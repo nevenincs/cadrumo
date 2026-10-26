@@ -1,0 +1,6 @@
+{"command":"setup","protocol":1,"type":"started"}
+{"notice_code":"following","plan_digest":"cf0d0fe871de0b9113d0043be3bb8496e2d97588358792ee4e7b77948b5e3b99","subject_code":"browser","type":"notice"}
+{"item_id":"browser","phase_code":"dependencies.setup.browser.download","step":"download","type":"phase"}
+{"completed":632,"subject_code":"browser","total":332691793,"type":"progress","unit_code":"bytes"}
+{"notice_code":"cancel_requested","type":"notice"}
+{"command":"setup","item_id":"browser","mode":"quick","outcome":"busy","rows":[{"item_id":"browser","mode":"quick","size_estimate_bytes":332691793,"state":"provisioning","version":"156.0.8078.4"},{"item_id":"local_ai","mode":"quick","recovery":"set_up_in_desktop","recovery_action_id":"operator.provision.local_ai","size_estimate_bytes":1586229413,"state":"absent","version":"0.40.10"}],"setup_complete":false,"type":"result"}

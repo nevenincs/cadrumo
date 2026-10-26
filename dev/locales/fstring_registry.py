@@ -1,0 +1,1231 @@
+"""Explicit registration surface for bounded f-string locale key patterns.
+
+The locale scaffold's AST scanner emits namespace markers for f-string
+``tr()`` call sites (e.g. ``wizard.setup.*``) but cannot enumerate the
+concrete keys those sites produce at runtime. This module declares every
+bounded f-string pattern whose value space is fully known at import time
+so the scaffold can expand them into concrete placeholder entries.
+
+Every f-string ``tr()`` call site with a known enumeration source must be
+registered here as a :class:`FStringKeyRegistration`. Dynamic values whose
+producer is data- or schema-backed are registered from that producer's finite
+vocabulary as well (for example, wizard profile descriptors and registry
+``row_field`` declarations). A genuinely unenumerable source must fail the
+discovery path explicitly; it must never be represented by an empty
+registration or an exemption.
+
+Adding a new enum value without updating the matching registration here
+will cause scaffold to omit the required locale entries, which the
+registration coverage test will surface immediately. The expanded key set
+is exposed through :func:`get_registered_keys` for
+:class:`locales.manager.LocaleManager`
+scaffold and parity checks.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from enum import Enum
+from typing import TYPE_CHECKING, Protocol, cast, get_args
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable
+
+
+class _ChoiceLike(Protocol):
+    @property
+    def value(self) -> str: ...
+
+    @property
+    def description(self) -> object: ...
+
+
+class _QuestionLike(Protocol):
+    @property
+    def id(self) -> str: ...
+
+    @property
+    def profile_key(self) -> str | None: ...
+
+    @property
+    def choices(self) -> Iterable[_ChoiceLike]: ...
+
+
+class _SectionLike(Protocol):
+    @property
+    def questions(self) -> Iterable[_QuestionLike]: ...
+
+
+class _FlowLike(Protocol):
+    """The one attribute the flow-description registration reads."""
+
+    @property
+    def id(self) -> str: ...
+
+    @property
+    def sections(self) -> Iterable[_SectionLike]: ...
+
+
+@dataclass(frozen=True, slots=True)
+class FStringKeyRegistration:
+    """A bounded f-string locale key pattern with its enumeration source.
+
+    ``description`` is used only in error and diagnostic messages.
+    ``key_factory`` maps a single string value from ``values`` to the
+    dotted locale key that the runtime will pass to ``tr()``.
+    ``values`` is the complete bounded value set.
+    """
+
+    description: str
+    key_factory: Callable[[str], str]
+    values: tuple[str, ...]
+
+
+def _hyphen(v: str) -> str:
+    """Replace underscores with hyphens — the transform used by wizard choice labels."""
+    return v.replace("_", "-")
+
+
+# The service-capability CONFIRM question ids (hyphenated, matching the catalogue
+# question ids in :mod:`application.wizard.catalogue`). Their prompt and
+# CLI-flag-help keys are f-string-built, so they are enumerated here for scaffold.
+_CAPABILITY_QUESTION_IDS: tuple[str, ...] = (
+    "cloud-evidence-upload",
+    "llm-vision",
+    "google-export",
+)
+
+_LEY_49_2002_QUESTION_IDS: tuple[str, ...] = (
+    "ley-49-2002-option-declared",
+    "ley-49-2002-option-date",
+    "ley-49-2002-renunciation-declared",
+    "ley-49-2002-renunciation-date",
+)
+
+# The `cli.config.google.errors.*` refusal-frame suffixes
+# `_GOOGLE_ERROR_KEY_SUFFIX` (`entrypoints.cli.config.google_errors`) maps
+# each concrete `GoogleAuthError` subclass name to. The map's values are the
+# complete bounded enumeration; the dynamic `f"cli.config.google.errors.{suffix}"`
+# build site is not otherwise visible to the static AST scanner.
+_GOOGLE_ERROR_SUFFIXES: tuple[str, ...] = (
+    "validation",
+    "client_revoked",
+    "scope_insufficient",
+    "network",
+    "loopback_bind",
+    "browser_open",
+    "non_interactive",
+    "unsecured_mode",
+    "keychain_locked",
+    "profile_unbound",
+    "storage",
+    "auth_failed",
+)
+
+# The `cli.config.profile.bundle_flow.*` copy slots referenced by the profile
+# bundle interactive flow (`entrypoints.cli.config._profile_bundle_flow`).
+# The references are CopyRef string literals resolved by the flow substrate's
+# render-time copy assembler, so the static AST scanner cannot see them; this
+# bounded enumeration is what keeps scaffold from stripping the entries.
+_PROFILE_BUNDLE_FLOW_COPY_SLOTS: tuple[str, ...] = (
+    "export_section_title",
+    "import_section_title",
+    "transport_prompt",
+    "transport_encrypted_label",
+    "transport_encrypted_description",
+    "transport_cleartext_label",
+    "transport_cleartext_description",
+)
+
+# Text-mode storage reports choose these labels through ``_label(name, ...)``;
+# the scanner can see neither the helper argument nor its nested notice prefix.
+# They are a closed CLI presentation vocabulary, not user- or data-derived keys.
+_STORAGE_LABEL_SUFFIXES: tuple[str, ...] = (
+    "already_present",
+    "area",
+    "areas",
+    "checked_areas",
+    "created",
+    "detail",
+    "entries",
+    "entry_count",
+    "footprint",
+    "healthy",
+    "issues",
+    "lifecycle",
+    "no",
+    "occupancy",
+    "path",
+    "reclaimable",
+    "removed_entries",
+    "resolved_paths",
+    "retained_entries",
+    "storage_root",
+    "targets",
+    "yes",
+    "notice_info",
+    "notice_warning",
+)
+
+
+def _enum_values(enum: type[Enum]) -> tuple[str, ...]:
+    """Read the declared string values in enum iteration order."""
+    return tuple(cast("str", item.value) for item in enum)
+
+
+def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
+    """Construct the registration tuple at import time.
+
+    Imports are deferred into this function so the module-level surface
+    stays import-error-safe. If a domain import fails, ``get_registered_keys``
+    will propagate the error with full context rather than a silent empty set.
+    """
+    from cadrumo.application.calculations.m303_carry_ingress import M303_CARRY_ERROR_NAMESPACE
+    from cadrumo.application.dependency_contracts import DependencySetupStep
+    from cadrumo.application.live.errors import LiveIvaAcquisitionFailureMode
+    from cadrumo.application.operations.frontend_requests import (
+        OperationCancellationRefusalCode,
+        OperationDetachRefusalCode,
+        OperationResponseControlRefusalCode,
+    )
+    from cadrumo.application.overview.home import HOME_ACTION_REASON_CODES
+    from cadrumo.application.review.filter import LedgerReviewStatus
+    from cadrumo.application.storage_management.models import StorageAreaDisposition, StorageOccupancy
+    from cadrumo.application.user_profile.validation import PROFILE_VALIDATION_ISSUE_CODES
+    from cadrumo.application.wizard.catalogue import build_setup_flow
+    from cadrumo.application.wizard.widgets import WIZARD_VALIDATION_REASON_CODES
+    from cadrumo.application.workflow.resume import WorkflowResumeRefusalReason
+    from cadrumo.core.errors.error_codes import ERROR_CONTEXT_LABEL_KEYS, ErrorCategory
+    from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
+    from cadrumo.core.operations import OperationTerminalCondition
+    from cadrumo.core.storage_taxonomy import StorageArea
+    from cadrumo.domain.auth.apoderamientos.catalogue import load_default_catalogue
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+    from cadrumo.domain.calculations.registry.descendant_relacion_catalogue import descendant_relacion_tokens
+    from cadrumo.domain.user_profile.values import ProfileSetupState
+    from cadrumo.entrypoints.tui.components.account_chrome import AccountActionV1
+    from cadrumo.entrypoints.tui.ledger.classification import CLASSIFICATION_FIELD_NAMES
+    from dev.docs.terminology_handbook.topics import load_topic_catalogue
+    from dev.locales._registry_scanner import scan_detail_row_fields, scan_profile_schema_keys
+
+    with bundled_indexed_authority().operation() as operation:
+        wizard_flow = build_setup_flow(operation)
+        apoderado_scope_values = tuple(
+            scope.code.lower() for scope in load_default_catalogue(operation=operation).scopes
+        )
+        descendant_relations = tuple(token.value for token in descendant_relacion_tokens(authority=operation))
+    topic_slugs = tuple(topic.slug for topic in load_topic_catalogue().topics)
+    row_fields = scan_detail_row_fields()
+    profile_field_label_keys = tuple(
+        sorted(
+            key
+            for key in scan_profile_schema_keys()
+            if key.startswith("profile.schema.field.") and key.endswith(".label")
+        )
+    )
+
+    return (
+        *_wizard_choice_label_registrations(
+            entity_type=_flow_choice_values(wizard_flow, "entity-type"),
+            legal_entity_form=_flow_choice_values(wizard_flow, "legal-entity-form"),
+            irpf_income_category=_flow_choice_values(wizard_flow, "irpf-income-categories"),
+            irpf_estimation_regime=_flow_choice_values(wizard_flow, "irpf-estimation-regime"),
+            irpf_special_regime=_flow_choice_values(wizard_flow, "irpf-special-regime"),
+            fiscal_residency=_flow_choice_values(wizard_flow, "fiscal-residency"),
+            ccaa=_flow_choice_values(wizard_flow, "tax-residence-ccaa"),
+            output_languages=SUPPORTED_OUTPUT_LANGUAGES,
+        ),
+        *_wizard_choice_description_registrations(
+            entity_type=_flow_choice_values(wizard_flow, "entity-type", described=True),
+            legal_entity_form=_flow_choice_values(wizard_flow, "legal-entity-form", described=True),
+            irpf_income_category=_flow_choice_values(wizard_flow, "irpf-income-categories", described=True),
+            irpf_estimation_regime=_flow_choice_values(wizard_flow, "irpf-estimation-regime", described=True),
+            fiscal_residency=_flow_choice_values(wizard_flow, "fiscal-residency", described=True),
+        ),
+        *_wizard_question_registrations(wizard_flows=(wizard_flow,)),
+        *_dynamic_family_registrations(
+            wizard_flows=(wizard_flow,),
+            apoderado_scope_values=apoderado_scope_values,
+            context_label_keys=ERROR_CONTEXT_LABEL_KEYS,
+            profile_validation_codes=PROFILE_VALIDATION_ISSUE_CODES,
+            row_fields=row_fields,
+            topic_slugs=topic_slugs,
+            home_reason_codes=HOME_ACTION_REASON_CODES,
+            wizard_reason_codes=WIZARD_VALIDATION_REASON_CODES,
+            ledger_classification_fields=CLASSIFICATION_FIELD_NAMES,
+        ),
+        FStringKeyRegistration(
+            description="profile.schema.field.*.label (user-profile schema field labels)",
+            key_factory=lambda key: key,
+            values=profile_field_label_keys,
+        ),
+        *_surface_registrations(profile_setup_state=ProfileSetupState),
+        *_storage_registrations(
+            storage_area=StorageArea,
+            storage_area_disposition=StorageAreaDisposition,
+            storage_occupancy=StorageOccupancy,
+        ),
+        *_aeat_sync_label_registrations(),
+        *_declarations_workspace_registrations(),
+        *_own_account_registrations(),
+        *_modelo_review_filter_registrations(),
+        *_generated_docs_registrations(),
+        FStringKeyRegistration(
+            # The operations modal renders tr(terminal_copy_key), a key the
+            # projection selects per terminal condition, plus the partial-success
+            # key no condition selects alone (entrypoints/tui/operations/projection.py).
+            description="operation.modal.terminal.* (OperationTerminalCondition)",
+            key_factory=lambda v: f"operation.modal.terminal.{v}",
+            values=(*(condition.value for condition in OperationTerminalCondition), "succeeded_partial"),
+        ),
+        FStringKeyRegistration(
+            # Bounded union: the operations modal derives its refusal copy key
+            # from the code's own value across all three refusal enums, so the enums
+            # decide which keys must exist (entrypoints/tui/operations/modal.py).
+            description="operation.modal.refusal.* (Operation{ResponseControl,Cancellation,Detach}RefusalCode)",
+            key_factory=lambda v: f"operation.modal.refusal.{v}",
+            values=tuple(
+                dict.fromkeys(
+                    [code.value for code in OperationResponseControlRefusalCode]
+                    + [code.value for code in OperationCancellationRefusalCode]
+                    + [code.value for code in OperationDetachRefusalCode]
+                )
+            ),
+        ),
+        FStringKeyRegistration(
+            description="cli.config.provision.step.* (DependencySetupStep)",
+            key_factory=lambda v: f"cli.config.provision.step.{v}",
+            values=_enum_values(DependencySetupStep),
+        ),
+        FStringKeyRegistration(
+            # Bounded enumeration: LedgerReviewStatus is a closed catalogue of
+            # ledger ``status=`` filter values, expanded into the controller's
+            # copy map in entrypoints/tui/ledger/controller.py.
+            description="tui.ledger.review_status.* (LedgerReviewStatus)",
+            key_factory=lambda v: f"tui.ledger.review_status.{v}",
+            values=_enum_values(LedgerReviewStatus),
+        ),
+        FStringKeyRegistration(
+            # Bounded enumeration: the live IVA wallet renders one operator
+            # label per acquisition failure mode, deriving the key from the
+            # enum's own value in entrypoints/cli/_app_live.py.
+            description="cli.app.live.iva_wallet.acquisition.outcome.* (LiveIvaAcquisitionFailureMode)",
+            key_factory=lambda v: f"cli.app.live.iva_wallet.acquisition.outcome.{v}",
+            values=_enum_values(LiveIvaAcquisitionFailureMode),
+        ),
+        FStringKeyRegistration(
+            description="errors.prefix.* (ErrorCategory)",
+            key_factory=lambda v: f"errors.prefix.{v}",
+            values=tuple(c.value.lower() for c in ErrorCategory),
+        ),
+        FStringKeyRegistration(
+            # Closed detail-label arguments in entrypoints/tui/profile/automation_inventory.py.
+            description="tui.automation_inventory.* (automation inventory detail labels)",
+            key_factory=lambda v: f"tui.automation_inventory.{v}",
+            values=(
+                "id",
+                "client",
+                "destination",
+                "kind",
+                "state",
+                "expires",
+                "grant",
+                "last_used",
+                "operations",
+                "actions",
+                "disclosures",
+                "periods",
+                "delegation",
+                "period_independent",
+                "unattended",
+                "os_lock",
+                "grant_expires",
+                "key_expires",
+                "target_grant",
+                "target_key",
+                "profile",
+                "review_digest",
+            ),
+        ),
+        FStringKeyRegistration(
+            # The resume refusal derives its message key from the reason's own
+            # value in application/workflow/resume.py and the CLI resume command.
+            description="application.workflow.errors.resume_refused_* (WorkflowResumeRefusalReason)",
+            key_factory=lambda v: f"application.workflow.errors.resume_refused_{v}",
+            values=_enum_values(WorkflowResumeRefusalReason),
+        ),
+        FStringKeyRegistration(
+            description="wizard.setup.descendientes.relacion.choices.*.label (descendant relationship authority)",
+            key_factory=lambda v: f"wizard.setup.descendientes.relacion.choices.{v}.label",
+            values=descendant_relations,
+        ),
+        *(
+            FStringKeyRegistration(
+                description=f"{prefix}.* (AccountActionV1)",
+                key_factory=lambda v, prefix=prefix: f"{prefix}.{v}",
+                values=_enum_values(AccountActionV1),
+            )
+            for prefix in ("tui.root.account", "tui.root.account_key", "tui.root.account_help")
+        ),
+        FStringKeyRegistration(
+            # Bounded enumeration, pinned to the _translated_error codes in
+            # application/calculations/m303_carry_ingress.py, which keys every
+            # refusal under M303_CARRY_ERROR_NAMESPACE.
+            description="application.calculations.m303_carry.errors.* (M303 carry ingress refusals)",
+            key_factory=lambda v: f"{M303_CARRY_ERROR_NAMESPACE}.{v}",
+            values=(
+                "available_compensation_formula_missing",
+                "carry_operands_disagree_with_formula",
+                "casilla_id_invalid",
+                "disposition_code_not_admitted",
+                "disposition_code_undeclared",
+                "disposition_result_sign_incompatible",
+                "duplicate_header_facts",
+                "envelope_not_normalized",
+                "formula_mapping_required",
+                "header_code_invalid",
+                "header_code_not_admitted",
+                "incomplete_supported_operands",
+                "invalid_registry_observation",
+                "local_disposition_header_disagreement",
+                "local_filing_disposition_required",
+                "local_filing_provenance_required",
+                "non_target_modelo_envelope",
+                "official_disposition_header_disagreement",
+                "official_header_required",
+                "registry_resolution_unavailable",
+                "registry_scope_invalid",
+                "result_casilla_required",
+                "supplied_available_contradicts_derivation",
+                "supplied_disposition_not_admitted",
+                "supplied_pair_contradicts_derivation",
+                "unsupported_provenance",
+            ),
+        ),
+        *_diagnostics_command_spec_registrations(),
+        *_custody_stdin_registrations(),
+        *_modelo_work_help_registrations(),
+        *_modelo_workbench_registrations(),
+    )
+
+
+def _own_account_registrations() -> tuple[FStringKeyRegistration, ...]:
+    """Enumerate account and import copy from its exact authored command and model vocabularies."""
+    from cadrumo.application.ledger.import_operation import LedgerImportFileRefusal
+    from cadrumo.domain.transactions.own_accounts import OwnAccountHolding, OwnAccountRole, OwnBankAccountDetails
+    from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
+
+    specs = (
+        COMMAND_GRAPH.spec("app_ledger_account"),
+        *COMMAND_GRAPH.children("app_ledger_account"),
+        COMMAND_GRAPH.spec("app_modelo_m360"),
+        *COMMAND_GRAPH.children("app_modelo_m360"),
+    )
+
+    command_keys = tuple(
+        dict.fromkeys(
+            key.value
+            for spec in specs
+            for key in (spec.help_key, *(parameter.help_key for parameter in spec.parameters))
+            if key is not None
+        )
+    )
+    return (
+        FStringKeyRegistration("authored own-account and M360 command help", lambda key: key, command_keys),
+        FStringKeyRegistration(
+            "tui.ledger.import.refusal.* (LedgerImportFileRefusal literal union)",
+            lambda value: f"tui.ledger.import.refusal.{value}",
+            tuple(str(value) for value in get_args(LedgerImportFileRefusal.model_fields["reason_code"].annotation)),
+        ),
+        FStringKeyRegistration(
+            "tui.ledger.own_accounts.role.* (OwnAccountRole)",
+            lambda value: f"tui.ledger.own_accounts.role.{value}",
+            _enum_values(OwnAccountRole),
+        ),
+        FStringKeyRegistration(
+            "tui.ledger.own_accounts.holding.* (OwnAccountHolding)",
+            lambda value: f"tui.ledger.own_accounts.holding.{value}",
+            _enum_values(OwnAccountHolding),
+        ),
+        FStringKeyRegistration(
+            "tui.ledger.own_accounts.field_name.* (OwnBankAccountDetails fields)",
+            lambda value: f"tui.ledger.own_accounts.field_name.{value}",
+            tuple(OwnBankAccountDetails.model_fields),
+        ),
+        FStringKeyRegistration(
+            "tui.ledger.own_accounts.detail.* (presence choice)",
+            lambda value: f"tui.ledger.own_accounts.detail.{value}",
+            ("present", "absent"),
+        ),
+        FStringKeyRegistration(
+            "tui.modelo.export.account.* (OwnAccountRole labels)",
+            lambda value: f"tui.modelo.export.account.{value}_label",
+            _enum_values(OwnAccountRole),
+        ),
+        FStringKeyRegistration(
+            "tui.modelo.export.result.label.* (OwnAccountRole accounts)",
+            lambda value: f"tui.modelo.export.result.label.{value}_account",
+            _enum_values(OwnAccountRole),
+        ),
+    )
+
+
+def _modelo_workbench_registrations() -> tuple[FStringKeyRegistration, ...]:
+    """Register the modelo workbench's words for each state, step, source, period and refused entry.
+
+    Each tail is the value of a closed vocabulary the workbench renders, so the
+    registration derives from that vocabulary and follows it when a member is
+    added. The text disclosure and layout provenance register only the members
+    the workbench puts into words: a localized label and a reviewed layout are
+    shown without a note.
+    """
+    from cadrumo.application.modelo.calculation_notes import (
+        CALCULATION_NOTE_ATTENTION,
+        what_locale_key,
+        what_to_do_locale_key,
+    )
+    from cadrumo.application.modelo.edit_models import ModeloEditParseReason
+    from cadrumo.application.modelo.edit_review_wording import WORDED_FINDING_CODES
+    from cadrumo.application.modelo.source_policy import SourceFamily
+    from cadrumo.application.modelo.work_form_models import (
+        ModeloFormEditability,
+        ModeloFormLayoutProvenance,
+        ModeloFormOrigin,
+        ModeloFormTextDisclosure,
+    )
+    from cadrumo.application.modelo.work_form_next_step import ModeloFormNextAction
+    from cadrumo.application.modelo.work_form_typing_effect import TYPING_EFFECTS
+    from cadrumo.application.modelo.work_form_wording import (
+        NOT_WRITABLE_REASONS,
+        PERIOD_WORD_NAMES,
+        SOURCE_WORDED_ORIGINS,
+    )
+    from cadrumo.core.export_layout_format import ExportLayoutFormat
+    from cadrumo.domain.modelos.calculation_revision_amendment import (
+        CalculationRevisionAmendmentKind,
+        M303RectificativaMotive,
+    )
+    from cadrumo.entrypoints.tui.modelo.workbench.editor import EDITOR_HINT_KINDS
+    from cadrumo.entrypoints.tui.modelo.workbench.page_items import WorkbenchFilter
+    from cadrumo.entrypoints.tui.modelo.workbench.progress import WorkbenchStep
+    from cadrumo.entrypoints.tui.modelo.workbench.result import ResultGroup
+    from cadrumo.entrypoints.tui.modelo.workbench.session import StageRefusal
+
+    root = "workspace.modelo"
+    vocabularies: tuple[tuple[str, tuple[str, ...]], ...] = (
+        ("origin", _enum_values(ModeloFormOrigin)),
+        (
+            "origin_source",
+            tuple(f"{origin.value}.{family.value}" for origin in SOURCE_WORDED_ORIGINS for family in SourceFamily),
+        ),
+        ("editability", _enum_values(ModeloFormEditability)),
+        ("not_writable", NOT_WRITABLE_REASONS),
+        (
+            "disclosure",
+            tuple(item.value for item in ModeloFormTextDisclosure if item is not ModeloFormTextDisclosure.LOCALIZED),
+        ),
+        (
+            "layout",
+            tuple(item.value for item in ModeloFormLayoutProvenance if item is not ModeloFormLayoutProvenance.REVIEWED),
+        ),
+        ("filter", _enum_values(WorkbenchFilter)),
+        ("step", _enum_values(WorkbenchStep)),
+        ("next", _enum_values(ModeloFormNextAction)),
+        ("stage_refused", _enum_values(StageRefusal)),
+        ("editor.placeholder", EDITOR_HINT_KINDS),
+        ("editor.format", EDITOR_HINT_KINDS),
+        ("review.effect", TYPING_EFFECTS),
+        ("amend.kind_help", _enum_values(CalculationRevisionAmendmentKind)),
+        ("amend.motive", _enum_values(M303RectificativaMotive)),
+        ("export.file_format", _enum_values(ExportLayoutFormat)),
+        ("review.finding", WORDED_FINDING_CODES),
+        ("result_diff.group", _enum_values(ResultGroup)),
+        ("result_diff.count", _enum_values(ResultGroup)),
+        ("period", PERIOD_WORD_NAMES),
+    )
+    return (
+        *(
+            FStringKeyRegistration(
+                description=f"{root}.{leaf}.* (modelo workbench vocabulary)",
+                key_factory=lambda value, leaf=leaf: f"{root}.{leaf}.{value}",
+                values=values,
+            )
+            for leaf, values in vocabularies
+        ),
+        FStringKeyRegistration(
+            description="application.modelo.edit.parse.* (ModeloEditParseReason)",
+            key_factory=lambda value: f"application.modelo.edit.parse.{value}",
+            values=_enum_values(ModeloEditParseReason),
+        ),
+        FStringKeyRegistration(
+            description="application.modelo.calc_diagnostic.*.what (calculation note reasons)",
+            key_factory=what_locale_key,
+            values=tuple(CALCULATION_NOTE_ATTENTION),
+        ),
+        FStringKeyRegistration(
+            description="application.modelo.calc_diagnostic.*.what_to_do (calculation note reasons)",
+            key_factory=what_to_do_locale_key,
+            values=tuple(CALCULATION_NOTE_ATTENTION),
+        ),
+    )
+
+
+def _diagnostics_command_spec_registrations() -> tuple[FStringKeyRegistration, ...]:
+    """Register diagnostic keys declared by the live command-spec registry."""
+    from ._command_spec_scanner import scan_command_spec_keys
+
+    keys = tuple(sorted(key for key in scan_command_spec_keys() if key.startswith("cli.diagnostics.")))
+    if not keys:
+        raise RuntimeError("The command-spec registry declared no CLI diagnostics translation keys")
+    return (
+        FStringKeyRegistration(
+            description="cli.diagnostics.* (live command-spec TranslationKey fields)",
+            key_factory=lambda key: key,
+            values=keys,
+        ),
+    )
+
+
+def _custody_stdin_registrations() -> tuple[FStringKeyRegistration, ...]:
+    """Register the stdin refusal keys both secret-reading doors declare.
+
+    ``_read_secrets_stdin`` / ``_read_secrets_fd`` take a ``diagnostic_prefix``
+    that names which payload failed, so the value space is those two callers.
+    """
+    prefixes = ("secrets", "profile_secrets")
+    return tuple(
+        FStringKeyRegistration(
+            description=f"cli.config.custody.errors.*_stdin_{tail}",
+            key_factory=lambda prefix, tail=tail: f"cli.config.custody.errors.{prefix}_stdin_{tail}",
+            values=prefixes,
+        )
+        for tail in ("too_large", "invalid_json", "missing_fields")
+    )
+
+
+def _modelo_work_help_registrations() -> tuple[FStringKeyRegistration, ...]:
+    """Register the per-option help keys the modelo work command specs declare.
+
+    The option and argument names are literals in
+    ``MODELO_WORK_COMMAND_SPECS``, so the spec tuple IS the enumeration source
+    -- the same relationship ``ErrorCategory`` has to ``errors.prefix.*``.
+    Deriving from it rather than hand-listing keeps the registration correct
+    when an option is added or renamed, which a literal list could not.
+    """
+    from cadrumo.entrypoints.cli.modelo_work_command_specs import MODELO_WORK_COMMAND_SPECS
+
+    prefix = "cli.app.modelo.work."
+    names = sorted(
+        {
+            help_key.value.removeprefix(prefix)
+            for spec in MODELO_WORK_COMMAND_SPECS
+            for parameter in spec.parameters or ()
+            if (help_key := parameter.help_key) is not None and help_key.value.startswith(prefix)
+        }
+    )
+    return (
+        FStringKeyRegistration(
+            description="cli.app.modelo.work.*_help (MODELO_WORK_COMMAND_SPECS parameters)",
+            key_factory=lambda name: f"{prefix}{name}",
+            values=tuple(names),
+        ),
+    )
+
+
+def _aeat_sync_label_registrations() -> tuple[FStringKeyRegistration, ...]:
+    """Register the enum labels the AEAT Sync workspace renders through one helper.
+
+    The screen module does not write these keys at its call sites. It declares
+    a table of prefixes keyed by enum class name, selects one, and appends the
+    member value::
+
+        return aeat_sync_copy(f"{prefix}.{value.value}")
+
+    The tail is always a member value, so the space is bounded by the enum
+    definitions and scaffold can expand it exactly rather than tolerating the
+    namespace.
+
+    The prefixes are held here as literals rather than imported from the
+    screen: that table is module-private to a view, and the registry should not
+    deepen a private reach into one -- the same call already made for the
+    work-select column keys. The coverage gate is what keeps the two in step.
+    """
+    from cadrumo.application.aeat_sync.workspace import (
+        AeatSyncAeatObservationState,
+        AeatSyncCensusCategory,
+        AeatSyncCensusStatus,
+        AeatSyncDiscrepancyKind,
+        AeatSyncDocumentCustodyState,
+        AeatSyncJustificanteState,
+        AeatSyncLocalFilingState,
+        AeatSyncNotificationCategory,
+        AeatSyncNotificationReadState,
+        AeatSyncOverviewArea,
+        AeatSyncReconciliationState,
+        AeatSyncSourceState,
+        AeatSyncWorkspaceAvailability,
+        AeatSyncWorkspaceSource,
+        AeatSyncWorkspaceZone,
+    )
+
+    labelled: tuple[tuple[str, type[Enum]], ...] = (
+        ("tui.aeat_sync.zone", AeatSyncWorkspaceZone),
+        ("tui.aeat_sync.availability", AeatSyncWorkspaceAvailability),
+        ("tui.aeat_sync.source", AeatSyncWorkspaceSource),
+        ("tui.aeat_sync.area", AeatSyncOverviewArea),
+        ("tui.aeat_sync.source_state", AeatSyncSourceState),
+        ("tui.aeat_sync.discrepancy", AeatSyncDiscrepancyKind),
+        ("tui.aeat_sync.census_category", AeatSyncCensusCategory),
+        ("tui.aeat_sync.census_status", AeatSyncCensusStatus),
+        ("tui.aeat_sync.local_filing_state", AeatSyncLocalFilingState),
+        ("tui.aeat_sync.aeat_observation_state", AeatSyncAeatObservationState),
+        ("tui.aeat_sync.justificante_state", AeatSyncJustificanteState),
+        ("tui.aeat_sync.notification_category", AeatSyncNotificationCategory),
+        ("tui.aeat_sync.notification_read_state", AeatSyncNotificationReadState),
+        ("tui.aeat_sync.document_custody_state", AeatSyncDocumentCustodyState),
+        ("tui.aeat_sync.reconciliation_state", AeatSyncReconciliationState),
+    )
+    return tuple(
+        FStringKeyRegistration(
+            description=f"{prefix}.* ({enum.__name__})",
+            key_factory=lambda value, prefix=prefix: f"{prefix}.{value}",
+            values=tuple(member.value for member in enum),
+        )
+        for prefix, enum in labelled
+    )
+
+
+def _declarations_workspace_registrations() -> tuple[FStringKeyRegistration, ...]:
+    """Register the declarations workspace labels whose tail is an enum value.
+
+    Every one of these call sites writes its prefix as a literal, so the
+    namespace markers were always derivable -- the root allowlist was what
+    withheld them. Registering rather than merely tolerating means scaffold
+    re-materialises each concrete key, so a new enum member arrives as a
+    missing catalogue entry instead of disappearing under a wildcard.
+
+    The two ``calendar.local`` / ``calendar.aeat`` sets carry an extra
+    ``unknown`` member: the call site maps ``None`` to that literal rather
+    than to a member value, and leaving it out would report the shipped key
+    as an orphan.
+    """
+    from cadrumo.application.modelo.declaration_summary import DeclarationSummaryState
+    from cadrumo.application.modelo.declarations_calendar import DeclarationsCalendarSource
+    from cadrumo.application.modelo.declarations_list import DeclarationListNextStep
+    from cadrumo.application.modelo.declarations_workspace_contracts import (
+        DeclarationsLifecycleKind,
+        DeclarationsWorkspaceAvailability,
+    )
+    from cadrumo.application.overview.calendar_models import (
+        OverviewAeatSubmissionState,
+        OverviewLocalFilingState,
+        OverviewPeriodState,
+    )
+    from cadrumo.application.overview.coverage import CoverageAdviceReason
+    from cadrumo.domain.deadlines.models import ObligationStatus
+    from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
+    from cadrumo.domain.modelos.work_unit import WorkUnitState
+    from cadrumo.entrypoints.tui.declarations.models import DeclarationsCalendarScopeV1
+
+    def _values(enum: type[Enum]) -> tuple[str, ...]:
+        return tuple(str(member.value) for member in enum)
+
+    return (
+        FStringKeyRegistration(
+            description="workspace.declarations.list.advice.* (CoverageAdviceReason)",
+            key_factory=lambda v: f"workspace.declarations.list.advice.{v}",
+            values=_values(CoverageAdviceReason),
+        ),
+        FStringKeyRegistration(
+            description="workspace.declarations.list.filter.* (grouped declarations filter choices)",
+            key_factory=lambda v: f"workspace.declarations.list.filter.{v}",
+            values=("all", "attention", "this_year", "recorded", "not_started"),
+        ),
+        FStringKeyRegistration(
+            description="workspace.declarations.list.sort.* (grouped declarations sort choices)",
+            key_factory=lambda v: f"workspace.declarations.list.sort.{v}",
+            values=("deadline", "modelo", "result", "state"),
+        ),
+        FStringKeyRegistration(
+            description="workspace.declarations.list.state.* (summary states plus calendar-only states)",
+            key_factory=lambda v: f"workspace.declarations.list.state.{v}",
+            # Recorded/discarded rows use explicit group/work-state keys.
+            values=(
+                *(
+                    str(member.value)
+                    for member in DeclarationSummaryState
+                    if member
+                    not in {
+                        DeclarationSummaryState.RECORDED,
+                        DeclarationSummaryState.DISCARDED,
+                    }
+                ),
+                "aeat_unlinked",
+                "aeat_needs_check",
+                "not_started",
+            ),
+        ),
+        FStringKeyRegistration(
+            description="workspace.declarations.list.next.* (DeclarationListNextStep)",
+            key_factory=lambda v: f"workspace.declarations.list.next.{v}",
+            values=_values(DeclarationListNextStep),
+        ),
+        FStringKeyRegistration(
+            description="workspace.declarations.availability.* (DeclarationsWorkspaceAvailability)",
+            key_factory=lambda v: f"workspace.declarations.availability.{v}",
+            values=_values(DeclarationsWorkspaceAvailability),
+        ),
+        FStringKeyRegistration(
+            description="workspace.declarations.lifecycle.* (DeclarationsLifecycleKind)",
+            key_factory=lambda v: f"workspace.declarations.lifecycle.{v}",
+            values=_values(DeclarationsLifecycleKind),
+        ),
+        FStringKeyRegistration(
+            description="workspace.declarations.work_state.* (WorkUnitState)",
+            key_factory=lambda v: f"workspace.declarations.work_state.{v}",
+            values=_values(WorkUnitState),
+        ),
+        FStringKeyRegistration(
+            description="workspace.declarations.revision_state.* (CalculationRevisionState)",
+            key_factory=lambda v: f"workspace.declarations.revision_state.{v}",
+            values=_values(CalculationRevisionState),
+        ),
+        FStringKeyRegistration(
+            description="workspace.declarations.calendar.scope.* (DeclarationsCalendarScopeV1)",
+            key_factory=lambda v: f"workspace.declarations.calendar.scope.{v}",
+            values=_values(DeclarationsCalendarScopeV1),
+        ),
+        FStringKeyRegistration(
+            description="workspace.declarations.calendar.source.* (DeclarationsCalendarSource)",
+            key_factory=lambda v: f"workspace.declarations.calendar.source.{v}",
+            values=_values(DeclarationsCalendarSource),
+        ),
+        FStringKeyRegistration(
+            description="workspace.declarations.calendar.legal.* (ObligationStatus, lowercased)",
+            key_factory=lambda v: f"workspace.declarations.calendar.legal.{v.lower()}",
+            values=_values(ObligationStatus),
+        ),
+        FStringKeyRegistration(
+            description="workspace.declarations.calendar.user.* (OverviewPeriodState)",
+            key_factory=lambda v: f"workspace.declarations.calendar.user.{v}",
+            values=_values(OverviewPeriodState),
+        ),
+        FStringKeyRegistration(
+            description="workspace.declarations.calendar.local.* (OverviewLocalFilingState plus the None sentinel)",
+            key_factory=lambda v: f"workspace.declarations.calendar.local.{v}",
+            values=(*_values(OverviewLocalFilingState), "unknown"),
+        ),
+        FStringKeyRegistration(
+            description="workspace.declarations.calendar.aeat.* (OverviewAeatSubmissionState plus the None sentinel)",
+            key_factory=lambda v: f"workspace.declarations.calendar.aeat.{v}",
+            values=(*_values(OverviewAeatSubmissionState), "unknown"),
+        ),
+    )
+
+
+def _modelo_review_filter_registrations() -> tuple[FStringKeyRegistration, ...]:
+    """Register every closed value used by the modelo-review facet labels."""
+    from cadrumo.application.modelo.work_review import ModeloWorkOriginAnomaly
+    from cadrumo.core.aggregation import BindingSourceKind
+    from cadrumo.core.estado_casilla_oficial import EstadoCasillaOficial
+    from cadrumo.core.operator_action_enums import OperatorActionAxis
+    from cadrumo.domain.calculations.registry.handoffs import RelationConsumptionChannel
+    from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+    from cadrumo.domain.filing.schema import ModeloValueKind
+    from cadrumo.domain.modelos.verification_report import (
+        ModeloVerificationFindingKind,
+        ModeloVerificationFindingSeverity,
+    )
+
+    axes = (
+        ("input_kind", _enum_values(InputKind)),
+        ("binding_source", _enum_values(BindingSourceKind)),
+        ("realised_kind", _enum_values(ModeloValueKind)),
+        ("origin_anomaly", _enum_values(ModeloWorkOriginAnomaly)),
+        ("estado_casilla_oficial", _enum_values(EstadoCasillaOficial)),
+        ("operator_action", _enum_values(OperatorActionAxis)),
+        ("finding_kind", _enum_values(ModeloVerificationFindingKind)),
+        ("finding_severity", _enum_values(ModeloVerificationFindingSeverity)),
+        ("relation_channel", get_args(RelationConsumptionChannel)),
+    )
+    return tuple(
+        FStringKeyRegistration(
+            description=f"flows.modelo_review.filter.option.{axis}.*",
+            key_factory=lambda value, axis=axis: f"flows.modelo_review.filter.option.{axis}.{value}",
+            values=values,
+        )
+        for axis, values in axes
+    )
+
+
+def _generated_docs_registrations() -> tuple[FStringKeyRegistration, ...]:
+    """Registrations for generated-docs display copy whose tail is an enum value.
+
+    The generated casilla reference names every string it renders with a full
+    literal key at the call site, so the regex scan sees them directly. Five
+    families are the exception: their tail is an ``InputKind`` /
+    ``BindingSourceKind`` / ``data_type`` / ``cadence`` / ``sign`` member, and
+    the surface derives them from those closed sets rather than writing 62 keys
+    out - the derivation is what makes a new enum member fail loudly instead of
+    rendering blank.
+
+    Those f-strings would otherwise emit a ``docs.casilla.<family>.*`` namespace
+    marker and need no registration, but :func:`_is_dynamic_translation_prefix`
+    only admits a marker whose root is in ``_DYNAMIC_TRANSLATION_ROOTS``, and
+    ``docs`` is not among them. Until that root is admitted, this registration
+    is what keeps scaffold from pruning the families as stale.
+    """
+    from dev.docs.casilla_display import display_locale_keys
+
+    return (
+        FStringKeyRegistration(
+            description="docs.casilla.* (generated casilla-reference display copy)",
+            key_factory=lambda v: v,
+            values=display_locale_keys(),
+        ),
+        # The CLI reference classifies every parameter on every command page as one of
+        # exactly four things -- argument or option, required or optional. The renderer
+        # derives the key from those two booleans rather than writing four literals, so
+        # a fifth classification would fail loudly instead of rendering blank.
+        FStringKeyRegistration(
+            description="docs.cli.param.* (CLI-reference parameter classification)",
+            key_factory=lambda v: f"docs.cli.param.{v}",
+            values=(
+                "argument_required",
+                "argument_optional",
+                "option_required",
+                "option_optional",
+            ),
+        ),
+    )
+
+
+def _dynamic_family_registrations(
+    *,
+    wizard_flows: Iterable[_FlowLike],
+    apoderado_scope_values: Iterable[str],
+    context_label_keys: Iterable[str],
+    profile_validation_codes: Iterable[str],
+    row_fields: Iterable[str],
+    topic_slugs: Iterable[str],
+    home_reason_codes: Iterable[str],
+    wizard_reason_codes: Iterable[str],
+    ledger_classification_fields: Iterable[str],
+) -> tuple[FStringKeyRegistration, ...]:
+    """Register the nine formerly-unbounded production f-string families.
+
+    Each iterable is supplied by the owning producer in ``_build_registrations``:
+    no current locale catalogue is consulted.  The wizard profile-key values
+    come from the descriptor graph itself, while the sheet values come from a
+    strict structural scan of the committed registry source.
+    """
+    profile_key_values: list[str] = []
+    for flow in wizard_flows:
+        for section in flow.sections:
+            for question in section.questions:
+                profile_key = getattr(question, "profile_key", None)
+                if profile_key is not None and profile_key not in profile_key_values:
+                    profile_key_values.append(profile_key)
+
+    return (
+        FStringKeyRegistration(
+            description="cli.config.auth.apoderado.scope.* (ApoderamientosCatalogue scopes.toml)",
+            key_factory=lambda v: f"cli.config.auth.apoderado.scope.{v}",
+            values=tuple(apoderado_scope_values),
+        ),
+        FStringKeyRegistration(
+            description="errors.context_labels.* (ERROR_CONTEXT_LABEL_KEYS)",
+            key_factory=lambda v: f"errors.context_labels.{v}",
+            values=tuple(context_label_keys),
+        ),
+        FStringKeyRegistration(
+            description="profile.keys.* (WizardFlow question profile_key declarations)",
+            key_factory=lambda v: f"profile.keys.{v}",
+            values=tuple(profile_key_values),
+        ),
+        FStringKeyRegistration(
+            description="profile.validation.* (PROFILE_VALIDATION_ISSUE_CODES)",
+            key_factory=lambda v: f"profile.validation.{v}",
+            values=tuple(profile_validation_codes),
+        ),
+        FStringKeyRegistration(
+            description="sheets.detalle.headers.* (bundled registry row_field declarations)",
+            key_factory=lambda v: f"sheets.detalle.headers.{v}",
+            values=tuple(row_fields),
+        ),
+        FStringKeyRegistration(
+            description="topic.*.title (bundled terminology topic slugs)",
+            key_factory=lambda v: f"topic.{v}.title",
+            values=tuple(topic_slugs),
+        ),
+        FStringKeyRegistration(
+            description="topic.*.body (bundled terminology topic slugs)",
+            key_factory=lambda v: f"topic.{v}.body",
+            values=tuple(topic_slugs),
+        ),
+        FStringKeyRegistration(
+            description="tui.ledger.classification.field.* (CLASSIFICATION_FIELD_NAMES)",
+            key_factory=lambda v: f"tui.ledger.classification.field.{v}",
+            values=tuple(ledger_classification_fields),
+        ),
+        FStringKeyRegistration(
+            description="tui.home.reason.* (HOME_ACTION_REASON_CODES)",
+            key_factory=lambda v: f"tui.home.reason.{v}",
+            values=tuple(home_reason_codes),
+        ),
+        FStringKeyRegistration(
+            description="tui.home.empty.* (the home screen's three retained list zones)",
+            key_factory=lambda v: f"tui.home.empty.{v}",
+            values=("actions", "declarations", "agenda"),
+        ),
+        FStringKeyRegistration(
+            description="wizard.errors.* (WIZARD_VALIDATION_REASON_CODES)",
+            key_factory=lambda v: f"wizard.errors.{v}",
+            values=tuple(wizard_reason_codes),
+        ),
+    )
+
+
+def _flow_choice_values(flow: _FlowLike, question_id: str, *, described: bool = False) -> tuple[str, ...]:
+    """Return the canonical choice values declared by one wizard question."""
+    for section in flow.sections:
+        for question in section.questions:
+            if question.id != question_id:
+                continue
+            return tuple(choice.value for choice in question.choices if not described or choice.description is not None)
+    raise LookupError(f"wizard flow has no question {question_id!r}")
+
+
+def _wizard_choice_label_registrations(
+    *,
+    entity_type: Iterable[str],
+    legal_entity_form: Iterable[str],
+    irpf_income_category: Iterable[str],
+    irpf_estimation_regime: Iterable[str],
+    irpf_special_regime: Iterable[str],
+    fiscal_residency: Iterable[str],
+    ccaa: Iterable[str],
+    output_languages: Iterable[str],
+) -> tuple[FStringKeyRegistration, ...]:
+    """Registrations for the wizard's closed-choice option labels.
+
+    Every entry expands one enum's members into the per-choice locale keys the
+    wizard renders. The enums arrive as parameters because the caller already
+    deferred their imports to keep this module import-error-safe.
+    """
+    return (
+        FStringKeyRegistration(
+            description="wizard.setup.taxpayer-type.entity-type.choices.*.label",
+            key_factory=lambda v: f"wizard.setup.taxpayer-type.entity-type.choices.{_hyphen(v)}.label",
+            values=tuple(entity_type),
+        ),
+        FStringKeyRegistration(
+            description="wizard.setup.taxpayer-type.legal-entity-form.choices.*.label",
+            key_factory=lambda v: f"wizard.setup.taxpayer-type.legal-entity-form.choices.{_hyphen(v)}.label",
+            values=tuple(legal_entity_form),
+        ),
+        FStringKeyRegistration(
+            description="wizard.setup.taxpayer-type.irpf-income-categories.choices.*.label",
+            key_factory=lambda v: f"wizard.setup.taxpayer-type.irpf-income-categories.choices.{_hyphen(v)}.label",
+            values=tuple(irpf_income_category),
+        ),
+        FStringKeyRegistration(
+            description="wizard.setup.obligations.irpf-estimation-regime.choices.*.label",
+            key_factory=lambda v: f"wizard.setup.obligations.irpf-estimation-regime.choices.{_hyphen(v)}.label",
+            values=tuple(irpf_estimation_regime),
+        ),
+        FStringKeyRegistration(
+            description="wizard.setup.obligations.irpf-special-regime.choices.*.label",
+            key_factory=lambda v: f"wizard.setup.obligations.irpf-special-regime.choices.{_hyphen(v)}.label",
+            values=tuple(irpf_special_regime),
+        ),
+        FStringKeyRegistration(
+            description="wizard.setup.residence.fiscal-residency.choices.*.label",
+            key_factory=lambda v: f"wizard.setup.residence.fiscal-residency.choices.{_hyphen(v)}.label",
+            values=tuple(fiscal_residency),
+        ),
+        FStringKeyRegistration(
+            description="wizard.setup.residence.ccaa.choices.*.label",
+            key_factory=lambda v: f"wizard.setup.residence.ccaa.choices.{v}.label",
+            values=tuple(ccaa),
+        ),
+        FStringKeyRegistration(
+            description="wizard.setup.profile.output-language.choices.*.label",
+            key_factory=lambda v: f"wizard.setup.profile.output-language.choices.{v}.label",
+            values=tuple(sorted(output_languages)),
+        ),
+    )
+
+
+def _wizard_choice_description_registrations(
+    *,
+    entity_type: Iterable[str],
+    legal_entity_form: Iterable[str],
+    irpf_income_category: Iterable[str],
+    irpf_estimation_regime: Iterable[str],
+    fiscal_residency: Iterable[str],
+) -> tuple[FStringKeyRegistration, ...]:
+    """Registrations for the longer explanatory copy under each wizard choice.
+
+    Only some choice sets carry descriptions — a legal-entity-form subset is
+    curated rather than exhaustive — so this group is deliberately not a
+    mirror of the label group.
+    """
+    return (
+        FStringKeyRegistration(
+            description="wizard.setup.taxpayer-type.entity-type.choices.*.description",
+            key_factory=lambda v: f"wizard.setup.taxpayer-type.entity-type.choices.{_hyphen(v)}.description",
+            values=tuple(entity_type),
+        ),
+        FStringKeyRegistration(
+            description="wizard.setup.taxpayer-type.irpf-income-categories.choices.*.description",
+            key_factory=lambda v: f"wizard.setup.taxpayer-type.irpf-income-categories.choices.{_hyphen(v)}.description",
+            values=tuple(irpf_income_category),
+        ),
+        FStringKeyRegistration(
+            description="wizard.setup.obligations.irpf-estimation-regime.choices.*.description",
+            key_factory=lambda v: f"wizard.setup.obligations.irpf-estimation-regime.choices.{_hyphen(v)}.description",
+            values=tuple(irpf_estimation_regime),
+        ),
+        FStringKeyRegistration(
+            description="wizard.setup.residence.fiscal-residency.choices.*.description",
+            key_factory=lambda v: f"wizard.setup.residence.fiscal-residency.choices.{_hyphen(v)}.description",
+            values=tuple(fiscal_residency),
+        ),
+        FStringKeyRegistration(
+            description="wizard.setup.taxpayer-type.legal-entity-form.choices.*.description (curated subset)",
+            key_factory=lambda v: f"wizard.setup.taxpayer-type.legal-entity-form.choices.{_hyphen(v)}.description",
+            values=tuple(legal_entity_form),
+        ),
+    )
+
+
+def _wizard_question_registrations(*, wizard_flows: Iterable[_FlowLike]) -> tuple[FStringKeyRegistration, ...]:
+    """Registrations for wizard flow descriptions and per-question prompt/help copy.
+
+    Unlike the choice group these expand id tuples declared in this module
+    (the service-capability and Ley 49/2002 question ids) rather than enums,
+    because their sources are catalogue question ids with no enum home.
+    """
+    return (
+        FStringKeyRegistration(
+            description="wizard.*.description (registered wizard flow IDs)",
+            key_factory=lambda v: f"wizard.{v}.description",
+            values=tuple(flow.id for flow in wizard_flows),
+        ),
+        FStringKeyRegistration(
+            description="wizard.setup.capabilities.*.prompt (service-capability CONFIRM questions)",
+            key_factory=lambda v: f"wizard.setup.capabilities.{v}.prompt",
+            values=_CAPABILITY_QUESTION_IDS,
+        ),
+        FStringKeyRegistration(
+            description="wizard.setup.flags.*.help (service-capability CLI flags)",
+            key_factory=lambda v: f"wizard.setup.flags.{v}.help",
+            values=_CAPABILITY_QUESTION_IDS,
+        ),
+        FStringKeyRegistration(
+            description="wizard.setup.taxpayer-type Ley 49/2002 question prompts",
+            key_factory=lambda v: f"wizard.setup.taxpayer-type.{v}.prompt",
+            values=_LEY_49_2002_QUESTION_IDS,
+        ),
+        FStringKeyRegistration(
+            description="wizard.setup.taxpayer-type Ley 49/2002 question help",
+            key_factory=lambda v: f"wizard.setup.taxpayer-type.{v}.help",
+            values=_LEY_49_2002_QUESTION_IDS,
+        ),
+        FStringKeyRegistration(
+            description="wizard.setup.flags Ley 49/2002 CLI flags",
+            key_factory=lambda v: f"wizard.setup.flags.{v}.help",
+            values=_LEY_49_2002_QUESTION_IDS,
+        ),
+    )
+
+
+def _surface_registrations(*, profile_setup_state: type[Enum]) -> tuple[FStringKeyRegistration, ...]:
+    """Registrations for operator-surface copy built outside the wizard.
+
+    The Google refusal frames, the status-page lifecycle labels, and the
+    profile-bundle flow's CopyRef slots are all resolved at render time, so the
+    static AST scanner cannot see their build sites.
+    """
+    return (
+        FStringKeyRegistration(
+            description="cli.config.google.errors.* (_GOOGLE_ERROR_KEY_SUFFIX refusal frames)",
+            key_factory=lambda v: f"cli.config.google.errors.{v}",
+            values=_GOOGLE_ERROR_SUFFIXES,
+        ),
+        FStringKeyRegistration(
+            description="flows.status.profiles.status.* (status-page profile setup-state labels)",
+            key_factory=lambda v: f"flows.status.profiles.status.{v}",
+            values=tuple(m.value for m in profile_setup_state),
+        ),
+        FStringKeyRegistration(
+            description="cli.config.profile.bundle_flow.* (profile bundle interactive-flow CopyRef copy)",
+            key_factory=lambda v: f"cli.config.profile.bundle_flow.{v}",
+            values=_PROFILE_BUNDLE_FLOW_COPY_SLOTS,
+        ),
+    )
+
+
+def _storage_registrations(
+    *,
+    storage_area: type[Enum],
+    storage_area_disposition: type[Enum],
+    storage_occupancy: type[Enum],
+) -> tuple[FStringKeyRegistration, ...]:
+    """Register every bounded key built by the storage CLI's display helpers."""
+    return (
+        FStringKeyRegistration(
+            description="cli.config.storage.labels.* (text-mode storage report labels)",
+            key_factory=lambda v: f"cli.config.storage.labels.{v}",
+            values=_STORAGE_LABEL_SUFFIXES,
+        ),
+        FStringKeyRegistration(
+            description="cli.config.storage.values.area.* (StorageArea)",
+            key_factory=lambda v: f"cli.config.storage.values.area.{v}",
+            values=tuple(member.value for member in storage_area),
+        ),
+        FStringKeyRegistration(
+            description="cli.config.storage.values.lifecycle.* (StorageAreaDisposition)",
+            key_factory=lambda v: f"cli.config.storage.values.lifecycle.{v}",
+            values=tuple(member.value for member in storage_area_disposition),
+        ),
+        FStringKeyRegistration(
+            description="cli.config.storage.values.occupancy.* (StorageOccupancy)",
+            key_factory=lambda v: f"cli.config.storage.values.occupancy.{v}",
+            values=tuple(member.value for member in storage_occupancy),
+        ),
+    )
+
+
+def get_registered_keys() -> set[str]:
+    """Expand all registered f-string patterns into concrete dotted locale keys.
+
+    Each registration iterates its bounded value set and applies the
+    ``key_factory`` to produce one concrete key per value. The result is
+    the full set of locale keys that the runtime can build from the
+    registered f-string patterns.
+    """
+    registrations = _build_registrations()
+    keys: set[str] = set()
+    for registration in registrations:
+        for value in registration.values:
+            keys.add(registration.key_factory(value))
+    return keys
+
+
+def get_registrations() -> tuple[FStringKeyRegistration, ...]:
+    """Return the current registration tuple for inspection and testing.
+
+    Returns:
+        A tuple of every :class:`FStringKeyRegistration` built at import
+        time by :func:`_build_registrations`.
+    """
+    return _build_registrations()
+
+
+__all__ = [
+    "FStringKeyRegistration",
+    "get_registered_keys",
+    "get_registrations",
+]
