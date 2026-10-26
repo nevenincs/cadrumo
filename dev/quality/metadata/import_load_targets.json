@@ -1900,7 +1900,6 @@
         "cadrumo.core.log_extra",
         "cadrumo.core.log_file_handler",
         "cadrumo.core.logging",
-        "cadrumo.core.loopback_endpoint",
         "cadrumo.core.model_roles",
         "cadrumo.core.modelo",
         "cadrumo.core.modelo_232_codigos",
