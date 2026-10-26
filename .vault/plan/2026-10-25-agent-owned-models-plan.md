@@ -15,7 +15,7 @@ related:
   - '[[2026-10-13-agent-attachments-adr]]'
 modified: '2026-10-26'
 body_schema: body-v2
-body_hash: 'sha256:23a63b4f92b5b05a2716d653491a13847c961fe5ccc01483fa48d3529bee2107'
+body_hash: 'sha256:591d9838d173424baaa3e5298a0a8c9928aa655b52ec90e71c45ea8a741a2554'
 ---
 
 # `agent-owned-models` plan
@@ -93,7 +93,7 @@ Drop model pins from the engine, take the selected local models as input, pull t
 
 Give the person a per-role selection on every surface with licence and vision capability, update documentation and the four locales, prove surface conformance and review.
 
-- [ ] `P05.S24` - Add the per-role selection control to the desktop agent settings, showing licence, vision capability and the recommended entry; replace the picker's offline fallback, which assembles cadrumo-agent's served catalog DTO from its internal modules and fails in a package since background_requests became required, with the public declared_provider_catalog() document shown as not yet observed; `native/desktop/frontend/src/components/agent/AgentSettingsPopover.tsx, native/desktop/frontend/src/dev/catalogue, native/desktop/frontend/src/shell/agentCatalog.ts, src/cadrumo_agent_service/service.py, src/cadrumo_agent_service/adapters/provider_catalog_metadata.py`.
+- [x] `P05.S24` - Add the per-role selection control to the desktop agent settings, showing licence, vision capability and the recommended entry; replace the picker's offline fallback, which assembles cadrumo-agent's served catalog DTO from its internal modules and fails in a package since background_requests became required, with the public declared_provider_catalog() document shown as not yet observed; `native/desktop/frontend/src/components/agent/AgentSettingsPopover.tsx, native/desktop/frontend/src/components/agent/ModelRolesDialog.tsx, native/desktop/frontend/src/shell/agentModelRoles.ts, native/desktop/frontend/src/shell/agentCatalog.ts, native/desktop/frontend/src/components/settings/ProviderSettings.tsx, native/desktop/frontend/src/dev/catalogue, native/desktop/frontend/tests/scenarios/model-roles.spec.ts, native/desktop/src-tauri/src/agent/model_roles.rs, src/cadrumo_agent_service/service.py, src/cadrumo_agent_service/adapters/provider_catalog_metadata.py, src/cadrumo_agent_service/locales`.
 - [ ] `P05.S25` - Make every Python surface read-only for the local AI: delete aeat config provision pull, keep setup and removal to the browser, refuse a Python component request naming local_ai for plan, setup or removal, route the local AI recovery and NO_SELECTION to the desktop in the CLI, TUI and MCP, and delete the winget and Homebrew installer locator and its installer fields; `src/cadrumo/adapters/outbound/components/client.py, src/cadrumo/entrypoints/cli/config/provision_cli.py, src/cadrumo/entrypoints/tui/setup/screen.py, src/cadrumo_mcp/mcp/component_setup.py, src/cadrumo/application/provisioning_host.py`.
 - [x] `P05.S26` - Update the how-to, CLI reference, technical articles and API pages that describe local models, pins or the direct adapter; `docs/how-to/classify-with-llm.md, docs/cli/config/provision.rst, docs/technical/articles/027-local-reader-provisioning-workstation-health-and-application-contracts.md, docs/technical/articles/168-profile-custody-provisioning-and-runtime-configuration.md`.
 - [ ] `P05.S27` - Add and translate the selection, licence and NO_SELECTION strings in en, es, ca and hu in the informal singular through the dev.locales set-batch workflow; `src/cadrumo/locales/en, src/cadrumo/locales/es, src/cadrumo/locales/ca, src/cadrumo/locales/hu`.

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:c12f2d68f4d9678989cb5796830bcba7754b947185908413b7b850a8e5974e92'
+body_hash: 'sha256:624ff002913cd3cffe5abcc0c5502f00c6c467f4f0ed349802bdc855c32deb30'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -814,6 +814,45 @@ related:
 - `S26` `verify:` `python -m dev.docs.sequences check --page workstation-setup` -> `pass`
 - `S26` `verify:` `python -m dev.docs.build --single-page (classify-with-llm, workstation-setup, import-bank-statements, profile-setup)` -> `pass`
 - `S26` `verify:` `python -m dev.docs.i18n set-batch (111 messages, 12 catalogues)` -> `pass`
+- `S24` `M` `src/cadrumo_agent_service/adapters/provider_catalog_metadata.py`
+- `S24` `M` `src/cadrumo_agent_service/service.py`
+- `S24` `M` `src/cadrumo_agent_service/admin.py`
+- `S24` `M` `src/cadrumo_agent_service/host/tests/test_picker_catalog.py`
+- `S24` `A` `src/cadrumo_agent_service/host/tests/test_picker_declared_catalog.py`
+- `S24` `M` `src/cadrumo_agent_service/host/tests/test_admin_authority.py`
+- `S24` `M` `native/desktop/src-tauri/src/agent/gateway.rs`
+- `S24` `M` `native/desktop/src-tauri/src/agent/mod.rs`
+- `S24` `M` `native/desktop/src-tauri/src/agent/model_roles.rs`
+- `S24` `M` `native/desktop/frontend/src/components/AgentColumn.tsx`
+- `S24` `M` `native/desktop/frontend/src/components/agent/AgentSettingsPopover.tsx`
+- `S24` `M` `native/desktop/frontend/src/components/agent/Composer.tsx`
+- `S24` `A` `native/desktop/frontend/src/components/agent/ModelRolesDialog.tsx`
+- `S24` `M` `native/desktop/frontend/src/components/settings/ProviderSettings.tsx`
+- `S24` `M` `native/desktop/frontend/src/dev/agentFixtureHost.ts`
+- `S24` `M` `native/desktop/frontend/src/dev/fixtures/agentCatalog.ts`
+- `S24` `M` `native/desktop/frontend/src/dev/main.tsx`
+- `S24` `M` `native/desktop/frontend/src/dev/providerSettingsFixture.ts`
+- `S24` `M` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S24` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S24` `M` `native/desktop/frontend/src/shell/agentCatalog.ts`
+- `S24` `A` `native/desktop/frontend/src/shell/agentModelRoles.ts`
+- `S24` `M` `native/desktop/frontend/src/shell/agentSession.ts`
+- `S24` `M` `native/desktop/frontend/src/shell/tauriHost.ts`
+- `S24` `A` `native/desktop/frontend/tests/scenarios/model-roles.spec.ts`
+- `S24` `M` `src/cadrumo_agent_service/locales/en.yml`
+- `S24` `M` `src/cadrumo_agent_service/locales/es.yml`
+- `S24` `M` `src/cadrumo_agent_service/locales/ca.yml`
+- `S24` `M` `src/cadrumo_agent_service/locales/hu.yml`
+- `S24` `M` `dev/locales/desktop_chrome.py`
+- `S24` `verify:` `uv run --no-sync pytest src/cadrumo_agent_service -q` -> `pass`
+- `S24` `verify:` `pytest host/tests/test_picker_catalog.py test_picker_declared_catalog.py test_admin_authority.py -m '' with CADRUMO_DEV_AGENT_CHECKOUT` -> `pass`
+- `S24` `verify:` `ruff check, ruff format --check, lint-imports` -> `pass`
+- `S24` `verify:` `playwright scenarios provider-picker, providers, agent-choice, agent-catalog-busy, model-roles` -> `pass`
+- `S24` `verify:` `tsc --noEmit, eslint ., node unit tests, prettier on touched files` -> `pass`
+- `S24` `verify:` `rustfmt --check on touched Rust` -> `pass`
+- `S24` `verify:` `dev.locales.desktop_chrome --shell-source generation` -> `pass`
+- `S24` `verify:` `dev/quality/tests/test_no_model_definitions.py` -> `pass`
+- `S24` `by:` `implementation-engineer`
 
 ## Notes
 
@@ -872,3 +911,4 @@ related:
 - `S15` P03 review fix: vision-model-refused-only-on-image-reads
 - `S15` P03 review fix: batch-consent-refusal-closes-no-role
 - `S26` Focused dev/docs pytest run incomplete: profile-delete sequences hit runtime worker exchange timeouts and the 590s wrapper killed two workers; localization and catalogue-drift tests passed. docs/cli/config/provision.rst still lists pull/load/--model; regeneration belongs to S28.
+- `S24` Desktop crate not compiled: no CMake inputs here; Rust checked by rustfmt only. python -m dev.quality.types exits 1 on one ty diagnostic in `src/cadrumo/entrypoints/tui/setup/tests/test_setup_screen.py,` another session's uncommitted file. Plan file left uncommitted: it carries other workers' uncommitted edits.
