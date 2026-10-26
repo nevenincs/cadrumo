@@ -136,15 +136,18 @@ class VerifiedTransport:
                             raise RefusalError(RefusalCode.INVALID_FRAME)
                         self._receive_event(received)
                     except BaseException as error:
-                        try:
-                            self._close_after_failure(error)
-                        finally:
-                            for disconnected in tuple(self._disconnect_receivers):
-                                disconnected()
+                        self._close_after_failure(error)
                         return
         finally:
             with self._claims_guard:
                 self._idle_wake = None
+            # Explicit close and failed exchanges also end this reader. Notify
+            # from its single exit, outside the exchange lock, on every path.
+            with self._exchange_lock:
+                receivers = tuple(self._disconnect_receivers)
+                self._disconnect_receivers.clear()
+            for disconnected in receivers:
+                disconnected()
 
     def _close_after_failure(self, error: BaseException) -> None:
         retained = error.__dict__.get("_transport_cleanup")
