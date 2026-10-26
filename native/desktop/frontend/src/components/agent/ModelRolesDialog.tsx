@@ -316,12 +316,14 @@ export function ModelRolesDialog({
   catalog,
   locale,
   onClose,
+  onLocalAi,
 }: {
   host: ModelRoleHost;
   /** The catalog the column read last, served or declared; null while unread. */
   catalog: AgentCatalogAnswer | null;
   locale: string;
   onClose: () => void;
+  onLocalAi?: () => void;
 }) {
   const t = useStrings();
   const { snapshot, busy, outcomes, change: changeRoles } = useModelRoles(host);
@@ -343,6 +345,11 @@ export function ModelRolesDialog({
             {t("desktop.agent.model_roles_lead")}
           </DialogDescription>
         </DialogHeader>
+        {onLocalAi && (
+          <Button variant="outline" size="sm" onClick={onLocalAi}>
+            {t("desktop.providers.local_models_title")}
+          </Button>
+        )}
         {snapshot.kind === "loading" && (
           <p className="flex items-center gap-2 text-base text-faint">
             <Spinner />

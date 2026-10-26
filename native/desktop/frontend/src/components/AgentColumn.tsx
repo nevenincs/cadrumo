@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useImperativeHandle,
   useMemo,
   useRef,
   useState,
@@ -96,6 +97,11 @@ const NO_SELECTION: AgentSelection = {
 
 type Panel = "none" | "history" | "settings";
 
+export type AgentColumnControl = {
+  openLocalAi(): void;
+  openModelRoles(): void;
+};
+
 type PendingSend = {
   id: string;
   conversationId: string | null;
@@ -182,6 +188,10 @@ export function AgentColumn({
   onOpenView,
   onSetUpLocalAi,
   onRemoveLocalModel,
+  onOpenLocalAi,
+  control,
+  localAiSetup,
+  onShowLocalAiSetup,
   setupSettled = null,
 }: {
   agent: AgentViews | undefined;
@@ -221,9 +231,14 @@ export function AgentColumn({
   /** Removes one local model no role selects, answering the refusal's code
    * or null, where this window offers setup. */
   onRemoveLocalModel?: (model: string) => Promise<string | null>;
+  onOpenLocalAi?: () => void;
   /** The last setup that settled, by operation: what this computer holds may
    * have changed, so the catalog is read again. */
   setupSettled?: string | null;
+  control?: Ref<AgentColumnControl>;
+  /** The existing component status and recovery beside its local models. */
+  localAiSetup?: ReactNode;
+  onShowLocalAiSetup?: () => void;
 }) {
   const t = useStrings();
   const [setupCheck, setSetupCheck] = useState<{
@@ -238,6 +253,7 @@ export function AgentColumn({
   const [view, setView] = useState({
     reader,
     panel: "none" as Panel,
+    localFocus: 0,
     archived: false,
     conversationId: null as string | null,
     chosen: null as AgentSelection | null,
@@ -257,6 +273,7 @@ export function AgentColumn({
     setView({
       reader,
       panel: "none",
+      localFocus: 0,
       archived: false,
       conversationId: null,
       chosen: null,
@@ -387,6 +404,24 @@ export function AgentColumn({
   // The person's model for each role that reads documents, where the host
   // offers reading and changing it.
   const [rolesShown, setRolesShown] = useState(false);
+  const openLocalAi = useCallback(() => {
+    setRolesShown(false);
+    setView((held) => ({
+      ...held,
+      panel: "settings",
+      localFocus: held.localFocus + 1,
+    }));
+  }, []);
+  useImperativeHandle(
+    control,
+    () => ({
+      openLocalAi,
+      openModelRoles() {
+        setRolesShown(true);
+      },
+    }),
+    [openLocalAi],
+  );
   const roleHost = useMemo((): ModelRoleHost | null => {
     if (
       !session?.modelRoles ||
@@ -566,7 +601,7 @@ export function AgentColumn({
     [],
   );
   const toggle = (next: Panel) =>
-    change({ panel: panel === next ? "none" : next });
+    change({ panel: panel === next ? "none" : next, localFocus: 0 });
   // The agent's settings belong to the signed-in profile, and are read only
   // while they are open: the first time behind one loader, and after that
   // again behind what was read last, each time they open.
@@ -585,6 +620,10 @@ export function AgentColumn({
     settingsOpen && shown,
     opened,
   );
+  const localProvider =
+    settings.read.kind === "ready"
+      ? settings.read.value.providers.find((lane) => lane.authKind === "none")
+      : undefined;
   if (catalogAgain !== settings.changes) setCatalogAgain(settings.changes);
   const access = useAgentAccess(
     agentAccess,
@@ -982,9 +1021,28 @@ export function AgentColumn({
             // own: provider settings and sign-in, plus keys for agents outside
             // Cadrumo.
             <div className="grid gap-6 p-3">
+              {view.localFocus > 0 &&
+                settings.read.kind === "ready" &&
+                !localProvider && (
+                  <div className="grid gap-2">
+                    {localAiSetup}
+                    <p className="text-sm text-muted-foreground">
+                      {t("desktop.providers.local_models_none")}
+                    </p>
+                    {onShowLocalAiSetup && (
+                      <Button variant="outline" onClick={onShowLocalAiSetup}>
+                        {t("desktop.setup.open")}
+                      </Button>
+                    )}
+                  </div>
+                )}
               {providerSettings &&
                 (settings.read.kind === "ready" ? (
                   <ProviderSettingsSection
+                    key={view.localFocus}
+                    focusLane={
+                      view.localFocus > 0 ? localProvider?.id : undefined
+                    }
                     providers={settings.read.value.providers}
                     signIn={providerSettings.signIn}
                     signInProviders={settings.read.value.signInProviders}
@@ -1002,26 +1060,33 @@ export function AgentColumn({
                     localModels={
                       roleHost
                         ? (lane) => (
-                            <LocalModels
-                              lane={
-                                localLanes.find(
-                                  (held) => held.id === lane.id,
-                                ) ?? null
-                              }
-                              host={roleHost}
-                              locale={locale}
-                              onSetUp={onSetUpLocalAi}
-                              onRemove={
-                                onRemoveLocalModel
-                                  ? (model) =>
-                                      onRemoveLocalModel(model).then((code) => {
-                                        if (code === null)
-                                          setCatalogAgain((count) => count + 1);
-                                        return code;
-                                      })
-                                  : undefined
-                              }
-                            />
+                            <div className="grid gap-3">
+                              {lane.id === localProvider?.id && localAiSetup}
+                              <LocalModels
+                                lane={
+                                  localLanes.find(
+                                    (held) => held.id === lane.id,
+                                  ) ?? null
+                                }
+                                host={roleHost}
+                                locale={locale}
+                                onSetUp={onSetUpLocalAi}
+                                onRemove={
+                                  onRemoveLocalModel
+                                    ? (model) =>
+                                        onRemoveLocalModel(model).then(
+                                          (code) => {
+                                            if (code === null)
+                                              setCatalogAgain(
+                                                (count) => count + 1,
+                                              );
+                                            return code;
+                                          },
+                                        )
+                                    : undefined
+                                }
+                              />
+                            </div>
                           )
                         : undefined
                     }
@@ -1282,6 +1347,9 @@ export function AgentColumn({
           catalog={catalog.kind === "ready" ? catalog.value : null}
           locale={locale}
           onClose={() => setRolesShown(false)}
+          onLocalAi={
+            providerSettings ? (onOpenLocalAi ?? openLocalAi) : undefined
+          }
         />
       )}
       {skillShown && (

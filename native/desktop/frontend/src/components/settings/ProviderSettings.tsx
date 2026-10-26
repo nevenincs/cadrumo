@@ -1,4 +1,11 @@
-import { useId, useRef, useState, type FormEvent, type ReactNode } from "react";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
@@ -432,14 +439,23 @@ function ProviderGroupRow({
   group,
   t,
   renderLane,
+  focus = false,
 }: {
   group: ProviderGroup;
   t: Translate;
   renderLane: (lane: ProviderStatus) => ReactNode;
+  focus?: boolean;
 }) {
+  const details = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    if (!focus || !details.current) return;
+    details.current.open = true;
+    details.current.querySelector("summary")?.focus();
+    details.current.scrollIntoView({ block: "nearest" });
+  }, [focus]);
   return (
     <li data-provider={group.provider} className="rounded-lg bg-card">
-      <details className="group/provider">
+      <details ref={details} className="group/provider">
         <summary className="flex min-h-control-lg cursor-pointer list-none flex-wrap items-center gap-x-2 gap-y-2 rounded-lg px-3 py-2.5 outline-none hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
           <span className="flex min-w-0 flex-1 items-center gap-2">
             <ProviderMark provider={group.provider} size="md" />
@@ -507,6 +523,7 @@ export function ProviderSettings({
   revisions = {},
   identity = null,
   localModels,
+  focusLane,
 }: {
   providers: readonly ProviderStatus[];
   /** The way whose change is on its way. */
@@ -537,6 +554,8 @@ export function ProviderSettings({
   /** The model controls of a keyless lane, where the host offers them: a
    * lane on this computer has no key or sign-in, only its models. */
   localModels?: (lane: ProviderStatus) => ReactNode;
+  /** Opens the existing provider group when reached from setup. */
+  focusLane?: string;
 }) {
   const t = useStrings();
   const titleId = useId();
@@ -607,6 +626,7 @@ export function ProviderSettings({
           <ProviderGroupRow
             key={group.provider}
             group={group}
+            focus={group.lanes.some((lane) => lane.id === focusLane)}
             t={t}
             renderLane={(lane) => (
               <WayRow

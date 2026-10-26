@@ -120,7 +120,17 @@ terminal interface and an AI assistant connected through MCP cannot install,
 remove or update it, and cannot choose its models. When the local AI is not
 ready, they point you to the desktop app.
 
-In the desktop app, choose a model for each reader role. Cadrumo names no model
+Open **Settings → Local AI** in the desktop app. This opens the local provider's
+existing settings, with its setup status, enable switch, model files and
+document-reading choices. **Models on this computer** in a setup prompt or the
+document model chooser leads to the same controls.
+
+Choose **Download** on a model, choose what it should read in your documents,
+then review and approve the setup plan. **Remove** clears the document-reading
+choices that use that model before removing its files. Choosing a model for
+chat does not change the models used for document reading.
+
+Cadrumo names no model
 and sets no default: the models on offer come from the Cadrumo agent's
 catalogue, which shows each model's size, context length, licence, whether it
 reads images, and whether it runs on this computer. The desktop app then

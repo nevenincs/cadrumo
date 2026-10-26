@@ -2,6 +2,9 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { fixtureAgent } from "@/dev/agentFixtureHost";
 import { FIXTURE_CATALOG } from "@/dev/fixtures/agentCatalog";
+import { setupFixture } from "@/dev/setupFixture";
+import { useSetup } from "../../shell/setup";
+import { SetupDialog } from "../setup/SetupDialog";
 import { roleLanes } from "../../shell/agentModelRoles";
 import type { ModelRoleHost } from "../../shell/modelRoles";
 import { LocalModels } from "./LocalModels";
@@ -11,8 +14,8 @@ import type { ProviderStatus } from "./types";
 
 // The real provider settings of the made-up lane that runs on this computer,
 // opened, with the real model list. The switch turns the lane off and on;
-// choosing roles stores them with the scenario host's agent; Download marks the
-// model as on this computer, as setup would once its plan is approved, and
+// choosing roles stores them with the scenario host's agent; Download opens the
+// shared setup review and marks the model as here only after approved setup, and
 // Remove takes it off again. Everything is kept in memory and forgotten on
 // reload, and nothing is downloaded. Every lane and model is made up.
 
@@ -85,6 +88,32 @@ function Settings(scene: Scene) {
   const [on, setOn] = useState(true);
   // Which models this computer holds, as setup and removal leave them.
   const [held, setHeld] = useState<Record<string, boolean>>({});
+  const setupHost = useMemo(
+    () =>
+      setupFixture({
+        shape: "partial",
+        latencyMs: 600,
+        say: () => undefined,
+        readable: () => true,
+      }),
+    [],
+  );
+  const setup = useSetup(setupHost, "Demo profile", true);
+  const [setupOpen, setSetupOpen] = useState(false);
+  const run = setup.snapshot?.setup;
+  useEffect(() => {
+    if (run?.stage !== "settled" || run.outcome !== "completed") return;
+    void host.read().then((roles) => {
+      if (roles.state !== "readable") return;
+      const pulled = roles.roles.flatMap((role) =>
+        role.lane === LANE && role.model ? [role.model] : [],
+      );
+      setHeld((now) => ({
+        ...now,
+        ...Object.fromEntries(pulled.map((model) => [model, true])),
+      }));
+    });
+  }, [host, run?.operation_id, run?.stage, run?.outcome]);
   useEffect(() => {
     root.current
       ?.querySelectorAll("details")
@@ -116,18 +145,8 @@ function Settings(scene: Scene) {
             host={host}
             locale="en"
             onSetUp={() => {
-              // Setup pulls every model a role selects, as its approved plan
-              // would.
-              void host.read().then((roles) => {
-                if (roles.state !== "readable") return;
-                const pulled = roles.roles.flatMap((role) =>
-                  role.lane === LANE && role.model ? [role.model] : [],
-                );
-                setHeld((now) => ({
-                  ...now,
-                  ...Object.fromEntries(pulled.map((model) => [model, true])),
-                }));
-              });
+              setSetupOpen(true);
+              setup.start(["local_ai"]);
             }}
             onRemove={(model) => {
               const refusal = scene.removal ?? null;
@@ -136,6 +155,15 @@ function Settings(scene: Scene) {
             }}
           />
         )}
+      />
+      <SetupDialog
+        open={setupOpen}
+        onOpenChange={setSetupOpen}
+        control={setup}
+        focus="local_ai"
+        locale="en"
+        onAct={(row) => setup.verify([row.item])}
+        onCopyDetails={() => undefined}
       />
     </div>
   );

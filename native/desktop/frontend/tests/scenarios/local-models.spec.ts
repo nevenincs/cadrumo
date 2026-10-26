@@ -104,13 +104,85 @@ test("downloading a model stores the roles chosen for it and opens setup on the 
       name: label("desktop.setup.role.vision_transcription"),
     })
     .check();
+  // The selected model is missing, but the window still has its earlier
+  // ready snapshot. Planning must re-read the host rather than trust it.
+  await target.evaluate(() => window.__scenarioSetup?.setAbsent("local_ai"));
   await confirm.click();
-  await expect(
-    target.getByRole("dialog", { name: label("desktop.setup.title") }),
-  ).toBeVisible();
+  const review = target.getByRole("dialog", {
+    name: label("desktop.setup.title"),
+  });
+  await expect(review).toContainText(label("desktop.setup.lead_review"));
+  await review
+    .getByText(label("desktop.setup.details"), { exact: true })
+    .click();
+  await expect(review.locator('[data-setup-plan="local_ai"]')).toHaveCount(1);
+  await expect(review.locator('[data-setup-plan="browser"]')).toHaveCount(0);
+  await expect
+    .poll(() => target.evaluate(() => window.__scenarioHostCalls ?? []))
+    .toContain("setup.start local_ai");
+  expect(
+    await target.evaluate(() => window.__scenarioHostCalls ?? []),
+  ).not.toContain("setup.answer apply");
   expect(await storedRoles(target)).toEqual([
     { role: "vision_transcription", lane: LOCAL, model: "synthetic-vision:1" },
   ]);
+  await review
+    .getByRole("button", {
+      name: label("desktop.setup.approve_at_least", { size: "3.4 GB" }),
+    })
+    .click();
+  await expect(review).toContainText(label("desktop.setup.lead_running"));
+});
+
+test("window settings opens the existing local provider with setup status and model controls", async ({
+  page: target,
+}) => {
+  await open(target);
+  await target.locator("[data-rail=settings]").click();
+  await target
+    .locator(".settings")
+    .getByRole("button", {
+      name: label("desktop.setup.item.local_ai"),
+      exact: true,
+    })
+    .click();
+  const provider = settings(target).locator(
+    'li[data-provider="local"] > details',
+  );
+  await expect(provider).toHaveAttribute("open", "");
+  await expect(provider.locator("summary")).toBeFocused();
+  await expect(provider.locator('[data-setup-row="local_ai"]')).toContainText(
+    label("desktop.setup.state.ready"),
+  );
+  await expect(provider.locator('[data-slot="local-models"]')).toBeVisible();
+  expect(await storedRoles(target)).toEqual([]);
+  expect(
+    await target.evaluate(() => window.__scenarioHostCalls ?? []),
+  ).not.toContain("setup.start local_ai");
+});
+
+test("setup leads to the same local model controls without starting a download", async ({
+  page: target,
+}) => {
+  await open(target, "partial");
+  const setup = target.getByRole("dialog", {
+    name: label("desktop.setup.title"),
+  });
+  await setup
+    .getByRole("button", {
+      name: label("desktop.providers.local_models_title"),
+    })
+    .click();
+  await expect(setup).toBeHidden();
+  await expect(
+    settings(target).locator('[data-slot="local-models"]'),
+  ).toBeVisible();
+  await expect(
+    settings(target).locator('[data-setup-row="local_ai"]'),
+  ).toContainText(label("desktop.setup.failure.damaged_download"));
+  expect(
+    await target.evaluate(() => window.__scenarioHostCalls ?? []),
+  ).not.toContain("setup.start local_ai");
 });
 
 test("a role the model cannot serve is refused by the service and said in words", async ({
@@ -194,4 +266,24 @@ test("a model not on this computer offers no removal", async ({
       name: label("desktop.providers.local_model_remove"),
     }),
   ).toHaveCount(0);
+});
+
+test("a host without setup cannot offer a model download", async ({
+  page: target,
+}) => {
+  await target.goto("/scenarios.html?scenario=signed-in&latency=0&bar=off");
+  const lane = await openLane(target);
+  await expect(
+    lane.locator('li[data-model="synthetic-vision:1"]').getByRole("button", {
+      name: label("desktop.providers.local_model_download"),
+    }),
+  ).toBeDisabled();
+  await target.locator("[data-rail=settings]").click();
+  await expect(
+    target.locator(".settings").getByRole("button", {
+      name: label("desktop.setup.item.local_ai"),
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  expect(await storedRoles(target)).toEqual([]);
 });

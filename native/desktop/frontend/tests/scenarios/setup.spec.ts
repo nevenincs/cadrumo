@@ -574,7 +574,7 @@ test("Copy details puts the report on the clipboard", async ({
   ).toBeVisible();
 });
 
-test("asking for an item this computer cannot set up says why once and offers only to close", async ({
+test("a local AI setup blocker leads to model settings without starting setup", async ({
   page: target,
 }) => {
   await open(target, "hardware");
@@ -589,14 +589,23 @@ test("asking for an item this computer cannot set up says why once and offers on
   await expect(prompt).toContainText(sentence);
   expect((await prompt.innerText()).split(sentence).length - 1).toBe(1);
   await noInternalWords(target);
-  // Setup cannot change this row, so no button leads into it.
+  // A different model may help; the setup blocker still grants no download.
   await expect(prompt.getByRole("button")).toHaveText([
+    label("desktop.providers.local_models_title"),
     label("desktop.setup.close"),
   ]);
   await prompt
-    .getByRole("button", { name: label("desktop.setup.close"), exact: true })
+    .getByRole("button", {
+      name: label("desktop.providers.local_models_title"),
+    })
     .click();
   await expect(prompt).toBeHidden();
+  await expect(
+    target.locator('.pane-agent [data-slot="local-models"]'),
+  ).toBeVisible();
+  expect(
+    await target.evaluate(() => window.__scenarioHostCalls ?? []),
+  ).not.toContain("setup.start local_ai");
 });
 
 /** Opens the window with setup unfinished, puts its dialog away, and has the

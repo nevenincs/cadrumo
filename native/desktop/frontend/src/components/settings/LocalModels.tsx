@@ -43,6 +43,7 @@ function LocalModelRow({
   removal,
   onUse,
   onRemove,
+  canDownload,
 }: {
   model: RoleModel;
   recommended: AgentRecommendedCapability[];
@@ -56,6 +57,7 @@ function LocalModelRow({
   onUse: (roles: string[]) => void;
   /** Removes the model from this computer; absent while nothing can. */
   onRemove?: () => void;
+  canDownload: boolean;
 }) {
   const t = useStrings();
   const headingId = useId();
@@ -128,7 +130,9 @@ function LocalModelRow({
           <div className="flex flex-wrap gap-2">
             <Button
               size="sm"
-              disabled={busy || picked.length === 0}
+              disabled={
+                busy || picked.length === 0 || (missing && !canDownload)
+              }
               onClick={() => {
                 onUse(picked);
                 setPicking(false);
@@ -148,7 +152,7 @@ function LocalModelRow({
           <Button
             variant="outline"
             size="sm"
-            disabled={busy || roles.length === 0}
+            disabled={busy || roles.length === 0 || (missing && !canDownload)}
             onClick={open}
           >
             {missing
@@ -284,6 +288,7 @@ export function LocalModels({
                 busy={busy !== null || removing !== null}
                 refusal={outcome?.kind === "refused" ? outcome.code : null}
                 removal={removals[key] ?? null}
+                canDownload={onSetUp !== undefined}
                 onRemove={
                   onRemove
                     ? () => void remove(key, model.id, usedBy)

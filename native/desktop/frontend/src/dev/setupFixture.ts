@@ -36,6 +36,8 @@ export const SETUP_SHAPES = [
 export type SetupShape = (typeof SETUP_SHAPES)[number];
 
 export type SetupFixtureControls = {
+  /** Changes the underlying files; only the next host command observes it. */
+  setAbsent(item: SetupItemId): void;
   /** Moves a running setup on by one step. */
   step(): void;
   /** A retry notice on the item now running. */
@@ -475,6 +477,11 @@ export function setupFixture({
   };
 
   const controls: SetupFixtureControls = {
+    setAbsent(item) {
+      const seed = seedOf(item);
+      if (seed)
+        seed.row = row(seed.row.item, seed.row.kind, seed.row.size_bytes);
+    },
     step,
     retry(attempt, delaySeconds) {
       const entry = current();

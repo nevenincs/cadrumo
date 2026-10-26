@@ -62,6 +62,7 @@
   --spacing-icon-sm: 1rem;
   --spacing-icon-md: 1.125rem;
   --spacing-icon-lg: 1.25rem;
+  --checkbox-mark-size: 0.75em;
 
   /* ── The brand mark beside the name: sm in the title bar, md at the head
      of a dialog, lg on the loading page. A mark is artwork, not a control,

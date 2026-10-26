@@ -77,7 +77,7 @@
     display: inline-grid;
     place-content: center;
     margin: 0;
-    border: 1px solid var(--border-strong);
+    border: var(--hairline) solid var(--border-strong);
     border-radius: var(--radius-sm);
     background: var(--background);
     cursor: pointer;
@@ -89,8 +89,8 @@
   }
   input[data-slot="checkbox"]::before {
     content: "";
-    width: 0.75em;
-    height: 0.75em;
+    width: var(--checkbox-mark-size);
+    height: var(--checkbox-mark-size);
     background: var(--primary-foreground);
     mask: no-repeat center / contain;
     visibility: hidden;

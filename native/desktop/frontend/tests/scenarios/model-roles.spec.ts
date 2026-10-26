@@ -68,6 +68,22 @@ const localLane = FIXTURE_CATALOG.providers?.find(
 );
 const localWords = `${localLane?.display_name}, ${label("desktop.providers.connection_api")}`;
 
+test("document roles lead to the same local model settings", async ({
+  page: target,
+}) => {
+  await open(target, "&setup=ready");
+  const dialog = await openRoles(target);
+  await dialog
+    .getByRole("button", {
+      name: label("desktop.providers.local_models_title"),
+    })
+    .click();
+  await expect(dialog).toBeHidden();
+  const local = column(target).locator('li[data-provider="local"] > details');
+  await expect(local).toHaveAttribute("open", "");
+  await expect(local.locator('[data-slot="local-models"]')).toBeVisible();
+});
+
 test("every role the service names is listed, none chosen, each choosable from the catalog", async ({
   page: target,
 }) => {

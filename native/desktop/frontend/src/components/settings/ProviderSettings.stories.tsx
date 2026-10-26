@@ -61,7 +61,15 @@ export const PROVIDERS: ProviderStatus[] = FIXTURE_SETTINGS_LANES.map(
 
 const meta = {
   title: "Shell/Settings/AI providers",
-  parameters: { surface: "chrome" },
+  parameters: {
+    surface: "chrome",
+    docs: {
+      description: {
+        component:
+          "Provider connection states only. The local model controls and the window's setup handoff are shown in Shell/Settings/Local models.",
+      },
+    },
+  },
   args: {
     providers: PROVIDERS,
     onSave: NOOP,

@@ -324,6 +324,7 @@ export function SetupDialog({
   locale,
   onAct,
   onCopyDetails,
+  onLocalAi,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -335,6 +336,7 @@ export function SetupDialog({
    * again. */
   onAct: (row: SetupRow) => void;
   onCopyDetails: (details: string) => void;
+  onLocalAi?: () => void;
 }) {
   const t = useStrings();
   const snapshot: SetupSnapshot | null = control.snapshot;
@@ -470,6 +472,13 @@ export function SetupDialog({
         )}
 
         <DialogFooter>
+          {onLocalAi &&
+            rows.some((row) => row.kind === "local_ai") &&
+            (stage === null || stage === "settled") && (
+              <Button variant="outline" size="sm" onClick={onLocalAi}>
+                {t("desktop.providers.local_models_title")}
+              </Button>
+            )}
           {snapshot?.details && (
             <Button
               variant="ghost"

@@ -21,6 +21,7 @@ export function SetupPrompt({
   takeFocus = true,
   onClose,
   onSetUp,
+  onLocalAi,
 }: {
   row: SetupRow | null;
   /** False leaves the keyboard where the person is typing: the prompt opens
@@ -28,6 +29,7 @@ export function SetupPrompt({
   takeFocus?: boolean;
   onClose: () => void;
   onSetUp: (row: SetupRow) => void;
+  onLocalAi?: () => void;
 }) {
   const t = useStrings();
   return (
@@ -44,6 +46,11 @@ export function SetupPrompt({
             <DialogDescription>{rowSentence(t, row)}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
+            {row.kind === "local_ai" && onLocalAi && (
+              <Button variant="outline" size="sm" onClick={onLocalAi}>
+                {t("desktop.providers.local_models_title")}
+              </Button>
+            )}
             {row.recovery === null ? (
               <Button size="sm" onClick={onClose}>
                 {t("desktop.setup.close")}

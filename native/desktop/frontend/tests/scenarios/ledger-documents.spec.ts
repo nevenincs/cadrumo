@@ -800,4 +800,9 @@ test("a reader with no model chosen is named in words, says so and leads to the 
     })
     .click();
   await expect(agentColumn(target)).toBeVisible();
+  await expect(
+    target.getByRole("dialog", {
+      name: label("desktop.agent.model_roles_title"),
+    }),
+  ).toBeVisible();
 });

@@ -43,7 +43,7 @@ import type {
 } from "./ipc/contract";
 import { PaneHeader, type PaneControl } from "./components/PaneHeader";
 import { Rail, type RailItem } from "./components/Rail";
-import { AgentColumn } from "./components/AgentColumn";
+import { AgentColumn, type AgentColumnControl } from "./components/AgentColumn";
 import { NavigationPrompt } from "./components/NavigationPrompt";
 import { AttendanceRequests } from "./components/AttendanceRequests";
 import { HostRecordList } from "./components/HostRecordList";
@@ -60,6 +60,7 @@ import { GoogleAccount } from "./components/GoogleAccount";
 import { SetupAdvisory } from "./components/setup/SetupAdvisory";
 import { SetupDialog } from "./components/setup/SetupDialog";
 import { SetupPrompt } from "./components/setup/SetupPrompt";
+import { SetupRowItem } from "./components/setup/SetupRowItem";
 import { canSignInGoogle, outcomeToast } from "./components/setup/setupWords";
 import { liveRun, needsSetup, setupTargetOf, useSetup } from "./shell/setup";
 import {
@@ -828,12 +829,9 @@ export function App({ host }: { host: Host }) {
   // Setup on the local AI's row, which a model chosen in the provider settings
   // is downloaded through.
   const setUpLocalAi = useCallback(() => {
-    const target = setupTargetOf(
-      "operator.provision.local_ai",
-      setupSnapshot?.rows ?? [],
-    );
-    openSetup(target && target !== "general" ? target.item : null);
-  }, [openSetup, setupSnapshot]);
+    openSetup("local_ai");
+    setup.start(["local_ai"]);
+  }, [openSetup, setup]);
   const setupShown = useRef(false);
   useEffect(() => {
     if (!setupIncomplete || setupShown.current) return;
@@ -1404,12 +1402,26 @@ export function App({ host }: { host: Host }) {
   // beside a role with none chosen leads to the agent column, where the host
   // lets the person read and change the choices.
   const agentSession = host.agentSession;
+  const agentControl = useRef<AgentColumnControl>(null);
+  const openLocalAi = useCallback(() => {
+    setSettingsOpen(false);
+    setSetupPrompt(null);
+    setSetupDialog((held) => ({ ...held, open: false }));
+    openView("agent");
+    agentControl.current?.openLocalAi();
+    if (setup.offered) setup.check("quick");
+  }, [openView, setup]);
   const modelChoice = useMemo<ModelChoice | null>(
     () =>
       agentSession?.modelRoles &&
       agentSession.setModelRole &&
       agentSession.clearModelRole
-        ? { open: () => openView("agent") }
+        ? {
+            open: () => {
+              openView("agent");
+              agentControl.current?.openModelRoles();
+            },
+          }
         : null,
     [agentSession, openView],
   );
@@ -3168,6 +3180,7 @@ export function App({ host }: { host: Host }) {
       {/* One bar: the conversation's own actions, then the column's maximize
           and close as every column has them. */}
       <AgentColumn
+        control={agentControl}
         agent={host.agent}
         session={host.agentSession}
         providerSettings={host.providerSettings}
@@ -3185,6 +3198,27 @@ export function App({ host }: { host: Host }) {
         onOpenLink={openLink}
         onSetUpLocalAi={setupOffered ? setUpLocalAi : undefined}
         onRemoveLocalModel={setupOffered ? setup.removeModel : undefined}
+        onOpenLocalAi={openLocalAi}
+        onShowLocalAiSetup={
+          setupOffered ? () => openSetup("local_ai") : undefined
+        }
+        localAiSetup={
+          setupSnapshot?.rows.some((row) => row.kind === "local_ai") ? (
+            <ul>
+              {setupSnapshot.rows
+                .filter((row) => row.kind === "local_ai")
+                .map((row) => (
+                  <SetupRowItem
+                    key={row.item}
+                    row={row}
+                    locale={locale}
+                    disabled={setup.pending}
+                    onAct={actOnSetupRow}
+                  />
+                ))}
+            </ul>
+          ) : undefined
+        }
         setupSettled={
           setupRun?.stage === "settled" ? setupRun.operation_id : null
         }
@@ -3597,6 +3631,14 @@ export function App({ host }: { host: Host }) {
                     />
                   ) : undefined
                 }
+                onLocalAi={
+                  setupOffered &&
+                  signedIn &&
+                  modelChoice &&
+                  host.providerSettings
+                    ? openLocalAi
+                    : undefined
+                }
               />
             )}
             <AboutDialog
@@ -3650,12 +3692,22 @@ export function App({ host }: { host: Host }) {
                   locale={locale}
                   onAct={actOnSetupRow}
                   onCopyDetails={copy}
+                  onLocalAi={
+                    modelChoice && host.providerSettings
+                      ? openLocalAi
+                      : undefined
+                  }
                 />
                 <SetupPrompt
                   row={setupPrompt}
                   takeFocus={setupPromptFocus}
                   onClose={() => setSetupPrompt(null)}
                   onSetUp={actOnSetupRow}
+                  onLocalAi={
+                    modelChoice && host.providerSettings
+                      ? openLocalAi
+                      : undefined
+                  }
                 />
               </>
             )}

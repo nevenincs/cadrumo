@@ -3,6 +3,7 @@ import { identity } from "virtual:desktop-content";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
+import { Icon } from "@/components/ui/icon";
 import { LanguageSelect, type LanguageControl } from "./LanguageSelect";
 import {
   Popover,
@@ -62,6 +63,7 @@ export function Settings({
   close,
   advisory,
   about,
+  onLocalAi,
 }: {
   prefs: Prefs;
   setPrefs: (prefs: Prefs) => void;
@@ -74,6 +76,8 @@ export function Settings({
   /** The installation's version row, which opens the About dialog; absent
    * where the host cannot say what is installed. */
   about?: { state: AboutState | null; onOpen: () => void };
+  /** Opens the existing provider settings for models on this computer. */
+  onLocalAi?: () => void;
 }) {
   const t = useStrings();
   const windowId = useId();
@@ -122,6 +126,16 @@ export function Settings({
       >
         <h2 className="font-serif text-lg">{t("desktop.settings.title")}</h2>
         {advisory}
+        {onLocalAi && (
+          <Button
+            variant="outline"
+            className="justify-start"
+            onClick={onLocalAi}
+          >
+            <Icon name="settings" />
+            {t("desktop.setup.item.local_ai")}
+          </Button>
+        )}
         <section className="grid gap-3" aria-labelledby={windowId}>
           <h3
             id={windowId}
