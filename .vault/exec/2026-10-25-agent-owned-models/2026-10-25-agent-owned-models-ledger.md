@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:008c6a21fb673422afbcc1fd31dc48beb1198ffb331b171077bd7c35a65aff22'
+body_hash: 'sha256:c79be06217dee8b527bc761914453be404d5b64c749869d551fbb17c0e8cff2d'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -721,6 +721,13 @@ related:
 - `S16` `M` `src/cadrumo/entrypoints/tests/test_workstation_check_operation_composition.py`
 - `S16` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tests -m "(unit or integration) and not perf"` -> `pass`
 - `S16` `by:` `standard-implementer`
+- `S14` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_ledger_review_native.py`
+- `S14` `M` `src/cadrumo_runtime/host/tests/native_commands/runtime_profile_cli_fixture.py`
+- `S14` `A` `src/cadrumo_runtime/host/tests/native_commands/admitted_model_run_service.py`
+- `S14` `verify:` `pytest -n0 -m 'windows_only and not os_keychain and not native_package' src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_ledger_review_native.py` -> `pass`
+- `S14` `verify:` `python -m dev.quality.types` -> `pass`
+- `S14` `verify:` `lint-imports --config .importlinter --no-cache` -> `pass`
+- `S14` `by:` `implementation-high`
 
 ## Notes
 

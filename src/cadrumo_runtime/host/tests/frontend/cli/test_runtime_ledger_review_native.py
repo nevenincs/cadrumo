@@ -1,10 +1,12 @@
-"""Real Windows worker reviews against a controlled loopback inference endpoint.
+"""Real Windows worker reviews whose model reads reach an admitted agent service.
 
-No inference or live provider runs. Only HTTP answers are authored: provider
-clients/parsers, immutable profile workers, encrypted review continuations and
-canonical ledger writes are real. The shared fixture explicitly enables the
-development session override and uses a synthetic native secret store; this is
-not desktop/custody acceptance.
+No inference or live provider runs. Only the agent-side answers are authored:
+the immutable profile workers, the runtime's model-run relay to the profile's
+admitted service, the installed-service client, Cadrumo's reading of the
+returned text, encrypted review continuations and canonical ledger writes are
+real. The shared fixture explicitly enables the development session override,
+uses a synthetic native secret store and controls installed-service image
+verification; this is not desktop/custody acceptance.
 """
 
 from __future__ import annotations
@@ -16,11 +18,8 @@ from collections import Counter
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 from decimal import Decimal
-from http import HTTPStatus
 from pathlib import Path
 from queue import Queue
-from typing import override
-from uuid import UUID
 
 import pytest
 from click.testing import Result
@@ -29,23 +28,26 @@ from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepos
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
-from cadrumo.core.config import override_settings, reset_settings_cache
+from cadrumo.core.model_roles import ModelRole
 from cadrumo.domain.buckets.event import BucketEvent, BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionLifecycleState
 from cadrumo.domain.transactions.models import TransactionCatalogue
 from cadrumo.tests.cli_envelope import unwrap_cli_result
 from cadrumo.tests.llm_vision_evidence_support import json_array, json_object, png_image
-from cadrumo.tests.loopback_llm import (
-    SilentLoopbackHandler,
-    ollama_chat_reply,
-    read_json_body,
-    serving_loopback,
-    write_json_response,
-)
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
+from cadrumo_client.contracts.model_runs import (
+    ModelRunBody,
+    ModelRunHeader,
+    ModelRunLane,
+    ModelRunMediaKind,
+    ModelRunOutput,
+    ModelRunRefusal,
+    ModelRunRefusalCode,
+    ModelRunRoleSelection,
+    ModelRunSelectedModel,
+)
 
-from .....adapters import profile_worker
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from ._ledger_llm_support import _PROFILE_FACTS
 from .cli_runner import invoke_cached_cli
@@ -57,8 +59,33 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers"),
 ]
 
-#: Synthetic models the reading endpoint answers as.
-_READING_MODELS = ("cadrumo-test-text-reader:1b", "cadrumo-test-vision-reader:1b")
+#: The on-host lanes the stand-in agent resolves: the text roles read no image, vision reads one.
+_TEXT_LANE = ModelRunLane(
+    provider_id="nearby",
+    transport="api",
+    model="synthetic-text-reader-1",
+    reads_off_host=False,
+    accepted_media=(),
+    licence=None,
+    size_bytes=None,
+    vision=False,
+    context_length=None,
+)
+_VISION_LANE = ModelRunLane(
+    provider_id="nearby",
+    transport="api",
+    model="synthetic-vision-reader-1",
+    reads_off_host=False,
+    accepted_media=(ModelRunMediaKind.IMAGE,),
+    licence=None,
+    size_bytes=None,
+    vision=True,
+    context_length=None,
+)
+
+
+def _lane(role: ModelRole) -> ModelRunLane:
+    return _VISION_LANE if role is ModelRole.VISION_TRANSCRIPTION else _TEXT_LANE
 
 
 @dataclass(frozen=True)
@@ -67,18 +94,58 @@ class _Answer:
     images: bool = False
 
 
+@dataclass(frozen=True)
+class _Run:
+    header: ModelRunHeader
+    body: ModelRunBody
+
+
 @dataclass
-class _EndpointState:
+class _Agent:
+    """The agent side of the admitted service: one on-host lane per role, runs answered by marker."""
+
     answers: dict[str, _Answer] = field(default_factory=dict)
-    arriving: Queue[dict[str, object]] = field(default_factory=Queue)
-    observed: list[dict[str, object]] = field(default_factory=list)
+    arriving: Queue[_Run] = field(default_factory=Queue)
+    observed: list[_Run] = field(default_factory=list)
     unexpected: Queue[str] = field(default_factory=Queue)
 
-    def posts(self) -> list[dict[str, object]]:
-        """Collect completed real HTTP requests without discarding earlier evidence."""
+    def lookup(self, role: str) -> ModelRunLane | ModelRunRefusal:
+        try:
+            return _lane(ModelRole(role))
+        except ValueError:
+            self.unexpected.put("lookup for an unknown role")
+            return ModelRunRefusal(code=ModelRunRefusalCode.UNKNOWN_ROLE)
+
+    def selections(self) -> tuple[ModelRunRoleSelection, ...] | ModelRunRefusal:
+        return tuple(
+            ModelRunRoleSelection(
+                role=role.value,
+                selected=ModelRunSelectedModel(lane_id="nearby_api", model=_lane(role).model),
+                lane=_lane(role),
+            )
+            for role in ModelRole
+        )
+
+    def run(self, header: ModelRunHeader, body: ModelRunBody) -> ModelRunOutput | ModelRunRefusal:
+        self.arriving.put(_Run(header, body))
+        matches = [answer for marker, answer in self.answers.items() if marker in body.model_dump_json()]
+        if len(matches) != 1:
+            self.unexpected.put("unmatched model run")
+            return ModelRunRefusal(code=ModelRunRefusalCode.RUN_FAILED)
+        lane = _lane(ModelRole(header.role))
+        return ModelRunOutput(
+            text=matches[0].content,
+            provider_id=lane.provider_id,
+            transport=lane.transport,
+            model=lane.model,
+            agent_version="0.0.0-test",
+        )
+
+    def runs(self) -> list[_Run]:
+        """Collect the runs the service answered without discarding earlier evidence."""
         while not self.arriving.empty():
             self.observed.append(self.arriving.get_nowait())
-        assert self.unexpected.empty(), "unexpected loopback provider request"
+        assert self.unexpected.empty(), "unexpected model-run request"
         return list(self.observed)
 
 
@@ -92,7 +159,7 @@ class _Snapshot:
 class _NativeReview:
     profile: NativeCliProfileFixture
     operation: PinnedAuthorityOperation
-    endpoint: _EndpointState
+    agent: _Agent
 
     def invoke(self, *command: str) -> Result:
         """Admit the exact registered profile using the canonical protected stdin."""
@@ -144,81 +211,12 @@ class _NativeReview:
 
 
 @pytest.fixture
-def native_review(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-    authority_operation: PinnedAuthorityOperation,
-) -> Iterator[_NativeReview]:
-    """Configure a real socket before the isolated native worker is created."""
-    state = _EndpointState()
-    models = _READING_MODELS
-
-    class _Endpoint(SilentLoopbackHandler):
-        @override
-        def do_GET(self) -> None:
-            if self.path == "/api/ps":
-                # This endpoint loads no weights and has no resident models.
-                payload: dict[str, object] = {"models": []}
-            elif self.path == "/api/tags":
-                payload = {"models": [{"name": model, "model": model, "size": 0} for model in models]}
-            else:
-                state.unexpected.put(self.path)
-                self.send_error(HTTPStatus.NOT_FOUND)
-                return
-            write_json_response(self, payload, status=HTTPStatus.OK)
-
-        @override
-        def do_POST(self) -> None:
-            body = dict(read_json_body(self))
-            state.arriving.put(body)
-            matches = [answer for marker, answer in state.answers.items() if marker in json.dumps(body)]
-            if self.path != "/api/chat" or len(matches) != 1:
-                state.unexpected.put("unmatched chat request")
-                self.send_error(HTTPStatus.BAD_REQUEST)
-                return
-            answer = matches[0]
-            write_json_response(
-                self,
-                ollama_chat_reply(answer.content, model=str(body["model"]), prompt_eval_count=12, eval_count=4),
-                status=HTTPStatus.OK,
-            )
-
-    try:
-        with serving_loopback(_Endpoint, path="/api/chat") as endpoint, monkeypatch.context() as environment:
-            environment.setenv("CADRUMO_LLM_OLLAMA_CHAT_URL", endpoint)
-            # Documented operator override admits an unmeasurable accelerator;
-            # it still refuses measured shortfalls. This server loads no model.
-            environment.setenv("CADRUMO_LLM_CONTENTION_CHECK_OVERRIDE", "true")
-            environment.setenv("CADRUMO_LLM_CONTENTION_SAFETY_MARGIN_BYTES", "0")
-            launch_environment = profile_worker._worker_launch_environment
-
-            def review_worker_environment(*, storage_root: Path, profile_id: UUID) -> dict[str, str]:
-                # Production clears ambient integration settings. This owned
-                # process fixture explicitly connects its real HTTP provider;
-                # it does not widen the installed launch environment contract.
-                return {
-                    **launch_environment(storage_root=storage_root, profile_id=profile_id),
-                    "CADRUMO_LLM_OLLAMA_CHAT_URL": endpoint,
-                    "CADRUMO_LLM_CONTENTION_CHECK_OVERRIDE": "true",
-                    "CADRUMO_LLM_CONTENTION_SAFETY_MARGIN_BYTES": "0",
-                    "CADRUMO_LLM_OLLAMA_TEXT_MODEL": models[0],
-                    "CADRUMO_LLM_OLLAMA_VISION_MODEL": models[1],
-                }
-
-            environment.setattr(profile_worker, "_worker_launch_environment", review_worker_environment)
-            reset_settings_cache()
-            with (
-                override_settings(
-                    cadrumo_llm_ollama_chat_url=endpoint,
-                    cadrumo_llm_contention_check_override=True,
-                    cadrumo_llm_contention_safety_margin_bytes=0,
-                ),
-                native_cli_profile_scope(tmp_path) as profile,
-            ):
-                profile.register(label="native-ledger-reviewed-provider", facts=_PROFILE_FACTS)
-                yield _NativeReview(profile, authority_operation, state)
-    finally:
-        reset_settings_cache()
+def native_review(tmp_path: Path, authority_operation: PinnedAuthorityOperation) -> Iterator[_NativeReview]:
+    """Serve a registered profile whose worker reads through an admitted agent service."""
+    agent = _Agent()
+    with native_cli_profile_scope(tmp_path) as profile:
+        profile.register(label="native-ledger-reviewed-provider", facts=_PROFILE_FACTS, model_runs=agent)
+        yield _NativeReview(profile, authority_operation, agent)
 
 
 def _classification_answer(*, saturated: bool = False) -> _Answer:
@@ -300,19 +298,17 @@ def _provider_once(
     *command: str,
     expected_posts: int = 1,
 ) -> dict[str, object]:
-    before = len(review.endpoint.posts())
+    before = len(review.agent.runs())
     result = _success(review.invoke(*command))
-    posts = review.endpoint.posts()
+    runs = review.agent.runs()
     # Identical preview/apply acquisition uses the canonical encrypted cache.
-    # Fresh requests reach HTTP once; a resumed decision never adds another POST.
-    assert len(posts) == before + expected_posts
-    request = posts[-1]
-    assert marker in json.dumps(request)
-    assert request["stream"] is False
-    messages = [json_object(message) for message in json_array(request["messages"])]
-    has_images = any(bool(message.get("images")) for message in messages)
-    assert has_images is review.endpoint.answers[marker].images
-    assert request["model"] in set(_READING_MODELS)
+    # Fresh requests reach the service once; a resumed decision never adds another run.
+    assert len(runs) == before + expected_posts
+    run = runs[-1]
+    assert marker in run.body.model_dump_json()
+    images = review.agent.answers[marker].images
+    assert bool(run.body.attachments) is images
+    assert run.header.role == (ModelRole.VISION_TRANSCRIPTION if images else ModelRole.TEXT_EXTRACTION).value
     return result
 
 
@@ -328,12 +324,12 @@ def test_native_classification_review_evidence_rejection_and_saturation(
     """Real registered reviews preserve no-write previews and canonical durable outcomes."""
     review = native_review
     marker = "native-basic-classification"
-    review.endpoint.answers[marker] = _classification_answer()
+    review.agent.answers[marker] = _classification_answer()
     transaction_id = _add(review, marker)
     before = review.snapshot()
     incompatible = review.invoke("app", "ledger", "classify", transaction_id, "--llm", "--classification", "BUSINESS")
     assert incompatible.exit_code != 0
-    assert review.endpoint.posts() == []
+    assert review.agent.runs() == []
     assert review.snapshot() == before
 
     preview = _provider_once(review, marker, "app", "ledger", "classify", transaction_id, "--llm")
@@ -352,7 +348,7 @@ def test_native_classification_review_evidence_rejection_and_saturation(
     ]
 
     rejected_marker = "native-rejected-classification"
-    review.endpoint.answers[rejected_marker] = _classification_answer()
+    review.agent.answers[rejected_marker] = _classification_answer()
     rejected_id = _add(review, rejected_marker)
     before_reject = review.snapshot()
     rejection = _provider_once(review, rejected_marker, "app", "ledger", "classify", rejected_id, "--llm", "--reject")
@@ -366,7 +362,7 @@ def test_native_classification_review_evidence_rejection_and_saturation(
     assert events[0].object_id == rejected_id
 
     evidence_marker = "native-text-evidence-classification"
-    review.endpoint.answers[evidence_marker] = _classification_answer()
+    review.agent.answers[evidence_marker] = _classification_answer()
     evidence_id = _add(review, evidence_marker)
     pdf = tmp_path / "synthetic-review.pdf"
     printed_marker = "UNIQUE PRINTED SYNTHETIC INVOICE LINE"
@@ -374,9 +370,9 @@ def test_native_classification_review_evidence_rejection_and_saturation(
     linked = _attach(review, evidence_id, pdf)
     before_saturate = review.snapshot()
     _provider_once(review, evidence_marker, "app", "ledger", "classify", evidence_id, "--llm", "--read-evidence")
-    assert printed_marker in json.dumps(review.endpoint.posts()[-1])
+    assert printed_marker in review.agent.runs()[-1].body.prompt
     assert review.snapshot() == before_saturate
-    review.endpoint.answers[evidence_marker] = _classification_answer(saturated=True)
+    review.agent.answers[evidence_marker] = _classification_answer(saturated=True)
     saturated = _provider_once(
         review,
         evidence_marker,
@@ -438,7 +434,7 @@ def test_native_classification_review_evidence_rejection_and_saturation(
 
     invalid_marker = "native-invalid-provider-selection"
     invalid_id = _add(review, invalid_marker)
-    review.endpoint.answers[invalid_marker] = _Answer(
+    review.agent.answers[invalid_marker] = _Answer(
         json.dumps(
             {
                 "classification": "BUSINESS",
@@ -449,10 +445,10 @@ def test_native_classification_review_evidence_rejection_and_saturation(
         )
     )
     before_invalid = review.snapshot()
-    calls = len(review.endpoint.posts())
+    calls = len(review.agent.runs())
     invalid = review.invoke("app", "ledger", "classify", invalid_id, "--llm", "--apply")
     assert invalid.exit_code != 0, invalid.output
-    assert len(review.endpoint.posts()) == calls + 1
+    assert len(review.agent.runs()) == calls + 1
     assert review.snapshot() == before_invalid
 
 
@@ -465,7 +461,7 @@ def test_native_image_split_review_and_atomic_children(
     """Both real review definitions persist one coherent evidence-linked child cohort."""
     review = native_review
     marker = f"native-image-{route}-parent"
-    review.endpoint.answers[marker] = _split_answer()
+    review.agent.answers[marker] = _split_answer()
     parent_id = _add(review, marker)
     image = tmp_path / "synthetic-review.png"
     image.write_bytes(png_image())
@@ -479,7 +475,7 @@ def test_native_image_split_review_and_atomic_children(
     if route == "split":
         refused = review.invoke(*command, "--apply")
         assert refused.exit_code != 0
-        assert review.endpoint.posts() == []
+        assert review.agent.runs() == []
         assert review.snapshot() == before
     preview = _provider_once(review, marker, *command)
     assert preview["persisted"] is False
@@ -488,9 +484,9 @@ def test_native_image_split_review_and_atomic_children(
     proposed = [json_object(item) for item in json_array(preview["proposed_children"])]
     assert len(proposed) == 2
     assert [Decimal(_text(item["amount"])) for item in proposed] == [Decimal("72.60"), Decimal("48.40")]
-    messages = [json_object(message) for message in json_array(review.endpoint.posts()[-1]["messages"])]
-    images = [_text(encoded) for message in messages for encoded in json_array(message.get("images", []))]
-    assert len(images) == 1 and base64.b64decode(images[0], validate=True) == image.read_bytes()
+    attachments = review.agent.runs()[-1].body.attachments
+    assert len(attachments) == 1 and attachments[0].media_type == "image/png"
+    assert base64.b64decode(attachments[0].base64_data, validate=True) == image.read_bytes()
     applied = _provider_once(
         review,
         marker,
@@ -529,7 +525,7 @@ def test_native_image_split_review_and_atomic_children(
 
     if route == "auto_split":
         single_marker = "native-image-single-line-parent"
-        review.endpoint.answers[single_marker] = _split_answer(single=True)
+        review.agent.answers[single_marker] = _split_answer(single=True)
         single_id = _add(review, single_marker)
         _attach(review, single_id, image)
         before_single = review.snapshot()
