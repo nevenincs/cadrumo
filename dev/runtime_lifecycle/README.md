@@ -150,7 +150,7 @@ runtime loss and holder EOF retire access. The helper owns bounded process
 cleanup and never touches the installed default root. It replaces the retired
 AEAT held-session command; no replacement AEAT attendance verb exists.
 
-The reviewed-operation driver below separately owns the local-model run,
+The reviewed-operation driver below separately owns the review's run,
 operation decision and independent result reads. A missing capability or a step
 the driver cannot prove is incomplete, never passed.
 
@@ -162,11 +162,15 @@ just verify-reviewed-operation build/windows-x64/stage/Release/app
 
 Prerequisites: the package's own `bin/aeat`, `bin/cadrumo-runtime` and
 `bin/cadrumo-mcp`, built with the optional `llm` extra (a core-only package
-refuses local-model work with `ERROR_OPTIONAL_EXTRA_MISSING`); an installed
-Ollama and an existing model store holding a model the operator set up (`--ollama-models`,
-default `~/.ollama/models`); and a free loopback port 11434. No remote service is used and nothing is downloaded. The
-attendance approval only admits the MCP connection; the review is answered on
-its own interaction.
+refuses model work with `ERROR_OPTIONAL_EXTRA_MISSING`). No remote service is
+used and nothing is downloaded. The attendance approval only admits the MCP
+connection; the review is answered on its own interaction.
+
+The review reads through an agent run on the person's text-extraction
+selection, so it needs an admitted agent service and a stored selection. The
+driver arranges neither yet. A review refused with `service_unavailable` or
+`no_selection` is therefore reported unproven, not contradicted; any other
+refusal fails the run.
 
 The driver runs each step as a real process on a fresh temporary root
 `reviewed-operation-*`, with the password only on a command's
@@ -179,33 +183,33 @@ standard input:
    --profile-id UUID --password-stdin` on the runtime-owned marked disposable
    root. Its bounded u32BE-length password frame creates non-persisted held
    authority; `session_held` names the exact profile/session/connection/boot.
-3. `ollama serve` with `OLLAMA_MODELS` set to the store and pruning off.
-4. `cadrumo-mcp` over stdio. Its first profile call raises an
+3. `cadrumo-mcp` over stdio. Its first profile call raises an
    `attendance_request` on the holder, which approves that exact ask after
    checking that the asking process descends from the driver.
-5. MCP `execute ledger.add` adds a synthetic row. The command line
+4. MCP `execute ledger.add` adds a synthetic row. The command line
    (`aeat app ledger list`, `aeat app ledger history ID`) records the row and
    its history.
-6. MCP `execute ledger.classify.review`, then `observe` until the pending
+5. MCP `execute ledger.classify.review`, then `observe` until the pending
    interaction is `review_available` with effect `none`, then `review` to read
-   the proposal.
-7. MCP `respond` with `reject` and the review's operation, interaction and
+   the proposal. A review that stops first is read with `result`; a model-run
+   refusal for an absent agent service or selection ends the proof as
+   unproven, with nothing written.
+6. MCP `respond` with `reject` and the review's operation, interaction and
    revision. A rejection is a recorded decision: the command line lists the row
    exactly as before, and its history gains exactly one
    `ledger.transaction.llm_suggestion.rejected` audit event.
-8. Steps 6 and 7 again with `apply`. The row is classified and reviewed by
-   `llm:local-text:*`, the command line reads that classification, and the
+7. Steps 5 and 6 again with `apply`. The row is classified and reviewed by
+   `llm:agent-text:*`, the command line reads that classification, and the
    history gains exactly one `ledger.transaction.classified` event.
-9. A second `apply` to the same interaction is refused, and the row and its
+8. A second `apply` to the same interaction is refused, and the row and its
    history are unchanged.
-10. Close the holder's input and settle its exact process, stop the model server
-    with its runners, and stop the runtime (exit 64). No started process may
-    survive.
+9. Close the holder's input and settle its exact process, and stop the runtime
+   (exit 64). No started process may survive.
 
 The root is removed afterwards; `--keep` keeps it, and a failed run keeps it and
 prints its path. The driver exits 0 when every step held, 1 when one was
-contradicted, and 3 when the model was unavailable or the package lacks the
-`llm` extra.
+contradicted, and 3 when the review had no agent service or selection to run
+on or the package lacks the `llm` extra.
 
 ## Inspect timing evidence
 
@@ -251,9 +255,10 @@ The runtime-owned development-root marker binds the temporary root before that
 password admission.
 
 `proof_support.py` owns profile setup and package/process observations.
-`mcp_proof_support.py` owns the MCP client, attendance decision
-flow and local-model lifetime. The reviewed-operation driver reports a missing
-local model or optional inference capability as an incomplete proof. These
+`mcp_proof_support.py` owns the MCP client and attendance decision
+flow. The reviewed-operation driver reports a review with no agent service or
+selection to run on, or a missing optional inference capability, as an
+incomplete proof. These
 drivers consume the built package's images and published authority.
 
 ## Integration ownership
