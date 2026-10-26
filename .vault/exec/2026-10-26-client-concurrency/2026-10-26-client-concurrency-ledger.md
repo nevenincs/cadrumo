@@ -5,7 +5,7 @@ tags:
 date: '2026-10-26'
 modified: '2026-10-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:11b0efa941bbc46885fa109d02032d625d0f64b72eaa7ab0931440c29634e941'
+body_hash: 'sha256:339538a2e9f576b0d07726f4e29c89fe95a58e895d6111b67a8d70bb9a26c3d2'
 related:
   - "[[2026-10-26-client-concurrency-plan]]"
 ---
@@ -72,6 +72,28 @@ related:
 - `S04` `M` `src/cadrumo_client/transport/windows_process.py`
 - `S04` `M` `src/cadrumo_client/transport/tests/test_windows_process.py`
 - `S04` `verify:` `native Windows process containment tests: 11 passed` -> `pass`
+- `S04` `verify:` `full client transport and runtime wait cleanup selection: 313 passed` -> `pass`
+- `S04` `verify:` `final opener metadata/ownership selection: 18 passed` -> `pass`
+- `S04` `verify:` `whole-project ty after related type fixes` -> `pass`
+- `S04` `verify:` `live real-runtime password rotation and native sign-in/logout suite: 3 passed` -> `pass`
+- `S04` `verify:` `native_client_live through CMake toolchain environment: 1 passed, 0 ignored` -> `pass`
+- `S04` `M` `dev/runtime_lifecycle/tests/test_clients.py`
+- `S04` `M` `dev/runtime_lifecycle/README.md`
+- `S04` `verify:` `packaged rotation regression Ruff and ty` -> `pass`
+- `S04` `verify:` `packaged rotation regression Ruff and ty` -> `pass`
+- `S04` `verify:` `current debug lifecycle driver build and check` -> `pass`
+- `S03` `verify:` `313 transport and runtime wait cleanup tests` -> `pass`
+- `S03` `verify:` `three source real-runtime authentication tests` -> `pass`
+- `S03` `verify:` `Rust live client with native credential store` -> `pass`
+- `S03` `verify:` `just check-code ten gates` -> `pass`
+- `S04` `M` `.vault/audit/2026-10-26-client-concurrency-audit.md`
+- `S04` `verify:` `packaged rotation real native receipt` -> `pass`
+- `S04` `verify:` `packaged CLI TUI MCP scope` -> `pass`
+- `S04` `verify:` `packaged login logout stale receipt` -> `pass`
+- `S04` `verify:` `Release bundle including installer bootstrap` -> `pass`
+- `S04` `verify:` `canonical packaged CTest four of four` -> `pass`
+- `S04` `verify:` `lifecycle JUnit ten tests zero skips failures errors` -> `pass`
+- `S04` `verify:` `Rust Release live-package acceptance` -> `pass`
 
 ## Notes
 
@@ -83,3 +105,11 @@ related:
 - `S04` Quick status no longer launches hardware queries; full checks/setup retain measurement. First live auth run had one rotation deadline failure; unchanged instrumented rerun passed in29s; canonical rerun and packaged matrix pending.
 - `S04` Moved immutable installation/authority metadata reads off the event loop and into the same opening deadline before acquiring native endpoints.
 - `S04` py-spy native stack proved CreateProcessW was blocked in an invalid-image modal dialog. Apply thread-local `SEM_FAILCRITICALERRORS` during creation and restore prior mode; stopped only the identified hung test process and reran native tests.
+- `S04` First package build refused concurrently changing documentation inputs; rerun started. Full client native hang was diagnosed by a captured native stack and fixed, not skipped.
+- `S04` Canonical uninstrumented rerun passed all three live authentication tests (rotation73.52s, refusal10.27s, sign-in/logout46.94s). Earlier timing failure is retained in live-auth.log; successful final run is live-auth-final.log.
+- `S04` Live Rust client: connect1ms, password sign-in526ms, stored receipt resume136ms; registered reads, streamed submissions and sign-out passed. Caller-owned runtime exited64 on stdin close as designed; cargo0.
+- `S04` Added sixth packaged lifecycle case for actual CLI password rotation, one generation advance, retained DEK epoch, revoked old authority/proof, and fresh native-store receipt resume; live run pending package assembly.
+- `S04` Added sixth packaged acceptance case: password generation advances once, DEK epoch remains, old session and old password refuse, fresh native receipt resumes and signs out. Full canonical CTest matrix is running. Aggregate check-code passed ten gates; remaining failures are unused core APIs unrelated to client changes.
+- `S03` Independent Luna read-only review completed. Aggregate quality has three unrelated core reachability/symbol/export findings; preserved public API intent and recorded them in audit. Python consumer and integrated client verification complete; full packaged lifecycle remains S04.
+- `S04` Committed test dcd447413a; README matrix count is ten including concurrent agent-service checks. A49.06s lease-wait sample measured test/client CPU0.046875s with6 threads stable; two runtime processes CPU2.203125s combined. Includes two-second test admission probes, not pure idle. Evidence .tmp/client-concurrency/live-lease-cpu-result.json. Full matrix remains running through canonical lease expiry.
+- `S04` Full live verification completed. Crash recovery preserved operation history and exactly one execution phase after the unchanged ten-minute lease. Median authenticated request 5.470ms; crash detection35.850/35.111ms; verified reconnect2.563/2.590s. Packaged password rotation16.064s. Existing unrelated core API quality findings remain documented. No client blocker remains; evidence and limitations are in the audit.

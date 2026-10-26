@@ -9,7 +9,7 @@ related:
   - '[[2026-10-17-idle-churn-operation-observation-adr]]'
 modified: '2026-10-26'
 body_schema: body-v2
-body_hash: 'sha256:f3a6406d1882df158b42bfe6667eacffd6654b4d7ba7120715d1b8841a950b78'
+body_hash: 'sha256:b47da74740c0dc8bfb404fed1d1a8690e9b21faa9d321f4dd8a2391585a7a235'
 ---
 
 # `client-concurrency` plan
@@ -22,8 +22,8 @@ Approved 2026-10-26. The user requested benchmarking, review and fixes of cadrum
 
 - [x] `S01` - Repair Python disconnect delivery and async cue scheduling with native regressions and before/after benchmarks; `src/cadrumo_client/transport`.
 - [x] `S02` - Enforce Rust exchange deadlines and race-free subscriptions and verify native consumers; `native/application/src/runtime_client.rs`.
-- [ ] `S03` - Repair Python consumer wait misuse and review retry paths, then run integrated verification; `src/cadrumo_client and Python consumers`.
-- [ ] `S04` - Build current package, run full native runtime lifecycle and Rust package verification, and fix related verification failures; `native client/package lifecycle, Python live consumers, and related quality gates`.
+- [x] `S03` - Repair Python consumer wait misuse and review retry paths, then run integrated verification; `src/cadrumo_client and Python consumers`.
+- [x] `S04` - Build current package, run full native runtime lifecycle and Rust package verification, and fix related verification failures; `native client/package lifecycle, Python live consumers, and related quality gates`.
 
 ## Parallelization
 

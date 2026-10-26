@@ -6,7 +6,7 @@ tags:
 date: '2026-10-26'
 modified: '2026-10-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:80d14097c70ba27fe98046ae1bdaaed5152c8d677ef599373b1b6fdedd98b0b2'
+body_hash: 'sha256:1f1eeffd04894ca267903562f7b028da743a3d6d578ba4d5b43b659b2d871e95'
 related:
   - '[[2026-10-26-client-concurrency-audit]]'
   - '[[2026-10-26-client-concurrency-ledger]]'
@@ -21,7 +21,7 @@ Auto-generated index of all documents tagged with `#client-concurrency`.
 
 ### audit
 
-- `2026-10-26-client-concurrency-audit` - `client-concurrency` audit: `Client concurrency benchmark and integrated review`
+- `2026-10-26-client-concurrency-audit` - `client-concurrency` audit: lifecycle, deadlines and scheduling
 
 ### exec
 
