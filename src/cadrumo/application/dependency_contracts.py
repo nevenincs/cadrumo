@@ -126,7 +126,6 @@ class DependencyStaleReason(StrEnum):
 class DependencyNote(StrEnum):
     """Secondary fact a ready item can carry without changing its state."""
 
-    DOWNLOADED_NOT_LOADED = "downloaded_not_loaded"
     OWN_NETWORK_SETTINGS = "own_network_settings"
 
 

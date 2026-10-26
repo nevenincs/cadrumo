@@ -53,7 +53,6 @@ pub enum StaleReason {
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Note {
-    DownloadedNotLoaded,
     OwnNetworkSettings,
 }
 
@@ -440,7 +439,7 @@ mod tests {
     fn an_interruption_offers_resume_whatever_else_the_check_observed() {
         let differs = Observation::Differs {
             stale: StaleReason::OlderRevision,
-            note: Some(Note::DownloadedNotLoaded),
+            note: Some(Note::OwnNetworkSettings),
         };
         for observation in [
             Observation::Absent,
@@ -560,7 +559,7 @@ mod tests {
         let mut stale = row(
             Observation::Differs {
                 stale: StaleReason::OlderRevision,
-                note: Some(Note::DownloadedNotLoaded),
+                note: Some(Note::OwnNetworkSettings),
             },
             Activity::Idle,
             None,
@@ -573,7 +572,7 @@ mod tests {
                 "mode": "quick",
                 "state": "stale",
                 "stale_reason": "older_revision",
-                "note": "downloaded_not_loaded",
+                "note": "own_network_settings",
                 "version": "0.40.10",
                 "recovery": "update",
                 "recovery_action_id": "operator.provision.browser",
@@ -670,7 +669,7 @@ mod tests {
             CheckMode::Full,
             &part(Observation::Absent),
             &[part(Observation::Present {
-                note: Some(Note::DownloadedNotLoaded),
+                note: Some(Note::OwnNetworkSettings),
             })],
         );
         assert_eq!(missing_program.observation, Observation::Absent);
@@ -678,13 +677,13 @@ mod tests {
             CheckMode::Full,
             &program,
             &[part(Observation::Present {
-                note: Some(Note::DownloadedNotLoaded),
+                note: Some(Note::OwnNetworkSettings),
             })],
         );
         assert_eq!(
             noted.observation,
             Observation::Present {
-                note: Some(Note::DownloadedNotLoaded)
+                note: Some(Note::OwnNetworkSettings)
             }
         );
     }

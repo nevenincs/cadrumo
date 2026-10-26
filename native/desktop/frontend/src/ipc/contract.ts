@@ -853,7 +853,7 @@ export type SetupStep =
   "plan" | "preflight" | "download" | "install" | "verify" | "cleanup";
 
 /** A secondary fact a usable item carries without changing its state. */
-export type SetupNote = "downloaded_not_loaded" | "own_network_settings";
+export type SetupNote = "own_network_settings";
 
 /** One item's derived state, with exactly the reason it needs. */
 export type SetupRow = {

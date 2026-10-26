@@ -1082,7 +1082,6 @@ fn blocked(reason: BlockedReason) -> wire::BlockedReason {
 
 fn note(note: Note) -> wire::Note {
     match note {
-        Note::DownloadedNotLoaded => wire::Note::DownloadedNotLoaded,
         Note::OwnNetworkSettings => wire::Note::OwnNetworkSettings,
     }
 }

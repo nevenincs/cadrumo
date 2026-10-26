@@ -40,7 +40,7 @@ export function rowSentence(t: Translate, row: SetupRow): string {
   return t(`desktop.setup.state.${row.state}`);
 }
 
-/** A usable item's secondary fact, such as "Downloaded, not loaded yet." */
+/** A usable item's secondary fact, such as "Uses its own network settings." */
 export function noteWords(t: Translate, note: SetupNote): string {
   return t(`desktop.setup.note.${note}`);
 }

@@ -137,7 +137,7 @@ function readied(held: SetupRow): SetupRow {
     recovery: null,
     recovery_action_id: null,
     version: "1.0",
-    note: held.kind === "local_ai" ? "downloaded_not_loaded" : null,
+    note: held.kind === "local_ai" ? "own_network_settings" : null,
   };
 }
 

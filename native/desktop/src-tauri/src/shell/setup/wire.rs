@@ -118,7 +118,6 @@ pub enum StaleReason {
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Note {
-    DownloadedNotLoaded,
     OwnNetworkSettings,
 }
 
@@ -768,7 +767,7 @@ mod tests {
                 s["rows"][0]["failure"] = json!("offline")
             }),
             ("note on an absent item", |s| {
-                s["rows"][0]["note"] = json!("downloaded_not_loaded")
+                s["rows"][0]["note"] = json!("own_network_settings")
             }),
             ("unknown note", |s| {
                 s["rows"][0]["state"] = json!("ready");

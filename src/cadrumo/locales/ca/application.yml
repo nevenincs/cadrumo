@@ -1974,7 +1974,6 @@ application:
       unexpected: Alguna cosa ha anat malament.
     in_desktop: Configura-la a l'aplicació d'escriptori de Cadrumo.
     note:
-      downloaded_not_loaded: Baixat, encara sense carregar.
       own_network_settings: Fa servir la seva pròpia configuració de xarxa.
     refusal:
       column_names_local_ai_not_ready: la IA local, que llegeix els noms de les columnes

@@ -46,7 +46,7 @@ def test_status_rows_carry_exactly_the_reason_their_state_needs() -> None:
         {"state": DependencyState.FAILED},
         {"state": DependencyState.READY, "failure_category": DependencyFailureCategory.UNEXPECTED},
         {"state": DependencyState.ABSENT, "blocked_reason": DependencyBlockedReason.OFFLINE},
-        {"state": DependencyState.ABSENT, "note": DependencyNote.DOWNLOADED_NOT_LOADED},
+        {"state": DependencyState.ABSENT, "note": DependencyNote.OWN_NETWORK_SETTINGS},
     )
     for fields in refused:
         with pytest.raises(ValidationError):

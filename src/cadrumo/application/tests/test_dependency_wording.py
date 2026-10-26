@@ -98,14 +98,14 @@ def test_a_row_renders_its_name_reason_and_one_button() -> None:
         kind=DependencyItemKind.LOCAL_AI,
         mode=DependencyCheckMode.FULL,
         state=DependencyState.READY,
-        note=DependencyNote.DOWNLOADED_NOT_LOADED,
+        note=DependencyNote.OWN_NETWORK_SETTINGS,
     )
     declaration = next(d for d in dependency_item_declarations() if d.item_id == ready.item_id)
     rendered = dependency_row_wording(ready, declaration, locale="en")
     assert (rendered.name, rendered.sentence, rendered.note, rendered.action) == (
         "Local AI",
         "Ready.",
-        "Downloaded, not loaded yet.",
+        "Uses its own network settings.",
         None,
     )
 

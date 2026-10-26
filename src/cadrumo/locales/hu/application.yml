@@ -1940,7 +1940,6 @@ application:
       unexpected: Valami hiba történt.
     in_desktop: Állítsd be a Cadrumo asztali alkalmazásában.
     note:
-      downloaded_not_loaded: Letöltve, még nincs betöltve.
       own_network_settings: A saját hálózati beállításait használja.
     refusal:
       column_names_local_ai_not_ready: a helyi MI, amely a fájl oszlopneveit olvassa,

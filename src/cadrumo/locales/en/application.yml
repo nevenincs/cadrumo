@@ -1857,7 +1857,6 @@ application:
       unexpected: Something went wrong.
     in_desktop: Set it up in the Cadrumo desktop app.
     note:
-      downloaded_not_loaded: Downloaded, not loaded yet.
       own_network_settings: Uses its own network settings.
     refusal:
       column_names_local_ai_not_ready: Local AI, which reads this file's column names,
