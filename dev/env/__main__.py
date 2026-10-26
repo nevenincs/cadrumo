@@ -10,7 +10,9 @@ Usage::
 Provisioning actions mutate only the checkout's managed environment. The
 initialization runner owns the dependency checks that precede provisioning.
 ``setup`` materializes ``env/.env`` and ports the values set in the main
-worktree's copy using the standard library alone; ``google-client`` stages
+worktree's copy using the standard library alone, and exits non-zero naming any
+key ``env/.env`` sets that ``env/.env.example`` does not declare;
+``google-client`` stages
 the Google Desktop client resource and needs the synchronized environment;
 ``workstation-tools`` provisions workstation CLIs.
 """

@@ -118,7 +118,8 @@ setup-workstation-tools:
 
 # Create env/.env from env/.env.example when missing, then port the values set
 # in the main worktree's env/.env. Values this worktree sets are never replaced.
-[doc('Create env/.env when missing and port the values set in the main worktree; never prints a value.')]
+# A key env/.env sets that env/.env.example does not declare is an error: nothing reads it.
+[doc('Create env/.env when missing and port the values set in the main worktree; reports undeclared keys as an error and never prints a value.')]
 [group('setup')]
 setup-env:
     uv run --no-sync python -m dev.env setup

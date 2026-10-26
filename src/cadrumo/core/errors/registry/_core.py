@@ -390,6 +390,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.core.unread_settings.UnreadSettingError",
+        ErrorCode(
+            code="REFUSED_UNREAD_SETTING",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_unread_setting",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.core.i18n.locale_catalogue.LocaleCatalogueCaptureError",
         ErrorCode(
             code="REFUSED_LOCALE_CATALOGUE_CAPTURE_NOT_CURRENT",

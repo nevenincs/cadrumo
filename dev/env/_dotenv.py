@@ -3,9 +3,15 @@
 `env/.env` is created from `env/.env.example` when it is absent. An explicitly
 supplied source tree can top it up from its own `env/.env`; setup does not
 discover other worktrees. A value is ported when the operator set it there - it is
-non-empty and differs from main's own template - and this worktree still holds
-nothing or its template's value for that key. A value this worktree set for
-itself is never overwritten, so running this again changes nothing.
+non-empty and differs from main's own template - and this worktree's template
+declares the key, and this worktree still holds nothing or its template's value
+for that key. A value this worktree set for itself is never overwritten, so
+running this again changes nothing.
+
+The template declares a key by assigning it, or by showing it as a commented
+example the operator may uncomment. A key in `env/.env` that the template does
+not declare is read by nothing the template documents, so setup reports it as an
+error and exits non-zero, and never ports one in. Setup does not remove it.
 
 The file holds the operator's secrets. Nothing here prints, logs, or raises a
 value: every message names keys and counts only.
@@ -27,6 +33,9 @@ from dev._paths import REPO_ROOT
 #: `KEY=value`, optionally prefixed with `export`, as dotenv loaders read it.
 _ASSIGNMENT: Final = re.compile(r"^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=")
 
+#: A commented example, `# KEY=value`: a key the template shows for the operator to uncomment.
+_EXAMPLE: Final = re.compile(r"^\s*#\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=")
+
 
 @dataclass(frozen=True)
 class _Assignment:
@@ -44,6 +53,7 @@ class Porting:
     ported: list[str] = field(default_factory=list)
     kept: list[str] = field(default_factory=list)
     skipped: list[str] = field(default_factory=list)
+    undeclared: list[str] = field(default_factory=list)
 
 
 def _read_lines(path: Path) -> list[str]:
@@ -64,6 +74,19 @@ def _assignments(lines: list[str]) -> dict[str, _Assignment]:
 
 def _values(path: Path) -> dict[str, str]:
     return {key: line.value.strip() for key, line in _assignments(_read_lines(path)).items()}
+
+
+def declared_keys(template: Path) -> frozenset[str]:
+    """Return every key the template declares: each one it assigns and each one it shows as a commented example."""
+    lines = _read_lines(template)
+    examples = {str(match.group(1)) for line in lines if (match := _EXAMPLE.match(line))}
+    return frozenset(_assignments(lines)) | examples
+
+
+def undeclared_keys(target: Path, template: Path) -> list[str]:
+    """Return the keys ``target`` assigns that ``template`` does not declare, in file order; never a value."""
+    declared = declared_keys(template)
+    return [key for key in _assignments(_read_lines(target)) if key not in declared]
 
 
 def _is_empty(value: str) -> bool:
@@ -108,13 +131,14 @@ def port_values(*, target: Path, template: Path, source: Path, source_template: 
     """
     source_defaults = _values(source_template) if source_template.is_file() else {}
     defaults = _values(template)
+    declared = declared_keys(template)
     lines = _read_lines(target)
     current = _assignments(lines)
     newline = next((_ending(line) for line in lines if _ending(line)), "\n")
     appended: list[str] = []
     result = Porting()
     for key, line in _assignments(_read_lines(source)).items():
-        _port_assignment(key, line, source_defaults, current, defaults, lines, newline, appended, result)
+        _port_assignment(key, line, source_defaults, declared, current, defaults, lines, newline, appended, result)
     if result.ported:
         if lines and not _ending(lines[-1]):
             lines[-1] += newline
@@ -123,16 +147,49 @@ def port_values(*, target: Path, template: Path, source: Path, source_template: 
 
 
 def provision(root: Path, main: Path | None) -> int:
-    """Create `env/.env` when absent, then port the main worktree's values into it.
+    """Create `env/.env` when absent, port the main worktree's values into it, then check its keys.
 
     Args:
         root: The worktree to provision.
         main: The worktree checked out on `main`, or ``None``.
 
     Returns:
-        0 on success, 1 when the template is missing or the files cannot be
-        read or written.
+        0 on success, 1 when the template is missing, the files cannot be read
+        or written, or `env/.env` sets a key the template does not declare.
     """
+    status = _create_and_port(root, main)
+    if status == 0 and not _report_undeclared_keys(root):
+        return 0
+    return 1
+
+
+def _report_undeclared_keys(root: Path) -> bool:
+    """Report every key `env/.env` sets that the template does not declare; return whether any exists.
+
+    The report names keys and says nothing about a value. The file is left as it is.
+    """
+    template = root / "env" / ".env.example"
+    target = root / "env" / ".env"
+    try:
+        stray = undeclared_keys(target, template)
+    except (OSError, UnicodeError):
+        # The exception text is not echoed: a decode error can quote file content.
+        print("Could not check env/.env against env/.env.example: a file is unreadable or not UTF-8.", file=sys.stderr)
+        return True
+    if not stray:
+        return False
+    print(
+        f"ERROR: env/.env sets {len(stray)} name(s) that env/.env.example does not declare, "
+        f"so nothing Cadrumo documents reads them: {', '.join(stray)}. "
+        "Remove them from env/.env; setup never removes a line and never prints a value.",
+        file=sys.stderr,
+        flush=True,
+    )
+    return True
+
+
+def _create_and_port(root: Path, main: Path | None) -> int:
+    """Create `env/.env` from the template when absent, then port the main worktree's values; 0 on success."""
     example = root / "env" / ".env.example"
     target = root / "env" / ".env"
     if not example.is_file():
@@ -171,6 +228,13 @@ def provision(root: Path, main: Path | None) -> int:
     if result.skipped:
         skipped = ", ".join(result.skipped)
         print(f"Skipped {len(result.skipped)} multi-line value(s); copy by hand: {skipped}", flush=True)
+    if result.undeclared:
+        undeclared = ", ".join(result.undeclared)
+        print(
+            f"Did not port {len(result.undeclared)} value(s) this worktree's env/.env.example does not declare: "
+            f"{undeclared}",
+            flush=True,
+        )
     return 0
 
 
@@ -213,6 +277,7 @@ def _port_assignment(
     key: str,
     line: _Assignment,
     source_defaults: dict[str, str],
+    declared: frozenset[str],
     current: dict[str, _Assignment],
     defaults: dict[str, str],
     lines: list[str],
@@ -220,9 +285,12 @@ def _port_assignment(
     appended: list[str],
     result: Porting,
 ) -> None:
-    """Port assignment."""
+    """Port one assignment the operator set, unless this worktree's template does not declare its key."""
     value = line.value
     if _is_empty(value) or source_defaults.get(key) == value.strip():
+        return
+    if key not in declared:
+        result.undeclared.append(key)
         return
     mine = current.get(key)
     if _unportable_line_value(value, mine):

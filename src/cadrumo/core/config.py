@@ -64,6 +64,7 @@ from .storage_environment import (
     storage_root_override,
 )
 from .storage_taxonomy import CONNECTION_SOCKET_DIRECTORY_ENVIRONMENT_VARIABLE, STORAGE_ROOT_SETTINGS_FIELD
+from .unread_settings import SETTINGS_OWNED_NAME_PREFIXES, require_no_unread_setting_names
 
 if TYPE_CHECKING:
     from .bucket_pointer import BucketPointer
@@ -105,11 +106,15 @@ def _without_severed_names(env_vars: Mapping[str, str | None]) -> dict[str, str 
 
 
 class _CadrumoEnvSettingsSource(EnvSettingsSource):
-    """Ignore severed names in the process environment."""
+    """Ignore severed names in the process environment, and refuse an unread one in a family it owns."""
 
     @override
     def __call__(self) -> dict[str, Any]:
         original_env_vars = self.env_vars
+        # An empty value configures nothing and the model ignores it, so only a set name can be unread.
+        set_names = [name for name, value in original_env_vars.items() if value is not None and value != ""]
+        if any(name.upper().startswith(SETTINGS_OWNED_NAME_PREFIXES) for name in set_names):
+            require_no_unread_setting_names(set_names, Settings.env_var_names())
         self.env_vars = _without_severed_names(original_env_vars)
         controls = Settings.storage_env_var_names()
         for key, value in tuple(self.env_vars.items()):

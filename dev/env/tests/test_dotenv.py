@@ -61,7 +61,7 @@ def test_a_new_worktree_receives_every_value_set_in_main(tmp_path: Path, capsys:
             f"export EXTRA='{_MARKER}-extra'\n"
         ),
     )
-    feature = _worktree(tmp_path / "feature", template=_TEMPLATE)
+    feature = _worktree(tmp_path / "feature", template=_TEMPLATE + "EXTRA=\n")
 
     assert provision(feature, main) == 0
 
@@ -153,6 +153,75 @@ def test_without_a_main_worktree_the_template_is_copied(tmp_path: Path, capsys: 
 
     assert _dotenv(feature) == _TEMPLATE
     assert "nothing to port" in _output(capsys)
+
+
+def test_a_key_the_template_does_not_declare_is_an_error_named_without_its_value(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    mine = f"URL=https://default.example\nRETIRED_KEY={_MARKER}-retired\nTOKEN={_MARKER}-token\nOTHER_RETIRED={_MARKER}-o\n"
+    feature = _worktree(tmp_path / "feature", template=_TEMPLATE, dotenv=mine)
+
+    assert provision(feature, None) == 1
+
+    output = _output(capsys)
+    assert "ERROR: env/.env sets 2 name(s) that env/.env.example does not declare" in output
+    assert "reads them: RETIRED_KEY, OTHER_RETIRED. Remove them" in output, "the declared keys are not reported"
+    assert _MARKER not in output
+    assert _dotenv(feature) == mine, "setup reports a stray key and never removes a line"
+
+
+def test_a_template_that_declares_every_key_passes_setup(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """The control for the case above: the same file with only declared keys is not an error."""
+    feature = _worktree(
+        tmp_path / "feature", template=_TEMPLATE, dotenv=f"URL=https://default.example\nTOKEN={_MARKER}-token\n"
+    )
+
+    assert provision(feature, None) == 0
+
+    assert "ERROR" not in _output(capsys)
+
+
+def test_a_commented_example_in_the_template_declares_its_key(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The template shows optional keys as `# KEY=...`; uncommenting one in env/.env is not a stray key."""
+    template = (
+        _TEMPLATE + "# Optional.\n# OPTIONAL_KEY=8\n#   export SPACED_KEY=1\n# Prose mentioning NOT_A_KEY=1 mid-line.\n"
+    )
+    feature = _worktree(
+        tmp_path / "feature",
+        template=template,
+        dotenv=f"OPTIONAL_KEY={_MARKER}\nSPACED_KEY=2\nNOT_A_KEY=3\n",
+    )
+
+    assert provision(feature, None) == 1
+
+    output = _output(capsys)
+    assert "NOT_A_KEY" in output
+    assert "OPTIONAL_KEY" not in output
+    assert "SPACED_KEY" not in output
+    assert _MARKER not in output
+
+
+def test_a_value_main_sets_for_a_key_this_template_lacks_is_not_ported(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Porting must not create the stray key that setup then reports: a retired key stays in main only."""
+    main = _worktree(
+        tmp_path / "main",
+        template=_TEMPLATE + "RETIRED_HERE=\n",
+        dotenv=f"TOKEN={_MARKER}-token\nRETIRED_HERE={_MARKER}-retired\n",
+    )
+    feature = _worktree(tmp_path / "feature", template=_TEMPLATE)
+
+    assert provision(feature, main) == 0
+
+    assert _dotenv(feature) == _TEMPLATE.replace("TOKEN=\n", f"TOKEN={_MARKER}-token\n")
+    output = _output(capsys)
+    assert "Ported 1 value(s)" in output
+    assert "Did not port 1 value(s)" in output
+    assert "RETIRED_HERE" in output
+    assert _MARKER not in output
 
 
 def test_setup_materializes_client_for_a_worker_that_scrubs_environment(
