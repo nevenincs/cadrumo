@@ -814,6 +814,37 @@ related:
 - `S26` `verify:` `python -m dev.docs.sequences check --page workstation-setup` -> `pass`
 - `S26` `verify:` `python -m dev.docs.build --single-page (classify-with-llm, workstation-setup, import-bank-statements, profile-setup)` -> `pass`
 - `S26` `verify:` `python -m dev.docs.i18n set-batch (111 messages, 12 catalogues)` -> `pass`
+- `S30` `A` `native/desktop/src-tauri/src/shell/setup/admission.rs`
+- `S30` `A` `native/desktop/src-tauri/src/shell/setup/admission_tests.rs`
+- `S30` `M` `native/desktop/src-tauri/src/shell/setup/components.rs`
+- `S30` `M` `native/desktop/src-tauri/src/shell/setup/components_tests.rs`
+- `S30` `M` `native/desktop/src-tauri/src/shell/setup/mod.rs`
+- `S30` `M` `native/desktop/src-tauri/src/shell/setup/wire.rs`
+- `S30` `M` `native/desktop/src-tauri/src/shell/provider_settings/mod.rs`
+- `S30` `M` `native/desktop/src-tauri/src/app.rs`
+- `S30` `M` `native/desktop/src-tauri/src/agent/mod.rs`
+- `S30` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S30` `M` `native/desktop/frontend/src/shell/host.ts`
+- `S30` `M` `native/desktop/frontend/src/shell/tauriHost.ts`
+- `S30` `M` `native/desktop/frontend/src/components/setup/SetupDialog.tsx`
+- `S30` `M` `native/desktop/frontend/src/components/setup/setupWords.ts`
+- `S30` `M` `native/desktop/frontend/src/dev/setupFixture.ts`
+- `S30` `M` `native/desktop/frontend/tests/scenarios/setup.spec.ts`
+- `S30` `M` `native/desktop/tests/packaged/setup.mjs`
+- `S30` `M` `dev/locales/desktop_chrome.py`
+- `S30` `M` `src/cadrumo/locales/en/common.yml`
+- `S30` `M` `src/cadrumo/locales/es/common.yml`
+- `S30` `M` `src/cadrumo/locales/ca/common.yml`
+- `S30` `M` `src/cadrumo/locales/hu/common.yml`
+- `S30` `verify:` `cmake --build --preset debug --target desktop-host-unit-test (cargo test, 584 passed 1 ignored)` -> `pass`
+- `S30` `verify:` `desktop host tests filtered to shell::setup after the last edit (52 passed)` -> `pass`
+- `S30` `verify:` `cmake --build --preset debug --target desktop-host-unit-clippy (cargo clippy --all-targets -D warnings)` -> `pass`
+- `S30` `verify:` `rustfmt --edition 2024 --check on the files of this Step` -> `pass`
+- `S30` `verify:` `node node_modules/typescript/bin/tsc --noEmit in native/desktop/frontend` -> `pass`
+- `S30` `verify:` `eslint and prettier --check on the changed frontend files` -> `pass`
+- `S30` `verify:` `playwright tests/scenarios/setup.spec.ts --project=scenarios (25 passed)` -> `pass`
+- `S30` `verify:` `uv run --no-sync pytest dev/locales/tests/test_desktop_chrome.py (23 passed)` -> `pass`
+- `S30` `by:` `implementation-engineer-high`
 - `S24` `M` `src/cadrumo_agent_service/adapters/provider_catalog_metadata.py`
 - `S24` `M` `src/cadrumo_agent_service/service.py`
 - `S24` `M` `src/cadrumo_agent_service/admin.py`
@@ -853,6 +884,111 @@ related:
 - `S24` `verify:` `dev.locales.desktop_chrome --shell-source generation` -> `pass`
 - `S24` `verify:` `dev/quality/tests/test_no_model_definitions.py` -> `pass`
 - `S24` `by:` `implementation-engineer`
+- `S25` `M` `src/cadrumo/application/provisioning_host.py`
+- `S25` `M` `src/cadrumo/application/local_reader_status_operation.py`
+- `S25` `M` `src/cadrumo/application/ledger/invoice_evidence_readiness_operation.py`
+- `S25` `M` `src/cadrumo/application/tests/test_provisioning_host.py`
+- `S25` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S25` `M` `src/cadrumo/core/external_constants.toml`
+- `S25` `M` `native/desktop/frontend/src/shell/ledger.ts`
+- `S25` `M` `native/desktop/frontend/src/dev/ledgerEvidenceFixture.ts`
+- `S25` `M` `dev/locales/desktop_chrome.py`
+- `S25` `M` `dev/locales/fstring_registry.py`
+- `S25` `M` `dev/locales/tests/test_audit.py`
+- `S25` `M` `dev/runtime_lifecycle/tests/test_components_surface_conformance.py`
+- `S25` `M` `dev/smoke/acquisition_lane.py`
+- `S25` `M` `dev/smoke/tests/test_acquisition_lane.py`
+- `S25` `M` `src/cadrumo/adapters/inbound/financial/providers/tests/test_mapped_tabular_reader_unavailable.py`
+- `S25` `M` `src/cadrumo/adapters/outbound/components/client.py`
+- `S25` `M` `src/cadrumo/adapters/outbound/components/protocol.py`
+- `S25` `M` `src/cadrumo/adapters/outbound/components/tests/recorded_rows.py`
+- `S25` `M` `src/cadrumo/adapters/outbound/components/tests/test_client.py`
+- `S25` `M` `src/cadrumo/adapters/outbound/components/tests/test_client_drives_the_real_role.py`
+- `S25` `M` `src/cadrumo/adapters/outbound/components/tests/test_protocol.py`
+- `S25` `M` `src/cadrumo/adapters/outbound/llm/providers/agent.py`
+- `S25` `M` `src/cadrumo/adapters/outbound/llm/tests/test_agent_dispatch.py`
+- `S25` `M` `src/cadrumo/application/dependency_contracts.py`
+- `S25` `M` `src/cadrumo/application/dependency_wording.py`
+- `S25` `M` `src/cadrumo/application/invoices/tests/test_bulk_import_reader_reason.py`
+- `S25` `M` `src/cadrumo/application/ledger/evidence_errors.py`
+- `S25` `M` `src/cadrumo/application/ledger/invoice_draft_extraction.py`
+- `S25` `M` `src/cadrumo/application/ledger/tests/test_evidence_reader_refusal_key.py`
+- `S25` `M` `src/cadrumo/application/operator_actions/catalogue.py`
+- `S25` `M` `src/cadrumo/application/operator_actions/tests/test_catalogue.py`
+- `S25` `M` `src/cadrumo/application/operator_surface/action_targets.py`
+- `S25` `M` `src/cadrumo/application/provisioning_contracts.py`
+- `S25` `M` `src/cadrumo/application/tests/test_dependency_health_rows.py`
+- `S25` `M` `src/cadrumo/application/tests/test_dependency_registry_conformance.py`
+- `S25` `M` `src/cadrumo/application/tests/test_dependency_wording.py`
+- `S25` `M` `src/cadrumo/entrypoints/cli/_component_setup_rendering.py`
+- `S25` `M` `src/cadrumo/entrypoints/cli/command_operation_table.py`
+- `S25` `M` `src/cadrumo/entrypoints/cli/config/_provision_command_specs.py`
+- `S25` `M` `src/cadrumo/entrypoints/cli/config/provision_cli.py`
+- `S25` `M` `src/cadrumo/entrypoints/cli/config/provision_payloads.py`
+- `S25` `M` `src/cadrumo/entrypoints/cli/config/tests/test_check_setup_rows.py`
+- `S25` `M` `src/cadrumo/entrypoints/cli/tests/test_component_setup_refusal_text.py`
+- `S25` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_evidence_batch_cli.py`
+- `S25` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_import_reader_refusal_settlement.py`
+- `S25` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_authentication_contract.py`
+- `S25` `M` `src/cadrumo/entrypoints/cli/tests/test_provision_components_role.py`
+- `S25` `M` `src/cadrumo/entrypoints/cli/tests/test_provision_drives_the_real_role.py`
+- `S25` `M` `src/cadrumo/entrypoints/cli/tests/test_provision_offline_status.py`
+- `S25` `M` `src/cadrumo/entrypoints/tests/test_evidence_reader_refusal_settlement.py`
+- `S25` `M` `src/cadrumo/entrypoints/tests/test_ledger_classification_reader_refusal_settlement.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/ledger/tests/setup_status_fixtures.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_evidence_draft_setup_offer.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_evidence_files_batch.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_evidence_refusal_and_review_setup_offer.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_import_setup_offer.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/operations/tests/test_modal_setup_offer.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/setup/offer.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/setup/screen.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/setup/tests/test_setup_screen.py`
+- `S25` `M` `src/cadrumo/locales/ca/application.yml`
+- `S25` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S25` `M` `src/cadrumo/locales/ca/common.yml`
+- `S25` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S25` `M` `src/cadrumo/locales/en/application.yml`
+- `S25` `M` `src/cadrumo/locales/en/cli.yml`
+- `S25` `M` `src/cadrumo/locales/en/common.yml`
+- `S25` `M` `src/cadrumo/locales/en/errors.yml`
+- `S25` `M` `src/cadrumo/locales/es/application.yml`
+- `S25` `M` `src/cadrumo/locales/es/cli.yml`
+- `S25` `M` `src/cadrumo/locales/es/common.yml`
+- `S25` `M` `src/cadrumo/locales/es/errors.yml`
+- `S25` `M` `src/cadrumo/locales/hu/application.yml`
+- `S25` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S25` `M` `src/cadrumo/locales/hu/common.yml`
+- `S25` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S25` `M` `src/cadrumo/tests/components_role_replay.py`
+- `S25` `M` `src/cadrumo/tests/fixtures/components_role/cancel_nothing_running.jsonl`
+- `S25` `D` `src/cadrumo/tests/fixtures/components_role/plan_every_item.jsonl`
+- `S25` `M` `src/cadrumo/tests/fixtures/components_role/remove_absent_browser.jsonl`
+- `S25` `M` `src/cadrumo/tests/fixtures/components_role/setup_browser_completed.jsonl`
+- `S25` `M` `src/cadrumo/tests/fixtures/components_role/setup_declined.jsonl`
+- `S25` `M` `src/cadrumo/tests/fixtures/components_role/setup_follow_stopped.jsonl`
+- `S25` `M` `src/cadrumo/tests/fixtures/components_role/setup_followed_completed.jsonl`
+- `S25` `M` `src/cadrumo/tests/fixtures/components_role/setup_input_refused.jsonl`
+- `S25` `D` `src/cadrumo/tests/fixtures/components_role/setup_local_ai_refused_host_unreachable.jsonl`
+- `S25` `M` `src/cadrumo/tests/fixtures/components_role/setup_plan_changed.jsonl`
+- `S25` `M` `src/cadrumo/tests/fixtures/components_role/setup_refused_blocked_by_network.jsonl`
+- `S25` `M` `src/cadrumo/tests/fixtures/components_role/status_quick.jsonl`
+- `S25` `M` `src/cadrumo/tests/fixtures/components_role/status_quick_browser_ready.jsonl`
+- `S25` `M` `src/cadrumo/tests/fixtures/components_role/transcripts.json`
+- `S25` `M` `src/cadrumo_mcp/mcp/component_setup.py`
+- `S25` `M` `src/cadrumo_mcp/mcp/protocol_contract.py`
+- `S25` `M` `src/cadrumo_mcp/mcp/tests/test_result_page_tool.py`
+- `S25` `M` `src/cadrumo_mcp/mcp/tests/test_setup_tools.py`
+- `S25` `M` `src/cadrumo_mcp/mcp/tests/test_setup_tools_drive_the_real_role.py`
+- `S25` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_evidence.py`
+- `S25` `A` `src/cadrumo/tests/fixtures/components_role/plan_browser.jsonl`
+- `S25` `verify:` `uv run --no-sync pytest components adapter, dependency wording/contracts/registry/health rows, operator actions, CLI provision and refusal text, TUI setup and ledger/modal offers, MCP setup tools and result tool, agent dispatch, dev/smoke, dev/quality no_python_provisioning and no_model_definitions, dev/locales audit and dynamic registry (focused modules)` -> `pass`
+- `S25` `verify:` `just check-import-boundaries` -> `pass`
+- `S25` `verify:` `just check-style` -> `pass`
+- `S25` `verify:` `just check-format` -> `pass`
+- `S25` `verify:` `just check-types` -> `pass`
+- `S25` `verify:` `uv run --no-sync python -m dev.operation_contract_manifest.generate --check` -> `pass`
+- `S25` `by:` `implementation-engineer`
 - `S24` `verify:` `cmake --build build/windows-x64 --config Debug --target desktop-host-unit-test (584 passed, 1 ignored)` -> `pass`
 - `S24` `verify:` `cmake --build build/windows-x64 --config Debug --target desktop-host-unit-clippy` -> `pass`
 - `S09` `verify:` `desktop-host-unit-test: provider_settings::wire keyless-lane tests compiled and passed` -> `pass`
@@ -914,4 +1050,13 @@ related:
 - `S15` P03 review fix: vision-model-refused-only-on-image-reads
 - `S15` P03 review fix: batch-consent-refusal-closes-no-role
 - `S26` Focused dev/docs pytest run incomplete: profile-delete sequences hit runtime worker exchange timeouts and the 590s wrapper killed two workers; localization and catalogue-drift tests passed. docs/cli/config/provision.rst still lists pull/load/--model; regeneration belongs to S28.
+- `S30` Shared with the P05.S24 desktop worker, hunks left uncommitted and landing with its commit: native/desktop/src-tauri/src/agent/mod.rs (one line, mod `model_roles;` becomes pub(crate) mod `model_roles;);` native/desktop/frontend/src/ipc/contract.ts (my removals of SetupAdvisory, SetupLicence, the `different_model_version` stale reason, the start model argument and the plan entry advisories and licences; my additions of SetupCheck.refusal and the refusal codes `model_selection_unusable` and `model_size_unstated);` native/desktop/frontend/src/shell/tauriHost.ts (my removal of model from the `desktop_setup_start` call); `dev/locales/desktop_chrome.py` and src/cadrumo/locales/en, es, ca and hu common.yml (my deletion of `desktop.setup.licence_non_commercial` and `desktop.setup.stale.different_model_version,` made with dev.locales remove-batch, and the matching family and key entries in the registry).
+- `S30` Until those shared hunks are in HEAD, the committed tree does not compile: admission.rs needs the agent/mod.rs line and SetupDialog.tsx reads check.refusal from contract.ts. `test_desktop_chrome.py` passes on the working tree only.
+- `S30` The refusal codes `model_selection_unusable` and `model_size_unstated` have no window words yet; refusalWords in setupWords.ts falls back to the general sentence until P05.S27 adds them.
+- `S30` A local lane is a keyless lane from the provider status: the catalogue flag `reads_off_host` is on no record the desktop reads in both states of the service, so it is not read.
+- `S30` cargo fmt --check on the whole desktop crate still fails on shell/ledger/tests.rs and shell/mod.rs, which this Step did not touch.
 - `S24` Desktop crate not compiled: no CMake inputs here; Rust checked by rustfmt only. python -m dev.quality.types exits 1 on one ty diagnostic in `src/cadrumo/entrypoints/tui/setup/tests/test_setup_screen.py,` another session's uncommitted file. Plan file left uncommitted: it carries other workers' uncommitted edits.
+- `S25` `test_the_desktop_wire_contract_admits_every_code_a_row_carries` fails until the desktop wire's Recovery enum gains SetUpInDesktop (P04.S30); the Python vocabulary now carries it.
+- `S25` The recorded role conversations under `src/cadrumo/tests/fixtures/components_role` were rewritten to plan contract 3 and `set_up_in_desktop` by script, not re-recorded: re-record them against the final role.
+- `S25` The `external_tool` role tests `(test_client_drives_the_real_role,` `test_provision_drives_the_real_role,` `test_setup_tools_drive_the_real_role,` conformance and lane real-role cases) were not run: no built binary.
+- `S25` Shared with P04.S30: the locale catalogue common.yml files and `dev/locales/desktop_chrome.py` also carry its licence and different-model-version string removals.

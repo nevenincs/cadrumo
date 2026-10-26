@@ -235,7 +235,6 @@ export function tauriHost(): Host {
       start: (items, options = {}) =>
         call("desktop_setup_start", {
           items,
-          model: options.model ?? null,
           resume: options.resume ?? false,
         }),
       answer: (operationId, planDigest, decision) =>

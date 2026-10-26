@@ -9,7 +9,7 @@
 mod admin;
 mod gateway;
 mod launcher;
-mod model_roles;
+pub(crate) mod model_roles;
 pub(crate) mod person;
 pub(crate) mod runner;
 mod session;

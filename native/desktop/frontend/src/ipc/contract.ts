@@ -846,7 +846,7 @@ export type PasswordChangeResult =
 // pushes a fresh `DesktopSetup` on the observe channel whenever the engine or
 // a Google act changes it; nothing polls. The snapshot carries codes and
 // locale-neutral facts only. The window words every item name, state,
-// failure, action, note, retry notice, plan part and licence from its own
+// failure, action, note, retry notice and plan part from its own
 // setup strings (`components/setup/setupWords.ts`). Never render a closed
 // value itself.
 
@@ -868,8 +868,7 @@ export type SetupState =
 export type SetupBlockedReason =
   "offline" | "needs_person" | "hardware" | "not_in_this_build";
 
-export type SetupStaleReason =
-  "older_revision" | "different_model_version" | "program_too_old";
+export type SetupStaleReason = "older_revision" | "program_too_old";
 
 export type SetupFailureCategory =
   | "offline"
@@ -895,15 +894,6 @@ export type SetupRecovery =
   "set_up" | "update" | "try_again" | "resume" | "check_again";
 
 export type SetupCheckMode = "quick" | "full";
-
-/** Why the local AI's plan entry is worth telling the person about. */
-export type SetupAdvisory =
-  | "licence_commercial_use_barred"
-  | "licence_unverified"
-  | "override_not_in_catalogue"
-  | "override_below_context_floor"
-  | "fit_exceeds_measured_headroom"
-  | "fit_unverified";
 
 export type SetupStep =
   "plan" | "preflight" | "download" | "install" | "verify" | "cleanup";
@@ -941,21 +931,20 @@ export type SetupCheck = {
   /** The category a failed check carried, worded as a row's failure is; null
    * while it runs, when it is done, and when a failure carried no category. */
   failure: SetupFailureCategory | null;
+  /** Why the check was refused before the engine ran: the person's selection
+   * of local models could not be handed to it. Only on a failed check, and
+   * never with a `failure`. Worded as a command's refusal is. */
+  refusal: SetupRefusalCode | null;
 };
 
-/** One part of the local AI's plan: `program`, or the catalogue role whose
- * model it is. A part sharing an earlier part's download has size 0. */
+/** One part of the local AI's plan: `program`, or a role the person selected
+ * a local model for, whose pull it is. Its size is the one the model's
+ * catalogue entry states. A part sharing an earlier part's download has
+ * size 0. */
 export type SetupPlanPart = {
   part: string;
   /** Null when the size is not known before the download starts. */
   download_bytes: number | null;
-};
-
-/** A planned model whose licence bars commercial use. */
-export type SetupLicence = {
-  model: string;
-  /** The licence's display name, as the pins state it. */
-  licence: string;
 };
 
 /** One entry of the plan a person approves: what, how large, from where and
@@ -970,13 +959,6 @@ export type SetupPlanEntry = {
   installs_outside_program: boolean;
   /** Another entry of this plan that downloads the same files. */
   shares_download_with: SetupItemId | null;
-  /** Empty except on the local AI's entry; approving the plan approves
-   * them too. */
-  advisories: SetupAdvisory[];
-  /** The planned models whose licence bars commercial use; not empty
-   * exactly when `advisories` holds "licence_commercial_use_barred".
-   * Approving the plan approves their notice too. */
-  licences: SetupLicence[];
   /** The local AI's parts in the order setup carries them out; empty for
    * any other item. */
   parts: SetupPlanPart[];
@@ -1105,7 +1087,13 @@ export type SetupRefusalCode =
   /** The setup cannot be cancelled now. */
   | "not_cancellable"
   /** The runtime could not carry the request. */
-  | "unavailable";
+  | "unavailable"
+  /** The person's selection of local models cannot be handed to the engine:
+   * its record is unreadable, or a selected role or model is not one the
+   * engine can pull. */
+  | "model_selection_unusable"
+  /** A selected local model's catalogue entry states no download size. */
+  | "model_size_unstated";
 
 export type SetupRefusal = { code: SetupRefusalCode };
 
@@ -1483,16 +1471,16 @@ export interface HostCommands {
     result: DesktopSetup;
   };
   /** Plans setup of `items`, or of every item not ready when null; the plan
-   * then awaits an answer in `setup.review`. `model` is always null: this
-   * build pins every role's model, and the host refuses any other. A setup
-   * already running is joined.
+   * then awaits an answer in `setup.review`. A setup names no model: the host
+   * reads the person's selection of local models from the agent service and
+   * refuses the start when it cannot admit it. A setup already running is
+   * joined.
    * `resume` is the person's Resume click after an interruption: when the
    * new plan is exactly the one approved before, it is approved again
    * without a second review; any other plan awaits an answer as usual. */
   desktop_setup_start: {
     args: Authorized<{
       items: SetupItemId[] | null;
-      model: string | null;
       resume: boolean;
     }>;
     result: DesktopSetup;
