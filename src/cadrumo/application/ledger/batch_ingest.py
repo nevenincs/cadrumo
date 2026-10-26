@@ -467,7 +467,10 @@ class _InferenceLaneState:
     typed model-run verdict -- the ``model_run_refusal`` fact, or the local AI
     setup action -- that verdict closes the role it names, and every later
     document of that role is paused with it. A role that is served keeps
-    working while another is not.
+    working while another is not. The batch carries no consent, so on a role
+    whose lane reads off this computer the dispatch's consent gate refuses with
+    the ``consent_missing`` model-run refusal and closes that role the same way,
+    with nothing sent.
 
     A refusal without either verdict -- a failed run, a document fault --
     closes nothing: it is that document's refusal, and the next document of the

@@ -1,4 +1,4 @@
-"""A batch closes a reading role only on the agent service's typed refusal for it.
+"""A batch closes a reading role only on a typed refusal of the role's model run.
 
 The registered ``ledger.evidence.batch`` runs through the production registry,
 the real supervisor, journal and encrypted operand store, the composed
@@ -96,16 +96,26 @@ def test_a_failed_run_on_one_document_leaves_the_role_open_for_the_next(
         assert any(lines[0] in prompt for prompt in sent), "each document reached the service"
 
 
-def test_an_off_host_lane_without_consent_sends_nothing_and_closes_nothing(
+def test_an_off_host_lane_without_consent_sends_nothing_and_pauses_the_role(
     tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> None:
-    """The batch carries no consent, so an off-host lane is refused before any run, per document."""
+    """The batch carries no consent, so the first document's consent refusal closes its role for the rest."""
     del operation
     assert DEFAULT_LANE.reads_off_host
     with operation_runtime(tmp_path, None, lane=DEFAULT_LANE) as runtime:
         projection = _settle_batch(runtime)
         runs = list(runtime.service.runs)
 
-    assert [item.status for item in projection.run.items] == ["refused", "refused"]
+    first, second = projection.run.items
+    assert first.status == "refused"
+    assert first.refusal_verdict is not None
+    refused = first.refusal_verdict.to_verdict()
+    assert refused.failed_condition_id == "llm.evidence.off_host_dispatch_permitted"
+    facts = {key: value for evidence in refused.evidence for key, value in evidence.values.items()}
+    assert facts["model_role"] == ModelRole.TEXT_EXTRACTION.value
+    assert facts["model_run_refusal"] == ModelRunRefusalCode.CONSENT_MISSING.value
+    assert facts["consent_token_present"] is False
+    assert second.status == "paused", "a role refused for consent is not asked again in the same run"
+    assert projection.run.inference_pause is not None
+    assert projection.run.inference_pause.precondition_verdict.to_verdict() == refused
     assert runs == [], "nothing is sent off this computer without consent"
-    assert projection.run.inference_pause is None

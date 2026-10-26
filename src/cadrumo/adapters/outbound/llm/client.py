@@ -452,7 +452,7 @@ class LLMClient:
         provider = LLMProvider.AGENT
         agent = await self._agent_dispatch(request)
         model = lane_model_label(agent.lane)
-        self._require_evidence_consent(provider, model, request, lane=agent.lane)
+        self._require_evidence_consent(provider, model, request, lane=agent.lane, role=agent.role)
         request_id = self._request_id(request)
         cached = self.cache.read(request, provider, model)
         if cached is not None:
@@ -758,6 +758,7 @@ class LLMClient:
         request: LLMRequest,
         *,
         lane: ModelRunLane,
+        role: ModelRole,
     ) -> None:
         """Refuse an off-host dispatch of taxpayer evidence without consent.
 
@@ -805,12 +806,18 @@ class LLMClient:
         the host; its endpoint is the agent service's loopback declaration, not
         an endpoint this client posts to.
 
+        **The refusal is the role's, not the document's.** Its verdict states
+        the role and the ``consent_missing`` model-run refusal the agent service
+        gives the same run, so a caller reading many documents closes the role
+        once rather than refusing each document for the same reason.
+
         Args:
             provider: The resolved provider this request would dispatch at.
             model: The resolved model this request would dispatch at, recorded
                 in the ledger entry.
             request: The request, carrying its evidence marker and any token.
             lane: The lane the agent service resolved for the request's role.
+            role: The role the request reads for, stated in the refusal.
 
         Raises:
             LLMConsentError: When an evidence-derived request would be
@@ -822,20 +829,19 @@ class LLMClient:
             return
         token = request.consent_token
         if self.settings.cadrumo_evidence_gestor_mode or token is None:
+            facts: dict[str, str | int | bool] = {
+                "provider": provider.value,
+                "gestor_mode": self.settings.cadrumo_evidence_gestor_mode,
+                "consent_token_present": token is not None,
+                "model_role": role.value,
+                "model_run_refusal": ModelRunRefusalCode.CONSENT_MISSING.value,
+            }
             raise LLMConsentError(
                 translated_message=_EVIDENCE_CONSENT_DISPATCH_REFUSAL_LOCALE_KEY,
-                context={
-                    "provider": provider.value,
-                    "gestor_mode": self.settings.cadrumo_evidence_gestor_mode,
-                    "consent_token_present": token is not None,
-                },
+                context=facts,
                 precondition_verdict=llm_no_recovery_verdict(
                     LLMPreconditionCondition.EVIDENCE_OFF_HOST_DISPATCH_PERMITTED,
-                    facts={
-                        "provider": provider.value,
-                        "gestor_mode": self.settings.cadrumo_evidence_gestor_mode,
-                        "consent_token_present": token is not None,
-                    },
+                    facts=facts,
                     provenance=ActionEvidenceProvenance.APPLICATION_STATE,
                 ),
             )

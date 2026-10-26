@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:5b328664a57783b3db2015269ea155ac903eeb76cf7bfcfa04ed990226d34b65'
+body_hash: 'sha256:c48f4d5ef4d1f193e77333157d68e1393b0b79f7f921167a8dd308fe302597de'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -758,6 +758,32 @@ related:
 - `S08` `verify:` `uv run --no-sync python -m dev.operation_contract_manifest.generate --check` -> `fail`
 - `S08` `verify:` `uv run --no-sync python -m dev.quality.types` -> `fail`
 - `S08` `by:` `implementation-engineer`
+- `S18` `A` `dev/runtime_lifecycle/tests/test_reviewed_operation_refusal.py`
+- `S18` `verify:` `pytest dev/runtime_lifecycle/tests` -> `pass`
+- `S18` `by:` `implementation-engineer`
+- `S16` `verify:` `pytest src/cadrumo src/cadrumo_agent_service src/cadrumo_client` -> `pass`
+- `S16` `verify:` `pytest dev/quality/tests/test_no_model_definitions.py` -> `pass`
+- `S16` `by:` `implementation-engineer`
+- `S15` `M` `src/cadrumo/adapters/outbound/llm/providers/agent.py`
+- `S15` `M` `src/cadrumo/application/ledger/llm_classification_ports.py`
+- `S15` `M` `src/cadrumo/application/ledger/llm_review_execution.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/_ledger_llm_cli.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/ledger_lifecycle_cli.py`
+- `S15` `M` `src/cadrumo/application/ledger/tests/test_llm_review_operation.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/tests/test_operation_ledger_llm.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/tests/test_llm_vision_classifier.py`
+- `S15` `M` `src/cadrumo/adapters/persistence/operations/tests/test_llm_review_operation_persistence.py`
+- `S15` `M` `src/cadrumo/adapters/persistence/profile/tests/test_llm_evidence_no_split.py`
+- `S15` `M` `src/cadrumo/adapters/persistence/profile/tests/test_llm_evidence_split.py`
+- `S15` `M` `src/cadrumo/adapters/persistence/profile/tests/test_llm_evidence_split_apply.py`
+- `S15` `M` `src/cadrumo/adapters/persistence/profile/tests/test_llm_reject_split.py`
+- `S15` `M` `src/cadrumo/adapters/persistence/profile/tests/test_llm_saturation.py`
+- `S15` `M` `src/cadrumo/adapters/persistence/profile/tests/test_llm_saturation_apply.py`
+- `S15` `verify:` `pytest -m 'unit or integration' ledger llm tests` -> `pass`
+- `S15` `by:` `implementation-engineer`
+- `S15` `M` `src/cadrumo/application/ledger/batch_ingest.py`
+- `S15` `M` `src/cadrumo/entrypoints/tests/test_evidence_batch_reader_lane.py`
+- `S15` `verify:` `pytest -m 'unit or integration' src/cadrumo/entrypoints/tests/test_evidence_batch_reader_lane.py` -> `pass`
 
 ## Notes
 
@@ -811,3 +837,7 @@ related:
 - `S22` native/desktop does not compile against the engine until P04.S30 removes its advisory, licence and different-model-version mappings
 - `S08` P02 review follow-up: remaining bounds
 - `S08` The manifest drift (ledger.evidence.reader-readiness, local-reader.status) and the one ty diagnostic `(tui/setup/tests/test_setup_screen.py)` come from other uncommitted edits; rendering the manifest with the HEAD `model_runs` gives the same drift.
+- `S18` P03 review fix: reviewed-operation-lane-cannot-prove-the-review
+- `S16` P03 review fix: model-names-and-local-only-wording-remain
+- `S15` P03 review fix: vision-model-refused-only-on-image-reads
+- `S15` P03 review fix: batch-consent-refusal-closes-no-role
