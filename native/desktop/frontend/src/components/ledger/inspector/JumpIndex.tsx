@@ -76,11 +76,17 @@ export function JumpIndex({
         size="xs"
         data-section={section}
         aria-current={current === section ? "location" : undefined}
-        aria-label={badge ? `${names[section]}, ${badge.label}` : undefined}
+        // The name keeps the visible words, the count included, and adds what
+        // the count counts.
+        aria-label={
+          badge ? `${names[section]} ${badge.count}, ${badge.label}` : undefined
+        }
         className="ledger-jump shrink-0 rounded-none border-b-2 border-transparent aria-[current=location]:border-muted-foreground aria-[current=location]:text-foreground"
         onClick={() => onJump(section)}
       >
-        {names[section]}
+        {/* The space keeps the visible text, "Classify 1", the opening
+            words of the name below; the flex row does not draw it. */}
+        {badge ? `${names[section]} ` : names[section]}
         {badge && (
           <span
             aria-hidden="true"
