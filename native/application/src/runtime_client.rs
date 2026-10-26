@@ -319,14 +319,17 @@ fn frame_header(header: &[u8; 5]) -> Result<(u8, usize), Refusal> {
     Ok((header[0], size))
 }
 
-/// Reads one frame: its header within `header_deadline`, its payload within
-/// [`FRAME_BUDGET`] of the header.
+/// Reads one frame before the caller's deadline, allowing at most
+/// [`FRAME_BUDGET`] for the payload after its header.
 fn read_frame(pipe: &Pipe, header_deadline: Instant) -> Result<(u8, Vec<u8>), Refusal> {
     let mut header = [0u8; 5];
     pipe.read_exact(&mut header, header_deadline)?;
     let (kind, size) = frame_header(&header)?;
     let mut payload = vec![0u8; size];
-    pipe.read_exact(&mut payload, Instant::now() + FRAME_BUDGET)?;
+    pipe.read_exact(
+        &mut payload,
+        header_deadline.min(Instant::now() + FRAME_BUDGET),
+    )?;
     Ok((kind, payload))
 }
 

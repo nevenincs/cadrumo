@@ -552,6 +552,16 @@ impl Pipe {
 
     /// Fills `buffer` before `deadline`; a peer that closes first is an unexpected end.
     pub fn read_exact(&self, buffer: &mut [u8], deadline: Instant) -> io::Result<()> {
+        self.read_until(buffer, Some(deadline))
+    }
+
+    /// Waits for input or closure without a periodic timer. Protocol callers
+    /// use this for the first byte only, then bound the remainder of a frame.
+    pub fn read_idle_byte(&self, byte: &mut u8) -> io::Result<()> {
+        self.read_until(std::slice::from_mut(byte), None)
+    }
+
+    fn read_until(&self, buffer: &mut [u8], deadline: Option<Instant>) -> io::Result<()> {
         let handle = self.raw_handle()?;
         let mut filled = 0usize;
         while filled < buffer.len() {
@@ -585,7 +595,7 @@ impl Pipe {
         while written < bytes.len() {
             let remaining = &bytes[written..];
             let size = remaining.len().min(u32::MAX as usize) as u32;
-            let sent = transfer(handle, deadline, |overlapped| {
+            let sent = transfer(handle, Some(deadline), |overlapped| {
                 // SAFETY: the bytes outlive the operation, which `transfer`
                 // settles before it returns.
                 unsafe {
@@ -635,7 +645,7 @@ impl Drop for Pipe {
 /// cancellation to settle, so the caller's buffer is free once this returns.
 fn transfer(
     handle: *mut c_void,
-    deadline: Instant,
+    deadline: Option<Instant>,
     start: impl FnOnce(*mut Overlapped) -> i32,
 ) -> io::Result<u32> {
     // SAFETY: an anonymous manual-reset event, owned for the operation.
@@ -656,7 +666,8 @@ fn transfer(
         if error.raw_os_error() != Some(ERROR_IO_PENDING) {
             return Err(error);
         }
-        let milliseconds = remaining_milliseconds(deadline).unwrap_or(0);
+        let milliseconds =
+            deadline.map_or(u32::MAX, |end| remaining_milliseconds(end).unwrap_or(0));
         // SAFETY: the event belongs to this operation.
         if unsafe { WaitForSingleObject(event.0, milliseconds) } != WAIT_OBJECT_0 {
             let mut settled = 0u32;
@@ -916,8 +927,8 @@ mod tests {
         let reader = {
             let pipe = pipe.clone();
             std::thread::spawn(move || {
-                let mut byte = [0u8; 1];
-                pipe.read_exact(&mut byte, Instant::now() + Duration::from_secs(30))
+                let mut byte = 0;
+                pipe.read_idle_byte(&mut byte)
             })
         };
         std::thread::sleep(Duration::from_millis(100));
