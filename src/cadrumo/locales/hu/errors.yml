@@ -798,8 +798,6 @@ errors:
       az értékesítés éve és rendszere is szükséges.
     canonical_inventory_closing_authority_conflict: Már rögzítve van egy másik, megváltoztathatatlan
       készletzárási hatóság.
-    canonical_invoice_draft_reader_busy_refused: Az automatikus számlaolvasó nem futott
-      le, mert egy másik olvasás már használta ezt a gépet.
     canonical_invoice_draft_reader_headroom_refused: Az automatikus számlaolvasó nem
       futott le, mert ezen a gépen nincs elég szabad memória hozzá.
     canonical_invoice_evidence_review_changed: A bizonylat vagy a számlatervezet megváltozott
@@ -1169,8 +1167,6 @@ errors:
       a megadott azonosítóval.
     refused_live_verify_observation_not_found: Nem létezik ellenőrzési megfigyelés
       a megadott azonosítóval.
-    refused_llm_busy: Ez a gép már a beállított maximális számú helyi nyelvi modell
-      kérést futtatja.
     refused_llm_config: A nyelvi modell kliens konfigurációja érvénytelen vagy hiányos.
     refused_llm_consent: A dokumentum gépen kívüli olvasása elutasítva, mert a külső
       továbbításhoz nem történt hozzájárulás.
@@ -1348,6 +1344,8 @@ errors:
       vagy nem tartalmaz fejlécsorral rendelkező táblázatot.
     refused_taxation_comparison: A közös és egyéni adózás összehasonlítása nem végezhető
       el ennél a nyomtatványnál vagy pillanatképnél.
+    refused_unread_setting: 'A környezet {count} olyan változót állít be, amely nem
+      a Cadrumo által olvasott beállítás: {names}. Távolítsd el őket a környezetből.'
     refused_user_profile_validation: Egy felhasználói profil értéke érvénytelen. Javítsd
       a megjelenített mezőt.
     refused_wizard_answer_type: A varázsló egy mező válasza nem várt típust kapott

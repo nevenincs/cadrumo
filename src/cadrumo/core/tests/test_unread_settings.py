@@ -11,6 +11,8 @@ from __future__ import annotations
 import pytest
 
 from ..config import Settings
+from ..errors.error_codes import resolve_error_message
+from ..external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ..unread_settings import (
     UnreadSettingError,
     require_no_unread_setting_names,
@@ -48,6 +50,24 @@ def test_a_retired_name_in_the_environment_is_refused_and_its_value_is_never_pri
     assert "Not a setting Cadrumo reads" in str(error)
     assert _VALUE not in str(error)
     assert _VALUE not in repr(error.context)
+
+
+@pytest.mark.parametrize("locale", SUPPORTED_OUTPUT_LANGUAGES)
+def test_the_refusal_names_the_setting_in_every_language_and_never_its_value(
+    locale: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("CADRUMO_LLM_OLLAMA_NUM_CTX", _VALUE)
+    monkeypatch.setenv("CADRUMO_LLM_PROVIDER", _VALUE)
+
+    with pytest.raises(UnreadSettingError) as refused:
+        Settings()
+
+    sentence = resolve_error_message(refused.value, locale=locale)
+    assert "CADRUMO_LLM_OLLAMA_NUM_CTX, CADRUMO_LLM_PROVIDER" in sentence
+    assert "2" in sentence
+    assert _VALUE not in sentence
+    assert "{names}" not in sentence
+    assert "{count}" not in sentence
 
 
 def test_a_name_is_refused_whatever_its_case(monkeypatch: pytest.MonkeyPatch) -> None:

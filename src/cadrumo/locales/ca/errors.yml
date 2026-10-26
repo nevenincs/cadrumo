@@ -863,8 +863,6 @@ errors:
       tant l'exercici com el règim d'alienació.
     canonical_inventory_closing_authority_conflict: Ja consta una altra autoritat
       immutable de tancament de l'inventari.
-    canonical_invoice_draft_reader_busy_refused: El lector automàtic de factures no
-      s'ha executat perquè una altra lectura ja feia servir aquest equip.
     canonical_invoice_draft_reader_headroom_refused: El lector automàtic de factures
       no s'ha executat perquè aquest equip no té prou memòria lliure.
     canonical_invoice_evidence_review_changed: El justificant o l'esborrany de la
@@ -1252,8 +1250,6 @@ errors:
       notificacions amb l'identificador indicat.
     refused_live_verify_observation_not_found: No existeix cap observació de verificació
       amb l'identificador indicat.
-    refused_llm_busy: Aquest equip ja executa el màxim configurat de peticions al
-      model de llenguatge en local.
     refused_llm_config: La configuració del client de model de llenguatge no és vàlida
       o està incompleta.
     refused_llm_consent: S'ha rebutjat la lectura del document fora de l'equip perquè
@@ -1438,6 +1434,8 @@ errors:
       o no conté cap taula amb fila de capçalera.
     refused_taxation_comparison: La comparació tributària conjunta/individual no es
       pot realitzar per a aquest model o instantània.
+    refused_unread_setting: 'L''entorn defineix {count} variable(s) que no són ajustos
+      que Cadrumo llegeixi: {names}. Treu-les de l''entorn.'
     refused_user_profile_validation: Un valor del perfil d'usuari no és vàlid. Corregeix
       la dada indicada.
     refused_wizard_answer_type: Un camp de resposta de l'assistent ha rebut un tipus
