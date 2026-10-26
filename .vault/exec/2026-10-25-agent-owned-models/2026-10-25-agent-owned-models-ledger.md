@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:41acb6ca9a8c3bec05c7738fa5f1a33c3cd35ee3ae58b0a5b62339325f13c605'
+body_hash: 'sha256:4e68ea3e19c6fa60da3d5e2215bfb351bd60a314eae921877a03c30bf8fef83c'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -1136,6 +1136,19 @@ related:
 - `S31` `verify:` `uv run --no-sync pytest -m '' focused S31 suites` -> `pass`
 - `S31` `verify:` `npx tsc --noEmit, eslint, prettier on desktop frontend` -> `pass`
 - `S31` `by:` `vaultspec-high-executor`
+- `S28` `M` `dev/quality/tests/test_no_model_definitions.py`
+- `S28` `M` `dev/quality/tests/test_no_python_provisioning.py`
+- `S28` `M` `src/cadrumo/entrypoints/tui/setup/tests/test_setup_screen.py`
+- `S28` `M` `src/cadrumo/entrypoints/cli/tests/test_provision_components_role.py`
+- `S28` `M` `src/cadrumo_mcp/mcp/tests/test_setup_tools.py`
+- `S28` `verify:` `uv run --no-sync pytest dev/quality/tests/test_no_model_definitions.py dev/quality/tests/test_no_python_provisioning.py -n 0 (69 passed)` -> `pass`
+- `S28` `verify:` `uv run --no-sync pytest -m '' test_provision_components_role.py test_component_setup_refusal_text.py test_setup_tools.py test_setup_screen.py -n 0 (96 passed)` -> `pass`
+- `S28` `verify:` `uv run --no-sync ruff check . and ruff format --check . and ty check on the changed files` -> `pass`
+- `S28` `verify:` `just check-import-boundaries` -> `pass`
+- `S28` `verify:` `just check-style` -> `pass`
+- `S28` `verify:` `just check-format` -> `pass`
+- `S28` `verify:` `just check-types` -> `pass`
+- `S28` `by:` `implementation-engineer`
 
 ## Notes
 
@@ -1205,3 +1218,5 @@ related:
 - `S25` The `external_tool` role tests `(test_client_drives_the_real_role,` `test_provision_drives_the_real_role,` `test_setup_tools_drive_the_real_role,` conformance and lane real-role cases) were not run: no built binary.
 - `S25` Shared with P04.S30: the locale catalogue common.yml files and `dev/locales/desktop_chrome.py` also carry its licence and different-model-version string removals.
 - `S31` desktop-host-unit-test build was stopped by the orchestrator before it ran; `test_provision_drives_the_real_role` needs a built role image `(CADRUMO_DEVELOPMENT_ROLE_IMAGE)` and did not run
+- `S28` The row S25 was said to have added to `test_no_python_provisioning.py` was not in the gate; the local AI request and model argument rows are new here.
+- `S28` `docs/_static/cli-tree.json` and docs/cli are gitignored build output, so the stale pull, load and --model entries in them need no commit.
