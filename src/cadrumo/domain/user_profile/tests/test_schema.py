@@ -89,6 +89,21 @@ def test_committed_user_profile_schema_exposes_profile_lookup_metadata() -> None
     assert "soltero" in situacion.enum_values
 
 
+def test_image_reading_capability_leaves_the_off_host_decision_to_the_cloud_gate() -> None:
+    """``llm_vision`` permits a read; it does not promise where the read runs.
+
+    The selected lane decides whether a read leaves the computer, and an
+    off-host read is gated by ``cloud_evidence_upload`` and per-read consent. A
+    description that promised on-host reading would tell the person the
+    document stays here whichever model they selected.
+    """
+    description = published_profile_schema().field("capabilities.llm_vision").description
+
+    assert "cloud_evidence_upload" in description
+    for promise in ("on-host", "no byte leaves", "local vision"):
+        assert promise not in description
+
+
 def test_committed_user_profile_schema_legal_refs_resolve_against_catalogue_and_corpus() -> None:
     schema = published_profile_schema()
     refs_by_field = {

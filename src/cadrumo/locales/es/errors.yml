@@ -487,8 +487,8 @@ errors:
     fail_justificante_parse: No se pudo interpretar el PDF como un justificante.
     fail_llm_cache: No se pudo leer, escribir o interpretar una entrada de la caché
       del modelo de lenguaje.
-    fail_llm_pdf_rasterisation: No se pudo renderizar el PDF para la entrada de visión
-      local.
+    fail_llm_pdf_rasterisation: No se pudo renderizar el PDF en imágenes de página
+      para leerlo.
     fail_llm_provider: El proveedor del modelo de lenguaje devolvió un error irrecuperable.
     fail_llm_rate_limit: El proveedor del modelo de lenguaje rechazó la solicitud
       por límite de uso. Espera unos minutos y vuelve a intentarlo.

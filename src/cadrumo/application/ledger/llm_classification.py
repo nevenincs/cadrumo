@@ -249,7 +249,8 @@ def resolve_llm_evidence(
 
     if not resolve_active_capability(ServiceCapability.LLM_VISION, settings=settings).enabled:
         raise PurchaseInvoiceEvidenceInputError(
-            "on-host LLM vision reading is disabled for this profile; enable it to read scanned or image evidence",
+            "image reading is disabled for this profile; enable the llm_vision capability to read scanned or image "
+            "evidence",
             precondition_verdict=ledger_no_recovery_verdict(
                 LedgerPreconditionCondition.EVIDENCE_VISION_CAPABILITY_ENABLED,
                 facts={"llm_vision_enabled": False},
@@ -264,7 +265,7 @@ def resolve_llm_evidence(
 # proposer at all. The remedy is image or scan evidence, or the manual split flags -- not a
 # provider, because none is selectable.
 _SPLIT_NEEDS_IMAGE_EVIDENCE = (
-    "proposing a split needs scanned or image evidence for the on-host reader; "
+    "proposing a split needs scanned or image evidence for the image-reading model; "
     "this transaction has no readable image evidence to route there"
 )
 

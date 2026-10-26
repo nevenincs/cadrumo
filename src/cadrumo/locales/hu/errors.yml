@@ -450,8 +450,7 @@ errors:
     fail_justificante_parse: A PDF-et nem sikerült bizonylatként elemezni.
     fail_llm_cache: Egy nyelvi modell gyorsítótár-bejegyzése nem olvasható, írható
       vagy elemezhető.
-    fail_llm_pdf_rasterisation: A PDF-et nem sikerült helyi gépi látási bemenetként
-      renderelni.
+    fail_llm_pdf_rasterisation: A PDF-et nem sikerült oldalképekké renderelni az olvasáshoz.
     fail_llm_provider: A nyelvi modell szolgáltatója nem visszaállítható hibát adott
       vissza.
     fail_llm_rate_limit: A nyelvi modell szolgáltatója sebességkorlátozás miatt elutasította

@@ -71,7 +71,8 @@ wizard:
       google-export:
         prompt: Enable Google Sheets export?
       llm-vision:
-        prompt: Enable on-host LLM vision for reading invoices?
+        prompt: Allow reading scanned or image documents with the image-reading model
+          you selected?
       title: Service capabilities
     certificate:
       path:
@@ -362,7 +363,8 @@ wizard:
         help: Record whether Modelo 036 casilla 652 declares renunciation of the Ley
           49/2002 Title II regime.
       llm-vision:
-        help: Enable on-host LLM vision for reading invoices.
+        help: Allow reading scanned or image documents with the image-reading model
+          selected in the desktop app.
       modelo-111-no-retenciones-periods:
         help: Comma-separated Modelo 111 no-obligation periods, format YYYY:PERIOD
           (for example 2025:2T,2025:3T). Use only when no subject payments were made.

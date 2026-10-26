@@ -29,7 +29,8 @@ profile:
         know it)
     capabilities:
       google_export: Enable Google Sheets export?
-      llm_vision: Enable on-host LLM vision for reading invoices?
+      llm_vision: Allow reading scanned or image documents with the image-reading
+        model you selected?
     censo:
       activity_start_date: From what date do you have filing obligations / when did
         you register? (YYYY-MM-DD, optional)
@@ -248,7 +249,7 @@ profile:
         google_export:
           label: Google export
         llm_vision:
-          label: On-host image reading
+          label: Image reading
       censo:
         activity_end_date:
           label: Activity end date
@@ -733,7 +734,7 @@ profile:
         title: AEAT authentication
       capabilities:
         summary: Which optional services this profile may use, such as reading scanned
-          documents on this machine.
+          or image documents with a model you select.
         title: Service capabilities
       censo:
         summary: Your registration in the AEAT census (modelo 036/037) and its dates.

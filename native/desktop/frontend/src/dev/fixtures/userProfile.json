@@ -129,12 +129,12 @@
       {
         "key": "capabilities",
         "title": "Service capabilities",
-        "summary": "Which optional services this profile may use, such as reading scanned documents on this machine.",
+        "summary": "Which optional services this profile may use, such as reading scanned or image documents with a model you select.",
         "repeatable": false,
         "fields": [
           {
             "path": "capabilities.llm_vision",
-            "label": "On-host image reading",
+            "label": "Image reading",
             "value": null,
             "masked": false,
             "required": false,
@@ -150,7 +150,7 @@
               }
             ],
             "help": null,
-            "about": "Whether this profile may read scanned or image evidence on-host with the local vision model, so no byte leaves the machine. Default on; opting out disables the on-host vision read.",
+            "about": "Whether this profile may read scanned or image evidence with the image-reading model the person selected. Default on; opting out disables the image read. This flag does not decide where the read runs: an off-host read also needs the cloud_evidence_upload capability and the per-read consent.",
             "row_index": null
           },
           {
@@ -3638,12 +3638,12 @@
       {
         "key": "capabilities",
         "title": "Capacidades del servicio",
-        "summary": "Qué servicios opcionales puede usar este perfil, como leer documentos escaneados en este equipo.",
+        "summary": "Qué servicios opcionales puede usar este perfil, como leer documentos escaneados o en imagen con un modelo que elijas.",
         "repeatable": false,
         "fields": [
           {
             "path": "capabilities.llm_vision",
-            "label": "Lectura de imágenes en local",
+            "label": "Lectura de imágenes",
             "value": null,
             "masked": false,
             "required": false,
@@ -3659,7 +3659,7 @@
               }
             ],
             "help": null,
-            "about": "Whether this profile may read scanned or image evidence on-host with the local vision model, so no byte leaves the machine. Default on; opting out disables the on-host vision read.",
+            "about": "Whether this profile may read scanned or image evidence with the image-reading model the person selected. Default on; opting out disables the image read. This flag does not decide where the read runs: an off-host read also needs the cloud_evidence_upload capability and the per-read consent.",
             "row_index": null
           },
           {
@@ -7147,12 +7147,12 @@
       {
         "key": "capabilities",
         "title": "Capacitats del servei",
-        "summary": "Quins serveis opcionals pot fer servir aquest perfil, com llegir documents escanejats en aquest equip.",
+        "summary": "Quins serveis opcionals pot fer servir aquest perfil, com llegir documents escanejats o en imatge amb un model que triïs.",
         "repeatable": false,
         "fields": [
           {
             "path": "capabilities.llm_vision",
-            "label": "Lectura d'imatges en local",
+            "label": "Lectura d'imatges",
             "value": null,
             "masked": false,
             "required": false,
@@ -7168,7 +7168,7 @@
               }
             ],
             "help": null,
-            "about": "Whether this profile may read scanned or image evidence on-host with the local vision model, so no byte leaves the machine. Default on; opting out disables the on-host vision read.",
+            "about": "Whether this profile may read scanned or image evidence with the image-reading model the person selected. Default on; opting out disables the image read. This flag does not decide where the read runs: an off-host read also needs the cloud_evidence_upload capability and the per-read consent.",
             "row_index": null
           },
           {
@@ -10656,12 +10656,12 @@
       {
         "key": "capabilities",
         "title": "Szolgáltatási képességek",
-        "summary": "Mely opcionális szolgáltatásokat használhat ez a profil, például a beolvasott dokumentumok helyi olvasását.",
+        "summary": "Mely opcionális szolgáltatásokat használhat ez a profil, például a beolvasott vagy kép alapú dokumentumok olvasását az általad kiválasztott modellel.",
         "repeatable": false,
         "fields": [
           {
             "path": "capabilities.llm_vision",
-            "label": "Helyi képfelismerés",
+            "label": "Képolvasás",
             "value": null,
             "masked": false,
             "required": false,
@@ -10677,7 +10677,7 @@
               }
             ],
             "help": null,
-            "about": "Whether this profile may read scanned or image evidence on-host with the local vision model, so no byte leaves the machine. Default on; opting out disables the on-host vision read.",
+            "about": "Whether this profile may read scanned or image evidence with the image-reading model the person selected. Default on; opting out disables the image read. This flag does not decide where the read runs: an off-host read also needs the cloud_evidence_upload capability and the per-read consent.",
             "row_index": null
           },
           {

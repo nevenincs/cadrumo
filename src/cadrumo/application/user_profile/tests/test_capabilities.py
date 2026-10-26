@@ -87,6 +87,25 @@ def test_authorized_fact_projection_uses_the_same_safety_floor_and_opt_out() -> 
     assert barred.source is CapabilitySource.SAFETY_FLOOR
 
 
+def test_gestor_mode_bars_the_off_host_gate_and_leaves_image_reading_to_the_profile() -> None:
+    """Image reading does not keep a document on this computer; the cloud gate does.
+
+    ``llm_vision`` permits a read with the image-reading model the person
+    selected, wherever that model runs. The standing bar on an off-host read
+    sits on ``cloud_evidence_upload`` alone, so gestor mode bars that one and
+    leaves ``llm_vision`` to its default and the profile's own answer.
+    """
+    gestor = load_settings().model_copy(update={"cadrumo_evidence_gestor_mode": True})
+
+    vision = resolve_capability(ServiceCapability.LLM_VISION, profile_record=None, settings=gestor)
+    cloud = resolve_capability(ServiceCapability.CLOUD_EVIDENCE_UPLOAD, profile_record=None, settings=gestor)
+
+    assert vision.enabled is True
+    assert vision.source is CapabilitySource.DEFAULT
+    assert cloud.enabled is False
+    assert cloud.source is CapabilitySource.SAFETY_FLOOR
+
+
 @pytest.mark.parametrize("token", ["no", "n", "false", "falso", "0"])
 def test_a_negative_answer_in_any_accepted_form_is_honoured(token: str) -> None:
     """A stored opt-out decides, rather than deferring to the deployment flag.

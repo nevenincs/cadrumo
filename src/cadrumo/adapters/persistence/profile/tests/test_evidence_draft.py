@@ -12,7 +12,7 @@ See Also:
         Acquisition-stage primitive that refuses a document with no text layer.
     :func:`~application.ledger.invoice_draft_extraction.extract_invoice_draft_from_evidence`
         CLI-facing resolver that reads stored evidence bytes from secure storage
-        and chooses text-layer or on-host vision extraction.
+        and chooses text-layer or image-reading extraction.
     :func:`~application.ledger.invoice_confirmation.prepare_invoice_confirmation_from_evidence`
         Confirmation step that re-extracts, applies overrides, and delegates the
         catalogue write.
@@ -418,7 +418,7 @@ class TestExtractInvoiceDraftFromEvidenceVisionFallback:
         secure_objects: SecureObjectRepository,
         tmp_path: Path,
     ) -> None:
-        """An operator who opted out of on-host vision gets a typed refusal, not an empty draft."""
+        """An operator who opted out of image reading gets a typed refusal, not an empty draft."""
         pdf_path = tmp_path / "scan.pdf"
         pdf_path.write_bytes(_scan_only_pdf_bytes())
         svc = _make_svc(isolated_settings, secure_objects)

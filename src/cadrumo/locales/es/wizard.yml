@@ -71,7 +71,8 @@ wizard:
       google-export:
         prompt: ¿Activar la exportación a Google Sheets?
       llm-vision:
-        prompt: ¿Activar la visión LLM local para leer facturas?
+        prompt: ¿Permitir leer documentos escaneados o en imagen con el modelo de
+          lectura de imágenes que elegiste?
       title: Capacidades de servicios
     certificate:
       path:
@@ -372,7 +373,8 @@ wizard:
         help: Registra si la casilla 652 del modelo 036 declara la renuncia al régimen
           del título II de la Ley 49/2002.
       llm-vision:
-        help: Activar la visión LLM local para leer facturas.
+        help: Permitir leer documentos escaneados o en imagen con el modelo de lectura
+          de imágenes elegido en la aplicación de escritorio.
       modelo-111-no-retenciones-periods:
         help: Periodos Modelo 111 sin obligación, separados por comas, formato AAAA:PERIODO
           (por ejemplo 2025:2T,2025:3T). Usar solo cuando no se pagaron rentas sujetas.

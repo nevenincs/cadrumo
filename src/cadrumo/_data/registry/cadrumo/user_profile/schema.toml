@@ -140,7 +140,7 @@ key = "llm_vision"
 type = "boolean"
 required = false
 sensitivity = "operational"
-description = "Whether this profile may read scanned or image evidence on-host with the local vision model, so no byte leaves the machine. Default on; opting out disables the on-host vision read."
+description = "Whether this profile may read scanned or image evidence with the image-reading model the person selected. Default on; opting out disables the image read. This flag does not decide where the read runs: an off-host read also needs the cloud_evidence_upload capability and the per-read consent."
 
 [[sections.fields]]
 key = "google_export"

@@ -109,18 +109,19 @@ def test_image_evidence_resolves_to_images(profile: TestRuntimeProfile, tmp_path
     [("scan.pdf", scan_only_pdf), ("receipt.png", png_image)],
     ids=["scan-pdf", "image"],
 )
-def test_llm_vision_off_refuses_both_on_host_read_modes(
+def test_llm_vision_off_refuses_both_image_read_modes(
     profile: TestRuntimeProfile,
     tmp_path: Path,
     name: str,
     data_factory: Callable[[], bytes],
 ) -> None:
-    """An ``llm_vision=off`` profile refuses BOTH on-host read modes.
+    """An ``llm_vision=off`` profile refuses BOTH image read modes.
 
     The capability gate sits past the text-layer early return, so it must cover
-    every on-host read mode: a scan-only PDF (rasterise path) and an image
+    every image read mode: a scan-only PDF (rasterise path) and an image
     attachment (direct-bytes path). Both reach the gate and must refuse with an
-    instructive, non-silent error naming the opt-in command.
+    instructive, non-silent error naming the capability, and the refusal must
+    not promise where a read would have run: the selected lane decides that.
     """
     from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 
@@ -149,7 +150,8 @@ def test_llm_vision_off_refuses_both_on_host_read_modes(
             settings=profile.settings,
             ports=_llm_ports(profile),
         )
-    assert "vision" in str(raised.value).lower()
+    assert "llm_vision" in str(raised.value)
+    assert "on-host" not in str(raised.value)
     assert raised.value.terminal_precondition_verdict is not None
     assert raised.value.terminal_precondition_verdict.failed_condition_id == (
         LedgerPreconditionCondition.EVIDENCE_VISION_CAPABILITY_ENABLED.value

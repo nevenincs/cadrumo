@@ -137,7 +137,9 @@ def resolve_capability_from_values(
             reason=f"{capability.value} is barred in gestor mode: a gestor never transmits a client's document",
         )
     # llm_vision / google_export: profile fact, else the conservative default. No
-    # safety-floor bar — vision is on-host, google export is non-sensitive.
+    # safety-floor bar: llm_vision does not decide where a read runs (an off-host
+    # read is gated by cloud_evidence_upload and consent), and google export is
+    # non-sensitive.
     fact = _parse_bool_fact(profile_values.get(capability.schema_path))
     if fact is not None:
         return CapabilityDecision(

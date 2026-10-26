@@ -82,7 +82,8 @@ wizard:
       google-export:
         prompt: Engedélyezi a Google Sheets exportálást?
       llm-vision:
-        prompt: Engedélyezi a helyi LLM-látást a számlák beolvasásához?
+        prompt: Engedélyezed a beolvasott vagy kép alapú dokumentumok olvasását az
+          általad kiválasztott képolvasó modellel?
       title: Szolgáltatási képességek
     certificate:
       path:
@@ -386,7 +387,8 @@ wizard:
         help: Rögzíti, hogy a Modelo 036 652-es mezője bejelenti-e a Ley 49/2002 II.
           címe szerinti rendszerről való lemondást.
       llm-vision:
-        help: Helyi LLM-látás engedélyezése a számlák beolvasásához.
+        help: Beolvasott vagy kép alapú dokumentumok olvasásának engedélyezése az
+          asztali alkalmazásban kiválasztott képolvasó modellel.
       modelo-111-no-retenciones-periods:
         help: Vesszővel elválasztott Modelo 111 nem kötelezett időszakok, ÉÉÉÉ:IDŐSZAK
           formátumban (például 2025:2T,2025:3T). Csak akkor használd, ha nem történt

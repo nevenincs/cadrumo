@@ -597,10 +597,11 @@ application:
       purchase_evidence_already_set: Purchase invoice supporting documents cannot
         be changed once attached. Remove the transaction from your records and add
         it again with the correct document.
-      split_requires_image_evidence: The on-host reader can only propose a split for
-        transaction %{transaction_id} from scanned or image evidence, and this transaction
-        has none it can read. Attach a scanned or image invoice and re-run with --read-evidence,
-        or state the split yourself with --child-amount and --child-description.
+      split_requires_image_evidence: The image-reading model can only propose a split
+        for transaction %{transaction_id} from scanned or image evidence, and this
+        transaction has none it can read. Attach a scanned or image invoice and re-run
+        with --read-evidence, or state the split yourself with --child-amount and
+        --child-description.
       transaction_id_prefix_ambiguous: 'transaction id prefix %{prefix} matches %{count}
         transactions: %{matches}'
       transaction_id_prefix_empty: transaction id prefix is empty

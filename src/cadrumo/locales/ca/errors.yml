@@ -491,8 +491,8 @@ errors:
     fail_justificante_parse: No s'ha pogut interpretar el PDF com un justificant.
     fail_llm_cache: No s'ha pogut llegir, escriure o interpretar una entrada de la
       memòria cau del model de llenguatge.
-    fail_llm_pdf_rasterisation: No s'ha pogut renderitzar el PDF per a l'entrada de
-      visió local.
+    fail_llm_pdf_rasterisation: No s'ha pogut renderitzar el PDF en imatges de pàgina
+      per llegir-lo.
     fail_llm_provider: El proveïdor del model de llenguatge ha retornat un error irrecuperable.
     fail_llm_rate_limit: El proveïdor del model de llenguatge ha rebutjat la sol·licitud
       per límit d'ús. Espera uns minuts i torna-ho a provar.

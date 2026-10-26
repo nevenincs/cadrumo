@@ -621,7 +621,7 @@ application:
       purchase_evidence_already_set: A beszerzési számla bizonylata a csatolás után
         nem módosítható. Töröld a tranzakciót a nyilvántartásodból, majd add hozzá
         újra a helyes bizonylattal.
-      split_requires_image_evidence: A gépen futó olvasó a(z) %{transaction_id} tranzakcióhoz
+      split_requires_image_evidence: A képolvasó modell a(z) %{transaction_id} tranzakcióhoz
         csak beolvasott vagy kép alapú bizonyítékból tud felosztást javasolni, és
         ehhez a tranzakcióhoz nincs ilyen, amit el tudna olvasni. Csatolj beolvasott
         vagy kép alapú számlát, és futtasd újra a --read-evidence kapcsolóval, vagy

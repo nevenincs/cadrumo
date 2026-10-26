@@ -28,7 +28,8 @@ profile:
       description: Activitat econòmica (text normal; usa l'epígraf IAE si el coneixes)
     capabilities:
       google_export: Vols activar l'exportació a Google Sheets?
-      llm_vision: Vols activar la visió LLM local per llegir factures?
+      llm_vision: Vols permetre llegir documents escanejats o en imatge amb el model
+        de lectura d'imatges que has triat?
     censo:
       activity_start_date: Des de quina data tens obligacions de declaració / quan
         et vas donar d'alta? (AAAA-MM-DD, opcional)
@@ -246,7 +247,7 @@ profile:
         google_export:
           label: Exportació a Google
         llm_vision:
-          label: Lectura d'imatges en local
+          label: Lectura d'imatges
       censo:
         activity_end_date:
           label: Data de baixa de l'activitat
@@ -730,7 +731,7 @@ profile:
         title: Autenticació amb l'AEAT
       capabilities:
         summary: Quins serveis opcionals pot fer servir aquest perfil, com llegir
-          documents escanejats en aquest equip.
+          documents escanejats o en imatge amb un model que triïs.
         title: Capacitats del servei
       censo:
         summary: La teva alta al cens de l'AEAT (model 036/037) i les seves dates.

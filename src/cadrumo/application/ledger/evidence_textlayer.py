@@ -91,11 +91,11 @@ def extract_evidence_pages(
     Raises:
         PurchaseInvoiceEvidenceInputError: When the evidence is not a PDF, or the
             PDF has no usable text layer (scan-only / XFA) -- the caller falls back
-            to the on-host vision reader in that case.
+            to the image-reading model in that case.
     """
     if evidence.document_shape not in PDF_CONTAINER_SHAPES:
         raise PurchaseInvoiceEvidenceInputError(
-            "evidence has no text layer (not a PDF); use the on-host vision reader",
+            "evidence has no text layer (not a PDF); use the image-reading model",
             precondition_verdict=ledger_no_recovery_verdict(
                 LedgerPreconditionCondition.EVIDENCE_TEXT_LAYER_AVAILABLE,
                 facts={"pdf_layer_present": False},

@@ -445,7 +445,8 @@ errors:
       connection and try again.
     fail_justificante_parse: The PDF could not be parsed into a receipt.
     fail_llm_cache: A language-model cache entry could not be read, written or parsed.
-    fail_llm_pdf_rasterisation: The PDF could not be rendered for local vision input.
+    fail_llm_pdf_rasterisation: The PDF could not be rendered into page images for
+      reading.
     fail_llm_provider: The language-model provider returned an unrecoverable error.
     fail_llm_rate_limit: The language-model provider rejected the request due to rate
       limits. Wait a few minutes and try again.

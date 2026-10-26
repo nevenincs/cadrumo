@@ -642,11 +642,11 @@ application:
       purchase_evidence_already_set: El justificant d'una factura de compra no es
         pot canviar un cop adjuntat. Elimina la transacció dels teus registres i torna
         a afegir-la amb el justificant correcte.
-      split_requires_image_evidence: El lector on-host només pot proposar una divisió
-        per a la transacció %{transaction_id} a partir d'evidència escanejada o en
-        imatge, i aquesta transacció no en té cap que pugui llegir. Adjunta una factura
-        escanejada o en imatge i torna a executar amb --read-evidence, o indica tu
-        mateix la divisió amb --child-amount i --child-description.
+      split_requires_image_evidence: El model de lectura d'imatges només pot proposar
+        una divisió per a la transacció %{transaction_id} a partir d'evidència escanejada
+        o en imatge, i aquesta transacció no en té cap que pugui llegir. Adjunta una
+        factura escanejada o en imatge i torna a executar amb --read-evidence, o indica
+        tu mateix la divisió amb --child-amount i --child-description.
       transaction_id_prefix_ambiguous: 'el prefix d''id de transacció %{prefix} coincideix
         amb %{count} transaccions: %{matches}'
       transaction_id_prefix_empty: el prefix d'id de transacció és buit

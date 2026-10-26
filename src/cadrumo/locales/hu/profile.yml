@@ -29,7 +29,8 @@ profile:
         IAE fejezetet, ha ismered)
     capabilities:
       google_export: Engedélyezi a Google Sheets exportálást?
-      llm_vision: Engedélyezi a helyi LLM-látást a számlák beolvasásához?
+      llm_vision: Engedélyezed a beolvasott vagy kép alapú dokumentumok olvasását
+        az általad kiválasztott képolvasó modellel?
     censo:
       activity_start_date: Mikortól van bevallási kötelezettsége / mikor regisztrált?
         (ÉÉÉÉ-HH-NN, opcionális)
@@ -248,7 +249,7 @@ profile:
         google_export:
           label: Google-exportálás
         llm_vision:
-          label: Helyi képfelismerés
+          label: Képolvasás
       censo:
         activity_end_date:
           label: Tevékenység vége
@@ -736,7 +737,8 @@ profile:
         title: AEAT-hitelesítés
       capabilities:
         summary: Mely opcionális szolgáltatásokat használhat ez a profil, például
-          a beolvasott dokumentumok helyi olvasását.
+          a beolvasott vagy kép alapú dokumentumok olvasását az általad kiválasztott
+          modellel.
         title: Szolgáltatási képességek
       censo:
         summary: Az AEAT adózói nyilvántartásába (Modelo 036/037) történt bejelentkezése
