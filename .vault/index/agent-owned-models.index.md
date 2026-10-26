@@ -4,12 +4,13 @@ tags:
   - '#index'
   - '#agent-owned-models'
 date: '2026-10-25'
-modified: '2026-10-25'
+modified: '2026-10-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:71df61c336f43b00dcb4ec10f5f1c2130e916023f1bb379b1466f913b9f1eb3d'
+body_hash: 'sha256:363627104d0deb54f691633b332893a70db26dd470e1e268cad21f2234b83188'
 related:
   - '[[2026-10-25-agent-owned-models-adr]]'
   - '[[2026-10-25-agent-owned-models-audit]]'
+  - '[[2026-10-25-agent-owned-models-hosted-vision-declaration-research]]'
   - '[[2026-10-25-agent-owned-models-ledger]]'
   - '[[2026-10-25-agent-owned-models-plan]]'
 ---
@@ -35,3 +36,7 @@ Auto-generated index of all documents tagged with `#agent-owned-models`.
 ### plan
 
 - `2026-10-25-agent-owned-models-plan` - `agent-owned-models` plan
+
+### research
+
+- `2026-10-25-agent-owned-models-hosted-vision-declaration-research` - `agent-owned-models` research: `Hosted models declared without vision`

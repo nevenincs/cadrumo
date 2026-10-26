@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:d99e841713d7aa78e99e9686ab340b8e2e3ce179965fc611f1e8e976ba237c48'
+body_hash: 'sha256:54cdddc2314fb01d416717bcff13ccf980d6bc0de63fa47c8fe2879e96de9714'
 related:
   - '[[2026-10-25-agent-owned-models-plan]]'
   - '[[2026-10-25-agent-owned-models-adr]]'
@@ -32,6 +32,21 @@ Phase-close review of `P03`, Steps `S12` to `S18`, and of the corrections to the
 Traced: every tax reader (statement reading, the text classifier, evidence text and vision, the vision classifier, column-role mapping, the supply-nature proposal and the batch) from its request through the client's consent gate, the lane lookup, on-host admission and the agent adapter to `ModelRunService.run`; the consent ledger append on off-host and on-host lanes; refusal verdicts through the batch's role closing and `nested_terminal_precondition_verdict`; the local-reader status, report and readiness reads; record compatibility for the retired provider and the dormant fitness-verdict location; and the test stand-ins, including the admitted model-run service under `src/cadrumo_runtime/host/tests/native_commands`.
 
 The orchestrator's rulings (a) to (f) were checked against the ADR text and none contradicts it. Strict consent for every off-host run, the size-less on-host lane taking the slot without the headroom check, the per-role sourcing of the kept `local-reader.*` and readiness contracts with `local-reader.provision` and `config provision load` deleted, the renamed `pin-local-ai-program` recipe, the batch closing a role on its first typed refusal, and the typed refusal of `--vision-model` each fall within constraints 4, 8, 10, 12 as amended and the Consequences list. Decision coverage is satisfied: the plan links every governing accepted ADR. No boundary violation was found: no added source, test, configuration or user-document line cites a development record.
+
+Plan-close review of `2026-10-25-agent-owned-models-plan`, all 31 Steps, examining in detail the work since the `P03` review: `P04` (`S19` to `S23` and `S30`) and `P05` (`S24` to `S28` and `S31`), and then the integrated behaviour of the whole plan. Diff base `321a087d0c`, which records the `P03` review; target `ff7631f6bf` on `feature/tui`. Reviewed: the commits in that range that carry `Vaultspec-Feature: agent-owned-models`. The `ollama-provider-settings` commits `2a3f5b9fbd`, `e73930e733` and `9c8f54b37e` were read only where they implement the governing ADR's 2026-10-26 amendment on the Ollama lane's settings. Uncommitted scope: other sessions' edits in the shared worktree (client concurrency, runtime installation, the operation journal, auth preferences, and the desktop user-profile files `native/desktop/frontend/src/shell/userProfile.ts` and `native/desktop/src-tauri/src/shell/user_profile.rs`). None is in this plan's scope, and none was touched.
+
+Read whole: `2026-10-25-agent-owned-models-adr` with all its amendments, and `2026-10-24-rust-component-provisioning-adr`. For `2026-10-18-dependency-provisioning-unified-setup-adr`, `2026-10-19-provider-settings-tax-model-runs-adr`, `2026-10-13-provider-settings-adr`, `2026-06-13-llm-evidence-classification-adr`, `2026-10-13-application-distribution-native-bundle-llm-extra-adr` and `2026-10-13-agent-attachments-adr`, this review read their dated amendments and the constraints those amendments replace. The ledger was read for every Step's rows, checks and notes.
+
+Owner architecture, traced:
+
+- The engine's `admit_local_ai` (`native/application/src/provisioning/engine.rs:542`) has one production caller: the desktop setup host (`native/desktop/src-tauri/src/shell/setup/components.rs:103`, `:598`). That host admits it with the selection and catalogue sizes it reads from the agent service (`native/desktop/src-tauri/src/shell/setup/admission.rs`).
+- An engine that is not admitted refuses a plan, setup or removal naming `local_ai` (`engine.rs:557`, `:562`). The Python request refuses the same before the role starts (`src/cadrumo/adapters/outbound/components/client.py:129`).
+- No product Python calls or reads the Ollama server. The remaining Ollama references in `src` are the program pins, storage locations, the host allowlist and the agent's launch address (`src/cadrumo_agent_service/host/launch_environment.py:71`).
+- `model_does_not_fit` maps to `ModelRunRefusalCode.MODEL_DOES_NOT_FIT` at run start through `_REFUSALS` (`src/cadrumo_agent_service/adapters/agent_background_runs.py:79`) and mid-turn through `_PROVIDER_CONDITIONS` (`:94`, `:362`). The tax side raises it as the non-retried `LLMContentionError` with `LOAD_CAPACITY_AVAILABLE` (`src/cadrumo/adapters/outbound/llm/providers/agent.py:79`, `:134`).
+- The run start waits 90 s (`agent_background_runs.py:47`), and the runtime's frame wait adds 120 s to the run deadline (`src/cadrumo_runtime/host/profile_connection_model_runs.py:43`). The agent's 60 s load bound is therefore reached first.
+- The local reader takes a role's installed state from the lane's `installed` (`src/cadrumo/application/local_reader.py:281`) and the program's state from the components status row (`local_reader.py:137`).
+
+Decision coverage: the plan links every governing accepted ADR, and no unlinked governing ADR was found. One record gap is a finding below: the `P05.S31` ruling is in the plan's Description and in no ADR. Boundary: no added source, test, configuration or user-document line in the range cites a development record.
 
 ## Findings
 
@@ -99,6 +114,103 @@ Ruling (f) has the option refuse with a typed condition. The refusal is built on
 
 The batch never carries consent, so on a lane whose entry reads off-host the client's gate refuses each document with `EVIDENCE_OFF_HOST_DISPATCH_PERMITTED` (`src/cadrumo/adapters/outbound/llm/client.py:821`). That verdict has no `model_run_refusal` fact and no role, so `_reader_refusal_role` closes nothing (`src/cadrumo/application/ledger/batch_ingest.py` `_InferenceLaneState.close_on_refusal`). Every later document of the role is attempted and refused for the same role-level reason. `src/cadrumo/entrypoints/tests/test_evidence_batch_reader_lane.py:99` fixes this as intended, and nothing leaves the host, so this is not a consent defect. However, a batch-wide configuration condition reads as N document refusals instead of one pause naming the role, and each attempt costs a lookup round trip. Consider having the consent gate state the role, so the batch pauses the role as it does for a model-run refusal.
 
+### vision-model-option-kept-to-refuse | high | `--vision-model` and the `vision_model` request field remain only to refuse, though their removal was deferred to `P05.S25`.
+
+The option is still declared on two classify commands (`src/cadrumo/entrypoints/cli/_app_ledger_lifecycle_command_specs.py:158`, `src/cadrumo/entrypoints/cli/_app_ledger_classification_command_specs.py:151`). It is threaded through `src/cadrumo/entrypoints/cli/ledger_commands.py:389` and `:426`, `src/cadrumo/entrypoints/cli/_ledger_llm_cli.py:74` and `src/cadrumo/entrypoints/cli/ledger_lifecycle_cli.py:547`. The registered `ledger.classify.review` request carries it as `vision_model` (`src/cadrumo/application/ledger/llm_review_contracts.py:56`). A dedicated port checks it (`src/cadrumo/application/ledger/llm_classification_ports.py:206`, `src/cadrumo/application/ledger/llm_review_execution.py:307`), and `refuse_vision_model_override` refuses it (`src/cadrumo/adapters/outbound/llm/providers/agent.py:117`). It also has its own precondition, `llm.agent.model_override_absent` (`src/cadrumo/adapters/outbound/llm/preconditions.py:26`), and help text in four locales (`src/cadrumo/locales/en/cli.yml:3081`).
+
+Every value is refused, so nothing is unsafe. However, the `P03.S13` ledger note defers removing the flag, the payload field and the help strings to `P05.S25`, and `P05.S25` closed without removing them. The owner's 2026-10-26 ruling, recorded in `2026-10-24-rust-component-provisioning-adr`, deletes divergent and superseded code. The architecture rule also forbids keeping a displaced API for old callers without a stated compatibility window.
+
+Fix, in one change:
+
+- Delete the option, the request field, the `vision_model` parameters of `src/cadrumo/application/ledger/llm_classification.py` and the ledger CLI, the refusal port, the precondition and its locale keys.
+- Regenerate the operation contract manifest.
+- Keep a test that the parser does not know the option.
+
+### downloaded-not-loaded-note-has-no-producer | high | No production code produces the `downloaded_not_loaded` note, yet it is declared in the engine, the desktop wire, the TypeScript contract, Python and eight locale catalogues.
+
+`Note::DownloadedNotLoaded` (`native/application/src/provisioning/state.rs:56`) is built only inside that module's tests (`state.rs:443`, `:563`, `:673`). No engine path sets it, because the full check of a selected model is a one-token generation that either passes or fails. The value is still declared in every other layer:
+
+- the desktop host maps it (`native/desktop/src-tauri/src/shell/setup/components.rs:1085`, `native/desktop/src-tauri/src/shell/setup/wire.rs:121`);
+- the TypeScript contract types it (`native/desktop/frontend/src/ipc/contract.ts:856`), and a dev fixture shows it (`native/desktop/frontend/src/dev/setupFixture.ts:140`);
+- the desktop chrome registers it (`dev/locales/desktop_chrome.py:515`, `:3207`);
+- Python declares it as `DependencyNote.DOWNLOADED_NOT_LOADED` (`src/cadrumo/application/dependency_contracts.py:129`);
+- `common.yml` and `application.yml` word it in all four locales (`src/cadrumo/locales/en/common.yml:3584`, `src/cadrumo/locales/en/application.yml:1860`).
+
+The note meant that contention admission had refused the full check's load (`2026-10-18-dependency-provisioning-unified-setup-adr` D7). `P05.S31` deleted that admission, on the owner's ruling that cadrumo-agent owns load admission. The note is therefore superseded code under the 2026-10-26 ruling, and its words describe a state that no surface can reach. Fix: remove the member from every layer, and remove its locale keys with the `dev.locales` remove-batch. Amend the D7 wording as described in the next finding.
+
+### load-admission-ruling-is-not-in-the-adrs | high | The accepted ADRs still bind Python to the contention admission that `P05.S31` deleted.
+
+These accepted ADR texts still keep that admission:
+
+- Constraint 8 of `2026-10-25-agent-owned-models-adr`: "Hardware and contention admission stays. It reads the model's size from the selected catalogue entry" (`.vault/adr/2026-10-25-agent-owned-models-adr.md:66`). Its amendment of rust-provisioning constraint 12 repeats that admission "stays in Python" (`:114`).
+- Constraint 12 of `2026-10-24-rust-component-provisioning-adr` says the same (`.vault/adr/2026-10-24-rust-component-provisioning-adr.md:59`).
+- D7 of `2026-10-18-dependency-provisioning-unified-setup-adr` still describes a full check that runs "when contention admission permits", with the note "downloaded, not loaded yet" (`.vault/adr/2026-10-18-dependency-provisioning-unified-setup-adr.md:115`). Its 2026-10-24 and 2026-10-25 amendments do not withdraw this.
+
+`P05.S31` (commit `2655d16282`) deleted Python's dispatch-time contention admission and the readiness fields that reported it, on the owner's 2026-10-26 ruling that cadrumo-agent owns load admission. That ruling and the agent contract it relies on are recorded only in the plan's Description (`.vault/plan/2026-10-25-agent-owned-models-plan.md:41`). Unlike the desktop-only ruling of the same day, they are not recorded as an amendment of any ADR. The code is authorised, but the binding records contradict it, and the next reader of constraint 8 is told to restore the admission. The hardware floor survives as a readiness read (`src/cadrumo/application/local_reader.py:263`) and in the doctor row (`src/cadrumo/application/provisioning.py:200`), so the amendment should state which part remains.
+
+Fix: append a dated amendment to these three records that states the ruling, the `model_does_not_fit` contract and that the hardware floor remains only a read:
+
+- `2026-10-25-agent-owned-models-adr`: constraint 8 and the constraint-12 amendment;
+- `2026-10-24-rust-component-provisioning-adr`: constraint 12;
+- `2026-10-18-dependency-provisioning-unified-setup-adr`: D7.
+
+No code changes.
+
+### product-identity-locale-gate-fails | high | The plan's new refusal and setup wording breaks the committed-catalogue product-identity gate in all four locales.
+
+`dev/locales/tests/test_audit.py::test_committed_catalogues_follow_contextual_product_identity_contract` fails at `dev/locales/tests/test_audit.py:1087` on the committed catalogues at `ff7631f6bf`. The test requires the set of keys whose prose names Cadrumo to equal the inventory `_PROSE_KEYS` (`dev/locales/tests/test_audit.py:77`). In each locale, seventeen keys name Cadrumo with no inventory entry, and none is missing. Most come from routing the reader refusals to the desktop in `P05.S25`, `P05.S27` (commit `0c8d80ea28`) and `P05.S31`. Examples:
+
+- `errors.refused.refused_llm_contention`
+- `errors.refused.refused_ledger_evidence_reader_unavailable`
+- `cli.ledger.classify.vision_model_help`
+- `cli.app.ledger.evidence.batch_paused_local_ai_unavailable`
+- `application.provisioning.refusal.statement_local_ai_unavailable`
+- `tui.local_reader.card.description`
+- `desktop.setup.refused_model_selection_unusable`
+- `desktop.setup.refused_model_size_unstated`
+
+Three more keys belong to the `ollama-provider-settings` work: `desktop.providers.local_model_remove_failed`, `desktop.providers.local_model_remove_still_selected` and `desktop.providers.local_models_lead`. The only locale check `P05.S27` records is `src/cadrumo/application/tests/test_component_refusal_wording.py`, so the regression went unseen. Fix: through the `dev.locales` workflow, either register each key in `_PROSE_KEYS` as a deliberate product-name reference or reword it to drop the name, then rerun the test file. Agree the three `desktop.providers` keys with that feature's owner.
+
+### reader-panel-names-roles-by-id-and-hides-why | medium | The desktop's document-reader panel shows a raw role id and a bare "Not ready", with no route to the model choice.
+
+`ReaderReadiness` renders each role by its wire id (`native/desktop/frontend/src/components/ledger/documents/DocumentPanels.tsx:697`). The person therefore reads `text_extraction` or `vision_transcription` in every locale, although the canonical `roleWords` (`native/desktop/frontend/src/shell/agentModelRoles.ts:144`) already words the same roles for the model-choice dialog and the Ollama settings.
+
+A role that is not ready shows only "Not ready" (`DocumentPanels.tsx:705`), and the panel offers a setup only when the verdict names one (`:639`). A role with no selection fails `SELECTED_MODEL_AVAILABLE` with no action (`src/cadrumo/application/local_reader.py:245`). The desktop is the only surface that can set a selection, yet it neither says that the role has no model chosen nor leads to the model choice. The same holds for a hardware floor, an unknown installed state and an unavailable service. The readiness payload already carries the `failed_condition_id` that tells these apart (`src/cadrumo/application/local_reader.py:188`). The comment at `DocumentPanels.tsx:636` also still names memory as a cause.
+
+Fix: word the role through `roleWords` and word the failed condition. For a role without a selection, offer the model-role choice that the agent column already opens.
+
+### loopback-endpoint-module-is-test-only | medium | `src/cadrumo/core/loopback_endpoint.py` has no product caller left.
+
+`endpoint_host_is_loopback` (`src/cadrumo/core/loopback_endpoint.py:17`) lost its last product caller when `P05.S31` deleted the Ollama endpoint setting and its check (commit `2655d16282`). Its only reader now is `src/cadrumo/core/tests/test_loopback_endpoint.py:7`. It is superseded product code that only its own test keeps alive, and the 2026-10-26 ruling deletes such code. The agent service's catalogue parser holds the keyless lane's own loopback rule. Fix: delete the module and its test.
+
+### technical-docs-still-describe-local-memory-admission | medium | Two technical pages still describe the memory admission that `P05.S31` deleted.
+
+`docs/technical/articles/014-llm-dispatch-consent-and-invoice-reading-pipeline.md:16` says an on-host lane "checks measured memory headroom against the selected catalogue entry's `size_bytes` before loading", and `:38` lists "local memory admission" among the boundary's controls. `docs/technical/topics/external-integrations-and-local-runtime.md:42` says requests "apply local memory admission". Since `P05.S31` the client holds only the on-host occupancy slot (`src/cadrumo/adapters/outbound/llm/client.py:604`), and the agent decides whether a load fits. Commit `2c6e3c00f7` corrected article 028 and the application-orchestration topic but not these pages, which describe a safety control that no longer exists. Fix: reword them as article 028 does, and regenerate their translation catalogues.
+
+### vision-capability-promises-on-host-reading | medium | The `llm_vision` capability tells the person image reads stay on this computer, but it now gates any lane the person selected.
+
+The profile capability `llm_vision` is described as reading image evidence "on-host with the local vision model, so no byte leaves the machine" (`src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml:143`, `src/cadrumo/core/capabilities.py:56`). The wizard asks "Enable on-host LLM vision for reading invoices?" (`src/cadrumo/locales/en/profile.yml:32`). The capability now gates every vision read (`src/cadrumo/application/ledger/invoice_draft_extraction.py:908`, `src/cadrumo/application/ledger/llm_classification.py:250`, `src/cadrumo/adapters/outbound/llm/statement_reading.py:339`), on whichever lane the person selected for the vision role, including an off-host lane. An off-host read still needs the digest-bound consent and the `cloud_evidence_upload` eligibility, so nothing leaves the host without consent. Still, the question the person answers promises a locality that the capability no longer decides.
+
+Fix: reword the capability and its prompt to say what it now gates. Whether `llm_vision` should instead admit only a lane whose entry reads on-host is a follow-on decision under constraint 4 of `2026-10-25-agent-owned-models-adr`.
+
+### rule-06-cites-deleted-model-admission | medium | The always-on application-orchestration rule still cites the deleted `provisioning_runtime.py` and its memory admission.
+
+`.vaultspec/rules/06-application-orchestration-and-diagnostics.md:7` lists "memory admission for model load" among the enforced controls and links `src/cadrumo/application/provisioning_runtime.py#L256`. Line `:9` names a readiness probe that "may cold-load a model", linking the same deleted module (`#L1031`). The `cadrumo-start` skill reference repeats both lines (`.vaultspec/skills/cadrumo-start/references/06-application-orchestration-and-diagnostics.md:7`, `:9`), as does the generated copy under `.claude/rules`. Every session loads this rule, so agents are told of a control and a defect that no longer exist, and the links do not resolve.
+
+The policy sources are the owner's. Propose rewording them to say that load admission belongs to cadrumo-agent and that the local reader reads readiness only. Apply the change only on request, then run `vaultspec-core sync`.
+
+### vendor-model-names-in-test-fixtures | low | About fifty real vendor model names remain as recorded-model strings in Python test fixtures.
+
+Examples are `src/cadrumo/adapters/outbound/llm/tests/test_cache.py:37`, `src/cadrumo/adapters/persistence/storage/tests/test_consent_withdrawal.py:33`, `src/cadrumo_runtime/host/tests/frontend/cli/test_evidence_consent_cli.py:49` and `src/cadrumo/application/ledger/tests/test_document_transcription.py:55`. One development reference point also uses a vendor name (`dev/ingest_harness/_reference_points.py:87`). These are opaque values that a cache, usage or consent record carries, not model definitions. No product path reads them, and the gate's stated stop excludes Python test directories (`dev/quality/tests/test_no_model_definitions.py:15`). Constraint 1 allows obviously synthetic ids in fixtures, which these are not, and the Rust and TypeScript fixtures were already moved to synthetic ids. Recommend one sweep to synthetic ids, and extending the gate's Python root to test directories so the names cannot return.
+
+### stale-on-host-wording | low | Some product wording still describes the deleted direct local path.
+
+- `src/cadrumo/core/config_runtime_fields.py:29` describes the vision timeout as "for the on-host local vision read". It bounds every vision run, whichever lane serves it, and the text classifier borrows it (`src/cadrumo/adapters/outbound/llm/text_classifier.py:79`). The generated `docs/reference/environment-overrides.md:107` repeats the description.
+- `src/cadrumo/core/image_media_type.py:6` names "the local Ollama transport".
+- `src/cadrumo/entrypoints/cli/_ledger_llm_cli.py:386` and `src/cadrumo/adapters/inbound/financial/providers/pdf_statement.py:5` say these reads run on this computer.
+
+Reword in place, and regenerate the environment page from its owner.
+
 ## Recommendations
 
 - Reopen `P01.S03` for the first finding, or carry it as an explicit consequence. The decision a follow-on ADR must make, if the owner prefers the current behaviour: whether a non-secret per-profile setting stored beside the credentials participates in the agent tree's generation binding, or whether that binding covers credential-bearing records only. This review does not make that choice.
@@ -117,6 +229,21 @@ The batch never carries consent, so on a lane whose entry reads off-host the cli
 - `P03` review: no critical or high finding, so no Step reopens. `operator-endpoint-measures-another-server` needs a follow-on decision on whether an operator-run Ollama server remains supported now that the agent owns local dispatch. This review does not make it. `model-names-and-local-only-wording-remain` is a routine correction within `P03.S16`'s file scope for the Python docstrings; the locale keys go with `P05.S25` and the gate's stop belongs to `P05.S28`. `reviewed-operation-lane-cannot-prove-the-review` is a routine correction within `P03.S18`'s file scope.
 - Already planned, recorded and not reopening `P03`. `operator.provision.local_ai`, the recovery `MODEL_NOT_INSTALLED` names, targets `config provision pull`, which cannot pull a selected model until `P04.S22` passes the selection to the component client. The Python components protocol still requires a licence on every model part and carries the commercial-use advisory and its `plan_non_commercial` wording (`src/cadrumo/adapters/outbound/components/protocol.py:244`, `src/cadrumo/entrypoints/cli/config/provision_cli.py:275`, `src/cadrumo/application/dependency_wording.py:166`). `P04.S19` removed licence data from the engine, so `P04.S22` must drop both, or the first model part the engine plans will fail Python validation, and constraint 5 forbids the commercial-use advisory. `NO_SELECTION` names no action until `P05.S25` registers the selection action.
 - Observation: the local-reader status reports an off-host lane ready (`src/cadrumo/application/local_reader.py` `_role_status`). That holds for evidence extraction, which can mint consent, but not for a statement import or a batch, which never carry consent and refuse on that lane. A surface that reads readiness as "this import will read" will overstate it.
+
+- Plan-close review: the verdict is REVISION REQUIRED. Four high findings reopen Steps:
+  - `vision-model-option-kept-to-refuse` reopens `P05.S25`, the Step its removal was deferred to.
+  - `downloaded-not-loaded-note-has-no-producer` reopens `P04.S22` and `P04.S30` for the engine and the desktop wire, and `P05.S31` for the Python contract and the locale keys. The orchestrator may instead fold it into one added Step.
+  - `load-admission-ruling-is-not-in-the-adrs` reopens `P05.S31` for record work only. The owner's ruling already exists first-hand, so the amendment records an authorised decision and needs no new one.
+  - `product-identity-locale-gate-fails` reopens `P05.S27`. Its three `desktop.providers` keys belong to `ollama-provider-settings`.
+- Medium findings, recorded and within approved scope:
+  - `reader-panel-names-roles-by-id-and-hides-why` fits the desktop scope of `P05.S24` and `P05.S31`.
+  - `loopback-endpoint-module-is-test-only` fits `P05.S31`.
+  - `technical-docs-still-describe-local-memory-admission` fits `P05.S26`.
+  - The rewording of `vision-capability-promises-on-host-reading` fits `P05.S27`. Whether `llm_vision` should admit only an on-host lane is a follow-on decision under constraint 4 of `2026-10-25-agent-owned-models-adr`; this review does not make it.
+  - `rule-06-cites-deleted-model-admission` needs the owner's request before anyone edits the policy source.
+- The two low findings are recorded and not scheduled.
+- Observation, not a finding of this plan: the `rust-component-provisioning` record `2026-10-26-rust-component-provisioning-registered-operations-adr` (commit `70d7db9e1e`) states that the full-screen gate `dev/operation_contract_manifest/tests/test_operation_catalogue.py:601` has failed since the TUI setup screen began importing the components adapter. That plan owns the gate. This review did not run it.
+- Observation: the 2026-10-26 amendment of `2026-10-24-rust-component-provisioning-adr` holds where this review read it. The desktop refuses to remove a model that a role still names (`native/desktop/src-tauri/src/shell/setup/components.rs:590`). It admits the engine only with selections on keyless lanes that are not turned off (`native/desktop/src-tauri/src/shell/setup/admission.rs:87`).
 
 ## Verification
 
@@ -179,3 +306,18 @@ Reasoned from source, with no gap found:
 - Tests. No added test sleeps, skips, uses xfail or adds a suppression. The admitted model-run stand-in drives the production runtime's admission, lease claim and relay through the real installed-service client. It uses the existing test-only `ControlledServiceVerifier` through the runtime's injectable `service_descriptors` and `service_verifier` parameters. No product file under `src/cadrumo_runtime` changed except removing one line from `operation_host.py`, so it adds no product admission bypass. Deleted test modules cover deleted behaviour, and the surviving behaviours (on-host slot, size-less admission, consent gate and ledger, refusal mapping) each have replacement cases over the real client.
 
 Pending, not a defect: the native desktop crate and TypeScript are unchanged by `P03` except the removal of two fields from `native/desktop/frontend/src/shell/ledger.ts` and its fixture. No reference to the removed fields remains in the frontend sources, but no frontend type check was run for this review. The owner is whoever next builds `native/desktop` under `P05.S24`.
+
+Plan-close verification at `ff7631f6bf`, run with the shared worktree's unrelated edits in place. Each test command below ran with `-n 0 -m ''`:
+
+- `uv run --no-sync pytest dev/quality/tests/test_no_model_definitions.py dev/quality/tests/test_no_python_provisioning.py src/cadrumo_agent_service/adapters/tests/test_agent_background_runs.py`: 93 passed, exit 0, in 91 s. Log: `var/storage/development/.logs/test-runs/2026-10-26/20261026T164510.810869Z-pytest-67312-341c7a44/`. It was run because the two gates are the plan's own completion checks and the third file holds the `model_does_not_fit` mapping the owner named.
+- `uv run --no-sync pytest dev/locales/tests/test_audit.py`: 12 passed and 1 failed, exit 1, in 157 s. Log: `var/storage/development/.logs/test-runs/2026-10-26/20261026T164648.853788Z-pytest-51204-de858b44/`. It was run because `P05.S27` records no catalogue-wide locale check. The failing test is the subject of `product-identity-locale-gate-fails`. The differing key sets were computed in memory with the test's own helpers; no repository file was written.
+
+Reused from the ledger without a log locator: the `P04.S22` engine `cargo test`, clippy and fmt; `desktop-host-unit-test` with 584 passed under `P04.S30` and again under `P05.S24`; `just check-import-boundaries`, `check-style`, `check-format` and `check-types`, and the operation contract manifest `--check`, under `P05.S25`, `P05.S28` and `P05.S31`; the `P05.S28` gate and role-surface runs, 69 and 96 passed; and `P05.S31`'s focused suites and frontend `tsc`, `eslint` and `prettier`.
+
+Pending, not code defects:
+
+- The final native tree is not built. After the last recorded desktop build, Rust changed in `16b8e38dae` (it restores `native/desktop/src-tauri/src/shell/setup/admission.rs`, `components.rs` and `wire.rs`), `eeaedf35f7`, `b3e36b4057`, and the `ollama-provider-settings` commits `2a3f5b9fbd` and `9c8f54b37e`. The `P05.S31` note records that its `desktop-host-unit-test` build was stopped before it ran. The plan's Verification requires the engine and desktop crate tests to pass. Owner: the plan's orchestrator, or whoever next builds `native/desktop`. Next action: the CMake targets `desktop-host-unit-test` and `desktop-host-unit-clippy`, plus the application crate's provisioning tests through CMake, on a tree that no concurrent build owns. They were not run here because of the owner's machine-load limit.
+- No ledger row shows that the real-role tests ran: `test_client_drives_the_real_role`, `test_provision_drives_the_real_role` and `test_setup_tools_drive_the_real_role`. They need `CADRUMO_DEVELOPMENT_ROLE_IMAGE`. The recorded role conversations were rewritten by script and never re-recorded (`P05.S25` note). Owner: the `P05.S25` executor. Next action: build the role image, then run those files with `-n 0`.
+- No ledger row shows two plan Verification items: "the CLI renders the `NO_SELECTION` refusal in each" locale, and "a selection made on the desktop is read back unchanged by the CLI, TUI and MCP lookup". This review found no test that demonstrates either end to end. Owner: the orchestrator. Next action: point to the covering tests or run them.
+
+Reasoned from source, with no gap found: the engine admission and its single desktop caller; the read-only components role; the Python request refusal; the absence of any Ollama HTTP client or `ollama` import in product Python; the absence of model tables, of model-pin data, and of `provisioning_runtime`, `provisioning_host`, `model_catalogue`, `local_ai_pins` and `role_fitness` in code; the run-start and frame timeouts; and the local reader's installed-state and program-row sources. The generated `docs/api`, `docs/_static/cli-tree.json`, `docs/cli` and the `docs/locales/pot` catalogues still name deleted modules and verbs. They are ignored build output, not committed references.
