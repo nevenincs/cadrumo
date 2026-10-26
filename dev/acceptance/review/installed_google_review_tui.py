@@ -38,6 +38,7 @@ from cadrumo.entrypoints.tui.home import HomeScreen
 from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
 from cadrumo.entrypoints.tui.navigation import TuiFocusIdentityV1, TuiNavigationTargetV1
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.contracts.profile_access import status_admits_session
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_runtime.host.frontend.tui.runtime_workbench import RuntimeWorkbenchRoot
@@ -249,7 +250,7 @@ async def run_google_saved_review_tui(
     output_dir.mkdir(parents=True, exist_ok=False)
     deadline = monotonic() + seconds
 
-    async def no_recovery() -> FrontendClient:
+    async def no_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         raise RefusalError(RefusalCode.UNAVAILABLE)
 
     root = RuntimeWorkbenchRoot(

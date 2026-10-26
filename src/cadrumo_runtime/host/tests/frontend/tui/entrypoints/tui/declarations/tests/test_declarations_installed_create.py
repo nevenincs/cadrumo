@@ -45,6 +45,7 @@ from cadrumo.entrypoints.tui.navigation import TuiFocusIdentityV1, TuiNavigation
 from cadrumo.entrypoints.tui.tests.settling import settle, settle_until
 from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import ClientHello
+from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.installation import installation
@@ -132,7 +133,7 @@ def _drive(
     human: FrontendClient, profile_id: UUID, reader: ThreadPoolExecutor
 ) -> Callable[[], Coroutine[Any, Any, None]]:
     async def run() -> None:
-        async def reject_recovery() -> FrontendClient:
+        async def reject_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
             raise AssertionError("declaration creation must not open profile recovery")
 
         root = RuntimeWorkbenchRoot(

@@ -43,6 +43,7 @@ from cadrumo_client.contracts.access_management import AccessManagementRequest
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
 from cadrumo_client.contracts.contracts import ByteChannel
+from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.transport.credentials import open_installed_credential_client
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -154,8 +155,10 @@ def test_human_tui_enrollment_review_delivery_is_inspected_and_revoked_by_cli(
                         profile_id=selected_profile, frontend=OperationFrontendProjection.TUI
                     )
 
-                async def open_recovery() -> FrontendClient:
-                    return await open_fresh(profile_id)
+                async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
+                    return await open_installed_client(
+                        profile_id=profile_id, frontend=OperationFrontendProjection.TUI, timeout=timeout
+                    )
 
                 def requester_for(reviewer: FrontendClient) -> RuntimeAutomationRequesterScreen:
                     assert reviewer is human

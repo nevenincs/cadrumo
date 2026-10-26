@@ -81,6 +81,7 @@ from cadrumo_client.contracts.access_vocabulary import (
     DisclosureCategory,
     DisclosurePermission,
 )
+from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.transport import credentials
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
@@ -385,7 +386,7 @@ async def test_cli_own_lock_and_human_proof_loss_preserve_independent_mcp_grant(
                 assert runtime.subject.store.profile_lock_state() == lock_before
                 factories: list[FrontendClient] = []
 
-                async def no_recovery() -> FrontendClient:
+                async def no_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
                     raise AssertionError("lost human authority must not silently acquire password proof")
 
                 def no_requester(client: FrontendClient) -> RuntimeAutomationRequesterScreen:
@@ -492,7 +493,7 @@ async def test_cli_global_lock_fences_tui_mcp_and_password_login_cannot_clear_it
                 lock_before = runtime.subject.store.profile_lock_state()
                 factories: list[FrontendClient] = []
 
-                async def no_recovery() -> FrontendClient:
+                async def no_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
                     raise AssertionError("global unlock requires a separate explicit password recovery")
 
                 def no_requester(client: FrontendClient) -> RuntimeAutomationRequesterScreen:

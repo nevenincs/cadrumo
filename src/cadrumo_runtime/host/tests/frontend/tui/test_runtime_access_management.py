@@ -34,6 +34,7 @@ from cadrumo_client.contracts.access_vocabulary import (
 )
 from cadrumo_client.contracts.automation_lifecycle import AutomationResumeReceipt
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.contracts.profile_access import ProfileStatus, SessionsLocked
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
@@ -270,7 +271,7 @@ async def test_inventory_denial_and_current_lock_keep_distinct_runtime_actions()
     profile_id = uuid4()
     client = _RuntimeClient(profile_id, admitted=True)
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         raise AssertionError("recovery was not requested")
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
@@ -310,7 +311,7 @@ async def test_human_create_journey_borrows_exact_reviewer_and_refreshes_after_c
     client = _RuntimeClient(uuid4(), admitted=True)
     created: list[RuntimeAutomationRequesterScreen] = []
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         raise AssertionError("recovery was not requested")
 
     async def open_requester(_profile_id: UUID) -> FrontendClient:
@@ -370,7 +371,7 @@ async def test_human_create_journey_borrows_exact_reviewer_and_refreshes_after_c
 async def test_api_human_refusal_fences_create_even_for_programmatic_button_event() -> None:
     client = _ApiInventoryClient(uuid4())
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         raise AssertionError("recovery was not requested")
 
     def factory(_reviewer: FrontendClient) -> RuntimeAutomationRequesterScreen:
@@ -408,7 +409,7 @@ async def test_session_detail_keeps_parent_grant_key_and_action_scope_visible() 
     )
     client.inventory = (session,)
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         raise AssertionError("recovery was not requested")
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
@@ -447,7 +448,7 @@ async def test_denial_receipt_distinguishes_denied_access_from_pending_native_cl
 
     client = PendingCleanupClient(uuid4(), admitted=True)
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         raise AssertionError("recovery was not requested")
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
@@ -485,7 +486,7 @@ async def test_profile_lock_uses_distinct_durable_denial_door() -> None:
     profile_id = uuid4()
     client = _RuntimeClient(profile_id, admitted=True)
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         raise AssertionError("recovery was not requested")
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
@@ -506,7 +507,7 @@ async def test_recovery_owns_fresh_client_and_waits_for_native_proof_to_settle()
     recovery.release_proof.clear()
     opened = 0
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         nonlocal opened
         opened += 1
         return recovery
@@ -544,7 +545,7 @@ async def test_invalid_grant_selection_wipes_password_before_opening_connection(
     client = _RuntimeClient(profile_id, admitted=True)
     opened = False
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         nonlocal opened
         opened = True
         raise AssertionError("invalid selection cannot open recovery")
@@ -568,7 +569,7 @@ async def test_cancelled_recovery_retains_proof_and_connection_until_native_call
     recovery = _RuntimeClient(profile_id, admitted=False)
     recovery.release_proof.clear()
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         return recovery
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
@@ -597,7 +598,7 @@ async def test_authority_loss_clears_inventory_and_disables_admitted_actions() -
     profile_id = uuid4()
     client = _RefusingInventoryClient(profile_id, admitted=True)
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         raise AssertionError("recovery was not requested")
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
@@ -614,7 +615,7 @@ async def test_authority_loss_clears_inventory_and_disables_admitted_actions() -
 async def test_api_inventory_human_refusal_keeps_only_authorized_current_lock() -> None:
     client = _ApiInventoryClient(uuid4())
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         raise AssertionError("recovery was not requested")
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
@@ -653,7 +654,7 @@ async def test_api_inventory_human_refusal_keeps_only_authorized_current_lock() 
 async def test_later_authority_or_transport_loss_clears_previously_rendered_private_rows(failure: Exception) -> None:
     client = _ExpiringInventoryClient(uuid4(), failure=failure)
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         raise AssertionError("recovery was not requested")
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
@@ -677,7 +678,7 @@ async def test_foreign_recovery_client_is_closed_without_receiving_proof() -> No
     client = _RuntimeClient(uuid4(), admitted=True)
     foreign = _RuntimeClient(uuid4(), admitted=False)
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         return foreign
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
@@ -701,7 +702,7 @@ async def test_selected_session_revoke_preserves_current_access_unless_cascade_r
     child_id = uuid4()
     client.selected_cascade = (selected_id, child_id)
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         raise AssertionError("recovery was not requested")
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
@@ -736,7 +737,7 @@ async def test_real_unmount_drains_recovery_and_wipes_proof_without_closing_borr
     recovery.release_proof.clear()
     recovery.wipe_in_port = False
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         return recovery
 
     screen = _UnmountNotifiedScreen(client, open_recovery_client=open_recovery)
@@ -763,7 +764,7 @@ async def test_unmount_during_recovery_open_closes_late_client_without_deliverin
     opening = asyncio.Event()
     release = asyncio.Event()
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         opening.set()
         await release.wait()
         return recovery
@@ -795,7 +796,7 @@ async def test_recovery_refusal_keeps_primary_and_retryable_close_owner() -> Non
     recovery.close_failures_remaining = 1
     recovery.wipe_in_port = False
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         return recovery
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
@@ -823,7 +824,7 @@ async def test_successful_recovery_failed_close_is_retried_on_unmount() -> None:
     recovery.close_failures_remaining = 1
     recovery.wipe_in_port = False
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         return recovery
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
@@ -872,7 +873,7 @@ async def test_recovery_mismatched_receipt_is_unknown_and_cannot_replay(receipt_
         else frozenset(),
     )
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         return recovery
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
@@ -910,7 +911,7 @@ async def test_dispatched_recovery_transport_failure_is_unknown_and_fences_repla
     recovery.proof_failure = failure
     recovery.wipe_in_port = False
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         return recovery
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
@@ -935,7 +936,7 @@ async def test_recovery_pre_dispatch_failure_and_domain_refusal_allow_fresh_proo
     recovered = _RuntimeClient(client.profile_id, admitted=False)
     openings = 0
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         nonlocal openings
         openings += 1
         if openings == 1:
@@ -972,7 +973,7 @@ async def test_recovery_settled_proof_is_wiped_before_blocked_close_and_cancel_k
     recovery.wipe_in_port = False
     recovery.release_close.clear()
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         return recovery
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
@@ -1012,7 +1013,7 @@ async def test_cancelled_failed_recovery_preserves_body_and_retries_close_on_unm
     recovery.wipe_in_port = False
     recovery.release_proof.clear()
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         return recovery
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
@@ -1050,7 +1051,7 @@ async def test_unmount_drains_failed_recovery_then_retries_owned_close() -> None
     recovery.wipe_in_port = False
     recovery.release_proof.clear()
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         return recovery
 
     screen = _UnmountNotifiedScreen(client, open_recovery_client=open_recovery)

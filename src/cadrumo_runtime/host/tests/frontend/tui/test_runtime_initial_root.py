@@ -15,6 +15,7 @@ from cadrumo.domain.user_profile.values import ProfileSetupState
 from cadrumo.entrypoints.tui.app import RootBindingV1
 from cadrumo.entrypoints.tui.tests.home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.transport.frontend_client import FrontendClient
 
 from ....frontend.tui import runtime_initial_root
@@ -77,7 +78,7 @@ def test_initial_route_uses_explicit_state_and_exact_profile(
 
     monkeypatch.setattr(RuntimeInitialRoot, "_workbench", workbench)
 
-    async def recovery() -> FrontendClient:
+    async def recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         raise AssertionError("routing must not open another client")
 
     def operations() -> Never:
@@ -152,7 +153,7 @@ def test_a_capture_reads_only_the_status_of_its_exact_profile(
     )
     monkeypatch.setattr(runtime_workbench, "read_runtime_account_session", lambda *_args, **_kwargs: None)
 
-    async def recovery() -> FrontendClient:
+    async def recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         raise AssertionError("capture must not open another client")
 
     def operations() -> Never:

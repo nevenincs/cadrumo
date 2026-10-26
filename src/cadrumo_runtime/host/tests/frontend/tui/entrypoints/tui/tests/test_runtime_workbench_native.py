@@ -90,6 +90,7 @@ from cadrumo_client.contracts.access_vocabulary import (
     DisclosurePermission,
 )
 from cadrumo_client.contracts.contracts import ClientHello, RefusalError
+from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.contracts.operation_access import (
     OperationAcknowledged,
     OperationContract,
@@ -581,7 +582,9 @@ def test_native_human_generation_is_exact_profile_and_key_cannot_submit_or_read(
                         "native workbench generation: %d canonical bytes", len(generation_document_bytes)
                     )
 
-                    async def reject_recovery() -> FrontendClient:
+                    async def reject_recovery(
+                        *, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
+                    ) -> FrontendClient:
                         raise AssertionError("workbench capture must not open profile recovery")
 
                     root = RuntimeWorkbenchRoot(

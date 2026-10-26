@@ -71,6 +71,7 @@ from cadrumo.entrypoints.tui.modelo.workbench.search import WorkbenchSearchPanel
 from cadrumo.entrypoints.tui.modelo.workbench.sources import WorkbenchSourcesScreen
 from cadrumo.entrypoints.tui.navigation import TuiScreenContextV1
 from cadrumo.entrypoints.tui.tests.frame import capture
+from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.installed_client import open_installed_client
 from cadrumo_runtime.host.frontend.tui.runtime_workbench import RuntimeWorkbenchRoot
@@ -629,7 +630,7 @@ async def _capture_all(
         await asyncio.to_thread(client.close)
 
 
-async def _no_recovery() -> FrontendClient:
+async def _no_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
     """A review capture never opens profile recovery."""
     raise ScenarioError("a scenario capture must not open profile recovery")
 

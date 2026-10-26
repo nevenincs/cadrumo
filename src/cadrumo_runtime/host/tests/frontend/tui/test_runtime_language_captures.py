@@ -25,6 +25,7 @@ from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PA
 from cadrumo.domain.user_profile.values import ProfileSetupState
 from cadrumo.entrypoints.tui.navigation import TuiScreenContextV1
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.transport import profile_language
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.profile_language import ProfileLanguage
@@ -87,7 +88,7 @@ def _status(profile_id: UUID, language: OutputLanguage) -> SimpleNamespace:
     )
 
 
-async def _recovery() -> FrontendClient:
+async def _recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
     raise AssertionError("language refresh cannot open another client")
 
 

@@ -39,6 +39,7 @@ from cadrumo_client.contracts.access_vocabulary import (
     disclosure_digest,
 )
 from cadrumo_client.contracts.contracts import RefusalCode
+from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind
 from cadrumo_client.contracts.profile_access import ProfileStatus
 from cadrumo_client.transport.automation_decision import AutomationDecisionCompletion, AutomationDecisionRunError
@@ -306,7 +307,7 @@ async def test_known_session_expiry_clears_display_without_a_second_inventory_re
 async def test_parent_opens_human_inventory_without_rebinding_client(monkeypatch: pytest.MonkeyPatch) -> None:
     client = _Client()
 
-    async def open_recovery() -> FrontendClient:
+    async def open_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
         raise AssertionError("inventory cannot open a recovery connection")
 
     def read(bound: FrontendClient) -> AutomationInventoryCompletion:

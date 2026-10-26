@@ -78,6 +78,7 @@ from cadrumo_client.contracts.access_vocabulary import (
 )
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
 from cadrumo_client.contracts.automation_lifecycle import AutomationResumeReceipt
+from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind
 from cadrumo_client.contracts.operation_access import OperationObserve, OperationObserved
 from cadrumo_client.contracts.projection_pages import PROJECTION_PAGE_BYTES, ProjectionPageRequest
@@ -633,7 +634,9 @@ def test_tui_rotates_renews_changes_scope_and_cli_inspects_same_grant(
                     human.login_password(proof)
                     assert not any(proof)
 
-                    async def no_recovery() -> FrontendClient:
+                    async def no_recovery(
+                        *, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
+                    ) -> FrontendClient:
                         raise AssertionError("key revocation does not open a recovery connection")
 
                     access = RuntimeAccessManagementScreen(human, open_recovery_client=no_recovery)
@@ -756,8 +759,12 @@ def test_tui_profile_lock_resumes_only_selected_grant_seen_by_cli(tmp_path: Path
                 assert not any(proof)
                 assert admitted.status.profile_id == profile_id and admitted.status.credential_authenticated
 
-                async def open_recovery_client() -> FrontendClient:
-                    return await open_installed_client(profile_id=profile_id, frontend=OperationFrontendProjection.TUI)
+                async def open_recovery_client(
+                    *, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
+                ) -> FrontendClient:
+                    return await open_installed_client(
+                        profile_id=profile_id, frontend=OperationFrontendProjection.TUI, timeout=timeout
+                    )
 
                 access = RuntimeAccessManagementScreen(human, open_recovery_client=open_recovery_client)
 
@@ -885,7 +892,7 @@ def test_api_reference_tui_refuses_programmatic_administration_but_can_lock_own_
                 lock_before = subject.store.profile_lock_state()
                 assert not lock_before.globally_locked
 
-                async def no_recovery() -> FrontendClient:
+                async def no_recovery(*, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
                     raise AssertionError("API administration must not acquire fresh human proof")
 
                 def no_requester(reviewer: FrontendClient) -> RuntimeAutomationRequesterScreen:
