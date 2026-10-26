@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-24 22:58+0200\n"
+"POT-Creation-Date: 2026-10-26 10:51+0100\n"
 "PO-Revision-Date: 2026-07-19 10:00+0200\n"
 "Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
 "Language: hu\n"
@@ -152,10 +152,8 @@ msgid "`ofx` - OFX and QFX bank-statement import."
 msgstr "`ofx` - OFX- és QFX-bankkivonat-import."
 
 #: ../../workstation-setup.md:63
-msgid "`llm` - on-host document reading with a local model runtime."
-msgstr ""
-"`llm` - dokumentumok olvasása a helyi gépen, helyi modellfuttató "
-"környezettel."
+msgid "`llm` - on-host document reading through the local AI."
+msgstr "`llm` - dokumentumok olvasása a helyi gépen, a helyi MI-vel."
 
 #: ../../workstation-setup.md:64
 msgid ""
@@ -202,74 +200,126 @@ msgstr "A böngésző és a helyi MI előkészítése"
 msgid ""
 "Two optional extras use a component that Cadrumo sets up on this "
 "computer. The `browser` extra drives a Chromium build for live AEAT "
-"reads. On-host document reading uses the local AI: its program and one "
-"model for each reader role (vision transcription, text extraction, "
-"tabular mapping, and supply-nature proposal). Cadrumo pins the exact "
-"version of each component and checks every download against its pinned "
-"size and checksum."
+"reads. On-host document reading uses the local AI: its program and the "
+"model you choose for each local reader role (vision transcription, text "
+"extraction, tabular mapping, and supply-nature proposal). Cadrumo pins "
+"the exact version of the browser and of the local AI program, and checks "
+"each of their downloads against its pinned size and checksum."
 msgstr ""
 "Két választható extra olyan összetevőt használ, amelyet a Cadrumo erre a "
 "számítógépre készít elő. A `browser` extra egy Chromium-buildet vezérel "
 "az élő AEAT-lekérdezésekhez. A helyi gépen történő dokumentumolvasás a "
-"helyi MI-t használja: a programját és olvasói szerepkörönként egy-egy "
-"modellt (képi átírás, szövegkinyerés, táblázatos leképezés és az ellátás "
-"jellegére vonatkozó javaslat). A Cadrumo minden összetevő pontos "
-"verzióját rögzíti, és minden letöltést összevet a rögzített méretével és "
-"ellenőrzőösszegével."
+"helyi MI-t használja: a programját és a helyi olvasói szerepkörökhöz "
+"általad választott modellt (képi átírás, szövegkinyerés, táblázatos "
+"leképezés és az ellátás jellegére vonatkozó javaslat). A Cadrumo rögzíti "
+"a böngésző és a helyi MI programjának pontos verzióját, és mindegyik "
+"letöltésüket összeveti a rögzített méretével és ellenőrzőösszegével."
 
-#: ../../workstation-setup.md:86
+#: ../../workstation-setup.md:87
 msgid ""
 "See where you stand first. `aeat config provision status` reads only what"
 " this computer already has, so it downloads nothing and works offline. "
-"Each row that is not ready names the command that fixes it."
+"Each row that is not ready says how to fix it."
 msgstr ""
 "Először nézd meg, hol tartasz. Az `aeat config provision status` csak azt"
 " olvassa, ami már megvan ezen a számítógépen, így semmit sem tölt le, és "
-"internetkapcsolat nélkül is működik. Minden nem kész sor megnevezi a "
-"parancsot, amely kijavítja."
+"internetkapcsolat nélkül is működik. Minden nem kész sor megmondja, "
+"hogyan javíthatod."
 
-#: ../../workstation-setup.md:90
+#: ../../workstation-setup.md:91
+msgid "Set up the browser"
+msgstr "A böngésző előkészítése"
+
+#: ../../workstation-setup.md:93
 msgid ""
-"To set up every component that is not ready yet, run `aeat config "
-"provision setup`. The command first checks that it can reach the download"
-" servers. It then prints its plan: what it downloads, how large each part"
-" is, which server it comes from, and where it is stored. It asks before "
-"it downloads anything. `--yes` approves exactly the plan the command "
-"prints, without asking. Without `--yes` and without a terminal to answer "
-"on, nothing is downloaded and the command says it needs your approval. "
-"Components that are already set up are left as they are."
+"To set up the browser, run `aeat config provision setup`. The command "
+"first checks that it can reach the download servers. It then prints its "
+"plan: what it downloads, how large each part is, which server it comes "
+"from, and where it is stored. It asks before it downloads anything. "
+"`--yes` approves exactly the plan the command prints, without asking. "
+"Without `--yes` and without a terminal to answer on, nothing is "
+"downloaded and the command says it needs your approval. A browser that is"
+" already set up is left as it is."
 msgstr ""
-"Ha minden még nem kész összetevőt elő szeretnél készíteni, futtasd az "
-"`aeat config provision setup` parancsot. A parancs először ellenőrzi, "
-"hogy eléri-e a letöltési kiszolgálókat. Ezután kiírja a tervét: mit tölt "
-"le, mekkora az egyes részek mérete, melyik kiszolgálóról származnak, és "
-"hová kerülnek. Mielőtt bármit letöltene, megkérdez. A `--yes` kérdés "
-"nélkül pontosan azt a tervet hagyja jóvá, amelyet a parancs kiír. `--yes`"
-" nélkül, ha nincs terminál a válaszhoz, semmi sem töltődik le, és a "
-"parancs jelzi, hogy a jóváhagyásodra van szükség. A már előkészített "
-"összetevők változatlanok maradnak."
+"A böngésző előkészítéséhez futtasd az `aeat config provision setup` "
+"parancsot. A parancs először ellenőrzi, hogy eléri-e a letöltési "
+"kiszolgálókat. Ezután kiírja a tervét: mit tölt le, mekkora az egyes "
+"részek mérete, melyik kiszolgálóról származnak, és hová kerülnek. Mielőtt"
+" bármit letöltene, megkérdez. A `--yes` kérdés nélkül pontosan azt a "
+"tervet hagyja jóvá, amelyet a parancs kiír. `--yes` nélkül, ha nincs "
+"terminál a válaszhoz, semmi sem töltődik le, és a parancs jelzi, hogy a "
+"jóváhagyásodra van szükség. A már előkészített böngésző változatlan "
+"marad."
 
-#: ../../workstation-setup.md:99
+#: ../../workstation-setup.md:101
 msgid "To set up the browser alone:"
 msgstr "Ha csak a böngészőt szeretnéd előkészíteni:"
 
-#: ../../workstation-setup.md:104
+#: ../../workstation-setup.md:106
 msgid ""
-"`aeat config provision pull` sets up the local AI alone: its program when"
-" it is missing, then every reader role's model, a few GB in total. "
-"Cadrumo downloads the program as a pinned archive from its publisher and "
-"keeps it in its own storage, so it needs no package manager, no "
-"administrator rights, and no separate installer on Windows, macOS, or "
-"Linux. Cadrumo chooses the model for each role."
+"To delete the browser from this computer, run `aeat config provision "
+"remove browser`. The command asks first, and `--yes` confirms without "
+"asking. You can set it up again at any time."
 msgstr ""
-"Az `aeat config provision pull` csak a helyi MI-t készíti elő: a "
-"programját, ha hiányzik, majd minden olvasói szerepkör modelljét, "
-"összesen néhány GB-ot. A Cadrumo a programot rögzített archívumként tölti"
-" le a kiadójától, és a saját tárhelyén tartja, így Windowson, macOS-en és"
-" Linuxon sincs szükség csomagkezelőre, rendszergazdai jogra vagy külön "
-"telepítőre. A Cadrumo választja ki az egyes szerepkörök modelljét."
+"Ha törölni szeretnéd a böngészőt erről a számítógépről, futtasd az `aeat "
+"config provision remove browser` parancsot. A parancs előbb megkérdez, a "
+"`--yes` pedig kérdés nélkül megerősíti. Bármikor újra előkészítheted."
 
-#: ../../workstation-setup.md:111
+#: ../../workstation-setup.md:110
+msgid ""
+"Offline, `status` still answers and a browser that is already set up "
+"keeps working. `setup` refuses before it downloads anything, and says "
+"whether the computer is offline, a server cannot be reached, or the "
+"network blocked the download."
+msgstr ""
+"Internetkapcsolat nélkül a `status` továbbra is válaszol, és a már "
+"előkészített böngésző tovább működik. A `setup` még a letöltés előtt "
+"elutasítja a futást, és jelzi, hogy nincs-e internetkapcsolat, nem "
+"érhető-e el egy kiszolgáló, vagy a hálózat blokkolta-e a letöltést."
+
+#: ../../workstation-setup.md:115
+msgid "Set up the local AI in the desktop app"
+msgstr "A helyi MI előkészítése az asztali alkalmazásban"
+
+#: ../../workstation-setup.md:117
+msgid ""
+"Only the Cadrumo desktop app sets up the local AI. The `aeat` command "
+"line, the terminal interface and an AI assistant connected through MCP "
+"cannot install, remove or update it, and cannot choose its models. When "
+"the local AI is not ready, they point you to the desktop app."
+msgstr ""
+"A helyi MI-t csak a Cadrumo asztali alkalmazása készíti elő. Az `aeat` "
+"parancssor, a terminálos felület és az MCP-n keresztül csatlakozó MI-"
+"asszisztens nem tudja telepíteni, törölni vagy frissíteni, és nem tud "
+"modellt választani hozzá. Ha a helyi MI nem áll készen, az asztali "
+"alkalmazáshoz irányítanak."
+
+#: ../../workstation-setup.md:122
+msgid ""
+"In the desktop app, choose a model for each reader role. Cadrumo names no"
+" model and sets no default: the models on offer come from the Cadrumo "
+"agent's catalogue, which shows each model's size, context length, "
+"licence, whether it reads images, and whether it runs on this computer. "
+"The desktop app then downloads the local AI program (Ollama) as a pinned "
+"archive from its publisher, and downloads the models you chose for the "
+"local roles. It shows its plan, with the size of each download, before it"
+" downloads anything. Cadrumo keeps the program in its own storage, so it "
+"needs no package manager, no administrator rights, and no separate "
+"installer on Windows, macOS, or Linux."
+msgstr ""
+"Az asztali alkalmazásban válassz modellt minden olvasói szerepkörhöz. A "
+"Cadrumo nem nevez meg modellt, és nem állít be alapértelmezettet: a "
+"választható modellek a Cadrumo ügynökének katalógusából származnak, amely"
+" minden modellnél megmutatja a méretet, a kontextushosszt, a licencet, "
+"azt, hogy olvas-e képet, és hogy ezen a számítógépen fut-e. Ezután az "
+"asztali alkalmazás rögzített archívumként letölti a helyi MI programját "
+"(Ollama) a kiadójától, és letölti a helyi szerepkörökhöz választott "
+"modelleket. Mielőtt bármit letöltene, megmutatja a tervét az egyes "
+"letöltések méretével. A Cadrumo a programot a saját tárhelyén tartja, így"
+" nincs szükség csomagkezelőre, rendszergazdai jogokra vagy külön "
+"telepítőre Windowson, macOS-en vagy Linuxon."
+
+#: ../../workstation-setup.md:132
 msgid ""
 "A copy of the local AI program (Ollama) that you installed yourself is "
 "detected and left alone. Cadrumo never starts, stops, or changes it, and "
@@ -279,7 +329,7 @@ msgstr ""
 "Cadrumo felismeri, és nem nyúl hozzá. Soha nem indítja el, nem állítja le"
 " és nem módosítja, a saját példánya pedig egy másik helyi címen figyel."
 
-#: ../../workstation-setup.md:115
+#: ../../workstation-setup.md:136
 msgid ""
 "The local AI runs in the background under the Cadrumo manager, which "
 "starts when you sign in to your computer or open the Cadrumo app. The "
@@ -296,69 +346,49 @@ msgstr ""
 " például egy forráskód-másolatban, a helyi MI nem futóként jelenik meg, "
 "és a dokumentumolvasás elutasítja a futást, amíg el nem indul."
 
-#: ../../workstation-setup.md:122
+#: ../../workstation-setup.md:143
+msgid ""
+"Every model request goes through the Cadrumo agent service to the model "
+"chosen for its role. LLM classification uses only a model that runs on "
+"this computer. See [Classify transactions with an LLM](how-to/classify-"
+"with-llm.md#set-up-the-local-reader)."
+msgstr ""
+"Minden modellkérés a Cadrumo ügynök szolgáltatásán keresztül jut el a "
+"szerepköréhez választott modellhez. Az LLM-es besorolás csak olyan "
+"modellt használ, amely ezen a számítógépen fut. Lásd: [Tranzakciók "
+"besorolása LLM-mel](how-to/classify-with-llm.md#set-up-the-local-reader)."
+
+#: ../../workstation-setup.md:148
+msgid "Check every component"
+msgstr "Minden összetevő ellenőrzése"
+
+#: ../../workstation-setup.md:150
 msgid ""
 "`aeat config provision verify` checks every component fully: it reaches "
-"the download servers, opens the browser, and asks each model for a one-"
-"word answer. `--item browser` or `--item local_ai` checks one component. "
-"The check downloads nothing and exits with status 2 unless each component"
-" it checks is usable."
+"the download servers, opens the browser, and asks each chosen local model"
+" for a one-word answer. `--item browser` or `--item local_ai` checks one "
+"component. The check downloads nothing and exits with status 2 unless "
+"each component it checks is usable."
 msgstr ""
 "Az `aeat config provision verify` minden összetevőt alaposan ellenőriz: "
 "eléri a letöltési kiszolgálókat, megnyitja a böngészőt, és minden "
-"modelltől egyszavas választ kér. A `--item browser` vagy a `--item "
-"local_ai` egyetlen összetevőt ellenőriz. Az ellenőrzés semmit sem tölt "
-"le, és 2-es állapotkóddal lép ki, hacsak nem használható minden "
+"választott helyi modelltől egyszavas választ kér. A `--item browser` vagy"
+" a `--item local_ai` egyetlen összetevőt ellenőriz. Az ellenőrzés semmit "
+"sem tölt le, és 2-es állapotkóddal lép ki, hacsak nem használható minden "
 "ellenőrzött összetevő."
 
-#: ../../workstation-setup.md:128
-msgid ""
-"To delete a component from this computer, run `aeat config provision "
-"remove browser` or `aeat config provision remove local_ai`. The command "
-"asks first, and `--yes` confirms without asking. You can set the "
-"component up again at any time."
-msgstr ""
-"Ha törölni szeretnél egy összetevőt erről a számítógépről, futtasd az "
-"`aeat config provision remove browser` vagy az `aeat config provision "
-"remove local_ai` parancsot. A parancs előbb megkérdez, a `--yes` pedig "
-"kérdés nélkül megerősíti. Az összetevőt bármikor újra előkészítheted."
-
-#: ../../workstation-setup.md:133
-msgid ""
-"Offline, `status` still answers and components that are already set up "
-"keep working. `setup` refuses before it downloads anything, and says "
-"whether the computer is offline, a server cannot be reached, or the "
-"network blocked the download."
-msgstr ""
-"Internetkapcsolat nélkül a `status` továbbra is válaszol, és a már "
-"előkészített összetevők tovább működnek. A `setup` még a letöltés előtt "
-"elutasítja a futást, és jelzi, hogy nincs-e internetkapcsolat, nem "
-"érhető-e el egy kiszolgáló, vagy a hálózat blokkolta-e a letöltést."
-
-#: ../../workstation-setup.md:138
+#: ../../workstation-setup.md:156
 msgid ""
 "These commands work with or without a signed-in profile. A Cadrumo build "
 "without its native components, such as a source checkout that has not "
-"built them, reports every component as not included in that version. The "
-"desktop app sets up the same components from its own setup window."
+"built them, reports every component as not included in that version."
 msgstr ""
 "Ezek a parancsok bejelentkezett profillal és anélkül is működnek. A natív"
 " összetevők nélküli Cadrumo-build, például egy olyan forráskód-másolat, "
 "amely nem fordította le őket, minden összetevőről azt jelzi, hogy az "
-"adott verzió nem tartalmazza. Az asztali alkalmazás ugyanezeket az "
-"összetevőket a saját előkészítő ablakából készíti elő."
+"adott verzió nem tartalmazza."
 
-#: ../../workstation-setup.md:143
-msgid ""
-"LLM classification runs only on this local reader; no cloud provider is "
-"involved. See [Classify transactions with an LLM](how-to/classify-with-"
-"llm.md#set-up-the-local-reader)."
-msgstr ""
-"Az LLM-es besorolás kizárólag ezen a helyi olvasón fut; felhőszolgáltató "
-"nem vesz részt benne. Lásd: [Tranzakciók besorolása LLM-mel](how-to"
-"/classify-with-llm.md#set-up-the-local-reader)."
-
-#: ../../workstation-setup.md:147
+#: ../../workstation-setup.md:160
 msgid ""
 "Run `aeat config check` again after each change to confirm the gap is "
 "closed."
@@ -366,11 +396,11 @@ msgstr ""
 "Minden változtatás után futtasd újra az `aeat config check` parancsot, "
 "hogy megbizonyosodj róla, a hiányosság megszűnt."
 
-#: ../../workstation-setup.md:149
+#: ../../workstation-setup.md:162
 msgid "Connect an AI assistant"
 msgstr "AI-asszisztens csatlakoztatása"
 
-#: ../../workstation-setup.md:151
+#: ../../workstation-setup.md:164
 msgid ""
 "Cadrumo installs `cadrumo-mcp` alongside `aeat`. The server connects an "
 "agent to registered operations through the local runtime, either under "
@@ -386,7 +416,7 @@ msgstr ""
 "elérési utadon. Forráskód-munkapéldányban ezzel ellenőrizd a telepített "
 "belépési pontot:"
 
-#: ../../workstation-setup.md:162
+#: ../../workstation-setup.md:175
 msgid ""
 "[Connect an agent](how-to/connect-an-agent.md) shows both ways to connect"
 " and the grant request flow."
@@ -394,11 +424,11 @@ msgstr ""
 "Az [Ügynök csatlakoztatása](how-to/connect-an-agent.md) oldal bemutatja "
 "mindkét csatlakozási módot és az engedélykérés folyamatát."
 
-#: ../../workstation-setup.md:165
+#: ../../workstation-setup.md:178
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../workstation-setup.md:167
+#: ../../workstation-setup.md:180
 msgid ""
 "[Quickstart](how-to/quickstart.md) - from an empty profile to an exported"
 " modelo file."
@@ -406,7 +436,7 @@ msgstr ""
 "[Gyorsindító](how-to/quickstart.md) - az üres profiltól az exportált "
 "modelofájlig."
 
-#: ../../workstation-setup.md:169
+#: ../../workstation-setup.md:182
 msgid ""
 "[Set up a profile](how-to/profile-setup.md) - including the per-profile "
 "service capabilities (Google export, LLM vision, cloud evidence upload)."
@@ -415,10 +445,10 @@ msgstr ""
 "szolgáltatási képességeket (Google-export, LLM-es képfeldolgozás, "
 "felhőbeli bizonyítékfeltöltés)."
 
-#: ../../workstation-setup.md:171
+#: ../../workstation-setup.md:184
 msgid "[Connect an agent](how-to/connect-an-agent.md)"
 msgstr "[Ügynök csatlakoztatása](how-to/connect-an-agent.md)"
 
-#: ../../workstation-setup.md:172
+#: ../../workstation-setup.md:185
 msgid "[Troubleshooting](how-to/troubleshooting.md)"
 msgstr "[Hibaelhárítás](how-to/troubleshooting.md)"

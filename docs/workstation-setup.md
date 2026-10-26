@@ -60,7 +60,7 @@ The core install is lean. Each optional extra adds one capability:
 - `google` - Google Drive and Sheets export.
 - `browser` - live AEAT reads through browser automation.
 - `ofx` - OFX and QFX bank-statement import.
-- `llm` - on-host document reading with a local model runtime.
+- `llm` - on-host document reading through the local AI.
 - `pdf` - writing the calculation-summary PDF. Reading and verifying a summary
   needs no extra.
 - `all` - every extra in this list.
@@ -78,35 +78,56 @@ extra named.
 
 Two optional extras use a component that Cadrumo sets up on this computer.
 The `browser` extra drives a Chromium build for live AEAT reads. On-host
-document reading uses the local AI: its program and one model for each reader
-role (vision transcription, text extraction, tabular mapping, and
-supply-nature proposal). Cadrumo pins the exact version of each component and
-checks every download against its pinned size and checksum.
+document reading uses the local AI: its program and the model you choose for
+each local reader role (vision transcription, text extraction, tabular mapping,
+and supply-nature proposal). Cadrumo pins the exact version of the browser and
+of the local AI program, and checks each of their downloads against its pinned
+size and checksum.
 
 See where you stand first. `aeat config provision status` reads only what this
 computer already has, so it downloads nothing and works offline. Each row that
-is not ready names the command that fixes it.
+is not ready says how to fix it.
 
-To set up every component that is not ready yet, run
-`aeat config provision setup`. The command first checks that it can reach the
-download servers. It then prints its plan: what it downloads, how large each
-part is, which server it comes from, and where it is stored. It asks before it
-downloads anything. `--yes` approves exactly the plan the command prints,
-without asking. Without `--yes` and without a terminal to answer on, nothing is
-downloaded and the command says it needs your approval. Components that are
-already set up are left as they are.
+### Set up the browser
+
+To set up the browser, run `aeat config provision setup`. The command first
+checks that it can reach the download servers. It then prints its plan: what it
+downloads, how large each part is, which server it comes from, and where it is
+stored. It asks before it downloads anything. `--yes` approves exactly the plan
+the command prints, without asking. Without `--yes` and without a terminal to
+answer on, nothing is downloaded and the command says it needs your approval.
+A browser that is already set up is left as it is.
 
 To set up the browser alone:
 
 ```{cli-sequence} provision-browser
 ```
 
-`aeat config provision pull` sets up the local AI alone: its program when it is
-missing, then every reader role's model, a few GB in total. Cadrumo downloads
-the program as a pinned archive from its publisher and keeps it in its own
-storage, so it needs no package manager, no administrator rights, and no
-separate installer on Windows, macOS, or Linux. Cadrumo chooses the model for
-each role.
+To delete the browser from this computer, run
+`aeat config provision remove browser`. The command asks first, and `--yes`
+confirms without asking. You can set it up again at any time.
+
+Offline, `status` still answers and a browser that is already set up keeps
+working. `setup` refuses before it downloads anything, and says whether the
+computer is offline, a server cannot be reached, or the network blocked the
+download.
+
+### Set up the local AI in the desktop app
+
+Only the Cadrumo desktop app sets up the local AI. The `aeat` command line, the
+terminal interface and an AI assistant connected through MCP cannot install,
+remove or update it, and cannot choose its models. When the local AI is not
+ready, they point you to the desktop app.
+
+In the desktop app, choose a model for each reader role. Cadrumo names no model
+and sets no default: the models on offer come from the Cadrumo agent's
+catalogue, which shows each model's size, context length, licence, whether it
+reads images, and whether it runs on this computer. The desktop app then
+downloads the local AI program (Ollama) as a pinned archive from its publisher,
+and downloads the models you chose for the local roles. It shows its plan,
+with the size of each download, before it downloads anything. Cadrumo keeps the
+program in its own storage, so it needs no package manager, no administrator
+rights, and no separate installer on Windows, macOS, or Linux.
 
 A copy of the local AI program (Ollama) that you installed yourself is
 detected and left alone. Cadrumo never starts, stops, or changes it, and its
@@ -119,30 +140,22 @@ stops it when the manager ends. No command starts it by hand. Where no manager
 runs, as in a source checkout, the local AI reads as not running, and document
 reading refuses until it runs.
 
-`aeat config provision verify` checks every component fully:
-it reaches the download servers, opens the browser, and asks each model for a
+Every model request goes through the Cadrumo agent service to the model chosen
+for its role. LLM classification uses only a model that runs on this computer.
+See
+[Classify transactions with an LLM](how-to/classify-with-llm.md#set-up-the-local-reader).
+
+### Check every component
+
+`aeat config provision verify` checks every component fully: it reaches the
+download servers, opens the browser, and asks each chosen local model for a
 one-word answer. `--item browser` or `--item local_ai` checks one component.
 The check downloads nothing and exits with status 2 unless each component it
 checks is usable.
 
-To delete a component from this computer, run
-`aeat config provision remove browser` or
-`aeat config provision remove local_ai`. The command asks first, and `--yes`
-confirms without asking. You can set the component up again at any time.
-
-Offline, `status` still answers and components that are already set up keep
-working. `setup` refuses before it downloads anything, and says whether the
-computer is offline, a server cannot be reached, or the network blocked the
-download.
-
 These commands work with or without a signed-in profile. A Cadrumo build
 without its native components, such as a source checkout that has not built
-them, reports every component as not included in that version. The desktop
-app sets up the same components from its own setup window.
-
-LLM classification runs only on this local reader; no cloud provider is
-involved. See
-[Classify transactions with an LLM](how-to/classify-with-llm.md#set-up-the-local-reader).
+them, reports every component as not included in that version.
 
 Run `aeat config check` again after each change to confirm the gap is closed.
 

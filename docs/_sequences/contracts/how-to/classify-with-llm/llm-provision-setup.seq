@@ -1,3 +1,0 @@
-@step Set up the local reader in one run.
-@static aeat config provision setup --yes
-@blocked external-service Downloads the local AI program and the reader models from their publishers, which the hermetic sandbox must not contact.

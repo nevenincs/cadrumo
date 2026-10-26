@@ -429,7 +429,8 @@ The three capabilities are:
 
 - `cloud_evidence_upload`: allow sending sensitive supporting documents to a
   cloud LLM provider. Off by default. Barred for gestor profiles.
-- `llm_vision`: read invoices with the on-host vision model. On by default.
+- `llm_vision`: read scanned and image invoices with the vision model you
+  chose in the Cadrumo desktop app. On by default.
 - `google_export`: export calculations to Google Sheets. On by default.
 
 Turn any capability on or off with `aeat config profile capabilities set`.

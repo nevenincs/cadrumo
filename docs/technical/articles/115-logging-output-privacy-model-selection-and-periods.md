@@ -9,7 +9,7 @@
 <!-- preserved:article -->
 ## Scope and method
 
-This chunk contains 22 core modules totaling 4,898 lines, 211,423 bytes, and 47,999 measured proxy tokens. I read every assigned page (9/9), including all of `logging.py`, `model_catalogue.py`, `paths.py`, and `period.py`. This is static analysis of the checked-in snapshot. I did not import the application, run tests, execute file or network operations, or independently verify licensing, AEAT behavior, or legal timing rules.
+This chunk contains 22 core modules. I read every assigned page, including all of `logging.py`, `model_roles.py`, `paths.py`, and `period.py`. This is static analysis of the checked-in snapshot. I did not import the application, run tests, execute file or network operations, or independently verify AEAT behavior or legal timing rules.
 
 ## Diagnostics, output privacy, and model selection
 
@@ -19,9 +19,7 @@ Startup avoids loading settings for CLI help/version, defers configuration until
 
 `output_rendering.py` is the separate success-output boundary: it returns already-redacted text for text or JSON mode, handles safe conversions for dates, paths, decimals and sets, and refuses unsupported objects/formats through typed errors. Profile and bucket identifiers remain redacted by default; an explicit setting opts into revealing only those opaque identifiers, while tax identities, URLs, tokens, and secure-object keys stay redacted. The returned model retains rendered text rather than the original payload, so a later transport cannot casually bypass this pass. Error envelopes and logs use other boundaries. Central renderer (`src/cadrumo/core/output_rendering.py`) Identifier opt-in (`src/cadrumo/core/output_rendering.py`)
 
-`model_catalogue.py` records local Ollama and hosted Anthropic candidates for vision transcription, text extraction, column-role mapping, and supply-nature proposals. Candidates declare runtime-specific ordering costs (local memory requirement or hosted input price), context capacity, licence posture, optional measurement reference, and roles. Catalogue validators require each runtime/role pair and default to resolve to an eligible candidate, reject duplicate IDs, and order candidates weakest-first within their runtime; larger models are explicit overrides. A separate context floor is necessary for prompts that include an allow-list and encoded page. Candidate and licence records (`src/cadrumo/core/model_catalogue.py`) Role/runtime candidate model (`src/cadrumo/core/model_catalogue.py`) Catalogue invariants (`src/cadrumo/core/model_catalogue.py`) Bounded candidate ordering (`src/cadrumo/core/model_catalogue.py`)
-
-The licence model requires publisher evidence (source URL and quote) for verified entries and refuses an unverified commercial-use claim. The shipped local defaults use Qwen3 entries declared Apache-2.0; research-licensed Qwen2.5 candidates remain available only under non-commercial posture or explicit override with an advisory. The hosted Claude Haiku candidate is ordered by stated price and uses commercial service terms rather than a fictitious weights licence. These are source-backed declarations in code, not a current legal opinion. Most candidate measurement references are empty, so the catalogue records capabilities, prices, and vendor-published weight sizes but does not claim a broad local benchmark corpus. Licence claim validator (`src/cadrumo/core/model_catalogue.py`) Shipped candidates and stated evidence (`src/cadrumo/core/model_catalogue.py`) Catalogue/default consistency (`src/cadrumo/core/model_catalogue.py`)
+`model_roles.py` declares the jobs a model is chosen for: vision transcription, text extraction, column-role mapping and supply-nature proposal. The roles are Cadrumo's; the models are not. Cadrumo declares no model name, size, digest, licence, default or ranking. The person selects a lane and a model for each role from cadrumo-agent's provider catalogue, whose entries carry the vision, size, context length, licence and `reads_off_host` facts, and the agent service stores and resolves that selection. Roles stay separate because their capability bars differ: only vision transcription needs image input. Role vocabulary (`src/cadrumo/core/model_roles.py`)
 
 ## Filing periods, notification facts, and workflow contracts
 
@@ -47,12 +45,12 @@ The PID probe supports crash-recoverable locks by treating permission/query fail
 
 ## Assessment and follow-up
 
-Strong local design choices include separate redaction paths for logs and CLI output, explicit licence evidence and runtime-aware candidate ranking, narrow filing-period grammars, reproducible notification-state evaluation, and factual joins between action arguments and their cited evidence. Main follow-up points are verifying the attached JSONL sink's third-party DEBUG filtering, checking current vendor model facts and licence pages against the catalogue, exercising unverified header values against real AEAT artifacts, reviewing period/event classification consumers against live portal vocabulary, and ensuring callers do not treat path resolution as containment. No tests or runtime integrations were executed in this pass; the chunk's declarations cannot certify end-to-end coverage.
+Strong local design choices include separate redaction paths for logs and CLI output, a role vocabulary that names no model, narrow filing-period grammars, reproducible notification-state evaluation, and factual joins between action arguments and their cited evidence. Main follow-up points are verifying the attached JSONL sink's third-party DEBUG filtering, exercising unverified header values against real AEAT artifacts, reviewing period/event classification consumers against live portal vocabulary, and ensuring callers do not treat path resolution as containment. No tests or runtime integrations were executed in this pass; the chunk's declarations cannot certify end-to-end coverage.
 
 ## Complete assigned-file coverage
 
 - logging.py (`src/cadrumo/core/logging.py`) — lines 1–1,059
-- model_catalogue.py (`src/cadrumo/core/model_catalogue.py`) — lines 1–656
+- model_roles.py (`src/cadrumo/core/model_roles.py`) — lines 1–33
 - modelo.py (`src/cadrumo/core/modelo.py`) — lines 1–47
 - modelo_232_codigos.py (`src/cadrumo/core/modelo_232_codigos.py`) — lines 1–165
 - modelo_export_artefact.py (`src/cadrumo/core/modelo_export_artefact.py`) — lines 1–46

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:c48f4d5ef4d1f193e77333157d68e1393b0b79f7f921167a8dd308fe302597de'
+body_hash: 'sha256:c12f2d68f4d9678989cb5796830bcba7754b947185908413b7b850a8e5974e92'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -784,6 +784,36 @@ related:
 - `S15` `M` `src/cadrumo/application/ledger/batch_ingest.py`
 - `S15` `M` `src/cadrumo/entrypoints/tests/test_evidence_batch_reader_lane.py`
 - `S15` `verify:` `pytest -m 'unit or integration' src/cadrumo/entrypoints/tests/test_evidence_batch_reader_lane.py` -> `pass`
+- `S26` `D` `docs/_sequences/contracts/how-to/classify-with-llm/llm-provision-setup.seq`
+- `S26` `M` `docs/how-to/classify-with-llm.md`
+- `S26` `M` `docs/how-to/import-bank-statements.md`
+- `S26` `M` `docs/how-to/profile-setup.md`
+- `S26` `M` `docs/locales/ca/LC_MESSAGES/how-to/classify-with-llm.po`
+- `S26` `M` `docs/locales/ca/LC_MESSAGES/how-to/import-bank-statements.po`
+- `S26` `M` `docs/locales/ca/LC_MESSAGES/how-to/profile-setup.po`
+- `S26` `M` `docs/locales/ca/LC_MESSAGES/workstation-setup.po`
+- `S26` `M` `docs/locales/es/LC_MESSAGES/how-to/classify-with-llm.po`
+- `S26` `M` `docs/locales/es/LC_MESSAGES/how-to/import-bank-statements.po`
+- `S26` `M` `docs/locales/es/LC_MESSAGES/how-to/profile-setup.po`
+- `S26` `M` `docs/locales/es/LC_MESSAGES/workstation-setup.po`
+- `S26` `M` `docs/locales/hu/LC_MESSAGES/how-to/classify-with-llm.po`
+- `S26` `M` `docs/locales/hu/LC_MESSAGES/how-to/import-bank-statements.po`
+- `S26` `M` `docs/locales/hu/LC_MESSAGES/how-to/profile-setup.po`
+- `S26` `M` `docs/locales/hu/LC_MESSAGES/workstation-setup.po`
+- `S26` `M` `docs/technical/articles/014-llm-dispatch-consent-and-invoice-reading-pipeline.md`
+- `S26` `M` `docs/technical/articles/015-llm-provider-adapters-and-google-drive-storage.md`
+- `S26` `M` `docs/technical/articles/027-local-reader-provisioning-workstation-health-and-application-contracts.md`
+- `S26` `M` `docs/technical/articles/028-runtime-admission-canonical-state-and-storage-route-policy.md`
+- `S26` `M` `docs/technical/articles/057-invoice-evidence-extraction-and-reviewed-confirmation.md`
+- `S26` `M` `docs/technical/articles/115-logging-output-privacy-model-selection-and-periods.md`
+- `S26` `M` `docs/technical/articles/168-profile-custody-provisioning-and-runtime-configuration.md`
+- `S26` `M` `docs/technical/topics/application-orchestration-and-diagnostics.md`
+- `S26` `M` `docs/workstation-setup.md`
+- `S26` `verify:` `doc8 docs` -> `pass`
+- `S26` `verify:` `python -m dev.docs.sequences check --page how-to/classify-with-llm` -> `pass`
+- `S26` `verify:` `python -m dev.docs.sequences check --page workstation-setup` -> `pass`
+- `S26` `verify:` `python -m dev.docs.build --single-page (classify-with-llm, workstation-setup, import-bank-statements, profile-setup)` -> `pass`
+- `S26` `verify:` `python -m dev.docs.i18n set-batch (111 messages, 12 catalogues)` -> `pass`
 
 ## Notes
 
@@ -841,3 +871,4 @@ related:
 - `S16` P03 review fix: model-names-and-local-only-wording-remain
 - `S15` P03 review fix: vision-model-refused-only-on-image-reads
 - `S15` P03 review fix: batch-consent-refusal-closes-no-role
+- `S26` Focused dev/docs pytest run incomplete: profile-delete sequences hit runtime worker exchange timeouts and the 590s wrapper killed two workers; localization and catalogue-drift tests passed. docs/cli/config/provision.rst still lists pull/load/--model; regeneration belongs to S28.

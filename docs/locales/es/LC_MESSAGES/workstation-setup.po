@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-24 22:58+0200\n"
+"POT-Creation-Date: 2026-10-26 10:51+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo docs team <docs@cadrumo.neve.md>\n"
 "Language: es\n"
@@ -153,10 +153,8 @@ msgid "`ofx` - OFX and QFX bank-statement import."
 msgstr "`ofx`: importación de extractos bancarios OFX y QFX."
 
 #: ../../workstation-setup.md:63
-msgid "`llm` - on-host document reading with a local model runtime."
-msgstr ""
-"`llm`: lectura de documentos en el propio equipo con un entorno de "
-"ejecución de modelos local."
+msgid "`llm` - on-host document reading through the local AI."
+msgstr "`llm`: lectura de documentos en el propio equipo a través de la IA local."
 
 #: ../../workstation-setup.md:64
 msgid ""
@@ -202,73 +200,125 @@ msgstr "Preparar el navegador y la IA local"
 msgid ""
 "Two optional extras use a component that Cadrumo sets up on this "
 "computer. The `browser` extra drives a Chromium build for live AEAT "
-"reads. On-host document reading uses the local AI: its program and one "
-"model for each reader role (vision transcription, text extraction, "
-"tabular mapping, and supply-nature proposal). Cadrumo pins the exact "
-"version of each component and checks every download against its pinned "
-"size and checksum."
+"reads. On-host document reading uses the local AI: its program and the "
+"model you choose for each local reader role (vision transcription, text "
+"extraction, tabular mapping, and supply-nature proposal). Cadrumo pins "
+"the exact version of the browser and of the local AI program, and checks "
+"each of their downloads against its pinned size and checksum."
 msgstr ""
 "Dos extras opcionales usan un componente que Cadrumo prepara en este "
 "ordenador. El extra `browser` utiliza una compilación de Chromium para "
 "las lecturas en directo de la AEAT. La lectura de documentos en el propio"
-" equipo usa la IA local: su programa y un modelo para cada rol de lectura"
-" (transcripción por visión, extracción de texto, asignación de columnas "
-"de tablas y propuesta de la naturaleza de la operación). Cadrumo fija la "
-"versión exacta de cada componente y comprueba cada descarga con su tamaño"
-" y su suma de verificación fijados."
+" equipo usa la IA local: su programa y el modelo que elijas para cada rol"
+" de lectura local (transcripción por visión, extracción de texto, "
+"asignación de columnas de tablas y propuesta de la naturaleza de la "
+"operación). Cadrumo fija la versión exacta del navegador y del programa "
+"de IA local, y comprueba cada una de sus descargas con su tamaño y su "
+"suma de verificación fijados."
 
-#: ../../workstation-setup.md:86
+#: ../../workstation-setup.md:87
 msgid ""
 "See where you stand first. `aeat config provision status` reads only what"
 " this computer already has, so it downloads nothing and works offline. "
-"Each row that is not ready names the command that fixes it."
+"Each row that is not ready says how to fix it."
 msgstr ""
 "Primero mira dónde estás. `aeat config provision status` solo lee lo que "
 "este ordenador ya tiene, así que no descarga nada y funciona sin "
-"conexión. Cada fila que no está lista indica el comando que lo soluciona."
+"conexión. Cada fila que no está lista indica cómo solucionarlo."
 
-#: ../../workstation-setup.md:90
+#: ../../workstation-setup.md:91
+msgid "Set up the browser"
+msgstr "Preparar el navegador"
+
+#: ../../workstation-setup.md:93
 msgid ""
-"To set up every component that is not ready yet, run `aeat config "
-"provision setup`. The command first checks that it can reach the download"
-" servers. It then prints its plan: what it downloads, how large each part"
-" is, which server it comes from, and where it is stored. It asks before "
-"it downloads anything. `--yes` approves exactly the plan the command "
-"prints, without asking. Without `--yes` and without a terminal to answer "
-"on, nothing is downloaded and the command says it needs your approval. "
-"Components that are already set up are left as they are."
+"To set up the browser, run `aeat config provision setup`. The command "
+"first checks that it can reach the download servers. It then prints its "
+"plan: what it downloads, how large each part is, which server it comes "
+"from, and where it is stored. It asks before it downloads anything. "
+"`--yes` approves exactly the plan the command prints, without asking. "
+"Without `--yes` and without a terminal to answer on, nothing is "
+"downloaded and the command says it needs your approval. A browser that is"
+" already set up is left as it is."
 msgstr ""
-"Para preparar todos los componentes que aún no están listos, ejecuta "
-"`aeat config provision setup`. El comando comprueba primero que puede "
-"llegar a los servidores de descarga. Después muestra su plan: qué "
-"descarga, qué tamaño tiene cada parte, de qué servidor viene y dónde se "
-"guarda. Te pregunta antes de descargar nada. `--yes` aprueba exactamente "
-"el plan que muestra el comando, sin preguntar. Sin `--yes` y sin un "
-"terminal en el que responder, no se descarga nada y el comando indica que"
-" necesita tu aprobación. Los componentes que ya están preparados se "
-"quedan como están."
+"Para preparar el navegador, ejecuta `aeat config provision setup`. El "
+"comando comprueba primero que puede llegar a los servidores de descarga. "
+"Después muestra su plan: qué descarga, qué tamaño tiene cada parte, de "
+"qué servidor viene y dónde se guarda. Te pregunta antes de descargar "
+"nada. `--yes` aprueba exactamente el plan que muestra el comando, sin "
+"preguntar. Sin `--yes` y sin un terminal en el que responder, no se "
+"descarga nada y el comando indica que necesita tu aprobación. Un "
+"navegador que ya está preparado se queda como está."
 
-#: ../../workstation-setup.md:99
+#: ../../workstation-setup.md:101
 msgid "To set up the browser alone:"
 msgstr "Para preparar solo el navegador:"
 
-#: ../../workstation-setup.md:104
+#: ../../workstation-setup.md:106
 msgid ""
-"`aeat config provision pull` sets up the local AI alone: its program when"
-" it is missing, then every reader role's model, a few GB in total. "
-"Cadrumo downloads the program as a pinned archive from its publisher and "
-"keeps it in its own storage, so it needs no package manager, no "
-"administrator rights, and no separate installer on Windows, macOS, or "
-"Linux. Cadrumo chooses the model for each role."
+"To delete the browser from this computer, run `aeat config provision "
+"remove browser`. The command asks first, and `--yes` confirms without "
+"asking. You can set it up again at any time."
 msgstr ""
-"`aeat config provision pull` prepara solo la IA local: su programa cuando"
-" falta y, después, el modelo de cada rol de lectura, unos pocos GB en "
-"total. Cadrumo descarga el programa como un archivo fijado de su editor y"
-" lo guarda en su propio almacenamiento, así que no necesita ningún gestor"
-" de paquetes, ni permisos de administrador, ni un instalador aparte en "
-"Windows, macOS o Linux. Cadrumo elige el modelo de cada rol."
+"Para borrar el navegador de este ordenador, ejecuta `aeat config "
+"provision remove browser`. El comando te pregunta antes, y `--yes` lo "
+"confirma sin preguntar. Puedes volver a prepararlo cuando quieras."
 
-#: ../../workstation-setup.md:111
+#: ../../workstation-setup.md:110
+msgid ""
+"Offline, `status` still answers and a browser that is already set up "
+"keeps working. `setup` refuses before it downloads anything, and says "
+"whether the computer is offline, a server cannot be reached, or the "
+"network blocked the download."
+msgstr ""
+"Sin conexión, `status` sigue respondiendo y un navegador que ya está "
+"preparado sigue funcionando. `setup` se niega antes de descargar nada e "
+"indica si el ordenador no tiene conexión, si no se puede llegar a un "
+"servidor o si la red ha bloqueado la descarga."
+
+#: ../../workstation-setup.md:115
+msgid "Set up the local AI in the desktop app"
+msgstr "Preparar la IA local en la aplicación de escritorio"
+
+#: ../../workstation-setup.md:117
+msgid ""
+"Only the Cadrumo desktop app sets up the local AI. The `aeat` command "
+"line, the terminal interface and an AI assistant connected through MCP "
+"cannot install, remove or update it, and cannot choose its models. When "
+"the local AI is not ready, they point you to the desktop app."
+msgstr ""
+"Solo la aplicación de escritorio de Cadrumo prepara la IA local. La línea"
+" de comandos `aeat`, la interfaz de terminal y un asistente de IA "
+"conectado mediante MCP no pueden instalarla, borrarla ni actualizarla, y "
+"no pueden elegir sus modelos. Cuando la IA local no está lista, te "
+"remiten a la aplicación de escritorio."
+
+#: ../../workstation-setup.md:122
+msgid ""
+"In the desktop app, choose a model for each reader role. Cadrumo names no"
+" model and sets no default: the models on offer come from the Cadrumo "
+"agent's catalogue, which shows each model's size, context length, "
+"licence, whether it reads images, and whether it runs on this computer. "
+"The desktop app then downloads the local AI program (Ollama) as a pinned "
+"archive from its publisher, and downloads the models you chose for the "
+"local roles. It shows its plan, with the size of each download, before it"
+" downloads anything. Cadrumo keeps the program in its own storage, so it "
+"needs no package manager, no administrator rights, and no separate "
+"installer on Windows, macOS, or Linux."
+msgstr ""
+"En la aplicación de escritorio, elige un modelo para cada rol de lectura."
+" Cadrumo no nombra ningún modelo ni fija ninguno por defecto: los modelos"
+" disponibles vienen del catálogo del agente de Cadrumo, que muestra de "
+"cada modelo su tamaño, la longitud de contexto, la licencia, si lee "
+"imágenes y si se ejecuta en este ordenador. Después, la aplicación de "
+"escritorio descarga el programa de IA local (Ollama) como un archivo "
+"fijado de su editor y descarga los modelos que elegiste para los roles "
+"locales. Muestra su plan, con el tamaño de cada descarga, antes de "
+"descargar nada. Cadrumo guarda el programa en su propio almacenamiento, "
+"así que no necesita ningún gestor de paquetes, ni derechos de "
+"administrador, ni un instalador aparte en Windows, macOS o Linux."
+
+#: ../../workstation-setup.md:132
 msgid ""
 "A copy of the local AI program (Ollama) that you installed yourself is "
 "detected and left alone. Cadrumo never starts, stops, or changes it, and "
@@ -278,7 +328,7 @@ msgstr ""
 "Cadrumo la detecta y no la toca. Nunca la inicia, la detiene ni la "
 "cambia, y su propia copia escucha en otra dirección local."
 
-#: ../../workstation-setup.md:115
+#: ../../workstation-setup.md:136
 msgid ""
 "The local AI runs in the background under the Cadrumo manager, which "
 "starts when you sign in to your computer or open the Cadrumo app. The "
@@ -296,69 +346,49 @@ msgstr ""
 " como no iniciada y la lectura de documentos se niega hasta que esté en "
 "marcha."
 
-#: ../../workstation-setup.md:122
+#: ../../workstation-setup.md:143
+msgid ""
+"Every model request goes through the Cadrumo agent service to the model "
+"chosen for its role. LLM classification uses only a model that runs on "
+"this computer. See [Classify transactions with an LLM](how-to/classify-"
+"with-llm.md#set-up-the-local-reader)."
+msgstr ""
+"Cada solicitud de modelo pasa por el servicio del agente de Cadrumo hasta"
+" el modelo elegido para su rol. La clasificación con un LLM solo usa un "
+"modelo que se ejecuta en este ordenador. Consulta [Clasificar movimientos"
+" con un LLM](how-to/classify-with-llm.md#set-up-the-local-reader)."
+
+#: ../../workstation-setup.md:148
+msgid "Check every component"
+msgstr "Comprobar todos los componentes"
+
+#: ../../workstation-setup.md:150
 msgid ""
 "`aeat config provision verify` checks every component fully: it reaches "
-"the download servers, opens the browser, and asks each model for a one-"
-"word answer. `--item browser` or `--item local_ai` checks one component. "
-"The check downloads nothing and exits with status 2 unless each component"
-" it checks is usable."
+"the download servers, opens the browser, and asks each chosen local model"
+" for a one-word answer. `--item browser` or `--item local_ai` checks one "
+"component. The check downloads nothing and exits with status 2 unless "
+"each component it checks is usable."
 msgstr ""
 "`aeat config provision verify` comprueba a fondo todos los componentes: "
 "llega a los servidores de descarga, abre el navegador y pide a cada "
-"modelo una respuesta de una palabra. `--item browser` o `--item local_ai`"
-" comprueba un solo componente. La comprobación no descarga nada y termina"
-" con el estado 2 salvo que todos los componentes que comprueba se puedan "
-"usar."
+"modelo local elegido una respuesta de una palabra. `--item browser` o "
+"`--item local_ai` comprueba un solo componente. La comprobación no "
+"descarga nada y termina con el estado 2 salvo que todos los componentes "
+"que comprueba se puedan usar."
 
-#: ../../workstation-setup.md:128
-msgid ""
-"To delete a component from this computer, run `aeat config provision "
-"remove browser` or `aeat config provision remove local_ai`. The command "
-"asks first, and `--yes` confirms without asking. You can set the "
-"component up again at any time."
-msgstr ""
-"Para borrar un componente de este ordenador, ejecuta `aeat config "
-"provision remove browser` o `aeat config provision remove local_ai`. El "
-"comando te pregunta antes, y `--yes` lo confirma sin preguntar. Puedes "
-"volver a preparar el componente cuando quieras."
-
-#: ../../workstation-setup.md:133
-msgid ""
-"Offline, `status` still answers and components that are already set up "
-"keep working. `setup` refuses before it downloads anything, and says "
-"whether the computer is offline, a server cannot be reached, or the "
-"network blocked the download."
-msgstr ""
-"Sin conexión, `status` sigue respondiendo y los componentes que ya están "
-"preparados siguen funcionando. `setup` se niega antes de descargar nada e"
-" indica si el ordenador no tiene conexión, si no se puede llegar a un "
-"servidor o si la red ha bloqueado la descarga."
-
-#: ../../workstation-setup.md:138
+#: ../../workstation-setup.md:156
 msgid ""
 "These commands work with or without a signed-in profile. A Cadrumo build "
 "without its native components, such as a source checkout that has not "
-"built them, reports every component as not included in that version. The "
-"desktop app sets up the same components from its own setup window."
+"built them, reports every component as not included in that version."
 msgstr ""
 "Estos comandos funcionan con o sin un perfil con la sesión iniciada. Una "
 "compilación de Cadrumo sin sus componentes nativos, como una copia del "
 "código fuente que no los ha compilado, indica que ningún componente está "
-"incluido en esa versión. La aplicación de escritorio prepara los mismos "
-"componentes desde su propia ventana de preparación."
+"incluido en esa versión."
 
-#: ../../workstation-setup.md:143
-msgid ""
-"LLM classification runs only on this local reader; no cloud provider is "
-"involved. See [Classify transactions with an LLM](how-to/classify-with-"
-"llm.md#set-up-the-local-reader)."
-msgstr ""
-"La clasificación con un LLM se ejecuta solo en este lector local; no "
-"interviene ningún proveedor en la nube. Consulta [Clasificar movimientos "
-"con un LLM](how-to/classify-with-llm.md#set-up-the-local-reader)."
-
-#: ../../workstation-setup.md:147
+#: ../../workstation-setup.md:160
 msgid ""
 "Run `aeat config check` again after each change to confirm the gap is "
 "closed."
@@ -366,11 +396,11 @@ msgstr ""
 "Ejecuta `aeat config check` de nuevo tras cada cambio para confirmar que "
 "la carencia se ha resuelto."
 
-#: ../../workstation-setup.md:149
+#: ../../workstation-setup.md:162
 msgid "Connect an AI assistant"
 msgstr "Conectar un asistente de IA"
 
-#: ../../workstation-setup.md:151
+#: ../../workstation-setup.md:164
 msgid ""
 "Cadrumo installs `cadrumo-mcp` alongside `aeat`. The server connects an "
 "agent to registered operations through the local runtime, either under "
@@ -385,7 +415,7 @@ msgstr ""
 "que está en tu ruta de búsqueda. En una copia de trabajo del código "
 "fuente, comprueba el punto de entrada instalado con:"
 
-#: ../../workstation-setup.md:162
+#: ../../workstation-setup.md:175
 msgid ""
 "[Connect an agent](how-to/connect-an-agent.md) shows both ways to connect"
 " and the grant request flow."
@@ -393,11 +423,11 @@ msgstr ""
 "[Conectar un agente](how-to/connect-an-agent.md) muestra las dos formas "
 "de conectarse y el flujo de solicitud de autorizaciones."
 
-#: ../../workstation-setup.md:165
+#: ../../workstation-setup.md:178
 msgid "Next steps"
 msgstr "Próximos pasos"
 
-#: ../../workstation-setup.md:167
+#: ../../workstation-setup.md:180
 msgid ""
 "[Quickstart](how-to/quickstart.md) - from an empty profile to an exported"
 " modelo file."
@@ -405,7 +435,7 @@ msgstr ""
 "[Guía rápida](how-to/quickstart.md): de un perfil vacío a un fichero de "
 "modelo exportado."
 
-#: ../../workstation-setup.md:169
+#: ../../workstation-setup.md:182
 msgid ""
 "[Set up a profile](how-to/profile-setup.md) - including the per-profile "
 "service capabilities (Google export, LLM vision, cloud evidence upload)."
@@ -414,10 +444,10 @@ msgstr ""
 "capacidades de servicio por perfil (exportación a Google, visión LLM, "
 "subida de evidencias a la nube)."
 
-#: ../../workstation-setup.md:171
+#: ../../workstation-setup.md:184
 msgid "[Connect an agent](how-to/connect-an-agent.md)"
 msgstr "[Conectar un agente](how-to/connect-an-agent.md)"
 
-#: ../../workstation-setup.md:172
+#: ../../workstation-setup.md:185
 msgid "[Troubleshooting](how-to/troubleshooting.md)"
 msgstr "[Resolución de problemas](how-to/troubleshooting.md)"

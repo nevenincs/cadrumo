@@ -1,12 +1,12 @@
 # Classify transactions with an LLM
 
-This page covers large language model (LLM) assisted classification: setting up the local reader, previewing a suggestion for one transaction, the review loop (apply, reject, or override), filling in the VAT tax fields, and reading an attached invoice with a model. Every model runs on your own machine. The suggestion is always a starting point: you confirm or correct it, and the model never sets a euro amount.
+This page covers large language model (LLM) assisted classification: setting up the local reader, previewing a suggestion for one transaction, the review loop (apply, reject, or override), filling in the VAT tax fields, and reading an attached invoice with a model. Each read uses the model you chose for its role, and these commands use only a model that runs on your own computer. The suggestion is always a starting point: you confirm or correct it, and the model never sets a euro amount.
 
 Classification does not contact AEAT and does not submit anything. It also
 sends nothing to a cloud service. See [the privacy boundary](#privacy-boundary)
 for the one command that can.
 
-The LLM commands on this page need a local model runtime that the documentation sandbox does not run, so they are shown as examples that are not run. The local commands around them run live at build time.
+The LLM commands on this page need the agent service and a local model, which the documentation sandbox does not run, so they are shown as examples that are not run. The local commands around them run live at build time.
 
 ## Before you start
 
@@ -18,7 +18,8 @@ You need:
 - Your passphrase. The command opens your encrypted records, so it prompts for the passphrase.
 - The `llm` extra, installed through your install channel, for example
   `pip install "cadrumo[llm]"`.
-- A local model runtime with its models, set up in the next section.
+- The local AI and a model chosen for each reader role, set up in the Cadrumo
+  desktop app as the next section describes.
 
 The examples in this documentation are recorded in English. `aeat` prints its
 messages in Spanish unless you
@@ -27,30 +28,38 @@ messages in Spanish unless you
 (set-up-a-provider)=
 ## Set up the local reader
 
-`aeat` sends every classification prompt to the local AI on your own
-computer, over a loopback connection. It stores no LLM credentials and needs
-no account. The `llm` extra provides the client, and `aeat config provision`
-sets up the local AI: its program and its models.
+`aeat` sends every model request through the Cadrumo agent service, which
+runs it with the model you chose for that request's role. Classification and
+text-layer documents use the text extraction role; scanned and image documents
+use the vision transcription role. Cadrumo names no model and sets no default.
+The models on offer come from the agent's catalogue, which shows each model's
+size, context length, licence, whether it reads images, and whether it runs on
+this computer or sends what it reads off the machine. `aeat` stores no LLM
+credentials and needs no account for a model that runs on this computer.
 
-To set up everything in one run, use:
+You set up the local reader in the Cadrumo desktop app:
 
-```{cli-sequence} llm-provision-setup
-```
+- Choose a model for each reader role. For the commands on this page, choose
+  models that run on this computer. The vision transcription role accepts only
+  a model the catalogue marks as reading images.
+- Let the desktop app set up the local AI. It downloads and installs the local
+  AI program (Ollama) at the version Cadrumo pins, then downloads the models you
+  chose for the local roles. It shows its plan, with the size of each
+  download, before it downloads anything.
 
-Setup downloads the pinned local AI program and a model for each reader
-role, and checks each download against its pinned checksum. It prints its
-plan before it downloads anything. The `--yes` option approves that plan; omit
-it to review and answer at the terminal. Setup without `--yes` and without a
-terminal downloads nothing. Components that are already set up are left as
-they are. The Cadrumo manager runs the local AI in the background once it is
-set up. See [Install Cadrumo](../workstation-setup.md) for the whole sequence.
+The Cadrumo manager runs the local AI in the background once it is set up. A
+role with no chosen model is never filled in for you: reads for that role
+refuse until you choose one.
 
-Text reads use the `qwen3:1.7b` model by default. Scanned and image reads use
-`qwen3-vl:2b`. Check the result with `aeat config check`. It reports the
-profile's service capabilities, whether each local reader is available, and
-the fix for each problem. `aeat config provision status` reports whether the
-local AI is set up, and `aeat config provision verify --item local_ai` checks
-that its program answers and each reader model replies.
+The `aeat` command line cannot set up the local AI or choose its models, and
+neither can the terminal interface or an AI assistant connected through MCP.
+They report on it. `aeat config check` reports the profile's service
+capabilities, whether each reader role is ready, and the fix for each problem.
+`aeat config provision status` reports whether the local AI is set up, and
+`aeat config provision verify --item local_ai` checks that its program answers
+and each chosen model replies. When the local AI needs setting up, they point
+you to the desktop app. See [Install Cadrumo](../workstation-setup.md) for the
+other components.
 
 The profile capability `llm_vision` is on by default. To stop `aeat` from reading scanned or image supporting documents, turn that capability off with `aeat config profile capabilities set`, naming `llm_vision` and `off`. Reads of scanned or image supporting documents then refuse.
 
@@ -59,24 +68,28 @@ Smoke-test the setup with a preview, which saves nothing:
 ```{cli-sequence} llm-provider-smoke-test
 ```
 
-If the local AI is not running or a model is missing, the command refuses
-and reads nothing. The refusal names the command that fixes it, such as
-`aeat config provision pull`. Fix the gap and retry.
+If no model is chosen for the role, the local AI is not running, or the
+chosen model is not downloaded yet, the command refuses and reads nothing. The
+refusal names what to fix, such as choosing a model for the role or setting up
+the local AI in the desktop app. If the model chosen for the role sends what it
+reads off this computer, the command refuses too: classification sends nothing
+off the machine. Fix the gap and retry.
 
 ## Ask for a suggestion
 
 Find a row that still needs classification and inspect it. Then send that one
-row to the local model for a preview:
+row to the model for a preview:
 
 ```{cli-sequence} llm-suggest
 :verify: Confirm the unclassified row is ready to send for a suggestion.
 ```
 
-`aeat` sends that one row to the local text model, which suggests a
+`aeat` sends that one row to the model chosen for the text extraction role,
+which suggests a
 classification (`BUSINESS`, `PERSONAL`, or `MIXED`), an expense category
 when it can choose one from the allowed list, a confidence, and a short
 reason. In preview mode nothing is saved. For the full machine-readable
-record, including the `provenance` (`llm:local-text:<model>`) and `persisted`
+record, including the `provenance` (`llm:agent-text:configured`) and `persisted`
 fields, put the global JSON flag before the subcommand:
 
 ```{cli-sequence} llm-suggest-json
@@ -91,7 +104,7 @@ The review loop has four terminals:
 
 - **Review.** Preview without `--apply`. Nothing is saved; walking away
   leaves the row unchanged.
-- **Apply.** Persist the suggestion after review. The apply output shows the transaction id, a `classified-by` line with `llm:local-text:<model>`, and the new review status. Where the suggestion came from, its confidence, and the reason are recorded with the classification event.
+- **Apply.** Persist the suggestion after review. The apply output shows the transaction id, a `classified-by` line with `llm:agent-text:configured`, and the new review status. Where the suggestion came from, its confidence, and the reason are recorded with the classification event.
 - **Reject.** Record that the model was wrong, with your reason, as an audit
   event; the row stays unclassified and the record stays in history. `--reject`
   cannot be combined with `--apply`. Previewing and walking away also changes
@@ -168,24 +181,23 @@ A VAT category does not by itself make input VAT deductible. To deduct it, also 
 
 Attach a purchase invoice or receipt to a transaction (see [Attach invoices and receipts to transactions](ledger-evidence.md)), then let the model read it while classifying with `--read-evidence`. The model chooses the spending category and the VAT situation from what it reads; `aeat` derives every euro amount from the official rates. Both kinds of document are read on your own machine:
 
-- **A scanned PDF or an image** is read by the local vision model. The
-  `llm_vision` capability must be on, which is the default.
-- **A text-layer PDF** has its text extracted and read by the local text
-  model.
+- **A scanned PDF or an image** is read by the model chosen for the vision
+  transcription role. The `llm_vision` capability must be on, which is the
+  default.
+- **A text-layer PDF** has its text extracted on this computer and read by the
+  model chosen for the text extraction role.
 
 Neither read needs an acknowledgement, and both work in gestor and
 professional deployments. `--read-evidence` on its own is enough. `--llm`
 without `--read-evidence` classifies from the transaction row only and never
 reads the attached document. To read the attached document with the vision model
-you provisioned, preview first:
+you chose, preview first:
 
 ```{cli-sequence} llm-read-evidence-local
 ```
 
-Setup downloads the model Cadrumo chose for each role. To read one scanned or
-image document with another model the local AI already has, such as
-`qwen2.5vl:7b` on a computer with room for it, add
-`--vision-model qwen2.5vl:7b` to the classify command.
+Every read uses the model chosen for its role. To read with another model,
+change that role's model in the desktop app; the command takes no model name.
 
 A transaction with no attached supporting document sends nothing extra: the model receives only the transaction row, exactly as in the plain suggestion flow.
 
@@ -211,8 +223,10 @@ place with no split.
 - Invoice bytes live only in encrypted secure storage. Reading decrypts them
   into memory for the one call and never writes them to a temp file, a log,
   or a cache.
-- A read sends the image or the extracted text only to the local model over a
-  loopback connection on your machine. Nothing leaves the machine.
+- A read sends the image or the extracted text through the agent service to
+  the model chosen for its role, which runs in the local AI on your machine.
+  If that model would send it off the machine, the read refuses before
+  anything is sent. Nothing leaves the machine.
 - The model selects only the classification, the category, the VAT category,
   and a split proportion. `aeat` derives every rate, base, and VAT amount from the official rates, and refuses to persist a result whose parts do not add
   up. When the printed VAT does not match the computed VAT, the review shows
@@ -223,8 +237,10 @@ place with no split.
 Every applied result records how it was produced, so a later review shows
 the source:
 
-- `llm:local-vision:<model>`: read by the local vision model.
-- `llm:local-text:<model>`: classified by the local text model.
+- `llm:agent-vision:<model>`: read by the vision model the agent service
+  reported for the read.
+- `llm:agent-text:configured`: classified by the model chosen for the text
+  extraction role.
 - `derived:iva-category`: you chose the VAT category and `aeat` derived the
   rest.
 - `manual`: you set the classification by hand.
@@ -247,11 +263,13 @@ add` then `rule apply --dry-run` then `rule apply`); both are covered in
 (privacy-boundary)=
 ## Privacy boundary
 
-Classification calls only the model runtime on your own machine, over a
-loopback connection. No transaction description, counterparty, amount, or
-document leaves the machine, and `aeat` needs no LLM account or key for it.
-This holds for the default endpoint: if you point `CADRUMO_LLM_OLLAMA_CHAT_URL`
-at a runtime on another host, reads go to that host.
+Classification uses only a model that runs on your own machine, in the local
+AI the desktop app set up. Every request goes through the agent service, and
+the catalogue entry of the model chosen for the role says whether that model
+sends what it reads off the machine. When it does, classification and
+document reading refuse before anything is sent. No transaction description,
+counterparty, amount, or document leaves the machine, and `aeat` needs no LLM
+account or key for it.
 
 One command can send a document off your machine:
 `aeat app ledger evidence extract --off-host-provider AGENT`. It reads
