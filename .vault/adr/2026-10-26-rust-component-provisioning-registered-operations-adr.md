@@ -8,6 +8,7 @@ body_schema: 'body-v2'
 body_hash: 'sha256:d9710346f3b7ed152dcdf071ffa1aa948a4806348b53f29e94ec2b263fab9501'
 related:
   - "[[2026-10-24-rust-component-provisioning-adr]]"
+  - '[[2026-10-24-rust-component-provisioning-audit]]'
 ---
 
 # `rust-component-provisioning` adr: `Component setup as registered operations` | (**status:** `accepted`)
