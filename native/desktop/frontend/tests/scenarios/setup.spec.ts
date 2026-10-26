@@ -224,12 +224,6 @@ test("the plan is summed up, its detail stays closed, and approving runs every c
   await expect(shown).toContainText(
     label("desktop.setup.plan_outside_program"),
   );
-  await expect(shown.locator("[data-setup-licence]")).toHaveText(
-    label("desktop.setup.licence_non_commercial", {
-      model: "qwen2.5vl:3b",
-      licence: "Qwen RESEARCH LICENSE AGREEMENT",
-    }),
-  );
   await expect(shown.locator("[data-setup-plan]").first()).toBeHidden();
   const disclosure = await details(shown);
   await expect(disclosure.locator("[data-setup-plan]")).toHaveCount(2);

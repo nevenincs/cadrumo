@@ -69,7 +69,7 @@ pub(crate) fn agent_selection_available(
 /// work continues after `busy`, and the next read collects that result.
 /// Retry only this read and only that explicit response, never a mutation
 /// or an exchange whose outcome is unknown.
-fn read_status(
+pub(crate) fn read_status(
     mut request: impl FnMut() -> Result<Value, ApplicationError>,
     pause: Duration,
 ) -> Result<Status, CommandFailure> {

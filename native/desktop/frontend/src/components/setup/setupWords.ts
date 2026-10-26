@@ -3,7 +3,6 @@ import type {
   SetupFailureCategory,
   SetupItemId,
   SetupItemKind,
-  SetupLicence,
   SetupNote,
   SetupOutcome,
   SetupRecovery,
@@ -17,8 +16,8 @@ import type { Translate } from "../../shell/strings";
 // The window's words for setup and the Google account. The host sends codes
 // only, and every one is worded here from the setup strings: an item's name,
 // the one sentence that states a row's state, its note and its button, a
-// failure, a retry notice, a plan part and a licence notice, and what the
-// shell itself says of a step, an outcome, a refusal and the Google account.
+// failure, a retry notice and a plan part, and what the shell itself says of
+// a step, an outcome, a refusal and the Google account.
 // A row's sentence is the one place its state is said. No closed value is
 // ever shown as it is.
 
@@ -70,19 +69,11 @@ export function retryWords(t: Translate, retry: SetupRetry): string {
   });
 }
 
-/** One part of the local AI's plan: its program, or one role's model. */
+/** One part of the local AI's plan: its program, or the model selected for one role. */
 export function partName(t: Translate, part: string): string {
   return part === "program"
     ? t("desktop.setup.part_program")
     : t("desktop.setup.part_model", { role: t(`desktop.setup.role.${part}`) });
-}
-
-/** What approving a model whose licence bars commercial use agrees to. */
-export function licenceWords(t: Translate, licence: SetupLicence): string {
-  return t("desktop.setup.licence_non_commercial", {
-    model: licence.model,
-    licence: licence.licence,
-  });
 }
 
 /** How a row's state is marked beside its sentence, which says it in words. */
