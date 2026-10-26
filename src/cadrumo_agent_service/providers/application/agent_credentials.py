@@ -20,6 +20,8 @@ from __future__ import annotations
 
 from typing import override
 
+from cadrumo.core.logging import get_logger
+
 from ...host.controller import (
     AgentCredentialSource,
     AgentGenerations,
@@ -29,13 +31,20 @@ from ...host.controller import (
 )
 from ...host.credential_frame import AgentCredential, wipe
 from ..domain.catalog import ProviderConsumer
-from .ports import ProviderCatalogSource, ProviderCatalogUnavailableError, ProviderSettingsStore
+from .ports import (
+    ProviderCatalogSource,
+    ProviderCatalogUnavailableError,
+    ProviderCatalogUnavailableReason,
+    ProviderSettingsStore,
+)
 from .resolution import (
     ProviderCredentialResolver,
     ProviderCredentialUnavailable,
     ProviderCredentialUnavailableReason,
     ResolvedDirectCredential,
 )
+
+_LOGGER = get_logger(__name__)
 
 _SIGNED_OUT_REASONS = frozenset(
     {ProviderCredentialUnavailableReason.NOT_SIGNED_IN, ProviderCredentialUnavailableReason.PROFILE_LOCKED},
@@ -78,7 +87,8 @@ class ProviderSettingsAgentCredentialSource(AgentCredentialSource):
             AgentHostError: ``SIGNED_OUT`` when the profile is not usable,
                 ``CREDENTIALS_UNAVAILABLE`` on a store failure, and
                 ``STALE_GENERATION`` when a sign-in or settings change raced
-                the resolution.
+                the resolution. An unusable agent catalog refuses as
+                ``AGENT_INCOMPATIBLE`` or ``LAUNCH_FAILED``.
         """
         before = self.current_generations()
         if before is None:
@@ -86,7 +96,13 @@ class ProviderSettingsAgentCredentialSource(AgentCredentialSource):
         try:
             catalog = self._catalog_source.catalog()
         except ProviderCatalogUnavailableError as error:
-            raise AgentHostError(AgentHostRefusal.CREDENTIALS_UNAVAILABLE) from error
+            _LOGGER.warning("agent provider catalog unavailable reason=%s", error.reason.value)
+            refusal = (
+                AgentHostRefusal.AGENT_INCOMPATIBLE
+                if error.reason is ProviderCatalogUnavailableReason.CATALOG_MALFORMED
+                else AgentHostRefusal.LAUNCH_FAILED
+            )
+            raise AgentHostError(refusal) from error
         agent_lanes = tuple(
             (entry.id, entry.agent_credential_id)
             for entry in catalog.providers
