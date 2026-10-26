@@ -1,0 +1,59 @@
+[[revisions."2023".casillas]]
+id = "perc.retenciones-forales-estatal"
+continuidad_id = "payee-retenciones-forales-estatal"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "The 2023 record design (aeat-dr-190-2023) prints «323-335 HACIENDA ESTATAL» at registro de tipo 2 positions 323-335, line 2415 of corpus/aeat_official/disenos_registro/modelo_190/files/04-190-...-hfp-1286-2023...extracted.md (sha256 c6cd8235c37e), under the campo heading «RETENCIONES E INGRESOS A CUENTA INGRESADOS EN EL ESTADO, EN LAS DIPUTACIONES FORALES DEL PAIS VASCO Y EN LA COMUNIDAD FORAL DE NAVARRA» (line 2367). The predecessor edition 2022 is grounded on aeat-dr-190-2020, whose registro de tipo 2 ends at position 322 and closes «323-500 – BLANCOS.» (line 2173 of corpus/aeat_official/disenos_registro/modelo_190/files/02-190-...-hac-1285-2020...extracted.md (sha256 09fad8cfd27d)); that design prints no forales campo at any position. The box lies beyond the predecessor record and is new on this edition's official form."
+number = "323-335"
+section = ["perceptor", "percepcion"]
+semantic_role = "payee_retenciones_forales_estatal"
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+required = true
+legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+
+[[revisions."2023".casillas]]
+id = "perc.retenciones-forales-navarra"
+continuidad_id = "payee-retenciones-forales-navarra"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "The 2023 record design (aeat-dr-190-2023) prints «336-348 COMUNIDAD FORAL DE NAVARRA» at registro de tipo 2 positions 336-348, line 2458 of corpus/aeat_official/disenos_registro/modelo_190/files/04-190-...-hfp-1286-2023...extracted.md (sha256 c6cd8235c37e), under the campo heading «RETENCIONES E INGRESOS A CUENTA INGRESADOS EN EL ESTADO, EN LAS DIPUTACIONES FORALES DEL PAIS VASCO Y EN LA COMUNIDAD FORAL DE NAVARRA» (line 2367). The predecessor edition 2022 is grounded on aeat-dr-190-2020, whose registro de tipo 2 ends at position 322 and closes «323-500 – BLANCOS.» (line 2173 of corpus/aeat_official/disenos_registro/modelo_190/files/02-190-...-hac-1285-2020...extracted.md (sha256 09fad8cfd27d)); that design prints no forales campo at any position. The box lies beyond the predecessor record and is new on this edition's official form."
+number = "336-348"
+section = ["perceptor", "percepcion"]
+semantic_role = "payee_retenciones_forales_navarra"
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+required = true
+legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+
+[[revisions."2023".casillas]]
+id = "perc.retenciones-forales-araba"
+continuidad_id = "payee-retenciones-forales-araba"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "The 2023 record design (aeat-dr-190-2023) prints «349-361 DIPUTACIÓN FORAL DE ARABA/ÁLAVA» at registro de tipo 2 positions 349-361, line 2481 of corpus/aeat_official/disenos_registro/modelo_190/files/04-190-...-hfp-1286-2023...extracted.md (sha256 c6cd8235c37e), under the campo heading «RETENCIONES E INGRESOS A CUENTA INGRESADOS EN EL ESTADO, EN LAS DIPUTACIONES FORALES DEL PAIS VASCO Y EN LA COMUNIDAD FORAL DE NAVARRA» (line 2367). The predecessor edition 2022 is grounded on aeat-dr-190-2020, whose registro de tipo 2 ends at position 322 and closes «323-500 – BLANCOS.» (line 2173 of corpus/aeat_official/disenos_registro/modelo_190/files/02-190-...-hac-1285-2020...extracted.md (sha256 09fad8cfd27d)); that design prints no forales campo at any position. The box lies beyond the predecessor record and is new on this edition's official form."
+number = "349-361"
+section = ["perceptor", "percepcion"]
+semantic_role = "payee_retenciones_forales_araba"
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+required = true
+legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+
+[[revisions."2023".casillas]]
+id = "perc.retenciones-forales-gipuzkoa"
+continuidad_id = "payee-retenciones-forales-gipuzkoa"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "The 2023 record design (aeat-dr-190-2023) prints «362-374 DIPUTACIÓN FORAL DE GIPUZKOA» at registro de tipo 2 positions 362-374, line 2512 of corpus/aeat_official/disenos_registro/modelo_190/files/04-190-...-hfp-1286-2023...extracted.md (sha256 c6cd8235c37e), under the campo heading «RETENCIONES E INGRESOS A CUENTA INGRESADOS EN EL ESTADO, EN LAS DIPUTACIONES FORALES DEL PAIS VASCO Y EN LA COMUNIDAD FORAL DE NAVARRA» (line 2367). The predecessor edition 2022 is grounded on aeat-dr-190-2020, whose registro de tipo 2 ends at position 322 and closes «323-500 – BLANCOS.» (line 2173 of corpus/aeat_official/disenos_registro/modelo_190/files/02-190-...-hac-1285-2020...extracted.md (sha256 09fad8cfd27d)); that design prints no forales campo at any position. The box lies beyond the predecessor record and is new on this edition's official form."
+number = "362-374"
+section = ["perceptor", "percepcion"]
+semantic_role = "payee_retenciones_forales_gipuzkoa"
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+required = true
+legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+
+[[revisions."2023".casillas]]
+id = "perc.retenciones-forales-bizkaia"
+continuidad_id = "payee-retenciones-forales-bizkaia"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "The 2023 record design (aeat-dr-190-2023) prints «375-387 DIPUTACIÓN FORAL DE BIZKAIA» at registro de tipo 2 positions 375-387, line 2534 of corpus/aeat_official/disenos_registro/modelo_190/files/04-190-...-hfp-1286-2023...extracted.md (sha256 c6cd8235c37e), under the campo heading «RETENCIONES E INGRESOS A CUENTA INGRESADOS EN EL ESTADO, EN LAS DIPUTACIONES FORALES DEL PAIS VASCO Y EN LA COMUNIDAD FORAL DE NAVARRA» (line 2367). The predecessor edition 2022 is grounded on aeat-dr-190-2020, whose registro de tipo 2 ends at position 322 and closes «323-500 – BLANCOS.» (line 2173 of corpus/aeat_official/disenos_registro/modelo_190/files/02-190-...-hac-1285-2020...extracted.md (sha256 09fad8cfd27d)); that design prints no forales campo at any position. The box lies beyond the predecessor record and is new on this edition's official form."
+number = "375-387"
+section = ["perceptor", "percepcion"]
+semantic_role = "payee_retenciones_forales_bizkaia"
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
+required = true
+legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]

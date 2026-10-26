@@ -1,0 +1,23 @@
+# Plazo from Orden EHA/3021/2007 art. 5: the declaration "se realizara en el
+# mes de enero de cada año". Ejercicio 2022 is presented in enero 2023 and
+# ejercicio 2023 in enero 2024. Both dates are the NOMINAL statutory ones and are
+# stored UNSHIFTED; shift_deadline derives the operational date.
+[[revisions."2022-2023".deadline_windows]]
+id = "modelo-182-2022-0a"
+filing_year = 2022
+period = "2022 0A"
+period_kind = "annual"
+opens_on = 2023-01-01
+closes_on = 2023-01-31
+legal_refs = ["orden-eha-3021-2007:art-5", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-182-procedure"]
+
+[[revisions."2022-2023".deadline_windows]]
+id = "modelo-182-2023-0a"
+filing_year = 2023
+period = "2023 0A"
+period_kind = "annual"
+opens_on = 2024-01-01
+closes_on = 2024-01-31
+legal_refs = ["orden-eha-3021-2007:art-5", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-182-procedure"]

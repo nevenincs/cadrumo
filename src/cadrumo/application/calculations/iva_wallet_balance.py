@@ -1,0 +1,57 @@
+"""Repository-backed IVA compensation wallet balance query.
+
+Loads stored Modelo 303 compensation period states and projects them into the
+pure
+:class:`~domain.iva_compensation.balance.IvaWalletBalanceReport` summary
+owned by the IVA-compensation domain. The summary projection and its record are
+exposed from :mod:`domain.iva_compensation`; this module is the application
+orchestration that wires the required
+:class:`~application.calculations.iva_compensation_history_ports.IvaCompensationHistoryRepositoryProtocol`
+to that pure projection.
+
+See Also:
+    :func:`~domain.iva_compensation.carry_forward.build_iva_compensation_carry_forward_report`
+        Builds the FIFO lot projection from stored period states.
+    :func:`~domain.iva_compensation.balance.build_iva_wallet_balance_report`
+        Collapses the carry-forward lots into the operator-facing balance
+        snapshot.
+"""
+
+from __future__ import annotations
+
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.iva_compensation.balance import IvaWalletBalanceReport, build_iva_wallet_balance_report
+from ...domain.iva_compensation.carry_forward import build_iva_compensation_carry_forward_report
+from .iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
+
+
+def query_iva_wallet_balance(
+    *,
+    as_of_year: int,
+    repository: IvaCompensationHistoryRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
+) -> IvaWalletBalanceReport:
+    """Load all stored IVA compensation period states and return the balance report.
+
+    Reads
+    :class:`~domain.iva_compensation.carry_forward.IvaCompensationPeriodState`
+    rows from
+    :class:`~application.calculations.iva_compensation_history_ports.IvaCompensationHistoryRepositoryProtocol`,
+    builds a
+    :class:`~domain.iva_compensation.carry_forward.IvaCompensationCarryForwardReport`,
+    and returns an
+    :class:`~domain.iva_compensation.balance.IvaWalletBalanceReport`
+    summarising available compensation as of ``as_of_year``.
+    """
+    states = repository.list_periods()
+    carry_forward = build_iva_compensation_carry_forward_report(
+        states,
+        as_of_year=as_of_year,
+        operation=operation,
+    )
+    return build_iva_wallet_balance_report(carry_forward, operation=operation)
+
+
+__all__ = [
+    "query_iva_wallet_balance",
+]

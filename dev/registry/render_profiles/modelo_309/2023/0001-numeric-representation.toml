@@ -1,0 +1,100 @@
+schema_version = 1
+fragment_id = "numeric-representation"
+width_17_rules = []
+signed_composite_rules = []
+
+[design_identity]
+modelo = "309"
+design_epoch = "2023"
+source_ref = "aeat-dr-309-2023"
+source_sha256 = "a84c6347a87ac4c4db8610010e100cb8632518a9d20e54e79ffbc713d770beb5"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "M30901"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+record_identity = "M30901"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m309-2023-accrual-year"
+decision_statement = "Devengo Ejercicio carries the four-digit accrual year without an implied decimal scale."
+justification = "The pinned workbook M30901 row 15 names Ejercicio, declares Num and length four; its M30900 row 9 independently states Ejercicio devengo (AAAA). The general Num note requires right alignment and left zero fill."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "M30901"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+record_identity = "M30901"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "M30901"
+source_row = 35
+source_cell = "A35"
+ordinal = "30"
+record_identity = "M30901"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m309-2023-aircraft-manufacture-year"
+decision_statement = "The aircraft manufacture year retains all four year digits without an implied decimal scale."
+justification = "The pinned workbook M30901 row 35 names Aeronaves Año fabricación and declares Num length four. The general Num note requires right alignment and left zero fill; the separate technical quantity fields are not year fields."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "M30901"
+source_row = 35
+source_cell = "A35"
+ordinal = "30"
+record_identity = "M30901"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 10
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "M30901"
+source_row = 36
+source_cell = "A36"
+ordinal = "31"
+record_identity = "M30901"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m309-2023-aircraft-takeoff-kilograms"
+decision_statement = "Maximum aircraft takeoff weight is an unsigned integer number of kilograms occupying ten digits."
+justification = "The pinned workbook M30901 row 36 names Peso máximo despegue (en Kg.), declares Num length ten, and leaves Contenido blank. This is the reviewed zero-scale choice for the unstated scale: it preserves the declared kilogram unit. Unlike the adjacent eslora and tax-rate fields, this field states no fractional split. The general Num note governs right alignment and left zero fill. Fractional kilograms are refused rather than rounded or silently scaled."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "M30901"
+source_row = 36
+source_cell = "A36"
+ordinal = "31"
+record_identity = "M30901"

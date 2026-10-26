@@ -1,0 +1,398 @@
+"""Validated temporal and authority-grade evidence for registry revisions.
+
+The closure report needs to know whether every registered revision can be
+selected by the law axes it declares and whether its declared authority grade
+is actually reachable through the validated snapshot boundary.  This module
+keeps those two facts together without deciding the broader cross-authority
+closure outcome.
+"""
+
+from __future__ import annotations
+
+from typing import Literal
+
+from pydantic import BaseModel, Field, computed_field, model_validator
+
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.core.filing_year import FilingYear
+from cadrumo.core.models import STRICT_FROZEN_CONFIG
+from cadrumo.core.period import RegistrySelectorPeriodCode
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.errors import (
+    AmbiguousRevisionSelectionError,
+    RegistrySnapshotError,
+    RegistryValidationError,
+)
+from cadrumo.domain.calculations.registry.ids import (
+    ModeloId,
+    RevisionId,
+)
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+
+from .compiler.authority import admitted_revision_id
+from .maintenance_support import (
+    coverage_assessment_floor,
+    coverage_assessment_horizon,
+    declared_revision_selection_date,
+    revision_selection_coordinates,
+)
+
+TemporalCoverageStatus = Literal["validated", "refused"]
+TemporalCoverageFailureCode = Literal[
+    "law_selection_refused",
+    "selected_revision_mismatch",
+    "undeclared_authority_grade",
+    "declared_grade_snapshot_refused",
+    "snapshot_revision_mismatch",
+]
+
+
+def _validated_outcome_failure(row: TemporalRevisionCoverage) -> str | None:
+    """Return the first shape error for a validated temporal-coverage row."""
+    if row.selected_revision != row.revision:
+        return "validated temporal coverage must select its declared revision"
+    if row.declared_authority_grade is None:
+        return "validated temporal coverage requires a declared authority grade"
+    if row.failure_code is not None or row.failure_detail is not None:
+        return "validated temporal coverage cannot carry a refusal"
+    return None
+
+
+def _law_selection_refusal_failure(row: TemporalRevisionCoverage) -> str | None:
+    if row.selected_revision is not None:
+        return "law-selection refusal cannot retain a selected revision"
+    return None
+
+
+def _selected_revision_mismatch_failure(row: TemporalRevisionCoverage) -> str | None:
+    if row.selected_revision is None or row.selected_revision == row.revision:
+        return "selected-revision mismatch requires a conflicting selected revision"
+    return None
+
+
+def _undeclared_grade_refusal_failure(row: TemporalRevisionCoverage) -> str | None:
+    if row.selected_revision != row.revision:
+        return "undeclared-grade refusal requires the registered selected revision"
+    if row.declared_authority_grade is not None:
+        return "undeclared-grade refusal cannot carry a declared authority grade"
+    return None
+
+
+def _declared_grade_snapshot_refusal_failure(row: TemporalRevisionCoverage) -> str | None:
+    if row.selected_revision != row.revision:
+        return "declared-grade snapshot refusal requires the registered selected revision"
+    if row.declared_authority_grade is None:
+        return "declared-grade snapshot refusal requires a declared authority grade"
+    return None
+
+
+def _snapshot_revision_mismatch_failure(row: TemporalRevisionCoverage) -> str | None:
+    if row.selected_revision is None or row.selected_revision == row.revision:
+        return "snapshot-revision mismatch requires a conflicting snapshot revision"
+    if row.declared_authority_grade is None:
+        return "snapshot-revision mismatch requires a declared authority grade"
+    return None
+
+
+def _failure_code_shape_failure(row: TemporalRevisionCoverage) -> str | None:
+    """Return the outcome-shape error associated with a typed refusal code."""
+    if row.failure_code == "law_selection_refused":
+        return _law_selection_refusal_failure(row)
+    if row.failure_code == "selected_revision_mismatch":
+        return _selected_revision_mismatch_failure(row)
+    if row.failure_code == "undeclared_authority_grade":
+        return _undeclared_grade_refusal_failure(row)
+    if row.failure_code == "declared_grade_snapshot_refused":
+        return _declared_grade_snapshot_refusal_failure(row)
+    return _snapshot_revision_mismatch_failure(row)
+
+
+def _refused_outcome_failure(row: TemporalRevisionCoverage) -> str | None:
+    """Return the first shape error for a refused temporal-coverage row."""
+    if row.failure_code is None or row.failure_detail is None:
+        return "refused temporal coverage requires a typed failure code and detail"
+    return _failure_code_shape_failure(row)
+
+
+class TemporalRevisionCoverage(BaseModel):
+    """Validated temporal evidence for one law-selected revision coordinate.
+
+    A ``validated`` row proves that its exact filing-year and declared-period
+    selector coordinate chose the owning revision without an injected revision
+    id and that the validated snapshot boundary admitted its declared authority
+    grade.  ``refused`` rows retain the failed cell rather than allowing a
+    first-year success to hide a later unsupported span.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    modelo: ModeloId
+    revision: RevisionId
+    filing_year: FilingYear
+    period: RegistrySelectorPeriodCode
+    selected_revision: RevisionId | None = None
+    declared_authority_grade: RegistryAuthorityGrade | None = None
+    status: TemporalCoverageStatus
+    failure_code: TemporalCoverageFailureCode | None = None
+    failure_detail: str | None = Field(default=None, min_length=1, max_length=1024)
+
+    @model_validator(mode="after")
+    def _validate_outcome_shape(self) -> TemporalRevisionCoverage:
+        failure = _validated_outcome_failure(self) if self.status == "validated" else _refused_outcome_failure(self)
+        if failure is not None:
+            raise ValueError(failure)
+        return self
+
+
+class TemporalRevisionCoverageSummary(BaseModel):
+    """Full temporal matrix result for one registered revision.
+
+    The release predicate remains revision-scoped, while its temporal limb is
+    now derived from every coordinate that revision claims through the current
+    supported-year horizon.  This summary is therefore an aggregation of the
+    cells, never a separately selected representative coordinate.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    modelo: ModeloId
+    revision: RevisionId
+    declared_authority_grade: RegistryAuthorityGrade | None = None
+    coordinates: tuple[TemporalRevisionCoverage, ...] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _validate_coordinate_membership(self) -> TemporalRevisionCoverageSummary:
+        coordinates = tuple((row.filing_year, row.period) for row in self.coordinates)
+        if len(coordinates) != len(set(coordinates)):
+            raise ValueError("temporal revision coverage cannot contain a coordinate more than once")
+        if coordinates != tuple(sorted(coordinates)):
+            raise ValueError("temporal revision coverage coordinates must be deterministically ordered")
+        for row in self.coordinates:
+            if row.modelo != self.modelo or row.revision != self.revision:
+                raise ValueError("temporal revision coverage coordinate must match its summary revision")
+            if row.declared_authority_grade is not self.declared_authority_grade:
+                raise ValueError("temporal revision coverage coordinate must match its summary authority grade")
+        return self
+
+    @computed_field
+    @property
+    def status(self) -> TemporalCoverageStatus:
+        """Return validated only when every claimed coordinate validated."""
+        return "validated" if all(row.status == "validated" for row in self.coordinates) else "refused"
+
+    @computed_field
+    @property
+    def failure_code(self) -> TemporalCoverageFailureCode | None:
+        """Return the first deterministic failure while retaining all failed cells."""
+        return next((row.failure_code for row in self.coordinates if row.status == "refused"), None)
+
+    @computed_field
+    @property
+    def failure_detail(self) -> str | None:
+        """Return the first deterministic failure detail for release rendering."""
+        return next((row.failure_detail for row in self.coordinates if row.status == "refused"), None)
+
+    @computed_field
+    @property
+    def refused_coordinates(self) -> tuple[TemporalRevisionCoverage, ...]:
+        """Expose every refused coordinate rather than reducing it to one summary field."""
+        return tuple(row for row in self.coordinates if row.status == "refused")
+
+
+class TemporalCoverageReport(BaseModel):
+    """The complete temporal and authority-grade denominator for one authority."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    rows: tuple[TemporalRevisionCoverage, ...] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _validate_unique_matrix_coordinates(self) -> TemporalCoverageReport:
+        coordinates = tuple((row.modelo, row.revision, row.filing_year, row.period) for row in self.rows)
+        if len(coordinates) != len(set(coordinates)):
+            raise ValueError("temporal coverage report must contain each law-selected coordinate exactly once")
+        return self
+
+    @computed_field
+    @property
+    def fully_validated(self) -> bool:
+        """Return whether every registered revision reached its declared grade."""
+        return all(row.status == "validated" for row in self.rows)
+
+    @computed_field
+    @property
+    def refused_rows(self) -> tuple[TemporalRevisionCoverage, ...]:
+        """Return every visible temporal or authority-grade refusal."""
+        return tuple(row for row in self.rows if row.status == "refused")
+
+    @computed_field
+    @property
+    def revision_summaries(self) -> tuple[TemporalRevisionCoverageSummary, ...]:
+        """Aggregate every matrix cell back to the release predicate's revision denominator."""
+        grouped: dict[tuple[ModeloId, RevisionId], list[TemporalRevisionCoverage]] = {}
+        for row in self.rows:
+            grouped.setdefault((row.modelo, row.revision), []).append(row)
+        return tuple(
+            TemporalRevisionCoverageSummary(
+                modelo=modelo,
+                revision=revision,
+                declared_authority_grade=coordinates[0].declared_authority_grade,
+                coordinates=tuple(sorted(coordinates, key=lambda row: (row.filing_year, row.period))),
+            )
+            for (modelo, revision), coordinates in sorted(grouped.items(), key=lambda item: item[0])
+        )
+
+
+def compose_temporal_coverage(*, authority: ValidatedRegistryAuthority) -> TemporalCoverageReport:
+    """Compose temporal evidence from validated, law-selected registry revisions.
+
+    Every coordinate comes only from the revision's declared selector through
+    the registry-supported assessment horizon.  Each is resolved through
+    ``inspect_revision`` without a revision-id filter, then admitted through
+    ``snapshot`` at the revision's exact grade.  Consequently, an ungraded,
+    unselectable, or over-claimed later cell remains visible rather than being
+    concealed by an earlier representative coordinate.
+    """
+    authority.validate_registry()
+    assessment_horizon = coverage_assessment_horizon(authority.catalogues)
+    assessment_floor = coverage_assessment_floor(authority.catalogues)
+    rows: list[TemporalRevisionCoverage] = []
+    for modelo in sorted(authority.modelos, key=lambda item: item.id):
+        for revision in sorted(modelo.revisions.values(), key=lambda item: item.id):
+            rows.extend(
+                _compose_revision_temporal_coverage(
+                    authority=authority,
+                    modelo_id=modelo.id,
+                    revision=revision,
+                    filing_year=filing_year,
+                    period=period,
+                    declared_authority_grade=revision.authority_grade,
+                )
+                for filing_year, period in revision_selection_coordinates(
+                    revision,
+                    assessment_horizon=assessment_horizon,
+                    assessment_floor=assessment_floor,
+                )
+            )
+    return TemporalCoverageReport(rows=tuple(rows))
+
+
+def _compose_revision_temporal_coverage(
+    *,
+    authority: ValidatedRegistryAuthority,
+    modelo_id: ModeloId,
+    revision: ModeloRevision,
+    filing_year: int,
+    period: RegistrySelectorPeriodCode,
+    declared_authority_grade: RegistryAuthorityGrade | None,
+) -> TemporalRevisionCoverage:
+    """Build one row, preserving an explicit refusal at each authority boundary."""
+    revision_id = revision.id
+    on = None
+    try:
+        try:
+            inspection = authority.inspect_revision(modelo_id, filing_year=filing_year, period=period)
+        except AmbiguousRevisionSelectionError:
+            # A year shared with a neighbouring design is re-asked on a date this
+            # revision itself governs; a whole-year revision keeps the refusal.
+            on = declared_revision_selection_date(revision, filing_year)
+            if on is None:
+                raise
+            inspection = authority.inspect_revision(modelo_id, filing_year=filing_year, period=period, on=on)
+    except (RegistrySnapshotError, RegistryValidationError) as exc:
+        return TemporalRevisionCoverage(
+            modelo=modelo_id,
+            revision=revision_id,
+            filing_year=filing_year,
+            period=period,
+            declared_authority_grade=declared_authority_grade,
+            status="refused",
+            failure_code="law_selection_refused",
+            failure_detail=_failure_detail(exc),
+        )
+    selected_revision = str(inspection.revision_id)
+    if selected_revision != revision_id:
+        return TemporalRevisionCoverage(
+            modelo=modelo_id,
+            revision=revision_id,
+            filing_year=filing_year,
+            period=period,
+            declared_authority_grade=declared_authority_grade,
+            selected_revision=selected_revision,
+            status="refused",
+            failure_code="selected_revision_mismatch",
+            failure_detail=(
+                f"law selection returned revision {selected_revision!r} instead of the registered "
+                f"revision {revision_id!r}"
+            ),
+        )
+    if declared_authority_grade is None:
+        return TemporalRevisionCoverage(
+            modelo=modelo_id,
+            revision=revision_id,
+            filing_year=filing_year,
+            period=period,
+            declared_authority_grade=declared_authority_grade,
+            selected_revision=selected_revision,
+            status="refused",
+            failure_code="undeclared_authority_grade",
+            failure_detail="the law-selected revision declares no authority grade",
+        )
+    try:
+        snapshot_revision = admitted_revision_id(
+            authority,
+            modelo_id,
+            filing_year=filing_year,
+            period=period,
+            on=on,
+            grade=declared_authority_grade,
+        )
+    except RegistryValidationError as exc:
+        return TemporalRevisionCoverage(
+            modelo=modelo_id,
+            revision=revision_id,
+            filing_year=filing_year,
+            period=period,
+            declared_authority_grade=declared_authority_grade,
+            selected_revision=selected_revision,
+            status="refused",
+            failure_code="declared_grade_snapshot_refused",
+            failure_detail=_failure_detail(exc),
+        )
+    if snapshot_revision != revision_id:
+        return TemporalRevisionCoverage(
+            modelo=modelo_id,
+            revision=revision_id,
+            filing_year=filing_year,
+            period=period,
+            declared_authority_grade=declared_authority_grade,
+            selected_revision=snapshot_revision,
+            status="refused",
+            failure_code="snapshot_revision_mismatch",
+            failure_detail=(
+                f"validated snapshot returned revision {snapshot_revision!r} instead of the registered "
+                f"revision {revision_id!r}"
+            ),
+        )
+    return TemporalRevisionCoverage(
+        modelo=modelo_id,
+        revision=revision_id,
+        filing_year=filing_year,
+        period=period,
+        declared_authority_grade=declared_authority_grade,
+        selected_revision=snapshot_revision,
+        status="validated",
+    )
+
+
+def _failure_detail(error: RegistrySnapshotError | RegistryValidationError) -> str:
+    """Keep the first refusal line bounded and stable for report consumers."""
+    return str(error).splitlines()[0][:1024]
+
+
+__all__ = [
+    "TemporalCoverageReport",
+    "TemporalRevisionCoverage",
+    "TemporalRevisionCoverageSummary",
+    "compose_temporal_coverage",
+]

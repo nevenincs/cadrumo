@@ -1,0 +1,190 @@
+[legal."orden-eha-1881-2011:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-1881-2011.html#a1"
+document_id = "BOE-A-2011-11704"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2011-11704#a1"
+published_at = 2011-07-06
+effective_from = 2011-07-07
+review_status = "agent_reviewed"
+reviewed_at = 2026-07-04
+reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2011-11704 art 1; pending operator re-stamp)"
+notes = "Orden EHA/1881/2011 art 1: aprueba el modelo 763, autoliquidación del Impuesto sobre actividades de juego en los supuestos de actividades anuales o plurianuales. Orden habilitante del modelo 763."
+required_text = [
+    "Se aprueba el modelo 763",
+    "Impuesto sobre actividades de juego",
+]
+
+[legal."orden-eha-1881-2011:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-1881-2011.html#a4"
+document_id = "BOE-A-2011-11704"
+article = "4"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2011-11704#a4"
+published_at = 2011-07-06
+effective_from = 2011-07-07
+review_status = "agent_reviewed"
+reviewed_at = 2026-07-04
+reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2011-11704 art 4; pending operator re-stamp)"
+notes = "Orden EHA/1881/2011 art 4: plazo de presentación del modelo 763. La presentación será trimestral y se efectuará durante el mes siguiente a la finalización de cada trimestre natural del año."
+required_text = [
+    "será trimestral y se efectuará durante el mes siguiente",
+    "finalización de cada trimestre natural",
+]
+
+[legal."orden-hap-2373-2014:df-primera"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hap-2373-2014.html#dfprimera"
+document_id = "BOE-A-2014-13180"
+article = "disposicion-final-primera"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-13180"
+published_at = 2014-12-19
+effective_from = 2015-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-22
+reviewed_by = "agent-prepared; corpus-grounded vs BOE-A-2014-13180; pending operator re-stamp"
+notes = """Orden HAP/2373/2014 disposición final primera amends orden-eha-1881-2011, the founding orden of modelo 763, substituting its anexo I (the autoliquidación del Impuesto sobre actividades de juego en los supuestos de actividades anuales o plurianuales) with effect for liquidation periods beginning 1 January 2015. This is the amending orden the span gate asks for: modelo 763's bundled record designs change shape at exactly that boundary -- aeat-dr-763-2015 declares applies_from 2015-01-01 -- and until now the modelo's entire revision history cited only the founding orden, so a corpus-evidenced re-layout crossed the span with no legal evidence that any revision occurred. Review grounding: agent-prepared (corpus-grounded against the bundled BOE-A-2014-13180 disposición final primera, fetched from two BOE surfaces that agree verbatim; pending operator re-stamp)"""
+required_text = [
+    "Con efectos para los periodos de liquidación que se inicien a partir del 1 de enero de 2015",
+    "Autoliquidación del Impuesto sobre actividades de juego en los supuestos de actividades anuales o plurianuales",
+]
+
+[sources."boe-modelo-763-2015-amendment"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hap-2373-2014.html"
+sha256 = "ec7c0db4694032b4dbaca44d49712ea12a5afcfc440bc4587cd953db662f89db"
+bytes = 1658
+retrieved_at = 2026-08-22
+published_at = 2014-12-19
+applies_from = 2015-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-13180"
+review_status = "pending_review"
+
+[legal."orden-hac-1363-2018:art-unico"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1363-2018.html#au"
+document_id = "BOE-A-2018-17602"
+article = "articulo-unico"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2018-17602"
+published_at = 2018-12-19
+effective_from = 2018-12-20
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-22
+reviewed_by = "agent-prepared; corpus-grounded vs BOE-A-2018-17602; pending operator re-stamp"
+notes = """Orden HAC/1363/2018 articulo unico substitutes the anexo I of orden-eha-1881-2011 -- modelo 763's founding orden -- and applies "para las autoliquidaciones correspondientes al cuarto trimestre del año 2018 y siguientes". That is the second re-layout boundary of this modelo, matching enrolled-modelo-763-layout's applies_from 2018-10-01 exactly, and it is why modelo 763 needs three eras rather than two: 2011-2014 under the founding anexo, 2015 to 3T 2018 under the orden-hap-2373-2014 anexo, and 4T 2018 onward under this one. Review grounding: agent-prepared (corpus-grounded against the bundled BOE-A-2018-17602 excerpt, fetched from two BOE surfaces that agree; the applicability clause cited in required_text is verbatim, the anexo-substitution sentence in the excerpt is a faithful restatement and is deliberately NOT cited as the orden's words -- see the excerpt's transcription caveat; pending operator re-stamp)"""
+required_text = [
+    "para las autoliquidaciones correspondientes al cuarto trimestre del año 2018 y siguientes",
+]
+
+[sources."boe-modelo-763-2018-amendment"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-1363-2018.html"
+sha256 = "a81f2e096a0eaa6e7010eb8fbbe64d6dbc8d41163c3f8020a0bf1739a47df98d"
+bytes = 1916
+retrieved_at = 2026-08-22
+published_at = 2018-12-19
+applies_from = 2018-10-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2018-17602"
+review_status = "pending_review"
+
+[sources."enrolled-modelo-763-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-1881-2011.html"
+sha256 = "f29da809112a6e27bf7b21a4ff34003d7cb9d11983d533f1c810fe0c2cafd437"
+bytes = 1114
+retrieved_at = 2026-07-04
+published_at = 2011-07-06
+applies_from = 2011-07-07
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2011-11704"
+review_status = "pending_review"
+
+# Re-pointed 2026-08-15: the previous corpus_path (orden-eha-1881-2011.html,
+# 1114 bytes) carries no annex section and no record-layout vocabulary. The
+# real Diseño de Registro (100952 bytes) is bundled and was never cited --
+# verified directly: "N° | Posic. | Lon | Tipo | Comp | Descripción | Oblig.
+# | Contenido", the canonical AEAT layout table header, starting with the
+# "<T" model/page envelope-open literal at position 1. Fields now point at
+# the bundled file, sourced from its manifest.json (real, observed
+# provenance, not re-fetched). record_design_epoch left undeclared (only
+# one design is bundled for this modelo, so no epoch ambiguity to resolve).
+#
+# Narrowed 2026-08-15: applies_from was 2018-01-01 while the artefact's own
+# scope is the FOURTH quarter of 2018 onward -- AEAT indexes it as "763 -
+# (Ejercicio 2018 4T y siguientes, actualizado 25-07-2023)" and the stored
+# filename says "desde 2018 4T". The registry was therefore asserting three
+# quarters (2018-1T, 2T and 3T) that this design never claims, and those
+# three are covered by the separately bundled "Ejercicios 2015 a 2018 hasta
+# 3T" design. Set to 2018-10-01, the first day of the 2018 fourth natural
+# trimestre. review_status is left exactly as the operator set it; this
+# narrows an over-claim rather than asserting any new review.
+[sources."enrolled-modelo-763-layout"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2018"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_763/files/01-763-desde-2018-4t-y-siguientes-actualizado-en-2023.xlsx"
+sha256 = "590db67f074251ad1ddfcbebfffbf8d58f6157848b62661fadc334bc5e7af5d4"
+bytes = 100952
+retrieved_at = 2026-07-21
+applies_from = 2018-10-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/DR763e18.xlsx"
+review_status = "pending_review"
+
+# Registered 2026-08-22. This design was bundled corpus that no catalogue entry,
+# hash-pin or resolver could see -- one of 49 such files the registration gate
+# reports across the tree. Its era comes from AEAT's own index title as captured
+# in the corpus manifest beside the file, "763 - Orden EHA/1881/2011 (Ejercicios
+# 2T/3T 2012, 2013 y 2014)", recorded with its source_page and download url --
+# not inferred from the stored filename. That is the sanctioned evidence for a
+# design boundary here; modelo 490's revision prose sets the precedent explicitly
+# and warns the boundary must never be chosen to make a window check pass.
+#
+# NOTE THE DISAGREEMENT, do not silently resolve it: that index title places the
+# first covered period at 2T 2012, while modelo 763's revision claims valid_from
+# 2011-01-01. Five quarters are claimed that AEAT's own artefact does not cover.
+# The founding orden EHA/1881/2011 is de 5 de julio de 2011, entered into force
+# the day after publication, carries NO disposicion transitoria and NO
+# first-application clause (re-checked against BOE 2026-08-22), so nothing
+# bundled says which trimestre was first. applies_from below records what the
+# artefact evidences, NOT a ruling on when the modelo first applied.
+[sources."aeat-dr-763-2012"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2012"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_763/files/02-763-orden-eha-1881-2011-ejercicios-2t-3t-2012-2013-y-2014.pdf"
+sha256 = "b9da58969e0a5cbea00c2f0780c3cbdc8fba3c5b9fc26d17042f8f277278d2fd"
+bytes = 45482
+retrieved_at = 2026-08-15
+applies_from = 2012-04-01
+applies_to = 2014-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_resto_mod/archivos/dr763e2011v11.pdf"
+review_status = "pending_review"
+
+[sources."aeat-dr-763-2015"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2015"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_763/files/03-763-ejercicios-2015-a-2018-hasta-3t.xlsx"
+sha256 = "124c40d7cdadced45e21a2b6b01bb9d76d30e78551ae7316508c14ceaec4f62e"
+bytes = 101269
+retrieved_at = 2026-08-15
+applies_from = 2015-01-01
+applies_to = 2018-09-30
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_resto_mod/archivos/dr763e2015v11.xlsx"
+review_status = "pending_review"

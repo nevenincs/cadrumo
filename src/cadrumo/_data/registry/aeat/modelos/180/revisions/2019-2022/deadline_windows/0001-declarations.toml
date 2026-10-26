@@ -1,0 +1,20 @@
+# Filing year 2022 only, read from AEAT's own Calendario del Contribuyente rather
+# than from the statutory rule: the bundled 2023 calendar prints "Hasta el 31 de
+# enero -- Resumen anual 2022: 180, 188, 190, 193, 193-S, 194, 196, 270", which is
+# where this modelo's annual window actually closes.
+#
+# Filing years 2019 to 2021 are NOT declared: AEAT's calendars are bundled from
+# 2023 onward only, so the January windows for those years cannot be read from
+# any source this repository holds, and nothing else bundled establishes modelo
+# 180's plazo -- orden-hap-1732-2014 contains the word "enero" zero times, and
+# orden-hfp-1284-2023 art. 7, which this modelo's 2023 windows cite, amends the
+# RECORD DESIGN rather than any plazo.
+[[revisions."2019-2022".deadline_windows]]
+id = "modelo-180-2022-0a"
+filing_year = 2022
+period = "2022 0A"
+period_kind = "annual"
+opens_on = 2023-01-01
+closes_on = 2023-01-31
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-hap-1732-2014:art-2", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-180-procedure", "aeat-calendario-contribuyente-2023"]

@@ -1,0 +1,62 @@
+# Terminology Handbook concept fragment.
+# Compiled by the strict loader in `dev.docs.terminology_handbook` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `dev.docs.terminology_handbook` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
+
+[concept]
+concept_id = "irpf"
+domain = "concepto"
+lifecycle = "approved"
+legal_refs = ["ley-35-2006:art-1"]
+related = ["tema-irpf-regime", "renta", "modelo-100", "modelo-130"]
+created_at = 2026-06-11
+updated_at = 2026-07-22
+
+[language.es]
+short_description = "El Impuesto sobre la Renta de las Personas Fisicas, el impuesto espanol sobre la renta de los particulares."
+definition = "Impuesto directo y personal que grava la renta de las personas fisicas residentes en territorio espanol, incluyendo los rendimientos del trabajo, del capital mobiliario e inmobiliario, de actividades economicas, las ganancias y perdidas patrimoniales y las imputaciones de renta. Se declara en el Modelo 100 anual, con pagos fraccionados y retenciones en los Modelos 111, 115, 130, 131, 180 y 190. No abarca el Impuesto sobre la Renta de no Residentes ni el Impuesto sobre Sociedades."
+
+[language.es.source]
+citation = "Ley 35/2006, de 28 de noviembre, del Impuesto sobre la Renta de las Personas Fisicas (BOE-A-2006-20764)."
+authority = "boe"
+
+[[language.es.term]]
+label = "IRPF"
+term_status = "preferred"
+part_of_speech = "abbreviation"
+
+[[language.es.term]]
+label = "Impuesto sobre la Renta de las Personas Fisicas"
+term_status = "admitted"
+part_of_speech = "noun"
+
+[language.en]
+short_description = "Spanish personal income tax on resident natural persons."
+definition = "Direct, personal tax on the income of natural persons resident in Spanish territory, including employment income, income from movable and immovable capital, income from economic activities, capital gains and losses, and imputed income. It is filed annually on Modelo 100, with instalment payments and withholdings on Modelos 111, 115, 130, 131, 180, and 190. It does not cover Non-Resident Income Tax or Corporate Income Tax."
+
+[language.en.source]
+citation = "Ley 35/2006, de 28 de noviembre, del Impuesto sobre la Renta de las Personas Fisicas (BOE-A-2006-20764)."
+authority = "boe"
+
+[[language.en.term]]
+label = "personal income tax"
+term_status = "admitted"
+part_of_speech = "noun"
+
+[language.ca]
+short_description = "L'Impost sobre la Renda de les Persones Fisiques, l'impost espanyol sobre la renda dels particulars."
+definition = "Impost directe i personal que grava la renda de les persones físiques residents en territori espanyol, incloent-hi els rendiments del treball, del capital mobiliari i immobiliari, d'activitats econòmiques, els guanys i pèrdues patrimonials i les imputacions de renda. Es declara en el Model 100 anual, amb pagaments fraccionats i retencions en els Models 111, 115, 130, 131, 180 i 190. No inclou l'Impost sobre la Renda de no Residents ni l'Impost sobre Societats."
+
+[language.ca.source]
+citation = "Ley 35/2006, de 28 de noviembre, del Impuesto sobre la Renta de las Personas Fisicas (BOE-A-2006-20764)."
+authority = "boe"
+
+[language.hu]
+short_description = "A spanyol személyi jövedelemadó, a belföldi magánszemélyek jövedelmét terhelő adó."
+definition = "Közvetlen és személyi adó, amely a spanyol területen belföldi illetőségű természetes személyek jövedelmét adóztatja, beleértve a munkaviszonyból, az ingó és ingatlan vagyoni tőkéből, a gazdasági tevékenységekből származó jövedelmeket, a vagyoni nyereségeket és veszteségeket, valamint a jövedelem-hozzárendeléseket. Az éves Modelo 100-ban kell bevallani, részkifizetésekkel és visszatartásokkal a Modelo 111, 115, 130, 131, 180 és 190 nyomtatványokon. Nem terjed ki a nem rezidensek jövedelemadójára (IRNR), sem a társasági adóra (Impuesto sobre Sociedades)."
+
+[language.hu.source]
+citation = "A 35/2006. törvény, 2006. november 28., a személyi jövedelemadóról (BOE-A-2006-20764)."
+authority = "boe"

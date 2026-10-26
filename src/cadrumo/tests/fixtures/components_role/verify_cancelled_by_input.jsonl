@@ -1,0 +1,4 @@
+{"command":"verify","protocol":1,"type":"started"}
+{"notice_code":"cancel_requested","type":"notice"}
+{"item_id":"browser","phase_code":"dependencies.setup.browser.verify","step":"verify","type":"phase"}
+{"command":"verify","mode":"full","outcome":"ok","rows":[{"failure_category":"host_unreachable","item_id":"browser","mode":"full","recovery":"try_again","recovery_action_id":"operator.provision.browser","size_estimate_bytes":332691793,"state":"failed","version":"156.0.8078.4"}],"setup_complete":false,"type":"result"}

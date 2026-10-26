@@ -1,0 +1,648 @@
+"""Read-only SQLite storage for generation-pinned authority components."""
+
+from __future__ import annotations
+
+import json
+import re
+import sqlite3
+from collections.abc import Callable, Generator, Hashable
+from contextlib import contextmanager
+from dataclasses import dataclass
+from datetime import date
+from pathlib import Path
+from queue import LifoQueue
+from secrets import token_hex
+from stat import S_ISREG
+from threading import RLock
+from typing import Final
+
+from ....core.errors.hierarchy import CadrumoError
+from ....core.file_change_time import file_change_time_ns
+from ....core.hashing import hash_file, reject_duplicate_json_members, reject_json_constant, sha256_hex
+from ....core.type_guards import is_str_keyed_dict
+from .authority_artifact import (
+    AuthorityComponentQuery,
+    AuthorityGenerationPin,
+    authority_component_identity,
+    authority_query_from_identity,
+)
+from .authority_cache import (
+    AccountedAuthorityCache,
+    AuthorityCacheStats,
+    RetainedAuthorityValue,
+)
+from .snapshot_proof import (
+    SNAPSHOT_PROOF_TABLES,
+    SnapshotCrossCheckProof,
+    SnapshotProofContract,
+    SnapshotProofKey,
+    ValidatorSource,
+)
+
+AUTHORITY_DATABASE_FORMAT: Final = "cadrumo-authority-sqlite-v5"
+#: The preceding format: identical components, no snapshot proof tables.
+_PROOFLESS_DATABASE_FORMAT: Final = "cadrumo-authority-sqlite-v4"
+_ADMITTED_DATABASE_FORMATS: Final = frozenset({_PROOFLESS_DATABASE_FORMAT, AUTHORITY_DATABASE_FORMAT})
+AUTHORITY_DESCRIPTOR_FORMAT: Final = "cadrumo-authority-descriptor-v1"
+#: The one file in an authority directory that selects its current database.
+AUTHORITY_DESCRIPTOR_FILENAME: Final = "authority.current.json"
+_DESCRIPTOR_MEMBERS: Final = frozenset({"format", "database", "database_size", "database_sha256", "logical_generation"})
+_DATABASE_NAME = re.compile(r"authority-([0-9a-f]{64})\.sqlite3")
+_SHA256_HEX = re.compile(r"[0-9a-f]{64}")
+_RECEIPT_MAX_BYTES: Final = 4096
+
+
+class AuthorityStoreError(CadrumoError):
+    """A published SQLite authority cannot be admitted or queried safely."""
+
+
+class AuthorityStoreCutoverError(AuthorityStoreError):
+    """A pin names another legitimate reader generation or incarnation."""
+
+
+class AuthorityStoreCorruptionError(AuthorityStoreError):
+    """Content-addressed bytes or their declared component closure changed."""
+
+
+class AuthorityStoreFormatError(AuthorityStoreError):
+    """The database is intact but written in a format this runtime does not read."""
+
+
+@dataclass(frozen=True, slots=True)
+class AuthorityDescriptor:
+    """Small control record selecting one exact content-addressed database."""
+
+    database: str
+    database_size: int
+    database_sha256: str
+    logical_generation: str
+    format: str = AUTHORITY_DESCRIPTOR_FORMAT
+
+    @classmethod
+    def read(cls, path: Path) -> AuthorityDescriptor:
+        """Read a closed canonical descriptor and confine its target to one directory."""
+        raw, document = _read_descriptor_document(path)
+        descriptor = _descriptor_from_document(document, descriptor_type=cls)
+        descriptor._validate(path.parent)
+        if descriptor.to_bytes() != raw:
+            raise AuthorityStoreError("authority descriptor is not canonical JSON")
+        return descriptor
+
+    def _validate(self, directory: Path) -> None:
+        """Reject unsupported formats, traversal, and incoherent content-addressed names."""
+        if self.format != AUTHORITY_DESCRIPTOR_FORMAT:
+            raise AuthorityStoreError(f"unsupported authority descriptor format {self.format!r}")
+        match = _DATABASE_NAME.fullmatch(self.database)
+        if match is None or match.group(1) != self.database_sha256:
+            raise AuthorityStoreError("authority descriptor database name does not match its physical digest")
+        if self.database_size <= 0:
+            raise AuthorityStoreError("authority descriptor database size must be positive")
+        if _DATABASE_NAME.fullmatch(Path(self.database).name) is None or Path(self.database).name != self.database:
+            raise AuthorityStoreError("authority descriptor database must be a confined basename")
+        _require_logical_generation_digest(self.logical_generation)
+        target = (directory / self.database).resolve()
+        if target.parent != directory.resolve():
+            raise AuthorityStoreError("authority descriptor database escapes its resource directory")
+
+    def to_bytes(self) -> bytes:
+        """Return canonical descriptor bytes containing no registry records."""
+        from ....core.hashing import canonical_json_bytes
+
+        return canonical_json_bytes(
+            {
+                "format": self.format,
+                "database": self.database,
+                "database_size": self.database_size,
+                "database_sha256": self.database_sha256,
+                "logical_generation": self.logical_generation,
+            }
+        )
+
+
+def _read_descriptor_document(path: Path) -> tuple[bytes, object]:
+    try:
+        raw = path.read_bytes()
+        document = json.loads(
+            raw,
+            object_pairs_hook=reject_duplicate_json_members,
+            parse_constant=reject_json_constant,
+        )
+    except (OSError, UnicodeDecodeError, ValueError) as exc:
+        raise AuthorityStoreError(f"authority descriptor is unavailable or malformed at {path}") from exc
+    return raw, document
+
+
+def _descriptor_from_document(
+    document: object,
+    *,
+    descriptor_type: type[AuthorityDescriptor],
+) -> AuthorityDescriptor:
+    if not is_str_keyed_dict(document) or frozenset(document) != _DESCRIPTOR_MEMBERS:
+        raise AuthorityStoreError("authority descriptor has unexpected or missing members")
+    try:
+        format_name = document["format"]
+        database = document["database"]
+        database_size = document["database_size"]
+        database_sha256 = document["database_sha256"]
+        logical_generation = document["logical_generation"]
+        if not isinstance(format_name, str):
+            raise TypeError
+        if not isinstance(database, str):
+            raise TypeError
+        if not isinstance(database_sha256, str):
+            raise TypeError
+        if not isinstance(logical_generation, str):
+            raise TypeError
+        if not isinstance(database_size, int) or isinstance(database_size, bool):
+            raise TypeError
+        return descriptor_type(database, database_size, database_sha256, logical_generation, format_name)
+    except (KeyError, TypeError, ValueError) as exc:
+        raise AuthorityStoreError("authority descriptor has invalid typed members") from exc
+
+
+def _require_logical_generation_digest(value: str) -> None:
+    if len(value) != 64 or any(char not in "0123456789abcdef" for char in value):
+        raise AuthorityStoreError("authority descriptor logical generation must be a lowercase SHA-256 digest")
+
+
+def require_authority_store_available(descriptor_path: Path) -> None:
+    """Quickly validate the descriptor-selected database dependency.
+
+    This startup probe validates the canonical descriptor and requires the
+    confined database to be a regular file of the published size. Full digest,
+    SQLite manifest, and component checks remain owned by
+    :class:`SQLiteAuthorityReader` when an authority operation is admitted.
+    """
+    descriptor = AuthorityDescriptor.read(descriptor_path)
+    database_path = descriptor_path.parent / descriptor.database
+    try:
+        status = database_path.stat()
+    except OSError as exc:
+        raise AuthorityStoreError(f"authority database is unavailable at {database_path}") from exc
+    if not S_ISREG(status.st_mode):
+        raise AuthorityStoreError(f"authority database is not a regular file at {database_path}")
+    if status.st_size != descriptor.database_size:
+        raise AuthorityStoreCorruptionError("authority database size disagrees with the published descriptor")
+
+
+@dataclass(frozen=True, slots=True)
+class _DatabaseIdentity:
+    device: int
+    inode: int
+    size: int
+    modified_ns: int
+    changed_ns: int
+    digest: str
+
+    def receipt(self) -> dict[str, object]:
+        """Return the receipt document a later process compares its own observation with."""
+        return {
+            "database_sha256": self.digest,
+            "device": self.device,
+            "inode": self.inode,
+            "size": self.size,
+            "modified_ns": self.modified_ns,
+            "changed_ns": self.changed_ns,
+        }
+
+
+def _receipt_path(digest: str) -> Path | None:
+    """Locate the per-user receipt for one content-addressed database, or ``None`` when storage is unresolved."""
+    if not _SHA256_HEX.fullmatch(digest):
+        return None
+    try:
+        from ....core.storage_taxonomy import StorageCategory
+        from ....core.storage_taxonomy_locations import storage_path
+
+        return storage_path(StorageCategory.AUTHORITY_ADMISSION_RECEIPTS) / f"{digest}.json"
+    except (CadrumoError, OSError, ValueError):
+        return None
+
+
+def _admitted_before(observed: _DatabaseIdentity) -> bool:
+    """Say whether a process already proved this exact file object's digest; anything unreadable says no."""
+    path = _receipt_path(observed.digest)
+    if path is None:
+        return False
+    try:
+        if path.stat().st_size > _RECEIPT_MAX_BYTES:
+            return False
+        recorded = json.loads(path.read_bytes(), object_pairs_hook=reject_duplicate_json_members)
+    except (OSError, ValueError):
+        return False
+    return is_str_keyed_dict(recorded) and recorded == observed.receipt()
+
+
+def _record_admission(observed: _DatabaseIdentity) -> None:
+    """Leave a receipt for later processes; failing to write one only costs them a hash.
+
+    Admission runs before a help request, a parse-time refusal or a refused
+    storage dependency is decided, and each of those must leave the storage
+    tree as it found it. The receipt therefore joins a cache directory the
+    storage materializer already provisioned and never provisions one itself.
+    """
+    path = _receipt_path(observed.digest)
+    if path is None or not path.parent.parent.is_dir():
+        return
+    from ....core.atomic_write import atomic_write_best_effort_bytes
+
+    try:
+        atomic_write_best_effort_bytes(path, json.dumps(observed.receipt(), sort_keys=True).encode("utf-8"))
+    except OSError:
+        return
+
+
+class SQLiteAuthorityReader:
+    """Admitted reader with bounded connection checkout and generation-pinned loads."""
+
+    def __init__(self, descriptor_path: Path, *, max_connections: int = 4) -> None:
+        """Admit one exact database without hydrating any domain payload."""
+        if sqlite3.sqlite_version_info < (3, 37, 0) or sqlite3.threadsafety == 0:
+            raise AuthorityStoreError("authority SQLite requires SQLite 3.37+ with a thread-safe build")
+        if not 1 <= max_connections <= 4:
+            raise ValueError("authority reader permits between one and four connection checkouts")
+        self._descriptor_path = descriptor_path.resolve()
+        self._descriptor = AuthorityDescriptor.read(self._descriptor_path)
+        self._database_path = self._descriptor_path.parent / self._descriptor.database
+        self._identity = self._read_database_identity()
+        self._incarnation = sha256_hex(f"{self._descriptor.logical_generation}:{token_hex(32)}".encode("ascii"))
+        self._connections: LifoQueue[sqlite3.Connection] = LifoQueue(max_connections)
+        self._all_connections: list[sqlite3.Connection] = []
+        self._state_lock = RLock()
+        self._active_leases = 0
+        self._closed = False
+        self._component_queries: tuple[AuthorityComponentQuery, ...] | None = None
+        self._has_proof_tables = False
+        self._proof_contract: tuple[SnapshotProofContract | None] | None = None
+        for _ in range(max_connections):
+            connection = self._open_connection()
+            self._all_connections.append(connection)
+            self._connections.put(connection)
+        self._admit_database()
+        self._cache: AccountedAuthorityCache[tuple[AuthorityGenerationPin, Hashable], object] = (
+            AccountedAuthorityCache()
+        )
+
+    def pin(self) -> AuthorityGenerationPin:
+        """Return this reader's immutable logical-generation/incarnation identity."""
+        self._require_open()
+        self._verify_database_identity()
+        return AuthorityGenerationPin(self._descriptor.logical_generation, self._incarnation)
+
+    @contextmanager
+    def lease(self) -> Generator[AuthorityGenerationPin]:
+        """Keep this reader resource alive for one top-level operation."""
+        with self._state_lock:
+            self._require_open()
+            self._active_leases += 1
+        try:
+            yield self.pin()
+        finally:
+            with self._state_lock:
+                self._active_leases -= 1
+
+    def load(self, query: AuthorityComponentQuery, *, pin: AuthorityGenerationPin) -> object:
+        """Load and decode one component from exactly this admitted generation.
+
+        Identity is verified wherever this reader touches the database: when the
+        lease takes its pin, and inside every uncached load. A cache hit reads
+        no file and is served under the pin the lease already verified, so it
+        does not re-stat the database. That is what keeps a command that loads
+        thousands of components from paying a metadata query for each one.
+        """
+        self._require_pin(pin)
+        return self._cache.get_or_load(
+            (pin, query),
+            lambda: self._load_uncached(query, pin=pin),
+        )
+
+    def retain_projection(
+        self,
+        key: Hashable,
+        *,
+        pin: AuthorityGenerationPin,
+        build: Callable[[], object],
+    ) -> object:
+        """Share one immutable projection of this generation's components within the component budget.
+
+        ``key`` must name every input the projection depends on besides the
+        generation. The projection holds the components it was built from, so
+        it is retained under their accounting rather than beside it: a
+        component it keeps alive stays charged after its own entry is evicted,
+        and evicting the projection releases only what no other entry holds.
+        Like a component, a hit is served under the pin the lease verified.
+        """
+        self._require_pin(pin)
+        return self._cache.get_or_compose((pin, key), build)
+
+    def stats(self) -> AuthorityCacheStats:
+        """Return retained component accounting, excluding connections and leases."""
+        return self._cache.stats()
+
+    def component_queries(self) -> tuple[AuthorityComponentQuery, ...]:
+        """Iterate the complete component directory without hydrating payloads.
+
+        The directory is read once per admitted database: an admitted
+        generation is immutable, and identity verification still runs on every
+        call so a swapped file is refused rather than served from memory.
+        """
+        self._verify_database_identity()
+        with self._state_lock:
+            if self._component_queries is not None:
+                return self._component_queries
+        with self._checkout() as connection:
+            rows = connection.execute("SELECT kind, key FROM components ORDER BY kind, key").fetchall()
+        queries = tuple(authority_query_from_identity(kind, key) for kind, key in rows)
+        with self._state_lock:
+            self._component_queries = queries
+        return queries
+
+    def snapshot_proof_contract(self) -> SnapshotProofContract | None:
+        """Return the validator and date window this database's snapshot proofs hold under.
+
+        ``None`` means the database carries no proofs: it is the preceding
+        format, or a newer database whose proof tables are still empty while
+        publication sweeps it. The contract is read once per admitted
+        database; identity is still verified on every call.
+        """
+        self._verify_database_identity()
+        with self._state_lock:
+            if self._proof_contract is not None:
+                return self._proof_contract[0]
+        contract = self._read_proof_contract() if self._has_proof_tables else None
+        with self._state_lock:
+            self._proof_contract = (contract,)
+        return contract
+
+    def snapshot_proof(self, key: SnapshotProofKey) -> SnapshotCrossCheckProof | None:
+        """Return publication's proof for exactly ``key``, or ``None`` when the cell was not proven."""
+        if self.snapshot_proof_contract() is None:
+            return None
+        with self._checkout() as connection:
+            row = connection.execute(
+                "SELECT revision_id FROM snapshot_proofs "
+                "WHERE modelo_id = ? AND filing_year = ? AND period = ? AND grade = ?",
+                (key.modelo_id, key.filing_year, key.period, key.grade.value),
+            ).fetchone()
+        self._verify_database_identity()
+        if row is None:
+            return None
+        revision_id = row[0]
+        if not isinstance(revision_id, str) or not revision_id:
+            raise AuthorityStoreCorruptionError("authority snapshot proof names no revision")
+        return SnapshotCrossCheckProof(key, revision_id)
+
+    def _read_proof_contract(self) -> SnapshotProofContract | None:
+        with self._checkout() as connection:
+            row = connection.execute(
+                "SELECT validator_digest, window_from, window_to FROM snapshot_proof_contract WHERE singleton = 1"
+            ).fetchone()
+            source_rows = connection.execute(
+                "SELECT module, sha256 FROM snapshot_proof_validator_sources ORDER BY module"
+            ).fetchall()
+        self._verify_database_identity()
+        if row is None:
+            return None
+        digest, window_from, window_to = row
+        if not isinstance(digest, str) or _SHA256_HEX.fullmatch(digest) is None:
+            raise AuthorityStoreCorruptionError("authority snapshot proof contract has an invalid validator digest")
+        sources: list[ValidatorSource] = []
+        for module, sha256 in source_rows:
+            if not isinstance(module, str) or not isinstance(sha256, str) or _SHA256_HEX.fullmatch(sha256) is None:
+                raise AuthorityStoreCorruptionError("authority snapshot proof validator source is malformed")
+            sources.append(ValidatorSource(module, sha256))
+        return SnapshotProofContract(
+            validator_sources=tuple(sources),
+            validator_digest=digest,
+            window_from=_proof_window_bound(window_from),
+            window_to=_proof_window_bound(window_to),
+        )
+
+    @property
+    def active_leases(self) -> int:
+        """Return the separately accounted number of top-level operation leases."""
+        with self._state_lock:
+            return self._active_leases
+
+    def close(self) -> None:
+        """Close an unleased reader deterministically."""
+        with self._state_lock:
+            if self._active_leases:
+                raise AuthorityStoreError("cannot close an authority reader while operations hold leases")
+            if self._closed:
+                return
+            self._closed = True
+            self._cache.clear()
+            for connection in self._all_connections:
+                connection.close()
+
+    def _load_uncached(
+        self,
+        query: AuthorityComponentQuery,
+        *,
+        pin: AuthorityGenerationPin,
+    ) -> RetainedAuthorityValue[object]:
+        kind, key = authority_component_identity(query)
+        with self._checkout() as connection:
+            row = connection.execute(
+                "SELECT codec, payload_sha256, retained_weight, payload FROM components WHERE kind = ? AND key = ?",
+                (kind.value, key),
+            ).fetchone()
+            dependency_rows = connection.execute(
+                "SELECT dependency_kind, dependency_key FROM dependencies "
+                "WHERE component_kind = ? AND component_key = ? ORDER BY ordinal",
+                (kind.value, key),
+            ).fetchall()
+        self._verify_database_identity()
+        if row is None:
+            raise LookupError(f"authority component {kind.value}/{key} is unavailable")
+        codec, payload_digest, retained_weight, payload = row
+        if codec != "cadrumo-authority-component-v1" or not isinstance(payload, bytes):
+            raise AuthorityStoreCorruptionError(f"authority component {kind.value}/{key} has invalid storage metadata")
+        if sha256_hex(payload) != payload_digest:
+            raise AuthorityStoreCorruptionError(f"authority component {kind.value}/{key} failed its digest check")
+        dependencies = tuple(
+            self.load(authority_query_from_identity(dependency_kind, dependency_key), pin=pin)
+            for dependency_kind, dependency_key in dependency_rows
+        )
+        from .authority_component_codec import decode_authority_component
+
+        decoded = decode_authority_component(query, payload, dependencies=dependencies)
+        # Publication measured the decoded graph once; re-walking millions of
+        # members on every load would repeat that work for every operation.
+        # The weight is a shared token so a projection holding this component
+        # is charged for it once, together with the component's own entry.
+        return RetainedAuthorityValue(decoded, 0, (((pin, query), int(retained_weight)),))
+
+    def _open_connection(self) -> sqlite3.Connection:
+        uri = self._database_path.resolve().as_uri() + "?mode=ro"
+        try:
+            connection = sqlite3.connect(uri, uri=True, check_same_thread=False, isolation_level=None)
+            connection.execute("PRAGMA query_only = ON")
+            connection.execute("PRAGMA foreign_keys = ON")
+            return connection
+        except sqlite3.Error as exc:
+            raise AuthorityStoreError(
+                f"authority database could not be opened read-only at {self._database_path}"
+            ) from exc
+
+    @contextmanager
+    def _checkout(self) -> Generator[sqlite3.Connection]:
+        self._require_open()
+        connection = self._connections.get()
+        try:
+            yield connection
+        finally:
+            self._connections.put(connection)
+
+    def _admit_database(self) -> None:
+        """Bind the opened database to its descriptor's format and logical generation.
+
+        Structural integrity -- page checks, foreign-key closure, a complete
+        component count and an acyclic dependency graph -- is proved once, at
+        publication, before the descriptor naming these bytes is written. The
+        size and SHA-256 identity check has already tied the opened file to
+        exactly those published bytes, so repeating the scans here would only
+        re-prove what the digest guarantees. An older format is refused rather
+        than read under a layout it does not have.
+
+        The preceding format differs only by lacking the snapshot proof
+        tables, so it is admitted as a database without proofs. The current
+        format must carry all three proof tables; proof rows without a
+        contract would be proofs nothing vouches for, so they are refused.
+        """
+        with self._checkout() as connection:
+            format_row = connection.execute("SELECT format FROM authority_manifest WHERE singleton = 1").fetchone()
+            if format_row is None or format_row[0] not in _ADMITTED_DATABASE_FORMATS:
+                raise AuthorityStoreFormatError(
+                    f"authority database format {format_row[0] if format_row else None!r} is not one of "
+                    f"{sorted(_ADMITTED_DATABASE_FORMATS)!r}; republish the authority",
+                )
+            row = connection.execute("SELECT logical_generation FROM authority_manifest WHERE singleton = 1").fetchone()
+            has_proof_tables = format_row[0] == AUTHORITY_DATABASE_FORMAT
+            if has_proof_tables:
+                _require_proof_tables(connection)
+        if row is None or row[0] != self._descriptor.logical_generation:
+            raise AuthorityStoreCorruptionError("authority database manifest disagrees with its descriptor")
+        self._has_proof_tables = has_proof_tables
+
+    def _read_database_identity(self) -> _DatabaseIdentity:
+        """Prove the published database's whole digest, once per file object rather than once per process.
+
+        The full digest is the integrity proof :meth:`_admit_database` relies on
+        instead of structural scans. It is read in chunks: holding the entire
+        database in memory to hash it cost every process its full size and
+        failed outright under memory pressure. Every process on the machine
+        opens the same 118 MB file, so a process that proves it leaves a receipt
+        naming the file's device, file id, size, write and change times; a later
+        process whose file shows exactly that identity relies on the receipt,
+        and any rewrite, replacement or restored timestamp moves the change time
+        and is hashed again.
+        """
+        try:
+            status = self._database_path.stat()
+            observed = _DatabaseIdentity(
+                device=status.st_dev,
+                inode=status.st_ino,
+                size=status.st_size,
+                modified_ns=status.st_mtime_ns,
+                changed_ns=file_change_time_ns(self._database_path, status),
+                digest=self._descriptor.database_sha256,
+            )
+            if observed.size == self._descriptor.database_size and _admitted_before(observed):
+                return observed
+            digest, hashed_length = hash_file(self._database_path)
+        except OSError as exc:
+            raise AuthorityStoreError(f"authority database is unavailable at {self._database_path}") from exc
+        if (
+            observed.size != self._descriptor.database_size
+            or hashed_length != observed.size
+            or digest != self._descriptor.database_sha256
+        ):
+            raise AuthorityStoreCorruptionError("authority database bytes disagree with the published descriptor")
+        try:
+            after = self._database_path.stat()
+        except OSError as exc:
+            raise AuthorityStoreError(f"authority database is unavailable at {self._database_path}") from exc
+        if (
+            after.st_dev,
+            after.st_ino,
+            after.st_size,
+            after.st_mtime_ns,
+            file_change_time_ns(self._database_path, after),
+        ) == (
+            observed.device,
+            observed.inode,
+            observed.size,
+            observed.modified_ns,
+            observed.changed_ns,
+        ):
+            _record_admission(observed)
+        return observed
+
+    def _verify_database_identity(self) -> None:
+        try:
+            status = self._database_path.stat()
+            observed = (
+                status.st_dev,
+                status.st_ino,
+                status.st_size,
+                status.st_mtime_ns,
+                file_change_time_ns(self._database_path, status),
+            )
+        except OSError as exc:
+            self._cache.clear()
+            raise AuthorityStoreCorruptionError(
+                "content-addressed authority database disappeared after admission"
+            ) from exc
+        accepted = (
+            self._identity.device,
+            self._identity.inode,
+            self._identity.size,
+            self._identity.modified_ns,
+            self._identity.changed_ns,
+        )
+        if observed != accepted:
+            self._cache.clear()
+            raise AuthorityStoreCorruptionError("content-addressed authority database changed after admission")
+
+    def _require_pin(self, pin: AuthorityGenerationPin) -> None:
+        expected = AuthorityGenerationPin(self._descriptor.logical_generation, self._incarnation)
+        if pin != expected:
+            raise AuthorityStoreCutoverError(
+                "authority operation pin belongs to another generation or reader incarnation"
+            )
+        self._require_open()
+
+    def _require_open(self) -> None:
+        if self._closed:
+            raise AuthorityStoreError("authority reader is closed")
+
+
+def _require_proof_tables(connection: sqlite3.Connection) -> None:
+    present = {name for (name,) in connection.execute("SELECT name FROM sqlite_schema WHERE type = 'table'").fetchall()}
+    missing = [table for table in SNAPSHOT_PROOF_TABLES if table not in present]
+    if missing:
+        raise AuthorityStoreCorruptionError(f"authority database lacks its snapshot proof tables {missing!r}")
+    (has_contract,) = connection.execute("SELECT EXISTS (SELECT 1 FROM snapshot_proof_contract)").fetchone()
+    if has_contract:
+        return
+    (has_rows,) = connection.execute(
+        "SELECT EXISTS (SELECT 1 FROM snapshot_proofs) OR EXISTS (SELECT 1 FROM snapshot_proof_validator_sources)"
+    ).fetchone()
+    if has_rows:
+        raise AuthorityStoreCorruptionError("authority database records snapshot proofs without a proof contract")
+
+
+def _proof_window_bound(value: object) -> date | None:
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        raise AuthorityStoreCorruptionError("authority snapshot proof window bound is not ISO date text")
+    try:
+        parsed = date.fromisoformat(value)
+    except ValueError as exc:
+        raise AuthorityStoreCorruptionError("authority snapshot proof window bound is not an ISO date") from exc
+    if parsed.isoformat() != value:
+        raise AuthorityStoreCorruptionError("authority snapshot proof window bound is not canonical ISO date text")
+    return parsed

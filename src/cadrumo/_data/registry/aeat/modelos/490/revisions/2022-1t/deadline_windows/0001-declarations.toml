@@ -1,0 +1,21 @@
+# Modelo 490 trimestral deadline windows for this era, grounded in
+# orden-hac-590-2021 art 3, the same provision this revision already cites in
+# prose: the modelo is presented and paid during the month following the natural
+# quarter. Each window opens the 1st and closes the last natural day of that
+# month.
+#
+# Added 2026-09-12. This edition had no deadline_windows family at all, so every
+# quarter it serves stood inside the supported filing span with no plazo.
+#
+# Dates are NOMINAL; shift_deadline applies weekend and holiday movement at read
+# time.
+
+[[revisions."2022-1t".deadline_windows]]
+id = "modelo-490-2022-1t"
+filing_year = 2022
+period = "2022 1T"
+period_kind = "quarterly"
+opens_on = 2022-04-01
+closes_on = 2022-04-30
+legal_refs = ["orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-490-procedure"]

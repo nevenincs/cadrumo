@@ -1,0 +1,405 @@
+"""The canonical policy for revision declaration-family inheritance.
+
+``SCHEMA_FAMILY`` answers a coverage question: which revision fields are
+collections of typed declarations.  It deliberately does not answer the
+different question of whether a successor may omit one of those declarations
+and inherit it from its predecessor.  Keeping that second decision here gives
+the compiler, the migration authoring tool, and the delta signal one vocabulary
+for the union rule.
+
+The table is intentionally dependency-light.  It does not import
+``ModeloRevision`` (which imports the restated-family schema), so the domain
+schema can import this module without a cycle.  Consumers validate the table
+against their local schema-family census where they have that schema available.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from dataclasses import dataclass
+from enum import StrEnum
+from types import MappingProxyType
+from typing import Final
+
+from ....core.type_guards import is_object_list_or_tuple, is_object_mapping
+
+__all__ = (
+    "CANONICAL_FAMILY_SPECS",
+    "CASILLAS_FAMILY",
+    "DROPPABLE_FAMILY_SPECS",
+    "HELD_BACK_FAMILY_REASONS",
+    "INHERITED_FAMILIES",
+    "INHERITED_FAMILY_SPECS",
+    "KEYED_FAMILY_SPECS",
+    "RESTATABLE_FAMILIES",
+    "ROW_SOURCE_ADDITIONS_FIELD",
+    "ROW_SOURCE_FIELD",
+    "FamilyInheritanceMode",
+    "KeyedFamilySpec",
+    "bound_family_source_refs",
+    "family_identity_value",
+    "family_source_default_fields",
+    "family_spec",
+    "inline_family_source_default",
+)
+
+#: The member field carrying a row's own source grounding.
+ROW_SOURCE_FIELD: Final[str] = "source_refs"
+#: The member field extending, rather than replacing, its family's edition default.
+ROW_SOURCE_ADDITIONS_FIELD: Final[str] = "additional_source_refs"
+
+
+class FamilyInheritanceMode(StrEnum):
+    """How a revision family participates in predecessor materialisation."""
+
+    #: Casillas use continuity lineage rather than a member-owned id and need
+    #: their own merge for locale and row-attestation handling.
+    CASILLA = "casilla"
+    #: A collection whose members are joined by the declared ``identity``.
+    KEYED = "keyed"
+    #: A declaration about the edition's own generated/evidence surface.
+    PER_EDITION = "per_edition"
+    #: A typed family that is intentionally full-copy for now.
+    NONE = "none"
+
+
+@dataclass(frozen=True, slots=True)
+class KeyedFamilySpec:
+    """Immutable policy for one declaration family.
+
+    ``identity`` is retained even for a ``NONE``/``PER_EDITION`` family when
+    the schema has one.  That lets diagnostics report the family accurately
+    without accidentally enrolling it in the predecessor union.  The
+    ``inheritance`` mode, not the presence of an id, is the enrolment decision.
+    """
+
+    section: str
+    identity: str | None
+    #: Edition-local key used only to address a member in the immediately
+    #: declared predecessor for lossless storage patches.  This is deliberately
+    #: separate from semantic continuity: for casillas it is ``id``, not
+    #: ``continuidad_id``.
+    storage_identity: str = "id"
+    identity_fields: tuple[str, ...] = ()
+    #: Identity fields that name edition-local casillas; compare their declared
+    #: continuity rather than mistaking a printed-number change for repurposing.
+    casilla_identity_fields: tuple[str, ...] = ()
+    period_scoped: bool = False
+    inheritance: FamilyInheritanceMode = FamilyInheritanceMode.KEYED
+    #: Whether a typed ``restated_families`` declaration is meaningful.  The
+    #: casilla merge is inherited but does not yet honour that manifest list.
+    restatable: bool = True
+    #: Whether the migration drop operation may remove an identical member.
+    #: Conditional period-scoped inheritance is deliberately not droppable.
+    drop_eligible: bool = False
+    #: Manifest field paired with a family's shared ``source_refs`` run, when
+    #: that family has one.  This does not itself enroll a family.
+    source_default_key: str | None = None
+    #: Reason shown when a family is intentionally not droppable/inheritable.
+    holdback_reason: str | None = None
+    #: Whether the family is a ``ModeloRevision`` ``SCHEMA_FAMILY`` field.
+    schema_family: bool = True
+    #: Whether each edition must explicitly assert that an edition-local claim applies.
+    scoped: bool = False
+    #: Whether the raw family is one table rather than an array of tables.
+    singleton: bool = False
+
+    def __post_init__(self) -> None:
+        """Reject an internally contradictory policy at import time."""
+        _validate_family_spec_identity(self)
+        _validate_family_spec_policy(self)
+
+    @property
+    def inherited(self) -> bool:
+        """Whether the loader carries members from a predecessor."""
+        return self.inheritance in {FamilyInheritanceMode.CASILLA, FamilyInheritanceMode.KEYED}
+
+    @property
+    def keyed(self) -> bool:
+        """Whether the generic identity union, rather than casilla merge, applies."""
+        return self.inheritance is FamilyInheritanceMode.KEYED
+
+
+def _validate_family_spec_identity(spec: KeyedFamilySpec) -> None:
+    if not spec.section:
+        raise ValueError("a family specification needs a section")
+    if not spec.storage_identity:
+        raise ValueError(f"family {spec.section!r} needs a storage identity")
+    if not set(spec.casilla_identity_fields).issubset(spec.identity_fields):
+        raise ValueError(f"casilla identity fields must be identity fields: {spec.section!r}")
+    if spec.inheritance in {FamilyInheritanceMode.CASILLA, FamilyInheritanceMode.KEYED} and not (
+        spec.identity is not None and spec.identity
+    ):
+        raise ValueError(f"inherited family {spec.section!r} needs an identity")
+
+
+def _validate_family_spec_policy(spec: KeyedFamilySpec) -> None:
+    inherited_modes = {FamilyInheritanceMode.CASILLA, FamilyInheritanceMode.KEYED}
+    if spec.period_scoped and spec.inheritance is not FamilyInheritanceMode.KEYED:
+        raise ValueError(f"only keyed families may be period-scoped: {spec.section!r}")
+    if spec.drop_eligible and spec.inheritance not in inherited_modes:
+        raise ValueError(f"only inherited families may be droppable: {spec.section!r}")
+    if spec.restatable and spec.inheritance not in inherited_modes:
+        raise ValueError(f"only inherited families may be restatable: {spec.section!r}")
+
+
+CASILLAS_FAMILY: Final[str] = "casillas"
+
+
+def family_identity_value(member: object, path: str) -> object:
+    """Read one identity-bearing field, including a dotted nested path.
+
+    Authoring and compiler boundaries carry raw TOML mappings, while focused
+    callers may hold typed registry models.  Resolve both shapes without
+    coercing the value: identity comparisons must distinguish missing values,
+    enums, and scalar values exactly as their source declared them.
+    """
+    current = member
+    for segment in path.split("."):
+        if is_object_mapping(current):
+            current = current.get(segment)
+        else:
+            try:
+                current = getattr(current, segment)
+            except AttributeError:
+                return None
+        if current is None:
+            return None
+    return current
+
+
+# The order follows the loader's materialisation order.  Keeping it stable is
+# useful to diagnostics and makes the census deterministic, while the mapping
+# below remains the lookup boundary for all consumers.
+CANONICAL_FAMILY_SPECS: Final[tuple[KeyedFamilySpec, ...]] = (
+    KeyedFamilySpec(
+        section=CASILLAS_FAMILY,
+        identity="continuidad_id",
+        identity_fields=("id",),
+        inheritance=FamilyInheritanceMode.CASILLA,
+        # The casilla merge does not honour restated_families yet; the schema
+        # validator retains its dedicated refusal for that declaration.
+        restatable=False,
+        drop_eligible=True,
+        source_default_key="casilla_source_refs",
+    ),
+    KeyedFamilySpec(
+        section="formulas",
+        identity="id",
+        identity_fields=("target_casilla_id",),
+        casilla_identity_fields=("target_casilla_id",),
+        source_default_key="formula_source_refs",
+        drop_eligible=True,
+    ),
+    KeyedFamilySpec(
+        section="applicability",
+        identity="id",
+        source_default_key="applicability_source_refs",
+        drop_eligible=True,
+    ),
+    KeyedFamilySpec(
+        section="filing_schedules",
+        identity="id",
+        source_default_key="filing_schedule_source_refs",
+        drop_eligible=True,
+    ),
+    KeyedFamilySpec(
+        section="live_cross_references",
+        identity="id",
+        source_default_key="live_cross_reference_source_refs",
+        drop_eligible=True,
+    ),
+    KeyedFamilySpec(
+        section="extraction_profiles",
+        identity="id",
+        source_default_key="extraction_profile_source_refs",
+        drop_eligible=True,
+    ),
+    KeyedFamilySpec(
+        section="dependency_classifications",
+        identity="id",
+        source_default_key="dependency_classification_source_refs",
+        drop_eligible=True,
+    ),
+    KeyedFamilySpec(
+        section="constructs",
+        identity="id",
+        source_default_key="construct_source_refs",
+        drop_eligible=True,
+    ),
+    KeyedFamilySpec(
+        section="application_links",
+        identity="id",
+        source_default_key="application_link_source_refs",
+        drop_eligible=True,
+    ),
+    KeyedFamilySpec(
+        section="parameters",
+        identity="id",
+        identity_fields=("data_type",),
+        source_default_key="parameter_source_refs",
+        drop_eligible=True,
+    ),
+    KeyedFamilySpec(
+        section="deadline_windows",
+        identity="id",
+        period_scoped=True,
+        drop_eligible=True,
+    ),
+    # These two families are live keyed unions.  They were previously held
+    # back only while their member ids were absent; their schema now supplies
+    # stable ids and the identity axes below are explicit.
+    KeyedFamilySpec(
+        section="projection_endpoints",
+        identity="id",
+        drop_eligible=True,
+    ),
+    KeyedFamilySpec(
+        section="verification_predicates",
+        identity="id",
+        identity_fields=("finding_kind",),
+        drop_eligible=True,
+    ),
+    # A binding id is edition-free, but the provider and value contract carry
+    # the member's semantic identity.  A successor may supersede a declaration
+    # (for example, when an official record design moves a field) while a
+    # change to one of these axes is an id repurpose and must be refused.
+    KeyedFamilySpec(
+        section="bindings",
+        identity="id",
+        identity_fields=("provider.kind", "value.data_type", "value.channel"),
+        inheritance=FamilyInheritanceMode.KEYED,
+        restatable=True,
+        drop_eligible=True,
+        source_default_key="binding_source_refs",
+    ),
+    KeyedFamilySpec(
+        section="export_layouts",
+        identity="id",
+        drop_eligible=True,
+        scoped=True,
+    ),
+    KeyedFamilySpec(
+        section="workbook_parity_refs",
+        identity="id",
+        drop_eligible=True,
+        scoped=True,
+    ),
+    KeyedFamilySpec(
+        section="verification_expectations",
+        identity="id",
+        drop_eligible=True,
+        scoped=True,
+    ),
+    # A generated declaration of the edition's own printed form, pinned to
+    # that edition's source digest: a predecessor's layout describes other
+    # casillas and never carries forward.
+    KeyedFamilySpec(
+        section="form_layouts",
+        identity="id",
+        inheritance=FamilyInheritanceMode.PER_EDITION,
+        restatable=False,
+    ),
+    # This is not a SCHEMA_FAMILY collection, but it is a deliberate
+    # per-edition holdback in migration policy and belongs in the same census.
+    KeyedFamilySpec(
+        section="completeness_manifest",
+        identity="source_ref",
+        drop_eligible=True,
+        scoped=True,
+        singleton=True,
+        schema_family=False,
+    ),
+)
+
+
+_BY_SECTION: Final[Mapping[str, KeyedFamilySpec]] = MappingProxyType(
+    {spec.section: spec for spec in CANONICAL_FAMILY_SPECS}
+)
+
+INHERITED_FAMILY_SPECS: Final[tuple[KeyedFamilySpec, ...]] = tuple(
+    spec for spec in CANONICAL_FAMILY_SPECS if spec.inherited
+)
+KEYED_FAMILY_SPECS: Final[tuple[KeyedFamilySpec, ...]] = tuple(spec for spec in CANONICAL_FAMILY_SPECS if spec.keyed)
+DROPPABLE_FAMILY_SPECS: Final[tuple[KeyedFamilySpec, ...]] = tuple(
+    spec for spec in CANONICAL_FAMILY_SPECS if spec.drop_eligible
+)
+INHERITED_FAMILIES: Final[frozenset[str]] = frozenset(spec.section for spec in INHERITED_FAMILY_SPECS)
+RESTATABLE_FAMILIES: Final[frozenset[str]] = frozenset(
+    spec.section for spec in INHERITED_FAMILY_SPECS if spec.restatable
+)
+HELD_BACK_FAMILY_REASONS: Final[Mapping[str, str]] = MappingProxyType(
+    {spec.section: spec.holdback_reason for spec in CANONICAL_FAMILY_SPECS if spec.holdback_reason is not None}
+)
+
+
+def family_spec(section: str) -> KeyedFamilySpec | None:
+    """Return the canonical policy for ``section``, if it is known."""
+    return _BY_SECTION.get(section)
+
+
+def family_source_default_fields(*, include_casillas: bool = False) -> tuple[tuple[str, str], ...]:
+    """Return each family paired with the manifest field carrying its ``source_refs`` default.
+
+    The pairing lives on :data:`CANONICAL_FAMILY_SPECS` so a family can never be
+    defaulted from another family's grounding, and so enrolling one is adding
+    its ``source_default_key`` rather than extending a second table that has to
+    be kept in step.  Casillas are excluded by default because their default is
+    applied by the casilla rule, which also fills ``legal_refs`` from the
+    edition's approving ordenes and defaults a row's ``constraints`` table.
+    """
+    return tuple(
+        (spec.section, spec.source_default_key)
+        for spec in CANONICAL_FAMILY_SPECS
+        if spec.source_default_key is not None and (include_casillas or spec.section != CASILLAS_FAMILY)
+    )
+
+
+def bound_family_source_refs(
+    default: object,
+    additions: object,
+) -> tuple[object, ...]:
+    """Return the edition default followed by a member's additions, each reference once.
+
+    The default comes first and duplicates are dropped, so a member extending
+    its edition's grounding reads as that grounding plus what it adds.  Values
+    are carried through uncoerced: a malformed default or addition reaches
+    typed construction and is refused there with the field's own error rather
+    than being silently repaired here.
+    """
+    ordered_default = tuple(default) if is_object_list_or_tuple(default) else ()
+    ordered_additions = tuple(additions) if is_object_list_or_tuple(additions) else ()
+    return tuple(dict.fromkeys((*ordered_default, *ordered_additions)))
+
+
+def inline_family_source_default(
+    member: Mapping[str, object],
+    edition: Mapping[str, object],
+    default_key: str | None,
+) -> Mapping[str, object]:
+    """Return ``member`` with its family's edition-level ``source_refs`` default bound onto it.
+
+    One rule, shared by every consumer that has to reason about what a member's
+    grounding EFFECTIVELY is: the compiler, which pins an inherited member to
+    the default effective where it was stated; the delta signal, which must not
+    report a field difference that is only the two editions' defaults; and the
+    migration chain proof, whose equivalence claim is about meaning rather than
+    physical representation.  A second implementation of it would let those
+    three disagree about what a registry says.
+
+    A member stating its own ``source_refs`` replaces the default whole and is
+    returned unchanged, as is one whose family has no default key or whose
+    edition declares no usable default.  Otherwise the member takes the default,
+    extended by any ``additional_source_refs`` it states, and the additions key
+    is consumed.  ``member`` itself is returned when nothing is bound, so a
+    caller can test identity to learn whether the edition changed anything.
+    """
+    if default_key is None or ROW_SOURCE_FIELD in member:
+        return member
+    default = edition.get(default_key)
+    if not is_object_list_or_tuple(default) or not default:
+        return member
+    bound = dict(member)
+    additions = bound.pop(ROW_SOURCE_ADDITIONS_FIELD, ())
+    bound[ROW_SOURCE_FIELD] = bound_family_source_refs(default, additions)
+    return bound

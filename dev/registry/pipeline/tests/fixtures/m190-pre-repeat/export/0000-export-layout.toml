@@ -1,0 +1,24 @@
+[[revisions.2025-y-siguientes.export_layouts]]
+id = 'modelo-190-fichero-boe'
+format = 'fixed_width'
+source_refs = [
+    'aeat-dr-190-2024',
+    'aeat-dr-190-2025',
+]
+legal_refs = [
+    'ley-35-2006:art-17',
+    'ley-35-2006:art-18',
+    'ley-35-2006:art-19',
+    'ley-35-2006:art-32',
+    'ley-35-2006:art-42.3.f',
+    'ley-35-2006:art-58',
+    'ley-35-2006:art-59',
+    'ley-35-2006:art-60',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'rd-439-2007:art-86',
+]
+dictionary_path_overrides = []

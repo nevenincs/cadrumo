@@ -1,0 +1,353 @@
+modelo:
+  schema:
+    '309':
+      casilla:
+        continuidad:
+          a-deducir-23:
+            label: Liquidació - A deduir [23]
+          adjudicatario-apellidos:
+            label: Adjudicatari - Cognoms o Denominació Social
+          adjudicatario-nif:
+            label: Adjudicatari - NIF
+          adjudicatario-nombre:
+            label: Adjudicatari - Nom
+          aeronave-ano:
+            label: Característiques i dades tècniques - Aeronaus - Any de fabricació
+          aeronave-fabricante:
+            label: Característiques i dades tècniques - Aeronaus - Fabricant
+          aeronave-marca:
+            label: Característiques i dades tècniques - Aeronaus - Marca - Tipus -
+              Model
+          aeronave-peso:
+            label: Característiques i dades tècniques - Aeronaus - Pes màxim d'enlairament
+              (kg)
+          aeronave-serie:
+            label: Característiques i dades tècniques - Aeronaus - Núm. de sèrie
+          cuota-a-ingresar:
+            label: Resultat a ingressar
+          cuota-devengada-22:
+            label: Total quota meritada
+          declaracion-complementaria:
+            label: Declaració complementària
+          declaracion-periodo-309:
+            label: Meritació. Període
+          declaracion-tipo-309:
+            label: Tipus de declaració
+          declarante-nombre-309:
+            label: Identificació - Nom
+          embarcacion-eslora:
+            label: Característiques i dades tècniques - Embarcacions - Eslora màxima
+          embarcacion-fabricante:
+            label: Característiques i dades tècniques - Embarcacions - Fabricant
+          embarcacion-tipo:
+            label: Característiques i dades tècniques - Embarcacions - Tipus-Model
+          filing-year:
+            label: Exercici a què es refereix la declaració
+          hecho-imponible:
+            label: 'Fet imposable:'
+          hecho-imponible-adquisicion-intracomunitaria:
+            label: 'Fet imposable: adquisició intracomunitària de béns'
+          hecho-imponible-entrega-inversion-inmobiliaria:
+            label: 'Fet imposable: lliurament de béns d''inversió de naturalesa immobiliària'
+          hecho-imponible-inversion-sujeto-pasivo:
+            label: 'Fet imposable: inversió del subjecte passiu'
+          hecho-imponible-medios-transporte-nuevos:
+            label: 'Fet imposable: adquisició intracomunitària de mitjans de transport
+              nous'
+          hecho-imponible-otros:
+            label: 'Fet imposable: altres supòsits no previstos'
+          hecho-imponible-procedimiento-administrativo-judicial:
+            label: 'Fet imposable: lliuraments de béns i prestacions de serveis en
+              procediments administratius i judicials'
+          iva-cuota-autorepercutida-intracomunitaria:
+            label: Quota d'IVA autorepercutida en adquisicions intracomunitàries (mitjans
+              de transport nous, etc.)
+          iva-cuota-no-periodica-total:
+            label: Total de quota d'IVA no periòdica (autorepercutida + suportada-recàrrec)
+          iva-cuota-soportada-recargo-equivalencia:
+            label: Quota d'IVA suportat per minoristes en recàrrec d'equivalència
+              (devolució a viatgers)
+          justificante-anterior:
+            label: Número de justificant de la declaració anterior
+          letras-etiqueta-persona-fisica:
+            label: Lletres de l'etiqueta identificativa
+          m309-papel-ccc-cuenta:
+            label: 'CCC: número de compte'
+          m309-papel-ccc-dc:
+            label: 'CCC: dígits de control'
+          m309-papel-ccc-entidad:
+            label: 'CCC: entitat'
+          m309-papel-ccc-oficina:
+            label: 'CCC: sucursal'
+          m309-papel-complementaria:
+            label: Declaració complementària
+          m309-papel-domicilio-codigo-postal:
+            label: Codi postal
+          m309-papel-domicilio-escalera:
+            label: Escala
+          m309-papel-domicilio-municipio:
+            label: Municipi
+          m309-papel-domicilio-numero:
+            label: Nombre
+          m309-papel-domicilio-piso:
+            label: Pis
+          m309-papel-domicilio-provincia:
+            label: Província
+          m309-papel-domicilio-puerta:
+            label: Porta
+          m309-papel-domicilio-telefono:
+            label: Telèfon
+          m309-papel-domicilio-tipo-via:
+            label: Tipus de via
+          m309-papel-domicilio-via:
+            label: 'Domicili fiscal: via pública'
+          m309-papel-nombre-completo:
+            label: Cognoms i nom o raó social
+          motivo-declaracion-no-periodica:
+            label: Motiu de la declaració no periòdica
+          mtn-embarcacion-identificacion:
+            label: Característiques i dades tècniques - Embarcacions - Identificació
+              (Núm. construcció)
+          observaciones-presentacion:
+            label: Observacions
+          papel-firma:
+            help: Espai per signar l’imprès. Escriure-hi un nom no constitueix una
+              signatura electrònica ni una presentació.
+            label: Signatura
+          papel-firma-fecha:
+            help: Data indicada a l’imprès; no acredita una presentació.
+            label: Data de signatura
+          papel-firma-lugar:
+            help: Lloc indicat a l’apartat de signatura de l’imprès.
+            label: Lloc de signatura
+          papel-forma-pago:
+            help: Mitjà de pagament indicat a l’imprès. No acredita un ingrés ni substitueix
+              el tipus de declaració.
+            label: Forma de pagament
+          re-base-10:
+            label: Liquidació - Recàrrec d'equivalència - Base imposable [10]
+          re-base-13:
+            label: Liquidació - Recàrrec d'equivalència - Base imposable [13]
+          re-base-16:
+            label: Liquidació - Recàrrec d'equivalència - Base imposable [16]
+          re-base-19:
+            label: Liquidació - Recàrrec d'equivalència - Base imposable [19]
+          re-cuota-12:
+            label: Liquidació - Recàrrec d'equivalència - Quota [12]
+          re-cuota-15:
+            label: Liquidació - Recàrrec d'equivalència - Quota [15]
+          re-cuota-18:
+            label: Liquidació - Recàrrec d'equivalència - Quota [18]
+          re-cuota-21:
+            label: Liquidació - Recàrrec d'equivalència - Quota [21]
+          re-tipo-11:
+            label: Liquidació - Recàrrec d'equivalència - Tipus % [11]
+          re-tipo-14:
+            label: Liquidació - Recàrrec d'equivalència - Tipus % [14]
+          re-tipo-17:
+            label: Liquidació - Recàrrec d'equivalència - Tipus % [17]
+          re-tipo-20:
+            label: Liquidació - Recàrrec d'equivalència - Tipus % [20]
+          rg-base-01:
+            label: Liquidació - Règim General - Base imposable [01]
+          rg-base-04:
+            label: Liquidació - Règim General - Base imposable [04]
+          rg-base-07:
+            label: Liquidació - Règim General - Base imposable [07]
+          rg-base-25:
+            label: Liquidació - Règim General - Base imposable [25]
+          rg-cuota-03:
+            label: Liquidació - Règim General - Quota [03]
+          rg-cuota-06:
+            label: Liquidació - Règim General - Quota [06]
+          rg-cuota-09:
+            label: Liquidació - Règim General - Quota [09]
+          rg-cuota-27:
+            label: Liquidació - Règim General - Quota [27]
+          rg-tipo-02:
+            label: Liquidació - Règim General - Tipus % [02]
+          rg-tipo-05:
+            label: Liquidació - Règim General - Tipus % [05]
+          rg-tipo-08:
+            label: Liquidació - Règim General - Tipus % [08]
+          rg-tipo-26:
+            label: Liquidació - Règim General - Tipus % [26]
+          situacion-tributaria:
+            label: 'Situació tributària:'
+          situacion-tributaria-agricola:
+            label: 'Situació tributària: subjecte acollit al règim especial d''agricultura,
+              ramaderia i pesca'
+          situacion-tributaria-otras:
+            label: 'Situació tributària: altres supòsits no previstos'
+          situacion-tributaria-persona-fisica-no-empresario:
+            label: 'Situació tributària: persona física que no actua com a empresari
+              o professional'
+          situacion-tributaria-persona-juridica-no-empresario:
+            label: 'Situació tributària: persona jurídica que no actua com a empresari
+              o professional'
+          situacion-tributaria-recargo-equivalencia:
+            label: 'Situació tributària: subjecte acollit al règim especial del recàrrec
+              d''equivalència'
+          situacion-tributaria-sin-derecho-deduccion:
+            label: 'Situació tributària: subjecte passiu sense dret a deducció'
+          transmitente-apellidos:
+            label: Transmitent - Cognoms o Denominació Social
+          transmitente-apellidos-nombre-razon-social:
+            label: Transmitent - Cognoms i nom o raó social
+          transmitente-nif:
+            label: Transmitent - NIF
+          transmitente-nif-iva:
+            label: Transmitent - NIF-IVA
+          transmitente-nombre:
+            label: Transmitent - Nom
+          transmitente-pais:
+            label: Transmitent - País
+          vehiculo-bastidor:
+            label: Característiques i dades tècniques - Vehicles - Núm. identificació
+              (bastidor)
+          vehiculo-clasificacion:
+            label: Característiques i dades tècniques - Vehicles - Classificació
+          vehiculo-marca:
+            label: Característiques i dades tècniques - Vehicles - Marca
+          vehiculo-modelo:
+            label: 'Característiques i dades tècniques - Vehicles - Model (denominació
+              comercial):'
+          vehiculo-tipo:
+            label: Característiques i dades tècniques - Vehicles - Tipus
+      construct:
+        modelo-309-papel-domicilio-cuenta:
+          field:
+            title: Domicili i compte bancari
+        modelo-309-papel-identificacion-complementaria:
+          field:
+            title: Identificació complementària
+      field:
+        official_name: Modelo 309. Impost sobre el Valor Afegit. Declaració-liquidació
+          no periòdica.
+        title: IVA. Declaració-liquidació no periòdica
+      form:
+        choice:
+          hecho-1:
+            heading: Adquisició intracomunitària de béns
+          hecho-2:
+            heading: Adquisició intracomunitària de mitjans de transport nous
+          hecho-3:
+            heading: Inversió del subjecte passiu
+          hecho-4:
+            heading: Lliuraments de béns d’inversió de naturalesa immobiliària
+          hecho-5:
+            heading: Lliuraments de béns i prestacions de serveis en procediments
+              administratius i judicials d’execució forçosa
+          hecho-6:
+            heading: Altres supòsits no previstos anteriorment
+          situacion-1:
+            heading: Règim especial de l’agricultura, ramaderia i pesca
+          situacion-2:
+            heading: Règim especial del recàrrec d’equivalència
+          situacion-3:
+            heading: Subjecte passiu sense dret a deducció (art. 14.U, 2n Llei IVA)
+          situacion-4:
+            heading: Persona jurídica no empresari o professional
+          situacion-5:
+            heading: Persona física no empresari o professional
+          situacion-6:
+            heading: Altres situacions tributàries no previstes anteriorment
+        context:
+          contacto:
+            heading: Persona de contacte
+          nif:
+            heading: NIF del declarant
+          nombre:
+            heading: Cognoms o raó social
+          telefono:
+            heading: Telèfon de contacte
+        page:
+          m30901:
+            heading: IVA · Declaració-liquidació no periòdica
+        row:
+          re:
+            heading: Recàrrec d’equivalència
+          rg:
+            heading: Règim general
+        section:
+          adjudicatario:
+            heading: Adjudicatari (4)
+          aeronave:
+            heading: Característiques i dades tècniques (7) · Aeronaus
+          complementaria:
+            heading: Declaració complementària (9)
+          datos-presentacion:
+            heading: Dades de presentació
+          devengo:
+            heading: Meritació (2)
+          embarcacion:
+            heading: Característiques i dades tècniques (7) · Embarcacions
+          firma:
+            heading: Signatura (11)
+          hecho:
+            heading: Fet imposable (6)
+          identificacion:
+            heading: Identificació (1)
+          ingreso:
+            heading: Ingrés (10)
+          legacy-aeronave:
+            heading: 6. Característiques i dades tècniques (7) · Aeronaus
+          legacy-complementaria:
+            heading: 8. Declaració complementària (9)
+          legacy-devengo:
+            heading: 2. Meritació (2)
+          legacy-embarcacion:
+            heading: 6. Característiques i dades tècniques (7) · Embarcacions
+          legacy-firma:
+            heading: 9. Signatura (11)
+          legacy-hecho:
+            heading: 5. Fet imposable (6)
+          legacy-identificacion:
+            heading: 1. Identificació (1)
+          legacy-ingreso:
+            heading: 10. Ingrés (10)
+          legacy-liquidacion:
+            heading: 7. Liquidació (8)
+          legacy-situacion:
+            heading: 4. Situació tributària (5)
+          legacy-transmitente:
+            heading: 3. Transmitent (3)
+          legacy-vehiculo:
+            heading: 6. Característiques i dades tècniques (7) · Vehicles
+          liquidacion:
+            heading: Liquidació (8)
+          situacion:
+            heading: Situació tributària (5)
+          transmitente:
+            heading: Transmitent (3)
+          vehiculo:
+            heading: Característiques i dades tècniques (7) · Vehicles
+      revision:
+        2004-2015:
+          construct:
+            modelo-309-iva-no-periodica:
+              field:
+                title: 'Model 309 històric: autoliquidació no periòdica (2004-2015)'
+          field:
+            label: Model 309, exercicis 2004 a 2015
+        2016-2017:
+          construct:
+            modelo-309-iva-no-periodica:
+              field:
+                title: 'Model 309: declaració-liquidació d''IVA no periòdica'
+          field:
+            label: Model 309, exercicis 2016 a 2017
+        2018-2022:
+          construct:
+            modelo-309-iva-no-periodica:
+              field:
+                title: 'Model 309: declaració-liquidació d''IVA no periòdica'
+          field:
+            label: Model 309, exercicis 2018 a 2022
+        2023-y-siguientes:
+          construct:
+            modelo-309-iva-no-periodica:
+              field:
+                title: 'Model 309: declaració-liquidació d''IVA no periòdica'
+          field:
+            label: Model 309, exercicis 2023 i següents

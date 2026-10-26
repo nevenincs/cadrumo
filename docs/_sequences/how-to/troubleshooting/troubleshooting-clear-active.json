@@ -1,0 +1,39 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "config",
+        "profile",
+        "list"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "config.profile.list",
+        "notices": [],
+        "result": {
+          "active_profile": "docs-sequence-sandbox",
+          "profiles": [
+            {
+              "active": true,
+              "bucket_id": "<bucket-id>",
+              "name": "docs-sequence-sandbox"
+            }
+          ]
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 2,
+  "sequence_id": "troubleshooting-clear-active"
+}

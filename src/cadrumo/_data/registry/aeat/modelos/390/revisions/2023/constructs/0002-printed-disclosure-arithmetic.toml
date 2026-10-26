@@ -1,0 +1,8 @@
+# This edition owns its source-printed disclosure formulas; expressions are unchanged.
+[[revisions.2023.constructs]]
+id = "modelo-390-printed-disclosure-arithmetic-2023"
+casilla_ids = ["iva.anual.sector-diferenciado-1.suma-deducciones", "iva.anual.sector-diferenciado-2.suma-deducciones", "iva.anual.sector-diferenciado-3.suma-deducciones", "iva.anual.territorio.resultado-atribuible-comun", "iva.anual.territorio.resultado-anual-atribuible-comun", "iva.anual.volumen.total", "iva.anual.total-bases-iva"]
+formulas = ["modelo-390-deduction-group-1", "modelo-390-deduction-group-2", "modelo-390-deduction-group-3", "modelo-390-territorial-allocation", "modelo-390-territorial-settlement", "modelo-390-annual-volume", "modelo-390-iva-anual-total-bases-iva"]
+application_links = ["modelo-390-review", "modelo-390-approval", "modelo-390-reconciliation", "modelo-390-workflow", "modelo-390-calculation"]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-1", "ley-37-1992:art-101", "ley-37-1992:art-9-1-c", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-97", "ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-121", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91"]
+source_refs = ["boe-modelo-390-2022-printed-calculations", "aeat-dr-390-2023", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]

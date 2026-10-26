@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-hfp-1314-2022.html",
+  "source_sha256": "2ede98929c43db8bfacedba16d4355955378b8682319bca89b702918a12efa1d",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.4",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Se aprueba el modelo 592 «Impuesto especial sobre los envases de plástico no reutilizables. Autoliquidación».",
+      "title": "Articulo 1. Aprobacion del modelo 592.",
+      "section": "Articulo 1. Aprobacion del modelo 592.",
+      "anchor": "#a1"
+    },
+    {
+      "text": "La presentación del modelo 592 y, en su caso, el pago de la deuda tributaria se efectuará dentro de los veinte primeros días naturales siguientes a aquel en que finaliza el periodo de liquidación que corresponda. El periodo de liquidación coincidirá con el trimestre natural, salvo que se trate de contribuyentes cuyo periodo de liquidación en el ámbito del Impuesto sobre el Valor Añadido fuera mensual. En caso de domiciliación bancaria del pago, el plazo será desde el día 1 hasta el día 15 del mes siguiente a aquel en que finaliza el periodo de liquidación que corresponda.",
+      "title": "Articulo 2. Plazo de presentacion del modelo 592.",
+      "section": "Articulo 2. Plazo de presentacion del modelo 592.",
+      "anchor": "#a2"
+    }
+  ]
+}

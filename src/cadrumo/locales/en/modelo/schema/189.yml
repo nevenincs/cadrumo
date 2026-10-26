@@ -1,0 +1,79 @@
+modelo:
+  schema:
+    '189':
+      casilla:
+        continuidad:
+          filing-year:
+            label: Filing year
+          irpf-declarante-nif:
+            label: Declarant's NIF
+          m189-clave-identificacion:
+            label: Identification method code
+          m189-clave-mercado:
+            label: Market type code
+          m189-clave-representacion:
+            label: Securities representation code
+          m189-clave-titularidad:
+            label: Ownership type code
+          m189-clave-valor:
+            label: Security type code
+          m189-codigo-pais:
+            label: Country code
+          m189-codigo-provincia:
+            label: Province code
+          m189-declaracion-complementaria-sustitutiva:
+            label: Supplementary or replacement return
+          m189-declarado-nif:
+            label: Tax ID of the reported holder
+          m189-declarado-nombre:
+            label: Surname and first name, business name or corporate name of the
+              reported holder
+          m189-declarante-razon-social:
+            label: Business name of the filer
+          m189-identificacion-valores:
+            label: Securities identifier
+          m189-nominal-unitario-valores:
+            label: Unit nominal value of the securities
+          m189-numero-identificativo-anterior:
+            label: Identifying number of the previous return
+          m189-numero-justificante:
+            label: Filing receipt number
+          m189-numero-total-declarados:
+            label: Total number of reported holders
+          m189-numero-valores:
+            label: Number of securities
+          m189-persona-relacion:
+            label: Contact person
+          m189-porcentaje-participacion:
+            label: Ownership percentage
+          m189-representante-legal-nif:
+            label: Legal representative's NIF
+          m189-tipo-soporte:
+            label: Submission medium
+          m189-valoracion:
+            label: Valuation
+          m189-valoracion-total:
+            label: Total valuation
+      construct:
+        modelo-189-informative:
+          field:
+            title: Modelo 189. Annual informative return on securities, insurance
+              and annuities
+      field:
+        official_name: Modelo 189. Annual informative return on securities, insurance
+          and annuities.
+        title: Annual informative return on securities, insurance and annuities
+      revision:
+        '2022':
+          field:
+            label: Modelo 189, tax year 2022
+        '2023':
+          field:
+            label: Modelo 189, tax year 2023
+        '2024':
+          field:
+            label: Modelo 189, tax year 2024
+        '2025':
+          field:
+            label: Modelo 189, tax year 2025 (Order EHA/3481/2008; Orders HFP/1180/2023,
+              HFP/1284/2023 and HAC/132/2026)

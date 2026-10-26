@@ -1,0 +1,734 @@
+"""Canonical safe projection and public operation-control services."""
+
+from __future__ import annotations
+
+from collections.abc import Callable
+from dataclasses import dataclass, field
+from datetime import datetime
+from secrets import compare_digest
+from typing import Protocol, Self, cast, runtime_checkable
+from uuid import UUID
+
+from pydantic import BaseModel
+
+from ...core.hashing import content_hash_hex
+from ...core.identity.digest import ContentDigest
+from ._projection_authority import (
+    OperationResponseAuthorityBrokerMixin,
+    response_authority_binding_matches,
+)
+from ._projection_control import (
+    authorize_cancellation as _authorize_cancellation,
+)
+from ._projection_control import (
+    cancellation_request_or_refusal as _cancellation_request_or_refusal,
+)
+from ._projection_control import (
+    detach_refusal as _detach_refusal,
+)
+from ._projection_control import (
+    execute_cancellation as _execute_cancellation,
+)
+from ._projection_control import (
+    inspect_response_authority as _inspect_response_authority,
+)
+from ._projection_control import (
+    load_cancellation_snapshot as _load_cancellation_snapshot,
+)
+from ._projection_control import (
+    load_detach_context as _load_detach_context,
+)
+from ._projection_control import (
+    load_response_control_context as _load_response_control_context,
+)
+from ._projection_control import (
+    response_control_contract_is_current as _response_control_contract_is_current,
+)
+from ._projection_control import (
+    response_control_request_or_refusal as _response_control_request_or_refusal,
+)
+from ._projection_control import (
+    response_for_mutation as _response_for_mutation,
+)
+from ._projection_control import (
+    response_refusal as _response_refusal,
+)
+from ._projection_read import (
+    load_refresh_context as _load_refresh_context,
+)
+from ._projection_read import (
+    load_result_context as _load_result_context,
+)
+from ._projection_read import (
+    load_review_context as _load_review_context,
+)
+from ._projection_read import (
+    lookup_refresh_registration as _lookup_refresh_registration,
+)
+from ._projection_read import (
+    lookup_result_registration as _lookup_result_registration,
+)
+from ._projection_read import (
+    lookup_review_registration as _lookup_review_registration,
+)
+from ._projection_read import (
+    refresh_request_or_refusal as _refresh_request_or_refusal,
+)
+from ._projection_read import (
+    resolve_refresh_target as _resolve_refresh_target,
+)
+from ._projection_read import (
+    resolve_result_projection as _resolve_result_projection,
+)
+from ._projection_read import (
+    resolve_review_projection as _resolve_review_projection,
+)
+from ._projection_read import (
+    result_digest_or_refusal as _result_digest_or_refusal,
+)
+from ._projection_read import (
+    result_request_or_refusal as _result_request_or_refusal,
+)
+from ._projection_read import (
+    review_request_or_refusal as _review_request_or_refusal,
+)
+from .error_detail import OperationErrorDetailV1, operation_error_detail_schema, resolve_operation_error_detail
+from .frontend_contracts import (
+    OperationCancellationResultV1,
+    OperationDetachResultV1,
+    OperationResponseControlResultV1,
+    OperationResponseMutationRequestV1,
+    OperationResponseMutationResultV1,
+    OperationResultProjectionResultV1,
+    OperationReviewProjectionResultV1,
+    OperationWorkspaceRefreshTargetResultV1,
+)
+from .frontend_requests import (
+    OperationCancellationRefusalV1,
+    OperationCancellationRequestV1,
+    OperationCancellationVersionHeader,
+    OperationDetachRefusalCode,
+    OperationDetachRefusalV1,
+    OperationDetachRequestV1,
+    OperationDetachSuccessV1,
+    OperationDetachVersionHeader,
+    OperationResponseApplyRequestV1,
+    OperationResponseControlRefusalCode,
+    OperationResponseControlRefusalV1,
+    OperationResponseControlRequestV1,
+    OperationResponseControlVersionHeader,
+    OperationResponseMutationSuccessV1,
+    OperationResponseRejectRequestV1,
+    OperationResultProjectionRefusalCode,
+    OperationResultProjectionRefusalV1,
+    OperationResultProjectionRequestV1,
+    OperationResultProjectionSuccessV1,
+    OperationResultProjectionVersionHeader,
+    OperationReviewProjectionRefusalV1,
+    OperationReviewProjectionRequestV1,
+    OperationReviewProjectionVersionHeader,
+    OperationWorkspaceRefreshTargetRefusalV1,
+    OperationWorkspaceRefreshTargetRequestV1,
+    OperationWorkspaceRefreshTargetVersionHeader,
+)
+from .interactions import (
+    OperationActorReference,
+    OperationApplyResponse,
+    OperationConsumedInteraction,
+    OperationInteractionId,
+    OperationPendingInteraction,
+    OperationRejectResponse,
+    OperationResponseIntent,
+    OperationResponseToken,
+)
+from .models import OperationId
+from .persistence.journal import (
+    OperationObservationReader,
+    OperationObservationUnknownOperationError,
+    OperationPersistedSnapshot,
+    OperationSecureReferenceStore,
+)
+from .registry import (
+    OperationFrontendProjection,
+    OperationRegistry,
+)
+from .secret_submission import zeroize_secret_buffer
+
+_READ_LIMIT = 1
+
+
+@runtime_checkable
+class OperationControlSupervisor(Protocol):
+    """Narrow mutation port implemented by the canonical operation supervisor."""
+
+    async def request_cancel(
+        self,
+        operation_id: OperationId,
+        *,
+        expected_revision: int,
+    ) -> OperationPersistedSnapshot:
+        """Request cooperative cancellation at one expected revision."""
+        ...
+
+    async def detach(self, operation_id: OperationId) -> OperationPersistedSnapshot:
+        """Detach the caller while retaining the durable operation state."""
+        ...
+
+    async def respond(
+        self,
+        response: OperationApplyResponse | OperationRejectResponse,
+    ) -> OperationConsumedInteraction:
+        """Consume one validated REVIEW response."""
+        ...
+
+
+@runtime_checkable
+class OperationSecureResponseAuthority(Protocol):
+    """Runtime-only authority for separately held REVIEW response capabilities."""
+
+    async def permitted_intents(
+        self,
+        request: OperationResponseControlRequestV1,
+        pending: OperationPendingInteraction,
+        /,
+    ) -> frozenset[OperationResponseIntent]:
+        """Return the response intents authorized for an exact pending review."""
+        ...
+
+    async def response_token(
+        self,
+        request: OperationResponseControlRequestV1,
+        pending: OperationPendingInteraction,
+        intent: OperationResponseIntent,
+        /,
+    ) -> OperationResponseToken:
+        """Return the opaque token only for one authorized response intent."""
+        ...
+
+    def close(self) -> None:
+        """Irreversibly close and wipe this runtime-only authority."""
+        ...
+
+
+@runtime_checkable
+class OperationResponseAuthorityIssuer(Protocol):
+    """Runtime-only sink for one freshly published REVIEW bearer."""
+
+    def issue(self, pending: OperationPendingInteraction, response_token: OperationResponseToken) -> None: ...
+
+
+@dataclass(frozen=True, slots=True)
+class BoundOperationSecureResponseAuthority:
+    """One runtime-only bearer bound to an exact pending REVIEW decision."""
+
+    operation_id: OperationId
+    interaction_id: OperationInteractionId
+    revision: int
+    reviewed_proposal_digest: ContentDigest
+    actor_ref: OperationActorReference
+    expires_at: datetime | None
+    intents: frozenset[OperationResponseIntent]
+    clock: Callable[[], datetime]
+    _token: bytearray = field(repr=False)
+    _closed: bool = field(default=False, init=False, repr=False)
+
+    @classmethod
+    def bind(
+        cls,
+        *,
+        operation_id: OperationId,
+        interaction_id: OperationInteractionId,
+        revision: int,
+        reviewed_proposal_digest: ContentDigest,
+        actor_ref: OperationActorReference,
+        expires_at: datetime | None,
+        intents: frozenset[OperationResponseIntent],
+        response_token: OperationResponseToken,
+        clock: Callable[[], datetime],
+    ) -> Self:
+        """Bind one mutable bearer to an exact pending REVIEW decision."""
+        if not intents or not intents <= frozenset({OperationResponseIntent.APPLY, OperationResponseIntent.REJECT}):
+            raise ValueError("secure response authority requires supported REVIEW intents")
+        return cls(
+            operation_id=operation_id,
+            interaction_id=interaction_id,
+            revision=revision,
+            reviewed_proposal_digest=reviewed_proposal_digest,
+            actor_ref=actor_ref,
+            expires_at=expires_at,
+            intents=intents,
+            clock=clock,
+            _token=bytearray(response_token, "ascii"),
+        )
+
+    async def permitted_intents(
+        self,
+        request: OperationResponseControlRequestV1,
+        pending: OperationPendingInteraction,
+        /,
+    ) -> frozenset[OperationResponseIntent]:
+        """Validate the binding and return its still-permitted response intents."""
+        self._validate_binding(request, pending)
+        return self.intents
+
+    def _validate_binding(
+        self,
+        request: OperationResponseControlRequestV1,
+        pending: OperationPendingInteraction,
+    ) -> None:
+        """Enforce every runtime bearer check before exposing its intent set."""
+        if self._closed:
+            raise ValueError("secure response authority is closed")
+        if not response_authority_binding_matches(self, request, pending):
+            raise ValueError("secure response authority binding is stale")
+        if self.expires_at is not None and self.clock() > self.expires_at:
+            raise ValueError("secure response authority is expired")
+        token_digest = content_hash_hex(self._token.decode("ascii"))
+        if not compare_digest(token_digest, pending.response_token_digest):
+            raise ValueError("secure response authority bearer does not match the pending interaction")
+
+    async def response_token(
+        self,
+        request: OperationResponseControlRequestV1,
+        pending: OperationPendingInteraction,
+        intent: OperationResponseIntent,
+        /,
+    ) -> OperationResponseToken:
+        """Return the private token only after exact authority validation."""
+        intents = await self.permitted_intents(request, pending)
+        if intent not in intents:
+            raise ValueError("secure response authority does not permit the requested intent")
+        return self._token.decode("ascii")
+
+    def close(self) -> None:
+        """Zeroize the in-memory response bearer and prevent reuse."""
+        zeroize_secret_buffer(self._token)
+        object.__setattr__(self, "_closed", True)
+
+
+class UnavailableOperationSecureResponseAuthority:
+    async def permitted_intents(
+        self,
+        request: OperationResponseControlRequestV1,
+        pending: OperationPendingInteraction,
+        /,
+    ) -> frozenset[OperationResponseIntent]:
+        del request, pending
+        raise ValueError("response authority is unavailable")
+
+    async def response_token(
+        self,
+        request: OperationResponseControlRequestV1,
+        pending: OperationPendingInteraction,
+        intent: OperationResponseIntent,
+        /,
+    ) -> OperationResponseToken:
+        del request, pending, intent
+        raise ValueError("response authority is unavailable")
+
+    def close(self) -> None:
+        """Close the empty authority idempotently."""
+
+
+@dataclass(frozen=True, slots=True)
+class InspectionOnlyOperationSecureResponseAuthority:
+    """Read current intents from process-local custody without moving the bearer."""
+
+    broker: OperationResponseAuthorityBroker
+    capability: OperationResponseCapability
+    clock: Callable[[], datetime]
+
+    async def permitted_intents(
+        self,
+        request: OperationResponseControlRequestV1,
+        pending: OperationPendingInteraction,
+        /,
+    ) -> frozenset[OperationResponseIntent]:
+        return self.broker.inspect(request, pending, self.capability, clock=self.clock)
+
+    async def response_token(
+        self,
+        request: OperationResponseControlRequestV1,
+        pending: OperationPendingInteraction,
+        intent: OperationResponseIntent,
+        /,
+    ) -> OperationResponseToken:
+        del request, pending, intent
+        raise ValueError("inspection authority cannot consume a response")
+
+    def close(self) -> None:
+        """Inspection owns no token and cannot close the caller's capability."""
+
+
+_CAPABILITY_ISSUER = object()
+
+
+class OperationResponseCapability:
+    """Opaque process-local capability retained separately from observation."""
+
+    __slots__ = ("__actor_ref", "__closed", "__handle", "__operation_id")
+
+    def __init__(
+        self,
+        operation_id: OperationId,
+        actor_ref: OperationActorReference,
+        handle: bytearray,
+        *,
+        _issuer: object,
+    ) -> None:
+        if _issuer is not _CAPABILITY_ISSUER:
+            raise TypeError("response capabilities are issued only by production composition")
+        self.__operation_id = operation_id
+        self.__actor_ref = actor_ref
+        self.__handle = handle
+        self.__closed = False
+
+    def matches(
+        self,
+        operation_id: OperationId,
+        actor_ref: OperationActorReference,
+        capability_digest: ContentDigest,
+    ) -> bool:
+        return (
+            not self.__closed
+            and self.__operation_id == operation_id
+            and self.__actor_ref == actor_ref
+            and compare_digest(content_hash_hex(self.__handle.hex()), capability_digest)
+        )
+
+    def close(self) -> None:
+        """Irrevocably release this caller-held response capability."""
+        zeroize_secret_buffer(self.__handle)
+        self.__closed = True
+
+
+class OperationResponseAuthorityBroker(OperationResponseAuthorityBrokerMixin):
+    """Process-local REVIEW bearer custody that cannot survive restart."""
+
+    _capability_issuer = _CAPABILITY_ISSUER
+
+
+@dataclass(frozen=True, slots=True)
+class OperationReviewProjectionService:
+    """Resolve safe public REVIEW projections from durable operation state."""
+
+    reader: OperationObservationReader
+    registry: OperationRegistry
+    operands: OperationSecureReferenceStore
+    clock: Callable[[], datetime]
+
+    async def resolve[ReviewProjectionT: BaseModel](
+        self,
+        request: OperationReviewProjectionVersionHeader | OperationReviewProjectionRequestV1,
+        projection_type: type[ReviewProjectionT],
+    ) -> OperationReviewProjectionResultV1[ReviewProjectionT]:
+        """Resolve the exact registered REVIEW projection or a typed refusal.
+
+        ``projection_type`` names the model the caller expects. A request whose
+        registered schema binds a different model refuses rather than returning
+        a projection of another shape under the caller's name.
+        """
+        reference_or_refusal = _review_request_or_refusal(request)
+        if isinstance(reference_or_refusal, OperationReviewProjectionRefusalV1):
+            return reference_or_refusal
+        context_or_refusal = await _load_review_context(self.reader, reference_or_refusal, self.clock)
+        if isinstance(context_or_refusal, OperationReviewProjectionRefusalV1):
+            return context_or_refusal
+        registration_or_refusal = _lookup_review_registration(self.registry, context_or_refusal)
+        if isinstance(registration_or_refusal, OperationReviewProjectionRefusalV1):
+            return registration_or_refusal
+        return await _resolve_review_projection(
+            self.registry,
+            self.operands,
+            registration_or_refusal,
+            projection_type,
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class OperationWorkspaceRefreshTargetService:
+    """Resolve safe typed workspace refresh targets after terminal success."""
+
+    reader: OperationObservationReader
+    registry: OperationRegistry
+
+    async def resolve[RefreshTargetT: BaseModel](
+        self,
+        request: OperationWorkspaceRefreshTargetVersionHeader | OperationWorkspaceRefreshTargetRequestV1,
+        target_type: type[RefreshTargetT],
+    ) -> OperationWorkspaceRefreshTargetResultV1[RefreshTargetT]:
+        """Resolve the exact registered refresh target or a typed refusal.
+
+        ``target_type`` names the model the caller expects. A request whose
+        registered schema binds a different model refuses.
+        """
+        request_or_refusal = _refresh_request_or_refusal(request)
+        if isinstance(request_or_refusal, OperationWorkspaceRefreshTargetRefusalV1):
+            return request_or_refusal
+        context_or_refusal = await _load_refresh_context(self.reader, request_or_refusal)
+        if isinstance(context_or_refusal, OperationWorkspaceRefreshTargetRefusalV1):
+            return context_or_refusal
+        registration_or_refusal = _lookup_refresh_registration(self.registry, context_or_refusal)
+        if isinstance(registration_or_refusal, OperationWorkspaceRefreshTargetRefusalV1):
+            return registration_or_refusal
+        return await _resolve_refresh_target(self.registry, registration_or_refusal, target_type)
+
+
+@dataclass(frozen=True, slots=True)
+class OperationResultProjectionService:
+    """Resolve safe public settled-result projections after terminal success.
+
+    Symmetric with :class:`OperationReviewProjectionService`: the private
+    settled result is resolved behind the secure operand port and handed,
+    with the safe terminal receipt, to the registered domain projector. The
+    private result type never crosses this boundary; only the projector's
+    typed public output does.
+    """
+
+    reader: OperationObservationReader
+    registry: OperationRegistry
+    operands: OperationSecureReferenceStore
+    _snapshot: list[
+        tuple[tuple[OperationId, UUID, OperationFrontendProjection, str, type[BaseModel], ContentDigest], BaseModel]
+    ] = field(default_factory=list, init=False, repr=False, compare=False)
+
+    def forget_snapshot(self, operation_id: OperationId | None = None) -> None:
+        """Release the single pending delivery snapshot, without retaining private history."""
+        retained = next(iter(self._snapshot), None)
+        if operation_id is None or (retained is not None and retained[0][0] == operation_id):
+            self._snapshot.clear()
+
+    async def resolve[ResultProjectionT: BaseModel](
+        self,
+        request: OperationResultProjectionVersionHeader | OperationResultProjectionRequestV1,
+        projection_type: type[ResultProjectionT],
+        *,
+        snapshot_scope: tuple[UUID, OperationFrontendProjection] | None = None,
+        continue_snapshot: bool = False,
+    ) -> OperationResultProjectionResultV1[ResultProjectionT]:
+        """Resolve the exact registered public result projection or a refusal.
+
+        ``projection_type`` names the model the caller expects. A request whose
+        registered schema binds a different model refuses.
+
+        Only a runtime holding its output guard supplies ``snapshot_scope``.
+        Page zero resolves afresh; continuations can reuse one validated public
+        model after all terminal and contract checks. Delivery, loss of the
+        profile's last session, or shutdown forgets the pending snapshot.
+        """
+        request_or_refusal = _result_request_or_refusal(request)
+        if isinstance(request_or_refusal, OperationResultProjectionRefusalV1):
+            return request_or_refusal
+        if request_or_refusal.result_schema == operation_error_detail_schema():
+            if not issubclass(OperationErrorDetailV1, projection_type):
+                return OperationResultProjectionRefusalV1(
+                    code=OperationResultProjectionRefusalCode.RESULT_SCHEMA_MISMATCH,
+                    requested_version=1,
+                    diagnostic_ref=None,
+                )
+            detail = await resolve_operation_error_detail(self.reader, self.registry, self.operands, request_or_refusal)
+            # CAST-RATIONALE-OPERATION-ERROR-DETAIL: the branch above admits only a
+            # requested type the stored detail model is a subclass of, so the
+            # detail envelope is exactly the caller's requested result shape.
+            return cast("OperationResultProjectionResultV1[ResultProjectionT]", detail)
+        context_or_refusal = await _load_result_context(self.reader, request_or_refusal)
+        if isinstance(context_or_refusal, OperationResultProjectionRefusalV1):
+            return context_or_refusal
+        registration_or_refusal = _lookup_result_registration(self.registry, context_or_refusal)
+        if isinstance(registration_or_refusal, OperationResultProjectionRefusalV1):
+            return registration_or_refusal
+        digest_or_refusal = _result_digest_or_refusal(context_or_refusal)
+        if isinstance(digest_or_refusal, OperationResultProjectionRefusalV1):
+            return digest_or_refusal
+        key = (
+            (
+                request_or_refusal.operation_id,
+                *snapshot_scope,
+                request_or_refusal.model_dump_json(),
+                projection_type,
+                digest_or_refusal,
+            )
+            if snapshot_scope is not None
+            else None
+        )
+        # Every continuation has already rechecked the terminal snapshot,
+        # current registry contract, schema and operand digest above. The host
+        # separately retains the exact session's disclosure guard on every page.
+        retained = next(iter(self._snapshot), None)
+        if key is not None and continue_snapshot and retained is not None and retained[0] == key:
+            # CAST-RATIONALE-PAGED-RESULT: the exact requested model class is
+            # part of the key; only validated success envelopes are retained.
+            return cast("OperationResultProjectionResultV1[ResultProjectionT]", retained[1])
+        if key is not None:
+            self._snapshot.clear()
+        result = await _resolve_result_projection(
+            self.registry,
+            self.operands,
+            registration_or_refusal,
+            digest_or_refusal,
+            projection_type,
+        )
+        if key is not None and isinstance(result, OperationResultProjectionSuccessV1):
+            self._snapshot[:] = [(key, result)]
+        return result
+
+
+@dataclass(frozen=True, slots=True)
+class OperationResponseControlService:
+    """Inspect and execute safe REVIEW response control at the public boundary."""
+
+    reader: OperationObservationReader
+    registry: OperationRegistry
+    authority: OperationSecureResponseAuthority
+    supervisor: OperationControlSupervisor
+
+    async def inspect(
+        self,
+        request: OperationResponseControlVersionHeader | OperationResponseControlRequestV1,
+    ) -> OperationResponseControlResultV1:
+        """Return authorized response intents or a typed refusal."""
+        request_or_refusal = _response_control_request_or_refusal(request)
+        if isinstance(request_or_refusal, OperationResponseControlRefusalV1):
+            return request_or_refusal
+        context_or_refusal = await _load_response_control_context(self.reader, request_or_refusal)
+        if isinstance(context_or_refusal, OperationResponseControlRefusalV1):
+            return context_or_refusal
+        if not _response_control_contract_is_current(self.registry, context_or_refusal):
+            return _response_refusal(
+                OperationResponseControlRefusalCode.RESPONSE_AUTHORITY_UNAVAILABLE,
+                requested_version=1,
+            )
+        return await _inspect_response_authority(self.authority, context_or_refusal)
+
+    async def apply(self, request: OperationResponseApplyRequestV1) -> OperationResponseMutationResultV1:
+        """Consume one exact APPLY response through the bound runtime authority."""
+        return await self._respond(request)
+
+    async def reject(self, request: OperationResponseRejectRequestV1) -> OperationResponseMutationResultV1:
+        """Consume one exact REJECT response through the bound runtime authority."""
+        return await self._respond(request)
+
+    async def _respond(self, request: OperationResponseMutationRequestV1) -> OperationResponseMutationResultV1:
+        availability = await self.inspect(request)
+        if isinstance(availability, OperationResponseControlRefusalV1):
+            return availability
+        intent = OperationResponseIntent(request.response_action)
+        if request.response_action not in availability.permitted_intents:
+            return _response_refusal(
+                OperationResponseControlRefusalCode.RESPONSE_AUTHORITY_UNAVAILABLE,
+                requested_version=1,
+            )
+        snapshot = await read_snapshot(self.reader, request.operation_id)
+        if snapshot is None:
+            return _response_refusal(OperationResponseControlRefusalCode.UNKNOWN_OPERATION, requested_version=1)
+        if isinstance(snapshot, UnavailableSnapshot) or snapshot.pending_interaction is None:
+            return _response_refusal(
+                OperationResponseControlRefusalCode.RESPONSE_NOT_PENDING,
+                requested_version=1,
+            )
+        pending = snapshot.pending_interaction
+        try:
+            response_token = await self.authority.response_token(request, pending, intent)
+            response = _response_for_mutation(request, pending, response_token)
+            consumed = await self.supervisor.respond(response)
+            if consumed.interaction_id != request.interaction_id or consumed.intent is not intent:
+                raise ValueError("operation supervisor consumed a different response")
+            return OperationResponseMutationSuccessV1(
+                operation_id=request.operation_id,
+                interaction_id=request.interaction_id,
+                revision=request.revision,
+                response_action=intent,
+            )
+        except Exception:
+            return _response_refusal(
+                OperationResponseControlRefusalCode.RESPONSE_AUTHORITY_UNAVAILABLE,
+                requested_version=1,
+            )
+        finally:
+            self.authority.close()
+
+
+@dataclass(frozen=True, slots=True)
+class OperationCancellationService:
+    """Request cooperative cancellation through one versioned public boundary."""
+
+    reader: OperationObservationReader
+    registry: OperationRegistry
+    supervisor: OperationControlSupervisor
+
+    async def request(
+        self,
+        request: OperationCancellationVersionHeader | OperationCancellationRequestV1,
+    ) -> OperationCancellationResultV1:
+        """Request cancellation or return a stable typed refusal."""
+        request_or_refusal = _cancellation_request_or_refusal(request)
+        if isinstance(request_or_refusal, OperationCancellationRefusalV1):
+            return request_or_refusal
+        snapshot_or_refusal = await _load_cancellation_snapshot(self.reader, request_or_refusal)
+        if isinstance(snapshot_or_refusal, OperationCancellationRefusalV1):
+            return snapshot_or_refusal
+        context_or_refusal = _authorize_cancellation(self.registry, snapshot_or_refusal)
+        if isinstance(context_or_refusal, OperationCancellationRefusalV1):
+            return context_or_refusal
+        return await _execute_cancellation(self.reader, self.supervisor, context_or_refusal)
+
+
+@dataclass(frozen=True, slots=True)
+class OperationDetachService:
+    """Detach a frontend from an operation through one public boundary."""
+
+    reader: OperationObservationReader
+    registry: OperationRegistry
+    supervisor: OperationControlSupervisor
+
+    async def detach(
+        self,
+        request: OperationDetachVersionHeader | OperationDetachRequestV1,
+    ) -> OperationDetachResultV1:
+        """Detach the requested operation or return a stable typed refusal."""
+        context_or_refusal = await _load_detach_context(self.reader, self.registry, request)
+        if isinstance(context_or_refusal, OperationDetachRefusalV1):
+            return context_or_refusal
+        try:
+            detached = await self.supervisor.detach(context_or_refusal.request.operation_id)
+            if (
+                detached.identity.operation_id != context_or_refusal.request.operation_id
+                or detached.revision != context_or_refusal.snapshot.revision
+            ):
+                raise ValueError("supervisor returned an invalid detach state")
+            return OperationDetachSuccessV1(
+                operation_id=context_or_refusal.request.operation_id,
+                revision=detached.revision,
+            )
+        except Exception:
+            return _detach_refusal(OperationDetachRefusalCode.DETACH_NOT_ALLOWED, requested_version=1)
+
+
+class UnavailableSnapshot:
+    pass
+
+
+async def read_snapshot(
+    reader: OperationObservationReader,
+    operation_id: OperationId,
+) -> OperationPersistedSnapshot | UnavailableSnapshot | None:
+    try:
+        materialization = await reader.read_observation(operation_id, 0, limit=_READ_LIMIT)
+        return materialization.snapshot
+    except OperationObservationUnknownOperationError:
+        return None
+    except Exception:
+        return UnavailableSnapshot()
+
+
+__all__ = [
+    "BoundOperationSecureResponseAuthority",
+    "OperationCancellationService",
+    "OperationControlSupervisor",
+    "OperationDetachService",
+    "OperationResponseControlService",
+    "OperationResultProjectionService",
+    "OperationReviewProjectionService",
+    "OperationSecureResponseAuthority",
+    "OperationWorkspaceRefreshTargetService",
+]

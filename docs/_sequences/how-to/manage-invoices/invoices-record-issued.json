@@ -1,0 +1,189 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "invoice",
+        "add",
+        "--kind",
+        "issued",
+        "--counterparty-nif",
+        "B12345674",
+        "--country-code",
+        "ES",
+        "--counterparty-name",
+        "Cliente SL",
+        "--invoice-number",
+        "FAC-2026-001",
+        "--invoice-date",
+        "2026-02-15",
+        "--taxable-base",
+        "1000",
+        "--iva-rate",
+        "21"
+      ],
+      "captures": [
+        {
+          "json_path": "result.invoice_id",
+          "name": "invoice_id",
+          "value": "8156e70ce16a05f4588f7516d49da7ffd4115964a75b079061e624a41ad30211"
+        }
+      ],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.invoice.add",
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
+        "result": {
+          "base_total": "1000.00",
+          "base_total_eur": "1000.00",
+          "bucket_id": "<bucket-id>",
+          "counterparty_country": "ES",
+          "counterparty_name": "Cliente SL",
+          "counterparty_tax_id": "sha256:133cad41",
+          "currency": "EUR",
+          "fx_rate": null,
+          "fx_rate_date": null,
+          "fx_rate_source": null,
+          "grand_total": "1210.00",
+          "grand_total_eur": "1210.00",
+          "invoice_class": "ORDINARIA",
+          "invoice_id": "8156e70ce16a05f4588f7516d49da7ffd4115964a75b079061e624a41ad30211",
+          "invoice_number": "FAC-2026-001",
+          "issued_at": "2026-02-15",
+          "iva_category": null,
+          "iva_total": "210.00",
+          "iva_total_eur": "210.00",
+          "kind": "issued",
+          "lines": [
+            {
+              "description": "FAC-2026-001",
+              "iva_amount": "210.00",
+              "iva_rate": "RATE_21",
+              "oss_rate_kind": null,
+              "quantity": "1",
+              "spending_category_id": null,
+              "subtotal": "1000.00",
+              "unit_price": "1000.00"
+            }
+          ],
+          "linked_transaction_ids": [],
+          "notes": "",
+          "operation_date": null,
+          "operation_date_role": null,
+          "operation_type": null,
+          "payment_status": "PENDING",
+          "recargo_amount": null,
+          "rectifies_invoice_number": null,
+          "retention_amount": null,
+          "retention_rate": null,
+          "series": null,
+          "source_filename": null,
+          "source_row_index": null,
+          "source_sha256": null
+        },
+        "schema_version": "2",
+        "status": "warning"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "invoice",
+        "view",
+        "8156e70ce16a05f4588f7516d49da7ffd4115964a75b079061e624a41ad30211"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.invoice.view",
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
+        "result": {
+          "base_total": "1000.00",
+          "base_total_eur": "1000.00",
+          "bucket_id": "<bucket-id>",
+          "counterparty_country": "ES",
+          "counterparty_name": "Cliente SL",
+          "counterparty_tax_id": "sha256:133cad41",
+          "currency": "EUR",
+          "fx_rate": null,
+          "fx_rate_date": null,
+          "fx_rate_source": null,
+          "grand_total": "1210.00",
+          "grand_total_eur": "1210.00",
+          "invoice_class": "ORDINARIA",
+          "invoice_id": "8156e70ce16a05f4588f7516d49da7ffd4115964a75b079061e624a41ad30211",
+          "invoice_number": "FAC-2026-001",
+          "issued_at": "2026-02-15",
+          "iva_category": null,
+          "iva_total": "210.00",
+          "iva_total_eur": "210.00",
+          "kind": "issued",
+          "lines": [
+            {
+              "description": "FAC-2026-001",
+              "iva_amount": "210.00",
+              "iva_rate": "RATE_21",
+              "oss_rate_kind": null,
+              "quantity": "1",
+              "spending_category_id": null,
+              "subtotal": "1000.00",
+              "unit_price": "1000.00"
+            }
+          ],
+          "linked_transaction_ids": [],
+          "notes": "",
+          "operation_date": null,
+          "operation_date_role": null,
+          "operation_type": null,
+          "payment_status": "PENDING",
+          "recargo_amount": null,
+          "rectifies_invoice_number": null,
+          "retention_amount": null,
+          "retention_rate": null,
+          "series": null,
+          "source_filename": null,
+          "source_row_index": null,
+          "source_sha256": null
+        },
+        "schema_version": "2",
+        "status": "warning"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 2,
+  "sequence_id": "invoices-record-issued"
+}

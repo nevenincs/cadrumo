@@ -1,0 +1,55 @@
+[revisions."2022-hasta-2023-04-24"]
+casilla_source_refs = ["aeat-dr-036-v35"]
+authority_grade = "applicability"
+# Modelo 036, declaracion censal de alta, modificacion y baja, from the support
+# floor to 24 April 2023, and the modelo's storage baseline: the edition that
+# opens on 2023-04-25 stores only its differences against it.
+#
+# WHICH DESIGN. aeat-dr-036-v35 (vers. 3.8, entrada en vigor 20210701) is the
+# design of the form Orden HAC/609/2021 put in force on 2021-07-01. Orden
+# HFP/381/2023 replaced the form (anexo I of Orden EHA/1274/2007) from
+# 2023-04-25, and AEAT's design for it, aeat-dr-036-2023, is this one with five
+# boxes added in reserved space: [744] on Pag. 5 (revendedores de telefonos
+# moviles, consolas) and [716.a], [717.a], [716.b], [717.b] on Pag. 7 (Registro
+# de extractores de depositos fiscales, which articulo primero of that orden
+# adds to article 11.2). Every other field sits at the same position with the
+# same caption, so this edition declares the same casillas as its successor less
+# those five.
+#
+# WHAT IT CLAIMS. The successor's applicability grade: the censal casillas, the
+# filing link and no export layout or calendar plazo.
+valid_from = 2022-01-01
+valid_to = 2023-04-24
+period_selector = { year_from = 2022, year_to = 2023, periods = ["alta", "modificacion", "baja"] }
+orden_aplicabilidad = [
+    "orden-eha-1274-2007:art-1",
+    "orden-eha-1274-2007:art-2",
+]
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "rd-1065-2007:art-10",
+    "rd-1065-2007:art-11",
+    "orden-eha-1274-2007:art-1",
+    "orden-eha-1274-2007:art-2",
+]
+source_refs = [
+    "aeat-dr-036-v35",
+]
+review_status = "pending_review"
+
+[revisions."2022-hasta-2023-04-24".family_dispositions.deadline_windows]
+reason = """\
+The censal declaration has no calendar plazo: its period_selector declares the EVENT kinds \
+alta, modificacion and baja rather than calendar periods, and RD 1065/2007 anchors each to \
+its triggering event rather than to a date in the year. Article 11.2 states this verbatim for \
+the baja -- la declaracion de baja debera presentarse en el plazo de un mes desde que se \
+cumplan las condiciones previstas en el apartado 1 de este articulo -- so a deadline window \
+keyed to a calendar period would assert a plazo this modelo does not have."""
+legal_refs = [
+    "rd-1065-2007:art-9",
+    "rd-1065-2007:art-10",
+    "rd-1065-2007:art-11",
+]
+source_refs = [
+    "aeat-dr-036-v35",
+]

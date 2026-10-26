@@ -1,0 +1,1783 @@
+modelo:
+  schema:
+    '036':
+      casilla:
+        continuidad:
+          act-actividad-descripcion:
+            label: Activitat. Descripció de l'activitat
+          act-actividad-iae-seccion-grupo:
+            label: Activitat. Secció de l'I.A.E. i grup o epígraf
+          act-actividad-tipo-actividad:
+            label: Activitat. Tipus d'activitat
+          act-indicadores-local-directo-1:
+            label: Indicadors de referencia cadastral. Indicador del primer local
+              directament afecte
+          act-indicadores-local-directo-2:
+            label: Indicadors de referencia cadastral. Indicador del segon local directament
+              afecte
+          act-indicadores-local-indirecto-1:
+            label: Indicadors de referencia cadastral. Indicador del primer local
+              indirectament afecte
+          act-indicadores-local-indirecto-2:
+            label: Indicadors de referencia cadastral. Indicador del segon local indirectament
+              afecte
+          act-local-directo-1-alta:
+            label: Local directament afecte (primer). Alta
+          act-local-directo-1-alta-fecha:
+            label: Local directament afecte (primer). Data d'alta
+          act-local-directo-1-baja:
+            label: Local directament afecte (primer). Baixa
+          act-local-directo-1-baja-fecha:
+            label: Local directament afecte (primer). Data de baixa
+          act-local-directo-1-codigo-postal:
+            label: Local directament afecte (primer). Codi postal
+          act-local-directo-1-codigo-provincia:
+            label: Local directament afecte (primer). Codi de província
+          act-local-directo-1-grado-afectacion:
+            label: Local directament afecte (primer). Grau d'afectació
+          act-local-directo-1-municipio:
+            label: Local directament afecte (primer). Municipi
+          act-local-directo-1-nombre-via:
+            label: Local directament afecte (primer). Nom de la via publica
+          act-local-directo-1-numero:
+            label: Local directament afecte (primer). Número
+          act-local-directo-1-numero-referencia-alta:
+            label: Local directament afecte (primer). Número de referencia d'alta
+          act-local-directo-1-piso:
+            label: Local directament afecte (primer). Pis
+          act-local-directo-1-puerta:
+            label: Local directament afecte (primer). Porta
+          act-local-directo-1-referencia-catastral:
+            label: Local directament afecte (primer). Referencia cadastral
+          act-local-directo-1-seccion-grafica:
+            label: Local directament afecte (primer). Secció gràfica cadastral
+          act-local-directo-1-superficie:
+            label: Local directament afecte (primer). Superficie en metres quadrats
+          act-local-directo-1-variacion:
+            label: Local directament afecte (primer). Variació
+          act-local-directo-1-variacion-fecha:
+            label: Local directament afecte (primer). Data de variació
+          act-local-directo-1-variacion-numero-referencia:
+            label: Local directament afecte (primer). Número de referencia de la variació
+          act-local-directo-2-alta:
+            label: Local directament afecte (segon). Alta
+          act-local-directo-2-alta-fecha:
+            label: Local directament afecte (segon). Data d'alta
+          act-local-directo-2-baja:
+            label: Local directament afecte (segon). Baixa
+          act-local-directo-2-baja-fecha:
+            label: Local directament afecte (segon). Data de baixa
+          act-local-directo-2-codigo-postal:
+            label: Local directament afecte (segon). Codi postal
+          act-local-directo-2-codigo-provincia:
+            label: Local directament afecte (segon). Codi de província
+          act-local-directo-2-grado-afectacion:
+            label: Local directament afecte (segon). Grau d'afectació
+          act-local-directo-2-municipio:
+            label: Local directament afecte (segon). Municipi
+          act-local-directo-2-nombre-via:
+            label: Local directament afecte (segon). Nom de la via publica
+          act-local-directo-2-numero:
+            label: Local directament afecte (segon). Número
+          act-local-directo-2-numero-referencia-alta:
+            label: Local directament afecte (segon). Número de referencia d'alta
+          act-local-directo-2-piso:
+            label: Local directament afecte (segon). Pis
+          act-local-directo-2-puerta:
+            label: Local directament afecte (segon). Porta
+          act-local-directo-2-referencia-catastral:
+            label: Local directament afecte (segon). Referencia cadastral
+          act-local-directo-2-seccion-grafica:
+            label: Local directament afecte (segon). Secció gràfica cadastral
+          act-local-directo-2-superficie:
+            label: Local directament afecte (segon). Superficie en metres quadrats
+          act-local-directo-2-variacion:
+            label: Local directament afecte (segon). Variació
+          act-local-directo-2-variacion-fecha:
+            label: Local directament afecte (segon). Data de variació
+          act-local-directo-2-variacion-numero-referencia:
+            label: Local directament afecte (segon). Número de referencia de la variació
+          act-local-indirecto-1-alta:
+            label: Local indirectament afecte (primer). Alta
+          act-local-indirecto-1-alta-fecha:
+            label: Local indirectament afecte (primer). Data d'alta
+          act-local-indirecto-1-baja:
+            label: Local indirectament afecte (primer). Baixa
+          act-local-indirecto-1-baja-fecha:
+            label: Local indirectament afecte (primer). Data de baixa
+          act-local-indirecto-1-codigo-postal:
+            label: Local indirectament afecte (primer). Codi postal
+          act-local-indirecto-1-codigo-provincia:
+            label: Local indirectament afecte (primer). Codi de província
+          act-local-indirecto-1-grado-afectacion:
+            label: Local indirectament afecte (primer). Grau d'afectació
+          act-local-indirecto-1-municipio:
+            label: Local indirectament afecte (primer). Municipi
+          act-local-indirecto-1-nombre-via:
+            label: Local indirectament afecte (primer). Nom de la via publica
+          act-local-indirecto-1-numero:
+            label: Local indirectament afecte (primer). Número
+          act-local-indirecto-1-numero-referencia-alta:
+            label: Local indirectament afecte (primer). Número de referencia d'alta
+          act-local-indirecto-1-piso:
+            label: Local indirectament afecte (primer). Pis
+          act-local-indirecto-1-puerta:
+            label: Local indirectament afecte (primer). Porta
+          act-local-indirecto-1-referencia-catastral:
+            label: Local indirectament afecte (primer). Referencia cadastral
+          act-local-indirecto-1-seccion-grafica:
+            label: Local indirectament afecte (primer). Secció gràfica cadastral
+          act-local-indirecto-1-superficie:
+            label: Local indirectament afecte (primer). Superficie en metres quadrats
+          act-local-indirecto-1-uso-destino:
+            label: Local indirectament afecte (primer). Ús o destí
+          act-local-indirecto-1-variacion:
+            label: Local indirectament afecte (primer). Variació
+          act-local-indirecto-1-variacion-fecha:
+            label: Local indirectament afecte (primer). Data de variació
+          act-local-indirecto-1-variacion-numero-referencia:
+            label: Local indirectament afecte (primer). Número de referencia de la
+              variació
+          act-local-indirecto-2-alta:
+            label: Local indirectament afecte (segon). Alta
+          act-local-indirecto-2-alta-fecha:
+            label: Local indirectament afecte (segon). Data d'alta
+          act-local-indirecto-2-baja:
+            label: Local indirectament afecte (segon). Baixa
+          act-local-indirecto-2-baja-fecha:
+            label: Local indirectament afecte (segon). Data de baixa
+          act-local-indirecto-2-codigo-postal:
+            label: Local indirectament afecte (segon). Codi postal
+          act-local-indirecto-2-codigo-provincia:
+            label: Local indirectament afecte (segon). Codi de província
+          act-local-indirecto-2-grado-afectacion:
+            label: Local indirectament afecte (segon). Grau d'afectació
+          act-local-indirecto-2-municipio:
+            label: Local indirectament afecte (segon). Municipi
+          act-local-indirecto-2-nombre-via:
+            label: Local indirectament afecte (segon). Nom de la via publica
+          act-local-indirecto-2-numero:
+            label: Local indirectament afecte (segon). Número
+          act-local-indirecto-2-numero-referencia-alta:
+            label: Local indirectament afecte (segon). Número de referencia d'alta
+          act-local-indirecto-2-piso:
+            label: Local indirectament afecte (segon). Pis
+          act-local-indirecto-2-puerta:
+            label: Local indirectament afecte (segon). Porta
+          act-local-indirecto-2-referencia-catastral:
+            label: Local indirectament afecte (segon). Referencia cadastral
+          act-local-indirecto-2-seccion-grafica:
+            label: Local indirectament afecte (segon). Secció gràfica cadastral
+          act-local-indirecto-2-superficie:
+            label: Local indirectament afecte (segon). Superficie en metres quadrats
+          act-local-indirecto-2-uso-destino:
+            label: Local indirectament afecte (segon). Ús o destí
+          act-local-indirecto-2-variacion:
+            label: Local indirectament afecte (segon). Variació
+          act-local-indirecto-2-variacion-fecha:
+            label: Local indirectament afecte (segon). Data de variació
+          act-local-indirecto-2-variacion-numero-referencia:
+            label: Local indirectament afecte (segon). Número de referencia de la
+              variació
+          act-sin-local-alta:
+            label: Activitat fora de local determinat. Alta
+          act-sin-local-alta-fecha:
+            label: Activitat fora de local determinat. Data d'alta
+          act-sin-local-baja:
+            label: Activitat fora de local determinat. Baixa
+          act-sin-local-baja-fecha:
+            label: Activitat fora de local determinat. Data de baixa
+          act-sin-local-municipio:
+            label: Activitat fora de local determinat. Municipi
+          act-sin-local-numero-referencia:
+            label: Activitat fora de local determinat. Número de referencia
+          decl-apellidos-razon-social:
+            label: Cognoms si és persona física, o raó social o denominació si és
+              persona jurídica
+          decl-causa-110:
+            label: Sol·licitud de Número d'Identificació Fiscal (NIF)
+          decl-causa-111:
+            label: Alta al cens d'empresaris, professionals i retenidors
+          decl-causa-120:
+            label: Sol·licitud de NIF definitiu, disposant de NIF provisional
+          decl-causa-121:
+            label: Sol·licitud de nova targeta acreditativa del NIF
+          decl-causa-122:
+            label: Modificació del domicili fiscal (pàgines 2A, 2B i 2C)
+          decl-causa-123:
+            label: Modificació del domicili social o de gestió administrativa (pàgines
+              2A i 2B)
+          decl-causa-124:
+            label: Modificació i baixa del domicili a efectes de notificacions (pàgines
+              2A, 2B i 2C)
+          decl-causa-125:
+            label: Modificació d'altres dades identificatives o de domini (pàgines
+              2A, 2B i 2C)
+          decl-causa-126:
+            label: Modificació de dades de representants (pàgina 3)
+          decl-causa-127:
+            label: Modificació de dades relatives a activitats econòmiques i locals
+              (pàgina 4)
+          decl-causa-128:
+            label: Modificació de la condició de Gran Empresa o Administració Pública
+              amb pressupost superior a 6.000.000 d'euros (pàgina 5)
+          decl-causa-129:
+            label: Sol·licitud d'alta o baixa al registre de devolució mensual (pàgina
+              5)
+          decl-causa-130:
+            label: Sol·licitud d'alta o baixa al registre d'operadors intracomunitaris
+              (pàgina 5)
+          decl-causa-131:
+            label: Modificació de dades relatives a l'Impost sobre el Valor Afegit
+              (pàgina 5)
+          decl-causa-132:
+            label: Modificació de dades relatives a l'Impost sobre la Renda de les
+              Persones Físiques (pàgina 6)
+          decl-causa-133:
+            label: Modificació de dades relatives a l'Impost sobre Societats (pàgina
+              6)
+          decl-causa-134:
+            label: Modificació de dades relatives a l'Impost sobre la Renda de no
+              Residents corresponent a establiments permanents o a entitats en atribució
+              de rendes constituïdes a l'estranger amb presència en territori espanyol
+              (pàgina 6)
+          decl-causa-135:
+            label: Opció o renúncia al règim fiscal especial del Títol II de la Llei
+              49/2002 (pàgina 6)
+          decl-causa-136:
+            label: Modificació de dades relatives a retencions i ingressos a compte
+              (pàgina 7)
+          decl-causa-137:
+            label: Modificació dades relatives a altres impostos i registres (pàgina
+              7)
+          decl-causa-138:
+            label: Modificació de dades relatives a règims especials del comerç intracomunitari
+              (pàgina 7)
+          decl-causa-139:
+            label: Modificació de dades relatives a la relació de socis, membres o
+              partícips (pàgina 8)
+          decl-causa-140:
+            label: Deixar d'exercir totes les activitats empresarials i/o professionals
+              (persones jurídiques i entitats, sense liquidació; entitats inactives)
+          decl-causa-142:
+            label: Modificació i baixa de dades de telèfons i adreces electròniques
+              per rebre avisos de l'AEAT, TEA i DGT (pàgines 2A, 2B i 2C)
+          decl-causa-143:
+            label: Comunicació d'opció i renúncia a la portada dels llibres registre
+              de l'IVA a través de la Seu electrònica de l'AEAT (pàgina 5)
+          decl-causa-150:
+            label: Baixa del cens d'empresaris, professionals i retenidors
+          decl-causa-baja:
+            label: Causa de la baixa en el cens d'empresaris, professionals i retenidors
+          decl-fecha-efectiva-baja:
+            label: Data efectiva de la baixa en el cens
+          decl-fecha-efectiva-cese:
+            label: Data efectiva del cessament de totes les activitats empresarials
+              o professionals
+          decl-nif:
+            label: Número d'identificació fiscal (NIF) del declarant
+          decl-nombre:
+            label: Nom, en el cas de persones físiques
+          ep-avisos-email:
+            label: Establiment permanent. Avisos. Correu electrònic
+          ep-avisos-prefijo-pais-movil:
+            label: Establiment permanent. Avisos. Prefix de país del telèfon mòbil
+          ep-avisos-telefono-movil:
+            label: Establiment permanent. Avisos. Telèfon mòbil
+          ep-domicilio-fiscal-bloque:
+            label: Establiment permanent. Domicili fiscal a Espanya. Bloc
+          ep-domicilio-fiscal-calificador-numero:
+            label: Establiment permanent. Domicili fiscal a Espanya. Qualificador
+              del número
+          ep-domicilio-fiscal-codigo-postal:
+            label: Establiment permanent. Domicili fiscal a Espanya. Codi postal
+          ep-domicilio-fiscal-codigo-provincia:
+            label: Establiment permanent. Domicili fiscal a Espanya. Codi de província
+          ep-domicilio-fiscal-complemento-domicilio:
+            label: Establiment permanent. Domicili fiscal a Espanya. Complement de
+              domicili
+          ep-domicilio-fiscal-escalera:
+            label: Establiment permanent. Domicili fiscal a Espanya. Escala
+          ep-domicilio-fiscal-indicador-referencia-catastral:
+            label: Establiment permanent. Domicili fiscal a Espanya. Indicador de
+              referència cadastral del domicili fiscal
+          ep-domicilio-fiscal-localidad:
+            label: Establiment permanent. Domicili fiscal a Espanya. Localitat o població
+          ep-domicilio-fiscal-municipio:
+            label: Establiment permanent. Domicili fiscal a Espanya. Nom del municipi
+          ep-domicilio-fiscal-nombre-via:
+            label: Establiment permanent. Domicili fiscal a Espanya. Nom de la via
+              pública
+          ep-domicilio-fiscal-numero-casa:
+            label: Establiment permanent. Domicili fiscal a Espanya. Número de casa
+          ep-domicilio-fiscal-planta:
+            label: Establiment permanent. Domicili fiscal a Espanya. Planta
+          ep-domicilio-fiscal-portal:
+            label: Establiment permanent. Domicili fiscal a Espanya. Portal
+          ep-domicilio-fiscal-puerta:
+            label: Establiment permanent. Domicili fiscal a Espanya. Porta
+          ep-domicilio-fiscal-referencia-catastral:
+            label: Establiment permanent. Domicili fiscal a Espanya. Referència cadastral
+          ep-domicilio-fiscal-tipo-numero:
+            label: Establiment permanent. Domicili fiscal a Espanya. Tipus de número
+          ep-domicilio-fiscal-tipo-via:
+            label: Establiment permanent. Domicili fiscal a Espanya. Tipus de via
+          ep-domicilio-notificaciones-apartado-calidad:
+            label: Establiment permanent. Domicili a efectes de notificacions. En
+              qualitat de, per a l'apartat de correus
+          ep-domicilio-notificaciones-apartado-codigo-postal:
+            label: Establiment permanent. Domicili a efectes de notificacions. Codi
+              postal de l'apartat de correus
+          ep-domicilio-notificaciones-apartado-codigo-provincia:
+            label: Establiment permanent. Domicili a efectes de notificacions. Codi
+              de província de l'apartat de correus
+          ep-domicilio-notificaciones-apartado-correos:
+            label: Establiment permanent. Domicili a efectes de notificacions. Número
+              d'apartat de correus
+          ep-domicilio-notificaciones-apartado-destinatario:
+            label: Establiment permanent. Domicili a efectes de notificacions. Destinatari
+              de l'apartat de correus, si és diferent del declarant
+          ep-domicilio-notificaciones-apartado-poblacion:
+            label: Establiment permanent. Domicili a efectes de notificacions. Població
+              o ciutat de l'apartat de correus
+          ep-domicilio-notificaciones-baja-domicilio:
+            label: Establiment permanent. Domicili a efectes de notificacions. Indicador
+              de baixa del domicili de notificacions
+          ep-domicilio-notificaciones-bloque:
+            label: Establiment permanent. Domicili a efectes de notificacions. Bloc
+              (domicili 1)
+          ep-domicilio-notificaciones-calidad:
+            label: Establiment permanent. Domicili a efectes de notificacions. En
+              qualitat de (domicili 1)
+          ep-domicilio-notificaciones-calificador-numero:
+            label: Establiment permanent. Domicili a efectes de notificacions. Qualificador
+              del número (domicili 1)
+          ep-domicilio-notificaciones-codigo-postal:
+            label: Establiment permanent. Domicili a efectes de notificacions. Codi
+              postal (domicili 1)
+          ep-domicilio-notificaciones-codigo-provincia:
+            label: Establiment permanent. Domicili a efectes de notificacions. Codi
+              de província (domicili 1)
+          ep-domicilio-notificaciones-complemento-domicilio:
+            label: Establiment permanent. Domicili a efectes de notificacions. Complement
+              de domicili (domicili 1)
+          ep-domicilio-notificaciones-destinatario:
+            label: Establiment permanent. Domicili a efectes de notificacions. Destinatari,
+              si és diferent del declarant (domicili 1)
+          ep-domicilio-notificaciones-escalera:
+            label: Establiment permanent. Domicili a efectes de notificacions. Escala
+              (domicili 1)
+          ep-domicilio-notificaciones-localidad:
+            label: Establiment permanent. Domicili a efectes de notificacions. Localitat
+              o població (domicili 1)
+          ep-domicilio-notificaciones-municipio:
+            label: Establiment permanent. Domicili a efectes de notificacions. Nom
+              del municipi (domicili 1)
+          ep-domicilio-notificaciones-nombre-via:
+            label: Establiment permanent. Domicili a efectes de notificacions. Nom
+              de la via publica (domicili 1)
+          ep-domicilio-notificaciones-numero-casa:
+            label: Establiment permanent. Domicili a efectes de notificacions. Número
+              de casa (domicili 1)
+          ep-domicilio-notificaciones-planta:
+            label: Establiment permanent. Domicili a efectes de notificacions. Planta
+              (domicili 1)
+          ep-domicilio-notificaciones-portal:
+            label: Establiment permanent. Domicili a efectes de notificacions. Portal
+              (domicili 1)
+          ep-domicilio-notificaciones-puerta:
+            label: Establiment permanent. Domicili a efectes de notificacions. Porta
+              (domicili 1)
+          ep-domicilio-notificaciones-tipo-numero:
+            label: Establiment permanent. Domicili a efectes de notificacions. Tipus
+              de número (domicili 1)
+          ep-domicilio-notificaciones-tipo-via:
+            label: Establiment permanent. Domicili a efectes de notificacions. Tipus
+              de via (domicili 1)
+          ep-identificacion-anagrama:
+            label: Establiment permanent. Identificació. Anagrama
+          ep-identificacion-dominio-internet:
+            label: Establiment permanent. Identificació. Domini o adreça d'internet
+          ep-identificacion-dominio-internet-secundario:
+            label: Establiment permanent. Identificació. Domini o adreça d'internet
+              (segon)
+          ep-identificacion-es-sucursal:
+            label: Establiment permanent. Identificació. És una sucursal de l'entitat
+              no resident
+          ep-identificacion-fecha-constitucion:
+            label: Establiment permanent. Identificació. Data de constitució
+          ep-identificacion-fecha-inscripcion-registro-mercantil:
+            label: Establiment permanent. Identificació. Data d'inscripció al registre
+              mercantil
+          ep-identificacion-matriz-estado-residencia:
+            label: Establiment permanent. Identificació. Estat de residència de la
+              persona o entitat no resident de la qual depèn
+          ep-identificacion-matriz-nif:
+            label: Establiment permanent. Identificació. N.I.F. de la persona o entitat
+              no resident de la qual depèn, si en disposa
+          ep-identificacion-matriz-razon-social:
+            label: Establiment permanent. Identificació. Raó o denominació social
+              de la persona o entitat no resident de la qual depèn
+          ep-identificacion-nif:
+            label: Establiment permanent. Identificació. N.I.F.
+          ep-identificacion-nif-estado-residencia:
+            label: Establiment permanent. Identificació. Codi d'identificació fiscal
+              de l'Estat de residència o NVAT
+          ep-identificacion-razon-social:
+            label: Establiment permanent. Identificació. Raó o denominació social
+          ep-identificacion-tipo-establecimiento:
+            label: Establiment permanent. Identificació. Tipus d'establiment permanent
+          extractores-depositos-alcohol-fecha:
+            label: Registre d'extractors de dipòsits fiscals. Data de la sol·licitud
+              per a alcohol i begudes derivades
+          extractores-depositos-hidrocarburos-fecha:
+            label: Registre d'extractors de dipòsits fiscals. Data de la sol·licitud
+              per a hidrocarburs
+          iva-facturacion-factura-por-destinatarios:
+            label: IVA. Facturació. L'obligació d'expedir factura es compleix pels
+              destinataris o per tercers
+          iva-facturacion-factura-por-destinatarios-fecha:
+            label: IVA. Facturació. Facturació per destinataris o tercers. Data
+          iva-gran-empresa-es-admon-publica-presupuesto:
+            label: Gran empresa i administracions públiques. Es administració pública
+              amb un darrer pressupost anual aprovat superior a 6 milions d'euros
+          iva-gran-empresa-es-gran-empresa:
+            label: Gran empresa i administracions públiques. Té la condició de gran
+              empresa
+          iva-gran-empresa-fecha-admon-publica-presupuesto:
+            label: Gran empresa i administracions públiques. Data de la condició d'administració
+              pública amb pressupost superior a 6 milions d'euros
+          iva-gran-empresa-fecha-gran-empresa:
+            label: Gran empresa i administracions públiques. Data de la condició de
+              gran empresa
+          iva-importacion-forales-iva-importacion-fecha:
+            label: IVA. Importació. Forals. Ingrés de l'IVA a la importació. Data
+          iva-importacion-ingreso-iva-importacion-fecha:
+            label: IVA. Importació. Ingrés de l'IVA a la importació. Data
+          iva-inicio-actividad-comienzo-habitual:
+            label: IVA. Inici d'activitat. Començament habitual de lliuraments de
+              bens o prestacions de serveis
+          iva-inicio-actividad-entregas-posterior:
+            label: IVA. Inici d'activitat. Lliuraments de bens o prestacions de serveis
+              posterior a l'adquisició
+          iva-inicio-actividad-entregas-previa-o-simultanea:
+            label: IVA. Inici d'activitat. Lliuraments de bens o prestacions de serveis
+              prèvia o simultània a l'adquisició
+          iva-inicio-actividad-fecha-comienzo-habitual:
+            label: IVA. Inici d'activitat. Data del començament habitual de lliuraments
+              o prestacions
+          iva-inicio-actividad-fecha-entregas-posterior:
+            label: IVA. Inici d'activitat. Data dels lliuraments posteriors
+          iva-inicio-actividad-fecha-entregas-previa-o-simultanea:
+            label: IVA. Inici d'activitat. Data dels lliuraments previs o simultanis
+          iva-inicio-actividad-fecha-sector-diferenciado:
+            label: IVA. Inici d'activitat. Data de l'inici de l'activitat que constitueix
+              sector diferenciat
+          iva-inicio-actividad-sector-diferenciado:
+            label: IVA. Inici d'activitat. Inici de nova activitat que constitueixi
+              un sector diferenciat
+          iva-libros-registro-llevanza-sede-electronica-fecha:
+            label: IVA. Llibres de registre. Portada dels llibres de registre a traves
+              de la seu electronica. Data
+          iva-obligaciones-establecido-en-tai:
+            label: IVA. Obligacions. Està establert al territori d'aplicació de l'impost
+              o hi té un establiment permanent
+          iva-obligaciones-revendedor-dispositivos:
+            label: IVA. Obligacions. Té la condició de revenedor de telèfons mòbils,
+              consoles, ordinadors portàtils i tauletes
+          iva-obligaciones-solo-operaciones-sin-autoliquidacion:
+            label: IVA. Obligacions. Realitza exclusivament operacions no subjectes
+              o exemptes que no obliguen a presentar autoliquidació periòdica
+          iva-prorrata-porcentaje-provisional:
+            label: IVA. Prorrata i sectors diferenciats. Proposa percentatge provisional
+              de deducció
+          iva-prorrata-sector-1-cnae-1:
+            label: IVA. Prorrata i sectors diferenciats. Sector I. Codi C.N.A.E. (primer)
+          iva-prorrata-sector-1-cnae-2:
+            label: IVA. Prorrata i sectors diferenciats. Sector I. Codi C.N.A.E. (segon)
+          iva-prorrata-sector-1-cnae-3:
+            label: IVA. Prorrata i sectors diferenciats. Sector I. Codi C.N.A.E. (tercer)
+          iva-prorrata-sector-1-prorrata-especial:
+            label: IVA. Prorrata i sectors diferenciats. Sector I. Opció per la prorrata
+              especial
+          iva-prorrata-sector-2-cnae-1:
+            label: IVA. Prorrata i sectors diferenciats. Sector II. Codi C.N.A.E.
+              (primer)
+          iva-prorrata-sector-2-cnae-2:
+            label: IVA. Prorrata i sectors diferenciats. Sector II. Codi C.N.A.E.
+              (segon)
+          iva-prorrata-sector-2-cnae-3:
+            label: IVA. Prorrata i sectors diferenciats. Sector II. Codi C.N.A.E.
+              (tercer)
+          iva-prorrata-sector-2-prorrata-especial:
+            label: IVA. Prorrata i sectors diferenciats. Sector II. Opció per la prorrata
+              especial
+          iva-prorrata-sector-3-cnae-1:
+            label: IVA. Prorrata i sectors diferenciats. Sector III. Codi C.N.A.E.
+              (primer)
+          iva-prorrata-sector-3-cnae-2:
+            label: IVA. Prorrata i sectors diferenciats. Sector III. Codi C.N.A.E.
+              (segon)
+          iva-prorrata-sector-3-cnae-3:
+            label: IVA. Prorrata i sectors diferenciats. Sector III. Codi C.N.A.E.
+              (tercer)
+          iva-prorrata-sector-3-prorrata-especial:
+            label: IVA. Prorrata i sectors diferenciats. Sector III. Opció per la
+              prorrata especial
+          iva-prorrata-sin-sectores-diferenciados:
+            label: IVA. Prorrata i sectors diferenciats. No te sectors diferenciats
+          iva-regimenes-agencias-viajes:
+            label: IVA. Règims. Règim especial d'agències de viatges, operació per
+              operació
+          iva-regimenes-agencias-viajes-fecha:
+            label: IVA. Règims. Agencies de viatges. Data
+          iva-regimenes-agencias-viajes-iae:
+            label: IVA. Règims. Agencies de viatges. Grup o epígraf de l'I.A.E. o
+              codi d'activitat
+          iva-regimenes-bienes-usados-margen-global:
+            label: IVA. Règims. Règim especial de bens usats, marge de benefici global
+          iva-regimenes-bienes-usados-margen-global-fecha:
+            label: IVA. Règims. Bens usats marge de benefici global. Data
+          iva-regimenes-bienes-usados-margen-global-iae:
+            label: IVA. Règims. Bens usats marge de benefici global. Grup o epígraf
+              de l'I.A.E. o codi d'activitat
+          iva-regimenes-bienes-usados-operacion:
+            label: IVA. Règims. Règim especial de bens usats, operació per operació
+          iva-regimenes-bienes-usados-operacion-fecha:
+            label: IVA. Règims. Bens usats operació per operació. Data
+          iva-regimenes-bienes-usados-operacion-iae:
+            label: IVA. Règims. Bens usats operació per operació. Grup o epígraf de
+              l'I.A.E. o codi d'activitat
+          iva-regimenes-general:
+            label: IVA. Règims. Règim general
+          iva-regimenes-general-fecha:
+            label: IVA. Règims. Règim general. Data
+          iva-regimenes-general-iae:
+            label: IVA. Règims. Règim general. Grup o epígraf de l'I.A.E. o codi d'activitat
+          iva-regimenes-oro-inversion:
+            label: IVA. Règims. Règim especial de l'or d'inversió
+          iva-regimenes-oro-inversion-fecha:
+            label: IVA. Règims. Or d'inversió. Data
+          iva-regimenes-oro-inversion-iae:
+            label: IVA. Règims. Or d'inversió. Grup o epígraf de l'I.A.E. o codi d'activitat
+          iva-regimenes-recargo-equivalencia:
+            label: IVA. Règims. Règim especial del recàrrec d'equivalència
+          iva-regimenes-recargo-equivalencia-fecha:
+            label: IVA. Règims. Recàrrec d'equivalència. Data
+          iva-regimenes-recargo-equivalencia-iae:
+            label: IVA. Règims. Recàrrec d'equivalència. Grup o epígraf de l'I.A.E.
+              o codi d'activitat
+          iva-registros-operadores-intracomunitarios-fecha:
+            label: IVA. Registres. Registre d'operadors intracomunitaris. Data
+          iva-revendedores-alta-baja-fecha:
+            label: IVA. Revenedors de dispositius. Alta o baixa de revenedors. Data
+          obl-irnr-obligacion-declarar:
+            label: IRNR. Establiment permanent. Obligació de presentar declaració
+          obl-irnr-obligacion-declarar-fecha:
+            label: IRNR. Establiment permanent. Data de l'obligació de presentar declaració
+          obl-irnr-opcion-art-40-3:
+            label: IRNR. Establiment permanent. Opció pel sistema de càlcul de l'art.
+              40.3
+          obl-irnr-opcion-art-40-3-fecha:
+            label: IRNR. Establiment permanent. Data de l'opció pel sistema de càlcul
+              de l'art. 40.3
+          obl-irnr-opcion-regimen-general:
+            label: IRNR. Establiment permanent. Opció pel règim general
+          obl-irnr-opcion-regimen-general-fecha:
+            label: IRNR. Establiment permanent. Data de l'opció pel règim general
+          obl-irpf-estimacion-directa-normal-fecha:
+            label: IRPF. Estimació directa normal. Data
+          obl-irpf-estimacion-directa-simplificada-fecha:
+            label: IRPF. Estimació directa simplificada. Data
+          obl-irpf-estimacion-objetiva-fecha:
+            label: IRPF. Estimació objectiva. Data
+          obl-irpf-pagos-fraccionados-actividad:
+            label: IRPF. Obligació de fer pagaments fraccionats per activitats econòmiques
+          obl-irpf-pagos-fraccionados-actividad-fecha:
+            label: IRPF. Data de l'obligació de pagaments fraccionats per activitats
+              econòmiques
+          obl-irpf-pagos-fraccionados-atribucion:
+            label: IRPF. Obligació de pagaments fraccionats com a membre d'una entitat
+              en atribució de rendes
+          obl-irpf-pagos-fraccionados-atribucion-fecha:
+            label: IRPF. Data de l'obligació de pagaments fraccionats com a membre
+              d'una entitat en atribució
+          obl-regimen-ley-49-2002-ejerce-opcion:
+            label: Règim fiscal especial de la Llei 49/2002. Exerceix l'opció pel
+              règim fiscal especial
+          obl-regimen-ley-49-2002-ejerce-opcion-fecha:
+            label: Règim fiscal especial de la Llei 49/2002. Data de l'exercici de
+              l'opció pel règim fiscal especial
+          obl-regimen-ley-49-2002-renuncia:
+            label: Règim fiscal especial de la Llei 49/2002. Renuncia a l'aplicació
+              del règim fiscal especial
+          obl-regimen-ley-49-2002-renuncia-fecha:
+            label: Regim fiscal especial de la Llei 49/2002. Data de la renuncia al
+              regim fiscal especial
+          obl-sociedades-cierre-ejercicio:
+            label: Impost sobre Societats. Data de tancament de l'exercici economic,
+              dia i mes
+          obl-sociedades-entidad-exenta:
+            label: Impost sobre Societats. Condició d'entitat exempta
+          obl-sociedades-obligacion-declarar:
+            label: Impost sobre Societats. Obligació de presentar declaració
+          obl-sociedades-obligacion-declarar-fecha:
+            label: Impost sobre Societats. Data de l'obligació de presentar declaració
+          obl-sociedades-opcion-art-40-3:
+            label: Impost sobre Societats. Opció pel sistema de càlcul de l'art. 40.3
+          obl-sociedades-opcion-art-40-3-fecha:
+            label: Impost sobre Societats. Data de l'opció pel sistema de càlcul de
+              l'art. 40.3
+          obl-sociedades-renuncia-consolidacion:
+            label: Impost sobre Societats. Renuncia a l'aplicació del règim de consolidació
+              fiscal
+          obl-sociedades-renuncia-consolidacion-fecha:
+            label: Impost sobre Societats. Data de la renuncia al règim de consolidació
+              fiscal
+          persona-juridica-domicilio-social-bloque:
+            label: Persona jurídica o entitat. Domicili social. Bloc
+          persona-juridica-domicilio-social-nombre-via:
+            label: Persona jurídica o entitat. Domicili social. Nom de la via pública
+          persona-juridica-domicilio-social-numero-casa:
+            label: Persona jurídica o entitat. Domicili social. Número de casa
+          pf-avisos-email:
+            label: Avisos. Correu electrònic
+          pf-avisos-telefono-movil:
+            label: Avisos. Telèfon mòbil
+          pf-domicilio-fiscal-bloque:
+            label: Domicili fiscal a Espanya. Bloc
+          pf-domicilio-fiscal-calificador-numero:
+            label: Domicili fiscal a Espanya. Qualificador del número
+          pf-domicilio-fiscal-codigo-postal:
+            label: Domicili fiscal a Espanya. Codi postal
+          pf-domicilio-fiscal-codigo-provincia:
+            label: Domicili fiscal a Espanya. Codi de província
+          pf-domicilio-fiscal-complemento-domicilio:
+            label: Domicili fiscal a Espanya. Complement de domicili
+          pf-domicilio-fiscal-escalera:
+            label: Domicili fiscal a Espanya. Escala
+          pf-domicilio-fiscal-indicador-referencia-catastral:
+            label: Domicili fiscal a Espanya. Indicador de referència cadastral del
+              domicili fiscal
+          pf-domicilio-fiscal-localidad:
+            label: Domicili fiscal a Espanya. Localitat o població
+          pf-domicilio-fiscal-municipio:
+            label: Domicili fiscal a Espanya. Nom del municipi
+          pf-domicilio-fiscal-nombre-via:
+            label: Domicili fiscal a Espanya. Nom de la via pública
+          pf-domicilio-fiscal-numero-casa:
+            label: Domicili fiscal a Espanya. Número de casa
+          pf-domicilio-fiscal-planta:
+            label: Domicili fiscal a Espanya. Planta
+          pf-domicilio-fiscal-portal:
+            label: Domicili fiscal a Espanya. Portal
+          pf-domicilio-fiscal-puerta:
+            label: Domicili fiscal a Espanya. Porta
+          pf-domicilio-fiscal-referencia-catastral:
+            label: Domicili fiscal a Espanya. Referència cadastral
+          pf-domicilio-fiscal-tipo-numero:
+            label: Domicili fiscal a Espanya. Tipus de número
+          pf-domicilio-fiscal-tipo-via:
+            label: Domicili fiscal a Espanya. Tipus de via
+          pf-domicilio-gestion-administrativa-bloque:
+            label: Domicili de gestió administrativa. Bloc
+          pf-domicilio-gestion-administrativa-calificador-numero:
+            label: Domicili de gestió administrativa. Qualificador del número
+          pf-domicilio-gestion-administrativa-codigo-postal:
+            label: Domicili de gestió administrativa. Codi postal
+          pf-domicilio-gestion-administrativa-codigo-provincia:
+            label: Domicili de gestió administrativa. Codi de província
+          pf-domicilio-gestion-administrativa-complemento-domicilio:
+            label: Domicili de gestió administrativa. Complement de domicili
+          pf-domicilio-gestion-administrativa-escalera:
+            label: Domicili de gestió administrativa. Escala
+          pf-domicilio-gestion-administrativa-indicador-baja:
+            label: Domicili de gestió administrativa. Indicador de baixa del domicili
+              de gestió administrativa
+          pf-domicilio-gestion-administrativa-localidad:
+            label: Domicili de gestió administrativa. Localitat o població
+          pf-domicilio-gestion-administrativa-municipio:
+            label: Domicili de gestió administrativa. Nom del municipi
+          pf-domicilio-gestion-administrativa-nombre-via:
+            label: Domicili de gestió administrativa. Nom de la via pública
+          pf-domicilio-gestion-administrativa-numero-casa:
+            label: Domicili de gestió administrativa. Número de casa
+          pf-domicilio-gestion-administrativa-planta:
+            label: Domicili de gestió administrativa. Planta
+          pf-domicilio-gestion-administrativa-portal:
+            label: Domicili de gestió administrativa. Portal
+          pf-domicilio-gestion-administrativa-puerta:
+            label: Domicili de gestió administrativa. Porta
+          pf-domicilio-gestion-administrativa-tipo-numero:
+            label: Domicili de gestió administrativa. Tipus de número
+          pf-domicilio-gestion-administrativa-tipo-via:
+            label: Domicili de gestió administrativa. Tipus de via
+          pf-domicilio-notificaciones-apartado-calidad:
+            label: Domicili a efectes de notificacions. En qualitat de, per a l'apartat
+              de correus
+          pf-domicilio-notificaciones-apartado-codigo-postal:
+            label: Domicili a efectes de notificacions. Codi postal de l'apartat de
+              correus
+          pf-domicilio-notificaciones-apartado-codigo-provincia:
+            label: Domicili a efectes de notificacions. Codi de província de l'apartat
+              de correus
+          pf-domicilio-notificaciones-apartado-correos:
+            label: Domicili a efectes de notificacions. Número d'apartat de correus
+          pf-domicilio-notificaciones-apartado-destinatario:
+            label: Domicili a efectes de notificacions. Destinatari de l'apartat de
+              correus, si és diferent del declarant
+          pf-domicilio-notificaciones-apartado-poblacion:
+            label: Domicili a efectes de notificacions. Població o ciutat de l'apartat
+              de correus
+          pf-domicilio-notificaciones-baja-domicilio:
+            label: Domicili a efectes de notificacions. Baixa del domicili de notificacions
+          pf-domicilio-notificaciones-bloque:
+            label: Domicili a efectes de notificacions. Bloc (domicili 1)
+          pf-domicilio-notificaciones-calidad:
+            label: Domicili a efectes de notificacions. En qualitat de (domicili 1)
+          pf-domicilio-notificaciones-calificador-numero:
+            label: Domicili a efectes de notificacions. Qualificador del número (domicili
+              1)
+          pf-domicilio-notificaciones-codigo-postal:
+            label: Domicili a efectes de notificacions. Codi postal (domicili 1)
+          pf-domicilio-notificaciones-codigo-provincia:
+            label: Domicili a efectes de notificacions. Codi de província (domicili
+              1)
+          pf-domicilio-notificaciones-complemento-domicilio:
+            label: Domicili a efectes de notificacions. Complement de domicili (domicili
+              1)
+          pf-domicilio-notificaciones-destinatario:
+            label: Domicili a efectes de notificacions. Destinatari, si és diferent
+              del declarant (domicili 1)
+          pf-domicilio-notificaciones-escalera:
+            label: Domicili a efectes de notificacions. Escala (domicili 1)
+          pf-domicilio-notificaciones-localidad:
+            label: Domicili a efectes de notificacions. Localitat o població (domicili
+              1)
+          pf-domicilio-notificaciones-municipio:
+            label: Domicili a efectes de notificacions. Nom del municipi (domicili
+              1)
+          pf-domicilio-notificaciones-nombre-via:
+            label: Domicili a efectes de notificacions. Nom de la via publica (domicili
+              1)
+          pf-domicilio-notificaciones-numero-casa:
+            label: Domicili a efectes de notificacions. Número de casa (domicili 1)
+          pf-domicilio-notificaciones-planta:
+            label: Domicili a efectes de notificacions. Planta (domicili 1)
+          pf-domicilio-notificaciones-portal:
+            label: Domicili a efectes de notificacions. Portal (domicili 1)
+          pf-domicilio-notificaciones-puerta:
+            label: Domicili a efectes de notificacions. Porta (domicili 1)
+          pf-domicilio-notificaciones-tipo-numero:
+            label: Domicili a efectes de notificacions. Tipus de número (domicili
+              1)
+          pf-domicilio-notificaciones-tipo-via:
+            label: Domicili a efectes de notificacions. Tipus de via (domicili 1)
+          pf-domicilio-residencia-extranjero-codigo-pais:
+            label: Domicili a l'Estat de residència. Codi de país
+          pf-domicilio-residencia-extranjero-codigo-postal:
+            label: Domicili a l'Estat de residència. Codi postal
+          pf-domicilio-residencia-extranjero-complemento-domicilio:
+            label: Domicili a l'Estat de residència. Complement de domicili
+          pf-domicilio-residencia-extranjero-domicilio:
+            label: Domicili a l'Estat de residència. Domicili
+          pf-domicilio-residencia-extranjero-pais:
+            label: Domicili a l'Estat de residència. País
+          pf-domicilio-residencia-extranjero-poblacion:
+            label: Domicili a l'Estat de residència. Població o ciutat
+          pf-domicilio-residencia-extranjero-provincia-region:
+            label: Domicili a l'Estat de residència. Província, regió o estat
+          pf-establecimientos-permanentes-cuantos:
+            label: Establiments permanents. Nombre d'establiments permanents
+          pf-establecimientos-permanentes-denominacion-1:
+            label: Establiments permanents. Denominació de l'establiment permanent
+              1
+          pf-establecimientos-permanentes-denominacion-2:
+            label: Establiments permanents. Denominació de l'establiment permanent
+              2
+          pf-establecimientos-permanentes-denominacion-3:
+            label: Establiments permanents. Denominació de l'establiment permanent
+              3
+          pf-establecimientos-permanentes-opera-establecimiento-permanente:
+            label: Establiments permanents. Opera a Espanya a través d'establiment
+              permanent
+          pf-identificacion-apellido-1:
+            label: Identificació. Primer cognom
+          pf-identificacion-apellido-2:
+            label: Identificació. Segon cognom
+          pf-identificacion-codigo-pais-residencia:
+            label: Identificació. Codi de país de l'Estat de residència
+          pf-identificacion-dominio-internet:
+            label: Identificació. Domini o adreça d'internet
+          pf-identificacion-erl-alta-baja:
+            label: Identificació. Alta o baixa com a Empresari de Responsabilitat
+              Limitada
+          pf-identificacion-erl-fecha:
+            label: Identificació. Data d'alta o baixa com a Empresari de Responsabilitat
+              Limitada
+          pf-identificacion-nacionalidad:
+            label: Identificació. Nacionalitat del no resident
+          pf-identificacion-nif:
+            label: Identificació. N.I.F. o N.I.E.
+          pf-identificacion-nif-estado-residencia:
+            label: Identificació. Codi d'identificació fiscal de l'Estat de residència
+              o NIF-IVA
+          pf-identificacion-nombre:
+            label: Identificació. Nom
+          pf-identificacion-nombre-comercial:
+            label: Identificació. Nom comercial
+          pj-aviso-email:
+            label: Persona jurídica o entitat. Avisos. Correu electrònic
+          pj-aviso-prefijo-pais-movil:
+            label: Persona jurídica o entitat. Avisos. Prefix de país del telèfon
+              mòbil
+          pj-aviso-telefono-movil:
+            label: Persona jurídica o entitat. Avisos. Telèfon mòbil
+          pj-dext-codigo-pais:
+            label: Persona jurídica o entitat. Domicili a l'Estat de residència. Codi
+              de país
+          pj-dext-codigo-postal:
+            label: Persona jurídica o entitat. Domicili a l'Estat de residència. Codi
+              postal
+          pj-dext-complemento-domicilio:
+            label: Persona jurídica o entitat. Domicili a l'Estat de residència. Complement
+              de domicili
+          pj-dext-domicilio:
+            label: Persona jurídica o entitat. Domicili a l'Estat de residència. Domicili
+          pj-dext-pais:
+            label: Persona jurídica o entitat. Domicili a l'Estat de residència. País
+          pj-dext-poblacion:
+            label: Persona jurídica o entitat. Domicili a l'Estat de residència. Població
+              o ciutat
+          pj-dext-provincia-region:
+            label: Persona jurídica o entitat. Domicili a l'Estat de residència. Província,
+              regió o estat
+          pj-dfisc-bloque:
+            label: Persona jurídica o entitat. Domicili fiscal a Espanya. Bloc
+          pj-dfisc-calificador-numero:
+            label: Persona jurídica o entitat. Domicili fiscal a Espanya. Qualificador
+              del número
+          pj-dfisc-codigo-postal:
+            label: Persona jurídica o entitat. Domicili fiscal a Espanya. Codi postal
+          pj-dfisc-codigo-provincia:
+            label: Persona jurídica o entitat. Domicili fiscal a Espanya. Codi de
+              província
+          pj-dfisc-complemento-domicilio:
+            label: Persona jurídica o entitat. Domicili fiscal a Espanya. Complement
+              de domicili
+          pj-dfisc-escalera:
+            label: Persona jurídica o entitat. Domicili fiscal a Espanya. Escala
+          pj-dfisc-indicador-referencia-catastral:
+            label: Persona jurídica o entitat. Domicili fiscal a Espanya. Indicador
+              de referència cadastral del domicili fiscal
+          pj-dfisc-localidad:
+            label: Persona jurídica o entitat. Domicili fiscal a Espanya. Localitat
+              o població
+          pj-dfisc-municipio:
+            label: Persona jurídica o entitat. Domicili fiscal a Espanya. Nom del
+              municipi
+          pj-dfisc-nombre-via:
+            label: Persona jurídica o entitat. Domicili fiscal a Espanya. Nom de la
+              via pública
+          pj-dfisc-numero-casa:
+            label: Persona jurídica o entitat. Domicili fiscal a Espanya. Número de
+              casa
+          pj-dfisc-planta:
+            label: Persona jurídica o entitat. Domicili fiscal a Espanya. Planta
+          pj-dfisc-portal:
+            label: Persona jurídica o entitat. Domicili fiscal a Espanya. Portal
+          pj-dfisc-puerta:
+            label: Persona jurídica o entitat. Domicili fiscal a Espanya. Porta
+          pj-dfisc-referencia-catastral:
+            label: Persona jurídica o entitat. Domicili fiscal a Espanya. Referència
+              cadastral
+          pj-dfisc-tipo-numero:
+            label: Persona jurídica o entitat. Domicili fiscal a Espanya. Tipus de
+              número
+          pj-dfisc-tipo-via:
+            label: Persona jurídica o entitat. Domicili fiscal a Espanya. Tipus de
+              via
+          pj-dnoti-apartado-calidad:
+            label: Persona jurídica o entitat. Domicili a efectes de notificacions.
+              En qualitat de, per a l'apartat de correus
+          pj-dnoti-apartado-codigo-postal:
+            label: Persona jurídica o entitat. Domicili a efectes de notificacions.
+              Codi postal de l'apartat de correus
+          pj-dnoti-apartado-codigo-provincia:
+            label: Persona jurídica o entitat. Domicili a efectes de notificacions.
+              Codi de província de l'apartat de correus
+          pj-dnoti-apartado-correos:
+            label: Persona jurídica o entitat. Domicili a efectes de notificacions.
+              Número d'apartat de correus
+          pj-dnoti-apartado-destinatario:
+            label: Persona jurídica o entitat. Domicili a efectes de notificacions.
+              Destinatari de l'apartat de correus, si és diferent del declarant
+          pj-dnoti-apartado-poblacion:
+            label: Persona jurídica o entitat. Domicili a efectes de notificacions.
+              Població o ciutat de l'apartat de correus
+          pj-dnoti-bloque:
+            label: Persona jurídica o entitat. Domicili a efectes de notificacions.
+              Bloc (domicili 1)
+          pj-dnoti-calidad:
+            label: Persona jurídica o entitat. Domicili a efectes de notificacions.
+              En qualitat de (domicili 1)
+          pj-dnoti-calificador-numero:
+            label: Persona jurídica o entitat. Domicili a efectes de notificacions.
+              Qualificador del número (domicili 1)
+          pj-dnoti-codigo-postal:
+            label: Persona jurídica o entitat. Domicili a efectes de notificacions.
+              Codi postal (domicili 1)
+          pj-dnoti-codigo-provincia:
+            label: Persona jurídica o entitat. Domicili a efectes de notificacions.
+              Codi de província (domicili 1)
+          pj-dnoti-complemento-domicilio:
+            label: Persona jurídica o entitat. Domicili a efectes de notificacions.
+              Complement de domicili (domicili 1)
+          pj-dnoti-destinatario:
+            label: Persona jurídica o entitat. Domicili a efectes de notificacions.
+              Destinatari, si és diferent del declarant (domicili 1)
+          pj-dnoti-escalera:
+            label: Persona jurídica o entitat. Domicili a efectes de notificacions.
+              Escala (domicili 1)
+          pj-dnoti-localidad:
+            label: Persona jurídica o entitat. Domicili a efectes de notificacions.
+              Localitat o població (domicili 1)
+          pj-dnoti-municipio:
+            label: Persona jurídica o entitat. Domicili a efectes de notificacions.
+              Nom del municipi (domicili 1)
+          pj-dnoti-nombre-via:
+            label: Persona jurídica o entitat. Domicili a efectes de notificacions.
+              Nom de la via pública (domicili 1)
+          pj-dnoti-numero-casa:
+            label: Persona jurídica o entitat. Domicili a efectes de notificacions.
+              Número de casa (domicili 1)
+          pj-dnoti-planta:
+            label: Persona jurídica o entitat. Domicili a efectes de notificacions.
+              Planta (domicili 1)
+          pj-dnoti-portal:
+            label: Persona jurídica o entitat. Domicili a efectes de notificacions.
+              Portal (domicili 1)
+          pj-dnoti-puerta:
+            label: Persona jurídica o entitat. Domicili a efectes de notificacions.
+              Porta (domicili 1)
+          pj-dnoti-tipo-numero:
+            label: Persona jurídica o entitat. Domicili a efectes de notificacions.
+              Tipus de número (domicili 1)
+          pj-dnoti-tipo-via:
+            label: Persona jurídica o entitat. Domicili a efectes de notificacions.
+              Tipus de via (domicili 1)
+          pj-dsoc-calificador-numero:
+            label: Persona jurídica o entitat. Domicili social. Qualificador del número
+          pj-dsoc-codigo-postal:
+            label: Persona jurídica o entitat. Domicili social. Codi postal
+          pj-dsoc-codigo-provincia:
+            label: Persona jurídica o entitat. Domicili social. Codi de província
+          pj-dsoc-complemento-domicilio:
+            label: Persona jurídica o entitat. Domicili social. Complement de domicili
+          pj-dsoc-escalera:
+            label: Persona jurídica o entitat. Domicili social. Escala
+          pj-dsoc-localidad:
+            label: Persona jurídica o entitat. Domicili social. Localitat o població
+          pj-dsoc-municipio:
+            label: Persona jurídica o entitat. Domicili social. Nom del municipi
+          pj-dsoc-planta:
+            label: Persona jurídica o entitat. Domicili social. Planta
+          pj-dsoc-portal:
+            label: Persona jurídica o entitat. Domicili social. Portal
+          pj-dsoc-puerta:
+            label: Persona jurídica o entitat. Domicili social. Porta
+          pj-dsoc-tipo-numero:
+            label: Persona jurídica o entitat. Domicili social. Tipus de número
+          pj-dsoc-tipo-via:
+            label: Persona jurídica o entitat. Domicili social. Tipus de via
+          pj-eperm-cuantos:
+            label: Persona jurídica o entitat. Establiments permanents. Nombre d'establiments
+              permanents
+          pj-eperm-denominacion-1:
+            label: Persona jurídica o entitat. Establiments permanents. Denominació
+              de l'establiment permanent 1
+          pj-eperm-denominacion-2:
+            label: Persona jurídica o entitat. Establiments permanents. Denominació
+              de l'establiment permanent 2
+          pj-eperm-denominacion-3:
+            label: Persona jurídica o entitat. Establiments permanents. Denominació
+              de l'establiment permanent 3
+          pj-eperm-nif-1:
+            label: Persona jurídica o entitat. Establiments permanents. N.I.F. de
+              l'establiment permanent 1
+          pj-eperm-nif-2:
+            label: Persona jurídica o entitat. Establiments permanents. N.I.F. de
+              l'establiment permanent 2
+          pj-eperm-nif-3:
+            label: Persona jurídica o entitat. Establiments permanents. N.I.F. de
+              l'establiment permanent 3
+          pj-eperm-opera-establecimiento-permanente:
+            label: Persona jurídica o entitat. Establiments permanents. Opera a Espanya
+              a través d'establiment permanent
+          pj-ident-anagrama:
+            label: Persona jurídica o entitat. Identificació. Anagrama
+          pj-ident-dominio-internet:
+            label: Persona jurídica o entitat. Identificació. Domini o adreça d'internet
+          pj-ident-dominio-internet-secundario:
+            label: Persona jurídica o entitat. Identificació. Domini o adreça d'internet
+              (segon)
+          pj-ident-fecha-acuerdo-voluntades:
+            label: Persona jurídica o entitat. Identificació. Data de l'acord de voluntats
+          pj-ident-fecha-constitucion:
+            label: Persona jurídica o entitat. Identificació. Data de constitució
+          pj-ident-fecha-inscripcion-registral:
+            label: Persona jurídica o entitat. Identificació. Data d'inscripció registral
+          pj-ident-nif:
+            label: Persona jurídica o entitat. Identificació. N.I.F.
+          pj-ident-nif-estado-residencia:
+            label: Persona jurídica o entitat. Identificació. Codi d'identificació
+              fiscal de l'Estat de residència
+          pj-ident-nif-otros-paises:
+            label: Persona jurídica o entitat. Identificació. N.I.F. d'altres països
+          pj-ident-pais-constitucion:
+            label: Persona jurídica o entitat. Identificació. Entitat no resident
+              o constituïda a l'estranger
+          pj-ident-razon-social:
+            label: Persona jurídica o entitat. Identificació. Raó o denominació social
+          pj-pjur-atribucion-espana-con-actividad:
+            label: Persona jurídica o entitat. Personalitat jurídica i classe d'entitat.
+              Entitat en atribució de rendes constituïda a Espanya amb activitat econòmica
+          pj-pjur-atribucion-espana-con-actividad-clase:
+            label: Persona jurídica o entitat. Personalitat jurídica i classe d'entitat.
+              Classe d'entitat en atribució de rendes constituïda a Espanya amb activitat
+              econòmica
+          pj-pjur-atribucion-espana-sin-actividad-clase:
+            label: Persona jurídica o entitat. Personalitat jurídica i classe d'entitat.
+              Classe d'entitat en atribució de rendes constituïda a Espanya sense
+              activitat econòmica
+          pj-pjur-atribucion-extranjero-con-presencia-clase:
+            label: Persona jurídica o entitat. Personalitat jurídica i classe d'entitat.
+              Classe d'entitat en atribució de rendes constituïda a l'estranger amb
+              presència a Espanya
+          pj-pjur-atribucion-extranjero-sin-presencia-clase:
+            label: Persona jurídica o entitat. Personalitat jurídica i classe d'entitat.
+              Classe d'entitat en atribució de rendes constituïda a l'estranger sense
+              presència a Espanya
+          pj-pjur-es-persona-juridica:
+            label: Persona jurídica o entitat. Personalitat jurídica i classe d'entitat.
+              Persona jurídica
+          pj-pjur-forma-juridica:
+            label: Persona jurídica o entitat. Personalitat jurídica i classe d'entitat.
+              Forma jurídica
+          pj-pjur-otras-entidades:
+            label: Persona jurídica o entitat. Personalitat jurídica i classe d'entitat.
+              Altres entitats
+          pj-pjur-otras-entidades-clase:
+            label: Persona jurídica o entitat. Personalitat jurídica i classe d'entitat.
+              Altres entitats. Classe d'entitat
+          pj-pjur-tiene-personalidad-juridica:
+            label: Persona jurídica o entitat. Personalitat jurídica i classe d'entitat.
+              Té personalitat jurídica
+          rep1-apellidos-razon-social:
+            label: Cognoms i nom o rao social del representant (primer representant,
+              bloc 3.1)
+          rep1-designada-apellido-1:
+            label: Primer cognom de la persona física designada (primer representant,
+              bloc 3.1)
+          rep1-designada-apellido-2:
+            label: Segon cognom de la persona física designada (primer representant,
+              bloc 3.1)
+          rep1-designada-fecha-causa:
+            label: Data efectiva de la causa de la presentació de la persona física
+              designada (primer representant, bloc 3.1)
+          rep1-designada-nif:
+            label: NIF de la persona física designada (primer representant, bloc 3.1)
+          rep1-designada-nombre:
+            label: Nom de la persona física designada (primer representant, bloc 3.1)
+          rep1-fecha-causa:
+            label: Data efectiva de la causa de la presentació del representant (primer
+              representant, bloc 3.1)
+          rep1-nif:
+            label: NIF del representant (primer representant, bloc 3.1)
+          rep1-representacion-legal-clave:
+            label: Clau de la representació legal (primer representant, bloc 3.1)
+          rep1-residente:
+            label: 'El representant es resident: si o no (primer representant, bloc
+              3.1)'
+          rep1-tipo-representacion:
+            label: Clau del tipus de representació (primer representant, bloc 3.1)
+          rep1-titulo-representacion:
+            label: Clau del títol de representació (primer representant, bloc 3.1)
+          rep2-apellidos-razon-social:
+            label: Cognoms i nom o rao social del representant (segon representant,
+              bloc 3.2)
+          rep2-designada-apellido-1:
+            label: Primer cognom de la persona física designada (segon representant,
+              bloc 3.2)
+          rep2-designada-apellido-2:
+            label: Segon cognom de la persona física designada (segon representant,
+              bloc 3.2)
+          rep2-designada-fecha-causa:
+            label: Data efectiva de la causa de la presentació de la persona física
+              designada (segon representant, bloc 3.2)
+          rep2-designada-nif:
+            label: NIF de la persona física designada (segon representant, bloc 3.2)
+          rep2-designada-nombre:
+            label: Nom de la persona física designada (segon representant, bloc 3.2)
+          rep2-fecha-causa:
+            label: Data efectiva de la causa de la presentació del representant (segon
+              representant, bloc 3.2)
+          rep2-nif:
+            label: NIF del representant (segon representant, bloc 3.2)
+          rep2-representacion-legal-clave:
+            label: Clau de la representació legal (segon representant, bloc 3.2)
+          rep2-residente:
+            label: 'El representant es resident: si o no (segon representant, bloc
+              3.2)'
+          rep2-tipo-representacion:
+            label: Clau del tipus de representació (segon representant, bloc 3.2)
+          rep2-titulo-representacion:
+            label: Clau del títol de representació (segon representant, bloc 3.2)
+          ret-extractores-depositos-alcohol:
+            label: Registre d'extractors de dipòsits fiscals. Sol·licita alta o baixa
+              per a productes dels Impostos sobre l'alcohol i begudes derivades
+          ret-extractores-depositos-hidrocarburos:
+            label: Registre d'extractors de dipòsits fiscals. Sol·licita alta o baixa
+              per a productes dels Impostos sobre Hidrocarburs
+          ret-impuestos-especiales-impuesto-electricidad:
+            label: Impostos especials. Obligat a presentar autoliquidació per l'Impost
+              sobre l'Electricitat
+          ret-impuestos-especiales-impuesto-electricidad-fecha:
+            label: Impostos especials. Data. Obligat a presentar autoliquidació per
+              l'Impost sobre l'Electricitat
+          ret-impuestos-especiales-inscripcion-registro-territorial:
+            label: Impostos especials. Obligació d'inscriure els establiments al registre
+              territorial de l'oficina gestora
+          ret-impuestos-especiales-inscripcion-registro-territorial-fecha:
+            label: Impostos especials. Data. Obligació d'inscriure els establiments
+              al registre territorial de l'oficina gestora
+          ret-impuestos-especiales-primas-seguros:
+            label: Impostos especials. Obligació de presentar declaració per l'Impost
+              Especial sobre Primes d'Assegurances
+          ret-impuestos-especiales-primas-seguros-fecha:
+            label: Impostos especials. Data. Obligació de presentar declaració per
+              l'Impost Especial sobre Primes d'Assegurances
+          ret-impuestos-especiales-resumen-anual-carbon:
+            label: Impostos especials. Obligat a presentar la declaració resum anual
+              de l'Impost Especial sobre el Carbó
+          ret-impuestos-especiales-resumen-anual-carbon-fecha:
+            label: Impostos especials. Data. Obligat a presentar la declaració resum
+              anual de l'Impost Especial sobre el Carbó
+          ret-medioambientales-obligacion-declarar:
+            label: Impostos mediambientals. Obligació de presentar declaració
+          ret-medioambientales-obligacion-declarar-fecha:
+            label: Impostos mediambientals. Data de l'obligació de presentar declaració
+          ret-retenciones-actividades-profesionales:
+            label: Retencions i ingressos a compte. Obligació de retenir o ingressar
+              a compte sobre rendiments d'activitats professionals
+          ret-retenciones-actividades-profesionales-fecha:
+            label: Retencions i ingressos a compte. Data de l'obligació sobre rendiments
+              d'activitats professionals
+          ret-retenciones-arrendamiento:
+            label: Retencions i ingressos a compte. Obligació de retenir o ingressar
+              a compte sobre rendiments de l'arrendament o subarrendament
+          ret-retenciones-arrendamiento-fecha:
+            label: Retencions i ingressos a compte. Data de l'obligació sobre rendiments
+              de l'arrendament o subarrendament
+          ret-retenciones-capital-mobiliario-contraprestacion:
+            label: Retencions i ingressos a compte. Obligació de retenir o ingressar
+              a compte sobre rendes de capital mobiliari obtingudes per la contraprestació
+          ret-retenciones-capital-mobiliario-contraprestacion-fecha:
+            label: Retencions i ingressos a compte. Data de l'obligació sobre rendes
+              de capital mobiliari obtingudes per la contraprestació
+          ret-retenciones-capital-mobiliario-operaciones:
+            label: Retencions i ingressos a compte. Obligació de retenir o ingressar
+              a compte sobre rendes de capital mobiliari procedents d'operacions
+          ret-retenciones-capital-mobiliario-operaciones-fecha:
+            label: Retencions i ingressos a compte. Data de l'obligació sobre rendes
+              de capital mobiliari procedents d'operacions
+          ret-retenciones-capital-mobiliario-otros:
+            label: Retencions i ingressos a compte. Obligació de retenir o ingressar
+              a compte sobre altres rendes de capital mobiliari
+          ret-retenciones-capital-mobiliario-otros-fecha:
+            label: Retencions i ingressos a compte. Data de l'obligació sobre altres
+              rendes de capital mobiliari
+          ret-retenciones-capital-mobiliario-transmision:
+            label: Retencions i ingressos a compte. Obligació de retenir o ingressar
+              a compte sobre rendes de capital mobiliari derivades de la transmissió
+          ret-retenciones-capital-mobiliario-transmision-fecha:
+            label: Retencions i ingressos a compte. Data de l'obligació sobre rendes
+              de capital mobiliari derivades de la transmissió
+          ret-retenciones-trabajo-personal:
+            label: Retencions i ingressos a compte. Obligació de retenir o ingressar
+              a compte sobre rendiments del treball personal
+          ret-retenciones-trabajo-personal-fecha:
+            label: Retencions i ingressos a compte. Data de l'obligació sobre rendiments
+              del treball personal
+          ret-retenciones-transmision-acciones:
+            label: Retencions i ingressos a compte. Obligació de retenir o ingressar
+              a compte sobre transmissions o reemborsaments d'accions o participacions
+          ret-retenciones-transmision-acciones-fecha:
+            label: Retencions i ingressos a compte. Data de l'obligació sobre transmissions
+              o reemborsaments d'accions o participacions
+          ret-servicios-digitales-obligacion-autoliquidar:
+            label: Impost sobre determinats serveis digitals. Obligat a presentar
+              autoliquidació
+          ret-servicios-digitales-obligacion-autoliquidar-fecha:
+            label: Impost sobre determinats serveis digitals. Data de l'obligació
+              de presentar autoliquidació
+          ret-telecom-art-70-uno-4-destino:
+            label: Serveis de telecomunicacions, radiodifusió i via electrònica (art.
+              70.Uno.4.a). Tributació en destí
+          ret-telecom-art-70-uno-4-fecha:
+            label: Serveis de telecomunicacions, radiodifusió i via electrònica (art.
+              70.Uno.4.a). Data
+          ret-telecom-art-70-uno-4-revocacion:
+            label: Serveis de telecomunicacions, radiodifusió i via electrònica (art.
+              70.Uno.4.a). Revocació
+          ret-telecom-art-70-uno-8-destino:
+            label: Serveis de telecomunicacions, radiodifusió i via electrònica (art.
+              70.Uno.8). Tributació en destí
+          ret-telecom-art-70-uno-8-fecha:
+            label: Serveis de telecomunicacions, radiodifusió i via electrònica (art.
+              70.Uno.8). Data
+          ret-telecom-art-70-uno-8-revocacion:
+            label: Serveis de telecomunicacions, radiodifusió i via electrònica (art.
+              70.Uno.8). Revocació
+          socio-principal-causa-fecha:
+            label: Socis, membres o partícips. Data de la causa de la presentació
+          socio-principal-cuota-atribucion:
+            label: Socis, membres o partícips. Quota o percentatge d'atribució
+          socio-principal-cuota-participacion:
+            label: Socis, membres o partícips. Quota o percentatge de participació
+          socio-principal-nif:
+            label: Socis, membres o partícips. N.I.F.
+          socio-principal-nombre-razon-social:
+            label: Socis, membres o partícips. Cognoms i nom, raó o denominació social
+          suc-a-nif:
+            label: NIF del successor o beneficiari (successor 13a)
+          suc-b-nif:
+            label: NIF del successor o beneficiari (successor 13b)
+          suc-c-nif:
+            label: NIF del successor o beneficiari (successor 13c)
+          suc-d-nif:
+            label: NIF del successor o beneficiari (successor 13d)
+          suc-e-nif:
+            label: NIF del successor o beneficiari (successor 13e)
+          suc-f-nif:
+            label: NIF del successor o beneficiari (successor 13f)
+      construct:
+        modelo-036-censo-foundation:
+          field:
+            title: 'Model 036: dades censals de base'
+      field:
+        official_name: Modelo 036. Declaració censal d'alta, modificació i baixa en
+          el Cens d'empresaris, professionals i retenidors.
+        title: Cens d'empresaris, professionals i retenidors
+      revision:
+        2022-hasta-2023-04-24:
+          casilla:
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at1dedim6tbechgn4qbf:
+              label: Identificació. Domini o adreça d'internet (segon)
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qpj5cdk62bb5cpim6t3fecmn4pbjd5i6arj3d5gg:
+              label: Identificació. Data d'efectes de la residència fiscal
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qsj5edkm8pbecdkm2bb9dpi6ior1chnn4:
+              label: Identificació. Persona física resident o no resident a Espanya
+            x-e1l2sqb4cln78bb6clhmgo9dclj6aorkdtpiqsj5edkm8pbecdkm2:
+              label: Persona jurídica o entitat. Identificació. Data d'efectes de
+                la residència fiscal
+            x-edqm6bb15phnarrkc4mmoqbhelkm8ob3d5nms:
+              label: Quota de liquidació, patrimoni o cabal hereditari del successor
+                o beneficiari (successor 13a)
+            x-edqm6bb15pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              label: Cognoms i nom, raó o denominació social del successor o beneficiari
+                (successor 13a)
+            x-edqm6bb15po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              label: Percentatge de liquidació, participació o herència del successor
+                o beneficiari (successor 13a)
+            x-edqm6bb25phnarrkc4mmoqbhelkm8ob3d5nms:
+              label: Quota de liquidació, patrimoni o cabal hereditari del successor
+                o beneficiari (successor 13b)
+            x-edqm6bb25pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              label: Cognoms i nom, raó o denominació social del successor o beneficiari
+                (successor 13b)
+            x-edqm6bb25po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              label: Percentatge de liquidació, participació o herència del successor
+                o beneficiari (successor 13b)
+            x-edqm6bb35phnarrkc4mmoqbhelkm8ob3d5nms:
+              label: Quota de liquidació, patrimoni o cabal hereditari del successor
+                o beneficiari (successor 13c)
+            x-edqm6bb35pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              label: Cognoms i nom, raó o denominació social del successor o beneficiari
+                (successor 13c)
+            x-edqm6bb35po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              label: Percentatge de liquidació, participació o herència del successor
+                o beneficiari (successor 13c)
+            x-edqm6bb45phnarrkc4mmoqbhelkm8ob3d5nms:
+              label: Quota de liquidació, patrimoni o cabal hereditari del successor
+                o beneficiari (successor 13d)
+            x-edqm6bb45pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              label: Cognoms i nom, raó o denominació social del successor o beneficiari
+                (successor 13d)
+            x-edqm6bb45po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              label: Percentatge de liquidació, participació o herència del successor
+                o beneficiari (successor 13d)
+            x-edqm6bb55phnarrkc4mmoqbhelkm8ob3d5nms:
+              label: Quota de liquidació, patrimoni o cabal hereditari del successor
+                o beneficiari (successor 13e)
+            x-edqm6bb55pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              label: Cognoms i nom, raó o denominació social del successor o beneficiari
+                (successor 13e)
+            x-edqm6bb55po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              label: Percentatge de liquidació, participació o herència del successor
+                o beneficiari (successor 13e)
+            x-edqm6bb65phnarrkc4mmoqbhelkm8ob3d5nms:
+              label: Quota de liquidació, patrimoni o cabal hereditari del successor
+                o beneficiari (successor 13f)
+            x-edqm6bb65pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              label: Cognoms i nom, raó o denominació social del successor o beneficiari
+                (successor 13f)
+            x-edqm6bb65po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              label: Percentatge de liquidació, participació o herència del successor
+                o beneficiari (successor 13f)
+          field:
+            label: Model 036, des de 2022 fins al 24 d'abril de 2023
+        2023-hasta-2025-02-02:
+          field:
+            label: Model 036, des del 25 d'abril de 2023 fins al 2 de febrer de 2025
+        2025-02-03-y-siguientes:
+          casilla:
+            x-c5hn8bjjd5n2qr3fcdgmobb3dti6iprf5lo74rrmd5n66qb1:
+              label: Activitat fora de local determinat. Codi de província
+            x-chim6r1ecdgnasr15koj8d0:
+              label: Sol·licitud de rehabilitació del NIF
+            x-chim6r1ecdgnasr15koj8d8:
+              label: Modificació de dades relatives a titulars reals (pàgina 10)
+            x-chim6r1ecdgnasr15koj8dg:
+              label: Modificació d'entitats en liquidació
+            x-chim6r1eclr6arjk5llmirj4:
+              label: Tipus de declaració censal
+            x-chim6r1ecpkn4rb15lhm2r39chgm8:
+              label: Qualitat en que se signa la declaració
+            x-chim6r1ecpkn4rb15lj6aor8c4:
+              label: Data en que se signa la declaració
+            x-chim6r1ecpkn4rb15lj6isjdc5n78p8:
+              label: Nom i cognoms de qui signa la declaració
+            x-chim6r1ecpkn4rb15lm7apr1e8:
+              label: Lloc on se signa la declaració
+            x-chim6r1eepkmepbecdkm2b9i60p3a:
+              label: Vigència normativa des del 3 de febrer de 2025
+            x-clo2sobmd5pmuspdc5im2t1dc5m78o8:
+              label: Establiment permanent. Avisos. Alta d'avisos de l'AEAT
+            x-clo2sobmd5pmuspdc5im2t1dc9gmko8:
+              label: Establiment permanent. Avisos. Baixa d'avisos de l'AEAT
+            x-clo2sobmd5pmuspdc5o70bb1clgn8bb1dhq62:
+              label: Establiment permanent. Avisos. Alta a l'aplicació mòbil de l'AEAT
+            x-clo2sobmd5pmuspdc5o70bb1clgn8bb2c5l62:
+              label: Establiment permanent. Avisos. Baixa a l'aplicació mòbil de l'AEAT
+            x-clo2sobmd5pmuspdchjn8bb1dhq62:
+              label: Establiment permanent. Avisos. Alta d'avisos de la DGT
+            x-clo2sobmd5pmuspdchjn8bb2c5l62:
+              label: Establiment permanent. Avisos. Baixa d'avisos de la DGT
+            x-clo2sobmd5pmuspdclmm2qbc5lgmot31:
+              label: Establiment permanent. Avisos. Alta o modificació del correu
+                electrònic d'avisos
+            x-clo2sobmd5pmuspdclmm2qbc5lh62qj1:
+              label: Establiment permanent. Avisos. Baixa del correu electrònic d'avisos
+            x-clo2sobmd5pmuspddlnncqbc5lgmot31:
+              label: Establiment permanent. Avisos. Alta o modificació del telèfon
+                mòbil
+            x-clo2sobmd5pmuspddlnncqbc5lh62qj1:
+              label: Establiment permanent. Avisos. Baixa del telèfon mòbil
+            x-clo2sobmd5pmuspdehim2bb1dhq62:
+              label: Establiment permanent. Avisos. Alta d'avisos del TEA
+            x-clo2sobmd5pmuspdehim2bb2c5l62:
+              label: Establiment permanent. Avisos. Baixa d'avisos del TEA
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmmqtbed5hmis39dsmmirj5:
+              label: Establiment permanent. Domicili fiscal a Espanya. Codi de municipi
+                INE
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmncqb15lkmsp8:
+              label: Establiment permanent. Domicili fiscal a Espanya. Codi de via
+                INE
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpddlqmsqb3d5o6irpdd5n6a:
+              label: Establiment permanent. Domicili a efectes de notificacions. Codi
+                de municipi INE (domicili 1)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpdepkm2bb9dpig:
+              label: Establiment permanent. Domicili a efectes de notificacions. Codi
+                de via INE (domicili 1)
+            x-d5r62bj9dlo6usjkc5hmirre5lj6usj1dhin6bb9epgiqqbde1nn4t31cdkmurg:
+              label: IVA. Importació. Forals. Ingrés de l'IVA a la importació. Opció
+                o renuncia
+            x-d5r62bj9dlo6usjkc5hmirre5lkmspriclpmubb9epgiqqbde1nn4t31cdkmurg:
+              label: IVA. Importació. Ingrés de l'IVA a la importació. Opció, renuncia,
+                revocació o baixa
+            x-d5r62bjcd5h74rrj5lp6apr9edq74rpddhm6atj1dpt62bbjcli6abb5dhim6t3idtn6ior1:
+              label: IVA. Llibres de registre. Portada dels llibres de registre a
+                traves de la seu electronica de l'AEAT
+            x-d5r62bjicljmirb5dpin6bb1ctp6iorldhq7asj15ljm2rj1chin4qb15lo6asr3c4:
+              label: IVA. Règims. Règim especial d'agricultura, ramaderia i pesca
+            x-d5r62bjicljmirb5dpin6bb1ctp6iorldhq7asj15ljm2rj1chin4qb15lo6asr3c4mmcpb3d1gg:
+              label: IVA. Règims. Agricultura, ramaderia i pesca. Data
+            x-d5r62bjicljmirb5dpin6bb1ctp6iorldhq7asj15ljm2rj1chin4qb15lo6asr3c4mmiob5:
+              label: IVA. Règims. Agricultura, ramaderia i pesca. Grup o epígraf de
+                l'I.A.E. o codi d'activitat
+            x-d5r62bjicljmirb5dpin6bb3e9kn8pbid5niqor1d9gg:
+              label: IVA. Règims. Règim especial del criteri de caixa
+            x-d5r62bjicljmirb5dpin6bb3e9kn8pbid5niqor1d9giqpj5cdk62:
+              label: IVA. Règims. Criteri de caixa. Data
+            x-d5r62bjicljmirb5dpin6bb3e9kn8pbid5niqor1d9giqqb1ck:
+              label: IVA. Règims. Criteri de caixa. Grup o epígraf de l'I.A.E. o codi
+                d'activitat
+            x-d5r62bjicljmirb5dpin6bbjd5mn0r39cpkm6ob4ds:
+              label: IVA. Règims. Règim especial simplificat
+            x-d5r62bjicljmirb5dpin6bbjd5mn0r39cpkm6ob4dsmmcpb3d1gg:
+              label: IVA. Règims. Règim simplificat. Data
+            x-d5r62bjicljmirb5dpin6bbjd5mn0r39cpkm6ob4dsmmiob5:
+              label: IVA. Règims. Règim simplificat. Grup o epígraf de l'I.A.E. o
+                codi d'activitat
+            x-d5r62bjicljmisrke9nn6bb4clr6ur3lcdkmurhddlimssrlc5m0:
+              label: IVA. Registres. Sol·licita alta o baixa al registre de devolució
+                mensual
+            x-d5r62bjicljmisrke9nn6bbfe1in4ob4dtp6aspdd5n78sj1cdnmqtbed5q62sj9dtpg:
+              label: IVA. Registres. Sol-licita alta o baixa al registre d'operadors
+                intracomunitaris
+            x-dth6obj9e9n74bbddti62r39chgm8:
+              label: IRNR. Establiment permanent. Modalitat d'establiment permanent
+            x-dth6obj9e9o6cbb5chpiqc9dd5gma:
+              label: IRPF. Secció de l'I.A.E. i grup o epígraf, activitat 1 declarada
+                en modalitat simplificada
+            x-dth6obj9e9o6cbb5chpiqc9dehkn0rpdc5hn8qbmd5i62p0:
+              label: IRPF. Tipus d'activitat, activitat 1 declarada en modalitat simplificada
+            x-dth6obj9e9o6cbb5chpiqchdd5gma:
+              label: IRPF. Secció de l'I.A.E. i grup o epígraf, activitat 2 declarada
+                en modalitat simplificada
+            x-dth6obj9e9o6cbb5chpiqchdehkn0rpdc5hn8qbmd5i62p0:
+              label: IRPF. Tipus d'activitat, activitat 2 declarada en modalitat simplificada
+            x-dth6obj9e9o6cbb5chpiqcpdd5gma:
+              label: IRPF. Secció de l'I.A.E. i grup o epígraf, activitat 3 declarada
+                en modalitat simplificada
+            x-dth6obj9e9o6cbb5chpiqcpdehkn0rpdc5hn8qbmd5i62p0:
+              label: IRPF. Tipus d'activitat, activitat 3 declarada en modalitat simplificada
+            x-dth6obj9e9o6cbb5chpiqd1dd5gma:
+              label: IRPF. Secció de l'I.A.E. i grup o epígraf, activitat 4 declarada
+                en modalitat simplificada
+            x-dth6obj9e9o6cbb5chpiqd1dehkn0rpdc5hn8qbmd5i62p0:
+              label: IRPF. Tipus d'activitat, activitat 4 declarada en modalitat simplificada
+            x-dth6obj9e9o6cbb5dsmj2bb9c5ig:
+              label: IRPF. Secció de l'I.A.E. i grup o epígraf, activitat 1 declarada
+                en estimació objectiva
+            x-dth6obj9e9o6cbb5dsmj2bbkd5o6ubb1cdq6itj9chgm8:
+              label: IRPF. Tipus d'activitat, activitat 1 declarada en estimació objectiva
+            x-dth6obj9e9o6cbb5dsmj4bb9c5ig:
+              label: IRPF. Secció de l'I.A.E. i grup o epígraf, activitat 2 declarada
+                en estimació objectiva
+            x-dth6obj9e9o6cbb5dsmj4bbkd5o6ubb1cdq6itj9chgm8:
+              label: IRPF. Tipus d'activitat, activitat 2 declarada en estimació objectiva
+            x-dth6obj9e9o6cbb5dsmj6bb9c5ig:
+              label: IRPF. Secció de l'I.A.E. i grup o epígraf, activitat 3 declarada
+                en estimació objectiva
+            x-dth6obj9e9o6cbb5dsmj6bbkd5o6ubb1cdq6itj9chgm8:
+              label: IRPF. Tipus d'activitat, activitat 3 declarada en estimació objectiva
+            x-dth6obj9e9o6cbb5dsmj8bb9c5ig:
+              label: IRPF. Secció de l'I.A.E. i grup o epígraf, activitat 4 declarada
+                en estimació objectiva
+            x-dth6obj9e9o6cbb5dsmj8bbkd5o6ubb1cdq6itj9chgm8:
+              label: IRPF. Tipus d'activitat, activitat 4 declarada en estimació objectiva
+            x-dth6obj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqrjfe9mm2r0:
+              label: IRPF. Estimació directa normal
+            x-dth6obj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqsr9dlo6oqb6d5hm2p31:
+              label: IRPF. Estimació directa simplificada
+            x-dth6obj9e9o6cbb5edq6irb1cdkmurhddth6kpbkd5r62:
+              label: IRPF. Estimació objectiva
+            x-dth6objjdthmipb4c5i6aspdcls6arj3d5nms:
+              label: Impost sobre Societats. Exempció
+            x-dth6objjdthmipb4c5i6aspdcls6arj3d5nmsbb6clhmgo8:
+              label: Impost sobre Societats. Exempció. Data
+            x-e1j2sobmd5pmuspdc5im2t1dc5m78o8:
+              label: Avisos. Alta d'avisos de l'AEAT
+            x-e1j2sobmd5pmuspdc5im2t1dc9gmko8:
+              label: Avisos. Baixa d'avisos de l'AEAT
+            x-e1j2sobmd5pmuspdc5o70bb1clgn8bb1dhq62:
+              label: Avisos. Alta a l'aplicació mòbil de l'AEAT
+            x-e1j2sobmd5pmuspdc5o70bb1clgn8bb2c5l62:
+              label: Avisos. Baixa a l'aplicació mòbil de l'AEAT
+            x-e1j2sobmd5pmuspdchjn8bb1dhq62:
+              label: Avisos. Alta d'avisos de la DGT
+            x-e1j2sobmd5pmuspdchjn8bb2c5l62:
+              label: Avisos. Baixa d'avisos de la DGT
+            x-e1j2sobmd5pmuspdclmm2qbc5lgmot31:
+              label: Avisos. Alta o modificació del correu electrònic d'avisos
+            x-e1j2sobmd5pmuspdclmm2qbc5lh62qj1:
+              label: Avisos. Baixa del correu electrònic d'avisos
+            x-e1j2sobmd5pmuspddlnncqbc5lgmot31:
+              label: Avisos. Alta o modificació del telèfon mòbil
+            x-e1j2sobmd5pmuspddlnncqbc5lh62qj1:
+              label: Avisos. Baixa del telèfon mòbil
+            x-e1j2sobmd5pmuspde1p6apj9d9niqs31d5piqrbfepkmo:
+              label: Avisos. Prefix de país del telèfon mòbil
+            x-e1j2sobmd5pmuspdehim2bb1dhq62:
+              label: Avisos. Alta d'avisos del TEA
+            x-e1j2sobmd5pmuspdehim2bb2c5l62:
+              label: Avisos. Baixa d'avisos del TEA
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmmqtbed5hmis39dsmmirj5:
+              label: Domicili fiscal a Espanya. Codi de municipi INE
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmncqb15lkmsp8:
+              label: Domicili fiscal a Espanya. Codi de via INE
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmup39ctniqrbldpkm6qbgd5niqqbeck:
+              label: Domicili de gestió administrativa. Codi de municipi INE
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmup39ctniqtj9c4mmirj5:
+              label: Domicili de gestió administrativa. Codi de via INE
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpddlqmsqb3d5o6irpdd5n6a:
+              label: Domicili a efectes de notificacions. Codi de municipi INE (domicili
+                1)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpdepkm2bb9dpig:
+              label: Domicili a efectes de notificacions. Codi de via INE (domicili
+                1)
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qpj5cdk62bb5cpim6t3fecmn4pbjd5i6arj3d5gg:
+              label: Identificació. Data d'efectes de la residència fiscal
+            x-e1l2sobmd5pmubb1clgn8bb1dhq62:
+              label: Persona jurídica o entitat. Avisos. Alta d'avisos de l'AEAT
+            x-e1l2sobmd5pmubb1clgn8bb2c5l62:
+              label: Persona jurídica o entitat. Avisos. Baixa d'avisos de l'AEAT
+            x-e1l2sobmd5pmubb1e1o2qob5c5q2qobcehgg:
+              label: Persona jurídica o entitat. Avisos. Alta a l'aplicació mòbil
+                de l'AEAT
+            x-e1l2sobmd5pmubb1e1o2qob5c5q2qoj1d9gg:
+              label: Persona jurídica o entitat. Avisos. Baixa a l'aplicació mòbil
+                de l'AEAT
+            x-e1l2sobmd5pmubb4ctq2qobcehgg:
+              label: Persona jurídica o entitat. Avisos. Alta d'avisos de la DGT
+            x-e1l2sobmd5pmubb4ctq2qoj1d9gg:
+              label: Persona jurídica o entitat. Avisos. Baixa d'avisos de la DGT
+            x-e1l2sobmd5pmubb5dlgmir1dc5m78o8:
+              label: Persona jurídica o entitat. Avisos. Alta o modificació del correu
+                electrònic d'avisos
+            x-e1l2sobmd5pmubb5dlgmir1dc9gmko8:
+              label: Persona jurídica o entitat. Avisos. Baixa del correu electrònic
+                d'avisos
+            x-e1l2sobmd5pmubbddtr6ir1dc5m78o8:
+              label: Persona jurídica o entitat. Avisos. Alta o modificació del telèfon
+                mòbil
+            x-e1l2sobmd5pmubbddtr6ir1dc9gmko8:
+              label: Persona jurídica o entitat. Avisos. Baixa del telèfon mòbil
+            x-e1l2sobmd5pmubbkclgiqobcehgg:
+              label: Persona jurídica o entitat. Avisos. Alta d'avisos del TEA
+            x-e1l2sobmd5pmubbkclgiqoj1d9gg:
+              label: Persona jurídica o entitat. Avisos. Baixa d'avisos del TEA
+            x-e1l2sp35f1q2qqbechkm6ob4dtp2qp3fdlkm6qbcd5niqpboehp62rjaclp6u:
+              label: Persona jurídica o entitat. Domicili a l'Estat de residència.
+                Indicador de domicili fiscal o social a l'estranger
+            x-e1l2sp36d5pm6bb3dti6iprf5lmnarj9cdkn0qbf5lkmsp8:
+              label: Persona jurídica o entitat. Domicili fiscal a Espanya. Codi de
+                municipi INE
+            x-e1l2sp36d5pm6bb3dti6iprf5lr6io9dd5n6a:
+              label: Persona jurídica o entitat. Domicili fiscal a Espanya. Codi de
+                via INE
+            x-e1l2sp3edtq6ibb2c5l62bb4dtmmior9dhkmu:
+              label: Persona jurídica o entitat. Domicili a efectes de notificacions.
+                Indicador de baixa del domicili de notificacions
+            x-e1l2sp3edtq6ibb3dti6iprf5lmnarj9cdkn0qbf5lkmsp8:
+              label: Persona jurídica o entitat. Domicili a efectes de notificacions.
+                Codi de municipi INE (domicili 1)
+            x-e1l2sp3edtq6ibb3dti6iprf5lr6io9dd5n6a:
+              label: Persona jurídica o entitat. Domicili a efectes de notificacions.
+                Codi de via INE (domicili 1)
+            x-e1l2sp3jdthiqorfchkmerpddlqmsqb3d5o6irpdd5n6a:
+              label: Persona jurídica o entitat. Domicili social. Codi de municipi
+                INE
+            x-e1l2sp3jdthiqorfchkmerpdepkm2bb9dpig:
+              label: Persona jurídica o entitat. Domicili social. Codi de via INE
+            x-e1l2sqb4cln78bb6clhmgo9dclj6aorkdtpiqsj5edkm8pbecdkm2:
+              label: Persona jurídica o entitat. Identificació. Data d'efectes de
+                la residència fiscal
+            x-e1l2sqb4cln78bbiclpmip35dphmio9dd5n68qb3c5i6usg:
+              label: Persona jurídica o entitat. Identificació. Entitat resident o
+                constituïda a Espanya, o no resident
+            x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5edo62rj15lpmirhdc5hn8qbmd5i62p0:
+              label: Persona jurídica o entitat. Personalitat jurídica i classe d'entitat.
+                Entitat en atribució de rendes constituïda a Espanya sense activitat
+                econòmica
+            x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5f1q74obed9in4rpdcdnmsbbge9in6pbecdkm2:
+              label: Persona jurídica o entitat. Personalitat jurídica i classe d'entitat.
+                Entitat en atribució de rendes constituïda a l'estranger amb presència
+                a Espanya
+            x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5f1q74obed9in4rpdedkmsbbge9in6pbecdkm2:
+              label: Persona jurídica o entitat. Personalitat jurídica i classe d'entitat.
+                Entitat en atribució de rendes constituïda a l'estranger sense presència
+                a Espanya
+            x-e9in0c9ecdgnasr15lo74pbjcln78ob3d5nms:
+              label: 'Causa de la presentació: alta, baixa o modificació del representant
+                (primer representant, bloc 3.1)'
+            x-e9in0c9ecdgnasr15lp6as3iclpmarjkc5hmirre:
+              label: Causa de la representació (primer representant, bloc 3.1)
+            x-e9in0c9echin6qb7dpgm8o9dcdgnasr15lo74pbjcln78ob3d5nms:
+              label: Causa de la presentació de la persona física designada (primer
+                representant, bloc 3.1)
+            x-e9in0checdgnasr15lo74pbjcln78ob3d5nms:
+              label: 'Causa de la presentació: alta, baixa o modificació del representant
+                (segon representant, bloc 3.2)'
+            x-e9in0checdgnasr15lp6as3iclpmarjkc5hmirre:
+              label: Causa de la representació (segon representant, bloc 3.2)
+            x-e9in0chechin6qb7dpgm8o9dcdgnasr15lo74pbjcln78ob3d5nms:
+              label: Causa de la presentació de la persona física designada (segon
+                representant, bloc 3.2)
+            x-e9in8bj9epgiqqbeehp62orfdlqmsqbkc5p6irpddto66qbfdomn4pb7d5mmarhdctimspbic5m0:
+              label: IVA. Adquisicions intracomunitàries. Opció pel règim general
+                de l'IVA, subjecció o no subjecció
+            x-e9in8bj9epgiqqbeehp62orfdlqmsqbkc5p6irpdelmm4sj1dgmj2c1g60o0:
+              label: IVA. Adquisicions intracomunitàries. Ha superat el llindar de
+                10.000 euros
+            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqd1delmm4sj1dgmj2c1g60o0:
+              label: Serveis de telecomunicacions, radiodifusió i via electrònica
+                (art. 70.Uno.4.a). Ha superat el llindar de 10.000 euros
+            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqe1delmm4sj1dgmj2c1g60o0:
+              label: Serveis de telecomunicacions, radiodifusió i via electrònica
+                (art. 70.Uno.8). Ha superat el llindar de 10.000 euros
+            x-ednm6bj3c5qn6o9de1p6asr5dpq62or9dtn0:
+              label: Socis, membres o partícips. Causa de la presentació
+            x-ednm6bj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqsr9dlo6oqb6d5hm2p31:
+              label: 'Socis, membres o partícips. IRPF, estimació directa simplificada:
+                renuncia o revocació'
+            x-ednm6bj9e9o6cbb5edq6irb1cdkmurhddth6kpbkd5r62:
+              label: 'Socis, membres o partícips. IRPF, estimació objectiva: renuncia
+                o revocació'
+            x-ednm6bj9epgiqsj5c5jn0:
+              label: 'Socis, membres o partícips. IVA, règim especial d''agricultura,
+                ramaderia i pesca: renuncia o revocació'
+            x-ednm6bj9epgiqsj5ctkmqpbe5lpmirbgdhkmcqb3c5i6u:
+              label: 'Socis, membres o partícips. IVA, règim simplificat: renuncia
+                o revocació'
+            x-ehkn8bj15lhm2tbjc4mmcpb3d1gg:
+              label: Titulars reals. Data de la causa de la presentació, titular real
+                14a
+            x-ehkn8bj15lhm2tbjc4mn0sj5edimst31cdkmurg:
+              label: Titulars reals. Causa de la presentació, titular real 14a
+            x-ehkn8bj15lj6aor8c4mmsob3d5mmipbeehng:
+              label: Titulars reals. Data de naixement, titular real 14a
+            x-ehkn8bj15lkm8pbeehkmcqb3c5hmirre:
+              label: Titulars reals. N.I.F. o codi d'identificació estranger, titular
+                real 14a
+            x-ehkn8bj15ln62or9dtn62r39chgm8:
+              label: Titulars reals. Nacionalitat, titular real 14a
+            x-ehkn8bj15ln6urb2e9ig:
+              label: Titulars reals. Cognoms i nom, titular real 14a
+            x-ehkn8bj15lo62qbj5lings35chkm6qbfdo:
+              label: Titulars reals. País d'expedició del document d'identificació,
+                titular real 14a
+            x-ehkn8bj15lo62qbj5lp6asr9chimsor9c4:
+              label: Titulars reals. País de residència, titular real 14a
+            x-ehkn8bj15lq6is3f5li6uorldlimst3f:
+              label: Titulars reals. Tipus de document identificatiu, titular real
+                14a
+            x-ehkn8bj25lhm2tbjc4mmcpb3d1gg:
+              label: Titulars reals. Data de la causa de la presentació, titular real
+                14b
+            x-ehkn8bj25lhm2tbjc4mn0sj5edimst31cdkmurg:
+              label: Titulars reals. Causa de la presentació, titular real 14b
+            x-ehkn8bj25lj6aor8c4mmsob3d5mmipbeehng:
+              label: Titulars reals. Data de naixement, titular real 14b
+            x-ehkn8bj25lkm8pbeehkmcqb3c5hmirre:
+              label: Titulars reals. N.I.F. o codi d'identificació estranger, titular
+                real 14b
+            x-ehkn8bj25ln62or9dtn62r39chgm8:
+              label: Titulars reals. Nacionalitat, titular real 14b
+            x-ehkn8bj25ln6urb2e9ig:
+              label: Titulars reals. Cognoms i nom, titular real 14b
+            x-ehkn8bj25lo62qbj5lings35chkm6qbfdo:
+              label: Titulars reals. País d'expedició del document d'identificació,
+                titular real 14b
+            x-ehkn8bj25lo62qbj5lp6asr9chimsor9c4:
+              label: Titulars reals. País de residència, titular real 14b
+            x-ehkn8bj25lq6is3f5li6uorldlimst3f:
+              label: Titulars reals. Tipus de document identificatiu, titular real
+                14b
+            x-ehkn8bj35lhm2tbjc4mmcpb3d1gg:
+              label: Titulars reals. Data de la causa de la presentació, titular real
+                14c
+            x-ehkn8bj35lhm2tbjc4mn0sj5edimst31cdkmurg:
+              label: Titulars reals. Causa de la presentació, titular real 14c
+            x-ehkn8bj35lj6aor8c4mmsob3d5mmipbeehng:
+              label: Titulars reals. Data de naixement, titular real 14c
+            x-ehkn8bj35lkm8pbeehkmcqb3c5hmirre:
+              label: Titulars reals. N.I.F. o codi d'identificació estranger, titular
+                real 14c
+            x-ehkn8bj35ln62or9dtn62r39chgm8:
+              label: Titulars reals. Nacionalitat, titular real 14c
+            x-ehkn8bj35ln6urb2e9ig:
+              label: Titulars reals. Cognoms i nom, titular real 14c
+            x-ehkn8bj35lo62qbj5lings35chkm6qbfdo:
+              label: Titulars reals. País d'expedició del document d'identificació,
+                titular real 14c
+            x-ehkn8bj35lo62qbj5lp6asr9chimsor9c4:
+              label: Titulars reals. País de residència, titular real 14c
+            x-ehkn8bj35lq6is3f5li6uorldlimst3f:
+              label: Titulars reals. Tipus de document identificatiu, titular real
+                14c
+            x-ehkn8bj45lhm2tbjc4mmcpb3d1gg:
+              label: Titulars reals. Data de la causa de la presentació, titular real
+                14d
+            x-ehkn8bj45lhm2tbjc4mn0sj5edimst31cdkmurg:
+              label: Titulars reals. Causa de la presentació, titular real 14d
+            x-ehkn8bj45lj6aor8c4mmsob3d5mmipbeehng:
+              label: Titulars reals. Data de naixement, titular real 14d
+            x-ehkn8bj45lkm8pbeehkmcqb3c5hmirre:
+              label: Titulars reals. N.I.F. o codi d'identificació estranger, titular
+                real 14d
+            x-ehkn8bj45ln62or9dtn62r39chgm8:
+              label: Titulars reals. Nacionalitat, titular real 14d
+            x-ehkn8bj45ln6urb2e9ig:
+              label: Titulars reals. Cognoms i nom, titular real 14d
+            x-ehkn8bj45lo62qbj5lings35chkm6qbfdo:
+              label: Titulars reals. País d'expedició del document d'identificació,
+                titular real 14d
+            x-ehkn8bj45lo62qbj5lp6asr9chimsor9c4:
+              label: Titulars reals. País de residència, titular real 14d
+            x-ehkn8bj45lq6is3f5li6uorldlimst3f:
+              label: Titulars reals. Tipus de document identificatiu, titular real
+                14d
+            x-ehkn8bj4clhmoobic5hmirre5ln6ubbmc5p6iob3d5nms:
+              label: Titulars reals. Declaració de no variació de dades
+            x-ehkn8bj55lhm2tbjc4mmcpb3d1gg:
+              label: Titulars reals. Data de la causa de la presentació, titular real
+                14e
+            x-ehkn8bj55lhm2tbjc4mn0sj5edimst31cdkmurg:
+              label: Titulars reals. Causa de la presentació, titular real 14e
+            x-ehkn8bj55lj6aor8c4mmsob3d5mmipbeehng:
+              label: Titulars reals. Data de naixement, titular real 14e
+            x-ehkn8bj55lkm8pbeehkmcqb3c5hmirre:
+              label: Titulars reals. N.I.F. o codi d'identificació estranger, titular
+                real 14e
+            x-ehkn8bj55ln62or9dtn62r39chgm8:
+              label: Titulars reals. Nacionalitat, titular real 14e
+            x-ehkn8bj55ln6urb2e9ig:
+              label: Titulars reals. Cognoms i nom, titular real 14e
+            x-ehkn8bj55lo62qbj5lings35chkm6qbfdo:
+              label: Titulars reals. País d'expedició del document d'identificació,
+                titular real 14e
+            x-ehkn8bj55lo62qbj5lp6asr9chimsor9c4:
+              label: Titulars reals. País de residència, titular real 14e
+            x-ehkn8bj55lq6is3f5li6uorldlimst3f:
+              label: Titulars reals. Tipus de document identificatiu, titular real
+                14e
+            x-ehkn8bj65lhm2tbjc4mmcpb3d1gg:
+              label: Titulars reals. Data de la causa de la presentació, titular real
+                14f
+            x-ehkn8bj65lhm2tbjc4mn0sj5edimst31cdkmurg:
+              label: Titulars reals. Causa de la presentació, titular real 14f
+            x-ehkn8bj65lj6aor8c4mmsob3d5mmipbeehng:
+              label: Titulars reals. Data de naixement, titular real 14f
+            x-ehkn8bj65lkm8pbeehkmcqb3c5hmirre:
+              label: Titulars reals. N.I.F. o codi d'identificació estranger, titular
+                real 14f
+            x-ehkn8bj65ln62or9dtn62r39chgm8:
+              label: Titulars reals. Nacionalitat, titular real 14f
+            x-ehkn8bj65ln6urb2e9ig:
+              label: Titulars reals. Cognoms i nom, titular real 14f
+            x-ehkn8bj65lo62qbj5lings35chkm6qbfdo:
+              label: Titulars reals. País d'expedició del document d'identificació,
+                titular real 14f
+            x-ehkn8bj65lo62qbj5lp6asr9chimsor9c4:
+              label: Titulars reals. País de residència, titular real 14f
+            x-ehkn8bj65lq6is3f5li6uorldlimst3f:
+              label: Titulars reals. Tipus de document identificatiu, titular real
+                14f
+            x-ehkn8bjjd5n2qrr2dhkmeob3d5nmsbb9chimst39cpkm6obi:
+              label: Titulars reals. Entitat sense obligació d'identificar el titular
+                real
+          field:
+            label: Model 036 des del 3 de febrer de 2025

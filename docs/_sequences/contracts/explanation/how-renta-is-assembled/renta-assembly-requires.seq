@@ -1,0 +1,5 @@
+@step List everything the declaration requires for the filing year.
+@result aeat --format json app modelo requires 100 --year 2025 --period 0A
+@expect result.modelo == "100"
+@expect result.filing_year == 2025
+@expect exit_code == 0

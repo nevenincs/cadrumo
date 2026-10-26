@@ -1,0 +1,53 @@
+# Terminology Handbook concept fragment.
+# Compiled by the strict loader in `dev.docs.terminology_handbook` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `dev.docs.terminology_handbook` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
+
+[concept]
+concept_id = "gancho-preprocesado"
+domain = "concepto"
+lifecycle = "deprecated"
+broader = ["manual-terminologia"]
+related = ["barrido-rag"]
+created_at = 2026-06-12
+updated_at = 2026-07-22
+
+[language.es]
+short_description = "El contrato upstream para transformar fuentes PDF, XLS, HTML u otras antes de indexarlas."
+definition = "Interfaz generica solicitada al servicio RAG de desarrollo para registrar preprocessors por patron de fichero, emitir una salida versionada con texto extraido o unidades pre-chunked, incluir identidad del preprocessor en la clave de cache y declarar fallos de forma explicita. Este contrato permite que los corpus BOE y AEAT sean indexables sin codificar conocimiento AEAT dentro del indexador."
+scope_note = "Mientras el gancho upstream no exista, este proyecto usa sidecars de extraccion como camino interino."
+
+[[language.es.term]]
+label = "gancho de preprocesado"
+term_status = "preferred"
+part_of_speech = "noun"
+
+[[language.es.term]]
+label = "preprocess hook"
+term_status = "admitted"
+part_of_speech = "noun"
+
+[language.en]
+short_description = "The upstream contract for transforming PDF, XLS, HTML, or other sources before indexing."
+definition = "A generic interface requested from the development RAG service to register preprocessors by file pattern, emit a versioned output with extracted text or pre-chunked units, include preprocessor identity in the cache key, and declare failures explicitly. This contract makes BOE and AEAT corpora indexable without encoding AEAT knowledge in the indexer."
+scope_note = "Until the upstream hook exists, this project uses extraction sidecars as an interim path."
+
+
+[[language.en.term]]
+label = "preprocess hook"
+term_status = "preferred"
+part_of_speech = "noun"
+
+[language.ca]
+short_description = "El contracte upstream per transformar fonts PDF, XLS, HTML o altres abans d'indexar-les."
+definition = "Interfície genèrica sol·licitada al servei RAG de desenvolupament per registrar preprocessadors per patró de fitxer, emetre una sortida versionada amb text extret o unitats prefragmentades, incloure la identitat del preprocessador a la clau de memòria cau i declarar els errors explícitament. Aquest contracte permet indexar els corpus del BOE i l'AEAT sense codificar coneixement de l'AEAT a l'indexador."
+scope_note = "Mentre no existeixi el ganxo upstream, aquest projecte utilitza sidecars d'extracció com a via provisional."
+
+
+[language.hu]
+short_description = "Az upstream szerződés PDF, XLS, HTML és más források indexelés előtti átalakítása."
+definition = "A fejlesztési RAG-szolgáltatástól kért általános felület, amely fájlminta szerint regisztrál előfeldolgozókat, verziózott kimenetet ad ki kinyert szöveggel vagy előre darabolt egységekkel, az előfeldolgozó azonosítóját a gyorsítótár kulcsába foglalja, és kifejezetten jelzi a hibákat. A szerződés indexelhetővé teszi a BOE- és AEAT-korpuszt anélkül, hogy AEAT-ismeretet kódolna az indexelőbe."
+scope_note = "Amíg a felfelé irányuló hook nem létezik, a projekt átmeneti megoldásként kinyerési sidecarokat használ."
+

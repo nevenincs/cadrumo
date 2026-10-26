@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<response>
+  <status>
+    <code>200</code>
+    <text>ok</text>
+  </status>
+  <data>
+    <bloque id="a10" tipo="precepto" titulo="Artículo 10">
+      <version id_norma="BOE-A-1997-12729" fecha_publicacion="19970612" fecha_vigencia="19970701">
+        <p class="articulo">Artículo 10. Dividendos.</p>
+        <p class="parrafo">1. Los dividendos pagados por una sociedad residente de un Estado contratante a un residente del otro Estado contratante pueden someterse a imposición en este otro Estado.</p>
+        <p class="parrafo">2. a) Los dividendos mencionados en el apartado 1 pueden también someterse a imposición en el Estado contratante en que resida la sociedad que pague los dividendos y según la legislación de este Estado, pero si el perceptor de los dividendos es el beneficiario efectivo, el impuesto así exigido no podrá exceder del 15 por 100 del importe bruto de los dividendos.</p>
+        <p class="parrafo">b) Sin embargo, estos dividendos solo pueden someterse a imposición en el Estado contratante del que el beneficiario efectivo es residente, si este es una sociedad sometida al impuesto de sociedades que sea:</p>
+        <p class="parrafo_2">i) Un residente de Francia que detente directamente al menos el 10 por 100 del capital de la sociedad que pague los dividendos, o</p>
+        <p class="parrafo">ii) Un residente de España que detente una participación sustancial en la sociedad que pague los dividendos.</p>
+        <p class="parrafo_2">Las disposiciones del presente apartado no afectan a la imposición de la sociedad respecto de los beneficios con cargo a los que se paguen los dividendos.</p>
+        <p class="parrafo">3. a) Un residente de España que perciba de una sociedad que es residente de Francia dividendos de los que es el beneficiario efectivo y que darían derecho a un «crédito fiscal» («avoir fiscal») si fueran percibidos por un residente de Francia, tendrá derecho a un pago del Tesoro francés, por un importe igual al citado «crédito fiscal» («avoir fiscal»), sin perjuicio del impuesto previsto en la letra a) del apartado 2 del presente artículo.</p>
+        <p class="parrafo">b) Las disposiciones de la letra a) del presente apartado solo se aplican a un residente de España que sea:</p>
+        <p class="parrafo_2">i) Una persona física, o</p>
+        <p class="parrafo">ii) Una sociedad que no detente una participación sustancial en la sociedad que paga los dividendos.</p>
+        <p class="parrafo_2">c) Las disposiciones de la letra a) del presente apartado solo se aplican al beneficiario efectivo de los dividendos que esté sometido al impuesto español por razón de estos dividendos y del pago del Tesoro francés.</p>
+        <p class="parrafo">d) En el caso de una sociedad, las disposiciones de la letra a) del presente apartado no se aplican si la sociedad que es la beneficiaria efectiva de los dividendos no es la propietaria de la participación por la cual se pagan los dividendos o si la detentación de esta participación tiene como objeto principal, o como uno de sus principales objetos, permitir a otra persona, residente o no de un Estado contratante, obtener las ventajas de las disposiciones de la letra a) del presente apartado.</p>
+        <p class="parrafo">e) Salvo que no obtenga el beneficio del pago del Tesoro francés contemplado en la letra a) del presente apartado, un residente de España que perciba dividendos pagados por una sociedad que sea residente de Francia puede obtener el reembolso de la retención («précompte») en la medida en que esta haya sido efectivamente ingresada por la sociedad por razón de estos dividendos. Las disposiciones del apartado 2 se aplicarán al importe bruto de dicha retención.</p>
+        <p class="parrafo">f) Los importes brutos del pago del Tesoro francés y de la retención contemplados en las letras a) y e) del presente apartado se consideran como dividendos a los efectos de la aplicación del presente Convenio.</p>
+        <p class="parrafo_2">4. a) El término «dividendos» empleado en el presente artículo significa los rendimientos de las acciones, acciones o bonos de disfrute, de las partes de minas, de las partes de fundador u otros derechos, excepto los de crédito, que permitan participar en los beneficios, así como las rentas sometidas al régimen de distribución de beneficios por la legislación fiscal del Estado contratante en que resida la sociedad que las distribuya.</p>
+        <p class="parrafo">b) A efectos de las disposiciones de la letra b).ii) del apartado 2 y de la letra b).ii) del apartado 3, se considera que una sociedad detenta una participación sustancial en la sociedad que paga los dividendos cuando detente directa o indirectamente, al menos, el 10 por 100 del capital de esta última.</p>
+        <p class="parrafo_2">5. Las disposiciones de los apartados 1, 2 y 3 no se aplican si el beneficiario efectivo de los dividendos, residente de un Estado contratante, ejerce en el otro Estado contratante, del que es residente la sociedad que paga los dividendos, una actividad industrial o comercial a través de un establecimiento permanente aquí situado, o presta unos trabajos independientes por medio de una base fija aquí situada, con los que la participación que genera los dividendos esté vinculada efectivamente. En estos casos se aplican las disposiciones del artículo 7 o del artículo 14, según proceda.</p>
+        <p class="parrafo">6 Cuando una sociedad residente de un Estado contratante obtenga beneficios o rentas procedentes del otro Estado contratante, este otro Estado no puede exigir ningún impuesto sobre los dividendos pagados por la sociedad, salvo en la medida en que estos dividendos sean pagados a un residente de este otro Estado o la participación que genere los dividendos esté vinculada efectivamente a un establecimiento permanente o a una base fija situada en ese otro Estado, ni someter los beneficios no distribuidos de la sociedad a un impuesto sobre los mismos, aunque los dividendos pagados o los beneficios no distribuidos consistan, total o parcialmente, en beneficios o rentas procedentes de este otro Estado.</p>
+      </version>
+    </bloque>
+  </data>
+</response>

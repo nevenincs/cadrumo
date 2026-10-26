@@ -1,0 +1,550 @@
+"""Gate: every secure store production reads must have a production writer.
+
+An encrypted repository the shipped application reads but never writes is
+indistinguishable, from every reader's side, from a store that happens to be
+empty. The read succeeds, the iteration yields nothing, and the caller renders
+a zero. Nothing is red: the repository imports, its own tests pass because they
+save through it directly, and the namespace is registered exactly like every
+store that does get filled.
+
+That is the shape ``no-silent-under-declaration`` exists to refuse. "The
+operator has no filing drafts" and "this application never stores a filing
+draft" are different facts, and a count rendered from an unwritten store
+reports the first while meaning the second. Where the store feeds an
+aggregation rather than a display, the same absence becomes a zero inside a
+filing-grade total.
+
+The property is read from the live tree rather than declared, so it cannot go
+stale. A repository is WRITTEN when some production module calls a mutating
+method on a value bound to it, and READ when a production module outside the
+repository's own defining module calls anything else on one. The owner
+exclusion is deliberate and applies to reads only: a repository whose write
+helper lives beside the class is written by every caller of that helper, while
+a repository only its own module reads is not yet wired to anything.
+
+Binding follows the three shapes the codebase actually uses -- assignment from
+a construction, a parameter annotated with the repository type, and an instance
+attribute -- and unwraps ``x if x is not None else Repository()`` and
+``x or Repository()``, the canonical inject-or-default idiom. Without that
+unwrapping the gate reports the most carefully written repositories in the
+tree, because taking an injected repository is what a testable one does.
+
+Mutation is recognised by verb rather than by an exact method name: the stores
+here expose ``save``, ``save_period``, ``save_observation`` and
+``persist_*`` for the same operation, and a name list would quietly reclassify
+a store as unwritten the next time one was added.
+
+The verdict is set equality against ``secure_store_write_path.toml`` in both
+directions, for the reason every baseline in this tree is:
+
+* a read-only store the declaration does not name is new debt -- a store was
+  wired for reading before anything filled it;
+* a declared store that now has a writer is a spent entry, and the declaration
+  must shrink to record that the debt was paid.
+
+Only the second direction keeps the file honest. Without it the declaration
+accumulates, and a later reader cannot tell an accepted exception from a line
+nobody removed.
+
+The scan reads every package under ``src/`` (``SOURCE_PACKAGES``), because a
+store's readers and writers need not share its package: the runtime composes
+the tax application's profile persistence, and a store only the runtime fills
+would read as unwritten from inside ``cadrumo`` alone. Two store families are
+recognised. A profile secure-object store subclasses ``SecureBoundRepository``.
+A service store keeps its records in the runtime's opaque custody and reaches
+them only through the descriptor record verbs of
+``cadrumo_client.transport.service_client.InstalledServiceClient``; the agent
+service's provider settings are one. Both answer the same question -- is what
+production reads ever filled -- so both are measured. Stores are named by class,
+and a class name two packages both define is refused rather than merged.
+"""
+
+from __future__ import annotations
+
+import ast
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Final
+
+from cadrumo.core.toml import parse_toml
+from dev.first_party_source import SOURCE_PACKAGES, is_production_source
+
+from .unread_inputs import report_unread
+
+_REPO_BASE: Final = "SecureBoundRepository"
+_SOURCE_ROOTS: Final = tuple(Path(__file__).resolve().parents[2] / package for package in SOURCE_PACKAGES)
+_DECLARATION: Final = Path(__file__).resolve().parent / "secure_store_write_path.toml"
+
+#: The runtime's opaque-custody record verbs, as ``InstalledServiceClient``
+#: defines them. A class that calls one of them on a receiver keeps its records
+#: in runtime custody, which makes it a service store.
+OPAQUE_RECORD_VERBS: Final = ("record_read", "record_write", "record_delete")
+
+#: A method mutates the store when any snake_case token of its name is one of
+#: these verbs. ``save``, ``save_period``, ``save_observation`` and
+#: ``to_secure_object_write`` are all the same operation under four names.
+_MUTATOR_VERBS: Final = (
+    "save",
+    "store",
+    "persist",
+    "write",
+    "delete",
+    "remove",
+    "upsert",
+    "put",
+    "clear",
+    "record",
+    "append",
+    "replace",
+    "commit",
+)
+
+_READ_ONLY_KINDS: Final = frozenset({"custody_carry_only", "awaiting_writer"})
+
+
+class SecureStoreWritePathError(RuntimeError):
+    """The declaration and the live tree disagree about which stores are filled."""
+
+
+@dataclass(frozen=True, slots=True)
+class StoreUsage:
+    """Where one secure repository is read and where it is written."""
+
+    name: str
+    owner: str
+    read_by: tuple[str, ...]
+    written_by: tuple[str, ...]
+
+    @property
+    def is_read_only(self) -> bool:
+        """Return whether production reads this store and nothing fills it."""
+        return bool(self.read_by) and not self.written_by
+
+
+def _called_name(func: ast.expr) -> str | None:
+    """Return the bare name a call expression invokes.
+
+    ``getattr(func, "id", None)`` would read the same two attributes, but it
+    erases the type: the result widens to ``Any`` and the narrowing this
+    module relies on stops meaning anything.
+    """
+    if isinstance(func, ast.Name):
+        return func.id
+    if isinstance(func, ast.Attribute):
+        return func.attr
+    return None
+
+
+def _is_mutator(method: str) -> bool:
+    """Return whether a method name declares a mutating operation.
+
+    Matched on whole snake_case tokens rather than a prefix, because a write
+    is not always the leading verb: a repository that participates in an
+    atomic commit exposes ``to_secure_object_write``, which builds the write
+    the committer applies, and a prefix rule reads that as a query.
+    """
+    return bool(set(method.split("_")) & set(_MUTATOR_VERBS))
+
+
+def _production_modules(roots: tuple[Path, ...]) -> dict[str, ast.Module]:
+    """Parse every shipped module under ``roots``, keyed by its ``src``-relative path.
+
+    A module that will not parse is skipped, because a walk over a tree a
+    sibling process is editing must survive a half-written file. It is not
+    skipped silently: this scan decides where a secure store is written,
+    and a module left out contributes neither its reads nor its writes, so
+    a store written only from the unread module reads as written nowhere.
+    An absent root is refused for the same reason: its stores, readers and
+    writers would vanish together and the verdict would still read clean.
+    """
+    trees: dict[str, ast.Module] = {}
+    unread: list[str] = []
+    for root in roots:
+        if not root.is_dir():
+            raise SecureStoreWritePathError(f"secure-store write-path source root is unavailable: {root}")
+        for path in sorted(root.rglob("*.py")):
+            if not is_production_source(path, root=root):
+                continue
+            module = path.relative_to(root.parent).as_posix()
+            try:
+                trees[module] = ast.parse(path.read_text(encoding="utf-8"))
+            except (OSError, SyntaxError, UnicodeDecodeError):
+                unread.append(module)
+                continue
+    report_unread(
+        "secure-store write-path scan",
+        "their secure-store reads and writes are both absent from the analysis",
+        unread,
+    )
+    return trees
+
+
+def _is_store_class(node: ast.ClassDef) -> bool:
+    """Return whether a class is a profile secure-object store or a service store."""
+    if any(_REPO_BASE in ast.unparse(base) for base in node.bases):
+        return True
+    return any(
+        isinstance(call, ast.Call) and isinstance(call.func, ast.Attribute) and call.func.attr in OPAQUE_RECORD_VERBS
+        for call in ast.walk(node)
+    )
+
+
+def _repository_classes(trees: dict[str, ast.Module]) -> dict[str, str]:
+    """Return each secure store class mapped to its defining module path."""
+    owners: dict[str, str] = {}
+    for module, tree in trees.items():
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.ClassDef) or not _is_store_class(node):
+                continue
+            previous = owners.setdefault(node.name, module)
+            if previous != module:
+                raise SecureStoreWritePathError(
+                    f"secure store {node.name} is defined in both {previous} and {module}; "
+                    "the declaration names stores by class, so the two cannot be told apart",
+                )
+    return owners
+
+
+def _protocol_aliases(trees: dict[str, ast.Module], repositories: frozenset[str]) -> dict[str, str]:
+    """Return each port protocol mapped to the one secure repository it stands for.
+
+    Application services hold a repository through its protocol, so a write
+    made through ``ports.observation_repository.save(...)`` names only the
+    protocol. A protocol two repositories implement names neither, and is left
+    unresolved rather than credited to one of them.
+    """
+    implementers: dict[str, set[str]] = {}
+    classes = [node for tree in trees.values() for node in ast.walk(tree) if isinstance(node, ast.ClassDef)]
+    stores = {node.name: _method_names(node) for node in classes if node.name in repositories}
+    for node in classes:
+        _collect_protocol_implementer(node, repositories, implementers)
+        _collect_structural_implementer(node, stores, implementers)
+    return {protocol: next(iter(names)) for protocol, names in implementers.items() if len(names) == 1}
+
+
+def _method_names(node: ast.ClassDef) -> frozenset[str]:
+    """Return the methods a class body defines."""
+    return frozenset(
+        statement.name for statement in node.body if isinstance(statement, ast.FunctionDef | ast.AsyncFunctionDef)
+    )
+
+
+def _is_protocol_class(node: ast.ClassDef) -> bool:
+    """Return whether a class declares ``typing.Protocol`` (bare or subscripted) as a base."""
+    for base in node.bases:
+        target = base.value if isinstance(base, ast.Subscript) else base
+        if isinstance(target, ast.Name | ast.Attribute) and _called_name(target) == "Protocol":
+            return True
+    return False
+
+
+def _collect_structural_implementer(
+    node: ast.ClassDef, stores: dict[str, frozenset[str]], implementers: dict[str, set[str]]
+) -> None:
+    """Credit a structural port to the store that both carries its name and satisfies it.
+
+    A service store implements its port structurally and names itself by
+    qualifying the port's name -- ``SecureProviderSettingsStore`` for the
+    ``ProviderSettingsStore`` protocol -- without listing it as a base. Both
+    conditions are required: a name suffix alone would credit an unrelated
+    protocol, and a method subset alone would credit every small one.
+    """
+    if not _is_protocol_class(node):
+        return
+    required = _method_names(node)
+    if not required:
+        return
+    for store, methods in stores.items():
+        if store != node.name and store.endswith(node.name) and required <= methods:
+            implementers.setdefault(node.name, set()).add(store)
+
+
+def _annotated_repositories(annotation: ast.expr | None, repositories: frozenset[str]) -> set[str]:
+    """Return the repository names an annotation mentions."""
+    if annotation is None:
+        return set()
+    mentioned = {node.id for node in ast.walk(annotation) if isinstance(node, ast.Name)}
+    mentioned |= {node.attr for node in ast.walk(annotation) if isinstance(node, ast.Attribute)}
+    return mentioned & repositories
+
+
+def _construction_source(value: ast.expr, repositories: frozenset[str], bound: dict[str, str]) -> str | None:
+    """Resolve the repository an assigned expression yields, if any.
+
+    ``x if x is not None else Repository()`` and ``x or Repository()`` are the
+    inject-or-default idiom; both branches are candidates, so the construction
+    is found whichever side carries it.
+    """
+    pending: list[ast.expr] = [value]
+    while pending:
+        node = pending.pop()
+        if isinstance(node, ast.IfExp):
+            pending.extend((node.body, node.orelse))
+            continue
+        if isinstance(node, ast.BoolOp):
+            pending.extend(node.values)
+            continue
+        if isinstance(node, ast.Call):
+            called = _called_name(node.func)
+            if called is not None and called in repositories:
+                return called
+        elif isinstance(node, ast.Name) and node.id in bound:
+            return bound[node.id]
+    return None
+
+
+def _bindings(
+    tree: ast.AST,
+    repositories: frozenset[str],
+) -> tuple[dict[str, str], dict[str, str], dict[str, str]]:
+    """Return the local names, instance attributes, and accessors bound to a repository.
+
+    An accessor is a function whose return annotation names a repository, so
+    ``self._drafts().save(draft)`` and ``_draft_repo().save(draft)`` resolve to
+    the store they hand back. Without it a lazily resolved repository -- the
+    shape used wherever construction must wait for a bucket -- is invisible on
+    both sides, and the gate reports a store that is written every run.
+    """
+    names: dict[str, str] = {}
+    attributes: dict[str, str] = {}
+    accessors: dict[str, str] = {}
+    for node in ast.walk(tree):
+        _collect_repository_binding(node, repositories, names, attributes, accessors)
+    return names, attributes, accessors
+
+
+def _receiver_repository(
+    receiver: ast.expr,
+    *,
+    repositories: frozenset[str],
+    names: dict[str, str],
+    attributes: dict[str, str],
+    accessors: dict[str, str],
+) -> str | None:
+    """Return the repository a call's receiver refers to, if any."""
+    if isinstance(receiver, ast.Call):
+        called = _called_name(receiver.func)
+        if called is None:
+            return None
+        if called in repositories:
+            return called
+        return accessors.get(called)
+    if isinstance(receiver, ast.Name):
+        return names.get(receiver.id)
+    if isinstance(receiver, ast.Attribute):
+        return attributes.get(receiver.attr)
+    return None
+
+
+def collect_store_usage(roots: tuple[Path, ...] = _SOURCE_ROOTS) -> tuple[StoreUsage, ...]:
+    """Return read and write sites for every secure store under ``roots``."""
+    trees = _production_modules(roots)
+    owners = _repository_classes(trees)
+    aliases = _protocol_aliases(trees, frozenset(owners))
+    repositories = frozenset(owners) | frozenset(aliases)
+    reads: dict[str, set[str]] = {name: set() for name in owners}
+    writes: dict[str, set[str]] = {name: set() for name in owners}
+    for module, tree in trees.items():
+        module_names, module_attributes, module_accessors = _bindings(tree, repositories)
+        # Each top-level class or function binds its own names over the
+        # module's, so two adapters in one module that both hold a
+        # ``_repository`` resolve to their own stores rather than the last one.
+        for unit in tree.body:
+            _collect_store_unit(
+                unit, module_names, module_attributes, module_accessors, repositories, aliases, writes, reads, module
+            )
+    return tuple(
+        StoreUsage(
+            name=name,
+            owner=owners[name],
+            # a store its own module reads is not yet wired to anything; the
+            # same exclusion on writes would hide every write helper sited
+            # beside its repository, which is where they belong
+            read_by=tuple(sorted(reads[name] - {owners[name]})),
+            written_by=tuple(sorted(writes[name])),
+        )
+        for name in sorted(owners)
+    )
+
+
+def _declared_read_only(declaration: Path = _DECLARATION) -> dict[str, str]:
+    """Return the declared read-only stores mapped to their rationale."""
+    if not declaration.exists():
+        return {}
+    document = parse_toml(declaration.read_text(encoding="utf-8"))
+    declared: dict[str, str] = {}
+    for entry in document.get("read_only", ()):
+        name = str(entry.get("name", "")).strip()
+        kind = str(entry.get("kind", "")).strip()
+        rationale = str(entry.get("rationale", "")).strip()
+        if not name:
+            raise SecureStoreWritePathError("a read_only entry declares no name")
+        if kind not in _READ_ONLY_KINDS:
+            raise SecureStoreWritePathError(f"{name} declares unknown kind {kind!r}")
+        if not rationale:
+            raise SecureStoreWritePathError(f"{name} declares no rationale")
+        declared[name] = rationale
+    return declared
+
+
+def evaluate(roots: tuple[Path, ...] = _SOURCE_ROOTS, declaration: Path = _DECLARATION) -> tuple[str, ...]:
+    """Return the verdict lines; an empty tuple is a pass."""
+    usage = collect_store_usage(roots)
+    observed = {store.name for store in usage if store.is_read_only}
+    declared = _declared_read_only(declaration)
+    problems: list[str] = []
+    for name in sorted(observed - set(declared)):
+        store = next(entry for entry in usage if entry.name == name)
+        readers = ", ".join(store.read_by)
+        problems.append(
+            f"+ {name}: production reads this secure store and nothing writes it ({readers}). "
+            "Wire the writer, or declare it read_only with its kind and rationale.",
+        )
+    for name in sorted(set(declared) - observed):
+        problems.append(
+            f"- {name}: declared read_only, but the tree now writes it. Remove the spent entry.",
+        )
+    return tuple(problems)
+
+
+def main() -> int:
+    """Print the verdict and return the process exit status."""
+    usage = collect_store_usage()
+    problems = evaluate()
+    declared = _declared_read_only()
+    packages: dict[str, int] = {}
+    for store in usage:
+        package = store.owner.split("/", 1)[0]
+        packages[package] = packages.get(package, 0) + 1
+    print(f"{len(usage)} secure store(s); {len(declared)} declared read-only.")
+    print(f"  scanned {', '.join(SOURCE_PACKAGES)}; stores by package: {packages}")
+    for name, rationale in sorted(declared.items()):
+        print(f"  = {name}: {rationale}")
+    for problem in problems:
+        print(f"  {problem}")
+    return 1 if problems else 0
+
+
+def _collect_protocol_implementer(
+    node: ast.AST, repositories: frozenset[str], implementers: dict[str, set[str]]
+) -> None:
+    """Collect protocol implementer."""
+    if not isinstance(node, ast.ClassDef):
+        return
+    # A structural port named after its repository is that repository's
+    # port even when the class does not list it as a base.
+    named_for = node.name.removesuffix("Protocol")
+    if node.name != named_for and named_for in repositories:
+        implementers.setdefault(node.name, set()).add(named_for)
+    if node.name not in repositories:
+        return
+    for base in node.bases:
+        name = _called_name(base) if isinstance(base, ast.Name | ast.Attribute) else None
+        if name is not None and name.endswith("Protocol"):
+            implementers.setdefault(name, set()).add(node.name)
+
+
+def _collect_repository_binding(
+    node: ast.AST,
+    repositories: frozenset[str],
+    names: dict[str, str],
+    attributes: dict[str, str],
+    accessors: dict[str, str],
+) -> None:
+    """Collect repository binding."""
+    if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+        _collect_callable_repository_binding(node, repositories, names, accessors)
+    elif isinstance(node, ast.AnnAssign):
+        _collect_annotated_repository_binding(node, repositories, names, attributes)
+    elif isinstance(node, ast.Assign):
+        source = _construction_source(node.value, repositories, names)
+        if source is None:
+            return
+        for target in node.targets:
+            if isinstance(target, ast.Name):
+                names[target.id] = source
+            elif isinstance(target, ast.Attribute):
+                attributes[target.attr] = source
+
+
+def _collect_store_call(
+    node: ast.AST,
+    repositories: frozenset[str],
+    names: dict[str, str],
+    attributes: dict[str, str],
+    accessors: dict[str, str],
+    aliases: dict[str, str],
+    writes: dict[str, set[str]],
+    reads: dict[str, set[str]],
+    module: str,
+) -> None:
+    """Collect store call."""
+    if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):
+        return
+    repository = _receiver_repository(
+        node.func.value,
+        repositories=repositories,
+        names=names,
+        attributes=attributes,
+        accessors=accessors,
+    )
+    if repository is None:
+        return
+    repository = aliases.get(repository, repository)
+    target = writes if _is_mutator(node.func.attr) else reads
+    target[repository].add(module)
+
+
+def _collect_store_unit(
+    unit: ast.stmt,
+    module_names: dict[str, str],
+    module_attributes: dict[str, str],
+    module_accessors: dict[str, str],
+    repositories: frozenset[str],
+    aliases: dict[str, str],
+    writes: dict[str, set[str]],
+    reads: dict[str, set[str]],
+    module: str,
+) -> None:
+    """Collect store unit."""
+    names, attributes, accessors = module_names, module_attributes, module_accessors
+    if isinstance(unit, ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef):
+        unit_names, unit_attributes, unit_accessors = _bindings(unit, repositories)
+        names = {**module_names, **unit_names}
+        attributes = {**module_attributes, **unit_attributes}
+        accessors = {**module_accessors, **unit_accessors}
+    for node in ast.walk(unit):
+        _collect_store_call(node, repositories, names, attributes, accessors, aliases, writes, reads, module)
+
+
+def _collect_callable_repository_binding(
+    node: ast.FunctionDef | ast.AsyncFunctionDef,
+    repositories: frozenset[str],
+    names: dict[str, str],
+    accessors: dict[str, str],
+) -> None:
+    """Collect callable repository binding."""
+    arguments = node.args
+    for argument in (*arguments.posonlyargs, *arguments.args, *arguments.kwonlyargs):
+        for repository in _annotated_repositories(argument.annotation, repositories):
+            names[argument.arg] = repository
+    for repository in _annotated_repositories(node.returns, repositories):
+        accessors[node.name] = repository
+
+
+def _collect_annotated_repository_binding(
+    node: ast.AnnAssign, repositories: frozenset[str], names: dict[str, str], attributes: dict[str, str]
+) -> None:
+    """Collect annotated repository binding."""
+    for repository in _annotated_repositories(node.annotation, repositories):
+        if isinstance(node.target, ast.Name):
+            names[node.target.id] = repository
+            # A class-body field is reached as ``holder.field``.
+            attributes[node.target.id] = repository
+        elif isinstance(node.target, ast.Attribute):
+            attributes[node.target.attr] = repository
+
+
+if __name__ == "__main__":
+    sys.exit(main())

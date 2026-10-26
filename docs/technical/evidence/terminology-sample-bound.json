@@ -1,0 +1,108 @@
+{
+  "report": "STAGE-2-205",
+  "tokenizer": "o200k_base",
+  "known_sample_files": [
+    {
+      "path": "src/cadrumo/_data/terminology/concepts/aeat.toml",
+      "tokens": 667,
+      "bytes": 2690
+    },
+    {
+      "path": "src/cadrumo/_data/terminology/concepts/barrido-rag.toml",
+      "tokens": 750,
+      "bytes": 2938
+    },
+    {
+      "path": "src/cadrumo/_data/terminology/concepts/binding.toml",
+      "tokens": 710,
+      "bytes": 2904
+    },
+    {
+      "path": "src/cadrumo/_data/terminology/concepts/casilla.toml",
+      "tokens": 1046,
+      "bytes": 4032
+    },
+    {
+      "path": "src/cadrumo/_data/terminology/concepts/fichero-boe.toml",
+      "tokens": 822,
+      "bytes": 3159
+    },
+    {
+      "path": "src/cadrumo/_data/terminology/concepts/irpf.toml",
+      "tokens": 1144,
+      "bytes": 4103
+    },
+    {
+      "path": "src/cadrumo/_data/terminology/concepts/iva-domestic-reverse-charge.toml",
+      "tokens": 628,
+      "bytes": 2372
+    },
+    {
+      "path": "src/cadrumo/_data/terminology/concepts/iva-intra-community-acquisition-reverse-charge.toml",
+      "tokens": 252,
+      "bytes": 998
+    },
+    {
+      "path": "src/cadrumo/_data/terminology/concepts/iva-domestic-general-21.toml",
+      "tokens": 250,
+      "bytes": 950
+    },
+    {
+      "path": "src/cadrumo/_data/terminology/concepts/modelo-036.toml",
+      "tokens": 630,
+      "bytes": 2258
+    },
+    {
+      "path": "src/cadrumo/_data/terminology/concepts/modelo-100.toml",
+      "tokens": 566,
+      "bytes": 2024
+    },
+    {
+      "path": "src/cadrumo/_data/terminology/concepts/modelo-200.toml",
+      "tokens": 595,
+      "bytes": 2202
+    },
+    {
+      "path": "src/cadrumo/_data/terminology/concepts/modelo-303.toml",
+      "tokens": 619,
+      "bytes": 2275
+    },
+    {
+      "path": "src/cadrumo/_data/terminology/concepts/work-unit.toml",
+      "tokens": 776,
+      "bytes": 3209
+    }
+  ],
+  "unidentified_sample_groups": {
+    "periodo-": 2,
+    "tema-": 2
+  },
+  "largest_possible_group_files": {
+    "periodo-": [
+      {
+        "path": "src/cadrumo/_data/terminology/concepts/periodo-3p.toml",
+        "tokens": 240,
+        "bytes": 864
+      },
+      {
+        "path": "src/cadrumo/_data/terminology/concepts/periodo-2p.toml",
+        "tokens": 239,
+        "bytes": 864
+      }
+    ],
+    "tema-": [
+      {
+        "path": "src/cadrumo/_data/terminology/concepts/tema-recargo-extemporaneo.toml",
+        "tokens": 251,
+        "bytes": 976
+      },
+      {
+        "path": "src/cadrumo/_data/terminology/concepts/tema-verifactu.toml",
+        "tokens": 251,
+        "bytes": 958
+      }
+    ]
+  },
+  "sample_token_upper_bound": 10436,
+  "limitation": "The original report names sample categories but not the exact two period and two topic stubs; the bound uses the largest possible files in each category and is not an exact sample count."
+}

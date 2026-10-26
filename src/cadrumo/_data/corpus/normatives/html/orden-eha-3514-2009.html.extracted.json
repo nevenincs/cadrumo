@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-eha-3514-2009.html",
+  "source_sha256": "d26527410b67a4c071af17d8238da371dd22039af58484fe4e48b8683c16db4b",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.4",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Se aprueba el modelo 181 «Declaración informativa de préstamos y créditos, y operaciones financieras relacionadas con bienes inmuebles».",
+      "title": "Articulo 1. Aprobacion del modelo 181.",
+      "section": "Articulo 1. Aprobacion del modelo 181.",
+      "anchor": "#a1"
+    },
+    {
+      "text": "La presentación de la declaración informativa de préstamos y créditos, y operaciones financieras relacionadas con bienes inmuebles, modelo 181, se realizará en el plazo comprendido entre el día 1 y el 31 del mes de enero de cada año.",
+      "title": "Articulo 6. Plazo de presentacion.",
+      "section": "Articulo 6. Plazo de presentacion.",
+      "anchor": "#a6"
+    }
+  ]
+}

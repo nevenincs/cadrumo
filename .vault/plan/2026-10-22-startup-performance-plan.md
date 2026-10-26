@@ -1,0 +1,55 @@
+---
+tags:
+  - '#plan'
+  - '#startup-performance'
+date: '2026-10-22'
+tier: L1
+related:
+  - '[[2026-10-22-startup-performance-authority-observation-adr]]'
+  - '[[2026-10-22-startup-performance-request-path-audit]]'
+  - '[[2026-09-14-registry-authority-artifact-boundary-indexed-storage-adr]]'
+  - '[[2026-10-22-startup-performance-worker-before-sign-in-adr]]'
+  - '[[2026-10-04-application-sign-in-adr]]'
+  - '[[2026-10-04-desktop-shell-adr]]'
+modified: '2026-10-24'
+body_schema: body-v2
+body_hash: 'sha256:7b6bb7720241d4774a942a624a4708d335797a96665f85b53373045cedcfbb3c'
+---
+
+# `startup-performance` plan
+
+Make sign-in to a usable first screen fast by removing the request-path costs measured in the request-path audit.
+
+## Description
+
+Approved 2026-10-22. Basis: the operator's instruction in this session, "fix the roots causes. if you have to refactor everything", given with a measured 40-50 s launch against an expected sub-2 s one. The operator did not answer the follow-up question offering the three design options within five minutes; the recommended options are taken under that instruction and remain open to the operator's veto.
+
+The findings are in `2026-10-22-startup-performance-request-path-audit`. `2026-10-22-startup-performance-authority-observation-adr` governs S02-S04. S06 and S07 each change a settled design (a pre-started worker; the desktop sign-in process chain, which amends the desktop shell's sign-in observation) and get their own ADR before they execute. S08 amends the runtime admission paragraph of `2026-09-14-registry-authority-artifact-boundary-indexed-storage-adr` under the same instruction. S01, S05, S09, S10 and S11 are implementation within existing decisions: `2026-10-13-startup-performance-operation-contract-manifest-adr`, `2026-10-16-idle-churn-adr` and `2026-10-17-idle-churn-operation-observation-adr` are unchanged. The staged package is the operator's running application; it is rebuilt only with the operator (S10). Measurements in between use an independent copy with changed modules overlaid.
+
+## Steps
+
+- [x] `S01` - Memoize the redaction gate's NIF-IVA catalogue and Spanish format per authority incarnation and Madrid date so log scrubbing stops re-resolving registry facts per record; `src/cadrumo/domain/calculations/registry/tax_identity_admission.py and its tests`.
+- [x] `S02` - Add the custody change witness over directory change notifications with re-arm-before-read, unwatchable fallback and 0.5 s maximum age; `src/cadrumo/adapters/persistence/storage/custody/change_witness.py and its tests`.
+- [x] `S03` - Serve runtime facts lock, enrollment and binding observations and the logon inventory through the witness and WTS invalidation, invalidating on own publications; `src/cadrumo_runtime/host/profile_host.py, src/cadrumo_runtime/host/profile_connections.py, custody stores and owning tests`.
+- [x] `S04` - Serve the worker's capsule binding validation through the witness; `src/cadrumo/adapters/persistence/storage/master_key/profile_worker_custody.py and owning tests`.
+- [x] `S05` - Measure the request path on an overlaid package copy and record before and after timings in the audit; `.vault/audit/2026-10-22-startup-performance-request-path-audit.md`.
+- [x] `S06` - Pre-start one unbound profile worker so sign-in binds an imported worker and the first operation skips cold start; `src/cadrumo_runtime/adapters/profile_worker*.py, src/cadrumo_runtime/host/worker*.py and owning tests`.
+- [x] `S07` - Remove CLI children from the desktop sign-in path: profile inventory from session watch, password sign-in through a pre-started session hold that persists the receipt; `src/cadrumo_runtime/host/session_watch.py, session_hold.py, native/desktop/src-tauri/src/shell/sign_in and owning tests`.
+- [x] `S08` - Stop hashing the whole authority database in every process while keeping corruption refusal; `src/cadrumo/domain/calculations/registry/authority_store.py and owning tests`.
+- [x] `S09` - Cut the TUI first screen's serial operations and eager imports; `src/cadrumo/entrypoints/tui and src/cadrumo_client/transport/frontend_profile_view_client.py`.
+- [ ] `S10` - Rebuild the stage with the operator, measure the real desktop launch to usable Home and confirm no slow-request warnings; `build/windows-x64/stage/Release/app, audit`.
+- [x] `S11` - Keep the workbench generation's module graph off the first operation's execution binding and pin it with an import gate; `src/cadrumo_runtime/host/operation_authority.py, src/cadrumo_runtime/host/tests/test_worker_startup_import_graph.py`.
+- [x] `S12` - Serve the sign-in view's profile list from the session watch and pre-start the window's person hold while the sign-in form is shown, so no process starts between password and signed-in; `src/cadrumo_runtime/host/session_watch.py, native/desktop/src-tauri/src/shell/sign_in and owning tests`.
+- [ ] `S13` - Measure the TUI's workbench generation in-process (frame timeline, audit-hook open counts, worker cProfile) and cut the repeated work it shows; `src/cadrumo/application/modelo/workspace_manifest.py, src/cadrumo_runtime/host/frontend/tui and owning tests`.
+- [x] `S14` - Import the operation composition graph in a watched worker's idle time before the first operation, under a lock a composition waits on and a sign-in does not; `src/cadrumo_runtime/host/operation_host.py, src/cadrumo_runtime/host/worker_service.py and owning tests`.
+
+## Parallelization
+
+Sequential by default: S02 precedes S03 and S04, and S05 measures S01-S04. S07's desktop half and S08 touch disjoint files from S02-S04 and may run in parallel with them once their ADR is accepted. One owner commits and logs.
+
+## Verification
+
+- Each Step's owning tests pass, including a test that fails against the previous code for each behaviour change: an out-of-process custody publication invalidates the observation before the next check, an unwatchable directory reads per check, a raising read is not cached, and a memoized gate answers like the unmemoized one.
+- Ruff, format, `just check-types`, import contracts and `dev/quality/tests/test_no_git_cli.py` pass on touched files.
+- The disposable-root harness shows, against the same package copy, a `user-profile.view` page and the login and hold admissions faster than the audit's baseline, with the numbers recorded in the audit.
+- S10: on the rebuilt stage, the operator's launch reaches Home with no runtime slow-request warning (`profile_worker_control_dispatch_slow` and the worker's other slow-call warnings). Since 2026-10-24 (`2026-10-24-desktop-native-sign-in-plan`) the desktop starts no `session hold`, so `session_hold_request_slow` no longer appears; the runtime's warnings time the same work where it runs.

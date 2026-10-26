@@ -1,0 +1,41 @@
+---
+tags:
+  - '#audit'
+  - '#secure-storage-production-hardening'
+date: '2026-06-04'
+modified: '2026-10-03'
+body_hash: 'sha256:531f15666ef644c32a951a3aec91ddf1dd2aac825f9082d6a58d8b549819b8d4'
+related: []
+---
+
+# `secure-storage-production-hardening` Code Review
+
+## S284-001 | PASS | Manifest discovery boundary
+
+`_profile_bucket_scan.py` is a plaintext manifest scanner. It uses bucket layout
+and manifest helpers to resolve UUIDs and labels, and does not import or call
+encrypted storage runtime, session, master-key, SQL, or remote-provider APIs.
+
+## S284-002 | PASS | Data consistency and lifecycle filtering
+
+Live-surface discovery excludes tombstoned profiles by default, while UUID-direct
+lookup can still inspect a tombstoned profile for diagnostics. Ambiguous labels
+raise `ProfileLabelAmbiguousError` instead of picking a bucket silently.
+
+## S284-003 | PASS | Exception observability
+
+Malformed manifests and invalid bucket directory names are not silently swallowed:
+the live scanner logs debug skip messages, and the separate scan-issue API returns
+structured `ProfileBucketScanIssue` rows for repair/audit surfaces.
+
+## S284-004 | PASS | Tests and localization
+
+The focused tests are filesystem-real and cover malformed manifest handling,
+active-profile resolution, label fallback, and ambiguity. No locale work was
+required because the module has no user-facing render strings.
+
+Validation passed:
+
+- the historical check
+- the historical check
+- `uv run --no-sync -q python -m aeat.locales audit`

@@ -1,0 +1,327 @@
+"""Fresh-source bootstrap behavior of the authority packaging hook."""
+
+from __future__ import annotations
+
+import importlib.util
+import json
+import os
+import shutil
+import tempfile
+from pathlib import Path
+from types import ModuleType
+from typing import Generic, TypeVar
+
+import pytest
+from hatchling.builders.config import BuilderConfig
+from hatchling.builders.sdist import SdistBuilder
+from hatchling.builders.wheel import WheelBuilder
+
+from dev._paths import REPO_ROOT
+
+from .test_google_oauth_provisioning import client_document
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+@pytest.fixture(autouse=True)
+def synthetic_build_client(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("CADRUMO_GOOGLE_OAUTH_CLIENT_JSON", client_document())
+
+
+def _hook_module() -> ModuleType:
+    path = REPO_ROOT / "packaging" / "authority" / "hatch_build.py"
+    spec = importlib.util.spec_from_file_location("cadrumo_authority_hatch_build_test", path)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _builder_config(root: Path, target_name: str) -> BuilderConfig:
+    """Return Hatch's own configuration for one target, whose reserved paths the hook extends."""
+    project = root / "hatch-project"
+    project.mkdir(exist_ok=True)
+    (project / "pyproject.toml").write_text(
+        '[project]\nname = "fixture"\nversion = "0"\n\n[tool.hatch.build.targets.wheel]\nbypass-selection = true\n',
+        encoding="utf-8",
+    )
+    builder = {"wheel": WheelBuilder, "sdist": SdistBuilder}[target_name](str(project))
+    config = builder.config
+    assert isinstance(config, BuilderConfig)
+    return config
+
+
+def _initialize(hook: ModuleType, root: Path, *, version: str, target_name: str) -> dict[str, object]:
+    """Run the real hook's ``initialize`` for one target and return its build data."""
+    instance = hook.CustomBuildHook(str(root), {}, _builder_config(root, target_name), None, str(root), target_name)
+    build_data: dict[str, object] = {}
+    instance.initialize(version, build_data)
+    return build_data
+
+
+def _record_resolutions(
+    hook: ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    pair_root: Path,
+    publication_flags: list[bool] | None = None,
+) -> list[Path]:
+    """Stand the resolution in with a published pair, recording each request."""
+    pair_root.mkdir(parents=True, exist_ok=True)
+    descriptor = pair_root / "authority.current.json"
+    database = pair_root / ("authority-" + "0" * 64 + ".sqlite3")
+    resolved: list[Path] = []
+
+    def resolve(build_root: Path, *, allow_publication: bool = False) -> Path:
+        resolved.append(build_root)
+        if publication_flags is not None:
+            publication_flags.append(allow_publication)
+        return pair_root
+
+    monkeypatch.setattr(hook, "_authority_root", resolve)
+    monkeypatch.setattr(hook, "_selected_pair", lambda _root: (descriptor, database))
+    return resolved
+
+
+def test_an_editable_build_told_to_skip_resolves_no_authority(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A lint job's editable install must not compile a registry it never reads."""
+    hook = _hook_module()
+    resolved = _record_resolutions(hook, monkeypatch, tmp_path / "pair")
+    monkeypatch.setenv("CADRUMO_EDITABLE_AUTHORITY", "skip")
+
+    assert _initialize(hook, tmp_path, version="editable", target_name="wheel") == {}
+    assert resolved == []
+
+
+def test_a_real_distribution_ignores_the_editable_skip(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """DISCRIMINATING: no wheel may ship without its authority because of an env knob."""
+    hook = _hook_module()
+    publication_flags: list[bool] = []
+    resolved = _record_resolutions(hook, monkeypatch, tmp_path / "pair", publication_flags)
+    monkeypatch.setenv("CADRUMO_EDITABLE_AUTHORITY", "skip")
+
+    build_data = _initialize(hook, tmp_path, version="standard", target_name="wheel")
+
+    assert resolved == [tmp_path]
+    assert publication_flags == [False]
+    assert build_data["force_include"], "the wheel lost its authority payload"
+
+
+@pytest.mark.parametrize("target_name,prefix", [("wheel", ""), ("sdist", "src/")])
+def test_distributions_embed_selected_client_and_clean_staging(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, target_name: str, prefix: str
+) -> None:
+    hook = _hook_module()
+    controlled = tmp_path / "controlled-temporary"
+    controlled.mkdir()
+    ambient = tmp_path / "ambient-not-created"
+    monkeypatch.setenv("CADRUMO_TEMP_DIR", str(controlled))
+    monkeypatch.setattr(tempfile, "tempdir", str(ambient))
+    _record_resolutions(hook, monkeypatch, tmp_path / "pair")
+    instance = hook.CustomBuildHook(
+        str(tmp_path), {}, _builder_config(tmp_path, target_name), None, str(tmp_path), target_name
+    )
+    build_data: dict[str, object] = {}
+    instance.initialize("standard", build_data)
+    mapping = build_data["force_include"]
+    assert isinstance(mapping, dict)
+    selected = {destination: Path(source) for source, destination in mapping.items()}
+    resource = selected[f"{prefix}cadrumo/_data/google/oauth_client.json"]
+    assert resource.read_text(encoding="utf-8") == client_document()
+    assert resource.is_relative_to(controlled)
+    assert not any(name.endswith(".env") for name in selected)
+    assert not any(name.startswith("dev/") for name in selected)
+    instance.finalize("standard", build_data, "unused-artifact")
+    assert not resource.exists()
+    assert not list(controlled.iterdir())
+    assert not ambient.exists()
+
+
+def test_an_editable_build_still_resolves_by_default(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A checkout's first sync keeps publishing the authority it will need."""
+    hook = _hook_module()
+    publication_flags: list[bool] = []
+    resolved = _record_resolutions(hook, monkeypatch, tmp_path / "pair", publication_flags)
+    monkeypatch.delenv("CADRUMO_EDITABLE_AUTHORITY", raising=False)
+
+    assert _initialize(hook, tmp_path, version="editable", target_name="wheel") == {}
+    assert resolved == [tmp_path]
+    assert publication_flags == [True]
+
+
+def test_distribution_build_refuses_to_publish_missing_source_authority(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Ordinary builds consume published authority and never author checkout state."""
+    hook = _hook_module()
+    publisher_calls: list[tuple[Path, Path]] = []
+
+    def publish(build_root: Path, destination: Path) -> Path:
+        publisher_calls.append((build_root, destination))
+        destination.mkdir(parents=True, exist_ok=True)
+        return destination
+
+    monkeypatch.delenv("CADRUMO_AUTHORITY_ROOT", raising=False)
+    monkeypatch.setattr(hook, "_publish_source_tree_authority", publish)
+
+    with pytest.raises(FileNotFoundError, match="just registry-publish-authority"):
+        _initialize(hook, tmp_path, version="standard", target_name="wheel")
+
+    assert publisher_calls == []
+    assert not (tmp_path / ".authority").exists()
+
+
+@pytest.mark.parametrize("seeded_override", [False, True])
+def test_fresh_source_tree_bootstraps_repo_root_authority(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    seeded_override: bool,
+) -> None:
+    hook = _hook_module()
+    expected = tmp_path / ".authority"
+    calls: list[tuple[Path, Path]] = []
+
+    def publish(build_root: Path, destination: Path) -> Path:
+        calls.append((build_root, destination))
+        return destination
+
+    monkeypatch.delenv("CADRUMO_AUTHORITY_ROOT", raising=False)
+    if seeded_override:
+        monkeypatch.setenv("CADRUMO_AUTHORITY_ROOT", str(expected))
+    monkeypatch.setattr(hook, "_publish_source_tree_authority", publish)
+
+    assert hook._authority_root(tmp_path, allow_publication=True) == expected
+    assert calls == [(tmp_path, expected)]
+
+
+def test_a_current_publication_is_read_without_publishing(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An existing publication is reused even when this source tree has no matching sources."""
+    hook = _hook_module()
+    current = Path(os.environ["CADRUMO_AUTHORITY_ROOT"])
+    descriptor = json.loads((current / "authority.current.json").read_text(encoding="utf-8"))
+    published = tmp_path / ".authority"
+    published.mkdir()
+    shutil.copy2(current / "authority.current.json", published / "authority.current.json")
+    shutil.copy2(current / descriptor["database"], published / descriptor["database"])
+    monkeypatch.delenv("CADRUMO_AUTHORITY_ROOT", raising=False)
+    monkeypatch.setattr(
+        hook,
+        "_publish_source_tree_authority",
+        lambda *_args: pytest.fail("a current publication must be read, not republished"),
+    )
+
+    assert hook._authority_root(tmp_path) == published
+
+
+def test_a_malformed_existing_descriptor_is_refused_without_republication(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A corrupt publication is refused rather than silently overwritten."""
+    hook = _hook_module()
+    published = tmp_path / ".authority"
+    published.mkdir()
+    (published / "authority.current.json").write_text("{}", encoding="utf-8")
+    calls: list[tuple[Path, Path]] = []
+
+    def publish(build_root: Path, destination: Path) -> Path:
+        calls.append((build_root, destination))
+        return destination
+
+    monkeypatch.delenv("CADRUMO_AUTHORITY_ROOT", raising=False)
+    monkeypatch.setattr(hook, "_publish_source_tree_authority", publish)
+
+    with pytest.raises(ValueError, match="invalid database"):
+        hook._authority_root(tmp_path)
+    assert calls == []
+
+
+@pytest.mark.parametrize("missing_database", [False, True])
+def test_an_interrupted_publication_is_completed_rather_than_read(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    missing_database: bool,
+) -> None:
+    """A directory a failed publication created, holding no descriptor, is not a publication."""
+    hook = _hook_module()
+    interrupted = tmp_path / ".authority"
+    (interrupted / "authority-candidate-left-behind").mkdir(parents=True)
+    if missing_database:
+        (interrupted / "authority.current.json").write_text(
+            json.dumps({"database": f"authority-{'0' * 64}.sqlite3"}), encoding="utf-8"
+        )
+    calls: list[tuple[Path, Path]] = []
+
+    def publish(build_root: Path, destination: Path) -> Path:
+        calls.append((build_root, destination))
+        return destination
+
+    monkeypatch.delenv("CADRUMO_AUTHORITY_ROOT", raising=False)
+    monkeypatch.setattr(hook, "_publish_source_tree_authority", publish)
+
+    assert hook._authority_root(tmp_path, allow_publication=True) == interrupted
+    assert calls == [(tmp_path, interrupted)]
+
+
+def test_embedded_sdist_authority_never_runs_source_bootstrap(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    hook = _hook_module()
+    embedded = tmp_path / "src" / "cadrumo" / "_data" / "registry" / "authority"
+    embedded.mkdir(parents=True)
+    monkeypatch.delenv("CADRUMO_AUTHORITY_ROOT", raising=False)
+    monkeypatch.setattr(
+        hook,
+        "_publish_source_tree_authority",
+        lambda *_args: pytest.fail("sdist rebuild must consume its embedded authority"),
+    )
+
+    assert hook._authority_root(tmp_path) == embedded
+
+
+def test_explicit_missing_override_does_not_fall_back_to_repo_root(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    hook = _hook_module()
+    (tmp_path / ".authority").mkdir()
+    monkeypatch.setenv("CADRUMO_AUTHORITY_ROOT", str(tmp_path / "missing"))
+
+    with pytest.raises(FileNotFoundError, match=r"configured \$CADRUMO_AUTHORITY_ROOT directory is unavailable"):
+        hook._authority_root(tmp_path)
+
+
+def test_hook_module_loads_with_one_parameter_nongeneric_hatchling_contract(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The current isolated backend may not expose the former two-parameter API."""
+    import hatchling.builders.config as builder_config_module
+    import hatchling.builders.hooks.plugin.interface as hook_interface_module
+
+    class CurrentBuilderConfig:
+        """Model Hatchling's concrete current configuration type."""
+
+    CurrentBuilderConfigType = TypeVar("CurrentBuilderConfigType")
+
+    class CurrentBuildHookInterface(Generic[CurrentBuilderConfigType]):
+        """Model Hatchling's one-parameter current build-hook interface."""
+
+    monkeypatch.setattr(builder_config_module, "BuilderConfig", CurrentBuilderConfig)
+    monkeypatch.setattr(hook_interface_module, "BuildHookInterface", CurrentBuildHookInterface)
+
+    hook = _hook_module()
+
+    assert hook.CustomBuildHook.__orig_bases__ == (CurrentBuildHookInterface[CurrentBuilderConfig],)

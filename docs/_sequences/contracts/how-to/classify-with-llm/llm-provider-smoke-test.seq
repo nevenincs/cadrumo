@@ -1,0 +1,3 @@
+@step Smoke-test the local reader with a preview that saves nothing.
+@static aeat app ledger classify <transaction-id> --llm
+@blocked external-service Needs the on-host local model runtime and its reader models, which the hermetic sandbox does not run.

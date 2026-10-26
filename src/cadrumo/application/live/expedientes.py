@@ -1,0 +1,321 @@
+"""Bucket-scoped expedientes snapshot service.
+
+Coordinates the read-only declaration-register capability supplied by the
+outer composition root with bucket-scoped persistence. Read-only by
+construction: no method calls AEAT to mutate expediente state.
+
+Verbs:
+  capture(snapshot)   persist a fresh expedientes capture, deduplicated
+  list_snapshots()    every captured snapshot, in capture order
+  show(snapshot_id)   single snapshot by full id or unambiguous prefix
+  latest()            most recent snapshot, or None
+
+The fetch path coordinates the auth-gated walker and encrypted custody here;
+the registered operation owns the exact-profile authority and effect guard.
+
+The lifecycle helpers (content-addressed id derivation, dedup on
+re-capture, list/show/latest) are routed through the shared
+:class:`StatelessSnapshotService` base; the public class identity,
+exception class names, secure-object storage layout, and per-call
+``bucket_id`` signatures are preserved exactly.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Callable
+from contextlib import AbstractAsyncContextManager
+from datetime import datetime
+from typing import TYPE_CHECKING, override
+
+from pydantic import BaseModel, Field
+
+from ...core.identity.bucket import BucketId
+from ...core.identity.hex_ids import SnapshotId
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.time.clock import now
+from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
+from ..auth.operator_scope_ports import OperatorScopePorts
+from ..auth.protocols import BrowserSessionFactoryPort
+from ..user_profile.access_errors import ProfileAccessRefusedError
+from .errors import LiveApplicationInputError
+from .expedientes_ports import ExpedientesDeclaration, ExpedientesPorts
+from .remote_state_models import ExpedientesBulkCaptureFailureRow, ExpedientesBulkCaptureReport
+from .remote_state_outcomes import bounded_context_text
+from .session import SessionWriteReporter, active_verified_session
+from .snapshot_base import (
+    SnapshotNotFoundError,
+    StatelessSnapshotService,
+)
+from .snapshot_identity import derive_snapshot_id as _derive_snapshot_id
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+
+
+class ExpedientesSnapshotNotFoundError(SnapshotNotFoundError):
+    """Raised when an expedientes snapshot lookup misses by id."""
+
+
+class ExpedientesCapture(BaseModel):
+    """Slim wrapper around translated declaration-register rows.
+
+    Mirrors the read-only marker pattern from
+    :class:`NotificationsSnapshot`: ``mode='read'`` is the structural
+    assertion that this capture cannot drive an AEAT-side mutation.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    declarations: tuple[ExpedientesDeclaration, ...]
+    captured_at: datetime
+    source_url: str = Field(min_length=1)
+    authenticated_identity: str | None = Field(default=None, max_length=32)
+    mode: str = Field(default="read", pattern=r"^read$")
+
+
+class PersistedExpedientesSnapshot(BaseModel):
+    """Captured expedientes snapshot persisted to the active bucket."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    snapshot_id: SnapshotId
+    bucket_id: BucketId
+    captured_at: datetime
+    source_url: str = Field(min_length=1)
+    authenticated_identity: str | None = Field(default=None, max_length=32)
+    declarations: tuple[ExpedientesDeclaration, ...]
+    persisted_at: datetime
+
+
+class ExpedientesCaptureOutcome(BaseModel):
+    """Persisted snapshot and whether content-addressed custody changed."""
+
+    model_config = STRICT_FROZEN_CONFIG
+    snapshot: PersistedExpedientesSnapshot
+    newly_persisted: bool
+
+
+ExpedientesEffectGuard = Callable[[], AbstractAsyncContextManager[None]]
+
+
+def expedientes_snapshot_object_key(bucket_id: str, snapshot_id: str) -> str:
+    """Execute this public contract operation."""
+    trimmed_bucket = bucket_id.strip()
+    trimmed_snapshot = snapshot_id.strip()
+    if not trimmed_bucket:
+        raise LiveApplicationInputError(
+            translated_message="application.live.expedientes.errors.bucket_id_blank",
+        )
+    if not trimmed_snapshot:
+        raise LiveApplicationInputError(
+            translated_message="application.live.expedientes.errors.snapshot_id_blank",
+        )
+    return f"expedientes-snapshot:{trimmed_bucket}:{trimmed_snapshot}"
+
+
+class ExpedientesService(StatelessSnapshotService[PersistedExpedientesSnapshot, ExpedientesCapture]):
+    """Bucket-scoped persistence + read surface over expedientes snapshots.
+
+    Structurally read-only per the live-AEAT charter. No submit, no
+    acknowledge, no method that mutates AEAT state. Each public verb
+    accepts ``bucket_id`` per call; storage is one encrypted secure-object
+    row per captured snapshot.
+    """
+
+    def __init__(self, *, ports: ExpedientesPorts) -> None:
+        """Bind the required application-owned expedientes capabilities."""
+        super().__init__(repository_factory=ports.snapshot_repository_factory)
+
+    def capture(
+        self,
+        *,
+        bucket_id: str,
+        capture: ExpedientesCapture,
+    ) -> PersistedExpedientesSnapshot:
+        """Execute this public contract operation."""
+        return self.capture_with_status(bucket_id=bucket_id, capture=capture).snapshot
+
+    def capture_with_status(self, *, bucket_id: str, capture: ExpedientesCapture) -> ExpedientesCaptureOutcome:
+        """Persist once and report the actual local snapshot effect."""
+        snapshot, newly_persisted = self._capture_stateless_with_status(bucket_id=bucket_id, capture=capture)
+        return ExpedientesCaptureOutcome(snapshot=snapshot, newly_persisted=newly_persisted)
+
+    def show(
+        self,
+        *,
+        bucket_id: str,
+        snapshot_id: str,
+    ) -> PersistedExpedientesSnapshot:
+        """Execute this public contract operation."""
+        return self.resolve_snapshot(bucket_id=bucket_id, snapshot_id=snapshot_id)
+
+    def latest(
+        self,
+        *,
+        bucket_id: str,
+    ) -> PersistedExpedientesSnapshot | None:
+        """Execute this public contract operation."""
+        snapshots = self.list_snapshots(bucket_id=bucket_id)
+        if not snapshots:
+            return None
+        return max(snapshots, key=lambda s: s.captured_at)
+
+    @override
+    def _derive_snapshot_id(self, capture: ExpedientesCapture) -> str:
+        return _derive_snapshot_id(capture)
+
+    @override
+    def _build_payload(
+        self,
+        *,
+        snapshot_id: str,
+        bucket_id: str,
+        capture: ExpedientesCapture,
+    ) -> PersistedExpedientesSnapshot:
+        return PersistedExpedientesSnapshot(
+            snapshot_id=snapshot_id,
+            bucket_id=bucket_id,
+            captured_at=capture.captured_at,
+            source_url=capture.source_url,
+            authenticated_identity=capture.authenticated_identity,
+            declarations=capture.declarations,
+            persisted_at=now(),
+        )
+
+
+LIVE_EXPEDIENTES_READ_OPERATION = "live-expedientes-read"
+
+
+async def capture_expedientes_with_outcome(
+    *,
+    bucket_id: str,
+    modelo: str,
+    year: int,
+    ports: ExpedientesPorts,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    browser_session_factory: BrowserSessionFactoryPort,
+    operator_scope_ports: OperatorScopePorts,
+    authority_operation: PinnedAuthorityOperation,
+    effect_guard: ExpedientesEffectGuard,
+    on_session_write: SessionWriteReporter | None = None,
+) -> ExpedientesCaptureOutcome:
+    """Walk remotely before crossing the guarded local persistence boundary."""
+    session, settings = await active_verified_session(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        browser_session_factory=browser_session_factory,
+        operation=LIVE_EXPEDIENTES_READ_OPERATION,
+        operator_scope_ports=operator_scope_ports,
+        authority_operation=authority_operation,
+        effect_guard=effect_guard,
+        on_session_write=on_session_write,
+    )
+    async with ports.declaration_reader.open_register(
+        session, settings=settings, authority_operation=authority_operation
+    ) as register:
+        declarations = await register.walk(modelo=modelo, ejercicio=year)
+    capture = ExpedientesCapture(
+        declarations=tuple(declarations),
+        captured_at=now(),
+        source_url=f"declarations:modelo={modelo}:ejercicio={year}",
+        authenticated_identity=session.identity_nif,
+    )
+    async with effect_guard():
+        return ExpedientesService(ports=ports).capture_with_status(bucket_id=bucket_id, capture=capture)
+
+
+async def capture_expedientes_bulk(
+    *,
+    bucket_id: str,
+    year_from: int,
+    year_to: int,
+    modelos: tuple[str, ...] | None = None,
+    ports: ExpedientesPorts,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    browser_session_factory: BrowserSessionFactoryPort,
+    operator_scope_ports: OperatorScopePorts,
+    authority_operation: PinnedAuthorityOperation,
+    effect_guard: ExpedientesEffectGuard,
+    on_session_write: SessionWriteReporter | None = None,
+) -> ExpedientesBulkCaptureReport:
+    """Capture each requested declaration-register view while reporting isolated failures."""
+    if year_from > year_to:
+        raise LiveApplicationInputError(
+            translated_message="live.errors.year_range_invalid",
+        )
+
+    resolved_modelos = modelos if modelos is not None else authority_operation.modelo_ids()
+    session, settings = await active_verified_session(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        browser_session_factory=browser_session_factory,
+        operation=LIVE_EXPEDIENTES_READ_OPERATION,
+        operator_scope_ports=operator_scope_ports,
+        authority_operation=authority_operation,
+        effect_guard=effect_guard,
+        on_session_write=on_session_write,
+    )
+    service = ExpedientesService(ports=ports)
+    snapshot_ids: list[str] = []
+    failures: list[ExpedientesBulkCaptureFailureRow] = []
+    declarations_for_snapshot: list[ExpedientesDeclaration] = []
+    successful_query_count = 0
+    newly_persisted = False
+
+    async with ports.declaration_reader.open_register(
+        session, settings=settings, authority_operation=authority_operation
+    ) as register:
+        for code in resolved_modelos:
+            for year in range(year_to, year_from - 1, -1):
+                try:
+                    declarations = await register.walk(modelo=code, ejercicio=year)
+                except ProfileAccessRefusedError:
+                    raise
+                except Exception as exc:
+                    failures.append(
+                        ExpedientesBulkCaptureFailureRow(
+                            modelo=code,
+                            year=year,
+                            error_type=exc.__class__.__name__,
+                            message=bounded_context_text(exc),
+                        ),
+                    )
+                    continue
+                successful_query_count += 1
+                declarations_for_snapshot.extend(declarations)
+
+    if successful_query_count:
+        capture = ExpedientesCapture(
+            declarations=tuple(declarations_for_snapshot),
+            captured_at=now(),
+            source_url=(f"declarations:bulk:modelos={','.join(resolved_modelos)}:ejercicios={year_from}-{year_to}"),
+            authenticated_identity=session.identity_nif,
+        )
+        async with effect_guard():
+            outcome = service.capture_with_status(bucket_id=bucket_id, capture=capture)
+        snapshot_ids.append(outcome.snapshot.snapshot_id)
+        newly_persisted = outcome.newly_persisted
+
+    return ExpedientesBulkCaptureReport(
+        bucket_id=bucket_id,
+        modelos=tuple(resolved_modelos),
+        year_from=year_from,
+        year_to=year_to,
+        captured_snapshot_count=len(snapshot_ids),
+        declaration_count=len(declarations_for_snapshot),
+        snapshot_ids=tuple(snapshot_ids),
+        newly_persisted=newly_persisted,
+        failures=tuple(failures),
+    )
+
+
+__all__ = [
+    "LIVE_EXPEDIENTES_READ_OPERATION",
+    "ExpedientesCapture",
+    "ExpedientesCaptureOutcome",
+    "ExpedientesEffectGuard",
+    "ExpedientesService",
+    "ExpedientesSnapshotNotFoundError",
+    "PersistedExpedientesSnapshot",
+    "capture_expedientes_bulk",
+    "capture_expedientes_with_outcome",
+    "expedientes_snapshot_object_key",
+]

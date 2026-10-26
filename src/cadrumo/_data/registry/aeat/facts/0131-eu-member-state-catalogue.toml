@@ -1,0 +1,23 @@
+[fact]
+fact_id = "eu-member-state-catalogue"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "eu-member-state-catalogue:2021-01-01"
+date_axis = "filing_period"
+valid_from = 2021-01-01
+legal_refs = ["trlirnr-rdleg-5-2004:art-10", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-210-procedure"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-210-procedure"
+required_text = ["residentes en otro Estado miembro de la Unión Europea"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "member_state.order", value = "at,be,bg,cy,cz,de,dk,ee,es,fi,fr,gr,hr,hu,ie,it,lt,lu,lv,mt,nl,pl,pt,ro,se,si,sk,xi" },
+  { key = "member_state.aliases", value = "AT=at,BE=be,BG=bg,CY=cy,CZ=cz,DE=de,DK=dk,EE=ee,ES=es,FI=fi,FR=fr,GR=gr,EL=gr,HR=hr,HU=hu,IE=ie,IT=it,LT=lt,LU=lu,LV=lv,MT=mt,NL=nl,PL=pl,PT=pt,RO=ro,SE=se,SI=si,SK=sk,XI=xi" },
+]

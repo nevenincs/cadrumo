@@ -1,0 +1,388 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "edit",
+        "docs-sequence-sandbox",
+        "--quiet",
+        "--accept-defaults",
+        "--activity-start-date",
+        "2026-01-01"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "import",
+        "--file",
+        "fixtures/movimientos-2026-1t.csv",
+        "--provider",
+        "csv"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "classify",
+        "71a5db2b",
+        "--classification",
+        "BUSINESS",
+        "--taxable-base",
+        "1000",
+        "--iva-rate",
+        "0.21",
+        "--iva-amount",
+        "210"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "classify",
+        "e3eeac5e",
+        "--classification",
+        "BUSINESS",
+        "--category-id",
+        "material_oficina",
+        "--taxable-base",
+        "500",
+        "--iva-rate",
+        "0.21",
+        "--iva-amount",
+        "105",
+        "--deduction-kind",
+        "domestic_current"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "evidence",
+        "add",
+        "fixtures/factura-material-oficina.pdf",
+        "--supplier",
+        "Papeleria Central SL",
+        "--invoice-number",
+        "C-2026-0087",
+        "--invoice-date",
+        "2026-02-11",
+        "--taxable-base",
+        "500",
+        "--iva-rate",
+        "21",
+        "--iva-amount",
+        "105",
+        "--idempotency-key",
+        "fq-factura"
+      ],
+      "captures": [
+        {
+          "json_path": "result.evidence_id",
+          "name": "evidence_id",
+          "value": "02f887c6ff8a69c5"
+        }
+      ],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "attach",
+        "e3eeac5e",
+        "--purchase-invoice-evidence-id",
+        "02f887c6ff8a69c5"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "create",
+        "--modelo",
+        "303",
+        "--year",
+        "2026",
+        "--period",
+        "1T"
+      ],
+      "captures": [
+        {
+          "json_path": "result.work_unit_id",
+          "name": "work_unit_id",
+          "value": "ce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53"
+        }
+      ],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "add",
+        "--date",
+        "2026-03-25",
+        "--amount",
+        "60.50",
+        "--direction",
+        "INCOMING",
+        "--description",
+        "Exact reference transition sale",
+        "--classification",
+        "BUSINESS",
+        "--taxable-base",
+        "50",
+        "--iva-rate",
+        "0.21",
+        "--iva-amount",
+        "10.50",
+        "--iva-category",
+        "domestic_general",
+        "--idempotency-key",
+        "filing-spine-exact-reference-transition"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "calculate",
+        "--modelo",
+        "303",
+        "--year",
+        "2026",
+        "--period",
+        "1T",
+        "--no-joint-return-elected"
+      ],
+      "captures": [
+        {
+          "json_path": "result.calculation_revision_id",
+          "name": "revision_id",
+          "value": "786732570d67395dc84270babac5fd418abb929047c937297fe07f8d31b04d1a"
+        }
+      ],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "modelo",
+        "work",
+        "verify",
+        "786732570d67395dc84270babac5fd418abb929047c937297fe07f8d31b04d1a"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "operation\tmodelo.work.verify\nverification_report_id\td6886babf44cc50f4600ba4c557ee25433d02a6d530baae2f8f5f69000e57eba\ncalculation_revision_id\t786732570d67395dc84270babac5fd418abb929047c937297fe07f8d31b04d1a\ncompleteness_status\tcomplete\ngranted_verificado_completo\ttrue\nrun_at\t2026-04-01T09:00:00+00:00\nverified_by\tdocs-sequence-sandbox\nresolved_casilla_id_count\t0\nmissing_required_casilla_id_count\t0\nfinding_count\t3\nfinding\tadvisory\twarning\t\tModelo 303 for 2025, period 4T, is not used here, because you said your activity started on 2026-01-01.\tnull\nfinding_legal_refs\t\trd-1065-2007:art-9\nfinding_source_refs\t\taeat-dr-303-2026, aeat-modelo-303-procedure, boe-modelo-303-2008-form\nfinding\tadvisory\twarning\t\tAn issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.\tnull\nfinding_legal_refs\t\tley-37-1992:art-97, rd-1619-2012:art-2\nfinding_source_refs\t\taeat-modelo-303-procedure, boe-modelo-303-2008-form, aeat-dr-303-2026, aeat-dr-303-2024-early, aeat-dr-303-2024-late, boe-modelo-303-2024-form-pdf\nfinding\tadvisory\twarning\t\tAn issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.\tnull\nfinding_legal_refs\t\tley-37-1992:art-97, rd-1619-2012:art-2\nfinding_source_refs\t\taeat-modelo-303-procedure, boe-modelo-303-2008-form, aeat-dr-303-2026, aeat-dr-303-2024-early, aeat-dr-303-2024-late, boe-modelo-303-2024-form-pdf\nnotice\tmodelo.work.verify.finding.advisory\tModelo 303 for 2025, period 4T, is not used here, because you said your activity started on 2026-01-01.\nnotice\tmodelo.work.verify.finding.advisory\tAn issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.\nnotice\tmodelo.work.verify.finding.advisory\tAn issued invoice on which you charge VAT has no supporting document. Attach it to the entry in your records.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "modelo",
+        "work",
+        "file",
+        "786732570d67395dc84270babac5fd418abb929047c937297fe07f8d31b04d1a"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "operation\tmodelo.work.file\nfiling_record_id\t7fb146917a4b0b0c6c4234653ed9d976efe4875d5e2be62fba12f08efadd4268\nwork_unit_id\tce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53\ncalculation_revision_id\t786732570d67395dc84270babac5fd418abb929047c937297fe07f8d31b04d1a\nbucket_id\t<bucket-id>\nmodelo\t303\nfiling_year\t2026\nperiod\t1T\nfiled_at\t2026-04-01T09:00:00+00:00\nfiled_by\tdocs-sequence-sandbox\nstatus\tvigente\norigin\tlocal\nconfirmation\tpendiente\ndeclaration_kind\toriginal\naeat_accepted\tfalse\nkind\tinternal_filing\nlive_submission\tfalse\nfiling_disambiguation\tThis filing is internal only and is not submitted to the AEAT.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "export",
+        "ce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53",
+        "--revision",
+        "786732570d67395dc84270babac5fd418abb929047c937297fe07f8d31b04d1a",
+        "--output",
+        "./modelo-303-revision.boe"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.export",
+        "notices": [
+          {
+            "action": null,
+            "code": "modelo.export.local_export_not_official_evidence",
+            "context": {
+              "evidence_status": "local_export_not_official_aeat_filing_evidence",
+              "filing_year": "2026",
+              "modelo": "303",
+              "period": "1T"
+            },
+            "message": "The exported file is not an AEAT filing receipt.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.export.development_software_identity",
+            "context": {
+              "filing_year": "2026",
+              "modelo": "303",
+              "period": "1T",
+              "software_identity_grade": "development_mock"
+            },
+            "message": "AEAT will not accept this file for filing: it contains Cadrumo's all-zero development software identity. Enter the calculated box values in the AEAT form instead.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
+        "result": {
+          "bucket_event_id": "144e7bb4905ab8d98e6b2edda43c1b7e690e50498ec137176e782e480f229b5a",
+          "bucket_id": "<bucket-id>",
+          "byte_size": 2948,
+          "calculation_revision_id": "786732570d67395dc84270babac5fd418abb929047c937297fe07f8d31b04d1a",
+          "file_sha256": "ba0b3588150a97b3d24687469f152f084a6fdfbcc718302649321032a17332ed",
+          "filing_year": 2026,
+          "format": "fichero-boe",
+          "iva_wallet_decision_provenance": {
+            "authority_source_kinds": [
+              "local_recurrence"
+            ],
+            "authority_source_refs": [
+              "sha256:64bc1cee701fc87c375234c8799bc82399c69968a5cc5e312b265e764a3ed334"
+            ],
+            "decision_ref": "sha256:4c310e680d2cfcf762e02632eb11d35a3e3c1bcd873094cf589fa50bb526a362",
+            "divergence": "first_period_zero",
+            "selected_authority": "local_recurrence",
+            "target_period": {
+              "code": "1T",
+              "filing_year": 2026
+            },
+            "target_year": 2026
+          },
+          "modelo": "303",
+          "operation": "modelo.export",
+          "output_path": "<sandbox-workdir>/modelo-303-revision.boe",
+          "payment_election": "ingreso",
+          "period": {
+            "code": "1T",
+            "filing_year": 2026
+          },
+          "prior_domiciliation_election": {
+            "baseline_evidence_reference_id": null,
+            "baseline_filing_record_id": null,
+            "baseline_result_disposition": null,
+            "baseline_source_header_locator": null,
+            "election": "keep"
+          },
+          "refund_election": null,
+          "resolved_result_disposition": "I",
+          "software_identity_grade": "development_mock",
+          "work_unit_id": "ce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53"
+        },
+        "schema_version": "2",
+        "status": "warning"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 2,
+  "sequence_id": "filing-spine-exact-ids"
+}

@@ -1,0 +1,20 @@
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.sin-datos-base-ceuta-melilla"
+provider = { kind = "manual_input", record = "page_1", field = "sin-datos-base-ceuta-melilla", offset = 359, length = 1, data_type = "integer" }
+value = { data_type = "integer", channel = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.agraria-ingresos-ordinarias-ceuta-melilla"
+provider = { kind = "manual_input", record = "page_1", field = "agraria-ingresos-ordinarias-ceuta-melilla", offset = 448, length = 10, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+[[revisions."2026".bindings]]
+id = "modelo-131.page1.agraria-ingresos-prioritarias-ceuta-melilla"
+provider = { kind = "manual_input", record = "page_1", field = "agraria-ingresos-prioritarias-ceuta-melilla", offset = 458, length = 10, data_type = "money" }
+value = { data_type = "money", channel = "decimal" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]
+[[revisions."2026".bindings]]
+id = "modelo-131.dpa.deduccion-ceuta-melilla"
+provider = { kind = "manual_input", record = "DPA", field = "deduccion-ceuta-melilla", offset = 29, length = 1, data_type = "integer" }
+value = { data_type = "integer", channel = "integer" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "rd-439-2007:art-95"]

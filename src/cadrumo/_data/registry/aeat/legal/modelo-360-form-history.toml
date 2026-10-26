@@ -1,0 +1,12 @@
+[sources.boe-modelo-360-2010-original-form-pdf]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2010-5210-modelos-360-361.pdf"
+sha256 = "c94fa6be703bc9234d799a3e688b71dc2a5b5f8f0ed39fdcd3de021f58e2e187"
+bytes = 345624
+retrieved_at = 2026-10-06
+published_at = 2010-03-30
+applies_from = 2010-04-01
+source_url = "https://www.boe.es/boe/dias/2010/03/30/pdfs/BOE-A-2010-5210.pdf"
+review_status = "pending_review"

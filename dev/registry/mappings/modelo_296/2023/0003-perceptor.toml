@@ -1,0 +1,531 @@
+schema_version = 1
+fragment_id = "perceptor"
+modelo = "296"
+design_epoch = "2023"
+source_ref = "aeat-dr-296-2023"
+source_sha256 = "858152af847e23e3165ba38295696466dfdf96f1ec55503f606cf982a4ae778f"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f001"
+kind = "literal"
+literal = "2"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 243
+ordinal = "1"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f002"
+kind = "literal"
+literal = "296"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 246
+ordinal = "2"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f003"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor", field = "ejercicio" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 249
+ordinal = "3"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f004"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor", field = "nif_del_declarante" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 253
+ordinal = "4"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f005"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor", field = "nif_del_perceptor" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 257
+ordinal = "5"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f006"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor", field = "nif_del_representante_legal" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 276
+ordinal = "6"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f007"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor", field = "f_j" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 291
+ordinal = "7"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f008"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor", field = "apellidos_y_nombre_razon_social_o_deno" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 296
+ordinal = "8"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f009"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor", field = "identificador_de_registro_o_numero_de" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 307
+ordinal = "9"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f010"
+kind = "filler"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 314
+ordinal = "10"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f011"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor", field = "fecha_de_devengo" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 315
+ordinal = "11"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f012"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor", field = "naturaleza" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 322
+ordinal = "12"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f013"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor", field = "clave" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 329
+ordinal = "13"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f014"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor", field = "subclave" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 378
+ordinal = "14"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f015"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor", field = "base_retenciones_e_ingresos_a_cuenta" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 446
+ordinal = "15"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f016"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor", field = "entero" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 497
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f017"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor", field = "decimal" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 501
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f018"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor", field = "parte_entera_del_importe_de_las_retenc" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 516
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f019"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor", field = "parte_decimal_del_importe_de_las_reten" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 519
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f020"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor", field = "perceptor_mediador" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 523
+ordinal = "18"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f021"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor", field = "codigo" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 539
+ordinal = "19"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f022"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor", field = "codigo_emisor" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 552
+ordinal = "20"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f023"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor", field = "declarante" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 576
+ordinal = "21"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f024"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor", field = "tipo_codigo" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 588
+ordinal = "22"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f025"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor", field = "codigo_cuenta_valores" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 608
+ordinal = "23"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f026"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor", field = "pendiente" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 632
+ordinal = "24"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f027"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor", field = "ejercicio_devengo" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 684
+ordinal = "25"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f028"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor", field = "fecha_de_inicio_del_prestamo" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 695
+ordinal = "26"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f029"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor", field = "fecha_de_vencimiento_del_prestamo" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 705
+ordinal = "27"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f030"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor", field = "entero_numerico_parte_entera" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 727
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f031"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor", field = "decimal_numerico_parte_decimal" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 730
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f032"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor", field = "entero_numerico_parte_entera_2" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 745
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f033"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor", field = "decimal_numerico_parte_decimal_2" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 748
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f034"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor", field = "entero_numerico_parte_entera_3" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 762
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f035"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor", field = "decimal_numerico_parte_decimal_3" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 765
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f036"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor", field = "direccion_del_perceptor" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 768
+ordinal = "31"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f037"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor", field = "ingresos_a_cuenta_repercutidos" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 805
+ordinal = "32"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f038"
+kind = "filler"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 809
+ordinal = "33"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f039"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor", field = "nif_en_el_pais_de_residencia_fiscal" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 810
+ordinal = "34"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f040"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor", field = "fecha_de_nacimiento" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 819
+ordinal = "35"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f041"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor", field = "ciudad" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 836
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f042"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor", field = "codigo_pais" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 840
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f043"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor", field = "pais_o_territorio_de_residencia_fiscal" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 847
+ordinal = "37"
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "m296-2023.perceptor.f044"
+kind = "filler"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 860
+ordinal = "38"
+record_identity = "Tipo 2 - Registro De Perceptor"

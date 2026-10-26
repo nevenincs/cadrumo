@@ -1,0 +1,42 @@
+"""Single application gate for persisted calculation-revision coordinates."""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from ...domain.modelos.calculation_revision import CalculationRevision
+from ..calculations.revision_carry_gate import revision_carry_outcome
+from .action_errors import WorkUnitRevisionDivergenceError
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+
+
+def require_calculation_revision_coordinates_current(
+    revision: CalculationRevision,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Refuse a persisted calculation whose producing registry coordinate diverges.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
+    """
+    outcome = revision_carry_outcome(revision.registry_snapshot_ref, operation=operation)
+    if not outcome.refused:
+        return
+    snapshot_ref = revision.registry_snapshot_ref
+    raise WorkUnitRevisionDivergenceError(
+        translated_message="application.modelo.errors.work_unit_revision_divergence",
+        context={
+            "work_unit_id": revision.work_unit_id,
+            "modelo": snapshot_ref.modelo,
+            "filing_year": str(snapshot_ref.modelo_year),
+            "period": snapshot_ref.period,
+            "work_unit_revision": snapshot_ref.revision_id,
+            "law_revision": outcome.selected_revision_id or "unresolvable",
+        },
+    )
+
+
+__all__ = ["require_calculation_revision_coordinates_current"]

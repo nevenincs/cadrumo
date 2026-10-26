@@ -1,0 +1,84 @@
+{
+  "modelo": "036",
+  "candidate_kind": "fillable",
+  "source_page_url": "https://fiscalbot.es/modelos-tributarios/modelo-036/",
+  "source_pdf_url": "https://fiscalbot.es/assets/pdf/Modelo036_rellenable.pdf?v=3",
+  "retrieved_on": "2026-08-23",
+  "source_chain": {
+    "classification": "third_party_hosted_external_layout_candidate",
+    "host": "fiscalbot.es"
+  },
+  "authority_adjudication": {
+    "artifact_authenticity": {
+      "verdict": "third_party_sample",
+      "evidence_summary": "The committed bytes display FiscalBot's example-only disclaimer and placeholder receipt number, and their third-party producer history plus added empty fields confirm that this artifact is not an official BOE or AEAT publication byte."
+    },
+    "official_base_derivation": {
+      "verdict": "verified_official_base_derivative",
+      "official_source": {
+        "authority": "boe",
+        "document_id": "BOE-A-2023-26632 Annex I",
+        "source_url": "https://www.boe.es/boe/dias/2023/12/29/pdfs/BOE-A-2023-26632.pdf",
+        "sha256": "97069814b634a6b87966e0b486956639b5a4dda36f0401c5c7f51fe12726cea3",
+        "page_mapping": [
+          {"candidate_page": 1, "official_page": 19},
+          {"candidate_page": 2, "official_page": 24},
+          {"candidate_page": 3, "official_page": 25},
+          {"candidate_page": 4, "official_page": 26}
+        ]
+      },
+      "comparison_method": "pdf_text_geometry_and_normalized_render",
+      "comparison_summary": "The four mapped pages preserve 401/424 through 658/665 ordered official tokens; affine coordinate fits have R-squared 0.99999-1.00000 with median residuals no greater than 0.32 points horizontally and 0.05 points vertically. This proves derivation from the historical annex layout, not exact official bytes or the replacement 2025 form.",
+      "pair_render": {
+        "counterpart_kind": "plain",
+        "counterpart_sha256": "27b887171666bc8423cabaa557b2f3ba040079ab73428f9f7f956f9cd7fc519a",
+        "comparison_method": "normalized_96_dpi_render_similarity",
+        "comparison_summary": "At 96 dpi, pages 1 through 4 have normalized MAE 0.000357, 0, 0, and 0.001311 respectively. The small overlay differences prevent an exact-render claim."
+      }
+    },
+    "registry_applicability": {
+      "verdict": "historical_layout_without_authored_revision",
+      "revision_id": null
+    }
+  },
+  "content": {
+    "sha256": "5fdcc9ca1bc770c71286a94db3190267bcd2d86224737a56f25382526ed14b82",
+    "size_bytes": 420443
+  },
+  "pdf": {
+    "version": "1.7",
+    "header_version": "1.4",
+    "page_count": 4,
+    "page_sizes_points": [
+      [595.276, 841.89],
+      [595.276, 841.89],
+      [595.276, 841.89],
+      [595.276, 841.89]
+    ],
+    "encrypted": false,
+    "acroform_top_level_field_count": 330,
+    "acroform_nonempty_value_count": 0,
+    "document_info": {
+      "Author": "AEAT",
+      "Creator": "AEAT",
+      "Keywords": "AEAT, Justificante, Declaracion, Predeclaracion, Vista Previa",
+      "ModDate": "D:20260114162325+01'00'",
+      "Producer": "3.0.31 (5.1.15) ",
+      "Subject": "Justificante AEAT. CSV=TJFA3A6B68B8MBUG",
+      "Title": "Justificante AEAT. CSV=TJFA3A6B68B8MBUG"
+    }
+  },
+  "observations": {
+    "text_layer_character_count": 17599,
+    "nif_like_match_count": 0,
+    "iban_like_match_count": 0,
+    "email_like_match_count": 0,
+    "printed_placeholder_justificante_number_present": true,
+    "value_observation": "All 330 top-level AcroForm fields have empty or off values; extracted text contains the printed placeholder justificante number 1234567890, but no NIF-like, IBAN-like, or email-like token."
+  },
+  "limitations": [
+    "FiscalBot hosts these bytes; document metadata and AEAT branding do not establish AEAT provenance or publication authority.",
+    "The fillable variant label describes the link exposed by the source page and does not promote the candidate to an official source class.",
+    "A blank external layout can probe parser behavior but cannot ground populated-value placement or taxpayer-specific output."
+  ]
+}

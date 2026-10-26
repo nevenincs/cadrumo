@@ -1,0 +1,6 @@
+@setup cadrumo-runtime config auth configure --provider certificate
+@step End the certificate provider's local sessions without removing its configuration.
+@result cadrumo-runtime --format json config auth logout --provider certificate
+@expect result.removed_sessions == 0
+@expect result.providers[0] == "certificate"
+@expect exit_code == 0

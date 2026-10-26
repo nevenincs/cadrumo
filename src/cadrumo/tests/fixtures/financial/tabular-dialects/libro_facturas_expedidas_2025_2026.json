@@ -1,0 +1,10 @@
+{
+  "output_sha256": "f228b6873f21e5c123e25d873d22bb0ca12c04f582935828eb0a90677e030d1c",
+  "output_size_bytes": 892,
+  "provenance": "synthetic_generated",
+  "role": "dialect_normalization_anchor",
+  "licence": "CC0-1.0",
+  "structural_difficulty": [
+    "Issued-invoice book: comma delimited, dot decimals, UTF-8 with BOM"
+  ]
+}

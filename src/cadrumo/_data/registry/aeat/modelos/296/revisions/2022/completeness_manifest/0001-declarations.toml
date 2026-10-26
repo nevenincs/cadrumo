@@ -1,0 +1,5 @@
+[revisions.2022.completeness_manifest]
+source_ref = "boe-modelo-296-2021-2022-layout"
+legal_refs = ["orden-eha-3290-2008:art-6", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["boe-modelo-296-form-layout", "boe-modelo-296-2021-2022-layout"]
+casillas = [{casilla_id = "02", number = "02"}, {casilla_id = "03", number = "03"}]

@@ -1,0 +1,32 @@
+[fact]
+fact_id = "iva-refund-eligibility-policy"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "iva-refund-eligibility-policy:1993-01-01"
+date_axis = "filing_period"
+valid_from = 1993-01-01
+legal_refs = [
+  "ley-37-1992:art-116",
+  "rd-1624-1992:art-30",
+]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "refund.final_period.order", value = "4T,12,0A" },
+  { key = "refund.final_period.4T.value", value = "4T" },
+  { key = "refund.final_period.4T.cadence", value = "quarterly" },
+  { key = "refund.final_period.4T.description", value = "Final quarterly filing period eligible for annual refund election under LIVA article 116." },
+  { key = "refund.final_period.4T.legal_refs", value = "ley-37-1992:art-116" },
+  { key = "refund.final_period.12.value", value = "12" },
+  { key = "refund.final_period.12.cadence", value = "monthly" },
+  { key = "refund.final_period.12.description", value = "Final monthly filing period; monthly refund eligibility is governed by the REDEME regime under RIVA article 30." },
+  { key = "refund.final_period.12.legal_refs", value = "rd-1624-1992:art-30" },
+  { key = "refund.final_period.0A.value", value = "0A" },
+  { key = "refund.final_period.0A.cadence", value = "annual" },
+  { key = "refund.final_period.0A.description", value = "Annual filing period eligible for refund election under LIVA article 116." },
+  { key = "refund.final_period.0A.legal_refs", value = "ley-37-1992:art-116" },
+]

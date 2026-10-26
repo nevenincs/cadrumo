@@ -1,0 +1,52 @@
+[revisions."2019-2023"]
+casilla_source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+parameter_source_refs = ["aeat-modelo-131-instructions"]
+binding_source_refs = ["aeat-dr-131-2019-2023-v101"]
+formula_source_refs = ["aeat-modelo-131-instructions"]
+authority_grade = "filing"
+id = "2019-2023"
+valid_from = 2019-01-01
+valid_to = 2023-12-31
+period_selector = { year_from = 2019, year_to = 2023, periods = ["1T", "2T", "3T", "4T"] }
+orden_aplicabilidad = ["orden-eha-672-2007:art-3"]
+legal_refs = [
+    "rd-439-2007:art-110",
+    "orden-eha-672-2007:art-3",
+    "orden-hac-1264-2018:art-4",
+    "orden-hac-1164-2019:art-4",
+    "orden-hac-1155-2020:art-4",
+    "orden-hfp-1335-2021:art-4",
+    "orden-hfp-1172-2022:art-4",
+    "rd-439-2007:art-95",
+]
+source_refs = [
+    "boe-2015-1656-modelos-130-131-form",
+    "aeat-dr-131-2019-2023-v101",
+    "aeat-modelo-131-instructions",
+    "aeat-calendario-contribuyente-2022",
+    "aeat-calendario-contribuyente-2023",
+    "boe-modelo-131-2007-form",
+]
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-08-19
+
+[revisions."2019-2023".family_dispositions.projection_endpoints]
+reason = """
+A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (modelo-131-2019-2023-fichero-boe) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction rather than unbuilt: authoring a projection row into the layout is what would make this family apply, and that change reaches this declaration \
+through the same revision."""
+legal_refs = [
+    "rd-439-2007:art-110",
+    "orden-eha-672-2007:art-3",
+    "orden-hac-1264-2018:art-4",
+    "orden-hac-1164-2019:art-4",
+    "orden-hac-1155-2020:art-4",
+    "orden-hfp-1335-2021:art-4",
+    "orden-hfp-1172-2022:art-4",
+    "rd-439-2007:art-95",
+]
+source_refs = [
+    "aeat-dr-131-2019-2023-v101",
+    "aeat-modelo-131-instructions",
+    "boe-modelo-131-2007-form",
+]

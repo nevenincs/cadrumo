@@ -1,0 +1,27 @@
+from __future__ import annotations
+
+from collections.abc import Callable
+from operator import methodcaller
+
+import pytest
+
+from ..errors.hierarchy import RedactionError
+from ..redaction.rules import redact, redact_for_cli_output
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+def redact_with_non_string_value() -> None:
+    methodcaller("__call__", 12345, rules=())(redact)
+
+
+def redact_cli_output_with_non_string_value() -> None:
+    methodcaller("__call__", {"not": "a string"})(redact_for_cli_output)
+
+
+@pytest.mark.parametrize("call", (redact_with_non_string_value, redact_cli_output_with_non_string_value))
+def test_redaction_entrypoints_raise_redaction_error(call: Callable[[], object]) -> None:
+    with pytest.raises(RedactionError) as raised:
+        call()
+
+    assert raised.type is RedactionError

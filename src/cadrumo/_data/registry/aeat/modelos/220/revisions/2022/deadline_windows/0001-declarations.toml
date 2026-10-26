@@ -1,0 +1,16 @@
+# Plazo of Orden HFP/523/2023 art. 6.3: the Modelo 220 is filed within the plazo of
+# the representante's individual declaration (LIS art. 75.2), which LIS art. 124.1
+# sets at the 25 dias naturales following the six months after the period ends.
+# For a calendar-year periodo impositivo 2022 that runs 2023-07-01 to 2023-07-25. Art.
+# 3.2 lets the domiciliacion be ordered until 2023-07-20. Dates are the nominal
+# statutory ones, stored unshifted; shift_deadline derives the operational date.
+[[revisions."2022".deadline_windows]]
+id = "modelo-220-2022-0a"
+filing_year = 2022
+period = "2022 0A"
+period_kind = "annual"
+opens_on = 2023-07-01
+closes_on = 2023-07-25
+payment_cutoff_on = 2023-07-20
+legal_refs = ["orden-hfp-523-2023:art-6-3", "orden-hfp-523-2023:art-3", "ley-27-2014:art-124"]
+source_refs = ["boe-modelo-220-2022-form", "aeat-modelo-200-manual-2022"]

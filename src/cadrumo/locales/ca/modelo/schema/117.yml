@@ -1,0 +1,86 @@
+modelo:
+  schema:
+    '117':
+      construct:
+        modelo-117-total-liquidacion-calculation:
+          field:
+            title: Modelo 117 total liquidació / resultat a ingressar
+      field:
+        official_name: Modelo 117. Retencions i ingressos a compte. Rendes o guanys
+          patrimonials obtinguts com a conseqüència de les transmissions o reemborsaments
+          d'accions i participacions d'institucions d'inversió col·lectiva.
+        title: Retencions i ingressos a compte - rendes o guanys per transmissió o
+          reemborsament d'accions i participacions d'IIC
+      form:
+        column:
+          derechos-suscripcion: Transmissions de drets de subscripció
+          inversion-colectiva: Transmissions o reemborsaments d’accions i participacions
+            d’institucions d’inversió col·lectiva
+        context:
+          apellidos: Cognoms o raó social
+          declaracion-complementaria: Autoliquidació complementària
+          ejercicio: Exercici
+          iban: Codi IBAN
+          justificante-anterior: Núm. de justificant de l’autoliquidació anterior
+          nif: NIF
+          nombre: Nom
+          periodo: Període
+        page:
+          dr-11701:
+            heading: Retencions i pagaments a compte sobre institucions d’inversió
+              col·lectiva i drets de subscripció
+        row:
+          base: Base de retencions i ingressos a compte
+          perceptores: Nombre de perceptors
+          retenciones: Retencions i ingressos a compte
+        section:
+          complementaria:
+            heading: Complementària (6)
+          devengo:
+            heading: Meritació (2)
+          identificacion:
+            heading: Identificació (1)
+          ingreso:
+            heading: Ingrés (4)
+          liquidacion:
+            heading: Liquidació (3) · A) Retencions i ingressos a compte
+          pago-cuenta:
+            heading: B) Pagament a compte
+          total:
+            heading: Total liquidació
+      revision:
+        2019-y-siguientes:
+          casilla:
+            '01':
+              label: Nombre de perceptors per transmissions o reemborsaments d'accions
+                i participacions d'IIC
+            '02':
+              label: Base de retencions i ingressos a compte per transmissions o reemborsaments
+                d'accions i participacions d'IIC
+            '03':
+              label: Retencions i ingressos a compte per transmissions o reemborsaments
+                d'accions i participacions d'IIC
+            '04':
+              label: Nombre de perceptors per transmissions de drets de subscripció
+            '05':
+              label: Base de retencions i ingressos a compte per transmissions de
+                drets de subscripció
+            '06':
+              label: Retencions i ingressos a compte per transmissions de drets de
+                subscripció
+            '07':
+              label: Base del pagament a compte previst a la disposició addicional
+                dinovena de la Ley 35/2006
+            08:
+              label: Pagament a compte previst a la disposició addicional dinovena
+                de la Ley 35/2006
+            09:
+              label: 'Liquidació total: suma de retencions, ingressos a compte, pagaments
+                a compte i regularització'
+            '10':
+              label: Resultats a ingressar de declaracions anteriors pel mateix concepte,
+                exercici i període
+            '11':
+              label: Resultat a ingressar
+          field:
+            label: Ordre EHA/3435/2007, exercicis 2019 i següents

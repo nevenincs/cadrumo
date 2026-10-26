@@ -1,0 +1,639 @@
+schema_version = 1
+fragment_id = "singletons"
+width_17_rules = []
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "35301"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+record_identity = "35301"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m353-2026-identificacion-ejercicio-year-yyyy"
+decision_statement = "The Identificación ejercicio renders as the four-digit filing year, unsigned, with no decimal component."
+justification = "The design leaves this field's Contenido cell blank while its own Descripción names it Ejercicio. At four Num positions the only reading available is the four-digit year the export codec already owns."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "35301"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+record_identity = "35301"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "35301"
+source_row = 28
+source_cell = "A28"
+ordinal = "23"
+record_identity = "35301"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m353-2026-participacion-195-percentage-decimal"
+decision_statement = "The entidad dependiente's participation percentage renders as an implied-decimal percentage of three integer and two decimal digits, unsigned."
+justification = "A participation share runs from 0 to 100 and is reported to hundredths, so three integer positions carry the whole part and the remaining two the fraction; the field is Num, so it is unsigned, and a negative share has no meaning."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "35301"
+source_row = 28
+source_cell = "A28"
+ordinal = "23"
+record_identity = "35301"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "35301"
+source_row = 33
+source_cell = "A33"
+ordinal = "28"
+record_identity = "35301"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m353-2026-participacion-242-percentage-decimal"
+decision_statement = "The entidad dependiente's participation percentage renders as an implied-decimal percentage of three integer and two decimal digits, unsigned."
+justification = "A participation share runs from 0 to 100 and is reported to hundredths, so three integer positions carry the whole part and the remaining two the fraction; the field is Num, so it is unsigned, and a negative share has no meaning."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "35301"
+source_row = 33
+source_cell = "A33"
+ordinal = "28"
+record_identity = "35301"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "35301"
+source_row = 38
+source_cell = "A38"
+ordinal = "33"
+record_identity = "35301"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m353-2026-participacion-289-percentage-decimal"
+decision_statement = "The entidad dependiente's participation percentage renders as an implied-decimal percentage of three integer and two decimal digits, unsigned."
+justification = "A participation share runs from 0 to 100 and is reported to hundredths, so three integer positions carry the whole part and the remaining two the fraction; the field is Num, so it is unsigned, and a negative share has no meaning."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "35301"
+source_row = 38
+source_cell = "A38"
+ordinal = "33"
+record_identity = "35301"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "35301"
+source_row = 43
+source_cell = "A43"
+ordinal = "38"
+record_identity = "35301"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m353-2026-participacion-336-percentage-decimal"
+decision_statement = "The entidad dependiente's participation percentage renders as an implied-decimal percentage of three integer and two decimal digits, unsigned."
+justification = "A participation share runs from 0 to 100 and is reported to hundredths, so three integer positions carry the whole part and the remaining two the fraction; the field is Num, so it is unsigned, and a negative share has no meaning."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "35301"
+source_row = 43
+source_cell = "A43"
+ordinal = "38"
+record_identity = "35301"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "35301"
+source_row = 48
+source_cell = "A48"
+ordinal = "43"
+record_identity = "35301"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m353-2026-participacion-383-percentage-decimal"
+decision_statement = "The entidad dependiente's participation percentage renders as an implied-decimal percentage of three integer and two decimal digits, unsigned."
+justification = "A participation share runs from 0 to 100 and is reported to hundredths, so three integer positions carry the whole part and the remaining two the fraction; the field is Num, so it is unsigned, and a negative share has no meaning."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "35301"
+source_row = 48
+source_cell = "A48"
+ordinal = "43"
+record_identity = "35301"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "35301"
+source_row = 53
+source_cell = "A53"
+ordinal = "48"
+record_identity = "35301"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m353-2026-participacion-430-percentage-decimal"
+decision_statement = "The entidad dependiente's participation percentage renders as an implied-decimal percentage of three integer and two decimal digits, unsigned."
+justification = "A participation share runs from 0 to 100 and is reported to hundredths, so three integer positions carry the whole part and the remaining two the fraction; the field is Num, so it is unsigned, and a negative share has no meaning."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "35301"
+source_row = 53
+source_cell = "A53"
+ordinal = "48"
+record_identity = "35301"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "35301"
+source_row = 58
+source_cell = "A58"
+ordinal = "53"
+record_identity = "35301"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m353-2026-participacion-477-percentage-decimal"
+decision_statement = "The entidad dependiente's participation percentage renders as an implied-decimal percentage of three integer and two decimal digits, unsigned."
+justification = "A participation share runs from 0 to 100 and is reported to hundredths, so three integer positions carry the whole part and the remaining two the fraction; the field is Num, so it is unsigned, and a negative share has no meaning."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "35301"
+source_row = 58
+source_cell = "A58"
+ordinal = "53"
+record_identity = "35301"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "35301"
+source_row = 63
+source_cell = "A63"
+ordinal = "58"
+record_identity = "35301"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m353-2026-participacion-524-percentage-decimal"
+decision_statement = "The entidad dependiente's participation percentage renders as an implied-decimal percentage of three integer and two decimal digits, unsigned."
+justification = "A participation share runs from 0 to 100 and is reported to hundredths, so three integer positions carry the whole part and the remaining two the fraction; the field is Num, so it is unsigned, and a negative share has no meaning."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "35301"
+source_row = 63
+source_cell = "A63"
+ordinal = "58"
+record_identity = "35301"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "35301"
+source_row = 68
+source_cell = "A68"
+ordinal = "63"
+record_identity = "35301"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m353-2026-participacion-571-percentage-decimal"
+decision_statement = "The entidad dependiente's participation percentage renders as an implied-decimal percentage of three integer and two decimal digits, unsigned."
+justification = "A participation share runs from 0 to 100 and is reported to hundredths, so three integer positions carry the whole part and the remaining two the fraction; the field is Num, so it is unsigned, and a negative share has no meaning."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "35301"
+source_row = 68
+source_cell = "A68"
+ordinal = "63"
+record_identity = "35301"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "35301"
+source_row = 73
+source_cell = "A73"
+ordinal = "68"
+record_identity = "35301"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m353-2026-participacion-618-percentage-decimal"
+decision_statement = "The entidad dependiente's participation percentage renders as an implied-decimal percentage of three integer and two decimal digits, unsigned."
+justification = "A participation share runs from 0 to 100 and is reported to hundredths, so three integer positions carry the whole part and the remaining two the fraction; the field is Num, so it is unsigned, and a negative share has no meaning."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "35301"
+source_row = 73
+source_cell = "A73"
+ordinal = "68"
+record_identity = "35301"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "35301"
+source_row = 78
+source_cell = "A78"
+ordinal = "73"
+record_identity = "35301"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m353-2026-participacion-665-percentage-decimal"
+decision_statement = "The entidad dependiente's participation percentage renders as an implied-decimal percentage of three integer and two decimal digits, unsigned."
+justification = "A participation share runs from 0 to 100 and is reported to hundredths, so three integer positions carry the whole part and the remaining two the fraction; the field is Num, so it is unsigned, and a negative share has no meaning."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "35301"
+source_row = 78
+source_cell = "A78"
+ordinal = "73"
+record_identity = "35301"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "35301"
+source_row = 83
+source_cell = "A83"
+ordinal = "78"
+record_identity = "35301"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m353-2026-participacion-712-percentage-decimal"
+decision_statement = "The entidad dependiente's participation percentage renders as an implied-decimal percentage of three integer and two decimal digits, unsigned."
+justification = "A participation share runs from 0 to 100 and is reported to hundredths, so three integer positions carry the whole part and the remaining two the fraction; the field is Num, so it is unsigned, and a negative share has no meaning."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "35301"
+source_row = 83
+source_cell = "A83"
+ordinal = "78"
+record_identity = "35301"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "35301"
+source_row = 88
+source_cell = "A88"
+ordinal = "83"
+record_identity = "35301"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m353-2026-participacion-759-percentage-decimal"
+decision_statement = "The entidad dependiente's participation percentage renders as an implied-decimal percentage of three integer and two decimal digits, unsigned."
+justification = "A participation share runs from 0 to 100 and is reported to hundredths, so three integer positions carry the whole part and the remaining two the fraction; the field is Num, so it is unsigned, and a negative share has no meaning."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "35301"
+source_row = 88
+source_cell = "A88"
+ordinal = "83"
+record_identity = "35301"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "35301"
+source_row = 93
+source_cell = "A93"
+ordinal = "88"
+record_identity = "35301"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m353-2026-participacion-806-percentage-decimal"
+decision_statement = "The entidad dependiente's participation percentage renders as an implied-decimal percentage of three integer and two decimal digits, unsigned."
+justification = "A participation share runs from 0 to 100 and is reported to hundredths, so three integer positions carry the whole part and the remaining two the fraction; the field is Num, so it is unsigned, and a negative share has no meaning."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "35301"
+source_row = 93
+source_cell = "A93"
+ordinal = "88"
+record_identity = "35301"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "35301"
+source_row = 98
+source_cell = "A98"
+ordinal = "93"
+record_identity = "35301"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m353-2026-participacion-853-percentage-decimal"
+decision_statement = "The entidad dependiente's participation percentage renders as an implied-decimal percentage of three integer and two decimal digits, unsigned."
+justification = "A participation share runs from 0 to 100 and is reported to hundredths, so three integer positions carry the whole part and the remaining two the fraction; the field is Num, so it is unsigned, and a negative share has no meaning."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "35301"
+source_row = 98
+source_cell = "A98"
+ordinal = "93"
+record_identity = "35301"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "35301"
+source_row = 103
+source_cell = "A103"
+ordinal = "98"
+record_identity = "35301"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m353-2026-participacion-900-percentage-decimal"
+decision_statement = "The entidad dependiente's participation percentage renders as an implied-decimal percentage of three integer and two decimal digits, unsigned."
+justification = "A participation share runs from 0 to 100 and is reported to hundredths, so three integer positions carry the whole part and the remaining two the fraction; the field is Num, so it is unsigned, and a negative share has no meaning."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "35301"
+source_row = 103
+source_cell = "A103"
+ordinal = "98"
+record_identity = "35301"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "35301"
+source_row = 108
+source_cell = "A108"
+ordinal = "103"
+record_identity = "35301"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m353-2026-participacion-947-percentage-decimal"
+decision_statement = "The entidad dependiente's participation percentage renders as an implied-decimal percentage of three integer and two decimal digits, unsigned."
+justification = "A participation share runs from 0 to 100 and is reported to hundredths, so three integer positions carry the whole part and the remaining two the fraction; the field is Num, so it is unsigned, and a negative share has no meaning."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "35301"
+source_row = 108
+source_cell = "A108"
+ordinal = "103"
+record_identity = "35301"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "35301"
+source_row = 113
+source_cell = "A113"
+ordinal = "108"
+record_identity = "35301"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m353-2026-participacion-994-percentage-decimal"
+decision_statement = "The entidad dependiente's participation percentage renders as an implied-decimal percentage of three integer and two decimal digits, unsigned."
+justification = "A participation share runs from 0 to 100 and is reported to hundredths, so three integer positions carry the whole part and the remaining two the fraction; the field is Num, so it is unsigned, and a negative share has no meaning."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "35301"
+source_row = 113
+source_cell = "A113"
+ordinal = "108"
+record_identity = "35301"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "35301"
+source_row = 118
+source_cell = "A118"
+ordinal = "113"
+record_identity = "35301"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m353-2026-participacion-1041-percentage-decimal"
+decision_statement = "The entidad dependiente's participation percentage renders as an implied-decimal percentage of three integer and two decimal digits, unsigned."
+justification = "A participation share runs from 0 to 100 and is reported to hundredths, so three integer positions carry the whole part and the remaining two the fraction; the field is Num, so it is unsigned, and a negative share has no meaning."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "35301"
+source_row = 118
+source_cell = "A118"
+ordinal = "113"
+record_identity = "35301"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "35301"
+source_row = 123
+source_cell = "A123"
+ordinal = "118"
+record_identity = "35301"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m353-2026-participacion-1088-percentage-decimal"
+decision_statement = "The entidad dependiente's participation percentage renders as an implied-decimal percentage of three integer and two decimal digits, unsigned."
+justification = "A participation share runs from 0 to 100 and is reported to hundredths, so three integer positions carry the whole part and the remaining two the fraction; the field is Num, so it is unsigned, and a negative share has no meaning."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "35301"
+source_row = 123
+source_cell = "A123"
+ordinal = "118"
+record_identity = "35301"
+
+[design_identity]
+modelo = "353"
+design_epoch = "2026"
+source_ref = "aeat-dr-353-2026"
+source_sha256 = "cb1374a79a87b7c8282ff3c964d78b250bedfa11750decfa0e5e7f90e8f97380"

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<response>
+  <status>
+    <code>200</code>
+    <text>ok</text>
+  </status>
+  <data>
+    <bloque id="a3" tipo="precepto" titulo="Artículo 3">
+      <version id_norma="BOE-A-2021-9721" fecha_publicacion="20210611" fecha_vigencia="20210612">
+        <p class="articulo">Artículo 3. Plazos de presentación del modelo 490.</p>
+        <p class="parrafo">1. El período de liquidación coincidirá con el trimestre natural.</p>
+        <p class="parrafo">2. El modelo 490 deberá presentarse e ingresarse durante el mes siguiente al correspondiente periodo trimestral natural.</p>
+        <p class="parrafo">Lo dispuesto en este apartado se entenderá sin perjuicio del plazo para la domiciliación bancaria del pago de la deuda tributaria, establecido en el anexo I de la Orden EHA/1658/2009, de 12 de junio, por la que se establecen el procedimiento y las condiciones para la domiciliación del pago de determinadas deudas a través de cuentas abiertas en las Entidades de crédito que prestan el servicio de colaboración en la gestión recaudatoria de la Agencia Estatal de Administración Tributaria.</p>
+        <p class="parrafo">3. Si en algún periodo de liquidación trimestral no resulta cuota a ingresar, el contribuyente vendrá obligado igualmente a presentar la correspondiente declaración negativa por el impuesto, en la forma establecida en el artículo 11 de la Orden HAP/2194/2013, de 22 de noviembre, por la que se regulan los procedimientos y las condiciones generales para la presentación de determinadas autoliquidaciones, declaraciones informativas, declaraciones censales, comunicaciones y solicitudes de devolución, de naturaleza tributaria.</p>
+      </version>
+    </bloque>
+  </data>
+</response>

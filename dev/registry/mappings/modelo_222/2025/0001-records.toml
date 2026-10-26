@@ -1,0 +1,162 @@
+schema_version = 1
+fragment_id = "records"
+modelo = "222"
+design_epoch = "2025"
+source_ref = "aeat-dr-222-2025"
+source_sha256 = "0a44cd6bcae3b6ecbdb7bba1e54ddfad519506b91545b655c8da8454a3a63f51"
+
+
+[[records]]
+sheet = "DR22201"
+record_identity = "DR22201"
+export_record_id = "m222-page-01"
+record_type = "page-01"
+
+[[records]]
+sheet = "DR22202"
+record_identity = "DR22202"
+export_record_id = "m222-page-02"
+record_type = "page-02"
+
+[[variable_envelopes]]
+source_ref = "aeat-dr-222-2025"
+source_sha256 = "0a44cd6bcae3b6ecbdb7bba1e54ddfad519506b91545b655c8da8454a3a63f51"
+record_identity = "DR22200"
+body_record_ids = ["m222-page-01", "m222-page-02"]
+
+[[variable_envelopes.prefix_fields]]
+role = "opening_tag"
+[variable_envelopes.prefix_fields.anchor]
+sheet = "DR22200"
+source_row = 6
+source_cell = "A6"
+ordinal = "1"
+record_identity = "DR22200"
+
+[[variable_envelopes.prefix_fields]]
+role = "modelo"
+[variable_envelopes.prefix_fields.anchor]
+sheet = "DR22200"
+source_row = 7
+source_cell = "A7"
+ordinal = "2"
+record_identity = "DR22200"
+
+[[variable_envelopes.prefix_fields]]
+role = "discriminant"
+[variable_envelopes.prefix_fields.anchor]
+sheet = "DR22200"
+source_row = 8
+source_cell = "A8"
+ordinal = "3"
+record_identity = "DR22200"
+
+[[variable_envelopes.prefix_fields]]
+role = "filing_year"
+[variable_envelopes.prefix_fields.anchor]
+sheet = "DR22200"
+source_row = 9
+source_cell = "A9"
+ordinal = "4"
+record_identity = "DR22200"
+
+[[variable_envelopes.prefix_fields]]
+role = "period"
+[variable_envelopes.prefix_fields.anchor]
+sheet = "DR22200"
+source_row = 10
+source_cell = "A10"
+ordinal = "5"
+record_identity = "DR22200"
+
+[[variable_envelopes.prefix_fields]]
+role = "record_type"
+[variable_envelopes.prefix_fields.anchor]
+sheet = "DR22200"
+source_row = 11
+source_cell = "A11"
+ordinal = "6"
+record_identity = "DR22200"
+
+[[variable_envelopes.prefix_fields]]
+role = "aux_opening_tag"
+[variable_envelopes.prefix_fields.anchor]
+sheet = "DR22200"
+source_row = 12
+source_cell = "A12"
+ordinal = "7"
+record_identity = "DR22200"
+
+[[variable_envelopes.prefix_fields]]
+role = "pre_program_filler"
+[variable_envelopes.prefix_fields.anchor]
+sheet = "DR22200"
+source_row = 13
+source_cell = "A13"
+ordinal = "8"
+record_identity = "DR22200"
+
+[[variable_envelopes.prefix_fields]]
+role = "program_identifier"
+[variable_envelopes.prefix_fields.anchor]
+sheet = "DR22200"
+source_row = 14
+source_cell = "A14"
+ordinal = "9"
+record_identity = "DR22200"
+
+[[variable_envelopes.prefix_fields]]
+role = "between_identities_filler"
+[variable_envelopes.prefix_fields.anchor]
+sheet = "DR22200"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+record_identity = "DR22200"
+
+[[variable_envelopes.prefix_fields]]
+role = "developer_tax_id"
+[variable_envelopes.prefix_fields.anchor]
+sheet = "DR22200"
+source_row = 16
+source_cell = "A16"
+ordinal = "11"
+record_identity = "DR22200"
+
+[[variable_envelopes.prefix_fields]]
+role = "post_developer_filler"
+[variable_envelopes.prefix_fields.anchor]
+sheet = "DR22200"
+source_row = 17
+source_cell = "A17"
+ordinal = "12"
+record_identity = "DR22200"
+
+[[variable_envelopes.prefix_fields]]
+role = "aux_closing_tag"
+[variable_envelopes.prefix_fields.anchor]
+sheet = "DR22200"
+source_row = 18
+source_cell = "A18"
+ordinal = "13"
+record_identity = "DR22200"
+
+[variable_envelopes.body_anchor]
+sheet = "DR22200"
+source_row = 19
+source_cell = "A19"
+ordinal = "14"
+record_identity = "DR22200"
+
+[variable_envelopes.closer_anchor]
+sheet = "DR22200"
+source_row = 20
+source_cell = "A20"
+ordinal = "15"
+record_identity = "DR22200"
+
+[variable_envelopes.total_anchor]
+source_row = 21
+source_cell = "A21"
+label = "total"
+length = "Variable"

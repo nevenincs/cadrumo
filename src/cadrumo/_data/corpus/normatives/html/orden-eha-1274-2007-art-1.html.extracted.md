@@ -1,0 +1,3 @@
+# Artículo 1. Aprobación del modelo 036 de declaración censal.
+
+De conformidad con lo establecido en el artículo 13 del Reglamento General de las actuaciones y los procedimientos de gestión e inspección tributaria y de desarrollo de las normas comunes de los procedimientos de aplicación de los tributos, aprobado por Real Decreto 1065/2007, de 27 de julio, se aprueba el modelo 036, de declaración censal de alta, modificación y baja en el Censo de empresarios, profesionales y retenedores que figura en el anexo I de esta orden.

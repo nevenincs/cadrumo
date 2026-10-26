@@ -1,0 +1,29 @@
+[[revisions.2022.deadline_windows]]
+id = "modelo-222-2022-1p"
+filing_year = 2022
+period = "2022 1P"
+period_kind = "quarterly"
+opens_on = 2022-04-01
+closes_on = 2022-04-20
+legal_refs = ["orden-hfp-227-2017:art-5"]
+source_refs = ["boe-modelo-202-base-order", "aeat-modelo-222-instructions"]
+
+[[revisions.2022.deadline_windows]]
+id = "modelo-222-2022-2p"
+filing_year = 2022
+period = "2022 2P"
+period_kind = "quarterly"
+opens_on = 2022-10-01
+closes_on = 2022-10-20
+legal_refs = ["orden-hfp-227-2017:art-5"]
+source_refs = ["boe-modelo-202-base-order", "aeat-modelo-222-instructions"]
+
+[[revisions.2022.deadline_windows]]
+id = "modelo-222-2022-3p"
+filing_year = 2022
+period = "2022 3P"
+period_kind = "quarterly"
+opens_on = 2022-12-01
+closes_on = 2022-12-20
+legal_refs = ["orden-hfp-227-2017:art-5"]
+source_refs = ["boe-modelo-202-base-order", "aeat-modelo-222-instructions"]

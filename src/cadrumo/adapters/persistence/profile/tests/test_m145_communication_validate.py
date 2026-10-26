@@ -1,0 +1,343 @@
+"""Real-runtime validation tests for Modelo 145 local communication records.
+
+See Also:
+    :mod:`~application.modelo.m145_communication_records`
+        Backend validation service under test.
+    :func:`~application.modelo.m145_communication_records.validate_m145_communication_record`
+        Validator exercised by this module.
+    :class:`~application.modelo.m145_communication_records.M145CommunicationValidationIssueKind`
+        Typed validation issue vocabulary asserted for malformed records.
+    :class:`~domain.calculations.registry.CasillaDefinition`
+        Registry casilla definitions that drive required-field validation.
+    :class:`~domain.calculations.registry.ModeloRevision`
+        Active Modelo 145 revision whose legal and source refs are preserved.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import pytest
+
+from .....application.modelo.m145_communication_records import (
+    M145CommunicationCreateCommand,
+    M145CommunicationValidationIssueKind,
+    create_m145_communication_record,
+    export_m145_communication_record,
+    validate_m145_communication_record,
+)
+from .....domain.calculations.registry.authority import PinnedAuthorityOperation
+from .....domain.calculations.registry.casilla_membership import casillas_by_id
+from .....domain.calculations.registry.schema_surfaces import CasillaDefinition
+from .....domain.calculations.registry.temporal import select_revision
+from .....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
+from ....outbound.aeat.export.registry_record_renderer import RegistryFixedWidthRecordRenderer
+from ...storage.tests.secure_sql import isolated_runtime_profile
+from ..m145_communication_records import build_m145_communication_records_ports
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+
+def _field_values() -> dict[str, str]:
+    return {
+        "perceptor.nif": "12345678Z",
+        "perceptor.primer-apellido": "Garcia",
+        "perceptor.segundo-apellido": "Lopez",
+        "perceptor.nombre": "Ana",
+        "perceptor.anio-nacimiento": "1981",
+    }
+
+
+def _m145_revision():
+    modelos, _catalogues = bundled_registry_tree()
+    modelo = next(candidate for candidate in modelos if candidate.id == "145")
+    return select_revision(modelo, filing_year=2026, period="comunicacion")
+
+
+def _snapshot_casillas() -> dict[str, CasillaDefinition]:
+    return casillas_by_id(_m145_revision())
+
+
+def _casilla_for_data_type(data_type: str) -> CasillaDefinition:
+    for casilla in sorted(_snapshot_casillas().values(), key=lambda item: item.id):
+        if casilla.data_type == data_type:
+            return casilla
+    raise AssertionError(f"Modelo 145 registry declares no casilla with data_type={data_type!r}")
+
+
+def _family_situation_casilla() -> CasillaDefinition:
+    for casilla in _snapshot_casillas().values():
+        if casilla.semantic_role == "modelo_145_perceptor_situacion_familiar":
+            return casilla
+    raise AssertionError("Modelo 145 registry declares no family-situation casilla")
+
+
+def test_validate_m145_communication_record_accepts_registry_backed_required_fields(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    revision = _m145_revision()
+
+    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+        record = create_m145_communication_record(
+            M145CommunicationCreateCommand(communication_year=2026, field_values=_field_values()),
+            bucket_id=runtime.bucket_id,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
+        )
+        result = validate_m145_communication_record(
+            record.communication_record_id[:12],
+            bucket_id=runtime.bucket_id,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
+        )
+
+    assert result.valid is True
+    assert result.issue_count == 0
+    assert result.issues == ()
+    assert result.communication_record_id == record.communication_record_id
+    assert result.revision_id == revision.id
+    assert result.legal_refs == tuple(sorted(str(ref) for ref in revision.legal_refs))
+    assert result.source_refs == tuple(sorted(str(ref) for ref in revision.source_refs))
+
+
+@pytest.mark.parametrize(
+    ("casilla_id", "expected_issue"),
+    (
+        ("comunicacion.pagina-complementaria", None),
+        ("perceptor.primer-apellido", M145CommunicationValidationIssueKind.MISSING_REQUIRED),
+        ("perceptor.segundo-apellido", M145CommunicationValidationIssueKind.MISSING_REQUIRED),
+        ("perceptor.nombre", M145CommunicationValidationIssueKind.MISSING_REQUIRED),
+        ("perceptor.situacion-familiar", M145CommunicationValidationIssueKind.INVALID_VALUE),
+        ("perceptor.anio-nacimiento", M145CommunicationValidationIssueKind.MISSING_REQUIRED),
+        ("descendiente-1.anio-nacimiento", M145CommunicationValidationIssueKind.INVALID_VALUE),
+    ),
+)
+def test_explicit_ordinary_page_blank_preserves_required_and_grounded_value_guards(
+    tmp_path: Path,
+    casilla_id: str,
+    expected_issue: M145CommunicationValidationIssueKind | None,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """DR145 row 2 permits a blank; required names, dated family tokens and years do not."""
+    values = _field_values()
+    values["comunicacion.pagina-complementaria"] = " "
+    values[casilla_id] = " "
+    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+        ports = build_m145_communication_records_ports(bucket_id=runtime.bucket_id)
+        record = create_m145_communication_record(
+            M145CommunicationCreateCommand(communication_year=2026, field_values=values),
+            bucket_id=runtime.bucket_id,
+            ports=ports,
+            operation=operation,
+        )
+        assert record.field_values[casilla_id] == " "
+        result = validate_m145_communication_record(
+            record.communication_record_id, bucket_id=runtime.bucket_id, ports=ports, operation=operation
+        )
+    if expected_issue is None:
+        assert result.valid and result.issues == ()
+    else:
+        assert not result.valid
+        assert any(issue.casilla_id == casilla_id and issue.kind is expected_issue for issue in result.issues)
+
+
+@pytest.mark.parametrize(("value", "expected_slot"), (("", b" "), (" ", b" "), ("C", b"C")))
+def test_page_indicator_accepts_only_the_official_blank_or_c_wire_tokens(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+    value: str,
+    expected_slot: bytes,
+) -> None:
+    """The persisted token must validate and render DR145 row 2 at byte position 10."""
+    values = _field_values()
+    values["comunicacion.pagina-complementaria"] = value
+    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+        ports = build_m145_communication_records_ports(bucket_id=runtime.bucket_id)
+        record = create_m145_communication_record(
+            M145CommunicationCreateCommand(communication_year=2026, field_values=values),
+            bucket_id=runtime.bucket_id,
+            ports=ports,
+            operation=operation,
+        )
+        assert record.field_values["comunicacion.pagina-complementaria"] == value
+        validation = validate_m145_communication_record(
+            record.communication_record_id, bucket_id=runtime.bucket_id, ports=ports, operation=operation
+        )
+        exported = export_m145_communication_record(
+            record.communication_record_id,
+            bucket_id=runtime.bucket_id,
+            renderer=RegistryFixedWidthRecordRenderer(),
+            ports=ports,
+            operation=operation,
+        )
+
+    assert validation.valid and validation.issues == ()
+    assert exported.payload[9:10] == expected_slot
+
+
+@pytest.mark.parametrize("value", ("X", "c", "CC", " C ", "  ", "\t", "\n"))
+def test_page_indicator_rejects_noncanonical_markers_and_blank_representations(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+    value: str,
+) -> None:
+    values = _field_values()
+    values["comunicacion.pagina-complementaria"] = value
+    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+        ports = build_m145_communication_records_ports(bucket_id=runtime.bucket_id)
+        record = create_m145_communication_record(
+            M145CommunicationCreateCommand(communication_year=2026, field_values=values),
+            bucket_id=runtime.bucket_id,
+            ports=ports,
+            operation=operation,
+        )
+        validation = validate_m145_communication_record(
+            record.communication_record_id, bucket_id=runtime.bucket_id, ports=ports, operation=operation
+        )
+
+    assert not validation.valid
+    assert [(issue.kind, issue.casilla_id) for issue in validation.issues] == [
+        (M145CommunicationValidationIssueKind.INVALID_VALUE, "comunicacion.pagina-complementaria"),
+    ]
+    assert "not in enum ('C',)" in validation.issues[0].message
+
+
+@pytest.mark.parametrize("value", ("familia_1", "familia_2", "familia_3"))
+def test_validate_m145_communication_record_accepts_registry_declared_family_situation(
+    tmp_path: Path,
+    value: str,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    casilla = _family_situation_casilla()
+    values = _field_values()
+    values[casilla.id] = value
+
+    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+        record = create_m145_communication_record(
+            M145CommunicationCreateCommand(communication_year=2026, field_values=values),
+            bucket_id=runtime.bucket_id,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
+        )
+        result = validate_m145_communication_record(
+            record.communication_record_id,
+            bucket_id=runtime.bucket_id,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
+        )
+
+    assert result.valid is True
+    assert result.issues == ()
+
+
+def test_validate_m145_communication_record_rejects_unknown_family_situation(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    casilla = _family_situation_casilla()
+    values = _field_values()
+    values[casilla.id] = "familia_unknown"
+
+    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+        record = create_m145_communication_record(
+            M145CommunicationCreateCommand(communication_year=2026, field_values=values),
+            bucket_id=runtime.bucket_id,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
+        )
+        result = validate_m145_communication_record(
+            record.communication_record_id,
+            bucket_id=runtime.bucket_id,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
+        )
+
+    issue = next(
+        issue
+        for issue in result.issues
+        if issue.kind is M145CommunicationValidationIssueKind.INVALID_VALUE and issue.casilla_id == casilla.id
+    )
+    assert result.valid is False
+    assert "family-situation token" in issue.message
+
+
+def test_validate_m145_communication_record_reports_missing_required_casilla_with_registry_refs(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    casillas = _snapshot_casillas()
+    missing = next(casilla for casilla in sorted(casillas.values(), key=lambda item: item.id) if casilla.required)
+    values = _field_values()
+    values.pop(missing.id)
+
+    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+        record = create_m145_communication_record(
+            M145CommunicationCreateCommand(communication_year=2026, field_values=values),
+            bucket_id=runtime.bucket_id,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
+        )
+        result = validate_m145_communication_record(
+            record.communication_record_id,
+            bucket_id=runtime.bucket_id,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
+        )
+
+    issue = next(
+        issue for issue in result.issues if issue.kind is M145CommunicationValidationIssueKind.MISSING_REQUIRED
+    )
+    assert result.valid is False
+    assert issue.casilla_id == missing.id
+    assert issue.data_type == missing.data_type
+    assert issue.legal_refs == tuple(str(ref) for ref in missing.legal_refs)
+    assert issue.source_refs == tuple(str(ref) for ref in missing.source_refs)
+
+
+@pytest.mark.parametrize(
+    ("data_type", "invalid_value"),
+    (
+        # No "date" case: Modelo 145's diseño de registro declares every
+        # date as independently numbered día/mes/año Num rows rather than
+        # one combined field, so the registry carries no data_type="date"
+        # casilla for this modelo to exercise.
+        ("integer", "1.5"),
+        ("money", "not-money"),
+        ("nif", "not-a-nif"),
+        ("year", "19X1"),
+    ),
+)
+def test_validate_m145_communication_record_reports_registry_data_type_failures(
+    tmp_path: Path,
+    data_type: str,
+    invalid_value: str,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    casilla = _casilla_for_data_type(data_type)
+    values = _field_values()
+    values[casilla.id] = invalid_value
+
+    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+        record = create_m145_communication_record(
+            M145CommunicationCreateCommand(communication_year=2026, field_values=values),
+            bucket_id=runtime.bucket_id,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
+        )
+        result = validate_m145_communication_record(
+            record.communication_record_id,
+            bucket_id=runtime.bucket_id,
+            ports=build_m145_communication_records_ports(bucket_id=runtime.bucket_id),
+            operation=operation,
+        )
+
+    issue = next(
+        issue
+        for issue in result.issues
+        if issue.kind is M145CommunicationValidationIssueKind.INVALID_VALUE and issue.casilla_id == casilla.id
+    )
+    assert result.valid is False
+    assert issue.data_type == data_type
+    assert issue.legal_refs == tuple(str(ref) for ref in casilla.legal_refs)
+    assert issue.source_refs == tuple(str(ref) for ref in casilla.source_refs)

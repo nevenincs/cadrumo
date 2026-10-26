@@ -1,0 +1,38 @@
+modelo:
+  form:
+    column:
+      aplicado: Applied in this return
+      aumentos: Increases
+      base_deduccion: Deduction base
+      base_imponible: Taxable base
+      codigo_cnae: CNAE activity code
+      cuota: Tax amount
+      cuota_deducible: Deductible tax
+      cuota_soportada: Input tax borne
+      diferencias_permanentes: Permanent differences
+      diferencias_temporarias_anteriores: Temporary differences from prior years
+      diferencias_temporarias_ejercicio: Temporary differences arising in the year
+      disminuciones: Decreases
+      importe_deduccion: Deduction amount
+      importe_operaciones: Amount of transactions
+      importe_operaciones_derecho_deduccion: Amount of transactions with deduction
+        right
+      importe_percepciones: Amount paid
+      importe_retenciones: Amount withheld
+      importe_total: Total amount
+      ingresos_a_cuenta: Payments on account
+      numero_declarados: Number of reported parties
+      numero_perceptores: Number of recipients
+      pendiente_futuro: Carried forward to future periods
+      pendiente_generada: Outstanding at start or generated in period
+      pendiente_inicio: Outstanding at start of period
+      porcentaje_prorrata: Pro rata %
+      territorio_araba_alava: Araba/Álava
+      territorio_bizkaia: Bizkaia
+      territorio_estado: State (AGE)
+      territorio_gipuzkoa: Gipuzkoa
+      territorio_navarra: Navarre
+      tipo: Rate %
+      tipo_prorrata: Pro rata type
+      total: Total
+      valor_percepciones_especie: Value of payments in kind

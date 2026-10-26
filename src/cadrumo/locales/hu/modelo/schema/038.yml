@@ -1,0 +1,27 @@
+modelo:
+  schema:
+    038:
+      casilla:
+        continuidad:
+          filing-year:
+            label: Az adóbevallás vonatkozási éve
+          tipo-declaracion:
+            label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
+      construct:
+        modelo-038-informative:
+          field:
+            title: 'Modelo 038 nyomtatvány: tájékoztató jellegű adatszolgáltatás'
+      field:
+        official_name: Modelo 038. A közhitelű nyilvántartásba bejegyzett szervezetek
+          által végzett ügyletek kimutatása. Adatszolgáltatási bevallás.
+        title: Közhitelű nyilvántartásba bejegyzett szervezetek ügyletei (havi adatszolgáltatás)
+      revision:
+        2022-hasta-2024-05:
+          field:
+            label: 038-as modelo, 2022-től 2024. májusig
+        2024-desde-06:
+          field:
+            label: 038-as modelo, 2024. júniustól
+        2025-y-siguientes:
+          field:
+            label: 038-as modelo, 2025. adóévtől

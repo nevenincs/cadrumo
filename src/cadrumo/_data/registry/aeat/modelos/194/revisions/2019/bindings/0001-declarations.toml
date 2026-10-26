@@ -1,0 +1,469 @@
+[[revisions.2019.bindings]]
+id = "modelo-194-perceptor-row-nif"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2019", "aeat-modelo-194-procedure"]
+
+[[revisions.2019.bindings.source_citations]]
+source_ref = "aeat-modelo-194-procedure"
+required_text = ["Modelo 194"]
+
+[revisions.2019.bindings.provider]
+kind = "withholding"
+fact = "row_field"
+row_field = "perceptor_tax_id"
+grouping = "per_source_allocation"
+record = "perceptor"
+data_type = "text"
+
+[revisions.2019.bindings.value]
+data_type = "text"
+channel = "row_set"
+row_grouping = "withholding"
+
+[revisions.2019.bindings.aggregation]
+op = "rows"
+
+[[revisions.2019.bindings]]
+id = "modelo-194-perceptor-row-nif-representante"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2019", "aeat-modelo-194-procedure"]
+
+[[revisions.2019.bindings.source_citations]]
+source_ref = "aeat-modelo-194-procedure"
+required_text = ["Modelo 194"]
+
+[revisions.2019.bindings.provider]
+kind = "withholding"
+fact = "row_field"
+row_field = "representative_tax_id"
+grouping = "per_source_allocation"
+record = "perceptor"
+data_type = "text"
+
+[revisions.2019.bindings.value]
+data_type = "text"
+channel = "row_set"
+row_grouping = "withholding"
+
+[revisions.2019.bindings.aggregation]
+op = "rows"
+
+[[revisions.2019.bindings]]
+id = "modelo-194-perceptor-row-nombre"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2019", "aeat-modelo-194-procedure"]
+
+[[revisions.2019.bindings.source_citations]]
+source_ref = "aeat-modelo-194-procedure"
+required_text = ["Modelo 194"]
+
+[revisions.2019.bindings.provider]
+kind = "withholding"
+fact = "row_field"
+row_field = "perceptor_legal_name"
+grouping = "per_source_allocation"
+record = "perceptor"
+data_type = "text"
+
+[revisions.2019.bindings.value]
+data_type = "text"
+channel = "row_set"
+row_grouping = "withholding"
+
+[revisions.2019.bindings.aggregation]
+op = "rows"
+
+[[revisions.2019.bindings]]
+id = "modelo-194-perceptor-row-provincia"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2019", "aeat-modelo-194-procedure"]
+
+[[revisions.2019.bindings.source_citations]]
+source_ref = "aeat-modelo-194-procedure"
+required_text = ["Modelo 194"]
+
+[revisions.2019.bindings.provider]
+kind = "withholding"
+fact = "row_field"
+row_field = "province_code"
+grouping = "per_source_allocation"
+record = "perceptor"
+data_type = "text"
+
+[revisions.2019.bindings.value]
+data_type = "text"
+channel = "row_set"
+row_grouping = "withholding"
+
+[revisions.2019.bindings.aggregation]
+op = "rows"
+
+[[revisions.2019.bindings]]
+id = "modelo-194-perceptor-row-origen"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2019", "aeat-modelo-194-procedure"]
+
+[[revisions.2019.bindings.source_citations]]
+source_ref = "aeat-modelo-194-procedure"
+required_text = ["Modelo 194"]
+
+[revisions.2019.bindings.provider]
+kind = "withholding"
+fact = "row_field"
+row_field = "financial_asset_origin"
+grouping = "per_source_allocation"
+record = "perceptor"
+data_type = "text"
+
+[revisions.2019.bindings.value]
+data_type = "text"
+channel = "row_set"
+row_grouping = "withholding"
+
+[revisions.2019.bindings.aggregation]
+op = "rows"
+
+[[revisions.2019.bindings]]
+id = "modelo-194-perceptor-row-clave-codigo"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2019", "aeat-modelo-194-procedure"]
+
+[[revisions.2019.bindings.source_citations]]
+source_ref = "aeat-modelo-194-procedure"
+required_text = ["Modelo 194"]
+
+[revisions.2019.bindings.provider]
+kind = "withholding"
+fact = "row_field"
+row_field = "clave_codigo"
+grouping = "per_source_allocation"
+record = "perceptor"
+data_type = "integer"
+
+[revisions.2019.bindings.value]
+data_type = "integer"
+channel = "row_set"
+row_grouping = "withholding"
+
+[revisions.2019.bindings.aggregation]
+op = "rows"
+
+[[revisions.2019.bindings]]
+id = "modelo-194-perceptor-row-codigo-emisor"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2019", "aeat-modelo-194-procedure"]
+
+[[revisions.2019.bindings.source_citations]]
+source_ref = "aeat-modelo-194-procedure"
+required_text = ["Modelo 194"]
+
+[revisions.2019.bindings.provider]
+kind = "withholding"
+fact = "row_field"
+row_field = "codigo_emisor"
+grouping = "per_source_allocation"
+record = "perceptor"
+data_type = "text"
+
+[revisions.2019.bindings.value]
+data_type = "text"
+channel = "row_set"
+row_grouping = "withholding"
+
+[revisions.2019.bindings.aggregation]
+op = "rows"
+
+[[revisions.2019.bindings]]
+id = "modelo-194-perceptor-row-tipo-codigo"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2019", "aeat-modelo-194-procedure"]
+
+[[revisions.2019.bindings.source_citations]]
+source_ref = "aeat-modelo-194-procedure"
+required_text = ["Modelo 194"]
+
+[revisions.2019.bindings.provider]
+kind = "withholding"
+fact = "row_field"
+row_field = "tipo_codigo"
+grouping = "per_source_allocation"
+record = "perceptor"
+data_type = "text"
+
+[revisions.2019.bindings.value]
+data_type = "text"
+channel = "row_set"
+row_grouping = "withholding"
+
+[revisions.2019.bindings.aggregation]
+op = "rows"
+
+[[revisions.2019.bindings]]
+id = "modelo-194-perceptor-row-codigo-cuenta"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2019", "aeat-modelo-194-procedure"]
+
+[[revisions.2019.bindings.source_citations]]
+source_ref = "aeat-modelo-194-procedure"
+required_text = ["Modelo 194"]
+
+[revisions.2019.bindings.provider]
+kind = "withholding"
+fact = "row_field"
+row_field = "codigo_cuenta"
+grouping = "per_source_allocation"
+record = "perceptor"
+data_type = "text"
+
+[revisions.2019.bindings.value]
+data_type = "text"
+channel = "row_set"
+row_grouping = "withholding"
+
+[revisions.2019.bindings.aggregation]
+op = "rows"
+
+[[revisions.2019.bindings]]
+id = "modelo-194-perceptor-row-pendiente"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2019", "aeat-modelo-194-procedure"]
+
+[[revisions.2019.bindings.source_citations]]
+source_ref = "aeat-modelo-194-procedure"
+required_text = ["Modelo 194"]
+
+[revisions.2019.bindings.provider]
+kind = "withholding"
+fact = "row_field"
+row_field = "pendiente_flag"
+grouping = "per_source_allocation"
+record = "perceptor"
+data_type = "text"
+
+[revisions.2019.bindings.value]
+data_type = "text"
+channel = "row_set"
+row_grouping = "withholding"
+
+[revisions.2019.bindings.aggregation]
+op = "rows"
+
+[[revisions.2019.bindings]]
+id = "modelo-194-perceptor-row-ejercicio-devengo"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2019", "aeat-modelo-194-procedure"]
+
+[[revisions.2019.bindings.source_citations]]
+source_ref = "aeat-modelo-194-procedure"
+required_text = ["Modelo 194"]
+
+[revisions.2019.bindings.provider]
+kind = "withholding"
+fact = "row_field"
+row_field = "accrual_year"
+grouping = "per_source_allocation"
+record = "perceptor"
+data_type = "integer"
+
+[revisions.2019.bindings.value]
+data_type = "integer"
+channel = "row_set"
+row_grouping = "withholding"
+
+[revisions.2019.bindings.aggregation]
+op = "rows"
+
+[[revisions.2019.bindings]]
+id = "modelo-194-perceptor-row-valor-adquisicion"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2019", "aeat-modelo-194-procedure"]
+
+[[revisions.2019.bindings.source_citations]]
+source_ref = "aeat-modelo-194-procedure"
+required_text = ["Modelo 194"]
+
+[revisions.2019.bindings.provider]
+kind = "withholding"
+fact = "row_field"
+row_field = "financial_asset_acquisition_value"
+grouping = "per_source_allocation"
+record = "perceptor"
+data_type = "money"
+
+[revisions.2019.bindings.value]
+data_type = "money"
+channel = "row_set"
+row_grouping = "withholding"
+
+[revisions.2019.bindings.aggregation]
+op = "rows"
+
+[[revisions.2019.bindings]]
+id = "modelo-194-perceptor-row-valor-transmision"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2019", "aeat-modelo-194-procedure"]
+
+[[revisions.2019.bindings.source_citations]]
+source_ref = "aeat-modelo-194-procedure"
+required_text = ["Modelo 194"]
+
+[revisions.2019.bindings.provider]
+kind = "withholding"
+fact = "row_field"
+row_field = "financial_asset_disposal_value"
+grouping = "per_source_allocation"
+record = "perceptor"
+data_type = "money"
+
+[revisions.2019.bindings.value]
+data_type = "money"
+channel = "row_set"
+row_grouping = "withholding"
+
+[revisions.2019.bindings.aggregation]
+op = "rows"
+
+[[revisions.2019.bindings]]
+id = "modelo-194-perceptor-row-base"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2019", "aeat-modelo-194-procedure"]
+
+[[revisions.2019.bindings.source_citations]]
+source_ref = "aeat-modelo-194-procedure"
+required_text = ["Modelo 194"]
+
+[revisions.2019.bindings.provider]
+kind = "withholding"
+fact = "row_field"
+row_field = "base_retenciones"
+grouping = "per_source_allocation"
+record = "perceptor"
+data_type = "money"
+
+[revisions.2019.bindings.value]
+data_type = "money"
+channel = "row_set"
+row_grouping = "withholding"
+
+[revisions.2019.bindings.aggregation]
+op = "rows"
+
+[[revisions.2019.bindings]]
+id = "modelo-194-perceptor-row-porcentaje"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2019", "aeat-modelo-194-procedure"]
+
+[[revisions.2019.bindings.source_citations]]
+source_ref = "aeat-modelo-194-procedure"
+required_text = ["Modelo 194"]
+
+[revisions.2019.bindings.provider]
+kind = "withholding"
+fact = "row_field"
+row_field = "porcentaje_retencion"
+grouping = "per_source_allocation"
+record = "perceptor"
+data_type = "decimal"
+
+[revisions.2019.bindings.value]
+data_type = "decimal"
+channel = "row_set"
+row_grouping = "withholding"
+
+[revisions.2019.bindings.aggregation]
+op = "rows"
+
+[[revisions.2019.bindings]]
+id = "modelo-194-perceptor-row-retenciones"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2019", "aeat-modelo-194-procedure"]
+
+[[revisions.2019.bindings.source_citations]]
+source_ref = "aeat-modelo-194-procedure"
+required_text = ["Modelo 194"]
+
+[revisions.2019.bindings.provider]
+kind = "withholding"
+fact = "row_field"
+row_field = "retencion_practicada"
+grouping = "per_source_allocation"
+record = "perceptor"
+data_type = "money"
+
+[revisions.2019.bindings.value]
+data_type = "money"
+channel = "row_set"
+row_grouping = "withholding"
+
+[revisions.2019.bindings.aggregation]
+op = "rows"
+
+[[revisions.2019.bindings]]
+id = "modelo-194-perceptor-row-vinculacion"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2019", "aeat-modelo-194-procedure"]
+
+[[revisions.2019.bindings.source_citations]]
+source_ref = "aeat-modelo-194-procedure"
+required_text = ["Modelo 194"]
+
+[revisions.2019.bindings.provider]
+kind = "withholding"
+fact = "row_field"
+row_field = "financial_asset_related_entity"
+grouping = "per_source_allocation"
+record = "perceptor"
+data_type = "text"
+
+[revisions.2019.bindings.value]
+data_type = "text"
+channel = "row_set"
+row_grouping = "withholding"
+
+[revisions.2019.bindings.aggregation]
+op = "rows"
+
+[[revisions.2019.bindings]]
+id = "modelo-194-resumen-perceptores-positivos"
+provider = { kind = "withholding", fact = "grouped_row_count", grouping = "per_source_allocation", base_sign = "positive" }
+value = { data_type = "integer", channel = "integer" }
+aggregation = { op = "count_distinct" }
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2019", "aeat-modelo-194-procedure"]
+source_citations = [{ source_ref = "aeat-modelo-194-procedure", required_text = ["Modelo 194"] }]
+
+[[revisions.2019.bindings]]
+id = "modelo-194-resumen-base-positiva"
+provider = { kind = "withholding", fact = "grouped_row_sum", grouping = "per_source_allocation", base_sign = "positive", row_field = "base_retenciones" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2019", "aeat-modelo-194-procedure"]
+source_citations = [{ source_ref = "aeat-modelo-194-procedure", required_text = ["Modelo 194"] }]
+
+[[revisions.2019.bindings]]
+id = "modelo-194-resumen-retenciones-total"
+provider = { kind = "withholding", fact = "grouped_row_sum", grouping = "per_source_allocation", row_field = "retencion_practicada" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2019", "aeat-modelo-194-procedure"]
+source_citations = [{ source_ref = "aeat-modelo-194-procedure", required_text = ["Modelo 194"] }]
+
+[[revisions.2019.bindings]]
+id = "modelo-194-resumen-perceptores-no-positivos"
+provider = { kind = "withholding", fact = "grouped_row_count", grouping = "per_source_allocation", base_sign = "nonpositive" }
+value = { data_type = "integer", channel = "integer" }
+aggregation = { op = "count_distinct" }
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2019", "aeat-modelo-194-procedure"]
+source_citations = [{ source_ref = "aeat-modelo-194-procedure", required_text = ["Modelo 194"] }]
+
+[[revisions.2019.bindings]]
+id = "modelo-194-resumen-base-negativa"
+provider = { kind = "withholding", fact = "grouped_row_sum", grouping = "per_source_allocation", base_sign = "nonpositive", row_field = "base_retenciones" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2019", "aeat-modelo-194-procedure"]
+source_citations = [{ source_ref = "aeat-modelo-194-procedure", required_text = ["Modelo 194"] }]

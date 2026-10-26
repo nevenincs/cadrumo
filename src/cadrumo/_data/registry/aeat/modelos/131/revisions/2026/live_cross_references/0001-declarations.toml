@@ -1,0 +1,16 @@
+[[revisions."2026".live_cross_references]]
+id = "modelo-131-static-official"
+evidence_tier = "layout_authority"
+surface = "static_official_documentation"
+guard_policy_id = "modelo-131-static-official"
+forbidden_actions = ["presentar", "firmar", "guardar", "pagar", "domiciliar", "modificar", "anular"]
+synthetic_data_allowed = false
+requires_authentication = false
+requires_aeat_authorization = false
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = [
+    "aeat-dr-131-2026",
+    "aeat-modelo-131-procedure",
+    "aeat-modelo-131-formulario-presentacion",
+    "aeat-modelo-131-recuperacion-declaraciones",
+]

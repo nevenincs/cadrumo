@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-hfp-1172-2022-da-8.html",
+  "source_sha256": "ed4c7d2ae8253053e6e0a2de7fdca04f6cff07ada354363f5b3922f7586642d0",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.4",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "La reducción prevista en la disposición adicional primera de la Orden HFP/1335/2021, de 1 de diciembre, será del 15 por 100.\nEsta reducción se tendrá en cuenta para cuantificar el rendimiento neto a efectos del pago fraccionado correspondientes al cuarto trimestre de 2022.",
+      "title": "Disposición adicional octava. Reducción en 2022 del rendimiento neto calculado por el método de estimación objetiva en todas las actividades económicas.",
+      "section": "Disposición adicional octava. Reducción en 2022 del rendimiento neto calculado por el método de estimación objetiva en todas las actividades económicas.",
+      "anchor": "#da-8"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<response>
+  <status>
+    <code>200</code>
+    <text>ok</text>
+  </status>
+  <data>
+    <bloque id="a3" tipo="precepto" titulo="Artículo 3">
+      <version id_norma="BOE-A-2021-8878" fecha_publicacion="20210528" fecha_vigencia="20210529">
+        <p class="articulo">Artículo 3. Plazo de presentación del modelo 604, «Impuesto sobre las Transacciones Financieras. Autoliquidación».</p>
+        <p class="parrafo">El período de liquidación coincidirá con el mes natural de acuerdo con lo previsto en el artículo 8.3 de la Ley 5/2020, de 15 de octubre, del Impuesto sobre las Transacciones Financieras.</p>
+        <p class="parrafo">De acuerdo con lo previsto en los artículos 6.1 y 8 del Real Decreto 366/2021, de 25 de mayo, por el que se desarrolla el procedimiento de presentación e ingreso de las autoliquidaciones del Impuesto sobre las Transacciones Financieras y se modifican otras normas tributarias, el modelo 604, «Impuesto sobre las Transacciones Financieras. Autoliquidación», deberá presentarse e ingresarse, según corresponda, por el depositario central de valores o por el sujeto pasivo, entre los días diez y veinte del mes siguiente al correspondiente periodo de liquidación mensual.</p>
+      </version>
+    </bloque>
+  </data>
+</response>

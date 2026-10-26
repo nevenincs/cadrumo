@@ -1,0 +1,141 @@
+modelo:
+  schema:
+    '181':
+      construct:
+        modelo-181-informative:
+          field:
+            title: Modelo 181 return informative
+      field:
+        official_name: Modelo 181. Informative return of loans and credits, and financial
+          transactions relating to real property.
+        title: Loans, credits and financial transactions relating to real property
+          (annual informative return)
+      revision:
+        2022-y-siguientes:
+          casilla:
+            cantidades-minorar-principal:
+              label: Amounts applied to reduce the loan principal
+            clave-intervencion:
+              label: Code for the role held in the transaction
+            clave-tipo-identificacion:
+              label: Identification type code
+            codigo-provincia:
+              label: Province code
+            declaracion-complementaria-sustitutiva:
+              label: Supplementary or replacement return
+            declarado-nif:
+              label: Tax ID of the reported person
+            declarado-nombre:
+              label: Surnames and given name or business name of the reported person
+            declarante-razon-social:
+              label: Business name of the filer
+            direccion-inmueble:
+              label: Address of the property
+            duracion-operacion:
+              label: Duration of the transaction in months
+            fecha-operacion:
+              label: Transaction date
+            iban-codigo-pais:
+              label: Country code of the operation IBAN
+            iban-digitos-control:
+              label: Check digits of the operation IBAN
+            identificacion-operacion:
+              label: Identifier of the loan, credit or other financial transaction
+            importe-amortizacion-capital:
+              label: Amount paid during the year as repayment of principal
+            importe-gastos-financiacion:
+              label: Amount paid during the year as costs arising from external financing
+            importe-intereses:
+              label: Amount paid during the year as interest
+            importe-operacion:
+              label: Amount of the loan, credit or other financial transaction
+            importe-reintegro-intereses:
+              label: Amount accrued during the year as refunded interest
+            importe-total-capital-amortizado:
+              label: Total amount of principal repaid
+            importe-total-gastos-financiacion:
+              label: Total costs arising from external financing
+            importe-total-intereses:
+              label: Total interest paid during the year
+            importe-total-saldos-pendientes:
+              label: Total balances outstanding at 31 December
+            inmueble-bloque:
+              label: Property block
+            inmueble-calificador-numero:
+              label: Property house-number qualifier
+            inmueble-codigo-municipio:
+              label: Property municipality code
+            inmueble-codigo-postal:
+              label: Property postal code
+            inmueble-codigo-provincia:
+              label: Property province code
+            inmueble-complemento:
+              label: Property address complement
+            inmueble-escalera:
+              label: Property stairway
+            inmueble-localidad:
+              label: Property locality
+            inmueble-municipio:
+              label: Property municipality
+            inmueble-nombre-via:
+              label: Property street name
+            inmueble-numero-casa:
+              label: Property house number
+            inmueble-planta:
+              label: Property floor
+            inmueble-portal:
+              label: Property entrance
+            inmueble-puerta:
+              label: Property door
+            inmueble-tipo-numeracion:
+              label: Property numbering type
+            inmueble-tipo-via:
+              label: Property street type
+            intereses-indemnizatorios:
+              label: Compensatory interest
+            numero-identificativo-anterior:
+              label: Identifying number of the previous return
+            numero-identificativo-declaracion:
+              label: Declaration identifying number
+            numero-total-declarados:
+              label: Total number of reported records
+            origen-operacion:
+              label: Origin of the transaction
+            otras-cantidades-indemnizatorias:
+              label: Other compensatory amounts
+            persona-relacion:
+              label: Contact person
+            porcentaje-financiacion-vivienda-habitual:
+              label: Percentage of the financing applied to the main residence
+            porcentaje-participacion:
+              label: Percentage of participation
+            prefijo-codigo-iban:
+              label: IBAN code prefix
+            prestamista-nif:
+              label: Tax ID of the lender
+            prestamista-nombre:
+              label: Surnames and given name or business name of the lender
+            referencia-catastral:
+              label: Cadastral reference
+            representante-legal-nif:
+              label: Legal representative's NIF
+            saldo-pendiente:
+              label: Balance outstanding at 31 December
+            situacion-inmueble:
+              label: Location status of the property
+            subclave-operacion:
+              label: Transaction subcode
+            tipo-operacion:
+              label: Transaction type
+            valor-tasacion-inmueble:
+              label: Appraised value of the property pledged as security
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
+              label: Supplementary return
+            x-chim6r1ecll6asj3d5hmiro:
+              label: Filing year to which the return relates
+            x-chim6r1eedqn6t39ehqn8qbmc4:
+              label: Replacement return
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              label: Return type (original / substitute / supplementary)
+          field:
+            label: Modelo 181 (Order EHA/3514/2009), tax years 2009 onwards

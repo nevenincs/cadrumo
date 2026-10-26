@@ -1,0 +1,169 @@
+schema_version = 1
+fragment_id = "records"
+modelo = "128"
+design_epoch = "2020"
+source_ref = "aeat-dr-128-2020"
+source_sha256 = "2cdf1540b2aaca1cd5cf5a19380179ba72271a7656eba8a6dd157833866a5cc0"
+entries = []
+
+[[records]]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+export_record_id = "modelo-128-page-01"
+record_type = "page_1"
+
+[[variable_envelopes]]
+source_ref = "aeat-dr-128-2020"
+source_sha256 = "2cdf1540b2aaca1cd5cf5a19380179ba72271a7656eba8a6dd157833866a5cc0"
+record_identity = "Pág. 0"
+body_record_ids = ["modelo-128-page-01"]
+
+[[variable_envelopes.prefix_fields]]
+role = "opening_tag"
+
+[variable_envelopes.prefix_fields.anchor]
+sheet = "Pág. 0"
+source_row = 6
+source_cell = "A6"
+record_identity = "Pág. 0"
+ordinal = "1"
+
+[[variable_envelopes.prefix_fields]]
+role = "modelo"
+
+[variable_envelopes.prefix_fields.anchor]
+sheet = "Pág. 0"
+source_row = 7
+source_cell = "A7"
+record_identity = "Pág. 0"
+ordinal = "2"
+
+[[variable_envelopes.prefix_fields]]
+role = "discriminant"
+
+[variable_envelopes.prefix_fields.anchor]
+sheet = "Pág. 0"
+source_row = 8
+source_cell = "A8"
+record_identity = "Pág. 0"
+ordinal = "3"
+
+[[variable_envelopes.prefix_fields]]
+role = "filing_year"
+
+[variable_envelopes.prefix_fields.anchor]
+sheet = "Pág. 0"
+source_row = 9
+source_cell = "A9"
+record_identity = "Pág. 0"
+ordinal = "4"
+
+[[variable_envelopes.prefix_fields]]
+role = "period"
+
+[variable_envelopes.prefix_fields.anchor]
+sheet = "Pág. 0"
+source_row = 10
+source_cell = "A10"
+record_identity = "Pág. 0"
+ordinal = "5"
+
+[[variable_envelopes.prefix_fields]]
+role = "record_type"
+
+[variable_envelopes.prefix_fields.anchor]
+sheet = "Pág. 0"
+source_row = 11
+source_cell = "A11"
+record_identity = "Pág. 0"
+ordinal = "6"
+
+[[variable_envelopes.prefix_fields]]
+role = "aux_opening_tag"
+
+[variable_envelopes.prefix_fields.anchor]
+sheet = "Pág. 0"
+source_row = 12
+source_cell = "A12"
+record_identity = "Pág. 0"
+ordinal = "7"
+
+[[variable_envelopes.prefix_fields]]
+role = "pre_program_filler"
+
+[variable_envelopes.prefix_fields.anchor]
+sheet = "Pág. 0"
+source_row = 13
+source_cell = "A13"
+record_identity = "Pág. 0"
+ordinal = "8"
+
+[[variable_envelopes.prefix_fields]]
+role = "program_identifier"
+
+[variable_envelopes.prefix_fields.anchor]
+sheet = "Pág. 0"
+source_row = 14
+source_cell = "A14"
+record_identity = "Pág. 0"
+ordinal = "9"
+
+[[variable_envelopes.prefix_fields]]
+role = "between_identities_filler"
+
+[variable_envelopes.prefix_fields.anchor]
+sheet = "Pág. 0"
+source_row = 15
+source_cell = "A15"
+record_identity = "Pág. 0"
+ordinal = "10"
+
+[[variable_envelopes.prefix_fields]]
+role = "developer_tax_id"
+
+[variable_envelopes.prefix_fields.anchor]
+sheet = "Pág. 0"
+source_row = 16
+source_cell = "A16"
+record_identity = "Pág. 0"
+ordinal = "11"
+
+[[variable_envelopes.prefix_fields]]
+role = "post_developer_filler"
+
+[variable_envelopes.prefix_fields.anchor]
+sheet = "Pág. 0"
+source_row = 17
+source_cell = "A17"
+record_identity = "Pág. 0"
+ordinal = "12"
+
+[[variable_envelopes.prefix_fields]]
+role = "aux_closing_tag"
+
+[variable_envelopes.prefix_fields.anchor]
+sheet = "Pág. 0"
+source_row = 18
+source_cell = "A18"
+record_identity = "Pág. 0"
+ordinal = "13"
+
+[variable_envelopes.body_anchor]
+sheet = "Pág. 0"
+source_row = 19
+source_cell = "A19"
+ordinal = "14"
+record_identity = "Pág. 0"
+
+[variable_envelopes.closer_anchor]
+sheet = "Pág. 0"
+source_row = 20
+source_cell = "A20"
+ordinal = "15"
+record_identity = "Pág. 0"
+
+[variable_envelopes.total_anchor]
+source_row = 21
+source_cell = "A21"
+label = "total"
+length = "Variable"

@@ -1,0 +1,359 @@
+"""Human-approved installed service leases on verified native connections."""
+
+from __future__ import annotations
+
+import os
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Protocol
+from uuid import UUID, uuid4
+
+from cadrumo.application.operations.person_acts import is_persons_frontend
+from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied
+from cadrumo_client.contracts.access_vocabulary import Availability
+from cadrumo_client.contracts.contracts import ByteChannel, Peer, RefusalCode, RefusalError
+from cadrumo_client.contracts.service_access import (
+    InstalledServiceDescriptor,
+    ServiceAdmission,
+    ServiceConnect,
+    ServiceConnected,
+    ServiceLease,
+    VerifiedServicePeer,
+)
+from cadrumo_client.contracts.session_events import ServiceLeaseChanged
+from cadrumo_client.contracts.transport import ConnectionContext
+
+from .profile_host import ProfileConnection
+
+if TYPE_CHECKING:
+    from ..adapters.service_verification import NativeProcessIdentity
+    from .profile_connections import RuntimeProfileConnections
+
+_MAXIMUM_ANCESTRY_DEPTH = 32
+
+
+# The argument that starts the desktop image as one of its roles; the window has none.
+_ROLE_ARGUMENT = "--role"
+
+
+class DesktopImageMatcher(Protocol):
+    """The one verifier question a desktop window's admission asks."""
+
+    def installed_parent_image_matches(self, image_path: str, descriptor_path: str, image_digest: str) -> bool:
+        """Whether ``image_path`` is the package's ``descriptor_path`` image with ``image_digest``."""
+        ...
+
+
+def desktop_window_peer(
+    verifier: DesktopImageMatcher,
+    context: ConnectionContext,
+    channel_peer: Peer,
+    descriptor: InstalledServiceDescriptor,
+) -> bool:
+    """Whether the peer is the installed desktop image itself, connected from its window.
+
+    The desktop window holds its own runtime connection. It is admitted as the
+    desktop holder on the same evidence its hold child's parent was: the peer
+    runs one of the images the package names as a desktop, by exact bytes, and
+    was not started by this runtime. A role argument makes the image one of the
+    runtime's own children, never the window.
+    """
+    from pathlib import Path
+
+    from ..adapters.service_verification import native_process_arguments, native_process_identity
+
+    pid, owner = context.peer.process_id, context.peer.os_owner_id
+    if pid is None or context.peer != channel_peer or not descriptor.allowed_parent_images:
+        return False
+    try:
+        identity = native_process_identity(pid, owner)
+        image = channel_peer.image_path
+        if image is None or Path(image).resolve() != Path(identity.image).resolve():
+            return False
+        if not any(
+            verifier.installed_parent_image_matches(identity.image, item.launch_image, item.image_digest)
+            for item in descriptor.allowed_parent_images
+        ):
+            return False
+        if native_process_arguments(pid, owner)[:1] == (_ROLE_ARGUMENT,):
+            return False
+        if _descends_from_this_runtime(identity, owner):
+            return False
+        return native_process_identity(pid, owner) == identity
+    except (RefusalError, OSError):
+        return False
+
+
+def _descends_from_this_runtime(process: NativeProcessIdentity, owner: str) -> bool:
+    """Whether this runtime started ``process``, directly or through its own children.
+
+    The runtime's workers run the same image as the desktop, so a desktop holder must not
+    trace back to this process. A chain that ends, leaves the owner, or reaches a parent born
+    after its child (a reused id) no longer leads back here; one too deep to follow is refused.
+    """
+    from ..adapters.service_verification import native_process_identity
+
+    runtime = os.getpid()
+    current = process
+    for _ in range(_MAXIMUM_ANCESTRY_DEPTH):
+        if current.pid == runtime:
+            return True
+        if current.parent_pid in (0, current.pid):
+            return False
+        try:
+            parent = native_process_identity(current.parent_pid, owner)
+        except (RefusalError, OSError):
+            return False
+        if parent.born > current.born:
+            return False
+        current = parent
+    return True
+
+
+@dataclass(slots=True)
+class ServiceConnection:
+    """Retain a verified service peer, channel, descriptor, and optional lease."""
+
+    descriptor: InstalledServiceDescriptor
+    peer: VerifiedServicePeer
+    channel: ByteChannel
+    lease: ServiceLease | None = None
+    # Model-run disclosures being written under the lease; withdrawing it waits for them.
+    disclosing: int = 0
+
+
+class ProfileConnectionServicesMixin:
+    """Handle installed-service connections owned by the runtime profile host."""
+
+    def service(
+        self: RuntimeProfileConnections,
+        context: ConnectionContext,
+        channel: ByteChannel,
+        request: ServiceConnect | ServiceAdmission,
+    ):
+        """Register a verified peer or approve it from an exact live human session."""
+        if isinstance(request, ServiceAdmission):
+            return self._admit_service(context, request)
+        descriptor = self._service_descriptors.get(request.service_id)
+        if descriptor is None:
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="service_descriptor_unknown")
+        with self._guard:
+            existing = self._services.get(context.connection_id)
+            connection = self._connections.get(context.connection_id)
+            host = self._profiles.get(request.profile_id) if existing is not None else None
+        # A registered connection proves its admitted incarnation; only a new one hashes the image.
+        if existing is None:
+            peer = self._service_verifier.verify_service(context, channel, descriptor)
+        elif self._service_verifier.recheck_service(context, channel, existing.peer):
+            peer = existing.peer
+        else:
+            peer = None
+        if peer is None:
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="service_verification_failed")
+        if existing is not None:
+            if (
+                existing.descriptor != descriptor
+                or connection is None
+                or connection.profile_id != request.profile_id
+                or host is None
+            ):
+                raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="service_connection_mismatch")
+            with host.guard:
+                lease = existing.lease
+                if lease is not None:
+                    status = self._status(connection, host, request.request_id, lease.session_id)
+                    if existing.lease is lease and (
+                        isinstance(status, AccessDenied) or status.status.denial is not None
+                    ):
+                        approved = lease
+                        try:
+                            holder_id = self._human_parent_connection(approved)
+                            host.authority.human_administration_facts(
+                                connection_id=holder_id, session_id=approved.parent_session_id
+                            )
+                            child = host.authority.attend(
+                                connection_id=holder_id,
+                                parent_session_id=approved.parent_session_id,
+                                recipient_connection_id=context.connection_id,
+                                scope=existing.descriptor.operation_scope,
+                            )
+                        except Exception:
+                            with self._guard:
+                                if existing.lease is approved:
+                                    self._withdraw_lease(existing)
+                        else:
+                            if isinstance(child, AccessDenied):
+                                with self._guard:
+                                    if existing.lease is approved:
+                                        self._withdraw_lease(existing)
+                            elif existing.lease is approved:
+                                connection.session_id = child.session_id
+                                existing.lease = approved.model_copy(update={"session_id": child.session_id})
+                return ServiceConnected(
+                    request_id=request.request_id,
+                    runtime_boot_id=self.boot,
+                    connection_id=context.connection_id,
+                    profile_id=request.profile_id,
+                    service_id=request.service_id,
+                    lease=existing.lease,
+                )
+        if connection is not None:
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="service_connection_exists")
+        login = self._capture(channel)
+        observed = login.observe(credential_facilities=Availability.UNAVAILABLE)
+        if not observed.active or observed.os_owner_id != context.peer.os_owner_id:
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="service_login_inactive_or_mismatch")
+        with self._guard:
+            self._connections[context.connection_id] = ProfileConnection(
+                context,
+                login,
+                uuid4(),
+                request.profile_id,
+                OperationFrontendProjection.INSTALLED_SERVICE,
+                method="service",
+                requested_scope=descriptor.operation_scope,
+            )
+            self._logins[login.login_id] = login
+            self._services[context.connection_id] = ServiceConnection(descriptor, peer, channel)
+        return ServiceConnected(
+            request_id=request.request_id,
+            runtime_boot_id=self.boot,
+            connection_id=context.connection_id,
+            profile_id=request.profile_id,
+            service_id=request.service_id,
+        )
+
+    def _admit_service(self: RuntimeProfileConnections, context: ConnectionContext, request: ServiceAdmission):
+        holder = self._connected(context.connection_id)
+        if (
+            holder.context != context
+            or holder.profile_id != request.profile_id
+            or holder.session_id != request.session_id
+            or not is_persons_frontend(holder.frontend)
+        ):
+            return AccessDenied(code=AccessDenialCode.HUMAN_AUTHORITY_REQUIRED)
+        with self._guard:
+            service = self._services.get(request.recipient_connection_id)
+            recipient = self._connections.get(request.recipient_connection_id)
+            host = self._profiles.get(request.profile_id)
+        if service is None or recipient is None or host is None or service.descriptor.service_id != request.service_id:
+            return AccessDenied(code=AccessDenialCode.CONNECTION_MISMATCH)
+        with host.guard:
+            host.authority.human_administration_facts(
+                connection_id=context.connection_id, session_id=request.session_id
+            )
+            if (
+                not self._service_verifier.recheck_service(recipient.context, service.channel, service.peer)
+                or recipient.profile_id != request.profile_id
+                or service.lease is not None
+            ):
+                return AccessDenied(code=AccessDenialCode.CONNECTION_MISMATCH)
+            recipient.client_id = holder.client_id
+            child = host.authority.attend(
+                connection_id=context.connection_id,
+                parent_session_id=request.session_id,
+                recipient_connection_id=request.recipient_connection_id,
+                scope=service.descriptor.operation_scope,
+            )
+            if isinstance(child, AccessDenied):
+                return child
+            recipient.session_id = child.session_id
+            service.lease = ServiceLease(
+                lease_id=uuid4(),
+                session_id=child.session_id,
+                profile_id=request.profile_id,
+                parent_session_id=request.session_id,
+                descriptor_digest=service.descriptor.descriptor_digest,
+                service_id=request.service_id,
+                runtime_boot_id=self.boot,
+                connection_id=request.recipient_connection_id,
+            )
+            # The service learns of its lease by claiming again; this only tells it to.
+            self._events.publish_cue(
+                ServiceLeaseChanged(
+                    runtime_boot_id=self.boot,
+                    connection_id=request.recipient_connection_id,
+                    profile_id=request.profile_id,
+                )
+            )
+            return ServiceConnected(
+                request_id=request.request_id,
+                runtime_boot_id=self.boot,
+                connection_id=context.connection_id,
+                profile_id=request.profile_id,
+                service_id=request.service_id,
+                lease=service.lease,
+            )
+
+    def _service_tree_owner(
+        self: RuntimeProfileConnections, context: ConnectionContext, channel: ByteChannel
+    ) -> ServiceConnection | None:
+        with self._guard:
+            services = tuple(self._services.values())
+        for service in services:
+            if service.descriptor.allow_descendants and self._service_verifier.verify_descendant(
+                context, channel, service.peer, service.peer.connection_id
+            ):
+                return service
+        return None
+
+    def _human_parent_connection(self: RuntimeProfileConnections, lease: ServiceLease) -> UUID:
+        with self._guard:
+            holder = next(
+                (
+                    item
+                    for item in self._connections.values()
+                    if item.profile_id == lease.profile_id and item.session_id == lease.parent_session_id
+                ),
+                None,
+            )
+        if holder is None:
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="human_parent_connection_absent")
+        return holder.context.connection_id
+
+    def _verify_desktop_holder(self: RuntimeProfileConnections, context, channel, request) -> None:
+        from ..adapters.service_verification import native_process_identity
+        from ..application.development_root import verify_development_root
+
+        descriptor = self._service_descriptors.get("desktop-session")
+        development_password = (
+            request.method == "password"
+            and not request.persist_receipt
+            and verify_development_root(self.root, self.storage_identity)
+        )
+        if descriptor is None:
+            if development_password and context.peer.process_id is not None:
+                native_process_identity(context.peer.process_id, context.peer.os_owner_id)
+                return
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="desktop_holder_descriptor_absent")
+        if self._desktop_window_peer(context, channel, descriptor):
+            return
+        if self._service_verifier.verify_service(context, channel, descriptor) is None:
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="desktop_holder_unverified")
+        child = native_process_identity(context.peer.process_id, context.peer.os_owner_id)
+        if development_password:
+            return
+        parent = native_process_identity(child.parent_pid, context.peer.os_owner_id)
+        if parent.born > child.born:
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="desktop_holder_parent_born_after_child")
+        if not any(
+            self._service_verifier.installed_parent_image_matches(parent.image, item.launch_image, item.image_digest)
+            for item in descriptor.allowed_parent_images
+        ):
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="desktop_holder_parent_image_unlisted")
+        if native_process_identity(parent.pid, context.peer.os_owner_id) != parent:
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="desktop_holder_parent_identity_changed")
+        if _descends_from_this_runtime(parent, context.peer.os_owner_id):
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="desktop_holder_started_by_runtime")
+
+    def _desktop_window_peer(self: RuntimeProfileConnections, context, channel, descriptor) -> bool:
+        return desktop_window_peer(self._service_verifier, context, channel.peer, descriptor)
+
+    def _nonhuman_peer(self: RuntimeProfileConnections, context, channel) -> bool:
+        if self._service_tree_owner(context, channel) is not None:
+            return True
+        return any(
+            descriptor.service_id != "desktop-session"
+            and self._service_verifier.verify_service(context, channel, descriptor) is not None
+            for descriptor in self._service_descriptors.values()
+        )

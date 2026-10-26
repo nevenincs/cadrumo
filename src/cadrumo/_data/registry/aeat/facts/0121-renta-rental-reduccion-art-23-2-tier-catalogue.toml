@@ -1,0 +1,45 @@
+[fact]
+fact_id = "renta-rental-reduccion-art-23-2-tier-catalogue"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "renta-rental-reduccion-art-23-2-tier-catalogue:2024-01-01"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["aeat-renta-2024-manual-parte1", "lirpf-cuota-chain-authority"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["90 por 100", "70 por 100", "60 por 100", "50 por 100"]
+
+[[fact.variants.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["En un 90 por ciento", "En un 70 por ciento", "En un 60 por ciento", "En un 50 por ciento"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "tier_order", value = "tier-50,tier-60,tier-70,tier-90" },
+  { key = "tier.tier-50.value", value = "tier-50" },
+  { key = "tier.tier-50.description", value = "Residual tier for every other qualifying lease." },
+  { key = "tier.tier-50.legal_ref", value = "ley-35-2006:art-23" },
+  { key = "tier.tier-50.parameter_id", value = "renta-rental-reduccion-rate-tier-50" },
+  { key = "tier.tier-60.value", value = "tier-60" },
+  { key = "tier.tier-60.description", value = "Dwelling rehabilitated within the two years before the lease." },
+  { key = "tier.tier-60.legal_ref", value = "ley-35-2006:art-23" },
+  { key = "tier.tier-60.parameter_id", value = "renta-rental-reduccion-rate-tier-60" },
+  { key = "tier.tier-70.value", value = "tier-70" },
+  { key = "tier.tier-70.description", value = "First lease to a tenant aged 18-35 in a tensioned residential-market zone, or a lease to a public administration or qualifying entity." },
+  { key = "tier.tier-70.legal_ref", value = "ley-35-2006:art-23" },
+  { key = "tier.tier-70.parameter_id", value = "renta-rental-reduccion-rate-tier-70" },
+  { key = "tier.tier-90.value", value = "tier-90" },
+  { key = "tier.tier-90.description", value = "New lease in a tensioned residential-market zone with the rent cut below the previous contract." },
+  { key = "tier.tier-90.legal_ref", value = "ley-35-2006:art-23" },
+  { key = "tier.tier-90.parameter_id", value = "renta-rental-reduccion-rate-tier-90" },
+  { key = "binding.profile_key", value = "renta_rental.reduccion_art_23_2_tier_2024" },
+  { key = "binding.typed_enum", value = "RentalReductionArt232Tier" },
+  { key = "missing_behavior", value = "fail_closed" },
+]

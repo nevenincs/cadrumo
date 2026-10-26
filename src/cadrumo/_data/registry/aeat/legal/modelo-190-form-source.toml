@@ -1,0 +1,13 @@
+[sources.boe-2009-18567-modelo-190-form-pdf]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2009-18567-modelo-190.pdf"
+sha256 = "a9c6164561e2c26026e679b076908f31b9a1b308c23656de729a7130799de470"
+bytes = 1094631
+retrieved_at = 2026-10-06
+published_at = 2009-11-23
+applies_from = 2009-11-24
+applies_to = 2024-12-31
+source_url = "https://www.boe.es/boe/dias/2009/11/23/pdfs/BOE-A-2009-18567.pdf"
+review_status = "pending_review"

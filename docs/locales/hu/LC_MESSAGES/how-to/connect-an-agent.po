@@ -1,0 +1,239 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-15 06:16+0200\n"
+"PO-Revision-Date: 2026-07-19 10:00+0200\n"
+"Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
+"Language: hu\n"
+"Language-Team: hu <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../how-to/connect-an-agent.md:1
+msgid "Connect an agent (MCP)"
+msgstr "Ügynök csatlakoztatása (MCP)"
+
+#: ../../how-to/connect-an-agent.md:3
+msgid ""
+"`cadrumo-mcp` connects an MCP client to the local Cadrumo runtime over "
+"standard input and output. The runtime must already be running. Starting "
+"the MCP server does not install or start Cadrumo, sign in to a profile, "
+"or submit a filing to AEAT."
+msgstr ""
+"A `cadrumo-mcp` szabványos bemeneten és kimeneten keresztül kapcsol egy "
+"MCP-klienst a helyi Cadrumo-futtatókörnyezethez. A futtatókörnyezetnek "
+"már működnie kell. Az MCP-kiszolgáló indítása nem telepíti és nem indítja"
+" el a Cadrumót, nem jelentkeztet be egy profilba, és nem nyújt be "
+"bevallást az AEAT-hoz."
+
+#: ../../how-to/connect-an-agent.md:8
+msgid ""
+"Before connecting, [set up a profile](profile-setup.md), start Cadrumo, "
+"and select the profile the agent should use. Keep credentials out of the "
+"MCP client configuration and the agent conversation."
+msgstr ""
+"Csatlakozás előtt [állíts be egy profilt](profile-setup.md), indítsd el a"
+" Cadrumót, és válaszd ki az ügynök által használandó profilt. A "
+"hitelesítő adatokat ne tedd az MCP-kliens konfigurációjába vagy az "
+"ügynökkel folytatott beszélgetésbe."
+
+#: ../../how-to/connect-an-agent.md:12
+msgid "Check the installation"
+msgstr "A telepítés ellenőrzése"
+
+#: ../../how-to/connect-an-agent.md:18
+msgid ""
+"If `cadrumo-mcp` is unavailable, install Cadrumo first; see [Get "
+"Cadrumo](../download.md)."
+msgstr ""
+"Ha a `cadrumo-mcp` nem érhető el, előbb telepítsd a Cadrumót; lásd a "
+"[Cadrumo beszerzése](../download.md) oldalt."
+
+#: ../../how-to/connect-an-agent.md:20
+msgid "Register the server"
+msgstr "Kiszolgáló regisztrálása"
+
+#: ../../how-to/connect-an-agent.md:22
+msgid ""
+"Register `cadrumo-mcp` as a stdio server in your MCP client. For a client"
+" that accepts a JSON server definition:"
+msgstr ""
+"Regisztráld a `cadrumo-mcp` programot stdio-kiszolgálóként az MCP-"
+"kliensedben. JSON-kiszolgálódefiníciót elfogadó kliens esetén:"
+
+#: ../../how-to/connect-an-agent.md:36
+msgid ""
+"Use a separate server entry for each profile. The profile must be "
+"selected in Cadrumo when the server requests access. `--profile-id` is "
+"required when you configure an enrolled key. The default surface is "
+"`full`; choose `read-only-local` when the connection should only read "
+"local data. The runtime enforces that surface when each operation is "
+"submitted."
+msgstr ""
+"Minden profilhoz külön kiszolgálóbejegyzést használj. A profilt ki kell "
+"választani a Cadrumóban, amikor a kiszolgáló hozzáférést kér. Regisztrált"
+" kulcs beállításakor kötelező megadni a `--profile-id` értékét. Az "
+"alapértelmezett felület a `full`; válaszd a `read-only-local` felületet, "
+"ha a kapcsolat csak helyi adatokat olvashat. A futtatókörnyezet minden "
+"művelet beküldésekor érvényesíti ezt a felületet."
+
+#: ../../how-to/connect-an-agent.md:42
+msgid "Connect with a human session"
+msgstr "Kapcsolódás emberi munkamenettel"
+
+#: ../../how-to/connect-an-agent.md:44
+msgid ""
+"Without `--credential-reference`, the server starts without a profile "
+"session. When a tool needs profile access, it asks the runtime for "
+"attendance from the currently selected profile. It does not use a stored "
+"sign-in receipt or follow your sign-in automatically."
+msgstr ""
+"`--credential-reference` nélkül a kiszolgáló profil-munkamenet nélkül "
+"indul el. Amikor egy eszköznek profilhozzáférésre van szüksége, a "
+"futtatókörnyezettől jelenlétet kér a jelenleg kiválasztott profilhoz. Nem"
+" használ elmentett bejelentkezési nyugtát, és nem követi automatikusan a "
+"bejelentkezésedet."
+
+#: ../../how-to/connect-an-agent.md:49
+msgid ""
+"Review the exact request in Cadrumo before approving it. The request "
+"identifies the client process and the operations, actions, periods, and "
+"data categories it would receive. Approve only a request you started and "
+"whose scope you accept. Until approval, the agent can read its tool list "
+"and `status`; other tools are refused. The approval is tied to that "
+"connection and your live human session. Signing out, locking the profile,"
+" changing the selected profile, or ending the session ends its access."
+msgstr ""
+"Jóváhagyás előtt tekintsd át a Cadrumóban a pontos kérést. A kérés "
+"azonosítja a kliensfolyamatot, valamint az általa megkapandó műveleteket,"
+" művelettípusokat, időszakokat és adatkategóriákat. Csak olyan kérést "
+"hagyj jóvá, amelyet te indítottál, és amelynek terjedelmével egyetértesz."
+" Jóváhagyásig az ügynök csak az eszközlistáját és a `status` eszközt "
+"olvashatja; a többi eszközt a rendszer elutasítja. A jóváhagyás ehhez a "
+"kapcsolathoz és az aktív emberi munkamenetedhez kötődik. A kijelentkezés,"
+" a profil zárolása, a kiválasztott profil megváltoztatása vagy a "
+"munkamenet befejezése megszünteti a hozzáférést."
+
+#: ../../how-to/connect-an-agent.md:57
+msgid "Connect with an enrolled key"
+msgstr "Kapcsolódás regisztrált kulccsal"
+
+#: ../../how-to/connect-an-agent.md:59
+msgid ""
+"An enrolled key gives access without a live human session. Create a "
+"finite automation request in the profile's access controls, choosing only"
+" the operations and data categories the agent needs. The terminal command"
+" accepts a complete proposal only through its protected input channel:"
+msgstr ""
+"A regisztrált kulcs aktív emberi munkamenet nélkül biztosít hozzáférést. "
+"Hozz létre időben korlátozott automatizálási kérelmet a profil "
+"hozzáférés-kezelőjében, és csak az ügynöknek szükséges műveleteket és "
+"adatkategóriákat válaszd ki. A terminálparancs teljes javaslatot "
+"kizárólag védett bemeneti csatornán fogad el:"
+
+#: ../../how-to/connect-an-agent.md:68
+msgid ""
+"The request does not issue a key by itself. Inspect the exact request and"
+" approve its current review digest in a separate human-authorized "
+"session:"
+msgstr ""
+"A kérelem önmagában nem ad ki kulcsot. Vizsgáld meg a pontos kérelmet, "
+"majd külön, ember által engedélyezett munkamenetben hagyd jóvá az "
+"aktuális felülvizsgálati kivonatot:"
+
+#: ../../how-to/connect-an-agent.md:77
+msgid ""
+"When protected delivery completes, configure the returned credential "
+"reference with both `--profile-id` and `--credential-reference`. Keep the"
+" reference in protected local configuration. Never put a password, raw "
+"key, or secret value in command arguments, environment variables, chat, "
+"or an MCP tool call."
+msgstr ""
+"A védett kézbesítés befejezése után állítsd be a kapott hitelesítőadat-"
+"hivatkozást a `--profile-id` és a `--credential-reference` paraméterrel "
+"együtt. A hivatkozást védett helyi konfigurációban tárold. Jelszót, nyers"
+" kulcsot vagy titkos értéket soha ne adj meg parancsargumentumban, "
+"környezeti változóban, csevegésben vagy MCP-eszközhívásban."
+
+#: ../../how-to/connect-an-agent.md:82
+msgid ""
+"For a keyed server entry, set these arguments in the MCP client "
+"configuration:"
+msgstr ""
+"Kulccsal rendelkező szerverbejegyzés esetén állítsd be ezeket az "
+"argumentumokat az MCP-kliens konfigurációjában:"
+
+#: ../../how-to/connect-an-agent.md:96
+msgid "Work through the connection"
+msgstr "Munka a kapcsolaton keresztül"
+
+#: ../../how-to/connect-an-agent.md:98
+msgid ""
+"Start with the MCP `status` tool. It reports whether the connection has "
+"an attended session, an enrolled key, or no access, and which surface it "
+"serves. Use `search` to find available operations, `describe` to read an "
+"operation's input contract, `execute` to submit it, and `observe` and "
+"`result` to follow it. The connection can use only the operations allowed"
+" by its session, key grant, and surface."
+msgstr ""
+"Az MCP `status` eszközével kezdd. Megmutatja, hogy a kapcsolat "
+"rendelkezik-e jelenléttel jóváhagyott munkamenettel, regisztrált kulccsal"
+" vagy semmilyen hozzáféréssel, és azt is, melyik felületet szolgálja ki. "
+"A `search` segítségével kereshetsz műveleteket, a `describe` megmutatja "
+"egy művelet bemeneti szerződését, az `execute` beküldi azt, az `observe` "
+"és a `result` pedig követi az állapotát és eredményét. A kapcsolat csak a"
+" munkamenete, a kulcsengedélye és a felülete által engedélyezett "
+"műveleteket használhatja."
+
+#: ../../how-to/connect-an-agent.md:105
+msgid ""
+"If an operation has an unknown outcome, do not submit it again. Retain "
+"its operation ID and reconcile the result after reconnecting. Cadrumo "
+"calculates deterministically from its published authority; connecting an "
+"agent does not authorize it to submit a return to AEAT. Review and file "
+"returns yourself as described in the [filing guide](file-at-aeat.md)."
+msgstr ""
+"Ha egy művelet eredménye ismeretlen, ne küldd be újra. Őrizd meg a "
+"művelet azonosítóját, és újracsatlakozás után egyeztesd az eredményt. A "
+"Cadrumo a közzétett hatósági adatok alapján, determinisztikusan számol; "
+"az ügynök csatlakoztatása nem jogosítja fel arra, hogy bevallást nyújtson"
+" be az AEAT-hoz. A bevallásokat a [bevallási útmutatóban](file-at-"
+"aeat.md) leírtak szerint te vizsgáld át és nyújtsd be."
+
+#: ../../how-to/connect-an-agent.md:111
+msgid "Review and revoke access"
+msgstr "Hozzáférés áttekintése és visszavonása"
+
+#: ../../how-to/connect-an-agent.md:113
+msgid ""
+"Use the profile's human-authorized access controls to inspect requests, "
+"grants, and keys. The terminal command group is `cadrumo-runtime config "
+"profile automation`. To revoke one key, one grant, or all automation for "
+"the profile, use the corresponding `deny` command or the following "
+"reviewed sequence:"
+msgstr ""
+"A kérelmek, engedélyek és kulcsok vizsgálatához használd a profil ember "
+"által engedélyezett hozzáférés-kezelőjét. A terminál parancscsoportja: "
+"`cadrumo-runtime config profile automation`. Egy kulcs, egy engedély vagy"
+" a profil összes automatizálásának visszavonásához használd a megfelelő "
+"`deny` parancsot vagy az alábbi ellenőrzött lépéseket:"
+
+#: ../../how-to/connect-an-agent.md:122
+msgid ""
+"Locking the current session ends its access. A profile-wide lock also "
+"suspends automation; resuming the profile does not reactivate grants "
+"unless you select them explicitly:"
+msgstr ""
+"Az aktuális munkamenet zárolása megszünteti annak hozzáférését. A teljes "
+"profil zárolása az automatizálást is felfüggeszti; a profil feloldásakor "
+"az engedélyek nem aktiválódnak újra, hacsak kifejezetten ki nem választod"
+" őket:"

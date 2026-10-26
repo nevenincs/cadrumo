@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<response>
+  <status>
+    <code>200</code>
+    <text>ok</text>
+  </status>
+  <data>
+    <bloque id="a4" tipo="precepto" titulo="Artículo 4">
+      <version id_norma="BOE-A-2021-10163" fecha_publicacion="20210618" fecha_vigencia="20210619">
+        <p class="articulo">Artículo 4. Plazo de presentación.</p>
+        <p class="parrafo">La presentación del modelo 179 tendrá una periodicidad trimestral, y deberá presentarse en relación con las operaciones realizadas en cada trimestre natural, en el plazo comprendido entre el primer y el último día del mes natural posterior a la finalización del trimestre a que se refiera la declaración.</p>
+      </version>
+      <version id_norma="BOE-A-2023-5260" fecha_publicacion="20230228" fecha_vigencia="20230301">
+        <p class="articulo">Artículo 4. Plazo de presentación.</p>
+        <p class="parrafo">El plazo de presentación del modelo 179 será el comprendido entre el 1 y el 31 de enero de cada año, en relación con la información y operaciones que correspondan al año natural inmediato anterior.</p>
+        <blockquote>
+          <p class="nota_pie">Se modifica por el art. 2.3 de la Orden HFP/188/2023, de 27 de febrero. <a class="refPost">Ref. BOE-A-2023-5260</a></p>
+        </blockquote>
+      </version>
+    </bloque>
+  </data>
+</response>

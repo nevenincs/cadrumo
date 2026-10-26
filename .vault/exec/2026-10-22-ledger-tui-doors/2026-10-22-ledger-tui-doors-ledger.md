@@ -1,0 +1,555 @@
+---
+tags:
+  - '#exec'
+  - '#ledger-tui-doors'
+date: '2026-10-22'
+modified: '2026-10-23'
+body_schema: 'body-v2'
+body_hash: 'sha256:080f67fb06c12c468c86abda1b11e5bb75401390ba38a0dd452266d5b2d32d49'
+related:
+  - "[[2026-10-22-ledger-tui-doors-plan]]"
+---
+
+# `ledger-tui-doors` ledger
+
+## Changes
+
+- `S01` `A` `src/cadrumo/entrypoints/tui/ledger/tools.py`
+- `S01` `M` `src/cadrumo/entrypoints/tui/ledger/controller.py`
+- `S01` `M` `src/cadrumo/entrypoints/tui/ledger/workspace_injection.py`
+- `S01` `M` `src/cadrumo/entrypoints/tui/ledger/routes.py`
+- `S01` `M` `src/cadrumo/entrypoints/tui/ledger/overview.py`
+- `S01` `M` `src/cadrumo/entrypoints/tui/ledger/entries.py`
+- `S01` `M` `src/cadrumo/entrypoints/tui/ledger/review.py`
+- `S01` `M` `src/cadrumo/entrypoints/tui/ledger/import_flow.py`
+- `S01` `M` `src/cadrumo/entrypoints/tui/ledger/classification.py`
+- `S01` `M` `src/cadrumo/entrypoints/tui/ledger/evidence.py`
+- `S01` `M` `src/cadrumo/entrypoints/tui/ledger/reconciliation.py`
+- `S01` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_ledger_tools.py`
+- `S01` `A` `src/cadrumo_runtime/host/frontend/tui/runtime_ledger_tools.py`
+- `S01` `M` `src/cadrumo_runtime/host/frontend/tui/runtime_workbench.py`
+- `S01` `A` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_tools.py`
+- `S01` `M` `src/cadrumo/locales/en/common.yml`
+- `S01` `M` `src/cadrumo/locales/es/common.yml`
+- `S01` `M` `src/cadrumo/locales/ca/common.yml`
+- `S01` `M` `src/cadrumo/locales/hu/common.yml`
+- `S01` `verify:` `pytest ledger + runtime ledger tools (196)` -> `pass`
+- `S01` `verify:` `pytest TUI + runtime TUI (2528, one gate fixed then rerun)` -> `pass`
+- `S01` `verify:` `ruff check/format` -> `pass`
+- `S01` `verify:` `lint-imports` -> `pass`
+- `S01` `verify:` `ty on touched files` -> `pass`
+- `S01` `by:` `orchestrator`
+- `S09` `M` `src/cadrumo/application/ledger/list_query.py`
+- `S09` `M` `src/cadrumo/application/ledger/tests/test_list_query.py`
+- `S09` `A` `src/cadrumo/entrypoints/tests/test_ledger_list_period_partition.py`
+- `S09` `verify:` `test_ledger_list_page_benchmark period page cpu_p95 15.6s to 1.06s (budget 3.0)` -> `pass`
+- `S09` `verify:` `list query, operation, partition parity and stale-index fallback tests (31)` -> `pass`
+- `S09` `verify:` `ruff, lint-imports, ty on touched files` -> `pass`
+- `S09` `by:` `O1`
+- `S10` `M` `src/cadrumo/adapters/persistence/profile/transactions.py`
+- `S10` `M` `src/cadrumo/adapters/persistence/profile/transaction_row_contracts.py`
+- `S10` `M` `src/cadrumo/application/ledger/actions_manual.py`
+- `S10` `A` `src/cadrumo/adapters/persistence/profile/tests/test_transaction_row_contracts.py`
+- `S10` `A` `src/cadrumo/adapters/persistence/profile/tests/test_transaction_catalogue_listing_identity.py`
+- `S10` `verify:` `unfiltered list at 30k: CPU mean 15.4s to 12.0s, load() 13.3s to 10.8s (paired, 9 samples)` -> `pass`
+- `S10` `verify:` `profile, ledger and domain transaction tests (4432)` -> `pass`
+- `S10` `verify:` `secure storage tests (1896)` -> `pass`
+- `S10` `verify:` `old/new timestamp witness oracle (43 cases)` -> `pass`
+- `S10` `verify:` `ruff, lint-imports, check-types` -> `pass`
+- `S10` `by:` `O2`
+- `S05` `A` `src/cadrumo/entrypoints/tui/ledger/invoices_import.py`
+- `S05` `A` `src/cadrumo/entrypoints/tui/ledger/invoices_wizard.py`
+- `S05` `A` `src/cadrumo/entrypoints/tui/ledger/tests/invoices_fixtures.py`
+- `S05` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_invoices_import.py`
+- `S05` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_invoices_wizard.py`
+- `S05` `A` `src/cadrumo_runtime/host/frontend/tui/runtime_ledger_records.py`
+- `S05` `A` `src/cadrumo_runtime/host/frontend/tui/runtime_ledger_invoices.py`
+- `S05` `A` `src/cadrumo_runtime/host/tests/frontend/tui/ledger_invoices_runtime_harness.py`
+- `S05` `A` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_records.py`
+- `S05` `A` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_invoices.py`
+- `S05` `A` `dev/tui/harness/ledger_invoices_fixtures.py`
+- `S05` `A` `dev/tui/harness/tests/test_ledger_invoices_fixtures.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/ledger/record_views.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/ledger/transaction_views.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_record_views.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/ledger/models.py`
+- `S05` `M` `src/cadrumo_runtime/host/frontend/tui/runtime_workbench.py`
+- `S05` `verify:` `D4 screen, runtime door and harness tests plus ledger workspace tests (191)` -> `pass`
+- `S05` `verify:` `ruff, ty on D4 files; lint-imports` -> `pass`
+- `S05` `by:` `D4`
+- `S06` `A` `src/cadrumo/entrypoints/tui/ledger/registers_presentation.py`
+- `S06` `A` `src/cadrumo/entrypoints/tui/ledger/registers_prorrata.py`
+- `S06` `A` `src/cadrumo/entrypoints/tui/ledger/registers_capital_goods.py`
+- `S06` `A` `src/cadrumo/entrypoints/tui/ledger/registers_inventory.py`
+- `S06` `A` `src/cadrumo/entrypoints/tui/ledger/tests/registers_fixtures.py`
+- `S06` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_registers_prorrata.py`
+- `S06` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_registers_capital_goods.py`
+- `S06` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_registers_inventory.py`
+- `S06` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_registers_surfaces.py`
+- `S06` `A` `src/cadrumo_runtime/host/frontend/tui/runtime_ledger_registers.py`
+- `S06` `A` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_registers.py`
+- `S06` `A` `dev/tui/harness/ledger_registers_fixtures.py`
+- `S06` `verify:` `D5 screen and runtime door tests (117)` -> `pass`
+- `S06` `verify:` `ruff, ty on D5 files; lint-imports` -> `pass`
+- `S06` `by:` `D5`
+- `S04` `A` `dev/tui/harness/ledger_evidence_files_fixtures.py`
+- `S04` `A` `dev/tui/harness/tests/test_ledger_evidence_files_fixtures.py`
+- `S04` `A` `src/cadrumo/entrypoints/tui/ledger/evidence_files_attachments.py`
+- `S04` `A` `src/cadrumo/entrypoints/tui/ledger/evidence_files_batch.py`
+- `S04` `A` `src/cadrumo/entrypoints/tui/ledger/evidence_files_common.py`
+- `S04` `A` `src/cadrumo/entrypoints/tui/ledger/evidence_files_consent.py`
+- `S04` `A` `src/cadrumo/entrypoints/tui/ledger/evidence_files_doors.py`
+- `S04` `A` `src/cadrumo/entrypoints/tui/ledger/evidence_files_queue.py`
+- `S04` `A` `src/cadrumo/entrypoints/tui/ledger/evidence_files_records.py`
+- `S04` `A` `src/cadrumo/entrypoints/tui/ledger/evidence_files_review.py`
+- `S04` `A` `src/cadrumo/entrypoints/tui/ledger/evidence_files_tools.py`
+- `S04` `A` `src/cadrumo/entrypoints/tui/ledger/evidence_files_write.py`
+- `S04` `A` `src/cadrumo/entrypoints/tui/ledger/tests/evidence_files_fixtures.py`
+- `S04` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_evidence_files_attachments.py`
+- `S04` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_evidence_files_batch.py`
+- `S04` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_evidence_files_reads.py`
+- `S04` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_evidence_files_records.py`
+- `S04` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_evidence_files_tools.py`
+- `S04` `A` `src/cadrumo_runtime/host/frontend/tui/runtime_ledger_evidence_files.py`
+- `S04` `A` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_evidence_files.py`
+- `S04` `verify:` `D3 screen, runtime door, harness and seam tests (194)` -> `pass`
+- `S04` `verify:` `ruff, ty on D3 files; lint-imports` -> `pass`
+- `S04` `by:` `D3`
+- `S08` `M` `src/cadrumo_runtime/host/frontend/tui/operations/runtime_profile_session.py`
+- `S08` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_own_accounts.py`
+- `S08` `verify:` `runtime door tests (421)` -> `pass`
+- `S08` `verify:` `new off-loop binding test fails against the old code` -> `pass`
+- `S08` `by:` `orchestrator`
+- `S02` `A` `dev/ci/tests/test_ledger_list_page_benchmark.py`
+- `S02` `A` `dev/tui/harness/ledger_entries_fixtures.py`
+- `S02` `A` `src/cadrumo/entrypoints/tui/ledger/entries_add.py`
+- `S02` `A` `src/cadrumo/entrypoints/tui/ledger/entries_browse.py`
+- `S02` `A` `src/cadrumo/entrypoints/tui/ledger/entries_common.py`
+- `S02` `A` `src/cadrumo/entrypoints/tui/ledger/entries_doors.py`
+- `S02` `A` `src/cadrumo/entrypoints/tui/ledger/entries_export.py`
+- `S02` `A` `src/cadrumo/entrypoints/tui/ledger/entries_health.py`
+- `S02` `A` `src/cadrumo/entrypoints/tui/ledger/entries_reset.py`
+- `S02` `A` `src/cadrumo/entrypoints/tui/ledger/entries_trace.py`
+- `S02` `A` `src/cadrumo/entrypoints/tui/ledger/tests/entries_door_fixtures.py`
+- `S02` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_entries_browse.py`
+- `S02` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_entries_forms.py`
+- `S02` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_entries_off_loop_and_fit.py`
+- `S02` `A` `src/cadrumo_runtime/host/frontend/tui/runtime_ledger_entries.py`
+- `S02` `A` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_entries.py`
+- `S02` `verify:` `D1 product, runtime and workspace tests (with D2: 394)` -> `pass`
+- `S02` `verify:` `list page CPU benchmark: period page p95 0.547s within 3.0s budget` -> `pass`
+- `S02` `verify:` `ruff, ty on D1 files; lint-imports` -> `pass`
+- `S02` `by:` `D1`
+- `S03` `A` `dev/tui/harness/ledger_categorisation_fixtures.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/categorisation_allocate.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/categorisation_bulk.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/categorisation_common.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/categorisation_counterparties.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/categorisation_diagnostics.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/categorisation_doors.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/categorisation_iva.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/categorisation_participation.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/categorisation_ratios.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/categorisation_review.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/categorisation_rules.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/categorisation_split.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/categorisation_tools.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/tests/categorisation_entry_fixtures.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/tests/categorisation_fixtures.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/tests/categorisation_memory_doors.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/tests/categorisation_pilot.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/tests/categorisation_register_fixtures.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/tests/categorisation_review_fixtures.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_categorisation_bulk.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_categorisation_entry_tools.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_categorisation_event_loop.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_categorisation_geometry.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_categorisation_registers.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_categorisation_review.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_categorisation_rules.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_categorisation_tools.py`
+- `S03` `A` `src/cadrumo_runtime/host/frontend/tui/runtime_ledger_categorisation.py`
+- `S03` `A` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_categorisation.py`
+- `S03` `verify:` `D2 product and runtime tests (with D1: 394)` -> `pass`
+- `S03` `verify:` `ruff, ty on D2 files; lint-imports` -> `pass`
+- `S03` `by:` `D2`
+- `S03` `M` `src/cadrumo/entrypoints/tui/ledger/categorisation_allocate.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/ledger/categorisation_bulk.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/ledger/categorisation_common.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/ledger/categorisation_counterparties.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/ledger/categorisation_diagnostics.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/ledger/categorisation_iva.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/ledger/categorisation_participation.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/ledger/categorisation_ratios.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/ledger/categorisation_review.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/ledger/categorisation_rules.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/ledger/categorisation_split.py`
+- `S03` `verify:` `categorisation, runtime and seam tests (177)` -> `pass`
+- `S03` `verify:` `key scanner sees all 254 D2 keys` -> `pass`
+- `S07` `M` `src/cadrumo_runtime/host/frontend/tui/runtime_ledger_tools.py`
+- `S07` `M` `src/cadrumo/locales/en/common.yml`
+- `S07` `M` `src/cadrumo/locales/es/common.yml`
+- `S07` `M` `src/cadrumo/locales/ca/common.yml`
+- `S07` `M` `src/cadrumo/locales/hu/common.yml`
+- `S07` `verify:` `pytest Records, runtime door and harness tests (1063 of 1064; sequence golden divergence under root-cause)` -> `fail`
+- `S07` `verify:` `check-locales on the 888 new keys, no placeholder or catalogue-only findings after the D2 and D3 follow-ups` -> `pass`
+- `S07` `by:` `orchestrator`
+- `S07` `M` `src/cadrumo_runtime/host/frontend/tui/runtime_workbench.py`
+- `S13` `M` `src/cadrumo/adapters/persistence/storage/sql/secure_objects.py`
+- `S13` `M` `src/cadrumo/adapters/persistence/storage/crypto/encrypted_columns.py`
+- `S13` `M` `src/cadrumo/adapters/persistence/storage/sql/_secure_object_row_codec.py`
+- `S13` `M` `src/cadrumo/adapters/persistence/storage/master_key/active_session.py`
+- `S13` `A` `src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_object_batch_read_session.py`
+- `S13` `verify:` `load_many_current at 30k: CPU mean 1.517s to 1.299s; transaction load() 7.33s to 7.05s (9 alternating samples)` -> `pass`
+- `S13` `verify:` `storage suite (1916 passed, 140 existing skips)` -> `pass`
+- `S13` `verify:` `profile persistence suite (2066)` -> `pass`
+- `S13` `verify:` `mid-read lapse, seal, handover and re-login refuse the whole read; tamper refusals still fire (20 tests, mutation-checked)` -> `pass`
+- `S13` `verify:` `ruff, lint-imports, check-types` -> `pass`
+- `S13` `by:` `O5`
+- `S11` `A` `dev/ci/tests/test_ledger_tui_reads_benchmark.py`
+- `S11` `verify:` `pytest dev/ci/tests/test_ledger_tui_reads_benchmark.py -m perf -n0 (28 reads, diagnostics only)` -> `pass`
+- `S11` `by:` `O3`
+- `S12` `M` `src/cadrumo/domain/transactions/models.py`
+- `S12` `M` `src/cadrumo/domain/transactions/cash_accounting_validation.py`
+- `S12` `M` `src/cadrumo/domain/transactions/raw_transaction.py`
+- `S12` `A` `src/cadrumo/domain/transactions/tests/test_transaction_load_validation.py`
+- `S12` `A` `src/cadrumo/domain/transactions/tests/varied_ledger_seed.py`
+- `S12` `verify:` `load() at 30k: CPU mean 6.80s to 6.36s, load plus list 7.63s to 7.27s (10 alternating in-process samples, 10 of 10 faster)` -> `pass`
+- `S12` `verify:` `transactions, iva, profile persistence and ledger tests (5253)` -> `pass`
+- `S12` `verify:` `identity over 30k rows and a varied seed either side of Madrid midnight; 784 mutated payloads refuse identically` -> `pass`
+- `S12` `verify:` `ruff, lint-imports, ty on touched files` -> `pass`
+- `S12` `by:` `O4`
+- `S14` `M` `src/cadrumo/domain/invoices/service.py`
+- `S14` `A` `src/cadrumo/domain/invoices/tests/test_reconciliation_index_parity.py`
+- `S14` `verify:` `suggest_reconciliations on the S11 seed: CPU mean 106.3s to 0.13s, identical 287 suggestions` -> `pass`
+- `S14` `verify:` `workbench.generation at 30k: CPU mean 146.2s to 19.9s (n=5)` -> `pass`
+- `S14` `verify:` `parity against the inlined all-pairs oracle over 24 worlds, all tolerances and 7 rounding modes; mutation-checked` -> `pass`
+- `S14` `verify:` `invoice, workspace and reconciliation tests (266)` -> `pass`
+- `S14` `by:` `S14`
+- `S16` `A` `src/cadrumo/domain/invoices/_validation_pass.py`
+- `S16` `M` `src/cadrumo/domain/invoices/models.py`
+- `S16` `M` `src/cadrumo/domain/invoices/enums.py`
+- `S16` `M` `src/cadrumo/domain/invoices/normalization.py`
+- `S16` `M` `src/cadrumo/domain/invoices/_payload_normalisation.py`
+- `S16` `A` `src/cadrumo/domain/invoices/tests/test_validation_pass.py`
+- `S16` `A` `src/cadrumo/domain/invoices/tests/test_catalogue_validation_pass.py`
+- `S16` `verify:` `3,000-invoice catalogue decode: CPU 7.0s to 2.0s (5 paired rounds)` -> `pass`
+- `S16` `verify:` `invoice.list CPU mean 8.8s to 3.4s; invoice.view 6.8s to 2.4s` -> `pass`
+- `S16` `verify:` `HEAD-versus-new identity and refusal parity over varied seeds incl. every rate window edge; memo-key mutations caught` -> `pass`
+- `S16` `verify:` `invoice, ledger, profile persistence tests (4908)` -> `pass`
+- `S16` `by:` `S16`
+- `S15` `M` `src/cadrumo/application/ledger/preflight.py`
+- `S15` `M` `src/cadrumo/application/ledger/readiness_query.py`
+- `S15` `M` `src/cadrumo/application/ledger/actions_manual.py`
+- `S15` `M` `src/cadrumo/application/ledger/status_operation.py`
+- `S15` `M` `src/cadrumo/application/ledger/check_query.py`
+- `S15` `M` `src/cadrumo/application/invoices/catalogue_reads.py`
+- `S15` `M` `src/cadrumo/application/ledger/id_resolution.py`
+- `S15` `M` `src/cadrumo/application/ledger/view_operation.py`
+- `S15` `M` `src/cadrumo/application/ledger/track_operation.py`
+- `S15` `M` `src/cadrumo/application/ledger/participation_operation.py`
+- `S15` `M` `src/cadrumo/application/ledger/history_operation.py`
+- `S15` `M` `src/cadrumo/application/ledger/history_query.py`
+- `S15` `M` `src/cadrumo/application/ledger/tests/test_check_query.py`
+- `S15` `A` `src/cadrumo/entrypoints/tests/test_ledger_read_operation_parity.py`
+- `S15` `verify:` `CPU means at 30k: view 24.3s to 0.12s, track 16.0s to 0.09s, history 7.7s to 0.08s, participation 7.5s to 0.10s, preflight 7.6s to 0.59s, status 45.6s to 9.0s, check 22.2s to 9.5s` -> `pass`
+- `S15` `verify:` `parity against full-load answers with decrypt counts pinned, stale index, split and edited rows, exact refusals (9 tests)` -> `pass`
+- `S15` `verify:` `ledger, invoices, overview, modelo suites (5120) and ledger entrypoint/CLI/runtime/TUI files (1919)` -> `pass`
+- `S15` `verify:` `ruff, lint-imports, check-types` -> `pass`
+- `S15` `by:` `S15`
+- `S08` `M` `src/cadrumo/application/ledger/actions_manual.py`
+- `S08` `M` `src/cadrumo/application/ledger/status_operation.py`
+- `S08` `M` `src/cadrumo/core/errors/registry/_application_part2.py`
+- `S08` `M` `src/cadrumo/entrypoints/tests/test_ledger_read_operation_parity.py`
+- `S08` `M` `src/cadrumo/locales/en/errors.yml`
+- `S08` `M` `src/cadrumo/locales/es/errors.yml`
+- `S08` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S08` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S08` `verify:` `ledger.status with 1P refuses with a registered typed refusal before reading; dated periods unchanged (parity tests and error registry tests, 66)` -> `pass`
+- `S08` `by:` `status-fix`
+- `S18` `M` `src/cadrumo/domain/invoices/models.py`
+- `S18` `M` `src/cadrumo/domain/invoices/normalization.py`
+- `S18` `M` `src/cadrumo/adapters/persistence/profile/invoices.py`
+- `S18` `M` `src/cadrumo/adapters/persistence/profile/catalogue_reads.py`
+- `S18` `M` `src/cadrumo/application/invoices/catalogue_read_operation.py`
+- `S18` `M` `src/cadrumo/application/invoices/inspection_read_ports.py`
+- `S18` `M` `src/cadrumo/application/invoices/catalogue_selection.py`
+- `S18` `M` `src/cadrumo/application/invoices/catalogue_lifecycle.py`
+- `S18` `M` `src/cadrumo/domain/invoices/tests/test_catalogue_validation_pass.py`
+- `S18` `A` `src/cadrumo/domain/invoices/tests/invoice_catalogue_seed.py`
+- `S18` `A` `src/cadrumo/domain/invoices/tests/test_authenticated_stored_read.py`
+- `S18` `A` `src/cadrumo/adapters/persistence/profile/tests/test_invoices_authenticated_read.py`
+- `S18` `verify:` `invoice.view CPU mean 2.56s to 0.19s (5 samples, two runs); invoice.list unchanged by design` -> `pass`
+- `S18` `verify:` `trusted read equals full validation over five seeds; kept refusals fire on trusted reads; write, intake and plain validation still refuse a stale id; mutation-checked` -> `pass`
+- `S18` `verify:` `invoice, profile, ledger, aggregation and runtime invoice suites (5813)` -> `pass`
+- `S18` `verify:` `ruff, lint-imports, ty on S18 files` -> `pass`
+- `S18` `by:` `S18`
+- `S19` `M` `src/cadrumo/application/aggregation/_iva_transaction.py`
+- `S19` `M` `src/cadrumo/application/aggregation/iva_ledger.py`
+- `S19` `M` `src/cadrumo/application/aggregation/errors.py`
+- `S19` `M` `src/cadrumo/application/aggregation/modelo_bindings.py`
+- `S19` `M` `src/cadrumo/application/aggregation/renta_income_ledger.py`
+- `S19` `A` `src/cadrumo/application/aggregation/concepto_ingreso_admission.py`
+- `S19` `M` `src/cadrumo/application/modelo/_art109_activity_income.py`
+- `S19` `M` `src/cadrumo/application/modelo/verification_revision_findings.py`
+- `S19` `M` `src/cadrumo/application/ledger/preflight.py`
+- `S19` `M` `src/cadrumo/domain/transactions/volumen_ingresos.py`
+- `S19` `M` `src/cadrumo/domain/iva/schema.py`
+- `S19` `M` `src/cadrumo/core/errors/registry/_application_part1.py`
+- `S19` `M` `src/cadrumo/locales/en/common.yml`
+- `S19` `M` `src/cadrumo/locales/es/common.yml`
+- `S19` `M` `src/cadrumo/locales/ca/common.yml`
+- `S19` `M` `src/cadrumo/locales/hu/common.yml`
+- `S19` `M` `src/cadrumo/locales/en/errors.yml`
+- `S19` `M` `src/cadrumo/locales/es/errors.yml`
+- `S19` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S19` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S19` `M` `src/cadrumo/application/aggregation/tests/test_m131_volumen_agrario.py`
+- `S19` `M` `src/cadrumo/application/aggregation/tests/test_undeclared_activity_advisory.py`
+- `S19` `A` `src/cadrumo/application/aggregation/tests/test_iva_ledger_refuses_unaccepted_registry_values.py`
+- `S19` `A` `src/cadrumo/application/aggregation/tests/test_m131_refuses_unaccepted_concepto_ingreso.py`
+- `S19` `A` `src/cadrumo/application/aggregation/tests/test_unaccepted_ledger_registry_value_error.py`
+- `S19` `A` `src/cadrumo/application/modelo/tests/test_art109_refuses_unaccepted_concepto_ingreso.py`
+- `S19` `M` `src/cadrumo/domain/transactions/tests/test_volumen_ingresos.py`
+- `S19` `A` `src/cadrumo/domain/iva/tests/test_cash_accounting_predicates_refuse_undeclared_treatment.py`
+- `S19` `verify:` `seeded before/after parity, 1321 valid rows: 60 IVA aggregations, 120 general and especial binding resolutions, 48 M131, 48 Art. 109; 0 differences` -> `pass`
+- `S19` `verify:` `per-field stale-row refusal tests through the real resolvers (13), each failing against the reinstated old behaviour` -> `pass`
+- `S19` `verify:` `aggregation, IVA, transactions, Renta, calculations, Modelo and ledger suites (7309) plus 24 adapter and entrypoint files (266)` -> `pass`
+- `S19` `verify:` `ruff format and check, lint-imports (28 kept), check-locales findings on new keys (0)` -> `pass`
+- `S19` `by:` `vaultspec-high-executor`
+- `S17` `M` `src/cadrumo/domain/transactions/models.py`
+- `S17` `M` `src/cadrumo/domain/transactions/model_validation.py`
+- `S17` `M` `src/cadrumo/adapters/persistence/profile/transactions.py`
+- `S17` `M` `src/cadrumo/adapters/persistence/profile/transaction_row_contracts.py`
+- `S17` `M` `src/cadrumo/application/ledger/read_ports.py`
+- `S17` `M` `src/cadrumo/application/ledger/action_ports.py`
+- `S17` `M` `src/cadrumo/application/ledger/check_operation.py`
+- `S17` `M` `src/cadrumo/entrypoints/ledger_action_composition.py`
+- `S17` `A` `src/cadrumo/domain/transactions/tests/test_authenticated_stored_row.py`
+- `S17` `A` `src/cadrumo/adapters/persistence/profile/tests/test_transaction_authenticated_reads.py`
+- `S17` `M` `src/cadrumo/entrypoints/tests/test_ledger_read_operation_parity.py`
+- `S17` `verify:` `uv run --no-sync pytest src/cadrumo/domain/transactions/tests src/cadrumo/adapters/persistence/profile/tests src/cadrumo/application/ledger/tests` -> `pass`
+- `S17` `by:` `vaultspec-high-executor`
+- `S07` `M` `dev/tui/harness/surfaces.py`
+- `S07` `A` `dev/tui/harness/settling.py`
+- `S07` `M` `dev/tui/harness/ledger_entries_fixtures.py`
+- `S07` `M` `dev/tui/harness/ledger_invoices_fixtures.py`
+- `S07` `M` `dev/tui/harness/ledger_registers_fixtures.py`
+- `S07` `M` `dev/tui/harness/ledger_categorisation_fixtures.py`
+- `S07` `M` `dev/tui/harness/ledger_evidence_files_fixtures.py`
+- `S07` `verify:` `uv run --no-sync python -m dev.tui render (66 domain surfaces, all viewports, both themes; 660 frames)` -> `pass`
+- `S07` `verify:` `uv run --no-sync pytest -q -n 8 dev/tui/tests dev/tui/harness/tests` -> `pass`
+- `S23` `M` `src/cadrumo/entrypoints/tui/ledger/categorisation_bulk.py`
+- `S23` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_categorisation_bulk.py`
+- `S23` `M` `src/cadrumo/locales/en/common.yml`
+- `S23` `M` `src/cadrumo/locales/es/common.yml`
+- `S23` `M` `src/cadrumo/locales/ca/common.yml`
+- `S23` `M` `src/cadrumo/locales/hu/common.yml`
+- `S23` `verify:` `uv run --no-sync pytest -q -p no:cacheprovider -m '' src/cadrumo/entrypoints/tui/ledger/tests -k categoris` -> `pass`
+- `S23` `by:` `vaultspec-standard-executor`
+- `S20` `M` `src/cadrumo_runtime/host/frontend/tui/runtime_ledger_categorisation.py`
+- `S20` `M` `src/cadrumo_runtime/host/frontend/tui/runtime_ledger_invoices.py`
+- `S20` `M` `src/cadrumo_runtime/host/tests/frontend/tui/ledger_invoices_runtime_harness.py`
+- `S20` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_categorisation.py`
+- `S20` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_evidence_files.py`
+- `S20` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_invoices.py`
+- `S20` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_records.py`
+- `S20` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_registers.py`
+- `S20` `verify:` `uv run --no-sync pytest -q -p no:cacheprovider -m '' src/cadrumo_runtime/host/tests/frontend/tui` -> `pass`
+- `S20` `by:` `vaultspec-high-executor`
+- `S21` `M` `src/cadrumo/entrypoints/tui/ledger/controller.py`
+- `S21` `M` `src/cadrumo/entrypoints/tui/ledger/workspace_presentation.py`
+- `S21` `M` `src/cadrumo/entrypoints/tui/ledger/evidence_records.py`
+- `S21` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_writes_hold_the_workspace.py`
+- `S21` `verify:` `uv run --no-sync pytest -q -p no:cacheprovider -m '' src/cadrumo/entrypoints/tui/ledger/tests/test_writes_hold_the_workspace.py` -> `pass`
+- `S21` `by:` `vaultspec-high-executor`
+- `S22` `A` `src/cadrumo/entrypoints/tui/operations/outcome.py`
+- `S22` `M` `src/cadrumo_runtime/host/frontend/tui/operations/runtime_profile_session.py`
+- `S22` `M` `src/cadrumo/core/errors/registry/_entrypoints.py`
+- `S22` `M` `src/cadrumo_runtime/host/frontend/tui/runtime_ledger_entries.py`
+- `S22` `M` `src/cadrumo/entrypoints/tui/ledger/entries_doors.py`
+- `S22` `A` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_operation_outcome.py`
+- `S22` `M` `src/cadrumo/locales/en/errors.yml`
+- `S22` `M` `src/cadrumo/locales/es/errors.yml`
+- `S22` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S22` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S22` `verify:` `uv run --no-sync pytest -q -p no:cacheprovider -m '' -n 8 src/cadrumo/entrypoints/tui/ledger/tests src/cadrumo_runtime/host/tests/frontend/tui` -> `pass`
+- `S22` `verify:` `just test-tui` -> `pass`
+- `S22` `by:` `vaultspec-high-executor`
+- `S24` `A` `src/cadrumo_runtime/host/frontend/tui/runtime_ledger_review.py`
+- `S24` `A` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_review.py`
+- `S24` `M` `src/cadrumo_runtime/host/frontend/tui/runtime_workbench.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/ledger/review.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/ledger/evidence.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/ledger/workspace_injection.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/ledger/routes.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/ledger/models.py`
+- `S24` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_review_doors.py`
+- `S24` `A` `src/cadrumo/entrypoints/tui/ledger/tests/review_door_fixtures.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/ledger/categorisation_common.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/ledger/evidence_files_batch.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/ledger/evidence_files_records.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/ledger/invoices_wizard.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/ledger/transaction_views.py`
+- `S24` `M` `src/cadrumo/entrypoints/tui/ledger/record_views.py`
+- `S24` `M` `src/cadrumo/locales/en/common.yml`
+- `S24` `M` `src/cadrumo/locales/es/common.yml`
+- `S24` `M` `src/cadrumo/locales/ca/common.yml`
+- `S24` `M` `src/cadrumo/locales/hu/common.yml`
+- `S24` `verify:` `python map_tui_ops.py (87 ledger operations wired, 0 Ctrl+P-only)` -> `pass`
+- `S24` `verify:` `uv run --no-sync pytest -q -p no:cacheprovider -m '' -n 8 src/cadrumo/entrypoints/tui/ledger/tests src/cadrumo_runtime/host/tests/frontend/tui` -> `pass`
+- `S24` `verify:` `just test-tui` -> `pass`
+- `S24` `by:` `vaultspec-high-executor`
+- `S25` `M` `src/cadrumo/entrypoints/tui/ledger/controller.py`
+- `S25` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_every_body_answers_an_area_choice.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_writes_hold_the_workspace.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/ledger/overview.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/ledger/entries_health.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/ledger/entries_trace.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/ledger/evidence_files_consent.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/ledger/evidence_files_review.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/ledger/evidence_files_write.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/ledger/invoices_import.py`
+- `S25` `verify:` `uv run --no-sync pytest -q -p no:cacheprovider -m '' src/cadrumo/entrypoints/tui/ledger/tests/test_every_body_answers_an_area_choice.py` -> `pass`
+- `S25` `by:` `vaultspec-high-executor`
+- `S21` `M` `src/cadrumo/entrypoints/tui/navigation.py`
+- `S21` `M` `src/cadrumo/entrypoints/tui/app_navigation.py`
+- `S21` `M` `src/cadrumo/entrypoints/tui/app.py`
+- `S21` `M` `src/cadrumo/entrypoints/tui/ledger/actividad_asset.py`
+- `S21` `M` `src/cadrumo/entrypoints/tui/ledger/evidence.py`
+- `S21` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_every_body_answers_an_area_choice.py`
+- `S21` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_actividad_asset_parity.py`
+- `S21` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_review_doors.py`
+- `S21` `A` `src/cadrumo/entrypoints/tui/tests/test_root_waits_for_a_write.py`
+- `S21` `verify:` `pytest S21 focused (5 files)` -> `pass`
+- `S21` `verify:` `just test-tui` -> `pass`
+- `S21` `verify:` `ruff format/check` -> `pass`
+- `S21` `verify:` `lint-imports` -> `pass`
+- `S20` `M` `src/cadrumo_runtime/host/frontend/tui/runtime_evidence.py`
+- `S20` `M` `src/cadrumo_runtime/host/frontend/tui/runtime_ledger_import.py`
+- `S20` `M` `src/cadrumo_runtime/host/frontend/tui/profile/manager_client.py`
+- `S20` `M` `src/cadrumo_runtime/host/frontend/tui/profile/aeat_auth_client.py`
+- `S20` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_evidence.py`
+- `S20` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_import.py`
+- `S20` `M` `src/cadrumo_runtime/host/tests/frontend/tui/profile/test_runtime_manager.py`
+- `S20` `M` `src/cadrumo_runtime/host/tests/frontend/tui/profile/test_auth_setup_client.py`
+- `S20` `verify:` `pytest ledger, runtime tui and client transport suites, 1718 tests` -> `pass`
+- `S20` `verify:` `ruff` -> `pass`
+- `S20` `verify:` `lint-imports` -> `pass`
+- `S22` `M` `src/cadrumo_runtime/host/frontend/tui/runtime_account_session.py`
+- `S22` `M` `src/cadrumo_runtime/host/frontend/tui/runtime_evidence.py`
+- `S22` `M` `src/cadrumo_runtime/host/frontend/tui/runtime_ledger_categorisation.py`
+- `S22` `M` `src/cadrumo_client/transport/operation_controller.py`
+- `S22` `M` `src/cadrumo/entrypoints/tui/operations/outcome.py`
+- `S22` `M` `src/cadrumo/entrypoints/tui/ledger/review.py`
+- `S22` `M` `src/cadrumo/entrypoints/tui/ledger/evidence_records.py`
+- `S22` `M` `src/cadrumo/entrypoints/tui/ledger/categorisation_review.py`
+- `S22` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_writes_hold_the_workspace.py`
+- `S22` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_operation_outcome.py`
+- `S22` `A` `src/cadrumo_runtime/host/tests/frontend/tui/unsupported_result.py`
+- `S22` `M` `src/cadrumo_runtime/host/tests/frontend/tui/ledger_invoices_runtime_harness.py`
+- `S22` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_categorisation.py`
+- `S22` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_entries.py`
+- `S22` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_evidence_files.py`
+- `S22` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_invoices.py`
+- `S22` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_records.py`
+- `S22` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_registers.py`
+- `S22` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_own_accounts.py`
+- `S22` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_evidence.py`
+- `S22` `verify:` `pytest ledger, runtime tui and client transport suites, 1718 tests` -> `pass`
+- `S22` `verify:` `old-code mutation run of the new and changed tests` -> `fail`
+- `S22` `M` `src/cadrumo/entrypoints/tui/ledger/controller.py`
+- `S22` `M` `src/cadrumo/entrypoints/tui/ledger/actividad_asset.py`
+- `S22` `M` `src/cadrumo/entrypoints/tui/ledger/evidence.py`
+- `S22` `M` `src/cadrumo/entrypoints/tui/ledger/invoice_entry.py`
+- `S22` `M` `src/cadrumo/entrypoints/tui/ledger/entries_add.py`
+- `S22` `M` `src/cadrumo/entrypoints/tui/ledger/entries_browse.py`
+- `S22` `M` `src/cadrumo/entrypoints/tui/ledger/entries_export.py`
+- `S22` `M` `src/cadrumo/entrypoints/tui/ledger/registers_presentation.py`
+- `S22` `M` `src/cadrumo/entrypoints/tui/ledger/categorisation_common.py`
+- `S22` `M` `src/cadrumo/entrypoints/tui/ledger/own_accounts.py`
+- `S22` `M` `src/cadrumo/entrypoints/tui/ledger/evidence_files_write.py`
+- `S22` `M` `src/cadrumo/entrypoints/tui/ledger/classification.py`
+- `S22` `M` `src/cadrumo/entrypoints/tui/ledger/reconciliation.py`
+- `S22` `M` `src/cadrumo_runtime/host/frontend/tui/runtime_actividad_asset.py`
+- `S22` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_actividad_asset_parity.py`
+- `S22` `A` `src/cadrumo/entrypoints/tui/ledger/tests/test_lost_session_outcome_is_unknown.py`
+- `S22` `verify:` `pytest ledger, runtime tui and client transport suites, 1750 tests` -> `pass`
+- `S22` `verify:` `ruff format and check on 23 files` -> `pass`
+- `S22` `verify:` `lint-imports` -> `pass`
+- `S22` `verify:` `old-code mutation run of 32 new tests` -> `fail`
+- `S26` `M` `src/cadrumo/entrypoints/tui/ledger/actividad_asset.py`
+- `S26` `M` `src/cadrumo/entrypoints/tui/ledger/categorisation_review.py`
+- `S26` `M` `src/cadrumo/entrypoints/tui/ledger/controller.py`
+- `S26` `M` `src/cadrumo/entrypoints/tui/ledger/evidence.py`
+- `S26` `M` `src/cadrumo/entrypoints/tui/ledger/evidence_records.py`
+- `S26` `M` `src/cadrumo/entrypoints/tui/ledger/own_accounts.py`
+- `S26` `M` `src/cadrumo/entrypoints/tui/ledger/record_views.py`
+- `S26` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_actividad_asset_parity.py`
+- `S26` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_categorisation_review.py`
+- `S26` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_ledger_ingestion_surfaces.py`
+- `S26` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_lost_session_outcome_is_unknown.py`
+- `S26` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_own_accounts.py`
+- `S26` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_record_views.py`
+- `S26` `M` `src/cadrumo/entrypoints/tui/ledger/transaction_views.py`
+- `S26` `M` `src/cadrumo/locales/ca/common.yml`
+- `S26` `M` `src/cadrumo/locales/en/common.yml`
+- `S26` `M` `src/cadrumo/locales/es/common.yml`
+- `S26` `M` `src/cadrumo/locales/hu/common.yml`
+- `S26` `verify:` `pytest ledger, runtime tui and client transport suites, 1761 tests` -> `pass`
+- `S26` `verify:` `just test-tui, 3005 tests` -> `pass`
+- `S26` `verify:` `ruff format and check` -> `pass`
+- `S26` `verify:` `lint-imports` -> `pass`
+- `S26` `verify:` `old-code mutation run of the 12 new test cases` -> `fail`
+- `S26` `by:` `vaultspec-high-executor`
+- `S27` `M` `src/cadrumo/entrypoints/tui/ledger/controller.py`
+- `S27` `M` `src/cadrumo/entrypoints/tui/ledger/categorisation_common.py`
+- `S27` `M` `src/cadrumo/entrypoints/tui/ledger/categorisation_review.py`
+- `S27` `M` `src/cadrumo/entrypoints/tui/ledger/evidence_records.py`
+- `S27` `M` `src/cadrumo/entrypoints/tui/ledger/own_accounts.py`
+- `S27` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_categorisation_review.py`
+- `S27` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_own_accounts.py`
+- `S27` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_lost_session_outcome_is_unknown.py`
+- `S27` `verify:` `pytest test_categorisation_review test_own_accounts test_lost_session_outcome_is_unknown test_writes_hold_the_workspace test_evidence_files_records 95 tests` -> `pass`
+- `S27` `verify:` `ruff check and format on touched files` -> `pass`
+- `S27` `verify:` `lint-imports 30 contracts` -> `pass`
+- `S27` `verify:` `HEAD modules via old-code plugin fail 7 of 8 new cases` -> `pass`
+- `S27` `by:` `vaultspec-high-executor`
+
+## Notes
+
+- `S10` Row cost after the change is about 360 us; the rest sits in the domain Transaction model and shared secure storage, outside this step.
+- `S05` Invoice and transaction updates carry no baseline on the wire; the door re-reads before writing, leaving a race window. Invoice import has no dry run; the apply is bound to the reviewed file by `source_sha256.` The tools composer entry and locale strings land in the integration commit.
+- `S06` The three register list operations have no paging fields; screens hold the register and render one page. The tools composer entry and locale strings land in the integration commit.
+- `S04` evidence.query, `attachment_queue` and consent.list take no paging fields; screens hold the result and render one page. Detach takes typed identities because no operation lists an entry's attachments. A whole-repo ruff safe-fix run touched four files outside D3; owners confirmed nothing was lost. The tools composer entry and locale strings land in the integration commit.
+- `S08` Gate B1 finding from D2: every runtime door's session binding check made a blocking IPC status read on the event loop.
+- `S02` Export drives OperationController directly so a partial export reports as partial. The exclusion submitter, tools composer entry and locale strings land in the integration commit.
+- `S03` Whole-ledger tools (bulk, rules, counterparties, ratios, diagnostics) attach to Entries because Classification needs a selected entry. classify.iva-derive has no preview; derived values show after the write. rule.list has no paging. The tools composer entry and locale strings land in the integration commit.
+- `S03` Follow-up: titles and prompts now reach tr() as literal keys so the locale scanner sees them.
+- `S07` Applied D1-D5 manifests and three orchestrator wording fixes. Accepted unknown-word findings are official untranslated terms (prorrata, Modelo, bienes de inversion, recargo de equivalencia, cuota), product names and valid inflections the pinned dictionaries lack. Harness surfaces not yet registered. Exclusion wiring in `runtime_workbench.py` is left uncommitted because that file carries another session's uncommitted startup work.
+- `S07` The exclusion submitter wiring (import, compose call, `exclusion_submitter=)` landed inside another session's commit 35934fefa0 together with its startup change; verified present in HEAD.
+- `S13` Behaviour change: a session lapsing or being replaced mid-read now refuses the whole read with a session refusal; before, a lapse surfaced as an unreadable row and a same-profile re-login released the records. transactions.py still digests each object key a second time (about 6 us/row); left for a follow-up.
+- `S11` At 30k rows after S09 and S10: workbench.generation 118 CPU-s mean (90M reconciliation pair checks), status 41 (4 full loads), check 32, view 30 (3 loads), track 19, preflight 12, unfiltered list 10, history 11, invoice.list 9, review 9, llm-diagnostics 8, participation 7, invoice.view 7. Period list page 0.59. Results and profiles in the scratchpad run4.log and prof folder.
+- `S12` Remaining domain cost is about 140 us of 212 us per row across `~75` validator calls; further cuts need a user decision (skip revalidating authenticated stored rows, native pydantic types, or paging the unfiltered listing).
+- `S14` When many items share one settlement amount, every true match is still built (about 12-25 us each); capping or paging suggestions would change output and needs a user decision.
+- `S16` invoice.view decoding only the selected invoice is covered by the authenticated-stored-read decision recorded next.
+- `S15` Status and check remain one whole-catalogue load each by design. Pre-existing: ledger.status with an instalment period (1P) fails with PeriodError in the money totals; pinned by a test, not fixed.
+- `S08` Pre-existing crash found by P04.S15: the money totals called Period.contains on a period with no date span. The overview pipeline now also gets the typed refusal for such a period; whether an instalment-period overview should show ledger totals is an open question.
+- `S18` Secure records report the current schema version, not the stored one; safe while older rows are refused outright, but a future row upgrader must expose the stored version to the trusted path.
+- `S19` Adding two IvaLedgerAggregationIssueReason members required classifying them in src/cadrumo/application/ledger/preflight.py, whose import-time invariant refuses an unclassified reason; both are declared as not reaching preflight.
+- `S19` The ledger preflight counterparty screen still compares an identification state only with the Spanish token; only the calculation refuses an undeclared one.
+- `S19` The IVA admission gate calls `validate_cash_accounting_axis` from `domain/transactions/cash_accounting_validation.py,` which P04.S17 owns; a rename there must update this caller.
+- `S17` full src/cadrumo run left 3 failures outside S17: docstring core-struct links on S15 ledger modules, and one `archive_fetch` test that did not reproduce; both routed to root-cause work
+- `S07` 23 frames crashed in one earlier loaded render; the cause was not recovered because a re-render overwrote that run's manifest. Forty-six harness processes in a row failed and then recovered, which points to a machine-wide event, not these states; it did not reproduce in 120 opens under load. The timed fixture settling, which could silently leave a frame in the wrong state, was replaced by deterministic waits. The settling and fixture files were committed inside another session's checkpoint 47d4a24167.
+- `S23` ledger.classify.bulk reports skips as a count only; a row is skipped when it already holds exactly the submitted values. The table id categorisation-bulk-changing is kept because the shared geometry test names it.
+- `S20` Before the fix, the off-loop thread tests failed for exactly invoice import preview, classify.review and split.review. All five domains' screens await doors on the loop since d84d3a639a, so the guarantee is the runtime door's own off-loop work, now proved per door.
+- `S21` S21 and S22 share one commit because both rewrite the same write screens' busy and failure handling. Evidence add had no in-flight flag at all and now runs under the extract and confirm flag. Disabling the guard fails all 18 in-flight tests. Some bodies (entries add, export and reset, import flow, invoice entry, most categorisation tools) never answer an area choice even when idle; left open.
+- `S22` Scope path is `src/cadrumo_runtime/host/frontend/tui/operations/runtime_profile_session.py.` A failed receipt whose effect is anything but NONE, UPDATED included, is reported as unknown, never refused. The export-only workaround door is removed. In the full run, `test_runtime_automation_requester_native` failed once and passed alone; routed to root-cause work.
+- `S24` S24 and S25 share one commit because eight files serve both. ledger.review and ledger.evidence.review.list take no paging fields, so each area holds the answer and renders one page. Neither screen offers the request filters yet. Back from an entry opened in Review returns to the overview. `tui.ledger.own_accounts.*,` `classification.field.*` and `review_status.*` still build keys from values.
+- `S25` The walk test discovers 41 concrete Records bodies by subclass. With the shared row handler removed it fails 41 of 41.
+- `S21` Re-review fix: root navigation, account actions and quit ask the destination's leave guard; asset screen runs actions in a worker; guard-disabled mutation fails 10 of 10
+- `S20` Re-review fix: evidence extract/confirm session checks, import preview folder listing, manager settings load and certificate path resolve moved off the loop; sweep of 39 runtime TUI door modules found no other blocking door
+- `S22` Re-review fix: every failure after acceptance judged once; unknown unless a NONE receipt was observed or the contract permits no UPDATED/PARTIAL; lost connection keeps expired vs unavailable; review and evidence add re-read on unknown. The old-code run is the expected detection proof (21 new runtime cases, 65 changed cases, 2 screen tests fail on HEAD code). Doors outside RuntimeProfileSession (auth, modelo create/lifecycle, `aeat_sync` handoff) are out of plan scope
+- `S22` Second re-review fix: activity-asset correlation inside settle, writes withheld until a re-read; session-lost unknown outcomes worded unknown on every write screen via `unknown_outcome_of;` categorisation result read judged inside the shared check; evidence add waits for a successful re-read; `_confirm` always clears reading. Start-denial recommendation dropped on evidence (see audit correction). The old-code run is the expected detection proof
+- `S26` Third re-review fixes: own-account write unstaged and worded saved before a separate re-read; categorisation modal None after Apply is unknown with the operation id until a re-read started after it lands; record and transaction edits use `unknown_outcome_of;` evidence Add released only by a load started after the unknown outcome; asset hold bound to its asset; refused records load shown; a failed re-read after an unknown outcome no longer says saved (new key `tui.ledger.flow.refresh_failed_unknown,` 4 locales). Not-found release of the asset hold deferred: needs a typed inspect refusal. The old-code run is the expected detection proof
+- `S27` `write_outcome_unknown` stays set as a record; `unknown_outcome_unread` derives the wording from re-read counters, because `test_writes_hold_the_workspace` asserts the flag survives a re-read

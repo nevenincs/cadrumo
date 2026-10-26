@@ -1,0 +1,68 @@
+# Modelo 222 trimestral deadline windows, grounded in Orden HFP/227/2017 art 5.2:
+# "La presentación de la autoliquidación modelo 222, pago fraccionado a cuenta
+# del Impuesto sobre Sociedades para los grupos fiscales, se efectuará, durante
+# los primeros veinte días naturales de los meses de abril, octubre y diciembre
+# de cada año natural." Each window opens on the first of the month and closes on
+# the 20th natural day, derived strictly from the statutory plazo (first 20
+# natural days), not copied from any engine output. The foral (Navarra/País
+# Vasco) modalities of art 5.3 are out of this revision's scope.
+
+[[revisions."2025-y-siguientes".deadline_windows]]
+id = "modelo-222-2025-1p"
+filing_year = 2025
+period = "2025 1P"
+period_kind = "quarterly"
+opens_on = 2025-04-01
+closes_on = 2025-04-20
+legal_refs = ["orden-hfp-227-2017:art-5"]
+source_refs = ["aeat-modelo-202-instructions", "boe-modelo-202-base-order"]
+
+[[revisions."2025-y-siguientes".deadline_windows]]
+id = "modelo-222-2025-2p"
+filing_year = 2025
+period = "2025 2P"
+period_kind = "quarterly"
+opens_on = 2025-10-01
+closes_on = 2025-10-20
+legal_refs = ["orden-hfp-227-2017:art-5"]
+source_refs = ["aeat-modelo-202-instructions", "boe-modelo-202-base-order"]
+
+[[revisions."2025-y-siguientes".deadline_windows]]
+id = "modelo-222-2025-3p"
+filing_year = 2025
+period = "2025 3P"
+period_kind = "quarterly"
+opens_on = 2025-12-01
+closes_on = 2025-12-20
+legal_refs = ["orden-hfp-227-2017:art-5"]
+source_refs = ["aeat-modelo-202-instructions", "boe-modelo-202-base-order"]
+
+[[revisions."2025-y-siguientes".deadline_windows]]
+id = "modelo-222-2026-1p"
+filing_year = 2026
+period = "2026 1P"
+period_kind = "quarterly"
+opens_on = 2026-04-01
+closes_on = 2026-04-20
+legal_refs = ["orden-hfp-227-2017:art-5"]
+source_refs = ["aeat-modelo-202-instructions", "boe-modelo-202-base-order"]
+
+[[revisions."2025-y-siguientes".deadline_windows]]
+id = "modelo-222-2026-2p"
+filing_year = 2026
+period = "2026 2P"
+period_kind = "quarterly"
+opens_on = 2026-10-01
+closes_on = 2026-10-20
+legal_refs = ["orden-hfp-227-2017:art-5"]
+source_refs = ["aeat-modelo-202-instructions", "boe-modelo-202-base-order"]
+
+[[revisions."2025-y-siguientes".deadline_windows]]
+id = "modelo-222-2026-3p"
+filing_year = 2026
+period = "2026 3P"
+period_kind = "quarterly"
+opens_on = 2026-12-01
+closes_on = 2026-12-20
+legal_refs = ["orden-hfp-227-2017:art-5"]
+source_refs = ["aeat-modelo-202-instructions", "boe-modelo-202-base-order"]

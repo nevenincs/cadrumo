@@ -1,0 +1,116 @@
+"""Import-light production command authority for the config Google family."""
+
+from __future__ import annotations
+
+from typing import Final
+
+from cadrumo_client.commands.execution_policies import GOOGLE_READ, GOOGLE_WRITE, state_free_group_spec
+from cadrumo_client.commands.leaf_specs import ModuleLeafBuilder
+from cadrumo_client.commands.parameters import OptionSpec
+from cadrumo_client.commands.shared_contracts import (
+    FLAG_VALUE,
+    LiteralValue,
+    ParameterConstraint,
+    ParameterDefault,
+    ValueContract,
+)
+from cadrumo_client.commands.shared_contracts import translation_key as _key
+
+from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
+
+# Every dynamically resolved handler module is named here as a WHOLE dotted path.
+# The path used to be built with an f-string, which meant no static reader -- grep,
+# the import-boundary checker, or a dead-code sweep -- could see the edge, so all of
+# these modules read as orphaned while backing live verbs. A wrong key now raises
+# at spec-build time instead of failing lazily on first invocation.
+_HANDLER_MODULES: Final[dict[str, str]] = {
+    "_google": ".google",
+    "_google_folder": ".google_folder_commands",
+    "_google_folder_payloads": ".google_folder_results",
+    "_google_payloads": "cadrumo_client.commands.google_payloads",
+}
+_leaf = ModuleLeafBuilder(_HANDLER_MODULES, __package__).leaf
+
+
+def _option(
+    name: str,
+    declarations: tuple[str, ...],
+    value: ValueContract,
+    help_key: str,
+    *,
+    required: bool = False,
+    default: LiteralValue | tuple[LiteralValue, ...] = None,
+    flag: bool = False,
+    multiple: bool = False,
+    minimum: int | None = None,
+    maximum: int | None = None,
+    transport_locus: TransportLocus = TransportLocus.NONE,
+    transport_shape: TransportShape = TransportShape.NOT_APPLICABLE,
+    transport_role: TransportRole = TransportRole.NOT_APPLICABLE,
+) -> OptionSpec:
+    return OptionSpec(
+        name=name,
+        declarations=declarations,
+        value=value,
+        default=ParameterDefault.required() if required else ParameterDefault.value(default),
+        help_key=_key(help_key),
+        is_flag=flag,
+        flag_value=True if flag else None,
+        multiple=multiple,
+        constraint=ParameterConstraint(minimum=minimum, maximum=maximum),
+        transport_locus=transport_locus,
+        transport_shape=transport_shape,
+        transport_role=transport_role,
+    )
+
+
+GOOGLE_COMMAND_SPECS = (
+    state_free_group_spec("config_google", "config", "google", "cli.config.google.help"),
+    state_free_group_spec("config_google_folder", "config_google", "folder", "cli.config.google.folder.help"),
+    _leaf(
+        "config_google_folder_view",
+        "config_google_folder",
+        "view",
+        "cli.config.google.folder.view_help",
+        "_google_folder",
+        "google_folder_view",
+        "_google_folder_payloads",
+        "GoogleFolderViewResult",
+        GOOGLE_READ,
+    ),
+    _leaf(
+        "config_google_folder_organize",
+        "config_google_folder",
+        "organize",
+        "cli.config.google.folder.organize_help",
+        "_google_folder",
+        "google_folder_organize",
+        "_google_folder_payloads",
+        "GoogleFolderOrganizeResult",
+        GOOGLE_WRITE,
+    ),
+    _leaf(
+        "config_google_probe",
+        "config_google",
+        "probe",
+        "cli.config.google.probe_help",
+        "_google",
+        "google_sync_probe",
+        "_google_payloads",
+        "GoogleSyncProbeResult",
+        GOOGLE_READ,
+        (
+            _option(
+                "read_only",
+                ("--read-only/--no-read-only",),
+                FLAG_VALUE,
+                "cli.config.google.probe_read_only_help",
+                default=False,
+                flag=True,
+            ),
+        ),
+    ),
+)
+
+
+__all__ = ["GOOGLE_COMMAND_SPECS"]

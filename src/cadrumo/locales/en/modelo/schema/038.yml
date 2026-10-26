@@ -1,0 +1,28 @@
+modelo:
+  schema:
+    038:
+      casilla:
+        continuidad:
+          filing-year:
+            label: Filing year to which the return relates
+          tipo-declaracion:
+            label: Return type (original / substitute / supplementary)
+      construct:
+        modelo-038-informative:
+          field:
+            title: Modelo 038 return informative
+      field:
+        official_name: Modelo 038. List of transactions carried out by entities registered
+          in public registers. Informative return.
+        title: Transactions of entities registered in public registers (monthly informative
+          return)
+      revision:
+        2022-hasta-2024-05:
+          field:
+            label: Modelo 038, 2022 to May 2024
+        2024-desde-06:
+          field:
+            label: Modelo 038, from June 2024
+        2025-y-siguientes:
+          field:
+            label: Modelo 038, tax years 2025 onwards

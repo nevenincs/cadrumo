@@ -1,0 +1,307 @@
+
+# Modelo 490 form casillas for the 2023 era, transcribed position-by-position
+# from aeat-dr-490-2023. `number` is AEAT's own bracketed box number wherever the
+# design supplies one; rows AEAT leaves unnumbered carry a record-scoped
+# descriptive number instead, never an invented box number.
+#
+# Grounding is the modelo-approving orden plus the general information duty,
+# matching what the revision and construct already declare. Ley 4/2020 (IDSD) is
+# NOT cited: it is absent from this registry's legal catalogue and no article is
+# invented here, even though the design's own prose references its art. 10.3.
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "terr-navarra-23"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:86 (sha256 f55ecbfff8fb) box [23] (40 965 5 Num Información de la tributación por razón de territorio ...); corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [23]."
+number = "23"
+section = ["490_01"]
+data_type = "ratio"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "terr-navarra-per-212"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:382 (sha256 f55ecbfff8fb) prints box [212]; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [212] and retires none"
+number = "212"
+section = ["490_03"]
+data_type = "ratio"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "terr-navarra-per-233"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:383 (sha256 f55ecbfff8fb) prints box [233]; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [233] and retires none"
+number = "233"
+section = ["490_03"]
+data_type = "ratio"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "terr-navarra-per-254"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:384 (sha256 f55ecbfff8fb) prints box [254]; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [254] and retires none"
+number = "254"
+section = ["490_03"]
+data_type = "ratio"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "terr-navarra-per-275"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:385 (sha256 f55ecbfff8fb) prints box [275]; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [275] and retires none"
+number = "275"
+section = ["490_03"]
+data_type = "ratio"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "terr-navarra-con-reg-213"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:386 (sha256 f55ecbfff8fb) prints box [213]; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [213] and retires none"
+number = "213"
+section = ["490_03"]
+data_type = "ratio"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "terr-navarra-con-reg-234"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:387 (sha256 f55ecbfff8fb) prints box [234]; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [234] and retires none"
+number = "234"
+section = ["490_03"]
+data_type = "ratio"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "terr-navarra-con-reg-255"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:388 (sha256 f55ecbfff8fb) prints box [255]; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [255] and retires none"
+number = "255"
+section = ["490_03"]
+data_type = "ratio"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "terr-navarra-con-reg-276"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:389 (sha256 f55ecbfff8fb) prints box [276]; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [276] and retires none"
+number = "276"
+section = ["490_03"]
+data_type = "ratio"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "terr-navarra-per-44"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:194 (sha256 f55ecbfff8fb) prints box [44]; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [44] and retires none"
+number = "44"
+section = ["490_02"]
+data_type = "ratio"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "terr-navarra-per-65"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:195 (sha256 f55ecbfff8fb) prints box [65]; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [65] and retires none"
+number = "65"
+section = ["490_02"]
+data_type = "ratio"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "terr-navarra-per-86"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:196 (sha256 f55ecbfff8fb) prints box [86]; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [86] and retires none"
+number = "86"
+section = ["490_02"]
+data_type = "ratio"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "terr-navarra-per-107"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:197 (sha256 f55ecbfff8fb) prints box [107]; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [107] and retires none"
+number = "107"
+section = ["490_02"]
+data_type = "ratio"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "terr-navarra-con-reg-45"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:198 (sha256 f55ecbfff8fb) prints box [45]; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [45] and retires none"
+number = "45"
+section = ["490_02"]
+data_type = "ratio"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "terr-navarra-con-reg-66"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:199 (sha256 f55ecbfff8fb) prints box [66]; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [66] and retires none"
+number = "66"
+section = ["490_02"]
+data_type = "ratio"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "terr-navarra-con-reg-87"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:200 (sha256 f55ecbfff8fb) prints box [87]; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [87] and retires none"
+number = "87"
+section = ["490_02"]
+data_type = "ratio"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "terr-navarra-con-reg-108"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:201 (sha256 f55ecbfff8fb) prints box [108]; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [108] and retires none"
+number = "108"
+section = ["490_02"]
+data_type = "ratio"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "terr-navarra-per-128"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:279 (sha256 f55ecbfff8fb) prints box [128]; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [128] and retires none"
+number = "128"
+section = ["490_02"]
+data_type = "ratio"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "terr-navarra-per-149"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:280 (sha256 f55ecbfff8fb) prints box [149]; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [149] and retires none"
+number = "149"
+section = ["490_02"]
+data_type = "ratio"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "terr-navarra-per-170"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:281 (sha256 f55ecbfff8fb) prints box [170]; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [170] and retires none"
+number = "170"
+section = ["490_02"]
+data_type = "ratio"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "terr-navarra-per-191"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:282 (sha256 f55ecbfff8fb) prints box [191]; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [191] and retires none"
+number = "191"
+section = ["490_02"]
+data_type = "ratio"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "terr-navarra-con-reg-129"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:283 (sha256 f55ecbfff8fb) prints box [129]; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [129] and retires none"
+number = "129"
+section = ["490_02"]
+data_type = "ratio"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "terr-navarra-con-reg-150"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:284 (sha256 f55ecbfff8fb) prints box [150]; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [150] and retires none"
+number = "150"
+section = ["490_02"]
+data_type = "ratio"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "terr-navarra-con-reg-171"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:285 (sha256 f55ecbfff8fb) prints box [171]; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [171] and retires none"
+number = "171"
+section = ["490_02"]
+data_type = "ratio"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "terr-navarra-con-reg-192"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:286 (sha256 f55ecbfff8fb) prints box [192]; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [192] and retires none"
+number = "192"
+section = ["490_02"]
+data_type = "ratio"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "terr-navarra-per-296"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:467 (sha256 f55ecbfff8fb) prints box [296]; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [296] and retires none"
+number = "296"
+section = ["490_03"]
+data_type = "ratio"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "terr-navarra-per-317"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:468 (sha256 f55ecbfff8fb) prints box [317]; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [317] and retires none"
+number = "317"
+section = ["490_03"]
+data_type = "ratio"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "terr-navarra-per-338"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:469 (sha256 f55ecbfff8fb) prints box [338]; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [338] and retires none"
+number = "338"
+section = ["490_03"]
+data_type = "ratio"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "terr-navarra-per-359"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:470 (sha256 f55ecbfff8fb) prints box [359]; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [359] and retires none"
+number = "359"
+section = ["490_03"]
+data_type = "ratio"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "terr-navarra-con-reg-297"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:471 (sha256 f55ecbfff8fb) prints box [297]; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [297] and retires none"
+number = "297"
+section = ["490_03"]
+data_type = "ratio"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "terr-navarra-con-reg-318"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:472 (sha256 f55ecbfff8fb) prints box [318]; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [318] and retires none"
+number = "318"
+section = ["490_03"]
+data_type = "ratio"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "terr-navarra-con-reg-339"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:473 (sha256 f55ecbfff8fb) prints box [339]; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [339] and retires none"
+number = "339"
+section = ["490_03"]
+data_type = "ratio"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
+
+[[revisions."2023-y-siguientes".casillas]]
+id = "terr-navarra-con-reg-360"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_490/files/01-490-ejercicio-2023-y-siguientes.xlsx.extracted.md:474 (sha256 f55ecbfff8fb) prints box [360]; corpus/aeat_official/disenos_registro/modelo_490/files/03-490-orden-hac-590-2021-ejercicio-2022-periodo-2t-4t.xlsx.extracted.md (sha256 9a4c8d8cd2e6) prints no box [360] and retires none"
+number = "360"
+section = ["490_03"]
+data_type = "ratio"
+legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]

@@ -1,0 +1,2218 @@
+//! Windows Installer and read-only Restart Manager adapters.
+#![allow(unsafe_code)]
+use crate::admission::{
+    MAX_DATA_BYTES, MAX_PRODUCTS, Product, Refusal, Request, Scope, canonical_guid,
+};
+use cadrumo_application::{
+    error::Error,
+    installation::maintenance::{
+        NativeContext, NativeFeature, NativeOwner, NativeProductInventory,
+    },
+};
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    ffi::c_void,
+    os::windows::{
+        fs::MetadataExt,
+        io::{FromRawHandle, OwnedHandle},
+    },
+    path::{Component, Path, Prefix},
+};
+use std::{path::PathBuf, ptr};
+
+const ERROR_SUCCESS: u32 = 0;
+const ERROR_MORE_DATA: u32 = 234;
+const ERROR_NO_MORE_ITEMS: u32 = 259;
+const ERROR_INSTALL_FAILURE: u32 = 1603;
+const ERROR_UNKNOWN_PRODUCT: u32 = 1605;
+const MACHINE: u32 = 4;
+const ALL_CONTEXTS: u32 = 7;
+
+#[link(name = "msi")]
+unsafe extern "system" {
+    fn MsiCloseHandle(handle: u32) -> u32;
+    fn MsiGetActiveDatabase(install: u32) -> u32;
+    fn MsiGetPropertyW(install: u32, name: *const u16, value: *mut u16, size: *mut u32) -> u32;
+    fn MsiSetPropertyW(install: u32, name: *const u16, value: *const u16) -> u32;
+    fn MsiOpenDatabaseW(path: *const u16, mode: *const u16, database: *mut u32) -> u32;
+    #[cfg(test)]
+    fn MsiDatabaseCommit(database: u32) -> u32;
+    fn MsiDatabaseOpenViewW(database: u32, query: *const u16, view: *mut u32) -> u32;
+    fn MsiViewExecute(view: u32, record: u32) -> u32;
+    fn MsiViewFetch(view: u32, record: *mut u32) -> u32;
+    fn MsiCreateRecord(fields: u32) -> u32;
+    fn MsiRecordSetStringW(record: u32, field: u32, value: *const u16) -> u32;
+    fn MsiRecordGetStringW(record: u32, field: u32, value: *mut u16, size: *mut u32) -> u32;
+    fn MsiProcessMessage(install: u32, kind: u32, record: u32) -> i32;
+    fn MsiEnumProductsExW(
+        product: *const u16,
+        sid: *const u16,
+        contexts: u32,
+        index: u32,
+        code: *mut u16,
+        context: *mut u32,
+        owner: *mut u16,
+        owner_size: *mut u32,
+    ) -> u32;
+    fn MsiGetProductInfoExW(
+        product: *const u16,
+        sid: *const u16,
+        context: u32,
+        property: *const u16,
+        value: *mut u16,
+        size: *mut u32,
+    ) -> u32;
+    fn MsiBeginTransactionW(
+        name: *const u16,
+        attributes: u32,
+        transaction: *mut u32,
+        owner_event: *mut *mut c_void,
+    ) -> u32;
+    fn MsiEndTransaction(state: u32) -> u32;
+    fn MsiInstallProductW(package: *const u16, properties: *const u16) -> u32;
+    fn MsiConfigureProductExW(
+        product: *const u16,
+        level: i32,
+        state: i32,
+        properties: *const u16,
+    ) -> u32;
+    fn MsiSetInternalUI(level: u32, window: *mut *mut c_void) -> u32;
+    fn MsiQueryFeatureStateExW(
+        product: *const u16,
+        sid: *const u16,
+        context: u32,
+        feature: *const u16,
+        state: *mut i32,
+    ) -> u32;
+    fn MsiGetFeatureStateW(
+        install: u32,
+        feature: *const u16,
+        installed: *mut i32,
+        action: *mut i32,
+    ) -> u32;
+}
+
+#[link(name = "kernel32")]
+unsafe extern "system" {
+    fn GetCurrentProcess() -> *mut c_void;
+    fn CloseHandle(handle: *mut c_void) -> i32;
+    fn LocalFree(memory: *mut c_void) -> *mut c_void;
+}
+#[link(name = "advapi32")]
+unsafe extern "system" {
+    fn OpenProcessToken(process: *mut c_void, access: u32, token: *mut *mut c_void) -> i32;
+    fn GetTokenInformation(
+        token: *mut c_void,
+        class: u32,
+        information: *mut c_void,
+        size: u32,
+        returned: *mut u32,
+    ) -> i32;
+    fn ConvertSidToStringSidW(sid: *mut c_void, value: *mut *mut u16) -> i32;
+}
+struct KernelHandle(*mut c_void);
+impl Drop for KernelHandle {
+    fn drop(&mut self) {
+        // SAFETY: This wrapper owns a non-null handle returned by the native API.
+        unsafe {
+            CloseHandle(self.0);
+        }
+    }
+}
+
+static INSTALLER_UI: std::sync::Mutex<()> = std::sync::Mutex::new(());
+struct InstallerUi {
+    previous: u32,
+    _exclusive: std::sync::MutexGuard<'static, ()>,
+}
+impl InstallerUi {
+    fn quiet() -> Result<Self, Refusal> {
+        let exclusive = INSTALLER_UI
+            .try_lock()
+            .map_err(|_| Refusal::NativeFailure)?;
+        // SAFETY: process-global UI changes are serialized for this transaction's
+        // entire lifetime. INSTALLUILEVEL_NONE prevents inherited dialogs, including
+        // noninteractive service hosts; it never suppresses a native error result.
+        let previous = unsafe { MsiSetInternalUI(2, ptr::null_mut()) };
+        if previous == 0 {
+            return Err(Refusal::NativeFailure);
+        }
+        Ok(Self {
+            previous,
+            _exclusive: exclusive,
+        })
+    }
+}
+impl Drop for InstallerUi {
+    fn drop(&mut self) {
+        // SAFETY: still holding the exclusive process UI guard, restore native state.
+        unsafe {
+            MsiSetInternalUI(self.previous, ptr::null_mut());
+        }
+    }
+}
+
+/// The owner, not a deferred custom action, holds this native transaction. A
+/// successful commit return is the only operation that disables rollback on Drop.
+pub struct Transaction {
+    _transaction: Handle,
+    ownership: crate::ownership::Ownership,
+    active: bool,
+    _ui: InstallerUi,
+}
+impl Transaction {
+    pub fn begin(name: &str) -> Result<Self, Refusal> {
+        let ui = InstallerUi::quiet()?;
+        let name = wide(name)?;
+        let mut transaction = 0;
+        let mut event = ptr::null_mut();
+        // SAFETY: All outputs and the terminated name remain live for this call.
+        result(unsafe { MsiBeginTransactionW(name.as_ptr(), 0, &mut transaction, &mut event) })?;
+        if event.is_null() || transaction == 0 {
+            // SAFETY: The preceding successful call opened our transaction.
+            unsafe {
+                MsiEndTransaction(0);
+            }
+            if transaction != 0 {
+                drop(Handle(transaction));
+            }
+            if !event.is_null() {
+                drop(KernelHandle(event));
+            }
+            return Err(Refusal::NativeFailure);
+        }
+        Ok(Self {
+            _transaction: Handle(transaction),
+            // SAFETY: MsiBeginTransaction returned this newly owned event handle.
+            ownership: crate::ownership::Ownership::new(unsafe {
+                OwnedHandle::from_raw_handle(event)
+            }),
+            active: true,
+            _ui: ui,
+        })
+    }
+    pub fn ownership(&self) -> crate::ownership::Ownership {
+        self.ownership.clone()
+    }
+    pub fn install(
+        &self,
+        package: &Path,
+        owner: &NativeOwner,
+        endpoint: &str,
+    ) -> Result<(), Refusal> {
+        self.ownership.current()?;
+        local_regular_file(package)?;
+        let package = wide(package.to_str().ok_or(Refusal::InvalidRequest)?)?;
+        let observed = MsiInventory
+            .locate(owner)
+            .map_err(|_| Refusal::IncompleteInventory)?;
+        let properties = wide(&installation_properties(
+            owner,
+            endpoint,
+            observed.as_ref(),
+        )?)?;
+        // SAFETY: This process owns the transaction; terminated strings remain live.
+        // Reboot-required and other nonzero results remain failures, never implicit success.
+        let installed =
+            result(unsafe { MsiInstallProductW(package.as_ptr(), properties.as_ptr()) });
+        self.ownership.current()?;
+        installed
+    }
+    pub fn commit(mut self) -> Result<(), Refusal> {
+        self.ownership.current()?;
+        // SAFETY: This object owns the active native transaction in this process.
+        result(unsafe { MsiEndTransaction(1) })?;
+        self.active = false;
+        Ok(())
+    }
+    pub fn remove(&self, owner: &NativeOwner, endpoint: &str) -> Result<(), Refusal> {
+        self.ownership.current()?;
+        let product = wide(&format!("{{{}}}", owner.product_code()))?;
+        let prefix = owner.prefix().to_str().ok_or(Refusal::InvalidRequest)?;
+        if prefix.contains(['"', '\r', '\n', '\0']) || endpoint.contains(['"', '\r', '\n', '\0']) {
+            return Err(Refusal::InvalidRequest);
+        }
+        let (remove, selection) = if let Some(feature) = owner.feature() {
+            let other = match feature {
+                NativeFeature::Version => NativeFeature::Registration,
+                NativeFeature::Registration => NativeFeature::Version,
+            };
+            let other_present = MsiInventory
+                .locate(&owner.clone().with_feature(other))
+                .map_err(|_| Refusal::IncompleteInventory)?
+                .is_some();
+            (
+                if other_present { feature.id() } else { "ALL" },
+                format!(" CADRUMO_MSI_FEATURE={}", feature.id()),
+            )
+        } else {
+            ("ALL", String::new())
+        };
+        let properties = wide(&format!(
+            "REMOVE={remove} INSTALL_ROOT=\"{prefix}\" CADRUMO_MSI_OWNER=\"{endpoint}\" REBOOT=ReallySuppress MSIRESTARTMANAGERCONTROL=Disable{selection}"
+        ))?;
+        // SAFETY: exact native product was admitted by the caller; this transaction
+        // owns settlement. INSTALLSTATE_ABSENT removes only Windows Installer-owned
+        // resources. Nonzero reboot, in-use and failure statuses are never success.
+        let removed = result(unsafe {
+            MsiConfigureProductExW(
+                product.as_ptr(),
+                0,
+                if remove == "ALL" { 2 } else { 5 },
+                properties.as_ptr(),
+            )
+        });
+        self.ownership.current()?;
+        removed
+    }
+    pub fn rollback(mut self) -> Result<(), Refusal> {
+        self.ownership.current()?;
+        // SAFETY: This object owns the active native transaction in this process.
+        result(unsafe { MsiEndTransaction(0) })?;
+        self.active = false;
+        Ok(())
+    }
+}
+
+fn installation_properties(
+    owner: &NativeOwner,
+    endpoint: &str,
+    observed: Option<&NativeOwner>,
+) -> Result<String, Refusal> {
+    let prefix = owner.prefix().to_str().ok_or(Refusal::InvalidRequest)?;
+    if prefix.contains(['"', '\r', '\n', '\0'])
+        || endpoint.contains(['"', '\r', '\n', '\0'])
+        || observed.is_some_and(|native| native != owner)
+    {
+        return Err(Refusal::InvalidRequest);
+    }
+    // REINSTALL on an absent product performs no installation. Only exact native
+    // presence enables forced file/registry/shortcut repair. No recache ('v') is
+    // requested: the independently verified native cache remains authoritative.
+    let repair = if observed.is_some() {
+        format!(
+            " REINSTALL={} REINSTALLMODE=amus",
+            owner.feature().map_or("ALL", NativeFeature::id)
+        )
+    } else {
+        String::new()
+    };
+    let feature = owner.feature().map_or_else(String::new, |feature| {
+        format!(
+            " INSTALLLEVEL=0 ADDLOCAL={0} CADRUMO_MSI_FEATURE={0}",
+            feature.id()
+        )
+    });
+    let scope = if owner.feature().is_some() {
+        match owner.context() {
+            NativeContext::Machine => " ALLUSERS=1 MSIINSTALLPERUSER=\"\"",
+            NativeContext::User { .. } => " ALLUSERS=\"\" MSIINSTALLPERUSER=1",
+        }
+    } else {
+        ""
+    };
+    Ok(format!(
+        "INSTALL_ROOT=\"{prefix}\" CADRUMO_MSI_OWNER=\"{endpoint}\" REBOOT=ReallySuppress MSIRESTARTMANAGERCONTROL=Disable{scope}{feature}{repair}"
+    ))
+}
+impl Drop for Transaction {
+    fn drop(&mut self) {
+        if self.active && self.ownership.current().is_ok() {
+            // SAFETY: Only our still-active transaction is rolled back. Failure
+            // leaves shared publication fenced; Drop never manufactures success.
+            unsafe {
+                MsiEndTransaction(0);
+            }
+        }
+    }
+}
+
+pub fn local_regular_file(path: &Path) -> Result<(), Refusal> {
+    if !path.is_absolute()
+        || !matches!(path.components().next(), Some(Component::Prefix(prefix))
+        if matches!(prefix.kind(), Prefix::Disk(_) | Prefix::VerbatimDisk(_)))
+        || path
+            .components()
+            .any(|part| matches!(part, Component::ParentDir))
+    {
+        return Err(Refusal::InvalidRequest);
+    }
+    for ancestor in path.ancestors() {
+        let metadata =
+            std::fs::symlink_metadata(ancestor).map_err(|_| Refusal::IncompleteInventory)?;
+        if metadata.file_attributes() & 0x400 != 0 {
+            return Err(Refusal::InvalidRequest);
+        }
+    }
+    if !path.is_file() {
+        return Err(Refusal::InvalidRequest);
+    }
+    Ok(())
+}
+
+pub fn installation_context(scope: Scope) -> Result<NativeContext, Refusal> {
+    let mut token = ptr::null_mut();
+    // SAFETY: Pseudo process handle is borrowed; output is writable. TOKEN_QUERY only.
+    if unsafe { OpenProcessToken(GetCurrentProcess(), 8, &mut token) } == 0 {
+        return Err(Refusal::NativeFailure);
+    }
+    let token = KernelHandle(token);
+    if scope == Scope::Machine {
+        let mut elevation = 0_u32;
+        let mut returned = 0;
+        // SAFETY: TOKEN_ELEVATION is exactly one DWORD and the output size matches.
+        if unsafe {
+            GetTokenInformation(
+                token.0,
+                20,
+                ptr::from_mut(&mut elevation).cast(),
+                4,
+                &mut returned,
+            )
+        } == 0
+            || returned != 4
+            || elevation == 0
+        {
+            return Err(Refusal::NativeFailure);
+        }
+        return Ok(NativeContext::Machine);
+    }
+    let mut returned = 0;
+    // SAFETY: The initial size-only query deliberately supplies a null output.
+    unsafe {
+        GetTokenInformation(token.0, 1, ptr::null_mut(), 0, &mut returned);
+    }
+    if returned == 0 || returned > 65536 {
+        return Err(Refusal::NativeFailure);
+    }
+    let mut storage = vec![0_usize; (returned as usize).div_ceil(size_of::<usize>())];
+    // SAFETY: Aligned storage has at least returned bytes; TokenUser writes SID_AND_ATTRIBUTES.
+    if unsafe {
+        GetTokenInformation(
+            token.0,
+            1,
+            storage.as_mut_ptr().cast(),
+            returned,
+            &mut returned,
+        )
+    } == 0
+    {
+        return Err(Refusal::NativeFailure);
+    }
+    // SAFETY: A successful TokenUser query starts with the SID pointer, pointer-aligned.
+    let sid = unsafe { *storage.as_ptr().cast::<*mut c_void>() };
+    let mut value = ptr::null_mut();
+    // SAFETY: SID belongs to the live token-information buffer; API allocates terminated text.
+    if unsafe { ConvertSidToStringSidW(sid, &mut value) } == 0 {
+        return Err(Refusal::NativeFailure);
+    }
+    let mut size = 0;
+    // SAFETY: The converted SID is terminated and documented textual SIDs fit 184 characters.
+    while size < 184 && unsafe { *value.add(size) } != 0 {
+        size += 1;
+    }
+    // SAFETY: The preceding scan bounds initialized UTF-16 text from this native allocation.
+    let text = String::from_utf16(unsafe { std::slice::from_raw_parts(value, size) });
+    // SAFETY: ConvertSidToStringSid allocated this memory for LocalFree.
+    unsafe {
+        LocalFree(value.cast());
+    }
+    if size == 184 {
+        return Err(Refusal::InvalidRequest);
+    }
+    Ok(NativeContext::User {
+        sid: text.map_err(|_| Refusal::InvalidRequest)?,
+    })
+}
+
+pub struct ProductDefinition {
+    pub code: String,
+    pub family: String,
+    pub version: String,
+    pub admission: Request,
+    pub ownership: PackageOwnership,
+    pub owner: Option<OwnerMetadata>,
+    pub registration: Option<crate::registration::Description>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PackageOwnership {
+    pub schema: u32,
+    pub application_id: String,
+    pub channel: String,
+    pub platform: String,
+    pub version: String,
+    pub role: String,
+    pub manifest_sha256: cadrumo_application::value::Sha256Digest,
+}
+fn database(path: &Path) -> Result<Handle, Refusal> {
+    local_regular_file(path)?;
+    let path = wide(path.to_str().ok_or(Refusal::InvalidRequest)?)?;
+    let mut handle = 0;
+    // SAFETY: Null persistence mode opens the local artifact read-only.
+    result(unsafe { MsiOpenDatabaseW(path.as_ptr(), ptr::null(), &mut handle) })?;
+    Handle::new(handle)
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DestinationRefusal {
+    Inventory,
+    TooLong,
+}
+
+const MAX_DESTINATION_ROWS: usize = 100_000;
+
+fn table_rows<const N: usize>(database: &Handle, query: &str) -> Result<Vec<[String; N]>, Refusal> {
+    let query = wide(query)?;
+    let mut view = 0;
+    // SAFETY: owned read-only database, static SQL and writable handle output.
+    result(unsafe { MsiDatabaseOpenViewW(database.0, query.as_ptr(), &mut view) })?;
+    let view = Handle::new(view)?;
+    // SAFETY: queries have no parameters; the view remains owned throughout enumeration.
+    result(unsafe { MsiViewExecute(view.0, 0) })?;
+    let mut rows = Vec::new();
+    loop {
+        let mut row = 0;
+        // SAFETY: live view, writable record output; each fetched record is closed.
+        let code = unsafe { MsiViewFetch(view.0, &mut row) };
+        if code == ERROR_NO_MORE_ITEMS {
+            return Ok(rows);
+        }
+        result(code)?;
+        let row = Handle::new(row)?;
+        if rows.len() == MAX_DESTINATION_ROWS {
+            return Err(Refusal::IncompleteInventory);
+        }
+        let mut fields: [String; N] = std::array::from_fn(|_| String::new());
+        for (index, field) in fields.iter_mut().enumerate() {
+            // SAFETY: selected field exists and string() owns bounded UTF-16 output.
+            *field = string(|buffer, size| unsafe {
+                MsiRecordGetStringW(row.0, (index + 1) as u32, buffer, size)
+            })?;
+            if field.encode_utf16().count() > 255 {
+                return Err(Refusal::InvalidRequest);
+            }
+        }
+        rows.push(fields);
+    }
+}
+
+fn destination_name(value: &str, directory: bool) -> Result<String, DestinationRefusal> {
+    let mut sides = value.split(':');
+    let target = sides.next().ok_or(DestinationRefusal::Inventory)?;
+    let source = sides.next();
+    if sides.next().is_some() || (!directory && source.is_some()) {
+        return Err(DestinationRefusal::Inventory);
+    }
+    let parse = |name: &str| -> Result<String, DestinationRefusal> {
+        let mut names = name.split('|');
+        let short = names.next().ok_or(DestinationRefusal::Inventory)?;
+        let long = names.next();
+        if names.next().is_some() || short.is_empty() || long.is_some_and(str::is_empty) {
+            return Err(DestinationRefusal::Inventory);
+        }
+        for part in [Some(short), long].into_iter().flatten() {
+            let device = part.split('.').next().unwrap_or(part).to_ascii_uppercase();
+            if matches!(device.as_str(), "CON" | "PRN" | "AUX" | "NUL")
+                || (device.len() == 4
+                    && (device.starts_with("COM") || device.starts_with("LPT"))
+                    && matches!(device.as_bytes()[3], b'1'..=b'9'))
+            {
+                return Err(DestinationRefusal::Inventory);
+            }
+            if (part == "." && directory)
+                || (!part.is_empty()
+                    && part != ".."
+                    && !part.ends_with(['.', ' '])
+                    && !part
+                        .chars()
+                        .any(|value| value.is_control() || "\\/:*?\"<>|".contains(value)))
+            {
+                continue;
+            }
+            return Err(DestinationRefusal::Inventory);
+        }
+        Ok(long.unwrap_or(short).into())
+    };
+    if let Some(source) = source {
+        parse(source)?;
+    }
+    parse(target)
+}
+
+fn destination_identifier(value: &str) -> Result<(), DestinationRefusal> {
+    if value.is_empty()
+        || value.len() > 72
+        || !value
+            .bytes()
+            .next()
+            .is_some_and(|value| value.is_ascii_alphabetic() || value == b'_')
+        || !value
+            .bytes()
+            .all(|value| value.is_ascii_alphanumeric() || matches!(value, b'_' | b'.'))
+    {
+        return Err(DestinationRefusal::Inventory);
+    }
+    Ok(())
+}
+
+fn resolved_destinations(
+    prefix: &Path,
+    directories: Vec<[String; 3]>,
+    components: Vec<[String; 2]>,
+    files: Vec<[String; 3]>,
+) -> Result<Vec<PathBuf>, DestinationRefusal> {
+    if !prefix.is_absolute()
+        || prefix
+            .components()
+            .any(|part| matches!(part, Component::ParentDir))
+        || !matches!(prefix.components().next(), Some(Component::Prefix(value)) if matches!(value.kind(), Prefix::Disk(_)))
+        || directories.is_empty()
+        || files.is_empty()
+        || [directories.len(), components.len(), files.len()]
+            .into_iter()
+            .any(|count| count > MAX_DESTINATION_ROWS)
+    {
+        return Err(DestinationRefusal::Inventory);
+    }
+    let mut names = BTreeSet::new();
+    let mut tree = BTreeMap::new();
+    for [id, parent, default] in directories {
+        destination_identifier(&id)?;
+        if !parent.is_empty() {
+            destination_identifier(&parent)?;
+        }
+        if !names.insert(id.to_ascii_lowercase())
+            || tree
+                .insert(id, (parent, destination_name(&default, true)?))
+                .is_some()
+        {
+            return Err(DestinationRefusal::Inventory);
+        }
+    }
+    if !tree.contains_key("INSTALL_ROOT")
+        || !tree.contains_key("TARGETDIR")
+        || !tree["TARGETDIR"].0.is_empty()
+        || tree.iter().any(|(id, (parent, _))| {
+            (id != "TARGETDIR" && parent.is_empty())
+                || (!parent.is_empty() && !tree.contains_key(parent))
+        })
+    {
+        return Err(DestinationRefusal::Inventory);
+    }
+    let mut resolved = BTreeMap::new();
+    let mut directory_paths = BTreeSet::new();
+    // Validate all rows, including otherwise unused trees: no unknown parents or cycles.
+    for id in tree.keys() {
+        let mut chain = Vec::new();
+        let mut current = id.as_str();
+        let mut seen = BTreeSet::new();
+        let mut inside = false;
+        loop {
+            if !seen.insert(current) || chain.len() > 64 {
+                return Err(DestinationRefusal::Inventory);
+            }
+            if current == "INSTALL_ROOT" {
+                inside = true;
+            }
+            let (parent, name) = &tree[current];
+            if !inside {
+                chain.push(name.as_str());
+            }
+            if parent.is_empty() {
+                break;
+            }
+            current = parent;
+        }
+        if inside {
+            let mut destination = prefix.to_owned();
+            for name in chain.into_iter().rev().filter(|name| *name != ".") {
+                destination.push(name);
+            }
+            let value = destination
+                .to_str()
+                .ok_or(DestinationRefusal::Inventory)?
+                .to_lowercase();
+            if tree[id].1 != "." && !directory_paths.insert(value) {
+                return Err(DestinationRefusal::Inventory);
+            }
+            resolved.insert(id.clone(), destination);
+        }
+    }
+    let mut component_ids = BTreeSet::new();
+    let mut component_directories = BTreeMap::new();
+    for [id, directory] in components {
+        destination_identifier(&id)?;
+        if !tree.contains_key(&directory)
+            || !component_ids.insert(id.to_ascii_lowercase())
+            || component_directories.insert(id, directory).is_some()
+        {
+            return Err(DestinationRefusal::Inventory);
+        }
+    }
+    let mut file_ids = BTreeSet::new();
+    let mut paths = BTreeSet::new();
+    let mut destinations = Vec::new();
+    for [id, component, name] in files {
+        destination_identifier(&id)?;
+        if !file_ids.insert(id.to_ascii_lowercase()) {
+            return Err(DestinationRefusal::Inventory);
+        }
+        let directory = component_directories
+            .get(&component)
+            .ok_or(DestinationRefusal::Inventory)?;
+        let directory = resolved
+            .get(directory)
+            .ok_or(DestinationRefusal::Inventory)?;
+        let destination = directory.join(destination_name(&name, false)?);
+        let value = destination.to_str().ok_or(DestinationRefusal::Inventory)?;
+        if value.encode_utf16().count() > 259 {
+            return Err(DestinationRefusal::TooLong);
+        }
+        if directory_paths.contains(&value.to_lowercase()) || !paths.insert(value.to_lowercase()) {
+            return Err(DestinationRefusal::Inventory);
+        }
+        destinations.push(destination);
+    }
+    Ok(destinations)
+}
+
+fn verified_component_budget(
+    components: Vec<[String; 3]>,
+    registry: Vec<[String; 3]>,
+) -> Result<(), DestinationRefusal> {
+    let mut keys = BTreeMap::new();
+    for [id, root, component] in registry {
+        if keys.insert(id, (root, component)).is_some() {
+            return Err(DestinationRefusal::Inventory);
+        }
+    }
+    let mut costed = components.len();
+    let mut seen = BTreeSet::new();
+    for [component, attributes, keypath] in components {
+        if !seen.insert(component.clone()) {
+            return Err(DestinationRefusal::Inventory);
+        }
+        let attributes = attributes
+            .parse::<u16>()
+            .map_err(|_| DestinationRefusal::Inventory)?;
+        if attributes & 4 != 0 {
+            if !keys.get(&keypath).is_some_and(|(root, owner)| {
+                owner == &component && matches!(root.as_str(), "-1" | "0" | "1" | "2" | "3")
+            }) {
+                return Err(DestinationRefusal::Inventory);
+            }
+            costed += 1;
+        }
+    }
+    if costed > 65535 {
+        return Err(DestinationRefusal::Inventory);
+    }
+    Ok(())
+}
+
+fn verified_features(
+    features: Vec<[String; 5]>,
+    components: &[[String; 2]],
+    links: Vec<[String; 2]>,
+) -> Result<(), DestinationRefusal> {
+    let mut tree = BTreeMap::new();
+    for [name, parent, display, level, attributes] in features {
+        if tree
+            .insert(name, (parent, display, level, attributes))
+            .is_some()
+        {
+            return Err(DestinationRefusal::Inventory);
+        }
+    }
+    let owned: BTreeSet<_> = components.iter().map(|row| row[0].as_str()).collect();
+    if tree.is_empty() || owned.is_empty() || owned.len() != components.len() {
+        return Err(DestinationRefusal::Inventory);
+    }
+    let mut enrolled = BTreeSet::new();
+    let mut counts = BTreeMap::<String, usize>::new();
+    for [feature, component] in links {
+        if !tree.contains_key(&feature)
+            || !owned.contains(component.as_str())
+            || !enrolled.insert(component)
+        {
+            return Err(DestinationRefusal::Inventory);
+        }
+        let count = counts.entry(feature).or_default();
+        *count += 1;
+        if *count > 1600 {
+            return Err(DestinationRefusal::Inventory);
+        }
+    }
+    if enrolled.len() != owned.len() {
+        return Err(DestinationRefusal::Inventory);
+    }
+    let combined = tree.contains_key("VersionFiles")
+        && tree.contains_key("SharedRegistration")
+        && !tree.contains_key("ProductFeature");
+    for (name, (parent, display, level, attributes)) in &tree {
+        if !matches!(display.as_str(), "" | "0")
+            || level != "1"
+            || attributes
+                != if combined {
+                    if parent.is_empty() { "8" } else { "10" }
+                } else if parent.is_empty() {
+                    "24"
+                } else {
+                    "26"
+                }
+        {
+            return Err(DestinationRefusal::Inventory);
+        }
+        let mut visited = BTreeSet::from([name.as_str()]);
+        let mut current = parent.as_str();
+        while !current.is_empty() {
+            if visited.len() >= 16 || !visited.insert(current) {
+                return Err(DestinationRefusal::Inventory);
+            }
+            current = &tree.get(current).ok_or(DestinationRefusal::Inventory)?.0;
+        }
+        if if combined {
+            !["VersionFiles", "SharedRegistration"].iter().any(|root| {
+                visited.contains(root) && tree.get(*root).is_some_and(|row| row.0.is_empty())
+            })
+        } else {
+            !visited.contains("ProductFeature")
+                || !tree
+                    .get("ProductFeature")
+                    .is_some_and(|row| row.0.is_empty())
+        } {
+            return Err(DestinationRefusal::Inventory);
+        }
+    }
+    Ok(())
+}
+
+/// Read exact admitted MSI tables while the caller retains its hash-verified file custody.
+pub fn verify_installation_destinations(
+    package: &Path,
+    prefix: &Path,
+    _custody: &crate::custody::FileCustody,
+) -> Result<(), DestinationRefusal> {
+    verify_installation_destinations_for_scope(package, prefix, _custody, Scope::User)
+}
+pub fn verify_installation_destinations_for_scope(
+    package: &Path,
+    prefix: &Path,
+    _custody: &crate::custody::FileCustody,
+    scope: Scope,
+) -> Result<(), DestinationRefusal> {
+    let inspect = || -> Result<_, Refusal> {
+        let database = database(package)?;
+        let tables = table_rows::<1>(&database, "SELECT `Name` FROM `_Tables`")?;
+        verified_component_budget(
+            table_rows(
+                &database,
+                "SELECT `Component`, `Attributes`, `KeyPath` FROM `Component`",
+            )?,
+            if tables.iter().any(|row| row[0] == "Registry") {
+                table_rows(
+                    &database,
+                    "SELECT `Registry`, `Root`, `Component_` FROM `Registry`",
+                )?
+            } else {
+                Vec::new()
+            },
+        )
+        .map_err(|_| Refusal::InvalidRequest)?;
+        let mut components = table_rows(
+            &database,
+            "SELECT `Component`, `Directory_` FROM `Component`",
+        )?;
+        verified_features(
+            table_rows(&database, "SELECT `Feature`, `Feature_Parent`, `Display`, `Level`, `Attributes` FROM `Feature`")?,
+            &components,
+            table_rows(&database, "SELECT `Feature_`, `Component_` FROM `FeatureComponents`")?,
+        ).map_err(|_| Refusal::InvalidRequest)?;
+        if tables.iter().any(|row| row[0] == "Condition")
+            && !table_rows::<1>(&database, "SELECT `Feature_` FROM `Condition`")?.is_empty()
+        {
+            return Err(Refusal::InvalidRequest);
+        }
+        if property(&database, "INSTALLLEVEL")?
+            .is_some_and(|level| level.parse::<u32>().map_or(true, |level| level == 0))
+        {
+            return Err(Refusal::InvalidRequest);
+        }
+        let combined = property(&database, "CadrumoAdmissionUser")?.is_some();
+        let mut files = table_rows::<3>(
+            &database,
+            "SELECT `File`, `Component_`, `FileName` FROM `File`",
+        )?;
+        if combined {
+            let conditions = table_rows::<2>(
+                &database,
+                "SELECT `Component`, `Condition` FROM `Component`",
+            )?;
+            let mut excluded = BTreeSet::new();
+            for [component, condition] in conditions {
+                let active = match condition.as_str() {
+                    "" => true,
+                    "NOT ALLUSERS" => scope == Scope::User,
+                    "ALLUSERS = \"1\"" => scope == Scope::Machine,
+                    _ => return Err(Refusal::InvalidRequest),
+                };
+                if !active {
+                    excluded.insert(component);
+                }
+            }
+            components.retain(|row: &[String; 2]| !excluded.contains(&row[0]));
+            files.retain(|row| !excluded.contains(&row[1]));
+        }
+        Ok((
+            table_rows(
+                &database,
+                "SELECT `Directory`, `Directory_Parent`, `DefaultDir` FROM `Directory`",
+            )?,
+            components,
+            files,
+        ))
+    };
+    let (directories, components, files) = inspect().map_err(|_| DestinationRefusal::Inventory)?;
+    resolved_destinations(prefix, directories, components, files).map(|_| ())
+}
+pub fn product_definition(path: &Path) -> Result<ProductDefinition, Refusal> {
+    product_definition_for_scope(path, Scope::User)
+}
+pub fn product_definition_for_scope(
+    path: &Path,
+    scope: Scope,
+) -> Result<ProductDefinition, Refusal> {
+    let database = database(path)?;
+    let required = |name| property(&database, name)?.ok_or(Refusal::InvalidRequest);
+    let suffix = if scope == Scope::Machine {
+        "Machine"
+    } else {
+        "User"
+    };
+    let admission = property(&database, &format!("CadrumoAdmission{suffix}"))?
+        .or(property(&database, "CadrumoAdmission")?)
+        .ok_or(Refusal::InvalidRequest)?;
+    let registration = property(&database, &format!("CadrumoRegistration{suffix}"))?
+        .or(property(&database, "CadrumoRegistration")?);
+    Ok(ProductDefinition {
+        code: canonical_guid(&required("ProductCode")?)?,
+        family: canonical_guid(&required("UpgradeCode")?)?,
+        version: required("ProductVersion")?,
+        admission: Request::parse(&admission)?,
+        ownership: serde_json::from_str(&required("CadrumoPackage")?)
+            .map_err(|_| Refusal::InvalidRequest)?,
+        owner: property(&database, "CadrumoOwner")?
+            .map(|value| serde_json::from_str(&value).map_err(|_| Refusal::InvalidRequest))
+            .transpose()?,
+        registration: registration
+            .map(|value| crate::registration::Description::parse(&value))
+            .transpose()?,
+    })
+}
+pub fn standalone_gate_present(path: &Path) -> Result<bool, Refusal> {
+    let database = database(path)?;
+    let query = wide("SELECT `Condition` FROM `LaunchCondition`")?;
+    let mut view = 0;
+    // SAFETY: Owned read-only database, terminated static SQL and writable output.
+    result(unsafe { MsiDatabaseOpenViewW(database.0, query.as_ptr(), &mut view) })?;
+    let view = Handle::new(view)?;
+    // SAFETY: No parameters occur in the query.
+    result(unsafe { MsiViewExecute(view.0, 0) })?;
+    for _ in 0..256 {
+        let mut row = 0;
+        // SAFETY: The view is alive and output points to writable handle storage.
+        let status = unsafe { MsiViewFetch(view.0, &mut row) };
+        if status == ERROR_NO_MORE_ITEMS {
+            return Ok(false);
+        }
+        result(status)?;
+        let row = Handle::new(row)?;
+        // SAFETY: The selected field exists and string supplies bounded writable storage.
+        let value = string(|buffer, size| unsafe { MsiRecordGetStringW(row.0, 1, buffer, size) })?;
+        if value.trim() == "0" {
+            return Ok(true);
+        }
+    }
+    Err(Refusal::IncompleteInventory)
+}
+
+struct Handle(u32);
+impl Handle {
+    fn new(value: u32) -> Result<Self, Refusal> {
+        if value == 0 {
+            Err(Refusal::NativeFailure)
+        } else {
+            Ok(Self(value))
+        }
+    }
+}
+impl Drop for Handle {
+    fn drop(&mut self) {
+        // SAFETY: Each wrapper owns one MSI handle returned by a successful API call.
+        unsafe {
+            MsiCloseHandle(self.0);
+        }
+    }
+}
+fn wide(value: &str) -> Result<Vec<u16>, Refusal> {
+    if value.contains('\0') || value.len() > MAX_DATA_BYTES {
+        return Err(Refusal::InvalidRequest);
+    }
+    Ok(value.encode_utf16().chain(Some(0)).collect())
+}
+fn result(code: u32) -> Result<(), Refusal> {
+    if code == ERROR_SUCCESS {
+        Ok(())
+    } else {
+        Err(Refusal::NativeFailure)
+    }
+}
+fn string(call: impl FnOnce(*mut u16, *mut u32) -> u32) -> Result<String, Refusal> {
+    let mut buffer = vec![0; MAX_DATA_BYTES + 1];
+    let mut size = buffer.len() as u32;
+    result(call(buffer.as_mut_ptr(), &mut size))?;
+    if size as usize > MAX_DATA_BYTES {
+        return Err(Refusal::InvalidRequest);
+    }
+    let value =
+        String::from_utf16(&buffer[..size as usize]).map_err(|_| Refusal::InvalidRequest)?;
+    if value.len() > MAX_DATA_BYTES || value.contains('\0') {
+        return Err(Refusal::InvalidRequest);
+    }
+    Ok(value)
+}
+
+fn property(database: &Handle, name: &str) -> Result<Option<String>, Refusal> {
+    let query = wide("SELECT `Value` FROM `Property` WHERE `Property` = ?")?;
+    let mut view = 0;
+    // SAFETY: Database is owned, query is terminated, output points to a live u32.
+    result(unsafe { MsiDatabaseOpenViewW(database.0, query.as_ptr(), &mut view) })?;
+    let view = Handle::new(view)?;
+    // SAFETY: Allocates a one-field record, subsequently owned by Handle.
+    let record = Handle::new(unsafe { MsiCreateRecord(1) })?;
+    let name = wide(name)?;
+    // SAFETY: Record and view remain alive; the one bound field is a terminated string.
+    result(unsafe { MsiRecordSetStringW(record.0, 1, name.as_ptr()) })?;
+    // SAFETY: The query has exactly one parameter and the record has that field.
+    result(unsafe { MsiViewExecute(view.0, record.0) })?;
+    let mut row = 0;
+    // SAFETY: The executed view is alive and the output pointer is writable.
+    let status = unsafe { MsiViewFetch(view.0, &mut row) };
+    if status == ERROR_NO_MORE_ITEMS {
+        return Ok(None);
+    }
+    result(status)?;
+    let row = Handle::new(row)?;
+    // SAFETY: The selected field exists; string supplies a bounded writable buffer.
+    let value = string(|buffer, size| unsafe { MsiRecordGetStringW(row.0, 1, buffer, size) })?;
+    // Property is a primary key, so multiple values indicate an invalid database.
+    let mut extra = 0;
+    // SAFETY: Same owned view, writable output; any unexpected handle is closed.
+    let status = unsafe { MsiViewFetch(view.0, &mut extra) };
+    if extra != 0 {
+        drop(Handle::new(extra)?);
+    }
+    if status != ERROR_NO_MORE_ITEMS {
+        return Err(Refusal::AmbiguousOwnership);
+    }
+    Ok(Some(value))
+}
+
+fn session_property(install: u32, name: &str) -> Result<String, Refusal> {
+    let name = wide(name)?;
+    // SAFETY: MSI owns the borrowed install handle. Name and output buffers are live.
+    string(|buffer, size| unsafe { MsiGetPropertyW(install, name.as_ptr(), buffer, size) })
+}
+
+fn cached_family(code: &[u16], context: u32, sid: &[u16]) -> Result<Option<String>, Refusal> {
+    let sid = if context == MACHINE {
+        ptr::null()
+    } else {
+        sid.as_ptr()
+    };
+    let local_package = wide("LocalPackage")?;
+    // SAFETY: Values come from native enumeration; all input/output buffers are live.
+    let cache = string(|buffer, size| unsafe {
+        MsiGetProductInfoExW(
+            code.as_ptr(),
+            sid,
+            context,
+            local_package.as_ptr(),
+            buffer,
+            size,
+        )
+    })
+    .map_err(|_| Refusal::IncompleteInventory)?;
+    if cache.is_empty() {
+        return Err(Refusal::IncompleteInventory);
+    }
+    let _cache_custody = crate::custody::file(Path::new(&cache))?;
+    let cache = wide(&cache)?;
+    let mut database = 0;
+    // SAFETY: Null mode is MSIDBOPEN_READONLY; this never runs cached package actions.
+    result(unsafe { MsiOpenDatabaseW(cache.as_ptr(), ptr::null(), &mut database) })
+        .map_err(|_| Refusal::IncompleteInventory)?;
+    let database = Handle::new(database)?;
+    let cached_code = property(&database, "ProductCode")?.ok_or(Refusal::IncompleteInventory)?;
+    let native_code = String::from_utf16(&code[..38]).map_err(|_| Refusal::AmbiguousOwnership)?;
+    if canonical_guid(&cached_code)? != canonical_guid(&native_code)? {
+        return Err(Refusal::AmbiguousOwnership);
+    }
+    property(&database, "UpgradeCode")
+}
+
+/// Exact-context native ownership observation for shared removal recovery.
+pub struct MsiInventory;
+
+/// Bind cached metadata to an exact installed product, scope, account and prefix.
+/// Retain the cache and its namespace while admitting nested native removal.
+pub fn cached_product(
+    owner: &NativeOwner,
+) -> Result<(ProductDefinition, crate::custody::CachedCustody), Error> {
+    if MsiInventory.locate(owner)?.as_ref() != Some(owner) {
+        return Err(Error::Integrity(
+            "cached product has no exact native owner".into(),
+        ));
+    }
+    let code = wide(&format!("{{{}}}", owner.product_code())).map_err(application_error)?;
+    let sid = match owner.context() {
+        NativeContext::Machine => None,
+        NativeContext::User { sid } => Some(wide(sid).map_err(application_error)?),
+    };
+    let contexts: &[u32] = if sid.is_none() { &[MACHINE] } else { &[1, 2] };
+    let mut cache = None;
+    for context in contexts {
+        if native_product_property(&code, sid.as_deref(), *context, "State")?.is_some() {
+            if cache.is_some() {
+                return Err(Error::Integrity("ambiguous cached product".into()));
+            }
+            cache = native_product_property(&code, sid.as_deref(), *context, "LocalPackage")?;
+        }
+    }
+    let path = PathBuf::from(
+        cache.ok_or_else(|| Error::Integrity("missing native cached product".into()))?,
+    );
+    let custody =
+        crate::custody::native_cache(&path, owner.context()).map_err(application_error)?;
+    let definition = product_definition_for_scope(
+        &path,
+        match owner.context() {
+            NativeContext::Machine => Scope::Machine,
+            NativeContext::User { .. } => Scope::User,
+        },
+    )
+    .map_err(application_error)?;
+    if definition.code != owner.product_code() {
+        return Err(Error::Integrity("cached product identity mismatch".into()));
+    }
+    Ok((definition, custody))
+}
+
+impl NativeProductInventory for MsiInventory {
+    fn locate(&self, owner: &NativeOwner) -> Result<Option<NativeOwner>, Error> {
+        let code = wide(&format!("{{{}}}", owner.product_code())).map_err(application_error)?;
+        let sid = match owner.context() {
+            NativeContext::Machine => None,
+            NativeContext::User { sid } => Some(wide(sid).map_err(application_error)?),
+        };
+        let contexts: &[u32] = if sid.is_none() { &[MACHINE] } else { &[1, 2] };
+        let mut found = None;
+        let mut product_seen = false;
+        for context in contexts {
+            let state = native_product_property(&code, sid.as_deref(), *context, "State")?;
+            let Some(state) = state else {
+                continue;
+            };
+            // INSTALLSTATE_DEFAULT (5) is installed. Advertised, broken or other
+            // transitional state cannot prove either committed presence or absence.
+            if state != "5" || product_seen {
+                return Err(Error::Integrity(
+                    "native product has ambiguous installation state".into(),
+                ));
+            }
+            product_seen = true;
+            let location =
+                native_product_property(&code, sid.as_deref(), *context, "InstallLocation")?
+                    .filter(|value| !value.is_empty())
+                    .ok_or_else(|| {
+                        Error::Integrity("native product install location is unavailable".into())
+                    })?;
+            if owner.feature().is_some() && Path::new(&location) != owner.prefix() {
+                return Err(Error::Integrity(
+                    "native feature belongs to another prefix".into(),
+                ));
+            }
+            if let Some(feature) = owner.feature() {
+                let feature = wide(feature.id()).map_err(application_error)?;
+                let mut installed = 0;
+                // SAFETY: exact native product/account/context and bounded, owned
+                // feature name; observation never opens an installation session.
+                result(unsafe {
+                    MsiQueryFeatureStateExW(
+                        code.as_ptr(),
+                        sid.as_ref().map_or(ptr::null(), |sid| sid.as_ptr()),
+                        *context,
+                        feature.as_ptr(),
+                        &mut installed,
+                    )
+                })
+                .map_err(application_error)?;
+                if installed == 2 {
+                    continue;
+                }
+                if installed != 3 {
+                    return Err(Error::Integrity("native feature state is not local".into()));
+                }
+            }
+            let mut observed = NativeOwner::new(
+                owner.product_code().into(),
+                owner.context().clone(),
+                PathBuf::from(location),
+            )?;
+            if let Some(feature) = owner.feature() {
+                observed = observed.with_feature(feature);
+            }
+            found = Some(observed);
+        }
+        Ok(found)
+    }
+}
+
+fn application_error(refusal: Refusal) -> Error {
+    Error::Integrity(refusal.message().into())
+}
+
+fn native_product_property(
+    code: &[u16],
+    sid: Option<&[u16]>,
+    context: u32,
+    property: &str,
+) -> Result<Option<String>, Error> {
+    let name = wide(property).map_err(application_error)?;
+    let mut status = ERROR_SUCCESS;
+    let value = string(|buffer, size| {
+        // SAFETY: Product, context and exact account are owned validated strings;
+        // the native query is read-only and output storage is bounded by string().
+        status = unsafe {
+            MsiGetProductInfoExW(
+                code.as_ptr(),
+                sid.map_or(ptr::null(), |sid| sid.as_ptr()),
+                context,
+                name.as_ptr(),
+                buffer,
+                size,
+            )
+        };
+        status
+    });
+    if status == ERROR_UNKNOWN_PRODUCT {
+        return Ok(None);
+    }
+    value.map(Some).map_err(application_error)
+}
+
+/// Machine admission enumerates Everyone, including managed/unmanaged user products.
+/// User admission enumerates the invoking account and machine products. It never
+/// substitutes the elevated installer's HKCU for all account contexts.
+pub fn inventory(scope: Scope) -> Result<Vec<Product>, Refusal> {
+    let everyone = wide("S-1-1-0")?;
+    let sid = if scope == Scope::Machine {
+        everyone.as_ptr()
+    } else {
+        ptr::null()
+    };
+    let mut products = Vec::new();
+    for index in 0..=MAX_PRODUCTS {
+        let mut code = [0; 39];
+        let mut owner = [0; 185];
+        let mut owner_size = owner.len() as u32;
+        let mut context = 0;
+        // SAFETY: The native API gets its documented fixed GUID and bounded SID buffers.
+        let status = unsafe {
+            MsiEnumProductsExW(
+                ptr::null(),
+                sid,
+                ALL_CONTEXTS,
+                index as u32,
+                code.as_mut_ptr(),
+                &mut context,
+                owner.as_mut_ptr(),
+                &mut owner_size,
+            )
+        };
+        if status == ERROR_NO_MORE_ITEMS {
+            return Ok(products);
+        }
+        if status != ERROR_SUCCESS || index == MAX_PRODUCTS || owner_size as usize >= owner.len() {
+            return Err(Refusal::IncompleteInventory);
+        }
+        let scope = match context {
+            MACHINE => Scope::Machine,
+            1 | 2 => Scope::User,
+            _ => return Err(Refusal::AmbiguousOwnership),
+        };
+        let family = cached_family(&code, context, &owner)?;
+        products.push(Product {
+            code: String::from_utf16(&code[..38]).map_err(|_| Refusal::AmbiguousOwnership)?,
+            family,
+            scope,
+            sid: if scope == Scope::Machine {
+                None
+            } else {
+                Some(
+                    String::from_utf16(&owner[..owner_size as usize])
+                        .map_err(|_| Refusal::AmbiguousOwnership)?,
+                )
+            },
+        });
+    }
+    Err(Refusal::IncompleteInventory)
+}
+
+fn prepare(install: u32) -> Result<(), Refusal> {
+    // SAFETY: MSI returns an owned database handle for the borrowed session handle.
+    let database = Handle::new(unsafe { MsiGetActiveDatabase(install) })?;
+    // Read the authored database, not an overridable public MSI property.
+    let all_users = session_property(install, "ALLUSERS")?;
+    let suffix = if all_users == "1" {
+        "Machine"
+    } else if all_users.is_empty() {
+        "User"
+    } else {
+        return Err(Refusal::AmbiguousOwnership);
+    };
+    let scoped = property(&database, &format!("CadrumoAdmission{suffix}"))?;
+    let combined = scoped.is_some();
+    let value = scoped
+        .or(property(&database, "CadrumoAdmission")?)
+        .ok_or(Refusal::InvalidRequest)?;
+    let request = Request::parse(&value)?;
+    if (request.scope == Scope::Machine && all_users != "1")
+        || (request.scope == Scope::User && !all_users.is_empty())
+    {
+        return Err(Refusal::AmbiguousOwnership);
+    }
+    let name = wide(&format!(
+        "CadrumoScopeAdmission{}",
+        if combined { suffix } else { "" }
+    ))?;
+    let value = wide(&serde_json::to_string(&request).map_err(|_| Refusal::InvalidRequest)?)?;
+    // SAFETY: The strings are terminated. Windows Installer copies the deferred data.
+    result(unsafe { MsiSetPropertyW(install, name.as_ptr(), value.as_ptr()) })
+}
+
+fn admit(install: u32) -> Result<(), Refusal> {
+    let request = Request::parse(&session_property(install, "CustomActionData")?)?;
+    request.admit(&inventory(request.scope)?)
+}
+
+#[derive(serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct OwnerMetadata {
+    pub schema: u32,
+    #[serde(default)]
+    pub scope: Option<Scope>,
+    pub product_code: String,
+    pub role: crate::owner::Role,
+    pub runner_sha256: cadrumo_application::value::Sha256Digest,
+    pub identity: cadrumo_application::installation::maintenance::Identity,
+    pub publication: cadrumo_application::value::RelativePath,
+}
+
+impl OwnerMetadata {
+    pub fn admits_role(&self, scope: Scope, role: crate::owner::Role) -> bool {
+        (self.schema == 2 && self.scope == Some(scope) && self.role == role)
+            || (self.schema == 3
+                && self.scope.is_none()
+                && self.role == crate::owner::Role::Application
+                && role != crate::owner::Role::Application)
+    }
+}
+
+fn prepare_owner(install: u32) -> Result<(), Refusal> {
+    // SAFETY: MSI returns an owned database handle for this borrowed session.
+    let database = Handle::new(unsafe { MsiGetActiveDatabase(install) })?;
+    let metadata = property(&database, "CadrumoOwner")?.ok_or(Refusal::InvalidRequest)?;
+    let metadata: OwnerMetadata =
+        serde_json::from_str(&metadata).map_err(|_| Refusal::InvalidRequest)?;
+    let product = property(&database, "ProductCode")?.ok_or(Refusal::InvalidRequest)?;
+    let combined = metadata.schema == 3
+        && metadata.role == crate::owner::Role::Application
+        && metadata.scope.is_none();
+    if (!combined && metadata.schema != 2) || canonical_guid(&product)? != metadata.product_code {
+        return Err(Refusal::InvalidRequest);
+    }
+    let all_users = session_property(install, "ALLUSERS")?;
+    let scope = if all_users == "1" {
+        Scope::Machine
+    } else if all_users.is_empty() {
+        Scope::User
+    } else {
+        return Err(Refusal::AmbiguousOwnership);
+    };
+    let (role, operation) = if combined {
+        selected_feature(install)?
+    } else {
+        if metadata.scope != Some(scope) {
+            return Err(Refusal::AmbiguousOwnership);
+        }
+        (
+            metadata.role,
+            if session_property(install, "REMOVE")?.is_empty() {
+                crate::owner::Operation::Install
+            } else {
+                crate::owner::Operation::Remove
+            },
+        )
+    };
+    let callback = crate::owner::Callback {
+        schema: 2,
+        identity: metadata.identity,
+        publication: metadata.publication,
+        claim: crate::owner::Claim {
+            product_code: metadata.product_code,
+            scope,
+            prefix: PathBuf::from(session_property(install, "INSTALL_ROOT")?),
+            operation,
+            role,
+        },
+    };
+    let bytes = serde_json::to_vec(&callback).map_err(|_| Refusal::InvalidRequest)?;
+    crate::owner::Callback::parse(&bytes)?;
+    let name = wide(&format!(
+        "CadrumoAuthenticateOwner{}",
+        if combined {
+            if scope == Scope::Machine {
+                "Machine"
+            } else {
+                "User"
+            }
+        } else {
+            ""
+        }
+    ))?;
+    let value = wide(std::str::from_utf8(&bytes).map_err(|_| Refusal::InvalidRequest)?)?;
+    // SAFETY: MSI copies the bounded strings for the deferred action.
+    result(unsafe { MsiSetPropertyW(install, name.as_ptr(), value.as_ptr()) })
+}
+
+fn feature_states(install: u32, feature: NativeFeature) -> Result<(i32, i32), Refusal> {
+    let feature = wide(feature.id())?;
+    let mut installed = 0;
+    let mut action = 0;
+    // SAFETY: borrowed native session, immutable authored feature name and live outputs.
+    result(unsafe { MsiGetFeatureStateW(install, feature.as_ptr(), &mut installed, &mut action) })?;
+    Ok((installed, action))
+}
+
+fn selected_feature(
+    install: u32,
+) -> Result<(crate::owner::Role, crate::owner::Operation), Refusal> {
+    let (feature, other, role) = match session_property(install, "CADRUMO_MSI_FEATURE")?.as_str() {
+        "VersionFiles" => (
+            NativeFeature::Version,
+            NativeFeature::Registration,
+            crate::owner::Role::Version,
+        ),
+        "SharedRegistration" => (
+            NativeFeature::Registration,
+            NativeFeature::Version,
+            crate::owner::Role::Registration,
+        ),
+        _ => return Err(Refusal::InvalidRequest),
+    };
+    for property in [
+        "ADVERTISE",
+        "ADDDEFAULT",
+        "ADDSOURCE",
+        "COMPADDLOCAL",
+        "COMPADDSOURCE",
+        "FILEADDLOCAL",
+        "FILEADDSOURCE",
+    ] {
+        if !session_property(install, property)?.is_empty() {
+            return Err(Refusal::InvalidRequest);
+        }
+    }
+    let remove = session_property(install, "REMOVE")?;
+    let add = session_property(install, "ADDLOCAL")?;
+    let reinstall = session_property(install, "REINSTALL")?;
+    let (_, target_action) = feature_states(install, feature)?;
+    let other_states = feature_states(install, other)?;
+    let operation = feature_operation(
+        feature,
+        target_action,
+        other_states,
+        (&remove, &add, &reinstall),
+    )?;
+    Ok((role, operation))
+}
+
+fn feature_operation(
+    feature: NativeFeature,
+    target_action: i32,
+    other_states: (i32, i32),
+    selectors: (&str, &str, &str),
+) -> Result<crate::owner::Operation, Refusal> {
+    let (other_installed, other_action) = other_states;
+    let (remove, add, reinstall) = selectors;
+    if !matches!(other_installed, -1 | 2 | 3)
+        || (other_installed == 3 && other_action != 3)
+        || (other_installed != 3 && !matches!(other_action, -1 | 2))
+    {
+        return Err(Refusal::InvalidRequest);
+    }
+    let operation = if remove.is_empty() {
+        if add != feature.id()
+            || (!reinstall.is_empty() && reinstall != feature.id())
+            || target_action != 3
+        {
+            return Err(Refusal::InvalidRequest);
+        }
+        crate::owner::Operation::Install
+    } else {
+        if (!add.is_empty())
+            || !reinstall.is_empty()
+            || target_action != 2
+            || !(remove == feature.id() || (remove == "ALL" && other_installed != 3))
+        {
+            return Err(Refusal::InvalidRequest);
+        }
+        crate::owner::Operation::Remove
+    };
+    Ok(operation)
+}
+
+fn authenticate_owner(install: u32) -> Result<(), Refusal> {
+    let data = session_property(install, "CustomActionData")?;
+    let callback = crate::owner::Callback::parse(data.as_bytes())?;
+    // Deferred actions can read ProductCode; bind the request to their actual native product.
+    if canonical_guid(&session_property(install, "ProductCode")?)? != callback.claim.product_code {
+        return Err(Refusal::InvalidRequest);
+    }
+    crate::owner::authenticate(&callback)
+}
+
+fn boundary(install: u32, operation: fn(u32) -> Result<(), Refusal>) -> u32 {
+    let outcome =
+        std::panic::catch_unwind(|| operation(install)).unwrap_or(Err(Refusal::NativeFailure));
+    if let Err(refusal) = outcome {
+        // No paths, SIDs, process details or property values enter MSI logs.
+        // SAFETY: CreateRecord returns owned MSI storage or zero on failure.
+        if let Ok(record) = Handle::new(unsafe { MsiCreateRecord(0) })
+            && let Ok(message) = wide(refusal.message())
+        {
+            // SAFETY: Field zero is the MSI message template; all handles remain live.
+            unsafe {
+                MsiRecordSetStringW(record.0, 0, message.as_ptr());
+                MsiProcessMessage(install, 0x0100_0000, record.0);
+            }
+        }
+        ERROR_INSTALL_FAILURE
+    } else {
+        ERROR_SUCCESS
+    }
+}
+
+/// Prepare a bounded request from immutable MSI database metadata.
+#[unsafe(no_mangle)]
+pub extern "system" fn CadrumoPrepareAdmission(install: u32) -> u32 {
+    boundary(install, prepare)
+}
+/// Deferred, checked custom action; per-machine authoring must disable impersonation.
+#[unsafe(no_mangle)]
+pub extern "system" fn CadrumoScopeAdmission(install: u32) -> u32 {
+    boundary(install, admit)
+}
+
+#[unsafe(no_mangle)]
+pub extern "system" fn CadrumoPrepareOwner(install: u32) -> u32 {
+    boundary(install, prepare_owner)
+}
+#[unsafe(no_mangle)]
+pub extern "system" fn CadrumoAuthenticateOwner(install: u32) -> u32 {
+    boundary(install, authenticate_owner)
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Default)]
+struct FileTime {
+    low: u32,
+    high: u32,
+}
+#[repr(C)]
+#[derive(Clone, Copy, Default)]
+struct UniqueProcess {
+    pid: u32,
+    started: FileTime,
+}
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct ProcessInfo {
+    process: UniqueProcess,
+    name: [u16; 256],
+    service: [u16; 64],
+    kind: i32,
+    status: u32,
+    session: u32,
+    restartable: i32,
+}
+#[link(name = "rstrtmgr")]
+unsafe extern "system" {
+    fn RmStartSession(session: *mut u32, flags: u32, key: *mut u16) -> u32;
+    fn RmEndSession(session: u32) -> u32;
+    fn RmRegisterResources(
+        session: u32,
+        files: u32,
+        paths: *const *const u16,
+        applications: u32,
+        processes: *const UniqueProcess,
+        services: u32,
+        names: *const *const u16,
+    ) -> u32;
+    fn RmGetList(
+        session: u32,
+        needed: *mut u32,
+        count: *mut u32,
+        processes: *mut ProcessInfo,
+        reboot: *mut u32,
+    ) -> u32;
+}
+struct RestartSession(u32);
+impl Drop for RestartSession {
+    fn drop(&mut self) {
+        // SAFETY: The wrapper owns exactly one successful Restart Manager session.
+        unsafe {
+            RmEndSession(self.0);
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct FileUse {
+    pub pid: u32,
+    pub creation_time: u64,
+    pub session: u32,
+}
+
+/// Read-only supplementary evidence. The caller must already exclude new launches
+/// and hold the version lease. An empty list alone never authorizes removal.
+/// No shutdown, restart, process termination or reboot API is imported.
+pub fn file_users(files: &[PathBuf]) -> Result<Vec<FileUse>, Refusal> {
+    if files.is_empty() || files.len() > MAX_PRODUCTS {
+        return Err(Refusal::InvalidRequest);
+    }
+    let names = files
+        .iter()
+        .map(|path| {
+            if !path.is_absolute() {
+                return Err(Refusal::InvalidRequest);
+            }
+            wide(path.to_str().ok_or(Refusal::InvalidRequest)?)
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    let mut id = 0;
+    let mut key = [0; 33];
+    // SAFETY: Both outputs are writable with the documented key capacity.
+    result(unsafe { RmStartSession(&mut id, 0, key.as_mut_ptr()) })?;
+    let session = RestartSession(id);
+    for chunk in names.chunks(256) {
+        let paths = chunk.iter().map(|name| name.as_ptr()).collect::<Vec<_>>();
+        // SAFETY: Every pointer addresses a live terminated path for this synchronous call.
+        result(unsafe {
+            RmRegisterResources(
+                session.0,
+                paths.len() as u32,
+                paths.as_ptr(),
+                0,
+                ptr::null(),
+                0,
+                ptr::null(),
+            )
+        })?;
+    }
+    let mut capacity = 0;
+    for _ in 0..4 {
+        let mut needed = 0;
+        let mut count = capacity;
+        let mut reboot = 0;
+        let mut processes = Vec::<ProcessInfo>::with_capacity(capacity as usize);
+        // SAFETY: The vector reserves count records; set_len follows only a successful
+        // call whose returned count fits that reservation. Null is valid for count zero.
+        let status = unsafe {
+            RmGetList(
+                session.0,
+                &mut needed,
+                &mut count,
+                if capacity == 0 {
+                    ptr::null_mut()
+                } else {
+                    processes.as_mut_ptr()
+                },
+                &mut reboot,
+            )
+        };
+        if reboot != 0 {
+            return Err(Refusal::IncompleteInventory);
+        }
+        if status == ERROR_MORE_DATA {
+            if needed == 0 || needed > 4096 {
+                return Err(Refusal::IncompleteInventory);
+            }
+            capacity = needed;
+            continue;
+        }
+        result(status)?;
+        if count > capacity {
+            return Err(Refusal::IncompleteInventory);
+        }
+        // SAFETY: Successful RmGetList initialized exactly count records in allocated storage.
+        unsafe {
+            processes.set_len(count as usize);
+        }
+        return Ok(processes
+            .into_iter()
+            .map(|p| FileUse {
+                pid: p.process.pid,
+                creation_time: (u64::from(p.process.started.high) << 32)
+                    | u64::from(p.process.started.low),
+                session: p.session,
+            })
+            .collect());
+    }
+    Err(Refusal::IncompleteInventory)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn selective_feature_actions_preserve_other_role_and_refuse_wider_mutation() {
+        use crate::owner::Operation::{Install, Remove};
+        use NativeFeature::{Registration, Version};
+        for (feature, action, other, selectors, expected) in [
+            (Version, 3, (-1, -1), ("", "VersionFiles", ""), Ok(Install)),
+            (
+                Version,
+                3,
+                (3, 3),
+                ("", "VersionFiles", "VersionFiles"),
+                Ok(Install),
+            ),
+            (
+                Registration,
+                3,
+                (3, 3),
+                ("", "SharedRegistration", ""),
+                Ok(Install),
+            ),
+            (Version, 2, (3, 3), ("VersionFiles", "", ""), Ok(Remove)),
+            (Registration, 2, (2, 2), ("ALL", "", ""), Ok(Remove)),
+            (
+                Version,
+                2,
+                (3, 3),
+                ("ALL", "", ""),
+                Err(Refusal::InvalidRequest),
+            ),
+            (
+                Version,
+                2,
+                (3, 2),
+                ("VersionFiles", "", ""),
+                Err(Refusal::InvalidRequest),
+            ),
+            (
+                Version,
+                3,
+                (2, 3),
+                ("", "VersionFiles", ""),
+                Err(Refusal::InvalidRequest),
+            ),
+            (
+                Version,
+                3,
+                (3, 3),
+                ("", "VersionFiles", "ALL"),
+                Err(Refusal::InvalidRequest),
+            ),
+            (
+                Version,
+                3,
+                (3, 3),
+                ("", "SharedRegistration", ""),
+                Err(Refusal::InvalidRequest),
+            ),
+            (
+                Version,
+                2,
+                (2, 2),
+                ("VersionFiles", "SharedRegistration", ""),
+                Err(Refusal::InvalidRequest),
+            ),
+            (
+                Version,
+                0,
+                (2, 2),
+                ("", "VersionFiles", ""),
+                Err(Refusal::InvalidRequest),
+            ),
+        ] {
+            assert_eq!(
+                feature_operation(feature, action, other, selectors),
+                expected
+            );
+        }
+    }
+
+    type DestinationFixture = (Vec<[String; 3]>, Vec<[String; 2]>, Vec<[String; 3]>);
+
+    fn destination_fixture() -> DestinationFixture {
+        (
+            vec![
+                ["TARGETDIR".into(), "".into(), "SourceDir".into()],
+                ["LocalAppDataFolder".into(), "TARGETDIR".into(), ".".into()],
+                [
+                    "INSTALL_ROOT".into(),
+                    "LocalAppDataFolder".into(),
+                    "CADRUMO".into(),
+                ],
+                [
+                    "Versions".into(),
+                    "INSTALL_ROOT".into(),
+                    "versio~1|versions:source".into(),
+                ],
+                ["Release".into(), "Versions".into(), "0.6.0".into()],
+                ["Alias".into(), "Release".into(), ".".into()],
+            ],
+            vec![
+                ["C_Version".into(), "Alias".into()],
+                ["C_Manager".into(), "INSTALL_ROOT".into()],
+            ],
+            vec![
+                [
+                    "F_Version".into(),
+                    "C_Version".into(),
+                    "payloa~1.bin|payload.bin".into(),
+                ],
+                ["F_Manager".into(), "C_Manager".into(), "manager.exe".into()],
+            ],
+        )
+    }
+
+    #[test]
+    fn msi_destinations_resolve_all_files_long_target_names_and_dot_directories() {
+        let (directories, components, files) = destination_fixture();
+        assert_eq!(
+            resolved_destinations(Path::new(r"C:\Install"), directories, components, files)
+                .unwrap(),
+            vec![
+                PathBuf::from(r"C:\Install\versions\0.6.0\payload.bin"),
+                PathBuf::from(r"C:\Install\manager.exe"),
+            ]
+        );
+    }
+
+    #[test]
+    fn msi_destination_budget_uses_absolute_utf16_units_including_astral_names() {
+        for astral in [false, true] {
+            let (directories, components, mut files) = destination_fixture();
+            let base = r"C:\Install\versions\0.6.0\";
+            let available = 259 - base.encode_utf16().count();
+            let mut name = if astral {
+                "😀".repeat(available / 2)
+            } else {
+                "a".repeat(available)
+            };
+            if name.encode_utf16().count() < available {
+                name.push('a');
+            }
+            files[0][2] = name;
+            assert!(
+                resolved_destinations(
+                    Path::new(r"C:\Install"),
+                    directories.clone(),
+                    components.clone(),
+                    files.clone()
+                )
+                .is_ok()
+            );
+            files[0][2].push('a');
+            assert_eq!(
+                resolved_destinations(Path::new(r"C:\Install"), directories, components, files),
+                Err(DestinationRefusal::TooLong)
+            );
+        }
+    }
+
+    #[test]
+    fn msi_destination_inventory_refuses_incomplete_escaping_cyclic_and_ambiguous_trees() {
+        for defect in 0..14 {
+            let (mut directories, mut components, mut files) = destination_fixture();
+            match defect {
+                0 => directories.retain(|row| row[0] != "INSTALL_ROOT"),
+                1 => directories[3][1] = "Unknown".into(),
+                2 => directories[3][1] = "Release".into(),
+                3 => directories[3][2] = "..".into(),
+                4 => directories[3][2] = r"a\b".into(),
+                5 => directories[3][2] = "short|long|extra".into(),
+                6 => directories[0][1] = "Release".into(),
+                7 => components[0][1] = "Unknown".into(),
+                8 => files[0][1] = "Unknown".into(),
+                9 => files[0][2] = "../outside".into(),
+                10 => files.clear(),
+                11 => {
+                    files.push([
+                        "F_Duplicate".into(),
+                        "C_Manager".into(),
+                        "MANAGER.EXE".into(),
+                    ]);
+                }
+                12 => {
+                    directories.push([
+                        "OtherVersions".into(),
+                        "INSTALL_ROOT".into(),
+                        "VERSIONS".into(),
+                    ]);
+                }
+                13 => files[0][2] = "CON.bin".into(),
+                _ => unreachable!(),
+            }
+            assert_eq!(
+                resolved_destinations(Path::new(r"C:\Install"), directories, components, files),
+                Err(DestinationRefusal::Inventory),
+                "defect {defect}"
+            );
+        }
+        let (directories, components, files) = destination_fixture();
+        assert_eq!(
+            resolved_destinations(Path::new(r"\\?\C:\Install"), directories, components, files),
+            Err(DestinationRefusal::Inventory)
+        );
+    }
+
+    #[test]
+    fn component_costing_budget_reserves_registry_keypath_expansion() {
+        let components: Vec<[String; 3]> = (0..32767)
+            .map(|index| [format!("C_{index}"), "260".into(), format!("R_{index}")])
+            .collect();
+        let registry: Vec<[String; 3]> = (0..32767)
+            .map(|index| [format!("R_{index}"), "1".into(), format!("C_{index}")])
+            .collect();
+        let mut boundary = components.clone();
+        boundary.push(["C_File".into(), "256".into(), "F_File".into()]);
+        assert_eq!(
+            verified_component_budget(boundary, registry.clone()),
+            Ok(())
+        );
+        let mut oversized = components.clone();
+        oversized.push(["C_Extra".into(), "260".into(), "R_Extra".into()]);
+        let mut extra_registry = registry.clone();
+        extra_registry.push(["R_Extra".into(), "1".into(), "C_Extra".into()]);
+        assert_eq!(
+            verified_component_budget(oversized, extra_registry),
+            Err(DestinationRefusal::Inventory)
+        );
+        let mut invalid = registry;
+        invalid[0][2] = "C_Foreign".into();
+        assert_eq!(
+            verified_component_budget(components, invalid),
+            Err(DestinationRefusal::Inventory)
+        );
+    }
+
+    #[test]
+    fn mandatory_feature_inventory_enforces_component_limit_and_complete_selection() {
+        let components: Vec<[String; 2]> = (0..1601)
+            .map(|index| [format!("C_{index}"), "INSTALL_ROOT".into()])
+            .collect();
+        let features = vec![
+            [
+                "ProductFeature".into(),
+                "".into(),
+                "0".into(),
+                "1".into(),
+                "24".into(),
+            ],
+            [
+                "PayloadFeature0001".into(),
+                "ProductFeature".into(),
+                "0".into(),
+                "1".into(),
+                "26".into(),
+            ],
+        ];
+        let links: Vec<[String; 2]> = components
+            .iter()
+            .enumerate()
+            .map(|(index, row)| {
+                [
+                    if index < 1600 {
+                        "ProductFeature"
+                    } else {
+                        "PayloadFeature0001"
+                    }
+                    .into(),
+                    row[0].clone(),
+                ]
+            })
+            .collect();
+        assert_eq!(
+            verified_features(features.clone(), &components, links.clone()),
+            Ok(())
+        );
+        for fault in 0..7 {
+            let mut features = features.clone();
+            let mut links = links.clone();
+            match fault {
+                0 => links[1600][0] = "ProductFeature".into(),
+                1 => {
+                    links.pop();
+                }
+                2 => links[1600][0] = "Unknown".into(),
+                3 => links[1600][1] = "C_0".into(),
+                4 => features[1][1] = "PayloadFeature0001".into(),
+                5 => features[1][3] = "0".into(),
+                _ => features[1][4] = "22".into(),
+            }
+            assert_eq!(
+                verified_features(features, &components, links),
+                Err(DestinationRefusal::Inventory)
+            );
+        }
+    }
+
+    #[test]
+    fn read_only_native_msi_tables_supply_complete_admitted_destination_inventory() {
+        let root = tempfile::tempdir().unwrap();
+        let package = root.path().join("destination.msi");
+        let name = wide(package.to_str().unwrap()).unwrap();
+        let mut database = 0;
+        // SAFETY: creates only this test's isolated MSI database, with owned output.
+        result(unsafe { MsiOpenDatabaseW(name.as_ptr(), 3_usize as *const u16, &mut database) })
+            .unwrap();
+        let database = Handle::new(database).unwrap();
+        for statement in [
+            "CREATE TABLE `Directory` (`Directory` CHAR(72) NOT NULL, `Directory_Parent` CHAR(72), `DefaultDir` CHAR(255) NOT NULL PRIMARY KEY `Directory`)",
+            "CREATE TABLE `Component` (`Component` CHAR(72) NOT NULL, `Directory_` CHAR(72) NOT NULL, `Attributes` SHORT NOT NULL, `KeyPath` CHAR(72) PRIMARY KEY `Component`)",
+            "CREATE TABLE `File` (`File` CHAR(72) NOT NULL, `Component_` CHAR(72) NOT NULL, `FileName` CHAR(255) NOT NULL PRIMARY KEY `File`)",
+            "CREATE TABLE `Feature` (`Feature` CHAR(38) NOT NULL, `Feature_Parent` CHAR(38), `Display` SHORT, `Level` SHORT NOT NULL, `Attributes` SHORT NOT NULL PRIMARY KEY `Feature`)",
+            "CREATE TABLE `FeatureComponents` (`Feature_` CHAR(38) NOT NULL, `Component_` CHAR(72) NOT NULL PRIMARY KEY `Feature_`, `Component_`)",
+            "CREATE TABLE `Property` (`Property` CHAR(72) NOT NULL, `Value` CHAR(0) NOT NULL PRIMARY KEY `Property`)",
+            "INSERT INTO `Feature` (`Feature`, `Display`, `Level`, `Attributes`) VALUES ('ProductFeature', 0, 1, 24)",
+            "INSERT INTO `FeatureComponents` (`Feature_`, `Component_`) VALUES ('ProductFeature', 'C_File')",
+            "INSERT INTO `Directory` (`Directory`, `DefaultDir`) VALUES ('TARGETDIR', 'SourceDir')",
+            "INSERT INTO `Directory` (`Directory`, `Directory_Parent`, `DefaultDir`) VALUES ('LocalAppDataFolder', 'TARGETDIR', '.')",
+            "INSERT INTO `Directory` (`Directory`, `Directory_Parent`, `DefaultDir`) VALUES ('INSTALL_ROOT', 'LocalAppDataFolder', 'CADRUMO')",
+            "INSERT INTO `Directory` (`Directory`, `Directory_Parent`, `DefaultDir`) VALUES ('Versions', 'INSTALL_ROOT', 'versio~1|versions:source')",
+            "INSERT INTO `Component` (`Component`, `Directory_`, `Attributes`, `KeyPath`) VALUES ('C_File', 'Versions', 256, 'F_One')",
+            "INSERT INTO `File` (`File`, `Component_`, `FileName`) VALUES ('F_One', 'C_File', 'one.bin')",
+            "INSERT INTO `File` (`File`, `Component_`, `FileName`) VALUES ('F_Two', 'C_File', 'two.bin')",
+        ] {
+            let statement = wide(statement).unwrap();
+            let mut view = 0;
+            // SAFETY: live isolated database and terminated fixed SQL, writable view output.
+            result(unsafe { MsiDatabaseOpenViewW(database.0, statement.as_ptr(), &mut view) })
+                .unwrap();
+            let view = Handle::new(view).unwrap();
+            // SAFETY: fixed statements have no parameter records.
+            result(unsafe { MsiViewExecute(view.0, 0) }).unwrap();
+        }
+        let statement = wide(&format!(
+            "UPDATE `File` SET `FileName` = '{}' WHERE `File` = 'F_Two'",
+            "a".repeat(220)
+        ))
+        .unwrap();
+        let mut view = 0;
+        // SAFETY: exact isolated database, fixed test-only update and writable view output.
+        result(unsafe { MsiDatabaseOpenViewW(database.0, statement.as_ptr(), &mut view) }).unwrap();
+        let view = Handle::new(view).unwrap();
+        // SAFETY: this statement has no parameter record and touches only this fixture.
+        result(unsafe { MsiViewExecute(view.0, 0) }).unwrap();
+        drop(view);
+        // SAFETY: persist this owned fixture before closing and reopening read-only.
+        result(unsafe { MsiDatabaseCommit(database.0) }).unwrap();
+        drop(database);
+        let custody = crate::custody::file(&package).unwrap();
+        assert_eq!(
+            verify_installation_destinations(&package, Path::new(r"C:\Install"), &custody),
+            Ok(())
+        );
+        // The first seven-character file still fits; only the second row exceeds
+        // the budget, proving complete native enumeration rather than first-row sampling.
+        let oversized = PathBuf::from(format!("C:\\{}", "a".repeat(27)));
+        assert_eq!(
+            verify_installation_destinations(&package, &oversized, &custody),
+            Err(DestinationRefusal::TooLong)
+        );
+        assert!(!oversized.exists());
+        drop(custody);
+        let mut raw_database = 0;
+        // SAFETY: reopen only this fixture in transacted mode, with owned output.
+        result(unsafe {
+            MsiOpenDatabaseW(
+                name.as_ptr(),
+                ptr::without_provenance::<u16>(1),
+                &mut raw_database,
+            )
+        })
+        .unwrap();
+        let database = Handle::new(raw_database).unwrap();
+        for index in 0..1600 {
+            for statement in [
+                format!(
+                    "INSERT INTO `Component` (`Component`, `Directory_`, `Attributes`) VALUES ('C_Extra{index}', 'Versions', 256)"
+                ),
+                format!(
+                    "INSERT INTO `FeatureComponents` (`Feature_`, `Component_`) VALUES ('ProductFeature', 'C_Extra{index}')"
+                ),
+            ] {
+                let statement = wide(&statement).unwrap();
+                let mut view = 0;
+                // SAFETY: fixed generated SQL touches only the isolated fixture.
+                result(unsafe { MsiDatabaseOpenViewW(database.0, statement.as_ptr(), &mut view) })
+                    .unwrap();
+                let view = Handle::new(view).unwrap();
+                // SAFETY: the insert has no parameter records.
+                result(unsafe { MsiViewExecute(view.0, 0) }).unwrap();
+            }
+        }
+        // SAFETY: commit this owned fixture before reacquiring read-only custody.
+        result(unsafe { MsiDatabaseCommit(database.0) }).unwrap();
+        drop(database);
+        let custody = crate::custody::file(&package).unwrap();
+        assert_eq!(
+            verify_installation_destinations(&package, Path::new(r"C:\Install"), &custody),
+            Err(DestinationRefusal::Inventory)
+        );
+    }
+    #[test]
+    fn invalid_session_handles_fail_closed_at_both_exported_boundaries() {
+        assert_eq!(CadrumoPrepareAdmission(0), ERROR_INSTALL_FAILURE);
+        assert_eq!(CadrumoScopeAdmission(0), ERROR_INSTALL_FAILURE);
+        assert_eq!(CadrumoPrepareOwner(0), ERROR_INSTALL_FAILURE);
+        assert_eq!(CadrumoAuthenticateOwner(0), ERROR_INSTALL_FAILURE);
+    }
+
+    #[test]
+    fn native_exact_product_inventory_distinguishes_absence_without_installing() {
+        let directory = tempfile::tempdir().unwrap();
+        let unique = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let digits = format!("{unique:032X}");
+        let code = format!(
+            "{}-{}-{}-{}-{}",
+            &digits[..8],
+            &digits[8..12],
+            &digits[12..16],
+            &digits[16..20],
+            &digits[20..]
+        );
+        let owner =
+            NativeOwner::new(code, NativeContext::Machine, directory.path().to_owned()).unwrap();
+        assert_eq!(MsiInventory.locate(&owner).unwrap(), None);
+        assert!(directory.path().is_dir());
+    }
+
+    #[test]
+    fn native_database_properties_are_parameter_bound_and_missing_is_distinct() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = wide(directory.path().join("fixture.msi").to_str().unwrap()).unwrap();
+        let mut database = 0;
+        // SAFETY: MSIDBOPEN_CREATE is the documented integer mode 3. The path and
+        // output are live and this creates only an isolated empty test database.
+        result(unsafe { MsiOpenDatabaseW(path.as_ptr(), 3_usize as *const u16, &mut database) })
+            .unwrap();
+        let database = Handle::new(database).unwrap();
+        for statement in [
+            "CREATE TABLE `Property` (`Property` CHAR(72) NOT NULL, `Value` CHAR(0) LOCALIZABLE PRIMARY KEY `Property`)",
+            "INSERT INTO `Property` (`Property`, `Value`) VALUES ('ProductCode', '{A0000000-0000-0000-0000-000000000000}')",
+            "INSERT INTO `Property` (`Property`, `Value`) VALUES ('CadrumoAdmission', 'immutable authored data')",
+        ] {
+            let statement = wide(statement).unwrap();
+            let mut view = 0;
+            // SAFETY: Owned isolated database, terminated static SQL, writable output.
+            result(unsafe { MsiDatabaseOpenViewW(database.0, statement.as_ptr(), &mut view) })
+                .unwrap();
+            let view = Handle::new(view).unwrap();
+            // SAFETY: These statements contain no parameters.
+            result(unsafe { MsiViewExecute(view.0, 0) }).unwrap();
+        }
+        assert_eq!(
+            property(&database, "CadrumoAdmission").unwrap().as_deref(),
+            Some("immutable authored data")
+        );
+        assert_eq!(property(&database, "UnknownProperty").unwrap(), None);
+        assert_eq!(property(&database, "' OR '1' = '1").unwrap(), None);
+    }
+    #[test]
+    fn live_restart_manager_inspects_an_unused_file_without_mutating_it() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("unowned.txt");
+        std::fs::write(&path, b"retained").unwrap();
+        assert_eq!(file_users(std::slice::from_ref(&path)), Ok(vec![]));
+        assert_eq!(std::fs::read(&path).unwrap(), b"retained");
+        assert_eq!(file_users(&[]), Err(Refusal::InvalidRequest));
+        assert_eq!(
+            file_users(&[PathBuf::from("relative")]),
+            Err(Refusal::InvalidRequest)
+        );
+    }
+
+    #[test]
+    fn native_installer_ui_is_quiet_serialized_and_restored() {
+        // Native UI requests may normalize to NONE on a Session 0 host. Capture
+        // the observed prior level; this test does not claim interactive UI proof.
+        // SAFETY: changes this test process's UI only; no installation is invoked.
+        let initial = unsafe { MsiSetInternalUI(3, ptr::null_mut()) };
+        // SAFETY: INSTALLUILEVEL_NOCHANGE observes the actual native level.
+        let prior = unsafe { MsiSetInternalUI(0, ptr::null_mut()) };
+        let ui = InstallerUi::quiet().unwrap();
+        let previous = ui.previous;
+        assert_eq!(previous, prior);
+        // SAFETY: INSTALLUILEVEL_NOCHANGE queries this process's current UI level.
+        assert_eq!(unsafe { MsiSetInternalUI(0, ptr::null_mut()) }, 2);
+        assert!(InstallerUi::quiet().is_err());
+        drop(ui);
+        // SAFETY: Read-only query after the RAII guard restored native process state.
+        assert_eq!(unsafe { MsiSetInternalUI(0, ptr::null_mut()) }, previous);
+        // SAFETY: restore the test process's original choice after verification.
+        unsafe {
+            MsiSetInternalUI(initial, ptr::null_mut());
+        }
+    }
+}
+#[test]
+fn reinstall_properties_require_exact_native_presence_and_never_skip_fresh_install() {
+    let root = tempfile::tempdir().unwrap();
+    let owner = NativeOwner::new(
+        "12345678-1234-1234-1234-123456789ABC".into(),
+        NativeContext::Machine,
+        root.path().to_owned(),
+    )
+    .unwrap();
+    let fresh = installation_properties(&owner, "endpoint", None).unwrap();
+    assert!(!fresh.contains("REINSTALL"));
+    assert!(fresh.contains("REBOOT=ReallySuppress"));
+    let repair = installation_properties(&owner, "endpoint", Some(&owner)).unwrap();
+    assert!(repair.ends_with(" REINSTALL=ALL REINSTALLMODE=amus"));
+    let foreign = NativeOwner::new(
+        owner.product_code().into(),
+        NativeContext::Machine,
+        root.path().join("other-prefix"),
+    )
+    .unwrap();
+    assert_eq!(
+        installation_properties(&owner, "endpoint", Some(&foreign)),
+        Err(Refusal::InvalidRequest)
+    );
+    assert_eq!(
+        installation_properties(&owner, "endpoint\" REINSTALL=ALL", None),
+        Err(Refusal::InvalidRequest)
+    );
+}

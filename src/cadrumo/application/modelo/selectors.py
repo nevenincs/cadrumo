@@ -1,0 +1,511 @@
+"""Calculation-revision selector policy for Modelo work units.
+
+Revision selectors load persisted :class:`CalculationRevision` rows and return a
+:class:`ModeloCalculationRevisionSelection` for current, latest draft, latest
+verified, filed, or explicit-id picks.
+
+Command-specific revision defaults stay here rather than in CLI modules:
+verification selects the current draft, filing selects the current
+verified-complete revision, and export prefers the current filed revision before
+falling back to an unambiguous verified-complete revision.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from enum import StrEnum
+from typing import TYPE_CHECKING, Literal
+
+from pydantic import BaseModel
+
+from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionCatalogue,
+    CalculationRevisionState,
+)
+from ...domain.modelos.errors import ModeloError
+from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
+from ...domain.modelos.work_unit import WorkUnit
+from .action_errors import ModeloPreconditionErrorMixin
+from .calculation_revision_gate import require_calculation_revision_coordinates_current
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+
+
+class ModeloCalculationRevisionSelector(StrEnum):
+    """Closed selector set for calculation revisions under a work unit."""
+
+    CURRENT = "current"
+    LATEST_DRAFT = "latest-draft"
+    LATEST_VERIFIED = "latest-verified"
+    FILED = "filed"
+    EXPLICIT = "explicit"
+
+
+class ModeloCalculationRevisionSelectorError(ModeloError):
+    """Base error for calculation-revision selector refusals."""
+
+
+class ModeloCalculationRevisionSelectorNotFoundError(ModeloCalculationRevisionSelectorError):
+    """Raised when a requested calculation revision cannot be selected."""
+
+
+class ModeloCalculationRevisionSelectorStateError(ModeloPreconditionErrorMixin, ModeloCalculationRevisionSelectorError):
+    """Raised when a command-specific selector finds a revision in the wrong state."""
+
+
+class ModeloCalculationRevisionSelectorAmbiguousError(ModeloCalculationRevisionSelectorError):
+    """Raised when a default revision selector would have to guess."""
+
+    def __init__(self, candidates: tuple[ModeloCalculationRevisionCandidate, ...]) -> None:
+        """Initialize the error with the ambiguous candidate revisions."""
+        self.candidates = candidates
+        super().__init__("calculation revision selector is ambiguous; choose an explicit selector or revision id")
+
+
+class ModeloCalculationRevisionCandidate(BaseModel):
+    """Human-readable calculation revision metadata for selector guidance."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    calculation_revision_id: CalculationRevisionId
+    short_calculation_revision_id: str
+    work_unit_id: WorkUnitId
+    state: CalculationRevisionState
+    created_at: str
+    updated_at: str
+    verified_at: str | None = None
+    filed_at: str | None = None
+
+    @classmethod
+    def from_revision(cls, revision: CalculationRevision) -> ModeloCalculationRevisionCandidate:
+        """Project a :class:`CalculationRevision` into a :class:`ModeloCalculationRevisionCandidate`."""
+        return cls(
+            calculation_revision_id=revision.calculation_revision_id,
+            short_calculation_revision_id=revision.calculation_revision_id[-12:],
+            work_unit_id=revision.work_unit_id,
+            state=revision.state,
+            created_at=revision.created_at.isoformat(),
+            updated_at=revision.updated_at.isoformat(),
+            verified_at=revision.verified_at.isoformat() if revision.verified_at is not None else None,
+            filed_at=revision.filed_at.isoformat() if revision.filed_at is not None else None,
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class ModeloCalculationRevisionSelection:
+    """Internal selection of a repository-validated revision under a work unit.
+
+    The repository validates the revision against its complete aggregate. This
+    value holder retains that record without validating it again outside the
+    owning aggregate context; it is neither a transport nor a persisted schema.
+    """
+
+    selector: ModeloCalculationRevisionSelector
+    work_unit_id: WorkUnitId
+    revision: CalculationRevision
+    candidates: tuple[ModeloCalculationRevisionCandidate, ...] = ()
+
+
+type ModeloCalculationRevisionDefault = Literal["verify", "file", "export"]
+"""Command-specific default selector modes for calculation revisions."""
+
+
+def select_modelo_calculation_revision(
+    work_unit: WorkUnit,
+    *,
+    selector: ModeloCalculationRevisionSelector,
+    calculation_revision_id: CalculationRevisionId | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
+    calculation_catalogue: CalculationRevisionCatalogue | None = None,
+) -> ModeloCalculationRevisionSelection:
+    """Select one persisted calculation revision as :class:`ModeloCalculationRevisionSelection`.
+
+    ``EXPLICIT`` requires ``calculation_revision_id`` and verifies the revision
+    belongs to the supplied :class:`~WorkUnit`. Non-explicit
+    selectors resolve through the work unit's current/filed pointers or by
+    latest state, and refuse missing or mismatched state instead of falling back
+    to another revision.
+
+    ``calculation_catalogue`` may carry the caller's fresh read from this same
+    synchronous selection. Every candidate and pointer is then evaluated
+    against that one catalogue; standalone calls read it from the repository.
+    """
+    catalogue = (
+        calculation_catalogue if calculation_catalogue is not None else calculation_repository.load(operation=operation)
+    )
+    revisions = _revisions_for_work_unit(
+        work_unit,
+        catalogue=catalogue,
+        operation=operation,
+    )
+    if selector is ModeloCalculationRevisionSelector.EXPLICIT:
+        if calculation_revision_id is None:
+            raise ModeloCalculationRevisionSelectorNotFoundError(
+                translated_message="errors.error.modelo_calculation_revision_selector_not_found",
+                context={"selection": "explicit", "calculation_revision_id_present": False},
+            )
+        revision = _explicit_revision_for_work_unit(
+            work_unit=work_unit,
+            calculation_revision_id=calculation_revision_id,
+            catalogue=catalogue,
+            operation=operation,
+        )
+        return ModeloCalculationRevisionSelection(
+            selector=selector,
+            work_unit_id=work_unit.work_unit_id,
+            revision=revision,
+            candidates=(ModeloCalculationRevisionCandidate.from_revision(revision),),
+        )
+    if calculation_revision_id is not None:
+        raise ModeloCalculationRevisionSelectorStateError(
+            translated_message="errors.refused.modelo_calculation_revision_selector_state",
+        )
+
+    selected = {
+        ModeloCalculationRevisionSelector.CURRENT: lambda: _revision_by_pointer(
+            work_unit,
+            work_unit.current_calculation_revision_id,
+            catalogue=catalogue,
+            pointer_name="current_calculation_revision_id",
+            operation=operation,
+        ),
+        ModeloCalculationRevisionSelector.LATEST_DRAFT: lambda: _latest_revision_with_state(
+            revisions,
+            state=CalculationRevisionState.BORRADOR,
+        ),
+        ModeloCalculationRevisionSelector.LATEST_VERIFIED: lambda: _latest_revision_with_state(
+            revisions,
+            state=CalculationRevisionState.VERIFICADO_COMPLETO,
+        ),
+        ModeloCalculationRevisionSelector.FILED: lambda: _revision_by_pointer(
+            work_unit,
+            work_unit.filed_calculation_revision_id,
+            catalogue=catalogue,
+            pointer_name="filed_calculation_revision_id",
+            operation=operation,
+        ),
+    }[selector]()
+    return ModeloCalculationRevisionSelection(
+        selector=selector,
+        work_unit_id=work_unit.work_unit_id,
+        revision=selected,
+        candidates=(ModeloCalculationRevisionCandidate.from_revision(selected),),
+    )
+
+
+def resolve_modelo_calculation_revision_pick(
+    work_unit: WorkUnit,
+    *,
+    selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT,
+    calculation_revision_id: CalculationRevisionId | None = None,
+    default_for: ModeloCalculationRevisionDefault | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
+    calculation_catalogue: CalculationRevisionCatalogue | None = None,
+) -> ModeloCalculationRevisionSelection:
+    """Resolve a command-specific :class:`ModeloCalculationRevisionSelection` pick under one work unit.
+
+    This is the application selector policy surface for commands that
+    accept a natural work target plus a revision selector. It preserves
+    the exact calculation-revision id escape hatch, while keeping
+    command defaults explicit: verification consumes the current draft,
+    filing consumes the current verified-complete revision, and export
+    prefers filed/current verified revisions according to
+    ``select_exportable_revision``.
+
+    A capture can supply its freshly loaded ``calculation_catalogue`` to keep
+    exact-id recovery and selector policy on the same read.
+    """
+    if calculation_revision_id is not None:
+        return select_modelo_calculation_revision(
+            work_unit,
+            selector=ModeloCalculationRevisionSelector.EXPLICIT,
+            calculation_revision_id=calculation_revision_id,
+            calculation_repository=calculation_repository,
+            operation=operation,
+            calculation_catalogue=calculation_catalogue,
+        )
+    if default_for == "file" and selector is ModeloCalculationRevisionSelector.CURRENT:
+        return select_current_verified_revision(
+            work_unit,
+            calculation_repository=calculation_repository,
+            operation=operation,
+            calculation_catalogue=calculation_catalogue,
+        )
+    if default_for == "export" and selector is ModeloCalculationRevisionSelector.CURRENT:
+        return select_exportable_revision(
+            work_unit,
+            calculation_repository=calculation_repository,
+            operation=operation,
+            calculation_catalogue=calculation_catalogue,
+        )
+    return select_modelo_calculation_revision(
+        work_unit,
+        selector=selector,
+        calculation_repository=calculation_repository,
+        operation=operation,
+        calculation_catalogue=calculation_catalogue,
+    )
+
+
+def select_current_verified_revision(
+    work_unit: WorkUnit,
+    *,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
+    calculation_catalogue: CalculationRevisionCatalogue | None = None,
+) -> ModeloCalculationRevisionSelection:
+    """Select the current verified-complete revision for filing.
+
+    Returns a :class:`ModeloCalculationRevisionSelection`.
+    """
+    selection = select_modelo_calculation_revision(
+        work_unit,
+        selector=ModeloCalculationRevisionSelector.CURRENT,
+        calculation_repository=calculation_repository,
+        operation=operation,
+        calculation_catalogue=calculation_catalogue,
+    )
+    if selection.revision.state is not CalculationRevisionState.VERIFICADO_COMPLETO:
+        from .preconditions import build_modelo_work_file_unverified_revision_failure
+
+        raise ModeloCalculationRevisionSelectorStateError(
+            translated_message="errors.refused.modelo_calculation_revision_selector_state",
+            context={
+                "calculation_revision_id": selection.revision.calculation_revision_id,
+                "state": selection.revision.state.value,
+            },
+            precondition_failure=build_modelo_work_file_unverified_revision_failure(
+                calculation_revision_id=selection.revision.calculation_revision_id,
+                state=selection.revision.state.value,
+                work_unit=work_unit,
+            ),
+        )
+    return selection
+
+
+def _selection_for_revision(
+    work_unit: WorkUnit,
+    *,
+    selector: ModeloCalculationRevisionSelector,
+    revision: CalculationRevision,
+) -> ModeloCalculationRevisionSelection:
+    """Project one already-selected revision into the public selection model."""
+    return ModeloCalculationRevisionSelection(
+        selector=selector,
+        work_unit_id=work_unit.work_unit_id,
+        revision=revision,
+        candidates=(ModeloCalculationRevisionCandidate.from_revision(revision),),
+    )
+
+
+def _current_exportable_revision(
+    work_unit: WorkUnit,
+    current_revision: CalculationRevision | None,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> ModeloCalculationRevisionSelection | None:
+    """Resolve the current-pointer branch of the export policy."""
+    if current_revision is None:
+        return None
+    if current_revision.state is CalculationRevisionState.VERIFICADO_COMPLETO:
+        return _selection_for_revision(
+            work_unit,
+            selector=ModeloCalculationRevisionSelector.CURRENT,
+            revision=current_revision,
+        )
+    if current_revision.state is CalculationRevisionState.BORRADOR:
+        raise ModeloCalculationRevisionSelectorStateError(
+            translated_message="errors.refused.modelo_calculation_revision_selector_state",
+        )
+    return None
+
+
+def _verified_exportable_fallback(
+    work_unit: WorkUnit,
+    *,
+    catalogue: CalculationRevisionCatalogue,
+    operation: PinnedAuthorityOperation,
+) -> ModeloCalculationRevisionSelection:
+    """Resolve the unambiguous verified-revision fallback for export."""
+    verified = tuple(
+        revision
+        for revision in _revisions_for_work_unit(
+            work_unit,
+            catalogue=catalogue,
+            operation=operation,
+        )
+        if revision.state is CalculationRevisionState.VERIFICADO_COMPLETO
+    )
+    if len(verified) == 1:
+        return _selection_for_revision(
+            work_unit,
+            selector=ModeloCalculationRevisionSelector.LATEST_VERIFIED,
+            revision=verified[0],
+        )
+    if len(verified) > 1:
+        raise ModeloCalculationRevisionSelectorAmbiguousError(
+            tuple(ModeloCalculationRevisionCandidate.from_revision(revision) for revision in verified),
+        )
+    raise ModeloCalculationRevisionSelectorNotFoundError(
+        translated_message="errors.error.modelo_calculation_revision_selector_not_found",
+        context={"selection": "exportable", "exportable_revision_present": False},
+    )
+
+
+def select_exportable_revision(
+    work_unit: WorkUnit,
+    *,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
+    calculation_catalogue: CalculationRevisionCatalogue | None = None,
+) -> ModeloCalculationRevisionSelection:
+    """Select the default exportable :class:`ModeloCalculationRevisionSelection` for a work unit.
+
+    Preference order:
+    1. current filed pointer, when it points to a current filed revision;
+    2. current calculation pointer, when it is verified-complete;
+    3. one unambiguous verified-complete revision, only when no current draft conflicts.
+    """
+    catalogue = (
+        calculation_catalogue if calculation_catalogue is not None else calculation_repository.load(operation=operation)
+    )
+    filed_revision = _optional_revision_by_pointer(
+        work_unit,
+        work_unit.filed_calculation_revision_id,
+        catalogue=catalogue,
+        operation=operation,
+    )
+    if filed_revision is not None and filed_revision.state is CalculationRevisionState.PRESENTADO:
+        return _selection_for_revision(
+            work_unit,
+            selector=ModeloCalculationRevisionSelector.FILED,
+            revision=filed_revision,
+        )
+
+    current_revision = _optional_revision_by_pointer(
+        work_unit,
+        work_unit.current_calculation_revision_id,
+        catalogue=catalogue,
+        operation=operation,
+    )
+    current_selection = _current_exportable_revision(work_unit, current_revision, operation=operation)
+    if current_selection is not None:
+        return current_selection
+    return _verified_exportable_fallback(
+        work_unit,
+        catalogue=catalogue,
+        operation=operation,
+    )
+
+
+def _revisions_for_work_unit(
+    work_unit: WorkUnit,
+    *,
+    catalogue: CalculationRevisionCatalogue,
+    operation: PinnedAuthorityOperation,
+) -> tuple[CalculationRevision, ...]:
+    revisions = tuple(sorted(catalogue.for_work_unit(work_unit.work_unit_id), key=lambda revision: revision.created_at))
+    for revision in revisions:
+        require_calculation_revision_coordinates_current(revision, operation=operation)
+    return revisions
+
+
+def _explicit_revision_for_work_unit(
+    *,
+    work_unit: WorkUnit,
+    calculation_revision_id: CalculationRevisionId,
+    catalogue: CalculationRevisionCatalogue,
+    operation: PinnedAuthorityOperation,
+) -> CalculationRevision:
+    revision = catalogue.get(calculation_revision_id)
+    if revision is None:
+        raise ModeloCalculationRevisionSelectorNotFoundError(
+            translated_message="errors.error.modelo_calculation_revision_selector_not_found",
+            context={"calculation_revision_id": calculation_revision_id},
+        )
+    if revision.work_unit_id != work_unit.work_unit_id:
+        raise ModeloCalculationRevisionSelectorStateError(
+            translated_message="errors.refused.modelo_calculation_revision_selector_state",
+        )
+    require_calculation_revision_coordinates_current(revision, operation=operation)
+    return revision
+
+
+def _revision_by_pointer(
+    work_unit: WorkUnit,
+    pointer_value: str | None,
+    *,
+    catalogue: CalculationRevisionCatalogue,
+    pointer_name: str,
+    operation: PinnedAuthorityOperation,
+) -> CalculationRevision:
+    revision = _optional_revision_by_pointer(
+        work_unit,
+        pointer_value,
+        catalogue=catalogue,
+        operation=operation,
+    )
+    if revision is None:
+        raise ModeloCalculationRevisionSelectorNotFoundError(
+            translated_message="errors.error.modelo_calculation_revision_pointer_not_found",
+            context={
+                "selection": "pointer",
+                "pointer_name": pointer_name,
+                "work_unit_id": work_unit.work_unit_id,
+                "modelo": str(work_unit.modelo),
+            },
+        )
+    return revision
+
+
+def _optional_revision_by_pointer(
+    work_unit: WorkUnit,
+    pointer_value: str | None,
+    *,
+    catalogue: CalculationRevisionCatalogue,
+    operation: PinnedAuthorityOperation,
+) -> CalculationRevision | None:
+    if pointer_value is None:
+        return None
+    return _explicit_revision_for_work_unit(
+        work_unit=work_unit,
+        calculation_revision_id=pointer_value,
+        catalogue=catalogue,
+        operation=operation,
+    )
+
+
+def _latest_revision_with_state(
+    revisions: tuple[CalculationRevision, ...],
+    *,
+    state: CalculationRevisionState,
+) -> CalculationRevision:
+    candidates = tuple(revision for revision in revisions if revision.state is state)
+    if not candidates:
+        raise ModeloCalculationRevisionSelectorNotFoundError(
+            translated_message="errors.error.modelo_calculation_revision_selector_not_found",
+            context={"selection": "state", "revision_state": state.value},
+        )
+    return max(candidates, key=lambda revision: (revision.created_at, revision.calculation_revision_id))
+
+
+__all__ = [
+    "ModeloCalculationRevisionCandidate",
+    "ModeloCalculationRevisionDefault",
+    "ModeloCalculationRevisionSelection",
+    "ModeloCalculationRevisionSelector",
+    "ModeloCalculationRevisionSelectorAmbiguousError",
+    "ModeloCalculationRevisionSelectorError",
+    "ModeloCalculationRevisionSelectorNotFoundError",
+    "ModeloCalculationRevisionSelectorStateError",
+    "resolve_modelo_calculation_revision_pick",
+    "select_current_verified_revision",
+    "select_exportable_revision",
+    "select_modelo_calculation_revision",
+]

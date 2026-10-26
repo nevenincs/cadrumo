@@ -1,0 +1,9 @@
+{
+  "provenance": "synthetic_generated",
+  "kind": "xml_invoice_facturae",
+  "source": "authored in-tree for the llm-package-split structured-reading parsers",
+  "licence": "Apache-2.0",
+  "notes": "Hand-authored Facturae 3.2.2 invoice, fictional data. Declared synthetic. Carries an EquivalenceSurcharge block so the recargo de equivalencia slot added to the extraction draft has a document that actually states one -- without it the slot would ship untested against real structure.",
+  "sha256": "b58ac2dfc4c86ed06e11657333cb184abe9726124abadc947ef44e30d8b72145",
+  "bytes": 3382
+}

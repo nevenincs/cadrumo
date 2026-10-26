@@ -1,0 +1,3 @@
+@step Preview with machine-readable output.
+@static aeat --format json app ledger classify <transaction-id> --llm
+@blocked external-service Needs the on-host local model runtime and its reader models, which the hermetic sandbox does not run.

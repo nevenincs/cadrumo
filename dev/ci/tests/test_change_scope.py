@@ -1,0 +1,343 @@
+"""Merge-gate test selection from a pull request's changed files."""
+
+from __future__ import annotations
+
+import json
+import uuid
+from pathlib import Path
+
+import pytest
+
+from dev._paths import REPO_ROOT
+
+from ..change_scope import (
+    CHANGE_CLASS_RULES,
+    CONTRACT_TARGETS,
+    ChangeScope,
+    compute_change_scope,
+    main,
+    selects_sequence_goldens,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+
+def _write(root: Path, relative: str, text: str = "") -> None:
+    path = root / relative
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
+
+
+@pytest.fixture
+def package(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> str:
+    """Build ``src/<pkg>`` with a leaf, a consumer importing it, an unrelated module and a core."""
+    name = f"scopepkg_{uuid.uuid4().hex}"
+    for relative in (
+        f"src/{name}/__init__.py",
+        f"src/{name}/leaf/__init__.py",
+        f"src/{name}/leaf/tests/__init__.py",
+        f"src/{name}/consumer/__init__.py",
+        f"src/{name}/consumer/tests/__init__.py",
+        f"src/{name}/unrelated/__init__.py",
+        f"src/{name}/unrelated/tests/__init__.py",
+        f"src/{name}/core/__init__.py",
+        f"src/{name}/core/tests/__init__.py",
+        f"src/{name}/untested/__init__.py",
+    ):
+        _write(tmp_path, relative)
+    _write(tmp_path, f"src/{name}/leaf/value.py", "VALUE = 1\n")
+    _write(tmp_path, f"src/{name}/consumer/use.py", f"from {name}.leaf.value import VALUE\n")
+    _write(tmp_path, f"src/{name}/unrelated/other.py", "OTHER = 2\n")
+    _write(tmp_path, f"src/{name}/core/base.py", "BASE = 3\n")
+    _write(tmp_path, f"src/{name}/untested/thing.py", "THING = 4\n")
+    monkeypatch.syspath_prepend(str(tmp_path / "src"))
+    return name
+
+
+def _scope(root: Path, name: str, files: list[str], *, max_targets: int = 40) -> ChangeScope:
+    return compute_change_scope(
+        files,
+        root=root,
+        packages=(name,),
+        fanout=(f"{name}.core",),
+        max_targets=max_targets,
+    )
+
+
+def test_python_change_selects_its_nearest_owning_tests(tmp_path: Path, package: str) -> None:
+    scope = _scope(tmp_path, package, [f"src/{package}/unrelated/other.py"])
+
+    assert not scope.too_broad
+    assert scope.targets == (*CONTRACT_TARGETS, f"src/{package}/unrelated/tests")
+
+
+def test_reverse_importer_tests_are_selected(tmp_path: Path, package: str) -> None:
+    scope = _scope(tmp_path, package, [f"src/{package}/leaf/value.py"])
+
+    assert not scope.too_broad
+    assert f"src/{package}/leaf/tests" in scope.targets
+    assert f"src/{package}/consumer/tests" in scope.targets
+    assert f"src/{package}/unrelated/tests" not in scope.targets
+
+
+def test_importer_selection_follows_the_live_import(tmp_path: Path, package: str) -> None:
+    _write(tmp_path, f"src/{package}/consumer/use.py", "VALUE = 1\n")
+
+    scope = _scope(tmp_path, package, [f"src/{package}/leaf/value.py"])
+
+    assert f"src/{package}/consumer/tests" not in scope.targets
+
+
+def test_changed_test_file_selects_its_own_tests_directory(tmp_path: Path, package: str) -> None:
+    scope = _scope(tmp_path, package, [f"src/{package}/leaf/tests/test_value.py"])
+
+    assert scope.targets == (*CONTRACT_TARGETS, f"src/{package}/leaf/tests")
+
+
+def test_unknown_path_under_src_still_maps(tmp_path: Path, package: str) -> None:
+    scope = _scope(
+        tmp_path,
+        package,
+        [f"src\\{package}\\leaf\\deleted\\nested\\gone.py", f"src/{package}/unrelated/notes.txt"],
+    )
+
+    assert not scope.too_broad
+    assert f"src/{package}/leaf/tests" in scope.targets
+    assert f"src/{package}/unrelated/tests" in scope.targets
+
+
+def test_python_change_without_owning_tests_is_never_silent(tmp_path: Path, package: str) -> None:
+    (tmp_path / "src" / package / "leaf" / "tests" / "__init__.py").unlink()
+    (tmp_path / "src" / package / "leaf" / "tests").rmdir()
+
+    scope = _scope(tmp_path, package, [f"src/{package}/leaf/value.py"])
+
+    assert scope.too_broad
+    assert scope.reason is not None and "value.py" in scope.reason
+    assert scope.targets == CONTRACT_TARGETS
+
+
+def test_importer_without_owning_tests_is_too_broad(tmp_path: Path, package: str) -> None:
+    _write(tmp_path, f"src/{package}/untested/thing.py", f"from {package}.leaf.value import VALUE\n")
+
+    scope = _scope(tmp_path, package, [f"src/{package}/leaf/value.py"])
+
+    assert scope.too_broad
+    assert scope.reason is not None and f"{package}.untested.thing" in scope.reason
+
+
+def test_python_outside_every_change_class_is_too_broad(tmp_path: Path) -> None:
+    scope = compute_change_scope(["scripts/loose.py"], root=tmp_path)
+
+    assert scope.too_broad
+    assert scope.targets == CONTRACT_TARGETS
+
+
+def test_fanout_package_change_is_too_broad(tmp_path: Path, package: str) -> None:
+    scope = _scope(tmp_path, package, [f"src/{package}/core/base.py"])
+
+    assert scope.too_broad
+    assert scope.reason is not None and "fan-out" in scope.reason
+    assert scope.targets == CONTRACT_TARGETS
+
+
+def test_selection_above_the_limit_is_too_broad(tmp_path: Path, package: str) -> None:
+    files = [f"src/{package}/leaf/value.py", f"src/{package}/unrelated/other.py"]
+
+    within = _scope(tmp_path, package, files, max_targets=3)
+    beyond = _scope(tmp_path, package, files, max_targets=2)
+
+    assert not within.too_broad
+    assert beyond.too_broad
+    assert beyond.reason is not None and "limit of 2" in beyond.reason
+    assert beyond.targets == CONTRACT_TARGETS
+
+
+def _rule_targets(name: str) -> tuple[str, ...]:
+    return next(rule.targets for rule in CHANGE_CLASS_RULES if rule.name == name)
+
+
+@pytest.mark.parametrize(
+    ("path", "rule"),
+    [
+        ("src/cadrumo/_data/registry/aeat/modelo_303/2025.toml", "registry-data"),
+        ("src/cadrumo/_data/registry/authority/authority-0123abcd.sqlite3", "authority"),
+        ("src/cadrumo/_data/registry/authority/authority.current.json", "authority"),
+        ("src/cadrumo/locales/es/LC_MESSAGES/cadrumo.po", "locales"),
+        ("justfile", "justfile"),
+    ],
+)
+def test_non_python_class_maps_to_its_declared_targets(tmp_path: Path, path: str, rule: str) -> None:
+    scope = compute_change_scope([path], root=tmp_path)
+
+    assert not scope.too_broad
+    assert _rule_targets(rule)
+    assert set(_rule_targets(rule)) <= set(scope.targets)
+    assert not scope.ci_contracts
+
+
+@pytest.mark.parametrize("path", ["conftest.py", "src/cadrumo/domain/conftest.py", "pyproject.toml", "uv.lock"])
+def test_broad_change_class_is_too_broad(tmp_path: Path, path: str) -> None:
+    scope = compute_change_scope([path], root=tmp_path)
+
+    assert scope.too_broad
+    assert scope.reason is not None and path in scope.reason
+    assert scope.targets == CONTRACT_TARGETS
+
+
+# The workflow path is a LIVE one on purpose. The rule it exercises is the
+# glob `.github/**` (change_scope.py:140), so the classification does not read
+# the file and the case passed just as well while naming `ci.yml`, deleted in
+# the workflow consolidation. That is not vacuous -- the rule really is
+# exercised -- but an example naming a file nobody can open invites the next
+# reader to conclude the subject is gone, which is what happened here.
+@pytest.mark.parametrize(
+    "path", [".github/workflows/merge-gate.yml", "dev/ci/change_scope.py", "dev/registry/bindings.py"]
+)
+def test_ci_and_dev_changes_flag_contracts_without_src_targets(tmp_path: Path, path: str) -> None:
+    scope = compute_change_scope([path], root=tmp_path)
+
+    assert scope.ci_contracts
+    assert not scope.too_broad
+    assert scope.targets == CONTRACT_TARGETS
+
+
+def test_unclassified_non_python_change_selects_only_the_contract_set(tmp_path: Path) -> None:
+    scope = compute_change_scope(["README.md"], root=tmp_path)
+
+    assert scope == ChangeScope(
+        targets=CONTRACT_TARGETS, ci_contracts=False, sequence_goldens=False, too_broad=False, reason=None
+    )
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "docs/how-to/quickstart.md",
+        "docs/_sequences/contracts/how-to/quickstart/quickstart-first-run.seq",
+        "docs/conf.py",
+        "dev/docs/sequences/runner.py",
+        "dev/docs/build.py",
+        "dev/packaging/command_execution.py",
+        "dev/_paths.py",
+        "src/cadrumo/entrypoints/cli/app.py",
+        "src/cadrumo/_data/registry/aeat/modelo_303/2025.toml",
+        "src/cadrumo/locales/es/LC_MESSAGES/cadrumo.po",
+        "uv.lock",
+    ],
+)
+def test_documented_output_changes_select_the_sequence_goldens_gate(path: str) -> None:
+    assert selects_sequence_goldens([path])
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "README.md",
+        ".github/workflows/merge-gate.yml",
+        "dev/ci/change_scope.py",
+        "dev/registry/bindings.py",
+        "dev/registry/pipeline/authority_publication.py",
+        "dev/packaging/release.py",
+        "dev/documentation.py",
+        "src/cadrumo_mcp/plugin.py",
+        "justfile",
+        "pyproject.toml",
+        "tests/conftest.py",
+    ],
+)
+def test_changes_outside_documented_output_do_not_select_the_goldens_gate(path: str) -> None:
+    assert not selects_sequence_goldens([path])
+
+
+def test_goldens_selection_normalises_paths_and_ignores_blanks() -> None:
+    assert selects_sequence_goldens(["", "  ", ".\\docs\\index.md"])
+    assert not selects_sequence_goldens(["", "  "])
+
+
+def test_goldens_gate_survives_a_too_broad_selection(tmp_path: Path) -> None:
+    scope = compute_change_scope(
+        ["src/cadrumo/_data/registry/aeat/modelo_303/2025.toml", "pyproject.toml"], root=tmp_path
+    )
+
+    assert scope.too_broad
+    assert scope.sequence_goldens
+    assert scope.targets == CONTRACT_TARGETS
+    assert scope.to_json()["sequence_goldens"] is True
+
+
+def test_goldens_rule_never_replaces_owning_test_selection(tmp_path: Path) -> None:
+    """A gate-only rule must not stand in for the tests that cover the file itself."""
+    _write(tmp_path, "src/cadrumo/feature/__init__.py")
+    _write(tmp_path, "src/cadrumo/feature/tests/__init__.py")
+
+    scope = compute_change_scope(["src/cadrumo/feature/template.txt"], root=tmp_path)
+
+    assert scope.sequence_goldens
+    assert not scope.too_broad
+    assert "src/cadrumo/feature/tests" in scope.targets
+
+
+def test_goldens_rule_never_silences_unclassified_python(tmp_path: Path) -> None:
+    scope = compute_change_scope(["docs/conf.py"], root=tmp_path)
+
+    assert scope.sequence_goldens
+    assert scope.too_broad
+    assert scope.reason is not None and "docs/conf.py" in scope.reason
+
+
+def test_gate_only_rules_do_not_classify() -> None:
+    documented = next(rule for rule in CHANGE_CLASS_RULES if rule.sequence_goldens)
+    assert not documented.classifies
+    assert all(rule.classifies for rule in CHANGE_CLASS_RULES if not rule.contract and not rule.sequence_goldens)
+
+
+def test_declared_targets_exist_in_the_repository() -> None:
+    declared = {target for rule in CHANGE_CLASS_RULES for target in rule.targets}
+
+    assert CONTRACT_TARGETS
+    assert sorted(target for target in declared if not (REPO_ROOT / target).exists()) == []
+
+
+def test_cli_prints_targets_one_per_line(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    manifest = tmp_path / "changed.txt"
+    manifest.write_text("justfile\n", encoding="utf-8")
+    assert main(["--changed-files", str(manifest)]) == 0
+    lines = capsys.readouterr().out.splitlines()
+    assert len(lines) == len(set(lines))
+    assert set(lines) == {*CONTRACT_TARGETS, *_rule_targets("justfile")}
+
+
+def test_cli_json_reports_the_full_selection(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    manifest = tmp_path / "changed.txt"
+    manifest.write_text("uv.lock\n.github/x.yml\n", encoding="utf-8")
+    assert main(["--changed-files", str(manifest), "--json"]) == 0
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    assert payload["targets"] == list(CONTRACT_TARGETS)
+    assert payload["ci_contracts"] is True
+    assert payload["too_broad"] is True
+    assert "uv.lock" in payload["reason"]
+    assert "too broad" in captured.err
+
+
+def test_cli_without_a_manifest_selects_every_test_root(capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["--json"]) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert set(payload["targets"]) == {"src/cadrumo", "src/cadrumo_mcp", "dev", "native", "packaging"}
+    assert payload["ci_contracts"] and payload["sequence_goldens"]
+
+
+@pytest.mark.parametrize("content", ["/src/module.py", "C:/src/module.py", "../module.py", "src/../module.py"])
+def test_cli_refuses_non_relative_changed_paths(tmp_path: Path, content: str) -> None:
+    manifest = tmp_path / "changed.txt"
+    manifest.write_text(content, encoding="utf-8")
+    with pytest.raises(SystemExit) as refused:
+        main(["--changed-files", str(manifest)])
+    assert refused.value.code == 2
+
+
+def test_cli_refuses_an_unreadable_manifest(tmp_path: Path) -> None:
+    with pytest.raises(SystemExit) as refused:
+        main(["--changed-files", str(tmp_path / "missing.txt")])
+    assert refused.value.code == 2

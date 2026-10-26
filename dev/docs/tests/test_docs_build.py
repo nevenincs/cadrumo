@@ -1,0 +1,1433 @@
+"""Documentation build conformance gate.
+
+Asserts the docs build machinery's hygiene contracts and the focused rendered
+surfaces (identity page, sequence widget), each in a ``tmp_path`` with
+``CADRUMO_DOCS_OFFLINE`` set so intersphinx inventories are not fetched. The
+heavy whole-tree ``-n -W`` builds live one-per-module beside this file
+(``test_docs_build_full_scope``, and ``test_docs_build_localized_compile``
+carrying the one compile of every language with the one language build it is
+measured against) so pytest-xdist's per-file distribution runs them
+concurrently; their shared machinery is
+:mod:`dev.docs.tests._sphinx_build_harness`.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+import pytest
+
+from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.external_constants import OutputLanguage
+from dev._paths import REPO_ROOT
+
+from ..apidocs.manager import API_SOURCE_PACKAGE, CLI_REFERENCE_SUBTREE, ApiStubManager, stub_filename
+from ..build import (
+    PREVIEW_SEQUENCE_NOTICE,
+    DocBuildPlan,
+    _generated_api_stub_names,
+    _targets_for_docs_root,
+    planned_doc_targets,
+    preview_doctree_dir,
+    resolve_preview_targets,
+    sphinx_build_environment,
+)
+from ..build_paths import docs_build_root, docs_html_root, pin_docs_build_root
+from ..sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
+
+_REPO_ROOT = REPO_ROOT
+_DOCS = _REPO_ROOT / "docs"
+_DOCS_BUILD = docs_build_root(_REPO_ROOT)
+_CANONICAL_BUILD_ROOTS = frozenset({"html", "doctrees"})
+
+
+def _docs_build_entries() -> set[str]:
+    """Return entry names currently present directly under the configured docs build root."""
+    if not _DOCS_BUILD.exists():
+        return set()
+    return {path.name for path in scan_directory(_DOCS_BUILD)}
+
+
+def _docs_source_paths() -> set[tuple[str, str]]:
+    """Return the live docs source path set, excluding build output."""
+    paths: set[tuple[str, str]] = set()
+    for path in scan_directory(_DOCS, recursive=True):
+        relative = path.relative_to(_DOCS)
+        if relative.parts and relative.parts[0] == "_build":
+            continue
+        kind = "dir" if path.is_dir() else "file"
+        paths.add((relative.as_posix(), kind))
+    return paths
+
+
+def _generated_docs_snapshot() -> set[tuple[str, str, int, int]]:
+    """Return metadata for generated docs sources that validation must not touch."""
+    snapshot: set[tuple[str, str, int, int]] = set()
+    for root_name in ("api", "cli"):
+        root = _DOCS / root_name
+        if not root.exists():
+            continue
+        for path in scan_directory(root, recursive=True):
+            relative = path.relative_to(_DOCS)
+            stat = path.stat()
+            kind = "dir" if path.is_dir() else "file"
+            size = stat.st_size if path.is_file() else 0
+            snapshot.add((relative.as_posix(), kind, size, stat.st_mtime_ns))
+    return snapshot
+
+
+def _producer_source_paths() -> dict[str, Path]:
+    """``dotted module -> repo-relative source path`` for every stub the generator emits.
+
+    Built by applying the generator's OWN naming rule forward over its
+    discovered inventory, so the mapping cannot drift from what it writes.
+    """
+    manager = ApiStubManager.for_repository(REPO_ROOT, docs_api=_DOCS / "api")
+    paths: dict[str, Path] = {}
+    for dotted, is_package in manager.discover_modules():
+        parts = dotted.split(".")
+        relative = Path("src", *parts, "__init__.py") if is_package else Path("src", *parts).with_suffix(".py")
+        paths[dotted] = relative
+    return paths
+
+
+def test_every_generated_api_stub_is_reachable_from_its_changed_source_path() -> None:
+    """A changed source file plans the API stub the generator would write for it.
+
+    The planner recovers a documentable module from a changed path, which is
+    the inverse of the generator's module-to-path naming. That inverse was
+    once restated here instead of delegated, and it addressed a source
+    package the generator no longer emits: it accepted zero of the tree, so
+    every source edit planned no API target at all, silently. This gate holds
+    the two sides at parity by asking the generator for its inventory and
+    requiring the planner to reach each entry from the file that produced it.
+    """
+    expected = _producer_source_paths()
+    assert len(expected) > 1000, f"generator inventory implausibly small: {len(expected)}"
+
+    plan = planned_doc_targets(REPO_ROOT, list(expected.values()))
+    assert plan.api_scaffold_required, "no changed source was recognised as documentable"
+
+    planned = {target.resolve() for target in plan.targets}
+    unreachable = sorted(dotted for dotted in expected if (_DOCS / "api" / f"{dotted}.rst").resolve() not in planned)
+    assert not unreachable, (
+        f"{len(unreachable)} of {len(expected)} generated stubs are unreachable from their source path:"
+        + chr(10)
+        + chr(10).join(f"  - {name}" for name in unreachable[:40])
+    )
+
+
+def test_changed_cli_source_plans_the_generated_command_reference() -> None:
+    """A CLI implementation edit regenerates the command reference, not an API stub."""
+    cli_source = Path("src", API_SOURCE_PACKAGE, *CLI_REFERENCE_SUBTREE, "main.py")
+    plan = planned_doc_targets(REPO_ROOT, [cli_source])
+    assert plan.cli_reference_required, f"{cli_source.as_posix()} did not plan the CLI reference"
+    assert not plan.api_scaffold_required, "the CLI subtree is documented by the generator, not autodoc"
+
+
+def test_changed_client_owner_source_plans_its_api_stub() -> None:
+    """Changes in sibling first-party packages reach their generated target too."""
+    source = Path("src", "cadrumo_client", "transport", "frontend_client.py")
+    plan = planned_doc_targets(REPO_ROOT, [source])
+
+    assert plan.api_scaffold_required
+    assert not plan.cli_reference_required
+    assert _DOCS / "api" / stub_filename("cadrumo_client.transport.frontend_client") in plan.targets
+
+
+def test_changed_source_the_generator_excludes_plans_nothing() -> None:
+    """Paths the stub generator refuses must not plan an API scaffold either."""
+    excluded = [
+        Path("src", API_SOURCE_PACKAGE, "core", "tests", "test_thing.py"),
+        Path("src", API_SOURCE_PACKAGE, "core", "conftest.py"),
+        Path("src", API_SOURCE_PACKAGE, "core", "_data", "table.py"),
+        Path("src", "cadrumo_client", "tests", "test_transport.py"),
+    ]
+    for rel_path in excluded:
+        plan = planned_doc_targets(REPO_ROOT, [rel_path])
+        assert not plan.api_scaffold_required, f"{rel_path.as_posix()} must not plan an API scaffold"
+
+
+def test_docs_build_directory_contains_only_canonical_html() -> None:
+    """Only canonical HTML and the owned persistent doctree cache may remain."""
+    entries = _docs_build_entries()
+    extra = sorted(entries - _CANONICAL_BUILD_ROOTS)
+    assert not extra, (
+        "CADRUMO_DOCS_BUILD_ROOT must contain only canonical HTML and the doctree cache. "
+        "Tests and changed-page validation must write to tmp_path or an OS temp "
+        f"directory, not docs/_build. Extra entries: {extra}"
+    )
+
+
+def test_docs_build_hygiene_refuses_unowned_output(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(sys.modules[__name__], "_DOCS_BUILD", tmp_path)
+    (tmp_path / "html").mkdir()
+    (tmp_path / "doctrees").mkdir()
+    test_docs_build_directory_contains_only_canonical_html()
+    (tmp_path / "preview-output").mkdir()
+    with pytest.raises(AssertionError, match="preview-output"):
+        test_docs_build_directory_contains_only_canonical_html()
+
+
+def test_docs_build_root_refinement_is_relative_and_pinned_before_isolation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    storage_root = tmp_path / "storage"
+    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", "")
+    monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(storage_root))
+    monkeypatch.setenv("CADRUMO_DOCS_BUILD_ROOT", "compiled/docs")
+
+    resolved = pin_docs_build_root(_REPO_ROOT)
+    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", str(tmp_path / "isolated-product-state"))
+
+    assert resolved == storage_root / "compiled" / "docs"
+    assert docs_build_root(_REPO_ROOT) == resolved
+    assert docs_html_root(_REPO_ROOT) == resolved / "html"
+
+
+def test_docs_build_root_defaults_to_the_checkout_build_tree(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    repo_root = tmp_path / "checkout"
+    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", "")
+    monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(tmp_path / "separate-storage"))
+    monkeypatch.setenv("CADRUMO_DOCS_BUILD_ROOT", "")
+
+    assert docs_build_root(repo_root) == repo_root / "build" / "docs"
+
+
+def test_docs_build_cleanup_removes_noncanonical_entries(tmp_path: Path) -> None:
+    """Canonical docs builds clear stale preview files from their build root."""
+    from ..build import remove_noncanonical_build_entries
+
+    build_root = tmp_path / "storage" / "development" / "build" / "docs"
+    html_root = build_root / "html"
+    doctree_root = build_root / "doctrees"
+    preview_dir = build_root / "index-preview"
+    preview_file = build_root / "md-preview.html"
+    html_root.mkdir(parents=True)
+    doctree_root.mkdir()
+    (doctree_root / "cache.pickle").write_bytes(b"doctree cache")
+    preview_dir.mkdir()
+    preview_file.write_text("<title>preview</title>\n", encoding="utf-8")
+
+    remove_noncanonical_build_entries(build_root)
+
+    assert sorted(path.name for path in scan_directory(build_root)) == sorted(_CANONICAL_BUILD_ROOTS)
+    assert html_root.is_dir()
+    assert (doctree_root / "cache.pickle").is_file()
+
+
+def test_an_isolated_full_build_reads_a_private_copy_it_discards(tmp_path: Path) -> None:
+    """Generated pages written by one root's build never reach the shared tree or another root."""
+    from ..build import _full_build_source
+
+    docs_root = tmp_path / "docs"
+    (docs_root / "_build" / "html").mkdir(parents=True)
+    (docs_root / "_build" / "html" / "index.html").write_text("built\n", encoding="utf-8")
+    (docs_root / "index.md").write_text("# Home\n", encoding="utf-8")
+
+    with _full_build_source(docs_root, isolated=True) as first, _full_build_source(docs_root, isolated=True) as second:
+        assert first != second
+        assert (first / "index.md").read_text(encoding="utf-8") == "# Home\n"
+        assert not (first / "_build").exists()
+        (first / "_generated").mkdir()
+        (first / "_generated" / "glossary.rst").write_text("es\n", encoding="utf-8")
+        assert not (second / "_generated").exists()
+    assert not (docs_root / "_generated").exists()
+    assert not first.exists()
+    assert not second.exists()
+
+    with _full_build_source(docs_root, isolated=False) as shared:
+        assert shared == docs_root
+
+
+def test_an_isolated_source_is_refused_for_a_named_target() -> None:
+    """Only a whole-scope build copies the tree; a named target already builds in a temporary copy."""
+    from ..build import main
+
+    with pytest.raises(SystemExit, match="--isolated-source applies to a whole-scope build"):
+        main(["--isolated-source", "docs/index.md"])
+
+
+def test_docs_build_flavor_defaults_to_web_and_refuses_unknown_values() -> None:
+    """The environment selects web or desktop; a mistyped flavor fails rather than building the web site."""
+    from ..build import docs_build_flavor
+
+    assert docs_build_flavor({}) == "web"
+    assert docs_build_flavor({"CADRUMO_DOCS_FLAVOR": "web"}) == "web"
+    assert docs_build_flavor({"CADRUMO_DOCS_FLAVOR": "desktop"}) == "desktop"
+    with pytest.raises(SystemExit, match="CADRUMO_DOCS_FLAVOR must be one of web, desktop"):
+        docs_build_flavor({"CADRUMO_DOCS_FLAVOR": "Desktop"})
+
+
+def test_a_desktop_build_is_refused_outside_its_own_output_root(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A desktop build never writes the canonical web output, from the flag or the environment."""
+    from ..build import main
+
+    # ``main`` writes the resolved flavor into ``os.environ`` for the Sphinx
+    # child; setting the key here first is what makes monkeypatch restore it.
+    monkeypatch.setenv("CADRUMO_DOCS_FLAVOR", "web")
+    with pytest.raises(SystemExit, match="--flavor desktop builds a whole scope into --out-dir"):
+        main(["--flavor", "desktop", "--scope", "user"])
+    with pytest.raises(SystemExit, match="--flavor desktop builds a whole scope into --out-dir"):
+        main(["--flavor", "desktop", "--single-page", "index"])
+    monkeypatch.setenv("CADRUMO_DOCS_FLAVOR", "desktop")
+    with pytest.raises(SystemExit, match="--flavor desktop builds a whole scope into --out-dir"):
+        main(["--single-page", "index"])
+    with pytest.raises(SystemExit, match="--out-dir applies to a whole-scope build"):
+        main(["--flavor", "desktop", "--out-dir", "unused", "docs/index.md"])
+
+
+def test_the_flavor_flag_overrides_the_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    """``--flavor`` wins over ``CADRUMO_DOCS_FLAVOR`` and is what the Sphinx child reads."""
+    from ..build import _docs_build_arguments, _docs_flavor
+
+    monkeypatch.setenv("CADRUMO_DOCS_FLAVOR", "desktop")
+    assert _docs_flavor(_docs_build_arguments(["--flavor", "web"])) == "web"
+    assert os.environ["CADRUMO_DOCS_FLAVOR"] == "web"
+    monkeypatch.setenv("CADRUMO_DOCS_FLAVOR", "web")
+    assert _docs_flavor(_docs_build_arguments(["--flavor", "desktop", "--out-dir", "out"])) == "desktop"
+    assert os.environ["CADRUMO_DOCS_FLAVOR"] == "desktop"
+    with pytest.raises(SystemExit):
+        _docs_build_arguments(["--flavor", "mobile"])
+
+
+def test_docs_build_jobs_accepts_only_serial_or_auto_settings() -> None:
+    """The deployment override pins serial or parallel Sphinx workers."""
+    from ..build import docs_build_jobs
+
+    assert docs_build_jobs({}) == "auto"
+    assert docs_build_jobs({"CADRUMO_DOCS_JOBS": "1"}) == "1"
+    with pytest.raises(SystemExit, match="must be a positive integer worker count"):
+        docs_build_jobs({"CADRUMO_DOCS_JOBS": "0"})
+    with pytest.raises(SystemExit, match="must be 'auto' or a positive integer"):
+        docs_build_jobs({"CADRUMO_DOCS_JOBS": "two"})
+
+
+def test_pagefind_index_mode_defaults_to_full_and_accepts_pages_and_none() -> None:
+    """Local docs keep records; a deployment may index pages alone, or nothing.
+
+    ``none`` is what a build of several language roots selects for each root:
+    the site has one index, built over every root after they are all built, and
+    a root that indexed itself would write one addressed to its build directory
+    rather than to the served site.
+    """
+    from ..build import pagefind_index_mode
+
+    assert pagefind_index_mode({}) == "full"
+    assert pagefind_index_mode({"CADRUMO_DOCS_PAGEFIND_MODE": "full"}) == "full"
+    assert pagefind_index_mode({"CADRUMO_DOCS_PAGEFIND_MODE": "pages"}) == "pages"
+    assert pagefind_index_mode({"CADRUMO_DOCS_PAGEFIND_MODE": "none"}) == "none"
+
+
+def test_pagefind_index_mode_rejects_unknown_values() -> None:
+    """The deployment cannot silently select an unsupported search contract."""
+    from ..build import pagefind_index_mode
+
+    with pytest.raises(SystemExit, match="CADRUMO_DOCS_PAGEFIND_MODE"):
+        pagefind_index_mode({"CADRUMO_DOCS_PAGEFIND_MODE": "records-only"})
+
+
+def test_only_the_full_contract_injects_records() -> None:
+    """``pages`` and ``none`` both inject nothing, and ``full`` injects.
+
+    The resolver is the single decision point the deployment-parity gate reads,
+    so the ``none`` contract must reach it as "no records" rather than fall
+    through the ``pages`` comparison it is not spelled as.
+    """
+    from ..build import resolve_record_injector
+
+    assert resolve_record_injector(_REPO_ROOT, {"CADRUMO_DOCS_PAGEFIND_MODE": "pages"}) is None
+    assert resolve_record_injector(_REPO_ROOT, {"CADRUMO_DOCS_PAGEFIND_MODE": "none"}) is None
+    assert resolve_record_injector(_REPO_ROOT, {"CADRUMO_DOCS_PAGEFIND_MODE": "full"}) is not None
+
+
+def test_the_site_prefix_defaults_to_the_root_being_the_whole_site() -> None:
+    """A root is its own site unless the build says where it sits in a larger one.
+
+    The default matters: a local single-language build, and a published layout
+    whose languages are peer directories each carrying their own index, both
+    want no prefix. Only a layout that nests a root under a directory -- the
+    packaged desktop site, whose apex language sits at the top -- names one, and
+    then a page resolves the site's one index and a shared result's destination
+    against it.
+    """
+    from ..build_paths import docs_site_prefix
+
+    assert docs_site_prefix({}) == ""
+    assert docs_site_prefix({"CADRUMO_DOCS_SITE_PREFIX": ""}) == ""
+    assert docs_site_prefix({"CADRUMO_DOCS_SITE_PREFIX": "es"}) == "es/"
+    assert docs_site_prefix({"CADRUMO_DOCS_SITE_PREFIX": "es/"}) == "es/"
+
+
+def test_the_layout_places_every_root_and_agrees_with_this_root_s_own_prefix() -> None:
+    """The whole layout, which a link from one root to another is written against.
+
+    Four configurations, each with the places it serves the four roots stated by
+    hand: the packaged copy compiled in English, one root of that copy built on
+    its own, the published site, and a local single-language build that is its
+    own whole site. In every one of them the build's own entry is the prefix the
+    build was given, because the two are the same fact read twice.
+    """
+    from ..build_paths import docs_site_prefixes
+
+    languages = ("en", "es", "ca", "hu")
+    apex = {"en": "", "es": "es/", "ca": "ca/", "hu": "hu/"}
+    published = {"en": "en/", "es": "es/", "ca": "ca/", "hu": "hu/"}
+
+    # The packaged copy, compiled in the language it is authored in: that root
+    # is the apex and is given no directory of its own.
+    assert docs_site_prefixes(languages, build_language="en", source_language="en", environ={}) == apex
+    # One root of the same packaged copy, built on its own in its own directory.
+    # Nothing says the site has an address, so its apex is still the authored
+    # language and not this root.
+    assert (
+        docs_site_prefixes(
+            languages,
+            build_language="es",
+            source_language="en",
+            environ={"CADRUMO_DOCS_SITE_PREFIX": "es"},
+        )
+        == apex
+    )
+    # The published site, served from an address of its own: every language sits
+    # under its own code, the authored one included, and no root is at the apex.
+    for build_language in languages:
+        assert (
+            docs_site_prefixes(
+                languages,
+                build_language=build_language,
+                source_language="en",
+                environ={
+                    "CADRUMO_DOCS_SITE_PREFIX": build_language,
+                    "CADRUMO_DOCS_BASE_URL": "https://example.test/docs",
+                },
+            )
+            == published
+        ), build_language
+    # A local single-language build, which is its own whole site: the root it
+    # builds is the apex whichever language it is.
+    assert docs_site_prefixes(languages, build_language="ca", source_language="en", environ={}) == {
+        "en": "en/",
+        "es": "es/",
+        "ca": "",
+        "hu": "hu/",
+    }
+    # The authored language told its own directory and no address: it cannot be
+    # the apex it was just placed below, so no root is.
+    assert (
+        docs_site_prefixes(
+            languages,
+            build_language="en",
+            source_language="en",
+            environ={"CADRUMO_DOCS_SITE_PREFIX": "en"},
+        )
+        == published
+    )
+
+
+@pytest.mark.parametrize("build_language", ["en", "es", "ca", "hu"])
+@pytest.mark.parametrize(
+    "environ",
+    [
+        {},
+        {"CADRUMO_DOCS_SITE_PREFIX": "own"},
+        {"CADRUMO_DOCS_SITE_PREFIX": "own", "CADRUMO_DOCS_BASE_URL": "https://example.test/docs"},
+        {"CADRUMO_DOCS_BASE_URL": "https://example.test/docs"},
+    ],
+    ids=["no-prefix", "prefix", "prefix-and-address", "address-only"],
+)
+def test_a_build_given_a_directory_is_never_placed_at_the_apex(build_language: str, environ: dict[str, str]) -> None:
+    """The layout's entry for this build and the prefix this build was given are one fact.
+
+    A page resolves the site's one search index by walking back out of its own
+    root's directory, and the switcher walks out of it the same way. If the
+    layout placed a root at the apex that was told it sits in a directory, every
+    page of that root would look for the index, and for the other languages, one
+    level too low.
+    """
+    from ..build_paths import docs_site_prefix, docs_site_prefixes
+
+    environment = {key: (build_language if value == "own" else value) for key, value in environ.items()}
+    layout = docs_site_prefixes(
+        ("en", "es", "ca", "hu"), build_language=build_language, source_language="en", environ=environment
+    )
+
+    assert layout[build_language] == docs_site_prefix(environment)
+
+
+@pytest.mark.parametrize("value", ["/es", "a/b", "..", ".", "es\\x", "/"])
+def test_the_site_prefix_refuses_anything_but_one_segment(value: str) -> None:
+    """A prefix that climbs or names several segments is refused, not normalised.
+
+    A reader's search controller walks back exactly the segments this names to
+    reach the site apex, so a value it cannot walk back would silently point
+    the one index and every shared destination at the wrong directory.
+    """
+    from ..build_paths import docs_site_prefix
+
+    with pytest.raises(ValueError, match="CADRUMO_DOCS_SITE_PREFIX"):
+        docs_site_prefix({"CADRUMO_DOCS_SITE_PREFIX": value})
+
+
+def test_deployment_sitemap_uses_canonical_human_doc_urls(tmp_path: Path) -> None:
+    """The deployed sitemap uses canonical URLs and omits generated surfaces."""
+    from defusedxml import ElementTree
+
+    from ..build import write_deployment_sitemap
+
+    for relative in (
+        "index.html",
+        "guide/index.html",
+        "guide/start.html",
+        "cli/index.html",
+        "api/client.html",
+        "_modules/aeat/client.html",
+        "search.html",
+    ):
+        page = tmp_path / relative
+        page.parent.mkdir(parents=True, exist_ok=True)
+        page.write_text("<html></html>", encoding="utf-8")
+
+    write_deployment_sitemap(tmp_path, "https://cadrumo.neve.md/docs")
+
+    sitemap = ElementTree.parse(tmp_path / "sitemap.xml")
+    locations = [(element.text or "") for element in sitemap.iter() if element.tag.endswith("loc")]
+    assert locations == [
+        "https://cadrumo.neve.md/docs/",
+        "https://cadrumo.neve.md/docs/cli/",
+        "https://cadrumo.neve.md/docs/guide/",
+        "https://cadrumo.neve.md/docs/guide/start.html",
+    ]
+
+
+@pytest.mark.parametrize(
+    "changed_path",
+    [
+        "dev/docs/apidocs/manager.py",
+        "dev/docs/cli_reference.py",
+    ],
+)
+def test_changed_docs_validation_does_not_pollute_repository_docs(changed_path: str) -> None:
+    """Changed-page validation writes generated sources and output outside live docs."""
+    before = _docs_build_entries()
+    paths_before = _docs_source_paths()
+    generated_before = _generated_docs_snapshot()
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "dev.docs.build",
+            changed_path,
+        ],
+        cwd=_REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    after = _docs_build_entries()
+    paths_after = _docs_source_paths()
+    generated_after = _generated_docs_snapshot()
+    assert result.returncode == 0, (
+        "changed-doc validation failed:\n" + (result.stdout or "")[-3000:] + (result.stderr or "")[-3000:]
+    )
+    assert after == before, (
+        "changed-doc validation must not add or remove docs/_build entries. "
+        f"Before: {sorted(before)}; after: {sorted(after)}"
+    )
+    assert paths_after == paths_before, (
+        "changed-doc validation must not add or remove live docs source paths. "
+        "Validation scratch files belong in the temporary docs source tree."
+    )
+    assert generated_after == generated_before, (
+        "changed-doc validation must not mutate live generated docs sources. "
+        "Generated API/CLI pages for validation belong in the temporary docs source tree."
+    )
+
+
+@pytest.mark.parametrize("generated_page", ["docs/api/cadrumo.rst", "docs/cli/index.rst"])
+def test_single_page_rejects_generated_documentation_sources(generated_page: str) -> None:
+    """Single-page canonical builds must not regenerate API or CLI source trees."""
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "dev.docs.build",
+            "--single-page",
+            generated_page,
+        ],
+        cwd=_REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode != 0
+    assert "--single-page does not support generated API/CLI pages" in result.stderr
+
+
+_ENVIRONMENT_UPDATE = re.compile(r"(\d+) added, (\d+) changed, (\d+) removed")
+_ANSI_ESCAPE = re.compile(r"\x1b\[[0-9;]*m")
+
+
+def test_a_changed_source_check_builds_the_stub_its_build_generates() -> None:
+    """A changed module's API page is built from the stub the build itself writes.
+
+    No stub exists before the build: the changed-page check copies ``docs/``
+    and ``docs/conf.py`` generates the stubs into that copy at
+    ``builder-inited``, the same hook a full build uses.
+    """
+    changed = Path("src", API_SOURCE_PACKAGE, "core", "casilla_id.py")
+    stub = f"api/{stub_filename(f'{API_SOURCE_PACKAGE}.core.casilla_id').removesuffix('.rst')}"
+    generated_before = _generated_docs_snapshot()
+
+    result = subprocess.run(
+        [sys.executable, "-m", "dev.docs.build", changed.as_posix()],
+        cwd=_REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    output = _ANSI_ESCAPE.sub("", (result.stdout or "") + (result.stderr or ""))
+    assert result.returncode == 0, output[-6000:]
+    assert "No existing documentation targets remained" not in output, output[-3000:]
+    # Parallel HTML writers may omit per-page write progress; the read event
+    # proves Sphinx consumed the generated target before the successful build.
+    assert f"reading sources... [100%] {stub}" in output, output[-3000:]
+    # The other generated stubs exist only after conf.py lists what to exclude,
+    # so reading exactly one source proves they stayed out of the read set.
+    assert _environment_update(output)[0] == 1, output[-3000:]
+    assert _generated_docs_snapshot() == generated_before, "the stubs belong in the temporary copy, not docs/api"
+
+
+def test_a_changed_page_check_keeps_only_the_api_stubs_its_build_generates(tmp_path: Path) -> None:
+    """Planned stubs survive the existence filter only when the build will write them."""
+    original = tmp_path / "docs"
+    copied = tmp_path / "copy"
+    (copied / "how-to").mkdir(parents=True)
+    (copied / "how-to" / "page.md").write_text("# Page\n", encoding="utf-8")
+    generated = _generated_api_stub_names(_REPO_ROOT)
+    kept_stub = stub_filename(f"{API_SOURCE_PACKAGE}.core")
+    assert kept_stub in generated, "the real generator must admit the stub this case keeps"
+
+    mapped = _targets_for_docs_root(
+        original,
+        copied,
+        [
+            original / "api" / kept_stub,
+            original / "api" / stub_filename(f"{API_SOURCE_PACKAGE}.retired_module"),
+            original / "how-to" / "page.md",
+            original / "how-to" / "missing.md",
+        ],
+        generated_api_stubs=generated,
+    )
+
+    assert mapped == [copied / "api" / kept_stub, copied / "how-to" / "page.md"]
+
+
+def _preview_docs_tree(repo_root: Path) -> Path:
+    """Materialise an isolated ``docs/`` tree carrying every preview-resolution case."""
+    docs_root = repo_root / "docs"
+    for relative in (
+        "index.md",
+        "architecture.md",
+        "architecture/overview.md",
+        "how-to/first.md",
+        "how-to/second.rst",
+        "how-to/nested/third.md",
+        "how-to/_draft.md",
+        "api/index.md",
+        "api/cadrumo.rst",
+        "cli/index.rst",
+        "_generated/glossary.rst",
+    ):
+        path = docs_root / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(f"# {path.stem}\n", encoding="utf-8")
+    return docs_root
+
+
+def test_a_preview_resolves_a_page_in_every_spelling(tmp_path: Path) -> None:
+    """A page is named relative to the repository or to docs/, with or without its suffix."""
+    docs_root = _preview_docs_tree(tmp_path)
+    page = [docs_root / "how-to" / "first.md"]
+
+    assert resolve_preview_targets(tmp_path, "how-to/first") == page
+    assert resolve_preview_targets(tmp_path, "how-to/first.md") == page
+    assert resolve_preview_targets(tmp_path, "docs/how-to/first.md") == page
+    assert resolve_preview_targets(tmp_path, "docs/how-to/first") == page
+    assert resolve_preview_targets(tmp_path, "how-to/second") == [docs_root / "how-to" / "second.rst"]
+
+
+def test_a_preview_of_a_directory_builds_every_authored_page_under_it(tmp_path: Path) -> None:
+    """A directory expands to its pages recursively, leaving drafts and generated trees out."""
+    docs_root = _preview_docs_tree(tmp_path)
+    section = [
+        docs_root / "how-to" / "first.md",
+        docs_root / "how-to" / "nested" / "third.md",
+        docs_root / "how-to" / "second.rst",
+    ]
+
+    assert resolve_preview_targets(tmp_path, "how-to") == section
+    assert resolve_preview_targets(tmp_path, "docs/how-to/") == section
+    assert resolve_preview_targets(tmp_path, "docs") == sorted(
+        [
+            docs_root / "index.md",
+            docs_root / "architecture.md",
+            docs_root / "architecture" / "overview.md",
+            *section,
+        ]
+    )
+
+
+def test_a_preview_refuses_an_ambiguous_generated_or_missing_target(tmp_path: Path) -> None:
+    """A name that is both a page and a directory is refused; each spelling that disambiguates works."""
+    docs_root = _preview_docs_tree(tmp_path)
+
+    with pytest.raises(SystemExit, match=r"names both the page architecture.md and a directory"):
+        resolve_preview_targets(tmp_path, "architecture")
+    assert resolve_preview_targets(tmp_path, "architecture.md") == [docs_root / "architecture.md"]
+    assert resolve_preview_targets(tmp_path, "architecture/") == [docs_root / "architecture" / "overview.md"]
+
+    for generated in ("api/cadrumo.rst", "api", "cli/index", "docs/cli"):
+        with pytest.raises(SystemExit, match="does not support generated API/CLI pages"):
+            resolve_preview_targets(tmp_path, generated)
+    with pytest.raises(SystemExit, match="requires an existing documentation page or directory"):
+        resolve_preview_targets(tmp_path, "how-to/absent")
+
+
+def test_previews_skip_sequence_execution_and_full_builds_keep_it() -> None:
+    """Only a preview renders from goldens unexecuted; the full build and the changed-page check run them."""
+    page = DocBuildPlan(targets=[_DOCS / "index.md"], full_build_required=False)
+    full = DocBuildPlan(targets=[], full_build_required=True)
+
+    preview_env = sphinx_build_environment(_REPO_ROOT, page, strict=False, single_page=True, scope="user", base={})
+    full_env = sphinx_build_environment(_REPO_ROOT, full, strict=True, single_page=False, scope="full", base={})
+    changed_env = sphinx_build_environment(_REPO_ROOT, page, strict=False, single_page=False, scope="full", base={})
+
+    assert preview_env[SEQUENCE_CHECK_SKIP_ENV] == "1"
+    assert SEQUENCE_CHECK_SKIP_ENV not in full_env
+    assert SEQUENCE_CHECK_SKIP_ENV not in changed_env
+
+
+def test_the_preview_doctree_cache_is_stable_and_outside_the_html_root() -> None:
+    """The cache path depends only on its inputs and separates configurations."""
+    english_user = preview_doctree_dir(_REPO_ROOT, scope="user", language=OutputLanguage.EN)
+
+    assert english_user == preview_doctree_dir(_REPO_ROOT, scope="user", language=OutputLanguage.EN)
+    assert english_user.is_relative_to(docs_build_root(_REPO_ROOT))
+    assert not english_user.is_relative_to(docs_html_root(_REPO_ROOT))
+    assert english_user != preview_doctree_dir(_REPO_ROOT, scope="full", language=OutputLanguage.EN)
+    assert english_user != preview_doctree_dir(_REPO_ROOT, scope="user", language=OutputLanguage.ES)
+
+
+def _environment_update(output: str) -> tuple[int, int, int]:
+    """Return Sphinx's ``added, changed, removed`` counts from one build's output."""
+    update = _ENVIRONMENT_UPDATE.search(output)
+    assert update is not None, f"the build reported no environment update:\n{output[-3000:]}"
+    return (int(update.group(1)), int(update.group(2)), int(update.group(3)))
+
+
+def _run_fixture_preview(repo_root: Path, storage: Path) -> str:
+    """Run the real preview build over an isolated fixture repository and return its output."""
+    script = (
+        "import sys;"
+        "from pathlib import Path;"
+        "from dev.docs.build import DocBuildPlan, build_docs;"
+        "repo = Path(sys.argv[1]);"
+        "plan = DocBuildPlan(targets=[repo / 'docs' / 'guide' / 'one.rst'], full_build_required=False);"
+        "build_docs(repo, plan, strict=False, single_page=True, scope='user')"
+    )
+    env = {key: value for key, value in os.environ.items() if not key.startswith("CADRUMO_DOCS_")}
+    env["CADRUMO_LOCAL_STORAGE_ROOT"] = str(storage)
+    result = subprocess.run(
+        [sys.executable, "-c", script, str(repo_root)],
+        cwd=_REPO_ROOT,
+        capture_output=True,
+        text=True,
+        env=env,
+        check=False,
+    )
+    output = _ANSI_ESCAPE.sub("", (result.stdout or "") + (result.stderr or ""))
+    assert result.returncode == 0, output
+    return output
+
+
+def test_a_repeat_preview_rereads_only_the_pages_that_changed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The preview keeps its doctree cache between runs, so an unchanged tree reads nothing."""
+    repo_root = tmp_path / "repo"
+    docs_root = repo_root / "docs"
+    (docs_root / "guide").mkdir(parents=True)
+    (docs_root / "conf.py").write_text('project = "fixture"\n', encoding="utf-8")
+    (docs_root / "index.rst").write_text("Home\n====\n\n.. toctree::\n\n   guide/one\n   guide/two\n", encoding="utf-8")
+    (docs_root / "guide" / "one.rst").write_text("One\n===\n", encoding="utf-8")
+    (docs_root / "guide" / "two.rst").write_text("Two\n===\n", encoding="utf-8")
+    storage = tmp_path / "storage"
+    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", str(storage))
+    monkeypatch.setenv("CADRUMO_DOCS_BUILD_ROOT", "")
+
+    first = _run_fixture_preview(repo_root, storage)
+    cache = preview_doctree_dir(repo_root, scope="user", language=OutputLanguage.EN)
+    assert (cache / "environment.pickle").is_file(), f"no persistent environment under {cache}"
+    assert PREVIEW_SEQUENCE_NOTICE in first
+    assert _environment_update(first) == (3, 0, 0), first
+
+    second = _run_fixture_preview(repo_root, storage)
+    assert _environment_update(second) == (0, 0, 0), second
+
+    (docs_root / "guide" / "two.rst").write_text("Two\n===\n\nEdited.\n", encoding="utf-8")
+    third = _run_fixture_preview(repo_root, storage)
+    assert _environment_update(third) == (0, 1, 0), third
+    assert (docs_build_root(repo_root) / "html" / "guide" / "one.html").is_file()
+
+
+def test_docs_compiled_output_consumers_share_the_canonical_root() -> None:
+    consumers = {
+        _REPO_ROOT / "dev" / "docs" / "build.py": ("pin_docs_build_root", "docs_html_root"),
+        _REPO_ROOT / "dev" / "docs" / "serve.py": ("docs_html_root", "CADRUMO_DOCS_BUILD_ROOT"),
+        _REPO_ROOT / "dev" / "deploy" / "docs_site_build.py": ("docs_html_root", "CADRUMO_DOCS_BUILD_ROOT"),
+        _REPO_ROOT / "docs" / "conf.py": ("dev.docs.build_paths", "_DOCS_HTML_ROOT"),
+    }
+    missing = [
+        f"{path.relative_to(_REPO_ROOT)}: {marker}"
+        for path, markers in consumers.items()
+        for marker in markers
+        if marker not in path.read_text(encoding="utf-8")
+    ]
+    assert not missing, "compiled docs outputs diverged from the shared storage root:\n  " + "\n  ".join(missing)
+
+
+def _scope_config(scope: str, tmp_path: Path) -> dict[str, object]:
+    """Evaluate the scope-conditional ``docs/conf.py`` config under one build scope.
+
+    Runs ``docs/conf.py`` module-level code (never ``setup()``) in a subprocess
+    with ``CADRUMO_DOCS_SCOPE`` set, and returns the switch-relevant config so the
+    scope conditionals are asserted without a full Sphinx build.
+    """
+    conf = _DOCS / "conf.py"
+    script = (
+        "import json, runpy;"
+        f"ns = runpy.run_path(r'{conf}');"
+        "print('SCOPE_CONFIG=' + json.dumps({"
+        "'user_scope': ns['_USER_SCOPE'],"
+        "'has_autodoc': 'sphinx.ext.autodoc' in ns['extensions'],"
+        "'has_attribute_types': 'dev.docs.apidocs.attribute_types' in ns['extensions'],"
+        "'has_viewcode': 'sphinx.ext.viewcode' in ns['extensions'],"
+        "'has_typehints': 'sphinx_autodoc_typehints' in ns['extensions'],"
+        "'has_myst': 'myst_parser' in ns['extensions'],"
+        "'excludes_api': 'api/**' in ns['exclude_patterns'],"
+        "'resolves_deferred': ns['_should_resolve_deferred_models']()}))"
+    )
+    env = {
+        **os.environ,
+        "CADRUMO_DOCS_SCOPE": scope,
+        "CADRUMO_DOCS_PROJECT_ROOT": str(_REPO_ROOT),
+        "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / f"cadrumo-scope-store-{scope}"),
+    }
+    result = subprocess.run(
+        [sys.executable, "-c", script],
+        cwd=_REPO_ROOT,
+        capture_output=True,
+        text=True,
+        env=env,
+        check=False,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    line = next(row for row in result.stdout.splitlines() if row.startswith("SCOPE_CONFIG="))
+    payload = json.loads(line[len("SCOPE_CONFIG=") :])
+    if not isinstance(payload, dict) or not all(isinstance(key, str) for key in payload):
+        raise AssertionError("scope config must contain a JSON object with string keys")
+    return {key: value for key, value in payload.items() if isinstance(key, str)}
+
+
+def test_docs_scope_config_switches_autodoc_and_api_exclusion(tmp_path: Path) -> None:
+    """User scope drops the app-importing autodoc extensions and excludes docs/api.
+
+    The whole point of the user scope is that the application is never imported to
+    render docs: autodoc / viewcode / typehints (which import the app) are absent,
+    the ``docs/api`` tree is excluded from the read set, and the deferred-model
+    rebuild (an autodoc-only import) is skipped. Every narrative extension stays.
+    Full scope keeps all of them, so the existing gates cover the API build.
+    """
+    user = _scope_config("user", tmp_path)
+    assert user["user_scope"] is True
+    assert user["has_autodoc"] is False
+    assert user["has_attribute_types"] is False
+    assert user["has_viewcode"] is False
+    assert user["has_typehints"] is False
+    assert user["excludes_api"] is True
+    assert user["resolves_deferred"] is False
+    assert user["has_myst"] is True  # the narrative rendering surface is untouched
+
+    full = _scope_config("full", tmp_path)
+    assert full["user_scope"] is False
+    assert full["has_autodoc"] is True
+    assert full["has_attribute_types"] is True
+    assert full["has_viewcode"] is True
+    assert full["has_typehints"] is True
+    assert full["excludes_api"] is False
+    assert full["resolves_deferred"] is True
+
+
+def _conf_read_set(tmp_path: Path, argv: list[str], *, scope: str = "full") -> dict[str, bool]:
+    """Evaluate ``docs/conf.py``'s generated-output read-set guard for one command line.
+
+    Runs the module-level ``conf.py`` code (never ``setup()``) in a subprocess
+    with ``sys.argv`` set to the Sphinx invocation under test, then asks the
+    guard whether each generated surface can influence that build.
+
+    Args:
+        tmp_path: Isolated storage root for the evaluation.
+        argv: The ``sys.argv`` the Sphinx process would see.
+        scope: The ``CADRUMO_DOCS_SCOPE`` the build runs under.
+
+    Returns:
+        A ``surface -> reads it`` mapping, one entry per generated surface.
+    """
+    conf = _DOCS / "conf.py"
+    script = (
+        "import json, runpy, sys;"
+        f"sys.argv = {argv!r};"
+        f"ns = runpy.run_path(r'{conf}');"
+        "print('READ_SET=' + json.dumps({"
+        "'cli': ns['_should_generate_cli_reference'](),"
+        "'glossary': ns['_build_reads']('_generated/glossary.rst'),"
+        "'casillas': ns['_build_reads']('_generated/casillas'),"
+        "'legal': ns['_build_reads']('_generated/legal'),"
+        "'api': ns['_should_generate_api_stubs']()}))"
+    )
+    env = {
+        **os.environ,
+        "CADRUMO_DOCS_PROJECT_ROOT": str(_REPO_ROOT),
+        "CADRUMO_DOCS_SCOPE": scope,
+        "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "cadrumo-read-set-store"),
+    }
+    result = subprocess.run(
+        [sys.executable, "-c", script],
+        cwd=_REPO_ROOT,
+        capture_output=True,
+        text=True,
+        env=env,
+        check=False,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    line = next(row for row in result.stdout.splitlines() if row.startswith("READ_SET="))
+    payload = json.loads(line[len("READ_SET=") :])
+    if not isinstance(payload, dict):
+        raise AssertionError("read-set probe must emit a JSON object")
+    return {str(key): bool(value) for key, value in payload.items()}
+
+
+def _generation_read_set(tmp_path: Path, *source_tails: str, scope: str = "full") -> dict[str, bool]:
+    """Evaluate the read-set guard for a ``sphinx-build`` naming ``source_tails``.
+
+    Args:
+        tmp_path: Isolated storage root for the evaluation.
+        source_tails: Docs-root-relative source filenames the invocation names
+            after ``sourcedir`` and ``outputdir``. Empty means a normal build,
+            which names no filenames at all.
+        scope: The ``CADRUMO_DOCS_SCOPE`` the build runs under.
+
+    Returns:
+        A ``surface -> reads it`` mapping, one entry per generated surface.
+    """
+    argv = ["sphinx-build", "-b", "dummy", str(_DOCS), str(tmp_path / "out")]
+    argv += [str(_DOCS / tail) for tail in source_tails]
+    return _conf_read_set(tmp_path, argv, scope=scope)
+
+
+_EVERY_SURFACE = {"cli": True, "glossary": True, "casillas": True, "legal": True, "api": True}
+_NO_SURFACE = {"cli": False, "glossary": False, "casillas": False, "legal": False, "api": False}
+
+
+def test_generated_surfaces_are_produced_exactly_when_the_build_reads_them(tmp_path: Path) -> None:
+    """The generated-output guard skips an unread surface and keeps a read one.
+
+    Every generated surface (CLI reference, glossary, casilla pages, legal pages,
+    API stubs) costs a registry compile, a Handbook load or a module walk before
+    writing a line, which on a one-page build is nearly the whole build. The
+    guard drops that work for a surface the invocation cannot read -- a
+    specific-source build parses only the filenames it names -- and that is
+    precisely the kind of narrowing that silently turns into "generates
+    nothing", so both directions are asserted:
+
+    * a normal build (no filenames) produces every surface;
+    * a one-page build produces none of them;
+    * a build that DOES name a generated page produces that surface and still
+      skips its siblings;
+    * a user-scope build never produces the API stubs, which it does not read.
+    """
+    full_build = _generation_read_set(tmp_path)
+    assert full_build == _EVERY_SURFACE, full_build
+
+    one_page = _generation_read_set(tmp_path, "index.md")
+    assert one_page == _NO_SURFACE, one_page
+
+    casilla_page = _generation_read_set(tmp_path, "_generated/casillas/303.rst")
+    assert casilla_page == {**_NO_SURFACE, "casillas": True}, casilla_page
+
+    cli_page = _generation_read_set(tmp_path, "cli/index.rst")
+    assert cli_page == {**_NO_SURFACE, "cli": True}, cli_page
+
+    api_page = _generation_read_set(tmp_path, "api/cadrumo.core.rst")
+    assert api_page == {**_NO_SURFACE, "api": True}, api_page
+
+    user_build = _generation_read_set(tmp_path, scope="user")
+    assert user_build == {**_EVERY_SURFACE, "api": False}, user_build
+
+
+def test_options_after_the_directories_are_not_read_as_filenames(tmp_path: Path) -> None:
+    """``sphinx-build`` accepts options anywhere; a trailing option value is not a source file."""
+    argv = ["sphinx-build", str(_DOCS), str(tmp_path / "out"), "-b", "html", "-j", "auto"]
+    assert _conf_read_set(tmp_path, argv) == _EVERY_SURFACE
+
+    named = ["sphinx-build", "-b", "html", "-j", "auto", str(_DOCS), str(tmp_path / "out"), str(_DOCS / "index.md")]
+    assert _conf_read_set(tmp_path, named) == _NO_SURFACE
+
+
+@pytest.mark.parametrize("scope", ["user", "full"])
+def test_the_live_preview_build_is_classified_as_a_whole_site_build(tmp_path: Path, scope: str) -> None:
+    """Every rebuild the docs server runs regenerates the references it serves.
+
+    The Sphinx command line is derived from the real server command: the
+    ``sphinx-autobuild`` argument split separates its own options from the
+    ones it hands Sphinx, and its builder runs ``python -m sphinx build`` with
+    them. That shape puts ``-b html -j auto`` after the directories, which the
+    guard once read as two source filenames, so no generated reference was
+    regenerated while serving.
+    """
+    from sphinx_autobuild.__main__ import _parse_args
+
+    from ..serve import serve_command
+
+    command = serve_command(_REPO_ROOT, host="127.0.0.1", port=8000, open_browser=False, scope=scope)
+    _autobuild_options, sphinx_arguments = _parse_args(command[command.index("sphinx_autobuild") + 1 :])
+    argv = ["sphinx", "build", *sphinx_arguments]
+
+    read_set = _conf_read_set(tmp_path, argv, scope=scope)
+
+    assert read_set == {**_EVERY_SURFACE, "api": scope == "full"}, (argv, read_set)
+
+
+def _render_focused_index(tmp_path: Path, flavor: str) -> Path:
+    """Build only the index page of one documentation flavor and return its output root."""
+    docs_source = tmp_path / "docs-source"
+    shutil.copytree(_DOCS, docs_source, ignore=shutil.ignore_patterns("_build", "api", "cli"))
+    output = tmp_path / "html"
+    env = {
+        **os.environ,
+        "CADRUMO_DOCS_OFFLINE": "1",
+        "CADRUMO_DOCS_PROJECT_ROOT": str(_REPO_ROOT),
+        "CADRUMO_DOCS_ONLY": "index.md",
+        "CADRUMO_DOCS_MASTER_DOC": "index",
+        "CADRUMO_DOCS_SINGLE_PAGE": "1",
+        "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "cadrumo-docs-state"),
+        # This gate reads the RENDERED index page's identity marks only; the
+        # cli-sequence golden check and the cli-tree projection are enforced by
+        # their dedicated gates and are not part of this page's assertions.
+        "CADRUMO_DOCS_SKIP_SEQUENCE_CHECK": "1",
+        "CADRUMO_DOCS_SKIP_CLI_TREE": "1",
+        "CADRUMO_DOCS_FLAVOR": flavor,
+    }
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "sphinx",
+            "-b",
+            "html",
+            "-j",
+            "1",
+            str(docs_source),
+            str(output),
+            str(docs_source / "index.md"),
+        ],
+        cwd=_REPO_ROOT,
+        capture_output=True,
+        text=True,
+        env=env,
+        check=False,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    return output
+
+
+def test_rendered_site_identity_and_static_marks_are_canonical(tmp_path: Path) -> None:
+    """A real focused HTML build and shipped SVGs expose the canonical identity."""
+    from bs4 import BeautifulSoup
+    from defusedxml import ElementTree
+    from PIL import Image
+
+    output = _render_focused_index(tmp_path, "web")
+    rendered = BeautifulSoup((output / "index.html").read_text(encoding="utf-8"), "html.parser")
+    assert rendered.title is not None
+    assert rendered.title.get_text(strip=True) == "Cadrumo documentation - local Spanish tax preparation"
+    site_name = rendered.find("meta", property="og:site_name")
+    assert site_name is not None
+    assert site_name.get("content") == "Cadrumo documentation"
+    heading = rendered.find("h1")
+    assert heading is not None
+    assert heading.get_text(" ", strip=True).startswith("Cadrumo documentation")
+    assert "Copyright © 2026, the Cadrumo authors" in rendered.get_text(" ", strip=True)
+    assert "advice from a qualified professional" in rendered.get_text(" ", strip=True)
+    assert rendered.find("link", rel="prefetch") is None
+
+    namespace = "{http://www.w3.org/2000/svg}"
+    for filename in ("cadrumo-mark-light.svg", "cadrumo-mark-dark.svg"):
+        mark = ElementTree.parse(_DOCS / "_static" / filename).getroot()
+        assert mark is not None
+        assert mark.findtext(f"{namespace}title") == "Cadrumo documentation"
+        assert mark.findtext(f"{namespace}desc", "").startswith("The Cadrumo mark")
+        assert [element.text for element in mark.iter(f"{namespace}text")] == ["CADRUMO"]
+
+    favicon = ElementTree.parse(_DOCS / "_static" / "cadrumo-favicon.svg").getroot()
+    assert favicon is not None
+    assert favicon.attrib["aria-label"] == "Cadrumo mark"
+
+    # Every icon the web head links is shipped at the size it declares.
+    icons = {
+        (link.get("href"), " ".join(link.get_attribute_list("rel")), link.get("sizes"))
+        for link in rendered.find_all("link", rel=["icon", "apple-touch-icon", "manifest"])
+    }
+    assert icons >= {
+        ("_static/cadrumo-favicon.ico", "icon", "32x32"),
+        ("_static/cadrumo-favicon.svg", "icon", None),
+        ("_static/cadrumo-icon-square-180.png", "apple-touch-icon", None),
+        ("_static/cadrumo.webmanifest", "manifest", None),
+    }
+    with Image.open(output / "_static" / "cadrumo-favicon.ico") as ico:
+        assert ico.format == "ICO"
+        assert ico.info["sizes"] == {(16, 16), (32, 32), (48, 48)}
+    with Image.open(output / "_static" / "cadrumo-icon-square-180.png") as touch:
+        assert touch.size == (180, 180)
+    manifest = json.loads((output / "_static" / "cadrumo.webmanifest").read_text(encoding="utf-8"))
+    for icon in manifest["icons"]:
+        with Image.open(output / "_static" / icon["src"]) as image:
+            assert f"{image.width}x{image.height}" == icon["sizes"]
+    og_image = rendered.find("meta", property="og:image")
+    assert og_image is not None
+    og_content = og_image.get("content")
+    assert isinstance(og_content, str), og_content
+    assert og_content.endswith("_static/cadrumo-icon-square-512.png")
+
+
+def test_desktop_flavor_links_only_icons_the_package_serves(tmp_path: Path) -> None:
+    """The packaged copy's head names no favicon or manifest file the documentation scheme refuses."""
+    from bs4 import BeautifulSoup
+
+    from dev.packaging.native.docs_stage import scan_page, served_media_types
+    from dev.packaging.native.layout import load_layout
+
+    output = _render_focused_index(tmp_path, "desktop")
+    page = (output / "index.html").read_text(encoding="utf-8")
+    rendered = BeautifulSoup(page, "html.parser")
+    icons = [link.get("href") for link in rendered.find_all("link", rel=["icon", "apple-touch-icon", "manifest"])]
+    assert icons == ["_static/cadrumo-favicon.svg"]
+    assert scan_page(page, served_media_types(load_layout()["user_docs"])).refused == []
+
+
+# ---------------------------------------------------------------------------
+# Progressive-enhancement sequence widget verification
+#
+# The stepped-player widget (docs/_static/cadrumo-docs.js) enhances the
+# server-rendered `cli-sequence` transcript; the terminal styling lives in
+# docs/_static/cadrumo-docs.css. These gates assert, with no mocks: the widget
+# ships zero external requests, it is wired and implemented, and a real
+# nitpicky (-n -W) Sphinx build of a sequence page renders a content-identical
+# no-JS transcript, carries the enhanceable markup, and ships the widget
+# assets.
+# ---------------------------------------------------------------------------
+
+_STATIC = _DOCS / "_static"
+_WIDGET_JS = _STATIC / "cadrumo-docs.js"
+_WIDGET_CSS = _STATIC / "cadrumo-docs.css"
+
+#: A quote/paren-anchored protocol-relative or absolute URL in an asset — the
+#: shape a CDN or external font reference would take. A bare ``//`` line comment
+#: is deliberately excluded (it is not a URL).
+_EXTERNAL_URL_RE = re.compile(r"""(?:url\(|["'(])\s*(?:https?:)?//""")
+
+_SEQUENCE_ID = "modelo-303-demo"
+_SEQUENCE_PAGE = "index"
+_SEQUENCE_DIRECTIVE_BODY = (
+    "@setup aeat app ledger import --file fixtures/x.csv\n"
+    "aeat app modelo work calculate wu_demo\n"
+    "@result aeat app modelo work verify wu_demo\n"
+    '@expect result.status == "verified_complete"'
+)
+
+
+def _sequence_golden_json() -> str:
+    """Return a schema-valid golden matching the fixture directive's three frames."""
+    from ..sequences.golden_store import GoldenFrame, SequenceGolden
+    from ..sequences.schema import FrameKind
+
+    golden = SequenceGolden(
+        sequence_id=_SEQUENCE_ID,
+        frames=(
+            GoldenFrame(
+                kind=FrameKind.SETUP,
+                argv=("aeat", "app", "ledger", "import", "--file", "fixtures/x.csv"),
+                exit_code=0,
+            ),
+            GoldenFrame(
+                kind=FrameKind.COMMAND,
+                argv=("aeat", "app", "modelo", "work", "calculate", "wu_demo"),
+                exit_code=0,
+                envelope={
+                    "schema_version": 1,
+                    "command": "modelo.work.calculate",
+                    "status": "ok",
+                    "notices": [],
+                    "result": {"casillas_computed": 4},
+                },
+                envelope_source="stdout",
+            ),
+            GoldenFrame(
+                kind=FrameKind.RESULT,
+                argv=("aeat", "app", "modelo", "work", "verify", "wu_demo"),
+                exit_code=0,
+                envelope={
+                    "schema_version": 1,
+                    "command": "modelo.work.verify",
+                    "status": "ok",
+                    "notices": [],
+                    "result": {"status": "verified_complete"},
+                },
+                envelope_source="stdout",
+            ),
+        ),
+    )
+    return json.dumps(golden.model_dump(mode="json"), indent=2) + "\n"
+
+
+def _write_sequence_site(root: Path, *, goldens_root: Path) -> None:
+    """Write a minimal MyST site: one page with the directive, shipping the widget assets."""
+    static = root / "_static"
+    static.mkdir()
+    shutil.copy2(_WIDGET_JS, static / _WIDGET_JS.name)
+    shutil.copy2(_WIDGET_CSS, static / _WIDGET_CSS.name)
+    conf = (
+        'extensions = ["myst_parser"]\n'
+        'myst_enable_extensions = ["colon_fence"]\n'
+        "nitpicky = True\n"
+        'html_static_path = ["_static"]\n'
+        'html_css_files = ["cadrumo-docs.css"]\n'
+        'html_js_files = ["cadrumo-docs.js"]\n'
+        f"cadrumo_sequences_goldens_root = {str(goldens_root)!r}\n"
+        "\n"
+        "def setup(app):\n"
+        "    from dev.docs.sequence_directive import register\n"
+        "    register(app)\n"
+    )
+    (root / "conf.py").write_text(conf, encoding="utf-8")
+    body = f"# Modelo 303\n\n```{{cli-sequence}} {_SEQUENCE_ID}\n:verify: Confirm the calculation is complete.\n```\n"
+    (root / "index.md").write_text(body, encoding="utf-8")
+    contract_dir = root / "_sequences" / "contracts" / _SEQUENCE_PAGE
+    contract_dir.mkdir(parents=True)
+    (contract_dir / f"{_SEQUENCE_ID}.seq").write_text(_SEQUENCE_DIRECTIVE_BODY + "\n", encoding="utf-8")
+
+
+def _build_html(root: Path) -> tuple[str, Path, str]:
+    """Build the site in an isolated subprocess under ``-n -W``."""
+    out = root / "_out"
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "sphinx",
+            "-b",
+            "html",
+            "-n",
+            "-W",
+            "-j",
+            "1",
+            str(root),
+            str(out),
+        ],
+        cwd=_REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    combined = result.stdout + result.stderr
+    assert result.returncode == 0, combined
+    index = out / "index.html"
+    html = index.read_text(encoding="utf-8") if index.is_file() else ""
+    return html, out, combined
+
+
+def test_sequence_widget_assets_make_no_external_requests() -> None:
+    """The vendored widget JS and CSS carry zero external or CDN requests."""
+    for asset in (_WIDGET_JS, _WIDGET_CSS):
+        text = asset.read_text(encoding="utf-8")
+        assert "http://" not in text, f"{asset.name} carries an http:// URL"
+        assert "https://" not in text, f"{asset.name} carries an https:// URL"
+        match = _EXTERNAL_URL_RE.search(text)
+        assert match is None, (
+            f"{asset.name} carries a non-relative URL near: {text[match.start() : match.start() + 40]!r}"
+        )
+
+
+def test_sequence_widget_is_wired_and_implemented() -> None:
+    """conf.py ships both assets and the sources carry the playhead and hover-help surfaces."""
+    conf = (_DOCS / "conf.py").read_text(encoding="utf-8")
+    assert '"cadrumo-docs.css"' in conf
+    assert '"cadrumo-docs.js"' in conf
+
+    js = _WIDGET_JS.read_text(encoding="utf-8")
+    for surface in ("initSequences", "setupSequence", "initHoverHelp", "cadrumo-sequence-payload", "cli-tree.json"):
+        assert surface in js, f"widget JS is missing {surface!r}"
+    # The playhead model: JS-applied state classes, not frame hiding.
+    for surface in ('"is-active"', '"is-past"', '"is-future"'):
+        assert surface in js, f"widget JS is missing the playhead state {surface}"
+    # The operator redesign removed autonomous/timed advance entirely; no play
+    # button, no timer, no reduced-motion autoplay branch may return.
+    for banned in ("setInterval", "startPlay", "PLAY_INTERVAL_MS", "prefersReducedMotion", "frame.hidden"):
+        assert banned not in js, f"widget JS must not carry the retired autoplay surface {banned!r}"
+    # Per-frame output disclosure: outputs are individually toggleable, the
+    # command line never is (the toggle governs only the output selector set).
+    for surface in ('"cadrumo-output-toggle"', '"is-output-open"', "setOutputOpen"):
+        assert surface in js, f"widget JS is missing the output-disclosure surface {surface}"
+    assert ".cadrumo-frame-command" not in js.split("OUTPUT_SELECTOR =")[1].split(";")[0], (
+        "the output disclosure must never govern the command line itself"
+    )
+
+    css = _WIDGET_CSS.read_text(encoding="utf-8")
+    for surface in (
+        ".cadrumo-sequence",
+        ".cli-tok-placeholder",
+        ".cadrumo-sequence-controls",
+        ".cadrumo-cli-popover",
+        ".cadrumo-frame.is-future",
+        ".cadrumo-output-toggle",
+        ":not(.is-output-open)",
+        "--font-stack--monospace",
+    ):
+        assert surface in css, f"widget CSS is missing {surface!r}"
+    # No terminal-chrome title bar (the removed top decorative rectangle).
+    assert "cadrumo-sequence::before" not in css
+    # No play-button styling remains.
+    assert "cadrumo-sequence-btn--play" not in css
+    assert "prefers-reduced-motion" in css
+
+
+def test_sequence_widget_carries_shell_switcher_and_copy() -> None:
+    """The widget ships the shell switcher and copy control (enhancement only), no autoplay.
+
+    The switcher toggles the server-rendered per-shell command variants by setting
+    ``data-cadrumo-shell`` on the sequence root; the copy control writes the frame's
+    authored single-line command (``data-command-line``) with a clipboard-plus-
+    ``execCommand`` fallback. Both are JS-created, so no-JS readers keep the full
+    transcript. The retired autoplay surface must stay absent.
+    """
+    js = _WIDGET_JS.read_text(encoding="utf-8")
+    for surface in (
+        "setupShellSwitcher",
+        "setupCopyButtons",
+        "cadrumo-shell-switcher",
+        "cadrumo-shell-btn",
+        "data-cadrumo-shell",
+        "cadrumo-cmd-variant",
+        "cadrumo-copy-btn",
+        "data-command-line",
+        "writeClipboard",
+        "execCommand",
+        "is-copied",
+        # The switcher now lives in a slim block header bar at the top.
+        "cadrumo-sequence-bar",
+    ):
+        assert surface in js, f"widget JS is missing the shell/copy surface {surface!r}"
+    # aria wiring for both controls (a segmented toggle and a labelled copy button).
+    assert "aria-pressed" in js
+    assert '"Copy command"' in js
+    # The copy control's brief "Copied" state uses a one-shot timeout, never a
+    # repeating timer — the no-autoplay invariant stays intact.
+    assert "setInterval" not in js
+    assert "setTimeout" in js
+    # Setup frames never enter the reader payload, so the widget needs no setup filter.
+    assert '!== "setup"' not in js
+
+    css = _WIDGET_CSS.read_text(encoding="utf-8")
+    for surface in (
+        ".cadrumo-cmd-variant",
+        "[data-cadrumo-shell=",
+        ".cli-continuation",
+        ".cadrumo-shell-switcher",
+        ".cadrumo-shell-btn",
+        ".cadrumo-copy-btn",
+        ".cadrumo-copy-btn.is-copied",
+        '[data-shell="pwsh"] pre code::before',
+        # The top switcher bar and the per-step header row.
+        ".cadrumo-sequence-bar",
+        ".cadrumo-frame-header",
+        ".cadrumo-frame-step",
+        ".cadrumo-frame-desc",
+    ):
+        assert surface in css, f"widget CSS is missing the shell/copy surface {surface!r}"
+    # Setup scaffolding has no reader-facing disclosure surface.
+    assert "details.cadrumo-setup" not in css
+    # The switcher and copy transitions join the reduced-motion opt-out.
+    reduced = css.rsplit("prefers-reduced-motion", 1)[1]
+    assert ".cadrumo-shell-btn" in reduced
+    assert ".cadrumo-copy-btn" in reduced
+
+
+from ._sequence_storage_fixtures import _isolated_sequence_storage
+
+__all__ = ["_isolated_sequence_storage"]
+
+
+def test_sequence_page_ships_widget_and_degrades_without_js(
+    tmp_path: Path,
+    _isolated_sequence_storage: None,
+) -> None:
+    """A real -n -W build renders the no-JS transcript, the enhanceable markup, and ships the assets."""
+    site = tmp_path / "site"
+    site.mkdir()
+    goldens_root = tmp_path / "goldens"
+    (goldens_root / _SEQUENCE_PAGE).mkdir(parents=True)
+    (goldens_root / _SEQUENCE_PAGE / f"{_SEQUENCE_ID}.json").write_text(_sequence_golden_json(), encoding="utf-8")
+    _write_sequence_site(site, goldens_root=goldens_root)
+
+    html, out, warnings = _build_html(site)
+
+    # The nitpicky, warnings-as-errors build reached here without raising, so it
+    # is clean; assert no residual warning text leaked either.
+    assert "WARNING" not in warnings, warnings
+
+    # No-JS degradation: the complete linear transcript is present in the static
+    # HTML with no script required, while build-only setup and assertions stay absent.
+    assert 'class="cadrumo-sequence"' in html
+    assert 'data-cadrumo-sequence="1"' in html
+    assert "Imported 3 transactions." not in html
+    assert "Confirm the calculation is complete." in html  # the verify caption
+    assert "Confirm result.status reads verified_complete." not in html
+    assert html.count('class="cadrumo-frame"') == 2
+
+    # Enhanceable markup: the hover-help keys (data-command-path) and the inline
+    # payload the stepped player parses are both present, matching the frames.
+    assert 'data-command-path="aeat app modelo work verify"' in html
+    match = re.search(
+        r'<script type="application/json" class="cadrumo-sequence-payload">(.*?)</script>',
+        html,
+        re.DOTALL,
+    )
+    assert match is not None
+    payload = json.loads(match.group(1).replace("<\\/", "</"))
+    assert payload["sequence_id"] == _SEQUENCE_ID
+    assert [frame["kind"] for frame in payload["frames"]] == ["command", "result"]
+    assert all("expects" not in frame for frame in payload["frames"])
+
+    # The widget assets ship into the built site and the page references them.
+    assert (out / "_static" / "cadrumo-docs.js").is_file()
+    assert (out / "_static" / "cadrumo-docs.css").is_file()
+    assert "cadrumo-docs.js" in html
+    assert "cadrumo-docs.css" in html

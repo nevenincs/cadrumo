@@ -1,0 +1,794 @@
+[[revisions.2022.formulas]]
+id = "modelo-303-iva-cuota-devengada-total"
+target_casilla_id = "iva.cuota-devengada-total"
+rounding = "money-2"
+# Casilla 27 = [03] + [06] + [09] + [11] + [13] + [15] + [18] + [21] + [24] +
+# [26]: the 2022 diseno de registro prints the total that way (aeat-dr-303-2022,
+# campo 51). The semantic cuota carriers stand for [03], [06], [09], [11] and
+# [13]: each rate row's carrier is that row's whole cuota devengada, including
+# the promotor's autoconsumo declared at the row's rate, so nothing is added
+# outside the printed boxes. The recargo de equivalencia cuotas [18], [21] and
+# [24] (LIVA art. 161) are bound from the ledger; and the two modificacion de
+# bases y cuotas boxes, [15] for IVA and [26] for recargo, are operator input
+# the total adds as printed. Later designs add only the rungs introduced in
+# their own year, which their revisions key as their own divergence.
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.formulas.expression]
+op = "add"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "iva.cuota-devengada.general"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "iva.cuota-devengada.reducido"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "iva.cuota-devengada.super-reducido"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "iva.autorepercutido.intracomunitaria"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "iva.autorepercutido.interior.devengado"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "15"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "18"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "21"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "24"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "26"
+
+[[revisions.2022.formulas]]
+id = "modelo-303-iva-cuota-deducible-total"
+target_casilla_id = "iva.cuota-deducible-total"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+# The diseño de registro of every supported year states box [45] as
+# [29] + [31] + [33] + [35] + [37] + [39] + [41] + [42] + [43] + [44]; the
+# total is read off those boxes so no deducible row is counted in two of
+# them. [42] stays operator input: the ledger books a REAGP purchase with a
+# cuota of zero by law and does not carry the compensación a tanto alzado.
+[revisions.2022.formulas.expression]
+op = "add"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "29"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "31"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "33"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "35"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "37"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "39"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "41"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "42"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "43"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "44"
+
+[[revisions.2022.formulas]]
+id = "modelo-303-iva-resultado-regimen-general"
+target_casilla_id = "iva.resultado-regimen-general"
+rounding = "money-2"
+# Orden EHA/3786/2008 art. 1: box [46] = [27] - [45].  The M303 printed form labels this cell
+# "Resultado régimen general (27 - 45)".  Casilla 27 = Total cuota devengada (LIVA art. 88);
+# casilla 45 = Total a deducir (LIVA arts. 92-94).  Source: boe-modelo-303-2008-form (Orden
+# EHA/3786/2008 form spec) and aeat-modelo-303-procedure (AEAT instrucciones de cumplimentación).
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.formulas.expression]
+op = "subtract"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "iva.cuota-devengada-total"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "iva.cuota-deducible-total"
+
+# LIVA art. 104.Dos closes its apartado with "La prorrata de deducción
+# resultante de la aplicación de los criterios anteriores se redondeará en la
+# unidad superior", so this percentage takes the NEXT unit up, never the
+# nearest one: 55,2 % is a 56 % deduction right. The shared "integer" code is
+# half-up and would have returned 55, understating the deduction for every
+# ratio whose fractional part is at or below one half. The sentence has stood
+# unamended since BOE-A-1992-28740, so it binds this revision exactly as it
+# binds the later explicit record-design revisions.
+#
+# LIVA art. 94 ("Operaciones cuya realizacion origina el derecho a la
+# deduccion") is declared here, not only on the enclosing construct, because
+# this formula depends on it twice and neither dependency is visible from art.
+# 104 alone. It supplies the membership rule for the numerator, since art.
+# 104.Dos regla 1a counts exactly "las entregas de bienes y prestaciones de
+# servicios que originen el derecho a la deduccion" and art. 94 is the article
+# that determines which those are; and it carries the no-volume branch below,
+# where art. 102.Uno leaves the regla de prorrata inapplicable and the input tax
+# stays deductible in full under arts. 92 and 94. This revision's window opens
+# in 2009 and therefore straddles the only amendment art. 94 has taken: art.
+# 10.14 of Real Decreto-ley 7/2021 (BOE-A-2021-6872), in force 01-07-2021,
+# which rewrites only apartado Uno numero 1o letra c, the exempt-operations
+# enumeration. The chapeau and the sujetas-y-no-exentas rule this formula rests
+# on are untouched, so the grounding does not vary within the window and is
+# identical to the one the later explicit record-design revisions declare.
+[[revisions.2022.formulas]]
+id = "modelo-303-iva-prorrata-porcentaje"
+target_casilla_id = "iva.prorrata-porcentaje"
+rounding = "integer-ceiling"
+legal_refs = [
+    "ley-37-1992:art-104",
+    "ley-37-1992:art-102",
+    "ley-37-1992:art-94",
+    "rd-1624-1992:art-71",
+    "orden-eha-3786-2008:art-1",
+]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.formulas.expression]
+op = "if_then_else"
+
+[[revisions.2022.formulas.expression.args]]
+op = "greater_than"
+
+[[revisions.2022.formulas.expression.args.args]]
+casilla_id = "iva.prorrata-volumen-total"
+
+[[revisions.2022.formulas.expression.args.args]]
+literal = "0"
+
+[[revisions.2022.formulas.expression.args]]
+op = "divide"
+
+[[revisions.2022.formulas.expression.args.args]]
+op = "multiply"
+
+[[revisions.2022.formulas.expression.args.args.args]]
+casilla_id = "iva.prorrata-volumen-con-derecho"
+
+[[revisions.2022.formulas.expression.args.args.args]]
+literal = "100"
+
+[[revisions.2022.formulas.expression.args.args]]
+casilla_id = "iva.prorrata-volumen-total"
+
+# No prorrata-volume data declared (volumen-total = 0) means no exempt-without-
+# right operations limit the deduction, so the prorrata percentage defaults to
+# 100 (full right to deduct, LIVA art. 94) — never 0, which would zero every
+# deduction and block a fully-taxable trader's filing (defect C2). A trader who
+# genuinely applies prorrata declares the volume casillas, and the computed
+# branch above takes over.
+#
+# The branch is grounded in art. 102.Uno, which makes the regla de prorrata
+# apply only where the sujeto pasivo performs deduction-granting and
+# non-granting operations "conjuntamente"; with no volumes declared that
+# antecedent is unmet, art. 104.Uno's percentage limitation never bites, and
+# the input tax is deductible in full. A percentage of 0 is the art. 104.Dos
+# answer only when the NUMERATOR is zero while the denominator is positive —
+# the volumen-total > 0 case the computed branch above already handles — so
+# returning 0 here asserts a total loss of the deduction right on a taxpayer
+# who declared no fact supporting it.
+#
+# This revision governs filing years 2022 and the applicable law is
+# identical to the later explicit record-design revisions across both windows: art. 102 was last amended
+# by Ley 3/2006 (in force 01/01/2006, before this window opens), and art. 104's
+# only later amendment, Ley 22/2013 (in force 01/01/2014), touches apartado
+# Tres.1º and leaves apartado Uno, the fraction and the rounding paragraph
+# untouched. The later divergence was therefore a defect in
+# this revision, not a reflection of different law.
+[[revisions.2022.formulas.expression.args]]
+literal = "100"
+
+[[revisions.2022.formulas]]
+id = "modelo-303-compensacion-aplicada-periodo"
+target_casilla_id = "iva.compensacion-aplicada-periodo"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.formulas.expression]
+op = "min"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "iva.compensacion-pendiente-periodos-anteriores"
+
+[[revisions.2022.formulas.expression.args]]
+op = "max"
+
+[[revisions.2022.formulas.expression.args.args]]
+literal = "0"
+
+[[revisions.2022.formulas.expression.args.args]]
+casilla_id = "iva.resultado-regimen-general"
+
+[[revisions.2022.formulas]]
+id = "modelo-303-compensacion-pendiente-periodos-posteriores"
+target_casilla_id = "iva.compensacion-pendiente-periodos-posteriores"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.formulas.expression]
+op = "subtract"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "iva.compensacion-pendiente-periodos-anteriores"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "iva.compensacion-aplicada-periodo"
+
+[[revisions.2022.formulas]]
+id = "modelo-303-iva-resultado"
+target_casilla_id = "iva.resultado"
+rounding = "money-2"
+# Box [69] = [66] + [77] - [78] + [68]: the 2022 diseno de registro prints
+# "Resultado ( [66] + [77] - [78] + [68] ) [69]" (aeat-dr-303-2022, resultado
+# campo 24), the same result every later design prints. [78] is the
+# compensacion applied this period.
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.formulas.expression]
+op = "subtract"
+
+[[revisions.2022.formulas.expression.args]]
+op = "add"
+
+[[revisions.2022.formulas.expression.args.args]]
+op = "add"
+
+[[revisions.2022.formulas.expression.args.args.args]]
+casilla_id = "66"
+
+[[revisions.2022.formulas.expression.args.args.args]]
+casilla_id = "77"
+
+[[revisions.2022.formulas.expression.args.args]]
+casilla_id = "68"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "iva.compensacion-aplicada-periodo"
+
+[[revisions.2022.formulas]]
+id = "modelo-303-compensacion-disponible-fin-periodo"
+target_casilla_id = "iva.compensacion-disponible-fin-periodo"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.formulas.expression]
+op = "add"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "iva.compensacion-pendiente-periodos-posteriores"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "iva.compensacion-generada-periodo"
+
+[[revisions.2022.formulas]]
+id = "modelo-303-compensacion-generada-periodo"
+target_casilla_id = "iva.compensacion-generada-periodo"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.formulas.expression]
+op = "max"
+
+[[revisions.2022.formulas.expression.args]]
+literal = "0"
+
+[[revisions.2022.formulas.expression.args]]
+op = "negate"
+
+[[revisions.2022.formulas.expression.args.args]]
+casilla_id = "iva.resultado"
+
+# Box [71] "Resultado de la liquidacion ( [69] - [70] )", as the 2022 diseno de
+# registro prints it (corpus/aeat_official/disenos_registro/modelo_303/files/
+# 02-303-ejercicio-2022-y-siguientes-actualizado-27-12-2021-332-kb-xlsx.xlsx,
+# pagina 3, campo 26). [69] is iva.resultado and [70] the amount an earlier
+# autoliquidacion of the same period already paid. Left as operator input, a
+# 2022 period with a result filed [71] as zero and its disposition as "N", which
+# the compensation carry then refused to read.
+[[revisions.2022.formulas]]
+id = "modelo-303-iva-resultado-final"
+target_casilla_id = "71"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30"]
+additional_source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.formulas.expression]
+op = "subtract"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "iva.resultado"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "70"
+
+# Operaciones interiores rows: the soportado part and the deducible half of
+# the domestic inversión del sujeto pasivo, by what was acquired.
+[[revisions.2022.formulas]]
+id = "modelo-303-iva-deducible-interiores-corrientes-base"
+target_casilla_id = "28"
+expression = { op = "add", args = [
+    { casilla_id = "iva.soportado.interiores.base" },
+    { casilla_id = "iva.autorepercutido.interior.deducible.base" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[[revisions.2022.formulas]]
+id = "modelo-303-dr303-29-projection"
+target_casilla_id = "29"
+expression = { op = "add", args = [
+    { casilla_id = "iva.soportado.interiores" },
+    { casilla_id = "iva.autorepercutido.interior.deducible" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[[revisions.2022.formulas]]
+id = "modelo-303-iva-deducible-interiores-bienes-inversion-base"
+target_casilla_id = "30"
+expression = { op = "add", args = [
+    { casilla_id = "iva.soportado.interiores.bienes-inversion.base" },
+    { casilla_id = "iva.autorepercutido.interior.deducible.bienes-inversion.base" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-108", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[[revisions.2022.formulas]]
+id = "modelo-303-iva-deducible-interiores-bienes-inversion-cuota"
+target_casilla_id = "31"
+expression = { op = "add", args = [
+    { casilla_id = "iva.soportado.interiores.bienes-inversion" },
+    { casilla_id = "iva.autorepercutido.interior.deducible.bienes-inversion" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-108", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[[revisions.2022.formulas]]
+id = "modelo-303-dr303-33-projection"
+target_casilla_id = "33"
+expression = { casilla_id = "iva.soportado.importaciones" }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-17", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[[revisions.2022.formulas]]
+id = "modelo-303-dr303-37-projection"
+target_casilla_id = "37"
+expression = { casilla_id = "iva.autorepercutido.intracomunitaria.deducible" }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[[revisions.2022.formulas]]
+id = "modelo-303-iva-rectificacion-deducciones-base"
+target_casilla_id = "40"
+expression = { op = "add", args = [
+    { casilla_id = "iva.rectificacion-deducciones.interiores.base" },
+    { casilla_id = "iva.rectificacion-deducciones.importaciones.base" },
+    { casilla_id = "iva.rectificacion-deducciones.inversion-sujeto-pasivo.base" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-99", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[[revisions.2022.formulas]]
+id = "modelo-303-iva-rectificacion-deducciones-cuota"
+target_casilla_id = "41"
+expression = { op = "add", args = [
+    { casilla_id = "iva.rectificacion-deducciones.interiores" },
+    { casilla_id = "iva.rectificacion-deducciones.importaciones" },
+    { casilla_id = "iva.rectificacion-deducciones.inversion-sujeto-pasivo" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-80", "ley-37-1992:art-99", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[[revisions.2022.formulas]]
+id = "modelo-303-dr303-45-projection"
+target_casilla_id = "45"
+expression = { casilla_id = "iva.cuota-deducible-total" }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+# Box [27] projects the devengado total; see modelo-303-iva-cuota-devengada-total.
+[[revisions.2022.formulas]]
+id = "modelo-303-dr303-27-projection"
+target_casilla_id = "27"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.formulas.expression]
+casilla_id = "iva.cuota-devengada-total"
+
+# Box [11] projects the annual adquisiciones intracomunitarias cuota. The 2022
+# diseno de registro prints the row as "Adquisiciones intracomunitarias de bienes
+# y servicios - Cuota [11]" with no rate field of its own, exactly as every later
+# design does, so the projection holds for this revision as it does for theirs.
+[[revisions.2022.formulas]]
+id = "modelo-303-dr303-11-projection"
+target_casilla_id = "11"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.formulas.expression]
+casilla_id = "iva.autorepercutido.intracomunitaria.devengado"
+
+# Box [13] projects the domestic inversion del sujeto pasivo cuota, the summand
+# modelo-303-iva-cuota-devengada-total already adds on this revision. The 2022
+# diseno prints the row as "Otras operaciones con inversion del sujeto pasivo
+# (excepto. adq. intracom) - Cuota [13]", unchanged in every later design.
+[[revisions.2022.formulas]]
+id = "modelo-303-dr303-13-projection"
+target_casilla_id = "13"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.formulas.expression]
+casilla_id = "iva.autorepercutido.interior.devengado"
+
+# Box [64] = [46] + [58] + [76]: the 2022 diseno de registro prints "Suma de
+# resultados ( [46] + [58] + [76] ) [64]" (aeat-dr-303-2022, resultado campo 16).
+# [46] is the regimen general result (LIVA arts. 88 and 92), [58] the regimen
+# simplificado result (arts. 122-124) and [76] the art. 80.Cinco.5a
+# regularizacion.
+[[revisions.2022.formulas]]
+id = "modelo-303-iva-suma-resultados"
+target_casilla_id = "64"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71"]
+additional_source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.formulas.expression]
+op = "add"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "iva.resultado-regimen-general"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "58"
+
+[[revisions.2022.formulas.expression.args]]
+casilla_id = "76"
+
+# Box [66] = [64] x [65] / 100: the share of [64] attributable to the
+# Administracion del Estado (aeat-dr-303-2022, resultado campos 17-18). [65] is
+# the taxpayer's state attribution percentage, 100 in territorio comun.
+[[revisions.2022.formulas]]
+id = "modelo-303-iva-atribuible-estado"
+target_casilla_id = "66"
+rounding = "money-2"
+legal_refs = ["rd-1624-1992:art-71"]
+additional_source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.formulas.expression]
+op = "divide"
+
+[[revisions.2022.formulas.expression.args]]
+op = "multiply"
+
+[[revisions.2022.formulas.expression.args.args]]
+casilla_id = "64"
+
+[[revisions.2022.formulas.expression.args.args]]
+casilla_id = "65"
+
+[[revisions.2022.formulas.expression.args]]
+literal = "100"
+
+# Box [10] projects the intracomunitaria acquisitions base, the base of the
+# same rows box [11] states the cuota of. The 2022 diseño de registro prints it
+# as every later design does (DP30301 campo 34) and gives it no rate field.
+[[revisions.2022.formulas]]
+id = "modelo-303-dr303-10-projection"
+target_casilla_id = "10"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+additional_source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[revisions.2022.formulas.expression]
+casilla_id = "iva.autorepercutido.intracomunitaria.devengado.base"
+
+# Each regimen general rate row carries the promotor's autoconsumo declared at
+# its rate (LIVA arts. 9.1º, 79.Tres, 90 and 91): the row's base box adds the
+# autoconsumo base to the ledger's base at that rate, and the row's cuota
+# carrier adds the autoconsumo base times the row's own rate, a parameter keyed
+# by the row's Tipo % box, to the ledger's cuota at that rate. They cite the
+# instructions and the approving orden rather than one year's design, so every
+# later edition inherits them unchanged.
+
+[[revisions.2022.formulas]]
+id = "modelo-303-iva-devengado-super-reducido-base"
+target_casilla_id = "01"
+expression = { op = "add", args = [
+    { casilla_id = "iva.repercutido.super-reducido.base" },
+    { casilla_id = "iva.autoconsumo.promotor.super-reducido.base" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "ley-37-1992:art-88", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+# LIVA art. 91.Dos: the 4 per cent rate, which art. 91.Dos.1.6º assigns to the
+# viviendas de protección oficial de régimen especial o de promoción pública
+# their promotor delivers.
+[[revisions.2022.formulas]]
+id = "modelo-303-iva-cuota-devengada-super-reducido"
+target_casilla_id = "iva.cuota-devengada.super-reducido"
+expression = { op = "add", args = [
+    { casilla_id = "iva.repercutido.super-reducido" },
+    { op = "divide", args = [
+        { op = "multiply", args = [
+            { casilla_id = "iva.autoconsumo.promotor.super-reducido.base" },
+            { parameter = "m303-dr303-02-tipo-porcentaje" },
+        ] },
+        { literal = "100" },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "ley-37-1992:art-88", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[[revisions.2022.formulas]]
+id = "modelo-303-iva-devengado-reducido-base"
+target_casilla_id = "04"
+expression = { op = "add", args = [
+    { casilla_id = "iva.repercutido.reducido.base" },
+    { casilla_id = "iva.autoconsumo.promotor.reducido.base" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "ley-37-1992:art-88", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+# LIVA art. 91.Uno: the 10 per cent rate, which art. 91.Uno.1.7º assigns to
+# edificios aptos para su utilización como viviendas.
+[[revisions.2022.formulas]]
+id = "modelo-303-iva-cuota-devengada-reducido"
+target_casilla_id = "iva.cuota-devengada.reducido"
+expression = { op = "add", args = [
+    { casilla_id = "iva.repercutido.reducido" },
+    { op = "divide", args = [
+        { op = "multiply", args = [
+            { casilla_id = "iva.autoconsumo.promotor.reducido.base" },
+            { parameter = "m303-dr303-05-tipo-porcentaje" },
+        ] },
+        { literal = "100" },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "ley-37-1992:art-88", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[[revisions.2022.formulas]]
+id = "modelo-303-iva-devengado-general-base"
+target_casilla_id = "07"
+expression = { op = "add", args = [
+    { casilla_id = "iva.repercutido.general.base" },
+    { casilla_id = "iva.autoconsumo.promotor.general.base" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "ley-37-1992:art-88", "ley-37-1992:art-90", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+# LIVA art. 90.Uno: the 21 per cent general rate, for a building no reduced
+# rate reaches.
+[[revisions.2022.formulas]]
+id = "modelo-303-iva-cuota-devengada-general"
+target_casilla_id = "iva.cuota-devengada.general"
+expression = { op = "add", args = [
+    { casilla_id = "iva.repercutido.general" },
+    { op = "divide", args = [
+        { op = "multiply", args = [
+            { casilla_id = "iva.autoconsumo.promotor.general.base" },
+            { parameter = "m303-dr303-08-tipo-porcentaje" },
+        ] },
+        { literal = "100" },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "ley-37-1992:art-88", "ley-37-1992:art-90", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+# The autoconsumo bases stated in the rate rows, summed so the profile's
+# rate-less total can be reconciled against them.
+[[revisions.2022.formulas]]
+id = "modelo-303-autoconsumo-promotor-base-por-tipo"
+target_casilla_id = "iva.autoconsumo.promotor.base.por-tipo"
+expression = { op = "add", args = [
+    { casilla_id = "iva.autoconsumo.promotor.super-reducido.base" },
+    { casilla_id = "iva.autoconsumo.promotor.reducido.base" },
+    { casilla_id = "iva.autoconsumo.promotor.general.base" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.2022.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+
+[[revisions.2022.formulas]]
+id = "modelo-303-volumen-operaciones-anual"
+target_casilla_id = "88"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-121", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["boe-modelo-303-2021-form-pdf", "aeat-dr-303-2022"]
+
+# BOE-A-2021-10509 Annex II, page 4, printed page 75946.
+# The printed total adds the fifteen operation categories and deducts the
+# non-habitual operations and investment-goods deliveries in boxes 79 and 99.
+[[revisions.2022.formulas.source_citations]]
+source_ref = "boe-modelo-303-2021-form-pdf"
+required_text = ["Total volumen de operaciones", "121 Ley IVA", "[97] + [98] - [79] - [99]"]
+
+[revisions.2022.formulas.expression]
+op = "subtract"
+args = [
+    { op = "add", args = [{ casilla_id = "80" }, { casilla_id = "81" }, { casilla_id = "93" }, { casilla_id = "94" }, { casilla_id = "83" }, { casilla_id = "84" }, { casilla_id = "125" }, { casilla_id = "126" }, { casilla_id = "127" }, { casilla_id = "128" }, { casilla_id = "86" }, { casilla_id = "95" }, { casilla_id = "96" }, { casilla_id = "97" }, { casilla_id = "98" }] },
+    { op = "add", args = [{ casilla_id = "79" }, { casilla_id = "99" }] },
+]

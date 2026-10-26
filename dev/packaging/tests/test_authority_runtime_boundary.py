@@ -1,0 +1,251 @@
+"""Static release gates for artifact-only authority consumption."""
+
+from __future__ import annotations
+
+import ast
+from pathlib import Path
+
+import pytest
+
+from cadrumo.core.directory_scan import scan_directory
+from dev._paths import REPO_ROOT
+from dev.product_environment import clean_product_env
+
+from ..authority_staging import AUTHORITY_ROOT_ENV
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+_SHIPPED_ROOT = REPO_ROOT / "src" / "cadrumo"
+_SHIPPED_REGISTRY_TESTS = _SHIPPED_ROOT / "domain" / "calculations" / "registry" / "tests"
+_YEAR_SELECTION_MODULES = (
+    _SHIPPED_ROOT / "domain" / "calculations" / "registry" / "authority.py",
+    _SHIPPED_ROOT / "domain" / "calculations" / "registry" / "snapshot.py",
+    _SHIPPED_ROOT / "domain" / "calculations" / "registry" / "temporal.py",
+)
+
+
+def _production_modules(root: Path = _SHIPPED_ROOT) -> list[Path]:
+    return [
+        path
+        for path in scan_directory(root, pattern="*.py", recursive=True)
+        if "tests" not in path.parts and path.name != "conftest.py"
+    ]
+
+
+def _absolute_import_roots(tree: ast.AST) -> set[str]:
+    roots: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            roots.update(alias.name.partition(".")[0] for alias in node.names)
+        elif isinstance(node, ast.ImportFrom) and node.level == 0 and (node.module is not None and node.module):
+            roots.add(node.module.partition(".")[0])
+    return roots
+
+
+def _literal_path_parts(node: ast.AST, bindings: dict[str, tuple[str, ...]]) -> tuple[str, ...]:
+    """Resolve static path fragments through calls, ``/`` composition, and names."""
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return (node.value,)
+    if isinstance(node, ast.Name):
+        return bindings.get(node.id, ())
+    if isinstance(node, (ast.List, ast.Tuple)):
+        return tuple(part for item in node.elts for part in _literal_path_parts(item, bindings))
+    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div):
+        return _literal_path_parts(node.left, bindings) + _literal_path_parts(node.right, bindings)
+    if isinstance(node, ast.Call):
+        values = [*node.args, *(keyword.value for keyword in node.keywords)]
+        return tuple(part for value in values for part in _literal_path_parts(value, bindings))
+    return ()
+
+
+def _literal_path_bindings(tree: ast.AST) -> dict[str, tuple[str, ...]]:
+    """Resolve module-local constants used to assemble resource paths."""
+    bindings: dict[str, tuple[str, ...]] = {}
+    assignments = tuple(node for node in getattr(tree, "body", ()) if isinstance(node, ast.Assign))
+    for _ in range(len(assignments) + 1):
+        changed = False
+        for assignment in assignments:
+            parts = _literal_path_parts(assignment.value, bindings)
+            if not parts:
+                continue
+            for target in assignment.targets:
+                if isinstance(target, ast.Name) and target.id not in bindings:
+                    bindings[target.id] = parts
+                    changed = True
+        if not changed:
+            break
+    return bindings
+
+
+def _literal_call_path(call: ast.Call, bindings: dict[str, tuple[str, ...]]) -> str:
+    """Join statically resolvable call-path fragments; prose is never visited."""
+    return "/".join(part.strip("/\\") for part in _literal_path_parts(call, bindings)).replace("\\", "/").lower()
+
+
+def _call_name(call: ast.Call) -> str:
+    if isinstance(call.func, ast.Name):
+        return call.func.id
+    if isinstance(call.func, ast.Attribute):
+        return call.func.attr
+    return ""
+
+
+def _receiver_calls(call: ast.Call, name: str) -> bool:
+    if not isinstance(call.func, ast.Attribute):
+        return False
+    return any(isinstance(node, ast.Call) and _call_name(node) == name for node in ast.walk(call.func.value))
+
+
+def _authored_registry_accesses(tree: ast.AST, *, include_corpus: bool = False) -> tuple[ast.Call, ...]:
+    """Return direct calls that construct or access the authored registry path."""
+    bindings = _literal_path_bindings(tree)
+    path_reader_methods = {"glob", "is_file", "iterdir", "read_bytes", "read_text", "rglob"}
+    path_call_names = path_reader_methods | {"Path", "bundled_path", "read_toml", "scan_directory"}
+    process_call_names = {"Popen", "check_call", "check_output", "run"}
+    return tuple(
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        and (
+            (
+                _call_name(node) in path_call_names
+                and (
+                    "registry/aeat" in _literal_call_path(node, bindings)
+                    or "_data/registry/aeat" in _literal_call_path(node, bindings)
+                    or "_data/registry" in _literal_call_path(node, bindings)
+                    or (include_corpus and "corpus/aeat_official" in _literal_call_path(node, bindings))
+                    or (include_corpus and "corpus/manuals" in _literal_call_path(node, bindings))
+                )
+            )
+            or (_call_name(node) in process_call_names and "_data/registry" in _literal_call_path(node, bindings))
+            or (include_corpus and _call_name(node) in path_reader_methods and _receiver_calls(node, "bundled_path"))
+        )
+    )
+
+
+def test_installed_cohort_environment_carries_no_authority_root_override(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Installed-cohort probes run with the authority-root override unset.
+
+    The authoring override exists so a development tree can keep its generated
+    authority outside the package. An installed cohort must not benefit from it:
+    the proof that the shipped path works is that the packaged resource resolves
+    with nothing pointing at a checkout. A leaked override would let a lane pass
+    while reading the contributor's own tree — the exact failure these lanes
+    exist to exclude — so the environment is asserted here rather than assumed
+    from the variable happening to be unset on one machine.
+    """
+
+    monkeypatch.setenv(AUTHORITY_ROOT_ENV, str(REPO_ROOT / ".authority"))
+
+    environment = clean_product_env()
+
+    assert AUTHORITY_ROOT_ENV not in environment
+    assert not [name for name in environment if name.startswith("CADRUMO_")]
+
+
+def test_raw_reader_census_resolves_indirect_path_composition() -> None:
+    """A constant assembled with ``Path /`` cannot evade the production census."""
+    tree = ast.parse(
+        'AUTHORED = Path("_data") / "registry" / "aeat"\npayload = read_toml(AUTHORED / "iva" / "catalogues.toml")\n'
+    )
+
+    accesses = _authored_registry_accesses(tree)
+
+    assert len(accesses) == 1
+    assert accesses[0].lineno == 2
+
+
+@pytest.mark.parametrize(
+    "source",
+    (
+        'for path in Path("src/cadrumo/_data/registry").rglob("verification_expectations/*.toml"):\n    pass\n',
+        '(bundled_path() / source.corpus_path).read_text(encoding="utf-8")\n',
+        'subprocess.run(["git", "grep", "token", "HEAD", "--", "src/cadrumo/_data/registry"])\n',
+    ),
+)
+def test_raw_reader_census_detects_direct_and_dynamic_authored_reads(source: str) -> None:
+    """Direct registry scans and dynamic corpus receivers cannot evade the census."""
+    assert _authored_registry_accesses(ast.parse(source), include_corpus=True)
+
+
+def test_shipped_runtime_has_no_operative_authored_registry_reader() -> None:
+    """Production cannot construct the authored path or combine such access with a TOML parser."""
+    modules = _production_modules()
+    operative_accesses: dict[str, list[str]] = {}
+    toml_readers: dict[str, list[str]] = {}
+    covered_areas = {
+        "domain/iva": False,
+        "domain/calculations/registry": False,
+        "domain/deadlines": False,
+        "adapters/outbound/aeat/auth": False,
+        "application/modelo": False,
+    }
+    for path in modules:
+        relative = path.relative_to(_SHIPPED_ROOT).as_posix()
+        for area in covered_areas:
+            if relative.startswith(f"{area}/"):
+                covered_areas[area] = True
+        source = path.read_text(encoding="utf-8")
+        tree = ast.parse(source, filename=str(path))
+        accesses = _authored_registry_accesses(tree)
+        if not accesses:
+            continue
+        operative_accesses[relative] = [
+            f"line {call.lineno}: {ast.get_source_segment(source, call) or '<call>'}" for call in accesses
+        ]
+        forbidden_imports = sorted(_absolute_import_roots(tree) & {"rtoml"})
+        if forbidden_imports:
+            toml_readers[relative] = forbidden_imports
+
+    assert len(modules) > 1500, "the shipped-code census is not covering the production tree"
+    assert all(covered_areas.values()), f"raw-reader census missed production areas: {covered_areas}"
+    assert toml_readers == {}, f"operative authored-registry readers import TOML parsers: {toml_readers}"
+    assert operative_accesses == {}, (
+        f"shipped modules access the development-only registry/aeat tree: {operative_accesses}"
+    )
+
+
+def test_shipped_registry_tests_have_no_operative_authored_registry_reader() -> None:
+    """Tests that inspect mutable authoring inputs live under ``dev/registry``."""
+
+    offenders: dict[str, list[str]] = {}
+    paths = tuple(scan_directory(_SHIPPED_REGISTRY_TESTS, pattern="*.py", recursive=True))
+    for path in paths:
+        source = path.read_text(encoding="utf-8")
+        tree = ast.parse(source, filename=str(path))
+        accesses = tuple(
+            call
+            for call in _authored_registry_accesses(tree, include_corpus=True)
+            if not (isinstance(call.func, ast.Name) and call.func.id == "SourceReference")
+        )
+        if accesses:
+            offenders[path.relative_to(_SHIPPED_REGISTRY_TESTS).as_posix()] = [
+                f"line {call.lineno}: {ast.get_source_segment(source, call) or '<call>'}" for call in accesses
+            ]
+
+    assert len(paths) >= 190, "the registry-test relocation census is not covering the package test tree"
+    assert offenders == {}, f"registry authoring tests remain under the shipped package: {offenders}"
+
+
+def test_revision_selection_delegates_year_admission_to_the_shared_catalogue() -> None:
+    """Selection modules carry no literal product-year gate beside the catalogue authority."""
+    literal_gates: list[str] = []
+    for path in _YEAR_SELECTION_MODULES:
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Compare):
+                continue
+            text = ast.get_source_segment(path.read_text(encoding="utf-8"), node) or ""
+            if "filing_year" in text and any(
+                isinstance(item, ast.Constant) and isinstance(item.value, int)
+                for item in (node.left, *node.comparators)
+            ):
+                literal_gates.append(f"{path.name}:{node.lineno}:{text}")
+
+    authority_source = _YEAR_SELECTION_MODULES[0].read_text(encoding="utf-8")
+    temporal_source = _YEAR_SELECTION_MODULES[-1].read_text(encoding="utf-8")
+    assert "support=self.catalogues.require_supported_filing_years()" in authority_source
+    assert "support=self.catalogues.supported_filing_years" in authority_source
+    assert "support=self.supported_filing_years()" in authority_source
+    assert "support.admits_filing_year(filing_year)" in temporal_source
+    assert literal_gates == [], f"year selection duplicates literal admission limits: {literal_gates}"

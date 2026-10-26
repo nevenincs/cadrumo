@@ -1,0 +1,2179 @@
+{
+  "result_version": 1,
+  "profile_id": "13000000-0000-4000-8000-000000000730",
+  "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
+  "form": {
+    "form": {
+      "modelo": "130",
+      "filing_year": 2026,
+      "period": { "filing_year": 2026, "code": "1T" },
+      "registry_revision_id": "2019-y-siguientes",
+      "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
+      "calculation_revision_id": "2e95f02dbe5b7a8f6f685c956d141f00ff76cbe748039e8d5f3b35c331522ca2",
+      "language": "hu",
+      "layout_provenance": "generated",
+      "inspection_reason": null,
+      "seed_source": "authored",
+      "pages": [
+        {
+          "id": "dr-13001",
+          "heading": {
+            "text": "1. oldal · Adóelőleg",
+            "disclosure": "localized"
+          },
+          "official_ref": "BOE-A-2015-1656, anexo I, pág. 6",
+          "condition": "always",
+          "applies": true,
+          "sections": [
+            {
+              "id": "dr-13001.identificacion",
+              "heading": { "text": "Bevalló (1)", "disclosure": "localized" },
+              "official_heading": "Declarante (1)",
+              "blocks": [
+                {
+                  "kind": "context_field",
+                  "id": "nif",
+                  "label": {
+                    "text": "Adóazonosító szám (NIF)",
+                    "disclosure": "localized"
+                  },
+                  "value": { "kind": "null", "text": "" },
+                  "value_text": "nincs adat"
+                },
+                {
+                  "kind": "context_field",
+                  "id": "nombre",
+                  "label": { "text": "Utónév", "disclosure": "localized" },
+                  "value": { "kind": "null", "text": "" },
+                  "value_text": "nincs adat"
+                },
+                {
+                  "kind": "context_field",
+                  "id": "apellidos",
+                  "label": { "text": "Vezetéknév", "disclosure": "localized" },
+                  "value": { "kind": "null", "text": "" },
+                  "value_text": "nincs adat"
+                }
+              ],
+              "counts": {
+                "total": 0,
+                "needs_input": 0,
+                "entered": 0,
+                "imported": 0,
+                "calculated": 0,
+                "overridden": 0,
+                "default_to_confirm": 0,
+                "not_applicable": 0,
+                "blocked": 0
+              }
+            },
+            {
+              "id": "dr-13001.devengo",
+              "heading": {
+                "text": "Adómegállapítási időszak (2)",
+                "disclosure": "localized"
+              },
+              "official_heading": "Devengo (2)",
+              "blocks": [
+                {
+                  "kind": "context_field",
+                  "id": "ejercicio",
+                  "label": { "text": "Adóév", "disclosure": "localized" },
+                  "value": { "kind": "integer", "text": "2026" },
+                  "value_text": "2026"
+                },
+                {
+                  "kind": "context_field",
+                  "id": "periodo",
+                  "label": { "text": "Időszak", "disclosure": "localized" },
+                  "value": { "kind": "string", "text": "1T" },
+                  "value_text": "2026. I. negyedév"
+                }
+              ],
+              "counts": {
+                "total": 0,
+                "needs_input": 0,
+                "entered": 0,
+                "imported": 0,
+                "calculated": 0,
+                "overridden": 0,
+                "default_to_confirm": 0,
+                "not_applicable": 0,
+                "blocked": 0
+              }
+            },
+            {
+              "id": "dr-13001.liquidacion-3-i-actividades-econ-estim-directa",
+              "heading": {
+                "text": "I. Tényleges költségelszámolású gazdasági tevékenységek",
+                "disclosure": "localized"
+              },
+              "official_heading": "Liquidación (3). I. Actividades económicas en estimación directa, modalidad normal o simplificada, distintas de las agrícolas, ganaderas, forestales y pesqueras.",
+              "blocks": [
+                {
+                  "kind": "field",
+                  "id": "field",
+                  "field": {
+                    "address": { "kind": "casilla", "casilla_id": "01" },
+                    "box": "01",
+                    "label": { "text": "Bevételek", "disclosure": "localized" },
+                    "help": "Az adóévben elért összesített vállalkozási bevétel.",
+                    "data_type": "money",
+                    "value": { "kind": "decimal", "text": "0" },
+                    "origin": "imported",
+                    "editability": "locked_source",
+                    "not_writable_reason": null,
+                    "required": false,
+                    "unattributed": false,
+                    "grounded_rate": null,
+                    "printed_rate": null,
+                    "role": "input",
+                    "bindings": [
+                      {
+                        "binding_id": "modelo-130-actividad-economica-ingresos-cumulative",
+                        "policy": {
+                          "source_kind": "ledger_renta_income_aggregation",
+                          "family": "records",
+                          "override_policy": "fix_at_source",
+                          "surface": "ledger"
+                        },
+                        "resolved": true
+                      }
+                    ],
+                    "source": {
+                      "family": "records",
+                      "binding_id": "modelo-130-actividad-economica-ingresos-cumulative",
+                      "source_kind": "ledger_renta_income_aggregation",
+                      "earlier_filings": []
+                    },
+                    "formula_id": null,
+                    "formula_operands": [],
+                    "blockers": [],
+                    "constraints": null,
+                    "legal_refs": [
+                      "rd-439-2007:art-110",
+                      "orden-eha-672-2007:art-1",
+                      "ley-35-2006:art-99",
+                      "rd-439-2007:art-95",
+                      "ley-35-2006:art-27",
+                      "ley-35-2006:art-28"
+                    ],
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": { "kind": "casilla", "casilla_id": "01" },
+                    "confirmable": false,
+                    "held_zero": true,
+                    "origin_words": "A nyilvántartásaidból",
+                    "origin_explanation": null,
+                    "editability_words": "A nyilvántartásaidból származik; ott javítsd, majd számolj újra.",
+                    "value_text": "0,00 €",
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "confirm_comparable": null,
+                    "state_digest": "26f32cb7d29df130e8fd740bb4ebe49e99b6c577404d3a364110735683bfa903"
+                  }
+                },
+                {
+                  "kind": "field",
+                  "id": "field-2",
+                  "field": {
+                    "address": { "kind": "casilla", "casilla_id": "02" },
+                    "box": "02",
+                    "label": { "text": "Kiadások", "disclosure": "localized" },
+                    "help": "Az adóévben elért összesített vállalkozási kiadás.",
+                    "data_type": "money",
+                    "value": { "kind": "decimal", "text": "0" },
+                    "origin": "imported",
+                    "editability": "locked_source",
+                    "not_writable_reason": null,
+                    "required": false,
+                    "unattributed": false,
+                    "grounded_rate": null,
+                    "printed_rate": null,
+                    "role": "input",
+                    "bindings": [
+                      {
+                        "binding_id": "modelo-130-actividad-economica-gastos-cumulative",
+                        "policy": {
+                          "source_kind": "ledger_renta_gastos_pago_fraccionado_aggregation",
+                          "family": "records",
+                          "override_policy": "fix_at_source",
+                          "surface": "ledger"
+                        },
+                        "resolved": true
+                      }
+                    ],
+                    "source": {
+                      "family": "records",
+                      "binding_id": "modelo-130-actividad-economica-gastos-cumulative",
+                      "source_kind": "ledger_renta_gastos_pago_fraccionado_aggregation",
+                      "earlier_filings": []
+                    },
+                    "formula_id": null,
+                    "formula_operands": [],
+                    "blockers": [],
+                    "constraints": null,
+                    "legal_refs": [
+                      "rd-439-2007:art-110",
+                      "orden-eha-672-2007:art-1",
+                      "ley-35-2006:art-99",
+                      "rd-439-2007:art-95",
+                      "ley-35-2006:art-28",
+                      "ley-35-2006:art-30"
+                    ],
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": { "kind": "casilla", "casilla_id": "02" },
+                    "confirmable": false,
+                    "held_zero": true,
+                    "origin_words": "A nyilvántartásaidból",
+                    "origin_explanation": null,
+                    "editability_words": "A nyilvántartásaidból származik; ott javítsd, majd számolj újra.",
+                    "value_text": "0,00 €",
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "confirm_comparable": null,
+                    "state_digest": "26f32cb7d29df130e8fd740bb4ebe49e99b6c577404d3a364110735683bfa903"
+                  }
+                },
+                {
+                  "kind": "field",
+                  "id": "field-3",
+                  "field": {
+                    "address": { "kind": "casilla", "casilla_id": "03" },
+                    "box": "03",
+                    "label": {
+                      "text": "Nettó jövedelem",
+                      "disclosure": "localized"
+                    },
+                    "help": "A közvetlen becslésű gazdasági tevékenységek nettó jövedelme, a bevételek és kiadások különbözeteként.",
+                    "data_type": "money",
+                    "value": { "kind": "decimal", "text": "0.00" },
+                    "origin": "calculated",
+                    "editability": "calculated",
+                    "not_writable_reason": null,
+                    "required": false,
+                    "unattributed": false,
+                    "grounded_rate": null,
+                    "printed_rate": null,
+                    "role": "computed",
+                    "bindings": [],
+                    "source": null,
+                    "formula_id": "modelo-130-rendimiento-neto",
+                    "formula_operands": ["01", "02"],
+                    "blockers": [],
+                    "constraints": null,
+                    "legal_refs": [
+                      "rd-439-2007:art-110",
+                      "orden-eha-672-2007:art-1",
+                      "ley-35-2006:art-99",
+                      "rd-439-2007:art-95",
+                      "ley-35-2006:art-28",
+                      "ley-35-2006:art-30"
+                    ],
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": { "kind": "casilla", "casilla_id": "03" },
+                    "confirmable": false,
+                    "held_zero": true,
+                    "origin_words": "Számított",
+                    "origin_explanation": null,
+                    "editability_words": "A Cadrumo más rovatokból számítja ki.",
+                    "value_text": "0,00 €",
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "confirm_comparable": null,
+                    "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
+                  }
+                },
+                {
+                  "kind": "field",
+                  "id": "field-4",
+                  "field": {
+                    "address": { "kind": "casilla", "casilla_id": "04" },
+                    "box": "04",
+                    "label": {
+                      "text": "Részletfizetés összege",
+                      "disclosure": "localized"
+                    },
+                    "help": "A közvetlen becslésű tevékenységek részletfizetési összege a korábbi befizetések és levonások előtt.",
+                    "data_type": "money",
+                    "value": { "kind": "decimal", "text": "0.00" },
+                    "origin": "calculated",
+                    "editability": "calculated",
+                    "not_writable_reason": null,
+                    "required": false,
+                    "unattributed": false,
+                    "grounded_rate": null,
+                    "printed_rate": null,
+                    "role": "computed",
+                    "bindings": [],
+                    "source": null,
+                    "formula_id": "modelo-130-pago-fraccionado-directa",
+                    "formula_operands": ["03"],
+                    "blockers": [],
+                    "constraints": {
+                      "sign": "non_negative",
+                      "min_value": null,
+                      "max_value": null,
+                      "pattern": null,
+                      "min_length": null,
+                      "max_length": null,
+                      "enum": null,
+                      "legal_refs": ["rd-439-2007:art-110"],
+                      "source_refs": ["aeat-modelo-130-instructions"]
+                    },
+                    "legal_refs": [
+                      "rd-439-2007:art-110",
+                      "orden-eha-672-2007:art-1",
+                      "ley-35-2006:art-99",
+                      "rd-439-2007:art-95"
+                    ],
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": { "kind": "casilla", "casilla_id": "04" },
+                    "confirmable": false,
+                    "held_zero": true,
+                    "origin_words": "Számított",
+                    "origin_explanation": null,
+                    "editability_words": "A Cadrumo más rovatokból számítja ki.",
+                    "value_text": "0,00 €",
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "confirm_comparable": null,
+                    "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
+                  }
+                },
+                {
+                  "kind": "field",
+                  "id": "field-5",
+                  "field": {
+                    "address": { "kind": "casilla", "casilla_id": "05" },
+                    "box": "05",
+                    "label": {
+                      "text": "Korábbi részletfizetések",
+                      "disclosure": "localized"
+                    },
+                    "help": "Ugyanazon adóév korábbi időszakaiban már teljesített részletfizetések közvetlen becslésű tevékenységekre.",
+                    "data_type": "money",
+                    "value": { "kind": "decimal", "text": "0" },
+                    "origin": "not_applicable",
+                    "editability": "overridable_source",
+                    "not_writable_reason": null,
+                    "required": false,
+                    "unattributed": false,
+                    "grounded_rate": null,
+                    "printed_rate": null,
+                    "role": "input",
+                    "bindings": [
+                      {
+                        "binding_id": "modelo-130-pagos-fraccionados-anteriores",
+                        "policy": {
+                          "source_kind": "previous_filing",
+                          "family": "earlier_filings",
+                          "override_policy": "override_with_reason",
+                          "surface": "declarations"
+                        },
+                        "resolved": false
+                      }
+                    ],
+                    "source": {
+                      "family": "earlier_filings",
+                      "binding_id": "modelo-130-pagos-fraccionados-anteriores",
+                      "source_kind": "previous_filing",
+                      "earlier_filings": []
+                    },
+                    "formula_id": null,
+                    "formula_operands": [],
+                    "blockers": [],
+                    "constraints": {
+                      "sign": "non_negative",
+                      "min_value": null,
+                      "max_value": null,
+                      "pattern": null,
+                      "min_length": null,
+                      "max_length": null,
+                      "enum": null,
+                      "legal_refs": [
+                        "rd-439-2007:art-110",
+                        "orden-eha-672-2007:art-1",
+                        "ley-35-2006:art-99",
+                        "rd-439-2007:art-95"
+                      ],
+                      "source_refs": [
+                        "aeat-dr-130-2019-v12",
+                        "aeat-modelo-130-instructions"
+                      ]
+                    },
+                    "legal_refs": [
+                      "rd-439-2007:art-110",
+                      "orden-eha-672-2007:art-1",
+                      "ley-35-2006:art-99",
+                      "rd-439-2007:art-95"
+                    ],
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": {
+                      "kind": "binding",
+                      "binding_id": "modelo-130-pagos-fraccionados-anteriores"
+                    },
+                    "confirmable": false,
+                    "held_zero": true,
+                    "origin_words": "Nem alkalmazandó",
+                    "origin_explanation": null,
+                    "editability_words": "Korábbi bevallásból származik; felülírhatja, és felülírtként jelenik meg, amíg vissza nem állítja a forrást.",
+                    "value_text": null,
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "confirm_comparable": null,
+                    "state_digest": "d1e9be461c167b5360985fc74fa6f5643abde1ba41c85f01b3807d6bba338ad0"
+                  }
+                },
+                {
+                  "kind": "field",
+                  "id": "field-6",
+                  "field": {
+                    "address": { "kind": "casilla", "casilla_id": "06" },
+                    "box": "06",
+                    "label": {
+                      "text": "Levonások és adóelőlegek",
+                      "disclosure": "localized"
+                    },
+                    "help": "Az időszakban elszenvedett levonások és előlegbefizetések közvetlen becslésű tevékenységekre.",
+                    "data_type": "money",
+                    "value": { "kind": "decimal", "text": "0" },
+                    "origin": "optional_empty",
+                    "editability": "editable_value",
+                    "not_writable_reason": null,
+                    "required": false,
+                    "unattributed": true,
+                    "grounded_rate": null,
+                    "printed_rate": null,
+                    "role": "input",
+                    "bindings": [],
+                    "source": null,
+                    "formula_id": null,
+                    "formula_operands": [],
+                    "blockers": [],
+                    "constraints": {
+                      "sign": "non_negative",
+                      "min_value": null,
+                      "max_value": null,
+                      "pattern": null,
+                      "min_length": null,
+                      "max_length": null,
+                      "enum": null,
+                      "legal_refs": [
+                        "rd-439-2007:art-110",
+                        "orden-eha-672-2007:art-1",
+                        "ley-35-2006:art-99",
+                        "rd-439-2007:art-95"
+                      ],
+                      "source_refs": [
+                        "aeat-dr-130-2019-v12",
+                        "aeat-modelo-130-instructions"
+                      ]
+                    },
+                    "legal_refs": [
+                      "rd-439-2007:art-110",
+                      "orden-eha-672-2007:art-1",
+                      "ley-35-2006:art-99",
+                      "rd-439-2007:art-95"
+                    ],
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": { "kind": "casilla", "casilla_id": "06" },
+                    "confirmable": false,
+                    "held_zero": true,
+                    "origin_words": "Nem kötelező, 0 marad",
+                    "origin_explanation": null,
+                    "editability_words": "Add meg a rovat összegét vagy adatát.",
+                    "value_text": "0,00 €",
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "confirm_comparable": null,
+                    "state_digest": "a98b28313c97e2f9b5bc587c178da1333f391127e7d64b384a0b74d1941df620"
+                  }
+                },
+                {
+                  "kind": "field",
+                  "id": "field-7",
+                  "field": {
+                    "address": { "kind": "casilla", "casilla_id": "07" },
+                    "box": "07",
+                    "label": {
+                      "text": "I. rész részeredménye",
+                      "disclosure": "localized"
+                    },
+                    "help": "Az I. rész részeredménye a korábbi befizetések és levonások levonása után.",
+                    "data_type": "money",
+                    "value": { "kind": "decimal", "text": "0.00" },
+                    "origin": "calculated",
+                    "editability": "calculated",
+                    "not_writable_reason": null,
+                    "required": false,
+                    "unattributed": false,
+                    "grounded_rate": null,
+                    "printed_rate": null,
+                    "role": "computed",
+                    "bindings": [],
+                    "source": null,
+                    "formula_id": "modelo-130-resultado-apartado-i",
+                    "formula_operands": ["04", "05", "06"],
+                    "blockers": [],
+                    "constraints": null,
+                    "legal_refs": [
+                      "rd-439-2007:art-110",
+                      "orden-eha-672-2007:art-1",
+                      "ley-35-2006:art-99",
+                      "rd-439-2007:art-95"
+                    ],
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": { "kind": "casilla", "casilla_id": "07" },
+                    "confirmable": false,
+                    "held_zero": true,
+                    "origin_words": "Számított",
+                    "origin_explanation": null,
+                    "editability_words": "A Cadrumo más rovatokból számítja ki.",
+                    "value_text": "0,00 €",
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "confirm_comparable": null,
+                    "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
+                  }
+                }
+              ],
+              "counts": {
+                "total": 7,
+                "needs_input": 0,
+                "entered": 0,
+                "imported": 2,
+                "calculated": 3,
+                "overridden": 0,
+                "default_to_confirm": 0,
+                "not_applicable": 1,
+                "blocked": 0
+              }
+            },
+            {
+              "id": "dr-13001.liquidacion-3-ii-actividades-agricolas-ga-829910",
+              "heading": {
+                "text": "II. Mező-, állat-, erdőgazdasági és halászati tevékenységek",
+                "disclosure": "localized"
+              },
+              "official_heading": "Liquidación (3). II. Actividades agrícolas, ganaderas, forestales y pesqueras en estimación directa, modalidad normal o simplificada.",
+              "blocks": [
+                {
+                  "kind": "field",
+                  "id": "field",
+                  "field": {
+                    "address": { "kind": "casilla", "casilla_id": "08" },
+                    "box": "08",
+                    "label": {
+                      "text": "A negyedév bevételi volumene",
+                      "disclosure": "localized"
+                    },
+                    "help": "A negyedév bevételi volumene mezőgazdasági, állattenyésztési, erdészeti vagy halászati tevékenységekből.",
+                    "data_type": "money",
+                    "value": { "kind": "decimal", "text": "0" },
+                    "origin": "optional_empty",
+                    "editability": "editable_value",
+                    "not_writable_reason": null,
+                    "required": false,
+                    "unattributed": true,
+                    "grounded_rate": null,
+                    "printed_rate": null,
+                    "role": "input",
+                    "bindings": [],
+                    "source": null,
+                    "formula_id": null,
+                    "formula_operands": [],
+                    "blockers": [],
+                    "constraints": null,
+                    "legal_refs": [
+                      "rd-439-2007:art-110",
+                      "orden-eha-672-2007:art-1",
+                      "ley-35-2006:art-99",
+                      "rd-439-2007:art-95"
+                    ],
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": { "kind": "casilla", "casilla_id": "08" },
+                    "confirmable": false,
+                    "held_zero": true,
+                    "origin_words": "Nem kötelező, 0 marad",
+                    "origin_explanation": null,
+                    "editability_words": "Add meg a rovat összegét vagy adatát.",
+                    "value_text": "0,00 €",
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "confirm_comparable": null,
+                    "state_digest": "a98b28313c97e2f9b5bc587c178da1333f391127e7d64b384a0b74d1941df620"
+                  }
+                },
+                {
+                  "kind": "field",
+                  "id": "field-2",
+                  "field": {
+                    "address": { "kind": "casilla", "casilla_id": "09" },
+                    "box": "09",
+                    "label": {
+                      "text": "Részletfizetés összege",
+                      "disclosure": "localized"
+                    },
+                    "help": "A mezőgazdasági, állattenyésztési, erdészeti vagy halászati tevékenységek részletfizetési összege.",
+                    "data_type": "money",
+                    "value": { "kind": "decimal", "text": "0.00" },
+                    "origin": "calculated",
+                    "editability": "calculated",
+                    "not_writable_reason": null,
+                    "required": false,
+                    "unattributed": false,
+                    "grounded_rate": null,
+                    "printed_rate": null,
+                    "role": "computed",
+                    "bindings": [],
+                    "source": null,
+                    "formula_id": "modelo-130-pago-fraccionado-agrario",
+                    "formula_operands": ["08"],
+                    "blockers": [],
+                    "constraints": {
+                      "sign": "non_negative",
+                      "min_value": null,
+                      "max_value": null,
+                      "pattern": null,
+                      "min_length": null,
+                      "max_length": null,
+                      "enum": null,
+                      "legal_refs": [
+                        "rd-439-2007:art-110",
+                        "orden-eha-672-2007:art-1",
+                        "ley-35-2006:art-99",
+                        "rd-439-2007:art-95"
+                      ],
+                      "source_refs": [
+                        "aeat-dr-130-2019-v12",
+                        "aeat-modelo-130-instructions"
+                      ]
+                    },
+                    "legal_refs": [
+                      "rd-439-2007:art-110",
+                      "orden-eha-672-2007:art-1",
+                      "ley-35-2006:art-99",
+                      "rd-439-2007:art-95"
+                    ],
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": { "kind": "casilla", "casilla_id": "09" },
+                    "confirmable": false,
+                    "held_zero": true,
+                    "origin_words": "Számított",
+                    "origin_explanation": null,
+                    "editability_words": "A Cadrumo más rovatokból számítja ki.",
+                    "value_text": "0,00 €",
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "confirm_comparable": null,
+                    "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
+                  }
+                },
+                {
+                  "kind": "field",
+                  "id": "field-3",
+                  "field": {
+                    "address": { "kind": "casilla", "casilla_id": "10" },
+                    "box": "10",
+                    "label": {
+                      "text": "Levonások és adóelőlegek",
+                      "disclosure": "localized"
+                    },
+                    "help": "Az időszakban elszenvedett levonások és előlegbefizetések mezőgazdasági, állattenyésztési, erdészeti vagy halászati tevékenységekre.",
+                    "data_type": "money",
+                    "value": { "kind": "decimal", "text": "0" },
+                    "origin": "optional_empty",
+                    "editability": "editable_value",
+                    "not_writable_reason": null,
+                    "required": false,
+                    "unattributed": true,
+                    "grounded_rate": null,
+                    "printed_rate": null,
+                    "role": "input",
+                    "bindings": [],
+                    "source": null,
+                    "formula_id": null,
+                    "formula_operands": [],
+                    "blockers": [],
+                    "constraints": {
+                      "sign": "non_negative",
+                      "min_value": null,
+                      "max_value": null,
+                      "pattern": null,
+                      "min_length": null,
+                      "max_length": null,
+                      "enum": null,
+                      "legal_refs": [
+                        "rd-439-2007:art-110",
+                        "orden-eha-672-2007:art-1",
+                        "ley-35-2006:art-99",
+                        "rd-439-2007:art-95"
+                      ],
+                      "source_refs": [
+                        "aeat-dr-130-2019-v12",
+                        "aeat-modelo-130-instructions"
+                      ]
+                    },
+                    "legal_refs": [
+                      "rd-439-2007:art-110",
+                      "orden-eha-672-2007:art-1",
+                      "ley-35-2006:art-99",
+                      "rd-439-2007:art-95"
+                    ],
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": { "kind": "casilla", "casilla_id": "10" },
+                    "confirmable": false,
+                    "held_zero": true,
+                    "origin_words": "Nem kötelező, 0 marad",
+                    "origin_explanation": null,
+                    "editability_words": "Add meg a rovat összegét vagy adatát.",
+                    "value_text": "0,00 €",
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "confirm_comparable": null,
+                    "state_digest": "a98b28313c97e2f9b5bc587c178da1333f391127e7d64b384a0b74d1941df620"
+                  }
+                },
+                {
+                  "kind": "field",
+                  "id": "field-4",
+                  "field": {
+                    "address": { "kind": "casilla", "casilla_id": "11" },
+                    "box": "11",
+                    "label": {
+                      "text": "II. rész részeredménye",
+                      "disclosure": "localized"
+                    },
+                    "help": "A II. rész részeredménye a levonások mezőgazdasági, állattenyésztési, erdészeti vagy halászati részletfizetésből való levonása után.",
+                    "data_type": "money",
+                    "value": { "kind": "decimal", "text": "0.00" },
+                    "origin": "calculated",
+                    "editability": "calculated",
+                    "not_writable_reason": null,
+                    "required": false,
+                    "unattributed": false,
+                    "grounded_rate": null,
+                    "printed_rate": null,
+                    "role": "computed",
+                    "bindings": [],
+                    "source": null,
+                    "formula_id": "modelo-130-resultado-apartado-ii",
+                    "formula_operands": ["09", "10"],
+                    "blockers": [],
+                    "constraints": null,
+                    "legal_refs": [
+                      "rd-439-2007:art-110",
+                      "orden-eha-672-2007:art-1",
+                      "ley-35-2006:art-99",
+                      "rd-439-2007:art-95"
+                    ],
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": { "kind": "casilla", "casilla_id": "11" },
+                    "confirmable": false,
+                    "held_zero": true,
+                    "origin_words": "Számított",
+                    "origin_explanation": null,
+                    "editability_words": "A Cadrumo más rovatokból számítja ki.",
+                    "value_text": "0,00 €",
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "confirm_comparable": null,
+                    "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
+                  }
+                }
+              ],
+              "counts": {
+                "total": 4,
+                "needs_input": 0,
+                "entered": 0,
+                "imported": 0,
+                "calculated": 2,
+                "overridden": 0,
+                "default_to_confirm": 0,
+                "not_applicable": 0,
+                "blocked": 0
+              }
+            },
+            {
+              "id": "dr-13001.liquidacion-3-iii-total-liquidacion",
+              "heading": {
+                "text": "III. Bevallás összesen",
+                "disclosure": "localized"
+              },
+              "official_heading": "Liquidación (3). III. Total liquidación.",
+              "blocks": [
+                {
+                  "kind": "field",
+                  "id": "field",
+                  "field": {
+                    "address": { "kind": "casilla", "casilla_id": "12" },
+                    "box": "12",
+                    "label": {
+                      "text": "Részeredmények összege",
+                      "disclosure": "localized"
+                    },
+                    "help": "Az I. és II. rész részeredményeinek összege.",
+                    "data_type": "money",
+                    "value": { "kind": "decimal", "text": "0.00" },
+                    "origin": "calculated",
+                    "editability": "calculated",
+                    "not_writable_reason": null,
+                    "required": false,
+                    "unattributed": false,
+                    "grounded_rate": null,
+                    "printed_rate": null,
+                    "role": "computed",
+                    "bindings": [],
+                    "source": null,
+                    "formula_id": "modelo-130-suma-parciales",
+                    "formula_operands": ["07", "11"],
+                    "blockers": [],
+                    "constraints": null,
+                    "legal_refs": [
+                      "rd-439-2007:art-110",
+                      "orden-eha-672-2007:art-1",
+                      "ley-35-2006:art-99",
+                      "rd-439-2007:art-95"
+                    ],
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": { "kind": "casilla", "casilla_id": "12" },
+                    "confirmable": false,
+                    "held_zero": true,
+                    "origin_words": "Számított",
+                    "origin_explanation": null,
+                    "editability_words": "A Cadrumo más rovatokból számítja ki.",
+                    "value_text": "0,00 €",
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "confirm_comparable": null,
+                    "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
+                  }
+                },
+                {
+                  "kind": "field",
+                  "id": "field-2",
+                  "field": {
+                    "address": { "kind": "casilla", "casilla_id": "13" },
+                    "box": "13",
+                    "label": {
+                      "text": "Nettó jövedelem miatti csökkentés",
+                      "disclosure": "localized"
+                    },
+                    "help": "A Modelo 130 nyomtatvány szabályozási küszöbe alapján alkalmazható nettó jövedelmi csökkentés.",
+                    "data_type": "money",
+                    "value": { "kind": "null", "text": "" },
+                    "origin": "calculation_failed",
+                    "editability": "calculated",
+                    "not_writable_reason": null,
+                    "required": false,
+                    "unattributed": false,
+                    "grounded_rate": null,
+                    "printed_rate": null,
+                    "role": "computed",
+                    "bindings": [],
+                    "source": null,
+                    "formula_id": "modelo-130-minoracion-rendimientos-netos",
+                    "formula_operands": [
+                      "irpf.previous_year_economic_activity_net_income"
+                    ],
+                    "blockers": [],
+                    "constraints": null,
+                    "legal_refs": [
+                      "rd-439-2007:art-110",
+                      "orden-eha-672-2007:art-1",
+                      "ley-35-2006:art-99",
+                      "rd-439-2007:art-95"
+                    ],
+                    "also_appears_on": [],
+                    "standing": "needs_you",
+                    "edit_address": { "kind": "casilla", "casilla_id": "13" },
+                    "confirmable": false,
+                    "held_zero": false,
+                    "origin_words": "Nem számítható ki",
+                    "origin_explanation": null,
+                    "editability_words": "A Cadrumo más rovatokból számítja ki.",
+                    "value_text": null,
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "confirm_comparable": null,
+                    "state_digest": "406cda705f9b73b812514662a61f30bd525df9ab22af7e5b1a0699aeeb55804e"
+                  }
+                },
+                {
+                  "kind": "field",
+                  "id": "field-3",
+                  "field": {
+                    "address": { "kind": "casilla", "casilla_id": "14" },
+                    "box": "14",
+                    "label": {
+                      "text": "Csökkentés utáni nettó összeg",
+                      "disclosure": "localized"
+                    },
+                    "help": "A nettó jövedelmi csökkentés alkalmazása után fennmaradó összeg.",
+                    "data_type": "money",
+                    "value": { "kind": "null", "text": "" },
+                    "origin": "calculation_failed",
+                    "editability": "calculated",
+                    "not_writable_reason": null,
+                    "required": false,
+                    "unattributed": false,
+                    "grounded_rate": null,
+                    "printed_rate": null,
+                    "role": "computed",
+                    "bindings": [],
+                    "source": null,
+                    "formula_id": "modelo-130-neto-tras-minoracion",
+                    "formula_operands": ["12", "13"],
+                    "blockers": [],
+                    "constraints": null,
+                    "legal_refs": [
+                      "rd-439-2007:art-110",
+                      "orden-eha-672-2007:art-1",
+                      "ley-35-2006:art-99",
+                      "rd-439-2007:art-95"
+                    ],
+                    "also_appears_on": [],
+                    "standing": "needs_you",
+                    "edit_address": { "kind": "casilla", "casilla_id": "14" },
+                    "confirmable": false,
+                    "held_zero": false,
+                    "origin_words": "Nem számítható ki",
+                    "origin_explanation": null,
+                    "editability_words": "A Cadrumo más rovatokból számítja ki.",
+                    "value_text": null,
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "confirm_comparable": null,
+                    "state_digest": "406cda705f9b73b812514662a61f30bd525df9ab22af7e5b1a0699aeeb55804e"
+                  }
+                },
+                {
+                  "kind": "field",
+                  "id": "field-4",
+                  "field": {
+                    "address": { "kind": "casilla", "casilla_id": "15" },
+                    "box": "15",
+                    "label": {
+                      "text": "Korábbi negyedévek negatív eredményei",
+                      "disclosure": "localized"
+                    },
+                    "help": "Ugyanazon adóév korábbi negyedéveiből származó negatív eredmények levonása.",
+                    "data_type": "money",
+                    "value": { "kind": "null", "text": "" },
+                    "origin": "calculation_failed",
+                    "editability": "calculated",
+                    "not_writable_reason": null,
+                    "required": false,
+                    "unattributed": false,
+                    "grounded_rate": null,
+                    "printed_rate": null,
+                    "role": "computed",
+                    "bindings": [],
+                    "source": null,
+                    "formula_id": "modelo-130-resultados-negativos-anteriores-cap",
+                    "formula_operands": [
+                      "14",
+                      "modelo-130-resultados-negativos-anteriores"
+                    ],
+                    "blockers": [],
+                    "constraints": {
+                      "sign": "non_negative",
+                      "min_value": null,
+                      "max_value": null,
+                      "pattern": null,
+                      "min_length": null,
+                      "max_length": null,
+                      "enum": null,
+                      "legal_refs": ["rd-439-2007:art-110"],
+                      "source_refs": ["aeat-modelo-130-instructions"]
+                    },
+                    "legal_refs": [
+                      "rd-439-2007:art-110",
+                      "orden-eha-672-2007:art-1",
+                      "ley-35-2006:art-99",
+                      "rd-439-2007:art-95"
+                    ],
+                    "also_appears_on": [],
+                    "standing": "needs_you",
+                    "edit_address": { "kind": "casilla", "casilla_id": "15" },
+                    "confirmable": false,
+                    "held_zero": false,
+                    "origin_words": "Nem számítható ki",
+                    "origin_explanation": null,
+                    "editability_words": "A Cadrumo más rovatokból számítja ki.",
+                    "value_text": null,
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "confirm_comparable": null,
+                    "state_digest": "406cda705f9b73b812514662a61f30bd525df9ab22af7e5b1a0699aeeb55804e"
+                  }
+                },
+                {
+                  "kind": "field",
+                  "id": "field-5",
+                  "field": {
+                    "address": { "kind": "casilla", "casilla_id": "16" },
+                    "box": "16",
+                    "label": {
+                      "text": "Lakóhelyi ingatlanberuházási kedvezmény",
+                      "disclosure": "localized"
+                    },
+                    "help": "A fő lakóhelybe történő beruházás kedvezménye, ha az átmeneti szabályozás alkalmazható.",
+                    "data_type": "money",
+                    "value": { "kind": "decimal", "text": "0" },
+                    "origin": "optional_empty",
+                    "editability": "editable_value",
+                    "not_writable_reason": null,
+                    "required": false,
+                    "unattributed": true,
+                    "grounded_rate": null,
+                    "printed_rate": null,
+                    "role": "input",
+                    "bindings": [],
+                    "source": null,
+                    "formula_id": null,
+                    "formula_operands": [],
+                    "blockers": [],
+                    "constraints": null,
+                    "legal_refs": [
+                      "rd-439-2007:art-110",
+                      "orden-eha-672-2007:art-1",
+                      "ley-35-2006:art-99",
+                      "rd-439-2007:art-95"
+                    ],
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": { "kind": "casilla", "casilla_id": "16" },
+                    "confirmable": false,
+                    "held_zero": true,
+                    "origin_words": "Nem kötelező, 0 marad",
+                    "origin_explanation": null,
+                    "editability_words": "Add meg a rovat összegét vagy adatát.",
+                    "value_text": "0,00 €",
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "confirm_comparable": null,
+                    "state_digest": "a98b28313c97e2f9b5bc587c178da1333f391127e7d64b384a0b74d1941df620"
+                  }
+                },
+                {
+                  "kind": "field",
+                  "id": "field-6",
+                  "field": {
+                    "address": { "kind": "casilla", "casilla_id": "17" },
+                    "box": "17",
+                    "label": {
+                      "text": "Különbözet",
+                      "disclosure": "localized"
+                    },
+                    "help": "Különbözet a korábbi negyedévek negatív eredményei és az esetleges lakóhelyi kedvezmény alkalmazása után.",
+                    "data_type": "money",
+                    "value": { "kind": "null", "text": "" },
+                    "origin": "calculation_failed",
+                    "editability": "calculated",
+                    "not_writable_reason": null,
+                    "required": false,
+                    "unattributed": false,
+                    "grounded_rate": null,
+                    "printed_rate": null,
+                    "role": "computed",
+                    "bindings": [],
+                    "source": null,
+                    "formula_id": "modelo-130-diferencia",
+                    "formula_operands": ["14", "15", "16"],
+                    "blockers": [],
+                    "constraints": null,
+                    "legal_refs": [
+                      "rd-439-2007:art-110",
+                      "orden-eha-672-2007:art-1",
+                      "ley-35-2006:art-99",
+                      "rd-439-2007:art-95"
+                    ],
+                    "also_appears_on": [],
+                    "standing": "needs_you",
+                    "edit_address": { "kind": "casilla", "casilla_id": "17" },
+                    "confirmable": false,
+                    "held_zero": false,
+                    "origin_words": "Nem számítható ki",
+                    "origin_explanation": null,
+                    "editability_words": "A Cadrumo más rovatokból számítja ki.",
+                    "value_text": null,
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "confirm_comparable": null,
+                    "state_digest": "406cda705f9b73b812514662a61f30bd525df9ab22af7e5b1a0699aeeb55804e"
+                  }
+                },
+                {
+                  "kind": "field",
+                  "id": "field-7",
+                  "field": {
+                    "address": { "kind": "casilla", "casilla_id": "18" },
+                    "box": "18",
+                    "label": {
+                      "text": "Korábbi önadózásokban fizetendőként szereplő összeg",
+                      "disclosure": "localized"
+                    },
+                    "help": "Ugyanazon időszakra és évre vonatkozó korábbi önadózásokban már fizetendőként bevallott összeg.",
+                    "data_type": "money",
+                    "value": { "kind": "decimal", "text": "0" },
+                    "origin": "optional_empty",
+                    "editability": "editable_value",
+                    "not_writable_reason": null,
+                    "required": false,
+                    "unattributed": true,
+                    "grounded_rate": null,
+                    "printed_rate": null,
+                    "role": "input",
+                    "bindings": [],
+                    "source": null,
+                    "formula_id": null,
+                    "formula_operands": [],
+                    "blockers": [],
+                    "constraints": null,
+                    "legal_refs": [
+                      "rd-439-2007:art-110",
+                      "orden-eha-672-2007:art-1",
+                      "ley-35-2006:art-99",
+                      "rd-439-2007:art-95"
+                    ],
+                    "also_appears_on": [],
+                    "standing": "done",
+                    "edit_address": { "kind": "casilla", "casilla_id": "18" },
+                    "confirmable": false,
+                    "held_zero": true,
+                    "origin_words": "Nem kötelező, 0 marad",
+                    "origin_explanation": null,
+                    "editability_words": "Add meg a rovat összegét vagy adatát.",
+                    "value_text": "0,00 €",
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null,
+                    "takes_typed_value": true,
+                    "clearable": false,
+                    "own_value": null,
+                    "confirm_comparable": null,
+                    "state_digest": "a98b28313c97e2f9b5bc587c178da1333f391127e7d64b384a0b74d1941df620"
+                  }
+                },
+                {
+                  "kind": "field",
+                  "id": "field-8",
+                  "field": {
+                    "address": { "kind": "casilla", "casilla_id": "19" },
+                    "box": "19",
+                    "label": {
+                      "text": "Végső eredmény",
+                      "disclosure": "localized"
+                    },
+                    "help": "A Modelo 130 nyomtatvány végső fizetendő összege minden levonás és korábbi önadózás után.",
+                    "data_type": "money",
+                    "value": { "kind": "null", "text": "" },
+                    "origin": "calculation_failed",
+                    "editability": "calculated",
+                    "not_writable_reason": null,
+                    "required": false,
+                    "unattributed": false,
+                    "grounded_rate": null,
+                    "printed_rate": null,
+                    "role": "computed",
+                    "bindings": [],
+                    "source": null,
+                    "formula_id": "modelo-130-resultado-final",
+                    "formula_operands": ["17", "18"],
+                    "blockers": [],
+                    "constraints": null,
+                    "legal_refs": [
+                      "rd-439-2007:art-110",
+                      "orden-eha-672-2007:art-1",
+                      "ley-35-2006:art-99",
+                      "rd-439-2007:art-95"
+                    ],
+                    "also_appears_on": [],
+                    "standing": "needs_you",
+                    "edit_address": { "kind": "casilla", "casilla_id": "19" },
+                    "confirmable": false,
+                    "held_zero": false,
+                    "origin_words": "Nem számítható ki",
+                    "origin_explanation": null,
+                    "editability_words": "A Cadrumo más rovatokból számítja ki.",
+                    "value_text": null,
+                    "restorable": false,
+                    "filers_own": false,
+                    "confirm_value": null,
+                    "takes_typed_value": false,
+                    "clearable": false,
+                    "own_value": null,
+                    "confirm_comparable": null,
+                    "state_digest": "406cda705f9b73b812514662a61f30bd525df9ab22af7e5b1a0699aeeb55804e"
+                  }
+                }
+              ],
+              "counts": {
+                "total": 8,
+                "needs_input": 0,
+                "entered": 0,
+                "imported": 0,
+                "calculated": 1,
+                "overridden": 0,
+                "default_to_confirm": 0,
+                "not_applicable": 0,
+                "blocked": 0
+              }
+            },
+            {
+              "id": "dr-13001.ingreso",
+              "heading": { "text": "Befizetés (4)", "disclosure": "localized" },
+              "official_heading": "Ingreso (4)",
+              "blocks": [
+                {
+                  "kind": "context_field",
+                  "id": "iban",
+                  "label": { "text": "IBAN", "disclosure": "localized" },
+                  "value": { "kind": "null", "text": "" },
+                  "value_text": "nincs adat"
+                }
+              ],
+              "counts": {
+                "total": 0,
+                "needs_input": 0,
+                "entered": 0,
+                "imported": 0,
+                "calculated": 0,
+                "overridden": 0,
+                "default_to_confirm": 0,
+                "not_applicable": 0,
+                "blocked": 0
+              }
+            },
+            {
+              "id": "dr-13001.complementaria",
+              "heading": {
+                "text": "Kiegészítő bevallás (7)",
+                "disclosure": "localized"
+              },
+              "official_heading": "Complementaria (7)",
+              "blocks": [
+                {
+                  "kind": "context_field",
+                  "id": "declaracion-complementaria",
+                  "label": {
+                    "text": "Kiegészítő önadózási bevallás",
+                    "disclosure": "localized"
+                  },
+                  "value": { "kind": "null", "text": "" },
+                  "value_text": "nincs adat"
+                },
+                {
+                  "kind": "context_field",
+                  "id": "justificante-anterior",
+                  "label": {
+                    "text": "Az előző önadózási bevallás igazolásszáma",
+                    "disclosure": "localized"
+                  },
+                  "value": { "kind": "null", "text": "" },
+                  "value_text": "nincs adat"
+                }
+              ],
+              "counts": {
+                "total": 0,
+                "needs_input": 0,
+                "entered": 0,
+                "imported": 0,
+                "calculated": 0,
+                "overridden": 0,
+                "default_to_confirm": 0,
+                "not_applicable": 0,
+                "blocked": 0
+              }
+            }
+          ],
+          "counts": {
+            "total": 19,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 2,
+            "calculated": 6,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 1,
+            "blocked": 0
+          },
+          "applicability_words": null
+        }
+      ],
+      "working_figures": [
+        {
+          "address": {
+            "kind": "casilla",
+            "casilla_id": "saldo-negativo-fin-periodo"
+          },
+          "box": null,
+          "label": {
+            "text": "Későbbi időszakokra átvihető negatív egyenleg (max. 0, -17. mező)",
+            "disclosure": "localized"
+          },
+          "help": "Számított átvihető érték, amikor a 17. mező negatív; későbbi negyedévben a 15. mező levonásaként használható.",
+          "data_type": "money",
+          "value": { "kind": "null", "text": "" },
+          "origin": "calculation_failed",
+          "editability": "calculated",
+          "not_writable_reason": null,
+          "required": false,
+          "unattributed": false,
+          "grounded_rate": null,
+          "printed_rate": null,
+          "role": "computed",
+          "bindings": [],
+          "source": null,
+          "formula_id": "modelo-130-saldo-negativo-fin-periodo",
+          "formula_operands": ["17"],
+          "blockers": [],
+          "constraints": {
+            "sign": "non_negative",
+            "min_value": null,
+            "max_value": null,
+            "pattern": null,
+            "min_length": null,
+            "max_length": null,
+            "enum": null,
+            "legal_refs": ["rd-439-2007:art-110"],
+            "source_refs": ["aeat-modelo-130-instructions"]
+          },
+          "legal_refs": [
+            "rd-439-2007:art-110",
+            "orden-eha-672-2007:art-1",
+            "ley-35-2006:art-99",
+            "rd-439-2007:art-95"
+          ],
+          "also_appears_on": [],
+          "standing": "needs_you",
+          "edit_address": {
+            "kind": "casilla",
+            "casilla_id": "saldo-negativo-fin-periodo"
+          },
+          "confirmable": false,
+          "held_zero": false,
+          "origin_words": "Nem számítható ki",
+          "origin_explanation": null,
+          "editability_words": "A Cadrumo más rovatokból számítja ki.",
+          "value_text": null,
+          "restorable": false,
+          "filers_own": false,
+          "confirm_value": null,
+          "takes_typed_value": false,
+          "clearable": false,
+          "own_value": null,
+          "confirm_comparable": null,
+          "state_digest": "406cda705f9b73b812514662a61f30bd525df9ab22af7e5b1a0699aeeb55804e"
+        }
+      ],
+      "unplaced": [],
+      "result_addresses": [],
+      "counts": {
+        "total": 20,
+        "needs_input": 0,
+        "entered": 0,
+        "imported": 2,
+        "calculated": 6,
+        "overridden": 0,
+        "default_to_confirm": 0,
+        "not_applicable": 1,
+        "blocked": 0
+      },
+      "progress": {
+        "state": "blocked",
+        "materialised_count": 14,
+        "target_count": 20,
+        "denominator": {
+          "kind": "calculation_completeness_manifest",
+          "registry_revision_id": "2019-y-siguientes",
+          "source_ref": "aeat-dr-130-2019-v12"
+        }
+      },
+      "operator_entries_known": true,
+      "edit_admitted": true,
+      "verification": "blocked",
+      "issues": [
+        {
+          "finding": {
+            "kind": "cross_period_dependency_unclean",
+            "severity": "blocking",
+            "casilla_id": null,
+            "expectation_id": null,
+            "message_locale_key": "application.modelo.findings.cross_period_dependency_unclean",
+            "message_facts": [
+              {
+                "key": "blocker_codes",
+                "kind": "string",
+                "text": "missing_observation|missing_current_filing_record"
+              },
+              {
+                "key": "origin_code",
+                "kind": "string",
+                "text": "previous_filing_binding"
+              },
+              {
+                "key": "origin_ids",
+                "kind": "string",
+                "text": "irpf.previous_year_economic_activity_net_income"
+              },
+              {
+                "key": "source_filing_year",
+                "kind": "integer",
+                "text": "2025"
+              },
+              { "key": "source_modelo", "kind": "string", "text": "100" },
+              { "key": "source_period", "kind": "string", "text": "0A" }
+            ],
+            "legal_refs": [
+              "ley-58-2003:art-119",
+              "ley-58-2003:art-120",
+              "ley-35-2006:art-99",
+              "orden-eha-672-2007:art-1",
+              "rd-439-2007:art-110",
+              "rd-439-2007:art-95"
+            ],
+            "source_refs": [
+              "aeat-dr-130-2019-v12",
+              "aeat-modelo-130-instructions"
+            ]
+          },
+          "box": null,
+          "attention": "blocks",
+          "action_locale_key": "application.modelo.work_form.finding_action.settle_earlier_declaration"
+        }
+      ],
+      "calculation_notes": [
+        {
+          "reason": "unresolved_binding",
+          "attention": "check",
+          "casilla_id": null,
+          "box": null,
+          "withholds_filing": true
+        }
+      ],
+      "calculation_notes_held": true,
+      "source_groups": [
+        {
+          "kind": "records",
+          "name": "A nyilvántartásaid",
+          "summary": "Bevételi nyilvántartás · Kiadási nyilvántartás",
+          "boxes": [],
+          "recorded": false,
+          "addresses": [
+            { "kind": "casilla", "casilla_id": "01" },
+            { "kind": "casilla", "casilla_id": "02" }
+          ],
+          "readings": [
+            {
+              "source_kind": "ledger_renta_income_aggregation",
+              "surface": "ledger",
+              "state": "produced",
+              "words": "Bevételi nyilvántartás",
+              "addresses": [{ "kind": "casilla", "casilla_id": "01" }]
+            },
+            {
+              "source_kind": "ledger_renta_gastos_pago_fraccionado_aggregation",
+              "surface": "ledger",
+              "state": "produced",
+              "words": "Kiadási nyilvántartás",
+              "addresses": [{ "kind": "casilla", "casilla_id": "02" }]
+            }
+          ]
+        },
+        {
+          "kind": "calculated",
+          "name": "Számított",
+          "summary": "",
+          "boxes": [],
+          "recorded": false,
+          "addresses": [
+            { "kind": "casilla", "casilla_id": "03" },
+            { "kind": "casilla", "casilla_id": "04" },
+            { "kind": "casilla", "casilla_id": "07" },
+            { "kind": "casilla", "casilla_id": "09" },
+            { "kind": "casilla", "casilla_id": "11" },
+            { "kind": "casilla", "casilla_id": "12" },
+            { "kind": "casilla", "casilla_id": "13" },
+            { "kind": "casilla", "casilla_id": "14" },
+            { "kind": "casilla", "casilla_id": "15" },
+            { "kind": "casilla", "casilla_id": "17" },
+            { "kind": "casilla", "casilla_id": "19" },
+            { "kind": "casilla", "casilla_id": "saldo-negativo-fin-periodo" }
+          ],
+          "readings": []
+        },
+        {
+          "kind": "blank",
+          "name": "Üresen hagyott vagy nem alkalmazandó",
+          "summary": "",
+          "boxes": [],
+          "recorded": false,
+          "addresses": [
+            { "kind": "casilla", "casilla_id": "05" },
+            { "kind": "casilla", "casilla_id": "06" },
+            { "kind": "casilla", "casilla_id": "08" },
+            { "kind": "casilla", "casilla_id": "10" },
+            { "kind": "casilla", "casilla_id": "16" },
+            { "kind": "casilla", "casilla_id": "18" }
+          ],
+          "readings": []
+        }
+      ],
+      "result": {
+        "casilla_id": "19",
+        "box": "19",
+        "value": null,
+        "direction": "unknown",
+        "disposition": null,
+        "election_may_change": false
+      },
+      "deadline": {
+        "closes_on": "2026-04-20",
+        "nominal_closes_on": "2026-04-20",
+        "holiday_coverage": "national_only",
+        "reference_on": "2026-10-25",
+        "days_remaining": null,
+        "days_overdue": 188
+      },
+      "aeat_data": null,
+      "filing": null,
+      "last_export": null,
+      "edit_closure": null,
+      "modelo_title": "Modelo 130 · IRPF részletfizetés, közvetlen megállapítás",
+      "modelo_name": "IRPF részletfizetés, közvetlen megállapítás",
+      "modelo_number": "Modelo 130",
+      "period_words": "2026. I. negyedév"
+    },
+    "verified": false,
+    "filed": false
+  },
+  "admitted_baseline": {
+    "compatibility": {
+      "workspace_contract_version": 1,
+      "edit_contract_version": 1,
+      "operation_manifest_version": 4,
+      "contract_set_digest": "8f3a0ed245e324f7fc4528e7ab661d4bcbb04840ac0747e418525584826751e5",
+      "operation_definition_id": "modelo.edit.apply",
+      "definition_contract_digest": "007cac2c7aaf032edde6b8d860a1ad2ba98b80c18c2967c4ebf8f08044834d57",
+      "request_schema": {
+        "schema_id": "modelo.edit.apply.request",
+        "schema_version": 2,
+        "schema_fingerprint": "e5a1e02a862bcf9d310c1fc919e27896f1cd5ccf9b4e008de9a9e10d473c463f"
+      },
+      "result_schema": {
+        "schema_id": "modelo.edit.apply.result",
+        "schema_version": 1,
+        "schema_fingerprint": "fcb07c3ebfda5185fff964d08883ab9ac5a7e13ae46de77868923db2f7a31af3"
+      },
+      "observation_contract_version": 1,
+      "review_projection_contract_version": null,
+      "review_schema": null,
+      "workspace_refresh_target_version": 1,
+      "workspace_refresh_target_schema": {
+        "schema_id": "modelo.edit.apply.workspace_refresh_target",
+        "schema_version": 1,
+        "schema_fingerprint": "f3ed60843779fac34b3b30864d6f82ec97d218a19dfb751f34d05fd6880822a7"
+      },
+      "financial_operand_protocol_version": 1,
+      "financial_operand_schema": {
+        "schema_id": "modelo.edit.submission",
+        "schema_version": 1,
+        "schema_fingerprint": "207803c795cd324d67b0c181c1e575755354ef23733b5450214c0c861992b4aa"
+      }
+    },
+    "bucket_id": "13000000-0000-4000-8000-000000000730",
+    "modelo": "130",
+    "filing_year": 2026,
+    "period_filing_year": 2026,
+    "period_code": "1T",
+    "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
+    "work_unit_record_digest": "377090cce8d626f19a2dbf711ec4ce97812cc1d3f989391ae7001b4aee56accd",
+    "calculation_head_digest": "b134bcdc4cc8902df45d14c6db34c6b5aac7346f5eb823c54b492e13a883b1e5",
+    "current_calculation_revision_id": "2e95f02dbe5b7a8f6f685c956d141f00ff76cbe748039e8d5f3b35c331522ca2",
+    "law_selected_revision_id": "2019-y-siguientes",
+    "schema_identity": {
+      "schema_id": "modelo-130-2019-y-siguientes",
+      "schema_fingerprint": "eb7d05820612972661edddda4e1f1f694ad933759de63e32456d8a07e218b1fe",
+      "completeness_manifest_digest": "3bb3ca3e26fc0d78ab0a6ce74d5117f7dae7d265532ec043c6d6eab803f756ce"
+    },
+    "schema_version": 1,
+    "permitted_surface": [
+      {
+        "kind": "writable_binding_override",
+        "binding_id": "irpf.previous_year_economic_activity_net_income",
+        "allowed_intents": ["set_override_value", "remove_override"],
+        "grammar": {
+          "data_type": "money",
+          "family": "decimal",
+          "channel": "decimal",
+          "max_fraction_digits": 2,
+          "sign": "any",
+          "minimum": null,
+          "maximum": null,
+          "choices": null,
+          "min_length": null,
+          "max_length": null,
+          "pattern": null,
+          "ratio_unit": null,
+          "money_operand_bound": true,
+          "required": false,
+          "constraints_declared": false
+        }
+      },
+      {
+        "kind": "non_writable_binding_override",
+        "binding_id": "modelo-130-actividad-economica-gastos-cumulative",
+        "reason": "source_locked"
+      },
+      {
+        "kind": "non_writable_binding_override",
+        "binding_id": "modelo-130-actividad-economica-ingresos-cumulative",
+        "reason": "source_locked"
+      },
+      {
+        "kind": "non_writable_binding_override",
+        "binding_id": "modelo-130-actividad-economica-retenciones-cumulative",
+        "reason": "source_locked"
+      },
+      {
+        "kind": "writable_binding_override",
+        "binding_id": "modelo-130-pagos-fraccionados-anteriores",
+        "allowed_intents": ["set_override_value", "remove_override"],
+        "grammar": {
+          "data_type": "money",
+          "family": "decimal",
+          "channel": "decimal",
+          "max_fraction_digits": 2,
+          "sign": "any",
+          "minimum": null,
+          "maximum": null,
+          "choices": null,
+          "min_length": null,
+          "max_length": null,
+          "pattern": null,
+          "ratio_unit": null,
+          "money_operand_bound": true,
+          "required": false,
+          "constraints_declared": false
+        }
+      },
+      {
+        "kind": "writable_binding_override",
+        "binding_id": "modelo-130-resultados-negativos-anteriores",
+        "allowed_intents": ["set_override_value", "remove_override"],
+        "grammar": {
+          "data_type": "money",
+          "family": "decimal",
+          "channel": "decimal",
+          "max_fraction_digits": 2,
+          "sign": "any",
+          "minimum": null,
+          "maximum": null,
+          "choices": null,
+          "min_length": null,
+          "max_length": null,
+          "pattern": null,
+          "ratio_unit": null,
+          "money_operand_bound": true,
+          "required": false,
+          "constraints_declared": false
+        }
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "01",
+        "reason": "schema_declared_read_only"
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "02",
+        "reason": "schema_declared_read_only"
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "03",
+        "reason": "computed_by_formula"
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "04",
+        "reason": "computed_by_formula"
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "05",
+        "reason": "schema_declared_read_only"
+      },
+      {
+        "kind": "writable_scalar",
+        "casilla_id": "06",
+        "data_type": "money",
+        "allowed_intents": [
+          "set_typed_value",
+          "clear_declared_value",
+          "restore_source_value"
+        ],
+        "grammar": {
+          "data_type": "money",
+          "family": "decimal",
+          "channel": "decimal",
+          "max_fraction_digits": 2,
+          "sign": "non_negative",
+          "minimum": null,
+          "maximum": null,
+          "choices": null,
+          "min_length": null,
+          "max_length": null,
+          "pattern": null,
+          "ratio_unit": null,
+          "money_operand_bound": true,
+          "required": false,
+          "constraints_declared": true
+        }
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "07",
+        "reason": "computed_by_formula"
+      },
+      {
+        "kind": "writable_scalar",
+        "casilla_id": "08",
+        "data_type": "money",
+        "allowed_intents": [
+          "set_typed_value",
+          "clear_declared_value",
+          "restore_source_value"
+        ],
+        "grammar": {
+          "data_type": "money",
+          "family": "decimal",
+          "channel": "decimal",
+          "max_fraction_digits": 2,
+          "sign": "any",
+          "minimum": null,
+          "maximum": null,
+          "choices": null,
+          "min_length": null,
+          "max_length": null,
+          "pattern": null,
+          "ratio_unit": null,
+          "money_operand_bound": true,
+          "required": false,
+          "constraints_declared": false
+        }
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "09",
+        "reason": "computed_by_formula"
+      },
+      {
+        "kind": "writable_scalar",
+        "casilla_id": "10",
+        "data_type": "money",
+        "allowed_intents": [
+          "set_typed_value",
+          "clear_declared_value",
+          "restore_source_value"
+        ],
+        "grammar": {
+          "data_type": "money",
+          "family": "decimal",
+          "channel": "decimal",
+          "max_fraction_digits": 2,
+          "sign": "non_negative",
+          "minimum": null,
+          "maximum": null,
+          "choices": null,
+          "min_length": null,
+          "max_length": null,
+          "pattern": null,
+          "ratio_unit": null,
+          "money_operand_bound": true,
+          "required": false,
+          "constraints_declared": true
+        }
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "11",
+        "reason": "computed_by_formula"
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "12",
+        "reason": "computed_by_formula"
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "13",
+        "reason": "computed_by_formula"
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "14",
+        "reason": "computed_by_formula"
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "15",
+        "reason": "computed_by_formula"
+      },
+      {
+        "kind": "writable_scalar",
+        "casilla_id": "16",
+        "data_type": "money",
+        "allowed_intents": [
+          "set_typed_value",
+          "clear_declared_value",
+          "restore_source_value"
+        ],
+        "grammar": {
+          "data_type": "money",
+          "family": "decimal",
+          "channel": "decimal",
+          "max_fraction_digits": 2,
+          "sign": "any",
+          "minimum": null,
+          "maximum": null,
+          "choices": null,
+          "min_length": null,
+          "max_length": null,
+          "pattern": null,
+          "ratio_unit": null,
+          "money_operand_bound": true,
+          "required": false,
+          "constraints_declared": false
+        }
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "17",
+        "reason": "computed_by_formula"
+      },
+      {
+        "kind": "writable_scalar",
+        "casilla_id": "18",
+        "data_type": "money",
+        "allowed_intents": [
+          "set_typed_value",
+          "clear_declared_value",
+          "restore_source_value"
+        ],
+        "grammar": {
+          "data_type": "money",
+          "family": "decimal",
+          "channel": "decimal",
+          "max_fraction_digits": 2,
+          "sign": "any",
+          "minimum": null,
+          "maximum": null,
+          "choices": null,
+          "min_length": null,
+          "max_length": null,
+          "pattern": null,
+          "ratio_unit": null,
+          "money_operand_bound": true,
+          "required": false,
+          "constraints_declared": false
+        }
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "19",
+        "reason": "computed_by_formula"
+      },
+      {
+        "kind": "non_writable_scalar",
+        "casilla_id": "saldo-negativo-fin-periodo",
+        "reason": "computed_by_formula"
+      }
+    ],
+    "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
+    "mutation_family": "calculate",
+    "issued_at": "2026-10-24T23:21:24.064781Z",
+    "expires_at": "2026-10-24T23:26:24.064781Z",
+    "baseline_id": "b5bf6dfd34317ff399fdb090d9fc437bd5a6f79145724b287d353668dfb319d8"
+  },
+  "admission_refusal": null,
+  "admission_refusal_words": null,
+  "rules_incomplete": false,
+  "next_step": {
+    "action": "resolve",
+    "count": 3,
+    "findings_lead": false,
+    "recorded_at": null,
+    "file_created_at": null,
+    "receipt_to_add": false
+  },
+  "header": {
+    "attention": [{ "level": "blocks", "count": 3, "words": "akadályozó: 3" }],
+    "result": {
+      "state": "failed",
+      "casilla_id": "19",
+      "box": "19",
+      "settles": true,
+      "direction": "unknown",
+      "words": null,
+      "amount_text": null,
+      "text": "Eredmény: nem számítható ki",
+      "short_text": "Eredmény: nem számítható ki",
+      "brief_text": "Eredmény: nem számítható ki",
+      "help": ["A Cadrumo számítása; az AEAT még nem látta."],
+      "out_of_date_words": null
+    },
+    "deadline": {
+      "text": "A határidő lejárt: 2026. 04. 20.; a benyújtás most már késedelmes",
+      "short_text": "A határidő lejárt: 2026. 04. 20.; a benyújtás most már késedelmes",
+      "tone": "urgent",
+      "help": null
+    },
+    "file": null,
+    "export_hold": {
+      "reason": "blocks",
+      "count": 3,
+      "words": "A fájl létrehozása vagy a benyújtás rögzítése előtt oldd meg, ami akadályozza a benyújtást (akadályozó: 3)."
+    }
+  },
+  "issue_lines": [
+    {
+      "level": "blocks",
+      "box": null,
+      "where": "A teljes bevallás",
+      "message": "Ez a bevallás a Modelo 100 (2025, éves időszak) adatait használja, és abban még megoldatlan problémák vannak. Előbb ott oldd meg őket.",
+      "action": "Teendő: Előbb rendezd a korábbi időszak bevallását, majd számolj újra.",
+      "detail": "Ez a bevallás egy még le nem zárt korábbi időszak számait használja, ezért az eredménye még változhat.",
+      "technical": "Technikai részletek: cross_period_dependency_unclean · blocking · blocker_codes=missing_observation|missing_current_filing_record · origin_code=previous_filing_binding · origin_ids=irpf.previous_year_economic_activity_net_income · source_filing_year=2025 · source_modelo=100 · source_period=0A · ley-58-2003:art-119 · ley-58-2003:art-120 · ley-35-2006:art-99 · orden-eha-672-2007:art-1 · rd-439-2007:art-110 · rd-439-2007:art-95 · aeat-dr-130-2019-v12 · aeat-modelo-130-instructions · application.modelo.findings.cross_period_dependency_unclean",
+      "address": null,
+      "in_records": false,
+      "surface": null,
+      "from_calculation": false,
+      "recalculates": false
+    },
+    {
+      "level": "blocks",
+      "box": "19",
+      "where": "Végső eredmény",
+      "message": "A számítás nem tudta meghatározni ezt a rovatot, így a bevallásnak még nincs eredménye.",
+      "action": "Teendő: Add meg a számítás megjegyzéseiben kért értékeket, majd számolj újra.",
+      "detail": "Amíg ez a rovat nem számítható ki, a benyújtás nem rögzíthető.",
+      "technical": "Technikai részletek: calculation_failed · 19",
+      "address": { "kind": "casilla", "casilla_id": "19" },
+      "in_records": false,
+      "surface": null,
+      "from_calculation": false,
+      "recalculates": false
+    },
+    {
+      "level": "blocks",
+      "box": null,
+      "where": "A teljes bevallás",
+      "message": "A Cadrumo nem tudott egy értéket kiszámolni az adataidból, és figyelmeztetés nélkül nullát mutatott volna.",
+      "action": "Teendő: Pótold a hiányzó nyilvántartásokat vagy profiladatokat, vagy írd be te magad az értéket, majd számolj újra.",
+      "detail": null,
+      "technical": "Technikai részletek: unresolved_binding",
+      "address": null,
+      "in_records": false,
+      "surface": null,
+      "from_calculation": true,
+      "recalculates": false
+    }
+  ],
+  "verdict": {
+    "status": "blocked",
+    "words": "Az ellenőrzés olyasmit talált, ami akadályozza a benyújtást.",
+    "unapplied_words": null
+  },
+  "calculation_revision_id": "2e95f02dbe5b7a8f6f685c956d141f00ff76cbe748039e8d5f3b35c331522ca2",
+  "verification_report_id": null,
+  "asks_m303_evidence": false,
+  "asks_modelo_390": false,
+  "registry_revision_id": "2019-y-siguientes",
+  "tax_id_format": {
+    "width": 9,
+    "country_prefix": "ES",
+    "country_prefixed_width": 11,
+    "country_prefix_strip_width": 2,
+    "prefixed_nif_leaders": "KLM",
+    "nie_leaders": "XYZ",
+    "cif_leaders": "ABCDEFGHJNPQRSUVW",
+    "nif_letters": "TRWAGMYFPDXBNJZSQVHLCKE",
+    "nie_prefix_substitutions": [
+      ["X", "0"],
+      ["Y", "1"],
+      ["Z", "2"]
+    ],
+    "cif_digit_only_kinds": "ABEH",
+    "cif_letter_only_kinds": "PQRSNW",
+    "cif_letter_table": "JABCDEFGHI"
+  },
+  "typing_effects": [
+    {
+      "address": { "kind": "casilla", "casilla_id": "05" },
+      "displaces": "nothing",
+      "words": "új érték"
+    },
+    {
+      "address": { "kind": "casilla", "casilla_id": "06" },
+      "displaces": "nothing",
+      "words": "új érték"
+    },
+    {
+      "address": { "kind": "casilla", "casilla_id": "08" },
+      "displaces": "nothing",
+      "words": "új érték"
+    },
+    {
+      "address": { "kind": "casilla", "casilla_id": "10" },
+      "displaces": "nothing",
+      "words": "új érték"
+    },
+    {
+      "address": { "kind": "casilla", "casilla_id": "16" },
+      "displaces": "nothing",
+      "words": "új érték"
+    },
+    {
+      "address": { "kind": "casilla", "casilla_id": "18" },
+      "displaces": "nothing",
+      "words": "új érték"
+    }
+  ],
+  "export_offer": {
+    "artefacts": [
+      {
+        "artefact": "fichero_boe",
+        "words": "BOE-fájl az AEAT-nál való benyújtáshoz",
+        "availability": {
+          "available": false,
+          "reason": "blocks",
+          "words": "A fájl létrehozása vagy a benyújtás rögzítése előtt oldd meg, ami akadályozza a benyújtást (akadályozó: 3)."
+        }
+      },
+      {
+        "artefact": "calculation_report_csv",
+        "words": "Számítási jelentés (CSV), csak helyi nyilvántartás",
+        "availability": {
+          "available": false,
+          "reason": "not_verified",
+          "words": "Exportálás előtt ellenőrizd a bevallást."
+        }
+      },
+      {
+        "artefact": "calculation_report_pdf",
+        "words": "Aláírt számítási összesítő (PDF), csak helyi nyilvántartás",
+        "availability": {
+          "available": false,
+          "reason": "not_verified",
+          "words": "Exportálás előtt ellenőrizd a bevallást."
+        }
+      },
+      {
+        "artefact": "calculation_review_xlsx",
+        "words": "Mentett számítás áttekintése (XLSX)",
+        "availability": { "available": true, "reason": null, "words": null }
+      }
+    ],
+    "record": {
+      "available": false,
+      "reason": "blocks",
+      "words": "A fájl létrehozása vagy a benyújtás rögzítése előtt oldd meg, ami akadályozza a benyújtást (akadályozó: 3)."
+    },
+    "review_package": {
+      "words": "Csomag a könyvelődnek",
+      "availability": {
+        "available": false,
+        "reason": "blocks",
+        "words": "A fájl létrehozása vagy a benyújtás rögzítése előtt oldd meg, ami akadályozza a benyújtást (akadályozó: 3)."
+      }
+    },
+    "asks_elections": false,
+    "elections": [],
+    "file_format": "fixed_width",
+    "file_format_words": "AEAT-fájl a rögzített szélességű BOE-formátumban"
+  },
+  "receipt": null
+}

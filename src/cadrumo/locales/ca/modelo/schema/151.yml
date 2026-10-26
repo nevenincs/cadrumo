@@ -1,0 +1,2292 @@
+modelo:
+  schema:
+    '151':
+      casilla:
+        continuidad:
+          contribuyente-fax-domicilio-espana:
+            label: Contribuent. 61 - Núm. de fax.
+          contribuyente-fax-domicilio-extranjero:
+            label: Contribuent domicili estranger. 72 - Núm. de fax
+          cuota-cero:
+            label: Quota zero
+          did-devolucion-swift-bic:
+            label: Devolució. SWIFT-BIC
+          filing-period:
+            label: Període (anual, 0A)
+          filing-year:
+            label: Exercici a què es refereix la declaració
+          impatriado-base-liquidable-ahorro:
+            label: 'Base liquidable de l''estalvi (part de la base liquidable de les
+              rendes art. 25.1.f TRLIRNR: dividends, interessos i guanys patrimonials
+              de l''estalvi de font espanyola)'
+          impatriado-base-liquidable-general:
+            label: Base liquidable general (règim d'impatriats, exclosa la part de
+              l'estalvi art. 25.1.f TRLIRNR)
+          impatriado-cuota-integra-ahorro:
+            label: Quota íntegra de l'estalvi (escala de l'art. 93.2.e).2n LIRPF sobre
+              la base liquidable de l'estalvi, en la redacció aplicable a cada exercici)
+          impatriado-cuota-integra-general:
+            label: 'Quota íntegra general (escala de l''art. 93.2.e).1r LIRPF: 24
+              % fins a 600.000 € i el tipus superior de l''exercici sobre l''excés)'
+          impatriado-retenciones:
+            label: Retencions i ingressos a compte (pagaments a compte, art. 93.2.f)
+          m151-datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-origen-12:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Origen
+              [12]
+          m151-datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-propiedad-10:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Propietat
+              (%) [10]
+          m151-datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-referencia-catastral-14:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Referència
+              cadastral [14]
+          m151-datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-situacion-13:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Situació
+              [13]
+          m151-datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-usufructo-11:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Usdefruit
+              (%) [11]
+          m151-ganancia-patrimonial-total-obtenida-10:
+            label: Guany Patrimonial total obtingut [10]
+          m151-retencion-o-ingreso-a-cuenta-11:
+            label: Retenció o ingrés a compte [11]
+          p01-contribuyente-57-codigo-de-municipio:
+            label: Contribuent. 57 - Codi de municipi.
+          p01-devengo-periodo:
+            label: Meritació - Període
+          p01-representante-57-codigo-de-municipio:
+            label: Representant. 57 - Codi de municipi.
+          p01-representante-apellidos:
+            label: Representant. Cognoms
+          p01-representante-nombre:
+            label: Representant. Nom
+          p02-datos-adicionales-de-l-inmuebles-propiedad-10-01:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Propietat
+              (%) [10]
+          p02-datos-adicionales-de-l-inmuebles-propiedad-10-03:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Propietat
+              (%) [10]
+          p02-datos-adicionales-de-l-inmuebles-propiedad-10-04:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Propietat
+              (%) [10]
+          p02-datos-adicionales-de-l-inmuebles-situacion-13-01:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Situació
+              [13]
+          p02-datos-adicionales-de-l-inmuebles-situacion-13-03:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Situació
+              [13]
+          p02-datos-adicionales-de-l-inmuebles-situacion-13-04:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Situació
+              [13]
+          p02-datos-adicionales-de-l-inmuebles-usufructo-11-01:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Usdefruit
+              (%) [11]
+          p02-datos-adicionales-de-l-inmuebles-usufructo-11-03:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Usdefruit
+              (%) [11]
+          p02-datos-adicionales-de-l-inmuebles-usufructo-11-04:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Usdefruit
+              (%) [11]
+          p02-datos-adicionales-de-l-referencia-catastral-14-01:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Referència
+              cadastral [14]
+          p02-datos-adicionales-de-l-referencia-catastral-14-03:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Referència
+              cadastral [14]
+          p02-datos-adicionales-de-l-referencia-catastral-14-04:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Referència
+              cadastral [14]
+          p02-datos-adicionales-de-l-s-e-inmuebles-origen-12-01:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Origen
+              [12]
+          p02-datos-adicionales-de-l-s-e-inmuebles-origen-12-03:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Origen
+              [12]
+          p02-datos-adicionales-de-l-s-e-inmuebles-origen-12-04:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Origen
+              [12]
+          p02-pagador-apellidos-o-razon-social-01:
+            label: Pagador. Cognoms o raó social
+          p02-pagador-apellidos-o-razon-social-02:
+            label: Pagador. Cognoms o raó social
+          p02-pagador-apellidos-o-razon-social-03:
+            label: Pagador. Cognoms o raó social
+          p02-pagador-apellidos-o-razon-social-04:
+            label: Pagador. Cognoms o raó social
+          p02-pagador-nombre-01:
+            label: Pagador. Nom
+          p02-pagador-nombre-02:
+            label: Pagador. Nom
+          p02-pagador-nombre-03:
+            label: Pagador. Nom
+          p02-pagador-nombre-04:
+            label: Pagador. Nom
+          p03-datos-adicionales-de-l-inmuebles-propiedad-10-01:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Propietat
+              (%) [10]
+          p03-datos-adicionales-de-l-inmuebles-propiedad-10-02:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Propietat
+              (%) [10]
+          p03-datos-adicionales-de-l-inmuebles-propiedad-10-03:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Propietat
+              (%) [10]
+          p03-datos-adicionales-de-l-inmuebles-propiedad-10-04:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Propietat
+              (%) [10]
+          p03-datos-adicionales-de-l-inmuebles-situacion-13-01:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Situació
+              [13]
+          p03-datos-adicionales-de-l-inmuebles-situacion-13-02:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Situació
+              [13]
+          p03-datos-adicionales-de-l-inmuebles-situacion-13-03:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Situació
+              [13]
+          p03-datos-adicionales-de-l-inmuebles-situacion-13-04:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Situació
+              [13]
+          p03-datos-adicionales-de-l-inmuebles-usufructo-11-01:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Usdefruit
+              (%) [11]
+          p03-datos-adicionales-de-l-inmuebles-usufructo-11-02:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Usdefruit
+              (%) [11]
+          p03-datos-adicionales-de-l-inmuebles-usufructo-11-03:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Usdefruit
+              (%) [11]
+          p03-datos-adicionales-de-l-inmuebles-usufructo-11-04:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Usdefruit
+              (%) [11]
+          p03-datos-adicionales-de-l-referencia-catastral-14-01:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Referència
+              cadastral [14]
+          p03-datos-adicionales-de-l-referencia-catastral-14-02:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Referència
+              cadastral [14]
+          p03-datos-adicionales-de-l-referencia-catastral-14-03:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Referència
+              cadastral [14]
+          p03-datos-adicionales-de-l-referencia-catastral-14-04:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Referència
+              cadastral [14]
+          p03-datos-adicionales-de-l-s-e-inmuebles-origen-12-01:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Origen
+              [12]
+          p03-datos-adicionales-de-l-s-e-inmuebles-origen-12-02:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Origen
+              [12]
+          p03-datos-adicionales-de-l-s-e-inmuebles-origen-12-03:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Origen
+              [12]
+          p03-datos-adicionales-de-l-s-e-inmuebles-origen-12-04:
+            label: Dades Addicionals de les rendes derivades de béns i immobles. Origen
+              [12]
+          p03-pagador-apellidos-o-razon-social-01:
+            label: Pagador. Cognoms o raó social
+          p03-pagador-apellidos-o-razon-social-02:
+            label: Pagador. Cognoms o raó social
+          p03-pagador-apellidos-o-razon-social-03:
+            label: Pagador. Cognoms o raó social
+          p03-pagador-apellidos-o-razon-social-04:
+            label: Pagador. Cognoms o raó social
+          p03-pagador-nombre-01:
+            label: Pagador. Nom
+          p03-pagador-nombre-02:
+            label: Pagador. Nom
+          p03-pagador-nombre-03:
+            label: Pagador. Nom
+          p03-pagador-nombre-04:
+            label: Pagador. Nom
+          p03-total-rendimientos-int-nmobiliaria-imputada-15:
+            label: Total rendiments íntegres / Renda immobiliària imputada [15]
+          p03-total-retenciones-o-ingresos-a-cuenta-16:
+            label: Total retencions o ingressos a compte [16]
+          p05-rendimientos-negativos-rentencion-o-ingreso-a-cuenta-6:
+            label: Rendiments negatius. Retenció o ingrés a compte [6]
+          p06-adquiriente-apellidos-o-razon-social-01:
+            label: Adquirent. Cognoms o raó social
+          p06-adquiriente-apellidos-o-razon-social-02:
+            label: Adquirent. Cognoms o raó social
+          p06-adquiriente-nombre-01:
+            label: Adquirent. Nom
+          p06-adquiriente-nombre-02:
+            label: Adquirent. Nom
+          p06-ganancia-patrimonial-total-obtenida-10-02:
+            label: Guany Patrimonial total obtingut [10]
+          p06-resto-ganancia-patrimonial-total-obtenida-10:
+            label: RESTA. Guany Patrimonial total obtingut [10]
+          p06-resto-retencion-o-ingreso-a-cuenta-11:
+            label: RESTA. Retenció o ingrés a compte [11]
+          p06-retencion-o-ingreso-a-cuenta-11-02:
+            label: Retenció o ingrés a compte [11]
+          p06-total-ganancias-patrimoniales-12:
+            label: Total guanys patrimonials [12]
+          p06-total-retenciones-o-ingresos-a-cuenta-13:
+            label: Total retencions o ingressos a compte [13]
+          p08-base-liquidable-del-ahorro-18:
+            label: Base liquidable de l'estalvi [18]
+          p08-cuota-correspondiente-e-general-del-ahorro-20:
+            label: Quota corresponent a la base liquidable de l'estalvi [20]
+          p08-cuota-integra-total-21:
+            label: Quota íntegra total [21]
+          p08-cuota-integra-total-parte-autonomica-23:
+            label: Quota íntegra total. Part autonòmica [23]
+          p08-cuota-integra-total-parte-estatal-22:
+            label: Quota íntegra total. Part estatal [22]
+          p08-cuota-liquida-total-30:
+            label: Quota líquida total [30]
+          p08-cuota-liquida-total-parte-autonomica-32:
+            label: Quota líquida total. Part autonòmica [32]
+          p08-cuota-liquida-total-parte-estatal-31:
+            label: Quota líquida total. Part estatal [31]
+          p08-cuotas-del-impuesto-so-as-en-la-declaracion-34:
+            label: Quotes de l'impost sobre la Renda de no Residents pagades respecte
+              de les rendes incloses en la declaració [34]
+          p08-deduccion-por-doble-im-anjero-parte-estatal-28:
+            label: Deducció per doble imposició internacional per raó dels rendiments
+              del treball obtinguts i gravats a l'estranger. Part estatal [28]
+          p08-deduccion-por-doble-im-dos-en-el-extranjero-27:
+            label: Deducció per doble imposició internacional per raó dels rendiments
+              del treball obtinguts i gravats a l'estranger [27]
+          p08-deduccion-por-doble-im-ero-parte-autonomica-29:
+            label: Deducció per doble imposició internacional per raó dels rendiments
+              del treball obtinguts i gravats a l'estranger. Part autonòmica [29]
+          p08-deduccion-por-donativos-24:
+            label: Deducció per donatius [24]
+          p08-deduccion-por-donativos-parte-autonomica-26:
+            label: Deducció per donatius. Part autonòmica [26]
+          p08-deduccion-por-donativos-parte-estatal-25:
+            label: Deducció per donatius. Part estatal [25]
+          p08-devoluciones-acordadas-or-la-administracion-42:
+            label: Devolucions acordades per l'Administració [42]
+          p08-epigrafe-a1-35:
+            label: Epígraf A1 [35]
+          p08-epigrafe-a2-36:
+            label: Epígraf A2 [36]
+          p08-epigrafe-b-37:
+            label: Epígraf B [37]
+          p08-epigrafe-c-38:
+            label: Epígraf C [38]
+          p08-epigrafe-d-39:
+            label: Epígraf D [39]
+          p08-epigrafe-e1-y-e2-40:
+            label: Epígrafs E1 i E2 [40]
+          p08-resultado-de-la-declaracion-43:
+            label: Resultat de la declaració [43]
+          p08-resultados-a-ingresar-cion-administrativas-41:
+            label: Resultats a ingressar de les anteriors declaracions o liquidacions
+              administratives [41]
+          representante-fax:
+            label: Representant. 61 - Núm. de fax.
+          tipo-de-declaracion:
+            label: Tipus de declaració
+      construct:
+        m151-impatriado-calculation:
+          field:
+            title: Model 151 IRPF règim d'impatriats quota
+      field:
+        official_name: Modelo 151. Declaració de l'IRPF per a contribuents del règim
+          especial aplicable als treballadors desplaçats a territori espanyol.
+        title: IRPF règim especial de treballadors desplaçats (impatriats, llei Beckham)
+      revision:
+        2015-2022:
+          casilla:
+            x-chkm8bjeelmmasjf5li6abb3elimst315lkm4obe:
+              label: Número de compte (IBAN)
+            x-chkm8bjicln7arj3d5giqo9ddhgiqp35epnmotb3d4mm2tjfe8mm8pbc5lq6asrfe9niqs3lc9m6iorf:
+              label: Renúncia a la devolució a favor del Tresor Públic
+            x-chkm8bjjdtm6ior9ehgiqr315li6atjfdhqm6qbfdomn0rri5lq74obeedj6asj5dphmio8:
+              label: Sol·licita la devolució per transferència
+            x-d5mn0obke9km2p3f5phnarrkc4mm8qb6clp6arj3d5gmo:
+              label: Quota diferencial (quota íntegra general menys retencions)
+            x-e0o32bj1edkmerj1cdkmurhdchiiqor1dpq6ip31chin6bb15lj6irj5ecmn6rr3d5gmopbj:
+              label: Assignació de quantitats a fins socials
+            x-e0o32bj1edkmerj1cdkmurhdehp6iojlehgn4qb15lgiqr315lkmer35edkm2bb3c5q6ur39cdgg:
+              label: Assignació tributària a l'Església Catòlica
+            x-e0o32bj3dtmnarj9chgm8bb1elq6urjfdlgiqp355liiqpbc5limkpbicdkm6qbf5lkmsp39cdgm8ro:
+              label: Comunitat autònoma de residència durant l'exercici indicat
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd1k5lq6is3f5li6abbmd5gg:
+              label: Contribuent. 44 - Tipus de via.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd1l5ln6urb2e9iiqp355lm62bbmd5giqs3lc9m6ior1:
+              label: Contribuent. 45 - Nom de la via pública.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd1m5lq6is3f5li6abbeelmmasj1cdkmurg:
+              label: Contribuent. 46 - Tipus de numeració.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd1n5ln7arb5e9niqp355lhm2sr1:
+              label: Contribuent. 47 - Número de casa.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd1o5lhm2r39cpkm6ob4dtp2qp355ln7arb5e9ng:
+              label: Contribuent. 48 - Qualificador de número.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd1p5lh6orrhelig:
+              label: Contribuent. 49 - Bloc.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd9g5lo6usjkc5m0:
+              label: Contribuent. 50 - Portal.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd9h5lin6or1dhin4o8:
+              label: Contribuent. 51 - Escala.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd9i5lo6oobeehgg:
+              label: Contribuent. 52 - Planta.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd9j5lo7apbiehgg:
+              label: Contribuent. 53 - Porta.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd9k5li62t3fecmmarb5dpq62sj9dtpiqp355li6urb9cdkmoqbf:
+              label: Contribuent. 54 - Dades complementàries del domicili.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd9l5lm6uor1dhkm8ob45lo6uojcc5hmirre:
+              label: Contribuent. 55 - Localitat/població
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd9m5lhmup39ctniqs3fedq62r0:
+              label: Contribuent. 56 - Codi postal.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd9o5lhmup39ctniqp355lo74rrmd5n66qb1:
+              label: Contribuent. 58 - Codi de província.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd9p5lq6ar35cpnmsrpdcpkmkro:
+              label: Contribuent. 59 - Telèfon fix.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqdhg5lq6ar35cpnmsrpddlnncqbc:
+              label: Contribuent. 60 - Telèfon mòbil.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqor1dlh6irpdchiiqp3fdlkm6qbcd5ng:
+              label: Contribuent. Canvi de domicili
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb1cgmm2r1de9imcpbicln66qb15lhm2t31edq74obc:
+              label: Contribuent Dades Addicionals habitatge actual. Referència cadastral
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb1cgmmarj4c4mm2orkelgmobbkd5q7ar31e9km8ob4:
+              label: Contribuent Dades Addicionals habitatge actual. Titularitat
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb1cgmmusj3cln78obackmn0obiehkm6qbgc5hmirre:
+              label: Contribuent Dades Addicionals habitatge actual. Percentatge de
+                participació
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb1cgmncqb5dpi62bb1cdq7aobc5lpmit3lc5hmirre:
+              label: Contribuent Dades Addicionals habitatge actual. Situació
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd4mm2rjaclp6ub9n60mn8pbcclj6urjf5lj6iqjf:
+              label: Contribuent domicili estranger. 70 - Telèfon fix
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd4mmasjf5kr38bbgdth6oob3d5nmsbb3d5qm8ob4:
+              label: Contribuent domicili estranger. 64 - Població/ciutat
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd4mmau3ke9gmsqj5e9niqdhi5li6urb9cdkmoqbf:
+              label: Contribuent domicili estranger. 62 - Domicili
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd4mmqs3cclmmarjkc5p6irrj5li6urb9cdkmoqbf:
+              label: Contribuent domicili estranger. 63 - Dades complementàries del
+                domicili
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd4mmsqj5e9niqdph5lq6ar35cpnmsrpddlnncqbc:
+              label: Contribuent domicili estranger. 71 - Telèfon mòbil
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd4mn0sjfepkmsor9c4mn4pb7d5nmsbb5edq62p3f:
+              label: Contribuent domicili estranger. 67 - Província/regió/estat
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd4mn4rpd6or2qorfchkmerpde1nn6t31dgmnkqbg:
+              label: Contribuent domicili estranger. 66 - Codi postal/ZIP
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd5niqpboehp62rjaclp6ub9m6kmmarb1d5m0:
+              label: Contribuent domicili estranger. 65 - Correu electrònic
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd5niqpboehp62rjaclp6ub9m70mn0ob9ec:
+              label: Contribuent domicili estranger. 68 - País
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqpj5cdk62bb4ckmmsob3d5mmipbeehng:
+              label: Contribuent. Data de naixement
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqsr5f1ng:
+              label: Contribuent. Sexe
+            x-e0o32bj4clhmoobic5hmirre5lhmurbgdhimqpbeehgn4qb1:
+              label: Declaració complementària
+            x-e0o32bj4clhmoobic5hmirre5lhmurbgdhimqpbeehgn4qb15kp0:
+              label: Declaració complementària 2
+            x-e0o32bjeelmmasjf5li6abbaelpn8qb6d5hm2rjkck:
+              label: Número de justificant
+            x-e0o32bjiclo74pbjcln78obeehiiqd1k5lq6is3f5li6abbmd5gg:
+              label: Representant. 44 - Tipus de via.
+            x-e0o32bjiclo74pbjcln78obeehiiqd1l5ln6urb2e9iiqp355lm62bbmd5giqs3lc9m6ior1:
+              label: Representant. 45 - Nom de la via pública.
+            x-e0o32bjiclo74pbjcln78obeehiiqd1m5lq6is3f5li6abbeelmmasj1cdkmurg:
+              label: Representant. 46 - Tipus de numeració.
+            x-e0o32bjiclo74pbjcln78obeehiiqd1n5ln7arb5e9niqp355lhm2sr1:
+              label: Representant. 47 - Número de casa.
+            x-e0o32bjiclo74pbjcln78obeehiiqd1o5lhm2r39cpkm6ob4dtp2qp355ln7arb5e9ng:
+              label: Representant. 48 - Qualificador de número.
+            x-e0o32bjiclo74pbjcln78obeehiiqd1p5lh6orrhelig:
+              label: Representant. 49 - Bloc.
+            x-e0o32bjiclo74pbjcln78obeehiiqd9g5lo6usjkc5m0:
+              label: Representant. 50 - Portal.
+            x-e0o32bjiclo74pbjcln78obeehiiqd9h5lin6or1dhin4o8:
+              label: Representant. 51 - Escala.
+            x-e0o32bjiclo74pbjcln78obeehiiqd9i5lo6oobeehgg:
+              label: Representant. 52 - Planta.
+            x-e0o32bjiclo74pbjcln78obeehiiqd9j5lo7apbiehgg:
+              label: Representant. 53 - Porta.
+            x-e0o32bjiclo74pbjcln78obeehiiqd9k5li62t3fecmmarb5dpq62sj9dtpiqp355li6urb9cdkmoqbf:
+              label: Representant. 54 - Dades complementàries del domicili.
+            x-e0o32bjiclo74pbjcln78obeehiiqd9l5lm6uor1dhkm8ob45lo6uojcc5hmirre:
+              label: Representant. 55 - Localitat/població
+            x-e0o32bjiclo74pbjcln78obeehiiqd9m5lhmup39ctniqs3fedq62r0:
+              label: Representant. 56 - Codi postal.
+            x-e0o32bjiclo74pbjcln78obeehiiqd9o5lhmup39ctniqp355lo74rrmd5n66qb1:
+              label: Representant. 58 - Codi de província.
+            x-e0o32bjiclo74pbjcln78obeehiiqd9p5lq6ar35cpnmsrpdcpkmkro:
+              label: Representant. 59 - Telèfon fix.
+            x-e0o32bjiclo74pbjcln78obeehiiqdhg5lq6ar35cpnmsrpddlnncqbc:
+              label: Representant. 60 - Telèfon mòbil.
+            x-e0o32bjiclo74pbjcln78obeehiiqrj9co:
+              label: Representant. NIF
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko32:
+              label: Dades Addicionals Rendiment del Treball. Impost satisfet a l'estranger
+                [9]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko34:
+              label: Dades Addicionals Rendiment del Treball. Impost satisfet a l'estranger
+                [9]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko36:
+              label: Dades Addicionals Rendiment del Treball. Impost satisfet a l'estranger
+                [9]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko38:
+              label: Dades Addicionals Rendiment del Treball. Impost satisfet a l'estranger
+                [9]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmncob4dsmmarhdclm2qpboehp62rjaclp6ub9o5ko32:
+              label: Dades Addicionals Rendiment del Treball. Rendiment íntegre obtingut
+                i gravat a l'estranger [8]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmncob4dsmmarhdclm2qpboehp62rjaclp6ub9o5ko34:
+              label: Dades Addicionals Rendiment del Treball. Rendiment íntegre obtingut
+                i gravat a l'estranger [8]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmncob4dsmmarhdclm2qpboehp62rjaclp6ub9o5ko36:
+              label: Dades Addicionals Rendiment del Treball. Rendiment íntegre obtingut
+                i gravat a l'estranger [8]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmncob4dsmmarhdclm2qpboehp62rjaclp6ub9o5ko38:
+              label: Dades Addicionals Rendiment del Treball. Rendiment íntegre obtingut
+                i gravat a l'estranger [8]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g64:
+              label: Ingressos a compte [4]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g68:
+              label: Ingressos a compte [4]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g6c:
+              label: Ingressos a compte [4]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g6g:
+              label: Ingressos a compte [4]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0c8:
+              label: Ingressos a compte repercutits [5]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0cg:
+              label: Ingressos a compte repercutits [5]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0co:
+              label: Ingressos a compte repercutits [5]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0d0:
+              label: Ingressos a compte repercutits [5]
+            x-e0o34bjec5q7asj1dhinko9d68mj0c8:
+              label: Naturalesa [2]
+            x-e0o34bjec5q7asj1dhinko9d68mj0cg:
+              label: Naturalesa [2]
+            x-e0o34bjec5q7asj1dhinko9d68mj0co:
+              label: Naturalesa [2]
+            x-e0o34bjec5q7asj1dhinko9d68mj0d0:
+              label: Naturalesa [2]
+            x-e0o34bjgc5jm2p3fe8mmcbba5ko32:
+              label: Pagador. Persona física/jurídica
+            x-e0o34bjgc5jm2p3fe8mmcbba5ko34:
+              label: Pagador. Persona física/jurídica
+            x-e0o34bjgc5jm2p3fe8mmcbba5ko36:
+              label: Pagador. Persona física/jurídica
+            x-e0o34bjgc5jm2p3fe8mmcbba5ko38:
+              label: Pagador. Persona física/jurídica
+            x-e0o34bjgc5jm2p3fe8mmsqb65ko32:
+              label: Pagador. Número d'identificació fiscal
+            x-e0o34bjgc5jm2p3fe8mmsqb65ko34:
+              label: Pagador. Número d'identificació fiscal
+            x-e0o34bjgc5jm2p3fe8mmsqb65ko36:
+              label: Pagador. Número d'identificació fiscal
+            x-e0o34bjgc5jm2p3fe8mmsqb65ko38:
+              label: Pagador. Número d'identificació fiscal
+            x-e0o34bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko32:
+              label: Rendiment íntegre / renda immobiliària imputada [6]
+            x-e0o34bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko34:
+              label: Rendiment íntegre / renda immobiliària imputada [6]
+            x-e0o34bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko36:
+              label: Rendiment íntegre / renda immobiliària imputada [6]
+            x-e0o34bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko38:
+              label: Rendiment íntegre / renda immobiliària imputada [6]
+            x-e0o34bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko32:
+              label: Retenció o ingrés a compte [7]
+            x-e0o34bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko34:
+              label: Retenció o ingrés a compte [7]
+            x-e0o34bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko36:
+              label: Retenció o ingrés a compte [7]
+            x-e0o34bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko38:
+              label: Retenció o ingrés a compte [7]
+            x-e0o34bjkd5o6ubb4ckmn4pbeehgiqc9d60og:
+              label: Tipus de renda [1]
+            x-e0o34bjkd5o6ubb4ckmn4pbeehgiqc9d60p0:
+              label: Tipus de renda [1]
+            x-e0o34bjkd5o6ubb4ckmn4pbeehgiqc9d60pg:
+              label: Tipus de renda [1]
+            x-e0o34bjkd5o6ubb4ckmn4pbeehgiqc9d60q0:
+              label: Tipus de renda [1]
+            x-e0o34bjmc5m6usj1cdkmurhd6cmj0c8:
+              label: Valoració [3]
+            x-e0o34bjmc5m6usj1cdkmurhd6cmj0cg:
+              label: Valoració [3]
+            x-e0o34bjmc5m6usj1cdkmurhd6cmj0co:
+              label: Valoració [3]
+            x-e0o34bjmc5m6usj1cdkmurhd6cmj0d0:
+              label: Valoració [3]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko32:
+              label: Dades Addicionals Rendiment del Treball. Impost satisfet a l'estranger
+                [9]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko34:
+              label: Dades Addicionals Rendiment del Treball. Impost satisfet a l'estranger
+                [9]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko36:
+              label: Dades Addicionals Rendiment del Treball. Impost satisfet a l'estranger
+                [9]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko38:
+              label: Dades Addicionals Rendiment del Treball. Impost satisfet a l'estranger
+                [9]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmncob4dsmmarhdclm2qpboehp62rjaclp6ub9o5ko32:
+              label: Dades Addicionals Rendiment del Treball. Rendiment íntegre obtingut
+                i gravat a l'estranger [8]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmncob4dsmmarhdclm2qpboehp62rjaclp6ub9o5ko34:
+              label: Dades Addicionals Rendiment del Treball. Rendiment íntegre obtingut
+                i gravat a l'estranger [8]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmncob4dsmmarhdclm2qpboehp62rjaclp6ub9o5ko36:
+              label: Dades Addicionals Rendiment del Treball. Rendiment íntegre obtingut
+                i gravat a l'estranger [8]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmncob4dsmmarhdclm2qpboehp62rjaclp6ub9o5ko38:
+              label: Dades Addicionals Rendiment del Treball. Rendiment íntegre obtingut
+                i gravat a l'estranger [8]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g64:
+              label: Ingressos a compte [4]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g68:
+              label: Ingressos a compte [4]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g6c:
+              label: Ingressos a compte [4]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g6g:
+              label: Ingressos a compte [4]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0c8:
+              label: Ingressos a compte repercutits [5]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0cg:
+              label: Ingressos a compte repercutits [5]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0co:
+              label: Ingressos a compte repercutits [5]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0d0:
+              label: Ingressos a compte repercutits [5]
+            x-e0o36bjec5q7asj1dhinko9d68mj0c8:
+              label: Naturalesa [2]
+            x-e0o36bjec5q7asj1dhinko9d68mj0cg:
+              label: Naturalesa [2]
+            x-e0o36bjec5q7asj1dhinko9d68mj0co:
+              label: Naturalesa [2]
+            x-e0o36bjec5q7asj1dhinko9d68mj0d0:
+              label: Naturalesa [2]
+            x-e0o36bjgc5jm2p3fe8mmcbba5ko32:
+              label: Pagador. Persona física/jurídica
+            x-e0o36bjgc5jm2p3fe8mmcbba5ko34:
+              label: Pagador. Persona física/jurídica
+            x-e0o36bjgc5jm2p3fe8mmcbba5ko36:
+              label: Pagador. Persona física/jurídica
+            x-e0o36bjgc5jm2p3fe8mmcbba5ko38:
+              label: Pagador. Persona física/jurídica
+            x-e0o36bjgc5jm2p3fe8mmsqb65ko32:
+              label: Pagador. Número d'identificació fiscal
+            x-e0o36bjgc5jm2p3fe8mmsqb65ko34:
+              label: Pagador. Número d'identificació fiscal
+            x-e0o36bjgc5jm2p3fe8mmsqb65ko36:
+              label: Pagador. Número d'identificació fiscal
+            x-e0o36bjgc5jm2p3fe8mmsqb65ko38:
+              label: Pagador. Número d'identificació fiscal
+            x-e0o36bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko32:
+              label: Rendiment íntegre / renda immobiliària imputada [6]
+            x-e0o36bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko34:
+              label: Rendiment íntegre / renda immobiliària imputada [6]
+            x-e0o36bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko36:
+              label: Rendiment íntegre / renda immobiliària imputada [6]
+            x-e0o36bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko38:
+              label: Rendiment íntegre / renda immobiliària imputada [6]
+            x-e0o36bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko32:
+              label: Retenció o ingrés a compte [7]
+            x-e0o36bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko34:
+              label: Retenció o ingrés a compte [7]
+            x-e0o36bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko36:
+              label: Retenció o ingrés a compte [7]
+            x-e0o36bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko38:
+              label: Retenció o ingrés a compte [7]
+            x-e0o36bjiclpn8rpde9imsp39dlkmarjkdsmmirjkckmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m:
+              label: RESTA. Rendiment íntegre / renda immobiliària imputada [6]
+            x-e0o36bjiclpn8rpde9imst35dphmirre5lniqqbectp6asrf5lgiqorlcln78o9d6s:
+              label: RESTA. Retenció o ingrés a compte [7]
+            x-e0o36bjkd5o6ubb4ckmn4pbeehgiqc9d60og:
+              label: Tipus de renda [1]
+            x-e0o36bjkd5o6ubb4ckmn4pbeehgiqc9d60p0:
+              label: Tipus de renda [1]
+            x-e0o36bjkd5o6ubb4ckmn4pbeehgiqc9d60pg:
+              label: Tipus de renda [1]
+            x-e0o36bjkd5o6ubb4ckmn4pbeehgiqc9d60q0:
+              label: Tipus de renda [1]
+            x-e0o36bjmc5m6usj1cdkmurhd6cmj0c8:
+              label: Valoració [3]
+            x-e0o36bjmc5m6usj1cdkmurhd6cmj0cg:
+              label: Valoració [3]
+            x-e0o36bjmc5m6usj1cdkmurhd6cmj0co:
+              label: Valoració [3]
+            x-e0o36bjmc5m6usj1cdkmurhd6cmj0d0:
+              label: Valoració [3]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g64:
+              label: Ingressos a compte [4]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g68:
+              label: Ingressos a compte [4]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g6c:
+              label: Ingressos a compte [4]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g6g:
+              label: Ingressos a compte [4]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g6k:
+              label: Ingressos a compte [4]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g6o:
+              label: Ingressos a compte [4]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g6s:
+              label: Ingressos a compte [4]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g70:
+              label: Ingressos a compte [4]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g74:
+              label: Ingressos a compte [4]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0c8:
+              label: Ingressos a compte repercutits [5]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0cg:
+              label: Ingressos a compte repercutits [5]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0co:
+              label: Ingressos a compte repercutits [5]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0d0:
+              label: Ingressos a compte repercutits [5]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0d8:
+              label: Ingressos a compte repercutits [5]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0dg:
+              label: Ingressos a compte repercutits [5]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0do:
+              label: Ingressos a compte repercutits [5]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0e0:
+              label: Ingressos a compte repercutits [5]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0e8:
+              label: Ingressos a compte repercutits [5]
+            x-e0o38bjec5q7asj1dhinko9d68mj0c8:
+              label: Naturalesa [2]
+            x-e0o38bjec5q7asj1dhinko9d68mj0cg:
+              label: Naturalesa [2]
+            x-e0o38bjec5q7asj1dhinko9d68mj0co:
+              label: Naturalesa [2]
+            x-e0o38bjec5q7asj1dhinko9d68mj0d0:
+              label: Naturalesa [2]
+            x-e0o38bjec5q7asj1dhinko9d68mj0d8:
+              label: Naturalesa [2]
+            x-e0o38bjec5q7asj1dhinko9d68mj0dg:
+              label: Naturalesa [2]
+            x-e0o38bjec5q7asj1dhinko9d68mj0do:
+              label: Naturalesa [2]
+            x-e0o38bjec5q7asj1dhinko9d68mj0e0:
+              label: Naturalesa [2]
+            x-e0o38bjec5q7asj1dhinko9d68mj0e8:
+              label: Naturalesa [2]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9m5ko32:
+              label: Rendiment íntegre [6]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9m5ko34:
+              label: Rendiment íntegre [6]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9m5ko36:
+              label: Rendiment íntegre [6]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9m5ko38:
+              label: Rendiment íntegre [6]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9m5ko3a:
+              label: Rendiment íntegre [6]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9m5ko3c:
+              label: Rendiment íntegre [6]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9m5ko3e:
+              label: Rendiment íntegre [6]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9m5ko3g:
+              label: Rendiment íntegre [6]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9m5ko3i:
+              label: Rendiment íntegre [6]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko32:
+              label: Retenció o ingrés a compte [7]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko34:
+              label: Retenció o ingrés a compte [7]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko36:
+              label: Retenció o ingrés a compte [7]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko38:
+              label: Retenció o ingrés a compte [7]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko3a:
+              label: Retenció o ingrés a compte [7]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko3c:
+              label: Retenció o ingrés a compte [7]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko3e:
+              label: Retenció o ingrés a compte [7]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko3g:
+              label: Retenció o ingrés a compte [7]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko3i:
+              label: Retenció o ingrés a compte [7]
+            x-e0o38bjiclpn8rpde9imsp39dlkmarjkdtpiqqbeehimesjf5kr0:
+              label: RESTA. Rendiment íntegre [6]
+            x-e0o38bjiclpn8rpde9imst35dphmirre5lniqqbectp6asrf5lgiqorlcln78o9d6s:
+              label: RESTA. Retenció o ingrés a compte [7]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc9d60og:
+              label: Tipus de renda [1]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc9d60p0:
+              label: Tipus de renda [1]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc9d60pg:
+              label: Tipus de renda [1]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc9d60q0:
+              label: Tipus de renda [1]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc9d60qg:
+              label: Tipus de renda [1]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc9d60r0:
+              label: Tipus de renda [1]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc9d60rg:
+              label: Tipus de renda [1]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc9d60s0:
+              label: Tipus de renda [1]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc9d60sg:
+              label: Tipus de renda [1]
+            x-e0o38bjkdtq62r1de9imsp39dlkmarjkdtpiqqbeehimesjfecmjg:
+              label: Total rendiments íntegres [8]
+            x-e0o38bjkdtq62r1de9in8pbecdkmurj5ecmmubb9dpjn4pbjdtpiqo9dcdqmarjkc4mji:
+              label: Total retencions o ingressos a compte [9]
+            x-e0o38bjmc5m6usj1cdkmurhd6cmj0c8:
+              label: Valoració [3]
+            x-e0o38bjmc5m6usj1cdkmurhd6cmj0cg:
+              label: Valoració [3]
+            x-e0o38bjmc5m6usj1cdkmurhd6cmj0co:
+              label: Valoració [3]
+            x-e0o38bjmc5m6usj1cdkmurhd6cmj0d0:
+              label: Valoració [3]
+            x-e0o38bjmc5m6usj1cdkmurhd6cmj0d8:
+              label: Valoració [3]
+            x-e0o38bjmc5m6usj1cdkmurhd6cmj0dg:
+              label: Valoració [3]
+            x-e0o38bjmc5m6usj1cdkmurhd6cmj0do:
+              label: Valoració [3]
+            x-e0o38bjmc5m6usj1cdkmurhd6cmj0e0:
+              label: Valoració [3]
+            x-e0o38bjmc5m6usj1cdkmurhd6cmj0e8:
+              label: Valoració [3]
+            x-e0o3abj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d68mj0c8:
+              label: Guany patrimonial [2]
+            x-e0o3abj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d68mj0cg:
+              label: Guany patrimonial [2]
+            x-e0o3abj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d68mj0co:
+              label: Guany patrimonial [2]
+            x-e0o3abj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d68mj0d0:
+              label: Guany patrimonial [2]
+            x-e0o3abj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d68mj0d8:
+              label: Guany patrimonial [2]
+            x-e0o3abj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d68mj0dg:
+              label: Guany patrimonial [2]
+            x-e0o3abj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d68mj0do:
+              label: Guany patrimonial [2]
+            x-e0o3abj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d68mj0e0:
+              label: Guany patrimonial [2]
+            x-e0o3abj7c5pn8rrj5li6abb1e1p6utj9edkmurj1dkmm2r35ecmnibb4ckmn6tbdd5n6isrke9nn6b9k:
+              label: Despeses d'aprovisionament de materials i subministraments [4]
+            x-e0o3abj7c5pn8rrj5li6abbgclp76rrec5m2qco:
+              label: Despeses de personal [3]
+            x-e0o3abj9dpjn4pbjdtpiqqbeehimesjfecmj4:
+              label: Ingressos íntegres [2]
+            x-e0o3abjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9g64:
+              label: NIF de la societat o fons d'inversió
+            x-e0o3abjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9g68:
+              label: NIF de la societat o fons d'inversió
+            x-e0o3abjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9g6c:
+              label: NIF de la societat o fons d'inversió
+            x-e0o3abjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9g6g:
+              label: NIF de la societat o fons d'inversió
+            x-e0o3abjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9g6k:
+              label: NIF de la societat o fons d'inversió
+            x-e0o3abjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9g6o:
+              label: NIF de la societat o fons d'inversió
+            x-e0o3abjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9g6s:
+              label: NIF de la societat o fons d'inversió
+            x-e0o3abjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9g70:
+              label: NIF de la societat o fons d'inversió
+            x-e0o3abjicln68qbdd5imst3f5ln6at3f5kqg:
+              label: Rendiment net [5]
+            x-e0o3abjicln68qbdd5imst3fecmmspb7c5q6itjfecmn4pbechkmqqb5dpq6ubbeclq6ub9n:
+              label: Rendiments negatius. Rendiment net [7]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9j5ko32:
+              label: Retenció o ingrés a compte [3]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9j5ko34:
+              label: Retenció o ingrés a compte [3]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9j5ko36:
+              label: Retenció o ingrés a compte [3]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9j5ko38:
+              label: Retenció o ingrés a compte [3]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9j5ko3a:
+              label: Retenció o ingrés a compte [3]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9j5ko3c:
+              label: Retenció o ingrés a compte [3]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9j5ko3e:
+              label: Retenció o ingrés a compte [3]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9j5ko3g:
+              label: Retenció o ingrés a compte [3]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9m:
+              label: Retenció o ingrés a compte [6]
+            x-e0o3abjiclpn8rpdctgmsobecdkm2bbgc5q74qbddtn6iobc5kp0:
+              label: RESTA. Guany patrimonial [2]
+            x-e0o3abjiclpn8rpde9imst35dphmirre5lniqqbectp6asrf5lgiqorlcln78o9d6c:
+              label: RESTA. Retenció o ingrés a compte [3]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc9d60og:
+              label: Tipus de renda [1]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc9d60p0:
+              label: Tipus de renda [1]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc9d60pg:
+              label: Tipus de renda [1]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc9d60q0:
+              label: Tipus de renda [1]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc9d60qg:
+              label: Tipus de renda [1]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc9d60r0:
+              label: Tipus de renda [1]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc9d60rg:
+              label: Tipus de renda [1]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc9d60s0:
+              label: Tipus de renda [1]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc9d60sg:
+              label: Tipus de renda [1]
+            x-e0o3abjkdtq62r1dctgmsobecdkm2spde1gn8sj9dlnmsqb1dhin6b9k:
+              label: Total guanys patrimonials [4]
+            x-e0o3abjkdtq62r1de9imsp39dlkmarjkdtpiqrj5ehnn6b9o:
+              label: Total rendiments nets [8]
+            x-e0o3abjkdtq62r1de9in8pbecdkmurj5ecmmubb9dpjn4pbjdtpiqo9dcdqmarjkc4mja:
+              label: Total retencions o ingressos a compte [5]
+            x-e0o3abjkdtq62r1de9in8pbecdkmurj5ecmmubb9dpjn4pbjdtpiqo9dcdqmarjkc4mji:
+              label: Total retencions o ingressos a compte [9]
+            x-e0o3cbhk6gmn8qbgdsmm8p9depkm2b9g64:
+              label: 44 - Tipus de via.
+            x-e0o3cbhk6gmn8qbgdsmm8p9depkm2b9g68:
+              label: 44 - Tipus de via.
+            x-e0o3cbhk6kmmsrrdc9p6abb4ckmmoo9depkm2bbgelh6oqb3c4mj0c8:
+              label: 45 - Nom de la via pública.
+            x-e0o3cbhk6kmmsrrdc9p6abb4ckmmoo9depkm2bbgelh6oqb3c4mj0cg:
+              label: 45 - Nom de la via pública.
+            x-e0o3cbhk6omn8qbgdsmm8p9ddpqmqpbic5hmirre5ko32:
+              label: 46 - Tipus de numeració.
+            x-e0o3cbhk6omn8qbgdsmm8p9ddpqmqpbic5hmirre5ko34:
+              label: 46 - Tipus de numeració.
+            x-e0o3cbhk70mm6obcd5j6ior1chnn4bb4ckmmstbdclp6ub9g64:
+              label: 48 - Qualificador de número.
+            x-e0o3cbhk70mm6obcd5j6ior1chnn4bb4ckmmstbdclp6ub9g68:
+              label: 48 - Qualificador de número.
+            x-e0o3cbhk74mm4r3fe5qmab9g64:
+              label: 49 - Bloc.
+            x-e0o3cbhk74mm4r3fe5qmab9g68:
+              label: 49 - Bloc.
+            x-e0o3cbhl64mmasr3c5m6asj15ko32:
+              label: 51 - Escala.
+            x-e0o3cbhl64mmasr3c5m6asj15ko34:
+              label: 51 - Escala.
+            x-e0o3cbhl6cmn0tb5e9q62b9g64:
+              label: 53 - Porta.
+            x-e0o3cbhl6cmn0tb5e9q62b9g68:
+              label: 53 - Porta.
+            x-e0o3cbhl6gmm8obkdtpiqorfdlo6opbdcln78obid5nn6bb4ckmm8rrdd5hmir39dsmj0c8:
+              label: 54 - Dades complementàries del domicili.
+            x-e0o3cbhl6gmm8obkdtpiqorfdlo6opbdcln78obid5nn6bb4ckmm8rrdd5hmir39dsmj0cg:
+              label: 54 - Dades complementàries del domicili.
+            x-e0o3cbhl6kmmorr3c5m6ip31cgmn0rr2dhgm6qbfdomj0c8:
+              label: 55 - Localitat/població
+            x-e0o3cbhl6kmmorr3c5m6ip31cgmn0rr2dhgm6qbfdomj0cg:
+              label: 55 - Localitat/població
+            x-e0o3cbhl6omm6rr4d5jmubbgdtpn8obc5ko32:
+              label: 56 - Codi postal.
+            x-e0o3cbhl6omm6rr4d5jmubbgdtpn8obc5ko34:
+              label: 56 - Codi postal.
+            x-e0o3cbhl6smmqtbed5hmis39dsmj0c8:
+              label: 57 - Municipi
+            x-e0o3cbhl6smmqtbed5hmis39dsmj0cg:
+              label: 57 - Municipi
+            x-e0o3cbhl70mn0sjfepkmsor9c4mj0c8:
+              label: 58 - Província.
+            x-e0o3cbhl70mn0sjfepkmsor9c4mj0cg:
+              label: 58 - Província.
+            x-e0o3cbhn6cmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc1h:
+              label: 73 - Referència cadastral
+            x-e0o3cbhn6cmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc1i:
+              label: 73 - Referència cadastral
+            x-e0o3cbj1chonaqbid5imst355lj2qqhd60og:
+              label: Adquirent. F/J
+            x-e0o3cbj1chonaqbid5imst355lj2qqhd60p0:
+              label: Adquirent. F/J
+            x-e0o3cbj1chonaqbid5imst355ln6iphd60og:
+              label: Adquirent. NIF
+            x-e0o3cbj1chonaqbid5imst355ln6iphd60p0:
+              label: Adquirent. NIF
+            x-e0o3cbj3elnn8o9dchiiqs31e9q6ior9e1gm6qbfdomj0c8:
+              label: Quota de participació
+            x-e0o3cbj3elnn8o9dchiiqs31e9q6ior9e1gm6qbfdomj0cg:
+              label: Quota de participació
+            x-e0o3cbj4d5j6asj5dphmio9dc5i72tb9edkm6qbfdomj8b9g64:
+              label: Diferència (adquisició) [4]
+            x-e0o3cbj4d5j6asj5dphmio9dc5i72tb9edkm6qbfdomj8b9g68:
+              label: Diferència (adquisició) [4]
+            x-e0o3cbj4d5j6asj5dphmio9ddlimkrric4mmub9ic4mm2p3helkn6qb3d5nmsb9o5ko32:
+              label: Diferència (millora o 2a adquisició) [8]
+            x-e0o3cbj4d5j6asj5dphmio9ddlimkrric4mmub9ic4mm2p3helkn6qb3d5nmsb9o5ko34:
+              label: Diferència (millora o 2a adquisició) [8]
+            x-e0o3cbj4dthnarb5dpq6ubbgelh6oqb3dsmmubbge9kncob4dsmj0c8:
+              label: Document públic o privat
+            x-e0o3cbj4dthnarb5dpq6ubbgelh6oqb3dsmmubbge9kncob4dsmj0cg:
+              label: Document públic o privat
+            x-e0o3cbj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60og:
+              label: Data d'adquisició
+            x-e0o3cbj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60p0:
+              label: Data d'adquisició
+            x-e0o3cbj6clhmgo9dchiiqrb5d9nn4o9ddsmj4o9dc5i72tb9edkm6qbfdomj0c8:
+              label: Data de millora o 2a adquisició
+            x-e0o3cbj6clhmgo9dchiiqrb5d9nn4o9ddsmj4o9dc5i72tb9edkm6qbfdomj0cg:
+              label: Data de millora o 2a adquisició
+            x-e0o3cbj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60og:
+              label: Data de transmissió
+            x-e0o3cbj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60p0:
+              label: Data de transmissió
+            x-e0o3cbj7c5n62rj3d5giqrpde1in4p39chgiqob4e5qmisr9cdkmurhd6kmj0c8:
+              label: Guany o pèrdua (adquisició) [5]
+            x-e0o3cbj7c5n62rj3d5giqrpde1in4p39chgiqob4e5qmisr9cdkmurhd6kmj0cg:
+              label: Guany o pèrdua (adquisició) [5]
+            x-e0o3cbj7c5n62rj3d5giqrpde1in4p39chgiqrb5d9nn4o9ddsmj4o9dc5i72tb9edkm6qbfdomjib9g64:
+              label: Guany o pèrdua (millora o 2a adquisició) [9]
+            x-e0o3cbj7c5n62rj3d5giqrpde1in4p39chgiqrb5d9nn4o9ddsmj4o9dc5i72tb9edkm6qbfdomjib9g68:
+              label: Guany o pèrdua (millora o 2a adquisició) [9]
+            x-e0o3cbjedtq62sj9dsmmubb6cli6at31e9kmub9g64:
+              label: Notari o fedatari
+            x-e0o3cbjedtq62sj9dsmmubb6cli6at31e9kmub9g68:
+              label: Notari o fedatari
+            x-e0o3cbjeelmmasjf5li6abbge9nn8rr3dtm6ub9g64:
+              label: Número de protocol
+            x-e0o3cbjeelmmasjf5li6abbge9nn8rr3dtm6ub9g68:
+              label: Número de protocol
+            x-e0o3cbjeelmmasjf5ll7asrkd5j6ior1dpq6abb4clm2qrbfchimorpd68oj2b9g64:
+              label: Número de justificant del model 211
+            x-e0o3cbjeelmmasjf5ll7asrkd5j6ior1dpq6abb4clm2qrbfchimorpd68oj2b9g68:
+              label: Número de justificant del model 211
+            x-e0o3cbjkd5o6ubb4ckmn4pbeehgiqc9d60og:
+              label: Tipus de renda [1]
+            x-e0o3cbjkd5o6ubb4ckmn4pbeehgiqc9d60p0:
+              label: Tipus de renda [1]
+            x-e0o3cbjmc5m6ushdchiiqob4e5qmisr9cdkmurhdc5i72tb9edkm6qbfdomj6b9g64:
+              label: Valor d'adquisició (adquisició) [3]
+            x-e0o3cbjmc5m6ushdchiiqob4e5qmisr9cdkmurhdc5i72tb9edkm6qbfdomj6b9g68:
+              label: Valor d'adquisició (adquisició) [3]
+            x-e0o3cbjmc5m6ushdchiiqrb5d9nn4o9ddsmj4o9dc4mmkrric4mmub9ic4mm2p3helkn6qb3d5nmsb9n5ko32:
+              label: Valor de millora o 2a adquisició (millora o 2a adquisició) [7]
+            x-e0o3cbjmc5m6ushdchiiqrb5d9nn4o9ddsmj4o9dc4mmkrric4mmub9ic4mm2p3helkn6qb3d5nmsb9n5ko34:
+              label: Valor de millora o 2a adquisició (millora o 2a adquisició) [7]
+            x-e0o3cbjmc5m6ushdchiiqt3ic5n76rb9edkmurhdc5i72tb9edkm6qbfdomj4b9g64:
+              label: Valor de transmissió (adquisició) [2]
+            x-e0o3cbjmc5m6ushdchiiqt3ic5n76rb9edkmurhdc5i72tb9edkm6qbfdomj4b9g68:
+              label: Valor de transmissió (adquisició) [2]
+            x-e0o3cbjmc5m6ushdchiiqt3ic5n76rb9edkmurhddlimkrric4mmub9ic4mm2p3helkn6qb3d5nmsb9m5ko32:
+              label: Valor de transmissió (millora o 2a adquisició) [6]
+            x-e0o3cbjmc5m6ushdchiiqt3ic5n76rb9edkmurhddlimkrric4mmub9ic4mm2p3helkn6qb3d5nmsb9m5ko34:
+              label: Valor de transmissió (millora o 2a adquisició) [6]
+            x-e0o3ebj4clpm6sj9e1hmirre5li6abbcc4mmeobec5n66qb15lo62t3id5mmurj9c5m2qc1h:
+              label: Descripció del guany patrimonial
+            x-e0o3ebj4clpm6sj9e1hmirre5li6abbcc4mmeobec5n66qb15lo62t3id5mmurj9c5m2qc1i:
+              label: Descripció del guany patrimonial
+            x-e0o3ebj4clpm6sj9e1hmirre5li6abbcc4mmeobec5n66qb15lo62t3id5mmurj9c5m2qc1j:
+              label: Descripció del guany patrimonial
+            x-e0o3ebj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko32:
+              label: Descripció de l'element patrimonial
+            x-e0o3ebj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko34:
+              label: Descripció de l'element patrimonial
+            x-e0o3ebj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko36:
+              label: Descripció de l'element patrimonial
+            x-e0o3ebj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko38:
+              label: Descripció de l'element patrimonial
+            x-e0o3ebj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko3a:
+              label: Descripció de l'element patrimonial
+            x-e0o3ebj4d5j6asj5dphmio9d6gmj0c8:
+              label: Diferència [4]
+            x-e0o3ebj4d5j6asj5dphmio9d6gmj0cg:
+              label: Diferència [4]
+            x-e0o3ebj4d5j6asj5dphmio9d6gmj0co:
+              label: Diferència [4]
+            x-e0o3ebj4d5j6asj5dphmio9d6gmj0d0:
+              label: Diferència [4]
+            x-e0o3ebj4d5j6asj5dphmio9d6gmj0d8:
+              label: Diferència [4]
+            x-e0o3ebj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60og:
+              label: Data d'adquisició
+            x-e0o3ebj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60p0:
+              label: Data d'adquisició
+            x-e0o3ebj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60pg:
+              label: Data d'adquisició
+            x-e0o3ebj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60q0:
+              label: Data d'adquisició
+            x-e0o3ebj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60qg:
+              label: Data d'adquisició
+            x-e0o3ebj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60og:
+              label: Data de transmissió
+            x-e0o3ebj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60p0:
+              label: Data de transmissió
+            x-e0o3ebj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60pg:
+              label: Data de transmissió
+            x-e0o3ebj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60q0:
+              label: Data de transmissió
+            x-e0o3ebj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60qg:
+              label: Data de transmissió
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6cmj0c8:
+              label: Guany patrimonial [3]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6cmj0cg:
+              label: Guany patrimonial [3]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6cmj0co:
+              label: Guany patrimonial [3]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6kmj0c8:
+              label: Guany patrimonial [5]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6kmj0cg:
+              label: Guany patrimonial [5]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6kmj0co:
+              label: Guany patrimonial [5]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6kmj0d0:
+              label: Guany patrimonial [5]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6kmj0d8:
+              label: Guany patrimonial [5]
+            x-e0o3ebjec5q7asj1dhinko9d68mj0c8:
+              label: Naturalesa [2]
+            x-e0o3ebjec5q7asj1dhinko9d68mj0cg:
+              label: Naturalesa [2]
+            x-e0o3ebjec5q7asj1dhinko9d68mj0co:
+              label: Naturalesa [2]
+            x-e0o3ebjiclpn8rpdctgmsobecdkm2bbgc5q74qbddtn6iobc5kpg:
+              label: RESTA. Guany patrimonial [3]
+            x-e0o3ebjiclpn8rpde9in8pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9k:
+              label: RESTA. Retenció o ingrés a compte [4]
+            x-e0o3ebjiclq6arj3d5nmsbbf5lkmspriclpmubb15lhnapbeehgiqd1d60og:
+              label: Retenció o ingrés a compte [4]
+            x-e0o3ebjiclq6arj3d5nmsbbf5lkmspriclpmubb15lhnapbeehgiqd1d60p0:
+              label: Retenció o ingrés a compte [4]
+            x-e0o3ebjiclq6arj3d5nmsbbf5lkmspriclpmubb15lhnapbeehgiqd1d60pg:
+              label: Retenció o ingrés a compte [4]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc9d60og:
+              label: Tipus de renda [1]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc9d60p0:
+              label: Tipus de renda [1]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc9d60pg:
+              label: Tipus de renda [1]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc9d60q0:
+              label: Tipus de renda [1]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc9d60qg:
+              label: Tipus de renda [1]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc9d60r0:
+              label: Tipus de renda [1]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc9d60rg:
+              label: Tipus de renda [1]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc9d60s0:
+              label: Tipus de renda [1]
+            x-e0o3ebjkdtq62r1dctgmsobecdkm2spde1gn8sj9dlnmsqb1dhin6b9l:
+              label: Total guanys patrimonials [5]
+            x-e0o3ebjkdtq62r1de9in8pbecdkmurhddsmmirj7e9in6rrj5lgiqorlcln78o9d6o:
+              label: Total retencions o ingressos a compte [6]
+            x-e0o3ebjmc5m6ushdchiiqob4e5qmisr9cdkmurhd6cmj0c8:
+              label: Valor d'adquisició [3]
+            x-e0o3ebjmc5m6ushdchiiqob4e5qmisr9cdkmurhd6cmj0cg:
+              label: Valor d'adquisició [3]
+            x-e0o3ebjmc5m6ushdchiiqob4e5qmisr9cdkmurhd6cmj0co:
+              label: Valor d'adquisició [3]
+            x-e0o3ebjmc5m6ushdchiiqob4e5qmisr9cdkmurhd6cmj0d0:
+              label: Valor d'adquisició [3]
+            x-e0o3ebjmc5m6ushdchiiqob4e5qmisr9cdkmurhd6cmj0d8:
+              label: Valor d'adquisició [3]
+            x-e0o3ebjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0c8:
+              label: Valor de transmissió [2]
+            x-e0o3ebjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0cg:
+              label: Valor de transmissió [2]
+            x-e0o3ebjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0co:
+              label: Valor de transmissió [2]
+            x-e0o3ebjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0d0:
+              label: Valor de transmissió [2]
+            x-e0o3ebjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0d8:
+              label: Valor de transmissió [2]
+            x-e0o3gbj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko32:
+              label: Descripció de l'element patrimonial
+            x-e0o3gbj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko34:
+              label: Descripció de l'element patrimonial
+            x-e0o3gbj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko36:
+              label: Descripció de l'element patrimonial
+            x-e0o3gbj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko38:
+              label: Descripció de l'element patrimonial
+            x-e0o3gbj4d5j6asj5dphmio9d6gmj0c8:
+              label: Diferència [4]
+            x-e0o3gbj4d5j6asj5dphmio9d6gmj0cg:
+              label: Diferència [4]
+            x-e0o3gbj4d5j6asj5dphmio9d6gmj0co:
+              label: Diferència [4]
+            x-e0o3gbj4d5j6asj5dphmio9d6gmj0d0:
+              label: Diferència [4]
+            x-e0o3gbj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60og:
+              label: Data d'adquisició
+            x-e0o3gbj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60p0:
+              label: Data d'adquisició
+            x-e0o3gbj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60pg:
+              label: Data d'adquisició
+            x-e0o3gbj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60q0:
+              label: Data d'adquisició
+            x-e0o3gbj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60og:
+              label: Data de transmissió
+            x-e0o3gbj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60p0:
+              label: Data de transmissió
+            x-e0o3gbj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60pg:
+              label: Data de transmissió
+            x-e0o3gbj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60q0:
+              label: Data de transmissió
+            x-e0o3gbj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6kmj0c8:
+              label: Guany patrimonial [5]
+            x-e0o3gbj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6kmj0cg:
+              label: Guany patrimonial [5]
+            x-e0o3gbj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6kmj0co:
+              label: Guany patrimonial [5]
+            x-e0o3gbj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6kmj0d0:
+              label: Guany patrimonial [5]
+            x-e0o3gbjiclpn8rpdctgmsobecdkm2bbgc5q74qbddtn6iobc5kqg:
+              label: RESTA. Guany patrimonial [5]
+            x-e0o3gbjkd5o6ubb4ckmn4pbeehgiqc9d60og:
+              label: Tipus de renda [1]
+            x-e0o3gbjkd5o6ubb4ckmn4pbeehgiqc9d60p0:
+              label: Tipus de renda [1]
+            x-e0o3gbjkd5o6ubb4ckmn4pbeehgiqc9d60pg:
+              label: Tipus de renda [1]
+            x-e0o3gbjkd5o6ubb4ckmn4pbeehgiqc9d60q0:
+              label: Tipus de renda [1]
+            x-e0o3gbjkdtq62r1dctgmsobecdkm2spde1gn8sj9dlnmsqb1dhin6b9m:
+              label: Total guanys patrimonials [6]
+            x-e0o3gbjmc5m6ushdchiiqob4e5qmisr9cdkmurhd6cmj0c8:
+              label: Valor d'adquisició [3]
+            x-e0o3gbjmc5m6ushdchiiqob4e5qmisr9cdkmurhd6cmj0cg:
+              label: Valor d'adquisició [3]
+            x-e0o3gbjmc5m6ushdchiiqob4e5qmisr9cdkmurhd6cmj0co:
+              label: Valor d'adquisició [3]
+            x-e0o3gbjmc5m6ushdchiiqob4e5qmisr9cdkmurhd6cmj0d0:
+              label: Valor d'adquisició [3]
+            x-e0o3gbjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0c8:
+              label: Valor de transmissió [2]
+            x-e0o3gbjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0cg:
+              label: Valor de transmissió [2]
+            x-e0o3gbjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0co:
+              label: Valor de transmissió [2]
+            x-e0o3gbjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0d0:
+              label: Valor de transmissió [2]
+          field:
+            label: Model 151 exercicis 2015 a 2022 (règim d'impatriats; escala general
+              de l'art. 93.2.e).1r i escala de l'estalvi de l'art. 93.2.e).2n en la
+              redacció de cada exercici)
+        2025-y-siguientes:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: Exercici a què es refereix la declaració
+            x-chim6r1ee1in4qbfchng:
+              help: Període (anual, 0A)
+            x-chkm8bj4clr6ur3lcdkmurhdc9gmsorf5lh62rjb5ln62rb5:
+              label: Devolució. Nom del banc
+            x-chkm8bj4clr6ur3lcdkmurhdcdknap31cgmm6qbkf4:
+              label: Devolució. Ciutat
+            x-chkm8bj4clr6ur3lcdkmurhdcdnm8qb7dsmn0ob9ecmm6rrldpq74u9dcdnm8p8:
+              label: Devolució. Codi de país
+            x-chkm8bj4clr6ur3lcdkmurhdchkn4pb3cdkmurhdchimobb2c5n66rpdc9gmsqpdc5i68sj5edpg:
+              label: Devolució. Adreça del banc
+            x-chkm8bj4clr6ur3lcdkmurhde9imstbecdkm2bb15lm62bb4clr6ur3lcdkmurhdc4mmcobmdtp2qp35dgmn8pbjdtp6ubbgelh6oq8:
+              label: Devolució. Renúncia a la devolució a favor del Tresor Públic
+            x-chkm8bj4clr6ur3lcdkmurhdednmoqb3d5q62bbcc4mm8pbmdtm7aor9dtn2qs3fe8mn8sj1dppmcpbicln66qb1:
+              label: Devolució. Sol·licita la devolució per transferència
+            x-chkm8bj9dpjn4pbjdsmm8rrdd5hmir39c5hmirre5li6atjfdhqm6qbfdommioj1do:
+              label: Ingrés / Domiciliació / Devolució. IBAN
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hispr1dpgmsor9c4mn0obke9kmqrred5gmo:
+              help: Dada de l'annex de transmissió d'accions o participacions d'IIC
+                del model 151.
+              label: Annex. Transmissió d'accions o participacions d'IIC. Guany patrimonial
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hisrj9commarjkd5i62p0:
+              help: Dada de l'annex de transmissió d'accions o participacions d'IIC
+                del model 151.
+              label: Annex. Transmissió d'accions o participacions d'IIC. NIF de la
+                societat o fons d'inversió
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hissj5ehimsor9dtn0:
+              help: Casella 03 del model 151, exercici 2025.
+              label: Model
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist39e1niqsj5dpq62:
+              help: Casella 01 del model 151, exercici 2025.
+              label: Inici de l'identificador de model i pàgina
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobb7c5n62rj3d5gn6:
+              help: Dada de l'annex de transmissió d'accions o participacions d'IIC
+                del model 151.
+              label: Annex. Transmissió d'accions o participacions d'IIC. Total de
+                guanys patrimonials
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobbiclq6arj3d5nmspbj:
+              help: Dada de l'annex de transmissió d'accions o participacions d'IIC
+                del model 151.
+              label: Annex. Transmissió d'accions o participacions d'IIC. Total de
+                retencions o ingressos a compte
+            x-d5mn0obke9km2p3f5ph62sr55lm6isbld5i62ojcckmmepbeclp62r0:
+              help: Base liquidable general (règim d'impatriats, exclosa la part de
+                l'estalvi art. 25.1.f TRLIRNR)
+            x-d5mn0obke9km2p3f5phnarrkc4mm8qb6clp6arj3d5gmo:
+              label: Quota diferencial (quota íntegra general més quota íntegra de
+                l'estalvi, menys retencions)
+            x-d5mn0obke9km2p3f5phnarrkc4mmirjkcljn4o9dctimspbic5m0:
+              help: 'Quota íntegra general (escala art. 93.2.e.1r: 24% fins a 600.000
+                €, 47% sobre l''excés)'
+            x-d5mn0obke9km2p3f5pp6at35dphmirreclpg:
+              help: Retencions i ingressos a compte (pagaments a compte, art. 93.2.f)
+            x-e0o32bj1edkmerj1cdkmurhdchiiqor1dpq6ip31chin6bb15lj6irj5ecmn6rr3d5gmopbj5kp34:
+              label: Assignació de quantitats a fins socials [22]
+            x-e0o32bj1edkmerj1cdkmurhdehp6iojlehgn4qb15lgiqr315lkmer35edkm2bb3c5q6ur39cdgiqchh:
+              label: Assignació Tributària a l'Església Catòlica [21]
+            x-e0o32bj3dtmnarj9chgm8bb1elq6urjfdlgiqp355lp6asr9chimsor9c4mm8tbic5n78p9dclm2qpbaclp66qb3d5niqqbecgmj4c0:
+              label: Comunitat Autònoma de residència durant l'exercici indicat [20]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqojcdtonap9d6cog:
+              label: Contribuent. Bloc [31]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqor1dhkmcqb3c5i6ushdchiiqrjldlin4rpd6co0:
+              label: Contribuent. Qualificador de número [30]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqor1dlh6irpdchiiqp3fdlkm6qbcd5niqc9j:
+              label: Contribuent. Canvi de domicili [13]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqorfchkmerpdchiiqs3idtr6irj3d5giqd1g:
+              label: Contribuent. Codi de Província [40]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqorfchkmerpde1nn6t31dgmm8pbc5li6urb9cdkmoqbf5kpjg:
+              label: Contribuent. Codi postal del domicili [38]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqorfdpi6ior9dtn2qorfdpq74qb2elsmarjkckmm2srfcdkm2p3f5lgiqrrke9niqs3id4mj0do:
+              label: Contribuent. Condició. Contribuent associat a un altre principal
+                [07]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqorfdpi6ior9dtn2qorfdpq74qb2elsmarjkckmn0sj9dphmis31dgmj0dg:
+              label: Contribuent. Condició. Contribuent principal [06]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb1chkm6qbfdpgmopbj5lr6itj9cln68o9dc5hn8tb1dgmn0rricdimst31d8mj2d8:
+              label: Contribuent Dades Addicionals habitatge actual. Percentatge de
+                participació [15]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb1chkm6qbfdpgmopbj5lr6itj9cln68o9dc5hn8tb1dgmn4pb6clp6arj3d4mj2do:
+              label: Contribuent Dades Addicionals habitatge actual. Referència cadastral
+                [17]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb1chkm6qbfdpgmopbj5lr6itj9cln68o9dc5hn8tb1dgmn6qbkelgm6qbfdomj2dg:
+              label: Contribuent Dades Addicionals habitatge actual. Situació [16]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb1chkm6qbfdpgmopbj5lr6itj9cln68o9dc5hn8tb1dgmn8qbkelm62sj9cgmj2d0:
+              label: Contribuent Dades Addicionals habitatge actual. Titularitat [14]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb3dtmn0r35dlimst31e9kmuspdchimobb4dtmmior9dhkmub9j6o:
+              label: Contribuent. Dades complementàries del domicili [36]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb4clm2qorfdpq74qb2elsmarjkckmn0sj9dphmis31dgmm2s35dhm6ip3fecmj2cg:
+              label: Contribuent. Dades del contribuent principal. Cognoms i nom [12]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb4clm2qorfdpq74qb2elsmarjkckmn0sj9dphmis31dgmmsqb65koj2:
+              label: Contribuent. Dades del contribuent principal. NIF [11]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd5niqpboehp62rjaclp6ubb3dti6iprf5lo6usrkc5m2quj9e0mj8do:
+              label: Contribuent Domicili Estranger. Codi postal/ZIP [47]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd5niqpboehp62rjaclp6ubb4c5q6uspdcdnmqs3cclmmarjkc5p6irrj5kq38:
+              label: Contribuent Domicili Estranger. Dades complementàries del domicili
+                [44]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd5niqpboehp62rjaclp6ubb4dtmmior9dhkmub9k6c:
+              label: Contribuent Domicili Estranger. Domicili [43]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd5niqpboehp62rjaclp6ubb5dlgmir1d6gr0:
+              label: Contribuent Domicili Estranger. Correu electrònic [46]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd5niqpboehp62rjaclp6ubbgc5kn6b9l60:
+              label: Contribuent Domicili Estranger. País [50]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd5niqpboehp62rjaclp6ubbgdth6oob3d5nmsbb3d5qm8ob45kq3a:
+              label: Contribuent Domicili Estranger. Població/Ciutat [45]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd5niqpboehp62rjaclp6ubbge9nncqbecdkm2bbicljmirre5lin6t31cgmj8e0:
+              label: Contribuent Domicili Estranger. Província/Regió/Estat [48]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd5niqpboehp62rjaclp6ubbkclm6apjfdpniqpj9d9niqd9h:
+              label: Contribuent Domicili Estranger. Telèfon fix [51]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd5niqpboehp62rjaclp6ubbkclm6apjfdpniqrbfepkmob9l68:
+              label: Contribuent Domicili Estranger. Telèfon mòbil [52]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqpbjcdgmopbic4mj6co:
+              label: Contribuent. Escala [33]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqpj5cdk62bb4ckmmsob3d5mmipbeehniqc1l:
+              label: Contribuent. Data de naixement [05]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqr3fcdgmoqb4c5i2qs3fc9m62or9dtn2qcpn:
+              label: Contribuent. Localitat/Població [37]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqrjfdlh74p9dchiiqr315lr6io9de1qm4r39cdgiqchn:
+              label: Contribuent. Nom de la via pública [27]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqrjfdlh74p9dchimobbdeln6ior9e1kmub9j74:
+              label: Contribuent. Nom del Municipi [39]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqrjldlin4rpdchiiqor1edgiqchp:
+              label: Contribuent. Número de casa [29]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqs3cc5n78o9d6cq0:
+              label: Contribuent. Planta [34]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqs3fe9q62r1d6cp0:
+              label: Contribuent. Portal [32]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqs3lclp78o9d6cqg:
+              label: Contribuent. Porta [35]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqsr5f1niqc1k:
+              label: Contribuent. Sexe [04]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqt35dhimcrredsmmcqbadsmj8c8:
+              label: Contribuent. Telèfon fix [41]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqt35dhimcrredsmmqrrmd5m2qd1i:
+              label: Contribuent. Telèfon mòbil [42]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqt39e1niqp355ln7arb5e9gm6qbfdomj4e0:
+              label: Contribuent. Tipus de numeració [28]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqt39e1niqp355lr6io9d68r0:
+              label: Contribuent. Tipus de via [26]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqt39e1niqp355lr6irj3elm62or9dtn2qorfdpsnapr55ko3g:
+              label: Contribuent. Tipus de vinculació. Cònjuge [08]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqt39e1niqp355lr6irj3elm62or9dtn2qq39d9niqo9d64o0:
+              label: Contribuent. Tipus de vinculació. Fill/a [10]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqt39e1niqp355lr6irj3elm62or9dtn2qs3idtjmarj9ehnn4bbjd5n2qtj9dphnar3f5ko3i:
+              label: Contribuent. Tipus de vinculació. Progenitor sense vincle matrimonial
+                [09]
+            x-e0o32bj4clhmoobic5hmirre5lhmurbgdhimqpbeehgn4qb15kp2qchk:
+              label: Declaració Complementària 2 [24]
+            x-e0o32bj4clhmoobic5hmirre5lhmurbgdhimqpbeehgn4qb15kp36:
+              label: Declaració Complementària [23]
+            x-e0o32bjeelmmasjf5li6abbaelpn8qb6d5hm2rjkckmj4d8:
+              label: Número de Justificant [25]
+            x-e0o32bjiclo74pbjcln78obeehiiqobgclm6oqb4dtpiqu9ddpnmqojickmmubbic5t6urhdednm6qb1dgmmubb4cln6urb9domj2e8:
+              label: Representant. Cognoms i nom, raó social o denominació [19]
+            x-e0o32bjiclo74pbjcln78obeehiiqojcdtonap9d6cog:
+              label: Representant. Bloc [31]
+            x-e0o32bjiclo74pbjcln78obeehiiqor1dhkmcqb3c5i6ushdchiiqrjldlin4rpd6co0:
+              label: Representant. Qualificador de número [30]
+            x-e0o32bjiclo74pbjcln78obeehiiqorfchkmerpdchiiqs3idtr6irj3d5giqd1g:
+              label: Representant. Codi de Província [40]
+            x-e0o32bjiclo74pbjcln78obeehiiqorfchkmerpde1nn6t31dgmm8pbc5li6urb9cdkmoqbf5kpjg:
+              label: Representant. Codi postal del domicili [38]
+            x-e0o32bjiclo74pbjcln78obeehiiqp31ehnn6bb3dtmn0r35dlimst31e9kmuspdchimobb4dtmmior9dhkmub9j6o:
+              label: Representant. Dades complementàries del domicili [36]
+            x-e0o32bjiclo74pbjcln78obeehiiqpbjcdgmopbic4mj6co:
+              label: Representant. Escala [33]
+            x-e0o32bjiclo74pbjcln78obeehiiqr3fcdgmoqb4c5i2qs3fc9m62or9dtn2qsr95lin6bb4d5pn8qbeehgiqp35dgmmqtbed4mj6do:
+              label: Representant. Localitat/Població (si és diferent del municipi)
+                [37]
+            x-e0o32bjiclo74pbjcln78obeehiiqrj9comj2e0:
+              label: Representant. NIF [18]
+            x-e0o32bjiclo74pbjcln78obeehiiqrjfdlh74p9dchiiqr315lr6io9de1qm4r39cdgiqchn:
+              label: Representant. Nom de la via pública [27]
+            x-e0o32bjiclo74pbjcln78obeehiiqrjfdlh74p9dchimobbdeln6ior9e1kmub9j74:
+              label: Representant. Nom del Municipi [39]
+            x-e0o32bjiclo74pbjcln78obeehiiqrjldlin4rpdchiiqor1edgiqchp:
+              label: Representant. Número de casa [29]
+            x-e0o32bjiclo74pbjcln78obeehiiqs3cc5n78o9d6cq0:
+              label: Representant. Planta [34]
+            x-e0o32bjiclo74pbjcln78obeehiiqs3fe9q62r1d6cp0:
+              label: Representant. Portal [32]
+            x-e0o32bjiclo74pbjcln78obeehiiqs3lclp78o9d6cqg:
+              label: Representant. Porta [35]
+            x-e0o32bjiclo74pbjcln78obeehiiqt35dhimcrredsmmcqbadsmj8c8:
+              label: Representant. Telèfon fix [41]
+            x-e0o32bjiclo74pbjcln78obeehiiqt35dhimcrredsmmqrrmd5m2qd1i:
+              label: Representant. Telèfon mòbil [42]
+            x-e0o32bjiclo74pbjcln78obeehiiqt39e1niqp355ln7arb5e9gm6qbfdomj4e0:
+              label: Representant. Tipus de numeració [28]
+            x-e0o32bjiclo74pbjcln78obeehiiqt39e1niqp355lr6io9d68r0:
+              label: Representant. Tipus de via [26]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmmirbgelin6t3f5lpm2t39edj6ab9g74mj0cg:
+              label: Dades Addicionals Rendiment del Treball. Impost satisfet a l'estranger
+                [09]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmmirbgelin6t3f5lpm2t39edj6ab9g74mj0co:
+              label: Dades Addicionals Rendiment del Treball. Impost satisfet a l'estranger
+                [09]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmmirbgelin6t3f5lpm2t39edj6ab9g74mj0d0:
+              label: Dades Addicionals Rendiment del Treball. Impost satisfet a l'estranger
+                [09]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmmirbgelin6t3f5lpm2t39edj6aor8dsmj0e8:
+              label: Dades Addicionals Rendiment del Treball. Impost satisfet a l'estranger
+                [09]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmn4pbechkmqqb5dpq6ubb9dpq6ab9g70mj0cg:
+              label: Dades Addicionals Rendiment del Treball. Rendiment íntegre obtingut
+                i gravat a l'estranger [08]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmn4pbechkmqqb5dpq6ubb9dpq6ab9g70mj0co:
+              label: Dades Addicionals Rendiment del Treball. Rendiment íntegre obtingut
+                i gravat a l'estranger [08]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmn4pbechkmqqb5dpq6ubb9dpq6ab9g70mj0d0:
+              label: Dades Addicionals Rendiment del Treball. Rendiment íntegre obtingut
+                i gravat a l'estranger [08]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmn4pbechkmqqb5dpq6ubb9dpq6apridsmj0e0:
+              label: Dades Addicionals Rendiment del Treball. Rendiment íntegre obtingut
+                i gravat a l'estranger [08]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d0:
+              label: Ingressos a compte [04]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d1d60p0:
+              label: Ingressos a compte [04]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d1d60pg:
+              label: Ingressos a compte [04]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d1d60q0:
+              label: Ingressos a compte [04]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qg:
+              label: Ingressos a compte repercutits [05]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qiqc1i:
+              label: Ingressos a compte repercutits [05]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qiqc1j:
+              label: Ingressos a compte repercutits [05]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qiqc1k:
+              label: Ingressos a compte repercutits [05]
+            x-e0o34bjec5q7asj1dhinko9d60p0:
+              label: Naturalesa [02]
+            x-e0o34bjec5q7asj1dhinko9d60p2qc1i:
+              label: Naturalesa [02]
+            x-e0o34bjec5q7asj1dhinko9d60p2qc1j:
+              label: Naturalesa [02]
+            x-e0o34bjec5q7asj1dhinko9d60p2qc1k:
+              label: Naturalesa [02]
+            x-e0o34bjgc5jm2p3fe8mm2s35dhm6ip3fecmnibbedtmm4sj55lniqsj1f9nmsbbjdthmiobc5kqj4:
+              label: Pagador. Cognoms i nom o raó social [52]
+            x-e0o34bjgc5jm2p3fe8mm2s35dhm6ip3fecmnibbedtmm4sj55lniqsj1f9nmsbbjdthmiobc5kqj4b9g68:
+              label: Pagador. Cognoms i nom o raó social [52]
+            x-e0o34bjgc5jm2p3fe8mm2s35dhm6ip3fecmnibbedtmm4sj55lniqsj1f9nmsbbjdthmiobc5kqj4b9g6c:
+              label: Pagador. Cognoms i nom o raó social [52]
+            x-e0o34bjgc5jm2p3fe8mm2s35dhm6ip3fecmnibbedtmm4sj55lniqsj1f9nmsbbjdthmiobc5kqj4b9g6g:
+              label: Pagador. Cognoms i nom o raó social [52]
+            x-e0o34bjgc5jm2p3fe8mmcbba5kqj2:
+              label: Pagador. Física/Jurídica [51]
+            x-e0o34bjgc5jm2p3fe8mmcbba5kqj2b9g68:
+              label: Pagador. Física/Jurídica [51]
+            x-e0o34bjgc5jm2p3fe8mmcbba5kqj2b9g6c:
+              label: Pagador. Física/Jurídica [51]
+            x-e0o34bjgc5jm2p3fe8mmcbba5kqj2b9g6g:
+              label: Pagador. Física/Jurídica [51]
+            x-e0o34bjicln68qbdd5imst3f5lkmst35ctp6ubbicln78o9dd5n6qrr2d5m6iobid5giqqbde1qn8ob4c4mj0dg:
+              label: Rendiment íntegre / Renda immobiliària imputada [06]
+            x-e0o34bjicln68qbdd5imst3f5lkmst35ctp6ubbicln78o9dd5n6qrr2d5m6iobid5giqqbde1qn8ob4c4mj0dhd60p0:
+              label: Rendiment íntegre / Renda immobiliària imputada [06]
+            x-e0o34bjicln68qbdd5imst3f5lkmst35ctp6ubbicln78o9dd5n6qrr2d5m6iobid5giqqbde1qn8ob4c4mj0dhd60pg:
+              label: Rendiment íntegre / Renda immobiliària imputada [06]
+            x-e0o34bjicln68qbdd5imst3f5lkmst35ctp6ubbicln78o9dd5n6qrr2d5m6iobid5giqqbde1qn8ob4c4mj0dhd60q0:
+              label: Rendiment íntegre / Renda immobiliària imputada [06]
+            x-e0o34bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6s:
+              label: Retenció o ingrés a compte [07]
+            x-e0o34bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6smj0cg:
+              label: Retenció o ingrés a compte [07]
+            x-e0o34bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6smj0co:
+              label: Retenció o ingrés a compte [07]
+            x-e0o34bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6smj0d0:
+              label: Retenció o ingrés a compte [07]
+            x-e0o34bjkd5o6ubb4ckmn4pbeehgiqc1h:
+              label: Tipus de Renda [01]
+            x-e0o34bjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
+              label: Tipus de Renda [01]
+            x-e0o34bjkd5o6ubb4ckmn4pbeehgiqc1h5ko36:
+              label: Tipus de Renda [01]
+            x-e0o34bjkd5o6ubb4ckmn4pbeehgiqc1h5ko38:
+              label: Tipus de Renda [01]
+            x-e0o34bjmc5m6usj1cdkmurhd60pg:
+              label: Valoració [03]
+            x-e0o34bjmc5m6usj1cdkmurhd60piqc1i:
+              label: Valoració [03]
+            x-e0o34bjmc5m6usj1cdkmurhd60piqc1j:
+              label: Valoració [03]
+            x-e0o34bjmc5m6usj1cdkmurhd60piqc1k:
+              label: Valoració [03]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmmirbgelin6t3f5lpm2t39edj6ab9g74mj0cg:
+              label: Dades Addicionals Rendiment del Treball. Impost satisfet a l'estranger
+                [09]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmmirbgelin6t3f5lpm2t39edj6ab9g74mj0co:
+              label: Dades Addicionals Rendiment del Treball. Impost satisfet a l'estranger
+                [09]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmmirbgelin6t3f5lpm2t39edj6ab9g74mj0d0:
+              label: Dades Addicionals Rendiment del Treball. Impost satisfet a l'estranger
+                [09]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmmirbgelin6t3f5lpm2t39edj6aor8dsmj0e8:
+              label: Dades Addicionals Rendiment del Treball. Impost satisfet a l'estranger
+                [09]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmn4pbechkmqqb5dpq6ubb9dpq6ab9g70mj0cg:
+              label: Dades Addicionals Rendiment del Treball. Rendiment íntegre obtingut
+                i gravat a l'estranger [08]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmn4pbechkmqqb5dpq6ubb9dpq6ab9g70mj0co:
+              label: Dades Addicionals Rendiment del Treball. Rendiment íntegre obtingut
+                i gravat a l'estranger [08]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmn4pbechkmqqb5dpq6ubb9dpq6ab9g70mj0d0:
+              label: Dades Addicionals Rendiment del Treball. Rendiment íntegre obtingut
+                i gravat a l'estranger [08]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmn4pbechkmqqb5dpq6ubb9dpq6apridsmj0e0:
+              label: Dades Addicionals Rendiment del Treball. Rendiment íntegre obtingut
+                i gravat a l'estranger [08]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d0:
+              label: Ingressos a compte [04]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d1d60p0:
+              label: Ingressos a compte [04]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d1d60pg:
+              label: Ingressos a compte [04]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d1d60q0:
+              label: Ingressos a compte [04]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qg:
+              label: Ingressos a compte repercutits [05]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qiqc1i:
+              label: Ingressos a compte repercutits [05]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qiqc1j:
+              label: Ingressos a compte repercutits [05]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qiqc1k:
+              label: Ingressos a compte repercutits [05]
+            x-e0o36bjec5q7asj1dhinko9d60p0:
+              label: Naturalesa [02]
+            x-e0o36bjec5q7asj1dhinko9d60p2qc1i:
+              label: Naturalesa [02]
+            x-e0o36bjec5q7asj1dhinko9d60p2qc1j:
+              label: Naturalesa [02]
+            x-e0o36bjec5q7asj1dhinko9d60p2qc1k:
+              label: Naturalesa [02]
+            x-e0o36bjgc5jm2p3fe8mm2s35dhm6ip3fecmnibbedtmm4sj55lniqsj1f9nmsbbjdthmiobc5kqj4:
+              label: Pagador. Cognoms i nom o raó social [52]
+            x-e0o36bjgc5jm2p3fe8mm2s35dhm6ip3fecmnibbedtmm4sj55lniqsj1f9nmsbbjdthmiobc5kqj4b9g68:
+              label: Pagador. Cognoms i nom o raó social [52]
+            x-e0o36bjgc5jm2p3fe8mm2s35dhm6ip3fecmnibbedtmm4sj55lniqsj1f9nmsbbjdthmiobc5kqj4b9g6c:
+              label: Pagador. Cognoms i nom o raó social [52]
+            x-e0o36bjgc5jm2p3fe8mm2s35dhm6ip3fecmnibbedtmm4sj55lniqsj1f9nmsbbjdthmiobc5kqj4b9g6g:
+              label: Pagador. Cognoms i nom o raó social [52]
+            x-e0o36bjgc5jm2p3fe8mmcbba5kqj2:
+              label: Pagador. Física/Jurídica [51]
+            x-e0o36bjgc5jm2p3fe8mmcbba5kqj2b9g68:
+              label: Pagador. Física/Jurídica [51]
+            x-e0o36bjgc5jm2p3fe8mmcbba5kqj2b9g6c:
+              label: Pagador. Física/Jurídica [51]
+            x-e0o36bjgc5jm2p3fe8mmcbba5kqj2b9g6g:
+              label: Pagador. Física/Jurídica [51]
+            x-e0o36bjicln68qbdd5imst3f5lkmst35ctp6ubbicln78o9dd5n6qrr2d5m6iobid5giqqbde1qn8ob4c4mj0dg:
+              label: Rendiment íntegre / Renda immobiliària imputada [06]
+            x-e0o36bjicln68qbdd5imst3f5lkmst35ctp6ubbicln78o9dd5n6qrr2d5m6iobid5giqqbde1qn8ob4c4mj0dhd60p0:
+              label: Rendiment íntegre / Renda immobiliària imputada [06]
+            x-e0o36bjicln68qbdd5imst3f5lkmst35ctp6ubbicln78o9dd5n6qrr2d5m6iobid5giqqbde1qn8ob4c4mj0dhd60pg:
+              label: Rendiment íntegre / Renda immobiliària imputada [06]
+            x-e0o36bjicln68qbdd5imst3f5lkmst35ctp6ubbicln78o9dd5n6qrr2d5m6iobid5giqqbde1qn8ob4c4mj0dhd60q0:
+              label: Rendiment íntegre / Renda immobiliària imputada [06]
+            x-e0o36bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6s:
+              label: Retenció o ingrés a compte [07]
+            x-e0o36bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6smj0cg:
+              label: Retenció o ingrés a compte [07]
+            x-e0o36bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6smj0co:
+              label: Retenció o ingrés a compte [07]
+            x-e0o36bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6smj0d0:
+              label: Retenció o ingrés a compte [07]
+            x-e0o36bjiclpn8rpde9imsp39dlkmarjkdsmmirjkcljn4rpde9imst315lkmsrbfc9kmoqb1e9km2bb9dlo7at31chgiqc1m:
+              label: RESTA. Rendiment íntegre / Renda immobiliària imputada [06]
+            x-e0o36bjiclpn8rpde9imst35dphmirre5lniqqbectp6asrf5lgiqorlcln78o9d60rg:
+              label: RESTA. Retenció o ingrés a compte [07]
+            x-e0o36bjkd5o6ubb4ckmn4pbeehgiqc1h:
+              label: Tipus de Renda [01]
+            x-e0o36bjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
+              label: Tipus de Renda [01]
+            x-e0o36bjkd5o6ubb4ckmn4pbeehgiqc1h5ko36:
+              label: Tipus de Renda [01]
+            x-e0o36bjkd5o6ubb4ckmn4pbeehgiqc1h5ko38:
+              label: Tipus de Renda [01]
+            x-e0o36bjmc5m6usj1cdkmurhd60pg:
+              label: Valoració [03]
+            x-e0o36bjmc5m6usj1cdkmurhd60piqc1i:
+              label: Valoració [03]
+            x-e0o36bjmc5m6usj1cdkmurhd60piqc1j:
+              label: Valoració [03]
+            x-e0o36bjmc5m6usj1cdkmurhd60piqc1k:
+              label: Valoració [03]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d0:
+              label: Ingressos a compte [04]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d1d60p0:
+              label: Ingressos a compte [04]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d1d60pg:
+              label: Ingressos a compte [04]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d1d60q0:
+              label: Ingressos a compte [04]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d1d60qg:
+              label: Ingressos a compte [04]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d1d60r0:
+              label: Ingressos a compte [04]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d1d60rg:
+              label: Ingressos a compte [04]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d1d60s0:
+              label: Ingressos a compte [04]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d1d60sg:
+              label: Ingressos a compte [04]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qg:
+              label: Ingressos a compte repercutits [05]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qiqc1i:
+              label: Ingressos a compte repercutits [05]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qiqc1j:
+              label: Ingressos a compte repercutits [05]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qiqc1k:
+              label: Ingressos a compte repercutits [05]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qiqc1l:
+              label: Ingressos a compte repercutits [05]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qiqc1m:
+              label: Ingressos a compte repercutits [05]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qiqc1n:
+              label: Ingressos a compte repercutits [05]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qiqc1o:
+              label: Ingressos a compte repercutits [05]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qiqc1p:
+              label: Ingressos a compte repercutits [05]
+            x-e0o38bjec5q7asj1dhinko9d60p0:
+              label: Naturalesa [02]
+            x-e0o38bjec5q7asj1dhinko9d60p2qc1i:
+              label: Naturalesa [02]
+            x-e0o38bjec5q7asj1dhinko9d60p2qc1j:
+              label: Naturalesa [02]
+            x-e0o38bjec5q7asj1dhinko9d60p2qc1k:
+              label: Naturalesa [02]
+            x-e0o38bjec5q7asj1dhinko9d60p2qc1l:
+              label: Naturalesa [02]
+            x-e0o38bjec5q7asj1dhinko9d60p2qc1m:
+              label: Naturalesa [02]
+            x-e0o38bjec5q7asj1dhinko9d60p2qc1n:
+              label: Naturalesa [02]
+            x-e0o38bjec5q7asj1dhinko9d60p2qc1o:
+              label: Naturalesa [02]
+            x-e0o38bjec5q7asj1dhinko9d60p2qc1p:
+              label: Naturalesa [02]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9g6o:
+              label: Rendiment íntegre [06]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9g6omj0cg:
+              label: Rendiment íntegre [06]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9g6omj0co:
+              label: Rendiment íntegre [06]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9g6omj0d0:
+              label: Rendiment íntegre [06]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9g6omj0d8:
+              label: Rendiment íntegre [06]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9g6omj0dg:
+              label: Rendiment íntegre [06]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9g6omj0do:
+              label: Rendiment íntegre [06]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9g6omj0e0:
+              label: Rendiment íntegre [06]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9g6omj0e8:
+              label: Rendiment íntegre [06]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6s:
+              label: Retenció o ingrés a compte [07]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6smj0cg:
+              label: Retenció o ingrés a compte [07]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6smj0co:
+              label: Retenció o ingrés a compte [07]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6smj0d0:
+              label: Retenció o ingrés a compte [07]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6smj0d8:
+              label: Retenció o ingrés a compte [07]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6smj0dg:
+              label: Retenció o ingrés a compte [07]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6smj0do:
+              label: Retenció o ingrés a compte [07]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6smj0e0:
+              label: Retenció o ingrés a compte [07]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6smj0e8:
+              label: Retenció o ingrés a compte [07]
+            x-e0o38bjiclpn8rpde9imsp39dlkmarjkdtpiqqbeehimesjf5ko3c:
+              label: RESTA. Rendiments íntegres [06]
+            x-e0o38bjiclpn8rpde9imst35dphmirre5lniqqbectp6asrf5lgiqorlcln78o9d60rg:
+              label: RESTA. Retenció o ingrés a compte [07]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc1h:
+              label: Tipus de Renda [01]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
+              label: Tipus de Renda [01]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc1h5ko36:
+              label: Tipus de Renda [01]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc1h5ko38:
+              label: Tipus de Renda [01]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc1h5ko3a:
+              label: Tipus de Renda [01]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc1h5ko3c:
+              label: Tipus de Renda [01]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc1h5ko3e:
+              label: Tipus de Renda [01]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc1h5ko3g:
+              label: Tipus de Renda [01]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc1h5ko3i:
+              label: Tipus de Renda [01]
+            x-e0o38bjkdtq62r1de9imsp39dlkmarjkdtpiqqbeehimesjfecmj0e0:
+              label: Total rendiments íntegres [08]
+            x-e0o38bjkdtq62r1de9in8pbecdkmurj5ecmmubb9dpjn4pbjdtpiqo9dcdqmarjkc4mj0e8:
+              label: Total retencions o ingressos a compte [09]
+            x-e0o38bjmc5m6usj1cdkmurhd60pg:
+              label: Valoració [03]
+            x-e0o38bjmc5m6usj1cdkmurhd60piqc1i:
+              label: Valoració [03]
+            x-e0o38bjmc5m6usj1cdkmurhd60piqc1j:
+              label: Valoració [03]
+            x-e0o38bjmc5m6usj1cdkmurhd60piqc1k:
+              label: Valoració [03]
+            x-e0o38bjmc5m6usj1cdkmurhd60piqc1l:
+              label: Valoració [03]
+            x-e0o38bjmc5m6usj1cdkmurhd60piqc1m:
+              label: Valoració [03]
+            x-e0o38bjmc5m6usj1cdkmurhd60piqc1n:
+              label: Valoració [03]
+            x-e0o38bjmc5m6usj1cdkmurhd60piqc1o:
+              label: Valoració [03]
+            x-e0o38bjmc5m6usj1cdkmurhd60piqc1p:
+              label: Valoració [03]
+            x-e0o3abj1cdq6itj9chgm8bb3dti6iprf5lsiqt39e1niqp355lgm6t39epkm8ob45koj0:
+              label: 'Activitat: Codi i tipus d''activitat [10]'
+            x-e0o3abj1cdq6itj9chgm8bb3dti6iprf5lsiqt39e1niqp355lgm6t39epkm8ob45koj0b9g68:
+              label: 'Activitat: Codi i tipus d''activitat [10]'
+            x-e0o3abj1cdq6itj9chgm8bb3dti6iprf5lsiqt39e1niqp355lgm6t39epkm8ob45koj0b9g6c:
+              label: 'Activitat: Codi i tipus d''activitat [10]'
+            x-e0o3abj1cdq6itj9chgm8bb3dti6iprf5lsiqt39e1niqp355lgm6t39epkm8ob45koj0b9g6g:
+              label: 'Activitat: Codi i tipus d''activitat [10]'
+            x-e0o3abj1cdq6itj9chgm8bb3dti6iprf5lsiqt39e1niqp355lgm6t39epkm8ob45koj0b9g6k:
+              label: 'Activitat: Codi i tipus d''activitat [10]'
+            x-e0o3abj1cdq6itj9chgm8bb7e9qn0rpddsmmas39ctp62pj55lkm2p9d64og:
+              label: 'Activitat: Grup o epígraf IAE [11]'
+            x-e0o3abj1cdq6itj9chgm8bb7e9qn0rpddsmmas39ctp62pj55lkm2p9d64oiqc1i:
+              label: 'Activitat: Grup o epígraf IAE [11]'
+            x-e0o3abj1cdq6itj9chgm8bb7e9qn0rpddsmmas39ctp62pj55lkm2p9d64oiqc1j:
+              label: 'Activitat: Grup o epígraf IAE [11]'
+            x-e0o3abj1cdq6itj9chgm8bb7e9qn0rpddsmmas39ctp62pj55lkm2p9d64oiqc1k:
+              label: 'Activitat: Grup o epígraf IAE [11]'
+            x-e0o3abj1cdq6itj9chgm8bb7e9qn0rpddsmmas39ctp62pj55lkm2p9d64oiqc1l:
+              label: 'Activitat: Grup o epígraf IAE [11]'
+            x-e0o3abj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9dd5mn0tb5edq6ubbjc5q6ib9h6cmj0cg:
+              label: Dades addicionals (activitat emprenedora. Impost satisfet a l'estranger
+                [13]
+            x-e0o3abj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9dd5mn0tb5edq6ubbjc5q6ib9h6cmj0co:
+              label: Dades addicionals (activitat emprenedora. Impost satisfet a l'estranger
+                [13]
+            x-e0o3abj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9dd5mn0tb5edq6ubbjc5q6ib9h6cmj0d0:
+              label: Dades addicionals (activitat emprenedora. Impost satisfet a l'estranger
+                [13]
+            x-e0o3abj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9dd5mn0tb5edq6ubbjc5q6ib9h6cmj0d8:
+              label: Dades addicionals (activitat emprenedora. Impost satisfet a l'estranger
+                [13]
+            x-e0o3abj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9dd5mn0tb5edq6ubbjc5q6isr6ckmj2co:
+              label: Dades addicionals (activitat emprenedora. Impost satisfet a l'estranger
+                [13]
+            x-e0o3abj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9de9imsp39dlkmarjkdsmmib9h68mj0cg:
+              label: Dades addicionals (activitat emprenedora. Rendiment íntegre obtingut
+                i gravat a l'estranger [12]
+            x-e0o3abj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9de9imsp39dlkmarjkdsmmib9h68mj0co:
+              label: Dades addicionals (activitat emprenedora. Rendiment íntegre obtingut
+                i gravat a l'estranger [12]
+            x-e0o3abj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9de9imsp39dlkmarjkdsmmib9h68mj0d0:
+              label: Dades addicionals (activitat emprenedora. Rendiment íntegre obtingut
+                i gravat a l'estranger [12]
+            x-e0o3abj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9de9imsp39dlkmarjkdsmmib9h68mj0d8:
+              label: Dades addicionals (activitat emprenedora. Rendiment íntegre obtingut
+                i gravat a l'estranger [12]
+            x-e0o3abj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9de9imsp39dlkmarjkdsmmirjkckmj2cg:
+              label: Dades addicionals (activitat emprenedora. Rendiment íntegre obtingut
+                i gravat a l'estranger [12]
+            x-e0o3abj7c5pn8rrj5li6abb1e1p6utj9edkmurj1dlkmarjkdsmm8p9ddlgn8pbid5gmopbj5lsiqp355lpnarb9dpkn6b9g6gmj0cg:
+              label: Despeses d'aprovisionament de materials i subministraments [04]
+            x-e0o3abj7c5pn8rrj5li6abb1e1p6utj9edkmurj1dlkmarjkdsmm8p9ddlgn8pbid5gmopbj5lsiqp355lpnarb9dpkn6b9g6gmj0co:
+              label: Despeses d'aprovisionament de materials i subministraments [04]
+            x-e0o3abj7c5pn8rrj5li6abb1e1p6utj9edkmurj1dlkmarjkdsmm8p9ddlgn8pbid5gmopbj5lsiqp355lpnarb9dpkn6b9g6gmj0d0:
+              label: Despeses d'aprovisionament de materials i subministraments [04]
+            x-e0o3abj7c5pn8rrj5li6abb1e1p6utj9edkmurj1dlkmarjkdsmm8p9ddlgn8pbid5gmopbj5lsiqp355lpnarb9dpkn6b9g6gmj0d8:
+              label: Despeses d'aprovisionament de materials i subministraments [04]
+            x-e0o3abj7c5pn8rrj5li6abb1e1p6utj9edkmurj1dlkmarjkdsmm8p9ddlgn8pbid5gmopbj5lsiqp355lpnarb9dpkn6t3idsmj0d0:
+              label: Despeses d'aprovisionament de materials i subministraments [04]
+            x-e0o3abj7c5pn8rrj5li6abbgclp76rrec5m2qc1j:
+              label: Despeses de personal [03]
+            x-e0o3abj7c5pn8rrj5li6abbgclp76rrec5m2qc1j5ko34:
+              label: Despeses de personal [03]
+            x-e0o3abj7c5pn8rrj5li6abbgclp76rrec5m2qc1j5ko36:
+              label: Despeses de personal [03]
+            x-e0o3abj7c5pn8rrj5li6abbgclp76rrec5m2qc1j5ko38:
+              label: Despeses de personal [03]
+            x-e0o3abj7c5pn8rrj5li6abbgclp76rrec5m2qc1j5ko3a:
+              label: Despeses de personal [03]
+            x-e0o3abj9dpjn4pbjdtpiqqbeehimesjfecmj0cg:
+              label: Ingressos íntegres [02]
+            x-e0o3abj9dpjn4pbjdtpiqqbeehimesjfecmj0chd60p0:
+              label: Ingressos íntegres [02]
+            x-e0o3abj9dpjn4pbjdtpiqqbeehimesjfecmj0chd60pg:
+              label: Ingressos íntegres [02]
+            x-e0o3abj9dpjn4pbjdtpiqqbeehimesjfecmj0chd60q0:
+              label: Ingressos íntegres [02]
+            x-e0o3abj9dpjn4pbjdtpiqqbeehimesjfecmj0chd60qg:
+              label: Ingressos íntegres [02]
+            x-e0o3abjicln68qbdd5imst3f5ln6at3f5ln6apr1ehkncrpd60rg:
+              label: 'Rendiment net: negatiu [07]'
+            x-e0o3abjicln68qbdd5imst3f5ln6at3f5ln6apr1ehkncrpd60riqc1i:
+              label: 'Rendiment net: negatiu [07]'
+            x-e0o3abjicln68qbdd5imst3f5ln6at3f5ln6apr1ehkncrpd60riqc1j:
+              label: 'Rendiment net: negatiu [07]'
+            x-e0o3abjicln68qbdd5imst3f5ln6at3f5ln6apr1ehkncrpd60riqc1k:
+              label: 'Rendiment net: negatiu [07]'
+            x-e0o3abjicln68qbdd5imst3f5ln6at3f5ln6apr1ehkncrpd60riqc1l:
+              label: 'Rendiment net: negatiu [07]'
+            x-e0o3abjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qg:
+              label: 'Rendiment net: positiu [05]'
+            x-e0o3abjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qiqc1i:
+              label: 'Rendiment net: positiu [05]'
+            x-e0o3abjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qiqc1j:
+              label: 'Rendiment net: positiu [05]'
+            x-e0o3abjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qiqc1k:
+              label: 'Rendiment net: positiu [05]'
+            x-e0o3abjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qiqc1l:
+              label: 'Rendiment net: positiu [05]'
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6o:
+              label: Retenció o ingrés a compte [06]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6omj0cg:
+              label: Retenció o ingrés a compte [06]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6omj0co:
+              label: Retenció o ingrés a compte [06]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6omj0d0:
+              label: Retenció o ingrés a compte [06]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6omj0d8:
+              label: Retenció o ingrés a compte [06]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc1h:
+              label: Tipus de Renda [01]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
+              label: Tipus de Renda [01]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc1h5ko36:
+              label: Tipus de Renda [01]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc1h5ko38:
+              label: Tipus de Renda [01]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc1h5ko3a:
+              label: Tipus de Renda [01]
+            x-e0o3cbj1cdq6itj9chgm8bb3dti6iprf5lsiqt39e1niqp355lgm6t39epkm8ob45koj0:
+              label: 'Activitat: Codi i tipus d''activitat [10]'
+            x-e0o3cbj1cdq6itj9chgm8bb3dti6iprf5lsiqt39e1niqp355lgm6t39epkm8ob45koj0b9g68:
+              label: 'Activitat: Codi i tipus d''activitat [10]'
+            x-e0o3cbj1cdq6itj9chgm8bb3dti6iprf5lsiqt39e1niqp355lgm6t39epkm8ob45koj0b9g6c:
+              label: 'Activitat: Codi i tipus d''activitat [10]'
+            x-e0o3cbj1cdq6itj9chgm8bb3dti6iprf5lsiqt39e1niqp355lgm6t39epkm8ob45koj0b9g6g:
+              label: 'Activitat: Codi i tipus d''activitat [10]'
+            x-e0o3cbj1cdq6itj9chgm8bb7e9qn0rpddsmmas39ctp62pj55lkm2p9d64og:
+              label: 'Activitat: Grup o epígraf IAE [11]'
+            x-e0o3cbj1cdq6itj9chgm8bb7e9qn0rpddsmmas39ctp62pj55lkm2p9d64oiqc1i:
+              label: 'Activitat: Grup o epígraf IAE [11]'
+            x-e0o3cbj1cdq6itj9chgm8bb7e9qn0rpddsmmas39ctp62pj55lkm2p9d64oiqc1j:
+              label: 'Activitat: Grup o epígraf IAE [11]'
+            x-e0o3cbj1cdq6itj9chgm8bb7e9qn0rpddsmmas39ctp62pj55lkm2p9d64oiqc1k:
+              label: 'Activitat: Grup o epígraf IAE [11]'
+            x-e0o3cbj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9dd5mn0tb5edq6ubbjc5q6ib9h6cmj0cg:
+              label: Dades addicionals (activitat emprenedora. Impost satisfet a l'estranger
+                [13]
+            x-e0o3cbj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9dd5mn0tb5edq6ubbjc5q6ib9h6cmj0co:
+              label: Dades addicionals (activitat emprenedora. Impost satisfet a l'estranger
+                [13]
+            x-e0o3cbj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9dd5mn0tb5edq6ubbjc5q6ib9h6cmj0d0:
+              label: Dades addicionals (activitat emprenedora. Impost satisfet a l'estranger
+                [13]
+            x-e0o3cbj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9dd5mn0tb5edq6ubbjc5q6isr6ckmj2co:
+              label: Dades addicionals (activitat emprenedora. Impost satisfet a l'estranger
+                [13]
+            x-e0o3cbj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9de9imsp39dlkmarjkdsmmib9h68mj0cg:
+              label: Dades addicionals (activitat emprenedora. Rendiment íntegre obtingut
+                i gravat a l'estranger [12]
+            x-e0o3cbj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9de9imsp39dlkmarjkdsmmib9h68mj0co:
+              label: Dades addicionals (activitat emprenedora. Rendiment íntegre obtingut
+                i gravat a l'estranger [12]
+            x-e0o3cbj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9de9imsp39dlkmarjkdsmmib9h68mj0d0:
+              label: Dades addicionals (activitat emprenedora. Rendiment íntegre obtingut
+                i gravat a l'estranger [12]
+            x-e0o3cbj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9de9imsp39dlkmarjkdsmmirjkckmj2cg:
+              label: Dades addicionals (activitat emprenedora. Rendiment íntegre obtingut
+                i gravat a l'estranger [12]
+            x-e0o3cbj7c5pn8rrj5li6abb1e1p6utj9edkmurj1dlkmarjkdsmm8p9ddlgn8pbid5gmopbj5lsiqp355lpnarb9dpkn6b9g6gmj0cg:
+              label: Despeses d'aprovisionament de materials i subministraments [04]
+            x-e0o3cbj7c5pn8rrj5li6abb1e1p6utj9edkmurj1dlkmarjkdsmm8p9ddlgn8pbid5gmopbj5lsiqp355lpnarb9dpkn6b9g6gmj0co:
+              label: Despeses d'aprovisionament de materials i subministraments [04]
+            x-e0o3cbj7c5pn8rrj5li6abb1e1p6utj9edkmurj1dlkmarjkdsmm8p9ddlgn8pbid5gmopbj5lsiqp355lpnarb9dpkn6b9g6gmj0d0:
+              label: Despeses d'aprovisionament de materials i subministraments [04]
+            x-e0o3cbj7c5pn8rrj5li6abb1e1p6utj9edkmurj1dlkmarjkdsmm8p9ddlgn8pbid5gmopbj5lsiqp355lpnarb9dpkn6t3idsmj0d0:
+              label: Despeses d'aprovisionament de materials i subministraments [04]
+            x-e0o3cbj7c5pn8rrj5li6abbgclp76rrec5m2qc1j:
+              label: Despeses de personal [03]
+            x-e0o3cbj7c5pn8rrj5li6abbgclp76rrec5m2qc1j5ko34:
+              label: Despeses de personal [03]
+            x-e0o3cbj7c5pn8rrj5li6abbgclp76rrec5m2qc1j5ko36:
+              label: Despeses de personal [03]
+            x-e0o3cbj7c5pn8rrj5li6abbgclp76rrec5m2qc1j5ko38:
+              label: Despeses de personal [03]
+            x-e0o3cbj9dpjn4pbjdtpiqqbeehimesjfecmj0cg:
+              label: Ingressos íntegres [02]
+            x-e0o3cbj9dpjn4pbjdtpiqqbeehimesjfecmj0chd60p0:
+              label: Ingressos íntegres [02]
+            x-e0o3cbj9dpjn4pbjdtpiqqbeehimesjfecmj0chd60pg:
+              label: Ingressos íntegres [02]
+            x-e0o3cbj9dpjn4pbjdtpiqqbeehimesjfecmj0chd60q0:
+              label: Ingressos íntegres [02]
+            x-e0o3cbjicln68qbdd5imst3f5ln6at3f5ln6apr1ehkncrpd60rg:
+              label: 'Rendiment net: negatiu [07]'
+            x-e0o3cbjicln68qbdd5imst3f5ln6at3f5ln6apr1ehkncrpd60riqc1i:
+              label: 'Rendiment net: negatiu [07]'
+            x-e0o3cbjicln68qbdd5imst3f5ln6at3f5ln6apr1ehkncrpd60riqc1j:
+              label: 'Rendiment net: negatiu [07]'
+            x-e0o3cbjicln68qbdd5imst3f5ln6at3f5ln6apr1ehkncrpd60riqc1k:
+              label: 'Rendiment net: negatiu [07]'
+            x-e0o3cbjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qg:
+              label: 'Rendiment net: positiu [05]'
+            x-e0o3cbjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qiqc1i:
+              label: 'Rendiment net: positiu [05]'
+            x-e0o3cbjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qiqc1j:
+              label: 'Rendiment net: positiu [05]'
+            x-e0o3cbjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qiqc1k:
+              label: 'Rendiment net: positiu [05]'
+            x-e0o3cbjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6o:
+              label: Retenció o ingrés a compte [06]
+            x-e0o3cbjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6omj0cg:
+              label: Retenció o ingrés a compte [06]
+            x-e0o3cbjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6omj0co:
+              label: Retenció o ingrés a compte [06]
+            x-e0o3cbjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6omj0d0:
+              label: Retenció o ingrés a compte [06]
+            x-e0o3cbjiclpn8rpde9imsp39dlkmarjkdsmmspbkdsmmspb7c5q6itjf5ko3e:
+              label: 'RESTA. Rendiment net: negatiu [07]'
+            x-e0o3cbjiclpn8rpde9imsp39dlkmarjkdsmmspbkdsmn0rrjd5q6itjf5ko3a:
+              label: 'RESTA. Rendiment net: positiu [05]'
+            x-e0o3cbjiclpn8rpde9imst35dphmirre5lniqqbectp6asrf5lgiqorlcln78o9d60r0:
+              label: RESTA. Retenció o ingrés a compte [06]
+            x-e0o3cbjkd5o6ubb4ckmn4pbeehgiqc1h:
+              label: Tipus de Renda [01]
+            x-e0o3cbjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
+              label: Tipus de Renda [01]
+            x-e0o3cbjkd5o6ubb4ckmn4pbeehgiqc1h5ko36:
+              label: Tipus de Renda [01]
+            x-e0o3cbjkd5o6ubb4ckmn4pbeehgiqc1h5ko38:
+              label: Tipus de Renda [01]
+            x-e0o3cbjkdtq62r1de9imsp39dlkmarjkdtpiqrj5ehnn6bbgdtpmit39epnn6b9g70:
+              label: Total rendiments nets positius [08]
+            x-e0o3cbjkdtq62r1de9in8pbecdkmurj5ecmmubb9dpjn4pbjdtpiqo9dcdqmarjkc4mj0e8:
+              label: Total retencions o ingressos a compte [09]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60p0:
+              label: Guany patrimonial [02]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60p2qc1i:
+              label: Guany patrimonial [02]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60p2qc1j:
+              label: Guany patrimonial [02]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60p2qc1k:
+              label: Guany patrimonial [02]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60p2qc1l:
+              label: Guany patrimonial [02]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60p2qc1m:
+              label: Guany patrimonial [02]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60p2qc1n:
+              label: Guany patrimonial [02]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60p2qc1o:
+              label: Guany patrimonial [02]
+            x-e0o3ebjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9l6c:
+              label: NIF de la societat o fons d'inversió [53]
+            x-e0o3ebjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9l6cmj0cg:
+              label: NIF de la societat o fons d'inversió [53]
+            x-e0o3ebjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9l6cmj0co:
+              label: NIF de la societat o fons d'inversió [53]
+            x-e0o3ebjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9l6cmj0d0:
+              label: NIF de la societat o fons d'inversió [53]
+            x-e0o3ebjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9l6cmj0d8:
+              label: NIF de la societat o fons d'inversió [53]
+            x-e0o3ebjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9l6cmj0dg:
+              label: NIF de la societat o fons d'inversió [53]
+            x-e0o3ebjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9l6cmj0do:
+              label: NIF de la societat o fons d'inversió [53]
+            x-e0o3ebjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9l6cmj0e0:
+              label: NIF de la societat o fons d'inversió [53]
+            x-e0o3ebjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6c:
+              label: Retenció o ingrés a compte [03]
+            x-e0o3ebjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6cmj0cg:
+              label: Retenció o ingrés a compte [03]
+            x-e0o3ebjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6cmj0co:
+              label: Retenció o ingrés a compte [03]
+            x-e0o3ebjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6cmj0d0:
+              label: Retenció o ingrés a compte [03]
+            x-e0o3ebjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6cmj0d8:
+              label: Retenció o ingrés a compte [03]
+            x-e0o3ebjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6cmj0dg:
+              label: Retenció o ingrés a compte [03]
+            x-e0o3ebjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6cmj0do:
+              label: Retenció o ingrés a compte [03]
+            x-e0o3ebjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6cmj0e0:
+              label: Retenció o ingrés a compte [03]
+            x-e0o3ebjiclpn8rpdctgmsobecdkm2bbgc5q74qbddtn6iobc5ko34:
+              label: RESTA. Guany patrimonial [02]
+            x-e0o3ebjiclpn8rpde9imst35dphmirre5lniqqbectp6asrf5lgiqorlcln78o9d60pg:
+              label: RESTA. Retenció o ingrés a compte [03]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc1h:
+              label: Tipus de Renda [01]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
+              label: Tipus de Renda [01]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc1h5ko36:
+              label: Tipus de Renda [01]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc1h5ko38:
+              label: Tipus de Renda [01]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc1h5ko3a:
+              label: Tipus de Renda [01]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc1h5ko3c:
+              label: Tipus de Renda [01]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc1h5ko3e:
+              label: Tipus de Renda [01]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc1h5ko3g:
+              label: Tipus de Renda [01]
+            x-e0o3ebjkdtq62r1dctgmsobecdkm2spde1gn8sj9dlnmsqb1dhin6b9g6g:
+              label: Total guanys patrimonials [04]
+            x-e0o3ebjkdtq62r1de9in8pbecdkmurj5ecmmubb9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d8:
+              label: Total retencions o ingressos a compte [05]
+            x-e0o3gbj1chonaqbid5imst355lgn0pbcdhkm8rrj5lsiqrjfdlh74p9ddsmn4obqdtn2qsrfcdkm2r1d6oog:
+              label: Adquirent. Cognoms i nom o raó social [61]
+            x-e0o3gbj1chonaqbid5imst355lgn0pbcdhkm8rrj5lsiqrjfdlh74p9ddsmn4obqdtn2qsrfcdkm2r1d6ooiqc1i:
+              label: Adquirent. Cognoms i nom o raó social [61]
+            x-e0o3gbj1chonaqbid5imst355lj2qqhd6oo0:
+              label: Adquirent. Física/Jurídica [60]
+            x-e0o3gbj1chonaqbid5imst355lj2qqhd6oo2qc1i:
+              label: Adquirent. Física/Jurídica [60]
+            x-e0o3gbj1chonaqbid5imst355ln6iphd6ksg:
+              label: Adquirent. NIF [59]
+            x-e0o3gbj1chonaqbid5imst355ln6iphd6ksiqc1i:
+              label: Adquirent. NIF [59]
+            x-e0o3gbj2dhnn2tb55kpj2:
+              label: Bloc [31]
+            x-e0o3gbj2dhnn2tb55kpj2b9g68:
+              label: Bloc [31]
+            x-e0o3gbj3c5m6ipj9cdgm8rri5li6abbeelmmasjf5kpj0:
+              label: Qualificador de número [30]
+            x-e0o3gbj3c5m6ipj9cdgm8rri5li6abbeelmmasjf5kpj0b9g68:
+              label: Qualificador de número [30]
+            x-e0o3gbj3dti6iprf5lo6usrkc5m2qcpo:
+              label: Codi postal [38]
+            x-e0o3gbj3dti6iprf5lo6usrkc5m2qcpo5ko34:
+              label: Codi postal [38]
+            x-e0o3gbj3elnn8o9dchiiqs31e9q6ior9e1gm6qbfdomjae0:
+              label: Quota de participació [58]
+            x-e0o3gbj3elnn8o9dchiiqs31e9q6ior9e1gm6qbfdomjae1d60p0:
+              label: Quota de participació [58]
+            x-e0o3gbj4c5q6uspdcdnmqs3cclmmarjkc5p6irrj5li6abb4dtmmior9dhkmub9j6o:
+              label: Dades complementàries de domicili [36]
+            x-e0o3gbj4c5q6uspdcdnmqs3cclmmarjkc5p6irrj5li6abb4dtmmior9dhkmub9j6omj0cg:
+              label: Dades complementàries de domicili [36]
+            x-e0o3gbj4d5j6asj5dphmio9dc5i72tb9edkm6qbfdomj0d0:
+              label: Diferència (Adquisició) [04]
+            x-e0o3gbj4d5j6asj5dphmio9dc5i72tb9edkm6qbfdomj0d1d60p0:
+              label: Diferència (Adquisició) [04]
+            x-e0o3gbj4d5j6asj5dphmio9ddlimkrric4mmub9ic4mm2p3helkn6qb3d5nmsb9g70:
+              label: Diferència (Millora o 2a adquisició) [08]
+            x-e0o3gbj4d5j6asj5dphmio9ddlimkrric4mmub9ic4mm2p3helkn6qb3d5nmsb9g70mj0cg:
+              label: Diferència (Millora o 2a adquisició) [08]
+            x-e0o3gbj4dthnarb5dpq6ubbgelh6oqb3dsmmubbge9kncob4dsmjccg:
+              label: Document públic o privat [62] [63]
+            x-e0o3gbj4dthnarb5dpq6ubbgelh6oqb3dsmmubbge9kncob4dsmjcchd60p0:
+              label: Document públic o privat [62] [63]
+            x-e0o3gbj5edhm2r35e9giqcpj:
+              label: Escala [33]
+            x-e0o3gbj5edhm2r35e9giqcpj5ko34:
+              label: Escala [33]
+            x-e0o3gbj6clhmgo9dchiiqob4e5qmisr9cdkmurhd6kqg:
+              label: Data d'adquisició [55]
+            x-e0o3gbj6clhmgo9dchiiqob4e5qmisr9cdkmurhd6kqiqc1i:
+              label: Data d'adquisició [55]
+            x-e0o3gbj6clhmgo9dchiiqrb5d9nn4o9ddsmj4o9dc5i72tb9edkm6qbfdomjadg:
+              label: Data de millora o 2a adquisició [56]
+            x-e0o3gbj6clhmgo9dchiiqrb5d9nn4o9ddsmj4o9dc5i72tb9edkm6qbfdomjadhd60p0:
+              label: Data de millora o 2a adquisició [56]
+            x-e0o3gbj6clhmgo9dchiiqt3ic5n76rb9edkmurhd6krg:
+              label: Data de transmissió [57]
+            x-e0o3gbj6clhmgo9dchiiqt3ic5n76rb9edkmurhd6kriqc1i:
+              label: Data de transmissió [57]
+            x-e0o3gbj7c5n62rj3d5giqrpde1in4p39chgiqob4e5qmisr9cdkmurhd60qg:
+              label: Guany o pèrdua (Adquisició) [05]
+            x-e0o3gbj7c5n62rj3d5giqrpde1in4p39chgiqob4e5qmisr9cdkmurhd60qiqc1i:
+              label: Guany o pèrdua (Adquisició) [05]
+            x-e0o3gbj7c5n62rj3d5giqrpde1in4p39chgiqrb5d9nn4o9ddsmj4o9dc5i72tb9edkm6qbfdomj0e8:
+              label: Guany o pèrdua (Millora o 2a adquisició) [09]
+            x-e0o3gbj7c5n62rj3d5giqrpde1in4p39chgiqrb5d9nn4o9ddsmj4o9dc5i72tb9edkm6qbfdomj0e9d60p0:
+              label: Guany o pèrdua (Millora o 2a adquisició) [09]
+            x-e0o3gbjcdthm2r39chgm8bbgdth6oob3d5nmsb9j6s:
+              label: Localitat/Població [37]
+            x-e0o3gbjcdthm2r39chgm8bbgdth6oob3d5nmsb9j6smj0cg:
+              label: Localitat/Població [37]
+            x-e0o3gbjdeln6ior9e1kmub9k60:
+              label: Municipi [40]
+            x-e0o3gbjdeln6ior9e1kmub9k60mj0cg:
+              label: Municipi [40]
+            x-e0o3gbjedtmm4sj55li6abbcc4mncqb15lo7aojcd5hm2b9i6s:
+              label: Nom de la via pública [27]
+            x-e0o3gbjedtmm4sj55li6abbcc4mncqb15lo7aojcd5hm2b9i6smj0cg:
+              label: Nom de la via pública [27]
+            x-e0o3gbjedtq62sj9dsmmubb6cli6at31e9kmub9m6g:
+              label: Notari o fedatari [64]
+            x-e0o3gbjedtq62sj9dsmmubb6cli6at31e9kmub9m6gmj0cg:
+              label: Notari o fedatari [64]
+            x-e0o3gbjeelmmasjf5li6abbge9nn8rr3dtm6ub9m6k:
+              label: Número de protocol [65]
+            x-e0o3gbjeelmmasjf5li6abbge9nn8rr3dtm6ub9m6kmj0cg:
+              label: Número de protocol [65]
+            x-e0o3gbjeelmmasjf5ll7asrkd5j6ior1dpq6abb4clm2qrbfchimorpd68oj2b9l6g:
+              label: Número de Justificant del model 211 [54]
+            x-e0o3gbjeelmmasjf5ll7asrkd5j6ior1dpq6abb4clm2qrbfchimorpd68oj2b9l6gmj0cg:
+              label: Número de Justificant del model 211 [54]
+            x-e0o3gbjge9nncqbecdkm2b9j74:
+              label: Província [39]
+            x-e0o3gbjge9nncqbecdkm2b9j74mj0cg:
+              label: Província [39]
+            x-e0o3gbjgelin4t315kpja:
+              label: Porta [35]
+            x-e0o3gbjgelin4t315kpjab9g68:
+              label: Porta [35]
+            x-e0o3gbjiclj6asj5dphmio9dcdgn8objehp62r1d6kpg:
+              label: Referència cadastral [53]
+            x-e0o3gbjiclj6asj5dphmio9dcdgn8objehp62r1d6kpiqc1i:
+              label: Referència cadastral [53]
+            x-e0o3gbjkd5o6ubb4ckmmstbdclp62or9dtn2qcho:
+              label: Tipus de numeració [28]
+            x-e0o3gbjkd5o6ubb4ckmmstbdclp62or9dtn2qcho5ko34:
+              label: Tipus de numeració [28]
+            x-e0o3gbjkd5o6ubb4ckmn4pbeehgiqc1h:
+              label: Tipus de Renda [01]
+            x-e0o3gbjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
+              label: Tipus de Renda [01]
+            x-e0o3gbjkd5o6ubb4ckmncqb15kp3c:
+              label: Tipus de via [26]
+            x-e0o3gbjkd5o6ubb4ckmncqb15kp3cb9g68:
+              label: Tipus de via [26]
+            x-e0o3gbjmc5m6ushdchiiqob4e5qmisr9cdkmurhdc5i72tb9edkm6qbfdomj0co:
+              label: Valor d'adquisició (Adquisició) [03]
+            x-e0o3gbjmc5m6ushdchiiqob4e5qmisr9cdkmurhdc5i72tb9edkm6qbfdomj0cpd60p0:
+              label: Valor d'adquisició (Adquisició) [03]
+            x-e0o3gbjmc5m6ushdchiiqrb5d9nn4o9ddsmj4o9dc5i72tb9edkm6qbfdommqpbadtp62bbf5kp62bb1chonaqbjd5hmib9g6smj0cg:
+              label: Valor de Millora o 2a adquisició (Millora o 2a adquisició) [07]
+            x-e0o3gbjmc5m6ushdchiiqrb5d9nn4o9ddsmj4o9dc5i72tb9edkm6qbfdommqpbadtp62bbf5kp62bb1chonaqbjd5hmirre5ko3e:
+              label: Valor de Millora o 2a adquisició (Millora o 2a adquisició) [07]
+            x-e0o3gbjmc5m6ushdchiiqt3ic5n76rb9edkmurhdc5i72tb9edkm6qbfdomj0cg:
+              label: Valor de transmissió (Adquisició) [02]
+            x-e0o3gbjmc5m6ushdchiiqt3ic5n76rb9edkmurhdc5i72tb9edkm6qbfdomj0chd60p0:
+              label: Valor de transmissió (Adquisició) [02]
+            x-e0o3gbjmc5m6ushdchiiqt3ic5n76rb9edkmurhddlimkrric4mmub9ic4mm2p3helkn6qb3d5nmsb9g6o:
+              label: Valor de transmissió (Millora o 2a adquisició) [06]
+            x-e0o3gbjmc5m6ushdchiiqt3ic5n76rb9edkmurhddlimkrric4mmub9ic4mm2p3helkn6qb3d5nmsb9g6omj0cg:
+              label: Valor de transmissió (Millora o 2a adquisició) [06]
+            x-e0o3ibj4clpm6sj9e1hmirre5li6abbcc4mmeobec5n66qb15lo62t3id5mmurj9c5m2qdhm:
+              label: Descripció del guany patrimonial [66]
+            x-e0o3ibj4clpm6sj9e1hmirre5li6abbcc4mmeobec5n66qb15lo62t3id5mmurj9c5m2qdhm5ko34:
+              label: Descripció del guany patrimonial [66]
+            x-e0o3ibj4clpm6sj9e1hmirre5li6abbcc4mmeobec5n66qb15lo62t3id5mmurj9c5m2qdhm5ko36:
+              label: Descripció del guany patrimonial [66]
+            x-e0o3ibj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5kr3e:
+              label: Descripció de l'element patrimonial [67]
+            x-e0o3ibj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5kr3eb9g68:
+              label: Descripció de l'element patrimonial [67]
+            x-e0o3ibj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5kr3eb9g6c:
+              label: Descripció de l'element patrimonial [67]
+            x-e0o3ibj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5kr3eb9g6g:
+              label: Descripció de l'element patrimonial [67]
+            x-e0o3ibj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5kr3eb9g6k:
+              label: Descripció de l'element patrimonial [67]
+            x-e0o3ibj4d5j6asj5dphmio9d60q0:
+              label: Diferència [04]
+            x-e0o3ibj4d5j6asj5dphmio9d60q2qc1i:
+              label: Diferència [04]
+            x-e0o3ibj4d5j6asj5dphmio9d60q2qc1j:
+              label: Diferència [04]
+            x-e0o3ibj4d5j6asj5dphmio9d60q2qc1k:
+              label: Diferència [04]
+            x-e0o3ibj4d5j6asj5dphmio9d60q2qc1l:
+              label: Diferència [04]
+            x-e0o3ibj6clhmgo9dchiiqob4e5qmisr9cdkmurhd6osg:
+              label: Data d'adquisició [69]
+            x-e0o3ibj6clhmgo9dchiiqob4e5qmisr9cdkmurhd6osiqc1i:
+              label: Data d'adquisició [69]
+            x-e0o3ibj6clhmgo9dchiiqob4e5qmisr9cdkmurhd6osiqc1j:
+              label: Data d'adquisició [69]
+            x-e0o3ibj6clhmgo9dchiiqob4e5qmisr9cdkmurhd6osiqc1k:
+              label: Data d'adquisició [69]
+            x-e0o3ibj6clhmgo9dchiiqob4e5qmisr9cdkmurhd6osiqc1l:
+              label: Data d'adquisició [69]
+            x-e0o3ibj6clhmgo9dchiiqt3ic5n76rb9edkmurhd6os0:
+              label: Data de transmissió [68]
+            x-e0o3ibj6clhmgo9dchiiqt3ic5n76rb9edkmurhd6os2qc1i:
+              label: Data de transmissió [68]
+            x-e0o3ibj6clhmgo9dchiiqt3ic5n76rb9edkmurhd6os2qc1j:
+              label: Data de transmissió [68]
+            x-e0o3ibj6clhmgo9dchiiqt3ic5n76rb9edkmurhd6os2qc1k:
+              label: Data de transmissió [68]
+            x-e0o3ibj6clhmgo9dchiiqt3ic5n76rb9edkmurhd6os2qc1l:
+              label: Data de transmissió [68]
+            x-e0o3ibj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60pg:
+              label: Guany patrimonial [03]
+            x-e0o3ibj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60piqc1i:
+              label: Guany patrimonial [03]
+            x-e0o3ibj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60piqc1j:
+              label: Guany patrimonial [03]
+            x-e0o3ibj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60qiqc1k:
+              label: Guany patrimonial [05]
+            x-e0o3ibj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60qiqc1l:
+              label: Guany patrimonial [05]
+            x-e0o3ibj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60qiqc1m:
+              label: Guany patrimonial [05]
+            x-e0o3ibj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60qiqc1n:
+              label: Guany patrimonial [05]
+            x-e0o3ibj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60qiqc1o:
+              label: Guany patrimonial [05]
+            x-e0o3ibjec5q7asj1dhinko9d60p0:
+              label: Naturalesa [02]
+            x-e0o3ibjec5q7asj1dhinko9d60p2qc1i:
+              label: Naturalesa [02]
+            x-e0o3ibjec5q7asj1dhinko9d60p2qc1j:
+              label: Naturalesa [02]
+            x-e0o3ibjiclpn8rpdctgmsobecdkm2bbgc5q74qbddtn6iobc5ko36:
+              label: RESTA. Guany patrimonial [03]
+            x-e0o3ibjiclpn8rpde9in8pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6g:
+              label: RESTA. Retenció o ingrés a compte [04]
+            x-e0o3ibjiclq6arj3d5nmsbbf5lkmspriclpmubb15lhnapbeehgiqc1k:
+              label: Retenció o ingrés a compte [04]
+            x-e0o3ibjiclq6arj3d5nmsbbf5lkmspriclpmubb15lhnapbeehgiqc1k5ko34:
+              label: Retenció o ingrés a compte [04]
+            x-e0o3ibjiclq6arj3d5nmsbbf5lkmspriclpmubb15lhnapbeehgiqc1k5ko36:
+              label: Retenció o ingrés a compte [04]
+            x-e0o3ibjkd5o6ubb4ckmn4pbeehgiqc1h:
+              label: Tipus de Renda [01]
+            x-e0o3ibjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
+              label: Tipus de Renda [01]
+            x-e0o3ibjkd5o6ubb4ckmn4pbeehgiqc1h5ko36:
+              label: Tipus de Renda [01]
+            x-e0o3ibjkd5o6ubb4ckmn4pbeehgiqc1h5ko38:
+              label: Tipus de Renda [01]
+            x-e0o3ibjkd5o6ubb4ckmn4pbeehgiqc1h5ko3a:
+              label: Tipus de Renda [01]
+            x-e0o3ibjkd5o6ubb4ckmn4pbeehgiqc1h5ko3c:
+              label: Tipus de Renda [01]
+            x-e0o3ibjkd5o6ubb4ckmn4pbeehgiqc1h5ko3e:
+              label: Tipus de Renda [01]
+            x-e0o3ibjkd5o6ubb4ckmn4pbeehgiqc1h5ko3g:
+              label: Tipus de Renda [01]
+            x-e0o3ibjkdtq62r1dctgmsobecdkm2spde1gn8sj9dlnmsqb1dhin6b9g6k:
+              label: Total guanys patrimonials [05]
+            x-e0o3ibjkdtq62r1de9in8pbecdkmurhddsmmirj7e9in6rrj5lgiqorlcln78o9d60r0:
+              label: Total retenció o ingressos a compte [06]
+            x-e0o3ibjmc5m6ushdchiiqob4e5qmisr9cdkmurhd60pg:
+              label: Valor d'adquisició [03]
+            x-e0o3ibjmc5m6ushdchiiqob4e5qmisr9cdkmurhd60piqc1i:
+              label: Valor d'adquisició [03]
+            x-e0o3ibjmc5m6ushdchiiqob4e5qmisr9cdkmurhd60piqc1j:
+              label: Valor d'adquisició [03]
+            x-e0o3ibjmc5m6ushdchiiqob4e5qmisr9cdkmurhd60piqc1k:
+              label: Valor d'adquisició [03]
+            x-e0o3ibjmc5m6ushdchiiqob4e5qmisr9cdkmurhd60piqc1l:
+              label: Valor d'adquisició [03]
+            x-e0o3ibjmc5m6ushdchiiqt3ic5n76rb9edkmurhd60p0:
+              label: Valor de transmissió [02]
+            x-e0o3ibjmc5m6ushdchiiqt3ic5n76rb9edkmurhd60p2qc1i:
+              label: Valor de transmissió [02]
+            x-e0o3ibjmc5m6ushdchiiqt3ic5n76rb9edkmurhd60p2qc1j:
+              label: Valor de transmissió [02]
+            x-e0o3ibjmc5m6ushdchiiqt3ic5n76rb9edkmurhd60p2qc1k:
+              label: Valor de transmissió [02]
+            x-e0o3ibjmc5m6ushdchiiqt3ic5n76rb9edkmurhd60p2qc1l:
+              label: Valor de transmissió [02]
+            x-e0oj0bj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5kr3e:
+              label: Descripció de l'element patrimonial [67]
+            x-e0oj0bj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5kr3eb9g68:
+              label: Descripció de l'element patrimonial [67]
+            x-e0oj0bj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5kr3eb9g6c:
+              label: Descripció de l'element patrimonial [67]
+            x-e0oj0bj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5kr3eb9g6g:
+              label: Descripció de l'element patrimonial [67]
+            x-e0oj0bj4d5j6asj5dphmio9d60q0:
+              label: Diferència [04]
+            x-e0oj0bj4d5j6asj5dphmio9d60q2qc1i:
+              label: Diferència [04]
+            x-e0oj0bj4d5j6asj5dphmio9d60q2qc1j:
+              label: Diferència [04]
+            x-e0oj0bj4d5j6asj5dphmio9d60q2qc1k:
+              label: Diferència [04]
+            x-e0oj0bj6clhmgo9dchiiqob4e5qmisr9cdkmurhd6osg:
+              label: Data d'adquisició [69]
+            x-e0oj0bj6clhmgo9dchiiqob4e5qmisr9cdkmurhd6osiqc1i:
+              label: Data d'adquisició [69]
+            x-e0oj0bj6clhmgo9dchiiqob4e5qmisr9cdkmurhd6osiqc1j:
+              label: Data d'adquisició [69]
+            x-e0oj0bj6clhmgo9dchiiqob4e5qmisr9cdkmurhd6osiqc1k:
+              label: Data d'adquisició [69]
+            x-e0oj0bj6clhmgo9dchiiqt3ic5n76rb9edkmurhd6os0:
+              label: Data de transmissió [68]
+            x-e0oj0bj6clhmgo9dchiiqt3ic5n76rb9edkmurhd6os2qc1i:
+              label: Data de transmissió [68]
+            x-e0oj0bj6clhmgo9dchiiqt3ic5n76rb9edkmurhd6os2qc1j:
+              label: Data de transmissió [68]
+            x-e0oj0bj6clhmgo9dchiiqt3ic5n76rb9edkmurhd6os2qc1k:
+              label: Data de transmissió [68]
+            x-e0oj0bj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60qg:
+              label: Guany patrimonial [05]
+            x-e0oj0bj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60qiqc1i:
+              label: Guany patrimonial [05]
+            x-e0oj0bj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60qiqc1j:
+              label: Guany patrimonial [05]
+            x-e0oj0bj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60qiqc1k:
+              label: Guany patrimonial [05]
+            x-e0oj0bjiclpn8rpdctgmsobecdkm2bbgc5q74qbddtn6iobc5ko3a:
+              label: RESTA. Guany patrimonial [05]
+            x-e0oj0bjkd5o6ubb4ckmn4pbeehgiqc1h:
+              label: Tipus de Renda [01]
+            x-e0oj0bjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
+              label: Tipus de Renda [01]
+            x-e0oj0bjkd5o6ubb4ckmn4pbeehgiqc1h5ko36:
+              label: Tipus de Renda [01]
+            x-e0oj0bjkd5o6ubb4ckmn4pbeehgiqc1h5ko38:
+              label: Tipus de Renda [01]
+            x-e0oj0bjkdtq62r1dctgmsobecdkm2spde1gn8sj9dlnmsqb1dhin6b9g6o:
+              label: Total guanys patrimonials [06]
+            x-e0oj0bjmc5m6ushdchiiqob4e5qmisr9cdkmurhd60pg:
+              label: Valor d'adquisició [03]
+            x-e0oj0bjmc5m6ushdchiiqob4e5qmisr9cdkmurhd60piqc1i:
+              label: Valor d'adquisició [03]
+            x-e0oj0bjmc5m6ushdchiiqob4e5qmisr9cdkmurhd60piqc1j:
+              label: Valor d'adquisició [03]
+            x-e0oj0bjmc5m6ushdchiiqob4e5qmisr9cdkmurhd60piqc1k:
+              label: Valor d'adquisició [03]
+            x-e0oj0bjmc5m6ushdchiiqt3ic5n76rb9edkmurhd60p0:
+              label: Valor de transmissió [02]
+            x-e0oj0bjmc5m6ushdchiiqt3ic5n76rb9edkmurhd60p2qc1i:
+              label: Valor de transmissió [02]
+            x-e0oj0bjmc5m6ushdchiiqt3ic5n76rb9edkmurhd60p2qc1j:
+              label: Valor de transmissió [02]
+            x-e0oj0bjmc5m6ushdchiiqt3ic5n76rb9edkmurhd60p2qc1k:
+              label: Valor de transmissió [02]
+          field:
+            label: Model 151, exercicis 2025 i següents (règim d'impatriats; escala
+              general plana 24/47 art. 93.2.e.1 més escala de l'estalvi art. 93.2.e.2,
+              redacció vigent segons la Llei 7/2024)

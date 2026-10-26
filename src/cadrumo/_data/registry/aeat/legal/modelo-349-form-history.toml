@@ -1,0 +1,15 @@
+# Historical visual reference only. The 2020 order replaces the paper form
+# with electronic record designs; this does not supply current filing fields.
+[sources."boe-modelo-349-2010-original-form-pdf"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2010-5098-modelo-349.pdf"
+sha256 = "3e194f09e71174b115ccdd6627656259cbbfd2f18fd44147d9091527a3909c69"
+bytes = 994098
+retrieved_at = 2026-10-06
+published_at = 2010-03-29
+applies_from = 2010-04-01
+applies_to = 2019-12-31
+source_url = "https://www.boe.es/boe/dias/2010/03/29/pdfs/BOE-A-2010-5098.pdf"
+review_status = "pending_review"

@@ -1,0 +1,331 @@
+modelo:
+  schema:
+    '202':
+      casilla:
+        continuidad:
+          '25':
+            label: Mod. 40.3 LIS B2 - Importe pago fraccionado tipo 2
+          importe-bonificacion-art-26-ley-19-1994:
+            help: Importe declarado en el bloque de información adicional de la liquidación
+              del pago fraccionado.
+            label: Información adicional (5) - Importe correspondiente a la bonificación
+              prevista en el art. 26 de la Ley 19/1994
+          importe-bonificacion-art-34-lis:
+            help: Importe declarado en el bloque de información adicional de la liquidación
+              del pago fraccionado.
+            label: Información adicional (5) - Importe de la bonificación prevista
+              en el art. 34 LIS
+          importe-excluido-aumento-capital-art-17-2-lis:
+            help: Importe declarado en el bloque de información adicional de la liquidación
+              del pago fraccionado.
+          importe-excluido-quita-espera:
+            help: Importe declarado en el bloque de información adicional de la liquidación
+              del pago fraccionado.
+            label: Información adicional (5) - Importe excluido por operaciones de
+              quita o espera
+          importe-integrado-base-imponible-quita-espera:
+            help: Importe declarado en el bloque de información adicional de la liquidación
+              del pago fraccionado.
+            label: Información adicional (5) - Parte integrada en la base imponible
+              por operaciones de quita o espera
+          importe-integrado-cuota-quita-espera-cooperativas:
+            help: Importe declarado en el bloque de información adicional de la liquidación
+              del pago fraccionado.
+          importe-no-computable-regimen-zec:
+            help: Importe declarado en el bloque de información adicional de la liquidación
+              del pago fraccionado.
+            label: Información adicional (5) - Importe no computable por aplicación
+              del régimen fiscal de la ZEC
+          importe-reserva-inversiones-canarias:
+            help: Importe declarado en el bloque de información adicional de la liquidación
+              del pago fraccionado.
+            label: Información adicional (5) - Importe correspondiente a la reserva
+              para inversiones en Canarias
+          is-pf-mod-40-2-a-ingresar:
+            label: Mod. 40.2 LIS - A ingresar
+          is-pf-mod-40-2-base-pago-fraccionado:
+            label: Mod. 40.2 LIS - Base del pago fraccionado
+          is-pf-mod-40-2-resultado-declaracion-anterior:
+            label: Mod. 40.2 LIS - Resultado de la declaración anterior (complementarias)
+          is-pf-mod-40-3-amortizacion-30pct-dism:
+            label: Mod. 40.3 LIS - 30% gastos amortización - Disminuciones
+          is-pf-mod-40-3-b1-base-pago-fraccionado:
+            label: Mod. 40.3 LIS B1 - Caso general - Base pago fraccionado
+          is-pf-mod-40-3-b1-compensacion-cuotas-neg-coop:
+            label: Mod. 40.3 LIS B1 - Compensación de cuotas negativas (cooperativas)
+          is-pf-mod-40-3-b1-dotaciones-art-11-12:
+            label: Mod. 40.3 LIS B1 - Dotaciones del art. 11.12 LIS
+          is-pf-mod-40-3-b1-porcentaje:
+            label: Mod. 40.3 LIS B1 - Caso general - Porcentaje
+          is-pf-mod-40-3-b1-reserva-nivelacion-convertida-aum:
+            label: Mod. 40.3 LIS B1 - Reserva nivelación convertida - Aumentos
+          is-pf-mod-40-3-b1-reserva-nivelacion-convertida-dis:
+            label: Mod. 40.3 LIS B1 - Reserva nivelación convertida - Disminuciones
+          is-pf-mod-40-3-b1-resultado-previo:
+            label: Mod. 40.3 LIS B1 - Caso general - Resultado previo
+          is-pf-mod-40-3-b2-base-pago-fraccionado:
+            label: Mod. 40.3 LIS B2 - Base del pago fraccionado
+          is-pf-mod-40-3-b2-base-tipo-1:
+            label: Mod. 40.3 LIS B2 - Base a tipo 1
+          is-pf-mod-40-3-b2-base-tipo-2:
+            label: Mod. 40.3 LIS B2 - Base a tipo 2
+          is-pf-mod-40-3-b2-compensacion-cuotas-neg-coop:
+            label: Mod. 40.3 LIS B2 - Compensación de cuotas negativas (cooperativas)
+          is-pf-mod-40-3-b2-dotaciones-art-11-12-coop:
+            label: Mod. 40.3 LIS B2 - Dotaciones art. 11.12 LIS (cooperativas)
+          is-pf-mod-40-3-b2-importe-pago-fraccionado:
+            label: Mod. 40.3 LIS B2 - Importe pago fraccionado tipo 1
+          is-pf-mod-40-3-b2-porcentaje-1:
+            label: Mod. 40.3 LIS B2 - Porcentaje 1
+          is-pf-mod-40-3-b2-porcentaje-2:
+            label: Mod. 40.3 LIS B2 - Porcentaje 2
+          is-pf-mod-40-3-b2-reserva-nivelacion-aumentos:
+            label: Mod. 40.3 LIS B2 - Reserva de nivelación (art. 105 LIS) - Aumentos
+          is-pf-mod-40-3-b2-reserva-nivelacion-disminuciones:
+            label: Mod. 40.3 LIS B2 - Reserva de nivelación (art. 105 LIS) - Disminuciones
+          is-pf-mod-40-3-b2-resultado-previo:
+            label: Mod. 40.3 LIS B2 - Resultado previo
+          is-pf-mod-40-3-base-imponible-previa:
+            label: Mod. 40.3 LIS - Base imponible previa
+          is-pf-mod-40-3-bonificaciones:
+            label: Mod. 40.3 LIS - Bonificaciones del periodo computado
+          is-pf-mod-40-3-cantidad-a-ingresar:
+            label: Mod. 40.3 LIS - Cantidad a ingresar (mayor de claves [32] y [33])
+          is-pf-mod-40-3-compensacion-bases-negativas:
+            label: Mod. 40.3 LIS - Compensación de bases negativas de ejercicios anteriores
+          is-pf-mod-40-3-correcciones-is-aumentos:
+            label: Mod. 40.3 LIS - Correcciones por IS - Aumentos
+          is-pf-mod-40-3-correcciones-is-disminuciones:
+            label: Mod. 40.3 LIS - Correcciones por IS - Disminuciones
+          is-pf-mod-40-3-minimo-a-ingresar:
+            label: Mod. 40.3 LIS - Mínimo a ingresar (CN >= 10 millones euros)
+          is-pf-mod-40-3-pagos-previos-territorio-comun:
+            label: Mod. 40.3 LIS - Pagos fraccionados de periodos anteriores en Territorio
+              Común
+          is-pf-mod-40-3-remanente-reserva-capitalizacion:
+            label: Mod. 40.3 LIS - Remanente reserva de capitalización no aplicada
+              por insuficiencia de base
+          is-pf-mod-40-3-reserva-nivelacion-aumentos:
+            label: Mod. 40.3 LIS - Reserva de nivelación (art. 105 LIS) - Aumentos
+          is-pf-mod-40-3-reserva-nivelacion-disminuciones:
+            label: Mod. 40.3 LIS - Reserva de nivelación (art. 105 LIS) - Disminuciones
+          is-pf-mod-40-3-resto-correcciones-aumentos:
+            label: Mod. 40.3 LIS - Resto correcciones - Aumentos
+          is-pf-mod-40-3-resto-correcciones-disminuciones:
+            label: Mod. 40.3 LIS - Resto correcciones - Disminuciones
+          is-pf-mod-40-3-resultado:
+            label: Mod. 40.3 LIS - Resultado
+          is-pf-mod-40-3-resultado-contable:
+            label: Mod. 40.3 LIS - Resultado contable después del IS
+          is-pf-mod-40-3-resultado-declaracion-anterior:
+            label: Mod. 40.3 LIS - Resultado de la declaración anterior (complementaria)
+          is-pf-mod-40-3-total-correcciones-aumentos:
+            label: Mod. 40.3 LIS - TOTAL correcciones - Aumentos
+          is-pf-mod-40-3-total-correcciones-disminuciones:
+            label: Mod. 40.3 LIS - TOTAL correcciones - Disminuciones
+          is-pf-mod-40-3-volumen-territorio-comun-pct:
+            label: Mod. 40.3 LIS - Volumen operaciones en Territorio Común (%)
+          minoracion-rentas-bonificacion-art-33-lis:
+            help: Importe declarado en el bloque de información adicional de la liquidación
+              del pago fraccionado.
+            label: Información adicional (5) - Importe de la minoración correspondiente
+              a las rentas que tengan derecho a la bonificación art. 33 LIS
+          renta-exenta-cap-xiv-tit-vii-lis:
+            help: Importe declarado en el bloque de información adicional de la liquidación
+              del pago fraccionado.
+          rentas-reversion-deterioros-integradas-base-imponible:
+            help: Importe declarado en el bloque de información adicional de la liquidación
+              del pago fraccionado.
+            label: Información adicional (5) - Rentas de reversión de deterioros que
+              se integran en la base imponible
+          retenciones-ingresos-a-cuenta:
+            label: Mod. 40.3 LIS - Retenciones e ingresos a cuenta sobre ingresos
+              del periodo computado
+      field:
+        official_name: Impuesto sobre Sociedades. Impuesto sobre la Renta de no Residentes
+          (establecimientos permanentes y entidades en régimen de atribución de rentas
+          constituidas en el extranjero con presencia en territorio español). Pago
+          fraccionado.
+        title: IS pago fraccionado
+      form:
+        authored-historical:
+          context:
+            reducida-dimension:
+              heading: Empresa de reducida dimensión · artículo 101 LIS y tipo del
+                primer párrafo del artículo 29.1 LIS
+        authored2025:
+          column:
+            base:
+              heading: Base
+            importe:
+              heading: Importe del pago fraccionado
+            porcentaje:
+              heading: Porcentaje
+          context:
+            capital-riesgo:
+              heading: Capital-riesgo · régimen especial del artículo 50 LIS
+            cnae:
+              heading: CNAE de la actividad principal
+            complementaria:
+              heading: Autoliquidación complementaria
+            comunicacion-adicional:
+              heading: Comunicación de datos adicionales
+            cooperativa:
+              heading: Cooperativa fiscalmente protegida
+            datos-adicionales:
+              heading: Datos adicionales
+            denominacion:
+              heading: Apellidos o razón social
+            ejercicio:
+              heading: Ejercicio
+            iban:
+              heading: IBAN
+            justificante:
+              heading: Justificante de la autoliquidación anterior
+            multiples-tipos:
+              heading: Otras entidades que pueden aplicar más de un tipo impositivo
+            navieras:
+              heading: Entidades navieras · régimen por tonelaje
+            negocios-millon:
+              heading: 'Cifra de negocios del período anterior: inferior a 1.000.000
+                €'
+            negocios-seis-millones:
+              heading: 'Cifra de negocios de los 12 meses anteriores al inicio del
+                período: superior a 6.000.000 €'
+            nif:
+              heading: NIF
+            nombre:
+              heading: Nombre
+            nrs:
+              heading: Número de referencia de sociedades
+            periodo:
+              heading: Período
+            reducida-dimension:
+              heading: Empresa de reducida dimensión · artículo 101 LIS y tipo específico
+            sin-fines-lucrativos:
+              heading: Régimen de entidades sin fines lucrativos · Ley 49/2002
+            socimi:
+              heading: Régimen SOCIMI · Ley 11/2009
+            tipo-gravamen:
+              heading: Tipo de gravamen del Impuesto sobre Sociedades del ejercicio
+                en curso
+          page:
+            '1':
+              heading: Pago fraccionado · página 1
+            '2':
+              heading: Pago fraccionado · página 2
+          row:
+            amortizacion:
+              heading: Reversión del 30% de amortización contable
+            ic:
+              heading: Impuesto Complementario
+            is:
+              heading: Impuesto sobre Sociedades
+            reserva:
+              heading: Reserva de nivelación
+            reserva-cuotas:
+              heading: Reserva de nivelación
+            resto:
+              heading: Resto de correcciones, excepto compensación de pérdidas anteriores
+            tipo-1:
+              heading: Tipo 1
+            tipo-2:
+              heading: Tipo 2
+            tipo-3:
+              heading: Tipo 3
+            tipo-4:
+              heading: Tipo 4
+            total:
+              heading: Total de correcciones
+          section:
+            b1:
+              heading: B.1) Caso general · porcentaje único
+            b2:
+              heading: B.2) Casos específicos · varios porcentajes
+            base-imponible:
+              heading: B) Pago según la base imponible · artículo 40.3
+            complementaria:
+              heading: Autoliquidación complementaria
+            devengo:
+              heading: Devengo
+            identificacion:
+              heading: Identificación
+            informacion:
+              heading: Información adicional
+            ingreso:
+              heading: Ingreso
+            modalidad-cuota:
+              heading: A) Pago según la cuota anterior · artículo 40.2
+            resultado:
+              heading: Resultado e importe a ingresar
+      revision:
+        2019-2022:
+          casilla:
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6au33dhqmip3f5lgnarb5dpq6ubb3c5o6it31dgmm2sjk5kojeb9i:
+              label: Información adicional (5) - Importe excluido por operaciones
+                de aumento de capital o fondos propios por compensación de créditos
+                que no se integren en la base imponible por aplicación del art. 17.2
+                LIS
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm6tbfehgiqsbld5q62bb5edo6asj15lhmurrgclp62t39epgn6:
+              label: Información adicional (5) - Parte integrada en la base imponible
+                a nivel cuota por op. de quita o espera (sólo cooperativas)
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgiqpbocln78o9dcdgn0bbod5r2qt39egmncqb95lm6iso:
+              label: Información adicional (5) - Importe renta exenta de las entidades
+                que aplican el régimen fiscal especial Cap. XIV del Tit. VII LIS
+          construct:
+            modelo-202-foundation:
+              field:
+                title: 'Modelo 202: pago fraccionado (ejercicios 2019-2022)'
+          field:
+            label: Modelo 202 ejercicios 2019 a 2022 (DR202v52.xlsx, Orden HAC/941/2018)
+        2023-2024:
+          casilla:
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6au33dhqmip3f5lgnarb5dpq6ubb3c5o6it31dgmm2sjk5kojeb9i:
+              label: Información adicional (5) - Importe excluido por operaciones
+                de aumento de capital o fondos propios por compensación de créditos
+                no integrado en la base imponible (art. 17.2 LIS)
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm6tbfehgiqsbld5q62bb5edo6asj15lhmurrgclp62t39epgn6:
+              label: Información adicional (5) - Parte integrada en la base imponible
+                a nivel cuota por operaciones de quita o espera (sólo cooperativas)
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgiqpbocln78o9dcdgn0bbod5r2qt39egmncqb95lm6iso:
+              label: Información adicional (5) - Importe de renta exenta de las entidades
+                que aplican el régimen fiscal especial del Cap. XIV del Tít. VII LIS
+          construct:
+            modelo-202-foundation:
+              field:
+                title: 'Modelo 202: pago fraccionado (ejercicios 2023-2024)'
+          field:
+            label: Modelo 202 ejercicios 2023 a 2024 (DR202e23.xlsx)
+        2025-y-siguientes:
+          casilla:
+            '61':
+              label: Mod. 40.3 LIS B2 - Base a tipo 3
+            '62':
+              label: Mod. 40.3 LIS B2 - Porcentaje 3
+            '63':
+              label: Mod. 40.3 LIS B2 - Importe pago fraccionado tipo 3
+            '64':
+              label: Mod. 40.3 LIS B2 - Base a tipo 4
+            '65':
+              label: Mod. 40.3 LIS B2 - Porcentaje 4
+            '66':
+              label: Mod. 40.3 LIS B2 - Importe pago fraccionado tipo 4
+            '67':
+              label: Mod. 40.3 LIS - Correcciones por Impuesto Complementario (IC)
+                - Aumentos
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6au33dhqmip3f5lgnarb5dpq6ubb3c5o6it31dgmm2sjk5kojeb9i:
+              label: Información adicional (5) - Importe excluido por operaciones
+                de aumento de capital o fondos propios por compensación de créditos
+                no integrado en la base imponible (art. 17.2 LIS)
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn6irjkcljn4ob4dsmm6tbfehgiqsbld5q62bb5edo6asj15lhmurrgclp62t39epgn6:
+              label: Información adicional (5) - Parte integrada en la base imponible
+                a nivel cuota por operaciones de quita o espera (sólo cooperativas)
+            x-d5n6crridlgm6qbfdomm2p39cdkmurj1dgn74pbeehgiqpbocln78o9dcdgn0bbod5r2qt39egmncqb95lm6iso:
+              label: Información adicional (5) - Importe de renta exenta de las entidades
+                que aplican el régimen fiscal especial del Cap. XIV del Tít. VII LIS
+          construct:
+            modelo-202-foundation:
+              field:
+                title: 'Modelo 202: base del pago fraccionado'
+          field:
+            label: Modelo 202 vigente, ejercicios 2025 y siguientes (DR202e25.xlsx)

@@ -1,0 +1,1007 @@
+"""Census of the registry load closure: what a load imports, what it runs, and who runs the rest.
+
+Answers one question the campaign left open -- *of everything a sanctioned
+registry load reaches, what actually executes, and for the remainder, which
+entry point owns it?* Two prior design reviews each missed a registry module a
+keyword search did not surface, so the denominator here is derived from the
+import graph and the package directory rather than from whichever modules a
+search returned.
+
+Three measurements, kept separate because they answer different questions:
+
+**The static load closure** is what a sanctioned load *imports*: every module
+transitively reachable by runtime import from :data:`LOAD_ENTRY_POINTS`.
+``TYPE_CHECKING``-guarded imports are excluded, because they never execute. The
+closure is checkable against reality -- its registry members equal the registry
+entries in ``sys.modules`` after a real load -- and it is the honest denominator
+for "reachable".
+
+**The traced execution sets** are what a load *runs*: the modules in which a
+function body starts during one traced entry point, recorded with
+:mod:`sys.monitoring`. Imports happen outside the traced window deliberately, so
+a module that only contributes definitions records nothing. That is a
+measurement boundary, not a verdict, and the distinction is load-bearing here:
+``_validate_cache`` publishes three cache objects bound at import by
+``_validate`` and defines no function of its own, so it can never appear in any
+execution set however live it is.
+
+**The reference map** is who *can* run a module: which production and test
+modules import its canonical defining module. The map records the module named
+by the import statement itself and leaves direct canonical evidence visible
+even when a module is only referenced from a function or a test.
+
+What this cannot see, stated rather than assumed away:
+
+- **Dynamic import targets that are not literal strings.** :func:`dynamic_import_sites`
+  harvests ``import_module("literal")`` edges the AST-only graph misses and
+  reports every non-literal target as UNRESOLVED. There is no sanctioned
+  inventory of first-party function-local edges to check those against, so an
+  unresolved site is reported on the graph difference alone and left
+  unclassified; it is never implied that a list cleared it.
+- **Attribute access through a module object.** ``from ... import registry``
+  followed by ``registry.symbol`` reads as a package import, not a symbol
+  reference.
+- **Reflective lookup.** ``getattr(registry, name)`` over a computed name.
+
+A module the reference map finds nowhere is reported directly as a live graph
+difference. There is no reviewed classification table: a real missing edge is
+fixed at its owner and an inference error is fixed in this scanner.
+"""
+
+from __future__ import annotations
+
+import argparse
+import ast
+import json
+import sys
+import tempfile
+from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import dataclass, field
+from functools import lru_cache
+from pathlib import Path
+from typing import Final, TypeGuard
+
+import grimp
+
+from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.storage_environment import prepare_temporary_directory
+from dev._paths import REPO_ROOT
+from dev.first_party_source import DEVELOPMENT_TOOLING, PRODUCT_PACKAGE, is_test_module_name, is_test_source
+from dev.packaging.command_execution import run_command
+from dev.quality.unread_inputs import report_unread
+
+SOURCE_ROOT: Final[Path] = REPO_ROOT / "src"
+ROOT_PACKAGE: Final[str] = "cadrumo"
+REGISTRY_PACKAGE: Final[str] = "cadrumo.domain.calculations.registry"
+REGISTRY_DIR: Final[Path] = SOURCE_ROOT / "cadrumo" / "domain" / "calculations" / "registry"
+
+#: The sanctioned way to load the registry: the validated authority and its
+#: package root. The root is included because importing a defining module also
+#: loads its ancestor packages; it is not a source of registry definitions.
+#: ``compiled_bundled_authority()`` is the only production load entry point the
+#: authority-flow rule admits.
+LOAD_ENTRY_POINTS: Final[tuple[str, ...]] = (
+    REGISTRY_PACKAGE,
+    f"{REGISTRY_PACKAGE}.authority",
+)
+
+#: Directories scanned for symbol references. ``dev`` is included because the
+#: registry conformance and maintenance tooling is a real consumer -- the live
+#: parity oracle catalogue is assembled there and nowhere else -- so omitting it
+#: would report live oracle modules as unreferenced.
+REFERENCE_SCAN_ROOTS: Final[tuple[Path, ...]] = (REPO_ROOT / PRODUCT_PACKAGE, REPO_ROOT / DEVELOPMENT_TOOLING)
+
+#: Cache directories whose redirection forces a cold load. Pointing them at
+#: empty directories denies the loader its compiled tree and denies the
+#: validator its persisted verdict.
+COLD_REGIME_ENV: Final[tuple[str, ...]] = (
+    "CADRUMO_REGISTRY_DISK_CACHE_DIR",
+    "CADRUMO_REGISTRY_VERDICT_CACHE_DIR",
+)
+
+#: Named once, as this tree requires of a module doing text IO.
+TRACE_REGIMES: Final[tuple[str, ...]] = ("warm", "cold", "inspection_snapshot")
+
+
+class LoadCensusError(RuntimeError):
+    """Raised when the census cannot be computed from the tree as it stands."""
+
+
+def build_runtime_graph() -> grimp.ImportGraph:
+    """Build the first-party import graph as it exists at RUNTIME.
+
+    ``TYPE_CHECKING``-guarded imports are excluded so the graph describes what a
+    running interpreter imports, matching the project's import-linter contract.
+
+    Returns:
+        The :class:`grimp.ImportGraph` for the ``cadrumo`` root package.
+    """
+    # Caching is off deliberately: grimp keys its cache on file mtimes and does not
+    # evict a module whose file was deleted, so after any relocation the cached graph
+    # still carries the retired module and the closure gate reds on a ghost. A census
+    # of what a running interpreter imports has to be read from the tree, not a cache.
+    return grimp.build_graph(
+        ROOT_PACKAGE,
+        include_external_packages=False,
+        exclude_type_checking_imports=True,
+        cache_dir=None,
+    )
+
+
+def static_load_closure(graph: grimp.ImportGraph) -> frozenset[str]:
+    """Return every module a sanctioned registry load imports, transitively.
+
+    Args:
+        graph: The runtime import graph.
+
+    Returns:
+        The entry points and everything upstream of them.
+
+    Raises:
+        LoadCensusError: If a declared entry point is absent from the graph.
+    """
+    closure: set[str] = set()
+    for entry in LOAD_ENTRY_POINTS:
+        if entry not in graph.modules:
+            raise LoadCensusError(f"sanctioned load entry point {entry!r} is not in the import graph")
+        closure.add(entry)
+        closure |= graph.find_upstream_modules(entry)
+    return frozenset(closure)
+
+
+def module_level_importers(module: str) -> frozenset[str]:
+    """Return the registry modules that import ``module`` outside any function body.
+
+    A function-scoped import is an edge the import graph records and a real load
+    never walks unless that function runs. The two are different claims, and
+    telling them apart is what lets the closure be confronted with ``sys.modules``
+    without the confrontation failing on a deliberate cycle break.
+
+    Nested ``if`` and ``try`` blocks at module scope still count as module level,
+    because they execute on import. Only a function or method body defers.
+
+    Args:
+        module: The fully qualified module whose importers are wanted.
+
+    Returns:
+        The importing modules, empty when every import of ``module`` is deferred.
+
+    Raises:
+        OSError: ``REGISTRY_DIR`` is missing or not a directory. An empty
+            result here must mean every import is deferred, never that the
+            walk found nothing to read.
+    """
+    importers: set[str] = set()
+    unread: list[str] = []
+    for path in scan_directory(REGISTRY_DIR, pattern="*.py", recursive=True, require_root=True):
+        if "__pycache__" in path.parts or is_test_source(path, root=REGISTRY_DIR):
+            continue
+        try:
+            tree = ast.parse(path.read_text(encoding="utf-8"))
+        except (SyntaxError, UnicodeDecodeError) as error:
+            # An empty result here MEANS every import of the module is deferred,
+            # so a file that could not be read makes that conclusion easier to
+            # reach and wrong: a module-level importer in the skipped file would
+            # have refuted it.
+            unread.append(f"{path}: {type(error).__name__}: {error}")
+            continue
+        owner = _module_name_for(path)
+        if owner is None or owner == module:
+            continue
+        for node in _module_level_statements(tree):
+            if _import_targets(node, owner=owner) & {module}:
+                importers.add(owner)
+    report_unread(
+        "registry load census",
+        "a module-level importer in one of them would refute the deferred-import conclusion",
+        unread,
+    )
+    return frozenset(importers)
+
+
+def _module_level_statements(tree: ast.Module) -> Iterable[ast.stmt]:
+    """Yield every statement that executes at import time, descending into blocks but not functions."""
+    stack = list(tree.body)
+    while stack:
+        node = stack.pop()
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
+            continue
+        yield node
+        for block in ("body", "orelse", "finalbody"):
+            stack.extend(getattr(node, block, []) or [])
+        for handler in getattr(node, "handlers", []) or []:
+            stack.extend(handler.body)
+
+
+def _import_targets(node: ast.stmt, *, owner: str) -> frozenset[str]:
+    """Return the fully qualified modules one import statement names."""
+    if isinstance(node, ast.Import):
+        return frozenset(alias.name for alias in node.names)
+    if not isinstance(node, ast.ImportFrom):
+        return frozenset[str]()
+    if node.level:
+        base = owner.rsplit(".", node.level)[0] if node.level <= owner.count(".") else ""
+        head = f"{base}.{node.module}" if (node.module is not None and node.module) else base
+    else:
+        head = node.module or ""
+    return frozenset({head} | {f"{head}.{alias.name}" for alias in node.names})
+
+
+def registry_package_modules() -> frozenset[str]:
+    """Return every production module file in the registry package.
+
+    Derived from the directory rather than from consumer imports, so a module
+    with no observed consumer is still counted.
+
+    Returns:
+        Dotted module names, ``conftest`` excluded.
+    """
+    modules: set[str] = set()
+    for path in scan_directory(REGISTRY_DIR, pattern="*.py"):
+        stem = path.stem
+        if is_test_source(path, root=REGISTRY_DIR):
+            continue
+        modules.add(REGISTRY_PACKAGE if stem == "__init__" else f"{REGISTRY_PACKAGE}.{stem}")
+    return frozenset(modules)
+
+
+def dynamic_reach(graph: grimp.ImportGraph, closure: frozenset[str]) -> frozenset[str]:
+    """Return modules the closure reaches only through a resolved dynamic import.
+
+    An AST import graph cannot represent ``import_module(name)``, so a module
+    imported that way is absent from the static closure however certainly the
+    load path reaches it. The cross-domain snapshot checks are the live case:
+    ``_snapshot`` imports the renta routing-integrity modules by name for their
+    registration side effect, and the import-linter contract sanctions exactly
+    that edge while the graph cannot see it.
+
+    Args:
+        graph: The runtime import graph.
+        closure: The static load closure.
+
+    Returns:
+        The dynamically reached modules and everything statically upstream of
+        them, minus what the closure already holds.
+    """
+    reached: set[str] = set()
+    for site in dynamic_import_sites():
+        if site.target is None or site.module not in closure:
+            continue
+        if site.target not in graph.modules:
+            continue
+        reached.add(site.target)
+        reached |= graph.find_upstream_modules(site.target)
+    return frozenset(reached - closure)
+
+
+def census_universe(graph: grimp.ImportGraph) -> frozenset[str]:
+    """Return every module this census must classify.
+
+    The union of three terms: the static load closure, what the closure reaches
+    dynamically, and the registry package. The last matters most -- a registry
+    module the load never imports is exactly the case the census exists to
+    catch, and it is invisible from the closure alone.
+
+    Args:
+        graph: The runtime import graph.
+
+    Returns:
+        Production modules only; test modules are out of scope.
+    """
+    closure = static_load_closure(graph)
+    members = closure | dynamic_reach(graph, closure) | registry_package_modules()
+    return frozenset(m for m in _with_ancestor_packages(members) if not is_test_module_name(m))
+
+
+def _with_ancestor_packages(modules: Iterable[str]) -> frozenset[str]:
+    """Return ``modules`` together with every package that importing them loads.
+
+    The import graph records the edges written in source, and importing
+    ``cadrumo.core.hashing`` writes no edge to ``cadrumo.core``. The interpreter
+    loads that parent all the same, and every ancestor above it, so a closure
+    built from edges alone omits packages a running load certainly holds.
+
+    Measured before this was added: five modules a real load has in
+    ``sys.modules`` were absent from the universe, four of them packages, and
+    rules naming them were reported stale for naming something real.
+
+    Args:
+        modules: The modules whose ancestors are wanted, included in the result.
+
+    Returns:
+        The modules and their ancestor packages within the root package.
+    """
+    found: set[str] = set()
+    for module in modules:
+        found.add(module)
+        parts = module.split(".")
+        for depth in range(1, len(parts)):
+            ancestor = ".".join(parts[:depth])
+            if ancestor == ROOT_PACKAGE or ancestor.startswith(ROOT_PACKAGE + "."):
+                found.add(ancestor)
+    return frozenset(found)
+
+
+@dataclass(frozen=True)
+class DynamicImportSite:
+    """One ``import_module`` call site and what it resolves to, if anything."""
+
+    module: str
+    lineno: int
+    target: str | None
+
+    @property
+    def resolved(self) -> bool:
+        """Whether the call site names a literal first-party module.
+
+        Returns:
+            ``True`` when a literal target was recovered.
+        """
+        return self.target is not None
+
+
+def _module_name_for(path: Path) -> str | None:
+    for root in REFERENCE_SCAN_ROOTS:
+        try:
+            relative = path.resolve().relative_to(root.parent)
+        except ValueError:
+            continue
+        parts = list(relative.with_suffix("").parts)
+        if parts and parts[-1] == "__init__":
+            parts.pop()
+        return ".".join(parts)
+    return None
+
+
+def _iter_source_files() -> Iterable[Path]:
+    for root in REFERENCE_SCAN_ROOTS:
+        yield from scan_directory(root, pattern="*.py", recursive=True, prune_directories=("__pycache__",))
+
+
+def _parse(path: Path) -> ast.Module:
+    """Parse one source file. Raises on any read, decode, or syntax failure.
+
+    Unlike the earlier swallowing form, the failure is not absorbed here: both
+    callers scan a REFERENCE_SCAN_ROOTS file that resolved to an in-scope
+    module name, and a file they cannot parse must be announced the same way
+    :func:`module_level_importers` announces an unreadable registry module,
+    not silently subtracted from the population they report.
+    """
+    return ast.parse(path.read_text(encoding="utf-8"))
+
+
+def _absolute(target: str, package: str | None) -> str | None:
+    if not target.startswith("."):
+        return target
+    return None if package is None else f"{package}{target}"
+
+
+def _literal_dynamic_target(node: ast.Call, package: str | None) -> str | None:
+    if not node.args:
+        return None
+    first = node.args[0]
+    if not isinstance(first, ast.Constant) or not isinstance(first.value, str):
+        return None
+    return _absolute(first.value, package)
+
+
+def _string_tuple_constants(tree: ast.Module) -> dict[str, tuple[str, ...]]:
+    """Collect module-level names bound to a tuple or list of string literals."""
+    constants: dict[str, tuple[str, ...]] = {}
+    for node in tree.body:
+        assignment = _module_level_assignment(node)
+        if assignment is None:
+            continue
+        targets, value = assignment
+        items = _literal_string_sequence(value)
+        if items is None:
+            continue
+        for target in targets:
+            if isinstance(target, ast.Name):
+                constants[target.id] = items
+    return constants
+
+
+def _module_level_assignment(node: ast.stmt) -> tuple[Sequence[ast.expr], ast.expr] | None:
+    """Return assignment targets and value for module-level assignment statements."""
+    if isinstance(node, ast.Assign):
+        return node.targets, node.value
+    if isinstance(node, ast.AnnAssign) and node.value is not None:
+        return (node.target,), node.value
+    return None
+
+
+def _literal_string_sequence(value: ast.expr) -> tuple[str, ...] | None:
+    """Return a non-empty tuple/list's strings only when every member is a string literal."""
+    if not isinstance(value, (ast.Tuple, ast.List)):
+        return None
+    if not value.elts:
+        return None
+    members: list[str] = []
+    for entry in value.elts:
+        if not isinstance(entry, ast.Constant) or not isinstance(entry.value, str):
+            return None
+        members.append(entry.value)
+    return tuple(members)
+
+
+def _is_import_module_call(node: ast.AST) -> TypeGuard[ast.Call]:
+    if not isinstance(node, ast.Call):
+        return False
+    func = node.func
+    name = func.attr if isinstance(func, ast.Attribute) else func.id if isinstance(func, ast.Name) else None
+    return name == "import_module"
+
+
+def evaluated_string_sequence(module: str, name: str) -> tuple[str, ...] | None:
+    """Return the string sequence ``module.name`` holds, or None if it holds none.
+
+    Asks the module rather than reading how the value is built. A module-level
+    tuple of module paths is the shape this census follows, and its
+    CONSTRUCTION is not the census's business: a literal, a tuple over a
+    mapping's values, a sorted set - all name the same thing, and a scan taught
+    one spelling goes blind at the next without saying so.
+
+    Evaluated in a separate interpreter, for the reason every other measurement
+    here is: importing the module in this process would add it and its imports
+    to this process's own module set, and this is a census of what gets
+    imported. A subprocess keeps the instrument out of its own reading.
+
+    Returns None on any failure - an import error, a missing name, a value that
+    is not a sequence of strings - because a fallback that guessed would be
+    worse than the unresolved record the caller already knows how to report.
+    """
+    script = chr(10).join(
+        (
+            "import importlib, json, sys",
+            "module = importlib.import_module(sys.argv[1])",
+            "value = getattr(module, sys.argv[2], None)",
+            "ok = isinstance(value, (tuple, list)) and all(isinstance(i, str) for i in value)",
+            "sys.stdout.write(json.dumps(list(value)) if ok else str())",
+        )
+    )
+    completed = run_command(
+        [sys.executable, "-c", script, module, name],
+        cwd=REPO_ROOT,
+    )
+    if completed.returncode != 0 or not completed.stdout.strip():
+        return None
+    try:
+        members = json.loads(completed.stdout)
+    except ValueError:
+        return None
+    if not isinstance(members, list):
+        return None
+    strings = tuple(member for member in members if isinstance(member, str))
+    if len(strings) != len(members):
+        return None
+    return strings
+
+
+def _loop_resolved_targets(
+    tree: ast.Module, constants: Mapping[str, tuple[str, ...]], *, module: str
+) -> dict[int, tuple[str, ...]]:
+    """Resolve ``for name in CONSTANT: import_module(name)`` to the constant's members.
+
+    This is the one indirection worth following, because it is how every
+    production dynamic-import site in this tree is written: a module-level tuple
+    of module paths, iterated, each imported for its registration side effect.
+    Reading the tuple recovers targets an argument-only scan reports as
+    unknowable, and the cross-domain snapshot checks are exactly this shape.
+
+    The tuple's CONSTRUCTION is deliberately not parsed. It was a literal when
+    this was written and is now built from another module's mapping values, and
+    a scan taught to read that shape would go blind again at the next one - the
+    failure this census already suffered once, silently, until the resolver
+    stopped following the snapshot checks and the loss surfaced as classification
+    rules that appeared stale. Unreadable constructions are handed to the
+    evaluating fallback, which asks the module what the name holds instead of
+    deducing it from syntax.
+    """
+    resolved: dict[int, tuple[str, ...]] = {}
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.For) or not isinstance(node.iter, ast.Name):
+            continue
+        variable = _loop_target_name(node)
+        if variable is None:
+            continue
+        # Find the import sites FIRST. Evaluating a constant costs an
+        # interpreter, and a loop that imports nothing has no target to
+        # recover; resolving before looking would pay that price for every
+        # ordinary loop in the tree.
+        sites = _loop_import_sites(node, variable)
+        if not sites:
+            continue
+        members = _loop_members(node.iter.id, constants, module=module)
+        if members is None:
+            continue
+        for lineno in sites:
+            resolved[lineno] = members
+    return resolved
+
+
+def _loop_target_name(node: ast.For) -> str | None:
+    """Return the target variable when a loop binds a simple name."""
+    return node.target.id if isinstance(node.target, ast.Name) else None
+
+
+def _loop_import_sites(node: ast.For, variable: str) -> tuple[int, ...]:
+    """Return loop call lines that dynamically import the loop variable."""
+    return tuple(
+        inner.lineno
+        for inner in ast.walk(node)
+        if _is_import_module_call(inner)
+        and inner.args
+        and isinstance(inner.args[0], ast.Name)
+        and inner.args[0].id == variable
+    )
+
+
+def _loop_members(name: str, constants: Mapping[str, tuple[str, ...]], *, module: str) -> tuple[str, ...] | None:
+    """Resolve one loop's iterable from syntax first, then the module value."""
+    members = constants.get(name)
+    return evaluated_string_sequence(module, name) if members is None else members
+
+
+def dynamic_import_sites(*, production_only: bool = True) -> tuple[DynamicImportSite, ...]:
+    """Harvest every ``import_module`` call site the AST import graph cannot represent.
+
+    Two shapes are resolved: a literal argument (relative literals are resolved
+    against the calling package), and a loop over a module-level tuple of module
+    paths. Anything else -- an f-string, a comprehension over a mapping, a
+    computed name -- is recorded with ``target=None`` and stays unclassified.
+
+    Args:
+        production_only: Restrict to production modules. Dynamic imports inside
+            tests cannot affect any load closure, and reporting them buries the
+            handful that can.
+
+    Returns:
+        One record per resolved target, or one per unresolved call site.
+    """
+    sites: list[DynamicImportSite] = []
+    unread: list[str] = []
+    for path in _iter_source_files():
+        module = _module_name_for(path)
+        try:
+            tree = _parse(path)
+        except (OSError, SyntaxError, UnicodeDecodeError) as error:
+            if module is not None:
+                unread.append(f"{path}: {type(error).__name__}: {error}")
+            continue
+        if module is None or (production_only and is_test_module_name(module)):
+            continue
+        sites.extend(_dynamic_imports_in_file(path, module, tree))
+    report_unread(
+        "registry load census dynamic import harvest",
+        "an import_module call site in one of them would be missing from the census",
+        unread,
+    )
+    return tuple(sites)
+
+
+def _dynamic_imports_in_file(path: Path, module: str, tree: ast.Module) -> tuple[DynamicImportSite, ...]:
+    """Resolve the dynamic-import call sites in one parsed source module."""
+    package = module.rsplit(".", 1)[0] if path.name != "__init__.py" else module
+    loop_targets = _loop_resolved_targets(tree, _string_tuple_constants(tree), module=module)
+    sites: list[DynamicImportSite] = []
+    for node in ast.walk(tree):
+        if not _is_import_module_call(node):
+            continue
+        members = loop_targets.get(node.lineno)
+        if members is None:
+            sites.append(DynamicImportSite(module, node.lineno, _literal_dynamic_target(node, package)))
+        else:
+            sites.extend(DynamicImportSite(module, node.lineno, _absolute(member, package)) for member in members)
+    return tuple(sites)
+
+
+def _registry_import_targets(
+    node: ast.Import | ast.ImportFrom,
+    module: str,
+    defining_modules: frozenset[str],
+) -> tuple[str, ...]:
+    """Return canonical registry modules named directly by one import statement.
+
+    ``from`` imports resolve the module path before the imported symbol is
+    considered. A package-root ``from`` import contributes an alias only when
+    that alias names a real registry submodule; package-owned symbols are never
+    inferred. Plain ``import`` statements contribute each dotted module they
+    name. The registry package itself is not a defining module.
+
+    Args:
+        node: The import statement.
+        module: The dotted name of the module containing it.
+        defining_modules: The registry package's modules, read once by the
+            caller for its whole scan; rescanning the package directory per
+            import statement made the reference map several times slower
+            than parsing every file it reads.
+
+    Returns:
+        Canonical registry module names, possibly empty.
+    """
+    targets = _registry_statement_targets(node, module)
+    return _canonical_registry_targets(node, targets, defining_modules)
+
+
+def _registry_statement_targets(node: ast.Import | ast.ImportFrom, module: str) -> tuple[str, ...]:
+    """Resolve the module path named by one import statement."""
+    if isinstance(node, ast.Import):
+        return tuple(alias.name for alias in node.names)
+    if node.level == 0:
+        return (node.module or "",)
+    base = module.split(".")
+    # ``a.b.c`` sits in package ``a.b``; one further level per extra dot.
+    del base[len(base) - node.level :]
+    target = ".".join((*base, node.module)) if (node.module is not None and node.module) else ".".join(base)
+    return (target,)
+
+
+def _canonical_registry_targets(
+    node: ast.Import | ast.ImportFrom,
+    targets: tuple[str, ...],
+    defining_modules: frozenset[str],
+) -> tuple[str, ...]:
+    """Keep direct registry modules and real submodules named by package imports."""
+    resolved: list[str] = []
+    for target in targets:
+        if target.startswith(REGISTRY_PACKAGE + "."):
+            resolved.append(target)
+        elif target == REGISTRY_PACKAGE and isinstance(node, ast.ImportFrom):
+            resolved.extend(
+                candidate for alias in node.names if (candidate := f"{target}.{alias.name}") in defining_modules
+            )
+    return tuple(resolved)
+
+
+@dataclass(frozen=True)
+class ReferenceMap:
+    """Canonical defining-module consumers, split by surface."""
+
+    production: Mapping[str, frozenset[str]] = field(default_factory=dict)
+    tests: Mapping[str, frozenset[str]] = field(default_factory=dict)
+
+    def consumers(self, module: str) -> frozenset[str]:
+        """Return every module importing canonical defining module ``module``.
+
+        Args:
+            module: The owning dotted module name.
+
+        Returns:
+            Production and test consumers combined.
+        """
+        return self.production.get(module, frozenset[str]()) | self.tests.get(module, frozenset[str]())
+
+
+def build_reference_map() -> ReferenceMap:
+    """Find every module that imports a registry module, by owning module.
+
+    Returns:
+        The reference map, with production and test consumers kept apart so a
+        module reachable only from a quality gate is visible as such.
+    """
+    return _reference_map_for(REFERENCE_SCAN_ROOTS)
+
+
+@lru_cache(maxsize=8)
+def _reference_map_for(roots: tuple[Path, ...]) -> ReferenceMap:
+    """Build the map for one set of scan roots, once per process.
+
+    The scan reads and AST-parses every source file under the roots -- 7,251
+    files, 77.3 MB, measured at 154s -- and the census asks for the map twice,
+    once directly and once inside :func:`run_census`, so a gate file paid for
+    two identical walks of an unchanged tree.
+
+    Keyed on the ROOTS rather than cached outright: the scan is a pure function
+    of the tree they name, and the tests that redirect ``REFERENCE_SCAN_ROOTS``
+    at a synthetic tree must still get their own scan. An unkeyed cache would
+    serve them the real map and quietly make them vacuous.
+
+    In-process only, like every memo here. Nothing persists across processes, so
+    an edited tree is read afresh by the next run.
+    """
+    production: dict[str, set[str]] = {}
+    tests: dict[str, set[str]] = {}
+    unread: list[str] = []
+    defining_modules = registry_package_modules()
+    for path in _iter_source_files():
+        module = _module_name_for(path)
+        tree = _reference_tree(path, module, unread)
+        if module is None or tree is None:
+            continue
+        # The package's own production modules are already represented by graph
+        # edges. Its tests are also consumers, so retain their direct canonical
+        # imports in this map rather than allowing them to look unreferenced.
+        if module.startswith(REGISTRY_PACKAGE + ".") and not is_test_module_name(module):
+            continue
+        bucket = tests if is_test_module_name(module) else production
+        _record_registry_imports(tree, module, defining_modules, bucket)
+    report_unread(
+        "registry load census reference map",
+        "a registry consumer named only in one of them would be missing from the reference map, "
+        "and its module could be misclassified dead",
+        unread,
+    )
+    return ReferenceMap(
+        production={k: frozenset(v) for k, v in production.items()},
+        tests={k: frozenset(v) for k, v in tests.items()},
+    )
+
+
+def _reference_tree(path: Path, module: str | None, unread: list[str]) -> ast.Module | None:
+    """Parse a source file while retaining unreadable in-scope evidence."""
+    try:
+        return _parse(path)
+    except (OSError, SyntaxError, UnicodeDecodeError) as error:
+        if module is not None:
+            unread.append(f"{path}: {type(error).__name__}: {error}")
+        return None
+
+
+def _record_registry_imports(
+    tree: ast.Module,
+    module: str,
+    defining_modules: frozenset[str],
+    bucket: dict[str, set[str]],
+) -> None:
+    """Add each direct canonical registry import from one consumer module."""
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Import | ast.ImportFrom):
+            continue
+        for owner in _registry_import_targets(node, module, defining_modules):
+            bucket.setdefault(owner, set()).add(module)
+
+
+def unreferenced_modules(graph: grimp.ImportGraph, reference_map: ReferenceMap) -> frozenset[str]:
+    """Return registry modules with no observed canonical defining-module consumer.
+
+    A module qualifies only when three independent signals agree: no production
+    module inside the package imports it, no module anywhere names it in an
+    import, and no test imports it directly. These are DEAD
+    CANDIDATES for review, not a verdict -- see this module's docstring for what
+    the instrument cannot see.
+
+    Args:
+        graph: The runtime import graph.
+        reference_map: The canonical defining-module reference map.
+
+    Returns:
+        Candidate modules, with the package root excluded because it is not a
+        defining module.
+    """
+    candidates: set[str] = set()
+    for module in sorted(registry_package_modules()):
+        if module == REGISTRY_PACKAGE:
+            continue
+        if _is_unreferenced_module(module, graph, reference_map):
+            candidates.add(module)
+    return frozenset(candidates)
+
+
+def _is_unreferenced_module(module: str, graph: grimp.ImportGraph, reference_map: ReferenceMap) -> bool:
+    """Apply the three independent consumer checks to one registry module."""
+    importers = graph.find_modules_that_directly_import(module)
+    in_package = {i for i in importers if i.startswith(REGISTRY_PACKAGE + ".") and not is_test_module_name(i)}
+    direct_tests = {i for i in importers if is_test_module_name(i)}
+    return not in_package and not direct_tests and not reference_map.consumers(module)
+
+
+def _trace_script(regime: str) -> str:
+    snapshot_block = ""
+    if regime == "inspection_snapshot":
+        snapshot_block = """
+        from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
+
+        for modelo in authority.modelos:
+            for period in ("1T", "0A", "ANUAL", "1"):
+                try:
+                    build_snapshot(
+                        modelo,
+                        authority.catalogues,
+                        source_root=source_root,
+                        filing_year=FILING_YEAR,
+                        period=period,
+                    )
+                except Exception:
+                    continue
+                break
+"""
+    return f"""
+import json
+import sys
+from pathlib import Path
+
+SOURCE = Path({str(SOURCE_ROOT)!r}).resolve()
+TOOL = sys.monitoring
+TOOL_ID = TOOL.PROFILER_ID
+FILING_YEAR = 2024
+
+
+def module_for(filename):
+    try:
+        path = Path(filename).resolve()
+        relative = path.relative_to(SOURCE)
+    except (OSError, ValueError):
+        return None
+    parts = list(relative.with_suffix("").parts)
+    if parts and parts[-1] == "__init__":
+        parts.pop()
+    return ".".join(parts)
+
+
+def main():
+    from cadrumo.core.resources.bundled_data import bundled_path
+
+    source_root = bundled_path()
+    executed = set()
+
+    def on_start(code, offset):
+        executed.add(code.co_filename)
+        return TOOL.DISABLE
+
+    prelude = {regime!r} == "inspection_snapshot"
+    if prelude:
+        authority = compiled_bundled_authority()
+
+    TOOL.use_tool_id(TOOL_ID, "load-census")
+    TOOL.register_callback(TOOL_ID, TOOL.events.PY_START, on_start)
+    TOOL.set_events(TOOL_ID, TOOL.events.PY_START)
+    try:
+        if not prelude:
+            authority = compiled_bundled_authority()
+{snapshot_block}
+    finally:
+        TOOL.set_events(TOOL_ID, 0)
+        TOOL.free_tool_id(TOOL_ID)
+
+    modules = sorted({{m for f in executed if (m := module_for(f)) and m.startswith("cadrumo")}})
+    Path(sys.argv[1]).write_text(json.dumps(modules, indent=2), encoding="utf-8")
+
+
+main()
+"""
+
+
+def trace_regime(regime: str) -> frozenset[str]:
+    """Run one traced entry point in a subprocess and return the modules that executed.
+
+    The trace records modules in which a function body STARTS, so a module whose
+    only contribution is import-time definitions records nothing. Imports are
+    performed outside the traced window on purpose -- otherwise every closure
+    member would register and the measurement would answer nothing.
+
+    Args:
+        regime: One of :data:`TRACE_REGIMES`.
+
+    Returns:
+        Dotted module names that executed.
+
+    Raises:
+        LoadCensusError: For an unknown regime or a failed trace.
+    """
+    if regime not in TRACE_REGIMES:
+        raise LoadCensusError(f"unknown trace regime {regime!r}; expected one of {TRACE_REGIMES}")
+    with tempfile.TemporaryDirectory(dir=prepare_temporary_directory()) as workspace:
+        area = Path(workspace)
+        output = area / "executed.json"
+        script = area / "trace.py"
+        script.write_text(_trace_script(regime), encoding="utf-8", newline="\n")
+        environment = None
+        if regime == "cold":
+            import os
+
+            environment = dict(os.environ)
+            for index, variable in enumerate(COLD_REGIME_ENV):
+                isolated = area / f"cold-{index}"
+                isolated.mkdir()
+                environment[variable] = str(isolated)
+        completed = run_command(
+            [sys.executable, str(script), str(output)],
+            cwd=REPO_ROOT,
+            environment=environment,
+        )
+        if completed.returncode != 0 or not output.exists():
+            raise LoadCensusError(f"{regime} trace failed:\n{completed.stderr}")
+        modules = json.loads(output.read_text(encoding="utf-8"))
+        if not isinstance(modules, list) or not all(isinstance(entry, str) for entry in modules):
+            raise LoadCensusError(f"{regime} trace produced a non-string module list")
+        return frozenset[str](modules)
+
+
+@dataclass(frozen=True)
+class CensusReport:
+    """One census run containing only mechanically derived graph signals."""
+
+    universe: frozenset[str]
+    closure: frozenset[str]
+    registry_modules: frozenset[str]
+    dead_candidates: frozenset[str]
+    unresolved_dynamic_sites: tuple[DynamicImportSite, ...]
+
+    @property
+    def clean(self) -> bool:
+        """Whether the live registry graph carries no unresolved difference."""
+        return not self.dead_candidates and not any(
+            site.module.startswith(REGISTRY_PACKAGE) for site in self.unresolved_dynamic_sites
+        )
+
+
+def run_census() -> CensusReport:
+    """Compute the census against the working tree.
+
+    Returns:
+        The report. Trace measurements are deliberately excluded from this fast
+        structural census.
+    """
+    graph = build_runtime_graph()
+    closure = static_load_closure(graph)
+    registry_modules = registry_package_modules()
+    universe = census_universe(graph)
+    reference_map = build_reference_map()
+    candidates = unreferenced_modules(graph, reference_map)
+    return CensusReport(
+        universe=universe,
+        closure=closure,
+        registry_modules=registry_modules,
+        dead_candidates=candidates,
+        unresolved_dynamic_sites=tuple(site for site in dynamic_import_sites() if not site.resolved),
+    )
+
+
+def _render(report: CensusReport, traces: Mapping[str, frozenset[str]]) -> str:
+    lines = [
+        f"static load closure          : {len(report.closure)}",
+        f"registry package modules     : {len(report.registry_modules)}",
+        f"census universe              : {len(report.universe)}",
+        f"dead candidates              : {len(report.dead_candidates)}",
+        f"unresolved dynamic sites     : {len(report.unresolved_dynamic_sites)}",
+    ]
+    for regime, executed in traces.items():
+        registry_executed = {m for m in executed if m.startswith(REGISTRY_PACKAGE)}
+        lines.append(f"trace[{regime}]: {len(executed)} modules, {len(registry_executed)} in the registry package")
+    lines.extend(f"  UNREFERENCED REGISTRY MODULE: {member}" for member in report.dead_candidates)
+    lines.extend(
+        f"  UNRESOLVED DYNAMIC IMPORT: {site.module}:{site.lineno}" for site in report.unresolved_dynamic_sites
+    )
+    return "\n".join(lines)
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Run the census and report.
+
+    Args:
+        argv: Command-line arguments; ``sys.argv`` when omitted.
+
+    Returns:
+        ``0`` when the derived registry graph has no unresolved difference.
+    """
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--trace", action="store_true", help="also run the load traces (slow; cold rebuilds caches)")
+    parser.add_argument("--json", action="store_true", help="emit machine-readable output")
+    arguments = parser.parse_args(argv)
+
+    report = run_census()
+    traces = {regime: trace_regime(regime) for regime in TRACE_REGIMES} if arguments.trace else {}
+    if arguments.json:
+        print(
+            json.dumps(
+                {
+                    "closure": sorted(report.closure),
+                    "registry_modules": sorted(report.registry_modules),
+                    "universe": sorted(report.universe),
+                    "dead_candidates": sorted(report.dead_candidates),
+                    "unresolved_dynamic_sites": [
+                        {"module": s.module, "lineno": s.lineno} for s in report.unresolved_dynamic_sites
+                    ],
+                    "traces": {regime: sorted(executed) for regime, executed in traces.items()},
+                },
+                indent=2,
+            )
+        )
+    else:
+        print(_render(report, traces))
+    return 0 if report.clean else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

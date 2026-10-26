@@ -1,0 +1,541 @@
+modelo:
+  schema:
+    '190':
+      binding:
+        modelo-190-111-actividades-dinerario-importe-anual:
+          label: Cash income from economic activities · annual total from Form 111,
+            box 08
+        modelo-190-111-actividades-especie-importe-anual:
+          label: Income in kind from economic activities · annual total from Form
+            111, box 11
+        modelo-190-111-derechos-imagen-importe-anual:
+          label: Consideration for assignment of image rights · annual total from
+            Form 111, box 26
+        modelo-190-111-ganancias-dinerario-importe-anual:
+          label: Cash capital gains from forestry · annual total from Form 111, box
+            20
+        modelo-190-111-ganancias-especie-importe-anual:
+          label: Capital gains in kind from forestry · annual total from Form 111,
+            box 23
+        modelo-190-111-premios-dinerario-importe-anual:
+          label: Cash prizes · annual total from Form 111, box 14
+        modelo-190-111-premios-especie-importe-anual:
+          label: Prizes in kind · annual total from Form 111, box 17
+        modelo-190-111-retenciones-anual:
+          label: Withholdings and payments on account · annual total from Form 111,
+            box 28
+        modelo-190-111-trabajo-dinerario-importe-anual:
+          label: Cash employment income · annual total from Form 111, box 02
+        modelo-190-111-trabajo-especie-importe-anual:
+          label: Employment income in kind · annual total from Form 111, box 05
+        modelo-190-perceptor-rows-incapacidad-dineraria-total:
+          label: Total cash benefits for incapacity for work
+        modelo-190-perceptor-rows-incapacidad-especie-total:
+          label: Total values of benefits in kind for incapacity for work
+        modelo-190-perceptor-rows-incapacidad-ingreso-a-cuenta-total:
+          label: Total payments on account for incapacity benefits in kind
+        modelo-190-perceptor-rows-incapacidad-retencion-total:
+          label: Total withholdings on incapacity benefits
+        modelo-190-perceptor-rows-ingreso-a-cuenta-total:
+          label: Total payments on account
+        modelo-190-perceptor-rows-percepcion-dineraria-total:
+          label: Total cash payments
+        modelo-190-perceptor-rows-percepcion-especie-total:
+          label: Total benefits in kind
+        modelo-190-perceptor-rows-retencion-practicada-total:
+          label: Total withholdings made
+      casilla:
+        continuidad:
+          devengo-year:
+            label: Accrual year
+          ingresos-a-cuenta-efectuados:
+            label: Payments on account made on in-kind income
+          ingresos-a-cuenta-repercutidos:
+            label: Payments on account
+          m190-correo-electronico:
+            label: Contact person's email address
+          m190-declaracion-complementaria:
+            label: Supplementary declaration
+          m190-declaracion-sustitutiva:
+            label: Replacement declaration
+          m190-numero-identificativo:
+            label: Declaration identifying number
+          m190-numero-identificativo-anterior:
+            label: Identifying number of the previous declaration
+          m190-persona-contacto-nombre:
+            label: Contact person's surnames and given name
+          m190-persona-contacto-telefono:
+            label: Contact person's telephone number
+          payee-anualidades-alimentos:
+            label: Maintenance annuities
+          payee-ascendientes-75-mas-entero:
+            label: Ascendants. Aged 75 or over. Counted in full
+          payee-ascendientes-75-mas-total:
+            label: Ascendants. Aged 75 or over. Total number
+          payee-ascendientes-discapacidad-33-65-entero:
+            label: Ascendants with a disability. Disability ≥ 33% and < 65%. Counted
+              in full
+          payee-ascendientes-discapacidad-33-65-total:
+            label: Ascendants with a disability. Disability ≥ 33% and < 65%. Total
+              number
+          payee-ascendientes-discapacidad-65-entero:
+            label: Ascendants with a disability. Disability ≥ 65%. Counted in full
+          payee-ascendientes-discapacidad-65-total:
+            label: Ascendants with a disability. Disability ≥ 65%. Total number
+          payee-ascendientes-discapacidad-movilidad-entero:
+            label: Ascendants with a disability. Reduced mobility. Counted in full
+          payee-ascendientes-discapacidad-movilidad-total:
+            label: Ascendants with a disability. Reduced mobility. Total number
+          payee-ascendientes-menores-75-entero:
+            label: Ascendants. Under 75 years old. Counted in full
+          payee-ascendientes-menores-75-total:
+            label: Ascendants. Under 75 years old. Total number
+          payee-birth-year:
+            label: Year of birth
+          payee-ceuta-melilla-clave:
+            label: Ceuta or Melilla
+          payee-clave-percepcion:
+            label: Income key
+          payee-complemento-ayuda-infancia:
+            label: Child support supplement
+          payee-computo-hijo-1:
+            label: Count of the first 3 children. 1st child
+          payee-computo-hijo-2:
+            label: Count of the first 3 children. 2nd child
+          payee-computo-hijo-3:
+            label: Count of the first 3 children. 3rd child
+          payee-contract-relation-clave:
+            label: Contract or relationship
+          payee-descendientes-discapacidad-33-65-entero:
+            label: Children and other descendants with a disability. Disability ≥
+              33% and < 65%. Counted in full
+          payee-descendientes-discapacidad-33-65-total:
+            label: Children and other descendants with a disability. Disability ≥
+              33% and < 65%. Total number
+          payee-descendientes-discapacidad-65-entero:
+            label: Children and other descendants with a disability. Disability ≥
+              65%. Counted in full
+          payee-descendientes-discapacidad-65-total:
+            label: Children and other descendants with a disability. Disability ≥
+              65%. Total number
+          payee-descendientes-discapacidad-movilidad-entero:
+            label: Children and other descendants with a disability. Reduced mobility.
+              Counted in full
+          payee-descendientes-discapacidad-movilidad-total:
+            label: Children and other descendants with a disability. Reduced mobility.
+              Total number
+          payee-descendientes-menores-3-entero:
+            label: Children and other descendants. Under 3 years old. Counted in full
+          payee-descendientes-menores-3-total:
+            label: Children and other descendants. Under 3 years old. Total number
+          payee-descendientes-resto-entero:
+            label: Children and other descendants. Remainder. Counted in full
+          payee-descendientes-resto-total:
+            label: Children and other descendants. Remainder. Total number
+          payee-disability-clave:
+            label: Disability
+          payee-emerging-stock-excess-clave:
+            help: Perceptor field declared in modelo 190's type 2 record.
+            label: Excess from delivery of start-up company shares
+          payee-family-situation:
+            label: Family situation
+          payee-gastos-deducibles:
+            label: Deductible expenses
+          payee-geographic-mobility-clave:
+            label: Geographic mobility
+          payee-incapacidad-dineraria-percepcion:
+            label: Benefits arising from work incapacity. Gross cash payment
+          payee-incapacidad-dineraria-retenciones:
+            label: Benefits arising from work incapacity. Withholdings applied to
+              the cash benefit
+          payee-incapacidad-especie-ingresos-a-cuenta:
+            label: Benefits arising from work incapacity. Payments on account made
+              for benefits in kind
+          payee-incapacidad-especie-repercutidos:
+            label: Benefits arising from work incapacity. Payments on account passed
+              on for benefits in kind
+          payee-incapacidad-especie-valoracion:
+            label: Benefits arising from work incapacity. Valuation of the benefit
+              in kind
+          payee-name:
+            label: Recipient's surnames and given name, or legal name
+          payee-nif:
+            label: Recipient's NIF
+          payee-pension-compensatoria:
+            label: Compensatory pensions
+          payee-prestamos-vivienda-clave:
+            label: Notification of loans for a habitual residence
+          payee-province:
+            label: Province code
+          payee-reducciones-aplicables:
+            label: Applicable reductions
+          payee-retenciones-forales-araba:
+            label: Withholdings and payments on account paid in. Provincial Council
+              of Araba/Álava
+          payee-retenciones-forales-bizkaia:
+            label: Withholdings and payments on account paid in. Provincial Council
+              of Bizkaia
+          payee-retenciones-forales-estatal:
+            label: Withholdings and payments on account paid in. State Tax Authority
+          payee-retenciones-forales-gipuzkoa:
+            label: Withholdings and payments on account paid in. Provincial Council
+              of Gipuzkoa
+          payee-retenciones-forales-navarra:
+            label: Withholdings and payments on account paid in. Chartered Community
+              of Navarre
+          payee-spouse-or-unit-titular-nif:
+            label: NIF of the spouse or of the holder of the cohabitation unit
+          payee-subclave-percepcion:
+            label: Income subkey
+          payee-unit-convivencia-titular-clave:
+            label: Holder of the cohabitation unit
+          perc-retenciones-practicadas:
+            label: Withholdings applied to cash income
+          percepcion-integra-dineraria:
+            label: Gross cash income not arising from work incapacity
+          percepcion-valoracion-especie:
+            label: Valuation of in-kind income not arising from work incapacity
+          prestacion-incapacidad:
+            help: Flag 1 or 0 according to whether this B.01 benefit type was paid
+              during the year.
+            label: Benefit type under code B.01. 03. Total or partial permanent incapacity
+          prestacion-jubilacion:
+            help: Flag 1 or 0 according to whether this B.01 benefit type was paid
+              during the year.
+            label: Benefit type under code B.01. 01. Retirement
+          prestacion-no-contributiva:
+            help: Flag 1 or 0 according to whether this B.01 benefit type was paid
+              during the year.
+            label: Benefit type under code B.01. 04. Non-contributory invalidity or
+              retirement pensions
+          prestacion-resto:
+            help: Flag 1 or 0 according to whether this B.01 benefit type was paid
+              during the year.
+            label: Benefit type under code B.01. 05. Other benefits under art. 17.2.a).1
+              of Law 35/2006
+          prestacion-viudedad:
+            help: Flag 1 or 0 according to whether this B.01 benefit type was paid
+              during the year.
+            label: Benefit type under code B.01. 02. Widowhood
+          rendimientos-trabajo-fondos-emprendimiento:
+            help: Perceptor field declared in modelo 190's type 2 record.
+            label: Employment income from managing funds linked to entrepreneurship,
+              innovation and economic activity development
+          representante-legal-nif:
+            label: Legal representative's NIF
+          retenciones-ingresos-a-cuenta:
+            label: Total amount of withholdings and advance payments
+          total-percepciones-amount:
+            label: Total amount of payments made
+          total-percepciones-count:
+            label: Total number of payments made
+      construct:
+        modelo-190-annual-summary:
+          field:
+            title: Annual summary of Modelo 190 from the quarterly Modelo 111 filings
+      field:
+        official_name: Modelo 190. Informative return. Withholdings and payments on
+          account. Employment and business income, prizes and certain capital gains
+          and income attributions. Annual summary.
+        title: Annual summary of withholdings on employment and business income
+      form:
+        context:
+          ejercicio:
+            heading: Tax year
+      revision:
+        '2022':
+          field:
+            label: Modelo 190, tax year 2022
+        '2023':
+          field:
+            label: Modelo 190, tax year 2023
+        '2024':
+          casilla:
+            x-e1in4opec5n6ubbec5hmirb9cln78ro:
+              help: Perceptor field declared in modelo 190's type 2 record.
+            x-e1in4opec5n7aobcd5i62p35ecmm2r39dlimst3fec:
+              help: Amount declared in modelo 190's perceptor record. The design splits
+                it into an integer and a decimal part.
+            x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdcln78pbids:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdehnn8obc:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kpj6b9m6kmmarjkclp6u:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kpj6b9m6kmn8rrkc5m0:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kr3abb5dpq6asjf:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kr3abbkdtq62r0:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45lmmutj9dhkm8ob45limst35e9ng:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45lmmutj9dhkm8ob45lq6ut31dg:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opec5pm6pbechkmarjkclpiqrb5dpnn4pbj5krjabb5dpq6asjf:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opec5pm6pbechkmarjkclpiqrb5dpnn4pbj5krjabbkdtq62r0:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opecdinat315lmmar39dhm62:
+              help: Perceptor field declared in modelo 190's type 2 record.
+            x-e1in4opecdnmqs3cclmmarjkdsmm2ublchgiqqbecpgmsor9c4:
+              help: Perceptor field declared in modelo 190's type 2 record.
+            x-e1in4opecdnmqs3lehniqq39d9niqc8:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opecdnmqs3lehniqq39d9niqcg:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opecdnmqs3lehniqq39d9niqco:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opecdnmst3ic5q6ubbiclm62or9dtn0:
+              help: Perceptor field declared in modelo 190's type 2 record.
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmj6cpd6oqiqpbeehin4ro:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmj6cpd6oqiqt3fehgmo:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmjcd9dcln78pbids:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmjcd9dehnn8obc:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmmqrrmd5m6ip31cgmmarjkclp6u:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmmqrrmd5m6ip31cgmn8rrkc5m0:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opechin6or5dpi6ipbeehin6bbdcln6usj5ecmj6bb5dpq6asjf:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opechin6or5dpi6ipbeehin6bbdcln6usj5ecmj6bbkdtq62r0:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opechin6or5dpi6ipbeehin6bbiclpn8rpdcln78pbids:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opechin6or5dpi6ipbeehin6bbiclpn8rpdehnn8obc:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opechkn6or1e1gm6qb4c5i0:
+              help: Perceptor field declared in modelo 190's type 2 record.
+            x-e1in4opecll6asj3d5hmirpdchincpbectng:
+              help: Perceptor field declared in modelo 190's type 2 record.
+            x-e1in4opectgn6t3fecmm8pb4elhmiojcclpg:
+              help: Amount declared in modelo 190's perceptor record. The design splits
+                it into an integer and a decimal part.
+            x-e1in4oped5n66obgc5hmip31cgmm8qbeclp62sj9c4mn0pbicdin0or9dtn0:
+              help: Perceptor field declared on modelo 190. The design splits amounts
+                into an integer and a decimal part.
+            x-e1in4oped5n66obgc5hmip31cgmm8qbeclp62sj9c4mn4pbkcln66qbfdpin6:
+              help: Perceptor field declared on modelo 190. The design splits amounts
+                into an integer and a decimal part.
+            x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9dd5n6esj5ednn6bb15lhnapbeehgg:
+              help: Perceptor field declared on modelo 190. The design splits amounts
+                into an integer and a decimal part.
+            x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9de9in0pbicdqn8qb4dtpg:
+              help: Perceptor field declared on modelo 190. The design splits amounts
+                into an integer and a decimal part.
+            x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9depgmorric5hmirre:
+              help: Perceptor field declared on modelo 190. The design splits amounts
+                into an integer and a decimal part.
+            x-e1in4oped5n6esj5ednn6bb15lhnapbeehgiqsj5e1in4orlehkm8rrj:
+              help: Perceptor field declared in modelo 190's type 2 record.
+            x-e1in4opedlnncqbcd5i62p1dctimupric5j6ior1:
+              help: Perceptor field declared in modelo 190's type 2 record.
+            x-e1in4opedpkmcbb3dtn7itb7ckmn8qbkelm62shdeln6ip31cg:
+              help: Perceptor field declared in modelo 190's type 2 record.
+            x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
+              help: Perceptor field declared in modelo 190's type 2 record.
+            x-e1in4opee1imssr9dtn2qorfdlo6arjjc5q6usj9c4:
+              help: Amount declared in modelo 190's perceptor record. The design splits
+                it into an integer and a decimal part.
+            x-e1in4opee1p6asrkc5mmuspdepkncqb5dpi62bb3dhgncp8:
+              help: Perceptor field declared in modelo 190's type 2 record.
+            x-e1in4opee1p6utj9dphmio8:
+              help: Perceptor field declared in modelo 190's type 2 record.
+            x-e1in4opee9im8tb3cdkmurj5ecmm2s3cd5hm2ojcclpg:
+              help: Amount declared in modelo 190's perceptor record. The design splits
+                it into an integer and a decimal part.
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc5p62oj1:
+              help: Perceptor field declared on modelo 190. The design splits amounts
+                into an integer and a decimal part.
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc9knkqr1d5gg:
+              help: Perceptor field declared on modelo 190. The design splits amounts
+                into an integer and a decimal part.
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
+              help: Box 323-335 of modelo 190, tax year 2024.
+              label: WITHHOLDINGS AND PAYMENTS ON ACCOUNT PAID TO THE STATE, TO THE
+                FORAL COUNCILS OF THE BASQUE COUNTRY AND TO THE CHARTERED COMMUNITY
+                OF NAVARRE
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdctkn0tbqddnm2:
+              help: Perceptor field declared on modelo 190. The design splits amounts
+                into an integer and a decimal part.
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspddpgncobie9gg:
+              help: Perceptor field declared on modelo 190. The design splits amounts
+                into an integer and a decimal part.
+            x-e1in4opeedkn8tb1cdkmurhdcpgmqqbcd5gn4:
+              help: Perceptor field declared in modelo 190's type 2 record.
+            x-e1in4opeehkn8tbcc5p2qtbed5i62p1dcdnmstj9epimsor9c4:
+              help: Perceptor field declared in modelo 190's type 2 record.
+          field:
+            label: Modelo 190, tax year 2024
+        2025-y-siguientes:
+          casilla:
+            x-e1in4opec5n6ubbec5hmirb9cln78ro:
+              help: Perceptor field declared in modelo 190's type 2 record.
+            x-e1in4opec5n7aobcd5i62p35ecmm2r39dlimst3fec:
+              help: Amount declared in modelo 190's perceptor record. The design splits
+                it into an integer and a decimal part.
+            x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdcln78pbids:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opec5pm6pbechkmarjkclpiqdpl5lmm2spdehnn8obc:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kpj6b9m6kmmarjkclp6u:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kpj6b9m6kmn8rrkc5m0:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kr3abb5dpq6asjf:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45kr3abbkdtq62r0:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45lmmutj9dhkm8ob45limst35e9ng:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opec5pm6pbechkmarjkclpiqp39edhm2s31cdkm8ob45lmmutj9dhkm8ob45lq6ut31dg:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opec5pm6pbechkmarjkclpiqrb5dpnn4pbj5krjabb5dpq6asjf:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opec5pm6pbechkmarjkclpiqrb5dpnn4pbj5krjabbkdtq62r0:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opecdinat315lmmar39dhm62:
+              help: Perceptor field declared in modelo 190's type 2 record.
+            x-e1in4opecdnmqs3cclmmarjkdsmm2ublchgiqqbecpgmsor9c4:
+              help: Perceptor field declared in modelo 190's type 2 record.
+            x-e1in4opecdnmqs3lehniqq39d9niqc8:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opecdnmqs3lehniqq39d9niqcg:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opecdnmqs3lehniqq39d9niqco:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opecdnmst3ic5q6ubbiclm62or9dtn0:
+              help: Perceptor field declared in modelo 190's type 2 record.
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmj6cpd6oqiqpbeehin4ro:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmj6cpd6oqiqt3fehgmo:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmjcd9dcln78pbids:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmjcd9dehnn8obc:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmmqrrmd5m6ip31cgmmarjkclp6u:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opechin6or5dpi6ipbeehin6bb4d5pm6obgc5hmip31cgmmqrrmd5m6ip31cgmn8rrkc5m0:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opechin6or5dpi6ipbeehin6bbdcln6usj5ecmj6bb5dpq6asjf:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opechin6or5dpi6ipbeehin6bbdcln6usj5ecmj6bbkdtq62r0:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opechin6or5dpi6ipbeehin6bbiclpn8rpdcln78pbids:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opechin6or5dpi6ipbeehin6bbiclpn8rpdehnn8obc:
+              help: Perceptor field declared on modelo 190, for the descendant or
+                ascendant minimum.
+            x-e1in4opechkn6or1e1gm6qb4c5i0:
+              help: Perceptor field declared in modelo 190's type 2 record.
+            x-e1in4opecll6asj3d5hmirpdchincpbectng:
+              help: Perceptor field declared in modelo 190's type 2 record.
+            x-e1in4opectgn6t3fecmm8pb4elhmiojcclpg:
+              help: Amount declared in modelo 190's perceptor record. The design splits
+                it into an integer and a decimal part.
+            x-e1in4oped5n66obgc5hmip31cgmm8qbeclp62sj9c4mn0pbicdin0or9dtn0:
+              help: Perceptor field declared on modelo 190. The design splits amounts
+                into an integer and a decimal part.
+            x-e1in4oped5n66obgc5hmip31cgmm8qbeclp62sj9c4mn4pbkcln66qbfdpin6:
+              help: Perceptor field declared on modelo 190. The design splits amounts
+                into an integer and a decimal part.
+            x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9dd5n6esj5ednn6bb15lhnapbeehgg:
+              help: Perceptor field declared on modelo 190. The design splits amounts
+                into an integer and a decimal part.
+            x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9de9in0pbicdqn8qb4dtpg:
+              help: Perceptor field declared on modelo 190. The design splits amounts
+                into an integer and a decimal part.
+            x-e1in4oped5n66obgc5hmip31cgmmasrgclhmip9depgmorric5hmirre:
+              help: Perceptor field declared on modelo 190. The design splits amounts
+                into an integer and a decimal part.
+            x-e1in4oped5n6esj5ednn6bb15lhnapbeehgiqsj5e1in4orlehkm8rrj:
+              help: Perceptor field declared in modelo 190's type 2 record.
+            x-e1in4opedlnncqbcd5i62p1dctimupric5j6ior1:
+              help: Perceptor field declared in modelo 190's type 2 record.
+            x-e1in4opedpkmcbb3dtn7itb7ckmn8qbkelm62shdeln6ip31cg:
+              help: Perceptor field declared in modelo 190's type 2 record.
+            x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
+              help: Perceptor field declared in modelo 190's type 2 record.
+            x-e1in4opee1imssr9dtn2qorfdlo6arjjc5q6usj9c4:
+              help: Amount declared in modelo 190's perceptor record. The design splits
+                it into an integer and a decimal part.
+            x-e1in4opee1p6asrkc5mmuspdepkncqb5dpi62bb3dhgncp8:
+              help: Perceptor field declared in modelo 190's type 2 record.
+            x-e1in4opee1p6utj9dphmio8:
+              help: Perceptor field declared in modelo 190's type 2 record.
+            x-e1in4opee9im8tb3cdkmurj5ecmm2s3cd5hm2ojcclpg:
+              help: Amount declared in modelo 190's perceptor record. The design splits
+                it into an integer and a decimal part.
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc5p62oj1:
+              help: Perceptor field declared on modelo 190. The design splits amounts
+                into an integer and a decimal part.
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdc9knkqr1d5gg:
+              help: Perceptor field declared on modelo 190. The design splits amounts
+                into an integer and a decimal part.
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdclpn8obkc5m0:
+              help: Box 323-335 of modelo 190, tax year 2025.
+              label: WITHHOLDINGS AND PAYMENTS ON ACCOUNT PAID TO THE STATE, TO THE
+                FORAL COUNCILS OF THE BASQUE COUNTRY AND TO THE CHARTERED COMMUNITY
+                OF NAVARRE
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspdctkn0tbqddnm2:
+              help: Perceptor field declared on modelo 190. The design splits amounts
+                into an integer and a decimal part.
+            x-e1in4opee9in8pbecdkmurj5ecmmcrric5m6aspddpgncobie9gg:
+              help: Perceptor field declared on modelo 190. The design splits amounts
+                into an integer and a decimal part.
+            x-e1in4opeedkn8tb1cdkmurhdcpgmqqbcd5gn4:
+              help: Perceptor field declared in modelo 190's type 2 record.
+            x-e1in4opeehkn8tbcc5p2qtbed5i62p1dcdnmstj9epimsor9c4:
+              help: Perceptor field declared in modelo 190's type 2 record.
+          field:
+            label: Modelo 190, tax years 2025 onwards

@@ -1,0 +1,72 @@
+# Authored form structure; automatic generation preserves this declaration.
+# Reconcile source changes explicitly. Authorship does not imply completed review.
+
+[[revisions.2016-y-siguientes.form_layouts]]
+id = "form-layout"
+revision_id = "2016-y-siguientes"
+seed_source = "authored"
+review = { state = "generated", notes = "Authored from BOE-A-2000-22794 Annex II p44305 and revision-specific record design. Original paper identity/address/signature represented only in historical revision; later electronic identity and IBAN/BIC use exact declared owners. Refund amount repeats total10, not a second input. Administration-reserved area has no taxpayer input. Signature remains optional presentation text, not proof of signing. Native Sheet and operator visual review pending." }
+generator_version = 1
+source_state_digest = "5647f246f2427e6270c204a2a5e47bc092cf3772acc550472cfbc0c163e2551f"
+design_sources = [
+    { source_ref = "aeat-dr-341-2016", sha256 = "b4b31c3bdc9fb0e944f1d92a85c3bedd06bdc2fbceaf87ea5bf0c68a073c0a64" },
+    { source_ref = "boe-modelo-341-2000-form-pdf", sha256 = "b833029bab3840d8ff99d8b8858a81506de140059a2619b6a0b8019e108a523b" },
+]
+placements = [
+    { casilla_id = "01", kind = "on_form", box_number = "01" },
+    { casilla_id = "02", kind = "on_form", box_number = "02" },
+    { casilla_id = "03", kind = "on_form", box_number = "03" },
+    { casilla_id = "04", kind = "on_form", box_number = "04" },
+    { casilla_id = "05", kind = "on_form", box_number = "05" },
+    { casilla_id = "06", kind = "on_form", box_number = "06" },
+    { casilla_id = "07", kind = "on_form", box_number = "07" },
+    { casilla_id = "08", kind = "on_form", box_number = "08" },
+    { casilla_id = "09", kind = "on_form", box_number = "09" },
+    { casilla_id = "10", kind = "on_form", box_number = "10", aliases = [{ page_id = "m34101", section_id = "devolucion", official_ref = "Importe solicitado" }] },
+    { casilla_id = "decl.ejercicio", kind = "on_form" },
+    { casilla_id = "decl.periodo", kind = "on_form" },
+]
+
+[[revisions.2016-y-siguientes.form_layouts.pages]]
+id = "m34101"
+official_ref = "BOE-A-2000-22794, anexo II, p.44305"
+heading_key = "modelo.schema.341.form.page.m34101.heading"
+official_heading = "Solicitud de reintegro de compensaciones"
+
+[[revisions.2016-y-siguientes.form_layouts.pages.sections]]
+id = "identificacion"
+heading_key = "modelo.schema.341.form.authored.identificacion.heading"
+official_heading = "Identificación"
+blocks = [
+    { kind = "context_field", id = "context-nif", export_layout_id = "modelo-341-fichero-boe", export_record_id = "modelo-341-page-01", export_field_id = "modelo-341-p01-nif", heading_key = "modelo.schema.341.form.authored.nif.heading", official_heading = "NIF" },
+    { kind = "context_field", id = "context-apellidos-razon-social", export_layout_id = "modelo-341-fichero-boe", export_record_id = "modelo-341-page-01", export_field_id = "modelo-341-p01-apellidos-razon-social", heading_key = "modelo.schema.341.form.authored.apellidos.heading", official_heading = "Apellidos o razón social" },
+    { kind = "context_field", id = "context-nombre", export_layout_id = "modelo-341-fichero-boe", export_record_id = "modelo-341-page-01", export_field_id = "modelo-341-p01-nombre", heading_key = "modelo.schema.341.form.authored.nombre.heading", official_heading = "Nombre" },
+]
+
+[[revisions.2016-y-siguientes.form_layouts.pages.sections]]
+id = "devengo"
+heading_key = "modelo.schema.341.form.authored.devengo.heading"
+official_heading = "Devengo"
+blocks = [
+    { kind = "field", id = "ejercicio", casilla_id = "decl.ejercicio" },
+    { kind = "field", id = "periodo", casilla_id = "decl.periodo" },
+]
+
+[[revisions.2016-y-siguientes.form_layouts.pages.sections]]
+id = "compensacion"
+heading_key = "modelo.schema.341.form.authored.compensacion.heading"
+official_heading = "Compensación"
+blocks = [
+    { kind = "grid", id = "compensaciones", columns = [{ key = "base", heading_key = "modelo.schema.341.form.authored.base.heading", official_heading = "Importe de las operaciones" }, { key = "porcentaje", heading_key = "modelo.schema.341.form.authored.porcentaje.heading", official_heading = "Porcentaje de compensación" }, { key = "importe", heading_key = "modelo.schema.341.form.authored.importe.heading", official_heading = "Importe de la compensación" }], rows = [{ key = "fila-1", heading_key = "modelo.schema.341.form.authored.fila-1.heading", cells = [{ kind = "casilla", casilla_id = "01" }, { kind = "casilla", casilla_id = "04" }, { kind = "casilla", casilla_id = "07" }] }, { key = "fila-2", heading_key = "modelo.schema.341.form.authored.fila-2.heading", cells = [{ kind = "casilla", casilla_id = "02" }, { kind = "casilla", casilla_id = "05" }, { kind = "casilla", casilla_id = "08" }] }, { key = "fila-3", heading_key = "modelo.schema.341.form.authored.fila-3.heading", cells = [{ kind = "casilla", casilla_id = "03" }, { kind = "casilla", casilla_id = "06" }, { kind = "casilla", casilla_id = "09" }] }] },
+    { kind = "field", id = "total", casilla_id = "10" },
+]
+
+[[revisions.2016-y-siguientes.form_layouts.pages.sections]]
+id = "devolucion"
+heading_key = "modelo.schema.341.form.authored.devolucion.heading"
+official_heading = "Devolución"
+blocks = [
+    { kind = "field", id = "importe-solicitado", casilla_id = "10" },
+    { kind = "context_field", id = "context-iban", export_layout_id = "modelo-341-fichero-boe", export_record_id = "modelo-341-page-01", export_field_id = "modelo-341-p01-iban", heading_key = "modelo.schema.341.form.authored.iban.heading", official_heading = "IBAN" },
+    { kind = "context_field", id = "context-swift-bic", export_layout_id = "modelo-341-fichero-boe", export_record_id = "modelo-341-page-01", export_field_id = "modelo-341-p01-swift-bic", heading_key = "modelo.schema.341.form.authored.bic.heading", official_heading = "SWIFT/BIC" },
+]

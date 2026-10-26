@@ -1,0 +1,32 @@
+Impuesto sobre la Renta de no Residentes
+No residentes sin establecimiento permanente
+Declaracion anual de retenciones/ingresos a cuenta
+
+Modelo 296
+
+Hoja-resumen
+
+Declarante:
+N.I.F.
+Telefono de contacto
+Apellidos y nombre (por este orden), razon social o denominacion
+N.I.F. del representante
+
+Ejercicio y modalidad de presentacion:
+Ejercicio
+Modalidad de presentacion: Impreso / Soporte
+
+Declaracion complementaria o sustitutiva:
+Declaracion complementaria por inclusion de datos
+Declaracion complementaria por modificacion o anulacion de datos
+Declaracion sustitutiva
+Numero identificativo de la declaracion anterior
+
+Resumen de los datos incluidos en la declaracion:
+
+N. total de perceptores: 01
+Base retenciones e ingresos a cuenta: 02
+Retenciones e ingresos a cuenta: 03
+Retenciones e ingresos a cuenta ingresados: 04
+
+Fecha y firma

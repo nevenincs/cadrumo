@@ -1,0 +1,20 @@
+[fact]
+fact_id = "lirpf-art-52-individual-contribution-sublimit"
+family = "scalar"
+
+[[fact.variants]]
+variant_id = "lirpf-art-52-individual-contribution-sublimit:2021-01-01"
+date_axis = "filing_period"
+valid_from = 2021-01-01
+legal_refs = ["ley-35-2006:art-52-2021"]
+source_refs = ["boe-lirpf-statutory-facts"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-lirpf-statutory-facts"
+required_text = ["1.500 euros anuales"]
+[fact.variants.payload]
+kind = "scalar"
+value_type = "decimal"
+value = "1500"
+unit = "eur"

@@ -1,0 +1,680 @@
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+import pytest
+
+from ..command import run
+from ..paths import SCRATCH_BASE_ENV
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+def test_command_run_streams_and_persists_identity(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    command = (sys.executable, "-c", "print('observable signal')")
+
+    status = run(command, repository=tmp_path, family="audit-runs", label="audit-probe")
+
+    assert status == 0
+    assert "observable signal" in capsys.readouterr().out
+    run_dir = next((tmp_path / ".logs" / "audit-runs").glob("*/*"))
+    metadata = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
+    assert metadata["command"] == list(command)
+    assert metadata["exit_status"] == 0
+    assert "COMMAND " in (run_dir / "run.log").read_text(encoding="utf-8")
+
+
+def test_command_run_preserves_failure_status(tmp_path: Path) -> None:
+    status = run(
+        (sys.executable, "-c", "raise SystemExit(7)"),
+        repository=tmp_path,
+        family="audit-runs",
+        label="audit-probe",
+    )
+
+    assert status == 7
+
+
+def test_command_run_keeps_log_location_separate_from_child_working_directory(tmp_path: Path) -> None:
+    repository = tmp_path / "checkout"
+    repository.mkdir()
+    log_root = tmp_path / "controlled-logs"
+    command = (sys.executable, "-c", "from pathlib import Path; Path('cwd-marker').write_text('child ran here')")
+
+    status = run(command, repository=repository, run_log_root=log_root, family="audit-runs", label="location-probe")
+
+    assert status == 0
+    assert (repository / "cwd-marker").read_text() == "child ran here"
+    assert not (repository / ".logs").exists()
+    run_dir = next((log_root / ".logs" / "audit-runs").glob("*/*"))
+    metadata = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
+    assert metadata["command"] == list(command)
+    assert metadata["exit_status"] == 0
+
+
+def test_command_run_removes_its_scratch_after_a_failing_run(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    base = tmp_path / "scratch-base"
+    base.mkdir()
+    monkeypatch.setenv(SCRATCH_BASE_ENV, str(base))
+    probe = (
+        "import pathlib, tempfile; pathlib.Path(tempfile.gettempdir(), 'left.txt').write_text('x'); raise SystemExit(3)"
+    )
+
+    status = run((sys.executable, "-c", probe), repository=tmp_path, family="audit-runs", label="scratch-probe")
+
+    assert status == 3
+    run_dir = next((tmp_path / ".logs" / "audit-runs").glob("*/*"))
+    scratch = Path(json.loads((run_dir / "run.json").read_text(encoding="utf-8"))["scratch"])
+    assert scratch.parent.resolve() == base.resolve()
+    assert not scratch.exists()
+    assert list(base.iterdir()) == []
+
+
+def test_command_run_finalizes_metadata_when_interrupted(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class InterruptingOutput:
+        async def read(self, size: int = -1) -> bytes:
+            run_dir = next((tmp_path / ".logs" / "audit-runs").glob("*/*"))
+            seeded = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
+            assert seeded["exit_status"] == 130
+            assert seeded["finished_at"]
+            raise KeyboardInterrupt
+
+    class InterruptingProcess:
+        stdout = InterruptingOutput()
+        returncode: int | None = None
+        terminated = False
+
+        def terminate(self) -> None:
+            self.terminated = True
+
+        async def wait(self) -> int:
+            self.returncode = 130
+            return 130
+
+    process = InterruptingProcess()
+
+    async def create_process(*args: object, **kwargs: object) -> InterruptingProcess:
+        return process
+
+    monkeypatch.setattr("dev.test_runs.command.asyncio.create_subprocess_exec", create_process)
+
+    status = run(
+        (sys.executable, "-c", "print('never reached')"),
+        repository=tmp_path,
+        family="audit-runs",
+        label="audit-probe",
+    )
+
+    assert status == 130
+    assert process.terminated is True
+    run_dir = next((tmp_path / ".logs" / "audit-runs").glob("*/*"))
+    metadata = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
+    assert metadata["exit_status"] == 130
+    assert metadata["finished_at"]
+    transcript = (run_dir / "run.log").read_text(encoding="utf-8")
+    assert "INTERRUPTED exit=130" in transcript
+    assert "FINISH " in transcript
+
+
+_DEFAULT_STREAM_LIMIT = 64 * 1024
+"""asyncio's default ``StreamReader`` limit, which is also the runner's read chunk size."""
+
+_PAST_THE_DEFAULT_STREAM_LIMIT = 4 * _DEFAULT_STREAM_LIMIT + 17
+"""A line length four times asyncio's default 64 KiB stream limit, off any chunk boundary."""
+
+
+@pytest.mark.parametrize(
+    "line_length",
+    [4 * _DEFAULT_STREAM_LIMIT, _PAST_THE_DEFAULT_STREAM_LIMIT],
+    ids=["on-a-chunk-boundary", "off-a-chunk-boundary"],
+)
+def test_command_run_keeps_a_line_longer_than_the_default_stream_limit_whole(
+    tmp_path: Path,
+    line_length: int,
+) -> None:
+    long_line = "x" * line_length
+    script = f"import sys; sys.stdout.write('before\\n' + 'x' * {line_length} + '\\nafter\\ntail')"
+
+    status = run((sys.executable, "-c", script), repository=tmp_path, family="audit-runs", label="audit-probe")
+
+    assert status == 0
+    run_dir = next((tmp_path / ".logs" / "audit-runs").glob("*/*"))
+    transcript = (run_dir / "run.log").read_text(encoding="utf-8").splitlines()
+    start = transcript.index("before")
+    assert transcript[start : start + 3] == ["before", long_line, "after"]
+    # Output ending without a newline is still delivered; the transcript's own
+    # FINISH record then follows it on the same line, as it always has.
+    assert transcript[start + 3].startswith("tail"), transcript[start + 3]
+
+
+def test_locale_signal_reads_a_report_longer_than_the_default_stream_limit(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The locale audit prints its whole report as one line; its size is not bounded by 64 KiB."""
+    backlog = [
+        {"domain": "cli", "key": f"cli.key_{index:05d}", "locale": "es", "state": "missing"} for index in range(4_000)
+    ]
+    payload = {
+        "outcome": "backlog",
+        "headline": "Translate the backlog.",
+        "summary": {
+            "translation_backlog": {"exact": True, "unique_keys_to_translate": 4_000, "cells_to_translate": 4_000}
+        },
+        "details": {"backlog": backlog, "findings": []},
+    }
+    report = tmp_path / "report.json"
+    report.write_text(json.dumps(payload), encoding="utf-8")
+    assert len(report.read_bytes()) > _PAST_THE_DEFAULT_STREAM_LIMIT
+    script = f"import pathlib, sys; sys.stdout.write(pathlib.Path({str(report)!r}).read_text(encoding='utf-8') + '\\n')"
+
+    status = run(
+        (sys.executable, "-c", script),
+        repository=tmp_path,
+        family="test-runs",
+        label="check-locales",
+        signal="locales-status",
+    )
+
+    assert status == 0
+    finished = json.loads(capsys.readouterr().out.splitlines()[-1])
+    assert finished["event"] == "run_finished"
+    assert finished["classification"] == "blocking_findings"
+    assert finished["translation_backlog"]["cells_to_translate"] == 4_000
+    run_dir = next((tmp_path / ".logs" / "test-runs").glob("*/*"))
+    persisted = (run_dir / "artifacts" / "locale-backlog.jsonl").read_text(encoding="utf-8").splitlines()
+    assert [json.loads(row) for row in persisted] == backlog
+
+
+def test_locale_signal_persists_backlog_and_keeps_stdout_bounded(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    payload = {
+        "outcome": "backlog",
+        "headline": "Translate 1 locale cell for 1 unique key: es 1.",
+        "summary": {
+            "inventory": {"closed": True, "required_keys": 1},
+            "translation_backlog": {
+                "exact": True,
+                "unique_keys_to_translate": 1,
+                "cells_to_translate": 1,
+            },
+            "cells": {"required": 1, "ready": 0, "missing": 1},
+            "locales": [{"locale": "es", "to_translate": 1}],
+            "domains": [{"domain": "cli", "state": "translate", "to_translate": 1}],
+            "catalogue_only": {"keys": 0, "cells": 0},
+            "next_action": {"action": "create_missing_catalogue_leaves", "command": "just locales-scaffold"},
+        },
+        "details": {
+            "backlog": [{"domain": "cli", "key": "cli.save", "locale": "es", "state": "missing"}],
+            "findings": [{"kind": "translation_missing", "key": "cli.save", "locale": "es"}],
+        },
+    }
+    script = f"import json; print(json.dumps({payload!r}))"
+
+    status = run(
+        (sys.executable, "-c", script),
+        repository=tmp_path,
+        family="test-runs",
+        label="locales-status",
+        signal="locales-status",
+    )
+
+    assert status == 0
+    envelopes = [json.loads(line) for line in capsys.readouterr().out.splitlines()]
+    assert [item["event"] for item in envelopes] == ["run_started", "run_finished"]
+    finished = envelopes[-1]
+    assert finished["translation_backlog"]["cells_to_translate"] == 1
+    assert "cli.save" not in json.dumps(finished)
+    run_dir = next((tmp_path / ".logs" / "test-runs").glob("*/*"))
+    assert (run_dir / "artifacts" / "locale-status.json").is_file()
+    assert "cli.save" in (run_dir / "artifacts" / "locale-backlog.jsonl").read_text(encoding="utf-8")
+    assert "translation_missing" in (run_dir / "artifacts" / "locale-findings.jsonl").read_text(encoding="utf-8")
+
+
+def test_locale_signal_fails_closed_when_child_payload_is_not_parseable(
+    tmp_path: Path,
+) -> None:
+    status = run(
+        (sys.executable, "-c", "print('not-json')"),
+        repository=tmp_path,
+        family="test-runs",
+        label="locales-status",
+        signal="locales-status",
+    )
+
+    assert status == 7
+    run_dir = next((tmp_path / ".logs" / "test-runs").glob("*/*"))
+    metadata = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
+    assert metadata["exit_status"] == 7
+
+
+def test_locale_signal_normalizes_nonzero_child_without_payload_to_tool_failure(tmp_path: Path) -> None:
+    status = run(
+        (sys.executable, "-c", "print('broken'); raise SystemExit(1)"),
+        repository=tmp_path,
+        family="test-runs",
+        label="locales-status",
+        signal="locales-status",
+    )
+
+    assert status == 7
+    run_dir = next((tmp_path / ".logs" / "test-runs").glob("*/*"))
+    metadata = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
+    assert metadata["exit_status"] == 7
+
+
+def test_locale_signal_normalizes_rich_traceback_without_leaking_it_to_stdout(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    traceback = "\n".join(
+        (
+            "┌──────────────── Traceback (most recent call last) ────────────────┐",
+            "│ dev/locales/cli.py:123 in status                                      │",
+            "└─────────────────────────────────────────────────────────────────────┘",
+            "AuthorityComponentCodecError: authority component uses unsupported codec",
+        )
+    )
+    script = f"import sys; sys.stdout.buffer.write({traceback!r}.encode()); raise SystemExit(1)"
+
+    status = run(
+        (sys.executable, "-c", script),
+        repository=tmp_path,
+        family="test-runs",
+        label="check-locales",
+        signal="locales-status",
+    )
+
+    assert status == 7
+    output = capsys.readouterr().out
+    envelopes = [json.loads(line) for line in output.splitlines()]
+    assert [item["event"] for item in envelopes] == ["run_started", "run_finished"]
+    assert "Traceback" not in output
+    finished = envelopes[-1]
+    assert finished["classification"] == "tool_failure"
+    assert finished["result"] == "unavailable"
+    assert finished["error"] == {
+        "category": "child_process",
+        "type": "AuthorityComponentCodecError",
+        "message": "authority component uses unsupported codec",
+    }
+    assert finished["translation_backlog"] == {
+        "cells_to_translate": None,
+        "exact": False,
+        "unique_keys_to_translate": None,
+    }
+    run_dir = next((tmp_path / ".logs" / "test-runs").glob("*/*"))
+    log = (run_dir / "run.log").read_text(encoding="utf-8")
+    assert "AuthorityComponentCodecError" in log
+    report = json.loads((run_dir / "artifacts" / "locale-status.json").read_text(encoding="utf-8"))
+    assert report["details"]["root_cause"] == finished["error"]
+    assert report["details"]["processor_error"].startswith("AuthorityComponentCodecError: ")
+    assert report["summary"]["translation_backlog"]["cells_to_translate"] is None
+
+
+def test_locale_signal_normalizes_import_traceback_generically(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    traceback = "\n".join(
+        (
+            "Traceback (most recent call last):",
+            '  File "dev/locales/__main__.py", line 5, in <module>',
+            "    from .cli import app",
+            "ModuleNotFoundError: No module named 'cadrumo.core.setup_answers'",
+        )
+    )
+    script = f"print({traceback!r}); raise SystemExit(1)"
+
+    status = run(
+        (sys.executable, "-c", script),
+        repository=tmp_path,
+        family="test-runs",
+        label="locales-status",
+        signal="locales-status",
+    )
+
+    assert status == 7
+    finished = json.loads(capsys.readouterr().out.splitlines()[-1])
+    assert finished["error"]["category"] == "import"
+    assert finished["error"]["type"] == "ModuleNotFoundError"
+    assert finished["error"]["message"] == "No module named 'cadrumo.core.setup_answers'"
+    assert "locales" not in finished
+    assert "domains" not in finished
+    assert "cells" not in finished
+
+
+def test_command_run_confines_child_temp_and_preserves_tool_cache_environment(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    ambient_cache = tmp_path / "ambient-cache"
+    monkeypatch.setenv("XDG_CACHE_HOME", str(ambient_cache))
+    probe = (
+        "import json, os, pathlib, tempfile; "
+        "pathlib.Path(os.environ['CADRUMO_DEV_ARTIFACTS_DIR']).joinpath('paths.json').write_text("
+        "json.dumps({'temp': tempfile.gettempdir(), 'xdg_cache_home': os.environ.get('XDG_CACHE_HOME')}))"
+    )
+    status = run((sys.executable, "-c", probe), repository=tmp_path, family="audit-runs", label="path-probe")
+
+    assert status == 0
+    run_dir = next((tmp_path / ".logs" / "audit-runs").glob("*/*"))
+    paths = json.loads((run_dir / "artifacts" / "paths.json").read_text(encoding="utf-8"))
+    scratch = Path(json.loads((run_dir / "run.json").read_text(encoding="utf-8"))["scratch"])
+    assert Path(paths["temp"]).resolve() == scratch.resolve()
+    assert paths["xdg_cache_home"] == str(ambient_cache)
+
+
+def test_import_boundaries_signal_deduces_contract_and_diagnostic_hotspots(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    transcript = "\n".join(
+        (
+            "Analyzed 4 files, 5 dependencies.",
+            "Application has no concrete outer dependency BROKEN",
+            "cadrumo.application is not allowed to import cadrumo.adapters:",
+            "-   cadrumo.application.service -> ",
+            "cadrumo.adapters.persistence.repository (l.4)",
+            "cadrumo is not allowed to import cadrumo.adapters:",
+            "-   cadrumo.application.service -> ",
+            "cadrumo.adapters.persistence.repository (l.4)",
+            "[SUBORDINATE_CHECKER] exit 1",
+            "[CANONICAL_TARGET_MISSING] src/cadrumo/application/service.py:4: "
+            "'cadrumo.core.old_home' does not define imported symbol 'Thing'",
+            "[PACKAGE_FACADE] src/cadrumo/application/service.py:4: "
+            "symbol 'Other' is consumed from package facade 'cadrumo.core.facade'",
+            "[PRIVATE_CROSS_PACKAGE] dev/tests/test_probe.py:9: "
+            "'dev.tests.test_probe' reaches private module 'dev.tooling._private'",
+        )
+    )
+    script = f"print({transcript!r}); raise SystemExit(1)"
+
+    status = run(
+        (sys.executable, "-c", script),
+        repository=tmp_path,
+        family="test-runs",
+        label="check-import-boundaries",
+        signal="import-boundaries",
+    )
+
+    # No schema-v2 health payload reached the wrapper, so the run is an
+    # operational failure; the transcript deductions are still reported.
+    assert status == 7
+    envelope = json.loads(capsys.readouterr().out.splitlines()[-1])
+    assert envelope["classification"] == "tool_failure"
+    deductions = envelope["deductions"]
+    assert deductions["schema_version"] == 1
+    assert deductions["contract_paths"] == {
+        "by_forbidden_edge": {
+            "cadrumo -> cadrumo.adapters": {
+                "direct_paths": 1,
+                "non_test_scoped_paths": 1,
+                "reported_paths": 1,
+                "test_scoped_paths": 0,
+                "top_bridge_modules": [],
+                "top_source_modules": [],
+                "top_terminal_modules": [],
+                "transitive_paths": 0,
+                "unique_source_modules": 1,
+                "unique_terminal_modules": 1,
+            },
+            "cadrumo.application -> cadrumo.adapters": {
+                "direct_paths": 1,
+                "non_test_scoped_paths": 1,
+                "reported_paths": 1,
+                "test_scoped_paths": 0,
+                "top_bridge_modules": [],
+                "top_source_modules": [],
+                "top_terminal_modules": [],
+                "transitive_paths": 0,
+                "unique_source_modules": 1,
+                "unique_terminal_modules": 1,
+            },
+        },
+        "classification": "test_scoped uses module naming conventions; non_test_scoped is its complement",
+        "maximum_contract_multiplicity": 2,
+        "overlapping_unique_paths": 1,
+        "reported_paths": 2,
+        "reports_for_overlapping_paths": 2,
+        "unique_dependency_paths": 1,
+    }
+    assert deductions["diagnostic_signal"]["amplification"] == {
+        "files": 2,
+        "findings": 3,
+        "findings_at_multi_finding_locations": 2,
+        "locations": 2,
+        "locations_with_multiple_findings": 1,
+        "maximum_findings_at_one_location": 2,
+    }
+    assert deductions["diagnostic_signal"]["by_code"]["CANONICAL_TARGET_MISSING"]["top_targets"] == [
+        {"count": 1, "value": "cadrumo.core.old_home"}
+    ]
+    assert deductions["remediation_lanes"]["canonical_import_surface"]["findings"] == 2
+    assert deductions["remediation_lanes"]["private_encapsulation"]["test_scoped_findings"] == 1
+
+
+def test_pytest_summary_signal_aggregates_lanes_without_streaming_details(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    transcript = "\n".join(
+        (
+            '{"event":"lane_started","lane":"calculations-parallel"}',
+            "FAILED tests/test_probe.py::test_one",
+            "E   ImportError: cannot import name 'Thing' from 'package'",
+            "======= 12 passed, 1 failed, 3 deselected in 2.50s (0:00:02) =======",
+            '{"event":"lane_finished","exit_status":1,"lane":"calculations-parallel","seconds":3}',
+            '{"event":"lane_started","lane":"registry-conformance"}',
+            "collection detail that must remain in the log",
+            "ERROR tests/test_registry.py",
+            "E   ImportError: cannot import name 'Thing' from 'package'",
+            "INTERNALERROR> AssertionError: ('tests/test_registry.py::test_one', <WorkerController gw0>)",
+            "============ 4 passed, 2 errors, 1 warning in 1.25s (0:00:01) ============",
+            '{"event":"lane_finished","exit_status":1,"lane":"registry-conformance","seconds":2}',
+        )
+    )
+
+    status = run(
+        (sys.executable, "-c", f"print({transcript!r})"),
+        repository=tmp_path,
+        family="test-runs",
+        label="test-registry",
+        signal="pytest-summary",
+        expected_lanes=("calculations-parallel", "registry-conformance"),
+    )
+
+    assert status == 7
+    output = capsys.readouterr().out
+    envelopes = [json.loads(line) for line in output.splitlines()]
+    assert len(envelopes) == 6
+    assert "FAILED tests/test_probe.py" not in output
+    finished = envelopes[-1]
+    assert finished["classification"] == "blocking_findings"
+    assert finished["summary"] == {
+        "collected": 0,
+        "deselected": 3,
+        "error": 2,
+        "failed": 1,
+        "complete": True,
+        "lanes_completed": 2,
+        "lanes_expected": 2,
+        "lanes_failed": 2,
+        "lanes_blocked": 0,
+        "lanes_not_run": 0,
+        "lanes_load_failed": 0,
+        "lanes_tool_failed": 1,
+        "passed": 16,
+        "pytest_invocations": 2,
+        "skipped": 0,
+        "total_selected": 19,
+        "warning": 1,
+        "xfailed": 0,
+        "xpassed": 0,
+    }
+    assert [lane["name"] for lane in finished["lanes"]] == [
+        "calculations-parallel",
+        "registry-conformance",
+    ]
+    assert finished["lanes"][0]["top_affected_files"] == [{"count": 1, "value": "tests/test_probe.py"}]
+    assert finished["lanes"][0]["classification"] == "blocking_findings"
+    assert finished["lanes"][1]["classification"] == "tool_failure"
+    assert finished["lanes"][1]["root_causes"][0] == {
+        "count": 1,
+        "exception": "AssertionError",
+        "message": "('tests/test_registry.py::test_one', <WorkerController gw0>)",
+        "phase": "tool",
+    }
+    assert finished["lanes"][0]["root_causes"] == [
+        {
+            "count": 1,
+            "exception": "ImportError",
+            "message": "cannot import name 'Thing' from 'package'",
+            "phase": "execution",
+        }
+    ]
+    run_dir = next((tmp_path / ".logs" / "test-runs").glob("*/*"))
+    assert "collection detail" in (run_dir / "run.log").read_text(encoding="utf-8")
+
+
+def test_pytest_summary_fails_closed_when_expected_lanes_never_emit_events(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    status = run(
+        (sys.executable, "-c", "print('child exited without lane events')"),
+        repository=tmp_path,
+        family="test-runs",
+        label="test-registry",
+        signal="pytest-summary",
+        expected_lanes=("collect", "load"),
+    )
+
+    assert status == 7
+    finished = json.loads(capsys.readouterr().out.splitlines()[-1])
+    assert finished["classification"] == "incomplete"
+    assert finished["result"] == "failed"
+    assert finished["summary"]["complete"] is False
+    assert finished["summary"]["lanes_not_run"] == 2
+    assert [lane["result"] for lane in finished["lanes"]] == ["not_run", "not_run"]
+
+
+def test_pytest_summary_classifies_typed_summaryless_load_as_load_failure(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    transcript = "\n".join(
+        (
+            '{"event":"lane_started","kind":"collection","lane":"collect","role":"preflight"}',
+            "================ 1 passed in 0.25s ================",
+            '{"event":"lane_finished","exit_status":0,"kind":"collection","lane":"collect","role":"preflight","seconds":1}',
+            '{"event":"lane_started","kind":"load","lane":"load","role":"preflight"}',
+            "registry-runtime-load\tstatus=failed\tloadable=false\tdetail="
+            "AuthorityComponentCodecError: authority component failed typed decoding",
+            '{"event":"lane_finished","exit_status":2,"kind":"load","lane":"load","role":"preflight","seconds":1}',
+        )
+    )
+
+    status = run(
+        (sys.executable, "-c", f"print({transcript!r}); raise SystemExit(2)"),
+        repository=tmp_path,
+        family="test-runs",
+        label="test-registry",
+        signal="pytest-summary",
+        expected_lanes=("collect", "load"),
+    )
+
+    assert status == 2
+    finished = json.loads(capsys.readouterr().out.splitlines()[-1])
+    assert finished["classification"] == "load_failure"
+    assert finished["summary"]["lanes_load_failed"] == 1
+    assert finished["summary"]["lanes_tool_failed"] == 0
+    assert finished["lanes"][1]["classification"] == "load_failure"
+    assert finished["lanes"][1]["kind"] == "load"
+    assert finished["lanes"][1]["root_causes"] == [
+        {
+            "count": 1,
+            "exception": "AuthorityComponentCodecError",
+            "message": "authority component failed typed decoding",
+            "phase": "load",
+        }
+    ]
+
+
+def test_pytest_summary_classifies_summaryless_collection_preflight_as_collection_failure(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    transcript = "\n".join(
+        (
+            '{"event":"lane_started","kind":"collection","lane":"collect","role":"preflight"}',
+            "SyntaxError: invalid syntax in registry test module",
+            '{"event":"lane_finished","exit_status":2,"kind":"collection","lane":"collect","role":"preflight","seconds":1}',
+        )
+    )
+
+    status = run(
+        (sys.executable, "-c", f"print({transcript!r}); raise SystemExit(2)"),
+        repository=tmp_path,
+        family="test-runs",
+        label="test-registry",
+        signal="pytest-summary",
+        expected_lanes=("collect",),
+    )
+
+    assert status == 2
+    finished = json.loads(capsys.readouterr().out.splitlines()[-1])
+    assert finished["classification"] == "collection_failure"
+    assert finished["summary"]["lanes_tool_failed"] == 0
+    assert finished["lanes"][0]["classification"] == "collection_failure"
+    assert finished["lanes"][0]["kind"] == "collection"
+    assert finished["lanes"][0]["root_causes"][0]["phase"] == "collection"
+
+
+def test_pytest_summary_reports_collection_preflight_and_blocked_lanes(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    transcript = "\n".join(
+        (
+            '{"event":"lane_started","kind":"collection","lane":"collect","role":"preflight"}',
+            "================ 314 tests collected in 1.25s ================",
+            '{"event":"lane_finished","exit_status":0,"kind":"collection","lane":"collect","role":"preflight","seconds":2}',
+            '{"event":"lane_started","kind":"load","lane":"load","role":"preflight"}',
+            "registry-runtime-load\tstatus=failed\tloadable=false\tdetail="
+            "AuthorityComponentCodecError: authority component failed typed decoding",
+            '{"event":"lane_finished","exit_status":1,"kind":"load","lane":"load","role":"preflight","seconds":1}',
+            '{"blocked_by":["load"],"event":"lane_skipped","kind":"command","lane":"parallel","reason":"preflight_failed","role":"execution"}',
+            '{"blocked_by":["load"],"event":"lane_skipped","kind":"command","lane":"serial","reason":"preflight_failed","role":"execution"}',
+        )
+    )
+
+    status = run(
+        (sys.executable, "-c", f"print({transcript!r})"),
+        repository=tmp_path,
+        family="test-runs",
+        label="test-registry",
+        signal="pytest-summary",
+        expected_lanes=("collect", "load", "parallel", "serial"),
+    )
+
+    assert status == 7
+    finished = json.loads(capsys.readouterr().out.splitlines()[-1])
+    assert finished["classification"] == "preflight_failure"
+    assert finished["summary"]["complete"] is True
+    assert finished["summary"]["collected"] == 314
+    assert finished["summary"]["lanes_completed"] == 2
+    assert finished["summary"]["lanes_blocked"] == 2
+    assert finished["summary"]["lanes_not_run"] == 0
+    assert finished["summary"]["lanes_load_failed"] == 1
+    assert finished["summary"]["lanes_tool_failed"] == 0
+    assert finished["lanes"][1]["classification"] == "load_failure"
+    assert finished["lanes"][1]["root_causes"][0]["phase"] == "load"
+    assert [lane["kind"] for lane in finished["lanes"]] == ["collection", "load", "command", "command"]
+    assert [lane["result"] for lane in finished["lanes"][2:]] == ["blocked", "blocked"]

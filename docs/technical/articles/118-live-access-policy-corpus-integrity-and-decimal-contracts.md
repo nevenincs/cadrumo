@@ -1,0 +1,56 @@
+# Live access policy, corpus integrity, and decimal contracts
+
+[Technical overview](../architecture.md) · [Article index](catalogue.md) · [Snapshot and reading guide](../reading-guide.md)
+
+> This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
+
+**Report:** `STAGE-2-118` · **Topic:** [Core authority and shared controls](../topics/core-authority-and-shared-controls.md)
+
+<!-- preserved:article -->
+## Scope and method
+
+This chunk contains 16 core modules totaling 2,003 lines, 84,526 bytes, and 18,713 measured proxy tokens. I read all four assigned pages, including the complete corpus-bundle verifier and decimal grammar/coercion helpers. This is static analysis only; corpus operations were not run and no legal, numeric, or external-source claims were independently validated.
+
+## Live access and sensitivity policies
+
+`AeatAccessGate` separates guarded pytest reads from operator workflows. A read supplies a guarded context to require the live-test opt-in through validated settings; an ordinary operator read proceeds to its independent authentication, profile, and remote-read checks. `require_live_write()` always raises `LiveSubmitForbiddenError`. The source states there is no outbound submission transport; filing files remain local artifacts that the operator uploads through AEAT. This is a strong architectural refusal, though the actual claim that every write-shaped caller reaches the inline gate depends on call-site coverage outside this chunk. Live-read and permanent-write gate (`src/cadrumo/core/access_gate/gate.py`) Typed permanent refusal (`src/cadrumo/core/access_gate/errors.py`)
+
+The classification policy table maps SECRET, SESSION, IDENTITY, FINANCIAL, AUDIT, CACHE, CORPUS, OPERATIONAL, and DIAGNOSTIC records to at-rest treatment, retention metadata, and named redaction rules. Sensitive secret/session/identity/financial/audit classes default to ciphertext-required, while public corpus/cache and low-sensitivity operational state may remain plaintext. The contract explicitly warns that `RetentionPolicy.max_age` and `archive_after` are currently not read by any repository or gate; only `require_explicit_expiry` is enforced for secret/session writes. Thus the declared seven-day diagnostic `max_age` is not by itself an implemented cleanup guarantee. This is the clearest security-quality limitation in the chunk. Sensitivity and at-rest classes (`src/cadrumo/core/classification/policies.py`) Retention fields and enforcement boundary (`src/cadrumo/core/classification/policies.py`) Default policy table (`src/cadrumo/core/classification/policies.py`)
+
+## Corpus integrity and distribution
+
+`CorpusManifest` records sorted per-file relative paths, SHA-256 values and byte counts, plus a canonical digest over the manifest body. Entry construction rejects absolute paths, dot segments, and backslashes; corpus walking excludes hidden paths, the manifest sidecar and symlinks. The builder hashes regular files and produces a deterministic manifest for a specified corpus-root name and UTC timestamp. Path-safe corpus entries (`src/cadrumo/core/corpus_manifest/manifest.py`) Corpus file selection (`src/cadrumo/core/corpus_manifest/manifest.py`) Manifest construction (`src/cadrumo/core/corpus_manifest/manifest.py`)
+
+The bundle builder writes a ZIP containing the manifest plus corpus files via atomic replacement. Verification checks the embedded manifest's schema/version/self-digest and returns missing, unexpected and content-mismatched member names without extracting the archive. These checks establish internal consistency, not publisher authenticity: an actor able to replace both corpus files and the embedded manifest can recompute its plain SHA-256 and create a self-consistent bundle. No signature or externally trusted expected digest is part of this module. The builder assembles the archive in memory, and verification reads members wholly into memory; large/untrusted archives therefore merit explicit size and resource-limit review. The verifier also reduces member names to a set, so duplicate ZIP member names are not individually reported; whether that matters depends on downstream install semantics. Atomic bundle creation (`src/cadrumo/core/corpus_manifest/manifest.py`) Bundle verification result (`src/cadrumo/core/corpus_manifest/manifest.py`) Archive comparison (`src/cadrumo/core/corpus_manifest/manifest.py`) Per-member hashing (`src/cadrumo/core/corpus_manifest/manifest.py`)
+
+## Decimal entry boundaries
+
+The decimal namespace deliberately offers distinct policies by data provenance. `coerce_decimal` is tolerant and can return a configured default for empty/unparseable values; `coerce_decimal_strict` preserves parse failures; `coerce_finite_european_decimal` parses spreadsheet/document text, accepts separators only when the token itself supports an unambiguous interpretation, and rejects non-finite values. For both comma and dot, the rightmost punctuation is treated as decimal only when the other mark groups integer digits in exact triples. A lone ambiguous `1.234` is dropped for operator confirmation rather than guessed at a thousandfold scale. Callers using the generic coercer still need to choose whether non-finite values are permitted; its contract is more permissive than the finite extraction helper. Tolerant/strict coercers (`src/cadrumo/core/decimal/coercion.py`) Finite European extraction (`src/cadrumo/core/decimal/coercion.py`)
+
+The human-entered canonical grammar accepts plain dot-decimal numbers, optionally signed, with configurable fractional precision; it rejects grouping, comma decimals, exponent syntax, plus signs, embedded whitespace and non-finite values. Ambiguous thousands forms are refused in the parser itself, avoiding a requirement that each caller remember a separate pre-check. Fixed-width filing values are stricter again: no floats, booleans, spaces, exponent notation or plus sign, and only finite exact values pass. Canonical human-input grammar (`src/cadrumo/core/decimal/grammar.py`) Ambiguity rule (`src/cadrumo/core/decimal/grammar.py`) Fixed-width coercion (`src/cadrumo/core/decimal/fixed_width.py`)
+
+`is_aeat_printed_money` is a shape gate requiring a two-digit comma fraction and only AEAT-declared grouping separators (`.`, NBSP, narrow NBSP). It does not parse or strip content. `without_currency_unit` removes at most one recognized symbol or the exact currency code reported by the same document, leaving unknown labels for the decimal parser to reject rather than guessing currency from a symbol. Formatting can preserve or normalize Decimal scale; separate `ZERO` and `MONEY_ZERO` constants preserve the distinction between arithmetic zero and a renderable `0.00`. Printed-money shape (`src/cadrumo/core/decimal/printed_money.py`) Currency-unit removal (`src/cadrumo/core/decimal/printed_units.py`) Scale-aware constants (`src/cadrumo/core/decimal/constants.py`)
+
+## Assessment and follow-up
+
+The strongest controls are a permanent no-submit exception, explicit at-rest classifications, traversal-safe corpus paths, a shared canonical manifest, and conservative refusal of ambiguous financial number text. Follow-up should trace live-write callers to the refusal gate, wire or remove the declared unused retention values, decide whether installed corpus bundles need signatures/trusted digests and ZIP resource limits, and check every monetary caller uses the correct tolerant, finite, or fixed-width parser. No runtime behavior or test coverage was evaluated.
+
+## Complete assigned-file coverage
+
+- access_gate/__init__.py (`src/cadrumo/core/access_gate/__init__.py`) — lines 1–32
+- access_gate/errors.py (`src/cadrumo/core/access_gate/errors.py`) — lines 1–92
+- access_gate/gate.py (`src/cadrumo/core/access_gate/gate.py`) — lines 1–107
+- classification/__init__.py (`src/cadrumo/core/classification/__init__.py`) — lines 1–20
+- classification/policies.py (`src/cadrumo/core/classification/policies.py`) — lines 1–336
+- corpus_manifest/__init__.py (`src/cadrumo/core/corpus_manifest/__init__.py`) — lines 1–28
+- corpus_manifest/errors.py (`src/cadrumo/core/corpus_manifest/errors.py`) — lines 1–46
+- corpus_manifest/manifest.py (`src/cadrumo/core/corpus_manifest/manifest.py`) — lines 1–513
+- decimal/__init__.py (`src/cadrumo/core/decimal/__init__.py`) — lines 1–55
+- decimal/coercion.py (`src/cadrumo/core/decimal/coercion.py`) — lines 1–214
+- decimal/constants.py (`src/cadrumo/core/decimal/constants.py`) — lines 1–48
+- decimal/fixed_width.py (`src/cadrumo/core/decimal/fixed_width.py`) — lines 1–37
+- decimal/formatting.py (`src/cadrumo/core/decimal/formatting.py`) — lines 1–57
+- decimal/grammar.py (`src/cadrumo/core/decimal/grammar.py`) — lines 1–230
+- decimal/printed_money.py (`src/cadrumo/core/decimal/printed_money.py`) — lines 1–126
+- decimal/printed_units.py (`src/cadrumo/core/decimal/printed_units.py`) — lines 1–62
+<!-- /preserved:article -->

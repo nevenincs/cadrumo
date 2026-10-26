@@ -1,0 +1,33 @@
+schema_version = 1
+fragment_id = "signed-composite"
+width_17_rules = []
+singleton_rules = []
+
+[design_identity]
+modelo = "296"
+design_epoch = "2024"
+source_ref = "aeat-dr-296-2024"
+source_sha256 = "abec12e56073f8325b159c45a6b25de713bd53f8315c26c0f5243024f00d0378"
+
+[[signed_composite_rules]]
+rule_kind = "signed_monetary_composite"
+integer_digits = 12
+decimal_digits = 2
+sign_policy = "blank-or-n-leading"
+
+[signed_composite_rules.anchor]
+sheet = "PDF record design"
+source_row = 177
+ordinal = "12"
+record_identity = "PDF record design"
+
+[signed_composite_rules.evidence]
+authority_kind = "official_parser_anchor"
+decision_statement = "The official anchor states one leading blank-or-N sign and a 12+2 digit unsigned magnitude."
+justification = "The reviewed rule is admitted only when the pinned parser anchor proves every sign and range clause."
+
+[signed_composite_rules.evidence.governed_anchor]
+sheet = "PDF record design"
+source_row = 177
+ordinal = "12"
+record_identity = "PDF record design"

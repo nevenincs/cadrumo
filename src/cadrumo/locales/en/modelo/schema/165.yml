@@ -1,0 +1,63 @@
+modelo:
+  schema:
+    '165':
+      casilla:
+        continuidad:
+          filing-year:
+            label: Filing year to which the return relates
+          m165-declaracion-complementaria-sustitutiva:
+            label: Supplementary or replacement return
+          m165-declarante-razon-social:
+            label: Name or business name of the filer
+          m165-empresa-emergente:
+            label: Start-up company
+          m165-fecha-adquisicion:
+            label: Date the shares or holdings were acquired
+          m165-fecha-constitucion:
+            label: Incorporation date
+          m165-importe-fondos-propios:
+            label: Amount of shareholders' equity
+          m165-importe-suscripcion:
+            label: Amount of the subscription or acquisition
+          m165-importe-total-suscripciones:
+            label: Total amount of subscriptions or acquisitions
+          m165-numero-identificativo-anterior:
+            label: Identifying number of the previous return
+          m165-numero-identificativo-declaracion:
+            label: Declaration identifying number
+          m165-numero-total-declarados:
+            label: Total number of reported members
+          m165-persona-relacion:
+            label: Contact person
+          m165-porcentaje-participacion:
+            label: Percentage of shareholding
+          m165-representante-legal-nif:
+            label: Legal representative's NIF
+          m165-socio-nif:
+            label: Tax ID of the member or shareholder
+          m165-socio-nombre:
+            label: Surnames and given name of the member or shareholder
+          tipo-declaracion:
+            label: Return type (original / substitute / supplementary)
+      construct:
+        modelo-165-informative:
+          field:
+            title: Modelo 165 return informative
+      field:
+        official_name: Modelo 165. Informative return of individual certificates issued
+          to shareholders or members of newly or recently created entities.
+        title: Certificates issued to shareholders of newly or recently created entities
+          (annual informative return)
+      revision:
+        2013-2015:
+          field:
+            label: Modelo 165, tax years 2013 to 2015
+        2016-2022:
+          field:
+            label: Modelo 165, tax years 2016 to 2022
+        2023-2025:
+          field:
+            label: Modelo 165, tax years 2023 to 2025
+        2026-y-siguientes:
+          field:
+            label: Modelo 165, tax years 2026 onwards

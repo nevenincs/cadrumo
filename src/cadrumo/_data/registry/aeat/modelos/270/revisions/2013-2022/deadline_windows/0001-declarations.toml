@@ -1,0 +1,20 @@
+# Modelo 270 annual deadline window for this era, grounded in orden-hap-2368-2013
+# art 3, the provision this revision already cites in its own legal_refs and names
+# in prose: la presentacion se realiza entre el 1 y el 31 de enero del ano
+# siguiente al que corresponde la declaracion.
+#
+# Added 2026-09-12. This edition had no deadline_windows family at all, so the
+# one ejercicio it serves inside the supported filing span had no plazo.
+#
+# Dates are NOMINAL; shift_deadline applies weekend and holiday movement at read
+# time.
+
+[[revisions."2013-2022".deadline_windows]]
+id = "modelo-270-2022-0a"
+filing_year = 2022
+period = "2022 0A"
+period_kind = "annual"
+opens_on = 2023-01-01
+closes_on = 2023-01-31
+legal_refs = ["orden-hap-2368-2013:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-270-procedure"]

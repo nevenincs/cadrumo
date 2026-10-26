@@ -1,0 +1,62 @@
+[[revisions."2023".formulas]]
+id = "renta-vehiculo-valor-adquisicion-suma"
+target_casilla_id = "1919"
+expression = { op = "sum", args = [
+    { casilla_id = "1920" },
+    { casilla_id = "1921" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias patrimoniales", "valor de adquisición"]
+[[revisions."2023".formulas]]
+id = "renta-resultado-declaracion"
+target_casilla_id = "0670"
+expression = { op = "sum", args = [
+    { casilla_id = "0610" },
+    { op = "negate", args = [{ casilla_id = "0611" }] },
+    { casilla_id = "0612" },
+    { op = "negate", args = [{ casilla_id = "0613" }] },
+    { op = "negate", args = [{ casilla_id = "0623" }] },
+    { casilla_id = "0624" },
+    { op = "negate", args = [{ casilla_id = "0636" }] },
+    { casilla_id = "0637" },
+    { op = "negate", args = [{ casilla_id = "0248" }] },
+    { casilla_id = "0249" },
+    { op = "negate", args = [{ casilla_id = "0660" }] },
+    { casilla_id = "0661" },
+    { op = "negate", args = [{ casilla_id = "0662" }] },
+    { casilla_id = "0663" },
+    { casilla_id = "0664" },
+    { casilla_id = "0666" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-103", "ley-35-2006:art-99"]
+source_refs = ["aeat-renta-2023-manual-parte1", "boe-modelo-100-2023-form"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["resultado de la declaracion", "cuota diferencial"]
+[[revisions."2023".formulas]]
+id = "renta-deduccion-maternidad-0611"
+target_casilla_id = "0611"
+# Art. 81.1 LIRPF: per-child qualifying months, including the distinct 1.350
+# EUR alta-posterior cap, are folded at the profile boundary where the
+# descendant records live.  This registry leaf only carries that one derived
+# legal result into the official casilla; it must not recreate or accept an
+# operator-supplied 0611 total.
+expression = { binding = "renta-profile-deduccion-maternidad" }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-81"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-renta-2023-manual-parte1"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = [
+    "Deducción por maternidad",
+    "Por tanto, 100 euros por cada mes.",
+    "El importe de la deducción por maternidad por cada hijo que otorgue derecho a la misma no podrá superar 1.200 euros anuales",
+]

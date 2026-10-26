@@ -1,0 +1,132 @@
+[legal."orden-hac-66-2002:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-66-2002.html#a1"
+document_id = "BOE-A-2002-1041"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2002-1041#a1"
+published_at = 2002-01-15
+effective_from = 2002-01-16
+review_status = "agent_reviewed"
+reviewed_at = 2026-07-04
+reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2002-1041 art 1; pending operator re-stamp)"
+notes = "Orden HAC/66/2002 art 1: aprueba el modelo 038, relación de operaciones realizadas por entidades inscritas en registros públicos, declaración informativa. Orden habilitante del modelo 038."
+required_text = [
+    "Se aprueba el modelo 038",
+    "Relación de operaciones realizadas por entidades inscritas en registros públicos",
+]
+
+[legal."orden-hac-66-2002:art-6"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-66-2002.html#a6"
+document_id = "BOE-A-2002-1041"
+article = "6"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2002-1041#a6"
+published_at = 2002-01-15
+effective_from = 2002-01-16
+review_status = "agent_reviewed"
+reviewed_at = 2026-07-04
+reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2002-1041 art 6; pending operator re-stamp)"
+notes = "Orden HAC/66/2002 art 6: plazo de presentación del modelo 038. La relación se presenta durante cada mes natural respecto de las inscripciones autorizadas en el mes inmediato anterior (periodicidad mensual)."
+required_text = [
+    "se llevará a cabo durante cada mes natural",
+    "inscripciones autorizadas en el mes inmediato anterior",
+]
+
+[legal."orden-hac-646-2024:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-646-2024.html#articulo-primero"
+document_id = "BOE-A-2024-13049"
+article = "primero"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-13049"
+published_at = 2024-06-28
+effective_from = 2024-06-29
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-25
+reviewed_by = "agent-prepared (corpus-grounded against official BOE-A-2024-13049 artículo primero; pending operator re-stamp)"
+notes = "Orden HAC/646/2024 artículo primero: introduce el campo Identificador registral único de la sociedad (IRUS) en las posiciones 153-165 del registro de tipo 2 del modelo 038 y desplaza Blancos a las posiciones 166-250."
+required_text = [
+    "Se introduce un nuevo campo, «Identificador registral único de la sociedad (IRUS)»",
+    "ocupará las posiciones 153-165 del registro de tipo 2",
+    "166-250",
+]
+
+[legal."orden-hac-646-2024:df-unica"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-646-2024.html#disposicion-final-unica"
+document_id = "BOE-A-2024-13049"
+article = "disposición final única"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-13049"
+published_at = 2024-06-28
+effective_from = 2024-06-29
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-25
+reviewed_by = "agent-prepared (corpus-grounded against official BOE-A-2024-13049 disposición final única; pending operator re-stamp)"
+notes = "Orden HAC/646/2024 disposición final única: fija la primera aplicación del artículo primero en la declaración informativa del modelo 038 correspondiente a junio de 2024, presentada en julio de 2024."
+required_text = [
+    "será aplicable, por primera vez, a la declaración informativa correspondiente al mes de junio de 2024",
+    "se presentará durante el mes de julio de 2024",
+]
+
+[sources."enrolled-modelo-038-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-66-2002.html"
+sha256 = "c123f133bec99b783a698eb3b595f8a5ef580629760e4857f4fc463f0d2adab9"
+bytes = 1093
+retrieved_at = 2026-07-04
+published_at = 2002-01-15
+applies_from = 2002-01-16
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2002-1041"
+review_status = "pending_review"
+
+# AEAT's current dr038_2024.pdf records the design introduced by
+# BOE-A-2024-13049. Its final provision makes article 1 applicable first to
+# the June 2024 declaration (filed in July); the order supplies no terminal
+# date, and AEAT's current filing guidance requires the vigente design. The
+# open end therefore records the continuing amendment, not a guessed
+# exercise label inferred from the filename.
+[sources."aeat-dr-038-2024"]
+record_design_epoch = "2024-late"
+applies_from = 2024-06-01
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_038/files/01-038-diseno-de-registro-actualizado-28-06-2024.pdf"
+sha256 = "f2f713cd60b26548ab9fb57b457f28c5a7841423592f95debdf83a78d9e2f0fe"
+bytes = 94268
+retrieved_at = 2026-07-21
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_01_99/archivos/dr038_2024.pdf"
+review_status = "pending_review"
+
+# AEAT's design "038 - Orden HAC/66/2002, de 15 de enero (actualizado a
+# 18/01/2012)", still listed as the modelo 038 design on the Sede page
+# modelos-01-99_.html on 2026-10-01. It governs until Orden HAC/646/2024
+# replaced it: that order's article 1 adds the IRUS field at positions 153-165
+# of the tipo 2 record and moves Blancos to 166-250, and its disposicion final
+# unica applies the change first to the June 2024 declaration. The PDF prints
+# every field of the 2024 design except IRUS; the corpus text sidecar records
+# the comparison of the two designs.
+# applies_from is the update date the index title states; applies_to is the
+# last month before the amendment's first declaration.
+[sources."aeat-dr-038-2012"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2012"
+applies_from = 2012-01-18
+applies_to = 2024-05-31
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_038/files/02-038-orden-hac-66-2002-de-15-de-enero-actualizado-a-18-01-2012.pdf"
+sha256 = "e9008d9c0c407c76143d6997f3a5fb52a2a482c40571f395da7dcf8a8fee3d9d"
+bytes = 79486
+retrieved_at = 2026-08-15
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_01_99/archivos/dr038_2005.pdf"
+review_status = "pending_review"

@@ -1,0 +1,22 @@
+---
+generated: true
+tags:
+  - '#index'
+  - '#fu-200-row-model'
+date: '2026-08-16'
+modified: '2026-10-03'
+body_schema: 'body-v2'
+body_hash: 'sha256:49d7c738675ad5a644d0c434c2ba760d684fdb870d0185c0ef98ff5e4959c0e6'
+related:
+  - '[[2026-06-04-fu-200-row-model-research]]'
+---
+
+# `fu-200-row-model` feature index
+
+Auto-generated index of all documents tagged with `#fu-200-row-model`.
+
+## Documents
+
+### research
+
+- `2026-06-04-fu-200-row-model-research` - `fu-200-row-model` research: `warning closeout research grounding`  ## Question  Which vault lifecycle warning needs an explicit research grounding edge so future semantic search and developer briefings do not treat execution evidence as orphaned context?  ## Findings  This note is a vault-curation closeout record. It does not introduce new runtime behavior, change an accepted architecture, or supersede an existing feature-specific research note.  The warning pass found that this feature needed an explicit research node or a plan-to-research edge. The related frontmatter carries the navigable authority chain; body wiki-links are intentionally avoided to keep body-link hygiene clean.  Semantic vault search was used before creating this bridge. Where older plan, audit, or execution records already existed, this note makes that evidence discoverable without rewriting the historical documents.  ## Recommendation  Keep this research bridge until a deeper feature-specific research record supersedes it. Any future supersession should update the related frontmatter on the linked ADR, plan, and this research record.

@@ -1,0 +1,85 @@
+# Cadrumo install channels.
+#
+# Stable, version-agnostic facts about each channel: identity, platform,
+# install commands, package and repository names, the artifact kinds it
+# carries, and the distribution-evidence rows it must produce. A channel is
+# listed here because Cadrumo publishes to it.
+#
+# This file is not hand-rendered into docs/download.md. Run
+#   uv run --no-sync python -m dev.docs.download_matrix generate
+# to inject the table and install commands into the marker zone there, and
+#   uv run --no-sync python -m dev.docs.download_matrix --check
+# as the drift gate. See dev/docs/download_matrix.py.
+#
+# What lives WHERE (do not duplicate a fact across sources of truth):
+#   - stable channel facts: this file.
+#   - artifact-kind taxonomy: ArtifactKind in dev/packaging/cohort_manifest.py.
+#     Every kind must be surfaced by exactly one channel's `artifact_kinds`;
+#     the parity gate in dev/docs/tests/test_download_matrix.py fails when a
+#     cohort kind has no documented channel row.
+#   - target roles and runner selectors: the fleet manifest.
+#   - version, filenames and digests: the cohort manifest, at release time.
+
+schema_version = 2
+
+# PyPI is the primary target. Homebrew and Scoop install what it serves, for
+# users who cannot be assumed to hold a Python toolchain.
+[[channel]]
+id = "python"
+title = "Python package"
+platform = "Any platform with Python 3.13+"
+artifact_kinds = ["python-wheel", "python-sdist", "python-manifest", "python-source-archive", "python-wheelhouse"]
+package = "cadrumo"
+registry = "PyPI listing"
+# The rows this channel must prove. dev/release/readiness.py derives its
+# blocking set from the union of every channel's rows, so this is the single
+# place a channel's proof obligation is declared.
+evidence_rows = [
+  "python-linux-x86-64",
+  "python-macos-arm64",
+  "python-windows-x86-64",
+]
+install_commands = [
+  "pip install cadrumo",
+  "uv tool install --compile-bytecode cadrumo",
+  "uvx --compile-bytecode --from cadrumo aeat",
+]
+
+[[channel]]
+id = "homebrew"
+title = "Homebrew formula"
+platform = "macOS (Apple silicon), Linux (x86-64 and arm64)"
+artifact_kinds = ["homebrew-formula"]
+package = "cadrumo"
+registry = "Homebrew tap"
+# Homebrew requires a repository named `homebrew-<name>` for the one-argument
+# tap form, so the repository is `nevenincs/homebrew-tap` and the tap name is
+# `nevenincs/tap`. The same repository carries the Scoop bucket below.
+tap = "nevenincs/tap"
+evidence_rows = [
+  "homebrew-linux-arm64",
+  "homebrew-linux-x86-64",
+  "homebrew-macos-arm64",
+]
+install_commands = [
+  "brew tap nevenincs/tap",
+  "brew install nevenincs/tap/cadrumo",
+]
+
+[[channel]]
+id = "scoop"
+title = "Scoop package"
+platform = "Windows (x86-64)"
+artifact_kinds = ["scoop-manifest"]
+package = "cadrumo"
+registry = "Scoop bucket"
+# Scoop imposes no repository-name constraint and resolves manifests from a
+# `bucket/` subdirectory, so it shares the tap repository above. A new product
+# adds one manifest file and creates no repository.
+bucket = "nevenincs"
+bucket_repo = "nevenincs/homebrew-tap"
+evidence_rows = ["scoop-windows-x86-64"]
+install_commands = [
+  "scoop bucket add nevenincs https://github.com/nevenincs/homebrew-tap",
+  "scoop install nevenincs/cadrumo",
+]

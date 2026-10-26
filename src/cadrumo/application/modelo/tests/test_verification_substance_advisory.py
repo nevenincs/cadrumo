@@ -1,0 +1,182 @@
+"""Verification advisory predicate substance tests."""
+
+from __future__ import annotations
+
+from decimal import Decimal
+
+import pytest
+
+from cadrumo.application.modelo.tests.verification_substance_fixtures import (
+    _CASILLA_00501,
+    _CASILLA_01,
+    _CASILLA_06,
+    _M200_BIN_GENERATED_CASILLA,
+    _casilla_values,
+    workflow_profile,
+)
+
+from ....core.casilla_id import CasillaId
+from ....domain.calculations.registry.schema_verification import (
+    VerificationPredicateDefinition,
+    VerificationPredicateOperator,
+)
+from ....domain.modelos.errors import ModeloError
+from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
+from ..action_errors import ModeloVerificationPredicateMalformedError
+from ..verification_predicates import (
+    VerificationPredicateRefusal,
+    VerificationPredicateRoute,
+    evaluate_advisory_predicate_fires,
+    evaluate_verification_predicates,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
+
+# ---------------------------------------------------------------------------
+# Advisory predicate unit tests
+# ---------------------------------------------------------------------------
+
+_ADVISORY_RATIO_GE = 'advisory_when_ratio_ge(["DP200012:00501", "DP200014:00552", "0.70"])'
+_M130_ART109_PROFILE_ADVISORY = 'profile_flag_enabled("art109_activity_income_withholding_ge_70pct")'
+_AdvisoryPredicateCase = tuple[str, dict[CasillaId, Decimal], bool]
+
+_ADVISORY_RATIO_GE_CASES: tuple[_AdvisoryPredicateCase, ...] = (
+    ("exact-threshold", _casilla_values((_CASILLA_00501, "10500"), (_M200_BIN_GENERATED_CASILLA, "15000")), True),
+    ("above-threshold", _casilla_values((_CASILLA_00501, "12000"), (_M200_BIN_GENERATED_CASILLA, "15000")), True),
+    ("below-threshold", _casilla_values((_CASILLA_00501, "9000"), (_M200_BIN_GENERATED_CASILLA, "15000")), False),
+    ("zero-denominator", _casilla_values((_CASILLA_00501, "5000"), (_M200_BIN_GENERATED_CASILLA, "0")), False),
+)
+
+_ADVISORY_IMPLIES_M200_BASE = 'implies_nonzero(["DP200012:00501", "DP200014:00552"])'
+_ADVISORY_IMPLIES_M200_BASE_CASES: tuple[_AdvisoryPredicateCase, ...] = (
+    (
+        "positive-result-zero-base",
+        _casilla_values((_CASILLA_00501, "140000"), (_M200_BIN_GENERATED_CASILLA, "0")),
+        True,
+    ),
+    ("loss-result", _casilla_values((_CASILLA_00501, "-5000"), (_M200_BIN_GENERATED_CASILLA, "0")), False),
+    ("zero-result", _casilla_values((_CASILLA_00501, "0"), (_M200_BIN_GENERATED_CASILLA, "0")), False),
+    (
+        "determined-base",
+        _casilla_values((_CASILLA_00501, "140000"), (_M200_BIN_GENERATED_CASILLA, "140000")),
+        False,
+    ),
+)
+
+
+def test_advisory_when_ratio_ge_cases() -> None:
+    """advisory_when_ratio_ge fires at or above the threshold and stays silent below it or with no denominator."""
+    for case_label, values, expected in _ADVISORY_RATIO_GE_CASES:
+        assert evaluate_advisory_predicate_fires(_ADVISORY_RATIO_GE, values) is expected, case_label
+
+
+def test_advisory_when_ratio_ge_rejects_noncanonical_casilla_id_token() -> None:
+    values: dict[CasillaId, Decimal] = {
+        _CASILLA_00501: Decimal("100"),
+        _M200_BIN_GENERATED_CASILLA: Decimal("100"),
+    }
+
+    with pytest.raises(ModeloError):
+        evaluate_advisory_predicate_fires('advisory_when_ratio_ge(["DP200012:00501", "bad key", "0.70"])', values)
+
+
+def test_advisory_implies_nonzero_cases() -> None:
+    """The M200 advisory fires only when positive resultado contable has no determined base."""
+    for case_label, values, expected in _ADVISORY_IMPLIES_M200_BASE_CASES:
+        assert evaluate_advisory_predicate_fires(_ADVISORY_IMPLIES_M200_BASE, values) is expected, case_label
+
+
+def test_art109_profile_advisory_emits_warning_when_profile_flag_is_enabled() -> None:
+    """Art. 109 ADVISORY reads the profile coverage flag, not a casilla ratio."""
+    predicate = VerificationPredicateDefinition(
+        id="profile-flag-enabled:art109-exencion-alta-retencion",
+        predicate_id="modelo-130-art109-exencion-alta-retencion",
+        legal_refs=("rd-439-2007:art-109",),
+        expression=_M130_ART109_PROFILE_ADVISORY,
+        finding_kind="ADVISORY",
+    )
+    profile = workflow_profile().model_copy(update={"art109_activity_income_withholding_ge_70pct": True})
+    casilla_values: dict[CasillaId, Decimal] = {
+        _CASILLA_06: Decimal("0"),
+        _CASILLA_01: Decimal("15000"),
+    }
+
+    findings = evaluate_verification_predicates((predicate,), casilla_values, profile)
+
+    assert len(findings) == 1
+    assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY
+    assert findings[0].severity is ModeloVerificationFindingSeverity.WARNING
+    assert "rd-439-2007:art-109" in findings[0].legal_refs
+
+
+def test_art109_profile_advisory_ignores_professional_only_profile_flag() -> None:
+    """The professional-only compatibility field is not the full Art. 109 fact."""
+    predicate = VerificationPredicateDefinition(
+        id="profile-flag-enabled:art109-exencion-alta-retencion",
+        predicate_id="modelo-130-art109-exencion-alta-retencion",
+        legal_refs=("rd-439-2007:art-109",),
+        expression=_M130_ART109_PROFILE_ADVISORY,
+        finding_kind="ADVISORY",
+    )
+    profile = workflow_profile().model_copy(update={"professional_income_withholding_ge_70pct": True})
+    casilla_values: dict[CasillaId, Decimal] = {
+        _CASILLA_06: Decimal("0"),
+        _CASILLA_01: Decimal("15000"),
+    }
+
+    findings = evaluate_verification_predicates((predicate,), casilla_values, profile)
+
+    assert findings == []
+
+
+def test_art109_profile_advisory_ignores_high_retention_amount_ratio_when_profile_flag_is_disabled() -> None:
+    """A high casilla 06 amount alone is not the Art. 109 income-coverage fact."""
+    predicate = VerificationPredicateDefinition(
+        id="profile-flag-enabled:art109-exencion-alta-retencion",
+        predicate_id="modelo-130-art109-exencion-alta-retencion",
+        legal_refs=("rd-439-2007:art-109",),
+        expression=_M130_ART109_PROFILE_ADVISORY,
+        finding_kind="ADVISORY",
+    )
+    casilla_values: dict[CasillaId, Decimal] = {
+        _CASILLA_06: Decimal("10500"),
+        _CASILLA_01: Decimal("15000"),
+    }
+
+    findings = evaluate_verification_predicates((predicate,), casilla_values, workflow_profile())
+    assert findings == []
+
+
+# ---------------------------------------------------------------------------
+# contract: M130 all-zero regression
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("threshold", "hazard"),
+    (
+        pytest.param("NaN", "builds without raising, then raises InvalidOperation at the comparison", id="nan"),
+        pytest.param("Infinity", "compares False to every ratio, silencing the advisory", id="infinity"),
+        pytest.param("-Infinity", "compares True to every ratio, firing the advisory always", id="negative-infinity"),
+    ),
+)
+def test_advisory_when_ratio_ge_refuses_a_non_finite_threshold(threshold: str, hazard: str) -> None:
+    """A non-finite threshold is an unreadable registry literal, refused before any comparison.
+
+    ``Decimal`` builds each of these without raising, and each would corrupt the
+    comparison in its own way, so admission refuses them as typed
+    :class:`ModeloVerificationPredicateMalformedError` refusals on every call rather than leaving the
+    advisory silent or letting ``InvalidOperation`` escape.
+    """
+    values = _casilla_values((_CASILLA_00501, "10500"), (_M200_BIN_GENERATED_CASILLA, "15000"))
+    expression = f'advisory_when_ratio_ge(["DP200012:00501", "DP200014:00552", "{threshold}"])'
+
+    for _ in range(3):
+        with pytest.raises(ModeloVerificationPredicateMalformedError) as raised:
+            evaluate_advisory_predicate_fires(expression, values)
+        assert raised.value.context == {
+            "predicate_expression_recognised": False,
+            "predicate_operator": VerificationPredicateOperator.ADVISORY_WHEN_RATIO_GE.value,
+            "predicate_refusal": VerificationPredicateRefusal.LITERAL.value,
+            "predicate_route": VerificationPredicateRoute.ADVISORY.value,
+        }, hazard

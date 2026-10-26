@@ -1,0 +1,37 @@
+modelo:
+  form:
+    column:
+      aplicado: E bevallásban érvényesített
+      aumentos: Növelések
+      base_deduccion: Kedvezmény alapja
+      base_imponible: Adóalap
+      codigo_cnae: CNAE tevékenységi kód
+      cuota: Adó összege
+      cuota_deducible: Levonható adó
+      cuota_soportada: Előzetesen felszámított adó
+      diferencias_permanentes: Állandó eltérések
+      diferencias_temporarias_anteriores: Korábbi években keletkezett átmeneti eltérések
+      diferencias_temporarias_ejercicio: Tárgyévben keletkezett átmeneti eltérések
+      disminuciones: Csökkentések
+      importe_deduccion: Kedvezmény összege
+      importe_operaciones: Ügyletek összege
+      importe_operaciones_derecho_deduccion: Levonásra jogosító ügyletek összege
+      importe_percepciones: Kifizetések összege
+      importe_retenciones: Visszatartott adó összege
+      importe_total: Teljes összeg
+      ingresos_a_cuenta: Előlegként befizetett összeg
+      numero_declarados: Bejelentett személyek száma
+      numero_perceptores: Kedvezményezettek száma
+      pendiente_futuro: Későbbi időszakokra átvitt
+      pendiente_generada: Időszak elején fennálló vagy az időszakban keletkezett
+      pendiente_inicio: Időszak elején fennálló
+      porcentaje_prorrata: Arányosítási %
+      territorio_araba_alava: Araba/Álava
+      territorio_bizkaia: Bizkaia
+      territorio_estado: Állami adóhatóság
+      territorio_gipuzkoa: Gipuzkoa
+      territorio_navarra: Navarra
+      tipo: Kulcs %
+      tipo_prorrata: Arányosítás típusa
+      total: Összesen
+      valor_percepciones_especie: Természetbeni juttatások értéke

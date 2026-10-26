@@ -1,0 +1,8 @@
+{
+  "uuid": "login-observation@cadrumo.org",
+  "name": "Cadrumo native login observation",
+  "description": "Read-only native screen-shield state for the local runtime.",
+  "shell-version": ["49", "50"],
+  "session-modes": ["user", "unlock-dialog"],
+  "version": 1
+}

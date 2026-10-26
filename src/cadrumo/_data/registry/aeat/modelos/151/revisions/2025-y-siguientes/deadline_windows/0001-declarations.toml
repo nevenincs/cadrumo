@@ -1,0 +1,51 @@
+# Modelo 151 filing windows, ejercicios 2023 y siguientes.
+#
+# GROUNDED, not carried by convenience. Orden HFP/1338/2023 art. 3.1 states that
+# this modelo's plazo "será el mismo que se apruebe cada ejercicio, con carácter
+# general, para las declaraciones del Impuesto sobre la Renta de las Personas
+# Físicas", so each year's opens_on and closes_on ARE that year's Renta campaign
+# dates, and each window below cites the campaign orden article that fixes them
+# alongside the remission article that makes it apply to this modelo.
+#
+# The payment cutoff is this modelo's OWN, not the general one: art. 4.2 puts the
+# domiciliación deadline at "cinco días antes de que finalice el plazo de
+# presentación a que se refiere el artículo 3.1". Computed from each closes_on by
+# that rule, it independently reproduces the cutoff Modelo 100 declares for the
+# same campaign in all three years -- two derivations agreeing, not one copied.
+#
+# This revision is open-ended, so a year beyond 2025 needs its own window added
+# once that ejercicio's campaign orden is published and bundled. There is no way
+# to state a future year's dates from art. 3.1 alone, and none is guessed here.
+
+[[revisions."2025-y-siguientes".deadline_windows]]
+id = "modelo-151-2023-0a"
+filing_year = 2023
+period = "2023 0A"
+period_kind = "annual"
+opens_on = 2024-04-03
+closes_on = 2024-07-01
+payment_cutoff_on = 2024-06-26
+legal_refs = ["orden-hfp-1338-2023:art-3", "orden-hac-265-2024:art-8", "ley-35-2006:art-99"]
+source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]
+
+[[revisions."2025-y-siguientes".deadline_windows]]
+id = "modelo-151-2024-0a"
+filing_year = 2024
+period = "2024 0A"
+period_kind = "annual"
+opens_on = 2025-04-02
+closes_on = 2025-06-30
+payment_cutoff_on = 2025-06-25
+legal_refs = ["orden-hfp-1338-2023:art-3", "orden-hac-242-2025:art-8", "ley-35-2006:art-99"]
+source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]
+
+[[revisions."2025-y-siguientes".deadline_windows]]
+id = "modelo-151-2025-0a"
+filing_year = 2025
+period = "2025 0A"
+period_kind = "annual"
+opens_on = 2026-04-08
+closes_on = 2026-06-30
+payment_cutoff_on = 2026-06-25
+legal_refs = ["orden-hfp-1338-2023:art-3", "orden-hac-277-2026:art-7", "ley-35-2006:art-99"]
+source_refs = ["aeat-modelo-151-procedure", "boe-modelo-151-layout"]

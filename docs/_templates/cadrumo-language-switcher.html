@@ -1,0 +1,19 @@
+{#-
+  Header language switcher: a compact native <details>/<summary> dropdown. The
+  closed state shows only the current language code (a small fixed footprint that
+  cannot overflow the header at any viewport width); opening reveals every
+  language with the current one marked, in an absolutely-positioned panel that
+  overlays content instead of stretching the header. Dependency-free and
+  licence-clean: native HTML disclosure, no required script, no external asset;
+  styling lives with the header family in _static/cadrumo-docs.css using Furo's
+  CSS variables so light and dark both render (cadrumo-docs.js adds optional
+  outside-click / Escape dismissal as progressive enhancement).
+
+  The element itself is built in dev/docs/language_switcher.py and handed to
+  every page through html_context. It is the one piece of chrome that varies
+  three ways at once between language roots -- span against link, one directory
+  level of depth, and the current language's own code -- with the page's own
+  path in the middle, which is more than a template can carry in one value for
+  every language at once (see dev/docs/compile_slots.py).
+-#}
+{%- if cadrumo_language_switcher -%}{{ cadrumo_language_switcher }}{%- endif -%}

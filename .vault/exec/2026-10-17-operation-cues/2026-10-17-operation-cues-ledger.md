@@ -1,0 +1,160 @@
+---
+tags:
+  - '#exec'
+  - '#operation-cues'
+date: '2026-10-17'
+modified: '2026-10-21'
+body_schema: 'body-v2'
+body_hash: 'sha256:9db2075eaba915f6618cc7b70f46af5b676b2cc5d49896a0a7fa5b4eda45c3fb'
+related:
+  - "[[2026-10-17-operation-cues-plan]]"
+---
+
+# `operation-cues` ledger
+
+## Changes
+
+- `S01` `M` `src/cadrumo/adapters/persistence/operations/durability_router.py`
+- `S01` `M` `src/cadrumo/adapters/persistence/operations/tests/test_durability_router.py`
+- `S01` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S01` `M` `src/cadrumo_runtime/contracts/worker_authorization.py`
+- `S01` `M` `src/cadrumo_runtime/adapters/worker_authorization.py`
+- `S01` `M` `src/cadrumo_runtime/adapters/worker_authorization_client.py`
+- `S01` `M` `src/cadrumo_runtime/adapters/tests/worker_authorization_fixture.py`
+- `S01` `M` `src/cadrumo_runtime/adapters/tests/test_worker_authorization.py`
+- `S01` `M` `src/cadrumo_runtime/host/operation_host.py`
+- `S01` `M` `src/cadrumo_runtime/host/profile_host.py`
+- `S01` `A` `src/cadrumo_runtime/host/operation_progress_reporter.py`
+- `S01` `A` `src/cadrumo_runtime/host/tests/test_operation_progress_reporter.py`
+- `S01` `verify:` `pytest -m integration test_durability_router.py` -> `pass`
+- `S01` `verify:` `pytest test_operation_progress_reporter.py` -> `pass`
+- `S01` `verify:` `pytest -m integration test_worker_authorization.py` -> `pass`
+- `S01` `verify:` `pytest operation host and persistence suites` -> `pass`
+- `S01` `verify:` `ruff check, ruff format --check, ty check, lint-imports` -> `pass`
+- `S02` `M` `src/cadrumo_client/contracts/session_events.py`
+- `S02` `M` `src/cadrumo_client/transport/frontend_client.py`
+- `S02` `M` `src/cadrumo_runtime/host/session_events.py`
+- `S02` `M` `src/cadrumo_runtime/host/profile_connection_operations.py`
+- `S02` `M` `src/cadrumo_runtime/host/profile_connection_admission.py`
+- `S02` `M` `src/cadrumo_runtime/host/profile_connection_sessions.py`
+- `S02` `M` `src/cadrumo_runtime/host/profile_connections.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/test_connection_cues.py`
+- `S02` `verify:` `pytest test_connection_cues.py` -> `pass`
+- `S02` `verify:` `pytest -m unit cadrumo_runtime/host/tests cadrumo_client/transport/tests cadrumo_client/contracts` -> `pass`
+- `S02` `verify:` `ruff check, ruff format --check, ty check` -> `pass`
+- `S03` `A` `src/cadrumo_client/transport/operation_changes.py`
+- `S03` `M` `src/cadrumo_client/transport/operation_settlement.py`
+- `S03` `M` `src/cadrumo_client/commands/registered_operation_observations.py`
+- `S03` `M` `src/cadrumo_client/commands/registered_operation_deadlines.py`
+- `S03` `M` `src/cadrumo_client/transport/tests/test_operation_settlement.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/tests/test_operation_registered_operation.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/tests/test_operation_operation_error_detail.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/tests/test_operation_modelo_filing_settlement.py`
+- `S03` `verify:` `pytest -m unit cadrumo_client, entrypoints/cli/tests, cli/config/tests, cadrumo_runtime/host/tests` -> `pass`
+- `S03` `verify:` `pytest -m integration test_runtime_modelo_work_create_native.py` -> `pass`
+- `S03` `verify:` `ruff check, ruff format --check, ty check, lint-imports` -> `pass`
+- `S04` `M` `src/cadrumo/entrypoints/cli/config/operation_censal_observation.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/config/operation_censal_review.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/google_saved_review.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/operations/controller_port.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/operations/modal.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/operations/tests/test_await_terminal_projection.py`
+- `S04` `A` `src/cadrumo/entrypoints/tui/operations/tests/test_modal_operation_cues.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/tests/test_google_saved_review.py`
+- `S04` `M` `src/cadrumo_client/commands/runtime_google_consent.py`
+- `S04` `M` `src/cadrumo_client/transport/frontend_client.py`
+- `S04` `M` `src/cadrumo_client/transport/frontend_operation_client.py`
+- `S04` `M` `src/cadrumo_client/transport/frontend_profile_view_client.py`
+- `S04` `M` `src/cadrumo_client/transport/operation_changes.py`
+- `S04` `M` `src/cadrumo_client/transport/operation_controller.py`
+- `S04` `M` `src/cadrumo_client/transport/operation_reads.py`
+- `S04` `M` `src/cadrumo_client/transport/profile_password_rotation.py`
+- `S04` `M` `src/cadrumo_runtime/host/frontend/tui/aeat_sync/runtime_handoff.py`
+- `S04` `M` `src/cadrumo_runtime/host/tests/frontend/cli/portable_human_cli_runtime.py`
+- `S04` `M` `src/cadrumo_runtime/host/tests/frontend/tui/aeat_sync/test_runtime_handoff.py`
+- `S04` `verify:` `pytest -m 'unit or integration' src/cadrumo_client src/cadrumo/entrypoints/cli src/cadrumo/entrypoints/tui src/cadrumo_runtime/host/tests/frontend src/cadrumo_harness/mcp/tests` -> `pass`
+- `S05` `M` `src/cadrumo_client/contracts/session_events.py`
+- `S05` `M` `src/cadrumo_client/transport/frontend_client.py`
+- `S05` `M` `src/cadrumo_harness/mcp/runtime_admission.py`
+- `S05` `A` `src/cadrumo_harness/mcp/tests/test_attendance_wait.py`
+- `S05` `M` `src/cadrumo_harness/mcp/tests/test_sign_in_resume.py`
+- `S05` `M` `src/cadrumo_runtime/host/profile_connection_attendance.py`
+- `S05` `M` `src/cadrumo_runtime/host/session_events.py`
+- `S05` `M` `src/cadrumo_runtime/host/tests/test_attendance.py`
+- `S05` `verify:` `pytest src/cadrumo_harness/mcp/tests/test_attendance_wait.py src/cadrumo_harness/mcp/tests/test_sign_in_resume.py src/cadrumo_runtime/host/tests/test_attendance.py` -> `pass`
+- `S08` `M` `native/manager/src/background.rs`
+- `S08` `A` `native/manager/src/change_watch.rs`
+- `S08` `M` `native/manager/src/cutover_coordinator.rs`
+- `S08` `M` `native/manager/src/installation_watch.rs`
+- `S08` `M` `native/manager/src/lib.rs`
+- `S08` `M` `native/manager/src/lifecycle.rs`
+- `S08` `verify:` `ctest --preset debug --tests-regex ^manager\.(rust|supervision)$` -> `pass`
+- `S08` `verify:` `cmake --build --preset debug --target check_manager_lifecycle` -> `pass`
+- `S08` `M` `native/manager/src/desktop_host.rs`
+- `S08` `M` `native/manager/src/session.rs`
+- `S08` `M` `native/manager/src/session/instance.rs`
+- `S08` `A` `native/manager/src/session/status_cue.rs`
+- `S08` `M` `native/manager/src/session/windows.rs`
+- `S08` `M` `native/manager/src/windows_lifecycle.rs`
+- `S08` `verify:` `ctest --preset debug --tests-regex ^manager\.(rust|supervision)$` -> `pass`
+- `S08` `verify:` `cmake --build --preset debug --target check_manager_lifecycle` -> `pass`
+- `S08` `verify:` `cmake --build --preset debug --target desktop-host-unit-clippy` -> `pass`
+- `S08` `verify:` `cmake --build --preset debug --target desktop-host-unit-test` -> `pass`
+- `S01` `M` `src/cadrumo_runtime/host/operation_progress_reporter.py`
+- `S01` `M` `src/cadrumo_runtime/host/tests/test_operation_progress_reporter.py`
+- `S01` `A` `.vault/audit/2026-10-17-operation-cues-audit.md`
+- `S01` `verify:` `pytest -n0 test_operation_progress_reporter.py` -> `pass`
+- `S01` `verify:` `escaping-error test against the previous reporter (expected to fail)` -> `fail`
+- `S01` `verify:` `ruff check, ruff format --check, ty check on the reporter and its test` -> `pass`
+- `S01` `verify:` `dev.quality.types diagnostics in the reporter (none)` -> `pass`
+- `S01` `by:` `tui-41 (took over from CADRUMO-BUILD-DEBUG)`
+- `S08` `M` `.vault/plan/2026-10-17-operation-cues-plan.md`
+- `S08` `M` `.vault/adr/2026-10-17-idle-churn-operation-observation-adr.md`
+- `S09` `M` `src/cadrumo_runtime/host/operation_progress_reporter.py`
+- `S09` `M` `src/cadrumo_runtime/host/tests/test_operation_progress_reporter.py`
+- `S09` `M` `.vault/adr/2026-10-17-idle-churn-operation-observation-adr.md`
+- `S09` `M` `.vault/plan/2026-10-17-operation-cues-plan.md`
+- `S09` `M` `.vault/audit/2026-10-17-operation-cues-audit.md`
+- `S09` `verify:` `pytest -n0 test_operation_progress_reporter.py` -> `pass`
+- `S09` `verify:` `retry and backoff tests against the dropping reporter (expected to fail)` -> `fail`
+- `S09` `verify:` `ruff check, ruff format --check, ty check` -> `pass`
+- `S09` `verify:` `dev.quality.types diagnostics in the reporter (none)` -> `pass`
+- `S09` `by:` `tui-41`
+- `S08` `M` `native/manager/src/session/status_cue.rs`
+- `S08` `M` `.vault/audit/2026-10-17-operation-cues-audit.md`
+- `S08` `verify:` `ctest --preset debug manager.rust incl. both status_cue tests` -> `pass`
+- `S08` `verify:` `ctest --preset debug manager.supervision` -> `pass`
+- `S08` `verify:` `cmake --build --preset debug --target check_manager_lifecycle (clippy -D warnings)` -> `pass`
+- `S08` `verify:` `rustfmt --edition 2024 (stdin) status_cue.rs` -> `pass`
+- `S08` `by:` `tui-41`
+- `S06` `verify:` `cmake --build --preset release --target app-payload at 4cc0fdddc0` -> `pass`
+- `S06` `verify:` `dev.runtime_lifecycle.backend_probe --package build/windows-x64/stage/Release/app` -> `pass`
+- `S06` `verify:` `dev.runtime_lifecycle.concurrent_sessions_probe --package build/windows-x64/stage/Release/app` -> `fail`
+- `S06` `verify:` `dev.runtime_lifecycle.concurrent_sessions_probe --package build/windows-x64/stage/Debug/app` -> `fail`
+- `S06` `verify:` `cmake --build --preset debug --target desktop-host-unit-test` -> `pass`
+- `S06` `by:` `tui-41`
+- `S06` `verify:` `concurrent_sessions_probe on stage/Release after bcf4f4085c, every functional check` -> `pass`
+- `S06` `verify:` `concurrent_sessions_probe no_error_records on stage/Release` -> `fail`
+- `S06` `verify:` `cmake --build --preset release --target app-payload at d2db5f6e1d` -> `pass`
+- `S06` `verify:` `concurrent_sessions_probe on stage/Release at d2db5f6e1d (second run)` -> `pass`
+- `S06` `verify:` `backend_probe on stage/Release at d2db5f6e1d` -> `pass`
+- `S06` `verify:` `concurrent_sessions_probe on stage/Release at d2db5f6e1d (first run, KDF calibration clean_exit timeout logged at ERROR)` -> `fail`
+- `S06` `verify:` `cmake --build --preset debug --target app-payload with d2db5f6e1d and 9d7c4cb381 (by CADRUMO-FIX1)` -> `pass`
+- `S06` `verify:` `concurrent_sessions_probe on stage/Debug, failed [] (by CADRUMO-FIX1)` -> `pass`
+- `S06` `verify:` `backend_probe on stage/Debug, failed_steps [] (by CADRUMO-FIX1)` -> `pass`
+
+## Notes
+
+- `S02` `test_frontend_boundaries::test_installed_composition_and_native_journeys_are_runtime_owned` fails before and after this Step: it asserts a test file another session deleted
+- `S03` Pre-existing, unchanged by this Step: 9 CLI structural/inventory tests, `test_frontend_boundaries` (deleted file), and `test_runtime_ledger_reads_native::test_native_api_ledger_status_requires_all_periods_even_when_query_selects_one,` which fails one run in three even with the reporter disabled and the old client code
+- `S04` The wide run's pre-existing failures were fixed separately in d07ae808aa (resolution-cost child import, environment reference conformance); the portable fixture's stale `_lapsed` field is fixed in this Step's commit.
+- `S08` Partial: the desktop host's 1 s external-owner pace remains. It mirrors the external manager's status, and the manager IPC has no change signal; removing it needs a status-wait in the manager protocol, pending the user's decision.
+- `S01` Plan-close review finding reporter-thread-not-replaced, fixed after S01 closed; the medium finding modal-waits-unbounded-on-a-dropped-report stays open for the operator's decision.
+- `S08` The earlier S08 note that the 1 s external-owner pace remains is superseded by ac366af11f: a publishing manager now cues the desktop, and the pace stays only as the fallback the ADR's third amendment keeps.
+- `S08` Correction to the previous S08 note: the fallback pace is kept by the ADR's second amendment ("ok add it"), not a third.
+- `S09` The re-review passed; its one low finding, that the constraint promised a retry an escaping error does not give, is resolved in the constraint's wording.
+- `S08` Plan-close finding status-cue-publisher-proof-is-a-bare-pid fixed: the record carries the publisher's creation stamp, schema 2.
+- `S06` S06 stays open: the concurrent probe's desktop holders, launched from bin/cadrumo-runtime, are refused `desktop_holder_unverified` because both stages were built with another writer's uncommitted `service_descriptors.py` edit that points the Windows desktop-session descriptor at the desktop's role-dispatch image; nothing here involves the operation cue. The Debug runtime also exited 1 mid-probe, unexplained. Debug's earlier probes at deed364c87 passed.
+- `S06` With bcf4f4085c the probe's desktop holders launch from the descriptor's image and are admitted. The only failure left is `no_error_records:` 262e873ce3 logs the probe's deliberate signed-out and `authentication_required` refusals at ERROR; its owner is reconciling. The earlier Debug runtime exit 1 was a Codex Debug build's quiesce at 21:27:19 local, mid-probe.
+- `S06` Release built from a tree that also held 20 uncommitted paths from other writers (agent service, desktop frontend and terminal, native/desktop/CMakeLists.txt); none is on the sign-in or operation-cue paths. Debug evidence comes from CADRUMO-FIX1's next Debug app-payload.
+- `S06` Both stages are rebuilt and both probes pass on each, so S06 closes.

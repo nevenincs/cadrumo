@@ -1,0 +1,45 @@
+[fact]
+fact_id = "invoice-legal-classification-catalogue"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "invoice-legal-classification-catalogue:2013-01-01"
+date_axis = "filing_period"
+valid_from = 2013-01-01
+legal_refs = [
+  "rd-1619-2012:art-6",
+  "rd-1619-2012:art-7",
+  "rd-1619-2012:art-6.1.a",
+  "rd-1619-2012:art-6.1.i",
+  "ley-37-1992:art-75",
+  "ley-37-1992:art-89",
+]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "invoice_class.order", value = "ORDINARIA,SIMPLIFICADA,RECTIFICATIVA" },
+  { key = "invoice_class.ordinaria_token", value = "ORDINARIA" },
+  { key = "invoice_class.simplificada_token", value = "SIMPLIFICADA" },
+  { key = "invoice_class.rectificativa_token", value = "RECTIFICATIVA" },
+  { key = "invoice_class.ORDINARIA.value", value = "ORDINARIA" },
+  { key = "invoice_class.ORDINARIA.description", value = "Complete invoice under RD 1619/2012 article 6." },
+  { key = "invoice_class.ORDINARIA.legal_refs", value = "rd-1619-2012:art-6" },
+  { key = "invoice_class.SIMPLIFICADA.value", value = "SIMPLIFICADA" },
+  { key = "invoice_class.SIMPLIFICADA.description", value = "Simplified invoice under RD 1619/2012 article 7." },
+  { key = "invoice_class.SIMPLIFICADA.legal_refs", value = "rd-1619-2012:art-7" },
+  { key = "invoice_class.RECTIFICATIVA.value", value = "RECTIFICATIVA" },
+  { key = "invoice_class.RECTIFICATIVA.description", value = "Corrective invoice under RD 1619/2012 article 6.1.a and LIVA article 89." },
+  { key = "invoice_class.RECTIFICATIVA.legal_refs", value = "rd-1619-2012:art-6.1.a,ley-37-1992:art-89" },
+  { key = "invoice_operation_date_role.order", value = "OPERATION_PERFORMED,ADVANCE_PAYMENT_RECEIVED" },
+  { key = "invoice_operation_date_role.operation_performed_token", value = "OPERATION_PERFORMED" },
+  { key = "invoice_operation_date_role.advance_payment_received_token", value = "ADVANCE_PAYMENT_RECEIVED" },
+  { key = "invoice_operation_date_role.OPERATION_PERFORMED.value", value = "OPERATION_PERFORMED" },
+  { key = "invoice_operation_date_role.OPERATION_PERFORMED.description", value = "Date the operation was performed under RD 1619/2012 article 6.1.i and LIVA article 75." },
+  { key = "invoice_operation_date_role.OPERATION_PERFORMED.legal_refs", value = "rd-1619-2012:art-6.1.i,ley-37-1992:art-75" },
+  { key = "invoice_operation_date_role.ADVANCE_PAYMENT_RECEIVED.value", value = "ADVANCE_PAYMENT_RECEIVED" },
+  { key = "invoice_operation_date_role.ADVANCE_PAYMENT_RECEIVED.description", value = "Date an advance payment was received under RD 1619/2012 article 6.1.i and LIVA article 75." },
+  { key = "invoice_operation_date_role.ADVANCE_PAYMENT_RECEIVED.legal_refs", value = "rd-1619-2012:art-6.1.i,ley-37-1992:art-75" },
+]

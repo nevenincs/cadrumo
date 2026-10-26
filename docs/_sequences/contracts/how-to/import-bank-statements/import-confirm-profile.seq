@@ -1,0 +1,4 @@
+@step Confirm the active profile.
+@result aeat --format json config profile status
+@expect result.active_profile == "docs-sequence-sandbox"
+@expect exit_code == 0

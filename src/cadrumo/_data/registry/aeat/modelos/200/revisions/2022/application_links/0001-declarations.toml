@@ -1,0 +1,23 @@
+# Applicability-grade links only: when the modelo is due, that it is filed and the
+# workflow around it. No calculation, export or review surface is linked, because
+# no formula or export layout backs them for this ejercicio.
+[[revisions."2022".application_links]]
+id = "modelo-200-deadline"
+surface = "deadline"
+consumer = "cadrumo.domain.deadlines"
+requires_snapshot = true
+legal_refs = ["ley-27-2014:art-124"]
+
+[[revisions."2022".application_links]]
+id = "modelo-200-filing"
+surface = "filing"
+consumer = "cadrumo.application.filing"
+requires_snapshot = true
+legal_refs = ["ley-27-2014:art-124"]
+
+[[revisions."2022".application_links]]
+id = "modelo-200-workflow"
+surface = "workflow"
+consumer = "cadrumo.application.workflow"
+requires_snapshot = true
+legal_refs = ["ley-27-2014:art-124"]

@@ -1,0 +1,104 @@
+modelo:
+  schema:
+    '123':
+      casilla:
+        continuidad:
+          base-rentas-dividendos:
+            label: Base dividendos y participaciones
+          base-rentas-resto:
+            label: Base resto de rentas
+          cuota-a-ingresar:
+            label: Resultado a ingresar
+          ingresos-ejercicios-anteriores:
+            label: Ingresos de ejercicios anteriores
+          numero-rentas-dividendos:
+            label: Número de rentas dividendos y participaciones
+          numero-rentas-resto:
+            label: Número de rentas resto
+          numero-rentas-total:
+            label: Número de rentas total
+          perceptor-count:
+            label: Número de perceptores
+          regularizacion:
+            label: Regularización
+          resultado-anteriores-autoliquidaciones:
+            label: Resultado de anteriores autoliquidaciones
+          retenciones-rentas-dividendos:
+            label: Retenciones dividendos y participaciones
+          retenciones-rentas-resto:
+            label: Retenciones resto de rentas
+          suma-retenciones-regularizacion:
+            label: Suma de retenciones y regularización
+      field:
+        official_name: Retenciones e ingresos a cuenta del IRPF, Impuesto sobre Sociedades
+          e IRNR establecimientos permanentes. Determinados rendimientos del capital
+          mobiliario o determinadas rentas.
+        title: Retenciones sobre capital mobiliario
+      form:
+        column:
+          base: Base de retenciones e ingresos a cuenta
+          dividendos: Dividendos y otras rentas de participación en fondos propios
+            de entidades
+          ingresos-anteriores: Ingresos de ejercicios anteriores
+          numero-perceptores: Número de perceptores
+          otras-rentas: Resto de rentas
+          regularizacion: Regularización
+          retenciones: Retenciones e ingresos a cuenta
+          totales: Totales
+        context:
+          apellidos: Apellidos o razón social
+          declaracion-complementaria: Autoliquidación complementaria
+          ejercicio: Ejercicio
+          iban: Código IBAN
+          justificante-anterior: N.º de justificante de la autoliquidación anterior
+          nif: NIF
+          nombre: Nombre
+          nombre-completo: Apellidos y nombre o razón social
+          periodo: Período
+        page:
+          dr-12301:
+            heading: Retenciones sobre rendimientos del capital mobiliario y determinadas
+              rentas
+        row:
+          base: Base de retenciones e ingresos a cuenta
+          numero-rentas: Número de rentas
+          periodificacion: Periodificación
+          retenciones: Retenciones e ingresos a cuenta
+        section:
+          complementaria:
+            heading: Complementaria (6)
+          devengo:
+            heading: Devengo (2)
+          identificacion:
+            heading: Identificación (1)
+          ingreso:
+            heading: Ingreso (4)
+          liquidacion:
+            heading: Liquidación (3)
+      revision:
+        2019-2023:
+          casilla:
+            '02':
+              label: Base de retenciones e ingresos a cuenta
+            '03':
+              label: Retenciones e ingresos a cuenta
+          construct:
+            modelo-123-capital-withholding:
+              field:
+                title: 'Modelo 123: retenciones sobre rendimientos del capital mobiliario
+                  (ejercicios 2019 a 2023)'
+          field:
+            label: Orden EHA/3435/2007, ejercicios 2019 a 2023
+        2024-y-siguientes:
+          casilla:
+            '06':
+              label: Base total
+            09:
+              label: Retenciones total
+          construct:
+            modelo-123-capital-withholding:
+              field:
+                title: Modelo 123 retenciones e ingresos a cuenta sobre rendimientos
+                  del capital mobiliario
+          field:
+            label: Orden HAC/56/2024, ejercicios 2024 y siguientes

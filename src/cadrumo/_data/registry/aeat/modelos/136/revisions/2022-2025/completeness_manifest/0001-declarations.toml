@@ -1,0 +1,41 @@
+# The graded closure claim for THIS edition, stated here rather than inherited:
+# the completeness manifest is a per-edition assertion about the edition that
+# states it, so it is deliberately excluded from the inheritable families and
+# must be authored by every edition that claims one.
+#
+# The six liquidacion boxes below are the closure this edition claims: 02 and 03
+# are the declared inputs, 04, 05 and 07 are computed from them by the three
+# formulas the anexo III form prints, and 06 is the complementaria deduction
+# those formulas consume. Box 01 is outside the claim because the form uses it
+# only as the denominator of the exemption proration it leaves to the filer, and
+# box 09 is outside it because it records the amount actually paid rather than a
+# computed result.
+
+[revisions."2022-2025".completeness_manifest]
+source_ref = "boe-modelo-136-current-form-text"
+legal_refs = ["ley-35-2006:da-33", "orden-hap-70-2013:art-11", "orden-hac-763-2018:art-tercero"]
+source_refs = ["boe-lirpf-lottery-prize-special-levy", "boe-modelo-136-current-form-text"]
+
+[[revisions."2022-2025".completeness_manifest.casillas]]
+casilla_id = "02"
+number = "02"
+
+[[revisions."2022-2025".completeness_manifest.casillas]]
+casilla_id = "03"
+number = "03"
+
+[[revisions."2022-2025".completeness_manifest.casillas]]
+casilla_id = "04"
+number = "04"
+
+[[revisions."2022-2025".completeness_manifest.casillas]]
+casilla_id = "05"
+number = "05"
+
+[[revisions."2022-2025".completeness_manifest.casillas]]
+casilla_id = "06"
+number = "06"
+
+[[revisions."2022-2025".completeness_manifest.casillas]]
+casilla_id = "07"
+number = "07"

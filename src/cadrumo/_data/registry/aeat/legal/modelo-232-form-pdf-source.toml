@@ -1,0 +1,26 @@
+[sources."boe-2017-10042-modelo-232-form-pdf"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2017-10042-modelo-232.pdf"
+sha256 = "18b307bc8f09960dc129e049575687ffd32f83f33570fd600b3f48e7a9fe6ee0"
+bytes = 288131
+retrieved_at = 2026-10-06
+published_at = 2017-08-30
+applies_from = 2016-01-01
+source_url = "https://www.boe.es/boe/dias/2017/08/30/pdfs/BOE-A-2017-10042.pdf"
+review_status = "pending_review"
+# Applicability: "Annex on printed page 85974 supplies the electronic form structure. Final provision two applies it to tax periods beginning from 1 January 2016; entry into force was 31 August 2017. Record capacity and revision-specific bindings remain governed by each revision's AEAT design."
+
+[sources."aeat-modelo-232-human-form-instructions"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_232/files/Instrucciones_Modelo_232.pdf"
+sha256 = "44a7606d2e5be723416c441ca8824e31fbfdf35af3554dceef2da4185e1a2a0c"
+bytes = 376447
+retrieved_at = 2026-10-06
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Procedimiento_ayuda/GI43/Instrucciones_Modelo_232.pdf"
+review_status = "pending_review"
+# Pages 5-8 explain person type, income/payment separation and amounts excluding VAT.
+# Live bytes matched the existing bundled PDF on the retrieval date above.

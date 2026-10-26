@@ -1,0 +1,373 @@
+"""Optional per-profile recovery: enrol, revoke, inspect, and reset the passphrase.
+
+Recovery is a second wrapper over the same data-encryption key, opened by a
+minted recovery code instead of the operator's passphrase. It is off by
+default. An operator who wants it enrols after the profile exists, proves the
+current passphrase to do so, and takes delivery of the code once, through the
+enrolment's handover; this service and the profile's custody never persist the
+code, never log it, and never put it in a result envelope. A frontend with no
+terminal to show the code on may hold the delivered copy for the operator
+until they have read it and confirmed they kept it. The only thing
+the code is good for is :func:`reset_profile_passphrase_with_recovery`: it
+proves the enrolled wrapper against the capsule's own sentinel and re-wraps
+the key under a new passphrase, so a forgotten passphrase is replaced rather
+than the records lost.
+
+Every door here works on a COMMITTED capsule under its custody transaction
+lock. Nothing mints, rotates, or re-derives a key schedule; the DEK epoch is
+preserved throughout, which is what keeps an enrolled code valid across
+ordinary passphrase changes.
+
+See Also:
+    :func:`~cadrumo.application.user_profile.passphrase_rotation.rotate_profile_passphrase`
+        The passphrase-proved sibling of the reset door; both share one
+        re-wrap primitive.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from hmac import compare_digest
+from secrets import token_bytes
+from typing import TYPE_CHECKING
+
+from pydantic import BaseModel
+
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+from cadrumo_client.contracts.bootstrap import ProfilePassphraseResetOutcome
+from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginThrottledError
+
+from ...core.credentials import assess_profile_password
+from ...core.errors.hierarchy import CadrumoError
+from ...core.identity.profile import ProfileId
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.paths import effective_storage_root
+from ...core.time.clock import now as _now
+from .authentication import ProfilePasswordProofOperation
+from .custody_ports import (
+    create_profile_recovery_enrollment_material,
+    default_profile_record_crypto_port,
+    install_profile_recovery_envelope,
+    load_profile_custody_password_material,
+    load_profile_custody_recovery_material,
+    map_profile_authentication_proof_failure,
+    profile_custody_recovery_envelope_path,
+    remove_profile_recovery_envelope,
+    unlock_profile_custody_password,
+    unlock_profile_custody_recovery,
+)
+from .custody_repository import profile_custody_transaction_lock
+from .login_session_port import profile_login_session_port
+from .passphrase_rotation import ProfilePassphraseReplacementProof, rewrap_profile_passphrase_under_lock
+from .prospective_password import ProspectiveProfilePasswordRefusal, prospective_profile_password_refusal
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from pathlib import Path
+    from uuid import UUID
+
+    from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
+    from .custody_ports import (
+        ProfileCustodyPasswordMaterialPort,
+        ProfileCustodyRecoveryEnvelopePort,
+        ProfileCustodyUnlockPort,
+        ProfileRecoveryKeyPort,
+    )
+
+
+class ProfileRecoveryError(CadrumoError):
+    """Raised when a recovery door cannot be honoured as supplied."""
+
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        context: dict[str, object] | None = None,
+        translated_message: str | None = None,
+        password_refusal: ProspectiveProfilePasswordRefusal | None = None,
+    ) -> None:
+        """Retain a typed prospective refusal without retaining any secret."""
+        super().__init__(message, context=context, translated_message=translated_message)
+        self._password_refusal = password_refusal
+
+    @property
+    def password_refusal(self) -> ProspectiveProfilePasswordRefusal | None:
+        """Retain the typed refusal for trusted in-process consumers only."""
+        return self._password_refusal
+
+
+@dataclass(frozen=True, slots=True)
+class ProfileRecoveryEnrollment:
+    """One minted recovery wrapper and the secret that opens it.
+
+    The secret rides in its wipeable container rather than as a ``str``: the
+    operator holds it across an interactive confirmation lasting as long as
+    it takes a human to copy a code down, and a string copy is unreachable
+    by any wipe primitive for its whole lifetime. The enrolment door owns the
+    wipe and takes it as soon as the handover returns.
+    """
+
+    envelope: ProfileCustodyRecoveryEnvelopePort
+    recovery_key: ProfileRecoveryKeyPort
+
+
+class ProfileRecoveryStatus(BaseModel):
+    """Whether one committed profile currently has recovery enrolled."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    profile_id: ProfileId
+    enrolled: bool
+
+
+class ProfileRecoveryEnrollmentOutcome(BaseModel):
+    """Non-secret result of one completed enrolment or revocation."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    profile_id: ProfileId
+    enrolled: bool
+    changed: bool
+
+
+def profile_recovery_status(*, profile_id: UUID, root: Path | None = None) -> ProfileRecoveryStatus:
+    """Report whether ``profile_id`` has a recovery wrapper enrolled.
+
+    Reads only the committed capsule's layout; no secret is required and no
+    key material is touched.
+    """
+    material = load_profile_custody_password_material(profile_id, root=effective_storage_root(root))
+    return ProfileRecoveryStatus(
+        profile_id=str(profile_id),
+        enrolled=profile_custody_recovery_envelope_path(material.capsule_path).exists(),
+    )
+
+
+def enroll_profile_recovery(
+    *,
+    profile_id: UUID,
+    current_passphrase: str,
+    recovery_handover: Callable[[ProfileRecoveryEnrollment], str],
+    root: Path | None = None,
+) -> ProfileRecoveryEnrollmentOutcome:
+    """Mint a recovery code for a committed profile and install its wrapper.
+
+    The current passphrase is the authorisation: a second door onto the
+    records may only be opened by someone who already holds the first. The
+    code is delivered through ``recovery_handover`` and nowhere else, and the
+    callback must return the exact code it received as possession proof. The
+    wrapper is installed only after that proof matches, so an operator who
+    could not copy the code down is left exactly where they started rather
+    than enrolled under a secret nobody holds.
+
+    Args:
+        profile_id: The committed profile to enrol.
+        current_passphrase: Proof of the existing credential. Never logged.
+        recovery_handover: The one channel the code reaches the operator
+            through. It is invoked once, before anything is written, and the
+            key is wiped by the time this returns. Raising from the callback
+            aborts the enrolment.
+        root: Storage root override; the effective root when omitted.
+
+    Raises:
+        ProfileRecoveryError: When the profile is already enrolled, the
+            passphrase does not open the committed envelope, or the returned
+            proof differs from the minted code.
+    """
+    storage_root = effective_storage_root(root)
+    with profile_custody_transaction_lock(storage_root, profile_id):
+        material = load_profile_custody_password_material(profile_id, root=storage_root)
+        if profile_custody_recovery_envelope_path(material.capsule_path).exists():
+            raise ProfileRecoveryError(
+                translated_message="application.user_profile.errors.recovery_already_enrolled",
+            )
+        unlock = _unlock_with_passphrase(
+            material,
+            passphrase=current_passphrase,
+            operation=ProfilePasswordProofOperation.RECOVERY_ENROLL,
+        )
+        minted = create_profile_recovery_enrollment_material(
+            profile_id=profile_id,
+            dek=unlock.dek,
+            dek_epoch=material.envelope.dek_epoch,
+            salt=token_bytes(default_profile_record_crypto_port().passphrase_kdf_policy().salt_bytes),
+        )
+        enrollment = ProfileRecoveryEnrollment(envelope=minted.envelope, recovery_key=minted.recovery_key)
+        with enrollment.recovery_key:
+            supplied_proof = recovery_handover(enrollment)
+            try:
+                if not compare_digest(supplied_proof, enrollment.recovery_key.code):
+                    raise ProfileRecoveryError(
+                        translated_message="application.user_profile.errors.recovery_possession_mismatch",
+                    )
+            finally:
+                del supplied_proof
+        install_profile_recovery_envelope(profile_id=profile_id, envelope=enrollment.envelope, root=storage_root)
+    return ProfileRecoveryEnrollmentOutcome(profile_id=str(profile_id), enrolled=True, changed=True)
+
+
+def revoke_profile_recovery(
+    *,
+    profile_id: UUID,
+    current_passphrase: str,
+    root: Path | None = None,
+) -> ProfileRecoveryEnrollmentOutcome:
+    """Remove the enrolled recovery wrapper after proving the current passphrase.
+
+    Idempotent: a profile that is not enrolled is reported unchanged rather
+    than refused, because the operator's intent ("no recovery on this
+    profile") already holds. The passphrase is still proved first, so the
+    unchanged answer never discloses enrolment state to someone without it.
+    """
+    storage_root = effective_storage_root(root)
+    with profile_custody_transaction_lock(storage_root, profile_id):
+        material = load_profile_custody_password_material(profile_id, root=storage_root)
+        _unlock_with_passphrase(
+            material,
+            passphrase=current_passphrase,
+            operation=ProfilePasswordProofOperation.RECOVERY_REVOKE,
+        )
+        if not profile_custody_recovery_envelope_path(material.capsule_path).exists():
+            return ProfileRecoveryEnrollmentOutcome(profile_id=str(profile_id), enrolled=False, changed=False)
+        recovery = load_profile_custody_recovery_material(profile_id, root=storage_root)
+        remove_profile_recovery_envelope(profile_id=profile_id, current=recovery.recovery_envelope, root=storage_root)
+    return ProfileRecoveryEnrollmentOutcome(profile_id=str(profile_id), enrolled=False, changed=True)
+
+
+def reset_profile_passphrase_with_recovery(
+    *,
+    profile_id: UUID,
+    recovery_code: str,
+    new_passphrase: str,
+    new_passphrase_confirmation: str,
+    root: Path | None = None,
+    profile_decode_context: ProfileDecodeContext,
+    expected_envelope_digest: str | None = None,
+    before_replace: Callable[[], None] | None = None,
+) -> ProfilePassphraseResetOutcome:
+    """Replace a forgotten passphrase by proving the enrolled recovery code.
+
+    The recovery code unwraps the DEK from the enrolled wrapper, the result
+    is proved against the capsule's own sentinel, and only then is the
+    password envelope re-minted under ``new_passphrase`` through the same
+    primitive an ordinary rotation uses. The DEK epoch is preserved, so the
+    recovery wrapper stays enrolled and the same code keeps working.
+
+    Fails closed at every step before the swap: a profile without recovery,
+    a wrong code, a new passphrase outside the profile-password contract, or
+    a mismatched confirmation all refuse with the committed envelope untouched.
+
+    The code is a credential proof like the passphrase, so it answers to the
+    same per-profile failed-attempt backoff login uses: a throttled profile is
+    refused before any key derivation runs, a wrong code counts as a failed
+    attempt, and a proven code clears the backoff exactly as a successful
+    login does. A second, reset-only counter would let a guesser alternate
+    doors to double their attempts.
+
+    Raises:
+        ProfileLoginThrottledError: When the profile's failed-attempt backoff
+            is in force.
+        ProfileRecoveryError: When recovery is not enrolled, the confirmation
+            does not match, the new passphrase is invalid, or the code does
+            not open the enrolled wrapper.
+    """
+    if new_passphrase != new_passphrase_confirmation:
+        raise ProfileRecoveryError(
+            translated_message="application.user_profile.errors.passphrase_confirmation_mismatch",
+        )
+    password_refusal = prospective_profile_password_refusal(assess_profile_password(new_passphrase))
+    if password_refusal is not None:
+        raise ProfileRecoveryError(
+            translated_message=password_refusal.translated_message,
+            context=dict(password_refusal.context),
+            password_refusal=password_refusal,
+        )
+
+    storage_root = effective_storage_root(root)
+    bucket_id = str(profile_id)
+    sessions = profile_login_session_port()
+    with profile_custody_transaction_lock(storage_root, profile_id):
+        # Evaluated under the custody lock so concurrent resets for this
+        # profile queue behind one another rather than all passing the gate
+        # before any of them has recorded its failure.
+        instant = _now()
+        evaluation = sessions.evaluate_throttle(storage_root=storage_root, bucket_id=bucket_id, now=instant)
+        if evaluation.throttled:
+            raise ProfileLoginThrottledError(remaining_seconds=evaluation.remaining_seconds)
+        password = load_profile_custody_password_material(profile_id, root=storage_root)
+        if expected_envelope_digest is not None and password.envelope.self_digest != expected_envelope_digest:
+            # A prepared bootstrap invocation can replace this exact predecessor
+            # once. A replay must not apply the still-valid recovery code again.
+            raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
+        if not profile_custody_recovery_envelope_path(password.capsule_path).exists():
+            raise ProfileRecoveryError(
+                translated_message="application.user_profile.errors.recovery_not_enrolled",
+            )
+        recovery = load_profile_custody_recovery_material(profile_id, root=storage_root)
+        try:
+            unlock = unlock_profile_custody_recovery(recovery, recovery_secret=recovery_code)
+        except CadrumoError as exc:
+            refusal = map_profile_authentication_proof_failure(
+                exc,
+                operation=ProfilePasswordProofOperation.RECOVERY_RESET,
+            )
+            if refusal is None:
+                raise
+            sessions.record_login_failure(storage_root=storage_root, bucket_id=bucket_id, now=instant)
+            raise ProfileRecoveryError(
+                translated_message="application.user_profile.errors.recovery_code_rejected",
+            ) from refusal
+        # Cleared on the proof itself, as login clears it on authentication
+        # and before anything is published: the backoff counts failed proofs,
+        # and this one succeeded whatever happens to the write that follows.
+        sessions.reset_throttle(storage_root=storage_root, bucket_id=bucket_id)
+        current = recovery.password_envelope
+        if before_replace is not None:
+            # Runtime composition retires live human authority only after proof
+            # succeeds, while the exact predecessor remains transaction-locked.
+            before_replace()
+        rotated = rewrap_profile_passphrase_under_lock(
+            profile_id=profile_id,
+            dek=unlock.dek,
+            current=current,
+            new_passphrase=new_passphrase,
+            proof=ProfilePassphraseReplacementProof.RECOVERY_CODE,
+            storage_root=storage_root,
+            profile_decode_context=profile_decode_context,
+        )
+    return ProfilePassphraseResetOutcome(
+        profile_id=str(profile_id),
+        password_generation=rotated.password_generation,
+        dek_epoch_preserved=rotated.dek_epoch == current.dek_epoch,
+        recovery_enrollment_retained=profile_custody_recovery_envelope_path(recovery.capsule_path).exists(),
+    )
+
+
+def _unlock_with_passphrase(
+    material: ProfileCustodyPasswordMaterialPort,
+    *,
+    passphrase: str,
+    operation: ProfilePasswordProofOperation,
+) -> ProfileCustodyUnlockPort:
+    """Prove the current passphrase, or refuse without disclosing why."""
+    try:
+        return unlock_profile_custody_password(material, password=passphrase)
+    except CadrumoError as exc:
+        refusal = map_profile_authentication_proof_failure(exc, operation=operation)
+        if refusal is None:
+            raise
+        raise ProfileRecoveryError(
+            translated_message="application.user_profile.errors.passphrase_current_rejected",
+        ) from refusal
+
+
+__all__ = [
+    "ProfileRecoveryEnrollment",
+    "ProfileRecoveryEnrollmentOutcome",
+    "ProfileRecoveryError",
+    "ProfileRecoveryStatus",
+    "enroll_profile_recovery",
+    "profile_recovery_status",
+    "reset_profile_passphrase_with_recovery",
+    "revoke_profile_recovery",
+]

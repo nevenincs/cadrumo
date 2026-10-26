@@ -1,0 +1,400 @@
+"""Development-owned per-invocation pytest logs under ``.logs``."""
+
+from __future__ import annotations
+
+import atexit
+import json
+import os
+import re
+import sys
+import tempfile
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import IO, Any, Final
+from uuid import uuid4
+
+import pytest
+
+from cadrumo.core.storage_environment import resolve_storage_path
+
+from .paths import (
+    ScratchAllocation,
+    ScratchOwnershipError,
+    allocate_scratch_directory,
+    remove_scratch_directory,
+    scratch_base,
+    scratch_environment,
+)
+from .reaper import sweep_scratch_directories
+
+_STATE_KEY = pytest.StashKey["RunLog"]()
+_SILENT_COLLECTION_KEY = pytest.StashKey[bool]()
+_COLLECTION_SUMMARY_KEY = pytest.StashKey[str]()
+_collection_errors = 0
+_ACTIVE: RunLog | None = None
+_INHERITED_RUN = False
+"""Whether this process joined a run another process started, rather than minting one."""
+_RUN_SCRATCH_ENV: Final = "CADRUMO_TEST_RUN_SCRATCH"
+
+
+def _product_log_directory(root: Path) -> Path:
+    """Preserve an explicit product log override and isolate the default per process."""
+    configured = os.environ.get("CADRUMO_LOG_DIR", "").strip()
+    if configured:
+        candidate = resolve_storage_path(configured)
+        run_default = (root / "artifacts" / "product-logs").resolve()
+        try:
+            candidate.relative_to(run_default)
+        except ValueError:
+            return candidate
+    return root / "artifacts" / "product-logs" / f"pid-{os.getpid()}"
+
+
+class RunLog:
+    """Live, flush-on-write record for one pytest controller invocation."""
+
+    def __init__(self, repository: Path, *, scratch: Path | None = None) -> None:
+        """Mint the run directory and take ``scratch``, or allocate one, as the run's scratch.
+
+        Dead-owner scratch beside it is swept first. The run's own scratch is
+        released when the process exits, whatever the run's outcome. Exit is the one point after which nothing
+        of this run still writes there: xdist tears its workers down when the
+        session finishes, and the run controller mints this log before the
+        conftests register the collection storage root's exit cleanup, so that
+        cleanup has already run -- closing the product log file it holds open
+        inside the scratch -- when this release does.
+        """
+        now = datetime.now(UTC)
+        repository = repository.resolve()
+        marker = f"{now:%Y%m%dT%H%M%S.%fZ}-pytest-{os.getpid()}-{uuid4().hex[:8]}"
+        self.root = repository / ".logs" / "test-runs" / f"{now:%Y-%m-%d}" / marker
+        self.root.mkdir(parents=True, exist_ok=False)
+        self.artifacts = self.root / "artifacts"
+        self.cache = self.root / "cache"
+        for path in (self.artifacts, self.cache):
+            path.mkdir()
+        sweep_scratch_directories(scratch_base())
+        self.scratch = allocate_scratch_directory() if scratch is None else scratch
+        self.scratch_allocation = ScratchAllocation.record(self.scratch)
+        atexit.register(self.release_scratch)
+        self.path = self.root / "run.log"
+        self.metadata_path = self.root / "run.json"
+        self.started = now
+        self.exit_status: int | None = None
+        self.stream: IO[str] = self.path.open("x", encoding="utf-8", newline="\n")
+        _apply_run_environment(self.root, self.scratch)
+        product_logs = _product_log_directory(self.root)
+        product_logs.mkdir(parents=True, exist_ok=True)
+        os.environ["CADRUMO_LOG_DIR"] = str(product_logs)
+        os.environ["CADRUMO_TEST_RUN_ROOT"] = str(self.root)
+        self.write(f"START {now.isoformat()} pid={os.getpid()}")
+        self.write(f"COMMAND {' '.join(sys.argv)}")
+
+    def write(self, text: str) -> None:
+        """Write and flush a record so failures survive a later hung lane."""
+        self.stream.write(text.rstrip() + "\n")
+        self.stream.flush()
+
+    def finish(self, exitstatus: int | pytest.ExitCode) -> None:
+        """Close the log and atomically leave machine-readable run metadata."""
+        finished = datetime.now(UTC)
+        self.exit_status = int(exitstatus)
+        self.write(f"FINISH {finished.isoformat()} exit={int(exitstatus)}")
+        self.stream.close()
+        payload: dict[str, Any] = {
+            "artifacts": str(self.artifacts),
+            "cache": str(self.cache),
+            "command": sys.argv,
+            "exit_status": int(exitstatus),
+            "finished_at": finished.isoformat(),
+            "log": str(self.path),
+            "run_id": self.root.name,
+            "scratch": str(self.scratch),
+            "started_at": self.started.isoformat(),
+        }
+        self.metadata_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8", newline="\n")
+
+    def release_scratch(self) -> str:
+        """Remove this run's scratch whatever its exit status, and record the outcome in the run log.
+
+        Failure detail belongs in the run log, which lives outside the scratch;
+        keeping a failed run's scratch let concurrent sessions fill the disk.
+        Nothing here can change the run's exit status: a refused or incomplete
+        removal is written to the log, never raised, and left for the next
+        run's start-of-run sweep.
+
+        Returns:
+            The line recorded in the run log.
+        """
+        scratch = self.scratch_allocation.path
+        try:
+            remove_scratch_directory(self.scratch_allocation)
+        except (ScratchOwnershipError, OSError) as error:
+            line = f"SCRATCH NOT REMOVED {scratch}: {type(error).__name__}: {error}"
+        else:
+            line = f"SCRATCH REMOVED {scratch}"
+        try:
+            with self.path.open("a", encoding="utf-8", newline="\n") as stream:
+                stream.write(line + "\n")
+        except OSError as error:
+            print(f"test run log {self.path} could not record: {line} ({error})", file=sys.stderr, flush=True)
+        return line
+
+
+def prepare_environment(repository: Path) -> None:
+    """Mint the controller run before any production import can bind logging."""
+    global _ACTIVE
+    inherited_root = os.environ.get("CADRUMO_TEST_RUN_ROOT")
+    if inherited_root is not None and inherited_root:
+        root = Path(inherited_root).resolve()
+        global _INHERITED_RUN
+        _INHERITED_RUN = True
+        _apply_run_environment(root, Path(os.environ[_RUN_SCRATCH_ENV]))
+        product_logs = _product_log_directory(root)
+        product_logs.mkdir(parents=True, exist_ok=True)
+        os.environ["CADRUMO_LOG_DIR"] = str(product_logs)
+        return
+    _ACTIVE = RunLog(repository)
+
+
+def _apply_run_environment(root: Path, scratch: Path) -> None:
+    """Confine generic temporary, coverage, and pytest scratch paths.
+
+    Logs, artifacts and pytest's own cache live in the run directory; temporary
+    files live in the run's short scratch, which the run directory is too deep
+    to host. Machine-managed tool cache and home variables remain inherited
+    unchanged from the invoking environment.
+    """
+    artifacts = root / "artifacts"
+    cache = root / "cache"
+    for path in (artifacts, cache):
+        path.mkdir(parents=True, exist_ok=True)
+    os.environ["CADRUMO_TEST_RUN_ROOT"] = str(root)
+    os.environ[_RUN_SCRATCH_ENV] = str(scratch)
+    os.environ["COVERAGE_FILE"] = str(artifacts / ".coverage")
+    os.environ["PYTEST_DEBUG_TEMPROOT"] = str(scratch)
+    os.environ.update(scratch_environment(scratch))
+    tempfile.tempdir = str(scratch)
+
+
+def _worker_id(config: pytest.Config) -> str | None:
+    """Return this process's xdist worker id, or ``None`` on the controller."""
+    workerinput = getattr(config, "workerinput", None)
+    if workerinput is None:
+        return None
+    identity = workerinput.get("workerid")
+    return str(identity) if identity else None
+
+
+def _confine_pytest_storage(config: pytest.Config, root: Path, scratch: Path) -> None:
+    """Rebind pytest objects created by its own early ``pytest_configure`` hooks.
+
+    The basetemp is per-process, never shared. ``TempPathFactory.getbasetemp``
+    treats an explicitly given basetemp as its own to own: it calls ``rm_rf`` on
+    the path and then ``mkdir`` with no ``exist_ok``. Handing every xdist worker
+    the same directory therefore did worse than collide -- whichever worker
+    started second could delete the live ``tmp_path`` trees of one already
+    running, and the loser of the ``mkdir`` race died at fixture setup with
+    ``FileExistsError``. Suffixing the worker id keeps the run's temporary files
+    confined to the run's scratch while giving each process a directory no other
+    process will clear.
+    """
+    cache = root / "cache" / "pytest"
+    basetemp = scratch / "pytest"
+    worker = _worker_id(config)
+    if worker is not None:
+        basetemp = basetemp / worker
+    cache.mkdir(parents=True, exist_ok=True)
+    basetemp.parent.mkdir(parents=True, exist_ok=True)
+    config.option.basetemp = str(basetemp)
+    pytest_cache = getattr(config, "cache", None)
+    if pytest_cache is not None:
+        pytest_cache._cachedir = cache
+    temp_factory = getattr(config, "_tmp_path_factory", None)
+    if temp_factory is not None:
+        temp_factory._given_basetemp = basetemp
+
+
+def _announce(config: pytest.Config, message: str) -> None:
+    """Write one notice to the terminal, falling back to stdout when headless."""
+    terminal = config.pluginmanager.getplugin("terminalreporter")
+    if terminal is not None:
+        terminal.write_line(message, yellow=True)
+    else:
+        print(message, flush=True)
+
+
+def _redirect_collection_output(config: pytest.Config, run_log: RunLog) -> bool:
+    """Send the collect-only listing to the persistent run transcript.
+
+    The listing is the bulk of a collect-only run and belongs with the other
+    evidence on disk; the terminal keeps the log location and a one-line
+    summary so a reader with no context still knows what happened and where
+    to look.
+    """
+    if not config.option.collectonly:
+        return False
+    terminal = config.pluginmanager.getplugin("terminalreporter")
+    if terminal is not None:
+        terminal._tw._file = run_log.stream
+    return True
+
+
+def configure(config: pytest.Config) -> None:
+    """Create and announce the controller's unique run directory."""
+    root = Path(os.environ["CADRUMO_TEST_RUN_ROOT"]).resolve()
+    scratch = Path(os.environ[_RUN_SCRATCH_ENV])
+    own_scratch: Path | None = None
+    if _INHERITED_RUN and _worker_id(config) is None:
+        # A pytest that a test launched joins the run but is a controller of its
+        # own. In the run's scratch it would take the run controller's
+        # ``scratch/pytest`` basetemp -- which pytest empties at start, deleting
+        # every live worker's tmp_path -- and its own workers' ids would match
+        # the run's. It gets its own scratch before any worker of its starts,
+        # and its workers inherit that through the environment.
+        scratch = own_scratch = allocate_scratch_directory()
+        _apply_run_environment(root, scratch)
+    _confine_pytest_storage(config, root, scratch)
+    if hasattr(config, "workerinput"):
+        return
+    global _ACTIVE
+    run_log = _ACTIVE
+    if run_log is None:
+        # The scratch allocated above already holds this controller's basetemp;
+        # the run log takes it rather than minting a second one beside it.
+        from .paths import test_log_root
+
+        run_log = RunLog(test_log_root(), scratch=own_scratch)
+        _ACTIVE = run_log
+    config.stash[_STATE_KEY] = run_log
+    silent_collection = _redirect_collection_output(config, run_log)
+    config.stash[_SILENT_COLLECTION_KEY] = silent_collection
+    notice = f"test run log: {run_log.path} (cache={root / 'cache'}, scratch={scratch})"
+    if silent_collection:
+        print(notice, flush=True)
+    else:
+        _announce(config, notice)
+
+
+def log_start(nodeid: str) -> None:
+    """Record a test identity before its body starts."""
+    if _ACTIVE is not None:
+        _ACTIVE.write(f"RUN {nodeid}")
+
+
+def log_report(report: pytest.TestReport) -> None:
+    """Record every terminal phase and flush failure detail immediately.
+
+    A test skipped at setup gets no call report, so its setup skip is its only
+    verdict. Without it the transcript shows a ``RUN`` line that never ends,
+    which reads exactly like a hung test.
+    """
+    if _ACTIVE is None:
+        return
+    if report.when == "call" or report.failed or report.skipped:
+        _ACTIVE.write(f"{report.outcome.upper()} {report.nodeid} phase={report.when} duration={report.duration:.6f}s")
+    if report.skipped and isinstance(report.longrepr, tuple):
+        _ACTIVE.write(str(report.longrepr[2]))
+    if report.failed:
+        _ACTIVE.write(str(report.longrepr))
+        if report.capstdout:
+            _ACTIVE.write("CAPTURED STDOUT\n" + report.capstdout)
+        if report.capstderr:
+            _ACTIVE.write("CAPTURED STDERR\n" + report.capstderr)
+
+
+def log_collection_report(report: pytest.CollectReport) -> None:
+    """Persist collection failures before test execution can begin."""
+    if not report.failed:
+        return
+    global _collection_errors
+    _collection_errors += 1
+    if _ACTIVE is not None:
+        _ACTIVE.write(f"COLLECTION FAILED {report.nodeid}\n{report.longrepr}")
+
+
+def log_internal_error(excrepr: object) -> None:
+    """Persist pytest's own traceback when execution aborts with exit code 3."""
+    if _ACTIVE is not None:
+        _ACTIVE.write(f"INTERNALERROR\n{excrepr}")
+
+
+def finish(config: pytest.Config, exitstatus: int | pytest.ExitCode) -> None:
+    """Finalize controller metadata."""
+    global _ACTIVE
+    run_log = config.stash.get(_STATE_KEY, None)
+    if run_log is not None:
+        if config.stash.get(_SILENT_COLLECTION_KEY, False):
+            run_log.exit_status = int(exitstatus)
+            session = config.pluginmanager.get_plugin("session")
+            collected = getattr(session, "testscollected", 0)
+            config.stash[_COLLECTION_SUMMARY_KEY] = (
+                f"collected {collected} test(s), {_collection_errors} collection error(s)"
+            )
+            return
+        run_log.finish(exitstatus)
+        _ACTIVE = None
+
+
+def restate(config: pytest.Config) -> None:
+    """Repeat the run-log location as the session's last line.
+
+    The opening notice scrolls out of reach on any run long enough to need it,
+    and a caller who pipes the tail of a run -- the usual shape for a lane that
+    takes minutes -- keeps only the end, which is precisely the part that did
+    not say where the evidence went.
+
+    This runs at unconfigure rather than session finish because pytest's own
+    terminal reporter implements ``pytest_sessionfinish`` as a hookwrapper and
+    prints the failure list and count line *after* every plain implementation
+    yields. No ordinary session hook, ``trylast`` included, can land beneath
+    that; unconfigure can. It prints rather than writing through the terminal
+    reporter for the same reason: by now the reporter has said its last word.
+    """
+    run_log = config.stash.get(_STATE_KEY, None)
+    if run_log is None:
+        return
+    if config.stash.get(_SILENT_COLLECTION_KEY, False):
+        if run_log.exit_status is None:
+            raise RuntimeError("collect-only run reached unconfigure without an exit status")
+        run_log.finish(run_log.exit_status)
+        global _ACTIVE
+        _ACTIVE = None
+        summary = config.stash.get(_COLLECTION_SUMMARY_KEY, "collection summary unavailable")
+        print(
+            f"collect-only: {summary}; listing in {run_log.path} (exit={run_log.exit_status})",
+            flush=True,
+        )
+        return
+    print(
+        f"test run log: {run_log.path} (exit={run_log.exit_status}, metadata={run_log.metadata_path})",
+        flush=True,
+    )
+
+
+#: The collect-only summary this module prints, read back by the gates that
+#: boot a nested collection. The writer is
+#: :func:`pytest_unconfigure` above; keeping the reader beside it is what stops
+#: a caller from re-deriving the spelling and silently reading nothing.
+_COLLECT_ONLY_LISTING: Final = re.compile(r"^collect-only: (?P<summary>.*); listing in (?P<path>.+?) \(exit=", re.M)
+
+
+def collect_only_listing(stdout: str) -> tuple[Path | None, str | None]:
+    """Return the listing file and summary a nested collect-only run reported.
+
+    A collect-only run writes its node ids to the run log rather than to
+    stdout, and prints one line naming the file. A caller that parses stdout
+    alone therefore sees a collection with no tests in it, which is
+    indistinguishable from a selection that genuinely matched nothing.
+
+    Args:
+        stdout: The captured standard output of the nested run.
+
+    Returns:
+        The listing path and the summary text, each ``None`` when the run
+        printed no collect-only line.
+    """
+    match = _COLLECT_ONLY_LISTING.search(stdout)
+    if match is None:
+        return None, None
+    return Path(str(match.group("path")).strip()), str(match.group("summary")).strip()

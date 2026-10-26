@@ -1,0 +1,13 @@
+desktop:
+  startup:
+    environment: Preparando los archivos y la configuración…
+    environment_step: Preparar la aplicación
+    failed: No se ha podido iniciar Cadrumo
+    failure: No se ha podido completar el inicio.
+    interrupted: Se ha interrumpido el inicio.
+    progress: Progreso de inicio
+    runtime: Iniciando y comprobando el servicio local…
+    runtime_step: Iniciar el servicio local
+    starting: Iniciando Cadrumo…
+    workspace: Abriendo el espacio de trabajo…
+    workspace_step: Abrir el espacio de trabajo

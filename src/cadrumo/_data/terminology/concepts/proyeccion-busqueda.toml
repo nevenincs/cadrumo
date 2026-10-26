@@ -1,0 +1,53 @@
+# Terminology Handbook concept fragment.
+# Compiled by the strict loader in `dev.docs.terminology_handbook` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `dev.docs.terminology_handbook` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
+
+[concept]
+concept_id = "proyeccion-busqueda"
+domain = "concepto"
+lifecycle = "deprecated"
+broader = ["manual-terminologia"]
+related = ["clases-registro-busqueda", "mapa-relevancia"]
+created_at = 2026-06-12
+updated_at = 2026-07-22
+
+[language.es]
+short_description = "La compilacion que convierte conceptos, casillas, CLI y paginas en registros de busqueda."
+definition = "Transformacion build-time que toma los conceptos del Terminology Handbook, las casillas proyectadas desde el registro, las superficies CLI y las paginas construidas, y las convierte en registros tipados para la busqueda offline. La proyeccion une las clases de resultado antes de inyectarlas en Pagefind."
+scope_note = "Las casillas concretas se proyectan desde el registro; no se curan como fragmentos del Handbook."
+
+[[language.es.term]]
+label = "proyeccion de busqueda"
+term_status = "preferred"
+part_of_speech = "noun"
+
+[[language.es.term]]
+label = "projection"
+term_status = "admitted"
+part_of_speech = "noun"
+
+[language.en]
+short_description = "The compiler that turns concepts, casillas, CLI surfaces, and pages into search records."
+definition = "A build-time transformation that takes Terminology Handbook concepts, registry-projected boxes, CLI surfaces, and built pages and converts them into typed records for offline search. The projection joins result classes before injecting them into Pagefind."
+scope_note = "Concrete boxes are projected from the registry; they are not curated as Handbook fragments."
+
+
+[[language.en.term]]
+label = "search projection"
+term_status = "preferred"
+part_of_speech = "noun"
+
+[language.ca]
+short_description = "La compilacio que converteix conceptes, caselles, CLI i pagines en registres de cerca."
+definition = "Transformació en temps de compilació que pren els conceptes del Terminology Handbook, les caselles projectades del registre, les superfícies de la CLI i les pàgines construïdes, i les converteix en registres tipats per a la cerca fora de línia. La projecció uneix les classes de resultats abans d'injectar-les a Pagefind."
+scope_note = "Les caselles concretes es projecten des del registre; no es curen com a fragments del Handbook."
+
+
+[language.hu]
+short_description = "A fordító, amely fogalmakat, mezőket, CLI-felületeket és oldalakat keresési rekordokká alakít."
+definition = "Fordítási időben végzett átalakítás, amely a Terminology Handbook fogalmait, a regiszterből vetített mezőket, a CLI-felületeket és a létrehozott oldalakat offline kereséshez használható típusos rekordokká alakítja. A vetítés a találati kategóriákat a Pagefindba való beillesztés előtt egyesíti."
+scope_note = "A konkrét mezőket a regiszterből vetítjük ki, nem a Handbook-részletekben gondozzuk."
+

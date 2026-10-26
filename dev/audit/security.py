@@ -1,0 +1,458 @@
+#!/usr/bin/env python
+"""The single canonical semgrep runner: invoke it, parse it, classify it honestly.
+
+Mirrors ``dev.audit.duplication``'s "the runner owns the whole measurement"
+shape: source selection, command construction, execution, timeout handling,
+parsing, and availability classification all live here, and there is
+deliberately no second semgrep invocation anywhere in the tree -- both
+``just audit-code-security`` and ``dev.audit.advisory``'s security dimension call
+:func:`run_security_scan`.
+
+semgrep runs through ``uvx`` (a pinned, ephemeral, network-touching tool
+resolution, the same risk profile as jscpd/npx), so this module carries the
+same three-state discipline ``duplication.py`` established: a scan that could
+not run, or ran but proves nothing, is never reported as clean.
+
+Findings are parsed from ``--json`` output rather than the default text
+report. The text report renders each match's surrounding source lines, which
+is what turns a few hundred findings into tens of thousands of terminal
+lines on this tree (measured: 365 findings, 55,378 lines) -- several bundled
+corpus/HTML fixtures carry single "lines" thousands of characters wide that
+wrap across dozens of terminal rows. The JSON payload carries the same
+findings without the rendered context, and the raw payload itself is still
+available for a deep dive via the persisted ``security-findings.json`` that
+:mod:`dev.audit.advisory` writes.
+
+See Also:
+    :mod:`dev.audit.duplication`
+        The sibling runner this module's shape is copied from.
+    :func:`run_security_scan`
+        The one entry point both ``just audit-code-security`` and
+        ``dev.audit.advisory`` call.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import shutil
+import subprocess
+import sys
+from collections.abc import Callable, Sequence
+from dataclasses import dataclass
+from enum import StrEnum
+from pathlib import Path
+from typing import Final, TypeIs
+
+from dev._paths import REPO_ROOT, UTF_8
+from dev.exit_codes import ADVISORY_BROKEN, OK
+from dev.first_party_source import SOURCE_PACKAGES
+from dev.packaging.command_execution import run_command
+
+_UTF_8: Final[str] = UTF_8
+_FINDING_CAP: Final[int] = 40
+_SEMGREP_SPEC: Final[str] = "semgrep==1.168.0"
+# The scan over every src/ package took 970s on an otherwise idle Windows
+# workstation (3887 files, `--config auto`), so 600s made the recipe always
+# unavailable. A cut-off scan is reported unavailable, never clean.
+_SEMGREP_TIMEOUT_SECONDS: Final[float] = 1800.0
+#: Every package under ``src/``; ``.semgrepignore`` removes their test surface and bundled data.
+_SOURCE_ROOTS: Final[tuple[Path, ...]] = tuple(Path(package) for package in SOURCE_PACKAGES)
+
+#: `pyproject.toml` requires Python `>=3.13` with no upper bound, so semgrep's
+#: stock Python 3.6/3.7 forward-compatibility rules (flagging
+#: `importlib.resources`, and the `errors`/`encoding` kwargs on `Popen`) can
+#: never fire on a real regression here -- every one of them is a false
+#: positive by construction, not a judgement call per finding.
+_PYTHON_LEGACY_COMPATIBILITY_RULE_IDS: Final[tuple[str, ...]] = (
+    "python.lang.compatibility.python37.python37-compatibility-importlib2",
+    "python.lang.compatibility.python36.python36-compatibility-Popen1",
+    "python.lang.compatibility.python36.python36-compatibility-Popen2",
+)
+
+# semgrep's real severity axis (`extra.severity` in --json output), worst first.
+_SEVERITY_ORDER: Final[tuple[str, ...]] = ("ERROR", "WARNING", "INFO")
+
+
+def _semgrep_parse_errors(payload: dict[str, object]) -> tuple[str, ...] | SecurityResult:
+    """Semgrep parse errors."""
+    raw_errors = payload.get("errors", [])
+    if not isinstance(raw_errors, list) or not all(isinstance(error, dict) for error in raw_errors):
+        return SecurityResult.unavailable("semgrep JSON errors field was not an object list")
+    parse_errors = tuple(
+        f"{err.get('path', '?')}: {err.get('message', err.get('type', 'unknown error'))}" for err in raw_errors
+    )
+    return parse_errors
+
+
+def _semgrep_scanned_files(payload: dict[str, object]) -> int | SecurityResult:
+    """Semgrep scanned files."""
+    paths = payload.get("paths", {})
+    if not isinstance(paths, dict):
+        return SecurityResult.unavailable("semgrep JSON paths field was not an object")
+    scanned = paths.get("scanned", [])
+    if not isinstance(scanned, list) or not all(isinstance(path, str) for path in scanned):
+        return SecurityResult.unavailable("semgrep JSON paths.scanned field was not a string list")
+    files_scanned = len(scanned)
+    if files_scanned <= 0:
+        return SecurityResult.unavailable("semgrep analysed 0 files, so the scan proves nothing about security")
+    return files_scanned
+
+
+class SecurityOutcome(StrEnum):
+    """The three honest states a semgrep scan can land in."""
+
+    OBSERVED_ZERO = "observed_zero"
+    FINDINGS = "findings"
+    UNAVAILABLE = "unavailable"
+
+
+@dataclass(frozen=True)
+class SecurityFinding:
+    """One semgrep result: a rule, a location, a severity, and its message."""
+
+    check_id: str
+    path: str
+    line: int
+    end_line: int
+    severity: str
+    message: str
+
+
+@dataclass(frozen=True)
+class SecurityResult:
+    """A security scan's typed outcome.
+
+    Construct through :meth:`observed_zero`, :meth:`from_findings`, or
+    :meth:`unavailable` rather than directly, so the invariants binding each
+    outcome to its evidence hold by construction.
+    """
+
+    outcome: SecurityOutcome
+    files_scanned: int = 0
+    findings: tuple[SecurityFinding, ...] = ()
+    parse_errors: tuple[str, ...] = ()
+    reason: str = ""
+    raw_json: str = ""
+
+    @classmethod
+    def observed_zero(cls, files_scanned: int, parse_errors: tuple[str, ...], raw_json: str) -> SecurityResult:
+        """A successful scan that inspected files and found no findings."""
+        if files_scanned <= 0:
+            msg = "observed_zero requires a scan that demonstrably inspected files"
+            raise ValueError(msg)
+        return cls(
+            outcome=SecurityOutcome.OBSERVED_ZERO,
+            files_scanned=files_scanned,
+            parse_errors=parse_errors,
+            raw_json=raw_json,
+        )
+
+    @classmethod
+    def from_findings(
+        cls,
+        *,
+        files_scanned: int,
+        findings: tuple[SecurityFinding, ...],
+        parse_errors: tuple[str, ...],
+        raw_json: str,
+    ) -> SecurityResult:
+        """A successful scan that found findings."""
+        if not findings:
+            msg = "from_findings requires at least one finding"
+            raise ValueError(msg)
+        return cls(
+            outcome=SecurityOutcome.FINDINGS,
+            files_scanned=files_scanned,
+            findings=findings,
+            parse_errors=parse_errors,
+            raw_json=raw_json,
+        )
+
+    @classmethod
+    def unavailable(cls, reason: str) -> SecurityResult:
+        """No security signal this cycle; ``reason`` says why."""
+        return cls(outcome=SecurityOutcome.UNAVAILABLE, reason=reason)
+
+    @property
+    def is_green(self) -> bool:
+        """Whether this result honestly earns a GREEN verdict.
+
+        Only a scan that demonstrably inspected files and found nothing
+        qualifies. An unavailable scan is never green.
+        """
+        return self.outcome is SecurityOutcome.OBSERVED_ZERO
+
+    @property
+    def count_by_severity(self) -> dict[str, int]:
+        """Finding counts keyed by semgrep's own ERROR/WARNING/INFO axis, worst first."""
+        counts: dict[str, int] = {}
+        for severity in _SEVERITY_ORDER:
+            count = sum(1 for f in self.findings if f.severity == severity)
+            if count:
+                counts[severity] = count
+        # Preserve any severity value semgrep introduces that this module
+        # does not yet enumerate, rather than silently dropping it.
+        for finding in self.findings:
+            if finding.severity not in counts and finding.severity not in _SEVERITY_ORDER:
+                counts[finding.severity] = counts.get(finding.severity, 0) + 1
+        return counts
+
+    def headline(self) -> str:
+        """One-line human summary of the outcome."""
+        if self.outcome is SecurityOutcome.UNAVAILABLE:
+            return f"security signal unavailable this cycle: {self.reason}"
+        error_note = f"; {len(self.parse_errors)} file(s) failed to parse" if self.parse_errors else ""
+        if self.outcome is SecurityOutcome.OBSERVED_ZERO:
+            return f"no findings across {self.files_scanned} scanned file(s){error_note}"
+        breakdown = ", ".join(f"{count} {sev}" for sev, count in self.count_by_severity.items())
+        return f"{len(self.findings)} finding(s) ({breakdown}) across {self.files_scanned} scanned file(s){error_note}"
+
+
+def semgrep_command(uvx: str, source_roots: Sequence[Path] = _SOURCE_ROOTS) -> list[str]:
+    r"""Build the one semgrep command line.
+
+    Each of ``source_roots`` is passed via :meth:`~pathlib.PurePath.as_posix` for the
+    same reason ``jscpd_command`` in ``duplication.py`` does: a Windows-native
+    ``src\cadrumo`` risks matching nothing under semgrep's own path handling.
+    """
+    command = [
+        uvx,
+        # Pin the scanner host independently of the application Python floor.
+        # uvx otherwise selected 3.15 before pywin32 had matching wheels.
+        "--python",
+        "3.13",
+        "--from",
+        _SEMGREP_SPEC,
+        "semgrep",
+        "scan",
+        "--quiet",
+        "--config",
+        "auto",
+    ]
+    for rule_id in _PYTHON_LEGACY_COMPATIBILITY_RULE_IDS:
+        command += ["--exclude-rule", rule_id]
+    command += ["--json", *(source_root.as_posix() for source_root in source_roots)]
+    return command
+
+
+def classify_semgrep_output(raw_stdout: str) -> SecurityResult:
+    """Classify semgrep's JSON stdout into the typed three-state result.
+
+    A run is only trusted when its JSON parses AND ``paths.scanned`` proves
+    files were actually inspected -- the same "files_analyzed" discipline
+    ``duplication.py`` applies to jscpd, so a scan that matched nothing can
+    never read as a clean pass.
+    """
+    try:
+        payload = json.loads(raw_stdout)
+    except json.JSONDecodeError as exc:
+        return SecurityResult.unavailable(f"semgrep produced no parseable JSON ({exc})")
+
+    if not isinstance(payload, dict):
+        return SecurityResult.unavailable("semgrep JSON root was not an object")
+
+    files_scanned = _semgrep_scanned_files(payload)
+    if isinstance(files_scanned, SecurityResult):
+        return files_scanned
+
+    parse_errors = _semgrep_parse_errors(payload)
+    if isinstance(parse_errors, SecurityResult):
+        return parse_errors
+
+    raw_results = payload.get("results", [])
+    if not isinstance(raw_results, list):
+        return SecurityResult.unavailable("semgrep JSON results field was not an object list")
+
+    findings: list[SecurityFinding] = []
+    for entry in raw_results:
+        finding = _semgrep_result_entry(entry)
+        if isinstance(finding, SecurityResult):
+            return finding
+        findings.append(finding)
+
+    if not findings:
+        return SecurityResult.observed_zero(files_scanned, parse_errors, raw_stdout)
+
+    findings.sort(key=lambda f: (_SEVERITY_ORDER.index(f.severity) if f.severity in _SEVERITY_ORDER else 99, f.path))
+    return SecurityResult.from_findings(
+        files_scanned=files_scanned,
+        findings=tuple(findings),
+        parse_errors=parse_errors,
+        raw_json=raw_stdout,
+    )
+
+
+def run_security_scan(
+    repo_root: Path,
+    *,
+    source_roots: Sequence[Path] = _SOURCE_ROOTS,
+    timeout: float = _SEMGREP_TIMEOUT_SECONDS,
+    which: Callable[[str], str | None] = shutil.which,
+) -> SecurityResult:
+    """Run semgrep over ``source_roots`` and classify the outcome.
+
+    This is the single entry point for every security consumer. ``uvx`` is
+    resolved through ``which`` -- an injected seam matching
+    ``run_duplication_scan``'s own contract, so a test may supply a resolver
+    returning ``None`` or pointing at a different real executable without
+    mutating global process state.
+    """
+    uvx = which("uvx")
+    if uvx is None:
+        return SecurityResult.unavailable("uvx was not found on PATH")
+
+    try:
+        completed = run_command(
+            semgrep_command(uvx, source_roots),
+            errors="replace",
+            cwd=repo_root,
+            timeout_seconds=timeout,
+            environment=_semgrep_environment(),
+        )
+    except subprocess.TimeoutExpired:
+        return SecurityResult.unavailable(f"semgrep exceeded its {timeout:g}s timeout")
+    except OSError as exc:
+        return SecurityResult.unavailable(f"semgrep could not be launched ({exc})")
+
+    if completed.returncode != 0:
+        detail = (completed.stderr or completed.stdout or "").strip().splitlines()
+        tail = detail[-1] if detail else "no diagnostic output"
+        return SecurityResult.unavailable(f"semgrep exited {completed.returncode}: {tail}")
+
+    return classify_semgrep_output(completed.stdout)
+
+
+def _semgrep_environment() -> dict[str, str]:
+    """Bind scanner state explicitly; Semgrep ignores XDG roots that do not exist."""
+    from cadrumo.core.storage_environment import prepare_temporary_directory, tool_storage_environment
+
+    environment = dict(os.environ)
+    environment.update(tool_storage_environment())
+    locations = {
+        "SEMGREP_SETTINGS_FILE": ("XDG_CONFIG_HOME", "semgrep/settings.yml"),
+        "SEMGREP_LOG_FILE": ("XDG_STATE_HOME", "semgrep/semgrep.log"),
+        "SEMGREP_VERSION_CACHE_PATH": ("XDG_CACHE_HOME", "semgrep/version"),
+    }
+    for variable, (category, member) in locations.items():
+        path = Path(environment[category]) / member
+        path.parent.mkdir(parents=True, exist_ok=True)
+        environment[variable] = str(path)
+    temporary = _semgrep_temporary_path(prepare_temporary_directory())
+    environment.update({"TEMP": temporary, "TMP": temporary, "TMPDIR": temporary})
+    return environment
+
+
+def _semgrep_temporary_path(path: Path) -> str:
+    """Keep the configured directory while avoiding OCaml's Windows socket path limit."""
+    if sys.platform != "win32":
+        return str(path)
+    import ctypes
+    from ctypes import wintypes
+
+    short_path = ctypes.WinDLL("kernel32", use_last_error=True).GetShortPathNameW
+    short_path.argtypes = [wintypes.LPCWSTR, wintypes.LPWSTR, wintypes.DWORD]
+    short_path.restype = wintypes.DWORD
+    buffer = ctypes.create_unicode_buffer(32768)
+    length = short_path(str(path), buffer, len(buffer))
+    # Some volumes disable short names. Keep the actual directory in that case;
+    # a scanner unable to use it must still report unavailable, never clean.
+    shortened: object = buffer.value
+    return shortened if isinstance(shortened, str) and 0 < length < len(buffer) else str(path)
+
+
+def render_console_report(result: SecurityResult, *, full: bool = False, cap: int = _FINDING_CAP) -> str:
+    """Render the operator-facing console report for `just audit-code-security`."""
+    out = [f"security: {result.headline()}"]
+    if result.parse_errors:
+        for err in result.parse_errors[: 5 if not full else len(result.parse_errors)]:
+            out.append(f"  [unparsed] {err}")
+    if result.outcome is not SecurityOutcome.FINDINGS:
+        return "\n".join(out)
+
+    shown = result.findings if full else result.findings[:cap]
+    for finding in shown:
+        out.append(f"  {finding.severity:<8} {finding.path}:{finding.line}  {finding.check_id}: {finding.message}")
+    if len(result.findings) > len(shown):
+        out.append(f"  ... {len(result.findings) - len(shown)} more (--full for all)")
+    return "\n".join(out)
+
+
+def main() -> int:
+    """Run the security scan and print the reduced console report.
+
+    Findings are advisory and return 0. An unavailable scan returns the shared
+    advisory-broken status so it cannot pose as a clean run.
+    """
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Run the security scan and print a reduced console report.")
+    parser.add_argument("--full", action="store_true", help="List every finding, uncapped.")
+    parser.add_argument("--json", action="store_true", help="Emit the result as JSON.")
+    args = parser.parse_args()
+
+    repo_root = REPO_ROOT
+    result = run_security_scan(repo_root)
+
+    if args.json:
+        print(
+            json.dumps(
+                {
+                    "outcome": result.outcome.value,
+                    "headline": result.headline(),
+                    "files_scanned": result.files_scanned,
+                    "count_by_severity": result.count_by_severity,
+                    "parse_errors": list(result.parse_errors),
+                    "findings": [
+                        {
+                            "check_id": f.check_id,
+                            "path": f.path,
+                            "line": f.line,
+                            "end_line": f.end_line,
+                            "severity": f.severity,
+                            "message": f.message,
+                        }
+                        for f in result.findings
+                    ],
+                    "reason": result.reason,
+                },
+                indent=2,
+                ensure_ascii=False,
+            ),
+        )
+    else:
+        print(render_console_report(result, full=args.full))
+
+    return ADVISORY_BROKEN if result.outcome is SecurityOutcome.UNAVAILABLE else OK
+
+
+def _semgrep_result_entry(entry: object) -> SecurityFinding | SecurityResult:
+    """Validate one result completely before admitting its typed finding."""
+    if not isinstance(entry, dict):
+        return SecurityResult.unavailable("semgrep JSON result entry was not an object")
+    extra = entry.get("extra", {})
+    start = entry.get("start", {})
+    end = entry.get("end", {})
+    if not isinstance(extra, dict) or not isinstance(start, dict) or not isinstance(end, dict):
+        return SecurityResult.unavailable("semgrep JSON result fields had an invalid object shape")
+    line = start.get("line", 0)
+    end_line = end.get("line", 0)
+    if not _semgrep_line_is_integer(line) or not _semgrep_line_is_integer(end_line):
+        return SecurityResult.unavailable("semgrep JSON result line fields were not integers")
+    return SecurityFinding(
+        check_id=str(entry.get("check_id", "")),
+        path=str(entry.get("path", "")).replace("\\", "/"),
+        line=line,
+        end_line=end_line,
+        severity=str(extra.get("severity", "UNKNOWN")),
+        message=str(extra.get("message", "")).strip(),
+    )
+
+
+def _semgrep_line_is_integer(value: object) -> TypeIs[int]:
+    """Accept integer line values while refusing bool, preserving the JSON boundary."""
+    return not isinstance(value, bool) and isinstance(value, int)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

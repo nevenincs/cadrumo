@@ -1,0 +1,301 @@
+"""Lease and local-durability mechanics shared by the operation supervisor."""
+
+from __future__ import annotations
+
+import asyncio
+from collections.abc import Callable, Coroutine
+from contextlib import suppress
+from datetime import datetime, timedelta
+
+from ...core.errors.hierarchy import InternalInvariantError
+from ...core.hex import Hex64Str
+from ...core.logging import get_logger
+from ...core.operations import OperationLifecycle
+from .errors import OperationSubjectBusyError
+from .models import OperationId, OperationIdentity
+from .persistence.idempotency import OperationIdempotencyClaim
+from .persistence.journal import (
+    OperationEventStream,
+    OperationJournal,
+    OperationLeaseRepository,
+    OperationPersistedSnapshot,
+)
+from .persistence.leases import (
+    OperationLeaseDisposition,
+    OperationLeaseObservationDisposition,
+    OperationLeaseToken,
+    OperationOwnerLease,
+    operation_conflict_scope_reference,
+)
+from .persistence.replay import OperationReplayStatus
+
+_log = get_logger(__name__)
+
+
+class OperationSupervisorLeaseMixin:
+    """Own local guards and exact durable-lease transitions for a supervisor."""
+
+    _journal: OperationJournal
+    _event_stream: OperationEventStream
+    _leases: OperationLeaseRepository
+    _owner_id: Hex64Str
+    _lease_token: OperationLeaseToken
+    _clock: Callable[[], datetime]
+    _lease_duration: timedelta
+    _leases_by_operation: dict[OperationId, OperationOwnerLease]
+    _lease_locks: dict[OperationId, asyncio.Lock]
+    _durable_change_events: dict[OperationId, asyncio.Event]
+    _durable_revisions: dict[OperationId, int]
+
+    async def reconcile(self, operation_id: OperationId) -> OperationPersistedSnapshot:
+        """Recover one operation through its durable owner evidence (the reconciliation mixin owns it)."""
+        raise NotImplementedError
+
+    async def settle_lapsed(self, operation_id: OperationId, *, grace: timedelta) -> OperationPersistedSnapshot | None:
+        """Settle an operation whose owner lapsed (the reconciliation mixin owns it)."""
+        raise NotImplementedError
+
+    def _candidate(self, identity: OperationIdentity, now: datetime) -> OperationOwnerLease:
+        return OperationOwnerLease(
+            operation_id=identity.operation_id,
+            scope_ref=operation_conflict_scope_reference(
+                definition_id=identity.definition_id,
+                subject_ref=identity.subject_ref,
+            ),
+            owner_id=self._owner_id,
+            token=self._lease_token,
+            acquired_at=now,
+            expires_at=now + self._lease_duration,
+        )
+
+    def _lease_lock(self, operation_id: OperationId) -> asyncio.Lock:
+        """Return the supervisor-local guard for one durable owner lease."""
+        return self._lease_locks.setdefault(operation_id, asyncio.Lock())
+
+    def _renewal_interval_seconds(self) -> float:
+        """Bound scheduler wakeups without making scheduler time lease authority."""
+        return min(max(self._lease_duration.total_seconds() / 3, 0.001), 30.0)
+
+    async def _require_owned_lease(self, identity: OperationIdentity, now: datetime) -> OperationOwnerLease:
+        """Return this supervisor's exact live lease under its local CAS guard."""
+        async with self._lease_lock(identity.operation_id):
+            return await self._require_owned_lease_unlocked(identity, now)
+
+    async def _require_owned_lease_unlocked(
+        self,
+        identity: OperationIdentity,
+        now: datetime,
+    ) -> OperationOwnerLease:
+        """Return this supervisor's exact live lease, renewing it only by CAS."""
+        scope_ref = operation_conflict_scope_reference(
+            definition_id=identity.definition_id,
+            subject_ref=identity.subject_ref,
+        )
+        held = await self._load_owned_lease(identity, scope_ref=scope_ref, now=now)
+        if now >= held.expires_at:
+            raise ValueError("operation exact lease expired before renewal")
+        successor = OperationOwnerLease(
+            operation_id=held.operation_id,
+            scope_ref=held.scope_ref,
+            owner_id=held.owner_id,
+            token=held.token,
+            acquired_at=held.acquired_at,
+            expires_at=now + self._lease_duration,
+        )
+        if successor.expires_at <= held.expires_at:
+            return await self._retain_owned_lease(identity, scope_ref=scope_ref, held=held, now=now)
+        renewed = await self._leases.compare_and_swap(held, successor, observed_at=now)
+        if renewed.disposition is not OperationLeaseDisposition.RENEWED or renewed.current != successor:
+            raise ValueError("operation exact lease renewal was refused")
+        self._leases_by_operation[identity.operation_id] = successor
+        return successor
+
+    async def _load_owned_lease(
+        self,
+        identity: OperationIdentity,
+        *,
+        scope_ref: str,
+        now: datetime,
+    ) -> OperationOwnerLease:
+        held = self._leases_by_operation.get(identity.operation_id)
+        if held is not None:
+            if held.scope_ref != scope_ref:
+                raise ValueError("operation lease no longer matches this supervisor's conflict scope")
+            return held
+        observed = await self._leases.inspect(scope_ref, identity.operation_id, observed_at=now)
+        current = observed.current
+        if (
+            observed.disposition is not OperationLeaseObservationDisposition.ACTIVE
+            or current is None
+            or current.owner_id != self._owner_id
+            or current.token != self._lease_token
+        ):
+            raise ValueError("operation is not owned by this supervisor")
+        self._leases_by_operation[identity.operation_id] = current
+        return current
+
+    async def _retain_owned_lease(
+        self,
+        identity: OperationIdentity,
+        *,
+        scope_ref: str,
+        held: OperationOwnerLease,
+        now: datetime,
+    ) -> OperationOwnerLease:
+        observed = await self._leases.inspect(scope_ref, identity.operation_id, observed_at=now)
+        if observed.disposition is not OperationLeaseObservationDisposition.ACTIVE or observed.current != held:
+            raise ValueError("operation lease no longer matches this supervisor's exact held lease")
+        return held
+
+    # A plain async executor neither yields nor accepts sent values; preserving
+    # its generic return type lets callers retain their precise result contract.
+    async def _renew_while_executing[ResultT](
+        self,
+        *,
+        identity: OperationIdentity,
+        executor: Coroutine[None, None, ResultT],
+    ) -> ResultT:
+        """Join one executor while renewing its exact durable lease on schedule."""
+        executor_task = asyncio.create_task(executor, name=f"operation-executor-{identity.operation_id}")
+        try:
+            while not executor_task.done():
+                done, pending = await asyncio.wait(
+                    (executor_task,),
+                    timeout=self._renewal_interval_seconds(),
+                )
+                if executor_task in done or not pending:
+                    break
+                await self._require_owned_lease(identity, self._clock())
+        except BaseException:
+            if not executor_task.done():
+                executor_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await executor_task
+            raise
+        # Join a finished executor exactly once: asyncio drops a task's stored
+        # traceback on retrieval, so a second await would re-raise its failure
+        # without the frame that raised it.
+        return await executor_task
+
+    async def _release_exact_lease(self, lease: OperationOwnerLease, *, observed_at: datetime) -> None:
+        """Release one exact current lease and refuse any ownership loss."""
+        released = await self._leases.release(lease, observed_at=observed_at)
+        if released.disposition is not OperationLeaseDisposition.RELEASED:
+            raise ValueError("operation exact lease release was refused")
+        self._leases_by_operation.pop(lease.operation_id, None)
+
+    async def _resolve_idempotency(self, claim: OperationIdempotencyClaim | None) -> OperationId | None:
+        if claim is None:
+            return None
+        return await self._journal.resolve_idempotency(claim)
+
+    async def _acquire_submission_lease(
+        self,
+        candidate: OperationOwnerLease,
+        *,
+        claim: OperationIdempotencyClaim | None,
+    ) -> OperationId | None:
+        """Hold ``candidate`` for a new submission, or name the operation a retry already created.
+
+        Returns ``None`` once the candidate lease is held. A subject held by an
+        operation that has not settled -- live, or lapsed and awaiting
+        reconciliation -- is refused with :class:`OperationSubjectBusyError`.
+        """
+        observed_at = candidate.acquired_at
+        acquired = await self._leases.acquire(candidate, observed_at=observed_at)
+        if acquired.disposition is OperationLeaseDisposition.ACQUIRED:
+            return None
+        existing_operation_id = await self._resolve_idempotency(claim)
+        if existing_operation_id is not None:
+            return existing_operation_id
+        holder = (
+            acquired.current if acquired.disposition is OperationLeaseDisposition.CONFLICT else acquired.predecessor
+        )
+        if holder is None:
+            raise OperationSubjectBusyError()
+        if not await self._holder_is_settled(holder) and not (
+            acquired.disposition is OperationLeaseDisposition.EXPIRED and await self._recover_lapsed_holder(holder)
+        ):
+            raise OperationSubjectBusyError(holder.operation_id)
+        # Crash recovery, not the settlement path: settlement clears the lease
+        # in the same critical section that writes the terminal record, so a
+        # settled holder still owning the subject can only be left by a
+        # process that died between those two writes. One exact release and
+        # one retry of the acquisition; any other outcome is a live conflict.
+        await self._release_leftover_lease(holder, observed_at=observed_at)
+        reacquired = await self._leases.acquire(candidate, observed_at=observed_at)
+        if reacquired.disposition is OperationLeaseDisposition.ACQUIRED:
+            return None
+        existing_operation_id = await self._resolve_idempotency(claim)
+        if existing_operation_id is not None:
+            return existing_operation_id
+        contender = reacquired.current if reacquired.disposition is OperationLeaseDisposition.CONFLICT else None
+        raise OperationSubjectBusyError(None if contender is None else contender.operation_id)
+
+    async def _recover_lapsed_holder(self, holder: OperationOwnerLease) -> bool:
+        """Settle a holder whose owner stopped renewing, so the waiting submission can proceed.
+
+        An unstarted holder has had no effect, and nobody started it within its
+        whole lease: its submitter is gone, so it is interrupted at once rather
+        than holding the subject for good. A started one goes through the
+        canonical reconciliation, which may resume it instead.
+        """
+        holder_snapshot = await self._journal.load(holder.operation_id)
+        if holder_snapshot.lifecycle is OperationLifecycle.CREATED and holder_snapshot.executor_entered_at is None:
+            settled = await self.settle_lapsed(holder.operation_id, grace=timedelta())
+        else:
+            try:
+                settled = await self.reconcile(holder.operation_id)
+            except ValueError:
+                _log.warning("lapsed operation could not be reconciled operation=%s", holder.operation_id)
+                return False
+        return settled is not None and settled.lifecycle is OperationLifecycle.TERMINAL
+
+    async def _holder_is_settled(self, holder: OperationOwnerLease) -> bool:
+        """Tell whether the operation a subject's lease names has a terminal journal.
+
+        A holder with no journal yet is a submission between its lease and its
+        journal create, which is a live conflict, never a leftover.
+        """
+        probe = await self._event_stream.read_after(holder.operation_id, 0, limit=1)
+        if probe.status is OperationReplayStatus.UNKNOWN_OPERATION:
+            return False
+        snapshot = await self._journal.load(holder.operation_id)
+        return snapshot.lifecycle is OperationLifecycle.TERMINAL
+
+    async def _release_settled_leftover_lease(self, snapshot: OperationPersistedSnapshot) -> None:
+        """Release a lease a terminal operation still owns after a crash inside its settlement.
+
+        Idempotent: a subject that is free, or held by another operation, is
+        left untouched.
+        """
+        if snapshot.lifecycle is not OperationLifecycle.TERMINAL:
+            raise InternalInvariantError("only a terminal operation may give up a leftover conflict lease")
+        observed_at = self._clock()
+        observed = await self._leases.inspect(
+            operation_conflict_scope_reference(
+                definition_id=snapshot.identity.definition_id,
+                subject_ref=snapshot.identity.subject_ref,
+            ),
+            snapshot.identity.operation_id,
+            observed_at=observed_at,
+        )
+        current = observed.current
+        if current is None or current.operation_id != snapshot.identity.operation_id:
+            return
+        await self._release_leftover_lease(current, observed_at=observed_at)
+
+    async def _release_leftover_lease(self, holder: OperationOwnerLease, *, observed_at: datetime) -> None:
+        """Release one settled operation's exact lease; a lost race leaves the winner's lease alone."""
+        await self._leases.release(holder, observed_at=observed_at)
+        if self._leases_by_operation.get(holder.operation_id) == holder:
+            del self._leases_by_operation[holder.operation_id]
+
+    def _notify_durable_change(self, snapshot: OperationPersistedSnapshot) -> None:
+        """Signal one local durable commit while leaving journal bytes authoritative."""
+        operation_id = snapshot.identity.operation_id
+        self._durable_revisions[operation_id] = snapshot.revision
+        self._durable_change_events.setdefault(operation_id, asyncio.Event()).set()
+
+
+__all__ = ["OperationSupervisorLeaseMixin"]

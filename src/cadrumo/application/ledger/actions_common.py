@@ -1,0 +1,1139 @@
+"""Shared ledger action helpers for repositories, events, and guards.
+
+This module validates injected ledger persistence ports; builds
+:class:`~cadrumo.domain.buckets.event.BucketEvent` audit entries;
+mutates :class:`TransactionCatalogue` and :class:`InvoiceCatalogue` snapshots
+atomically; and verifies evidence, attachment, usage-ratio, and
+finalized-modelo blockers for the public ledger action services.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Callable, Mapping
+from datetime import datetime
+from decimal import Decimal
+from types import MappingProxyType
+from typing import TYPE_CHECKING
+
+from pydantic import TypeAdapter
+
+from ...core.decimal.formatting import format_decimal
+from ...core.errors.hierarchy import InternalInvariantError
+from ...core.external_constants import CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL
+from ...core.time.clock import now
+
+if TYPE_CHECKING:
+    from ...core.secure_object_write import SecureObjectWrite
+
+from ...core.time.utc import coerce_utc_aware
+from ...domain.attachments.errors import AttachmentNotFoundError, AttachmentValidationError
+from ...domain.attachments.protocols import AttachmentStoreProtocol as _AttachmentStoreProtocol
+from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
+from ...domain.buckets.event_repository import append_bucket_event, build_bucket_event
+from ...domain.invoices.models import InvoiceCatalogue
+from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES, CalculationRevisionState
+from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
+from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+from ...domain.transactions.enums import BusinessClassification
+from ...domain.transactions.errors import TransactionNotFoundError, TransactionValidationError
+from ...domain.transactions.models import BucketTransactionRef, Transaction, TransactionCatalogue
+from ...domain.transactions.own_accounts import OwnAccountRegister, OwnAccountRegisterError, OwnBankAccount
+from ...domain.usage_ratios.errors import UsageRatioValidationError
+from ...domain.usage_ratios.model import UsageRatioProfile, validate_usage_ratio_reference
+from .evidence import PurchaseInvoiceEvidence
+from .evidence_reference import (
+    EvidenceReferenceOutcome,
+    classify_evidence_reference,
+)
+from .models import (
+    LedgerRemovalBlocker,
+    ManualLedgerTransactionCommand,
+    ManualLedgerTransactionPatch,
+    ManualLedgerTransactionResult,
+)
+from .persistence_ports import LedgerPersistenceConflictError
+from .protocols import (
+    BucketEventHistoryCoCommitWriterProtocol,
+    InvoiceCatalogueCoCommitWriterProtocol,
+    RevisionGuardedTransactionCatalogueCoCommitWriterProtocol,
+    TransactionCatalogueCoCommitWriterProtocol,
+)
+
+_BUCKET_EVENT_PAYLOAD_VERSION = 1
+
+EventSpec = tuple[BucketEventType, BucketEventObjectType, str, dict[str, str]]
+# Draft revisions do not block removal (the operator may legitimately prune a row
+# before finalising), but a draft that still cites the removed row will assert an
+# income/expense no longer in the books on the next verify/file. Surfacing a
+# non-blocking advisory keeps that under-declaration non-silent
+# (no-silent-under-declaration). DESCARTADO (discarded) drafts are excluded: they
+# are not live filings.
+_REMOVAL_ADVISORY_REVISION_STATES = frozenset(
+    {
+        CalculationRevisionState.BORRADOR,
+    },
+)
+
+
+def require_repository[RepositoryT](
+    repository: RepositoryT | None,
+    *,
+    reason: str,
+) -> RepositoryT:
+    """Require a port selected by an outer composition root.
+
+    Ledger application services deliberately do not choose persistence
+    implementations.  Failing before any read/write preserves the prior
+    all-or-nothing action semantics while making an unwired production caller
+    explicit.
+    """
+    if repository is None:
+        raise TransactionValidationError(
+            f"{reason} requires an injected persistence port",
+            context={"supplied_repository": "none"},
+        )
+    return repository
+
+
+def resolve_transaction_repository(
+    *,
+    bucket_id: str,
+    repository: TransactionCatalogueCoCommitWriterProtocol | None,
+) -> TransactionCatalogueCoCommitWriterProtocol:
+    repository = require_repository(repository, reason="the manual ledger transaction path")
+    if repository.bucket_id != bucket_id:
+        raise TransactionValidationError(
+            "transaction repository bucket_id does not match the manual ledger command bucket",
+            context={"command_bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
+        )
+    return repository
+
+
+def resolve_revision_guarded_transaction_repository(
+    *,
+    bucket_id: str,
+    repository: TransactionCatalogueCoCommitWriterProtocol | None,
+) -> RevisionGuardedTransactionCatalogueCoCommitWriterProtocol:
+    """Resolve the optional full-snapshot capability for a whole-catalogue ledger write."""
+    resolved = resolve_transaction_repository(bucket_id=bucket_id, repository=repository)
+    if not isinstance(resolved, RevisionGuardedTransactionCatalogueCoCommitWriterProtocol):
+        raise InternalInvariantError("whole-catalogue ledger write requires revision-guarded transaction persistence")
+    return resolved
+
+
+def resolve_invoice_repository(
+    *,
+    bucket_id: str,
+    repository: InvoiceCatalogueCoCommitWriterProtocol | None,
+) -> InvoiceCatalogueCoCommitWriterProtocol:
+    repository = require_repository(repository, reason="the manual ledger invoice path")
+    if repository.bucket_id is not None and repository.bucket_id != bucket_id:
+        raise TransactionValidationError(
+            "invoice repository bucket_id does not match the manual ledger command bucket",
+            context={"command_bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
+        )
+    return repository
+
+
+def resolve_bucket_event_repository(
+    *,
+    bucket_id: str,
+    repository: BucketEventHistoryCoCommitWriterProtocol | None,
+) -> BucketEventHistoryCoCommitWriterProtocol:
+    _ = bucket_id
+    return require_repository(repository, reason="the bucket-event history path")
+
+
+def require_actor(value: str, *, operation: str) -> str:
+    trimmed = value.strip()
+    if not trimmed:
+        raise TransactionValidationError(f"{operation} actor must not be blank")
+    return trimmed
+
+
+def require_source_command(value: str, *, operation: str) -> str:
+    trimmed = value.strip()
+    if not trimmed:
+        raise TransactionValidationError(f"{operation} source_command must not be blank")
+    return trimmed
+
+
+def normalise_attachment_patch_ids(attachment_ids: tuple[str, ...]) -> tuple[str, ...]:
+    normalized = tuple(item.strip() for item in attachment_ids if item.strip())
+    if len(set(normalized)) != len(normalized):
+        raise TransactionValidationError("ledger evidence attachment ids must not contain duplicates")
+    return normalized
+
+
+def merge_identifier_tuple(existing: tuple[str, ...], incoming: tuple[str, ...]) -> tuple[str, ...]:
+    merged: list[str] = list(existing)
+    for item in incoming:
+        if item not in merged:
+            merged.append(item)
+    return tuple(merged)
+
+
+def required_patched[T](
+    patch: ManualLedgerTransactionPatch,
+    patch_fields: set[str],
+    field: str,
+    fallback: T,
+) -> T:
+    """Return ``patch.<field>`` when in patch_fields and non-null; otherwise the fallback.
+
+    Raises ``TransactionValidationError`` when the field is set on the
+    patch but explicitly nulled - the patch contract forbids resetting a
+    required value to None. Generic in ``T`` so the caller's field type
+    flows through to the assignment site (type checkers see the concrete
+    type at the use point, not ``object``).
+    """
+    if field not in patch_fields:
+        return fallback
+    value = getattr(patch, field)
+    if value is None:
+        raise TransactionValidationError(f"manual ledger patch {field} must not be null")
+    return _typed_patch_value(patch, field, value, fallback)
+
+
+def optional_patched[T](
+    patch: ManualLedgerTransactionPatch,
+    patch_fields: set[str],
+    field: str,
+    fallback: T,
+) -> T:
+    """Return ``patch.<field>`` when in patch_fields (None allowed); otherwise the fallback.
+
+    Generic in ``T`` for the same reason as :func:`required_patched`.
+    """
+    if field not in patch_fields:
+        return fallback
+    return _typed_patch_value(patch, field, getattr(patch, field), fallback)
+
+
+def _typed_patch_value[T](patch: ManualLedgerTransactionPatch, field: str, value: object, expected: T) -> T:
+    """Validate a dynamic patch field through its declared Pydantic type."""
+    annotation = ManualLedgerTransactionPatch.model_fields[field].annotation
+    if annotation is None:
+        raise InternalInvariantError(f"manual ledger patch field {field} declares no type to validate against")
+    adapter: TypeAdapter[T] = TypeAdapter(annotation)
+    return adapter.validate_python(value)
+
+
+def blocking_modelo_references(
+    *,
+    bucket_id: str,
+    transaction_ids: tuple[str, ...],
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None,
+) -> tuple[LedgerRemovalBlocker, ...]:
+    """Return finalized modelo revisions that still depend on these transactions."""
+    if not transaction_ids:
+        return ()
+    wanted = set(transaction_ids)
+    work_units = require_repository(work_unit_repository, reason="the finalized-modelo guard").load()
+    revisions = require_repository(calculation_repository, reason="the finalized-modelo guard").load()
+    blockers: list[LedgerRemovalBlocker] = []
+    for revision in revisions.values():
+        if revision.state not in SEALED_REVISION_STATES:
+            continue
+        if not wanted.intersection(revision.source_transaction_ids):
+            continue
+        work_unit = work_units.get(revision.work_unit_id)
+        if work_unit is None or work_unit.bucket_id != bucket_id:
+            continue
+        blockers.append(
+            LedgerRemovalBlocker(
+                work_unit_id=work_unit.work_unit_id,
+                calculation_revision_id=revision.calculation_revision_id,
+                revision_state=revision.state.value,
+                modelo=work_unit.modelo,
+                filing_year=work_unit.filing_year,
+                period=work_unit.period.registry_token,
+            ),
+        )
+    return tuple(
+        sorted(
+            blockers,
+            key=lambda blocker: (
+                blocker.modelo,
+                blocker.filing_year,
+                blocker.period,
+                blocker.calculation_revision_id,
+            ),
+        ),
+    )
+
+
+def draft_revision_advisories(
+    *,
+    bucket_id: str,
+    transaction_ids: tuple[str, ...],
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None,
+) -> tuple[LedgerRemovalBlocker, ...]:
+    """Collect DRAFT (BORRADOR) revisions still citing the wanted transaction ids.
+
+    Removal proceeds for draft-cited rows, but the draft's
+    ``source_transaction_ids`` will still assert the removed row's income/expense
+    on the next verify/file. These advisory rows name each affected draft so the
+    operator can recalculate it (no-silent-under-declaration). Correctness rides
+    on the live revision-catalogue scan, never the derived participation index
+    (aeat-ledger-contract).
+    """
+    if not transaction_ids:
+        return ()
+    wanted = set(transaction_ids)
+    work_units = require_repository(work_unit_repository, reason="the draft-modelo advisory").load()
+    revisions = require_repository(calculation_repository, reason="the draft-modelo advisory").load()
+    advisories: list[LedgerRemovalBlocker] = []
+    for revision in revisions.values():
+        if revision.state not in _REMOVAL_ADVISORY_REVISION_STATES:
+            continue
+        if not wanted.intersection(revision.source_transaction_ids):
+            continue
+        work_unit = work_units.get(revision.work_unit_id)
+        if work_unit is None or work_unit.bucket_id != bucket_id:
+            continue
+        advisories.append(
+            LedgerRemovalBlocker(
+                work_unit_id=work_unit.work_unit_id,
+                calculation_revision_id=revision.calculation_revision_id,
+                revision_state=revision.state.value,
+                modelo=work_unit.modelo,
+                filing_year=work_unit.filing_year,
+                period=work_unit.period.registry_token,
+            ),
+        )
+    return tuple(
+        sorted(
+            advisories,
+            key=lambda advisory: (
+                advisory.modelo,
+                advisory.filing_year,
+                advisory.period,
+                advisory.calculation_revision_id,
+            ),
+        ),
+    )
+
+
+def blockers_by_source_transaction_id(
+    *,
+    bucket_id: str,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None,
+) -> dict[str, tuple[LedgerRemovalBlocker, ...]]:
+    """Map each source transaction id to the finalized-modelo blockers referencing it.
+
+    Computed once so a batch edit can look up the finalized-modelo guard per row
+    without reloading the work-unit and calculation repositories on every row
+    (the load-once half of the ``bulk_classify_from_csv`` batching contract).
+    """
+    work_units = require_repository(work_unit_repository, reason="the finalized-modelo guard").load()
+    revisions = require_repository(calculation_repository, reason="the finalized-modelo guard").load()
+    out: dict[str, list[LedgerRemovalBlocker]] = {}
+    for revision in revisions.values():
+        if revision.state not in SEALED_REVISION_STATES:
+            continue
+        work_unit = work_units.get(revision.work_unit_id)
+        if work_unit is None or work_unit.bucket_id != bucket_id:
+            continue
+        blocker = LedgerRemovalBlocker(
+            work_unit_id=work_unit.work_unit_id,
+            calculation_revision_id=revision.calculation_revision_id,
+            revision_state=revision.state.value,
+            modelo=work_unit.modelo,
+            filing_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+        )
+        for txid in revision.source_transaction_ids:
+            out.setdefault(txid, []).append(blocker)
+    return {txid: tuple(found) for txid, found in out.items()}
+
+
+def transaction_modelo_source_ids(transaction: Transaction) -> tuple[str, ...]:
+    return tuple(
+        sorted({transaction.transaction_id, *(entry.previous_transaction_id for entry in transaction.edit_lineage)}),
+    )
+
+
+def catalogue_modelo_source_ids(catalogue: TransactionCatalogue) -> tuple[str, ...]:
+    return tuple(
+        sorted(
+            {
+                source_id
+                for transaction in catalogue.values()
+                for source_id in transaction_modelo_source_ids(transaction)
+            },
+        ),
+    )
+
+
+_EVIDENCE_MUTATION_FIELDS: frozenset[str] = frozenset(
+    {"purchase_invoice_evidence_id", "attachment_ids"},
+)
+
+
+def is_evidence_only_command(command: ManualLedgerTransactionCommand, current: Transaction) -> bool:
+    """Return whether ``command`` adds evidence provenance and changes nothing else.
+
+    An evidence-only mutation is exempt from the finalized-modelo write guard,
+    because it leaves what a finalized revision sealed. Three independent
+    project contracts establish that:
+
+    * :func:`~cadrumo.domain.transactions.models.derive_transaction_id` hashes the
+      provider identity, effective value date, amount, and narrative only, so an
+      evidence-only edit re-derives the SAME id. A finalized revision's
+      ``source_transaction_ids`` citation therefore keeps resolving.
+    * The ledger filing snapshot's fingerprint field set (the canonical
+      "tax facts" of a row) reads neither evidence field, so ``row_fingerprint``
+      and the revision's ``snapshot_fingerprint`` are unchanged and the revision's
+      :class:`LedgerFilingSnapshot` still reconciles against the live catalogue.
+    * A finalized revision's casilla values and bundled ledger evidence are frozen
+      persisted snapshots; this write touches the transaction catalogue alone.
+
+    The exemption is deliberately the narrowest that unblocks the operator: it
+    requires at least one evidence field to differ AND every other value of the
+    row to match, so a value-affecting edit smuggled alongside an attachment
+    still meets the guard. The stamp naming the writer's mechanism is not a
+    value (an attach always stamps ``manual``), so it is not compared: a row a
+    rule stamped takes the same attach as one stamped by hand.
+
+    Linked purchase evidence is not inert to a calculation. A recalculation
+    takes the row's base and cuota from the invoice and counts an incoming row
+    as a refund, which is why the link is one of
+    :data:`~cadrumo.domain.transactions.classification_origin.CLASSIFICATION_DECISION_FIELDS`.
+    The fingerprint does not read it, so a sealed revision does not turn stale
+    by itself. The attach is admitted anyway, and the caller reports the cited
+    revisions as stale so the operator recalculates, rather than silently
+    accepting the write. A supplementary attachment feeds no calculation.
+    """
+    differing = set(ledger_values_differing_from_stored(command, current))
+    return bool(differing) and differing <= _EVIDENCE_MUTATION_FIELDS
+
+
+def ledger_values_differing_from_stored(
+    command: ManualLedgerTransactionCommand, current: Transaction
+) -> tuple[str, ...]:
+    """Return the sorted names of the row values ``command`` carries that differ from the stored row's.
+
+    The stamp naming the last writer's mechanism is not a value. Equal here is
+    equal in value and says nothing of the written form: ``500`` compares equal
+    to a stored ``500.00``. So this can show that a command is a changed write,
+    and cannot show that the row it would store is the row that is stored.
+    """
+    command_fields = _command_idempotency_fields(command)
+    current_fields = _transaction_idempotency_fields(current)
+    return tuple(
+        sorted(
+            name for name, value in command_fields.items() if name != "classified_by" and current_fields[name] != value
+        )
+    )
+
+
+def command_changes_no_ledger_value(command: ManualLedgerTransactionCommand, current: Transaction) -> bool:
+    """Return whether every value ``command`` carries compares equal to the stored row's."""
+    return not ledger_values_differing_from_stored(command, current)
+
+
+def raise_finalized_modelo_blocked(
+    *,
+    operation: str,
+    transaction_ids: tuple[str, ...],
+    blockers: tuple[LedgerRemovalBlocker, ...],
+    changed_fields: tuple[str, ...] = (),
+) -> None:
+    """Refuse a write to rows finalized revisions cite.
+
+    ``changed_fields`` names, never shows, the row values the refused write
+    would have changed, so the operator can tell a note from a figure.
+    """
+    first = blockers[0]
+    context = {
+        "transaction_ids": ",".join(transaction_ids),
+        "calculation_revision_id": first.calculation_revision_id,
+        "work_unit_id": first.work_unit_id,
+        "modelo": first.modelo,
+        "filing_year": str(first.filing_year),
+        "period": first.period,
+        "blocking_reference_count": str(len(blockers)),
+    }
+    if changed_fields:
+        context["changed_fields"] = ",".join(changed_fields)
+    raise TransactionValidationError(
+        f"{operation} refused because finalized modelo revisions cite the transaction",
+        context=context,
+    )
+
+
+def transaction_catalogue_object_id(bucket_id: str) -> str:
+    return f"transaction-catalogue:{bucket_id.strip()}"
+
+
+def verify_evidence_references(
+    command: ManualLedgerTransactionCommand,
+    *,
+    transaction_id: str,
+    invoice_repository: InvoiceCatalogueCoCommitWriterProtocol | None,
+    attachment_store: _AttachmentStoreProtocol | None,
+    evidence_records: tuple[PurchaseInvoiceEvidence, ...] = (),
+) -> None:
+    if command.purchase_invoice_evidence_id is not None:
+        _verify_purchase_invoice_evidence(
+            command,
+            invoice_repository=invoice_repository,
+            evidence_records=evidence_records,
+        )
+    if command.attachment_ids:
+        _verify_attachment_references(command, transaction_id=transaction_id, attachment_store=attachment_store)
+
+
+def resolve_attachment_store(
+    attachment_store: _AttachmentStoreProtocol | None,
+) -> _AttachmentStoreProtocol:
+    """Require the attachment store selected by the outer composition root."""
+    return require_repository(attachment_store, reason="the ledger attachment verification path")
+
+
+def _verify_purchase_invoice_evidence(
+    command: ManualLedgerTransactionCommand,
+    *,
+    invoice_repository: InvoiceCatalogueCoCommitWriterProtocol | None,
+    evidence_records: tuple[PurchaseInvoiceEvidence, ...] = (),
+) -> None:
+    """Refuse a purchase-invoice evidence reference that no id space accepts.
+
+    The write gate over :func:`classify_evidence_reference`, which owns the
+    definition of the two id spaces, their consultation order, and the
+    bucket-ownership and ``RECEIVED``-kind policy. This function only turns an
+    unacceptable outcome into the operator-facing refusal; it decides nothing about
+    which space an id belongs to, so it cannot drift from the other consumers of the
+    same field.
+    """
+    evidence_id = command.purchase_invoice_evidence_id
+    if evidence_id is None:
+        return
+    reference = classify_evidence_reference(
+        evidence_id,
+        bucket_id=command.bucket_id,
+        evidence_records=evidence_records,
+        invoices=resolve_invoice_repository(bucket_id=command.bucket_id, repository=invoice_repository).load(),
+    )
+    if reference.is_acceptable:
+        return
+    if reference.outcome is EvidenceReferenceOutcome.UNRESOLVED:
+        raise TransactionValidationError(
+            "purchase_invoice_evidence_id must reference an existing purchase invoice evidence record "
+            "(register one from a PDF/image with `aeat app ledger evidence add`) or an imported "
+            "received-invoice id from the invoice catalogue; ids minted by `aeat app ledger invoice add` "
+            "are operator invoice records, not evidence references",
+            context={"purchase_invoice_evidence_id": evidence_id},
+        )
+    invoice = reference.invoice
+    if invoice is None:
+        # Every outcome that survives the screens above carries its catalogue invoice.
+        raise TransactionValidationError(
+            "purchase invoice evidence reference resolved without its catalogue invoice",
+            context={"purchase_invoice_evidence_id": evidence_id},
+        )
+    if reference.outcome is EvidenceReferenceOutcome.INVOICE_OUTSIDE_BUCKET:
+        raise TransactionValidationError(
+            "purchase_invoice_evidence_id must belong to the manual ledger command bucket",
+            context={
+                "purchase_invoice_evidence_id": evidence_id,
+                "command_bucket_id": command.bucket_id,
+                "evidence_bucket_id": invoice.bucket_id or "",
+            },
+        )
+    raise TransactionValidationError(
+        "purchase_invoice_evidence_id must reference a received purchase invoice evidence record",
+        context={
+            "purchase_invoice_evidence_id": evidence_id,
+            "invoice_kind": invoice.kind.value,
+        },
+    )
+
+
+def _verify_attachment_references(
+    command: ManualLedgerTransactionCommand,
+    *,
+    transaction_id: str,
+    attachment_store: _AttachmentStoreProtocol | None,
+) -> None:
+    """Verify every declared attachment manifest exists, lives in the bucket, and is link-compatible."""
+    store = resolve_attachment_store(attachment_store)
+    for attachment_id in command.attachment_ids:
+        _verify_single_attachment(
+            attachment_id,
+            command=command,
+            transaction_id=transaction_id,
+            store=store,
+        )
+
+
+def _verify_single_attachment(
+    attachment_id: str,
+    *,
+    command: ManualLedgerTransactionCommand,
+    transaction_id: str,
+    store: _AttachmentStoreProtocol,
+) -> None:
+    try:
+        attachment = store.load_manifest(attachment_id)
+        store.verify_blob(attachment_id)
+    except (AttachmentNotFoundError, AttachmentValidationError) as exc:
+        raise TransactionValidationError(
+            "attachment_ids must reference existing secure attachment manifests and blobs",
+            context={"attachment_id": attachment_id},
+        ) from exc
+    if attachment.bucket_id != command.bucket_id:
+        raise TransactionValidationError(
+            "attachment_ids must belong to the manual ledger command bucket",
+            context={
+                "attachment_id": attachment_id,
+                "command_bucket_id": command.bucket_id,
+                "attachment_bucket_id": attachment.bucket_id or "",
+            },
+        )
+    if attachment.linked_transaction_ids and transaction_id not in attachment.linked_transaction_ids:
+        raise TransactionValidationError(
+            "attachment_id is linked to different ledger transactions",
+            context={"attachment_id": attachment_id, "transaction_id": transaction_id},
+        )
+
+
+def verify_usage_ratio_reference(
+    command: ManualLedgerTransactionCommand,
+    *,
+    usage_ratio_profile: UsageRatioProfile | None,
+) -> None:
+    if command.usage_ratio_id is None:
+        return
+    profile = require_repository(usage_ratio_profile, reason="the usage-ratio validation path")
+    try:
+        validate_usage_ratio_reference(
+            profile,
+            category_id=command.category_id,
+            usage_ratio_id=command.usage_ratio_id,
+            business_pct=command.business_pct,
+        )
+    except UsageRatioValidationError as exc:
+        raise TransactionValidationError(
+            str(exc),
+            context={
+                "bucket_id": command.bucket_id,
+                "category_id": command.category_id or "",
+                "usage_ratio_id": command.usage_ratio_id,
+            },
+        ) from exc
+
+
+def optional_decimal(value: Decimal | None) -> str:
+    return "" if value is None else format_decimal(value)
+
+
+def display_decimal(value: Decimal) -> str:
+    return format_decimal(value, normalize=True)
+
+
+def normalise_timestamp(value: datetime | None) -> datetime:
+    timestamp = value or now()
+    return coerce_utc_aware(timestamp)
+
+
+def _catalogue_from_validated_members(
+    members: dict[str, Transaction],
+    *,
+    newcomer: Transaction | None,
+) -> TransactionCatalogue:
+    """Assemble a catalogue, validating only the member that was not already in one.
+
+    Validating the whole mapping re-runs every transaction's model validators,
+    so a bulk edit re-validated the entire ledger once per row. Every other
+    member came out of a validated catalogue and is frozen; the newcomer is
+    validated through the catalogue's own member contract, which re-derives its
+    id and re-checks its cross-field invariants even when it was produced by a
+    copy that skipped validation. Keys match ids by construction.
+    """
+    if newcomer is not None:
+        TransactionCatalogue.model_validate({"transactions": {newcomer.transaction_id: newcomer}})
+    return TransactionCatalogue.model_construct(transactions=MappingProxyType(members))
+
+
+def upsert_transaction(catalogue: TransactionCatalogue, transaction: Transaction) -> TransactionCatalogue:
+    updated = dict(catalogue.transactions)
+    updated[transaction.transaction_id] = transaction
+    return _catalogue_from_validated_members(updated, newcomer=transaction)
+
+
+def replace_transaction(
+    catalogue: TransactionCatalogue,
+    *,
+    old_transaction_id: str,
+    replacement: Transaction,
+) -> TransactionCatalogue:
+    current = catalogue.get(old_transaction_id)
+    if current is None:
+        raise TransactionNotFoundError(
+            f"transaction not found: {old_transaction_id}",
+            context={"transaction_id": old_transaction_id},
+        )
+    if replacement.invoice_id != current.invoice_id:
+        raise TransactionValidationError(
+            "invoice associations must change through the reciprocal link operation",
+            context={"transaction_id": old_transaction_id},
+        )
+    if replacement.transaction_id != old_transaction_id:
+        if replacement.transaction_id in catalogue:
+            raise TransactionValidationError(
+                "ledger edit would replace a different transaction",
+                context={"transaction_id": old_transaction_id, "replacement_id": replacement.transaction_id},
+            )
+        if current.invoice_id is not None:
+            raise TransactionValidationError(
+                "linked transaction identity cannot change without updating its invoice link",
+                context={"transaction_id": old_transaction_id, "invoice_id": current.invoice_id},
+            )
+    updated = dict(catalogue.transactions)
+    updated.pop(old_transaction_id, None)
+    updated[replacement.transaction_id] = replacement
+    return _catalogue_from_validated_members(updated, newcomer=replacement)
+
+
+def remove_transaction(catalogue: TransactionCatalogue, *, transaction_id: str) -> TransactionCatalogue:
+    updated = dict(catalogue.transactions)
+    updated.pop(transaction_id, None)
+    return _catalogue_from_validated_members(updated, newcomer=None)
+
+
+def require_transaction(catalogue: TransactionCatalogue, transaction_id: str) -> Transaction:
+    transaction = catalogue.get(transaction_id)
+    if transaction is None:
+        raise TransactionNotFoundError(
+            f"transaction not found: {transaction_id}",
+            context={"transaction_id": transaction_id},
+        )
+    return transaction
+
+
+def mutation_signature(transaction: Transaction) -> tuple[object, ...]:
+    """Fold every operator-settable ledger field into one comparable tuple.
+
+    This is what decides whether an edit changed anything: two equal signatures
+    make the update a no-op, and the caller refuses it with "manual ledger
+    update must change at least one ledger field". A persisted field missing
+    from here is therefore not merely uncompared — an edit touching ONLY that
+    field is rejected and the operator's correction is dropped.
+
+    It must stay key-for-key with :func:`_transaction_idempotency_fields`, minus
+    ``classified_by`` alone. That exclusion is deliberate: ``classified_by`` is
+    provenance a write stamps, not a value the operator set, so comparing it
+    would make every re-classification look like a change and defeat the guard.
+    Re-applying an identical classification on purpose is what ``--reaffirm``
+    is for.
+
+    ``recargo_amount`` and ``deduction_fact_kind`` were absent, and both are
+    Modelo 303 figures rather than provenance: an operator correcting a recargo
+    de equivalencia, or the deduction source behind an input-IVA claim, was
+    told nothing had changed.
+    """
+    raw = transaction.raw
+    return (
+        raw.booked_date,
+        raw.value_date,
+        raw.amount,
+        raw.currency,
+        raw.counterparty,
+        raw.description,
+        transaction.direction,
+        transaction.source_jurisdiction,
+        transaction.business_classification,
+        transaction.business_pct,
+        transaction.category_id,
+        transaction.taxable_base,
+        transaction.iva_rate,
+        transaction.iva_amount,
+        transaction.iva_category,
+        transaction.deduction_fact_kind,
+        transaction.investment_asset_id,
+        transaction.recargo_amount,
+        transaction.counterparty_country,
+        transaction.counterparty_identification_state,
+        transaction.irpf_category,
+        transaction.m210_income_classification,
+        transaction.usage_ratio_id,
+        transaction.prorrata_reference,
+        transaction.art_104_tres_exclusion,
+        transaction.input_classification,
+        transaction.prorrata_sector_id,
+        transaction.purchase_invoice_evidence_id,
+        transaction.attachment_ids,
+        transaction.notes,
+        transaction.group_label,
+        transaction.own_account_id,
+    )
+
+
+def require_registered_own_account(own_accounts: OwnAccountRegister, own_account_id: str) -> OwnBankAccount:
+    """Return the registered own account ``own_account_id``, or refuse the ledger write.
+
+    A transaction may only name an account the profile's own-account register
+    holds, so every ledger surface that binds a row checks it here.
+
+    Raises:
+        TransactionValidationError: When the register holds no such account.
+    """
+    try:
+        return own_accounts.account(own_account_id)
+    except OwnAccountRegisterError as exc:
+        raise TransactionValidationError(
+            translated_message="errors.transaction.own_account_unknown",
+            context={"own_account_id": own_account_id},
+        ) from exc
+
+
+def _persisted_classified_by(command: ManualLedgerTransactionCommand) -> str:
+    """Return the ``classified_by`` value a write of ``command`` would persist.
+
+    Mirrors the stamp in ``_transaction_from_command``: a command that carries a real
+    classification stamps ``classified_by_override or CLASSIFIED_BY_MANUAL``; a
+    still-unprocessed command leaves the field unstamped, so the rebuilt transaction
+    takes the ``Transaction.classified_by`` model default. Projecting the *effective*
+    value keeps the comparison apples-to-apples: a retry that omits the override on a
+    row already stamped ``manual`` still matches, while a retry that changes the
+    override (``rule:a`` -> ``rule:b``) is correctly seen as different content.
+    """
+    if command.business_classification is BusinessClassification.NOT_YET_PROCESSED:
+        return CLASSIFIED_BY_AUTO
+    return command.classified_by_override or CLASSIFIED_BY_MANUAL
+
+
+def _command_idempotency_fields(command: ManualLedgerTransactionCommand) -> dict[str, object]:
+    """Project every persisted field of ``command`` into a name-keyed mapping.
+
+    The full-field idempotency contract (``aeat-cli-contract``)
+    requires the no-op match to compare EVERY persisted field. Keeping the field set as one
+    ordered mapping makes a new model field omitted here a single greppable site, paired with
+    :func:`_transaction_idempotency_fields` key-for-key.
+
+    The mapping is the single source for both consumers:
+    :func:`_command_idempotency_projection` folds it to the positional tuple the
+    idempotency guard compares, and :func:`is_evidence_only_command` reads it by
+    name to isolate which fields a command would actually change.
+
+    Four command fields are deliberately excluded, because none of them is content a
+    retry could silently drop:
+
+    - ``bucket_id`` scopes the lookup rather than describing the movement; the stored
+      row is only ever found by scanning that bucket's own catalogue, so a differing
+      bucket yields a different row, not a false match.
+    - ``actor`` and ``source_command`` are provenance of the invocation, not of the
+      movement. They are stamped once at creation (``created_by`` / ``source_command``)
+      and deliberately NOT re-stamped by a retry, so folding them in would turn a
+      benign retry from a different entry point into a spurious conflict.
+    - ``idempotency_key`` is the match key itself: the guard has already resolved the
+      stored row by the clock-free provider id derived from it, so both sides are equal
+      by construction.
+
+    ``classified_by_override`` is NOT excluded: it is persisted content
+    (``Transaction.classified_by``) and is projected through
+    :func:`_persisted_classified_by`.
+    """
+    return {
+        "booked_date": command.booked_date,
+        "value_date": command.value_date,
+        "amount": command.amount,
+        "currency": command.currency,
+        "counterparty": command.counterparty,
+        "description": command.description,
+        "direction": command.direction,
+        "business_classification": command.business_classification,
+        "business_pct": command.business_pct,
+        "category_id": command.category_id,
+        "taxable_base": command.taxable_base,
+        "iva_rate": command.iva_rate,
+        "iva_amount": command.iva_amount,
+        "iva_category": command.iva_category,
+        "deduction_fact_kind": command.deduction_fact_kind,
+        "investment_asset_id": command.investment_asset_id,
+        "recargo_amount": command.recargo_amount,
+        "source_jurisdiction": command.source_jurisdiction,
+        "counterparty_country": command.counterparty_country,
+        "counterparty_identification_state": command.counterparty_identification_state,
+        "irpf_category": command.irpf_category,
+        "m210_income_classification": command.m210_income_classification,
+        "usage_ratio_id": command.usage_ratio_id,
+        "prorrata_reference": command.prorrata_reference,
+        "art_104_tres_exclusion": command.art_104_tres_exclusion,
+        "input_classification": command.input_classification,
+        "prorrata_sector_id": command.prorrata_sector_id,
+        "purchase_invoice_evidence_id": command.purchase_invoice_evidence_id,
+        # tuple[str, ...] compared value-equal, not identity-equal, by tuple equality.
+        "attachment_ids": command.attachment_ids,
+        "notes": command.notes,
+        "group_label": command.group_label,
+        "own_account_id": command.own_account_id,
+        "classified_by": _persisted_classified_by(command),
+    }
+
+
+def _command_idempotency_projection(command: ManualLedgerTransactionCommand) -> tuple[object, ...]:
+    """Fold :func:`_command_idempotency_fields` into the positional idempotency tuple."""
+    return tuple(_command_idempotency_fields(command).values())
+
+
+def _transaction_idempotency_fields(current: Transaction) -> dict[str, object]:
+    """Project the stored transaction's persisted fields, aligned with the command mapping.
+
+    The banking-boundary fields read from ``current.raw``; the classification and
+    provenance fields read from the transaction directly — key-for-key with
+    :func:`_command_idempotency_fields`. The ``classified_by`` entry holds the stored
+    stamp, compared against the value a write of the command would persist
+    (:func:`_persisted_classified_by`).
+    """
+    raw = current.raw
+    return {
+        "booked_date": raw.booked_date,
+        "value_date": raw.value_date,
+        "amount": raw.amount,
+        "currency": raw.currency,
+        "counterparty": raw.counterparty,
+        "description": raw.description,
+        "direction": current.direction,
+        "business_classification": current.business_classification,
+        "business_pct": current.business_pct,
+        "category_id": current.category_id,
+        "taxable_base": current.taxable_base,
+        "iva_rate": current.iva_rate,
+        "iva_amount": current.iva_amount,
+        "iva_category": current.iva_category,
+        "deduction_fact_kind": current.deduction_fact_kind,
+        "investment_asset_id": current.investment_asset_id,
+        "recargo_amount": current.recargo_amount,
+        "source_jurisdiction": current.source_jurisdiction,
+        "counterparty_country": current.counterparty_country,
+        "counterparty_identification_state": current.counterparty_identification_state,
+        "irpf_category": current.irpf_category,
+        "m210_income_classification": current.m210_income_classification,
+        "usage_ratio_id": current.usage_ratio_id,
+        "prorrata_reference": current.prorrata_reference,
+        "art_104_tres_exclusion": current.art_104_tres_exclusion,
+        "input_classification": current.input_classification,
+        "prorrata_sector_id": current.prorrata_sector_id,
+        "purchase_invoice_evidence_id": current.purchase_invoice_evidence_id,
+        "attachment_ids": current.attachment_ids,
+        "notes": current.notes,
+        "group_label": current.group_label,
+        "own_account_id": current.own_account_id,
+        "classified_by": current.classified_by,
+    }
+
+
+def _transaction_idempotency_projection(current: Transaction) -> tuple[object, ...]:
+    """Fold :func:`_transaction_idempotency_fields` into the positional idempotency tuple."""
+    return tuple(_transaction_idempotency_fields(current).values())
+
+
+def command_matches_current(command: ManualLedgerTransactionCommand, current: Transaction) -> bool:
+    """Return True when a command would produce no observable change against the stored transaction.
+
+    Used to detect re-affirmation patches (operator supplies the same ``business_classification``
+    the record already carries) so the caller can treat them as confirmed no-ops instead of
+    raising a mutation-required error.
+    """
+    return _command_idempotency_projection(command) == _transaction_idempotency_projection(current)
+
+
+def build_ledger_bucket_event(
+    *,
+    bucket_id: str,
+    event_type: BucketEventType,
+    occurred_at: datetime,
+    actor: str,
+    object_id: str,
+    payload: Mapping[str, str],
+    object_type: BucketEventObjectType = BucketEventObjectType.LEDGER_TRANSACTION,
+) -> BucketEvent:
+    """Derive one ledger :class:`BucketEvent` without persisting it.
+
+    Delegates to the domain builder rather than restating the envelope, so the
+    ledger cannot drift from the canonical event shape. Supplies the ledger's
+    :data:`_BUCKET_EVENT_PAYLOAD_VERSION` and its default object type.
+    """
+    return build_bucket_event(
+        bucket_id=bucket_id,
+        event_type=event_type,
+        occurred_at=occurred_at,
+        actor=actor,
+        object_type=object_type,
+        object_id=object_id,
+        payload=payload,
+        payload_version=_BUCKET_EVENT_PAYLOAD_VERSION,
+    )
+
+
+def _commit_with_guarded_events(
+    *,
+    # rationale: calls to_secure_object_write(), an adapter-only escape
+    # hatch absent from BucketEventHistoryRepositoryProtocol.
+    event_repository: BucketEventHistoryCoCommitWriterProtocol,
+    events: tuple[BucketEvent, ...],
+    commit: Callable[[SecureObjectWrite], None],
+    attempts: int = 4,
+) -> None:
+    """Commit ``commit`` with the events composed in, guarded on their revision.
+
+    The co-commit is what these ledger writes need and what the self-committing
+    domain emitter cannot give them: the audit entry has to land in the SAME
+    batch as the record it describes, or a crash records a linkage that never
+    happened, or lands one with nothing saying so.
+
+    What the composition lacked was the other half. Reading the event catalogue
+    and handing it straight to the batch writes back whatever revision was read,
+    so an event another process appended in between is discarded -- the same
+    singleton-row loss ``append_guarded`` closes for the standalone path, on the
+    one shape that could not use it. Content-addressed events hide it perfectly:
+    every survivor is intact and the missing one leaves no gap.
+
+    So the write carries the revision the catalogue was READ at, and the whole
+    composition is re-run against the newly-current catalogue when the substrate
+    refuses it. ``commit`` is therefore called once per attempt and must be safe
+    to re-run; it is, because the domain catalogues it closes over are values
+    computed before this call, not reads that could go stale inside it.
+
+    Args:
+        event_repository: The bucket event-history repository.
+        events: The events to append, in order.
+        commit: Performs the real batch write, given the composed event write.
+        attempts: Maximum reads before the contention is surfaced.
+
+    Raises:
+        LedgerPersistenceConflictError: Contention persisted across every
+            attempt. Refusing beats the silent discard this replaced.
+    """
+    last_conflict: LedgerPersistenceConflictError | None = None
+    for _attempt in range(attempts):
+        event_catalogue, revision_id = event_repository.load_revisioned()
+        for event in events:
+            event_catalogue = append_bucket_event(event_catalogue, event)
+        try:
+            commit(event_repository.to_secure_object_write(event_catalogue, expected_revision_id=revision_id))
+        except LedgerPersistenceConflictError as exc:
+            last_conflict = exc
+            continue
+        return
+    if last_conflict is not None:
+        raise last_conflict
+    raise AssertionError("guarded event co-commit exhausted without a conflict")
+
+
+def save_transaction_catalogue_and_events(
+    *,
+    transaction_repository: TransactionCatalogueCoCommitWriterProtocol,
+    # rationale: calls to_secure_object_write(), an adapter-only escape
+    # hatch absent from BucketEventHistoryRepositoryProtocol.
+    event_repository: BucketEventHistoryCoCommitWriterProtocol,
+    catalogue: TransactionCatalogue,
+    events: tuple[BucketEvent, ...],
+    expected_current: Transaction | None = None,
+    replacement: Transaction | None = None,
+    expected_catalogue_revision: str | None = None,
+) -> None:
+    if expected_current is not None and expected_catalogue_revision is not None:
+        raise ValueError("transaction co-commit accepts only one expected snapshot guard")
+    if expected_current is not None:
+        if replacement is None:
+            raise ValueError("baseline-guarded transaction write requires its replacement")
+        _commit_with_guarded_events(
+            event_repository=event_repository,
+            events=events,
+            commit=lambda event_write: transaction_repository.replace_if_current_with_secure_object_writes(
+                expected_current,
+                replacement,
+                (event_write,),
+            ),
+        )
+        return
+    if expected_catalogue_revision is not None:
+        if not isinstance(transaction_repository, RevisionGuardedTransactionCatalogueCoCommitWriterProtocol):
+            raise InternalInvariantError("revision-guarded transaction co-commit capability is unavailable")
+        _commit_with_guarded_events(
+            event_repository=event_repository,
+            events=events,
+            commit=lambda event_write: transaction_repository.save_if_revision_with_secure_object_writes(
+                catalogue,
+                expected_revision_id=expected_catalogue_revision,
+                extra_writes=(event_write,),
+            ),
+        )
+        return
+    _commit_with_guarded_events(
+        event_repository=event_repository,
+        events=events,
+        commit=lambda event_write: transaction_repository.save_with_secure_object_writes(
+            catalogue,
+            (event_write,),
+        ),
+    )
+
+
+def save_transaction_catalogue_invoices_and_events(
+    *,
+    transaction_repository: TransactionCatalogueCoCommitWriterProtocol,
+    invoice_repository: InvoiceCatalogueCoCommitWriterProtocol,
+    # rationale: calls to_secure_object_write(), an adapter-only escape
+    # hatch absent from BucketEventHistoryRepositoryProtocol.
+    event_repository: BucketEventHistoryCoCommitWriterProtocol,
+    transaction_catalogue: TransactionCatalogue,
+    invoice_catalogue: InvoiceCatalogue,
+    events: tuple[BucketEvent, ...],
+) -> None:
+    _commit_with_guarded_events(
+        event_repository=event_repository,
+        events=events,
+        commit=lambda event_write: transaction_repository.save_with_secure_object_writes(
+            transaction_catalogue,
+            (
+                invoice_repository.to_secure_object_write(invoice_catalogue),
+                event_write,
+            ),
+        ),
+    )
+
+
+def primary_lineage_event_id(events: tuple[BucketEvent, ...]) -> str:
+    for event in events:
+        if event.object_type is BucketEventObjectType.LEDGER_TRANSACTION:
+            return event.event_id
+    return events[0].event_id
+
+
+def derive_evidence_event_ids(events: tuple[BucketEvent, ...]) -> dict[tuple[str, str], str]:
+    mapping: dict[tuple[str, str], str] = {}
+    for event in events:
+        if event.event_type in {
+            BucketEventType.PURCHASE_INVOICE_EVIDENCE_ATTACHED,
+            BucketEventType.PURCHASE_INVOICE_EVIDENCE_REPLACED,
+        }:
+            mapping[("purchase_invoice_evidence", event.object_id)] = event.event_id
+        if event.event_type is BucketEventType.ATTACHMENT_LINKED:
+            mapping[("attachment", event.object_id)] = event.event_id
+    return mapping
+
+
+def build_manual_ledger_result(
+    bucket_id: str,
+    transaction: Transaction,
+    bucket_event_ids: tuple[str, ...],
+    *,
+    stale_finalized_revisions: tuple[LedgerRemovalBlocker, ...] = (),
+) -> ManualLedgerTransactionResult:
+    return ManualLedgerTransactionResult(
+        ref=BucketTransactionRef(bucket_id=bucket_id, transaction_id=transaction.transaction_id),
+        transaction=transaction,
+        bucket_event_ids=bucket_event_ids,
+        stale_finalized_revisions=stale_finalized_revisions,
+    )
+
+
+__all__ = ["blocking_modelo_references"]

@@ -1,0 +1,25 @@
+{
+  "result_version": 1,
+  "profile_id": "13000000-0000-4000-8000-000000000730",
+  "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
+  "outcome": {
+    "outcome": "evaluated",
+    "baseline_id": "ba08e514b899519ecdffa5a2d19b8f23f1b6a392a724eb20d9f13c13b456178f",
+    "findings": []
+  },
+  "parsed": [
+    {
+      "address": { "kind": "scalar", "casilla_id": "06" },
+      "value": "1234.56",
+      "normalisations": ["separators_removed"],
+      "refusal": null,
+      "value_text": "1.234,56 €",
+      "refusal_words": null,
+      "comparable_value": "1234.56"
+    }
+  ],
+  "findings": [],
+  "operator_entries_unknown": false,
+  "refusal_words": null,
+  "rebase": []
+}

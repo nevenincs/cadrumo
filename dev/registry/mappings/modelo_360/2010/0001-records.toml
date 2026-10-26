@@ -1,0 +1,18 @@
+schema_version = 1
+fragment_id = "records"
+modelo = "360"
+design_epoch = "2010"
+source_ref = "aeat-dr-360-2010"
+source_sha256 = "1361d004c0156d99555e0257b269ae379cbae420a454cdb90b9c37e0abc28950"
+
+[[records]]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+export_record_id = "m360-solicitud"
+record_type = "solicitud"
+
+[[records]]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+export_record_id = "m360-operaciones"
+record_type = "operaciones"

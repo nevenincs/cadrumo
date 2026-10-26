@@ -1,0 +1,51 @@
+[package]
+name = "cadrumo-application"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.96"
+publish = false
+
+[features]
+live-python-tests = []
+live-package-tests = ["platform"]
+live-release-tests = ["live-package-tests"]
+platform = ["dep:cadrumo-platform"]
+# The local test servers the provisioning tests use, for owners whose own tests drive the
+# engine against them.
+test-support = ["dep:ring"]
+
+[dependencies]
+cadrumo-platform = { path = "../platform", optional = true }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.11"
+zeroize = "1"
+zip = { version = "9.0", default-features = false, features = ["deflate"] }
+# The local AI program ships as tar.gz on macOS and tar.zst on Linux. The same zlib-rs
+# inflater zip already links, a pure-Rust zstd decoder, and tar's reader without xattr.
+flate2 = { version = "1.1", default-features = false, features = ["zlib-rs"] }
+ruzstd = "0.9"
+tar = { version = "0.4", default-features = false }
+rustls = { version = "0.23", default-features = false, features = ["std", "tls12", "ring"] }
+webpki-roots = "1"
+object = { version = "0.40", default-features = false, features = ["read", "std"] }
+tokio = { version = "1", features = ["process", "io-util", "time", "rt", "macros"] }
+toml = { version = "1", default-features = false, features = ["std", "serde", "parse"] }
+ring = { version = "0.17", optional = true }
+
+[dev-dependencies]
+ring = "0.17"
+tempfile = "3"
+
+# Its own main: the scenarios need real child processes and a main thread
+# without the test harness's hook.
+[[test]]
+name = "panic_hook"
+path = "tests/panic_hook.rs"
+harness = false
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+all = "deny"

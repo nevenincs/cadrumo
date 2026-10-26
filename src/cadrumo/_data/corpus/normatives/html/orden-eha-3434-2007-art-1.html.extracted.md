@@ -1,0 +1,5 @@
+# Artículo 1. Aprobación del modelo 322.
+
+1. Se aprueba el modelo 322 de «Impuesto sobre el Valor Añadido. Grupo de entidades. Modelo individual. Autoliquidación mensual. Ingreso del Impuesto sobre el Valor Añadido a la importación liquidado por la Aduana», que figura como anexo I en la presente Orden.
+2. Este modelo será presentado por los sujetos pasivos del Impuesto sobre el Valor Añadido que formen parte de un grupo de entidades, de acuerdo con lo establecido en el artículo 163 quinquies.Uno de la Ley del Impuesto, y hayan optado por aplicar el Régimen especial previsto en el Capítulo IX Título IX de la Ley 37/1992, de 28 de diciembre, del Impuesto sobre el Valor Añadido. 3. La presentación de este modelo sólo podrá efectuarse por vía telemática en las condiciones y de acuerdo con el procedimiento previsto en los artículos 5 y 6 de esta Orden.
+Se modifica el apartado 1 por el art. 2.1 de la Orden HFP/1307/2017, de 29 de diciembre. Ref. BOE-A-2017-1584

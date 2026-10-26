@@ -1,0 +1,71 @@
+modelo:
+  schema:
+    '280':
+      casilla:
+        continuidad:
+          filing-year:
+            label: Exercici de declaració
+          irpf-declarante-nif:
+            label: NIF del declarant
+          m280-aportaciones-ejercicio:
+            label: Aportacions efectuades en l'exercici
+          m280-base-retencion-practicada:
+            label: Base de la retenció practicada
+          m280-base-retenciones:
+            label: Base de retencions
+          m280-clave-alta:
+            label: Clau d'alta
+          m280-declaracion-complementaria-sustitutiva:
+            label: Declaració complementària o substitutiva
+          m280-declarado-nif:
+            label: NIF del declarat
+          m280-declarado-nombre:
+            label: Cognoms i nom del declarat
+          m280-declarante-razon-social:
+            label: Raó social del declarant
+          m280-extincion-plan:
+            label: Extinció del Pla d'Estalvi a Llarg Termini
+          m280-fecha-apertura:
+            label: Data d'obertura
+          m280-fecha-extincion:
+            label: Data d'extinció
+          m280-identificador-producto:
+            label: Identificador del producte contractat
+          m280-importe-total-aportaciones:
+            label: Import total d'aportacions
+          m280-numero-identificativo-anterior:
+            label: Número identificatiu de la declaració anterior
+          m280-numero-identificativo-declaracion:
+            label: Número identificatiu de la declaració
+          m280-numero-total-declarados:
+            label: Nombre total de declarats
+          m280-persona-relacion:
+            label: Persona amb qui relacionar-se
+          m280-rendimientos-negativos-acumulados:
+            label: Rendiments negatius acumulats
+          m280-rendimientos-negativos-ejercicio:
+            label: Rendiments negatius obtinguts durant l'exercici
+          m280-rendimientos-negativos-imputables:
+            label: Rendiments negatius imputables
+          m280-rendimientos-positivos-acumulados:
+            label: Rendiments positius acumulats
+          m280-rendimientos-positivos-ejercicio:
+            label: Rendiments positius obtinguts durant l'exercici
+          m280-representante-legal-nif:
+            label: NIF del representant legal
+          m280-tipo-identificador:
+            label: Tipus d'identificador
+          m280-tipo-plan-ahorro:
+            label: Tipus de Pla d'Estalvi a Llarg Termini
+      field:
+        official_name: Modelo 280. Declaració informativa anual de Plans d'Estalvi
+          a Llarg Termini.
+        title: Declaració informativa anual de Plans d'Estalvi a Llarg Termini
+      revision:
+        2022-2024:
+          field:
+            label: Model 280, exercicis 2022 a 2024
+        '2025':
+          field:
+            label: Model 280, exercici 2025 (Ordre HAP/2118/2015; Ordres HFP/1822/2016,
+              HAC/1276/2019 i HFP/1192/2022)

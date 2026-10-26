@@ -1,0 +1,8 @@
+@step Record a transaction you are not ready to resolve.
+aeat --format json app ledger add --date 2026-03-15 --amount 80.00 --direction OUTGOING --description "Awaiting invoice" --idempotency-key correct-stash
+@capture transaction_id result.transaction_id
+@step Set it aside for later.
+aeat app ledger stash {transaction_id} --reason "waiting for invoice" --yes
+@step Confirm the lifecycle state now reads STASHED.
+@result aeat --format json app ledger view {transaction_id}
+@expect result.transaction.lifecycle_state == "STASHED"

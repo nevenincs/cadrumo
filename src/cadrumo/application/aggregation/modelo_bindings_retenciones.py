@@ -1,0 +1,247 @@
+"""Per-perceptor retenciones source resolver for modelo calculation bindings."""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, ClassVar
+
+from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from ...core.i18n.translatable import Translatable as tr
+from ...core.modelo import Modelo
+from ...core.period import Period
+from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
+from ...domain.calculations.registry.retenciones_bindings import (
+    resolve_retenciones_aggregation_binding_row_values,
+    resolve_retenciones_aggregation_binding_values,
+)
+from ..calculations.m115_no_relevant_payments import is_m115_no_relevant_payment_period
+from ._modelo_bindings_support import (
+    STORAGE_DEGRADATION_ERRORS,
+    empty_source_resolution,
+    revision_has_binding_source,
+)
+from ._preconditions import AggregationPreconditionCondition, aggregation_no_recovery_verdict
+from ._retencion_rate_advisory import (
+    administrador_retencion_rate_advisory_observations,
+)
+from .errors import AggregationValidationError
+from .retencion_observations_repository import (
+    RetencionObservationPersistenceError,
+    RetencionObservationPorts,
+)
+from .retenciones import (
+    RetencionesAggregation,
+    RetencionObservation,
+    aggregate_retenciones_111,
+    aggregate_retenciones_115,
+    aggregate_retenciones_123,
+    aggregate_retenciones_180,
+    aggregate_retenciones_190,
+    aggregate_retenciones_193,
+)
+from .source_mesh import (
+    CalculationSourceContext,
+    CalculationSourceDiagnostic,
+    CalculationSourceProvenance,
+    CalculationSourceResolution,
+)
+from .source_resolution_operations import (
+    source_provenance_for as _provenance_for,
+)
+from .source_resolution_operations import storage_degradation_resolution
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.schema import ModeloRevision
+
+_RETENCIONES_AGGREGATORS = {
+    Modelo("111").value: aggregate_retenciones_111,
+    Modelo("115").value: aggregate_retenciones_115,
+    Modelo("123").value: aggregate_retenciones_123,
+    Modelo("180").value: aggregate_retenciones_180,
+    Modelo("190").value: aggregate_retenciones_190,
+    Modelo("193").value: aggregate_retenciones_193,
+}
+
+
+class RetencionesAggregationSourceResolver:
+    """Source mesh resolver for the dedicated per-perceptor retención store.
+
+    Reads the bucket-scoped per-perceptor retención observations
+    (:class:`~.retencion_observations_repository.RetencionObservationRepository`)
+    for the modelo's period and materialises the declared retenciones aggregation
+    bindings through the matching validated aggregator. Modelo 115 consumes the
+    quarterly URBAN_RENTAL count/base; annual summary modelos consume the same
+    family store for their distinct-NIF count. Modelo 190's percepciones count is
+    handled by :class:`~.withholding_source.WithholdingSourceResolver`.
+    """
+
+    resolver_id: ClassVar[str] = "retenciones_aggregation"
+    owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = (BindingSourceKind.RETENCIONES_AGGREGATION,)
+
+    def __init__(
+        self,
+        *,
+        ports: RetencionObservationPorts,
+        m115_no_relevant_payment_periods: frozenset[tuple[int, str]] = frozenset(),
+    ) -> None:
+        """Use the required retención-observation capability bundle."""
+        self._ports = ports
+        self._m115_no_relevant_payment_periods = m115_no_relevant_payment_periods
+
+    @staticmethod
+    def aggregate(
+        modelo: str,
+        observations: tuple[RetencionObservation, ...],
+        *,
+        period: Period,
+    ) -> RetencionesAggregation:
+        """Aggregate per-perceptor retención observations for ``modelo``.
+
+        The ONE canonical retenciones aggregation entry point. Both this
+        resolver's live calculate path (:meth:`resolve`) and the per-modelo
+        aggregation service (:func:`~.service.aggregate_per_modelo`, the CLI
+        ``aggregate`` / pull surface) route through this single method over the
+        shared :data:`_RETENCIONES_AGGREGATORS` dispatch, so the calculate and
+        pull surfaces produce byte-identical aggregation and cannot drift
+        (``aeat-calculation-aggregation``). Raises ``KeyError``
+        for a non-retenciones modelo, matching the prior service dispatch.
+        """
+        return _RETENCIONES_AGGREGATORS[modelo](tuple(observations), period=period)
+
+    @staticmethod
+    def supports_modelo(modelo: str) -> bool:
+        """Return whether this canonical retenciones dispatcher owns ``modelo``."""
+        return modelo in _RETENCIONES_AGGREGATORS
+
+    def load_calculation_observations(
+        self,
+        *,
+        modelo: str,
+        period: Period,
+        revision: ModeloRevision,
+    ) -> tuple[RetencionObservation, ...] | None:
+        """Return the stored retención rows the calculation reads for ``modelo`` in ``period``.
+
+        ``None`` when ``revision`` declares no ``retenciones_aggregation``
+        binding, or declares one for a modelo with no retenciones aggregator:
+        the calculation then reads nothing from this store, which is a different
+        fact from reading an empty window. Modelo 180 reads the year's active
+        Modelo 115 windows; every other modelo reads its own window.
+
+        :meth:`resolve` and the per-modelo aggregate report both read through
+        here, so the report summarises exactly the rows the calculation
+        materialises rather than a window of its own choosing.
+
+        Parameter types: ``revision`` (:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`).
+        """
+        if (
+            not revision_has_binding_source(revision, "retenciones_aggregation")
+            or modelo not in _RETENCIONES_AGGREGATORS
+        ):
+            return None
+        if modelo == Modelo("180").value:
+            return self._ports.repository.load_annual_source_observations(Modelo("115").value, period.filing_year)
+        return self._ports.repository.load_observations(modelo, period)
+
+    def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
+        """Resolve the retenciones binding values for the declared modelo context."""
+        try:
+            observations = self.load_calculation_observations(
+                modelo=context.modelo,
+                period=context.period,
+                revision=context.revision,
+            )
+        except (RetencionObservationPersistenceError, *STORAGE_DEGRADATION_ERRORS) as exc:
+            return storage_degradation_resolution(
+                resolver_id=self.resolver_id,
+                owned_sources=self.owned_sources,
+                source_kinds=self.owned_sources,
+                error=exc,
+            )
+        if observations is None:
+            return empty_source_resolution(self.resolver_id, self.owned_sources)
+        if not observations:
+            is_m115 = context.modelo == Modelo("115").value
+            is_m115_no_relevant_payment = is_m115 and is_m115_no_relevant_payment_period(
+                filing_year=context.filing_year,
+                period_token=context.period.registry_token,
+                attested_periods=self._m115_no_relevant_payment_periods,
+            )
+            if is_m115_no_relevant_payment:
+                aggregation = self.aggregate(context.modelo, (), period=context.period)
+                return CalculationSourceResolution(
+                    resolver_id=self.resolver_id,
+                    owned_sources=self.owned_sources,
+                    binding_values=resolve_retenciones_aggregation_binding_values(context.revision, aggregation),
+                    row_binding_values=resolve_retenciones_aggregation_binding_row_values(
+                        context.revision, aggregation
+                    ),
+                    diagnostics=(
+                        CalculationSourceDiagnostic(
+                            reason="source_issue",
+                            source_kind="retenciones_aggregation",
+                            resolver_id=self.resolver_id,
+                            message=(
+                                f"Modelo 115 {context.filing_year} {context.period.registry_token} has an explicit "
+                                "no-relevant-payment attestation; its retention values are materialised as zero. "
+                                "This is local preparation evidence, not AEAT submission evidence."
+                            ),
+                        ),
+                    ),
+                )
+            # Modelo 111 is the one retenciones modelo with a prescribed remedy:
+            # a quarter with no retenciones is ATTESTED, never filed blank. Name
+            # that path, following the Modelo 180 precedent of carrying the flag
+            # in the message. The typed action channel cannot express it -- the
+            # wizard setup command projects no inputs to bind against.
+            is_m111 = context.modelo == Modelo("111").value
+            message = tr(
+                "aggregation.retenciones.errors.m111_no_retenciones_attestation_missing"
+                if is_m111
+                else "aggregation.retenciones.errors.perceptor_observations_missing",
+            )
+            # ``Translatable`` carries only the key; the renderer interpolates
+            # from this context, so the attestation period travels there.
+            refusal_context: dict[str, object] = {
+                "modelo": context.modelo,
+                "filing_year": str(context.filing_year),
+                "period": context.period.registry_token,
+                "source_kind": "retenciones_aggregation",
+            }
+            if is_m111:
+                refusal_context["attestation_period"] = f"{context.filing_year}:{context.period.registry_token}"
+            raise AggregationValidationError(
+                message,
+                context=refusal_context,
+                precondition_verdict=aggregation_no_recovery_verdict(
+                    AggregationPreconditionCondition.RETENCIONES_OBSERVATIONS_PRESENT,
+                    facts={
+                        "modelo": str(context.modelo),
+                        "filing_year": str(context.filing_year),
+                        "period": context.period.registry_token,
+                        "source_kind": "retenciones_aggregation",
+                    },
+                ),
+            )
+        aggregation = self.aggregate(context.modelo, tuple(observations), period=context.period)
+        return CalculationSourceResolution(
+            resolver_id=self.resolver_id,
+            owned_sources=self.owned_sources,
+            binding_values=resolve_retenciones_aggregation_binding_values(context.revision, aggregation),
+            row_binding_values=resolve_retenciones_aggregation_binding_row_values(context.revision, aggregation),
+            diagnostics=administrador_retencion_rate_advisory_observations(
+                observations, effective_date=context.period.end_date
+            ),
+            provenance=_provenance_for(
+                aggregation.rollups,
+                lambda rollup: CalculationSourceProvenance(
+                    resolver_id=self.resolver_id,
+                    resolved_binding_source=BindingSourceKind.RETENCIONES_AGGREGATION,
+                    contributor_source_kind="retenciones_aggregation",
+                    contributor_binding_source=BindingSourceKind.RETENCIONES_AGGREGATION,
+                    lineage_role=CalculationSourceLineageRole.PRIMARY,
+                    source_ref=f"perceptor:{rollup.perceptor_nif}",
+                    parent_source_ref=None,
+                    terminal_origin=TerminalOriginClass.PERCEPTOR_OBSERVATION,
+                ),
+            ),
+        )

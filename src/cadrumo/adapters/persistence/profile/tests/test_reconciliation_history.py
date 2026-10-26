@@ -1,0 +1,203 @@
+"""Real-behavior tests for the reconciliation-history read-back surface.
+
+Authority: ``2026-06-10-cli-operator-surface`` decision D7 (read-back
+baseline guarantee); CRUD-matrix audit finding F-07 (no reconciliation-history list).
+
+``modelo_reconcile`` persists a stored record per run, co-written with the slim
+``MODELO_RECONCILED`` bucket event in one unit of work.
+``list_modelo_reconciliations`` reads that record store back. These tests drive
+the production path end to end on a real isolated bucket: run several
+reconciliations, list them, assert the typed fields, narrow to one work unit,
+prove an empty bucket lists clean, and an anti-tautology proof shows an
+unreconciled work unit is absent. The store's own format obligations —
+roundtrip, anti-tautology, the N-per-work-unit key, atomicity — live in
+``test_reconciliation_record_store``.
+"""
+
+from __future__ import annotations
+
+from datetime import UTC, datetime
+
+import pytest
+
+from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
+    active_profile_isolated_backend_fixture,
+)
+from cadrumo.application.modelo.reconciliation import (
+    ModeloReconciliationCommand,
+)
+from cadrumo.application.workflow.persistence import workflow_state_repository
+from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+    bundled_indexed_authority,
+)
+from cadrumo.domain.modelos.codes import ModeloCode
+from cadrumo.domain.modelos.repository import upsert_work_unit
+from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from cadrumo.tests.inventory import FIXTURES_DIR
+
+from .....application.modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
+from .....application.modelo.reconciliation_records import (
+    ModeloReconciliationHistoryEntry,
+    ModeloReconciliationVerdict,
+    list_modelo_reconciliations,
+)
+from .reconciliation_persist_support import modelo_reconcile
+
+__all__ = ["isolated_backend"]
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+MODELO_130_FIXTURE = FIXTURES_DIR / "justificantes" / "modelo_130_2026Q1.pdf"
+_WORK_UNIT_TIMESTAMP = datetime(2026, 5, 28, 13, 30, 0, tzinfo=UTC)
+
+isolated_backend = active_profile_isolated_backend_fixture(profile_overrides={"identity.tax_id": "00000000T"})
+
+
+def _active_bucket_id() -> str:
+    bucket_id = workflow_state_repository().load().active_profile_bucket_id()
+    assert bucket_id is not None
+    return bucket_id
+
+
+def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> str:
+    bucket_id = _active_bucket_id()
+    # The history refuses a record whose revision diverges from the law-selected
+    # one, so the seeded unit carries the revision the registry actually selects.
+    with bundled_indexed_authority().operation() as operation:
+        revision_id = str(operation.revision_for_context(modelo, filing_year=filing_year, period=period).id)
+    typed_period = Period.from_year_and_code(filing_year, period)
+    work_unit_id = derive_work_unit_id(
+        bucket_id=bucket_id,
+        modelo=modelo,
+        filing_year=filing_year,
+        period=typed_period,
+        revision_id=revision_id,
+    )
+    work_unit = WorkUnit(
+        work_unit_id=work_unit_id,
+        bucket_id=bucket_id,
+        modelo=ModeloCode(modelo),
+        filing_year=filing_year,
+        period=typed_period,
+        revision_id=revision_id,
+        name=f"{modelo}-{filing_year}-{typed_period.registry_token}",
+        created_at=_WORK_UNIT_TIMESTAMP,
+        updated_at=_WORK_UNIT_TIMESTAMP,
+    )
+    repo = WorkUnitCatalogueRepository()
+    repo.save(upsert_work_unit(repo.load(), work_unit))
+    return work_unit_id
+
+
+def _reconcile(work_unit_id: str, *, operation: PinnedAuthorityOperation) -> None:
+    modelo_reconcile(
+        ModeloReconciliationCommand(
+            work_unit_id=work_unit_id,
+            source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
+            source_path=MODELO_130_FIXTURE,
+            actor="tester",
+        ),
+        operation=operation,
+    )
+
+
+def test_history_lists_recorded_reconciliations_with_typed_fields(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Several reconciliations all surface in the history with their typed fields.
+
+    A modelo=130 work unit matches the modelo_130 fixture (verdict MATCHES,
+    zero diffs); a modelo=303 work unit mismatches it (verdict MISMATCHES, a
+    modelo diff). The history projects both with the right verdict, source kind,
+    diff count, and actor.
+    """
+    matching_unit = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
+    mismatching_unit = _seed_work_unit(modelo="303", filing_year=2026, period="1T")
+    _reconcile(matching_unit, operation=operation)
+    _reconcile(mismatching_unit, operation=operation)
+
+    with bundled_indexed_authority().operation() as operation:
+        entries = list_modelo_reconciliations(bucket_id=_active_bucket_id(), operation=operation)
+
+    assert all(isinstance(entry, ModeloReconciliationHistoryEntry) for entry in entries)
+    by_unit = {entry.work_unit_id: entry for entry in entries}
+    assert set(by_unit) == {matching_unit, mismatching_unit}
+
+    matched = by_unit[matching_unit]
+    assert matched.verdict is ModeloReconciliationVerdict.MATCHES
+    assert matched.diff_count == 0
+    assert matched.source_kind is ModeloReconciliationEvidenceKind.JUSTIFICANTE
+    assert matched.actor == "tester"
+    assert matched.source_path.endswith("modelo_130_2026Q1.pdf")
+
+    mismatched = by_unit[mismatching_unit]
+    assert mismatched.verdict is ModeloReconciliationVerdict.MISMATCHES
+    assert mismatched.diff_count >= 1
+
+
+def test_history_narrows_to_one_work_unit(operation: PinnedAuthorityOperation) -> None:
+    """The optional work_unit_id filter narrows the history to one work unit."""
+    unit_a = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
+    unit_b = _seed_work_unit(modelo="130", filing_year=2026, period="2T")
+    _reconcile(unit_a, operation=operation)
+    _reconcile(unit_b, operation=operation)
+
+    with bundled_indexed_authority().operation() as operation:
+        only_a = list_modelo_reconciliations(
+            bucket_id=_active_bucket_id(),
+            operation=operation,
+            work_unit_id=unit_a,
+        )
+
+    assert {entry.work_unit_id for entry in only_a} == {unit_a}
+
+
+def test_history_orders_oldest_first(operation: PinnedAuthorityOperation) -> None:
+    """Repeated reconciliations of one unit list oldest-first by reconciled_at."""
+    unit = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
+    _reconcile(unit, operation=operation)
+    _reconcile(unit, operation=operation)
+
+    with bundled_indexed_authority().operation() as operation:
+        entries = list_modelo_reconciliations(
+            bucket_id=_active_bucket_id(),
+            operation=operation,
+            work_unit_id=unit,
+        )
+
+    timestamps = [entry.reconciled_at for entry in entries]
+    assert timestamps == sorted(timestamps)
+
+
+def test_history_on_empty_bucket_returns_clean_empty() -> None:
+    """A bucket with no reconciliations lists a clean empty tuple, not an error."""
+    with bundled_indexed_authority().operation() as operation:
+        entries = list_modelo_reconciliations(bucket_id=_active_bucket_id(), operation=operation)
+
+    assert entries == ()
+
+
+def test_anti_tautology_unreconciled_unit_absent_from_history(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """A work unit that was never reconciled is absent from the history.
+
+    Anti-tautology proof: reconcile one unit, create a second unit but never
+    reconcile it, then assert the history lists only the first. If this passed
+    with the unreconciled unit present, the read-back would be tautological.
+    """
+    reconciled_unit = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
+    never_reconciled_unit = _seed_work_unit(modelo="130", filing_year=2026, period="3T")
+    _reconcile(reconciled_unit, operation=operation)
+
+    with bundled_indexed_authority().operation() as operation:
+        listed_units = {
+            entry.work_unit_id
+            for entry in list_modelo_reconciliations(bucket_id=_active_bucket_id(), operation=operation)
+        }
+
+    assert reconciled_unit in listed_units
+    assert never_reconciled_unit not in listed_units

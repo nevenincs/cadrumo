@@ -1,0 +1,1088 @@
+"""Application-live persistence for captured AEAT justificante receipts.
+
+The live justificante pull retrieves the authentic, AEAT-signed
+*justificante de presentación* PDF for a filed work unit through the
+read-only declarations register and persists it
+as a bucket-scoped, content-addressed secure object. The persisted
+artefact is the durable, official evidence the local reconciler reads —
+the operator no longer hand-downloads the receipt.
+
+This service is a stateful :class:`SnapshotService` sibling of the
+Modelo 100 borrador service: it keys supersession on the
+``(modelo, filing_year, period)`` axis so a re-filed period's fresh
+capture supersedes the prior ACTIVE one, and it persists each snapshot
+through a :class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`
+at FINANCIAL sensitivity under
+:data:`cadrumo.adapters.persistence.storage.secure_object_namespaces.LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE`,
+and records each capture as a lifecycle event via
+:class:`BucketEventHistoryRepository`.
+
+The captured PDF bytes ride inside the encrypted snapshot :class:`Envelope`
+as a base64 ``str`` (binary cannot survive the JSON envelope verbatim); the
+raw-bytes ``pdf_sha256`` is the content address used for snapshot-id
+derivation and dedup.
+
+See Also:
+    :mod:`cadrumo.application.live`
+        Public read-only live facade that orchestrates capture and reports
+        :class:`~cadrumo.application.live.justificante.JustificanteCaptureOutcome`.
+    :func:`cadrumo.application.live.filed_observation_persistence.enroll_filed_justificante_evidence`
+        Filed-history path that performs the same metadata registration and
+        current-record evidence stamping from declaration-register artefacts.
+    :mod:`cadrumo.application.overview`
+        Calendar projection that reads :class:`JustificanteCaptureSnapshot`
+        rows and matching domain justificante metadata as AEAT-side evidence.
+    :class:`cadrumo.adapters.persistence.profile.snapshots.SecureSnapshotRepository`
+        Shared encrypted snapshot repository used by this bucket-scoped
+        capture repository.
+    :class:`~ModeloRecord`
+        Local filing record stamped with live
+        :class:`~ExternalEvidence` only after the receipt
+        matches the current filing axis.
+"""
+
+from __future__ import annotations
+
+import base64
+import binascii
+from collections.abc import AsyncGenerator, Callable, Sequence
+from contextlib import asynccontextmanager, nullcontext
+from dataclasses import dataclass
+from datetime import datetime
+from enum import StrEnum
+from typing import TYPE_CHECKING, override
+
+from pydantic import BaseModel, Field, field_validator, model_validator
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.justificante.schema import Justificante
+    from ...domain.modelos.filing_record import ModeloRecord
+
+from ...core.aeat_csv import normalise_aeat_csv
+from ...core.errors.hierarchy import CoreValidationError, InternalInvariantError, pydantic_validation_boundary
+from ...core.filing_year import FilingYear
+from ...core.hashing import content_hash_hex, sha256_hex
+from ...core.identity.aeat_csv import AeatCsv
+from ...core.identity.aeat_expediente import AeatExpedienteId
+from ...core.identity.bucket import BucketId
+from ...core.identity.digest import ContentDigest
+from ...core.identity.hex_ids import SnapshotId
+from ...core.identity.tax_id import tax_id_identity_token
+from ...core.modelo import Modelo
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.period import Period
+from ...core.time.clock import now
+from ...domain.justificante.errors import JustificanteVerificationError
+from ..calculations.observations_repository import ObservationSourceKind
+from .errors import (
+    LiveApplicationInputError,
+    LiveReadPrecondition,
+    live_read_no_recovery_verdict,
+)
+from .filed_data_ports import FiledEffectGuard
+from .justificante_ports import (
+    JustificanteAuthenticityVerifierPort,
+    JustificanteDeclaration,
+    JustificanteLiveReadPort,
+    JustificanteRegistrationPorts,
+    JustificanteSnapshotPersistencePort,
+)
+from .session import SessionWriteReporter
+from .snapshot_base import (
+    SnapshotLifecycleState,
+    SnapshotNotFoundError,
+    SnapshotService,
+    enforce_snapshot_state_invariants,
+)
+
+JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE = "cadrumo.application.live.justificante_capture_snapshot"
+
+# Official source kind stamped on the captured receipt. Its explicit
+# ``is_official_aeat`` capability lets a dependent period whose upstream evidence
+# is this capture clear the ``MISSING_JUSTIFICANTE_VERIFICATION`` blocker.
+JUSTIFICANTE_CAPTURE_SOURCE_KIND = ObservationSourceKind.AEAT_SEDE_LIVE_CAPTURE
+
+
+@asynccontextmanager
+async def _local_effect_boundary(effect_guard: FiledEffectGuard | None) -> AsyncGenerator[None]:
+    """Enter a caller's fresh local write fence when one was supplied."""
+    if effect_guard is None:
+        yield
+    else:
+        async with effect_guard():
+            yield
+
+
+class JustificanteAuthenticity(StrEnum):
+    """Verdict of the read-only AEAT *cotejo* check on a captured receipt.
+
+    The four members are distinct states and never collapse into a boolean.
+    ``NOT_CHECKED`` is the default a capture carries until the cotejo viewer
+    has been consulted; ``UNAVAILABLE`` records that the check was attempted
+    and could not be completed. Neither is a denial, and neither may be read
+    as one. Only ``CONFIRMED`` means AEAT rendered the CSV-bound document
+    viewer for this receipt, and only ``DENIED`` means AEAT answered that it
+    holds no such document.
+
+    A verdict is advisory provenance about the captured PDF. It says nothing
+    about the correctness of the declared values and must never be promoted
+    into a filing-grade figure by a downstream consumer.
+    """
+
+    NOT_CHECKED = "not_checked"
+    CONFIRMED = "confirmed"
+    DENIED = "denied"
+    UNAVAILABLE = "unavailable"
+
+
+class JustificanteCaptureSnapshotNotFoundError(SnapshotNotFoundError):
+    """Raised when a live justificante-capture snapshot lookup misses by id."""
+
+
+class JustificanteCaptureSnapshot(BaseModel):
+    """One live-captured AEAT justificante receipt persisted for a bucket.
+
+    Bundles the work-unit axis (``modelo`` / ``filing_year`` / ``period``),
+    the sede provenance (``expediente_id`` / ``csv``), the content address
+    (``pdf_sha256`` over the raw bytes), and the receipt itself
+    (``pdf_base64``). The official ``source_kind`` records that the receipt
+    came from an authenticated live capture.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    snapshot_id: SnapshotId
+    bucket_id: BucketId
+    modelo: str = Field(min_length=1, max_length=16)
+    filing_year: FilingYear
+    period: Period
+    expediente_id: AeatExpedienteId
+    csv: AeatCsv
+    pdf_sha256: ContentDigest
+    pdf_base64: str = Field(min_length=1)
+    source_kind: ObservationSourceKind = Field(default=JUSTIFICANTE_CAPTURE_SOURCE_KIND)
+
+    @field_validator("source_kind", mode="before")
+    @classmethod
+    def _parse_source_kind(cls, value: object) -> ObservationSourceKind:
+        """Parse persisted snapshot JSON into the closed observation taxonomy."""
+        return ObservationSourceKind(value)
+
+    authenticity: JustificanteAuthenticity = Field(default=JustificanteAuthenticity.NOT_CHECKED)
+
+    @field_validator("authenticity", mode="before")
+    @classmethod
+    def _parse_authenticity(cls, value: object) -> JustificanteAuthenticity:
+        """Parse persisted snapshot JSON into the closed cotejo-verdict taxonomy.
+
+        A snapshot written before the cotejo stamp existed carries no
+        ``authenticity`` key at all; the field default answers that case as
+        ``NOT_CHECKED`` rather than inventing a verdict for it.
+        """
+        return JustificanteAuthenticity(value)
+
+    captured_at: datetime
+    state: SnapshotLifecycleState
+    superseded_by_snapshot_id: SnapshotId | None = None
+    discarded_at: datetime | None = None
+    discarded_by: str = Field(default="", max_length=128)
+    discard_reason: str = Field(default="", max_length=500)
+
+    @field_validator("modelo")
+    @classmethod
+    @pydantic_validation_boundary
+    def _modelo_is_known(cls, value: str) -> str:
+        """Reject a modelo code that is not a member of the core :class:`Modelo` enum."""
+        try:
+            Modelo(value)
+        except CoreValidationError as exc:
+            raise LiveApplicationInputError(
+                translated_message="application.live.justificante.errors.modelo_unknown",
+                context={"modelo": value},
+            ) from exc
+        return value
+
+    @model_validator(mode="after")
+    def _enforce_state_payload(self) -> JustificanteCaptureSnapshot:
+        enforce_snapshot_state_invariants(
+            state=self.state,
+            has_supersession_pointer=self.superseded_by_snapshot_id is not None,
+            discarded_at=self.discarded_at,
+            discarded_by=self.discarded_by,
+            discard_reason=self.discard_reason,
+        )
+        try:
+            decoded = base64.b64decode(self.pdf_base64, validate=True)
+        except (binascii.Error, ValueError) as exc:
+            raise LiveApplicationInputError(
+                translated_message="application.live.justificante.errors.pdf_base64_invalid",
+                context={"snapshot_id": self.snapshot_id},
+            ) from exc
+        if not decoded:
+            raise LiveApplicationInputError(
+                translated_message="application.live.justificante.errors.pdf_base64_empty",
+                context={"snapshot_id": self.snapshot_id},
+            )
+        if sha256_hex(decoded) != self.pdf_sha256:
+            raise LiveApplicationInputError(
+                translated_message="application.live.justificante.errors.pdf_sha256_mismatch",
+                context={"snapshot_id": self.snapshot_id, "decoded_byte_size": len(decoded)},
+            )
+        return self
+
+    def decoded_pdf_bytes(self) -> bytes:
+        """Return the raw PDF bytes decoded from :attr:`pdf_base64`."""
+        return base64.b64decode(self.pdf_base64, validate=True)
+
+
+def justificante_capture_snapshot_object_key(bucket_id: str, snapshot_id: str) -> str:
+    """Return the secure-object key for one bucket's justificante-capture snapshot.
+
+    The key shape is the object-key grammar declared by
+    :data:`cadrumo.adapters.persistence.storage.secure_object_namespaces.LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE`.
+    """
+    trimmed_bucket = bucket_id.strip()
+    trimmed_snapshot = snapshot_id.strip()
+    if not trimmed_bucket:
+        raise LiveApplicationInputError(
+            translated_message="application.live.justificante.errors.bucket_id_blank",
+        )
+    if not trimmed_snapshot:
+        raise LiveApplicationInputError(
+            translated_message="application.live.justificante.errors.snapshot_id_blank",
+        )
+    return f"justificante-capture-snapshot:{trimmed_bucket}:{trimmed_snapshot}"
+
+
+def derive_justificante_capture_snapshot_id(
+    *,
+    modelo: str,
+    filing_year: int,
+    period: Period,
+    pdf_sha256: str,
+) -> str:
+    """Return the content-addressed id for one justificante capture.
+
+    The id is derived from the work-unit axis plus the raw-PDF content
+    address, so re-capturing the identical receipt is idempotent while a
+    re-filed period (a different signed PDF) yields a new id that
+    supersedes the prior ACTIVE snapshot on the same axis.
+    """
+    return content_hash_hex(
+        {
+            "modelo": modelo,
+            "filing_year": filing_year,
+            "period": period.registry_token,
+            "pdf_sha256": pdf_sha256,
+        },
+    )
+
+
+def resolve_period_declaration(
+    *,
+    declarations: Sequence[JustificanteDeclaration],
+    modelo: str,
+    period: Period,
+) -> JustificanteDeclaration:
+    """Select the latest accepted register row for the exact model and period.
+
+    The procedure tree is a different AEAT surface and need not contain filed
+    declarations. The selected row itself owns the authenticated receipt control.
+    Never substitute another quarter or year when the requested row is absent.
+    """
+    target_period = period.registry_token
+    candidates = [
+        declaration for declaration in declarations if declaration.modelo == modelo and declaration.period == period
+    ]
+    if not candidates:
+        raise LiveApplicationInputError(
+            translated_message="application.live.justificante.errors.no_filed_declaration",
+            context={"modelo": modelo, "period": target_period},
+        )
+    chosen = max(
+        candidates,
+        key=lambda declaration: (
+            declaration.estado.upper() == "ALTA",
+            declaration.presented_at,
+            declaration.expediente_id,
+        ),
+    )
+    return chosen
+
+
+def _captured_snapshot(record: object) -> JustificanteCaptureSnapshot:
+    """Return one persisted record as the capture snapshot this bucket stores.
+
+    The persistence port is declared over an opaque record so the encrypted
+    store stays snapshot-agnostic. This boundary states what the repository
+    reads back, and refuses a foreign record instead of passing it on.
+    """
+    if not isinstance(record, JustificanteCaptureSnapshot):
+        raise InternalInvariantError("justificante snapshot persistence returned a foreign record")
+    return record
+
+
+class JustificanteCaptureSnapshotRepository:
+    """Secure-DB repository for captured justificante snapshots in one bucket.
+
+    Composes the shared :class:`SecureSnapshotRepository` for the read surface
+    (load / resolve / list / exists), preserving the class identity,
+    ``JustificanteCaptureSnapshotNotFoundError`` messages, and the
+    ``captured_at`` list ordering. ``save`` is kept local because justificante
+    stamps the envelope ``written_at`` with the capture time (not ``now()``),
+    a deliberate divergence from the shared base.
+
+    The namespace, sensitivity, schema version, and key grammar come from
+    :data:`cadrumo.adapters.persistence.storage.secure_object_namespaces.LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE`.
+    Each :class:`JustificanteCaptureSnapshot` is written through an
+    :class:`~cadrumo.adapters.persistence.storage.envelope.contract.Envelope` so the captured PDF,
+    CSV, and expediente metadata stay inside the encrypted
+    :class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`
+    bucket store.
+    """
+
+    def __init__(self, *, persistence: JustificanteSnapshotPersistencePort) -> None:
+        """Initialize this public contract."""
+        trimmed = persistence.bucket_id.strip()
+        if not trimmed:
+            raise LiveApplicationInputError(
+                translated_message="application.live.justificante.errors.bucket_id_blank",
+            )
+        self._bucket_id = trimmed
+        self._persistence = persistence
+
+    @property
+    def bucket_id(self) -> str:
+        """Execute this public contract operation."""
+        return self._bucket_id
+
+    def exists(self, snapshot_id: str) -> bool:
+        """Execute this public contract operation."""
+        return self._persistence.exists(snapshot_id)
+
+    def load(self, snapshot_id: str) -> JustificanteCaptureSnapshot:
+        """Execute this public contract operation."""
+        return _captured_snapshot(self._persistence.load(snapshot_id))
+
+    def list_snapshots(self) -> tuple[JustificanteCaptureSnapshot, ...]:
+        """Execute this public contract operation."""
+        return tuple(
+            sorted(
+                (_captured_snapshot(record) for record in self._persistence.list_snapshots()),
+                key=lambda item: (item.captured_at, item.snapshot_id),
+            ),
+        )
+
+    def resolve(self, snapshot_id: str) -> JustificanteCaptureSnapshot:
+        """Execute this public contract operation."""
+        return _captured_snapshot(self._persistence.resolve(snapshot_id))
+
+    def save(self, snapshot: JustificanteCaptureSnapshot) -> None:
+        """Execute this public contract operation."""
+        if snapshot.bucket_id != self._bucket_id:
+            raise LiveApplicationInputError(
+                translated_message="application.live.justificante.errors.snapshot_bucket_mismatch",
+                context={
+                    "snapshot_bucket_id": snapshot.bucket_id,
+                    "repository_bucket_id": self._bucket_id,
+                },
+            )
+        self._persistence.save(snapshot)
+
+
+class _JustificanteCaptureRequest(BaseModel):
+    model_config = _STRICT_FROZEN
+
+    modelo: str
+    filing_year: int
+    period: Period
+    expediente_id: AeatExpedienteId
+    csv: AeatCsv
+    pdf_bytes: bytes
+    pdf_sha256: str
+    captured_at: datetime
+
+
+class JustificanteCaptureSnapshotService(
+    SnapshotService[JustificanteCaptureSnapshot, _JustificanteCaptureRequest],
+):
+    """Canonical backend service for bucket-scoped live justificante captures."""
+
+    def __init__(
+        self,
+        *,
+        bucket_id: str,
+        repository: JustificanteCaptureSnapshotRepository,
+    ) -> None:
+        """Initialize this public contract."""
+        super().__init__(bucket_id=bucket_id, repository=repository)
+
+    # ---- public API ------------------------------------------------------
+
+    def capture(
+        self,
+        *,
+        modelo: str,
+        filing_year: int,
+        period: Period,
+        expediente_id: str,
+        csv: str,
+        pdf_bytes: bytes,
+        pdf_sha256: str,
+        captured_at: datetime,
+    ) -> JustificanteCaptureSnapshot:
+        """Persist one captured justificante and return the ACTIVE :class:`JustificanteCaptureSnapshot`.
+
+        Idempotent on the receipt content address: re-capturing the same
+        signed PDF returns the existing snapshot. A re-filed period (a new
+        signed PDF) supersedes the prior ACTIVE snapshot on the
+        ``(modelo, filing_year, period)`` axis.
+        """
+        return self._capture_with_lifecycle(
+            _JustificanteCaptureRequest(
+                modelo=modelo,
+                filing_year=filing_year,
+                period=period,
+                expediente_id=expediente_id,
+                csv=csv,
+                pdf_bytes=pdf_bytes,
+                pdf_sha256=pdf_sha256,
+                captured_at=captured_at,
+            ),
+        )
+
+    @override
+    # TYPE-IGNORE-RATIONALE-OVERRIDE-COVARIANT-RETURN:
+    # Subclass returns a narrower snapshot type and adds optional filter params;
+    # base-class signature widening would ripple to N snapshot subclasses.
+    def list_snapshots(
+        self,
+        *,
+        filing_year: int | None = None,
+        state: SnapshotLifecycleState | None = SnapshotLifecycleState.ACTIVE,
+    ) -> tuple[JustificanteCaptureSnapshot, ...]:
+        snapshots: tuple[JustificanteCaptureSnapshot, ...] = super().list_snapshots()
+        if filing_year is not None:
+            snapshots = tuple(snapshot for snapshot in snapshots if snapshot.filing_year == filing_year)
+        if state is not None:
+            snapshots = tuple(snapshot for snapshot in snapshots if snapshot.state is state)
+        return snapshots
+
+    def stamp_authenticity(
+        self,
+        *,
+        snapshot: JustificanteCaptureSnapshot,
+        authenticity: JustificanteAuthenticity,
+    ) -> JustificanteCaptureSnapshot:
+        """Persist ``authenticity`` onto ``snapshot`` and return the stamped record.
+
+        The verdict rides the same encrypted snapshot envelope as the receipt
+        it describes, so no plaintext copy of the capture leaves the secure
+        store. Re-stamping is idempotent for an unchanged verdict and
+        overwrites in place otherwise: the cotejo answer is a current-state
+        fact about the document, not an append-only ledger of attempts.
+        """
+        stamped = snapshot.model_copy(update={"authenticity": authenticity})
+        self._repository.save(stamped)
+        return stamped
+
+    def show(self, snapshot_id: str) -> JustificanteCaptureSnapshot:
+        """Execute this public contract operation."""
+        return self.resolve_snapshot(snapshot_id)
+
+    # ---- SnapshotService hooks -------------------------------------------
+
+    @override
+    def _derive_snapshot_id(self, capture: _JustificanteCaptureRequest) -> str:
+        return derive_justificante_capture_snapshot_id(
+            modelo=capture.modelo,
+            filing_year=capture.filing_year,
+            period=capture.period,
+            pdf_sha256=capture.pdf_sha256,
+        )
+
+    @override
+    def _build_active_payload(
+        self,
+        *,
+        snapshot_id: str,
+        capture: _JustificanteCaptureRequest,
+    ) -> JustificanteCaptureSnapshot:
+        return JustificanteCaptureSnapshot(
+            snapshot_id=snapshot_id,
+            bucket_id=self._repository.bucket_id,
+            modelo=capture.modelo,
+            filing_year=capture.filing_year,
+            period=capture.period,
+            expediente_id=capture.expediente_id,
+            csv=capture.csv,
+            pdf_sha256=capture.pdf_sha256,
+            pdf_base64=base64.b64encode(capture.pdf_bytes).decode("ascii"),
+            source_kind=JUSTIFICANTE_CAPTURE_SOURCE_KIND,
+            captured_at=capture.captured_at,
+            state=SnapshotLifecycleState.ACTIVE,
+        )
+
+    @override
+    def _payload_axis_key(self, payload: JustificanteCaptureSnapshot) -> tuple[object, ...]:
+        return (payload.modelo, payload.filing_year, payload.period)
+
+    @override
+    def _payload_captured_at(self, payload: JustificanteCaptureSnapshot) -> datetime:
+        return payload.captured_at
+
+    @override
+    def _payload_snapshot_id(self, payload: JustificanteCaptureSnapshot) -> str:
+        return payload.snapshot_id
+
+    @override
+    def _payload_state(self, payload: JustificanteCaptureSnapshot) -> SnapshotLifecycleState:
+        return payload.state
+
+    @override
+    def _demote_to_superseded(
+        self,
+        payload: JustificanteCaptureSnapshot,
+        *,
+        superseded_by: str,
+    ) -> JustificanteCaptureSnapshot:
+        return payload.model_copy(
+            update={
+                "state": SnapshotLifecycleState.SUPERSEDED,
+                "superseded_by_snapshot_id": superseded_by,
+            },
+        )
+
+
+def parse_capture_to_justificante(
+    snapshot: JustificanteCaptureSnapshot,
+    *,
+    ports: JustificanteRegistrationPorts,
+) -> Justificante:
+    """Parse a persisted capture's PDF into a strict domain :class:`Justificante`.
+
+    Reads the encrypted snapshot's bytes in memory and runs the inbound parser.
+    Used to register the captured receipt as official filing evidence and to
+    reconcile against it.
+    """
+    return ports.parse_pdf(snapshot.decoded_pdf_bytes())
+
+
+def _require_receipt_csv_matches_capture(
+    justificante: Justificante,
+    snapshot: JustificanteCaptureSnapshot,
+) -> None:
+    """Refuse a parsed receipt whose CSV is not the one the capture was fetched under.
+
+    One guard rather than one per caller: the two registration paths asked the
+    same question with the same refusal, so a second copy could only drift.
+    Both sides go through the shared comparison form, so a receipt whose CSV
+    differs only in case or surrounding whitespace is still the same receipt.
+    """
+    if normalise_aeat_csv(justificante.csv) == normalise_aeat_csv(snapshot.csv):
+        return
+    raise LiveApplicationInputError(
+        translated_message="application.live.justificante.errors.csv_mismatch",
+        context={"snapshot_id": snapshot.snapshot_id},
+        precondition_verdict=live_read_no_recovery_verdict(
+            LiveReadPrecondition.JUSTIFICANTE_MATCHES_CAPTURE,
+            facts={"snapshot_id": snapshot.snapshot_id, "csv_matches": False},
+        ),
+    )
+
+
+def register_capture_justificante_metadata(
+    *,
+    snapshot: JustificanteCaptureSnapshot,
+    ports: JustificanteRegistrationPorts,
+) -> Justificante | None:
+    """Persist parsed justificante metadata for a live capture.
+
+    This records the official AEAT receipt metadata even when the local app has
+    no current ``ModeloRecord`` for the period. It does not stamp or create a
+    local filing row; that remains owned by
+    :func:`register_capture_as_filing_evidence`.
+
+    Returns the persisted :class:`Justificante`, or ``None`` when the captured
+    snapshot cannot be parsed into one.
+    """
+    from ...domain.justificante.errors import JustificanteParseError
+
+    if snapshot.state is not SnapshotLifecycleState.ACTIVE:
+        raise LiveApplicationInputError(
+            translated_message="application.live.justificante.errors.metadata_snapshot_not_active",
+            context={"snapshot_id": snapshot.snapshot_id, "state": snapshot.state.value},
+        )
+    try:
+        justificante = parse_capture_to_justificante(snapshot, ports=ports)
+    except JustificanteParseError:
+        return None
+    _require_receipt_csv_matches_capture(justificante, snapshot)
+    if not _justificante_matches_capture_axis(justificante, snapshot):
+        raise LiveApplicationInputError(
+            translated_message="application.live.justificante.errors.capture_axis_mismatch",
+            context={
+                "snapshot_id": snapshot.snapshot_id,
+                "modelo": snapshot.modelo,
+                "period": str(snapshot.period),
+            },
+            precondition_verdict=live_read_no_recovery_verdict(
+                LiveReadPrecondition.JUSTIFICANTE_MATCHES_CAPTURE,
+                facts={
+                    "snapshot_id": snapshot.snapshot_id,
+                    "modelo": snapshot.modelo,
+                    "period": str(snapshot.period),
+                    "axis_matches": False,
+                },
+            ),
+        )
+    ports.metadata.save(justificante)
+    return justificante
+
+
+def _justificante_matches_capture_axis(
+    justificante: Justificante,
+    snapshot: JustificanteCaptureSnapshot,
+) -> bool:
+    return justificante.matches_filing_target(
+        modelo=snapshot.modelo,
+        filing_year=snapshot.filing_year,
+        period=snapshot.period,
+    )
+
+
+def _current_filing_record_for_capture(
+    snapshot: JustificanteCaptureSnapshot,
+    ports: JustificanteRegistrationPorts,
+) -> ModeloRecord:
+    catalogue = ports.filing.load()
+    current = catalogue.current_for(
+        bucket_id=snapshot.bucket_id,
+        modelo=snapshot.modelo,
+        filing_year=snapshot.filing_year,
+        period=snapshot.period,
+    )
+    if current is None:
+        raise LiveApplicationInputError(
+            translated_message="application.live.justificante.errors.filing_record_missing",
+            context={"modelo": snapshot.modelo, "period": str(snapshot.period)},
+        )
+    return current
+
+
+def _require_capture_matches_filing_record(
+    justificante: Justificante,
+    current: ModeloRecord,
+    snapshot: JustificanteCaptureSnapshot,
+    *,
+    authority_operation: PinnedAuthorityOperation | None,
+) -> str:
+    expected_tax_id = _expected_tax_id_for_filing_record(current, authority_operation=authority_operation)
+    if not _justificante_matches_filing_record(
+        justificante,
+        current,
+        expected_tax_id=expected_tax_id,
+    ):
+        raise LiveApplicationInputError(
+            translated_message="application.live.justificante.errors.filing_record_mismatch",
+            context={
+                "snapshot_id": snapshot.snapshot_id,
+                "modelo": str(current.modelo),
+                "period": str(current.period),
+                "filing_record_id": current.filing_record_id,
+            },
+            precondition_verdict=live_read_no_recovery_verdict(
+                LiveReadPrecondition.JUSTIFICANTE_MATCHES_FILING_RECORD,
+                facts={
+                    "snapshot_id": snapshot.snapshot_id,
+                    "modelo": str(current.modelo),
+                    "period": str(current.period),
+                    "filing_record_id": current.filing_record_id,
+                    "matches_filing_record": False,
+                },
+            ),
+        )
+    return expected_tax_id
+
+
+def _require_capture_evidence_slot(
+    current: ModeloRecord,
+    snapshot: JustificanteCaptureSnapshot,
+) -> None:
+    if current.external_evidence is not None and not _existing_capture_evidence_matches_current_csv(
+        current, snapshot.csv
+    ):
+        raise LiveApplicationInputError(
+            translated_message="application.live.justificante.errors.evidence_overwrite_refused",
+            context={
+                "filing_record_id": current.filing_record_id,
+                "snapshot_id": snapshot.snapshot_id,
+            },
+            precondition_verdict=live_read_no_recovery_verdict(
+                LiveReadPrecondition.JUSTIFICANTE_FILING_EVIDENCE_ABSENT,
+                facts={
+                    "filing_record_id": current.filing_record_id,
+                    "snapshot_id": snapshot.snapshot_id,
+                    "existing_evidence_present": True,
+                },
+            ),
+        )
+
+
+def _register_and_confirm_capture(
+    *,
+    current: ModeloRecord,
+    snapshot: JustificanteCaptureSnapshot,
+    justificante: Justificante,
+    expected_tax_id: str,
+    ports: JustificanteRegistrationPorts,
+    authority_operation: PinnedAuthorityOperation | None,
+) -> ModeloRecord:
+    from ...domain.modelos.filing_record import AeatRegisterRef, ExternalEvidenceKind
+    from ..modelo.filing_chain_reconciliation import AeatRegisterEntry, FilingReconciliationOutcome
+
+    # The receipt lands before any chain entry cites it, so a failure between
+    # the two leaves an orphan receipt rather than a filing record whose
+    # AEAT_LIVE_CAPTURE evidence does not load.
+    ports.metadata.save(justificante)
+    result = ports.filing_reconciliation.reconcile(
+        AeatRegisterEntry(
+            bucket_id=snapshot.bucket_id,
+            modelo=snapshot.modelo,
+            filing_year=snapshot.filing_year,
+            period=snapshot.period,
+            register=AeatRegisterRef(
+                expediente_id=snapshot.expediente_id,
+                csv=snapshot.csv,
+                justificante_number=justificante.presentation_id,
+            ),
+            evidence_kind=ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
+            tax_id=expected_tax_id,
+            justificante=justificante,
+        ),
+        actor="aeat-live-capture",
+        clock=now(),
+        authority_operation=authority_operation,
+    )
+    settled = (
+        ports.filing.load().get(result.filing_record_id)
+        if result.outcome in {FilingReconciliationOutcome.CONFIRMED, FilingReconciliationOutcome.ALREADY_RECORDED}
+        and result.filing_record_id is not None
+        else None
+    )
+    if settled is None or not settled.aeat_accepted:
+        raise LiveApplicationInputError(
+            translated_message="application.live.justificante.errors.filing_record_unconfirmed",
+            context={
+                "filing_record_id": current.filing_record_id,
+                "snapshot_id": snapshot.snapshot_id,
+                "outcome": result.outcome.value,
+                "notices": ",".join(notice.code.value for notice in result.notices),
+            },
+        )
+    return settled
+
+
+def register_capture_as_filing_evidence(
+    *,
+    snapshot: JustificanteCaptureSnapshot,
+    ports: JustificanteRegistrationPorts,
+    authority_operation: PinnedAuthorityOperation | None = None,
+) -> ModeloRecord:
+    """Confirm the period's filing with a persisted live capture of its receipt.
+
+    Loads the period's current filing record first; with one present, parses
+    the captured receipt into a domain ``Justificante`` (keyed by the capture's
+    CSV, which is the gate's evidence reference), registers it, and reconciles
+    the filing chain with it through
+    :func:`~cadrumo.application.modelo.filing_chain_reconciliation.reconcile_aeat_register_entry`.
+    A receipt carries only totals, so a pending filing is confirmed only when
+    its computed result matches them. Once confirmed, the cross-period
+    clean-state gate's ``MISSING_JUSTIFICANTE_VERIFICATION`` blocker clears for
+    the period.
+
+    Returns the confirmed :class:`~ModeloRecord`.
+
+    Raises:
+        LiveApplicationInputError: when no current filing record exists for the
+            captured ``(modelo, filing_year, period)``, when the receipt does not
+            match it, or when the reconciliation does not confirm it.
+    """
+    if snapshot.state is not SnapshotLifecycleState.ACTIVE:
+        raise LiveApplicationInputError(
+            translated_message="application.live.justificante.errors.evidence_snapshot_not_active",
+            context={"snapshot_id": snapshot.snapshot_id, "state": snapshot.state.value},
+        )
+
+    current = _current_filing_record_for_capture(snapshot, ports)
+    justificante = parse_capture_to_justificante(snapshot, ports=ports)
+    _require_receipt_csv_matches_capture(justificante, snapshot)
+    expected_tax_id = _require_capture_matches_filing_record(
+        justificante,
+        current,
+        snapshot,
+        authority_operation=authority_operation,
+    )
+    _require_capture_evidence_slot(current, snapshot)
+    return _register_and_confirm_capture(
+        current=current,
+        snapshot=snapshot,
+        justificante=justificante,
+        expected_tax_id=expected_tax_id,
+        ports=ports,
+        authority_operation=authority_operation,
+    )
+
+
+def _expected_tax_id_for_filing_record(
+    filing: ModeloRecord, *, authority_operation: PinnedAuthorityOperation | None = None
+) -> str:
+    if filing.member_nif is not None and filing.member_nif.strip():
+        return tax_id_identity_token(filing.member_nif)
+    from ...core.errors.hierarchy import CadrumoError
+    from ...domain.calculations.registry.authority import bundled_indexed_authority
+    from ..user_profile.access_errors import ProfileAccessRefusedError
+    from ..user_profile.profile_record_repository import ProfileRecordRepository
+    from ..user_profile.projections import record_to_values
+
+    if authority_operation is None:
+        with bundled_indexed_authority().operation() as operation:
+            return _expected_tax_id_for_filing_record(filing, authority_operation=operation)
+    with nullcontext(authority_operation) as operation:
+        try:
+            profile_decode_context = operation.profile_decode_context()
+            record = ProfileRecordRepository.for_current_session(
+                filing.bucket_id,
+                profile_decode_context=profile_decode_context,
+            ).load(filing.bucket_id)
+        except ProfileAccessRefusedError:
+            raise
+        except (CadrumoError, OSError) as exc:
+            raise LiveApplicationInputError(
+                translated_message="application.live.justificante.errors.filing_identity_unresolved",
+                context={"filing_record_id": filing.filing_record_id, "profile_record_readable": False},
+                precondition_verdict=live_read_no_recovery_verdict(
+                    LiveReadPrecondition.JUSTIFICANTE_FILING_IDENTITY_RESOLVED,
+                    facts={
+                        "filing_record_id": filing.filing_record_id,
+                        "profile_record_readable": False,
+                        "tax_id_resolved": False,
+                    },
+                ),
+            ) from exc
+        values = record_to_values(record, schema=profile_decode_context.schema)
+    tax_id = tax_id_identity_token(values.get("identity.tax_id") or values.get("tax.id") or "")
+    if not tax_id:
+        raise LiveApplicationInputError(
+            translated_message="application.live.justificante.errors.filing_identity_unresolved",
+            context={"filing_record_id": filing.filing_record_id, "profile_record_readable": True},
+            precondition_verdict=live_read_no_recovery_verdict(
+                LiveReadPrecondition.JUSTIFICANTE_FILING_IDENTITY_RESOLVED,
+                facts={
+                    "filing_record_id": filing.filing_record_id,
+                    "profile_record_readable": True,
+                    "tax_id_resolved": False,
+                },
+            ),
+        )
+    return tax_id
+
+
+def _justificante_matches_filing_record(
+    justificante: Justificante,
+    filing: ModeloRecord,
+    *,
+    expected_tax_id: str,
+) -> bool:
+    return justificante.matches_filing_target(
+        modelo=str(filing.modelo),
+        filing_year=filing.filing_year,
+        period=filing.period,
+        tax_id=expected_tax_id,
+    )
+
+
+expected_tax_id_for_filing_record = _expected_tax_id_for_filing_record
+
+
+def _existing_capture_evidence_matches_current_csv(filing: ModeloRecord, csv: str) -> bool:
+    evidence = filing.external_evidence
+    if evidence is None:
+        return False
+    kind = getattr(evidence.kind, "value", evidence.kind)
+    if str(kind) not in {"aeat_csv_register", "aeat_justificante_pdf", "aeat_live_capture"}:
+        return False
+    return normalise_aeat_csv(evidence.reference_id) == normalise_aeat_csv(csv)
+
+
+def stamp_capture_evidence_if_filed(
+    snapshot: JustificanteCaptureSnapshot,
+    *,
+    ports: JustificanteRegistrationPorts,
+    authority_operation: PinnedAuthorityOperation | None = None,
+) -> ModeloRecord | None:
+    """Best-effort filing-evidence registration for an already persisted capture."""
+    from ...domain.justificante.errors import JustificanteParseError
+
+    catalogue = ports.filing.load()
+    current = catalogue.current_for(
+        bucket_id=snapshot.bucket_id,
+        modelo=snapshot.modelo,
+        filing_year=snapshot.filing_year,
+        period=snapshot.period,
+    )
+    if current is None:
+        return None
+
+    try:
+        return register_capture_as_filing_evidence(
+            snapshot=snapshot, ports=ports, authority_operation=authority_operation
+        )
+    except JustificanteParseError:
+        return None
+
+
+async def verify_capture_authenticity(
+    *,
+    snapshot: JustificanteCaptureSnapshot,
+    service: JustificanteCaptureSnapshotService,
+    verifier: JustificanteAuthenticityVerifierPort,
+    browser: object | None = None,
+    browser_session_factory: Callable[[], object] | None = None,
+    effect_guard: FiledEffectGuard | None = None,
+) -> JustificanteCaptureSnapshot:
+    """Ask AEAT's public cotejo viewer about ``snapshot`` and stamp the verdict.
+
+    Runs the read-only :func:`~cadrumo.adapters.outbound.aeat.verify.contract.verify_csv`
+    round trip against the capture's own CSV and persists the resulting
+    :class:`JustificanteAuthenticity` on the snapshot through ``service``.
+
+    The three answers stay distinct. AEAT rendering the CSV-bound document
+    viewer is :attr:`JustificanteAuthenticity.CONFIRMED`; AEAT answering that
+    it holds no such document is :attr:`JustificanteAuthenticity.DENIED`; a
+    round trip that could not be completed at all — no browser, a navigation
+    failure, a guard refusal — is
+    :attr:`JustificanteAuthenticity.UNAVAILABLE`, which is emphatically not a
+    denial and must never be reported as one. The capture itself is already
+    persisted before this runs, so an unreachable cotejo surface downgrades
+    the provenance available for the receipt without losing the receipt.
+
+    Args:
+        snapshot: The already-persisted capture whose CSV is checked.
+        service: Snapshot service owning ``snapshot``'s bucket; it performs
+            the encrypted write of the stamped record.
+        verifier: Port that submits the capture CSV to the authenticity surface.
+        browser: An already-constructed browser session to borrow. When
+            ``None``, the verifier builds and closes its own.
+        browser_session_factory: Optional no-argument factory for the
+            self-owned verifier path. Ignored when ``browser`` is supplied.
+        effect_guard: Fresh local COMMIT fence entered only for the verdict stamp.
+
+    Returns:
+        The stamped :class:`JustificanteCaptureSnapshot`.
+    """
+    try:
+        confirmed = await verifier.verify(
+            snapshot.csv,
+            browser=browser,
+            browser_session_factory=browser_session_factory,
+        )
+    except JustificanteVerificationError:
+        authenticity = JustificanteAuthenticity.UNAVAILABLE
+    else:
+        authenticity = JustificanteAuthenticity.CONFIRMED if confirmed else JustificanteAuthenticity.DENIED
+    async with _local_effect_boundary(effect_guard):
+        return service.stamp_authenticity(snapshot=snapshot, authenticity=authenticity)
+
+
+@dataclass(frozen=True, slots=True)
+class JustificanteCaptureOutcome:
+    """Outcome of one live justificante capture and local evidence enrolment."""
+
+    snapshot: JustificanteCaptureSnapshot
+    justificante: Justificante | None
+    filing_record: ModeloRecord | None
+
+    @property
+    def justificante_metadata_registered(self) -> bool:
+        """Return whether the captured receipt yielded stored justificante metadata."""
+        return self.justificante is not None
+
+    @property
+    def filing_evidence_stamped(self) -> bool:
+        """Return whether the receipt matched an existing local filing record."""
+        return self.filing_record is not None
+
+    @property
+    def filing_record_id(self) -> str | None:
+        """Return the local filing-record identifier when capture stamped one."""
+        return self.filing_record.filing_record_id if self.filing_record is not None else None
+
+
+async def capture_justificante_snapshot_outcome(
+    *,
+    bucket_id: str,
+    modelo: str,
+    year: int,
+    period: Period,
+    service: JustificanteCaptureSnapshotService,
+    read_port: JustificanteLiveReadPort,
+    registration_ports: JustificanteRegistrationPorts,
+    verifier: JustificanteAuthenticityVerifierPort,
+    effect_guard: FiledEffectGuard | None = None,
+    on_session_write: SessionWriteReporter | None = None,
+    authority_operation: PinnedAuthorityOperation | None = None,
+) -> JustificanteCaptureOutcome:
+    """Capture a justificante and report the separate metadata and filing-evidence outcomes."""
+    declarations = await read_port.declarations(
+        modelo=modelo, year=year, effect_guard=effect_guard, on_session_write=on_session_write
+    )
+    expediente = resolve_period_declaration(
+        declarations=declarations,
+        modelo=modelo,
+        period=period,
+    )
+    capture = await read_port.capture(expediente_id=expediente.expediente_id)
+    async with _local_effect_boundary(effect_guard):
+        persisted = service.capture(
+            modelo=modelo,
+            filing_year=year,
+            period=period,
+            expediente_id=capture.expediente_id,
+            csv=capture.csv,
+            pdf_bytes=capture.pdf_bytes,
+            pdf_sha256=capture.pdf_sha256,
+            captured_at=now(),
+        )
+    persisted = await verify_capture_authenticity(
+        snapshot=persisted, service=service, verifier=verifier, effect_guard=effect_guard
+    )
+    async with _local_effect_boundary(effect_guard):
+        justificante = register_capture_justificante_metadata(snapshot=persisted, ports=registration_ports)
+    async with _local_effect_boundary(effect_guard):
+        filing_record = stamp_capture_evidence_if_filed(
+            persisted, ports=registration_ports, authority_operation=authority_operation
+        )
+    return JustificanteCaptureOutcome(snapshot=persisted, justificante=justificante, filing_record=filing_record)
+
+
+__all__ = [
+    "JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE",
+    "JUSTIFICANTE_CAPTURE_SOURCE_KIND",
+    "JustificanteAuthenticity",
+    "JustificanteCaptureOutcome",
+    "JustificanteCaptureSnapshot",
+    "JustificanteCaptureSnapshotNotFoundError",
+    "JustificanteCaptureSnapshotRepository",
+    "JustificanteCaptureSnapshotService",
+    "capture_justificante_snapshot_outcome",
+    "derive_justificante_capture_snapshot_id",
+    "justificante_capture_snapshot_object_key",
+    "parse_capture_to_justificante",
+    "register_capture_as_filing_evidence",
+    "register_capture_justificante_metadata",
+    "resolve_period_declaration",
+    "stamp_capture_evidence_if_filed",
+    "verify_capture_authenticity",
+]

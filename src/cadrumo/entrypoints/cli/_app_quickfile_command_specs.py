@@ -1,0 +1,171 @@
+"""Import-light command authority for the executable quickfile group."""
+
+from __future__ import annotations
+
+from cadrumo_client.commands.parameters import OptionSpec
+from cadrumo_client.commands.shared_contracts import (
+    FLAG_VALUE,
+    PATH_VALUE,
+    TEXT_VALUE,
+    WHOLE_NUMBER_VALUE,
+    DeferredTarget,
+    LazyBinding,
+    ParameterDefault,
+    ResultSchemaSpec,
+    SchemaState,
+    TranslationKey,
+    ValueContract,
+)
+from cadrumo_client.commands.spec import CommandSpec, ExecutionPolicySpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import (
+    CommandNodeKind,
+    CommandWriteRoute,
+)
+
+from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
+
+_POLICY = ExecutionPolicySpec(
+    frozenset({"calculation", "encrypted-facts", "filing"}),
+    frozenset({"local-state"}),
+    "compute",
+    CommandWriteRoute.PROFILE_BOUND,
+    handoff=True,
+)
+_LANG = ValueContract(DeferredTarget("...core.external_constants", "OutputLanguage", __package__))
+
+
+def _option(
+    name: str,
+    declarations: tuple[str, ...],
+    value: ValueContract,
+    help_key: str,
+    *,
+    required: bool = False,
+    default: str | tuple[str, ...] | None = None,
+    multiple: bool = False,
+    transport_locus: TransportLocus = TransportLocus.NONE,
+    transport_shape: TransportShape = TransportShape.NOT_APPLICABLE,
+    transport_role: TransportRole = TransportRole.NOT_APPLICABLE,
+) -> OptionSpec:
+    return OptionSpec(
+        name,
+        declarations,
+        value,
+        ParameterDefault.required() if required else ParameterDefault.value(default),
+        TranslationKey(help_key),
+        multiple=multiple,
+        transport_locus=transport_locus,
+        transport_shape=transport_shape,
+        transport_role=transport_role,
+    )
+
+
+def _boolean_choice(name: str, declaration: str, help_key: TranslationKey) -> OptionSpec:
+    """Declare a tri-state operator choice without silently choosing false."""
+    return OptionSpec(
+        name,
+        (declaration, f"--no-{declaration.removeprefix('--')}"),
+        FLAG_VALUE,
+        ParameterDefault.value(None),
+        help_key,
+        is_flag=True,
+        flag_value=True,
+    )
+
+
+QUICKFILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
+    CommandSpec(
+        "app_quickfile",
+        "app",
+        "quickfile",
+        CommandNodeKind.GROUP,
+        TranslationKey("cli.app.quickfile.app_help"),
+        None,
+        InvocationSpec(
+            invoke_without_command=True,
+            add_completion=True,
+            context_parameter="ctx",
+            terminal_behavior="executable",
+        ),
+        (
+            _option("modelo", ("--modelo",), TEXT_VALUE, "cli.app.modelo.work.modelo_help", required=True),
+            _option("year", ("--year",), WHOLE_NUMBER_VALUE, "cli.app.modelo.work.year_help", required=True),
+            _option("period", ("--period",), TEXT_VALUE, "cli.app.modelo.work.period_help", required=True),
+            _option(
+                "output",
+                ("--output",),
+                PATH_VALUE,
+                "cli.app.modelo.export.output_help",
+                transport_locus=TransportLocus.LOCAL_OUT,
+                transport_shape=TransportShape.FILE,
+                transport_role=TransportRole.PRIMARY,
+            ),
+            _option("revision", ("--revision",), TEXT_VALUE, "cli.app.modelo.work.revision_help"),
+            _option("bucket_id", ("--bucket-id",), TEXT_VALUE, "cli.app.modelo.work.bucket_id_help"),
+            _option("casilla", ("--casilla",), TEXT_VALUE, "cli.app.modelo.work.casilla_help", multiple=True),
+            _option("binding", ("--binding",), TEXT_VALUE, "cli.app.modelo.work.override_help", multiple=True),
+            _option("relation", ("--relation",), TEXT_VALUE, "cli.app.modelo.work.relation_help", multiple=True),
+            _option("row", ("--row",), TEXT_VALUE, "cli.app.modelo.work.row_help", multiple=True),
+            _option("actor", ("--by",), TEXT_VALUE, "cli.app.modelo.work.actor_help"),
+            _option(
+                "refund_election",
+                ("--refund-election",),
+                ValueContract(DeferredTarget("...core.refund_election", "RefundElection", __package__)),
+                "cli.app.modelo.work.refund_election_help",
+                default="compensar",
+            ),
+            _option(
+                "payment_election",
+                ("--payment-election",),
+                ValueContract(DeferredTarget("...core.payment_election", "PaymentElection", __package__)),
+                "cli.app.modelo.work.payment_election_help",
+                default="ingreso",
+            ),
+            _option(
+                "prior_domiciliation_election",
+                ("--prior-domiciliation-election",),
+                ValueContract(
+                    DeferredTarget("...core.prior_domiciliation_election", "PriorDomiciliationElection", __package__)
+                ),
+                "cli.app.modelo.work.prior_domiciliation_election_help",
+                default="keep",
+            ),
+            _boolean_choice(
+                "joint_return_elected",
+                "--joint-return-elected",
+                TranslationKey("cli.app.modelo.work.joint_return_elected_help"),
+            ),
+            _option(
+                "m303_exonerado_390_attachment_id",
+                ("--m303-exonerado-390-attachment-id",),
+                TEXT_VALUE,
+                "cli.app.modelo.work.m303_exonerado_390_attachment_id_help",
+            ),
+            _option(
+                "m303_exonerado_390_sha256",
+                ("--m303-exonerado-390-sha256",),
+                TEXT_VALUE,
+                "cli.app.modelo.work.m303_exonerado_390_sha256_help",
+            ),
+            _option(
+                "output_language",
+                ("--output-language", "--language"),
+                _LANG,
+                "cli.config.auth.output_language_help",
+            ),
+        ),
+        _POLICY,
+        LazyBinding.available(DeferredTarget(".app_quickfile_commands", "quickfile", __package__)),
+        ResultSchemaSpec(
+            SchemaState.TARGET,
+            DeferredTarget(".app_quickfile_results", "QuickfileResultPayload", __package__),
+            identity="app.quickfile",
+        ),
+        search_terms=(
+            "file my taxes do my taxes file my return file quarterly taxes submit quarterly IVA tax return declaration",
+            "presentar la declaración trimestral autoliquidación de impuestos one command full filing chain",
+        ),
+    ),
+)
+
+__all__ = ["QUICKFILE_COMMAND_SPECS"]

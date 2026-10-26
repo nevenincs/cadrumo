@@ -1,0 +1,36 @@
+[fact]
+fact_id = "travel-agency-mediation-catalogue"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "travel-agency-mediation-catalogue:2013-01-01"
+date_axis = "invoice_date"
+valid_from = 2013-01-01
+legal_refs = [
+  "rd-1619-2012:disp-adicional-4",
+  "orden-eha-3012-2008:art-1",
+]
+source_refs = ["boe-modelo-347-2008-form"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-modelo-347-2008-form"
+required_text = [
+  "Ventas agencia viaje",
+  "Compras agencia viaje",
+  "disposición adicional cuarta",
+]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "travel_agency_mediation.order", value = "mediated_service,air_passenger_transport" },
+  { key = "travel_agency_mediation.air_passenger_transport_token", value = "air_passenger_transport" },
+  { key = "travel_agency_mediation.mediated_service.value", value = "mediated_service" },
+  { key = "travel_agency_mediation.mediated_service.description", value = "Service invoiced by a travel agency under RD 1619/2012 additional provision four; Modelo 347 clave F applies to the issued side." },
+  { key = "travel_agency_mediation.mediated_service.legal_refs", value = "rd-1619-2012:disp-adicional-4,orden-eha-3012-2008:art-1" },
+  { key = "travel_agency_mediation.air_passenger_transport.value", value = "air_passenger_transport" },
+  { key = "travel_agency_mediation.air_passenger_transport.description", value = "Air passenger transport and luggage service covered by RD 1619/2012 additional provision four; Modelo 347 clave G applies to the received side." },
+  { key = "travel_agency_mediation.air_passenger_transport.legal_refs", value = "rd-1619-2012:disp-adicional-4,orden-eha-3012-2008:art-1" },
+]

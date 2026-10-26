@@ -1,0 +1,8 @@
+@step List every flag the create command accepts.
+aeat config profile create --help
+@step List every flag the edit command accepts.
+aeat config profile edit --help
+@step Confirm which profile those flags would apply to.
+@result aeat --format json config profile status
+@expect result.configured == true
+@expect exit_code == 0

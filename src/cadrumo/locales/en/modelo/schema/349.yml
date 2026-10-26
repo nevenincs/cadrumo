@@ -1,0 +1,107 @@
+modelo:
+  schema:
+    '349':
+      construct:
+        modelo-349-informative:
+          field:
+            title: 'Modelo 349: informative return of intra-Community transactions'
+      field:
+        official_name: Modelo 349. Informative return. Recapitulative statement of
+          intra-Community transactions.
+        title: Recapitulative statement of intra-Community transactions
+      form:
+        authored:
+          base:
+            heading: Tax base or amount
+          base-anterior:
+            heading: Previously declared tax base
+          base-rectificada:
+            heading: Corrected tax base
+          clave:
+            heading: Transaction code
+          contacto:
+            heading: Contact person and telephone
+          contacto-nombre:
+            heading: Contact person
+          contacto-telefono:
+            heading: Contact telephone
+          declaracion:
+            heading: Supplementary or replacement declaration
+          ejercicio:
+            heading: Year
+          identificacion:
+            heading: Declarant
+          nif:
+            heading: Declarant tax ID
+          nif-comunitario:
+            heading: EU VAT number
+          nombre:
+            heading: Full name or company name
+          operaciones:
+            heading: Intra-Community transactions
+          operador-nombre:
+            heading: Operator name
+          pais:
+            heading: Country code
+          period-code:
+            heading: Period
+          periodo:
+            heading: Year and period
+          rectificaciones:
+            heading: Corrections to earlier periods
+          resumen:
+            heading: Summary
+          resumen-importes:
+            heading: Declaration totals
+          sustituto-nif:
+            heading: Replacement recipient VAT number
+          sustituto-nombre:
+            heading: Replacement recipient name
+      revision:
+        2020-y-siguientes:
+          casilla:
+            x-chim6r1ecdgmqoj9dsmn0pbid5nm8qb3d5i62p0:
+              label: Indicator of a change in filing periodicity
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
+              label: Supplementary or replacement declaration
+            x-chim6r1ed5mn0rriehiiqrrgclp62or9dtn6aso:
+              label: Amount of intra-Community transactions
+            x-chim6r1ed5mn0rriehiiqsj5cdq6ipj9cdgm6qbfdpin6:
+              label: Amount of the corrections
+            x-chim6r1edpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
+              label: NIF of the declarant's legal representative
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
+              label: Declaration identification number
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
+              label: Identification number of the previous declaration
+            x-chim6r1edpqmqpbidsmmus35e9gm8rriclpg:
+              label: Total number of intra-Community operators
+            x-chim6r1edpqmqpbidsmn4pb3ehkmcqb3c5hmirreclpg:
+              label: Total number of intra-Community operators with corrections
+            x-dto2sobgclm6oqb4dtpiqsj1f9nmsbbjdthmiobc:
+              label: Surname and first name or company name of the intra-Community
+                operator
+            x-dto2soj1ediiqqbde1nmsqb2dhig:
+              label: Taxable base or amount of the intra-Community transaction
+            x-dto2sorcc5r6abbfe1in4ob3d5nms:
+              label: Intra-Community transaction code
+            x-dto2sorfchkmerpde1gmiso:
+              label: Country code of the Community operator
+            x-dto2srj9comm6rrdeln6it31e9kmu:
+              label: VAT number of the Community operator
+            x-e9im6t1ec9gn6p9dc5n78pbid5nn4:
+              label: Taxable base previously declared
+            x-e9im6t1ec9gn6p9de9im6t39cpkm6ob4c4:
+              label: Taxable base or amounts corrected
+            x-e9im6t1ecll6asj3d5hmirpde9im6t39cpkm6ob4ds:
+              label: Corrected tax year
+            x-e9im6t1ee1in4qbfchniqsj5cdq6ipj9cdgm8ro:
+              label: Corrected period
+            x-edqn6t39ehqn8rpec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
+              label: Surname and forename, or company name, of the substitute taxable
+                person
+            x-edqn6t39ehqn8rpedpkmc:
+              label: Tax identification number (NIF) of the substitute final-recipient
+                trader or professional
+          field:
+            label: Modelo 349, tax year 2020 onwards (Order HAC/174/2020)

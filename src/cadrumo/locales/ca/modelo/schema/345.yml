@@ -1,0 +1,97 @@
+modelo:
+  schema:
+    '345':
+      casilla:
+        continuidad:
+          m345-anio-nacimiento:
+            label: Any de naixement
+          m345-beneficiario-nif:
+            label: NIF del beneficiari persona amb discapacitat
+          m345-clave:
+            label: Clau
+          m345-codigo-provincia:
+            label: Codi de província
+          m345-datos-adicionales-clave-i:
+            label: Dades addicionals per a la clau I
+          m345-datos-adicionales-clave-m:
+            label: Dades addicionals per a la clau M
+          m345-datos-adicionales-claves-abc:
+            label: Dades addicionals per a les claus A, B i C
+          m345-datos-identificativos-empleador:
+            label: Dades identificatives de l'ocupador promotor o prenedor del sistema
+              de previsió social
+          m345-declaracion-complementaria-sustitutiva:
+            label: Declaració complementària o substitutiva
+          m345-declarado-nif:
+            label: NIF del declarat
+          m345-declarado-nombre:
+            label: Cognoms i nom del declarat
+          m345-declarante-nif:
+            label: NIF del declarant
+          m345-declarante-razon-social:
+            label: Cognoms i nom o raó social del declarant
+          m345-devoluciones-excesos:
+            label: Devolucions o reintegraments per excessos d'aportacions
+          m345-ejercicio-declaracion:
+            label: Exercici de declaració
+          m345-empleador-nif:
+            label: NIF de l'ocupador promotor o prenedor
+          m345-empleador-nombre:
+            label: Cognoms i nom o raó social de l'ocupador
+          m345-entidad-aseguradora-nif:
+            label: NIF de l'entitat asseguradora
+          m345-fondo-pensiones-nif:
+            label: NIF del fons de pensions
+          m345-fondo-pensiones-numero-registro:
+            label: Número de registre del fons de pensions
+          m345-importe:
+            label: Import
+          m345-importe-total-aportaciones:
+            label: Import total de les aportacions
+          m345-numero-identificativo-anterior:
+            label: Número identificatiu de la declaració anterior
+          m345-numero-identificativo-declaracion:
+            label: Número identificatiu de la declaració
+          m345-pepp-cuenta-subcuenta:
+            label: Compte/subcompte
+          m345-pepp-denominacion:
+            label: Denominació del PEPP
+          m345-pepp-numero-inscripcion:
+            label: Número d'inscripció del PEPP
+          m345-persona-relacion:
+            label: Persona amb qui relacionar-se
+          m345-pias-fecha-primera-prima:
+            label: Data de pagament de la primera prima
+          m345-pias-importe-acumulado:
+            label: Import acumulat PIAS
+          m345-plan-pensiones-denominacion:
+            label: Denominació del pla de pensions
+          m345-rendimientos-trabajo-no-superiores-60000:
+            label: Rendiments íntegres del treball no superiors a 60.000 euros
+          m345-representante-legal-nif:
+            label: NIF del representant legal
+          m345-subclave:
+            label: Subclau
+          m345-total-declarados:
+            label: Nombre total de declarats
+      field:
+        official_name: Modelo 345. Declaració informativa. Plans, fons de pensions
+          i sistemes alternatius. Declaració anual de partícips, aportacions i contribucions.
+        title: Declaració informativa anual de plans i fons de pensions, partícips,
+          aportacions i contribucions
+      revision:
+        '2022':
+          field:
+            label: Model 345, exercici 2022
+        '2023':
+          field:
+            label: Model 345, exercici 2023
+        '2024':
+          field:
+            label: Model 345, exercici 2024
+        '2025':
+          casilla:
+            rendimientos-trabajo-superiores-60000:
+              label: Rendiments íntegres del treball superiors a 60000 euros
+          field:
+            label: Model 345, exercici 2025 (Ordre HFP/823/2022 i Ordre HAC/1430/2025)

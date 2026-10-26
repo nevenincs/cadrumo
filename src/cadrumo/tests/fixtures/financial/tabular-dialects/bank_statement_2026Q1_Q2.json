@@ -1,0 +1,10 @@
+{
+  "output_sha256": "604f04eca2d5334232faaf13e185dbd2b3cf164e80dab0892360f7a692543b09",
+  "output_size_bytes": 1211,
+  "provenance": "synthetic_generated",
+  "role": "dialect_normalization_anchor",
+  "licence": "CC0-1.0",
+  "structural_difficulty": [
+    "Bank statement export: semicolon delimited, comma decimals, cp1252, seven preamble lines before the header row; four movements have no matching document"
+  ]
+}

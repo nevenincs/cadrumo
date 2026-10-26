@@ -1,0 +1,197 @@
+"""Current-schema proof for disposition-aware Modelo 303 carry ingress."""
+
+from __future__ import annotations
+
+from datetime import UTC, datetime
+from decimal import Decimal
+from pathlib import Path
+
+import pytest
+
+from .....application.calculations.m303_carry_ingress import M303CarryIngressError
+from .....application.calculations.observations_repository import ObservationSourceKind, ResultDispositionProjection
+from .....core.casilla_id import CasillaId
+from .....core.modelo import Modelo
+from .....core.observed_header_fact import ObservedHeaderFact
+from .....core.period import Period
+from .....core.result_disposition import ResultDisposition
+from .....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from .....domain.calculations.registry.casilla_membership import casillas_by_id
+from .....domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M303_COMPENSATION_AVAILABLE_CASILLA,
+    M303_COMPENSATION_GENERADA_CASILLA,
+    M303_COMPENSATION_POSTERIOR_CASILLA,
+    M303_COMPENSATION_RESULTADO_CASILLA,
+)
+from .....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
+from ...storage.tests.secure_sql import isolated_runtime_profile
+from ..calculation_observations import CalculationObservationRepository
+from .published_authority_support import published_authority_operation
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_CAPTURED_AT = datetime(2026, 8, 11, 10, 0, tzinfo=UTC)
+_PERIOD = Period.from_year_and_code(2025, "1T")
+_POSTERIOR = Decimal("7.00")
+_NEGATIVE_RESULT = Decimal("-20.00")
+
+
+def _observed_header(code: str) -> ObservedHeaderFact:
+    return ObservedHeaderFact(
+        header_key="filing.result_disposition",
+        value=code,
+        source_artefact_kind="submitted_file",
+        source_locator=f"modelo-303-fichero-boe:declaration-type:{code}",
+    )
+
+
+def _carry_observation() -> RegistryModeloObservation:
+    snapshot = published_authority_operation().snapshot(
+        Modelo("303").value,
+        filing_year=_PERIOD.filing_year,
+        period=_PERIOD.registry_token,
+    )
+    definitions = casillas_by_id(snapshot.revision)
+
+    def observed(casilla_id: CasillaId, value: Decimal) -> CasillaObservation:
+        definition = definitions[casilla_id]
+        return CasillaObservation(
+            casilla_id=casilla_id,
+            value=value,
+            legal_refs=tuple(definition.legal_refs),
+            source_refs=tuple(definition.source_refs),
+        )
+
+    return RegistryModeloObservation(
+        modelo=Modelo("303").value,
+        filing_year=_PERIOD.filing_year,
+        period=_PERIOD.registry_token,
+        observations=(
+            observed(M303_COMPENSATION_POSTERIOR_CASILLA, _POSTERIOR),
+            observed(M303_COMPENSATION_RESULTADO_CASILLA, _NEGATIVE_RESULT),
+        ),
+    )
+
+
+@pytest.mark.parametrize(
+    ("source_kind", "source_headers"),
+    [
+        (ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE, ()),
+        (ObservationSourceKind.APP_FILING, ()),
+    ],
+)
+def test_under_declared_m303_carry_is_refused_before_repository_mutation(
+    tmp_path: Path,
+    source_kind: ObservationSourceKind,
+    source_headers: tuple[ObservedHeaderFact, ...],
+) -> None:
+    """Canonical ingress never invents a missing official or filing disposition."""
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repository = CalculationObservationRepository()
+
+        with pytest.raises(M303CarryIngressError):
+            repository.prepare_observation_envelope(
+                _carry_observation(),
+                source_kind=source_kind,
+                captured_at=_CAPTURED_AT,
+                source_headers=source_headers,
+                stamped_revision_id=revision_id_for_observation(_carry_observation()),
+            )
+
+        assert repository.load_observation(Modelo("303").value, _PERIOD) is None
+
+
+@pytest.mark.parametrize(
+    ("disposition", "source_headers", "projection", "expected_available", "expected_generated", "expected_basis"),
+    [
+        (
+            ResultDisposition.COMPENSACION,
+            (_observed_header(ResultDisposition.COMPENSACION.value),),
+            None,
+            Decimal("27.00"),
+            Decimal("20.00"),
+            "resultado",
+        ),
+        (
+            ResultDisposition.DEVOLUCION,
+            (),
+            ResultDispositionProjection(
+                disposition=ResultDisposition.DEVOLUCION,
+                provenance_kind="app_filing",
+                provenance_locator="filed-revision:current-schema-proof",
+            ),
+            Decimal("7.00"),
+            Decimal("0.00"),
+            "refunded",
+        ),
+    ],
+)
+def test_current_dispositions_and_normalized_pair_round_trip_through_real_repository(
+    tmp_path: Path,
+    disposition: ResultDisposition,
+    source_headers: tuple[ObservedHeaderFact, ...],
+    projection: ResultDispositionProjection | None,
+    expected_available: Decimal,
+    expected_generated: Decimal,
+    expected_basis: str,
+) -> None:
+    """Official and local current-schema evidence persist one strict normalized envelope."""
+    source_kind = ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE if source_headers else ObservationSourceKind.APP_FILING
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repository = CalculationObservationRepository()
+        prepared = repository.prepare_observation_envelope(
+            _carry_observation(),
+            source_kind=source_kind,
+            captured_at=_CAPTURED_AT,
+            source_headers=source_headers,
+            result_disposition=projection,
+            stamped_revision_id=revision_id_for_observation(_carry_observation()),
+        )
+
+        repository.save(prepared)
+        loaded = repository.load_observation(Modelo("303").value, _PERIOD)
+
+        assert loaded == prepared
+        assert loaded is not None
+        assert loaded.result_disposition is not None
+        assert loaded.result_disposition.disposition is disposition
+        assert loaded.m303_compensation_basis == expected_basis
+        assert loaded.observation.casilla_values[M303_COMPENSATION_AVAILABLE_CASILLA] == expected_available
+        assert loaded.observation.casilla_values[M303_COMPENSATION_GENERADA_CASILLA] == expected_generated
+
+
+@pytest.mark.parametrize("legacy", [False, True])
+def test_official_disposition_preserves_canonical_and_legacy_header_evidence(tmp_path: Path, legacy: bool) -> None:
+    """Producer-key migration does not orphan previously captured official evidence."""
+    header = _observed_header("C")
+    if legacy:
+        header = header.model_copy(update={"header_key": "declaration_type"})
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repository = CalculationObservationRepository()
+        payload = repository.prepare_observation_envelope(
+            _carry_observation(),
+            source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
+            captured_at=_CAPTURED_AT,
+            source_headers=(header,),
+            stamped_revision_id=revision_id_for_observation(_carry_observation()),
+        )
+        assert payload.result_disposition is not None
+        assert payload.result_disposition.disposition is ResultDisposition.COMPENSACION
+        assert payload.source_headers == (header,)
+        assert payload.result_disposition.provenance_locator == header.source_locator
+
+
+def test_canonical_and_legacy_disposition_facts_are_ambiguous(tmp_path: Path) -> None:
+    """Alias support cannot silently choose one of two claimed official facts."""
+    header = _observed_header("C")
+    legacy = header.model_copy(update={"header_key": "declaration_type"})
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repository = CalculationObservationRepository()
+        with pytest.raises(M303CarryIngressError, match="duplicate_header_facts"):
+            repository.prepare_observation_envelope(
+                _carry_observation(),
+                source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
+                captured_at=_CAPTURED_AT,
+                source_headers=(header, legacy),
+                stamped_revision_id=revision_id_for_observation(_carry_observation()),
+            )

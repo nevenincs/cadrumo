@@ -1,0 +1,9 @@
+{
+  "provenance": "synthetic_generated",
+  "kind": "xml_invoice_ubl",
+  "source": "authored in-tree for the llm-package-split structured-reading parsers",
+  "licence": "Apache-2.0",
+  "notes": "Hand-authored EN16931 UBL invoice, fictional data. Declared synthetic rather than sourced: nothing in the bundled corpus exercised the UBL syntax, so a CII-only reader silently returned nothing for half the standard. Shaped for TWO tax rates (21% and 10%) because a single-rate document cannot detect the multi-rate collapse, and it carries a schemeID=VA supplier id so the VAT-over-national-registration selection is exercised rather than assumed.",
+  "sha256": "b91c550a7e408466b255886fc7f783d7e5fceff4badbdaf500809047d84d3656",
+  "bytes": 3771
+}

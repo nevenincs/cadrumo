@@ -1,0 +1,54 @@
+name: Cadrumo Documentation Availability
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: documentation-availability
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: "Check: Documentation availability (Linux)"
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 125
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install just
+        uses: taiki-e/install-action@6012bba2f8e3e666a2b212f8823c06831704ce92 # just
+        with:
+          tool: just@1.38.0
+      - name: Provision the monitoring runtime
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          prune-cache: false
+          version: "0.11.29"
+          enable-cache: false
+      - name: Check both documentation mounts
+        run: just docs-availability-check
+      - name: Report an availability failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          title='Documentation availability check failed'
+          existing=$(gh issue list --state open --search "$title in:title" --json number,title --jq '.[] | select(.title == "Documentation availability check failed") | .number' | head -n 1)
+          alert="$(uv run --no-sync python -c 'from dev._paths import prepare_temporary_directory; print(prepare_temporary_directory() / "docs-alert.md")')"
+          printf 'Public documentation verification failed. Inspect the HTTP checks and release identities.\n\nRun: %s\n' "$RUN_URL" > "$alert"
+          if [ -n "$existing" ]; then
+            gh issue edit "$existing" --body-file "$alert"
+          else
+            gh issue create --title "$title" --body-file "$alert"
+          fi

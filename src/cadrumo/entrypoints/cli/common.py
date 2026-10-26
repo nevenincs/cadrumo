@@ -1,0 +1,1038 @@
+"""Shared CLI transport helpers used across all ``cadrumo`` command groups.
+
+Provides output helpers, period normalisation, and the active-profile
+bucket guard used by the ledger, modelo, and config command groups.
+
+The output boundary is :func:`emit_envelope`. It routes every JSON result
+through :class:`SchemaEnvelope`, requires a graph-declared result schema, and
+carries typed :class:`Notice` diagnostics while preserving the text line
+iterator unchanged.
+
+Application-layer and domain symbols are imported lazily inside each
+helper to avoid pulling the registry parse into fast-path commands such
+as ``aeat --version``.
+"""
+
+from __future__ import annotations
+
+import re
+from collections.abc import Callable, Generator, Iterable, Sequence
+from contextlib import contextmanager
+from contextvars import ContextVar
+from functools import cache, partial
+from pathlib import Path
+from typing import TYPE_CHECKING, Protocol, cast, override
+
+import click
+import typer
+import typer._click.types as typer_click_types
+from pydantic import BaseModel, Field, field_validator
+
+from cadrumo_client.commands.suggestions import INVOCATION_REMAINDER_META_KEY
+from cadrumo_client.contracts.command_program import CommandProgram
+
+from ...application.operator_surface.action_targets import ACTION_TARGETS, recorded_action_target_reconciliation
+from ...core.cli_metadata import is_metadata_invocation
+from ...core.errors.hierarchy import InternalInvariantError, pydantic_validation_boundary
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import tr
+from ...core.json_contract import Notice, NoticeSeverity, ResolvedActionArgument, ResolvedPreconditionAction
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.output_rendering import OutputFormat, render_command_output
+from ...core.terminal_encoding import encode_terminal_text
+from ...core.text_bounds import NonEmptyStr
+from .operator_surface_reconciliation import operator_surface_target_reconciliation
+
+
+# The accepted-code set for every ``--modelo`` option and argument comes from the
+# same published authority the command body will query. A missing or invalid
+# publication therefore refuses the surface instead of falling back to a second
+# identifier universe maintained in Python.
+#
+# The parameter type is a module-level object because ``from __future__ import
+# annotations`` stringifies the ``Annotated`` metadata carrying
+# ``click_type=...`` and Typer re-evaluates that string in this module.  The
+# governed values themselves must not be resolved until Click converts a real
+# command argument: importing the CLI, rendering help, and printing the version
+# are metadata-only operations and do not own an authority operation.
+#
+# CAST-RATIONALE-TYPER-CLICK-PARAMTYPE-DUALITY: typer vendors its own click, so
+# click.Choice's click.types.ParamType and typer's typer._click.types.ParamType
+# are the same runtime object behind two static names; the cast bridges only that
+# static duality, with no Any escape.
+def _published_modelo_codes() -> list[str]:
+    """Return the identifiers admitted by the bundled published authority."""
+    from ...domain.calculations.registry.authority import bundled_indexed_authority
+
+    with bundled_indexed_authority().operation() as operation:
+        return sorted(operation.modelo_ids())
+
+
+class _PublishedModeloCode(click.ParamType[str]):
+    """Validate a modelo identifier against the authority at argument use."""
+
+    name = "modelo"
+
+    @property
+    def choices(self) -> tuple[str, ...]:
+        """Report the published identifiers when a schema asks for the choice set."""
+        return tuple(_published_modelo_codes())
+
+    @override
+    def convert(
+        self,
+        value: object,
+        param: click.Parameter | None,
+        ctx: click.Context | None,
+    ) -> str:
+        """Resolve the published directory only for a governed invocation."""
+        return click.Choice(_published_modelo_codes()).convert(value, param, ctx)
+
+
+MODELO_CODE_CHOICE: typer_click_types.ParamType = cast(
+    typer_click_types.ParamType,
+    _PublishedModeloCode(),
+)
+
+
+class _PublishedIvaTerritorialScope(click.ParamType[str]):
+    """Project an IVA territorial scope through the published fact at argument use."""
+
+    name = "territorial_scope"
+
+    @property
+    def choices(self) -> tuple[str, ...]:
+        """Report the published territorial tokens when a schema asks for the choice set."""
+        from ...domain.calculations.registry.authority import bundled_indexed_authority
+        from ...domain.iva.classification import resolve_iva_classification_catalogue
+
+        with bundled_indexed_authority().operation() as operation:
+            catalogue = resolve_iva_classification_catalogue(operation=operation)
+            return tuple(sorted(str(scope) for scope in catalogue.territorial_scopes))
+
+    @override
+    def convert(self, value: object, param: click.Parameter | None, ctx: click.Context | None) -> str:
+        """Return the projected token, listing the accepted set on a refusal."""
+        from ...domain.calculations.registry.authority import bundled_indexed_authority
+        from ...domain.iva.classification import require_iva_territorial_scope
+
+        accepted = self.choices
+        click.Choice(accepted).convert(value, param, ctx)
+        with bundled_indexed_authority().operation() as operation:
+            return require_iva_territorial_scope(value, operation=operation)
+
+
+class _PublishedEuMemberState(click.ParamType[str]):
+    """Project an EU IVA member-state token through the published fact at argument use."""
+
+    name = "member_state"
+
+    @property
+    def choices(self) -> tuple[str, ...]:
+        """Report the published member-state tokens when a schema asks for the choice set."""
+        from ...domain.calculations.registry.authority import bundled_indexed_authority
+        from ...domain.calculations.registry.eu_member_state_catalogue import resolve_eu_member_state_catalogue
+
+        with bundled_indexed_authority().operation() as operation:
+            return tuple(str(state) for state in resolve_eu_member_state_catalogue(authority=operation).choices)
+
+    @override
+    def convert(self, value: object, param: click.Parameter | None, ctx: click.Context | None) -> str:
+        """Return the projected token, listing the accepted set on a refusal."""
+        from ...domain.calculations.registry.authority import bundled_indexed_authority
+        from ...domain.calculations.registry.errors import RegistryValidationError
+        from ...domain.calculations.registry.eu_member_state_catalogue import resolve_eu_member_state_catalogue
+
+        with bundled_indexed_authority().operation() as operation:
+            catalogue = resolve_eu_member_state_catalogue(authority=operation)
+            try:
+                return catalogue.require(value)
+            except RegistryValidationError:
+                accepted = tuple(str(state) for state in catalogue.choices)
+        click.Choice(accepted).convert(value, param, ctx)
+        raise click.BadParameter(str(value), ctx=ctx, param=param)
+
+
+class _PublishedIrpfCategory(click.ParamType[str]):
+    """Resolve a ledger IRPF category token through the published taxonomy at argument use."""
+
+    name = "irpf_category"
+
+    @override
+    def convert(self, value: object, param: click.Parameter | None, ctx: click.Context | None) -> str:
+        """Return the normalized token, naming the accepted ids on a refusal."""
+        from ...domain.calculations.registry.authority import bundled_indexed_authority
+        from ...domain.transactions.errors import TransactionValidationError
+        from ...domain.transactions.irpf_categories import require_ledger_irpf_category
+
+        with bundled_indexed_authority().operation() as operation:
+            try:
+                return require_ledger_irpf_category(str(value), authority=operation)
+            except TransactionValidationError as refusal:
+                self.fail(str(refusal), param, ctx)
+
+
+IRPF_CATEGORY_CHOICE: typer_click_types.ParamType = cast(
+    typer_click_types.ParamType,
+    _PublishedIrpfCategory(),
+)
+
+IVA_TERRITORIAL_SCOPE_CHOICE: typer_click_types.ParamType = cast(
+    typer_click_types.ParamType,
+    _PublishedIvaTerritorialScope(),
+)
+EU_MEMBER_STATE_CHOICE: typer_click_types.ParamType = cast(
+    typer_click_types.ParamType,
+    _PublishedEuMemberState(),
+)
+
+# The application- and domain-layer symbols below are imported lazily,
+# inside the helpers that use them at runtime. A module-level import
+# would pull the application layer — and transitively the registry
+# parse — into every consumer of this transport module, including the
+# ``aeat --version`` / ``aeat --help`` fast paths that import ``emit_envelope``
+# but never reach a registry-backed helper. ``from __future__ import
+# annotations`` keeps the type annotations valid as strings without a
+# runtime import; the ``TYPE_CHECKING`` block keeps static checkers
+# resolving them.
+if TYPE_CHECKING:
+    from ...application.modelo.work_lifecycle import ModeloWorkLifecycleContinuation
+    from ...application.operator_actions.models import ActionReference, PreconditionVerdict
+    from ...application.operator_surface.verb_input_contracts import VerbInputSchema
+    from ...core.json_contract import ResolvedNoticeAction
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+
+
+__all__ = [
+    "active_profile_label",
+    "bad",
+    "emit_envelope",
+    "emit_help_text",
+    "emit_progress_line",
+    "format_of",
+    "no_active_profile_refusal",
+    "notice_lines",
+    "profile_grounding_index_for_operation",
+    "resolve_lifecycle_continuation_notice",
+    "resolve_notice_action",
+    "resolve_notice_actions",
+]
+
+
+def profile_grounding_index_for_operation(operation: PinnedAuthorityOperation):
+    """Build profile grounding from the operation's explicit revision inventory.
+
+    CLI refusal rendering needs the same legal/source unions as profile
+    preflight, but the indexed authority intentionally has no whole-model
+    object graph. Walking the bounded revision-id inventory keeps that
+    projection generation-pinned while avoiding a legacy eager authority.
+    """
+    from ...core.aggregation import BindingSourceKind
+    from ...core.modelo import Modelo
+    from ...domain.calculations.registry.profile_grounding import ProfileKeyGrounding, binding_profile_keys
+
+    modelos: dict[str, set[str]] = {}
+    legal_refs: dict[str, set[str]] = {}
+    source_refs: dict[str, set[str]] = {}
+    for modelo_id, revision_id in operation.revision_ids():
+        revision = operation.revision(modelo_id, revision_id)
+        for binding in revision.bindings:
+            if getattr(binding.source, "value", binding.source) != BindingSourceKind.PROFILE.value:
+                continue
+            for key in binding_profile_keys(binding):
+                modelos.setdefault(key, set()).add(modelo_id)
+                legal_refs.setdefault(key, set()).update(binding.legal_refs)
+                source_refs.setdefault(key, set()).update(binding.source_refs)
+    return {
+        key: ProfileKeyGrounding(
+            profile_key=key,
+            modelos=tuple(Modelo(code) for code in sorted(modelos[key])),
+            legal_refs=tuple(sorted(legal_refs[key])),
+            source_refs=tuple(sorted(source_refs[key])),
+        )
+        for key in sorted(modelos)
+    }
+
+
+REQUESTED_CLI_LEAF_META_KEY = "cadrumo.requested_cli_leaf"
+"""Context key holding the terminal leaf selected before root guards run."""
+
+_CLI_POLICY_REFUSAL_PROJECTION_ATTRIBUTE = "_cadrumo_cli_policy_refusal_projection"
+
+
+class RequestedCliLeaf(BaseModel):
+    """Immutable identity of the real terminal command the operator requested."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    subject_leaf_key: NonEmptyStr
+    canonical_cli_path: tuple[str, ...] = Field(min_length=1)
+
+    @field_validator("canonical_cli_path")
+    @classmethod
+    @pydantic_validation_boundary
+    def _path_tokens_are_canonical(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if any(not token or token != token.strip() or token.startswith("-") for token in value):
+            raise ValueError("requested CLI leaf path requires canonical command tokens")
+        return value
+
+
+_REQUESTED_CLI_LEAF_CONTEXT: ContextVar[RequestedCliLeaf | None] = ContextVar(
+    "cadrumo_requested_cli_leaf",
+    default=None,
+)
+
+#: The same leaf, held for the WHOLE invocation rather than the Click context.
+#:
+#: :data:`_REQUESTED_CLI_LEAF_CONTEXT` is reset by ``ctx.call_on_close`` when the
+#: Click context closes, which is correct for in-command reads and useless to the
+#: PROCESS boundary: ``_terminal_errors._emit_crash`` runs after that close, so it
+#: asked and got ``None``, and every refusal escaping there published a null
+#: ``command`` even where the leaf was known.
+#:
+#: Lifetime is owned by :func:`run_standalone_with_error_contract`, which every
+#: invocation passes through, exactly as it already owns ``_INVOCATION_ARGV``.
+#: That reset is what stops a leaf leaking into the NEXT invocation -- the failure
+#: mode that matters here is not a crash but a WRONG command name on an unrelated
+#: error, which the cached in-process runner would surface first.
+_BOUNDARY_REQUESTED_CLI_LEAF: ContextVar[RequestedCliLeaf | None] = ContextVar(
+    "cadrumo_boundary_requested_cli_leaf",
+    default=None,
+)
+_BOUNDARY_REQUESTED_CLI_LEAF_SCOPED: ContextVar[bool] = ContextVar(
+    "cadrumo_boundary_requested_cli_leaf_scoped",
+    default=False,
+)
+
+
+@contextmanager
+def boundary_requested_leaf_scope() -> Generator[None]:
+    """Bound the invocation-scoped requested leaf to one CLI dispatch."""
+    token = _BOUNDARY_REQUESTED_CLI_LEAF.set(None)
+    scoped = _BOUNDARY_REQUESTED_CLI_LEAF_SCOPED.set(True)
+    try:
+        yield
+    finally:
+        _BOUNDARY_REQUESTED_CLI_LEAF_SCOPED.reset(scoped)
+        _BOUNDARY_REQUESTED_CLI_LEAF.reset(token)
+
+
+class CliPolicyRefusalProjection(BaseModel):
+    """Typed policy handoff awaiting a generic boundary transport."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    requested_leaf: RequestedCliLeaf | None
+    precondition_action: ResolvedPreconditionAction
+
+
+class _CommandGroup(Protocol):
+    def get_command(self, ctx: object, cmd_name: str) -> object | None:
+        """Resolve one real child command."""
+
+
+def attach_cli_policy_refusal_projection[ExceptionT: Exception](
+    error: ExceptionT,
+    *,
+    projection: CliPolicyRefusalProjection,
+) -> ExceptionT:
+    """Attach the strict typed handoff without changing the generic transport."""
+    setattr(error, _CLI_POLICY_REFUSAL_PROJECTION_ATTRIBUTE, projection)
+    return error
+
+
+def cli_policy_refusal_projection(error: BaseException) -> CliPolicyRefusalProjection | None:
+    """Read a directly attached or workflow-terminal typed policy handoff."""
+    value = getattr(error, _CLI_POLICY_REFUSAL_PROJECTION_ATTRIBUTE, None)
+    if value is not None:
+        if not isinstance(value, CliPolicyRefusalProjection):
+            raise TypeError("CLI policy refusal contains an invalid typed projection")
+        return value
+
+    from ...application.cli_exception_preconditions import nested_terminal_precondition_verdict
+
+    terminal_verdict = nested_terminal_precondition_verdict(error)
+    if terminal_verdict is None:
+        return None
+    return project_cli_policy_refusal(
+        requested_leaf=current_requested_cli_leaf(),
+        verdict=terminal_verdict,
+    )
+
+
+def _next_requested_cli_child(ctx: typer.Context, command: object, token: str) -> object | None:
+    """Resolve one non-option child while preserving the Click tree boundary."""
+    if token.startswith("-") or not hasattr(command, "get_command"):
+        return None
+    return cast(_CommandGroup, command).get_command(ctx, token)
+
+
+def _requested_cli_command_token(child: object, fallback: str) -> str:
+    """Use Click's canonical child name, falling back to the invoked token."""
+    command_name = getattr(child, "name", None)
+    return command_name if isinstance(command_name, str) and command_name else fallback
+
+
+def _walk_requested_cli_leaf(ctx: typer.Context, raw_tokens: tuple[str, ...]) -> tuple[str, ...] | None:
+    """Walk the requested Click path and return its canonical terminal path."""
+    command: object = ctx.command
+    canonical_path: list[str] = []
+    for token in raw_tokens:
+        child = _next_requested_cli_child(ctx, command, token)
+        if child is None:
+            return None
+        canonical_path.append(_requested_cli_command_token(child, token))
+        command = child
+        if not hasattr(command, "get_command"):
+            return tuple(canonical_path)
+    return None
+
+
+def _requested_cli_leaf_identity(canonical_path: tuple[str, ...]) -> str | None:
+    """Resolve the graph-owned result identity for one canonical CLI path."""
+    from .command_specs import COMMAND_GRAPH
+
+    spec = COMMAND_GRAPH.resolve_path(("aeat", *canonical_path))
+    return spec.result_schema.identity
+
+
+def _bind_requested_cli_leaf(ctx: typer.Context, requested: RequestedCliLeaf) -> None:
+    """Bind the requested leaf to Click and the invocation-scoped boundary holders."""
+    ctx.meta[REQUESTED_CLI_LEAF_META_KEY] = requested
+    token = _REQUESTED_CLI_LEAF_CONTEXT.set(requested)
+    ctx.call_on_close(partial(_REQUESTED_CLI_LEAF_CONTEXT.reset, token))
+    # Written through to the invocation-scoped holder as well, so the
+    # process boundary can still name the command after this Click
+    # context has closed. Deliberately NOT reset on close, so it is written
+    # only inside the dispatch scope that owns its reset.
+    if _BOUNDARY_REQUESTED_CLI_LEAF_SCOPED.get():
+        _BOUNDARY_REQUESTED_CLI_LEAF.set(requested)
+
+
+def preserve_requested_cli_leaf(ctx: typer.Context) -> RequestedCliLeaf | None:
+    """Resolve and retain the terminal live leaf before root policy guards."""
+    existing = ctx.meta.get(REQUESTED_CLI_LEAF_META_KEY)
+    if existing is not None:
+        if not isinstance(existing, RequestedCliLeaf):
+            raise TypeError("requested CLI leaf context contains an invalid value")
+        return existing
+
+    raw_tokens = tuple(str(token) for token in ctx.meta.get(INVOCATION_REMAINDER_META_KEY, ()))
+    canonical_path = _walk_requested_cli_leaf(ctx, raw_tokens)
+    if canonical_path is None:
+        return None
+    identity = _requested_cli_leaf_identity(canonical_path)
+    if identity is None:
+        return None
+    requested = RequestedCliLeaf(
+        subject_leaf_key=identity,
+        canonical_cli_path=canonical_path,
+    )
+    _bind_requested_cli_leaf(ctx, requested)
+    return requested
+
+
+def requested_cli_leaf(ctx: typer.Context) -> RequestedCliLeaf | None:
+    """Return the already-preserved requested terminal identity, if any."""
+    value = ctx.meta.get(REQUESTED_CLI_LEAF_META_KEY)
+    if value is None:
+        return None
+    if not isinstance(value, RequestedCliLeaf):
+        raise TypeError("requested CLI leaf context contains an invalid value")
+    return value
+
+
+def current_requested_cli_leaf() -> RequestedCliLeaf | None:
+    """Return the preserved leaf from the current Click context, if one exists."""
+    bound = _REQUESTED_CLI_LEAF_CONTEXT.get()
+    if bound is not None:
+        return bound
+    ctx = click.get_current_context(silent=True)
+    if ctx is None:
+        # No Click context: either before one opened, or after it closed. The
+        # invocation-scoped holder answers the second case, which is where the
+        # process boundary asks from.
+        return _BOUNDARY_REQUESTED_CLI_LEAF.get()
+    return requested_cli_leaf(cast(typer.Context, ctx))
+
+
+def project_cli_policy_refusal(
+    *,
+    requested_leaf: RequestedCliLeaf | None,
+    verdict: PreconditionVerdict,
+) -> CliPolicyRefusalProjection:
+    """Project one application verdict without teaching the CLI applicability."""
+    return CliPolicyRefusalProjection(
+        requested_leaf=requested_leaf,
+        precondition_action=resolve_cli_precondition_action(verdict),
+    )
+
+
+def resolve_cli_precondition_action(verdict: PreconditionVerdict) -> ResolvedPreconditionAction:
+    """Schema-resolve one application verdict against the live command graph.
+
+    This is the sole CLI bridge from application-owned verdict facts into the
+    strict wire DTO. It binds the leaf the command graph declares for the
+    action's target to the application-owned projection, which owns the
+    catalogue join, the binding checks and the record itself.
+    """
+    from ...application.operator_surface.precondition_action import resolve_precondition_action
+
+    def target_reconciliation(command_key: str, /):
+        target = next((row for row in ACTION_TARGETS if row.command_key == command_key), None)
+        if target is None:
+            raise LookupError(f"unknown command schema identity: {command_key}")
+        if target.program is CommandProgram.AEAT:
+            return operator_surface_target_reconciliation(command_key)
+        return recorded_action_target_reconciliation(
+            command_key,
+            canonical_cli_path=(target.program.executable_name, *target.cli_path),
+        )
+
+    resolved = resolve_precondition_action(verdict, target_reconciliation=target_reconciliation)
+    if resolved.action is None:
+        return resolved
+    target = next(row for row in ACTION_TARGETS if row.command_key == resolved.action.target_command_key)
+    if target.program is CommandProgram.AEAT:
+        from .command_specs import COMMAND_GRAPH
+
+        executable = COMMAND_GRAPH.root().token
+    else:
+        executable = target.program.executable_name
+    cli_path = resolved.action.cli_path
+    if cli_path is None:
+        raise LookupError(f"resolved CLI action has no command path: {resolved.action.target_command_key}")
+    action = resolved.action.model_copy(update={"cli_path": (executable, *cli_path)})
+    return resolved.model_copy(update={"action": action})
+
+
+def attach_cli_policy_verdict[ExceptionT: Exception](
+    error: ExceptionT,
+    *,
+    verdict: PreconditionVerdict,
+    requested_leaf: RequestedCliLeaf | None = None,
+) -> ExceptionT:
+    """Project and attach an application verdict at the shared CLI boundary."""
+    leaf = requested_leaf if requested_leaf is not None else current_requested_cli_leaf()
+    return attach_cli_policy_refusal_projection(
+        error,
+        projection=project_cli_policy_refusal(
+            requested_leaf=leaf,
+            verdict=verdict,
+        ),
+    )
+
+
+# ---------------------------------------------------------------------
+# Transport helpers
+# ---------------------------------------------------------------------
+
+
+def _is_metadata_invocation(ctx: typer.Context) -> bool:
+    """Read metadata posture from captured tokens and eager callback flags.
+
+    Click consumes eager ``--help`` / ``--version`` options before group
+    :meth:`invoke` runs, so the captured remainder is intentionally not the
+    only authority.  The callback parameters are the lossless observation for
+    those root and curated-group flags; consulting them keeps metadata output
+    off profile, custody, and sandbox discovery even after parsing.
+    """
+    arguments = tuple(str(token) for token in ctx.meta.get(INVOCATION_REMAINDER_META_KEY, ()))
+    if is_metadata_invocation(arguments):
+        return True
+    return any(ctx.params.get(name) is True for name in ("help_", "version"))
+
+
+def _format_of(ctx: typer.Context) -> OutputFormat:
+    state = cast(dict[str, object], ctx.ensure_object(dict))
+    format_value = state.get("format", OutputFormat.TEXT)
+    if isinstance(format_value, OutputFormat):
+        return format_value
+    return OutputFormat(format_value)
+
+
+format_of = _format_of
+
+
+def emit_help_text(ctx: typer.Context) -> None:
+    """Emit Click/Typer help text through the shared CLI output boundary."""
+    typer.echo(encode_terminal_text(ctx.get_help()))
+
+
+def _render_and_echo(*, format_name: str, payload: object, lines: tuple[str, ...]) -> None:
+    """Render through the output boundary and emit whatever text it returns.
+
+    The single place operator-facing success text crosses from rendering into
+    standard output. Both the closing envelope and the streamed progress
+    channel funnel through here, so the redaction pass and the
+    reveal-identifiers resolver are applied once, in one place, rather than
+    once per emitter. A second copy of these three lines is how the streamed
+    channel came to bypass redaction in the first place.
+    """
+    rendered = render_command_output(format_name=format_name, payload=payload, lines=lines)
+    if rendered.text:
+        typer.echo(rendered.text)
+
+
+def emit_progress_line(line: str) -> None:
+    """Emit one streamed text-mode progress line through the success-output funnel.
+
+    A long-running command reports per-item progress while the run is still
+    working, so those lines reach stdout before the closing envelope exists.
+    They are operator-facing success output all the same, and they are rendered
+    here by :func:`~cadrumo.core.output_rendering.render_command_output` — the
+    very renderer :func:`emit_envelope` uses for its text arm. The streamed
+    channel therefore applies the same line-oriented CLI redaction and consults
+    the same
+    :func:`~cadrumo.core.output_rendering.reveal_cli_identifiers_opt_in`
+    resolver, so an operator cannot be shown a raw value on the progress stream
+    that the envelope would have masked, nor a masked one they opted to reveal.
+
+    This is deliberately not a second envelope: it carries no schema spine, no
+    notices, and no sandbox banner. Callers gate the stream to text mode
+    themselves, because in JSON the closing envelope already carries every row.
+
+    **What the funnel masks, stated because the change that introduced this
+    primitive overstated it.** The redaction policy substitutes embedded tax
+    identities and opaque record identifiers; it does NOT mask filesystem
+    paths. A streamed line naming a document by its path still emits that
+    path, and only an identity inside it is replaced. The protection this
+    primitive restores is identity and opaque-id masking on a channel that had
+    none, which is narrower than "the material the funnel exists to mask" and
+    is the accurate claim to reason from.
+    """
+    _render_and_echo(format_name=OutputFormat.TEXT.value, payload=None, lines=(line,))
+
+
+@cache
+def _live_action_input_schema(command_key: str) -> VerbInputSchema:
+    """Resolve one action target through the command-spec input authority."""
+    from .verb_input_schema import build_verb_input_schema
+
+    return build_verb_input_schema(command_key)
+
+
+def resolve_notice_actions(notices: Sequence[Notice] | None) -> tuple[Notice, ...]:
+    """Join success-notice actions to their live CLI paths before presentation."""
+    from ...application.operator_actions.catalogue import lookup_action
+    from ...core.json_contract import ResolvedNoticeAction
+
+    resolved: list[Notice] = []
+    for notice in notices or ():
+        notice_action = notice.action
+        if not isinstance(notice_action, ResolvedNoticeAction):
+            resolved.append(notice)
+            continue
+        action = notice_action.action
+        declaration = lookup_action(action.action_id)
+        if declaration.target_command_key != action.target_command_key:
+            raise ValueError(
+                f"notice action target contradicts catalogue: {action.action_id} -> {action.target_command_key}",
+            )
+        schema = _live_action_input_schema(action.target_command_key)
+        parameter_names = {parameter.name for parameter in schema.parameters}
+        argument_names = {binding.argument_name for binding in notice_action.argument_bindings}
+        if not argument_names <= parameter_names:
+            raise ValueError(
+                f"notice action arguments do not exist on live target {action.target_command_key}: "
+                f"{tuple(sorted(argument_names - parameter_names))}",
+            )
+        resolved.append(
+            notice.model_copy(
+                update={
+                    "action": notice_action.model_copy(
+                        update={"action": action.model_copy(update={"cli_path": schema.cli_path})},
+                    ),
+                },
+            ),
+        )
+    return tuple(resolved)
+
+
+#: Tokens PowerShell passes through bare. ``@`` is excluded because a leading
+#: ``@`` is splatting in argument mode: the argument silently disappears.
+_SAFE_ACTION_TOKEN = re.compile(r"^[A-Za-z0-9._:/=+-]+$")
+
+#: Every character PowerShell's tokenizer reads as a single quote: the ASCII
+#: apostrophe and the four typographic quotes U+2018 to U+201B.
+_POWERSHELL_SINGLE_QUOTE = re.compile("['\u2018\u2019\u201a\u201b]")
+
+
+def _powershell_action_token(token: str) -> str:
+    """Render one argv token as a PowerShell literal without enabling expansion.
+
+    PowerShell expands ``$()``, ``$env:...`` and backticks inside double-quoted
+    strings, so JSON string quoting is not a safe copy/paste representation on
+    the supported Windows shell. Single-quoted strings are literal there; an
+    embedded single quote is represented by doubling it, which includes the
+    typographic quotes that would otherwise end the literal early.
+    """
+    if _SAFE_ACTION_TOKEN.fullmatch(token):
+        return token
+    return "'" + _POWERSHELL_SINGLE_QUOTE.sub(lambda quote: quote.group(0) * 2, token) + "'"
+
+
+def _action_text_lines(notices: Sequence[Notice]) -> tuple[str, ...]:
+    """Derive executable text commands from the same resolved action DTOs as JSON."""
+    from ...application.operator_surface.verb_input_contracts import cli_argv_for
+    from ...core.json_contract import ResolvedNoticeAction
+    from ...core.product_identity import PRODUCT_IDENTITY
+
+    lines: list[str] = []
+    for notice in notices:
+        notice_action = notice.action
+        if not isinstance(notice_action, ResolvedNoticeAction):
+            continue
+        action = notice_action.action
+        if action.cli_path is None:
+            continue
+        schema = _live_action_input_schema(action.target_command_key)
+        arguments: dict[str, object] = {
+            binding.argument_name: binding.value for binding in notice_action.argument_bindings
+        }
+        argv = cli_argv_for(schema, arguments)[2:]
+        rendered = " ".join(_powershell_action_token(token) for token in argv)
+        lines.append(f"next_action\t{PRODUCT_IDENTITY.cli_executable} {rendered}")
+    return tuple(lines)
+
+
+def notice_lines(notices: Sequence[Notice]) -> tuple[str, ...]:
+    """Render envelope notices as the matching machine-parsable text lines.
+
+    Text mode receives no ``notices`` channel of its own, so a command that
+    passes notices to :func:`emit_envelope` and does not fold the same values
+    into its ``lines`` emits a diagnostic in JSON that is simply absent from the
+    terminal. Rebuilding the line from the notice itself is what stops the two
+    surfaces drifting: the code and the message are the notice's, never a second
+    sentence written beside it.
+
+    This is the tab-separated transport form every ``app`` surface uses. The
+    config storage surface renders its own wrapped, severity-labelled block
+    instead; that is a presentation choice for a human-read report and is not
+    substitutable here, where the line is parsed.
+    """
+    return tuple(f"notice\t{notice.code}\t{notice.message}" for notice in notices)
+
+
+def emit_envelope(
+    ctx: typer.Context,
+    *,
+    command: str,
+    result: object,
+    lines: Iterable[str],
+    notices: Sequence[Notice] | None = None,
+    metadata_only: bool = False,
+) -> None:
+    """Render a typed result through JSON or text output.
+
+    JSON mode goes through :func:`~cadrumo.application.operator_output.emit.emit_operator_json_success`
+    so the payload is wrapped in the shared
+    :class:`SchemaEnvelope` spine
+    ``{"schema_version": ..., "command": ..., "status": ..., "result": ...,
+    "notices": ...}``; ``status`` is derived from the supplied notice
+    severities. Text mode keeps the existing line iterator unchanged so
+    terminal output is unaffected.
+
+    When the active profile bucket is a sandbox, a
+    persistent info :class:`Notice` naming the sandbox is prepended to
+    ``notices`` (JSON mode, via
+    :func:`~cadrumo.application.operator_output.emit.emit_operator_json_success`)
+    and a matching banner line is prepended ahead of ``lines`` (text mode),
+    so an operator can never mistake a sandbox run for a run against the
+    real profile. The indicator is resolved by
+    :func:`~cadrumo.application.operator_output.sandbox_notice.sandbox_notice_for_active_bucket`,
+    shared with the setup wizard's own success emitters
+    (:mod:`cadrumo.application.wizard.commands`), which sit below this CLI
+    package and route through the same funnel rather than a second
+    implementation.
+
+    Args:
+        ctx: Typer context (used to discover the requested output format).
+        command: Stable command path string (matches the
+            the CommandSpec result-schema identity argument on the result model).
+        result: The strict-validated payload model to surface as
+            ``envelope.result``. Must be a pydantic model registered
+            under ``command`` in
+            the command-spec graph; the CLI
+            conformance gate enforces this at test time.
+        lines: Iterable of pre-formatted text lines (used unchanged
+            for text mode).
+        notices: Optional typed :class:`Notice`
+            diagnostics surfaced on the envelope's ``notices`` channel.
+            The text-mode rendering is unchanged; callers fold the same
+            notices into ``lines`` themselves so JSON and text cannot
+            drift.
+        metadata_only: Skip profile notices, action resolution, and sandbox
+            discovery for a callback that only renders command metadata.
+    """
+    metadata_invocation = metadata_only or _is_metadata_invocation(ctx)
+    output_format = _format_of(ctx)
+    supplied_notices = tuple(notices or ())
+    if metadata_invocation:
+        resolved_notices = supplied_notices
+    else:
+        from cadrumo_client.commands.profile_authentication_notice import drain_profile_authentication_notices
+
+        from ..payer_fact_migration_notices import drain_payer_fact_migration_notices
+
+        supplied_notices = (
+            *supplied_notices,
+            *drain_profile_authentication_notices(),
+            *drain_payer_fact_migration_notices(),
+        )
+        resolved_notices = resolve_notice_actions(supplied_notices)
+    if output_format is OutputFormat.JSON:
+        if metadata_invocation:
+            # The ``--help`` / ``--version`` fast path stays off the
+            # sandbox/active-profile resolution entirely — active_profile is
+            # forced to ``None`` and no sandbox lookup runs, matching the
+            # existing metadata-invocation contract, and it never imports
+            # ``application.operator_output`` at all. This is the one
+            # documented direct call to the low-level primitive, allowlisted
+            # in test_json_schema_conformance.py.
+            from ...core.json_contract import emit_json_success
+
+            emit_json_success(command, result, notices=resolved_notices, active_profile=None)
+            return
+        from ...application.operator_output.emit import emit_operator_json_success
+
+        active_profile = active_profile_label()
+        emit_operator_json_success(command, result, notices=resolved_notices, active_profile=active_profile)
+        return
+    # Route non-JSON paths through render_command_output so unsupported
+    # ``--format`` values (e.g. ``xml``) raise the shared refusal contract.
+    # ``render_command_output``
+    # ignores ``payload`` outside JSON mode and emits the line iterator.
+    if metadata_invocation:
+        rendered_lines = tuple(lines)
+    else:
+        rendered_lines = (*lines, *notice_lines(resolved_notices), *_action_text_lines(resolved_notices))
+        from ...application.operator_output.sandbox_notice import sandbox_banner_line, sandbox_notice_for_active_bucket
+
+        sandbox_notice = sandbox_notice_for_active_bucket()
+        if sandbox_notice is not None:
+            rendered_lines = (sandbox_banner_line(sandbox_notice), *rendered_lines)
+    _render_and_echo(format_name=output_format.value, payload=result, lines=rendered_lines)
+
+
+def resolve_notice_action(
+    *,
+    action: ActionReference,
+    argument_bindings: tuple[ResolvedActionArgument, ...] = (),
+) -> ResolvedNoticeAction:
+    """Resolve a fully materialised successful notice action against the live CLI.
+
+    This is the sole entrypoint bridge for successful ``Notice.action`` values.
+    It derives the current result-schema, Click input, mounted-family,
+    profile-policy, and external projections, then delegates all action validation
+    to the application-owned resolver.  Producers therefore supply only their
+    stable action identity and provenance-bearing concrete values; they cannot
+    hand-assemble a wire action or silently omit a live required input.
+    """
+    from ...application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
+    from ...application.operator_surface.action_resolution import (
+        resolve_notice_action as resolve_application_notice_action,
+    )
+
+    resolved = resolve_application_notice_action(
+        action=action,
+        argument_bindings=argument_bindings,
+        catalogue=OPERATOR_ACTION_CATALOGUE,
+        reconciliation=operator_surface_target_reconciliation(
+            OPERATOR_ACTION_CATALOGUE.lookup(action.action_id).target_command_key,
+        ),
+    )
+    schema = _live_action_input_schema(resolved.action.target_command_key)
+    return resolved.model_copy(
+        update={"action": resolved.action.model_copy(update={"cli_path": schema.cli_path})},
+    )
+
+
+def resolve_lifecycle_continuation_notice(continuation: ModeloWorkLifecycleContinuation) -> Notice:
+    """Project an application-owned lifecycle continuation through the live action resolver."""
+    action = None
+    if continuation.action is not None:
+        action = resolve_notice_action(
+            action=continuation.action,
+            argument_bindings=tuple(
+                ResolvedActionArgument(
+                    argument_name=binding.argument_name,
+                    status=binding.status,
+                    value=binding.value,
+                    source=binding.source,
+                    source_key=binding.source_key,
+                    source_evidence_id=binding.source_evidence_id,
+                )
+                for binding in continuation.argument_bindings
+            ),
+        )
+    context = {key: str(value) for key, value in continuation.evidence.values.items()}
+    context["continuation_outcome"] = (
+        "action_available" if continuation.no_recovery_outcome is None else continuation.no_recovery_outcome.value
+    )
+    return Notice(
+        severity=NoticeSeverity.INFO,
+        code=continuation.notice_code,
+        message=tr(continuation.summary_locale_key, **continuation.evidence.values),
+        action=action,
+        context=context,
+    )
+
+
+def active_profile_label() -> str | None:
+    """Return the active taxpayer profile's display label, or ``None``.
+
+    Resolves the active bucket id through the same core precedence chain
+    every command uses (:func:`~cadrumo.core.bucket_pointer.resolve_active_bucket_id`), then
+    resolves its live plaintext manifest label
+    (:func:`~cadrumo.application.workflow.profile_bucket_scan.resolve_profile_bucket`) — the
+    same non-secret display name
+    :func:`~cadrumo.application.operator_output.sandbox_notice.sandbox_notice_for_active_bucket`
+    reads,
+    never opening the encrypted per-bucket database and never touching the
+    redacted profile/bucket UUID. Returns ``None`` when no profile is
+    active, Cadrumo has rejected a legacy product-state location, or the manifest is
+    absent, unreadable, or fails strict validation, so a non-profile-bound
+    command and a degraded manifest both leave the envelope spine's
+    ``active_profile`` null rather than breaking the emit. This is the identity anchor injected at the CLI
+    transport boundary because the ``core`` layer that builds the envelope
+    (:func:`~cadrumo.core.json_contract.emit_json_success`) never scans
+    profile manifests.
+    """
+    from ...adapters.persistence.storage.errors import StorageValidationError
+    from ...application.workflow.profile_bucket_scan import resolve_profile_bucket
+    from ...core.bucket_pointer import resolve_active_bucket_id
+    from ...core.config_state_root import FormerProductStateError
+
+    try:
+        bucket_id = resolve_active_bucket_id()
+        if bucket_id is None:
+            return None
+        pointer = resolve_profile_bucket(bucket_id)
+    except (FormerProductStateError, StorageValidationError):
+        return None
+    return pointer.label if pointer is not None else None
+
+
+def _bad(message: str) -> typer.BadParameter:
+    return typer.BadParameter(message)
+
+
+bad = _bad
+
+
+def _no_active_profile_refusal() -> Exception:
+    """Return the canonical no-active-profile refusal exception.
+
+    A missing active profile is a workflow-state refusal, not a
+    user-input error: it must read as ``Refused. No active profile…``
+    rather than be wrapped in a Click ``Invalid value:`` header. Every
+    cold-start command path — ledger, modelo work, overview — raises
+    this same translated refusal so first-contact guidance is
+    consistent across the CLI surface.
+
+    The suggested next command distinguishes "no profile registered at
+    all" (suggest create) from "at least one profile is registered but
+    none is active" (suggest login), so an operator who has already
+    created a profile and merely logged out is never told to create a
+    second one. ``list_profile_buckets`` reads only manifest files and
+    never unlocks a bucket, so this check is cheap.
+    """
+    from cadrumo_client.commands.errors import CliRefusedBoundaryError
+
+    from ...application.profile_preconditions import inspect_active_profile_precondition
+    from ...application.workflow.profile_bucket_scan import list_profile_buckets
+
+    registered_profile_count = len(list_profile_buckets())
+    verdict = inspect_active_profile_precondition(
+        active_profile_present=False,
+        registered_profile_count=registered_profile_count,
+    )
+    if verdict is None:
+        raise InternalInvariantError("no-active-profile refusal did not produce a failed verdict")
+    # Each branch calls tr() with a literal key so the locale scaffold's
+    # static discovery can find both keys; a single tr(variable) call would
+    # be invisible to that AST-literal scan and the second key would never
+    # get scaffolded across the four catalogues.
+    if registered_profile_count:
+        error = CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile_registered"))
+    else:
+        error = CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
+    return attach_cli_policy_verdict(error, verdict=verdict)
+
+
+no_active_profile_refusal = _no_active_profile_refusal
+
+
+def resolve_optional_root(value: Path | None, default: Callable[[], Path]) -> Path:
+    """Resolve an optional ``--*-root`` Typer option to its declared default.
+
+    Shared by every optional-root option that falls back to a bundled data
+    path or a :class:`~cadrumo.core.config.Settings` field when the operator
+    supplies no override. ``default`` is invoked ONLY when ``value`` is
+    ``None``, so a settings-backed default never triggers a settings load on
+    the common override path.
+    """
+    return value if value is not None else default()
+
+
+def resolve_pull_year_range(
+    *,
+    year: int | None,
+    year_from: int | None,
+    year_to: int | None,
+) -> tuple[int, int]:
+    """Resolve mutually exclusive single-year and inclusive range pull options."""
+    if year is not None and (year_from is not None or year_to is not None):
+        raise typer.BadParameter("use --year for a single-year pull or --from-year/--to-year for a range, not both")
+    if year is not None:
+        return year, year
+    if year_from is None and year_to is None:
+        raise typer.BadParameter("either --year or both --from-year and --to-year are required")
+    if year_from is None or year_to is None:
+        raise typer.BadParameter("--from-year and --to-year must be supplied together")
+    if year_from > year_to:
+        raise typer.BadParameter("--from-year must be less than or equal to --to-year")
+    return year_from, year_to
+
+
+# ---------------------------------------------------------------------
+# Repositories
+# ---------------------------------------------------------------------
+
+
+def active_bucket_id_or_refuse() -> str:
+    """Return the active profile bucket id or raise the canonical no-active-profile refusal.
+
+    Stateless single source for the cold-start bucket-id guard shared across
+    bucket-bound CLI command families.
+    """
+    from ...core.bucket_pointer import require_active_bucket_id
+    from ...core.errors.hierarchy import NoActiveProfileError
+
+    try:
+        return require_active_bucket_id()
+    except NoActiveProfileError as exc:
+        raise _no_active_profile_refusal() from exc
+
+
+# ---------------------------------------------------------------------
+# Output-language override
+# ---------------------------------------------------------------------
+
+
+def activate_subcommand_output_language(ctx: typer.Context, language: OutputLanguage | None) -> None:
+    """Apply a subcommand-supplied ``--output-language`` to the render path.
+
+    ``--output-language`` on a subcommand short-circuits the root
+    callback's ``--language`` flow; rather than re-parsing, override the
+    Settings field directly and drop the cached language so any ``tr()``
+    fired during the verb body resolves to the requested locale.
+    """
+    if language is None:
+        return
+    from ...core.config import override_settings
+    from ...core.i18n.render import clear_output_language_cache
+
+    ctx.with_resource(override_settings(cadrumo_output_language=language))
+    clear_output_language_cache()

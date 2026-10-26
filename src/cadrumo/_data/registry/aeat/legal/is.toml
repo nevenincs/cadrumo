@@ -1,0 +1,3286 @@
+[legal."ley-27-2014:art-7"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-7.html#a7"
+document_id = "BOE-A-2014-12328"
+article = "7"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a7"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "verified against official BOE-A-2014-12328 consolidated art. 7; corpus excerpt bundled"
+notes = "LIS art 7 defines contributors to Impuesto sobre Sociedades, including resident legal persons and using the abbreviated designations sociedades or entidades. Grounds the legal_entity branch of the profile entity-type axis."
+required_text = [
+    "Contribuyentes",
+    "Serán contribuyentes del Impuesto",
+    "Las personas jurídicas",
+    "sociedades o entidades",
+]
+
+[legal."ley-27-2014:art-10"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-10.html#a10"
+document_id = "BOE-A-2014-12328"
+article = "10"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a10"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "operator_reviewed"
+reviewed_at = 2026-06-02
+reviewed_by = "operator"
+notes = "LIS art 10: concepto y determinacion de la base imponible. La base imponible es la renta del periodo minorada por la compensacion de bases imponibles negativas; en estimacion directa se calcula corrigiendo el resultado contable mediante los preceptos de la Ley. Es la definicion-marco del encadenamiento de determinacion de la base del Modelo 200 (00501 resultado contable -> correcciones -> 00550 base previa -> 00552 base imponible)."
+required_text = [
+    "La base imponible estará constituida por el importe de la renta obtenida en el período impositivo",
+    "compensación de bases imponibles negativas",
+    "corrigiendo, mediante la aplicación de los preceptos establecidos en esta Ley, el resultado contable",
+]
+
+[legal."ley-27-2014:art-11"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-11.html#a11"
+document_id = "BOE-A-2014-12328"
+article = "11"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a11"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "operator_reviewed"
+reviewed_at = 2026-06-02
+reviewed_by = "operator"
+notes = "LIS art 11: imputacion temporal e inscripcion contable de ingresos y gastos. Los ingresos y gastos se imputan al periodo de su devengo con arreglo a la normativa contable, con independencia de su pago o cobro. Gobierna el criterio de devengo de las partidas que forman el resultado contable que alimenta la determinacion de la base del Modelo 200."
+required_text = [
+    "se imputarán al período impositivo en que se produzca su devengo",
+    "con independencia de la fecha de su pago o de su cobro",
+]
+
+[legal."ley-27-2014:art-14"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-14.html#a14"
+document_id = "BOE-A-2014-12328"
+article = "14"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a14"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "operator_reviewed"
+reviewed_at = 2026-06-02
+reviewed_by = "operator"
+notes = "LIS art 14: provisiones y otros gastos. Regula la no deducibilidad de determinados gastos por provisiones (fondos internos de pensiones, retribuciones a largo plazo, obligaciones implicitas o tacitas) que constituyen correcciones al resultado contable en la determinacion de la base imponible del Modelo 200."
+required_text = [
+    "No serán deducibles los gastos por provisiones y fondos internos",
+    "No serán deducibles los siguientes gastos asociados a provisiones",
+]
+
+[legal."ley-27-2014:art-13"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-13.html#a13"
+document_id = "BOE-A-2014-12328"
+article = "13"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a13"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "operator_reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "operator"
+notes = """\
+LIS art 13: correcciones de valor - perdida por deterioro del valor de los elementos patrimoniales. \
+Establece la deducibilidad del deterioro de creditos cuando concurra una de cuatro circunstancias (6 \
+meses de vencimiento, concurso, alzamiento de bienes, reclamacion judicial / arbitral), las \
+exclusiones (creditos publicos, vinculadas excepto liquidacion concursal, estimaciones globales), y \
+la no-deducibilidad general del deterioro de inmovilizado material/intangible/inversiones \
+inmobiliarias y participaciones. Base sustantiva de la dotaciones_deterioro_creditos_u_otros_activos \
+section de M200."""
+required_text = [
+    "pérdida por deterioro del valor",
+    "deterioro de los créditos",
+    "6 meses desde el vencimiento",
+]
+
+[legal."ley-27-2014:art-15"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-15.html#a15"
+document_id = "BOE-A-2014-12328"
+article = "15"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a15"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "operator_reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "operator"
+notes = """\
+LIS art 15: gastos no deducibles. Enumera los gastos que la LIS expresamente excluye de la \
+deducibilidad fiscal: retribucion de fondos propios (incluidos prestamos participativos \
+intra-grupo), IS contabilizado, multas y sanciones, recargos del periodo ejecutivo y \
+extemporaneos, perdidas del juego, donativos y liberalidades (con excepcion de atenciones \
+a clientes limitadas al 1 por ciento del INCN), actuaciones contrarias al ordenamiento \
+juridico, gastos con paraisos fiscales. Base sustantiva de las correcciones positivas al \
+resultado contable en M200."""
+required_text = [
+    "Gastos no deducibles",
+    "retribución de los fondos propios",
+    "multas y sanciones",
+]
+
+[legal."ley-27-2014:art-21"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-21.html#a21"
+document_id = "BOE-A-2014-12328"
+article = "21"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a21"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "operator_reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "operator"
+notes = """\
+LIS art 21: exencion sobre dividendos y rentas derivadas de la transmision de valores \
+representativos de los fondos propios de entidades residentes y no residentes en \
+territorio espanol. Establece el regimen de participation exemption: dividendos y \
+ganancias por transmision de acciones quedan exentos cuando se cumple el umbral del 5 por \
+ciento de participacion sostenida durante un anio, con requisito adicional para no \
+residentes de tributacion minima al 10 por ciento nominal. Base sustantiva de las \
+correcciones negativas por dividendos exentos en M200."""
+required_text = [
+    "Exención sobre dividendos",
+    "5 por ciento",
+    "manera ininterrumpida durante el año anterior",
+]
+
+[legal."ley-27-2014:art-22"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-22.html#a22"
+document_id = "BOE-A-2014-12328"
+article = "22"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a22"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "operator_reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "operator"
+notes = """\
+LIS art 22: exencion de las rentas obtenidas en el extranjero a traves de un \
+establecimiento permanente. Establece la exencion para rentas positivas obtenidas por EPs \
+no residentes cuando el EP haya estado sujeto al impuesto extranjero a un tipo nominal de \
+al menos el 10 por ciento, junto con la exencion en transmision o cese del EP. Las rentas \
+negativas no se integran salvo en caso de cese (con minorizacion por rentas positivas \
+previamente exentas o deducidas). Base sustantiva de las correcciones por \
+rentas-EP-no-residente en M200."""
+required_text = [
+    "Exención de las rentas obtenidas en el extranjero",
+    "establecimiento permanente",
+    "10 por ciento",
+]
+
+[legal."ley-27-2014:art-31"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-31.html#a31"
+document_id = "BOE-A-2014-12328"
+article = "31"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a31"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "operator_reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "operator"
+notes = """\
+LIS art 31: deduccion para evitar la doble imposicion juridica - impuesto soportado por el \
+contribuyente. Permite deducir de la cuota integra la menor de dos cantidades: el impuesto \
+efectivamente satisfecho en el extranjero (con tope del convenio CDI si aplica), o la \
+cuota integra que en Espana correspondería pagar por las mismas rentas. Las cantidades no \
+deducidas se trasladan a periodos siguientes; comprobacion prescribe a los 10 anios. Base \
+sustantiva de la deduccion por doble imposicion juridica internacional en M200."""
+required_text = [
+    "Deducción para evitar la doble imposición jurídica",
+    "menor de las dos cantidades",
+    "impuesto satisfecho en el extranjero",
+]
+
+[legal."ley-27-2014:art-32"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-32.html#a32"
+document_id = "BOE-A-2014-12328"
+article = "32"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a32"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "operator_reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "operator"
+notes = "LIS art 32: deduccion para evitar la doble imposicion economica internacional - dividendos y participaciones en beneficios. Permite deducir el impuesto efectivamente pagado por la entidad no residente sobre los beneficios distribuidos como dividendos, condicionado a participacion minima del 5 por ciento mantenida ininterrumpidamente durante un anio y a la inclusion de la cuantia en la base imponible. Base sustantiva del underlying-tax-credit (deduccion DIE) en M200."
+required_text = [
+    "Deducción para evitar la doble imposición económica internacional",
+    "dividendos",
+    "5 por ciento",
+]
+
+[legal."ley-27-2014:art-12"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-12.html#a12"
+document_id = "BOE-A-2014-12328"
+article = "12"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a12"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "operator_reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "operator"
+notes = """\
+LIS art 12: correcciones de valor - amortizaciones. Define la deducibilidad de la \
+amortizacion segun depreciacion efectiva, los cinco metodos validos (tabla lineal \
+art-12.1.a, porcentaje constante degresivo, numeros digitos, plan aceptado por la \
+Administracion, justificacion del importe) y la tabla de coeficientes maximos por tipo de \
+elemento (obra civil 2-7 por ciento, edificios 2-4 por ciento, maquinaria 12 por ciento, \
+equipos electronicos 20-33 por ciento, etc.). Base sustantiva de las casillas de \
+amortizacion de M200, desarrollada en RIS art-3."""
+required_text = [
+    "Correcciones de valor: amortizaciones",
+    "depreciación efectiva",
+    "coeficientes de amortización lineal",
+]
+
+[legal."ley-27-2014:art-16"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-16.html#a16"
+document_id = "BOE-A-2014-12328"
+article = "16"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a16"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "operator_reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "operator"
+notes = "LIS art 16: limitacion en la deducibilidad de gastos financieros. Establece el limite del 30 por ciento del beneficio operativo del ejercicio para los gastos financieros netos deducibles, con un suelo absoluto de 1 millon de euros y traslado a los cinco anios siguientes del exceso no aplicado del limite."
+required_text = [
+    "Limitación en la deducibilidad de gastos financieros",
+    "30 por ciento del beneficio operativo",
+    "1 millón de euros",
+]
+
+[legal."ley-27-2014:art-19"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-19.html#a19"
+document_id = "BOE-A-2014-12328"
+article = "19"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a19"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "operator_reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "operator"
+notes = """\
+LIS art 19: cambios de residencia, operaciones realizadas con o por personas o entidades \
+residentes en paraisos fiscales y cantidades sujetas a retencion. Establece la regla de \
+salida fiscal (integracion en base imponible de la diferencia entre valor de mercado y \
+valor fiscal de los elementos patrimoniales al trasladar la residencia) y la opcion de \
+fraccionamiento del pago en cinco anualidades cuando el destino es la UE/EEE con \
+asistencia mutua equivalente. Base sustantiva de la \
+opcion_de_fraccionamiento_en_supuestos_de_cambios section de M200."""
+required_text = [
+    "Cambios de residencia",
+    "diferencia entre el valor de mercado y el valor fiscal",
+    "fraccionar el pago",
+]
+
+[legal."ley-27-2014:art-36"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-36.html#a36"
+document_id = "BOE-A-2014-12328"
+article = "36"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a36"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "operator_reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "operator"
+notes = "LIS art 36: deduccion por inversiones en producciones cinematograficas, series audiovisuales y espectaculos en vivo de artes escenicas y musicales. Establece las tasas de deduccion (30 por ciento primer millon de base, 25 por ciento exceso), los limites por produccion y episodio (20M / 10M EUR), el requisito de gasto territorial espanol (50 por ciento de la base) y el sub-regimen de productor/financiacion (la letra que M200 cita como art-36.1 y 36.3 para entidades cofinanciadoras)."
+required_text = [
+    "Deducción por inversiones en producciones cinematográficas",
+    "30 por ciento",
+    "25 por ciento",
+]
+
+[legal."ley-27-2014:art-100"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-100.html#a100"
+document_id = "BOE-A-2014-12328"
+article = "100"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a100"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "operator_reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "operator"
+notes = "LIS art 100: Transparencia Fiscal Internacional. Imputacion de rentas positivas obtenidas por entidades no residentes y establecimientos permanentes cuando el contribuyente tenga (solo o con vinculadas art-18) participacion igual o superior al 50 por ciento Y el gravamen extranjero sea inferior al 75 por ciento del que hubiera correspondido en Espana. Base sustantiva de la imputacion-rentas-positivas-art-100-LIS section de M200."
+required_text = [
+    "Imputación de rentas positivas obtenidas por entidades no residentes",
+    "participación igual o superior al 50 por ciento",
+    "inferior al 75 por ciento",
+]
+
+[legal."rd-634-2015:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-634-2015-art-3.html#a3"
+document_id = "BOE-A-2015-7771"
+article = "3"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-7771#a3"
+published_at = 2015-07-11
+effective_from = 2015-07-12
+review_status = "operator_reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "operator"
+notes = """\
+RIS art 3: amortizacion de elementos patrimoniales del inmovilizado material, intangible e \
+inversiones inmobiliarias - normas comunes. Define los metodos de depreciacion efectiva \
+(LIS art-12), la base amortizable (precio de adquisicion o coste de produccion, exclusion \
+del valor del suelo en edificaciones, prorrateo catastral), el inicio de la amortizacion \
+(puesta en funcionamiento / capacidad de producir ingresos) y el tratamiento de \
+renovaciones, ampliaciones y mejoras. Base reglamentaria de las casillas de amortizacion \
+de M200."""
+required_text = [
+    "Amortización de elementos patrimoniales",
+    "métodos previstos en el apartado 1 del artículo 12",
+    "vida útil",
+]
+
+[legal."rd-634-2015:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-634-2015.html#a4"
+document_id = "BOE-A-2015-7771"
+article = "4"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-7771#a4"
+published_at = 2015-07-11
+effective_from = 2015-07-12
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-23
+reviewed_by = "agent-prepared; anchor resolved in the bundled consolidated text; required_text copied from that unit; pending operator re-stamp"
+notes = "RIS art 4: amortizacion segun la tabla de la LIS. Admite cualquier coeficiente entre el maximo y el derivado del periodo maximo, el coeficiente por mas de un turno de trabajo y el doble del maximo sobre el precio de elementos usados; los edificios de menos de diez anos no son usados."
+required_text = [
+    "Amortización según la tabla de amortización establecida en la Ley del Impuesto",
+    "Cualquier otro coeficiente de amortización lineal comprendido entre los dos anteriormente mencionados",
+    "se utilice diariamente en más de un turno normal de trabajo",
+    "multiplicar por 2 la cantidad derivada de aplicar el coeficiente de amortización lineal máximo",
+    "no se considerarán como elementos patrimoniales usados los edificios cuya antigüedad sea inferior a diez años",
+]
+
+[legal."rd-634-2015:art-5"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-634-2015.html#a5"
+document_id = "BOE-A-2015-7771"
+article = "5"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-7771#a5"
+published_at = 2015-07-11
+effective_from = 2015-07-12
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-23
+reviewed_by = "agent-prepared; anchor resolved in the bundled consolidated text; required_text copied from that unit; pending operator re-stamp"
+notes = "RIS art 5: amortizacion segun porcentaje constante sobre el valor pendiente, ponderado 1,5, 2 o 2,5 segun el periodo, nunca inferior al 11 por ciento; excluye edificios, mobiliario y enseres."
+required_text = [
+    "Amortización según porcentaje constante",
+    "En ningún caso el porcentaje constante podrá ser inferior al 11 por ciento",
+    "Los edificios, mobiliario y enseres no podrán amortizarse mediante el método de amortización según porcentaje constante",
+]
+
+[legal."rd-634-2015:art-6"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-634-2015.html#a6"
+document_id = "BOE-A-2015-7771"
+article = "6"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-7771#a6"
+published_at = 2015-07-11
+effective_from = 2015-07-12
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-23
+reviewed_by = "agent-prepared; anchor resolved in the bundled consolidated text; required_text copied from that unit; pending operator re-stamp"
+notes = "RIS art 6: amortizacion segun numeros digitos, en orden decreciente o inverso, con periodo entre el maximo y el derivado del coeficiente maximo; excluye edificios, mobiliario y enseres."
+required_text = [
+    "Amortización según números dígitos",
+    "La asignación de valores numéricos también podrá efectuarse de manera inversa a la prevista en el párrafo anterior",
+    "Los edificios, mobiliario y enseres no podrán amortizarse mediante el método de amortización según números dígitos",
+]
+
+[legal."rd-634-2015:art-7"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-634-2015.html#a7"
+document_id = "BOE-A-2015-7771"
+article = "7"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-7771#a7"
+published_at = 2015-07-11
+effective_from = 2015-07-12
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-23
+reviewed_by = "agent-prepared; anchor resolved in the bundled consolidated text; required_text copied from that unit; pending operator re-stamp"
+notes = "RIS art 7: planes de amortizacion propuestos por el contribuyente y aprobados, expresamente o por silencio, por la Administracion; surten efecto en los periodos que finalicen tras su presentacion."
+required_text = [
+    "Planes de amortización",
+    "Aprobar el plan de amortización formulado por el contribuyente",
+    "surtirá efecto en los períodos impositivos que finalicen tras la presentación del mismo",
+]
+
+[legal."ley-27-2014:art-103"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014.html#a103"
+document_id = "BOE-A-2014-12328"
+article = "103"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a103"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-23
+reviewed_by = "agent-prepared; anchor resolved in the bundled consolidated text; required_text copied from that unit; pending operator re-stamp"
+notes = "LIS art 103: los elementos nuevos del inmovilizado material, inversiones inmobiliarias e intangible puestos a disposicion en un periodo de reducida dimension pueden amortizarse con el doble del coeficiente lineal maximo de las tablas."
+required_text = [
+    "Amortización de los elementos nuevos del inmovilizado material y de las inversiones inmobiliarias y del inmovilizado intangible",
+    "multiplicar por 2 el coeficiente de amortización lineal máximo previsto en las tablas de amortización oficialmente aprobadas",
+]
+
+[sources."boe-ris-statutory-facts"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/rd-634-2015.html"
+sha256 = "8015d89ab6b01914e918fa3c62f454a7b2aef2225aa50ccbbc3c9b7318a86804"
+bytes = 387943
+retrieved_at = 2026-08-10
+published_at = 2015-07-11
+applies_from = 2015-07-12
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-7771"
+review_status = "agent_reviewed"
+
+[legal."ley-27-2014:art-25"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-25.html#a25"
+document_id = "BOE-A-2014-12328"
+article = "25"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a25"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "operator_reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "operator"
+notes = "LIS art 25: reserva de capitalizacion. Establece la reduccion en la base imponible del 15 por ciento del incremento de los fondos propios (23 por ciento si la plantilla media aumenta), condicionada al mantenimiento durante 3 anios y a la dotacion de una reserva indisponible."
+required_text = [
+    "Reserva de capitalización",
+    "reducción en la base imponible",
+    "incremento de sus fondos propios",
+]
+
+[legal."ley-27-2014:art-26"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-26.html#a26"
+document_id = "BOE-A-2014-12328"
+article = "26"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a26"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "operator_reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "operator"
+notes = "LIS art 26: compensacion de bases imponibles negativas. Establece el limite del 70 por ciento de la base imponible previa para la compensacion de BINs con rentas positivas de ejercicios siguientes, con suelo absoluto de 1 millon de euros y plazo de prescripcion de 10 anios para la facultad de comprobacion."
+required_text = [
+    "Compensación de bases imponibles negativas",
+    "70 por ciento de la base imponible previa",
+    "1 millón de euros",
+]
+
+[legal."ley-27-2014:art-29"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-29.html#a29"
+document_id = "BOE-A-2014-12328"
+article = "29"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a29"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "operator_reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "operator"
+notes = "LIS art 29: el tipo de gravamen. Establece los tipos del Impuesto sobre Sociedades: 25 por ciento general; escala micro-empresa 17 por ciento (0-50.000) / 20 por ciento (resto); cooperativas fiscalmente protegidas -3 pp; entidades sin fines lucrativos 10 por ciento; nuevas creacion 15 por ciento (primeros dos ejercicios); entidades de credito y exploracion de hidrocarburos 30 por ciento."
+required_text = [
+    "El tipo de gravamen",
+    "25 por ciento",
+    "Sociedades cooperativas fiscalmente protegidas",
+]
+
+[legal."ley-49-2002:art-10"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-49-2002-art-10.html#a10"
+document_id = "BOE-A-2002-25039"
+article = "10"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2002-25039#a10"
+published_at = 2002-12-24
+effective_from = 2002-12-25
+consolidated_as_of = 2023-12-20
+review_status = "agent_reviewed"
+reviewed_at = 2026-06-29
+reviewed_by = "verified against live BOE-A-2002-25039 art. 10 and bundled corpus excerpt"
+notes = "Ley 49/2002 art 10: regime-specific Impuesto sobre Sociedades rate for positive taxable base from non-exempt economic activities of entities without profit motive under Title II; supports the Modelo 200 10 percent special-regime branch alongside LIS art 29.3."
+required_text = [
+    "Artículo 10. Tipo de gravamen.",
+    "La base imponible positiva",
+    "explotaciones económicas no exentas",
+    "tipo del 10 por 100",
+]
+
+[legal."ley-49-2002:art-14"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-49-2002-art-14.html#a14"
+document_id = "BOE-A-2002-25039"
+article = "14"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2002-25039#a14"
+published_at = 2002-12-24
+effective_from = 2002-12-25
+consolidated_as_of = 2023-12-20
+review_status = "agent_reviewed"
+reviewed_at = 2026-06-29
+reviewed_by = "verified against live BOE-A-2002-25039 art. 14 and bundled corpus excerpt"
+notes = "Ley 49/2002 art 14: application of the Title II special fiscal regime by option in the regulatory form/period, indefinite linkage while art. 3 requirements remain met and no renunciation is filed, proof burden on the entity, and non-compliance repayment consequences."
+required_text = [
+    "Artículo 14. Aplicación del régimen fiscal especial.",
+    "podrán acogerse al régimen fiscal especial",
+    "plazo y en la forma que reglamentariamente se establezca",
+    "Ejercitada la opción",
+    "forma indefinida durante los períodos impositivos siguientes",
+    "mientras no se renuncie a su aplicación",
+    "deberán ser probados por la entidad",
+]
+
+# Ley 49/2002 art 6, binding provision establishing which income of a Title II
+# entidad sin fines lucrativos is EXEMPT from Impuesto sobre Sociedades
+# (donativos/donaciones, cuotas de asociados, subvenciones not financing
+# non-exempt activity, rendimientos del patrimonio mobiliario/inmobiliario,
+# rentas de transmisiones, rentas de explotaciones económicas exentas del art.
+# 7, and atribuidas/imputadas exempt income). On Modelo 200 these rentas are
+# excluded from the base imponible via the régimen-especial disminución
+# corrections (casillas 03276-03280, page 026f → [00392] disminución).
+[legal."ley-49-2002:art-6"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-49-2002-art-6.html#a6"
+document_id = "BOE-A-2002-25039"
+article = "6"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2002-25039#a6"
+published_at = 2002-12-24
+effective_from = 2002-12-25
+consolidated_as_of = 2023-12-20
+review_status = "agent_reviewed"
+reviewed_at = 2026-06-30
+reviewed_by = "agent-prepared; verified against live BOE-A-2002-25039 art. 6 consolidated text 2023-12-20; pending operator re-stamp"
+notes = """\
+Ley 49/2002 art 6: rentas exentas del Impuesto sobre Sociedades obtenidas por entidades \
+sin fines lucrativos del Título II — donativos y donaciones, cuotas de \
+asociados/colaboradores/benefactores, subvenciones (salvo las que financian explotaciones \
+no exentas), rendimientos del patrimonio mobiliario e inmobiliario, rentas de \
+adquisiciones/transmisiones, rentas de explotaciones económicas exentas del art. 7, y \
+rentas atribuidas/imputadas procedentes de rentas exentas. Grounds the Modelo 200 \
+régimen-especial disminución corrections that exclude exempt income from the base \
+imponible."""
+required_text = [
+    "Artículo 6. Rentas exentas.",
+    "Están exentas del Impuesto sobre Sociedades las siguientes rentas obtenidas por entidades sin fines lucrativos",
+    "Los donativos y donaciones recibidos para colaborar en los fines de la entidad",
+    "Las cuotas satisfechas por los asociados, colaboradores o benefactores",
+    "Las subvenciones, salvo las destinadas a financiar la realización de explotaciones económicas no exentas",
+    "Las obtenidas en el ejercicio de las explotaciones económicas exentas a que se refiere el artículo siguiente",
+]
+
+# Ley 49/2002 art 7, binding provision establishing which EXPLOTACIONES
+# ECONÓMICAS of a Title II entidad sin fines lucrativos are exempt from
+# Impuesto sobre Sociedades when carried out in pursuit of the entity's
+# specific object (asistencia social, sanitaria, I+D+i, cultural, educativa,
+# deportiva, escasa relevancia ≤ 20.000 EUR, etc.). The income of these exempt
+# activities is the art. 6.4.º exempt renta excluded from the Modelo 200 base
+# imponible. Apartado 12.º currentized by RD-ley 6/2023 (BOE-A-2023-25758).
+[legal."ley-49-2002:art-7"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-49-2002-art-7.html#a7"
+document_id = "BOE-A-2002-25039"
+article = "7"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2002-25039#a7"
+published_at = 2002-12-24
+effective_from = 2024-01-01
+consolidated_as_of = 2023-12-20
+review_status = "agent_reviewed"
+reviewed_at = 2026-06-30
+reviewed_by = "agent-prepared; verified against live BOE-A-2002-25039 art. 7 consolidated text 2023-12-20, apartado 12.º RD-ley 6/2023; pending operator re-stamp"
+notes = """\
+Ley 49/2002 art 7: explotaciones económicas exentas del Impuesto sobre Sociedades cuando se \
+desarrollan en cumplimiento del objeto o finalidad específica de la entidad sin fines lucrativos \
+(acción/asistencia social, hospitalización y asistencia sanitaria, I+D+i del art. 35 LIS, bienes de \
+interés cultural y museos, artes escénicas, espacios naturales protegidos, enseñanza y formación, \
+exposiciones y seminarios, edición, deporte, auxiliares/complementarias hasta el 20%, y escasa \
+relevancia con INCN ≤ 20.000 EUR). Su renta es la renta exenta del art. 6.4.º excluida de la base \
+imponible del Modelo 200."""
+required_text = [
+    "Artículo 7. Explotaciones económicas exentas.",
+    "Están exentas del Impuesto sobre Sociedades las rentas obtenidas por entidades sin fines lucrativos que procedan de las siguientes explotaciones económicas",
+    "siempre y cuando sean desarrolladas en cumplimiento de su objeto o finalidad específica",
+    "Las explotaciones económicas de escasa relevancia",
+    "no supere en conjunto 20.000 euros",
+]
+
+# LIS disposición transitoria cuadragésima cuarta, added by Ley 7/2024
+# (disposición final octava). Binding source for the micro-empresa
+# (INCN < 1M EUR) two-tranche transitional rate schedule applied to the
+# 2025 (21%/22%) and 2026 (19%/21%) periods on top of LIS art. 29.1.
+[legal."ley-27-2014:dt-44"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-dt-44.html#dt-6"
+document_id = "BOE-A-2014-12328"
+article = "DT-44"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#dt-6"
+published_at = 2024-12-21
+effective_from = 2025-01-01
+review_status = "operator_reviewed"
+reviewed_at = 2026-06-02
+reviewed_by = "operator"
+notes = "LIS DT 44ª (Ley 7/2024, BOE-A-2024-26694): régimen transitorio del tipo de gravamen de las microempresas cuyo INCN del período inmediato anterior es inferior a 1 millón de euros, sobre la escala del art. 29.1 LIS; ejercicios iniciados en 2025 (21% / 22%) y 2026 (19% / 21%). También fija el tránsito de entidades de reducida dimensión que cumplen el art. 101 LIS: 24% en 2025, 23% en 2026, 22% en 2027 y 21% en 2028, salvo tipo especial distinto del general."
+required_text = [
+    "21 por ciento",
+    "22 por ciento",
+    "24 por ciento",
+    "23 por ciento",
+    "entidades que cumplan las previsiones previstas en el artículo 101",
+    "1 millón de euros",
+]
+
+# Ley 7/2024, de 20 de diciembre, art. 6: subjects of the Impuesto Complementario,
+# which names the grupo nacional de gran magnitud beside the grupo multinacional.
+[legal."ley-7-2024:art-6"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-7-2024-art-6.html#a6"
+document_id = "BOE-A-2024-26694"
+article = "6"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-26694#a6"
+published_at = 2024-12-21
+effective_from = 2024-12-22
+governs_periods_from = 2023-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled consolidated BOE-A-2024-26694 art 6; pending operator re-stamp)"
+notes = """Ley 7/2024 art 6 (sujetos pasivos y reglas de sujeción del Impuesto Complementario): the constituent entity located in Spain that belongs to a grupo multinacional or to a grupo nacional de gran magnitud whose consolidated INCN reaches 750 million euros in two of the four preceding periods. The law enters into force the day after its BOE publication of 2024-12-21 and has effects for periods starting on or after 2023-12-31 (disposición final vigésima segunda), hence governs_periods_from. The AEAT Sociedades 2025 manual cites this article for widening Modelo 200 keys [00081] and [00082] to filiales and sociedades matriz última of a grupo nacional de gran magnitud; the 2024 manual cites it for the grupo mercantil section of page 1 bis."""
+required_text = [
+    "Sujetos pasivos y reglas de sujeción",
+    "que forme parte de un grupo multinacional o de un grupo nacional de gran magnitud",
+    "750 millones de euros",
+]
+corpus_tier = "provision_excerpt"
+
+[legal."ley-27-2014:art-101"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-101.html#a101"
+document_id = "BOE-A-2014-12328"
+article = "101"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a101"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-06-27
+reviewed_by = "bundled corpus excerpt cross-checked against live BOE"
+notes = "LIS art 101: define the entidades de reducida dimensión threshold by prior-period INCN below 10 million euros and the annualisation/group rules used by DT 44 ERD rate dispatch."
+required_text = [
+    "inferior a 10 millones de euros",
+    "entidad patrimonial",
+    "importe neto de la cifra de negocios se elevará al año",
+]
+
+[legal."ley-27-2014:art-30"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-30.html#a30"
+document_id = "BOE-A-2014-12328"
+article = "30"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a30"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "operator_reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "operator"
+notes = "LIS art 30: cuota integra. Define la cuota integra como la cantidad resultante de aplicar a la base imponible el tipo de gravamen del articulo 29, con regla de proporcionalidad para periodos impositivos de duracion inferior al anio. La definicion sustantiva del Impuesto sobre Sociedades reside en este articulo."
+required_text = [
+    "Cuota íntegra",
+    "aplicar a la base imponible el tipo de gravamen",
+]
+
+[legal."ley-27-2014:art-39"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-39.html#a39"
+document_id = "BOE-A-2014-12328"
+article = "39"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a39"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "operator_reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "operator"
+notes = "LIS art 39: normas comunes a las deducciones para incentivar la realizacion de determinadas actividades. Establece el plazo de 15 anios para aplicar deducciones no utilizadas por insuficiencia de cuota, el regimen de abono por insuficiencia de cuota para deducciones de I+D+i y animacion, y los limites anuales de 1 millon de euros (innovacion tecnologica) y 3 millones (conjunto)."
+required_text = [
+    "Normas comunes a las deducciones",
+    "15 años inmediatos y sucesivos",
+    "insuficiencia de cuota",
+]
+
+[legal."ley-27-2014:art-105"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-105.html#a105"
+document_id = "BOE-A-2014-12328"
+article = "105"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a105"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "operator_reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "operator"
+notes = "LIS art 105: reserva de nivelacion de bases imponibles. Permite a las entidades que cumplen las condiciones del articulo 101 (cifra de negocios inferior a 10 millones de euros) y aplican el tipo general minorar su base imponible positiva hasta el 10 por ciento de su importe, con tope de 1 millon de euros, computada tambien a efectos de pagos fraccionados (art 40.3) e incompatible con la reserva de capitalizacion del articulo 25."
+required_text = [
+    "Reserva de nivelación de bases imponibles",
+    "minorar su base imponible positiva hasta el 10 por ciento",
+    "1 millón de euros",
+]
+
+[legal."ley-27-2014:art-40"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-40.html#a40"
+document_id = "BOE-A-2014-12328"
+article = "40"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a40"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "operator_reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "operator"
+notes = "Pago fraccionado del Impuesto sobre Sociedades. Establece las dos modalidades (cuota integra y base imponible) y el calendario de pagos fraccionados que liquida el Modelo 202."
+required_text = [
+    "El pago fraccionado",
+    "20 días naturales de los meses de abril, octubre y diciembre",
+    "La base para calcular el pago fraccionado será la cuota íntegra del último período impositivo",
+    "el porcentaje del 18 por ciento",
+    "el porcentaje que resulte de multiplicar por cinco séptimos el tipo de gravamen redondeado por defecto",
+    "El pago fraccionado tendrá la consideración de deuda tributaria",
+]
+
+[legal."ley-27-2014:art-40-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-40.html#a40"
+document_id = "BOE-A-2014-12328"
+article = "40.3"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a40"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "operator_reviewed"
+reviewed_at = 2026-05-26
+reviewed_by = "operator"
+notes = """\
+LIS art 40.3: modalidad opcional / obligatoria del pago fraccionado del Impuesto sobre Sociedades \
+calculada sobre la parte de la base imponible de los 3, 9 u 11 primeros meses del año natural. La \
+modalidad es obligatoria para los contribuyentes cuyo importe neto de la cifra de negocios haya \
+superado los 6 millones de euros durante los 12 meses anteriores al inicio del periodo impositivo. \
+La cuantia se obtiene aplicando a la base el porcentaje resultante de multiplicar por cinco septimos \
+el tipo de gravamen redondeado por defecto. Funda el gate de aplicabilidad de la modalidad Modelo \
+202 Art. 40.3 frente a la modalidad Art. 40.2."""
+required_text = [
+    "Los pagos fraccionados también podrán realizarse, a opción del contribuyente, sobre la parte de la base imponible",
+    "estarán obligados a aplicar la modalidad a que se refiere este apartado",
+    "importe neto de la cifra de negocios haya superado la cantidad de 6 millones de euros",
+    "12 meses anteriores a la fecha en que se inicie el período impositivo",
+    "el porcentaje que resulte de multiplicar por cinco séptimos el tipo de gravamen redondeado por defecto",
+]
+
+# LIS disposición adicional decimocuarta, redacción vigente dada por el
+# artículo 71 de la Ley 6/2018 (BOE-A-2018-9268), que sustituye la redacción
+# originaria del Real Decreto-ley 2/2016 (declarada inconstitucional por
+# motivos formales por la STC 78/2020, de 1 de julio); la redacción de la Ley
+# 6/2018 fue declarada conforme al principio de capacidad económica por la STC
+# 175/2025, de 20 de noviembre. Binding source of the Modelo 202 clave 33
+# pago-fraccionado mínimo: la cantidad a ingresar de la modalidad del art. 40.3
+# no puede ser inferior al 23% (25% para las entidades del art. 29.6 párrafo
+# primero) del resultado positivo de la cuenta de pérdidas y ganancias, para
+# contribuyentes con INCN >= 10 millones de euros.
+[legal."ley-27-2014:da-14"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-da-14.html#da14"
+document_id = "BOE-A-2014-12328"
+article = "DA-14"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#dadecimocuaa"
+published_at = 2018-07-04
+effective_from = 2018-07-05
+review_status = "agent_reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "agent-prepared; verified against the bundled consolidated text and the AEAT Modelo 202 clave 33 instructions; pending operator re-stamp"
+notes = """\
+LIS disposición adicional decimocuarta (redacción del art. 71 de la Ley 6/2018, BOE-A-2018-9268): \
+pago fraccionado mínimo de la modalidad del art. 40.3 de la LIS. Para contribuyentes cuyo importe \
+neto de la cifra de negocios en los 12 meses anteriores sea al menos 10 millones de euros, la \
+cantidad a ingresar no podrá ser inferior al 23 por ciento (25 por ciento para las entidades a las \
+que resulte de aplicación el tipo del primer párrafo del apartado 6 del art. 29) del resultado \
+positivo de la cuenta de pérdidas y ganancias de los 3, 9 u 11 primeros meses, minorado en los pagos \
+fraccionados anteriores del mismo período impositivo. Funda la casilla 33 del Modelo 202 La \
+redacción originaria del RDL 2/2016 fue anulada por motivos formales por la STC 78/2020; la STC \
+175/2025 declaró la redacción de la Ley 6/2018 conforme al principio de capacidad económica. (mínimo \
+a ingresar, CN >= 10 millones euros)."""
+required_text = [
+    "no podrá ser inferior",
+    "23 por ciento",
+    "resultado positivo de la cuenta de pérdidas y ganancias",
+    "diez millones de euros",
+]
+
+[legal."orden-hfp-227-2017:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-227-2017.html#a1"
+document_id = "BOE-A-2017-2778"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2017-2778#a1"
+published_at = 2017-03-15
+effective_from = 2017-03-16
+consolidated_as_of = 2025-03-19
+review_status = "agent_reviewed"
+reviewed_at = 2026-06-29
+reviewed_by = "downloaded consolidated BOE-A-2017-2778 from BOE on 2026-06-29"
+notes = "Base approval order for Modelo 202 pagos fraccionados. Article 1 approves the model and establishes mandatory use for IS and IRNR permanent-establishment pagos fraccionados."
+required_text = [
+    "Artículo 1. Aprobación del modelo 202",
+    "Se aprueba el modelo 202",
+    "Pago fraccionado",
+    "uso obligatorio para efectuar los pagos fraccionados",
+]
+
+[legal."orden-hfp-227-2017:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-227-2017.html#a2"
+document_id = "BOE-A-2017-2778"
+article = "2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2017-2778#a2"
+published_at = 2017-03-15
+effective_from = 2017-03-16
+consolidated_as_of = 2025-03-19
+review_status = "agent_reviewed"
+reviewed_at = 2026-07-04
+reviewed_by = "agent-prepared (corpus-grounded against the bundled consolidated BOE-A-2017-2778 art 2; pending operator re-stamp)"
+notes = "Approval article for Modelo 222. Article 2 approves the model 222 «Impuesto sobre Sociedades. Régimen de consolidación fiscal. Pago fraccionado» and establishes its mandatory use for the pagos fraccionados del art. 40 LIS filed by grupos fiscales que tributan por el régimen especial de consolidación fiscal (cap. VI, tít. VII LIS). Same approving Orden HFP/227/2017 that art 1 uses for Modelo 202."
+required_text = [
+    "Artículo 2. Aprobación del modelo 222",
+    "Se aprueba el modelo 222",
+    "Régimen de consolidación fiscal",
+    "uso obligatorio para efectuar los pagos fraccionados del Impuesto sobre Sociedades",
+]
+
+[legal."orden-hfp-227-2017:art-5"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-227-2017.html#a5"
+document_id = "BOE-A-2017-2778"
+article = "5"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2017-2778#a5"
+published_at = 2017-03-15
+effective_from = 2017-03-16
+consolidated_as_of = 2025-03-19
+review_status = "agent_reviewed"
+reviewed_at = 2026-07-04
+reviewed_by = "agent-prepared (corpus-grounded against the bundled consolidated BOE-A-2017-2778 art 5; pending operator re-stamp)"
+notes = "Binding filing plazo for the Modelo 222 pago fraccionado en régimen de consolidación fiscal (art 5.2): los primeros veinte días naturales de los meses de abril, octubre y diciembre de cada año natural. The same article carries the Modelo 202 plazo (art 5.1) in identical terms. Grounds the Modelo 222 trimestral deadline windows."
+required_text = [
+    "Plazo de presentación de los modelos 202 y 222",
+    "modelo 222, pago fraccionado a cuenta del Impuesto sobre Sociedades para los grupos fiscales",
+    "primeros veinte días naturales de los meses de abril, octubre y diciembre",
+]
+
+[legal."orden-hac-941-2018:art-primero-5-anexo-i"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-941-2018.html#articulo-primero"
+document_id = "BOE-A-2018-12515"
+article = "primero.5"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2018-12515"
+published_at = 2018-09-14
+effective_from = 2018-09-15
+review_status = "agent_reviewed"
+reviewed_at = 2026-06-29
+reviewed_by = "downloaded BOE-A-2018-12515 from BOE on 2026-06-29"
+notes = "Amendment order replacing Modelo 202 annex I under Orden HFP/227/2017. Grounds the 2019-2022 record-design revision, whose official AEAT design is labelled Orden HAC/941/2018."
+required_text = [
+    "Artículo primero. Modificación de la Orden HFP/227/2017",
+    "Cinco. Se sustituye el anexo I",
+    "modelo 202, por el que figura como anexo I",
+]
+
+[legal."orden-hfp-312-2023:art-unico-1-anexo-i"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-312-2023.html#articulo-unico"
+document_id = "BOE-A-2023-8120"
+article = "unico.1"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-8120"
+published_at = 2023-03-31
+effective_from = 2023-04-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-06-29
+reviewed_by = "downloaded BOE-A-2023-8120 from BOE on 2026-06-29"
+notes = "Amendment order replacing Modelo 202 annex I under Orden HFP/227/2017 for the 2023-2024 form surface."
+required_text = [
+    "Artículo único. Modificación de la Orden HFP/227/2017",
+    "Uno. Se sustituye el anexo I",
+]
+
+[legal."orden-hac-262-2025:art-unico-1-anexo-i"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-262-2025.html#articulo-unico"
+document_id = "BOE-A-2025-5407"
+article = "unico.1"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-5407"
+published_at = 2025-03-19
+effective_from = 2025-03-20
+review_status = "agent_reviewed"
+reviewed_at = 2026-06-29
+reviewed_by = "downloaded BOE-A-2025-5407 from BOE on 2026-06-29"
+notes = "Current amendment order replacing Modelo 202 annex I under Orden HFP/227/2017, first applicable to pagos fraccionados whose filing period begins in April 2025."
+required_text = [
+    "Artículo único. Modificación de la Orden HFP/227/2017",
+    "Uno. Se sustituye el anexo I",
+]
+
+[sources."aeat-dr-202-2025"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2025"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_202/files/15-202-ejercicio-2025-y-siguientes-actualizado-14-07-2026.xlsx"
+sha256 = "04e7b349b24b982d985195d4ae38b68e72e75d606cf66c7ef30b62b281c7f82c"
+bytes = 134404
+retrieved_at = 2026-07-21
+applies_from = 2025-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_25/DR202e25.xlsx"
+review_status = "pending_review"
+
+# These manifest-backed AEAT binaries are source evidence, but their published
+# titles do not establish a non-conflicting selection window against another
+# design for the same modelo. Keep them hash-pinned and deliberately
+# unselectable until temporal authority is reviewed.
+[sources."aeat-dr-202-2025-mar-update"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_202/files/01-202-ejercicio-2025-y-siguientes-actualizado-17-03-26-132-kb-xlsx.xlsx"
+sha256 = "463cac7529de6333f55c174e3a887e92c79e7af328de5865bb1a0399d711b9a0"
+bytes = 135038
+retrieved_at = 2026-05-03
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/DR202e25.xlsx"
+review_status = "pending_review"
+
+[sources."aeat-dr-202-2019-september-update"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_202/files/06-202-orden-hac-941-2018-ejercicios-2019-y-sigu.xlsx"
+sha256 = "99dc1738c38269209bd15053ab5c4805477dc70394e29ead2e4c34a172628cc7"
+bytes = 131561
+retrieved_at = 2026-05-03
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR202e17v50.xlsx"
+review_status = "pending_review"
+
+[sources."aeat-dr-202-2012-v32"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_202/files/08-202-orden-hap-2055-2012-v3-2-40-kb-pdf.pdf"
+sha256 = "3a47f5b39926e79ca7fa2a589b6a8fabfe15472ad51d324f2d7bc0e489a35adf"
+bytes = 40560
+retrieved_at = 2026-05-03
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/dr202e12v32.pdf"
+review_status = "pending_review"
+
+[sources."aeat-dr-202-2013-v33"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_202/files/12-202-orden-hap-636-2013-v3-3-39-kb-pdf.pdf"
+sha256 = "90385eb1ca5692d4504b3b567aa6b63fddd2e60b0805b70fbecb044e35587d84"
+bytes = 40253
+retrieved_at = 2026-05-03
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/dr202e12v33.pdf"
+review_status = "pending_review"
+
+[sources."aeat-dr-202-2010-v13"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_202/files/14-202-orden-eha-664-2010-adaptada-a-la-ultima-normativa-vigente-33-kb-pdf.pdf"
+sha256 = "c58221f899a6aacc674f305f86764595dfa0c7152f2f58faffa3e341521f5534"
+bytes = 33426
+retrieved_at = 2026-05-03
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/dr202e12v13.pdf"
+review_status = "pending_review"
+
+[sources."aeat-dr-200-2009-v20"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2009"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_200/files/17-200-orden-eha-1338-2010-actualizado-a-11-06-2010-283-kb-pdf.pdf"
+sha256 = "2c845e30819b599c73ae5c55fc7e1d786e370ecf8fe722ca2c0201a59863d866"
+bytes = 289922
+retrieved_at = 2026-05-03
+applies_from = 2009-01-01
+applies_to = 2009-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/dr200e09v20.pdf"
+review_status = "pending_review"
+
+[sources."aeat-modelo-202-instructions"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_202/files/modelo-202-instrucciones.html"
+sha256 = "60aa28dc53d942aa876708dbcc3e99b0f36b4da6232cd5df0a478cfeca497c63"
+bytes = 92399
+retrieved_at = 2026-05-05
+applies_from = 2025-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/impuesto-sobre-sociedades/modelo-202-is-i_____resencia-territorio-fraccionado_/instrucciones.html"
+review_status = "pending_review"
+
+[sources."aeat-modelo-222-instructions"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_222/files/modelo-222-instrucciones.html"
+sha256 = "55c90330904a9fcdbef770a5917faed7514d4c9cf9091de29415f003131461b3"
+bytes = 106810
+retrieved_at = 2026-09-11
+# applies_from corrected from 2025-01-01 to 2018-01-01. The bundled page is a
+# SINGLE document carrying instructions for four eras, and its own index says
+# so: "Instrucciones para periodos impositivos iniciados en 2023 y 2024",
+# "Instrucciones para periodos impositivos 2019 a 2022", "Instrucciones para
+# periodos impositivos iniciados en 2018", and "Modelo 222. Instrucciones para
+# 2025 y siguientes". The old date admitted only the last of the four, which
+# left revisions 222/2023 and 222/2024 with no guidance source at all even
+# though this document instructs their exact periods.
+#
+# This is a stronger claim than the aeat-modelo-190-procedure correction and
+# does not rest on it: 190's marker scopes a consultation SERVICE and the
+# document window is inferred from it, whereas this page states which periods
+# its own instructions cover.
+#
+# NOT modelled as per-era sources the way modelo 202 is
+# (aeat-modelo-202-instructions-2018-2022 / -2023-2024): those are separate
+# corpus FILES, one per era. Modelo 222 publishes one file containing every
+# era, so one source with the full window is what the corpus actually holds.
+applies_from = 2018-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/impuestos-tasas/impuesto-sobre-sociedades/modelo-222-is-regimen-consolidacion-fraccionado_/instrucciones.html"
+review_status = "pending_review"
+
+# Modelo 222 instrucciones for the era AEAT publishes as its own page,
+# "Instrucciones para periodos impositivos iniciados en 2023 y 2024". The
+# sibling "aeat-modelo-222-instructions" is the 2025-y-siguientes page: its
+# index LINKS to the other three eras, and this is one of the linked documents
+# rather than a section inside it. Registered separately for the same reason
+# modelo 202 registers "aeat-modelo-202-instructions-2023-2024" separately --
+# one corpus file per era, so a formula cites the text actually in force for
+# the ejercicio it computes.
+[sources."aeat-modelo-222-instructions-2023-2024"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_222/files/modelo-222-instrucciones-2023-2024.html"
+sha256 = "4950559f078987479d132cae0cc8a013aec37e659a11ff7ffad656f369f151a9"
+bytes = 96810
+retrieved_at = 2026-09-25
+applies_from = 2023-01-01
+applies_to = 2024-12-31
+source_url = "https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/impuesto-sobre-sociedades/modelo-222-is-regimen-consolidacion-fraccionado_/instrucciones/instrucciones-periodos-impositivos-iniciados-2023-siguientes.html"
+review_status = "pending_review"
+
+[sources."aeat-dr-222-2025"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2025"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_222/files/01-222-ejercicio-2025-y-siguientes.xlsx"
+sha256 = "0a44cd6bcae3b6ecbdb7bba1e54ddfad519506b91545b655c8da8454a3a63f51"
+bytes = 139242
+retrieved_at = 2026-07-21
+applies_from = 2025-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_25/DR222e25.xlsx"
+review_status = "pending_review"
+
+# Historical Modelo 222 design, pre-2025, outside the current declared span.
+# Already acquired and manifested (2026-07-21) but previously unregistered --
+# registration, not acquisition. Records historical inventory; asserts no
+# coverage claim. Re-fetched from the live AEAT URL on 2026-08-15 and
+# confirmed byte-identical (sha256 match) before registering.
+[sources."aeat-dr-222-2023-2024"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2023"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_222/files/02-222-ejercicios-2023-y-2024.xlsx"
+sha256 = "1c7482aba6d81d56d0e6106674690eaf4718dae8c9a8f97d799a034bc4fc8505"
+bytes = 137820
+retrieved_at = 2026-07-21
+applies_from = 2023-01-01
+applies_to = 2024-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_23/DR222e23.xlsx"
+review_status = "pending_review"
+
+# Modelo 222 diseno de registro for ejercicios 2019 to 2022. AEAT's historical
+# index titles it "222 - Orden HAC/941/2018 (Ejercicios 2019 a 2022, actualizado
+# Septiembre 2019)". It is the design the 2022 edition renders: measured against
+# aeat-dr-222-2023-2024, it lacks the page-1 flag the 2023 design inserts at
+# position 226 (grupo fiscal with importe neto de la cifra de negocios below one
+# million euros) and boxes [59] and [60] (DA 19a LIS adjustments), so every later
+# page-1 field sits one or, after [39], thirty-five positions earlier; page 2 is
+# identical. It had been classified as a historical exclusion although filing
+# year 2022 is inside the supported envelope.
+[sources."aeat-dr-222-2019-2022"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2019"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_222/files/03-222-orden-hac-941-2018-ejercicios-2019-a-2022-actualizado-septiembre-2019.xlsx"
+sha256 = "dcda923080570aa7ad9d5bd48e0fc4224ca4e142fbf8960363f175c3244d6c2a"
+bytes = 137380
+retrieved_at = 2026-09-30
+applies_from = 2019-01-01
+applies_to = 2022-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_17/DR222e17v55.xlsx"
+review_status = "pending_review"
+
+# Modelo 222 instrucciones for the era AEAT's instructions index lists as
+# "Instrucciones para periodos impositivos 2019 a 2022": the page links this PDF,
+# "Instrucciones para periodos impositivos iniciados en 2019 (pago fraccionado de
+# octubre y siguientes)". It states each computed clave of that era, including
+# "clave [10] = clave [04] + clave [38] - clave [39]", without the [59]/[60] terms
+# the 2023-2024 instructions add.
+[sources."aeat-modelo-222-instructions-2019-2022"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "manual_pdf"
+corpus_path = "corpus/aeat_official/instructions/modelo_222/files/modelo-222-instrucciones-2019-2022.pdf"
+sha256 = "1d6a5c0fc17ec85fcdc3af20cb8b48a3296b251c4a25a950610667751e9a338c"
+bytes = 303752
+retrieved_at = 2026-09-30
+applies_from = 2019-01-01
+applies_to = 2022-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Procedimiento_ayuda/GE03/222_instrucciones_2019.pdf"
+review_status = "pending_review"
+
+[sources."aeat-dr-202-2023"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2023"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_202/files/03-202-ejercicio-2023-a-2024-actualizado-16-04-24-130-kb-xlsx.xlsx"
+sha256 = "1e4881439e25417df5a8584bffd7149ca0952e2df53963b19c0346572259bec7"
+bytes = 132661
+retrieved_at = 2026-05-03
+applies_from = 2023-01-01
+applies_to = 2024-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_23/DR202e23.xlsx"
+review_status = "pending_review"
+
+[sources."aeat-modelo-202-instructions-2023-2024"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_202/files/modelo-202-instrucciones-2023-2024.html"
+sha256 = "36663a37b2f0809728d05fc28dde6fe27546ae9a6b7260600145b2a425ce0e07"
+bytes = 84026
+retrieved_at = 2026-05-05
+applies_from = 2023-01-01
+applies_to = 2024-12-31
+source_url = "https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/impuesto-sobre-sociedades/modelo-202-is-i_____resencia-territorio-fraccionado_/instrucciones/instrucciones-periodos-impositivos-iniciados-2023-2024.html"
+review_status = "pending_review"
+
+[sources."aeat-modelo-202-instructions-2018-2022"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "manual_pdf"
+corpus_path = "corpus/aeat_official/instructions/modelo_202/files/modelo-202-instrucciones-2018-2022.pdf"
+sha256 = "6b172c0e88e32c19598813f1dc99644ce544cbe1f2f05053617b84e298250771"
+bytes = 229573
+retrieved_at = 2026-07-01
+applies_from = 2018-01-01
+applies_to = 2022-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Procedimiento_ayuda/GE00/202_2018_Instrucciones.pdf"
+review_status = "pending_review"
+
+[sources."aeat-dr-202-2019"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2019"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_202/files/05-202-orden-hac-941-2018-ejercicios-2019-a-2022-actualizado-mayo-2020-132-kb-xlsx.xlsx"
+sha256 = "96160cf2a82a4e6f2c9c9848c6061b2cfe5c4877de7a455126704af86f3ac7db"
+bytes = 132387
+retrieved_at = 2026-05-03
+applies_from = 2019-01-01
+applies_to = 2022-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_19/DR202v52.xlsx"
+review_status = "pending_review"
+
+[sources."boe-modelo-202-base-order"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hfp-227-2017.html"
+sha256 = "497ce0a6cdbf7deb19c3bee0839861325c14a2fbfe7714eb47722c2084b9cef7"
+bytes = 130975
+retrieved_at = 2026-06-29
+published_at = 2017-03-15
+applies_from = 2017-03-16
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2017-2778"
+review_status = "pending_review"
+
+[sources."boe-modelo-202-2018-amendment"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-941-2018.html"
+sha256 = "05180686f258df500d76f300801b8896e8b086e15870d8ca7bf40ad61b104778"
+bytes = 58193
+retrieved_at = 2026-06-29
+published_at = 2018-09-14
+applies_from = 2018-09-15
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2018-12515"
+review_status = "pending_review"
+
+[sources."boe-modelo-202-2023-amendment"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hfp-312-2023.html"
+sha256 = "261ac0000942e4ea0fb428fc9a4ab94ee5f0b8d9a21a77317c7f5cea4ddda2b0"
+bytes = 42907
+retrieved_at = 2026-06-29
+published_at = 2023-03-31
+applies_from = 2023-04-01
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-8120"
+review_status = "pending_review"
+
+[sources."boe-modelo-202-2025-amendment"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-262-2025.html"
+sha256 = "aba2815c04843d892cceea488b81643f614fddaa0f524e4c7fbdf1e7784b9b41"
+bytes = 39598
+retrieved_at = 2026-06-29
+published_at = 2025-03-19
+applies_from = 2025-03-20
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-5407"
+review_status = "pending_review"
+
+[legal."ley-27-2014:art-18"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-18.html#a18"
+document_id = "BOE-A-2014-12328"
+article = "18"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a18"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "operator_reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "operator"
+notes = "Operaciones vinculadas: definicion, valor de mercado, metodos de valoracion y deber de informacion (Modelo 232)."
+required_text = [
+    "personas o entidades vinculadas",
+    # Apartado 6 (acuerdos previos de valoracion) and apartado 14, at 50% and
+    # 97% of the article. The three original phrases were the title and two
+    # terms from the FIRST sentence, all inside the first 220 characters, so
+    # any truncation of the 24,500-character article passed the evidence check.
+    # Verified against the live BOE consolidated text: art. 18 has 14 apartados
+    # and the bundled excerpt carries all 14.
+    "sin que pueda exceder de los 4 períodos impositivos siguientes",
+    "no producirá efectos respecto del valor de mercado de las operaciones entre personas o entidades vinculadas",
+]
+
+[legal."rd-634-2015:art-13"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-634-2015-art-13.html#a13"
+document_id = "BOE-A-2015-7771"
+article = "13"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-7771#a13"
+published_at = 2015-07-11
+effective_from = 2015-07-12
+review_status = "operator_reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "operator"
+notes = "Reglamento del Impuesto sobre Sociedades: informacion y documentacion sobre entidades y operaciones vinculadas."
+required_text = [
+    "operaciones vinculadas",
+    "18.3 de la Ley",
+]
+
+[legal."orden-hfp-816-2017:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-816-2017.html#a1"
+document_id = "BOE-A-2017-10042"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2017-10042"
+published_at = 2017-08-30
+effective_from = 2017-08-31
+review_status = "operator_reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "operator"
+notes = "Aprueba el modelo 232 de declaracion informativa de operaciones vinculadas y de operaciones y situaciones relacionadas con paises o territorios calificados como paraisos fiscales."
+required_text = [
+    "modelo 232",
+    "operaciones vinculadas",
+    "paraísos fiscales",
+]
+
+[legal."orden-hfp-816-2017:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-816-2017-art-2.html#a2"
+document_id = "BOE-A-2017-10042"
+article = "2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2017-10042#a2"
+published_at = 2017-08-30
+effective_from = 2017-08-31
+review_status = "operator_reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "operator"
+notes = "Obligados a presentar el Modelo 232: contribuyentes del IS y del IRNR con establecimiento permanente, asi como entidades en regimen de atribucion de rentas. Define los umbrales de operaciones vinculadas y las reglas de paraisos fiscales."
+required_text = [
+    "Obligados a presentar",
+    "Impuesto sobre Sociedades",
+    "operaciones realizadas con la misma persona",
+]
+
+[legal."orden-hfp-816-2017:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-816-2017-art-3.html#a3"
+document_id = "BOE-A-2017-10042"
+article = "3"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2017-10042#a3"
+published_at = 2017-08-30
+effective_from = 2017-08-31
+review_status = "operator_reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "operator"
+notes = "Contenido del Modelo 232: secciones I (Informacion de operaciones con personas o entidades vinculadas), II (Operaciones con personas o entidades vinculadas en paraisos fiscales) y III (Operaciones y situaciones relacionadas con paraisos fiscales)."
+required_text = [
+    "Contenido del modelo 232",
+    "operaciones del mismo tipo",
+    "Información de operaciones",
+]
+
+[legal."orden-hfp-816-2017:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-816-2017.html#a4"
+document_id = "BOE-A-2017-10042"
+article = "4"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2017-10042"
+published_at = 2017-08-30
+effective_from = 2017-08-31
+review_status = "operator_reviewed"
+reviewed_at = 2026-05-05
+reviewed_by = "operator"
+notes = "Plazo de presentacion del Modelo 232: el mes siguiente a los diez meses posteriores a la conclusion del periodo impositivo (noviembre para ejercicios cerrados a 31 de diciembre)."
+required_text = [
+    "Plazo de presentación del Modelo 232",
+    "mes siguiente a los diez meses posteriores",
+    "conclusión del período impositivo",
+]
+
+[sources."aeat-dr-232-2018"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2018"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_232/files/01-232-orden-hfp-816-2017-ejercicio-2016-y-siguientes-actualizado-15-01-2020-145-kb-xlsx.xlsx"
+sha256 = "a61485dfc480393ec1dfc926142fd0b6a9386e28e60746da3dfbf2fdaf3bffff"
+bytes = 149501
+retrieved_at = 2026-05-03
+applies_from = 2018-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_17/dr232e17v14.xlsx"
+review_status = "pending_review"
+
+[sources."aeat-dr-232-2016"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2016"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_232/files/02-232-orden-hfp-816-2017-ejercicios-2016-2017-146-kb-xlsx.xlsx"
+sha256 = "fb6802dcf8746e69331b67873cb2e5cae90c3343c69b4f4d430aecde3c56b6ad"
+bytes = 150262
+retrieved_at = 2026-05-03
+applies_from = 2016-01-01
+applies_to = 2017-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/dr232e17v13.xlsx"
+review_status = "pending_review"
+
+[sources."aeat-modelo-232-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_232/files/modelo-232-procedure.html"
+sha256 = "33e413e281e789a4080228d8fb97df1209cd0b633df4d691808079168ad5f31b"
+bytes = 35923
+retrieved_at = 2026-05-05
+applies_from = 2017-08-31
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI43.shtml"
+review_status = "pending_review"
+
+[sources."boe-modelo-232-2017-form"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hfp-816-2017.html"
+sha256 = "c9ac79e79a63c9bbf4f65e61fa176dd1ac1273d64555cac16b7b69fb9405f6f4"
+bytes = 57238
+retrieved_at = 2026-05-05
+published_at = 2017-08-30
+applies_from = 2017-08-31
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2017-10042"
+review_status = "pending_review"
+
+[legal."ley-27-2014:art-41"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-41.html#a41"
+document_id = "BOE-A-2014-12328"
+article = "41"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a41"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "operator_reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "operator"
+notes = "Deduccion de retenciones, ingresos a cuenta y pagos fraccionados de la cuota liquida del Impuesto sobre Sociedades. Establece el deber de devolucion del exceso por la Administracion."
+required_text = [
+    "Deducción de las retenciones, ingresos a cuenta y pagos fraccionados",
+    "Serán deducibles de la cuota líquida",
+    "Los pagos fraccionados",
+    "la Administración tributaria procederá a devolver, de oficio, el exceso",
+]
+
+[legal."ley-12-2002:art-15"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-12-2002-art-15.html#a15"
+document_id = "BOE-A-2002-9969"
+article = "15"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2002-9969#a15"
+published_at = 2002-05-24
+effective_from = 2002-05-25
+review_status = "agent_reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "verified against official BOE-A-2002-9969 consolidated art. 15; corpus excerpt bundled"
+notes = "Concierto Economico Pais Vasco art 15: Impuesto sobre Sociedades taxpayers that tribute jointly to the Diputaciones Forales and the Administracion del Estado allocate the tax in proportion to the volume of operations in each territory, expressed as a percentage. Grounds the Modelo 200 Estado/foral percentage profile fact."
+required_text = [
+    "Impuesto sobre Sociedades",
+    "Diputaciones Forales",
+    "Administración del Estado",
+    "en proporción al volumen de operaciones",
+    "porcentaje redondeado con dos decimales",
+]
+
+[legal."ley-28-1990:art-19"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-28-1990-art-19.html#a1-22"
+document_id = "BOE-A-1990-31117"
+article = "19"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1990-31117#a1-22"
+published_at = 1990-12-27
+effective_from = 2003-07-17
+review_status = "agent_reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "verified against official BOE-A-1990-31117 consolidated art. 19; corpus excerpt bundled"
+notes = "Convenio Economico Navarra art 19: Impuesto sobre Sociedades taxpayers operating in common and Navarra territories tribute jointly to both Administrations in proportion to operation volume, expressed as a percentage. Grounds the Modelo 200 Estado/Navarra percentage profile fact."
+required_text = [
+    "Comunidad Foral de Navarra",
+    "Impuesto sobre Sociedades",
+    "tributarán conjuntamente a ambas Administraciones",
+    "en proporción al volumen de operaciones",
+    "porcentaje redondeado con dos decimales",
+]
+
+[legal."ley-27-2014:art-124"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-124.html#a124"
+document_id = "BOE-A-2014-12328"
+article = "124"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a124"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "operator_reviewed"
+reviewed_at = 2026-05-06
+reviewed_by = "operator"
+notes = "Declaracion del Impuesto sobre Sociedades: lugar, forma, obligados y plazo general de 25 dias naturales tras los seis meses posteriores a la conclusion del periodo impositivo."
+required_text = [
+    "Los contribuyentes estarán obligados a presentar una declaración",
+    "25 días naturales siguientes a los 6 meses posteriores",
+    "conclusión del período impositivo",
+]
+
+[legal."orden-hac-657-2025:modelo-200"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-657-2025.html#modelo-200"
+document_id = "BOE-A-2025-12818"
+article = "modelo 200"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-12818"
+published_at = 2025-06-24
+effective_from = 2025-07-01
+governs_periods_from = 2024-01-01
+governs_periods_to = 2024-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-06-29
+reviewed_by = "agent-review"
+notes = "Orden HAC/657/2025: aprueba el Modelo 200 de declaracion del Impuesto sobre Sociedades para periodos impositivos iniciados en 2024; the bundled BOE excerpt carries the Art. 6 reference to Art. 1 approval, deadline, entry into force, and Modelo 200 heading."
+required_text = [
+    "períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2024",
+    "modelo 200 de declaración del Impuesto sobre Sociedades",
+    "aprobado en el artículo 1 de la presente orden",
+    "La presente orden entrará en vigor el día 1 de julio de 2025",
+    "Modelo 200",
+]
+
+[legal."orden-hac-657-2025:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-657-2025.html#modelo-200"
+document_id = "BOE-A-2025-12818"
+article = "3"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-12818"
+published_at = 2025-06-24
+effective_from = 2025-07-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-07-04
+reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2025-12818 excerpt art 3; pending operator re-stamp)"
+notes = """\
+Orden HAC/657/2025 is the approving order for the IS declaration models for períodos impositivos \
+iniciados en 2024; article 3 (pago mediante domiciliación bancaria) names Modelos 200 y 220 \
+together, evidencing that the Modelo 220 (declaración anual del grupo fiscal en régimen de \
+consolidación) is one of the IS declaration models this orden approves. The Modelo 220 filing plazo \
+is the general IS declaration plazo of art. 124.1 LIS (25 días naturales tras los 6 meses \
+posteriores a la conclusión del período impositivo). The dedicated «Se aprueba el modelo 220» clause \
+of art 1 is not carried by the bundled Modelo-200 excerpt; art 3 is the bundled provision naming 220 \
+verbatim."""
+required_text = [
+    "Modelos 200 y 220, mediante domiciliación bancaria",
+    "desde el día 1 de julio hasta el 22 de julio de 2025",
+]
+
+[sources."aeat-dr-200-2025"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_200/files/01-200-ejercicio-2025-10-9-mb-xls.xls"
+sha256 = "92392cdb46d8e7c7f6e4e6477306570e15edfd64d5ea3e6d631e5cf847dd5509"
+bytes = 11527168
+retrieved_at = 2026-07-21
+applies_from = 2025-01-01
+record_design_epoch = "2025"
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_25/DR200e25.xls"
+review_status = "pending_review"
+
+[sources."aeat-dr-200-2024"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_200/files/16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls"
+sha256 = "ed4df89a451abc2184bc60a1d13ff53a3d38e9a6201698fb635cf0b8ee455218"
+bytes = 11248640
+retrieved_at = 2026-05-03
+applies_from = 2024-01-01
+applies_to = 2024-12-31
+record_design_epoch = "2024"
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_24/DR200-2024.xls"
+review_status = "pending_review"
+
+[sources."aeat-dr-220-2023"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm"
+sha256 = "ad3ed2e041789c820cb92e6a9be392a0fa5327ada9f71ac18c70f65cc9da17ca"
+bytes = 1353283
+retrieved_at = 2026-07-21
+applies_from = 2023-01-01
+applies_to = 2023-12-31
+record_design_epoch = "2023"
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_23/DR220e23.xlsm"
+review_status = "pending_review"
+
+[sources."aeat-dr-220-2024"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx"
+sha256 = "a8f398dd42db0b1142d5f2e98bf3a60d79069e31d63af32001373f459fee4f2e"
+bytes = 1559124
+retrieved_at = 2026-07-21
+applies_from = 2024-01-01
+applies_to = 2024-12-31
+record_design_epoch = "2024"
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_24/DR220e24.xlsx"
+review_status = "pending_review"
+
+[sources."aeat-dr-220-2025"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_220/files/01-220-ejercicio-2025.xlsx"
+sha256 = "69c3a234e96eb4485a31c65209348bbcede0a49a8c143223c952000784f3f2df"
+bytes = 1662928
+retrieved_at = 2026-07-21
+applies_from = 2025-01-01
+applies_to = 2025-12-31
+record_design_epoch = "2025"
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_25/DR220e25.xlsx"
+review_status = "pending_review"
+
+# Historical Modelo 220 design, 2022 edition. Already acquired and manifested
+# (2026-07-21) but previously unregistered -- registration, not acquisition.
+# Records historical inventory; asserts no coverage claim. Re-fetched from the
+# live AEAT URL on 2026-08-15 and confirmed byte-identical (sha256 match)
+# before registering. Registration is independent of parseability: this
+# artefact's own T22014A00 sheet omits a type declaration for three fields
+# (ordinals 98/99/100) and the strict parser currently refuses on it -- a
+# genuine AEAT-side omission, confirmed (not our copy being damaged) by
+# hash-matching the live server, and grounded (2023/2024/2025 editions
+# declare "Num" at the same offsets, 3-for-3). A correction mechanism is
+# proposed and queued for purge, not built here; registering the source now
+# does not wait on that fix.
+[sources."aeat-dr-220-2022"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2022"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_220/files/02-220-ejercicio-2022.xlsm"
+sha256 = "251fffc3cf06ef8a16c14a5143b87e44abb5a97f23d0c949d468fe76ddfc02ee"
+bytes = 1282290
+retrieved_at = 2026-07-21
+applies_from = 2022-01-01
+applies_to = 2022-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_22/DR220e22.xlsm"
+review_status = "pending_review"
+
+[sources."aeat-modelo-200-manual-2022"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "manual_pdf"
+corpus_path = "corpus/manuals/sociedades/2022/source.pdf"
+sha256 = "eccda760fe36cb6436fc07c7a70a65ef1f39a03ec0a44dddd088788dc577cc3f"
+bytes = 14432256
+retrieved_at = 2026-09-10
+applies_from = 2022-01-01
+applies_to = 2022-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/Sociedades/Manual_sociedades_2022.pdf"
+review_status = "pending_review"
+
+[sources."aeat-modelo-200-manual-2023"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "manual_pdf"
+corpus_path = "corpus/manuals/sociedades/2023/source.pdf"
+sha256 = "56c03e2215af54967af83323220ce5bff421ad50e1f733c66ecacedf7f9548ed"
+bytes = 5188800
+retrieved_at = 2026-09-10
+applies_from = 2023-01-01
+applies_to = 2023-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/Sociedades/Manual_Sociedades_2023.pdf"
+review_status = "pending_review"
+
+[sources."aeat-modelo-200-manual-2024"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "manual_pdf"
+corpus_path = "corpus/manuals/sociedades/2024/source.pdf"
+sha256 = "ad02f914246632dcd7ab30f3e7280daf3501be6ee3938237e2ebfe7328ff8179"
+bytes = 6266062
+retrieved_at = 2026-05-06
+applies_from = 2024-01-01
+applies_to = 2024-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/Sociedades/Manual_Sociedades_2024.pdf"
+review_status = "pending_review"
+
+[sources."aeat-modelo-200-manual-2025"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "manual_pdf"
+corpus_path = "corpus/manuals/sociedades/2025/source.pdf"
+sha256 = "6e837ca4af4a7b67fcb5f062cd239ce8ced48dbefc4da50c3886bc40947472ca"
+bytes = 5178589
+retrieved_at = 2026-07-21
+applies_from = 2025-01-01
+applies_to = 2025-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/Sociedades/Manual_Sociedades_2025.pdf"
+review_status = "pending_review"
+
+# Retiered 2026-08-15: this 2308-byte orden excerpt carries no annex section
+# and no record-layout vocabulary, so it was never layout authority for either
+# Modelo 200 or Modelo 220. Real Diseños de Registro are bundled and
+# registered for both (aeat-dr-200-2024/2025, aeat-dr-220-2022/2023/2024/2025).
+# This excerpt remains a genuine official_source_guidance citation (the orden
+# covering the IS declaration models' filing window), just not the layout's
+# home.
+[sources."boe-modelo-200-2025-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-657-2025.html"
+sha256 = "bde86314696bec1ff236451d0117bd9f9c3575f0001ec51942365225f3eb54cc"
+bytes = 2308
+retrieved_at = 2026-05-06
+published_at = 2025-06-24
+# THE WINDOW IS THE EJERCICIO GOVERNED, NOT THE PRESENTATION. This read
+# 2025-07-01..2025-07-25, which is this orden's own entrada en vigor plus the
+# art. 6 plazo -- "entrara en vigor el dia 1 de julio de 2025" and "en el plazo
+# de los 25 dias naturales siguientes a los seis meses posteriores a la
+# conclusion del periodo impositivo", both bundled in the excerpt above. That is
+# a filing calendar, not a period, and it excluded the 2024 revisions of BOTH
+# modelo 200 and modelo 220, which cite this source.
+#
+# The orden states its own scope in its title, bundled verbatim: "por la que se
+# aprueban los modelos de declaracion del Impuesto sobre Sociedades ... para los
+# periodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de
+# 2024". The legal entry over these same bytes already records exactly that, as
+# governs_periods_from 2024-01-01 / governs_periods_to 2024-12-31; the source
+# half simply never agreed with its own twin.
+applies_from = 2024-01-01
+applies_to = 2024-12-31
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-12818"
+review_status = "pending_review"
+
+[legal."orden-hac-529-2026:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-529-2026-art-1.html#a1"
+document_id = "BOE-A-2026-11583"
+article = "1"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-11583"
+published_at = 2026-05-29
+effective_from = 2026-07-01
+governs_periods_from = 2025-01-01
+governs_periods_to = 2025-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2026-11583 art 1; pending operator re-stamp)"
+notes = """Orden HAC/529/2026 art 1 approves Modelo 200, the declaration of the Impuesto sobre Sociedades and of the IRNR for establecimientos permanentes and entidades en atribución de rentas constituidas en el extranjero, and its documento de ingreso o devolución, for períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2025 (apartado 1.a).1.º and 1.b).1.º, anexo I); apartado 2 makes it applicable to every IS and IRNR-EP contributor obliged to declare. It is the approval clause of Modelo 200's 2025 edition. The orden enters into force on 2026-07-01 (disposición final segunda) and governs only the periods its own article 1 names. The excerpt is sliced verbatim from the as-published text; BOE holds no consolidated text for this orden."""
+required_text = [
+    "Se aprueban los modelos de declaración del Impuesto sobre Sociedades",
+    "para los períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2025",
+    "que figura en el anexo I",
+    "es aplicable, con carácter general, a todos los contribuyentes del Impuesto sobre Sociedades",
+]
+corpus_tier = "provision_excerpt"
+
+[legal."orden-hac-529-2026:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-529-2026.html#a3"
+document_id = "BOE-A-2026-11583"
+article = "3.2"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-11583"
+published_at = 2026-05-29
+effective_from = 2026-07-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-22
+reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2026-11583 art 3.2, fetched from two BOE surfaces that agree verbatim; pending operator re-stamp)"
+notes = """Orden HAC/529/2026 art 3.2 fixes the domiciliación bancaria window for the IS declaration models of períodos impositivos iniciados en 2025: del 1 al 22 de julio de 2026, ambos inclusive. It grounds the modelo 220 deadline window's payment_cutoff_on. That date had been carried across the span split from the 2024 orden's equivalent clause without being checked -- it happened to be right, but nothing in the tree said so."""
+required_text = [
+    "La domiciliación bancaria a que se refiere el párrafo anterior podrá realizarse",
+    "desde el día 1 de julio hasta el 22 de julio de 2026",
+]
+
+[legal."orden-hac-529-2026:art-6-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-529-2026.html#a6"
+document_id = "BOE-A-2026-11583"
+article = "6.3"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-11583"
+published_at = 2026-05-29
+effective_from = 2026-07-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-22
+reviewed_by = "agent-prepared; corpus-grounded vs BOE-A-2026-11583; pending operator re-stamp"
+notes = """Orden HAC/529/2026 is the approving order for the IS declaration models for períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2025 -- the successor to orden-hac-657-2025, which covered períodos iniciados en 2024. Article 6.3 is the Modelo 220-specific plazo clause: it grounds the group declaration's deadline in art. 75.2 LIS (the plazo of the representative entity's individual declaration) rather than the general art. 124.1 plazo, and it names «el Modelo 220 de declaración aprobado en el artículo 1 de la presente orden», which is itself operative evidence that art. 1 approves Modelo 220. This is firmer grounding than the 2024-era citation, whose only bundled provision naming 220 is art. 3's domiciliación bancaria heading. Art. 1 itself is not bundled: no fetch returned its enumerated list without elision, and abridging it would repeat the defect corrected in orden-hac-510-2021 the same day. Review grounding: agent-prepared (corpus-grounded against the bundled BOE-A-2026-11583 excerpt art 6.3, fetched from two BOE surfaces that agree verbatim; pending operator re-stamp)"""
+required_text = [
+    "el Modelo 220 de declaración aprobado en el artículo 1 de la presente orden",
+    "dentro del plazo correspondiente a la declaración en régimen de tributación individual",
+    "artículo 75.2 de la Ley 27/2014",
+]
+
+[legal."orden-hac-529-2026:df-segunda"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-529-2026.html#dfsegunda"
+document_id = "BOE-A-2026-11583"
+article = "disposicion-final-segunda"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-11583"
+published_at = 2026-05-29
+effective_from = 2026-07-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-22
+reviewed_by = "agent-prepared; corpus-grounded vs BOE-A-2026-11583; pending operator re-stamp"
+notes = """Orden HAC/529/2026 disposición final segunda: entrada en vigor el 1 de julio de 2026, aplicable a los modelos con períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2025. This is the provision that fixes the temporal boundary of the 2025 IS declaration layout, and so the authority for splitting modelo 220's open-ended revision at the 2024/2025 re-layout. Review grounding: agent-prepared (corpus-grounded against the bundled BOE-A-2026-11583 excerpt disposición final segunda, fetched from two BOE surfaces that agree verbatim; pending operator re-stamp)"""
+required_text = [
+    "La presente orden entrará en vigor el día 1 de julio de 2026",
+    "con períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2025",
+]
+
+[sources."boe-modelo-220-2025-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-529-2026.html"
+sha256 = "c8b3eea25b45fc705bc3b3a1df6818c75490df58239ef1c816c43574d71649c5"
+bytes = 3227
+retrieved_at = 2026-08-22
+published_at = 2026-05-29
+applies_from = 2025-01-01
+applies_to = 2025-12-31
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-11583"
+review_status = "pending_review"
+
+# The approving ordenes of the IS declaration models for periodos impositivos
+# iniciados en 2022 (Orden HFP/523/2023) and en 2023 (Orden HAC/495/2024). Each
+# approves Modelo 220 in its art. 1, fixes its domiciliacion window in art. 3.2
+# and its plazo in art. 6.3. The bundled corpus files are the as-published BOE
+# texts; neither orden has a consolidated text.
+[legal."orden-hfp-523-2023:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-523-2023.html#a1"
+document_id = "BOE-A-2023-12416"
+article = "1"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-12416"
+published_at = 2023-05-29
+effective_from = 2023-07-01
+governs_periods_from = 2022-01-01
+governs_periods_to = 2022-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2023-12416 art 1; pending operator re-stamp)"
+notes = "Orden HFP/523/2023 art 1.1.a).2.o approves Modelo 220, the IS declaration of grupos fiscales in the regimen de consolidacion fiscal, set out in anexo II, for periodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2022; art 1.3 applies it to the grupos fiscales, cooperatives included, of capitulo VI del titulo VII LIS and RD 1345/1992. The orden enters into force on 2023-07-01 (disposicion final unica). It is the approval clause of Modelo 220's ejercicio 2022 edition."
+required_text = [
+    "Se aprueban los modelos de declaración del Impuesto sobre Sociedades",
+    "para los períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2022",
+    "Modelo 220: Declaración del Impuesto sobre Sociedades–Régimen de consolidación fiscal correspondiente a los grupos fiscales, que figura en el anexo II",
+    "El Modelo 220, que figura como anexo II, es aplicable a los grupos fiscales",
+]
+
+[legal."orden-hfp-523-2023:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-523-2023.html#a3"
+document_id = "BOE-A-2023-12416"
+article = "3.2"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-12416"
+published_at = 2023-05-29
+effective_from = 2023-07-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2023-12416 art 3.2; pending operator re-stamp)"
+notes = "Orden HFP/523/2023 art 3.2: the domiciliacion bancaria of the Modelos 200 and 220 for periodos ended on 31 December 2022 may be ordered from 1 to 20 July 2023, both inclusive. It grounds the Modelo 220 ejercicio 2022 window's payment_cutoff_on."
+required_text = [
+    "La domiciliación bancaria a que se refiere el párrafo anterior podrá realizarse desde el día 1 de julio hasta el 20 de julio de 2023, ambos inclusive.",
+]
+
+[legal."orden-hfp-523-2023:art-6-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-523-2023.html#a6"
+document_id = "BOE-A-2023-12416"
+article = "6.3"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-12416"
+published_at = 2023-05-29
+effective_from = 2023-07-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2023-12416 art 6.3; pending operator re-stamp)"
+notes = "Orden HFP/523/2023 art 6.3: under LIS art 75.2 the Modelo 220 approved in art 1 is filed within the plazo of the individual declaration of the group's representante or cabeza de grupo. It is the Modelo 220 plazo clause for periodos impositivos iniciados en 2022."
+required_text = [
+    "el Modelo 220 de declaración aprobado en el artículo 1 de la presente orden",
+    "dentro del plazo correspondiente a la declaración en régimen de tributación individual",
+    "artículo 75.2 de la Ley 27/2014",
+]
+
+[sources."boe-modelo-220-2022-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hfp-523-2023.html"
+sha256 = "4affd45014e78fee00eb60dea9f8603a8d23d046b57052f977fd92a32baba827"
+bytes = 125408
+retrieved_at = 2026-10-01
+published_at = 2023-05-29
+applies_from = 2022-01-01
+applies_to = 2022-12-31
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-12416"
+review_status = "pending_review"
+
+[legal."orden-hac-495-2024:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-495-2024.html#a1"
+document_id = "BOE-A-2024-10574"
+article = "1"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-10574"
+published_at = 2024-05-27
+effective_from = 2024-07-01
+governs_periods_from = 2023-01-01
+governs_periods_to = 2023-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2024-10574 art 1; pending operator re-stamp)"
+notes = "Orden HAC/495/2024 art 1.1.a).2.o approves Modelo 220, the IS declaration of grupos fiscales in the regimen de consolidacion fiscal, set out in anexo II, for periodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2023; art 1.3 applies it to the grupos fiscales, cooperatives included, of capitulo VI del titulo VII LIS and RD 1345/1992. The orden enters into force on 2024-07-01 (disposicion final tercera). It is the approval clause of Modelo 220's ejercicio 2023 edition."
+required_text = [
+    "Se aprueban los modelos de declaración del Impuesto sobre Sociedades",
+    "para los períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2023",
+    "Modelo 220: Declaración del Impuesto sobre Sociedades–Régimen de consolidación fiscal correspondiente a los grupos fiscales, que figura en el anexo II",
+    "El Modelo 220, que figura como anexo II, es aplicable a los grupos fiscales",
+]
+
+[legal."orden-hac-495-2024:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-495-2024.html#a3"
+document_id = "BOE-A-2024-10574"
+article = "3.2"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-10574"
+published_at = 2024-05-27
+effective_from = 2024-07-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2024-10574 art 3.2; pending operator re-stamp)"
+notes = "Orden HAC/495/2024 art 3.2: the domiciliacion bancaria of the Modelos 200 and 220 for periodos ended on 31 December 2023 may be ordered from 1 to 22 July 2024, both inclusive. It grounds the Modelo 220 ejercicio 2023 window's payment_cutoff_on."
+required_text = [
+    "La domiciliación bancaria a que se refiere el párrafo anterior podrá realizarse desde el día 1 de julio hasta el 22 de julio de 2024, ambos inclusive.",
+]
+
+[legal."orden-hac-495-2024:art-6-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-495-2024.html#a6"
+document_id = "BOE-A-2024-10574"
+article = "6.3"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-10574"
+published_at = 2024-05-27
+effective_from = 2024-07-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2024-10574 art 6.3; pending operator re-stamp)"
+notes = "Orden HAC/495/2024 art 6.3: under LIS art 75.2 the Modelo 220 approved in art 1 is filed within the plazo of the individual declaration of the group's representante or cabeza de grupo. It is the Modelo 220 plazo clause for periodos impositivos iniciados en 2023."
+required_text = [
+    "el Modelo 220 de declaración aprobado en el artículo 1 de la presente orden",
+    "dentro del plazo correspondiente a la declaración en régimen de tributación individual",
+    "artículo 75.2 de la Ley 27/2014",
+]
+
+[sources."boe-modelo-220-2023-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-495-2024.html"
+sha256 = "be465cf9848e6c008eeb28cbb980312b48e738b3f0effbb5dc698b6b9a59412a"
+bytes = 136988
+retrieved_at = 2026-10-01
+published_at = 2024-05-27
+applies_from = 2023-01-01
+applies_to = 2023-12-31
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-10574"
+review_status = "pending_review"
+
+# Modelo 200 approval and plazo clauses of the same two ordenes, for the periodos
+# impositivos iniciados en 2022 (Orden HFP/523/2023) and en 2023 (Orden HAC/495/2024):
+# art. 1.1.a).1.o approves Modelo 200 (anexo I) and art. 1.2 applies it to every IS
+# contribuyente and IRNR establecimiento permanente; art. 6.1 sets its plazo under LIS
+# art. 124.1. Art. 3.2 (domiciliacion, Modelos 200 y 220) is catalogued above.
+[legal."orden-hfp-523-2023:modelo-200"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-523-2023.html#a1"
+document_id = "BOE-A-2023-12416"
+article = "1.1.a).1.o y 1.2"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-12416"
+published_at = 2023-05-29
+effective_from = 2023-07-01
+governs_periods_from = 2022-01-01
+governs_periods_to = 2022-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2023-12416 art 1; pending operator re-stamp)"
+notes = "Orden HFP/523/2023 art 1.1.a).1.o approves Modelo 200, the declaracion del Impuesto sobre Sociedades and of the IRNR (establecimientos permanentes and entidades en regimen de atribucion de rentas constituidas en el extranjero con presencia en territorio espanol), set out in anexo I, for periodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2022; art 1.2 applies it with caracter general to every IS contribuyente. The orden enters into force on 2023-07-01 (disposicion final unica). It is the approval clause of Modelo 200's ejercicio 2022 edition."
+required_text = [
+    "Se aprueban los modelos de declaración del Impuesto sobre Sociedades",
+    "para los períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2022",
+    "Modelo 200: Declaración del Impuesto sobre Sociedades y del Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español), que figura en el anexo I",
+    "El Modelo 200, que figura como anexo I, es aplicable, con carácter general, a todos los contribuyentes del Impuesto sobre Sociedades",
+]
+
+[legal."orden-hfp-523-2023:art-6-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-523-2023.html#a6"
+document_id = "BOE-A-2023-12416"
+article = "6.1"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-12416"
+published_at = 2023-05-29
+effective_from = 2023-07-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2023-12416 art 6.1; pending operator re-stamp)"
+notes = "Orden HFP/523/2023 art 6.1: under LIS art 124.1 the Modelo 200 approved in art 1 is filed within the 25 dias naturales following the six months after the periodo impositivo ends. It is the Modelo 200 plazo clause for periodos impositivos iniciados en 2022."
+required_text = [
+    "el modelo 200 de declaración del Impuesto sobre Sociedades, aprobado en el artículo 1 de la presente orden, se presentará en el plazo de los 25 días naturales siguientes a los seis meses posteriores a la conclusión del período impositivo",
+]
+
+[sources."boe-modelo-200-2022-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hfp-523-2023.html"
+sha256 = "4affd45014e78fee00eb60dea9f8603a8d23d046b57052f977fd92a32baba827"
+bytes = 125408
+retrieved_at = 2026-10-01
+published_at = 2023-05-29
+applies_from = 2022-01-01
+applies_to = 2022-12-31
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-12416"
+review_status = "pending_review"
+
+[legal."orden-hac-495-2024:modelo-200"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-495-2024.html#a1"
+document_id = "BOE-A-2024-10574"
+article = "1.1.a).1.o y 1.2"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-10574"
+published_at = 2024-05-27
+effective_from = 2024-07-01
+governs_periods_from = 2023-01-01
+governs_periods_to = 2023-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2024-10574 art 1; pending operator re-stamp)"
+notes = "Orden HAC/495/2024 art 1.1.a).1.o approves Modelo 200, the declaracion del Impuesto sobre Sociedades and of the IRNR (establecimientos permanentes and entidades en regimen de atribucion de rentas constituidas en el extranjero con presencia en territorio espanol), set out in anexo I, for periodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2023; art 1.2 applies it with caracter general to every IS contribuyente. The orden enters into force on 2024-07-01 (disposicion final tercera). It is the approval clause of Modelo 200's ejercicio 2023 edition."
+required_text = [
+    "Se aprueban los modelos de declaración del Impuesto sobre Sociedades",
+    "para los períodos impositivos iniciados entre el 1 de enero y el 31 de diciembre de 2023",
+    "Modelo 200: Declaración del Impuesto sobre Sociedades y del Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español), que figura en el anexo I",
+    "El Modelo 200, que figura como anexo I, es aplicable, con carácter general, a todos los contribuyentes del Impuesto sobre Sociedades",
+]
+
+[legal."orden-hac-495-2024:art-6-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-495-2024.html#a6"
+document_id = "BOE-A-2024-10574"
+article = "6.1"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-10574"
+published_at = 2024-05-27
+effective_from = 2024-07-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2024-10574 art 6.1; pending operator re-stamp)"
+notes = "Orden HAC/495/2024 art 6.1: under LIS art 124.1 the Modelo 200 approved in art 1 is filed within the veinticinco dias naturales following the six months after the periodo impositivo ends. It is the Modelo 200 plazo clause for periodos impositivos iniciados en 2023."
+required_text = [
+    "el modelo 200 de declaración del Impuesto sobre Sociedades, aprobado en el artículo 1 de la presente orden, se presentará en el plazo de los veinticinco días naturales siguientes a los seis meses posteriores a la conclusión del período impositivo",
+]
+
+[sources."boe-modelo-200-2023-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-495-2024.html"
+sha256 = "be465cf9848e6c008eeb28cbb980312b48e738b3f0effbb5dc698b6b9a59412a"
+bytes = 136988
+retrieved_at = 2026-10-01
+published_at = 2024-05-27
+applies_from = 2023-01-01
+applies_to = 2023-12-31
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-10574"
+review_status = "pending_review"
+
+[legal."ley-44-2015:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-44-2015-art-1.html#a1"
+document_id = "BOE-A-2015-11071"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11071#a1"
+published_at = 2015-10-22
+effective_from = 2015-10-24
+review_status = "operator_reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "operator"
+notes = "Ley 44/2015 Art. 1: definicion de sociedad laboral. Sociedad Anonima Laboral (SAL) y Sociedad Limitada Laboral (SLL). Requisito: la mayoria del capital social ha de ser propiedad de trabajadores que presten en ella servicios retribuidos en forma personal y directa, cuya relacion laboral sea de duracion indefinida. Ningun socio puede poseer acciones o participaciones que representen mas de un tercio del capital social salvo entidades publicas, asociaciones u otras personas juridicas sin animo de lucro."
+required_text = [
+    "sociedad laboral",
+    "capital social",
+    "trabajadores",
+]
+
+[legal."ley-44-2015:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-44-2015-art-2.html#a2"
+document_id = "BOE-A-2015-11071"
+article = "2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11071#a2"
+published_at = 2015-10-22
+effective_from = 2015-10-24
+review_status = "operator_reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "operator"
+notes = "Ley 44/2015 Art. 2: denominacion social. Las sociedades laborales deben incluir en su denominacion las palabras 'Sociedad Anonima Laboral' o 'Sociedad Limitada Laboral', o sus abreviaturas SAL o SLL respectivamente. Prohibicion de uso de estas denominaciones por entidades no calificadas."
+required_text = [
+    "Sociedad Anónima Laboral",
+    "Sociedad Limitada Laboral",
+    "S.A.L.",
+]
+
+[legal."ley-44-2015:art-13"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-44-2015-art-13.html#a13"
+document_id = "BOE-A-2015-11071"
+article = "13"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11071#a13"
+published_at = 2015-10-22
+effective_from = 2015-10-24
+review_status = "operator_reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "operator"
+notes = "Ley 44/2015 Art. 13: regimen tributario de las sociedades laborales. Las sociedades laborales tributan por el Impuesto sobre Sociedades en el regimen general. No tienen un tipo reducido propio; el tipo aplicable es el general del 25 por ciento o el que corresponda segun su cifra de negocios, forma juridica, etc."
+required_text = [
+    "régimen tributario",
+    "Impuesto sobre Sociedades",
+]
+
+[legal."ley-44-2015:art-14"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-44-2015-art-14.html#a14"
+document_id = "BOE-A-2015-11071"
+article = "14"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11071#a14"
+published_at = 2015-10-22
+effective_from = 2015-10-24
+review_status = "agent_reviewed"
+reviewed_at = 2026-06-30
+reviewed_by = "verified against official BOE-A-2015-11071 consolidated art. 14; corpus excerpt currentized"
+notes = """\
+Ley 44/2015 Art. 14: reserva especial. Las sociedades laborales deben constituir una reserva \
+especial dotada con el diez por ciento del beneficio liquido de cada ejercicio hasta que alcance al \
+menos una cifra superior al doble del capital social. El articulo tambien limita el destino de la \
+reserva a compensar perdidas cuando no haya otras reservas disponibles suficientes y/o a adquirir \
+acciones o participaciones propias para enajenarlas a trabajadores indefinidos conforme al art 12. \
+La reduccion de base imponible IS por dotaciones a la reserva especial se fundamenta separadamente \
+en Ley 44/2015 art 13."""
+required_text = [
+    "reserva especial",
+    "diez por ciento del beneficio líquido",
+    "superior al doble del capital social",
+    "compensación de pérdidas",
+    "adquisición de sus propias acciones o participaciones sociales",
+]
+
+[legal."ley-31-2022:art-39"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-31-2022-art-39.html#a39"
+document_id = "BOE-A-2022-22128"
+article = "39"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-22128#a39"
+published_at = 2022-12-29
+effective_from = 2023-01-01
+review_status = "operator_reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "operator"
+notes = """\
+Ley 31/2022 Art. 39: modifica el articulo 29 de la Ley 27/2014 LIS para introducir el tipo reducido \
+del 23 por ciento para entidades cuya cifra de negocios del periodo impositivo inmediato anterior \
+sea inferior a 1 millon de euros (entidades de reducida dimension). Aplicable a periodos impositivos \
+iniciados a partir del 1 de enero de 2023. Las entidades sujetas al tipo general del 25 por ciento \
+que cumplan el umbral de cifra de negocios inferior a 1 millon de euros aplican el tipo ERD del 23 \
+por ciento; las cooperativas fiscalmente protegidas y entidades sin fines lucrativos conservan sus \
+tipos especiales."""
+required_text = [
+    "23 por ciento",
+    "cifra de negocios del período impositivo inmediato anterior",
+    "1 millón de euros",
+]
+
+[legal."ley-27-2014:art-75-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014.html#a75"
+document_id = "BOE-A-2014-12328"
+article = "75.2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a75"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "agent_reviewed"
+reviewed_by = "agent: enrolled from the bundled consolidated LIS (ley-27-2014.html). Modelo 220's revision prose has discussed LIS art. 75.2 at length for several editions while citing it only indirectly through the approving orden's reference to it, because no table existed; a ref discussed in prose and absent from the catalogue is not citable, and this closes that gap. Both required_text phrases were confirmed present in the bundled payload. NOT CLAIMED -- no operator countersignature, and apartado 1 is not enrolled here."
+reviewed_at = 2026-09-12
+notes = """LIS art. 75.2: plazo de la declaracion del grupo fiscal. The group declaration is filed within the plazo of the REPRESENTANTE's own individual declaration rather than on a plazo of its own, which is why modelo 220's deadline routes through art. 124.1 by way of the representante rather than directly. Orden HAC/529/2026 art. 6.3 grounds the Modelo 220 plazo on this provision; until now the registry could only cite that orden, not the provision it rests on."""
+required_text = [
+    "La declaracion del grupo fiscal debera presentarse dentro del plazo correspondiente a la declaracion en regimen de tributacion individual de la entidad representante",
+    "Declaracion y autoliquidacion del grupo fiscal",
+]
+
+[legal."ley-27-2014:art-130"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014.html#a130"
+document_id = "BOE-A-2014-12328"
+article = "130"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a130"
+published_at = 2014-11-28
+effective_from = 2016-01-01
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared; anchor #a130 resolved through the production resolver against the bundled consolidated LIS (ley-27-2014.html, 212 units, exactly one unit for this anchor) and each required_text phrase confirmed present in that resolved unit; corroborated by the AEAT Manual practico de Sociedades 2024 anchors 59 and 61 (pp. 529, 534); pending operator re-stamp"
+reviewed_at = 2026-08-26
+notes = """LIS art. 130: derecho a la conversion de activos por impuesto diferido (AID) en credito exigible frente a la Administracion Tributaria. Los AID correspondientes a dotaciones por deterioro de creditos por insolvencias de deudores no vinculados y no adeudados con entidades de derecho publico cuya deducibilidad no se produce por el art. 13.1.a), y los derivados de los apartados 1 y 2 del art. 14 (sistemas de prevision social y prejubilacion), pueden convertirse en credito exigible por un importe igual a la cuota liquida positiva del periodo impositivo de generacion, cuando concurra alguna de las circunstancias del apartado 2 (perdidas contables en los terminos que fija, o liquidacion o insolvencia judicialmente declarada). Funda la seccion activos_impuesto_diferido_aid_art_130_lis del Modelo 200, que hasta ahora citaba unicamente la lista generica de 18 articulos comun a toda la revision y no el articulo que establece el derecho."""
+required_text = [
+    "podrán convertirse en un crédito exigible frente a la Administración Tributaria",
+    "Que la entidad sea objeto de liquidación o insolvencia judicialmente declarada",
+]
+
+[legal."ley-27-2014:da-13"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014.html#dadecimotercera-2"
+document_id = "BOE-A-2014-12328"
+article = "DA-13"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#dadecimotercera-2"
+published_at = 2014-11-28
+effective_from = 2016-01-01
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared; anchor #dadecimotercera-2 resolved through the production resolver to exactly one unit of the bundled consolidated LIS (the -2 suffix is the BOE source anchor id, verified NOT a redaction split: only one unit matches the #dadecimotercera prefix); required_text phrases confirmed present in that unit; the 1,5 per cent prestacion rate is described in these notes but deliberately NOT asserted in required_text, because a numeric rate needs the live-BOE cross-check this entry has not had; pending operator re-stamp"
+reviewed_at = 2026-08-26
+notes = """LIS disposicion adicional decimotercera: prestacion patrimonial por conversion de activos por impuesto diferido en credito exigible frente a la Administracion Tributaria. Obliga al pago de la prestacion a los contribuyentes que tengan registrados AID a que se refiere el apartado 2 de la DT 33a y pretendan tener el derecho del art. 130. El importe declarado por el texto bundled es el resultado de aplicar el 1,5 por ciento al importe total de dichos activos existente el ultimo dia del periodo impositivo; esa cifra NO ha sido contrastada contra el texto vivo del BOE y no se afirma en required_text. Se devenga el dia de inicio del plazo voluntario de declaracion."""
+required_text = [
+    "Prestación patrimonial por conversión de activos por impuesto diferido",
+    "El ingreso de la prestación patrimonial se realizará mediante autoliquidación",
+]
+
+[legal."ley-27-2014:dt-33"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014.html#dttrigesimatercera"
+document_id = "BOE-A-2014-12328"
+article = "DT-33"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#dttrigesimatercera"
+published_at = 2014-11-28
+effective_from = 2016-01-01
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared; anchor #dttrigesimatercera resolved through the production resolver to exactly one unit of the bundled consolidated LIS; required_text phrases confirmed present in that unit; corroborated by the AEAT Manual practico de Sociedades 2024 anchor 61 (p. 534), which cites art. 130, DA 13a and DT 33a together; pending operator re-stamp"
+reviewed_at = 2026-08-26
+notes = """LIS disposicion transitoria trigesima tercera: extiende lo dispuesto en los arts. 11.12 y 130 a los activos por impuesto diferido generados en periodos impositivos iniciados con anterioridad a 1 de enero de 2016, incluidos los derivados de los arts. 13.1.b) y 14.1.f) del texto refundido anterior segun su redaccion vigente en periodos iniciados antes de 1 de enero de 2015. Es la pata transitoria de la seccion activos_impuesto_diferido_aid_dt_33a_y_da_13a_lis del Modelo 200, cuyo propio nombre de seccion nombra esta disposicion y la DA 13a."""
+required_text = [
+    "Conversión de activos por impuesto diferido generados en períodos impositivos iniciados con anterioridad",
+    "se registren activos por impuesto diferido",
+]
+
+[legal."ley-27-2014:art-17"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014.html#a17"
+document_id = "BOE-A-2014-12328"
+article = "17"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a17"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared; anchor #a17 resolved to exactly one unit through the production resolver against the bundled consolidated LIS; required_text confirmed present in that unit; the section tag naming art. 17 was checked against the provision own rubric rather than trusted, because M200 section tags truncate at roughly 50 characters; pending operator re-stamp"
+reviewed_at = 2026-08-26
+notes = "LIS art. 17: regla general y reglas especiales de valoracion en los supuestos de transmisiones lucrativas y societarias. Los elementos patrimoniales se valoran conforme al Codigo de Comercio corregido por los preceptos de la Ley, y las variaciones por valor razonable no tienen efectos fiscales mientras no se imputen a la cuenta de perdidas y ganancias. Funda las secciones del Modelo 200 cuyo tag nombra el art. 17."
+required_text = [
+    "Los elementos patrimoniales se valorarán de acuerdo con los criterios previstos en el Código de Comercio",
+    "las variaciones de valor originadas por aplicación del criterio del valor razonable no tendrán efectos fiscales",
+]
+
+[legal."ley-27-2014:da-6"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014.html#dasexta"
+document_id = "BOE-A-2014-12328"
+article = "DA-6"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#dasexta"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared; anchor #dasexta resolved to exactly one unit through the production resolver; required_text confirmed present; the 50 per cent exemption share is described in notes but deliberately NOT asserted in required_text, pending a live-BOE numeric cross-check; pending operator re-stamp"
+reviewed_at = 2026-08-26
+notes = "LIS disposicion adicional sexta: exencion de rentas derivadas de la transmision de determinados inmuebles. Segun el texto bundled, exime parcialmente las rentas positivas derivadas de la transmision de bienes inmuebles urbanos que sean activo no corriente o activo no corriente mantenido para la venta, adquiridos a titulo oneroso entre la entrada en vigor del RDL 18/2012 y el 31 de diciembre de 2012. La proporcion exenta que declara el texto bundled es del 50 por ciento; esa cifra no ha sido contrastada contra el texto vivo del BOE y no se afirma en required_text."
+required_text = [
+    "rentas positivas derivadas de la transmisión de bienes inmuebles de naturaleza urbana",
+    "activos no corrientes mantenidos para la venta",
+]
+
+[legal."ley-27-2014:dt-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014.html#dtprimera"
+document_id = "BOE-A-2014-12328"
+article = "DT-1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#dtprimera"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared; anchor #dtprimera resolved to exactly one unit through the production resolver; required_text confirmed present; pending operator re-stamp"
+reviewed_at = 2026-08-26
+notes = "LIS disposicion transitoria primera: regularizacion de ajustes extracontables. Los ajustes extracontables positivos y negativos practicados para determinar bases imponibles de periodos iniciados antes de la entrada en vigor de la Ley se toman en consideracion para determinar las bases de los periodos en que la Ley aplica, con la regla de cierre de que una misma renta no puede dejar de computarse ni computarse dos veces."
+required_text = [
+    "Los ajustes extracontables, positivos y negativos",
+    "En ningún caso será admisible que una misma renta no se tome",
+]
+
+[legal."ley-27-2014:dt-23"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014.html#dtvigesimatercera"
+document_id = "BOE-A-2014-12328"
+article = "DT-23"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#dtvigesimatercera"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared; anchor #dtvigesimatercera resolved to exactly one unit through the production resolver; required_text confirmed present; the doble-imposicion-interna subject matter was matched against the di_interna_* section tags it grounds rather than assumed from the tag text; pending operator re-stamp"
+reviewed_at = 2026-08-26
+notes = "LIS disposicion transitoria vigesima tercera: regimen transitorio de las deducciones para evitar la doble imposicion. Gobierna las participaciones adquiridas en periodos iniciados en el transmitente antes de 1 de enero de 2015, remitiendo a la exencion del art. 21 cuando se cumplen sus requisitos. Funda las secciones di_interna_<ejercicio> del Modelo 200, que declaran por ejercicio de generacion los saldos pendientes de deduccion por doble imposicion interna."
+required_text = [
+    "Régimen transitorio en el Impuesto sobre Sociedades de las deducciones para evitar la doble imposición",
+    "con anterioridad a 1 de enero de 2015",
+]
+
+[legal."ley-27-2014:dt-24"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014.html#dtvigesimacuaa"
+document_id = "BOE-A-2014-12328"
+article = "DT-24"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#dtvigesimacuaa"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared; anchor #dtvigesimacuaa resolved to exactly one unit through the production resolver -- note the BOE ordinal spelling cuaa rather than cuarta, which was read off the corpus and never guessed; required_text confirmed present; pending operator re-stamp"
+reviewed_at = 2026-08-26
+notes = "LIS disposicion transitoria vigesima cuarta: deducciones para incentivar la realizacion de determinadas actividades pendientes de aplicar. Conserva la aplicabilidad de deducciones generadas bajo la Ley 61/1978 y el Reglamento aprobado por el RD 2631/1982, y de los saldos pendientes procedentes de regimenes anteriores. Funda las secciones del Modelo 200 cuyo tag nombra la DT 24a."
+required_text = [
+    "Deducciones para incentivar la realización de determinadas actividades pendientes de aplicar",
+    "de la Ley 61/1978",
+]
+
+[legal."rd-634-2015:dt-5"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "reglamento"
+corpus_ref = "corpus/normatives/html/rd-634-2015.html#dtquinta"
+document_id = "BOE-A-2015-8043"
+article = "DT-5"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-8043#dtquinta"
+published_at = 2015-07-11
+effective_from = 2015-07-12
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared; anchor #dtquinta resolved to exactly one unit through the production resolver against the bundled consolidated RIS (rd-634-2015.html, 87 units); required_text confirmed present; pending operator re-stamp"
+reviewed_at = 2026-08-26
+notes = "RIS disposicion transitoria quinta: obligaciones de informacion de la disposicion transitoria decimocuarta de la Ley del Impuesto. Obliga a presentar, junto con la declaracion del Impuesto sobre Sociedades de los ejercicios en que se practique la deduccion de la DT 14a LIS, la identificacion y porcentaje de participacion en las entidades participadas, la descripcion de sus actividades y el valor de sus fondos propios. Funda la seccion del Modelo 200 cuyo tag nombra la DT 5a RIS."
+required_text = [
+    "Obligaciones de información de la disposición transitoria decimocuarta de la Ley del Impuesto",
+    "Identificación y porcentaje de participación en aquellas entidades participadas",
+]
+
+[legal."ley-27-2014:art-45"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014.html#a45"
+document_id = "BOE-A-2014-12328"
+article = "45"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a45"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared; anchor #a45 resolved to exactly one unit through the production resolver against the bundled consolidated LIS, and its rubric reads Uniones temporales de empresas, matching the section it grounds; required_text confirmed present in the resolved unit; the anchor was checked against the measured collision set for this corpus and is not shadowed; pending operator re-stamp"
+reviewed_at = 2026-08-26
+notes = "LIS art. 45: uniones temporales de empresas. Las UTE reguladas en la Ley 18/1982 e inscritas en el registro especial tributan con arreglo al art. 43 (agrupaciones de interes economico espanolas), salvo la regla de valoracion del segundo parrafo del apartado 4 de ese articulo. Funda la seccion del Modelo 200 cuyo tag nombra el art. 45.1."
+required_text = [
+    "Las uniones temporales de empresas reguladas en la Ley 18/1982",
+    "inscritas en el registro especial",
+]
+
+[legal."ley-27-2014:art-106"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014.html#a106"
+document_id = "BOE-A-2014-12328"
+article = "106"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a106"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared; anchor #a106 resolved to exactly one unit through the production resolver, rubric Contratos de arrendamiento financiero, matching the section it grounds; required_text confirmed present; the minimum contract durations the provision states are described in notes but deliberately NOT asserted in required_text, pending a live-BOE numeric cross-check; pending operator re-stamp"
+reviewed_at = 2026-08-26
+notes = "LIS art. 106: contratos de arrendamiento financiero. Se aplica a los contratos en que el arrendador es una entidad de credito o un establecimiento financiero de credito. El texto bundled fija duraciones minimas segun el objeto sea bien mueble o inmueble, con habilitacion reglamentaria para otros plazos; esas cifras no han sido contrastadas contra el texto vivo del BOE y no se afirman en required_text. Funda la seccion de arrendamiento financiero del Modelo 200."
+required_text = [
+    "Contratos de arrendamiento financiero",
+    "el arrendador sea una entidad de crédito o un establecimiento financiero de crédito",
+]
+
+[legal."ley-27-2014:art-83"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014.html#a83"
+document_id = "BOE-A-2014-12328"
+article = "83"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a83"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared; anchor #a83 resolved to exactly one unit through the production resolver against the bundled consolidated LIS, and checked against this corpus's measured anchor-collision set so it is not one of the shadowed bis/ter provisions; required_text confirmed present in the resolved unit; pending operator re-stamp"
+reviewed_at = 2026-08-26
+notes = "LIS art. 83: limitacion en la deduccion de gastos financieros destinados a la adquisicion de participaciones en el capital o en los fondos propios de entidades. Opera a los efectos del art. 16, anadiendo un limite propio para la deuda destinada a adquirir participaciones cuando la entidad adquirida se incorpora al grupo fiscal o es objeto de una reestructuracion. Es la SEGUNDA MITAD del compuesto que nombra la seccion limite_art_16_5_y_o_83_lis del Modelo 200: esa seccion descansa sobre el art. 16.5 y sobre este articulo, de modo que fundarla solo en el art. 16 declararia una autoridad mas estrecha que la que la propia seccion invoca."
+required_text = [
+    "Limitación en la deducción de gastos financieros destinados a la adquisición de participaciones",
+    "A los efectos de lo previsto en el artículo 16 de esta Ley",
+    "gastos financieros derivados de deudas destinadas a la adquisición de participaciones en el capital o fondos propios",
+]
+
+[legal."ley-27-2014:art-15-bis"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014.html#a15bis"
+document_id = "BOE-A-2014-12328"
+article = "15-bis"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a15bis"
+published_at = 2014-11-28
+effective_from = 2021-01-01
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared; ANCHOR NOTE -- BOE's own anchor for this provision is #a1-2, which _canonical_anchor normalises to 'a12' and so collides with articulo 12; the resolver correctly REFUSES it. The compact form #a15bis reaches the provision through the resolver's structural-title fallback and resolves to exactly one unit, verified through the production resolver before this entry was written. required_text confirmed present in that resolved unit; pending operator re-stamp"
+reviewed_at = 2026-08-26
+notes = "LIS art. 15 bis: asimetrias hibridas. Niega la deducibilidad de gastos correspondientes a operaciones con personas o entidades vinculadas que, por una calificacion fiscal diferente en aquellas, no generen ingreso, generen un ingreso exento o sujeto a una reduccion del tipo, o den lugar a una deduccion sin inclusion. Transpone la ATAD II. Funda la seccion asimetrias_hibridas_art_15_bis_lis del Modelo 200, cuyo tag nombra este articulo con la salvedad que el propio tag recoge."
+required_text = [
+    "Asimetrías híbridas",
+    "No serán fiscalmente deducibles los gastos correspondientes a operaciones realizadas con personas o entidades vinculadas",
+    "no generen un ingreso, generen un ingreso exento o sujeto a una reducción del tipo impositivo",
+]
+
+[legal."ley-27-2014:da-18"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014.html#dadecimoctava"
+document_id = "BOE-A-2014-12328"
+article = "DA-18"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#dadecimoctava"
+published_at = 2014-11-28
+effective_from = 2023-01-01
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared; ANCHOR NOTE -- BOE anchors this disposicion as #da-3, which _canonical_anchor folds onto 'da3' and so collides with DA tercera; the compact ordinal form #dadecimoctava reaches it through the resolver's structural-title fallback and resolves to exactly one unit, verified through the production resolver before this entry was written. required_text confirmed present in that unit. The percentage and investment ceilings the disposicion states are described in notes but deliberately NOT asserted in required_text, pending a live-BOE numeric cross-check; pending operator re-stamp"
+reviewed_at = 2026-08-26
+notes = "LIS disposicion adicional decimoctava: libertad de amortizacion en determinados vehiculos y en nuevas infraestructuras de recarga. Permite amortizar libremente las inversiones en vehiculos electricos y en puntos de recarga afectos a actividades economicas y puestos a disposicion en los ejercicios que la propia disposicion acota. Funda la seccion libertad_de_amortizacion_de_determinados_vehiculos del Modelo 200, cuyo nombre reproduce el rubrico de la disposicion."
+required_text = [
+    "Libertad de amortización en determinados vehículos y en nuevas infraestructuras de recarga",
+    "Las inversiones en vehículos",
+    "del Reglamento General de Vehículos, aprobado por el Real Decreto 2822/1998",
+]
+
+[legal."real-decreto-ley-4-2024:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto_ley"
+corpus_ref = "corpus/normatives/html/boe-a-2024-12944-rdl-4-2024-iva-alimentos.html#a4"
+document_id = "BOE-A-2024-12944"
+article = "4"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-12944#a4"
+published_at = 2024-06-27
+effective_from = 2024-06-28
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-30
+reviewed_by = "agent-authored from the bundled consolidated RDL 4/2024 (block a4); operator to re-stamp"
+notes = "RDL 4/2024 art. 4.Uno: con efectos para los periodos impositivos que se inicien a partir de 1 de enero de 2024 y que no hayan concluido a la entrada en vigor del real decreto-ley (28 de junio de 2024), redacta de nuevo la disposicion adicional decimoctava LIS: libertad de amortizacion de vehiculos nuevos FCV, FCHV, BEV, REEV o PHEV y de nuevas infraestructuras de recarga que entren en funcionamiento en los periodos impositivos que se inicien en 2024 y 2025, sustituyendo la amortizacion acelerada al doble del coeficiente lineal maximo que regia desde 2023. Un periodo impositivo concluido antes del 28 de junio de 2024 (en el IRPF, el del contribuyente fallecido antes de esa fecha) queda fuera de esta redaccion y conserva la amortizacion acelerada, como recoge el Manual practico de Renta 2024. Los apartados Dos y Tres del articulo (reserva de capitalizacion) no se citan desde esta entrada."
+required_text = [
+    "Modificación de la Ley 27/2014, de 27 de noviembre, del Impuesto sobre Sociedades",
+    "Con efectos para los períodos impositivos que se inicien a partir de 1 de enero de 2024 y que no hayan concluido a la entrada en vigor de este real decreto-ley, se modifica la disposición adicional decimoctava",
+]
+
+[legal."ley-27-2014:da-17"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014.html#dadecimoseptima"
+document_id = "BOE-A-2014-12328"
+article = "DA-17"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#dadecimoseptima"
+published_at = 2014-11-28
+effective_from = 2022-10-20
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-23
+reviewed_by = "agent-prepared; BOE anchors this disposicion as #da-2, which collides with another unit, so the compact ordinal form #dadecimoseptima reaches it through the resolver's structural-title fallback; verified to resolve to exactly one unit through resolve_anchored_extracted_unit with every required_text phrase present; pending operator re-stamp"
+notes = "LIS disposicion adicional decimoseptima (added by RDL 18/2022): libertad de amortizacion en instalaciones de autoconsumo electrico y de uso termico de consumo propio con energia renovable que sustituyan instalaciones fosiles, condicionada a mantener la plantilla media total de los 24 meses siguientes al inicio del periodo impositivo respecto de la de los doce meses anteriores. Excluye edificios; inversion maxima 500.000 euros. The consolidated text carries a chain of RDL amendments and derogations (RDL 9/2024, 16/2025, 2/2026 derogated; RDL 7/2026 for periods not concluded at 22 March 2026) that governs which entry-into-service years apply to a given period."
+required_text = [
+    "Libertad de amortización en inversiones que utilicen energía procedente de fuentes renovables",
+    "la plantilla media total de la entidad se mantenga respecto de la plantilla media de los doce meses anteriores",
+    "Los edificios no podrán acogerse a la libertad de amortización regulada en esta disposición.",
+]
+
+[legal."real-decreto-ley-18-2022:art-22"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto_ley"
+corpus_ref = "corpus/normatives/xml/real-decreto-ley-18-2022-art-22.xml#a2-4"
+document_id = "BOE-A-2022-17040"
+article = "22"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-17040#a2-4"
+published_at = 2022-10-19
+effective_from = 2022-10-20
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-30
+reviewed_by = "agent-prepared from the BOE consolidated-text article endpoint (block a2-4, single redaction fecha_vigencia 20221020); pending operator re-stamp"
+notes = "RDL 18/2022 art. 22: introduce la disposicion adicional decimoseptima LIS, libertad de amortizacion de instalaciones de autoconsumo electrico y de uso termico de consumo propio con energia renovable que sustituyan instalaciones fosiles, puestas a disposicion del contribuyente a partir de la entrada en vigor del real decreto-ley (20 de octubre de 2022) y que entren en funcionamiento en 2023, en los periodos impositivos que se inicien o concluyan en dicho ano; condicionada al mantenimiento de la plantilla media, excluye edificios e inversion maxima de 500.000 euros. Funda los parametros de Renta 2023 de esta libertad de amortizacion; la ampliacion a 2024 es del art. 18 del RDL 8/2023 (real-decreto-ley-8-2023:art-18)."
+required_text = [
+    "Se introduce una nueva disposición adicional decimoséptima en la Ley 27/2014, de 27 de noviembre, del Impuesto sobre Sociedades",
+    "entren funcionamiento en 2023, podrán ser amortizadas libremente en los períodos impositivos que se inicien o concluyan en dicho año",
+    "La cuantía máxima de la inversión que podrá beneficiarse del régimen de libertad de amortización será de 500.000 euros.",
+]
+
+[legal."real-decreto-ley-8-2023:art-18"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto_ley"
+corpus_ref = "corpus/normatives/xml/real-decreto-ley-8-2023-art-18.xml#a1-10"
+document_id = "BOE-A-2023-26452"
+article = "18"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2023-26452#a1-10"
+published_at = 2023-12-28
+effective_from = 2023-12-29
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-30
+reviewed_by = "agent-prepared from the BOE consolidated-text article endpoint (block a1-10, single redaction fecha_vigencia 20231229); pending operator re-stamp"
+notes = "RDL 8/2023 art. 18: modifica el apartado 1 de la disposicion adicional decimoseptima LIS para admitir tambien las instalaciones que entren en funcionamiento en 2024, amortizables libremente en los periodos impositivos que se inicien o concluyan en 2024 (letra ii), manteniendo la puesta a disposicion desde la entrada en vigor del RDL 18/2022, la plantilla media, la exclusion de edificios y la inversion maxima de 500.000 euros. Funda los parametros de Renta 2024 de esta libertad de amortizacion."
+required_text = [
+    "Se modifica el apartado 1 de la disposición adicional decimoséptima de la Ley 27/2014, de 27 de noviembre, del Impuesto sobre Sociedades",
+    "ii) Que se inicien o concluyan en 2024, cuando la entrada en funcionamiento de los elementos a que se refiere este apartado se produzca en 2024.",
+    "La cuantía máxima de la inversión que podrá beneficiarse del régimen de libertad de amortización será de 500.000 euros.",
+]
+
+[legal."rdl-16-2025:art-17"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto_ley"
+corpus_ref = "corpus/normatives/xml/rdl-16-2025-art-17.xml#a1-9"
+document_id = "BOE-A-2025-26458"
+article = "17"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2025-26458#a1-9"
+published_at = 2025-12-24
+effective_from = 2025-12-25
+effective_to = 2026-01-27
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-24
+reviewed_by = "agent-prepared from the BOE consolidated-text article endpoint (block a1-9); pending operator re-stamp"
+notes = "RDL 16/2025 art. 17.Uno: con efectos para los periodos impositivos que se inicien a partir de 1 de enero de 2025, redacta de nuevo la disposicion adicional decimoseptima LIS y anade la letra c) (periodos que se inicien o concluyan en 2025, entrada en funcionamiento en 2025), manteniendo la plantilla media, la exclusion de edificios y la inversion maxima de 500.000 euros. En vigor desde el 25 de diciembre de 2025 (entrada en vigor que publica el BOE). Derogado: la Resolucion de 27 de enero de 2026 (BOE-A-2026-2024, catalogada como resolucion-congreso-2026-01-27-derogacion-rdl-16-2025:acuerdo) publica que el Congreso, en su sesion de 27 de enero de 2026, acordo derogarlo; fecha de publicacion 28 de enero de 2026. La resolucion no fija otra fecha de efectos, y la derogacion de un real decreto-ley no convalidado surte efecto con la publicacion del acuerdo, de modo que su ultimo dia de vigencia es el 27 de enero de 2026. Que la letra c) siga rigiendo el periodo impositivo 2025 no descansa en esta entrada sino en la posicion de la AEAT (Manual de Renta 2025), citada por separado en los parametros que la aplican."
+required_text = [
+    "Con efectos para los períodos impositivos que se inicien a partir de 1 de enero de 2025, la disposición adicional decimoséptima queda redactada de la siguiente forma:",
+    "c) Que se inicien o concluyan en 2025, cuando la entrada en funcionamiento de los elementos a que se refiere este apartado se produzca en 2025.",
+    "La cuantía máxima de la inversión que podrá beneficiarse del régimen de libertad de amortización será de 500.000 euros.",
+]
+
+[legal."resolucion-congreso-2026-01-27-derogacion-rdl-16-2025:acuerdo"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "acuerdo_parlamentario"
+corpus_ref = "corpus/normatives/html/boe-a-2026-2024-derogacion-rdl-16-2025.html#textoxslt"
+document_id = "BOE-A-2026-2024"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-2024"
+published_at = 2026-01-28
+effective_from = 2026-01-28
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-24
+reviewed_by = "agent-prepared from BOE-A-2026-2024 downloaded from boe.es; pending operator re-stamp"
+notes = "Resolucion de 27 de enero de 2026 del Congreso de los Diputados que ordena publicar el acuerdo de derogacion del Real Decreto-ley 16/2025 (art. 86.2 CE). Fecha de disposicion 27/01/2026, fecha de publicacion 28/01/2026. Su analisis deja sin efecto, entre otras, la modificacion de las disposiciones adicionales 17 y 18 de la LIS. Fija el fin de vigencia de rdl-16-2025:art-17."
+required_text = [
+    "el Congreso de los Diputados, en su sesión del día de hoy, acordó derogar el Real Decreto-ley",
+    "Palacio del Congreso de los Diputados, 27 de enero de 2026.",
+]
+
+[legal."ley-27-2014:art-102"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014.html#a102"
+document_id = "BOE-A-2014-12328"
+article = "102"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a102"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared; anchor #a102 resolved to exactly one unit through the production resolver and checked against this corpus's measured collision set; required_text confirmed present. Adjudicated as the ENTIDADES DE REDUCIDA DIMENSION regime rather than a general one: art. 102 sits in the incentives chapter whose ambito is fixed by art. 101, which the catalogue already carries, so it grounds the ERD libertad-de-amortizacion section and not the other varieties; pending operator re-stamp"
+reviewed_at = 2026-08-26
+notes = "LIS art. 102: libertad de amortizacion de las entidades de reducida dimension. Los elementos nuevos del inmovilizado material y de las inversiones inmobiliarias afectos a actividades economicas pueden amortizarse libremente siempre que, durante los periodos que la norma fija, la plantilla media total se incremente respecto de la de los doce meses anteriores y ese incremento se mantenga. Funda la seccion empresas_de_reducida_dimension_libertad_de_amortizacion del Modelo 200."
+required_text = [
+    "Libertad de amortización",
+    "Los elementos nuevos del inmovilizado material y de las inversiones inmobiliarias",
+    "la plantilla media total de la empresa se incremente respecto de la plantilla",
+]
+
+[legal."ley-49-2002:art-20"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-49-2002.html#a20"
+document_id = "BOE-A-2002-25039"
+article = "20"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2002-25039#a20"
+published_at = 2002-12-24
+effective_from = 2003-01-01
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared; anchor #a20 resolved to exactly one unit through the production resolver against the bundled consolidated Ley 49/2002 (55 units, zero colliding canonical anchors in that corpus); required_text confirmed present. IMPORTANT distinction checked rather than assumed: art. 19 of this same Ley is the IRPF deduction and art. 20 is the Impuesto sobre Sociedades one, so the catalogued ley-49-2002:art-19 grounds Modelo 100 and must NOT be used for Modelo 200. The deduction percentages are described in notes and deliberately kept OUT of required_text pending a live-BOE numeric cross-check; pending operator re-stamp"
+reviewed_at = 2026-08-26
+notes = "Ley 49/2002 art. 20: deduccion de la cuota del Impuesto sobre Sociedades por donativos, donaciones y aportaciones. Los sujetos pasivos del IS deducen de la cuota integra, minorada en las deducciones y bonificaciones de los capitulos correspondientes, un porcentaje de la base de deduccion determinada segun el art. 18. Es la contrapartida en el IS del art. 19, que es la deduccion en el IRPF. Funda la seccion de donativos a entidades sin fines lucrativos del Modelo 200."
+required_text = [
+    "Deducción de la cuota del Impuesto sobre Sociedades",
+    "tendrán derecho a deducir de la cuota íntegra",
+    "las cantidades correspondientes al período impositivo no deducidas podrán aplicarse en las liquidaciones",
+]
+
+[legal."ley-49-2002:art-22"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-49-2002.html#a22"
+document_id = "BOE-A-2002-25039"
+article = "22"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2002-25039#a22"
+published_at = 2002-12-24
+effective_from = 2003-01-01
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared; anchor #a22 resolved to exactly one unit through the production resolver against the bundled consolidated Ley 49/2002; required_text confirmed present in that unit; corroborated by the AEAT Manual practico de Sociedades 2024, whose donativos chapter cites arts. 16 to 22 of this Ley; pending operator re-stamp"
+reviewed_at = 2026-08-26
+notes = "Ley 49/2002 art. 22: actividades prioritarias de mecenazgo. Habilita a la Ley de Presupuestos Generales del Estado para establecer una relacion de actividades prioritarias de mecenazgo dentro de los fines de interes general de la Ley, y para elevar en su caso los porcentajes y limites de deduccion aplicables a esas actividades. Funda la subseccion de donaciones para actividades prioritarias de mecenazgo del Modelo 200, que es exactamente la poblacion cuyo porcentaje esa habilitacion eleva."
+required_text = [
+    "Actividades prioritarias de mecenazgo",
+    "La Ley de Presupuestos Generales del Estado podrá establecer una relación de actividades prioritarias de mecenazgo",
+]
+
+[sources."aeat-dr-200-2010"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2010"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_200/files/02-200-ejercicio-2010-472-kb-pdf.pdf"
+sha256 = "cba4c97ac0f0540f9c5bc7a83ff6061bd41fcfc1abfe8918afedbc389a019144"
+bytes = 483803
+retrieved_at = 2026-05-03
+applies_from = 2010-01-01
+applies_to = 2010-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR200_2010.pdf"
+review_status = "pending_review"
+
+[sources."aeat-dr-200-2011"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2011"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_200/files/03-200-ejercicio-2011-522-kb-pdf.pdf"
+sha256 = "481ca062674904111075c2b3679bc96c5937f784db3bd019120e39985b98d683"
+bytes = 534391
+retrieved_at = 2026-05-03
+applies_from = 2011-01-01
+applies_to = 2011-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR200-2011.pdf"
+review_status = "pending_review"
+
+[sources."aeat-dr-200-2012"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2012"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_200/files/04-200-ejercicio-2012-actualizado-a-28-06-2013-539-kb-pdf.pdf"
+sha256 = "ee37e8e3777c494c064defd5fa8e1a344d034eb2cb587b3d4818c787f0ade5aa"
+bytes = 552085
+retrieved_at = 2026-05-03
+applies_from = 2012-01-01
+applies_to = 2012-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR200-2012.pdf"
+review_status = "pending_review"
+
+[sources."aeat-dr-200-2013"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2013"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_200/files/05-200-ejercicio-2013-actualizado-a-27-06-2014-548-kb-pdf.pdf"
+sha256 = "e6e13ae029bc8f73659351c0cf828b86a6035fe1a04cb23dd59c09a46009edfe"
+bytes = 562137
+retrieved_at = 2026-05-03
+applies_from = 2013-01-01
+applies_to = 2013-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR200-2013.pdf"
+review_status = "pending_review"
+
+[sources."aeat-dr-200-2014"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2014"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_200/files/06-200-ejercicio-2014-588-kb-pdf.pdf"
+sha256 = "0733d9fdd39249b8b933aef2ed465b6824aa04dc1d7e4d52dbf3e821eddd4405"
+bytes = 602645
+retrieved_at = 2026-05-03
+applies_from = 2014-01-01
+applies_to = 2014-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR200-2014.pdf"
+review_status = "pending_review"
+
+[sources."aeat-dr-200-2015"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2015"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_200/files/07-200-ejercicio-2015-actualizado-a-05-07-2016-7-71-mb-xls.xls"
+sha256 = "74317cacd60e96d863a1f30c1f3cef5b06da4ef81a6f00f93f1007e417b68fe5"
+bytes = 8093696
+retrieved_at = 2026-05-03
+applies_from = 2015-01-01
+applies_to = 2015-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR200-2015.xls"
+review_status = "pending_review"
+
+[sources."aeat-dr-200-2016"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2016"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_200/files/08-200-ejercicio-2016-8-22-mb-xls.xls"
+sha256 = "041b6f9fbb9cc6e79b38b3b19973e03b2228085bfdaf0d3009c2b6f2629f86df"
+bytes = 8621568
+retrieved_at = 2026-05-03
+applies_from = 2016-01-01
+applies_to = 2016-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR200-2016.xls"
+review_status = "pending_review"
+
+[sources."aeat-dr-200-2017"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2017"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_200/files/09-200-ejercicio-2017-8-40-mb-xls.xls"
+sha256 = "4e11acb94c3cae59248c954860e2c35cf33dfd93976f9494344c3136b610da4e"
+bytes = 8818176
+retrieved_at = 2026-05-03
+applies_from = 2017-01-01
+applies_to = 2017-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR200-2017-1_00.xls"
+review_status = "pending_review"
+
+[sources."aeat-dr-200-2018"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2018"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_200/files/10-200-ejercicio-2018-actualizado-28-11-2019-8-69-mb-xls.xls"
+sha256 = "c561bc77e6525adac94bb5f5c8e69974fc0e20151506706b1376725effdd3625"
+bytes = 9119744
+retrieved_at = 2026-05-03
+applies_from = 2018-01-01
+applies_to = 2018-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR200-2018.xls"
+review_status = "pending_review"
+
+[sources."aeat-dr-200-2019"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2019"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_200/files/11-200-ejercicio-2019-actualizado-10-06-2020-9-43-mb-xls.xls"
+sha256 = "ce43a011a3cd0774aed54cb08379724f7077fd423ed94026dc58a590798d4797"
+bytes = 9892864
+retrieved_at = 2026-05-03
+applies_from = 2019-01-01
+applies_to = 2019-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR200-2019.xls"
+review_status = "pending_review"
+
+[sources."aeat-dr-200-2020"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2020"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_200/files/12-200-ejercicio-2020-actualizado-28-07-2021-9-56-mb-xls.xls"
+sha256 = "1754e834411536c05ed25ebd4e0395e1330806c91c69154614c6178acf0e80de"
+bytes = 10033152
+retrieved_at = 2026-05-03
+applies_from = 2020-01-01
+applies_to = 2020-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_20/DR200-2020.xls"
+review_status = "pending_review"
+
+[sources."aeat-dr-200-2021"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2021"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_200/files/13-200-ejercicio-2021-actualizado-22-06-2022-11-1-mb-xls.xls"
+sha256 = "3db076b4c6b604cce9dc2f1550a1b8ce792c48981149bf2e9f732970555a2620"
+bytes = 10387456
+retrieved_at = 2026-05-03
+applies_from = 2021-01-01
+applies_to = 2021-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_21/DR200-2021.xls"
+review_status = "pending_review"
+
+[sources."aeat-dr-200-2022"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2022"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_200/files/14-200-ejercicio-2022-actualizado-30-06-2023-10-2-mb-xls.xls"
+sha256 = "a69d73692c40f8be07005e2df8add251f9949a2d6780f3816189372bdd98f69d"
+bytes = 10753536
+retrieved_at = 2026-05-03
+applies_from = 2022-01-01
+applies_to = 2022-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_22/DR200-2022.xls"
+review_status = "pending_review"
+
+[sources."aeat-dr-200-2023"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2023"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_200/files/15-200-ejercicio-2023-actualizado-15-07-2024-10-4-mb-xls.xls"
+sha256 = "07ab6b44ac6b46317d965ef59680aeb0a3380f197f55f94af824383d228190b6"
+bytes = 10930176
+retrieved_at = 2026-05-03
+applies_from = 2023-01-01
+applies_to = 2023-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_23/DR200-2023.xls"
+review_status = "pending_review"
+
+[sources."aeat-dr-202-2008"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2008"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_202/files/02-202-ejercicio-2008-y-2009-orden-eha-3435-2007-32-kb-pdf.pdf"
+sha256 = "83b7f29ea2fc5eaee6f041a52c5f5c479d162f32a7d87b11126e617bb4042526"
+bytes = 54658
+retrieved_at = 2026-05-03
+applies_from = 2008-01-01
+applies_to = 2009-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/202_2008.pdf"
+review_status = "pending_review"
+
+[sources."aeat-dr-202-2013-desde-3p"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2013"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_202/files/09-202-orden-hap-2214-2013-ejercicios-3p-2013-y-2014-46-kb-pdf.pdf"
+sha256 = "4a5055d3bd27079083c809c8ba9ddf20451de319f2912645ab33f3b15cc43b3c"
+bytes = 46103
+retrieved_at = 2026-05-03
+applies_from = 2013-01-01
+applies_to = 2014-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/dr202e13v34.pdf"
+review_status = "pending_review"
+
+[sources."aeat-dr-202-2015"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2015"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_202/files/11-202-orden-hap-523-2015-ejercicios-2015-125-kb-xlsx.xlsx"
+sha256 = "71584d7d3258f83472a486f5e426d7533f1f66dc87d631fb1f2e60b7a4130f46"
+bytes = 127906
+retrieved_at = 2026-05-03
+applies_from = 2015-01-01
+applies_to = 2015-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR202e15v42.xlsx"
+review_status = "pending_review"
+
+[sources."aeat-dr-202-2016-1p"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2016-early"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_202/files/10-202-orden-hap-523-2015-1p-2016-124-kb-xlsx.xlsx"
+sha256 = "434b31a65fea06d574f412bd7da0d30b30109bb8b79d0f1386f33f5ac3899e8e"
+bytes = 127913
+retrieved_at = 2026-05-03
+applies_from = 2016-01-01
+applies_to = 2016-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR202e16v43.xlsx"
+review_status = "pending_review"
+
+[sources."aeat-dr-202-2016-desde-2p"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2016-late"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_202/files/07-202-orden-hap-1552-2016-ejercicio-2p-y-3p-2016-128-kb-xlsx.xlsx"
+sha256 = "046b1a25a5038d229e3c4c5e91a49038001edc646a7ee53be8bd51fca7698b28"
+bytes = 128921
+retrieved_at = 2026-05-03
+applies_from = 2016-01-01
+applies_to = 2016-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR202e16v44.xlsx"
+review_status = "pending_review"
+
+[sources."aeat-dr-202-2017"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2017"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_202/files/13-202-orden-hfp-227-2017-ejercicio-2017-y-1p-de-2018-129-kb-xlsx.xlsx"
+sha256 = "c5bef798fc270bf6360e33a6ef1f89ea841669462cd8956c4c0edb6983cb76e1"
+bytes = 131851
+retrieved_at = 2026-05-03
+applies_from = 2017-01-01
+applies_to = 2018-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR202e17v47.xlsx"
+review_status = "pending_review"
+
+[sources."aeat-dr-202-2018-desde-2p"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2018"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_202/files/04-202-orden-hac-941-2018-ejercicio-2018-2p-y-3p-129-kb-xlsx.xlsx"
+sha256 = "7828b3ce0bb64da4a5b2f0fef866e3145be9059f53a682eb89c7475996e73a2a"
+bytes = 132628
+retrieved_at = 2026-05-03
+applies_from = 2018-01-01
+applies_to = 2018-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR202e17v48.xlsx"
+review_status = "pending_review"
+
+[sources."boe-rdl-16-2025-art-17"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/xml/rdl-16-2025-art-17.xml"
+sha256 = "4cb1b338971207b80d15f12f2aaf201c5125676fb8d44ff4a2502695deff5610"
+bytes = 12936
+retrieved_at = 2026-09-24
+published_at = 2025-12-24
+applies_from = 2025-01-01
+applies_to = 2025-12-31
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2025-26458/texto/bloque/a1-9"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
+[sources."boe-rdl-18-2022-art-22"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/xml/real-decreto-ley-18-2022-art-22.xml"
+sha256 = "5fd9f498d20192c4a92e15fbfcfba57cc9dfafd5af9777375de624ea37be4a40"
+bytes = 9698
+retrieved_at = 2026-09-30
+published_at = 2022-10-19
+applies_from = 2023-01-01
+applies_to = 2023-12-31
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2022-17040/texto/bloque/a2-4"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
+[sources."boe-rdl-8-2023-art-18"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/xml/real-decreto-ley-8-2023-art-18.xml"
+sha256 = "42a523ab66770b5bb202297fabf280754c8ba4022be09379cb3d4d9d68541dad"
+bytes = 10090
+retrieved_at = 2026-09-30
+published_at = 2023-12-28
+applies_from = 2024-01-01
+applies_to = 2024-12-31
+source_url = "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-2023-26452/texto/bloque/a1-10"
+review_status = "agent_reviewed"
+corpus_tier = "provision_excerpt"
+
+[sources."boe-derogacion-rdl-16-2025"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2026-2024-derogacion-rdl-16-2025.html"
+sha256 = "6db4efa9d24b67dc263f7250150ac4f49ea5bdd70480d503afa93e5b4711c38a"
+bytes = 41299
+retrieved_at = 2026-09-24
+published_at = 2026-01-28
+applies_from = 2026-01-28
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-2024"
+review_status = "agent_reviewed"
+
+[sources."aeat-nota-efectos-rdl-16-2025-rdl-2-2026"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/notices/aeat-nota-efectos-rdl-16-2025-rdl-2-2026.html"
+sha256 = "b68a950ed2513bf89db377cea877f9483e5eb2bec3445eebfe58605c81d9c81b"
+bytes = 8890
+retrieved_at = 2026-09-24
+published_at = 2026-04-01
+applies_from = 2025-01-01
+applies_to = 2026-12-31
+source_url = "https://sede.agenciatributaria.gob.es/Sede/todas-noticias/2026/abril/1/nota-sobre-efectos-ambito-tributario-febrero.html"
+review_status = "agent_reviewed"
+
+[legal."ley-27-2014:art-12-3-b"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-12-full.html#a12"
+document_id = "BOE-A-2014-12328"
+article = "12"
+section = "3.b"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a12"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-02
+reviewed_by = "Codex agent; checked against captured 2022, 2026-01-28 and current BOE Article 12; operator review pending"
+notes = "LIS article 12.3(b): free amortization of tangible and intangible fixed assets used in research and development, excluding buildings from that rule; buildings used in those activities may be amortized linearly over ten years. This reference is limited to subsection 3(b)."
+required_text = ["3. No obstante, podrán amortizarse libremente:", "b) Los elementos del inmovilizado material e intangible, excluidos los edificios, afectos a las actividades de investigación y desarrollo.", "Los edificios podrán amortizarse de forma lineal durante un período de 10 años, en la parte que se hallen afectos a las actividades de investigación y desarrollo."]
+
+[legal."ley-27-2014:art-12-3-c"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-12-full.html#a12"
+document_id = "BOE-A-2014-12328"
+article = "12"
+section = "3.c"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a12"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-02
+reviewed_by = "Codex agent; checked against captured 2022, 2026-01-28 and current BOE Article 12; operator review pending"
+notes = "LIS article 12.3(c): free amortization of research and development expenses capitalized as intangible fixed assets, excluding amortization of assets that already enjoy free amortization. This reference is limited to subsection 3(c)."
+required_text = ["3. No obstante, podrán amortizarse libremente:", "c) Los gastos de investigación y desarrollo activados como inmovilizado intangible, excluidas las amortizaciones de los elementos que disfruten de libertad de amortización."]
+
+[legal."ley-27-2014:art-12-3-a"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-12-full.html#a12"
+document_id = "BOE-A-2014-12328"
+article = "12"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a12"
+published_at = 2014-11-28
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-02
+reviewed_by = "Codex agent; exact clause resolved from enrolled full Article 12; 2022/current held text comparison recorded separately"
+notes = "LIS Article 12.3(a): free amortization for qualifying assets of worker-owned limited/public companies acquired during the first five years after qualification. The printed aggregate field cites this precise clause; taxpayer eligibility is not inferred."
+effective_from = 2015-01-01
+section = "3.a"
+required_text = ["3. No obstante, podrán amortizarse libremente:", "a) Los elementos del inmovilizado material, intangible e inversiones inmobiliarias de las sociedades anónimas laborales y de las sociedades limitadas laborales afectos a la realización de sus actividades, adquiridos durante los cinco primeros años a partir de la fecha de su calificación como tales."]
+
+[legal."ley-27-2014:art-12-3-d"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-12-full.html#a12"
+document_id = "BOE-A-2014-12328"
+article = "12"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a12"
+published_at = 2014-11-28
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-02
+reviewed_by = "Codex agent; exact clause resolved from enrolled full Article 12; 2022/current held text comparison recorded separately"
+notes = "LIS Article 12.3(d): free amortization for qualifying assets of priority associative agricultural holdings acquired during the first five years after recognition. The printed aggregate field cites this precise clause; taxpayer eligibility is not inferred."
+effective_from = 2015-01-01
+section = "3.d"
+required_text = ["3. No obstante, podrán amortizarse libremente:", "d) Los elementos del inmovilizado material o intangible de las entidades que tengan la calificación de explotaciones asociativas prioritarias de acuerdo con lo dispuesto en la Ley 19/1995, de 4 de julio, de modernización de las explotaciones agrarias, adquiridos durante los cinco primeros años a partir de la fecha de su reconocimiento como explotación prioritaria."]
+
+[legal."ley-27-2014:da-16"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014.html#da"
+document_id = "BOE-A-2014-12328"
+article = "DA-16"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#da"
+published_at = 2014-11-28
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-02
+reviewed_by = "Codex agent; native #da uniquely resolves the DA 16 title and operative limits; amendment provenance and entry-into-force note verified in held BOE text"
+notes = "LIS DA 16, introduced by RDL 23/2020 and amended by RDL 34/2020: automotive mobility-chain free amortization. The held text confines entry into service to 2 April 2020 through 30 June 2021 and imposes workforce and qualifying-report conditions. Later filed adjustments do not assert that new investments in 2022+ qualify. Investment/programme dates are not statute repeal dates."
+effective_from = 2020-06-25
+required_text = ["Libertad de amortización en inversiones realizadas en la cadena de valor de movilidad eléctrica, sostenible o conectada.", "entre el 2 de abril de 2020 y el 30 de junio de 2021", "deberán aportar informe motivado"]
+
+[legal."ley-27-2014:dt-28"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014.html#dtvigesimaoctava"
+document_id = "BOE-A-2014-12328"
+article = "DT-28"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#dtvigesimaoctava"
+published_at = 2014-11-28
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-02
+reviewed_by = "Codex agent; complete operative DT28 clause resolved at the held BOE anchor and checked against the predecessor-regime and tax-period wording"
+notes = "LIS DT28 continues the former TRLIS Article 113 reinvestment amortization regime for entities applying it under the wording in tax periods beginning before 1 January 2015, subject to the requirements and conditions of that regime."
+effective_from = 2015-01-01
+required_text = ["Las entidades que estuviesen aplicando lo dispuesto en el artículo 113 del texto refundido de la Ley del Impuesto sobre Sociedades, aprobado por el Real Decreto Legislativo 4/2004, de 5 de marzo, según redacción vigente en períodos impositivos iniciados con anterioridad a 1 de enero de 2015, podrán continuar su aplicación, con los requisitos y condiciones establecidos en aquel."]
+
+[legal."ley-27-2014:art-36-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-36-full.html#a36"
+document_id = "BOE-A-2014-12328"
+article = "36"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a36"
+published_at = 2014-11-28
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-02
+reviewed_by = "Codex agent; full Article 36 captured through canonical BOE acquisition/extraction; foreign criterion corroborated against 2024/2025 redactions in saved BOE API history receipt"
+notes = "LIS Article 36.2 grounds the foreign-production identity for qualifying Spanish expenses of registered producers executing a foreign audiovisual production. This reference identifies the statutory regime, not rates or eligibility limits for another vintage. The captured current full article and actual BOE redactions effective at the end of 2024 and 2025 share the identity criterion; no unchanged numeric-rate claim is made."
+section = "2"
+effective_from = 2015-01-01
+required_text = ["ejecución de una producción extranjera", "gastos realizados en territorio español"]
+
+[legal."ley-11-2020:da-76"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-11-2020-da-76.html#da-77"
+document_id = "BOE-A-2020-17339"
+article = "DA-76"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2020-17339#da-77"
+published_at = 2020-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-02
+reviewed_by = "Codex agent; canonical whole-document BOE capture, actual titled #da-77 selected and exact DA 76 extracted; programme end distinguished from legal effective_to"
+notes = "Ley 11/2020 DA 76 declares the Centenario del Rugby en España y de la Unió Esportiva Santboiana programme an event of exceptional public interest. Its support programme ends 31 December 2023. This is not a claim that all carried-forward deductions expire then. The native BOE locator is #da-77 despite the legal ordinal 76."
+effective_from = 2021-01-01
+required_text = ["Centenario del Rugby en España y de la Unió Esportiva Santboiana", "acontecimiento de excepcional interés público", "31 de diciembre de 2023"]

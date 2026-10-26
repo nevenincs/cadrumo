@@ -1,0 +1,1551 @@
+# Source geometry: exact hash-pinned AEAT record design. Semantic IDs and providers: selected revision declarations.
+schema_version = 1
+fragment_id = "records"
+modelo = "604"
+design_epoch = "2024"
+source_ref = "aeat-dr-604-2024"
+source_sha256 = "98f7022a391e822ee2c57b6e2b1f873fd2bcc8db80a5b692fd7c6fae1e758f68"
+
+[[records]]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+export_record_id = "modelo-604-604-01"
+record_type = "604-01"
+required = true
+
+[[records]]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+export_record_id = "modelo-604-604-02"
+record_type = "604-02"
+required = true
+
+[[entries]]
+export_field_id = "modelo-604-604-01-lit-1"
+kind = "literal"
+literal = "<T"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 6
+source_cell = "A6"
+ordinal = "1"
+
+[[entries]]
+export_field_id = "modelo-604-604-01-lit-3"
+kind = "literal"
+literal = "604"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 7
+source_cell = "A7"
+ordinal = "2"
+
+[[entries]]
+export_field_id = "modelo-604-604-01-lit-6"
+kind = "literal"
+literal = "01000"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 8
+source_cell = "A8"
+ordinal = "3"
+
+[[entries]]
+export_field_id = "modelo-604-604-01-lit-11"
+kind = "literal"
+literal = ">"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 9
+source_cell = "A9"
+ordinal = "4"
+
+[[entries]]
+export_field_id = "modelo-604-604-01-indicador-pagina-complementaria"
+kind = "filler"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 10
+source_cell = "A10"
+ordinal = "5"
+
+[[entries]]
+export_field_id = "modelo-604-decl-tipo-autoliquidacion"
+kind = "casilla"
+casilla_id = "decl.tipo-autoliquidacion"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 11
+source_cell = "A11"
+ordinal = "6"
+
+[[entries]]
+export_field_id = "modelo-604-604-01-taxpayer-tax-id"
+kind = "header"
+producer_key = "taxpayer.tax_id"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 12
+source_cell = "A12"
+ordinal = "7"
+
+[[entries]]
+export_field_id = "modelo-604-604-01-taxpayer-full-name"
+kind = "header"
+producer_key = "taxpayer.full_name"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 13
+source_cell = "A13"
+ordinal = "8"
+
+[[entries]]
+export_field_id = "modelo-604-604-01-draft-filing-year"
+kind = "draft"
+draft_attribute = "filing_year"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 14
+source_cell = "A14"
+ordinal = "9"
+
+[[entries]]
+export_field_id = "modelo-604-604-01-draft-period-code"
+kind = "draft"
+draft_attribute = "period_code"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+
+[[entries]]
+export_field_id = "modelo-604-sp-codigo-lei"
+kind = "casilla"
+casilla_id = "sp.codigo-lei"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 16
+source_cell = "A16"
+ordinal = "11"
+
+[[entries]]
+export_field_id = "modelo-604-sp-codigo-bic"
+kind = "casilla"
+casilla_id = "sp.codigo-bic"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 17
+source_cell = "A17"
+ordinal = "12"
+
+[[entries]]
+export_field_id = "modelo-604-dom-es-tipo-via"
+kind = "casilla"
+casilla_id = "dom-es.tipo-via"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 18
+source_cell = "A18"
+ordinal = "13"
+
+[[entries]]
+export_field_id = "modelo-604-dom-es-nombre-via"
+kind = "casilla"
+casilla_id = "dom-es.nombre-via"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 19
+source_cell = "A19"
+ordinal = "14"
+
+[[entries]]
+export_field_id = "modelo-604-dom-es-tipo-numeracion"
+kind = "casilla"
+casilla_id = "dom-es.tipo-numeracion"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 20
+source_cell = "A20"
+ordinal = "15"
+
+[[entries]]
+export_field_id = "modelo-604-dom-es-numero-casa"
+kind = "casilla"
+casilla_id = "dom-es.numero-casa"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 21
+source_cell = "A21"
+ordinal = "16"
+
+[[entries]]
+export_field_id = "modelo-604-dom-es-calificador-numero"
+kind = "casilla"
+casilla_id = "dom-es.calificador-numero"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 22
+source_cell = "A22"
+ordinal = "17"
+
+[[entries]]
+export_field_id = "modelo-604-dom-es-bloque"
+kind = "casilla"
+casilla_id = "dom-es.bloque"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 23
+source_cell = "A23"
+ordinal = "18"
+
+[[entries]]
+export_field_id = "modelo-604-dom-es-portal"
+kind = "casilla"
+casilla_id = "dom-es.portal"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 24
+source_cell = "A24"
+ordinal = "19"
+
+[[entries]]
+export_field_id = "modelo-604-dom-es-escalera"
+kind = "casilla"
+casilla_id = "dom-es.escalera"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 25
+source_cell = "A25"
+ordinal = "20"
+
+[[entries]]
+export_field_id = "modelo-604-dom-es-planta"
+kind = "casilla"
+casilla_id = "dom-es.planta"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 26
+source_cell = "A26"
+ordinal = "21"
+
+[[entries]]
+export_field_id = "modelo-604-dom-es-puerta"
+kind = "casilla"
+casilla_id = "dom-es.puerta"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 27
+source_cell = "A27"
+ordinal = "22"
+
+[[entries]]
+export_field_id = "modelo-604-dom-es-complemento"
+kind = "casilla"
+casilla_id = "dom-es.complemento"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 28
+source_cell = "A28"
+ordinal = "23"
+
+[[entries]]
+export_field_id = "modelo-604-dom-es-localidad"
+kind = "casilla"
+casilla_id = "dom-es.localidad"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 29
+source_cell = "A29"
+ordinal = "24"
+
+[[entries]]
+export_field_id = "modelo-604-dom-es-codigo-postal"
+kind = "casilla"
+casilla_id = "dom-es.codigo-postal"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 30
+source_cell = "A30"
+ordinal = "25"
+
+[[entries]]
+export_field_id = "modelo-604-dom-es-municipio"
+kind = "casilla"
+casilla_id = "dom-es.municipio"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 31
+source_cell = "A31"
+ordinal = "26"
+
+[[entries]]
+export_field_id = "modelo-604-dom-es-codigo-provincia"
+kind = "casilla"
+casilla_id = "dom-es.codigo-provincia"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 32
+source_cell = "A32"
+ordinal = "27"
+
+[[entries]]
+export_field_id = "modelo-604-dom-es-provincia"
+kind = "casilla"
+casilla_id = "dom-es.provincia"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 33
+source_cell = "A33"
+ordinal = "28"
+
+[[entries]]
+export_field_id = "modelo-604-dom-ex-domicilio"
+kind = "casilla"
+casilla_id = "dom-ex.domicilio"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 34
+source_cell = "A34"
+ordinal = "29"
+
+[[entries]]
+export_field_id = "modelo-604-dom-ex-complemento"
+kind = "casilla"
+casilla_id = "dom-ex.complemento"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 35
+source_cell = "A35"
+ordinal = "30"
+
+[[entries]]
+export_field_id = "modelo-604-dom-ex-poblacion"
+kind = "casilla"
+casilla_id = "dom-ex.poblacion"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 36
+source_cell = "A36"
+ordinal = "31"
+
+[[entries]]
+export_field_id = "modelo-604-dom-ex-codigo-postal"
+kind = "casilla"
+casilla_id = "dom-ex.codigo-postal"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 37
+source_cell = "A37"
+ordinal = "32"
+
+[[entries]]
+export_field_id = "modelo-604-dom-ex-provincia-region-estado"
+kind = "casilla"
+casilla_id = "dom-ex.provincia-region-estado"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 38
+source_cell = "A38"
+ordinal = "33"
+
+[[entries]]
+export_field_id = "modelo-604-dom-ex-pais"
+kind = "casilla"
+casilla_id = "dom-ex.pais"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 39
+source_cell = "A39"
+ordinal = "34"
+
+[[entries]]
+export_field_id = "modelo-604-dom-ex-codigo-pais"
+kind = "casilla"
+casilla_id = "dom-ex.codigo-pais"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 40
+source_cell = "A40"
+ordinal = "35"
+
+[[entries]]
+export_field_id = "modelo-604-sp-persona-contacto"
+kind = "casilla"
+casilla_id = "sp.persona-contacto"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 41
+source_cell = "A41"
+ordinal = "36"
+
+[[entries]]
+export_field_id = "modelo-604-sp-telefono-contacto"
+kind = "casilla"
+casilla_id = "sp.telefono-contacto"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 42
+source_cell = "A42"
+ordinal = "37"
+
+[[entries]]
+export_field_id = "modelo-604-anexo-numero-justificante"
+kind = "casilla"
+casilla_id = "anexo.numero-justificante"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 43
+source_cell = "A43"
+ordinal = "38"
+
+[[entries]]
+export_field_id = "modelo-604-liq-01-base-imponible"
+kind = "casilla"
+casilla_id = "liq.01-base-imponible"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 44
+source_cell = "A44"
+ordinal = "39"
+
+[[entries]]
+export_field_id = "modelo-604-liq-02-cuota"
+kind = "casilla"
+casilla_id = "liq.02-cuota"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 45
+source_cell = "A45"
+ordinal = "40"
+
+[[entries]]
+export_field_id = "modelo-604-liq-03-signo-base-rectificaciones"
+kind = "casilla"
+casilla_id = "liq.03-signo-base-rectificaciones"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 46
+source_cell = "A46"
+ordinal = "41"
+
+[[entries]]
+export_field_id = "modelo-604-liq-03-base-rectificaciones"
+kind = "casilla"
+casilla_id = "liq.03-base-rectificaciones"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 47
+source_cell = "A47"
+ordinal = "42"
+
+[[entries]]
+export_field_id = "modelo-604-liq-04-signo-cuota-rectificaciones"
+kind = "casilla"
+casilla_id = "liq.04-signo-cuota-rectificaciones"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 48
+source_cell = "A48"
+ordinal = "43"
+
+[[entries]]
+export_field_id = "modelo-604-liq-04-cuota-rectificaciones"
+kind = "casilla"
+casilla_id = "liq.04-cuota-rectificaciones"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 49
+source_cell = "A49"
+ordinal = "44"
+
+[[entries]]
+export_field_id = "modelo-604-liq-05-operaciones-exentas"
+kind = "casilla"
+casilla_id = "liq.05-operaciones-exentas"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 50
+source_cell = "A50"
+ordinal = "45"
+
+[[entries]]
+export_field_id = "modelo-604-liq-08-diferencia"
+kind = "casilla"
+casilla_id = "liq.08-diferencia"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 51
+source_cell = "A51"
+ordinal = "46"
+
+[[entries]]
+export_field_id = "modelo-604-liq-09-cuota-estado"
+kind = "casilla"
+casilla_id = "liq.09-cuota-estado"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 52
+source_cell = "A52"
+ordinal = "47"
+
+[[entries]]
+export_field_id = "modelo-604-liq-10-signo-cuota-rectificaciones-estado"
+kind = "casilla"
+casilla_id = "liq.10-signo-cuota-rectificaciones-estado"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 53
+source_cell = "A53"
+ordinal = "48"
+
+[[entries]]
+export_field_id = "modelo-604-liq-10-cuota-rectificaciones-estado"
+kind = "casilla"
+casilla_id = "liq.10-cuota-rectificaciones-estado"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 54
+source_cell = "A54"
+ordinal = "49"
+
+[[entries]]
+export_field_id = "modelo-604-liq-11-porcentaje-atribuible-estado"
+kind = "casilla"
+casilla_id = "liq.11-porcentaje-atribuible-estado"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 55
+source_cell = "A55"
+ordinal = "50"
+
+[[entries]]
+export_field_id = "modelo-604-liq-12-resultado-estado"
+kind = "casilla"
+casilla_id = "liq.12-resultado-estado"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 56
+source_cell = "A56"
+ordinal = "51"
+
+[[entries]]
+export_field_id = "modelo-604-liq-06-a-deducir"
+kind = "casilla"
+casilla_id = "liq.06-a-deducir"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 57
+source_cell = "A57"
+ordinal = "52"
+
+[[entries]]
+export_field_id = "modelo-604-liq-07-resultado"
+kind = "casilla"
+casilla_id = "liq.07-resultado"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 58
+source_cell = "A58"
+ordinal = "53"
+
+[[entries]]
+export_field_id = "modelo-604-compl-declaracion-complementaria"
+kind = "casilla"
+casilla_id = "compl.declaracion-complementaria"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 59
+source_cell = "A59"
+ordinal = "54"
+
+[[entries]]
+export_field_id = "modelo-604-compl-numero-justificante-anterior"
+kind = "casilla"
+casilla_id = "compl.numero-justificante-anterior"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 60
+source_cell = "A60"
+ordinal = "55"
+
+[[entries]]
+export_field_id = "modelo-604-604-01-reservado-831"
+kind = "filler"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 61
+source_cell = "A61"
+ordinal = "56"
+
+[[entries]]
+export_field_id = "modelo-604-604-01-reservado-976"
+kind = "filler"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 62
+source_cell = "A62"
+ordinal = "57"
+
+[[entries]]
+export_field_id = "modelo-604-604-01-lit-989"
+kind = "literal"
+literal = "</T60401000>"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 1"
+record_identity = "Pág. 1"
+source_row = 63
+source_cell = "A63"
+ordinal = "58"
+
+[[entries]]
+export_field_id = "modelo-604-604-02-lit-1"
+kind = "literal"
+literal = "<T"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+source_row = 6
+source_cell = "A6"
+ordinal = "1"
+
+[[entries]]
+export_field_id = "modelo-604-604-02-lit-3"
+kind = "literal"
+literal = "604"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+source_row = 7
+source_cell = "A7"
+ordinal = "2"
+
+[[entries]]
+export_field_id = "modelo-604-604-02-lit-6"
+kind = "literal"
+literal = "02000"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+source_row = 8
+source_cell = "A8"
+ordinal = "3"
+
+[[entries]]
+export_field_id = "modelo-604-604-02-lit-11"
+kind = "literal"
+literal = ">"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+source_row = 9
+source_cell = "A9"
+ordinal = "4"
+
+[[entries]]
+export_field_id = "modelo-604-604-02-indicador-pagina-complementaria"
+kind = "filler"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+source_row = 10
+source_cell = "A10"
+ordinal = "5"
+
+[[entries]]
+export_field_id = "modelo-604-604-02-taxpayer-tax-id"
+kind = "header"
+producer_key = "taxpayer.tax_id"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+source_row = 11
+source_cell = "A11"
+ordinal = "6"
+
+[[entries]]
+export_field_id = "modelo-604-604-02-taxpayer-full-name"
+kind = "header"
+producer_key = "taxpayer.full_name"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+source_row = 12
+source_cell = "A12"
+ordinal = "7"
+
+[[entries]]
+export_field_id = "modelo-604-terr-alava-cuota-sujetas-no-exentas"
+kind = "casilla"
+casilla_id = "terr.alava.cuota-sujetas-no-exentas"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+source_row = 13
+source_cell = "A13"
+ordinal = "8"
+
+[[entries]]
+export_field_id = "modelo-604-terr-alava-signo-cuota-rectificaciones"
+kind = "casilla"
+casilla_id = "terr.alava.signo-cuota-rectificaciones"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+source_row = 14
+source_cell = "A14"
+ordinal = "9"
+
+[[entries]]
+export_field_id = "modelo-604-terr-alava-cuota-rectificaciones"
+kind = "casilla"
+casilla_id = "terr.alava.cuota-rectificaciones"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+
+[[entries]]
+export_field_id = "modelo-604-terr-alava-cuota-total-atribuible"
+kind = "casilla"
+casilla_id = "terr.alava.cuota-total-atribuible"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+source_row = 16
+source_cell = "A16"
+ordinal = "11"
+
+[[entries]]
+export_field_id = "modelo-604-terr-alava-porcentaje-atribuible"
+kind = "casilla"
+casilla_id = "terr.alava.porcentaje-atribuible"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+source_row = 17
+source_cell = "A17"
+ordinal = "12"
+
+[[entries]]
+export_field_id = "modelo-604-terr-alava-importe-operaciones-exentas"
+kind = "casilla"
+casilla_id = "terr.alava.importe-operaciones-exentas"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+source_row = 18
+source_cell = "A18"
+ordinal = "13"
+
+[[entries]]
+export_field_id = "modelo-604-terr-guipuzcoa-cuota-sujetas-no-exentas"
+kind = "casilla"
+casilla_id = "terr.guipuzcoa.cuota-sujetas-no-exentas"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+source_row = 19
+source_cell = "A19"
+ordinal = "14"
+
+[[entries]]
+export_field_id = "modelo-604-terr-guipuzcoa-signo-cuota-rectificaciones"
+kind = "casilla"
+casilla_id = "terr.guipuzcoa.signo-cuota-rectificaciones"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+source_row = 20
+source_cell = "A20"
+ordinal = "15"
+
+[[entries]]
+export_field_id = "modelo-604-terr-guipuzcoa-cuota-rectificaciones"
+kind = "casilla"
+casilla_id = "terr.guipuzcoa.cuota-rectificaciones"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+source_row = 21
+source_cell = "A21"
+ordinal = "16"
+
+[[entries]]
+export_field_id = "modelo-604-terr-guipuzcoa-cuota-total-atribuible"
+kind = "casilla"
+casilla_id = "terr.guipuzcoa.cuota-total-atribuible"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+source_row = 22
+source_cell = "A22"
+ordinal = "17"
+
+[[entries]]
+export_field_id = "modelo-604-terr-guipuzcoa-porcentaje-atribuible"
+kind = "casilla"
+casilla_id = "terr.guipuzcoa.porcentaje-atribuible"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+source_row = 23
+source_cell = "A23"
+ordinal = "18"
+
+[[entries]]
+export_field_id = "modelo-604-terr-guipuzcoa-importe-operaciones-exentas"
+kind = "casilla"
+casilla_id = "terr.guipuzcoa.importe-operaciones-exentas"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+source_row = 24
+source_cell = "A24"
+ordinal = "19"
+
+[[entries]]
+export_field_id = "modelo-604-terr-vizcaya-cuota-sujetas-no-exentas"
+kind = "casilla"
+casilla_id = "terr.vizcaya.cuota-sujetas-no-exentas"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+source_row = 25
+source_cell = "A25"
+ordinal = "20"
+
+[[entries]]
+export_field_id = "modelo-604-terr-vizcaya-signo-cuota-rectificaciones"
+kind = "casilla"
+casilla_id = "terr.vizcaya.signo-cuota-rectificaciones"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+source_row = 26
+source_cell = "A26"
+ordinal = "21"
+
+[[entries]]
+export_field_id = "modelo-604-terr-vizcaya-cuota-rectificaciones"
+kind = "casilla"
+casilla_id = "terr.vizcaya.cuota-rectificaciones"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+source_row = 27
+source_cell = "A27"
+ordinal = "22"
+
+[[entries]]
+export_field_id = "modelo-604-terr-vizcaya-cuota-total-atribuible"
+kind = "casilla"
+casilla_id = "terr.vizcaya.cuota-total-atribuible"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+source_row = 28
+source_cell = "A28"
+ordinal = "23"
+
+[[entries]]
+export_field_id = "modelo-604-terr-vizcaya-porcentaje-atribuible"
+kind = "casilla"
+casilla_id = "terr.vizcaya.porcentaje-atribuible"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+source_row = 29
+source_cell = "A29"
+ordinal = "24"
+
+[[entries]]
+export_field_id = "modelo-604-terr-vizcaya-importe-operaciones-exentas"
+kind = "casilla"
+casilla_id = "terr.vizcaya.importe-operaciones-exentas"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+source_row = 30
+source_cell = "A30"
+ordinal = "25"
+
+[[entries]]
+export_field_id = "modelo-604-terr-navarra-cuota-sujetas-no-exentas"
+kind = "casilla"
+casilla_id = "terr.navarra.cuota-sujetas-no-exentas"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+source_row = 31
+source_cell = "A31"
+ordinal = "26"
+
+[[entries]]
+export_field_id = "modelo-604-terr-navarra-signo-cuota-rectificaciones"
+kind = "casilla"
+casilla_id = "terr.navarra.signo-cuota-rectificaciones"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+source_row = 32
+source_cell = "A32"
+ordinal = "27"
+
+[[entries]]
+export_field_id = "modelo-604-terr-navarra-cuota-rectificaciones"
+kind = "casilla"
+casilla_id = "terr.navarra.cuota-rectificaciones"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+source_row = 33
+source_cell = "A33"
+ordinal = "28"
+
+[[entries]]
+export_field_id = "modelo-604-terr-navarra-cuota-total-atribuible"
+kind = "casilla"
+casilla_id = "terr.navarra.cuota-total-atribuible"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+source_row = 34
+source_cell = "A34"
+ordinal = "29"
+
+[[entries]]
+export_field_id = "modelo-604-terr-navarra-porcentaje-atribuible"
+kind = "casilla"
+casilla_id = "terr.navarra.porcentaje-atribuible"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+source_row = 35
+source_cell = "A35"
+ordinal = "30"
+
+[[entries]]
+export_field_id = "modelo-604-terr-navarra-importe-operaciones-exentas"
+kind = "casilla"
+casilla_id = "terr.navarra.importe-operaciones-exentas"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+source_row = 36
+source_cell = "A36"
+ordinal = "31"
+
+[[entries]]
+export_field_id = "modelo-604-terr-estado-cuota-sujetas-no-exentas"
+kind = "casilla"
+casilla_id = "terr.estado.cuota-sujetas-no-exentas"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+source_row = 37
+source_cell = "A37"
+ordinal = "32"
+
+[[entries]]
+export_field_id = "modelo-604-terr-estado-signo-cuota-rectificaciones"
+kind = "casilla"
+casilla_id = "terr.estado.signo-cuota-rectificaciones"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+source_row = 38
+source_cell = "A38"
+ordinal = "33"
+
+[[entries]]
+export_field_id = "modelo-604-terr-estado-cuota-rectificaciones"
+kind = "casilla"
+casilla_id = "terr.estado.cuota-rectificaciones"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+source_row = 39
+source_cell = "A39"
+ordinal = "34"
+
+[[entries]]
+export_field_id = "modelo-604-terr-estado-cuota-total-atribuible"
+kind = "casilla"
+casilla_id = "terr.estado.cuota-total-atribuible"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+source_row = 40
+source_cell = "A40"
+ordinal = "35"
+
+[[entries]]
+export_field_id = "modelo-604-terr-estado-porcentaje-atribuible"
+kind = "casilla"
+casilla_id = "terr.estado.porcentaje-atribuible"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+source_row = 41
+source_cell = "A41"
+ordinal = "36"
+
+[[entries]]
+export_field_id = "modelo-604-terr-estado-importe-operaciones-exentas"
+kind = "casilla"
+casilla_id = "terr.estado.importe-operaciones-exentas"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+source_row = 42
+source_cell = "A42"
+ordinal = "37"
+
+[[entries]]
+export_field_id = "modelo-604-604-02-reservado-502"
+kind = "filler"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+source_row = 43
+source_cell = "A43"
+ordinal = "38"
+
+[[entries]]
+export_field_id = "modelo-604-604-02-lit-689"
+kind = "literal"
+literal = "</T60402000>"
+legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-604-2024"]
+
+[entries.anchor]
+sheet = "Pág. 2"
+record_identity = "Pág. 2"
+source_row = 44
+source_cell = "A44"
+ordinal = "39"
+
+[[variable_envelopes]]
+source_ref = "aeat-dr-604-2024"
+source_sha256 = "98f7022a391e822ee2c57b6e2b1f873fd2bcc8db80a5b692fd7c6fae1e758f68"
+record_identity = "Pág. 0"
+body_record_ids = ["modelo-604-604-01", "modelo-604-604-02"]
+
+[[variable_envelopes.prefix_fields]]
+role = "opening_tag"
+
+[variable_envelopes.prefix_fields.anchor]
+sheet = "Pág. 0"
+source_row = 6
+source_cell = "A6"
+ordinal = "1"
+record_identity = "Pág. 0"
+
+[[variable_envelopes.prefix_fields]]
+role = "modelo"
+
+[variable_envelopes.prefix_fields.anchor]
+sheet = "Pág. 0"
+source_row = 7
+source_cell = "A7"
+ordinal = "2"
+record_identity = "Pág. 0"
+
+[[variable_envelopes.prefix_fields]]
+role = "discriminant"
+
+[variable_envelopes.prefix_fields.anchor]
+sheet = "Pág. 0"
+source_row = 8
+source_cell = "A8"
+ordinal = "3"
+record_identity = "Pág. 0"
+
+[[variable_envelopes.prefix_fields]]
+role = "filing_year"
+
+[variable_envelopes.prefix_fields.anchor]
+sheet = "Pág. 0"
+source_row = 9
+source_cell = "A9"
+ordinal = "4"
+record_identity = "Pág. 0"
+
+[[variable_envelopes.prefix_fields]]
+role = "period"
+
+[variable_envelopes.prefix_fields.anchor]
+sheet = "Pág. 0"
+source_row = 10
+source_cell = "A10"
+ordinal = "5"
+record_identity = "Pág. 0"
+
+[[variable_envelopes.prefix_fields]]
+role = "record_type"
+
+[variable_envelopes.prefix_fields.anchor]
+sheet = "Pág. 0"
+source_row = 11
+source_cell = "A11"
+ordinal = "6"
+record_identity = "Pág. 0"
+
+[[variable_envelopes.prefix_fields]]
+role = "aux_opening_tag"
+
+[variable_envelopes.prefix_fields.anchor]
+sheet = "Pág. 0"
+source_row = 12
+source_cell = "A12"
+ordinal = "7"
+record_identity = "Pág. 0"
+
+[[variable_envelopes.prefix_fields]]
+role = "pre_program_filler"
+
+[variable_envelopes.prefix_fields.anchor]
+sheet = "Pág. 0"
+source_row = 13
+source_cell = "A13"
+ordinal = "8"
+record_identity = "Pág. 0"
+
+[[variable_envelopes.prefix_fields]]
+role = "language"
+casilla_id = "decl.idioma"
+
+[variable_envelopes.prefix_fields.anchor]
+sheet = "Pág. 0"
+source_row = 14
+source_cell = "A14"
+ordinal = "9"
+record_identity = "Pág. 0"
+
+[[variable_envelopes.prefix_fields]]
+role = "between_language_program_filler"
+
+[variable_envelopes.prefix_fields.anchor]
+sheet = "Pág. 0"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+record_identity = "Pág. 0"
+
+[[variable_envelopes.prefix_fields]]
+role = "program_identifier"
+
+[variable_envelopes.prefix_fields.anchor]
+sheet = "Pág. 0"
+source_row = 16
+source_cell = "A16"
+ordinal = "11"
+record_identity = "Pág. 0"
+
+[[variable_envelopes.prefix_fields]]
+role = "between_identities_filler"
+
+[variable_envelopes.prefix_fields.anchor]
+sheet = "Pág. 0"
+source_row = 17
+source_cell = "A17"
+ordinal = "12"
+record_identity = "Pág. 0"
+
+[[variable_envelopes.prefix_fields]]
+role = "developer_tax_id"
+
+[variable_envelopes.prefix_fields.anchor]
+sheet = "Pág. 0"
+source_row = 18
+source_cell = "A18"
+ordinal = "13"
+record_identity = "Pág. 0"
+
+[[variable_envelopes.prefix_fields]]
+role = "post_developer_filler"
+
+[variable_envelopes.prefix_fields.anchor]
+sheet = "Pág. 0"
+source_row = 19
+source_cell = "A19"
+ordinal = "14"
+record_identity = "Pág. 0"
+
+[[variable_envelopes.prefix_fields]]
+role = "aux_closing_tag"
+
+[variable_envelopes.prefix_fields.anchor]
+sheet = "Pág. 0"
+source_row = 20
+source_cell = "A20"
+ordinal = "15"
+record_identity = "Pág. 0"
+
+[variable_envelopes.body_anchor]
+sheet = "Pág. 0"
+source_row = 21
+source_cell = "A21"
+ordinal = "16"
+record_identity = "Pág. 0"
+
+[variable_envelopes.closer_anchor]
+sheet = "Pág. 0"
+source_row = 22
+source_cell = "A22"
+ordinal = "17"
+record_identity = "Pág. 0"
+
+[variable_envelopes.total_anchor]
+source_row = 23
+source_cell = "A23"
+label = "total"
+length = "Variable"

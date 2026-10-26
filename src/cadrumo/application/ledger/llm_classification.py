@@ -1,0 +1,1634 @@
+"""LLM-assisted ledger classification: suggest / apply / provider availability.
+
+Wires the existing :class:`~domain.transactions.llm.LLMClassifier` engine into
+the operator suggest -> review -> confirm / override / reject loop without
+rebuilding the classifier. The contract is deliberately thin:
+
+* :func:`suggest_llm_classification` loads one transaction, runs the
+  caller-composed classifier port with the category-enabled prompt
+  spec, and returns a typed
+  :class:`~application.ledger.llm_classification_ports.LLMClassificationSuggestion`
+  **without persisting anything**. Rejecting a suggestion is simply not
+  applying it.
+* :func:`apply_llm_classification` persists an accepted suggestion through the
+  established classification write (:func:`~domain.transactions.service.set_classification`),
+  stamping ``classified_by`` with the classifier's ``decided_by`` (``llm:<model>``
+  provenance, distinct from manual / ``rule:``) and recording the model's
+  ``confidence`` and ``reason``. The accepted decision is appended to the
+  profile audit trail through the caller-injected bucket-event repository as a
+  ``ledger.transaction.classified`` event.
+
+Hallucination containment stays inside the engine: the classifier's
+``classify`` runs the allow-list-guarded
+:func:`~domain.transactions.llm.parse_response`, so an out-of-allow-list
+value is rejected before it ever reaches this module.
+
+**Stage-1 constraint.** :func:`suggest_llm_classification` /
+:func:`apply_llm_classification` persist only the non-regulated
+``business_classification`` and optional expense ``category``; they never set a
+regulated tax value.
+
+**Stage-2 saturation.** :func:`saturate_llm_classification` /
+:func:`apply_saturated_llm_classification` additionally persist the
+model-selected ``iva_category`` and the system-DERIVED ``taxable_base`` /
+``iva_rate`` / ``iva_amount``. The model still never emits a number — the rate
+is looked up from the registry and the base and amount are derived with
+``round_to_cents``. ``irpf_category`` remains operator-only.
+
+Core types:
+:class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
+"""
+
+from __future__ import annotations
+
+import base64
+from dataclasses import dataclass
+from datetime import date, datetime
+from decimal import Decimal
+from typing import TYPE_CHECKING
+
+from ...core.config import Settings
+from ...core.document_shape import PDF_CONTAINER_SHAPES
+from ...core.errors.hierarchy import InternalInvariantError
+from ...core.image_media_type import ImageMediaType, detect_image_media_type
+from ...core.logging import get_logger
+from ...core.model_roles import ModelRole
+from ...core.provenance_stamp import provenance_stamp_transport
+from ...core.time.clock import now
+from ...core.time.utc import coerce_utc_aware
+from ...domain.buckets.event import BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH, BucketEventObjectType, BucketEventType
+from ...domain.categories.spending_category import SpendingCategory
+from ...domain.iva.saturation import resolve_category_rate, split_gross_at_rate
+from ...domain.iva.schema import IvaCategory
+from ...domain.transactions.classification_origin import written_classification_origin
+from ...domain.transactions.enums import BUSINESS_BEARING_STATES, BusinessClassification, TransactionLifecycleState
+from ...domain.transactions.errors import TransactionNotFoundError, TransactionValidationError
+from ...domain.transactions.llm import (
+    LLMClassificationResponse,
+    LLMClassifier,
+    LLMSplitChild,
+    LLMSplitProposer,
+    LLMSplitResponse,
+    PromptSpec,
+    prompt_spec_with_every_spending_category,
+    prompt_spec_with_saturation_fields,
+)
+from ...domain.transactions.models import Transaction, TransactionCatalogue
+from ...domain.transactions.service import set_classification
+from ..operations.execution_actor import actor_label_is_automation
+from .action_ports import LedgerActionPorts
+from .actions_common import (
+    build_ledger_bucket_event,
+    build_manual_ledger_result,
+    resolve_revision_guarded_transaction_repository,
+    resolve_transaction_repository,
+    save_transaction_catalogue_and_events,
+)
+from .actions_manual import update_manual_transaction_fields
+from .actions_split_merge import split_transaction_with_classified_children
+from .evidence_advisory import printed_iva_advisory
+from .evidence_errors import PurchaseInvoiceEvidenceInputError
+from .evidence_split import derive_child_amounts
+from .evidence_textlayer import extract_evidence_text
+from .llm_classification_ports import (
+    EvidenceImage,
+    LLMClassificationPorts,
+    LLMClassificationSuggestion,
+    LLMSaturatedSuggestion,
+    LLMSplitApplyResult,
+    LLMSplitChildSuggestion,
+    LLMSplitSuggestion,
+    LLMSuggestionRejectionResult,
+    OperatorIvaDerivationResult,
+    VisionClassifier,
+)
+from .models import ManualLedgerTransactionPatch, ManualLedgerTransactionResult, SplitChildCommand
+from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
+from .protocols import BucketEventHistoryCoCommitWriterProtocol, TransactionCatalogueCoCommitWriterProtocol
+
+_logger = get_logger(__name__)
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+
+
+# The CLI binary each subprocess provider shells out to. Used by
+
+
+@dataclass(frozen=True)
+class ResolvedEvidence:
+    """A transaction's linked evidence resolved for a read by role.
+
+    Exactly one read mode is populated: ``text`` for a text-layer PDF (inlined into
+    the prompt the text-extraction role reads) or ``images`` for a scan-only PDF /
+    image (read in memory by the vision-transcription role). Either role's
+    selected lane, when it reads off the host, needs the per-call consent. The
+    ``images`` are transient
+    FINANCIAL-derived bytes and MUST never be persisted or logged
+    (``sensitive-financial-data-secure-storage-only``).
+    """
+
+    reference: str
+    text: str | None
+    images: tuple[EvidenceImage, ...]
+
+    @property
+    def is_images(self) -> bool:
+        """Whether this evidence routes to the vision-transcription reader."""
+        return bool(self.images)
+
+
+def _transport_from_provenance(provenance: str) -> str:
+    """Return the transport segment of an ``llm:<transport>:<model>`` stamp.
+
+    The suggestion used to carry a separate ``provider`` enum field, redundant
+    with the stamp and able to disagree with it. The audit payload keeps its
+    ``provider`` key -- consumers read it -- but derives the value from the one
+    place that records which transport actually read the document, so the two
+    can no longer disagree.
+
+    The rationale recorded here once added that the field had become meaningless
+    when the transport axis collapsed to the local runtime. That is no longer
+    true: off-host reading was re-sanctioned behind a per-invocation consent
+    gate, so this value is again the thing that says whether a document left the
+    host.
+
+    **Delegated rather than parsed here.** The stamp's middle segment is
+    ``<transport>-<reader>``, so a colon split alone returned both glued
+    together -- ``local-text`` where the field means ``local``. That was
+    invisible while every read was on-host and one label was as good as another;
+    with off-host reading back it would have published ``openai-text`` as the
+    provider, which is wrong in a way a reader believes rather than questions.
+
+    The fix is convergence, not a second split. Two implementations of one
+    grammar agree only while somebody maintains both, and this pair had already
+    stopped agreeing.
+
+    Falls back to the whole stamp when the grammar does not recognise it, so a
+    malformed provenance surfaces in the payload rather than being blanked --
+    and deliberately NOT to a transport label, because an unreadable stamp is a
+    question this cannot answer and answering it optimistically would hide the
+    artefact a withdrawal most needs to surface.
+    """
+    return provenance_stamp_transport(provenance) or provenance
+
+
+_PROVENANCE_ELISION = "..."
+
+
+def _bounded_transport_label(label: str) -> str:
+    """Shorten a transport label to fit one bucket-event payload value.
+
+    The recognised transport segment is always short, but the malformed-stamp
+    fallback in :func:`_transport_from_provenance` echoes the whole,
+    operator-supplied provenance stamp, which carries no length bound of its
+    own. Truncating silently would misreport a malformed stamp as a
+    recognised one, so the elision marker keeps a shortened value
+    self-evidently shortened.
+    """
+    if len(label) <= BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH:
+        return label
+    keep = BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH - len(_PROVENANCE_ELISION)
+    return label[:keep] + _PROVENANCE_ELISION
+
+
+def resolve_llm_evidence(
+    transaction: Transaction,
+    *,
+    bucket_id: str,
+    settings: Settings,
+    ports: LLMClassificationPorts,
+) -> ResolvedEvidence | None:
+    """Resolve a transaction's linked evidence to its text or its page images, or ``None``.
+
+    Returns ``None`` when the transaction has no linked evidence. A PDF with a
+    text layer yields ``text``, which the text-extraction role reads. A scan-only
+    PDF or an image yields base64 ``images``, which the vision-transcription role
+    reads, and only while the profile's ``llm_vision`` capability is on. Each
+    role is read by an agent run on the lane the person selected for it; a lane
+    whose catalogue entry reads off the host refuses without the per-call
+    consent. Bytes are read from secure storage into memory only; nothing is
+    written to disk (``sensitive-financial-data-secure-storage-only``).
+
+    Raises:
+        PurchaseInvoiceEvidenceInputError: When the linked evidence cannot be read
+            as a document or image, or image evidence meets a profile whose
+            ``llm_vision`` capability is off.
+    """
+    evidence_id = transaction.purchase_invoice_evidence_id
+    attachment_ids = transaction.attachment_ids
+    if evidence_id is None and not attachment_ids:
+        return None
+    resolved = ports.resolve_evidence_input(bucket_id, evidence_id, attachment_ids)
+    evidence_input, reference = resolved.evidence_input, resolved.reference
+    if evidence_input.document_shape in PDF_CONTAINER_SHAPES:
+        try:
+            text = extract_evidence_text(evidence_input, text_layer_ports=ports.text_layer_ports)
+        except PurchaseInvoiceEvidenceInputError:
+            text = ""  # scan-only / no usable text layer -> vision path
+        if text:
+            return ResolvedEvidence(reference=reference, text=text, images=())
+        images = tuple(
+            EvidenceImage.from_base64(page, ImageMediaType.PNG) for page in ports.rasterise_pdf(evidence_input.data)
+        )
+    else:
+        # An attachment is whatever format the operator supplied, so the type is
+        # detected from the bytes and an unsupported one refuses here rather than
+        # travelling to a provider under a guessed label.
+        images = (
+            EvidenceImage.from_base64(
+                base64.b64encode(evidence_input.data).decode("ascii"),
+                detect_image_media_type(evidence_input.data),
+            ),
+        )
+    # Only image evidence reaches here. Gate it on the profile's llm_vision
+    # capability — opting out disables scanned/image reading entirely (a typed
+    # refusal, never a silent skip).
+    from ...core.capabilities import ServiceCapability
+    from ..user_profile.capabilities import resolve_active_capability
+
+    if not resolve_active_capability(ServiceCapability.LLM_VISION, settings=settings).enabled:
+        raise PurchaseInvoiceEvidenceInputError(
+            "on-host LLM vision reading is disabled for this profile; enable it to read scanned or image evidence",
+            precondition_verdict=ledger_no_recovery_verdict(
+                LedgerPreconditionCondition.EVIDENCE_VISION_CAPABILITY_ENABLED,
+                facts={"llm_vision_enabled": False},
+            ),
+        )
+    return ResolvedEvidence(reference=reference, text=None, images=images)
+
+
+# Raised when a split proposal has no reader to route to. The vision
+# transcription reader is the only split proposer the composition wires, and it
+# reads images only, so a text-layer or evidence-less transaction reaches no
+# proposer at all. The remedy is image or scan evidence, or the manual split flags -- not a
+# provider, because none is selectable.
+_SPLIT_NEEDS_IMAGE_EVIDENCE = (
+    "proposing a split needs scanned or image evidence for the on-host reader; "
+    "this transaction has no readable image evidence to route there"
+)
+
+
+def classify_with_evidence(
+    transaction: Transaction,
+    evidence: ResolvedEvidence | None,
+    *,
+    text_classifier: LLMClassifier | None,
+    spec: PromptSpec,
+    vision_classifier: VisionClassifier | None,
+    vision_model: str | None,
+    settings: Settings,
+    ports: LLMClassificationPorts,
+) -> tuple[LLMClassificationResponse, str]:
+    """Classify through the agent by role: images to vision transcription, text or none to text extraction.
+
+    Returns ``(response, provenance)``. Image evidence is read on the person's
+    vision-transcription selection and needs no ``text_classifier``; text or no
+    evidence is read on the text-extraction selection, so an absent
+    ``text_classifier`` is resolved from ``ports`` rather than refused. A
+    selected lane that reads off the host needs the per-call consent and
+    refuses without it. ``vision_model`` must be ``None``: the selection is the
+    only model choice, and a named model is refused.
+
+    Raises:
+        PurchaseInvoiceEvidenceInputError: When the role's reader is unavailable;
+            the error carries the reader's exact precondition verdict.
+        LLMClassifierError: When the reader call fails after its preconditions are
+            confirmed satisfied.
+    """
+    if evidence is not None and evidence.is_images:
+        # The vision path shells out through LLMClient.complete, which records
+        # its own run-timing record -- do not double-record here.
+        vision = vision_classifier or ports.make_vision_classifier(spec, vision_model)
+        images = evidence.images
+        response = _reader_classification(
+            ports.run_reader(
+                ModelRole.VISION_TRANSCRIPTION,
+                lambda: vision.classify(transaction, evidence_images=images),
+            )
+        )
+        return response, vision.decided_by
+    text = evidence.text if evidence is not None else None
+    if text_classifier is None:
+        # The text-extraction reader. Text-layer evidence takes the same agent
+        # path, under the same consent rule, as scanned evidence, so how a
+        # document happened to be produced never decides where it is read.
+        local_text = ports.make_text_classifier(spec)
+        return _reader_classification(
+            ports.run_reader(
+                ModelRole.TEXT_EXTRACTION,
+                lambda: local_text.classify(transaction, evidence_text=text),
+            )
+        ), local_text.decided_by
+    return _reader_classification(
+        ports.record_classifier_run(
+            lambda: text_classifier.classify(transaction, evidence_text=text),
+            text_classifier.decided_by,
+        )
+    ), text_classifier.decided_by
+
+
+def _reader_classification(result: object) -> LLMClassificationResponse:
+    """Return one reader result as the classification the readers are declared to emit.
+
+    The run ports are declared over an opaque result so run records and reader
+    recovery stay reader-agnostic; this boundary states what this caller asked
+    for, and refuses a result that is not it rather than carrying it further.
+    """
+    if not isinstance(result, LLMClassificationResponse):
+        raise InternalInvariantError("ledger classification reader returned a non-classification result")
+    return result
+
+
+def _reader_split(result: object) -> LLMSplitResponse:
+    """Return one reader result as the split proposal the readers are declared to emit."""
+    if not isinstance(result, LLMSplitResponse):
+        raise InternalInvariantError("ledger split reader returned a non-split result")
+    return result
+
+
+def _split_with_evidence(
+    transaction: Transaction,
+    evidence: ResolvedEvidence | None,
+    *,
+    proposer: LLMSplitProposer | None,
+    spec: PromptSpec,
+    vision_classifier: VisionClassifier | None,
+    vision_model: str | None,
+    settings: Settings,
+    ports: LLMClassificationPorts,
+) -> tuple[LLMSplitResponse, str]:
+    """Propose a split, routing scan/image evidence to the vision-transcription reader.
+
+    ``vision_model`` must be ``None``: the person's vision-transcription
+    selection is the only model choice, and a named model is refused.
+
+    Raises:
+        TransactionValidationError: When the evidence is not images and no
+            ``proposer`` was injected, so no reader can propose a split.
+    """
+    if evidence is not None and evidence.is_images:
+        # The vision path shells out through LLMClient.complete, which records
+        # its own run-timing record -- do not double-record here.
+        vision = vision_classifier or ports.make_vision_classifier(spec, vision_model)
+        images = evidence.images
+        response = _reader_split(
+            ports.run_reader(
+                ModelRole.VISION_TRANSCRIPTION,
+                lambda: vision.propose_split(transaction, evidence_images=images),
+            )
+        )
+        return response, vision.decided_by
+    if proposer is None:
+        raise TransactionValidationError(
+            _SPLIT_NEEDS_IMAGE_EVIDENCE,
+            translated_message="application.ledger.errors.split_requires_image_evidence",
+            context={"transaction_id": transaction.transaction_id},
+        )
+    text = evidence.text if evidence is not None else None
+    return _reader_split(
+        ports.record_classifier_run(
+            lambda: proposer.propose_split(transaction, evidence_text=text),
+            proposer.decided_by,
+        )
+    ), proposer.decided_by
+
+
+def _load_llm_transaction(
+    *,
+    bucket_id: str,
+    transaction_id: str,
+    transaction_repository: TransactionCatalogueCoCommitWriterProtocol | None,
+    reviewed_transaction: Transaction | None = None,
+) -> tuple[TransactionCatalogueCoCommitWriterProtocol, Transaction]:
+    """Resolve the catalogue port and use the reviewed row or load its exact id."""
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    if reviewed_transaction is not None:
+        if reviewed_transaction.transaction_id != transaction_id:
+            raise TransactionValidationError(
+                "reviewed transaction does not match the suggestion target",
+                context={"transaction_id": transaction_id},
+            )
+        return repository, reviewed_transaction
+    transaction = repository.load().get(transaction_id)
+    if transaction is None:
+        raise TransactionNotFoundError(
+            translated_message="application.ledger.errors.transaction_not_found",
+            context={"transaction_id": transaction_id},
+        )
+    return repository, transaction
+
+
+def _resolve_requested_llm_evidence(
+    transaction: Transaction,
+    *,
+    bucket_id: str,
+    settings: Settings,
+    ports: LLMClassificationPorts,
+    read_evidence: bool,
+) -> ResolvedEvidence | None:
+    """Resolve linked evidence only when the caller opted into reading it."""
+    if not read_evidence:
+        return None
+    return resolve_llm_evidence(transaction, bucket_id=bucket_id, settings=settings, ports=ports)
+
+
+def _evidence_text_and_reference(evidence: ResolvedEvidence | None) -> tuple[str | None, str | None]:
+    """Project optional evidence into the two fields consumed by suggestions."""
+    if evidence is None:
+        return None, None
+    return evidence.text, evidence.reference
+
+
+def _effective_ledger_date(transaction: Transaction, on_date: date | None) -> date:
+    """Return the explicit date or the transaction's value/booked date."""
+    return on_date or transaction.raw.value_date or transaction.raw.booked_date
+
+
+def suggest_llm_classification(
+    *,
+    bucket_id: str,
+    transaction_id: str,
+    operation: PinnedAuthorityOperation,
+    classifier: LLMClassifier | None = None,
+    vision_classifier: VisionClassifier | None = None,
+    vision_model: str | None = None,
+    transaction_repository: TransactionCatalogueCoCommitWriterProtocol,
+    read_evidence: bool = False,
+    settings: Settings,
+    ports: LLMClassificationPorts,
+    reviewed_transaction: Transaction | None = None,
+) -> LLMClassificationSuggestion:
+    """Run the LLM classifier for one transaction and return a suggestion.
+
+    Loads the transaction, runs the injected classifier (default-resolved with
+    the category-enabled prompt spec), and returns the typed suggestion.
+    **Persists nothing** — this is the suggest step of the
+    suggest / review / confirm / reject loop.
+
+    Args:
+        bucket_id: Active profile bucket id.
+        transaction_id: Stable id of the transaction to classify.
+        operation: Generation-pinned authority operation for the prompt's
+            dated category vocabulary and profile hints.
+        classifier: Injected classifier (dependency injection for tests). The
+            agent's text-extraction reader is the default, so an injected
+            classifier is the only non-default case.
+        vision_classifier: Injected vision classifier used when the evidence is
+            a scan-only PDF or image; default-resolved otherwise.
+        vision_model: Must be ``None``. A named model is refused with
+            ``llm.agent.model_override_absent``, because the person's
+            vision-transcription selection is the only model choice.
+        transaction_repository: Injected catalogue repository.
+        read_evidence: When True, resolve the transaction's linked evidence and
+            read it: a text-layer PDF on the text-extraction selection, a
+            scan-only PDF or image on the vision-transcription selection. A
+            selected lane that reads off the host needs the per-call consent.
+            Off by default.
+        settings: Injected settings; defaults to ``load_settings()``.
+        ports: Injected evidence-reading and classifier execution ports.
+        reviewed_transaction: Immutable caller-captured row used instead of
+            reloading the catalogue before provider work; its id must match.
+
+    Returns:
+        A :class:`~application.ledger.llm_classification_ports.LLMClassificationSuggestion`.
+
+    Raises:
+        TransactionNotFoundError: When the transaction id is unknown.
+        LLMClassifierError: When the classifier fails (e.g. provider CLI
+            unavailable, hallucinated out-of-allow-list value).
+    """
+    _, transaction = _load_llm_transaction(
+        bucket_id=bucket_id,
+        transaction_id=transaction_id,
+        transaction_repository=transaction_repository,
+        reviewed_transaction=reviewed_transaction,
+    )
+    resolved_settings = settings
+    resolved_classifier = classifier
+    evidence = _resolve_requested_llm_evidence(
+        transaction,
+        bucket_id=bucket_id,
+        settings=resolved_settings,
+        ports=ports,
+        read_evidence=read_evidence,
+    )
+    response, provenance = classify_with_evidence(
+        transaction,
+        evidence,
+        text_classifier=resolved_classifier,
+        spec=prompt_spec_with_every_spending_category(
+            year=transaction.raw.booked_date.year,
+            operation=operation,
+        ),
+        vision_classifier=vision_classifier,
+        vision_model=vision_model,
+        settings=resolved_settings,
+        ports=ports,
+    )
+    _logger.info(
+        "llm suggest: decided_by=%s classification=%s confidence=%s",
+        provenance,
+        response.classification.value,
+        response.confidence,
+    )
+    return LLMClassificationSuggestion(
+        transaction_id=transaction_id,
+        provenance=provenance,
+        classification=response.classification,
+        category=response.category,
+        confidence=response.confidence,
+        reason=response.reason,
+        evidence_id=evidence.reference if evidence is not None else None,
+        multiple_components=response.multiple_components,
+    )
+
+
+def _validate_llm_application_business_pct(
+    suggestion: LLMClassificationSuggestion,
+    business_pct: Decimal | None,
+) -> None:
+    """Enforce the operator-owned business percentage coupling."""
+    classification = suggestion.classification
+    if classification is BusinessClassification.MIXED and business_pct is None:
+        raise TransactionValidationError(
+            "applying a MIXED LLM suggestion requires --business-pct; "
+            "the LLM proposes the split direction but not the business-use percentage",
+            context={"transaction_id": suggestion.transaction_id},
+        )
+    if classification is not BusinessClassification.MIXED and business_pct is not None:
+        raise TransactionValidationError(
+            "--business-pct only applies to a MIXED classification",
+            context={"transaction_id": suggestion.transaction_id},
+        )
+
+
+def _validate_active_llm_transaction(catalogue: TransactionCatalogue, transaction_id: str) -> Transaction:
+    """Refuse missing or immutable rows before the classification write."""
+    current = catalogue.get(transaction_id)
+    if current is None:
+        raise TransactionNotFoundError(
+            translated_message="application.ledger.errors.transaction_not_found",
+            context={"transaction_id": transaction_id},
+        )
+    if current.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+        raise TransactionValidationError(
+            "only active ledger transactions can be classified; archived, stashed, and split-parent rows are immutable",
+            context={
+                "transaction_id": transaction_id,
+                "lifecycle_state": current.lifecycle_state.value,
+            },
+        )
+    return current
+
+
+def _llm_category_id(suggestion: LLMClassificationSuggestion) -> str | None:
+    """Carry a spending category only on a business-bearing classification."""
+    if suggestion.classification not in BUSINESS_BEARING_STATES:
+        return None
+    return suggestion.category.value if suggestion.category is not None else None
+
+
+def apply_llm_classification(
+    suggestion: LLMClassificationSuggestion,
+    *,
+    bucket_id: str,
+    business_pct: Decimal | None = None,
+    actor: str = "operator",
+    source_command: str,
+    transaction_repository: TransactionCatalogueCoCommitWriterProtocol,
+    bucket_event_repository: BucketEventHistoryCoCommitWriterProtocol,
+    occurred_at: datetime | None = None,
+    expected_current: Transaction | None = None,
+) -> ManualLedgerTransactionResult:
+    """Persist an accepted LLM suggestion with ``llm:`` provenance.
+
+    Writes the decision through :func:`~domain.transactions.service.set_classification`,
+    stamping ``classified_by`` with the suggestion's ``provenance`` (the
+    classifier's ``decided_by``, e.g. ``llm:<model>``) and recording the
+    model's ``confidence`` and ``reason``. Persists the catalogue and emits a
+    :attr:`~domain.buckets.event.BucketEventType.LEDGER_TRANSACTION_CLASSIFIED`
+    event atomically.
+
+    The MVP persists only the non-regulated ``business_classification`` and
+    optional expense ``category``. It never sets a regulated tax value.
+
+    A ``MIXED`` suggestion requires an explicit ``business_pct`` (the LLM does
+    not produce one); apply refuses instructively when it is absent. The
+    expense ``category`` is recorded only for ``BUSINESS`` / ``MIXED``
+    classifications.
+
+    Args:
+        suggestion: The accepted
+            :class:`~application.ledger.llm_classification_ports.LLMClassificationSuggestion`.
+        bucket_id: Active profile bucket id.
+        business_pct: Required when ``suggestion.classification`` is ``MIXED``.
+        actor: Operator identity for the audit event.
+        source_command: Source-command label for the audit event.
+        transaction_repository: Injected catalogue repository.
+        bucket_event_repository: Injected audit-event repository.
+        occurred_at: Override clock for deterministic tests.
+        expected_current: Immutable transaction reviewed before provider work.
+            Its exact row is compared atomically with the classification write.
+
+    Returns:
+        A :class:`~application.ledger.models.ManualLedgerTransactionResult`
+        reflecting the persisted decision.
+
+    Raises:
+        TransactionNotFoundError: When the transaction id is unknown.
+        TransactionValidationError: When the transaction is not ACTIVE or a
+            ``MIXED`` suggestion is applied without a ``business_pct``.
+    """
+    _validate_llm_application_business_pct(suggestion, business_pct)
+    classification = suggestion.classification
+    occurred = coerce_utc_aware(occurred_at or now())
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    event_repository = bucket_event_repository
+    catalogue = repository.load()
+    current = _validate_active_llm_transaction(catalogue, suggestion.transaction_id)
+    if expected_current is not None and expected_current.transaction_id != suggestion.transaction_id:
+        raise TransactionValidationError(
+            "reviewed transaction does not match the classification target",
+            context={"transaction_id": suggestion.transaction_id},
+        )
+    category_id = _llm_category_id(suggestion)
+    updated_catalogue = set_classification(
+        catalogue,
+        suggestion.transaction_id,
+        classification=classification,
+        business_pct=business_pct,
+        category_id=category_id,
+        classified_by=suggestion.provenance,
+        # Accepting a proposal is the decision of whoever accepted it.
+        origin=written_classification_origin(
+            by_automation=actor_label_is_automation(actor), classified_by=suggestion.provenance
+        ),
+        reason=suggestion.reason,
+        confidence=suggestion.confidence,
+    )
+    updated_transaction = updated_catalogue.get(suggestion.transaction_id)
+    if updated_transaction is None:
+        raise TransactionValidationError(
+            "classification write dropped the transaction it was applied to",
+            context={"transaction_id": suggestion.transaction_id},
+        )
+    event = build_ledger_bucket_event(
+        bucket_id=bucket_id,
+        event_type=BucketEventType.LEDGER_TRANSACTION_CLASSIFIED,
+        occurred_at=occurred,
+        actor=actor,
+        object_type=BucketEventObjectType.LEDGER_TRANSACTION,
+        object_id=suggestion.transaction_id,
+        payload={
+            "source_command": source_command,
+            "classification": classification.value,
+            "category_id": category_id or "",
+            "classified_by": suggestion.provenance,
+            "provider": _bounded_transport_label(_transport_from_provenance(suggestion.provenance)),
+            "confidence": format(suggestion.confidence, "f"),
+            "mutation_kind": "llm_classification",
+        },
+    )
+    save_transaction_catalogue_and_events(
+        transaction_repository=repository,
+        event_repository=event_repository,
+        catalogue=updated_catalogue,
+        events=(event,),
+        expected_current=current if expected_current is None else expected_current,
+        replacement=updated_transaction,
+    )
+    _logger.info(
+        "llm apply: classified_by=%s classification=%s",
+        suggestion.provenance,
+        classification.value,
+    )
+    return build_manual_ledger_result(bucket_id, updated_transaction, (event.event_id,))
+
+
+# ── stage-2 saturation: grounded rich tax metadata ────────────────
+
+
+def _derive_iva_substrate(
+    iva_category: IvaCategory,
+    *,
+    gross: Decimal,
+    on_date: date,
+    operation: PinnedAuthorityOperation,
+) -> tuple[Decimal | None, Decimal | None, Decimal | None, bool, str]:
+    """Derive ``(iva_rate, taxable_base, iva_amount, derivable, note)`` for a category.
+
+    Resolves the registry rate for ``iva_category`` via
+    :func:`~domain.iva.saturation.resolve_category_rate` and, when derivable, splits
+    the absolute ``gross`` at that rate with
+    :func:`~domain.iva.saturation.split_gross_at_rate`. The model never supplies these
+    numbers; they trace to the registry rate and a deterministic inverse split.
+
+    Returns the derived rate/base/amount (or ``None`` for each when the
+    category has no simple derivable Spanish domestic rate), the
+    ``derivable`` flag, and an operator-facing ``note`` explaining a
+    non-derivable category.
+    """
+    resolution = resolve_category_rate(iva_category, on_date=on_date, operation=operation)
+    if not resolution.derivable or resolution.rate is None:
+        return None, None, None, False, resolution.reason
+    taxable_base, iva_amount = split_gross_at_rate(abs(gross), resolution.rate)
+    return resolution.rate, taxable_base, iva_amount, True, ""
+
+
+def _saturation_iva_values(
+    response: LLMClassificationResponse,
+    *,
+    gross: Decimal,
+    on_date: date,
+    operation: PinnedAuthorityOperation,
+) -> tuple[Decimal | None, Decimal | None, Decimal | None, bool, str]:
+    """Derive the optional saturation substrate from the model's IVA category."""
+    if response.iva_category is None:
+        return None, None, None, False, ""
+    return _derive_iva_substrate(response.iva_category, gross=gross, on_date=on_date, operation=operation)
+
+
+def _iva_category_label(response: LLMClassificationResponse) -> str:
+    """Return the audit-log label for an optional IVA category."""
+    if response.iva_category is None:
+        return ""
+    return response.iva_category.value
+
+
+def saturate_llm_classification(
+    *,
+    bucket_id: str,
+    transaction_id: str,
+    operation: PinnedAuthorityOperation,
+    classifier: LLMClassifier | None = None,
+    vision_classifier: VisionClassifier | None = None,
+    vision_model: str | None = None,
+    transaction_repository: TransactionCatalogueCoCommitWriterProtocol,
+    on_date: date | None = None,
+    read_evidence: bool = False,
+    settings: Settings,
+    ports: LLMClassificationPorts,
+    reviewed_transaction: Transaction | None = None,
+) -> LLMSaturatedSuggestion:
+    """Run the saturating LLM classifier for one transaction and return a suggestion.
+
+    Loads the transaction, runs the injected classifier (default-resolved with
+    the saturation prompt spec), then DERIVES the regulated tax substrate from
+    the model's selected :class:`~domain.iva.schema.IvaCategory` using the registry
+    rate and a deterministic inverse split. **Persists nothing** — this is the
+    suggest step; rejecting a suggestion is simply not applying it.
+
+    Args:
+        bucket_id: Active profile bucket id.
+        transaction_id: Stable id of the transaction to classify.
+        operation: Generation-pinned authority operation for the prompt's
+            dated category and IVA projections.
+        classifier: Injected classifier (dependency injection for tests). The
+            agent's text-extraction reader is the default; an injected
+            classifier overrides it, with the saturation prompt spec.
+        vision_classifier: Injected vision classifier used when the evidence is
+            a scan-only PDF or image; default-resolved otherwise.
+        vision_model: Must be ``None``. A named model is refused with
+            ``llm.agent.model_override_absent``, because the person's
+            vision-transcription selection is the only model choice.
+        transaction_repository: Injected catalogue repository.
+        on_date: Effective date used to resolve the registry rate; defaults to
+            the transaction's value date (or booked date).
+        read_evidence: When True, resolve the transaction's linked evidence, extract
+            its text on-host, and inject it into the prompt. Off by default.
+        settings: Injected settings; defaults to ``load_settings()``.
+        ports: Injected evidence-reading and classifier execution ports.
+        reviewed_transaction: Immutable caller-captured row used instead of
+            reloading the catalogue before provider work; its id must match.
+
+    Returns:
+        A :class:`~application.ledger.llm_classification_ports.LLMSaturatedSuggestion`
+        carrying the model's selections and the system-derived euro substrate.
+
+    Raises:
+        TransactionNotFoundError: When the transaction id is unknown.
+        LLMClassifierError: When the classifier fails (provider CLI
+            unavailable, hallucinated out-of-allow-list value).
+    """
+    _, transaction = _load_llm_transaction(
+        bucket_id=bucket_id,
+        transaction_id=transaction_id,
+        transaction_repository=transaction_repository,
+        reviewed_transaction=reviewed_transaction,
+    )
+    resolved_settings = settings
+    resolved_classifier = classifier
+    evidence = _resolve_requested_llm_evidence(
+        transaction,
+        bucket_id=bucket_id,
+        settings=resolved_settings,
+        ports=ports,
+        read_evidence=read_evidence,
+    )
+    response, provenance = classify_with_evidence(
+        transaction,
+        evidence,
+        text_classifier=resolved_classifier,
+        spec=prompt_spec_with_saturation_fields(
+            year=transaction.raw.booked_date.year,
+            operation=operation,
+        ),
+        vision_classifier=vision_classifier,
+        vision_model=vision_model,
+        settings=resolved_settings,
+        ports=ports,
+    )
+    evidence_text, evidence_reference = _evidence_text_and_reference(evidence)
+    effective_date = _effective_ledger_date(transaction, on_date)
+    iva_rate, taxable_base, iva_amount, rate_derivable, derivation_note = _saturation_iva_values(
+        response,
+        gross=transaction.raw.amount,
+        on_date=effective_date,
+        operation=operation,
+    )
+    _logger.info(
+        "llm saturate: provider=%s classification=%s iva_category=%s derivable=%s",
+        provenance,
+        response.classification.value,
+        _iva_category_label(response),
+        rate_derivable,
+    )
+    return LLMSaturatedSuggestion(
+        transaction_id=transaction_id,
+        provenance=provenance,
+        classification=response.classification,
+        category=response.category,
+        confidence=response.confidence,
+        reason=response.reason,
+        iva_category=response.iva_category,
+        business_pct=response.business_pct,
+        iva_rate=iva_rate,
+        taxable_base=taxable_base,
+        iva_amount=iva_amount,
+        rate_derivable=rate_derivable,
+        derivation_note=derivation_note,
+        evidence_id=evidence_reference,
+        evidence_advisory=printed_iva_advisory(evidence_text, iva_amount) or "",
+        multiple_components=response.multiple_components,
+    )
+
+
+def apply_saturated_llm_classification(
+    suggestion: LLMSaturatedSuggestion,
+    *,
+    bucket_id: str,
+    business_pct: Decimal | None = None,
+    actor: str = "operator",
+    source_command: str,
+    ports: LedgerActionPorts,
+    occurred_at: datetime | None = None,
+    expected_current: Transaction | None = None,
+) -> ManualLedgerTransactionResult:
+    """Persist an accepted saturated suggestion through the manual write path.
+
+    Composes the established single-writer manual-command write
+    (:func:`update_manual_transaction_fields`) rather than re-implementing it,
+    so the regulated fields land with their existing validators plus the
+    ``gross == taxable_base + iva_amount`` invariant, and stamps
+    ``classified_by`` with the suggestion's ``llm:<model>`` provenance via
+    ``classified_by_override``.
+
+    The non-regulated business decision (classification, expense category) and
+    the model-selected ``iva_category`` are persisted; the regulated euro
+    figures are persisted only when the category was derivable (a
+    non-derivable category leaves the operator to complete the numbers). A
+    ``MIXED`` suggestion requires a business percentage — the model's proposed
+    ``business_pct`` is used unless the caller overrides it; apply refuses
+    instructively when neither is present.
+
+    Args:
+        suggestion: The accepted
+            :class:`~application.ledger.llm_classification_ports.LLMSaturatedSuggestion`.
+        bucket_id: Active profile bucket id.
+        business_pct: Operator override for the MIXED business percentage;
+            falls back to the model's proposed ``business_pct``.
+        actor: Operator identity for the audit event.
+        source_command: Source-command label recording the operator's verb.
+        ports: Injected ledger action ports for the catalogue and audit-event
+            repositories.
+        occurred_at: Override clock for deterministic tests.
+        expected_current: Immutable transaction reviewed before provider work.
+
+    Returns:
+        A :class:`~application.ledger.models.ManualLedgerTransactionResult`
+        reflecting the persisted state.
+
+    Raises:
+        TransactionValidationError: When a ``MIXED`` suggestion is applied with
+            no business percentage available.
+    """
+    classification = suggestion.classification
+    effective_business_pct = business_pct if business_pct is not None else suggestion.business_pct
+    if classification is BusinessClassification.MIXED and effective_business_pct is None:
+        raise TransactionValidationError(
+            "applying a MIXED saturated suggestion requires a business percentage; "
+            "pass --business-pct (the model proposes the split direction but the percentage is operator-owned)",
+            context={"transaction_id": suggestion.transaction_id},
+        )
+
+    patch_fields: dict[str, object] = {"business_classification": classification}
+    if classification is BusinessClassification.MIXED:
+        patch_fields["business_pct"] = effective_business_pct
+    category_carrying = classification in BUSINESS_BEARING_STATES
+    if category_carrying and suggestion.category is not None:
+        patch_fields["category_id"] = suggestion.category.value
+    if suggestion.iva_category is not None:
+        patch_fields["iva_category"] = suggestion.iva_category
+    if suggestion.rate_derivable:
+        patch_fields["taxable_base"] = suggestion.taxable_base
+        patch_fields["iva_rate"] = suggestion.iva_rate
+        patch_fields["iva_amount"] = suggestion.iva_amount
+    patch = ManualLedgerTransactionPatch.model_validate(patch_fields)
+
+    # Compose the single-writer manual write rather than re-implementing the
+    # regulated-field persistence (aeat-architecture-boundaries).
+    # The operator's verb is recorded via ``source_command`` on the manual
+    # write's own classification event, and model provenance via
+    # ``classified_by_override``; we deliberately do not emit a second,
+    # parallel LLM-specific event here.
+    result = update_manual_transaction_fields(
+        bucket_id=bucket_id,
+        transaction_id=suggestion.transaction_id,
+        patch=patch,
+        actor=actor,
+        source_command=source_command,
+        classified_by_override=suggestion.provenance,
+        ports=ports,
+        occurred_at=occurred_at,
+        expected_current=expected_current,
+    )
+    _logger.info(
+        "llm saturate apply: classified_by=%s iva_category=%s derived=%s",
+        suggestion.provenance,
+        suggestion.iva_category.value if suggestion.iva_category is not None else "",
+        suggestion.rate_derivable,
+    )
+    return result
+
+
+# ── operator-initiated derivation (no LLM) ────────────────────────
+
+
+def derive_operator_iva_substrate(
+    *,
+    bucket_id: str,
+    transaction_id: str,
+    iva_category: IvaCategory,
+    on_date: date | None = None,
+    actor: str = "operator",
+    source_command: str,
+    ports: LedgerActionPorts,
+    occurred_at: datetime | None = None,
+    expected_current: Transaction | None = None,
+) -> OperatorIvaDerivationResult:
+    """Derive and persist the IVA substrate for an OPERATOR-chosen category.
+
+    The same grounded derivation the saturating LLM path uses
+    (:func:`~domain.iva.saturation.resolve_category_rate` +
+    :func:`~domain.iva.saturation.split_gross_at_rate`), but initiated by the operator
+    rather than the model — the fallback for when the model declines (returns
+    ``unknown``) or the operator simply knows the category. Given a transaction
+    already classified BUSINESS or MIXED and the selected
+    :class:`~domain.iva.schema.IvaCategory`, it resolves the registry rate, splits
+    the gross into taxable base and IVA amount, and persists them through the
+    manual write with ``derived:`` provenance. Only the IVA substrate is
+    touched; the business classification stays as-is. A non-derivable category
+    persists nothing and returns an explanatory note.
+
+    ``expected_current`` pins the operator's reviewed transaction through the
+    existing manual writer's comparison and atomic replacement.
+
+    Returns:
+        The
+        :class:`~application.ledger.llm_classification_ports.OperatorIvaDerivationResult`
+        recording the persisted IVA substrate, or an explanatory note when the
+        category is non-derivable.
+
+    Raises:
+        TransactionNotFoundError: When the transaction id is unknown.
+        TransactionValidationError: When the transaction is not classified
+            BUSINESS or MIXED (IVA applies only to business activity).
+    """
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
+    transaction = repository.load().get(transaction_id)
+    if transaction is None:
+        raise TransactionNotFoundError(
+            translated_message="application.ledger.errors.transaction_not_found",
+            context={"transaction_id": transaction_id},
+        )
+    if transaction.business_classification not in BUSINESS_BEARING_STATES:
+        raise TransactionValidationError(
+            "IVA derivation applies only to a business transaction; classify it as "
+            "BUSINESS or MIXED first, then derive the IVA substrate",
+            context={"transaction_id": transaction_id},
+        )
+    effective_date = on_date or transaction.raw.value_date or transaction.raw.booked_date
+    iva_rate, taxable_base, iva_amount, derivable, note = _derive_iva_substrate(
+        iva_category,
+        gross=transaction.raw.amount,
+        on_date=effective_date,
+        operation=ports.operation,
+    )
+    if not derivable:
+        return OperatorIvaDerivationResult(
+            transaction_id=transaction_id,
+            iva_category=iva_category,
+            derivable=False,
+            note=note,
+        )
+    patch = ManualLedgerTransactionPatch.model_validate(
+        {
+            "iva_category": iva_category,
+            "iva_rate": iva_rate,
+            "taxable_base": taxable_base,
+            "iva_amount": iva_amount,
+        }
+    )
+    result = update_manual_transaction_fields(
+        bucket_id=bucket_id,
+        transaction_id=transaction_id,
+        patch=patch,
+        actor=actor,
+        source_command=source_command,
+        classified_by_override="derived:iva-category",
+        ports=ports,
+        occurred_at=occurred_at,
+        expected_current=expected_current,
+    )
+    _logger.info(
+        "operator iva derive: iva_category=%s",
+        iva_category.value,
+    )
+    return OperatorIvaDerivationResult(
+        transaction_id=transaction_id,
+        iva_category=iva_category,
+        derivable=True,
+        iva_rate=iva_rate,
+        taxable_base=taxable_base,
+        iva_amount=iva_amount,
+        result=result,
+    )
+
+
+# ── stage-3b: evidence-driven N-way split ─────────────────────────
+
+
+def _split_child_description(child_index: int, *, citation: str, category: SpendingCategory | None) -> str:
+    """Build a distinct, operator-facing description for one split child.
+
+    The 1-based ordinal prefix guarantees distinct child descriptions (hence
+    distinct split-child ids) even when two children share an amount and a
+    category; the label prefers the model's evidence citation, then the expense
+    category, then a neutral fallback.
+    """
+    label = citation.strip() or (category.value if category is not None else "línea")
+    return f"{child_index + 1}. {label}"
+
+
+def _split_child_iva_values(
+    child: LLMSplitChild,
+    *,
+    amount: Decimal,
+    on_date: date,
+    operation: PinnedAuthorityOperation,
+) -> tuple[Decimal | None, Decimal | None, Decimal | None, bool, str]:
+    """Derive one split child's optional IVA substrate."""
+    if child.iva_category is None:
+        return None, None, None, False, ""
+    return _derive_iva_substrate(child.iva_category, gross=amount, on_date=on_date, operation=operation)
+
+
+def _build_split_child_suggestion(
+    child: LLMSplitChild,
+    *,
+    index: int,
+    amount: Decimal,
+    effective_date: date,
+    operation: PinnedAuthorityOperation,
+) -> LLMSplitChildSuggestion:
+    """Materialize one model child with system-derived amounts and tax values."""
+    iva_rate, taxable_base, iva_amount, rate_derivable, derivation_note = _split_child_iva_values(
+        child,
+        amount=amount,
+        on_date=effective_date,
+        operation=operation,
+    )
+    return LLMSplitChildSuggestion(
+        proportion=child.proportion,
+        amount=amount,
+        description=_split_child_description(index, citation=child.evidence_citation, category=child.category),
+        category=child.category,
+        iva_category=child.iva_category,
+        iva_rate=iva_rate,
+        taxable_base=taxable_base,
+        iva_amount=iva_amount,
+        rate_derivable=rate_derivable,
+        derivation_note=derivation_note,
+        evidence_citation=child.evidence_citation,
+    )
+
+
+def _materialize_split_children(
+    response: LLMSplitResponse,
+    *,
+    transaction: Transaction,
+    effective_date: date,
+    operation: PinnedAuthorityOperation,
+) -> list[LLMSplitChildSuggestion]:
+    """Derive exact child amounts and materialize them in model order."""
+    proportions = tuple(child.proportion for child in response.children)
+    amounts = derive_child_amounts(transaction.raw.amount, proportions)
+    children: list[LLMSplitChildSuggestion] = []
+    for index, (child, amount) in enumerate(zip(response.children, amounts, strict=True)):
+        children.append(
+            _build_split_child_suggestion(
+                child,
+                index=index,
+                amount=amount,
+                effective_date=effective_date,
+                operation=operation,
+            ),
+        )
+    return children
+
+
+def suggest_evidence_split(
+    *,
+    bucket_id: str,
+    transaction_id: str,
+    operation: PinnedAuthorityOperation,
+    proposer: LLMSplitProposer | None = None,
+    vision_classifier: VisionClassifier | None = None,
+    vision_model: str | None = None,
+    transaction_repository: TransactionCatalogueCoCommitWriterProtocol,
+    on_date: date | None = None,
+    read_evidence: bool = True,
+    settings: Settings,
+    ports: LLMClassificationPorts,
+    reviewed_transaction: Transaction | None = None,
+) -> LLMSplitSuggestion:
+    """Propose an evidence-driven N-way split for one transaction.
+
+    Loads the transaction, runs the injected proposer (default-resolved with
+    the saturation prompt spec) over the optional on-host evidence text,
+    DERIVES each child's euro amount from the parent gross and the model's
+    proportion (summing exactly to the parent), and DERIVES each child's
+    regulated tax substrate from the registry rate for the model-selected IVA
+    category. **Persists nothing** — this is the suggest step.
+
+    Args:
+        bucket_id: Active profile bucket id.
+        transaction_id: Stable id of the transaction to split.
+        operation: Generation-pinned authority operation for the prompt's
+            dated category and IVA projections.
+        proposer: Injected split proposer (dependency injection for tests). The
+            agent's vision-transcription reader is the default, so an injected
+            proposer is the only non-default case.
+        vision_classifier: Injected vision classifier used when the evidence is
+            a scan-only PDF or image; default-resolved otherwise.
+        vision_model: Must be ``None``. A named model is refused with
+            ``llm.agent.model_override_absent``, because the person's
+            vision-transcription selection is the only model choice.
+        transaction_repository: Injected catalogue repository.
+        on_date: Effective date used to resolve each child's registry rate;
+            defaults to the transaction's value date (or booked date).
+        read_evidence: When True (default for splitting), resolve the
+            transaction's linked evidence, extract its text on-host, and inject it
+            into the prompt.
+        settings: Injected settings; defaults to ``load_settings()``.
+        ports: Injected evidence-reading and classifier execution ports.
+        reviewed_transaction: Immutable caller-captured parent used instead of
+            reloading the catalogue before provider work; its id must match.
+
+    Returns:
+        A :class:`~application.ledger.llm_classification_ports.LLMSplitSuggestion`
+        whose child amounts sum exactly to the parent.
+
+    Raises:
+        TransactionNotFoundError: When the transaction id is unknown.
+        LLMClassifierError: When the proposer fails (provider CLI unavailable,
+            hallucinated out-of-allow-list value, or a malformed split response).
+    """
+    _, transaction = _load_llm_transaction(
+        bucket_id=bucket_id,
+        transaction_id=transaction_id,
+        transaction_repository=transaction_repository,
+        reviewed_transaction=reviewed_transaction,
+    )
+    resolved_settings = settings
+    resolved_proposer = proposer
+    evidence = _resolve_requested_llm_evidence(
+        transaction,
+        bucket_id=bucket_id,
+        settings=resolved_settings,
+        ports=ports,
+        read_evidence=read_evidence,
+    )
+    response, provenance = _split_with_evidence(
+        transaction,
+        evidence,
+        proposer=resolved_proposer,
+        spec=prompt_spec_with_saturation_fields(
+            year=transaction.raw.booked_date.year,
+            operation=operation,
+        ),
+        vision_classifier=vision_classifier,
+        vision_model=vision_model,
+        settings=resolved_settings,
+        ports=ports,
+    )
+    _, evidence_reference = _evidence_text_and_reference(evidence)
+    effective_date = _effective_ledger_date(transaction, on_date)
+    children = _materialize_split_children(
+        response,
+        transaction=transaction,
+        effective_date=effective_date,
+        operation=operation,
+    )
+    _logger.info(
+        "llm split suggest: provider=%s children=%d",
+        provenance,
+        len(children),
+    )
+    return LLMSplitSuggestion(
+        transaction_id=transaction_id,
+        provenance=provenance,
+        reason=response.reason,
+        parent_amount=transaction.raw.amount,
+        children=tuple(children),
+        evidence_id=evidence_reference,
+    )
+
+
+def _split_child_patch_fields(child: LLMSplitChildSuggestion, *, evidence_link: dict[str, object]) -> dict[str, object]:
+    """Build the classification patch fields for one evidence-split child.
+
+    Assembles the ``BUSINESS`` classification, the inherited evidence link, and
+    the model-selected category / IVA substrate (the euro figures only when the
+    category was registry-derivable). Shared by the atomic split writer's
+    per-child classification so the split and no-split paths stamp identical
+    fields.
+    """
+    patch_fields: dict[str, object] = {
+        "business_classification": BusinessClassification.BUSINESS,
+        **evidence_link,
+    }
+    if child.category is not None:
+        patch_fields["category_id"] = child.category.value
+    if child.iva_category is not None:
+        patch_fields["iva_category"] = child.iva_category
+    if child.rate_derivable:
+        patch_fields["taxable_base"] = child.taxable_base
+        patch_fields["iva_rate"] = child.iva_rate
+        patch_fields["iva_amount"] = child.iva_amount
+    return patch_fields
+
+
+def apply_evidence_split(
+    suggestion: LLMSplitSuggestion,
+    *,
+    bucket_id: str,
+    actor: str = "operator",
+    source_command: str,
+    ports: LedgerActionPorts,
+    occurred_at: datetime | None = None,
+    expected_current: Transaction | None = None,
+) -> LLMSplitApplyResult:
+    """Apply a reviewed evidence-driven split through the single-writer split path.
+
+    Delegates the whole mutation to the established single writer rather than
+    re-implementing it: :func:`split_transaction_with_classified_children`
+    redistributes the parent into children whose magnitudes sum exactly to the
+    parent and stamps each child's model-selected expense and IVA category, the
+    registry-DERIVED regulated numbers, the parent's inherited evidence link, and
+    the ``llm:<model>`` provenance. This function only translates the reviewed
+    suggestion into that writer's arguments; it performs no write of its own and
+    no follow-up per-child field patch.
+
+    Because the writer persists the parent transition, every classified child, and
+    all bucket events in one transaction, a child can never come to rest split but
+    unclassified or missing its evidence link. The writer enforces
+    children-sum-to-parent, the non-negative-magnitude invariant, and
+    ``gross == taxable_base + iva_amount`` per child. The LLM never supplies a
+    persisted euro amount or regulated number.
+
+    Args:
+        suggestion: The accepted
+            :class:`~application.ledger.llm_classification_ports.LLMSplitSuggestion`.
+        bucket_id: Active profile bucket id.
+        actor: Operator identity for the audit events.
+        source_command: Source-command label recording the operator's verb.
+        ports: Injected ledger action ports for the catalogue and audit-event
+            repositories.
+        occurred_at: Override clock for deterministic tests.
+        expected_current: Immutable parent reviewed before provider work.
+
+    Returns:
+        An :class:`~application.ledger.llm_classification_ports.LLMSplitApplyResult`
+        naming the split group and its children.
+
+    Raises:
+        TransactionNotFoundError: When the parent transaction id is unknown.
+        TransactionValidationError: When the split invariants are violated.
+    """
+    if not suggestion.recommends_split:
+        # A single-child suggestion is the no-split verdict; applying it as a
+        # one-way split is degenerate. The CLI routes this to single-transaction
+        # classification instead — never here.
+        raise TransactionValidationError(
+            "this proposal is a no-split verdict (one line); classify the transaction instead of splitting it",
+            context={"transaction_id": suggestion.transaction_id, "child_count": len(suggestion.children)},
+        )
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
+    parent = repository.load().get(suggestion.transaction_id)
+    if parent is None:
+        raise TransactionNotFoundError(
+            translated_message="application.ledger.errors.transaction_not_found",
+            context={"transaction_id": suggestion.transaction_id},
+        )
+
+    commands = tuple(
+        SplitChildCommand(amount=child.amount, description=child.description) for child in suggestion.children
+    )
+
+    # Every split child inherits the parent's validated evidence link.
+    evidence_link: dict[str, object] = {}
+    if parent.purchase_invoice_evidence_id is not None:
+        evidence_link["purchase_invoice_evidence_id"] = parent.purchase_invoice_evidence_id
+    elif parent.attachment_ids:
+        evidence_link["attachment_ids"] = parent.attachment_ids
+
+    child_classifications = tuple(
+        ManualLedgerTransactionPatch.model_validate(_split_child_patch_fields(child, evidence_link=evidence_link))
+        for child in suggestion.children
+    )
+
+    # One atomic transaction: parent transition + every classified,
+    # evidence-bearing child + all events persist together, or nothing does.
+    # No generic field patch re-enters evidence after the split.
+    split_result = split_transaction_with_classified_children(
+        bucket_id=bucket_id,
+        transaction_id=suggestion.transaction_id,
+        children=commands,
+        child_classifications=child_classifications,
+        classified_by=suggestion.provenance,
+        actor=actor,
+        source_command=source_command,
+        reason=suggestion.reason,
+        ports=ports,
+        occurred_at=occurred_at,
+        expected_current=expected_current,
+    )
+    classified = len(split_result.child_transactions)
+
+    _logger.info(
+        "llm split apply: children=%d classified=%d classified_by=%s",
+        len(split_result.child_transaction_ids),
+        classified,
+        suggestion.provenance,
+    )
+    return LLMSplitApplyResult(
+        bucket_id=bucket_id,
+        parent_transaction_id=split_result.parent_transaction_id,
+        split_group_id=split_result.split_group_id,
+        child_transaction_ids=split_result.child_transaction_ids,
+        provenance=suggestion.provenance,
+        classified_child_count=classified,
+    )
+
+
+def apply_evidence_classification(
+    suggestion: LLMSplitSuggestion,
+    *,
+    bucket_id: str,
+    actor: str = "operator",
+    source_command: str,
+    ports: LedgerActionPorts,
+    occurred_at: datetime | None = None,
+    expected_current: Transaction | None = None,
+) -> ManualLedgerTransactionResult:
+    """Apply a no-split (single-child) evidence suggestion in place on the parent.
+
+    The auto-split router uses one model call — the split proposer — to decide
+    whether to split. When the proposer returns a single child (the "no split
+    warranted" verdict), that child already carries the model-selected expense and
+    IVA categories and the registry-DERIVED ``taxable_base`` / ``iva_rate`` /
+    ``iva_amount`` for the whole gross. This stamps them on the parent through the
+    single-writer :func:`update_manual_transaction_fields` with the ``llm:<model>``
+    provenance — the same values :func:`apply_evidence_split` hands its children,
+    but applied in place to one existing row instead of redistributed across new
+    ones. The parent's own evidence link is preserved verbatim by that write and is
+    never re-set here. The model emits no euro amount or regulated number
+    (``llm-selects-system-derives-tax-numbers``).
+
+    Args:
+        suggestion: A no-split
+            :class:`~application.ledger.llm_classification_ports.LLMSplitSuggestion`
+            (exactly one child).
+        bucket_id: Active profile bucket id.
+        actor: Operator identity for the audit event.
+        source_command: Source-command label recording the operator's verb.
+        ports: Injected ledger action ports for the catalogue and audit-event
+            repositories.
+        occurred_at: Override clock for deterministic tests.
+        expected_current: Immutable parent reviewed before provider work.
+
+    Returns:
+        The :class:`~application.ledger.models.ManualLedgerTransactionResult`
+        for the in-place classification.
+
+    Raises:
+        TransactionValidationError: When the suggestion recommends a split (use
+            :func:`apply_evidence_split`).
+        TransactionNotFoundError: When the transaction id is unknown.
+    """
+    if suggestion.recommends_split:
+        raise TransactionValidationError(
+            "this proposal recommends a split; apply it with apply_evidence_split, not in place",
+            context={"transaction_id": suggestion.transaction_id, "child_count": len(suggestion.children)},
+        )
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
+    parent = repository.load().get(suggestion.transaction_id)
+    if parent is None:
+        raise TransactionNotFoundError(
+            translated_message="application.ledger.errors.transaction_not_found",
+            context={"transaction_id": suggestion.transaction_id},
+        )
+    child = suggestion.children[0]
+    # In-place classification on the PARENT: the parent already carries its own
+    # evidence, which the manual-write replacement preserves verbatim. Evidence
+    # is therefore never re-set through this generic-classification patch —
+    # evidence mutation is reserved for `aeat app ledger attach`.
+    patch_fields: dict[str, object] = {"business_classification": BusinessClassification.BUSINESS}
+    if child.category is not None:
+        patch_fields["category_id"] = child.category.value
+    if child.iva_category is not None:
+        patch_fields["iva_category"] = child.iva_category
+    if child.rate_derivable:
+        patch_fields["taxable_base"] = child.taxable_base
+        patch_fields["iva_rate"] = child.iva_rate
+        patch_fields["iva_amount"] = child.iva_amount
+    patch = ManualLedgerTransactionPatch.model_validate(patch_fields)
+    result = update_manual_transaction_fields(
+        bucket_id=bucket_id,
+        transaction_id=parent.transaction_id,
+        patch=patch,
+        actor=actor,
+        source_command=source_command,
+        classified_by_override=suggestion.provenance,
+        ports=ports,
+        occurred_at=occurred_at,
+        expected_current=expected_current,
+    )
+    _logger.info(
+        "llm auto-classify (no split): classified_by=%s category=%s iva_category=%s",
+        suggestion.provenance,
+        child.category.value if child.category is not None else "",
+        child.iva_category.value if child.iva_category is not None else "",
+    )
+    return result
+
+
+# ── reject: the fourth decision terminal (audit-trailed) ──────────
+
+
+def reject_llm_suggestion(
+    suggestion: LLMClassificationSuggestion | LLMSaturatedSuggestion | LLMSplitSuggestion,
+    *,
+    bucket_id: str,
+    reason: str = "",
+    actor: str = "operator",
+    source_command: str,
+    transaction_repository: TransactionCatalogueCoCommitWriterProtocol,
+    bucket_event_repository: BucketEventHistoryCoCommitWriterProtocol,
+    occurred_at: datetime | None = None,
+) -> LLMSuggestionRejectionResult:
+    """Record an explicit, audit-trailed rejection of an LLM suggestion.
+
+    This is the fourth decision terminal of the suggest -> review -> decide loop
+    (after approve = apply and update = manual override). It captures *what* the
+    model proposed and the operator's reason in a
+    ``LEDGER_TRANSACTION_LLM_SUGGESTION_REJECTED`` bucket event, and **mutates
+    no transaction fields** — the current transaction's classification, numbers,
+    and lifecycle are untouched, including changes made since this proposal was
+    reviewed. The audit event and freshly loaded catalogue revision are committed
+    conditionally together, so a concurrent catalogue write refuses the decline.
+    No regulated number is written; the model emitted none and reject writes none.
+
+    Args:
+        suggestion: The captured proposal being rejected — a stage-1
+            classification, a saturated suggestion, or an evidence-driven split.
+        bucket_id: Active profile bucket id.
+        reason: The operator's free-text reason for rejecting (optional).
+        actor: Operator identity for the audit event.
+        source_command: Source-command label recording the operator's verb.
+        transaction_repository: Injected catalogue repository.
+        bucket_event_repository: Injected audit-event repository.
+        occurred_at: Override clock for deterministic tests.
+
+    Returns:
+        An
+        :class:`~application.ledger.llm_classification_ports.LLMSuggestionRejectionResult`
+        naming the recorded event.
+
+    Raises:
+        TransactionNotFoundError: When the transaction id is unknown.
+        TransactionValidationError: When the transaction is not active.
+    """
+    repository = resolve_revision_guarded_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    catalogue, catalogue_revision = repository.load_revisioned()
+    transaction = catalogue.get(suggestion.transaction_id)
+    if transaction is None:
+        raise TransactionNotFoundError(
+            translated_message="application.ledger.errors.transaction_not_found",
+            context={"transaction_id": suggestion.transaction_id},
+        )
+    if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+        raise TransactionValidationError(
+            "only active ledger transactions can carry an LLM rejection record",
+            context={
+                "transaction_id": suggestion.transaction_id,
+                "lifecycle_state": transaction.lifecycle_state.value,
+            },
+        )
+    occurred = coerce_utc_aware(occurred_at or now())
+    if isinstance(suggestion, LLMSplitSuggestion):
+        suggestion_kind = "split"
+        payload: dict[str, str] = {
+            "suggestion_kind": suggestion_kind,
+            "child_count": str(len(suggestion.children)),
+            "model_reason": suggestion.reason,
+        }
+    else:
+        suggestion_kind = "classification"
+        payload = {
+            "suggestion_kind": suggestion_kind,
+            "classification": suggestion.classification.value,
+            "category": suggestion.category.value if suggestion.category is not None else "",
+            "confidence": format(suggestion.confidence, "f"),
+            "model_reason": suggestion.reason,
+        }
+        if isinstance(suggestion, LLMSaturatedSuggestion) and suggestion.iva_category is not None:
+            payload["iva_category"] = suggestion.iva_category.value
+    payload["provider"] = _transport_from_provenance(suggestion.provenance)
+    payload["provenance"] = suggestion.provenance
+    payload["operator_reason"] = reason
+    payload["source_command"] = source_command
+    payload["mutation_kind"] = "llm_suggestion_rejected"
+
+    event = build_ledger_bucket_event(
+        bucket_id=bucket_id,
+        event_type=BucketEventType.LEDGER_TRANSACTION_LLM_SUGGESTION_REJECTED,
+        occurred_at=occurred,
+        actor=actor,
+        object_type=BucketEventObjectType.LEDGER_TRANSACTION,
+        object_id=suggestion.transaction_id,
+        payload=payload,
+    )
+    # Persist the event through the transaction repository's secure-write batch
+    # (the unchanged catalogue rides along as a no-op), exactly as the apply path
+    # does — the caller-composed event repository stays bound to the active
+    # bucket store in the CLI flow.
+    _event_repo_arg = bucket_event_repository
+    save_transaction_catalogue_and_events(
+        transaction_repository=repository,
+        event_repository=_event_repo_arg,
+        catalogue=catalogue,
+        events=(event,),
+        expected_catalogue_revision=catalogue_revision,
+    )
+    _logger.info(
+        "llm reject: kind=%s provenance=%s",
+        suggestion_kind,
+        suggestion.provenance,
+    )
+    return LLMSuggestionRejectionResult(
+        bucket_id=bucket_id,
+        transaction_id=suggestion.transaction_id,
+        bucket_event_id=event.event_id,
+        suggestion_kind=suggestion_kind,
+        provenance=suggestion.provenance,
+        operator_reason=reason,
+    )
+
+
+__all__ = [
+    "ResolvedEvidence",
+    "apply_evidence_classification",
+    "apply_evidence_split",
+    "apply_llm_classification",
+    "apply_saturated_llm_classification",
+    "classify_with_evidence",
+    "derive_operator_iva_substrate",
+    "reject_llm_suggestion",
+    "resolve_llm_evidence",
+    "saturate_llm_classification",
+    "suggest_evidence_split",
+    "suggest_llm_classification",
+]

@@ -1,0 +1,335 @@
+"""Active-bucket session resolution for the column-level encrypt path.
+
+The column-level :class:`TypeDecorator` set in
+``adapters/persistence/storage/crypto/encrypted_columns.py`` cannot
+thread an explicit session reference through SQLAlchemy's
+:meth:`process_bind_param` signature (the method is invoked by
+SQLAlchemy's column machinery with a fixed ``(self, value, dialect)``
+shape). The substrate also forbids module-global mutable state that
+could survive a bucket switch -- the :class:`BucketSession` instance is
+the only legitimate owner of unlocked DEK bytes.
+
+This module composes both constraints with a
+:class:`~cadrumo.core.process_binding.ProcessScopedBinding` holding the active
+:class:`BucketSession`. The binding holds the session OBJECT, never its key
+bytes, so the session remains the sole owner of unlocked DEK material and
+:meth:`BucketSession.close` remains the sole zeroisation boundary.
+
+Who logged in is a fact about the PROCESS, not about one span of work. Exactly
+one profile is unlocked per process, and every surface that reads encrypted
+storage -- a parsed CLI invocation, a Textual credential screen running on a
+thread worker, a second :func:`asyncio.run` frame in the same program -- must
+observe the same answer. A plain :class:`~contextvars.ContextVar` cannot carry
+that: a login performed inside a copied context is discarded when that context
+ends, which reaches the operator as a correct authentication followed by a
+surface that cannot find the profile it just unlocked.
+
+So :func:`bind_active_bucket_session` publishes process-wide, and
+:func:`activate_session` still shadows that publication for the duration of a
+block -- nested activations stack and unwind exactly as before, and no
+*binding* made by the context manager outlives its ``with``.
+:func:`close_active_bucket_session` is the explicit eviction boundary: it
+closes the current session before removing that exact binding.
+"""
+
+from __future__ import annotations
+
+import atexit as _atexit
+from collections.abc import Generator
+from contextlib import contextmanager
+from typing import TypeGuard, override
+
+from .....application.auth.operator_probe_ports import ActiveProfileSessionPresencePort
+from .....core.logging import get_logger
+from .....core.process_binding import ProcessScopedBinding
+from .....core.time.clock import now
+from ..bucket.errors import BucketLockedError
+from ..errors import SecretStoreError
+from .bucket_session import BucketSession
+from .live_sessions import close_all_live_bucket_sessions
+from .profile_worker_binding import profile_worker_binding
+
+_log = get_logger(__name__)
+
+active_session: ProcessScopedBinding[BucketSession] = ProcessScopedBinding("aeat_active_bucket_session")
+"""The one live :class:`BucketSession` this process has unlocked, if any."""
+
+
+class NoActiveBucketSessionError(SecretStoreError):
+    """Raised when the encrypt path runs outside an active session block.
+
+    The adapter establishes only the observed session state.  The CLI boundary
+    decides whether a public profile label makes the canonical login action
+    resolvable; this substrate must not manufacture that action from custody
+    internals.
+    """
+
+    def __init__(self, detail: str | None = None) -> None:
+        """Initialize the error, ignoring ``detail`` in favour of the fixed translated message."""
+        del detail
+        super().__init__(
+            context={"active_bucket_session_available": False},
+            translated_message="errors.refused.refused_storage_master_key_no_active_session",
+        )
+
+
+@contextmanager
+def activate_session(session: BucketSession) -> Generator[None]:
+    """Bind ``session`` as the active :class:`BucketSession` for the block.
+
+    The binding this installs is scoped to the block: nested activations
+    stack and unwind cleanly, and on exit the caller observes exactly what
+    it observed before, whether that was an enclosing activation or the
+    process-wide binding :func:`bind_active_bucket_session` published. The
+    session itself is not closed on exit — ownership of the
+    :class:`BucketSession` lifecycle stays with the caller that opened it.
+
+    Args:
+        session: The unlocked :class:`BucketSession` whose DEK becomes
+            the column-level encryption key for the duration of the
+            block.
+    """
+    profile_worker_binding.require_session(session)
+    with active_session.override(session):
+        yield
+
+
+def bind_active_bucket_session(session: BucketSession) -> None:
+    """Publish ``session`` as this PROCESS's active session.
+
+    The unscoped counterpart of :func:`activate_session`, for the caller
+    shape that has no enclosing ``with`` block: an authenticated or resumed
+    profile session, whose binding must outlive the function that opened it
+    and is evicted explicitly by :func:`close_active_bucket_session` (or by
+    the interpreter-exit hook).
+
+    The publication is process-wide because the fact is: one profile is
+    unlocked per process, and a credential surface that authenticates on a
+    thread worker or inside its own event loop must be visible to the
+    surface that reads storage afterwards. Callers that DO have a scope, and
+    mean to shadow this binding only for that scope, use
+    :func:`activate_session` instead.
+
+    Args:
+        session: The unlocked :class:`BucketSession` to bind.
+    """
+    profile_worker_binding.require_session(session)
+    active_session.bind(session)
+
+
+def require_fresh_active_session() -> BucketSession:
+    """Return the active, unexpired :class:`BucketSession` or raise.
+
+    The shared resolution behind :func:`get_active_master_key` and
+    :func:`get_active_hmac_subkey`: both key surfaces must refuse
+    identically when no session is bound or the bound session expired,
+    so the checks live once here.
+
+    A batch reader that resolves key material once for one storage call
+    calls this directly, keeps the returned session for that call only, and
+    calls it again before releasing what it decrypted, so the call still ends
+    in this refusal when the session lapsed while it ran.
+
+    Raises:
+        NoActiveBucketSessionError: When no :func:`activate_session` block is
+            currently active on the calling thread or task.
+        BucketLockedError: When the active session has expired.
+    """
+    session = active_session.get()
+    profile_worker_binding.require_session(session)
+    if session is None:
+        raise NoActiveBucketSessionError()
+    if session.is_expired(now()):
+        bucket_id = session.bucket_id
+        close_active_bucket_session()
+        raise BucketLockedError(bucket_id=bucket_id)
+    return session
+
+
+def get_active_master_key() -> bytes:
+    """Return the DEK bytes of the currently-active :class:`BucketSession`.
+
+    Used by every column-level encrypt and decrypt operation in
+    ``_encrypted_columns.py``. The DEK (not the KEK) is the
+    AES-256-GCM key for the row-ciphertext layer — the KEK only ever
+    unwraps the DEK while the session is being opened.
+
+    Returns:
+        The 32-byte DEK used for AES-256-GCM column-level encryption.
+
+    Raises:
+        NoActiveBucketSessionError: When no :func:`activate_session` block is
+            currently active on the calling thread or task.
+        BucketLockedError: When the active session has expired.
+    """
+    return require_fresh_active_session().dek
+
+
+def get_active_hmac_subkey(context: bytes) -> bytes:
+    """Return the active session's memoised HKDF sub-key for ``context``.
+
+    The keyed-lookup digest path (:class:`HashedLookup` and the
+    secure-object key digest built on it) derives a per-consumer sub-key
+    from the active DEK before HMAC-ing its material. That derivation
+    depends only on ``(DEK, context)``, so it is memoised on the
+    :class:`BucketSession` (see :meth:`BucketSession.hmac_subkey`) and
+    resolved here under exactly the freshness checks
+    :func:`get_active_master_key` applies.
+
+    Args:
+        context: Stable per-consumer HKDF info bytes.
+
+    Returns:
+        The 32-byte derived sub-key.
+
+    Raises:
+        NoActiveBucketSessionError: When no :func:`activate_session` block is
+            currently active on the calling thread or task.
+        BucketLockedError: When the active session has expired.
+    """
+    return require_fresh_active_session().hmac_subkey(context)
+
+
+def has_active_bucket_session() -> bool:
+    """Return whether an active :class:`BucketSession` is bound."""
+    return current_active_bucket_session() is not None
+
+
+class ActiveProfileSessionPresenceAdapter(ActiveProfileSessionPresencePort):
+    """Expose active-session presence through the application probe contract."""
+
+    @override
+    def is_bound(self) -> bool:
+        """Return the current active bucket-session presence."""
+        return has_active_bucket_session()
+
+
+def current_active_bucket_session() -> BucketSession | None:
+    """Return the currently-bound :class:`BucketSession`, or ``None``.
+
+    Read-only observation of the active-session :class:`~contextvars.ContextVar`
+    for callers (storage runtime readiness, per-request secure-object session
+    gating) that need the live session's attributes (``bucket_id``, ``sealed``,
+    idle deadline) rather than only its DEK (:func:`get_active_master_key`) or
+    its presence (:func:`has_active_bucket_session`). Never mutates the
+    context; :func:`activate_session` and
+    :func:`close_active_bucket_session` own binding changes.
+    """
+    session = active_session.get()
+    profile_worker_binding.require_session(session)
+    return session
+
+
+def session_serves_bucket(session: BucketSession | None, bucket_id: str) -> TypeGuard[BucketSession]:
+    """Return whether ``session`` is open for exactly ``bucket_id``.
+
+    The single bucket-identity comparison for session reuse. Callers holding an
+    explicitly-passed session (the auth scope resolves one, then layers
+    storage-root and explicit-routing agreement on top) use this; callers
+    reading the ambient binding use :func:`active_bucket_session_serves`, which
+    is this function applied to the active-session ``ContextVar``.
+
+    One comparison, two entry points: an injected-session caller must not
+    re-derive ``session.bucket_id == bucket_id`` locally, because that is the
+    comparison whose omission produces the cross-bucket read.
+
+    Typed as a :data:`~typing.TypeGuard` so a caller that passes the guard may
+    read the session's own attributes without a redundant ``is not None``
+    re-check. :data:`~typing.TypeIs` would be unsound here: this returns
+    ``False`` for a perfectly non-``None`` session bound to a different bucket,
+    which must not narrow the negative branch to ``None``.
+    """
+    return session is not None and session.bucket_id == bucket_id
+
+
+def active_bucket_session_serves(bucket_id: str) -> bool:
+    """Return whether the bound session is open for exactly ``bucket_id``.
+
+    The single reuse predicate for callers deciding whether an ambient session
+    already serves the bucket they are about to read or write, rather than
+    opening a second span over it.
+
+    :func:`has_active_bucket_session` answers a strictly weaker question --
+    whether *any* session is bound -- and a caller that resolves a target
+    bucket and then reuses on presence alone will operate against whichever
+    bucket happens to be bound. The two differ exactly when a session for one
+    bucket is ambient while the caller targets another, which is the case that
+    reads or writes one profile's encrypted store under another profile's
+    identity. Callers that hold a target bucket MUST use this predicate;
+    :func:`has_active_bucket_session` remains correct only for callers with no
+    target to compare against.
+
+    Storage-root and explicit-routing agreement are a separate, stricter
+    concern layered on top of this by
+    :func:`~application.auth.operator_scope.active_profile_storage_span`; this
+    function owns the bucket-identity half that every caller needs.
+    """
+    return session_serves_bucket(current_active_bucket_session(), bucket_id)
+
+
+def close_active_bucket_session() -> None:
+    """Close and evict the currently bound :class:`BucketSession`.
+
+    The existing :meth:`BucketSession.close` boundary owns key zeroisation,
+    sealing, and engine disposal. This function adds only active-context
+    eviction. It is idempotent when no session is bound or when the bound
+    session is already sealed.
+
+    The binding is cleared in ``finally`` so an unexpected close failure cannot
+    leave a key-owning or sealed object advertised as active. An identity check
+    preserves a replacement binding installed reentrantly during cleanup.
+    """
+    session = active_session.get()
+    if session is None:
+        return
+    try:
+        session.close()
+    finally:
+        active_session.clear_bound(session)
+
+
+def _close_active_session_at_exit() -> None:
+    """Best-effort close of every live session on interpreter shutdown.
+
+    Registered as an :func:`atexit.register` hook below. If a session is
+    still bound when the interpreter exits (an interrupted CLI run, a
+    crashed test, a long-lived REPL) this hook zeroises the key
+    buffers in place so the memory footprint at shutdown does not leak
+    cleartext key material.
+
+    Closes the calling context's binding first, then sweeps the process-wide
+    live-session registry. The sweep is what covers a session bound on another
+    thread: ``atexit`` hooks run on the main thread, and by PEP 567 semantics
+    that thread observes no binding a worker made, so the context-scoped close
+    alone would silently leave a worker's keys in memory.
+    """
+    try:
+        close_active_bucket_session()
+    except Exception as exc:
+        # Interpreter shutdown is a degraded environment; never raise
+        # from an atexit hook, but keep a debug breadcrumb for audit.
+        _log.debug("active bucket session cleanup failed at interpreter exit error_type=%s", type(exc).__name__)
+    try:
+        close_all_live_bucket_sessions()
+    except Exception as exc:
+        _log.debug("live bucket session sweep failed at interpreter exit error_type=%s", type(exc).__name__)
+        return
+
+
+_atexit.register(_close_active_session_at_exit)
+
+
+__all__ = [
+    "ActiveProfileSessionPresenceAdapter",
+    "NoActiveBucketSessionError",
+    "activate_session",
+    "active_bucket_session_serves",
+    "bind_active_bucket_session",
+    "close_active_bucket_session",
+    "current_active_bucket_session",
+    "get_active_hmac_subkey",
+    "get_active_master_key",
+    "has_active_bucket_session",
+    "require_fresh_active_session",
+    "session_serves_bucket",
+]

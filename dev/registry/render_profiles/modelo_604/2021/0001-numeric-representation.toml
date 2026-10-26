@@ -1,0 +1,132 @@
+# Exact eligible Num anchors from the hash-pinned AEAT source; reviewed policies retain source omissions.
+schema_version = 1
+fragment_id = "numeric-representation"
+width_17_rules = []
+signed_composite_rules = []
+literal_numeric_rules = []
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 14
+source_cell = "A14"
+ordinal = "9"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m604-2021-row-14-year-yyyy"
+decision_statement = "Encode source field Sujeto pasivo (1) - Ejercicio with the reviewed year_yyyy representation."
+justification = "The four-byte Ejercicio field represents the filing year."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 14
+source_cell = "A14"
+ordinal = "9"
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 21
+source_cell = "A21"
+ordinal = "16"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m604-2021-row-21-integer"
+decision_statement = "Encode source field Sujeto pasivo (1) - Domicilio fiscal del SP en territorio español - Número de casa with the reviewed integer representation."
+justification = "Número de casa is a five-digit whole-number street number, not a decimal amount."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 21
+source_cell = "A21"
+ordinal = "16"
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 5
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 30
+source_cell = "A30"
+ordinal = "25"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m604-2021-row-30-identifier-digits"
+decision_statement = "Encode source field Sujeto pasivo (1) - Domicilio fiscal del SP en territorio español - Código postal with the reviewed identifier_digits representation."
+justification = "Código postal is a five-digit identifier whose leading zeroes are significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 30
+source_cell = "A30"
+ordinal = "25"
+record_identity = "Pág. 1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 16
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 42
+source_cell = "A42"
+ordinal = "37"
+record_identity = "Pág. 1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m604-2021-row-42-digit-string"
+decision_statement = "Encode source field Sujeto pasivo (1) - Teléfono de contacto with the reviewed digit_string representation."
+justification = "Teléfono de contacto is a digit string; the source does not state a fractional value."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 42
+source_cell = "A42"
+ordinal = "37"
+record_identity = "Pág. 1"
+
+[design_identity]
+modelo = "604"
+design_epoch = "2021"
+source_ref = "aeat-dr-604-2021"
+source_sha256 = "262e743deecf303fd344084bd56e9497da5a7cfd6eeab5286719513f788fd550"

@@ -1,0 +1,4 @@
+@step Store English as the default output language for the active profile.
+@result aeat --format json config profile edit --quiet --output-language en
+@expect result.status == "updated"
+@expect exit_code == 0

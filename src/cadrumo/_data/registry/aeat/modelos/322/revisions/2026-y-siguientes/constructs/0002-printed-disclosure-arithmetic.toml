@@ -1,0 +1,8 @@
+# This edition owns its source-printed disclosure formulas; expressions are unchanged.
+[[revisions.2026-y-siguientes.constructs]]
+id = "modelo-322-printed-disclosure-arithmetic-2026-y-siguientes"
+casilla_ids = ["38", "62", "63", "68", "70", "88", "717", "735", "65"]
+formulas = ["modelo-322-printed-38", "modelo-322-printed-62", "modelo-322-printed-63", "modelo-322-printed-68", "modelo-322-printed-70", "modelo-322-printed-88", "modelo-322-printed-717", "modelo-322-printed-735", "modelo-322-printed-65"]
+application_links = ["modelo-322-review", "modelo-322-approval", "modelo-322-reconciliation", "modelo-322-workflow", "modelo-322-calculation"]
+legal_refs = ["orden-eha-3434-2007:art-1", "orden-hac-27-2026:disposicion-final-unica", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-121"]
+source_refs = ["boe-modelo-390-2026-form", "aeat-dr-322-2026", "aeat-modelo-322-instructions-20261006", "aeat-modelo-322-procedure", "boe-modelo-322-2007-form"]

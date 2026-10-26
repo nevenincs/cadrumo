@@ -1,0 +1,699 @@
+use super::*;
+
+#[cfg(windows)]
+#[tokio::test(start_paused = true)]
+async fn readiness_preserves_public_observation_after_former_startup_boundary() {
+    let started = tokio::time::Instant::now();
+    let observed = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let progress = observed.clone();
+    let ready = wait_for_readiness(async move {
+        tokio::time::sleep(Duration::from_millis(89_800)).await;
+        progress.store(1, Ordering::Release);
+        tokio::time::sleep(Duration::from_secs(5)).await;
+        progress.store(2, Ordering::Release);
+        Ok(())
+    });
+    tokio::pin!(ready);
+    tokio::select! {
+        result = &mut ready => panic!("admission finished before public observation: {result:?}"),
+        _ = tokio::time::sleep(Duration::from_secs(90)) => {}
+    }
+    assert_eq!(observed.load(Ordering::Acquire), 1);
+    ready.await.unwrap();
+    assert_eq!(observed.load(Ordering::Acquire), 2);
+    assert_eq!(started.elapsed(), Duration::from_millis(94_800));
+}
+
+#[cfg(windows)]
+#[tokio::test(start_paused = true)]
+async fn readiness_expiry_and_public_refusal_remain_failures() {
+    let started = tokio::time::Instant::now();
+    let error = wait_for_readiness(std::future::pending())
+        .await
+        .unwrap_err();
+    assert_eq!(error.code, ErrorCode::TimedOut);
+    assert_eq!(error.operation, Operation::Manager);
+    assert_eq!(
+        started.elapsed(),
+        cadrumo_manager::supervision::supervisor::SupervisorConfig::default().readiness_ceiling
+    );
+    let error = wait_for_readiness(async {
+        tokio::time::sleep(Duration::from_secs(95)).await;
+        Err(failure(ErrorCode::ReadFailed))
+    })
+    .await
+    .unwrap_err();
+    assert_eq!(error.code, ErrorCode::ReadFailed);
+    assert_eq!(error.operation, Operation::Manager);
+}
+
+#[tokio::test]
+async fn failed_start_is_a_typed_public_status_and_close_still_settles() {
+    let manager = fixture(Ok(Err("image_not_installed")));
+    manager
+        .start_with(false, |_| async {
+            Err(failure(ErrorCode::PackageUnavailable))
+        })
+        .await
+        .unwrap_err();
+    let status = manager.read_status().unwrap();
+    assert_eq!(status.state, ManagerState::Failed);
+    assert_eq!(status.failure.unwrap().code, ErrorCode::PackageUnavailable);
+    manager.close_checked().await.unwrap();
+    assert_eq!(manager.read_status().unwrap().state, ManagerState::Stopped);
+}
+
+#[tokio::test]
+async fn isolated_root_activation_never_inspects_or_dispatches_the_installed_manager() {
+    let manager = fixture(Err(failure(ErrorCode::ManagerUnavailable)));
+    let package = PathBuf::from("unusable package");
+    for retry in [false, true] {
+        assert_eq!(
+            manager
+                .activate_installed(false, package.clone(), retry)
+                .await
+                .unwrap(),
+            None
+        );
+    }
+    let snapshot = manager.diagnostics.snapshot(0);
+    assert!(snapshot.processes.is_empty());
+    assert!(snapshot.events.is_empty());
+    assert!(manager.attempt.lock().await.is_none());
+}
+
+#[test]
+fn dispatch_command_preserves_only_explicit_recovery_intent() {
+    use std::ffi::OsString;
+
+    let manager = fixture(Ok(Err("image_not_installed")));
+    let target = Selection {
+        entrypoint: PathBuf::from("installed prefix/manager.exe"),
+        package: PathBuf::from("installed prefix/versions/0.6.0"),
+        manager: PathBuf::from("installed prefix/versions/0.6.0/manager.exe"),
+        version: [0, 6, 0],
+        lease: None,
+        registration: None,
+    };
+    for retry in [false, true] {
+        let command = manager.dispatch_command(&target, retry);
+        let mut expected: Vec<OsString> = ["-I", "-c", DISPATCH]
+            .into_iter()
+            .map(OsString::from)
+            .collect();
+        if retry {
+            expected.push("installed prefix/versions/0.6.0/manager.exe".into());
+            expected.push("--retry".into());
+        } else {
+            expected.push("installed prefix/manager.exe".into());
+        }
+        assert_eq!(command.as_std().get_args().collect::<Vec<_>>(), expected);
+    }
+}
+
+#[tokio::test]
+async fn overlapping_explicit_retry_does_not_share_an_ordinary_attempt() {
+    use std::{future::Future, task::Poll};
+
+    let manager = fixture(Ok(Err("image_not_installed")));
+    let (entered, ready) = tokio::sync::oneshot::channel();
+    let (release, waiting) = tokio::sync::oneshot::channel();
+    let initial_owner = manager.clone();
+    let initial = tokio::spawn(async move {
+        initial_owner
+            .start_with(false, |_| async move {
+                entered.send(()).unwrap();
+                waiting.await.unwrap();
+                Ok(StartOutcome::Dispatched)
+            })
+            .await
+    });
+    ready.await.unwrap();
+
+    let ran = Arc::new(AtomicBool::new(false));
+    let recovery_ran = ran.clone();
+    let mut recovery = Box::pin(manager.start_with(true, |_| async move {
+        recovery_ran.store(true, Ordering::Release);
+        Ok(StartOutcome::Dispatched)
+    }));
+    std::future::poll_fn(|context| {
+        assert!(recovery.as_mut().poll(context).is_pending());
+        Poll::Ready(())
+    })
+    .await;
+    release.send(()).unwrap();
+    assert_eq!(initial.await.unwrap().unwrap(), StartOutcome::Dispatched);
+    assert_eq!(recovery.await.unwrap(), StartOutcome::Dispatched);
+    assert!(
+        ran.load(Ordering::Acquire),
+        "explicit recovery must execute"
+    );
+    assert_eq!(manager.generation.load(Ordering::Acquire), 2);
+    assert!(manager.attempt.lock().await.as_ref().unwrap().retry);
+}
+
+fn fixture(target: Result<std::result::Result<PathBuf, &'static str>>) -> Arc<ManagerStart> {
+    Arc::new(ManagerStart {
+        package_root: target,
+        child: ChildConfiguration::new(
+            std::env::current_exe().unwrap(),
+            std::env::temp_dir(),
+            Default::default(),
+        )
+        .unwrap(),
+        storage_root: std::env::temp_dir(),
+        diagnostics: Arc::new(Diagnostics::default()),
+        attempt: Arc::new(tokio::sync::Mutex::new(None)),
+        generation: AtomicU64::new(0),
+        closed: Arc::new(AtomicBool::new(false)),
+        cancellation: Arc::new(Cancellation::default()),
+        spawn_fence: Arc::new(Mutex::new(())),
+        closing: tokio::sync::Notify::new(),
+        supervision: Arc::new(tokio::sync::watch::Sender::new(0)),
+        observation: observation::Observer::new(cfg!(windows)),
+        #[cfg(windows)]
+        host: Mutex::new(None),
+    })
+}
+
+#[tokio::test]
+async fn explicit_install_refuses_unmanaged_hosts_and_closed_requests() {
+    for scope in [InstallScope::User, InstallScope::Machine] {
+        let manager = fixture(Ok(Err("image_not_installed")));
+        let error = manager.install(scope).await.unwrap_err();
+        assert_eq!(error.code, ErrorCode::InstallationRefused);
+        assert_eq!(error.operation, Operation::Installation);
+        assert!(!manager.attempt.lock().await.as_ref().unwrap().retry);
+        assert!(manager.diagnostics.snapshot(0).processes.is_empty());
+        manager.close().await;
+        assert_eq!(
+            manager.install(scope).await.unwrap_err().code,
+            ErrorCode::SessionUnavailable
+        );
+    }
+}
+
+#[cfg(windows)]
+#[tokio::test]
+async fn close_cancels_then_joins_the_actual_verifier_and_refuses_late_retries() {
+    use cadrumo_application::{error::Error, package::PackageManifest, value::RelativePath};
+    use std::{sync::mpsc, time::Instant};
+    for abandon_caller in [false, true] {
+        let manager = fixture(Ok(Err("image_not_installed")));
+        let settled = Arc::new(AtomicBool::new(false));
+        let cancellation_observed = Arc::new(AtomicBool::new(false));
+        let worker_settled = settled.clone();
+        let worker_observed = cancellation_observed.clone();
+        let (entered, ready) = tokio::sync::oneshot::channel();
+        let (release, waiting) = mpsc::channel();
+        let owner = manager.clone();
+        let caller = tokio::spawn(async move {
+            owner
+                .start_with(false, |owner| async move {
+                    owner
+                        .resolve_with(move |cancellation| {
+                            entered.send(()).unwrap();
+                            waiting.recv_timeout(Duration::from_secs(5)).unwrap();
+                            let owner = RelativePath::new("manifest.json").unwrap();
+                            let inspected = PackageManifest::read_cancellable(
+                                &std::env::temp_dir().join("unused-cancelled-verifier-fixture"),
+                                &owner,
+                                &cancellation,
+                            );
+                            worker_observed.store(
+                                matches!(inspected, Err(Error::Cancelled)),
+                                Ordering::Release,
+                            );
+                            worker_settled.store(true, Ordering::Release);
+                            // Even a verifier that returns a target after the close fence
+                            // must settle without permitting a late helper launch.
+                            Ok(PathBuf::from("unused-target"))
+                        })
+                        .await?;
+                    owner
+                        .run_dispatch(helper("exit 99"), Duration::from_secs(15))
+                        .await
+                })
+                .await
+        });
+        tokio::time::timeout(Duration::from_secs(5), ready)
+            .await
+            .unwrap()
+            .unwrap();
+        if abandon_caller {
+            caller.abort();
+        }
+        let cancellation_started = Instant::now();
+        let closing_owner = manager.clone();
+        let closing = tokio::spawn(async move { closing_owner.close().await });
+        tokio::time::timeout(Duration::from_secs(5), async {
+            while !manager.closed.load(Ordering::Acquire) {
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .unwrap();
+        assert!(
+            !closing.is_finished(),
+            "close must wait for the actual blocked verifier"
+        );
+        assert!(!settled.load(Ordering::Acquire));
+        for _ in 0..8 {
+            assert_eq!(
+                tokio::time::timeout(Duration::from_secs(1), manager.start(true))
+                    .await
+                    .unwrap()
+                    .unwrap_err()
+                    .code,
+                ErrorCode::SessionUnavailable
+            );
+        }
+        assert!(manager.diagnostics.snapshot(0).processes.is_empty());
+        let released = Instant::now();
+        release.send(()).unwrap();
+        tokio::time::timeout(Duration::from_secs(5), closing)
+            .await
+            .unwrap()
+            .unwrap();
+        if abandon_caller {
+            assert!(caller.await.unwrap_err().is_cancelled());
+        } else {
+            assert_eq!(
+                caller.await.unwrap().unwrap_err().code,
+                ErrorCode::SessionUnavailable
+            );
+        }
+        assert!(settled.load(Ordering::Acquire));
+        assert!(cancellation_observed.load(Ordering::Acquire));
+        assert!(manager.diagnostics.snapshot(0).processes.is_empty());
+        assert_eq!(
+            manager
+                .attempt
+                .lock()
+                .await
+                .as_ref()
+                .unwrap()
+                .outcome
+                .as_ref()
+                .unwrap_err()
+                .code,
+            ErrorCode::SessionUnavailable
+        );
+        assert_eq!(
+            manager
+                .run_dispatch(helper("exit 99"), Duration::from_secs(15))
+                .await
+                .unwrap_err()
+                .code,
+            ErrorCode::SessionUnavailable
+        );
+        assert!(manager.diagnostics.snapshot(0).processes.is_empty());
+        eprintln!(
+            "verifier settlement abandon_caller={abandon_caller} cancellation_to_settlement_us={} test_gate_release_to_settlement_us={}",
+            cancellation_started.elapsed().as_micros(),
+            released.elapsed().as_micros()
+        );
+    }
+}
+
+#[cfg(windows)]
+#[tokio::test]
+async fn close_waits_for_the_private_helper_and_fences_later_launches() {
+    use std::{future::Future, task::Poll};
+    let manager = fixture(Ok(Err("image_not_installed")));
+    let held = manager.attempt.lock().await;
+    let running = async {
+        let result = manager
+            .run_dispatch(helper("Start-Sleep -Seconds 60"), Duration::from_secs(30))
+            .await;
+        drop(held);
+        result
+    };
+    tokio::pin!(running);
+    // Process creation completes inside the first poll and can take seconds on
+    // a loaded host; the budget below measures only close interrupting the helper.
+    std::future::poll_fn(|context| {
+        assert!(running.as_mut().poll(context).is_pending());
+        Poll::Ready(())
+    })
+    .await;
+    assert_eq!(
+        manager.diagnostics.snapshot(0).processes[0].phase,
+        ProcessPhase::Running
+    );
+    let (result, ()) = tokio::time::timeout(Duration::from_secs(3), async {
+        tokio::join!(running, manager.close())
+    })
+    .await
+    .expect("closing must interrupt the helper instead of waiting its30second deadline");
+    assert_eq!(result.unwrap_err().code, ErrorCode::SessionUnavailable);
+    assert_eq!(
+        manager.diagnostics.snapshot(0).processes[0].phase,
+        ProcessPhase::Terminated
+    );
+    assert_eq!(
+        manager.start(true).await.unwrap_err().code,
+        ErrorCode::SessionUnavailable
+    );
+}
+
+#[cfg(windows)]
+#[tokio::test]
+async fn cancelled_ipc_caller_does_not_abandon_the_owned_helper() {
+    let manager = fixture(Ok(Err("image_not_installed")));
+    let caller_owner = manager.clone();
+    let caller = tokio::spawn(async move {
+        caller_owner.start_with(true, |owner| async move {
+            owner.run_dispatch(helper(
+                "Start-Sleep -Milliseconds 700; [Console]::Out.Write('{\"dispatched\":true,\"os_code\":null}')"
+            ), Duration::from_secs(10)).await
+        }).await
+    });
+    tokio::time::timeout(Duration::from_secs(5), async {
+        while manager.diagnostics.snapshot(0).processes.is_empty() {
+            tokio::task::yield_now().await;
+        }
+    })
+    .await
+    .unwrap();
+    caller.abort();
+    assert!(caller.await.unwrap_err().is_cancelled());
+    let settled = tokio::time::timeout(Duration::from_secs(5), manager.attempt.lock())
+        .await
+        .unwrap();
+    assert_eq!(
+        settled.as_ref().unwrap().outcome.as_ref().unwrap(),
+        &StartOutcome::Dispatched
+    );
+    drop(settled);
+    manager.close().await;
+    let snapshot = manager.diagnostics.snapshot(0);
+    assert_eq!(snapshot.processes.len(), 1);
+    assert_eq!(snapshot.processes[0].phase, ProcessPhase::Exited);
+    assert_eq!(snapshot.processes[0].exit_code, Some(0));
+    assert_eq!(
+        manager
+            .attempt
+            .lock()
+            .await
+            .as_ref()
+            .unwrap()
+            .outcome
+            .as_ref()
+            .unwrap(),
+        &StartOutcome::Dispatched
+    );
+}
+
+#[cfg(windows)]
+#[tokio::test]
+async fn overlapping_retries_share_one_attempt_instead_of_forming_a_launch_queue() {
+    use std::{future::Future, task::Poll};
+    let manager = fixture(Ok(Err("image_not_installed")));
+    let held = manager.attempt.lock().await;
+    let mut requests: Vec<_> = (0..64).map(|_| Box::pin(manager.start(true))).collect();
+    std::future::poll_fn(|context| {
+        for request in &mut requests {
+            assert!(request.as_mut().poll(context).is_pending());
+        }
+        Poll::Ready(())
+    })
+    .await;
+    drop(held);
+    for request in requests {
+        assert_eq!(
+            request.await.unwrap_err().code,
+            ErrorCode::ManagerUnavailable
+        );
+    }
+    let starts = manager
+        .diagnostics
+        .snapshot(0)
+        .events
+        .iter()
+        .filter(|event| matches!(event.kind, EventKind::StageStarted))
+        .count();
+    assert_eq!(starts, 1, "overlapping IPC retries must share one dispatch");
+}
+
+#[cfg(windows)]
+#[tokio::test]
+async fn initial_calls_share_the_failure_but_explicit_retry_records_a_new_attempt() {
+    let manager = fixture(Err(failure(ErrorCode::ManagerUnavailable)));
+    let (first, second) = tokio::join!(manager.start(false), manager.start(false));
+    assert_eq!(first.unwrap_err().code, ErrorCode::ManagerUnavailable);
+    assert_eq!(second.unwrap_err().code, ErrorCode::ManagerUnavailable);
+    let starts = || {
+        manager
+            .diagnostics
+            .snapshot(0)
+            .events
+            .iter()
+            .filter(|event| matches!(event.kind, EventKind::StageStarted))
+            .count()
+    };
+    assert_eq!(starts(), 1);
+    assert_eq!(
+        manager.start(true).await.unwrap_err().code,
+        ErrorCode::ManagerUnavailable
+    );
+    assert_eq!(starts(), 2);
+    let unmanaged = fixture(Ok(Err("image_not_installed")));
+    let refused = unmanaged.start(false).await.unwrap_err();
+    assert_eq!(refused.code, ErrorCode::ManagerUnavailable);
+    assert_eq!(refused.reason.as_deref(), Some("image_not_installed"));
+    assert!(unmanaged.diagnostics.snapshot(0).processes.is_empty());
+}
+
+#[cfg(windows)]
+fn helper(script: &str) -> tokio::process::Command {
+    let mut command = tokio::process::Command::new(
+        PathBuf::from(std::env::var_os("SystemRoot").unwrap())
+            .join("System32/WindowsPowerShell/v1.0/powershell.exe"),
+    );
+    command
+        .args([
+            "-NoLogo",
+            "-NoProfile",
+            "-NonInteractive",
+            "-Command",
+            script,
+        ])
+        .stdin(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .kill_on_drop(true);
+    command.creation_flags(0x0800_0000);
+    command
+}
+
+#[cfg(windows)]
+#[tokio::test]
+async fn missing_executable_or_working_directory_reports_safe_spawn_failure() {
+    for missing_image in [false, true] {
+        let manager = fixture(Ok(Err("image_not_installed")));
+        let private_path =
+            std::env::temp_dir().join(format!("cadrumo-missing-private-{}", std::process::id()));
+        assert!(!private_path.exists());
+        let mut command = if missing_image {
+            tokio::process::Command::new(&private_path)
+        } else {
+            helper("exit0")
+        };
+        if !missing_image {
+            command.current_dir(&private_path);
+        }
+        let error = manager
+            .run_dispatch(command, Duration::from_secs(2))
+            .await
+            .unwrap_err();
+        assert_eq!(error.code, ErrorCode::ManagerDispatchFailed);
+        let snapshot = manager.diagnostics.snapshot(0);
+        assert!(snapshot.processes.is_empty());
+        assert_eq!(snapshot.events[0].role, Some(ProcessRole::ManagerDispatch));
+        assert!(
+            !serde_json::to_string(&snapshot.events)
+                .unwrap()
+                .contains("missing-private")
+        );
+    }
+}
+
+#[cfg(windows)]
+#[tokio::test]
+async fn repeated_helpers_remain_settled_and_report_measured_latency() {
+    let manager = fixture(Ok(Err("image_not_installed")));
+    let mut samples = Vec::new();
+    for _ in 0..24 {
+        let start = std::time::Instant::now();
+        let mut command = helper(
+            "[Console]::Error.Write(('private-noise' * 65536)); [Console]::Out.Write('{\"dispatched\":true,\"os_code\":null}')",
+        );
+        // Fixed absolute executable and explicit working directory must not need PATH.
+        command
+            .env_remove("PATH")
+            .env_remove("PYTHONPATH")
+            .current_dir(std::env::temp_dir());
+        assert_eq!(
+            manager
+                .run_dispatch(command, Duration::from_secs(10))
+                .await
+                .unwrap(),
+            StartOutcome::Dispatched
+        );
+        samples.push(start.elapsed());
+        let snapshot = manager.diagnostics.snapshot(0);
+        assert!(
+            snapshot
+                .processes
+                .iter()
+                .all(|process| process.phase == ProcessPhase::Exited)
+        );
+        assert!(snapshot.output.is_empty());
+    }
+    samples.sort();
+    eprintln!(
+        "helper churn samples=24 median_us={} p95_us={} retained_processes={}",
+        samples[12].as_micros(),
+        samples[22].as_micros(),
+        manager.diagnostics.snapshot(0).processes.len()
+    );
+}
+
+#[cfg(windows)]
+#[tokio::test]
+async fn helper_success_and_failure_keep_exit_attribution_without_capturing_output() {
+    for (script, expected) in [
+        (
+            "[Console]::Out.Write('{\"dispatched\":true,\"os_code\":null}')",
+            None,
+        ),
+        (
+            "[Console]::Out.Write('{\"dispatched\":false,\"os_code\":5}'); exit 1",
+            Some(ErrorCode::ManagerDispatchFailed),
+        ),
+        (
+            "[Console]::Out.Write('private-invalid-reply')",
+            Some(ErrorCode::ManagerDispatchFailed),
+        ),
+    ] {
+        let manager = fixture(Ok(Err("image_not_installed")));
+        let result = manager
+            .run_dispatch(helper(script), Duration::from_secs(15))
+            .await;
+        assert_eq!(result.err().map(|error| error.code), expected);
+        let snapshot = manager.diagnostics.snapshot(0);
+        assert_eq!(snapshot.processes.len(), 1);
+        assert_eq!(snapshot.processes[0].phase, ProcessPhase::Exited);
+        assert_eq!(snapshot.processes[0].role, ProcessRole::ManagerDispatch);
+        assert!(snapshot.output.is_empty());
+        assert!(
+            !serde_json::to_string(&snapshot.events)
+                .unwrap()
+                .contains("private-invalid-reply")
+        );
+    }
+}
+
+#[cfg(windows)]
+#[tokio::test]
+async fn helper_timeout_and_output_limit_reap_and_attribute_the_child() {
+    for (script, deadline, expected) in [
+        (
+            "Start-Sleep -Seconds 60",
+            Duration::from_millis(500),
+            ErrorCode::TimedOut,
+        ),
+        (
+            "while ($true) { [Console]::Out.Write(('x' * 8192)) }",
+            Duration::from_secs(15),
+            ErrorCode::OutputLimit,
+        ),
+    ] {
+        let manager = fixture(Ok(Err("image_not_installed")));
+        assert_eq!(
+            manager
+                .run_dispatch(helper(script), deadline)
+                .await
+                .unwrap_err()
+                .code,
+            expected
+        );
+        let snapshot = manager.diagnostics.snapshot(0);
+        let process = &snapshot.processes[0];
+        assert_eq!(process.phase, ProcessPhase::Terminated);
+        assert!(snapshot.events.iter().any(|event| {
+            event.process == Some(process.id)
+                && event
+                    .failure
+                    .as_ref()
+                    .is_some_and(|error| error.code == expected)
+        }));
+        assert!(snapshot.output.is_empty());
+    }
+}
+
+#[test]
+fn dispatch_acknowledges_launch_only_and_rejects_failed_or_malformed_replies() {
+    assert_eq!(
+        decode(br#"{"dispatched":true,"os_code":null}"#, true).unwrap(),
+        StartOutcome::Dispatched
+    );
+    for (bytes, success) in [
+        (br#"{"dispatched":true,"os_code":null}"#.as_slice(), false),
+        (br#"{"dispatched":false,"os_code":5}"#.as_slice(), true),
+        (
+            br#"{"dispatched":true,"os_code":null,"ready":true}"#.as_slice(),
+            true,
+        ),
+        (b"not a control reply".as_slice(), true),
+    ] {
+        assert!(decode(bytes, success).is_err());
+    }
+}
+
+#[test]
+fn manager_path_is_taken_from_the_package_projection_and_is_unambiguous() {
+    use cadrumo_application::installation::Image;
+    let mut contract: DiscoveryContract =
+        serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/contract.json"))).unwrap();
+    contract.layout.application_images = vec![Image {
+        name: "fixture-manager".into(),
+        placement: ".".into(),
+        target: "rust_manager".into(),
+    }];
+    assert_eq!(
+        contract.manager_member().unwrap().as_str(),
+        format!("fixture-manager{}", contract.layout.entrypoint_suffix)
+    );
+    contract.layout.application_images[0].name = "../foreign".into();
+    assert!(contract.manager_member().is_err());
+    contract.layout.application_images[0].name = "fixture-manager".into();
+    contract.layout.application_images.push(Image {
+        name: "duplicate-manager".into(),
+        placement: ".".into(),
+        target: "rust_manager".into(),
+    });
+    assert!(contract.manager_member().is_err());
+    contract.layout.application_images.clear();
+    assert!(contract.manager_member().is_err());
+}
+
+#[test]
+fn asynchronous_service_failure_is_logged_once_per_transition() {
+    let manager = fixture(Ok(Err("image_not_installed")));
+    manager.report_failure(failure(ErrorCode::ManagerUnavailable));
+    manager.report_failure(failure(ErrorCode::ManagerUnavailable));
+    let snapshot = manager.diagnostics.snapshot(u64::MAX);
+    let failures: Vec<_> = snapshot
+        .events
+        .iter()
+        .filter(|event| event.failure.is_some())
+        .collect();
+    assert_eq!(failures.len(), 1);
+    assert_eq!(failures[0].stage, Some(HostStage::Manager));
+    assert_eq!(
+        failures[0].failure.as_ref().unwrap().code,
+        ErrorCode::ManagerUnavailable
+    );
+}

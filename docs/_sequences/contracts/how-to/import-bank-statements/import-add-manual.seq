@@ -1,0 +1,11 @@
+@step Record an expense you paid out.
+aeat --format json app ledger add --date 2026-03-15 --amount 49.99 --direction OUTGOING --description "Software subscription" --idempotency-key import-add-software
+@capture transaction_id result.transaction_id
+@step Record a payment you received.
+aeat --format json app ledger add --date 2026-03-20 --amount 121.00 --direction INCOMING --description "Client payment" --idempotency-key import-add-client
+@step Record a supplier expense.
+aeat --format json app ledger add --date 2026-03-21 --amount 60.50 --direction OUTGOING --description "Office supplies" --idempotency-key import-add-supplies
+@step Confirm the first transaction was stored as an outgoing expense.
+@result aeat --format json app ledger view {transaction_id}
+@expect result.transaction.amount == "49.99"
+@expect result.transaction.direction == "OUTGOING"

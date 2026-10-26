@@ -1,0 +1,379 @@
+"""Registry-backed loaders for withholding parameter facts.
+
+The rate families and their legal applicability are authored in source-cited
+governed-fact fragments under ``registry/aeat/facts``. Python consumers read
+the selected values from the validated authority rather than restating a
+figure, category, or legal rule in this adapter. Separate legal declarations
+remain only for consumers that have not yet migrated.
+
+The loaders resolve typed scalar facts through ``ValidatedRegistryAuthority``
+at an explicit filing-period coordinate, then project only the values needed
+by their frozen pydantic records. The authority owns validation, fingerprinting
+and lifecycle identity; this module keeps neither a legacy parser nor
+a local value cache.
+
+The activity-rate projection supplies a governed upper bound for bounded
+inference, while the administrator projection supplies the selected rate and
+turnover condition for an advisory comparison. This module performs only
+authority resolution, typed projection, and generic numeric validation; it
+does not choose a legal category for a transaction.
+
+See Also:
+    :mod:`domain.iva.components`
+        Declares, per IVA category, whether a retención is expected at all.
+    :mod:`domain.iva.recargo_equivalencia`
+        The loader idiom this module follows.
+"""
+
+from __future__ import annotations
+
+from datetime import date
+from decimal import Decimal
+from typing import TYPE_CHECKING, Final
+
+from pydantic import BaseModel, Field
+
+from ...core.models import STRICT_FROZEN_CONFIG
+from ..calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
+from .errors import TransactionValidationError
+
+if TYPE_CHECKING:
+    from ..calculations.registry.facts.resolution import ResolvedScalarFact
+
+
+class RirpfArt95RetencionRates(BaseModel):
+    """Frozen projection of the authority's activity withholding rates.
+
+    Attributes:
+        Each field is a named projection of one registry-declared activity
+        withholding family. The field names preserve the consumer contract;
+        the selected values, legal references, and applicability remain in
+        the registry authority.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    general_rate: Decimal = Field(gt=Decimal("0"), lt=Decimal("1"))
+    inicio_actividad_rate: Decimal = Field(gt=Decimal("0"), lt=Decimal("1"))
+    agricola_ganadera_rate: Decimal = Field(gt=Decimal("0"), lt=Decimal("1"))
+    ganadera_engorde_rate: Decimal = Field(gt=Decimal("0"), lt=Decimal("1"))
+    forestal_rate: Decimal = Field(gt=Decimal("0"), lt=Decimal("1"))
+    estimacion_objetiva_rate: Decimal = Field(gt=Decimal("0"), lt=Decimal("1"))
+
+
+_GENERAL_FACT_ID: Final[str] = "rirpf-art-95:retencion-actividades-profesionales-general"
+_INICIO_FACT_ID: Final[str] = "rirpf-art-95:retencion-actividades-profesionales-inicio"
+_AGRICOLA_GANADERA_FACT_ID: Final[str] = "rirpf-art-95:retencion-actividades-agricolas-ganaderas-general"
+_GANADERA_ENGORDE_FACT_ID: Final[str] = "rirpf-art-95:retencion-actividades-ganaderas-engorde-porcino-avicultura"
+_FORESTAL_FACT_ID: Final[str] = "rirpf-art-95:retencion-actividades-forestales"
+_ESTIMACION_OBJETIVA_FACT_ID: Final[str] = "rirpf-art-95:retencion-actividades-estimacion-objetiva"
+
+#: Every activity-withholding fact this module resolves, in authority order.
+#:
+#: Declared once so the rate loader and the grounding lookup below cannot drift:
+#: a fact added to one and not the other would produce a rate set whose
+#: refs do not cover it.
+_ART95_FACT_IDS: Final[tuple[str, ...]] = (
+    _GENERAL_FACT_ID,
+    _INICIO_FACT_ID,
+    _AGRICOLA_GANADERA_FACT_ID,
+    _GANADERA_ENGORDE_FACT_ID,
+    _FORESTAL_FACT_ID,
+    _ESTIMACION_OBJETIVA_FACT_ID,
+)
+
+
+def retencion_effective_date(*, value_date: date | None, booked_date: date | None) -> date:
+    """Return the settlement date that selects a transaction's withholding facts.
+
+    A bank's value date records when the payment became effective and therefore
+    takes precedence.  Some providers do not supply it; their booked date is
+    the recorded settlement coordinate.  No wall-clock fallback is lawful here:
+    a row with neither dated payment fact is unsupported and must not select a
+    rate from a different legal period.
+    """
+    if value_date is not None:
+        return value_date
+    if booked_date is not None:
+        return booked_date
+    raise TransactionValidationError("retención fact resolution requires a transaction value or booked date")
+
+
+def _resolved_scalar_fact(
+    fact_id: str,
+    *,
+    effective_date: date,
+    expected_unit: str,
+    authority: GovernedFactSource | None = None,
+) -> ResolvedScalarFact:
+    """Resolve one rate fact with the authority evidence required by its consumer."""
+    from ..calculations.registry.errors import RegistryError
+    from ..calculations.registry.facts.resolution import ResolvedScalarFact, ScalarFactQuery
+    from ..calculations.registry.schema_base import DateAxis
+
+    authority = require_governed_fact_authority(authority, subject="retención fact resolution")
+    try:
+        resolved = authority.resolve_governed_fact(
+            ScalarFactQuery(
+                fact_id=fact_id,
+                date_axis=DateAxis.FILING_PERIOD,
+                effective_date=effective_date,
+            )
+        )
+    except RegistryError as exc:
+        raise TransactionValidationError(
+            f"failed to resolve retención fact {fact_id!r}: {exc}",
+        ) from exc
+    if not isinstance(resolved, ResolvedScalarFact):
+        raise TransactionValidationError(f"retención fact {fact_id!r} did not resolve to a scalar")
+    if resolved.payload.unit != expected_unit:
+        raise TransactionValidationError(
+            f"retención fact {fact_id!r} carries unit {resolved.payload.unit!r}, expected {expected_unit!r}",
+        )
+    if not resolved.legal_refs:
+        raise TransactionValidationError(f"retención fact {fact_id!r} has no legal references")
+    return resolved
+
+
+def _legal_refs_of(
+    fact_id: str,
+    *,
+    effective_date: date,
+    authority: GovernedFactSource | None = None,
+) -> tuple[str, ...]:
+    """Return one resolved fact's legal references, refusing an ungrounded result."""
+    return tuple(
+        _resolved_scalar_fact(
+            fact_id,
+            effective_date=effective_date,
+            expected_unit="fraction" if fact_id != _ADMINISTRADOR_INCN_UMBRAL_FACT_ID else "EUR",
+            authority=authority,
+        ).legal_refs
+    )
+
+
+def load_retencion_actividades_rates(
+    *,
+    effective_date: date,
+    authority: GovernedFactSource | None = None,
+) -> RirpfArt95RetencionRates:
+    """Return the authority-selected activity withholding rates.
+
+    Returns:
+        A :class:`RirpfArt95RetencionRates` record with every rate value.
+
+    Raises:
+        TransactionValidationError: If any expected fact id is absent,
+            carries no string value, or does not parse as a ``Decimal``, or if
+            the supplied authority cannot resolve it.
+        InternalInvariantError: When no authority is supplied and no
+            validation scope is active.
+    """
+    coordinate = effective_date
+    return RirpfArt95RetencionRates(
+        general_rate=_decimal_fact(_GENERAL_FACT_ID, coordinate, authority),
+        inicio_actividad_rate=_decimal_fact(_INICIO_FACT_ID, coordinate, authority),
+        agricola_ganadera_rate=_decimal_fact(_AGRICOLA_GANADERA_FACT_ID, coordinate, authority),
+        ganadera_engorde_rate=_decimal_fact(_GANADERA_ENGORDE_FACT_ID, coordinate, authority),
+        forestal_rate=_decimal_fact(_FORESTAL_FACT_ID, coordinate, authority),
+        estimacion_objetiva_rate=_decimal_fact(_ESTIMACION_OBJETIVA_FACT_ID, coordinate, authority),
+    )
+
+
+def rirpf_art95_retencion_legal_refs(
+    *,
+    effective_date: date,
+    authority: GovernedFactSource | None = None,
+) -> tuple[str, ...]:
+    """Return legal references grounding the selected activity-rate set.
+
+    Read off the facts this module already resolves rather than restated
+    here, which is the whole point: an advisory that names an article from a
+    Python literal asserts law the registry cannot confirm it still says, while
+    one carrying the fact's own refs moves with the registry.
+
+    Returns:
+        The distinct reference ids, in first-seen order so the sequence is
+        stable for an operator comparing two runs.
+    """
+    seen: list[str] = []
+    for fact_id in _ART95_FACT_IDS:
+        for reference in _legal_refs_of(fact_id, effective_date=effective_date, authority=authority):
+            if reference not in seen:
+                seen.append(reference)
+    return tuple(seen)
+
+
+def statutory_activity_retencion_rates(
+    *, effective_date: date, authority: GovernedFactSource | None = None
+) -> frozenset[Decimal]:
+    """Return every distinct authority-declared activity withholding rate.
+
+    Distinct values are returned because callers use this surface only for
+    arithmetic matching. A consumer that needs the governing category must
+    resolve the named registry fact instead; this set deliberately discards
+    that legal selection.
+
+    Returns:
+        The distinct rates selected by the registry for the date.
+    """
+    rates = load_retencion_actividades_rates(effective_date=effective_date, authority=authority)
+    return frozenset(
+        {
+            rates.general_rate,
+            rates.inicio_actividad_rate,
+            rates.agricola_ganadera_rate,
+            rates.ganadera_engorde_rate,
+            rates.forestal_rate,
+            rates.estimacion_objetiva_rate,
+        },
+    )
+
+
+def professional_activity_retencion_rates(
+    *, effective_date: date, authority: GovernedFactSource | None = None
+) -> frozenset[Decimal]:
+    """Return the authority-declared professional-classified rates.
+
+    This projection is separate because consumers assign different confidence
+    to a match by registry classification. The classification itself remains
+    registry-owned.
+
+    Returns:
+        The registry-declared professional rate subset.
+    """
+    rates = load_retencion_actividades_rates(effective_date=effective_date, authority=authority)
+    return frozenset({rates.general_rate, rates.inicio_actividad_rate})
+
+
+def maximum_supported_activity_retencion_rate(
+    *, effective_date: date, authority: GovernedFactSource | None = None
+) -> Decimal:
+    """Return the authority-selected upper bound for amount inference.
+
+    The inference refuses a result above the selected authority bound rather
+    than persisting a fabricated withholding.
+
+    Returns:
+        The maximum retención rate the activity inference will accept.
+    """
+    return load_retencion_actividades_rates(effective_date=effective_date, authority=authority).general_rate
+
+
+class AdministradorRetencionRates(BaseModel):
+    """Frozen projection of authority-selected administrator withholding data.
+
+    Attributes:
+        ``general_rate`` and ``reduced_rate`` are authority-selected rate
+        projections; ``reduced_incn_threshold_eur`` is the selected turnover
+        condition. Their values and legal applicability remain in registry
+        facts.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    general_rate: Decimal = Field(gt=Decimal("0"), lt=Decimal("1"))
+    reduced_rate: Decimal = Field(gt=Decimal("0"), lt=Decimal("1"))
+    reduced_incn_threshold_eur: Decimal = Field(gt=Decimal("0"))
+
+
+_ADMINISTRADOR_GENERAL_FACT_ID: Final[str] = "lirpf-art-101:retencion-administrador-general"
+_ADMINISTRADOR_REDUCIDA_FACT_ID: Final[str] = "lirpf-art-101:retencion-administrador-reducida"
+_ADMINISTRADOR_INCN_UMBRAL_FACT_ID: Final[str] = "lirpf-art-101:retencion-administrador-incn-umbral-eur"
+
+#: Every administrador fact this module resolves. Declared once so the
+#: rate loader and the grounding lookup below cannot drift, for the same
+#: reason :data:`_ART95_FACT_IDS` is declared once.
+_ADMINISTRADOR_FACT_IDS: Final[tuple[str, ...]] = (
+    _ADMINISTRADOR_GENERAL_FACT_ID,
+    _ADMINISTRADOR_REDUCIDA_FACT_ID,
+    _ADMINISTRADOR_INCN_UMBRAL_FACT_ID,
+)
+
+
+def load_administrador_retencion_rates(
+    *,
+    effective_date: date,
+    authority: GovernedFactSource | None = None,
+) -> AdministradorRetencionRates:
+    """Return authority-selected administrator withholding data.
+
+    Returns:
+        An :class:`AdministradorRetencionRates` record with every rate value.
+
+    Raises:
+        TransactionValidationError: If any expected fact id is absent,
+            carries no string value, or does not parse as a ``Decimal``, or if
+            the supplied authority cannot resolve it.
+        InternalInvariantError: When no authority is supplied and no
+            validation scope is active.
+    """
+    coordinate = effective_date
+    return AdministradorRetencionRates(
+        general_rate=_decimal_fact(_ADMINISTRADOR_GENERAL_FACT_ID, coordinate, authority),
+        reduced_rate=_decimal_fact(_ADMINISTRADOR_REDUCIDA_FACT_ID, coordinate, authority),
+        reduced_incn_threshold_eur=_decimal_fact(
+            _ADMINISTRADOR_INCN_UMBRAL_FACT_ID,
+            coordinate,
+            authority,
+            expected_unit="EUR",
+        ),
+    )
+
+
+def administrador_retencion_legal_refs(
+    *,
+    effective_date: date,
+    authority: GovernedFactSource | None = None,
+) -> tuple[str, ...]:
+    """Return legal references grounding the administrator-rate set.
+
+    Read off the facts this module already resolves rather than restated
+    here, for the same reason :func:`rirpf_art95_retencion_legal_refs` states:
+    an advisory that names an article from a Python literal asserts law the
+    registry cannot confirm it still says, while one carrying the fact's
+    own refs moves with the registry.
+
+    Returns:
+        The distinct reference ids, in first-seen order so the sequence is
+        stable for an operator comparing two runs.
+    """
+    seen: list[str] = []
+    for fact_id in _ADMINISTRADOR_FACT_IDS:
+        for reference in _legal_refs_of(fact_id, effective_date=effective_date, authority=authority):
+            if reference not in seen:
+                seen.append(reference)
+    return tuple(seen)
+
+
+def _decimal_fact(
+    fact_id: str,
+    effective_date: date,
+    authority: GovernedFactSource | None,
+    *,
+    expected_unit: str = "fraction",
+) -> Decimal:
+    """Return a Decimal only from a resolved scalar fact with the expected unit."""
+    value = _resolved_scalar_fact(
+        fact_id,
+        effective_date=effective_date,
+        expected_unit=expected_unit,
+        authority=authority,
+    ).payload.value
+    if not isinstance(value, Decimal):
+        raise TransactionValidationError(f"retención fact {fact_id!r} has non-Decimal value {value!r}")
+    return value
+
+
+__all__ = [
+    "AdministradorRetencionRates",
+    "RirpfArt95RetencionRates",
+    "administrador_retencion_legal_refs",
+    "load_administrador_retencion_rates",
+    "load_retencion_actividades_rates",
+    "maximum_supported_activity_retencion_rate",
+    "professional_activity_retencion_rates",
+    "retencion_effective_date",
+    "rirpf_art95_retencion_legal_refs",
+    "statutory_activity_retencion_rates",
+]

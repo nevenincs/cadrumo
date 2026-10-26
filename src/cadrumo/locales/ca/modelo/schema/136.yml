@@ -1,0 +1,94 @@
+modelo:
+  schema:
+    '136':
+      casilla:
+        continuidad:
+          cuota-a-ingresar:
+            label: Resultat a ingressar
+          m136-autoliquidacion-complementaria:
+            label: Autoliquidació complementària
+          m136-base-imponible-gravamen:
+            label: base imposable
+          m136-codigo-iban:
+            label: Codi IBAN
+          m136-cuantia-exenta-gravamen:
+            label: Quantia exempta del gravamen especial
+          m136-cuota-gravamen-especial:
+            label: Quota del gravamen especial
+          m136-declarante-nif:
+            label: Número d'identificació fiscal (NIF)
+          m136-declarante-nombre:
+            label: Cognoms i nom o raó social
+          m136-ejercicio-declaracion:
+            label: Exercici
+          m136-fecha-celebracion:
+            label: Data de celebració
+          m136-fecha-cobro-premio:
+            label: Data de cobrament del premi
+          m136-forma-pago:
+            label: Forma de pagament
+          m136-importe-ingresado:
+            label: Import ingressat a favor del Tresor Públic
+          m136-importe-premio-declarante:
+            label: Import o valor del premi que correspon individualment al declarant
+          m136-importe-premio-total:
+            label: Import del premi obtingut pel bitllet, cupó o aposta premiada
+          m136-justificante-anterior:
+            label: Número de justificant identificatiu de l'autoliquidació anterior
+          m136-loteria-apuesta-denominacion:
+            label: Denominació de la loteria o aposta
+          m136-organizador-codigo-pais:
+            label: Codi de país de l'organisme o entitat organitzadora
+          m136-organizador-denominacion:
+            label: Denominació o raó social de l'organisme o entitat organitzadora
+          m136-organizador-pais:
+            label: País de l'organisme o entitat organitzadora
+          m136-periodo-declaracion:
+            label: Període
+          m136-precio-unitario:
+            label: Preu unitari
+          m136-provincia-residencia-irpf:
+            label: Codi de la província de residència habitual del contribuent IRPF
+          m136-resultados-anteriores-mismo-premio:
+            label: Resultats a ingressar d'autoliquidacions anteriors pel mateix concepte
+              i corresponents al mateix premi
+      field:
+        official_name: Modelo 136. IRPF i IRNR. Gravamen especial sobre els premis
+          de determinades loteries i apostes. Autoliquidació.
+        title: Gravamen especial sobre els premis de determinades loteries i apostes.
+          Autoliquidació
+      form:
+        page:
+          pag-1:
+            heading: Gravamen especial sobre els premis de determinades loteries i
+              apostes
+        section:
+          complementaria:
+            heading: Complementària
+          declarante:
+            heading: Declarant
+          devengo:
+            heading: Meritació
+          ingreso:
+            heading: Ingrés
+          liquidacion:
+            heading: Liquidació
+          loteria:
+            heading: Loteria o aposta premiada
+      revision:
+        2022-2025:
+          construct:
+            modelo-136-calculation-construct:
+              field:
+                title: Model 136 gravamen especial sobre determinats premis de loteries
+                  i apostes
+          field:
+            label: Model 136, exercicis 2022 a 2025
+        '2026':
+          construct:
+            modelo-136-calculation-construct:
+              field:
+                title: 'Model 136: càlcul del gravamen especial sobre premis de loteries
+                  i apostes'
+          field:
+            label: Model 136 exercici 2026 (Ordre HAP/70/2013 i Ordre HAC/763/2018)

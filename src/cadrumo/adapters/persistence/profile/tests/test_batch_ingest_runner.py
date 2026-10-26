@@ -1,0 +1,787 @@
+"""The batch runner against real secure storage: one bad item, and a second run.
+
+Every property this file pins is invisible on the happy path. A runner that
+aborts on the first failure reports correctly when nothing fails; a runner that
+re-ingests on every pass looks right on its first pass; and a runner that spools
+decrypted bytes to a temp file produces exactly the same rows as one that does
+not. So each test drives the real encrypted-bucket write path over the bundled
+synthetic corpus and asserts on what the run LEFT BEHIND, not only on what it
+returned.
+
+Deterministic throughout: the structured-record reader is a parser, and the
+malformed and empty PDFs refuse before any reader is selected. No model is
+loaded, pulled, or contacted (the corpus is bundled and synthetic; see each
+document's ``.provenance.json`` sidecar).
+"""
+
+from __future__ import annotations
+
+import hashlib
+from collections.abc import Callable
+from pathlib import Path
+
+import pytest
+
+from cadrumo.adapters.outbound.llm.tests.model_run_support import IMAGE_LANE, serving_agent
+from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.purchase_invoice_evidence import (
+    LedgerEvidenceAttachmentIngestor,
+    LedgerEvidenceRepositoryAdapter,
+)
+from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
+from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
+from cadrumo.adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
+from cadrumo.application.ledger import tests as ledger_application_tests
+from cadrumo.application.ledger.batch_ingest import BatchItemResult, BatchRunResult, run_evidence_batch
+from cadrumo.application.ledger.evidence import PurchaseInvoiceEvidenceService
+from cadrumo.application.ledger.evidence_ports import LedgerEvidencePorts
+from cadrumo.application.ledger.extraction_draft_store import load_extraction_drafts
+from cadrumo.application.ledger.invoice_draft_extraction_ports import InvoiceDraftExtractionPorts
+from cadrumo.application.ledger.invoice_extraction_authority import default_invoice_extraction_period
+from cadrumo.application.local_reader import EXTRACTION_READER_ROLES
+from cadrumo.application.provisioning_contracts import ProvisioningPreconditionCondition
+from cadrumo.core.config import Settings, load_settings
+from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.provenance_stamp import LOCAL_TRANSPORT_LABEL
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.iva.regime_legend import resolve_regime_legends
+from cadrumo.tests.pdf_fixtures import text_pdf_bytes
+from cadrumo_client.contracts.model_runs import ModelRunLane, ModelRunRefusalCode
+
+from .....domain.iva.schema import InvoiceKind
+from ._invoice_confirmation_test_support import _invoice_draft_extraction_ports, serving_a_loopback_reader
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+
+_BUCKET_ID = "2b2b2b2b-2b2b-4b2b-8b2b-2b2b2b2b2b2b"
+
+runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=False, name="runtime_profile")
+
+
+#: The evidence corpus belongs to the ledger application tests; resolved through
+#: that package so the location follows its owner rather than this file's depth.
+_CORPUS = Path(ledger_application_tests.__file__).parent / "_evidence_corpus"
+
+#: A structured record: read by a parser, so this row is deterministic and
+#: reaches no model at all.
+_STRUCTURED = "facturae_32_series_and_parties_invoice.xml"
+
+#: The poison. Malformed bytes behind a PDF extension, which is the shape that
+#: must produce a refusal ROW rather than end the run.
+_POISON = "adversarial_malformed.pdf"
+
+#: A scan with no text layer, so reading it needs a model and it is the item a
+#: contended machine must defer rather than attempt.
+_SCAN = "scanned_invoice_from_commons_1.pdf"
+
+_GIB = 1024**3
+_SUPPLIER_CIF = "B12345674"
+
+
+@pytest.fixture
+def batch_dir(tmp_path: Path) -> Path:
+    """A folder holding one readable structured invoice and one poisoned PDF."""
+    folder = tmp_path / "batch"
+    folder.mkdir()
+    for name in (_STRUCTURED, _POISON):
+        (folder / name).write_bytes((_CORPUS / name).read_bytes())
+    return folder
+
+
+def _events(profile: TestRuntimeProfile) -> BucketEventHistoryRepository:
+    return BucketEventHistoryRepository(objects=profile.repository)
+
+
+def _batch_ports(
+    profile: TestRuntimeProfile,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[LedgerEvidencePorts, InvoiceDraftExtractionPorts]:
+    """Compose the required application ports from this test's outer adapters."""
+    evidence_ports = LedgerEvidencePorts(
+        evidence_repository=LedgerEvidenceRepositoryAdapter(objects=profile.repository),
+        attachment_ingestor=LedgerEvidenceAttachmentIngestor(store=AttachmentStore(objects=profile.repository)),
+        bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
+    )
+    return evidence_ports, _invoice_draft_extraction_ports(evidence_ports=evidence_ports, operation=operation)
+
+
+def _service(profile: TestRuntimeProfile, *, operation: PinnedAuthorityOperation) -> PurchaseInvoiceEvidenceService:
+    """Build the evidence service from the same outer repository binding."""
+    return PurchaseInvoiceEvidenceService(ports=_batch_ports(profile, operation=operation)[0])
+
+
+def _run_batch(
+    runtime: TestRuntimeProfile,
+    *,
+    sources: list[Path],
+    direction: InvoiceKind = InvoiceKind.RECEIVED,
+    settings: Settings | None = None,
+    lane: ModelRunLane = IMAGE_LANE,
+    on_item: Callable[[BatchItemResult], None] | None = None,
+) -> BatchRunResult:
+    """Run the application batch through ports composed by this outer test.
+
+    Without explicit settings the run reads through the loopback reader, whose
+    agent resolves every role to ``lane``, never the host's runtime: the
+    profile's settings snapshot is aligned to the served endpoint, so the
+    outcome cannot depend on what this machine happens to have set up.
+    """
+    if settings is not None:
+        return _run_batch_with(
+            runtime,
+            sources=sources,
+            direction=direction,
+            settings=settings,
+            on_item=on_item,
+        )
+    with serving_a_loopback_reader(replies=(), lane=lane):
+        served = load_settings()
+        # Admission inputs are pinned to their declared defaults, so a host's
+        # local configuration cannot open or close the lane under test.
+        declared = {
+            name: Settings.model_fields[name].default
+            for name in (
+                "cadrumo_llm_contention_safety_margin_bytes",
+                "cadrumo_llm_contention_check_override",
+                "cadrumo_llm_model_runtime_memory_floor_bytes",
+                "cadrumo_llm_local_inference_concurrency",
+            )
+        }
+        aligned = runtime.settings.model_copy(
+            update={
+                **declared,
+                "cadrumo_llm_ollama_chat_url": served.cadrumo_llm_ollama_chat_url,
+            },
+        )
+        return _run_batch_with(
+            runtime,
+            sources=sources,
+            direction=direction,
+            settings=aligned,
+            on_item=on_item,
+        )
+
+
+def _run_batch_with(
+    runtime: TestRuntimeProfile,
+    *,
+    sources: list[Path],
+    direction: InvoiceKind,
+    settings: Settings,
+    on_item: Callable[[BatchItemResult], None] | None,
+) -> BatchRunResult:
+    period = default_invoice_extraction_period()
+    with bundled_indexed_authority().operation() as operation:
+        evidence_ports, extraction_ports = _batch_ports(runtime, operation=operation)
+        legends = resolve_regime_legends(operation=operation, effective_date=period.end_date)
+        return run_evidence_batch(
+            bucket_id=_BUCKET_ID,
+            sources=sources,
+            direction=direction,
+            settings=settings,
+            evidence_ports=evidence_ports,
+            extraction_ports=extraction_ports,
+            operation=operation,
+            legends=legends,
+            on_item=on_item,
+        )
+
+
+#: The person's selection, read on this computer, for a model no computer holds.
+#: Dispatch admits an on-host lane against the size its catalogue entry states,
+#: so a read of it is refused for measured contention on any host before
+#: anything is loaded.
+_OVERSIZED_LANE = IMAGE_LANE.model_copy(update={"size_bytes": 2**50})
+
+#: The measured-contention refusals of on-host load admission.
+_CONTENTION = frozenset(
+    {
+        ProvisioningPreconditionCondition.LOAD_CAPACITY_AVAILABLE.value,
+        ProvisioningPreconditionCondition.LOAD_HEADROOM_MEASURABLE.value,
+        ProvisioningPreconditionCondition.RESIDENT_SET_READABLE.value,
+    }
+)
+
+
+def _run(profile: TestRuntimeProfile, folder: Path) -> BatchRunResult:
+    return _run_batch(profile, sources=[folder])
+
+
+def test_a_poisoned_document_does_not_end_the_run(
+    runtime_profile: TestRuntimeProfile,
+    batch_dir: Path,
+) -> None:
+    """The whole reason batch is a verb: the good document still gets ingested.
+
+    The adjacent statement-import folder path fails this exact assertion by
+    construction — its bare comprehension discards every parsed result when one
+    file raises.
+    """
+    result = _run(runtime_profile, batch_dir)
+
+    assert len(result.items) == 2, "both documents must be reported, not just the one that worked"
+    statuses = {item.source_name: item.status for item in result.items}
+    assert statuses[_POISON] == "refused"
+    assert statuses[_STRUCTURED] in {"ingested", "pending_review"}
+    assert result.any_failed, "a refused item must fail the run's exit status"
+
+
+def test_the_refused_row_says_what_was_wrong_with_that_document(
+    runtime_profile: TestRuntimeProfile,
+    batch_dir: Path,
+) -> None:
+    """A refusal an operator cannot act on is barely better than a silent drop."""
+    result = _run(runtime_profile, batch_dir)
+    poison = next(item for item in result.items if item.source_name == _POISON)
+
+    assert poison.refusal_code is not None and poison.refusal_code
+    assert poison.refusal_verdict is not None, "a refusal must name the condition that failed"
+    assert poison.refusal_verdict.failed_condition_id
+    facts = {key: value for evidence in poison.refusal_verdict.evidence for key, value in evidence.values.items()}
+    assert facts, "a refusal an operator cannot act on is barely better than a silent drop"
+
+
+def test_the_good_document_is_actually_persisted_not_merely_reported(
+    runtime_profile: TestRuntimeProfile,
+    batch_dir: Path,
+) -> None:
+    """Positive control for the refusal tests: a row saying 'ingested' means a draft exists.
+
+    Without this, every assertion above would still pass against a runner that
+    reported plausible rows and wrote nothing.
+    """
+    _run(runtime_profile, batch_dir)
+
+    drafts = load_extraction_drafts(_BUCKET_ID, runtime_profile.settings).drafts
+    assert len(drafts) == 1, "exactly the readable document should have left a draft"
+    assert drafts[0].draft.supplier_tax_id is not None
+
+
+def test_an_all_local_batch_ingest_surveys_as_on_host(
+    runtime_profile: TestRuntimeProfile,
+    batch_dir: Path,
+) -> None:
+    """A batch read that never left the host must not appear in a withdrawal.
+
+    Drives the REAL batch path rather than seeding the draft store, because the
+    defect this guards was invisible to a seeded test: the survey classified by
+    parsing the stored ``extractor`` label, the batch stores a function name
+    there by a deliberate rule, and every batch-ingested draft was therefore
+    reported cloud-derived. A test that wrote its own stored draft would have
+    chosen a parseable label and proved the selector rather than the path.
+
+    Fail-open noise is not caution on a confidentiality surface. A withdrawal
+    listing documents that never left the machine trains the operator to skim
+    it, and the one row that matters is then the one they skim past.
+    """
+    from cadrumo.application.ledger.consent_withdrawal import survey_cloud_consent
+
+    _run(runtime_profile, batch_dir)
+
+    stored = load_extraction_drafts(_BUCKET_ID, runtime_profile.settings).drafts
+    assert stored, "the batch must have written a draft for this gate to mean anything"
+
+    survey = survey_cloud_consent(bucket_id=_BUCKET_ID, settings=runtime_profile.settings, consent_entries=())
+
+    assert survey.cloud_derived_artefacts == (), (
+        "an all-local batch ingest was reported as cloud-derived; the survey is classifying by "
+        f"something other than the recorded transports {[row.read_transports for row in stored]}"
+    )
+    assert survey.transmitted_bytes_are_unrecallable is True
+
+
+def test_a_batch_draft_records_the_transport_that_carried_it(
+    runtime_profile: TestRuntimeProfile,
+    batch_dir: Path,
+) -> None:
+    """The stored transport is populated, so the survey above is not passing on emptiness.
+
+    An empty ``read_transports`` is defined to mean UNKNOWN and is surfaced, so
+    a survey returning no rows cannot be explained by the field being unset --
+    but only if something asserts the field is actually written. Without this,
+    a regression that stopped recording transports would flip the gate above
+    from green to red rather than silently, which is the right direction, and
+    this case is what makes that true.
+    """
+    _run(runtime_profile, batch_dir)
+
+    stored = load_extraction_drafts(_BUCKET_ID, runtime_profile.settings).drafts
+    assert stored
+    for row in stored:
+        assert row.read_transports, f"{row.evidence_reference} recorded no transport at all"
+        assert all(transport == LOCAL_TRANSPORT_LABEL for transport in row.read_transports)
+
+
+def test_a_second_run_re_ingests_nothing_and_emits_no_second_event(
+    runtime_profile: TestRuntimeProfile,
+    batch_dir: Path,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Resume IS re-run, so the second pass must be a no-op rather than a duplicate.
+
+    Asserted on the stored evidence catalogue and the bucket event history, not
+    only on the returned rows: a runner that reported ``no_op`` while writing a
+    second record would pass a rows-only check.
+    """
+    first = _run(runtime_profile, batch_dir)
+    service = _service(runtime_profile, operation=operation)
+    records_after_first = len(service.list_all(bucket_id=_BUCKET_ID))
+    events_after_first = len(_events(runtime_profile).load().events)
+    drafted_at_first = load_extraction_drafts(_BUCKET_ID, runtime_profile.settings).drafts[0].drafted_at
+
+    second = _run(runtime_profile, batch_dir)
+
+    assert [item.content_address for item in second.items] == [item.content_address for item in first.items]
+    assert any(item.status == "no_op" for item in second.items), "the completed document must report as a no-op"
+    assert len(service.list_all(bucket_id=_BUCKET_ID)) == records_after_first, "no second evidence record"
+    assert len(_events(runtime_profile).load().events) == events_after_first, "no second lifecycle event"
+    assert load_extraction_drafts(_BUCKET_ID, runtime_profile.settings).drafts[0].drafted_at == drafted_at_first, (
+        "a no-op must not re-stamp the draft it did not rewrite"
+    )
+
+    # Byte-identical from the second run on, which is the strongest form the
+    # design permits rather than a weakened one: the FIRST run legitimately
+    # differs, because the item it ingested is a no-op by the second. Runs two
+    # and three are what catch a row re-deriving a per-run field — a timestamp,
+    # a run id — since such a field orders identically and still leaves two
+    # reports nobody can diff.
+    third = _run(runtime_profile, batch_dir)
+    assert [item.model_dump_json() for item in third.items] == [item.model_dump_json() for item in second.items]
+
+
+def test_an_item_that_failed_to_read_is_retried_rather_than_stranded(
+    runtime_profile: TestRuntimeProfile,
+    batch_dir: Path,
+) -> None:
+    """Evidence-without-draft is an incomplete item, not a completed one.
+
+    The subtle half of idempotency. The poisoned document's evidence record IS
+    written on the first pass — the bytes attach fine, it is the READ that
+    fails — so a runner treating "evidence exists" as completion would report
+    it as an untroubled ``no_op`` on every later run and never attempt it
+    again. It must stay a visible refusal.
+    """
+    _run(runtime_profile, batch_dir)
+    second = _run(runtime_profile, batch_dir)
+
+    poison = next(item for item in second.items if item.source_name == _POISON)
+    assert poison.status == "refused", "a previously-unreadable document must be retried, not marked done"
+
+
+def test_the_run_writes_nothing_outside_secure_storage(
+    runtime_profile: TestRuntimeProfile,
+    batch_dir: Path,
+    tmp_path: Path,
+) -> None:
+    """No spool, no journal, no progress file (sensitive-financial-data-secure-storage-only).
+
+    Compares the whole temp tree before and after, so it catches a spool
+    wherever it is written rather than only in the places this test thought to
+    look. The batch inputs themselves are the only files outside the storage
+    root that may exist afterwards, and they must be byte-identical.
+    """
+    storage_root = runtime_profile.storage_root.resolve()
+
+    def outside_storage() -> dict[Path, bytes]:
+        return {
+            path: path.read_bytes()
+            for path in scan_directory(tmp_path, recursive=True)
+            if path.is_file() and storage_root not in path.resolve().parents
+        }
+
+    before = outside_storage()
+
+    _run(runtime_profile, batch_dir)
+
+    after = outside_storage()
+    appeared = sorted(set(after) - set(before))
+    assert appeared == [], f"the run left files outside secure storage: {appeared}"
+    assert after == before, "the run rewrote a file outside secure storage"
+
+
+def test_no_decrypted_document_bytes_reach_any_file_outside_secure_storage(
+    runtime_profile: TestRuntimeProfile,
+    batch_dir: Path,
+    tmp_path: Path,
+) -> None:
+    """The anti-tautology proof for the scan above.
+
+    A file-count check passes against a runner that spools INTO the storage
+    root, or that overwrites an input in place. This searches for a distinctive
+    run of the document's own plaintext across every file the run could have
+    touched, and its positive control is that the same search finds the bytes in
+    the source document — so a search that can never match is not mistaken for
+    absence.
+    """
+    source = batch_dir / _STRUCTURED
+    plaintext = source.read_bytes()
+    needle = plaintext[:64]
+
+    # Positive control: the needle IS findable, in the one file that legitimately holds it.
+    assert needle in source.read_bytes()
+
+    _run(runtime_profile, batch_dir)
+
+    storage_root = runtime_profile.storage_root.resolve()
+    leaked = [
+        path
+        for path in scan_directory(tmp_path, recursive=True)
+        if path.is_file()
+        and path != source
+        and storage_root not in path.resolve().parents
+        and needle in path.read_bytes()
+    ]
+    assert leaked == [], f"decrypted document bytes were written outside secure storage: {leaked}"
+
+
+def test_ordering_does_not_depend_on_how_the_folder_was_enumerated(
+    runtime_profile: TestRuntimeProfile,
+    tmp_path: Path,
+) -> None:
+    """Two folders holding the same documents under names that sort oppositely.
+
+    Filename ordering and content-address ordering disagree here by
+    construction, so a runner that had silently kept enumeration order would
+    report the two folders differently.
+    """
+    forward = tmp_path / "forward"
+    reverse = tmp_path / "reverse"
+    payloads = {
+        "aaa.xml": (_CORPUS / _STRUCTURED).read_bytes(),
+        "zzz.xml": (_CORPUS / "facturae_32_recargo_invoice.xml").read_bytes(),
+    }
+    for folder, names in ((forward, ("aaa.xml", "zzz.xml")), (reverse, ("zzz.xml", "aaa.xml"))):
+        folder.mkdir()
+        for name, payload in zip(names, payloads.values(), strict=True):
+            (folder / name).write_bytes(payload)
+
+    ordered = [item.content_address for item in _run(runtime_profile, forward).items]
+
+    assert ordered == sorted(ordered), "rows must come out in content-address order"
+    assert ordered == sorted(hashlib.sha256(payload).hexdigest() for payload in payloads.values())
+
+
+def test_an_unreadable_source_is_reported_rather_than_dropped(
+    runtime_profile: TestRuntimeProfile,
+    tmp_path: Path,
+) -> None:
+    """A source that never became an item still has to reach the operator."""
+    folder = tmp_path / "partial"
+    folder.mkdir()
+    (folder / _STRUCTURED).write_bytes((_CORPUS / _STRUCTURED).read_bytes())
+
+    result = _run_batch(
+        runtime_profile,
+        sources=[folder, tmp_path / "does_not_exist.pdf"],
+    )
+
+    assert len(result.unresolved) == 1
+    assert result.unresolved[0].refusal_code == "unreadable_source"
+    assert result.any_failed, "an unreadable source must fail the run"
+    assert len(result.items) == 1, "the readable document must still have been processed"
+
+
+def test_the_same_document_under_two_directions_is_two_records(
+    runtime_profile: TestRuntimeProfile,
+    tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Positive control for idempotency: the guard must not collapse a sale into a purchase."""
+    folder = tmp_path / "directional"
+    folder.mkdir()
+    (folder / _STRUCTURED).write_bytes((_CORPUS / _STRUCTURED).read_bytes())
+    service = _service(runtime_profile, operation=operation)
+
+    for direction in (InvoiceKind.RECEIVED, InvoiceKind.ISSUED):
+        _run_batch(runtime_profile, sources=[folder], direction=direction)
+
+    assert len(service.list_all(bucket_id=_BUCKET_ID)) == 2, "issued and received are genuinely two records"
+
+
+class TestInferencePacing:
+    """A contended machine must cost the batch its readable items, not its whole run.
+
+    Contention is produced by the real dispatch admission: the selected on-host
+    lane states a size no computer holds, so the production
+    ``assess_model_load_contention`` refuses the load from this host's own
+    measurements, whatever they are. Nothing here substitutes the decision.
+    """
+
+    def test_a_contended_machine_still_completes_every_deterministic_item(
+        self,
+        runtime_profile: TestRuntimeProfile,
+        tmp_path: Path,
+    ) -> None:
+        """The point of pacing: the structured records go through regardless.
+
+        A run that refused everything because a model could not be loaded would
+        waste the half of the work that never needed one.
+        """
+        folder = tmp_path / "mixed"
+        folder.mkdir()
+        (folder / _STRUCTURED).write_bytes((_CORPUS / _STRUCTURED).read_bytes())
+        (folder / _SCAN).write_bytes((_CORPUS / _SCAN).read_bytes())
+
+        result = _run_batch(
+            runtime_profile,
+            sources=[folder],
+            lane=_OVERSIZED_LANE,
+        )
+
+        statuses = {item.source_name: item.status for item in result.items}
+        assert statuses[_SCAN] == "paused", "an item needing a reader must be paused, not attempted"
+        assert statuses[_STRUCTURED] != "paused", "a structured record needs no model and must still run"
+
+    def test_the_pause_is_stated_once_for_the_run_not_per_document(
+        self,
+        runtime_profile: TestRuntimeProfile,
+        tmp_path: Path,
+    ) -> None:
+        """N identical refusals is how a real refusal goes unread."""
+        folder = tmp_path / "scans"
+        folder.mkdir()
+        for name in (_SCAN, "com_2026_0005_camera_photo.jpg", "commons_invoice_1.jpg"):
+            (folder / name).write_bytes((_CORPUS / name).read_bytes())
+
+        result = _run_batch(
+            runtime_profile,
+            sources=[folder],
+            lane=_OVERSIZED_LANE,
+        )
+
+        assert [item.status for item in result.items] == ["paused"] * 3
+        assert result.inference_pause is not None, "three paused documents must carry one stated cause"
+        assert result.inference_pause.precondition_verdict.failed_condition_id in _CONTENTION
+        # No per-item refusal text: the model forbids a reason under a non-refused
+        # status, so this also proves the pause did not smuggle one in per row.
+        assert all(item.refusal_verdict is None for item in result.items)
+
+    def test_a_paused_run_is_not_a_failed_run_but_is_not_silent_either(
+        self,
+        runtime_profile: TestRuntimeProfile,
+        tmp_path: Path,
+    ) -> None:
+        """Nothing went wrong with the documents, and work still remains.
+
+        One boolean cannot say both, which is why deferral is its own axis.
+        """
+        folder = tmp_path / "deferred"
+        folder.mkdir()
+        (folder / _SCAN).write_bytes((_CORPUS / _SCAN).read_bytes())
+
+        result = _run_batch(
+            runtime_profile,
+            sources=[folder],
+            lane=_OVERSIZED_LANE,
+        )
+
+        assert not result.any_failed, "a deferred document has not failed"
+        assert result.any_deferred, "but the run must not report itself as finished"
+
+    def test_a_paused_item_is_attempted_on_a_later_run(
+        self,
+        runtime_profile: TestRuntimeProfile,
+        tmp_path: Path,
+    ) -> None:
+        """Positive control for pausing: it defers work, it does not consume it.
+
+        A pause that left the item looking complete would be worse than a
+        refusal, because the operator would never learn it was skipped.
+        """
+        folder = tmp_path / "retry"
+        folder.mkdir()
+        (folder / _SCAN).write_bytes((_CORPUS / _SCAN).read_bytes())
+
+        def _over_the_folder(lane: ModelRunLane) -> BatchRunResult:
+            """Run the same folder twice, varying only the size the selected entry states.
+
+            Spelled out rather than splatted from a shared dict, which widened
+            every argument to the union of all of them and checked none of them.
+            """
+            return _run_batch(
+                runtime_profile,
+                sources=[folder],
+                lane=lane,
+            )
+
+        paused = _over_the_folder(_OVERSIZED_LANE)
+        # The contention clears; the same folder is re-run against a new
+        # measured outcome.
+        later = _over_the_folder(IMAGE_LANE)
+
+        assert paused.items[0].status == "paused"
+        assert later.items[0].status != "paused", "once the contention clears, the deferred item must be attempted"
+
+    def test_a_role_with_no_selection_spends_one_document_and_pauses_the_rest_on_one_typed_reason(
+        self,
+        runtime_profile: TestRuntimeProfile,
+        tmp_path: Path,
+    ) -> None:
+        """The other way the lane closes, and the one the operator meets most.
+
+        The agent service answers the vision role's lookup with no selection,
+        before anything is sent. The first document of each role learns it and
+        is refused with that typed verdict; it closes the role, so every later
+        document of that role is deferred on the stated cause rather than
+        refused again. A role with no
+        selection is not an unreadable document, which a refusal per document
+        would conflate.
+
+        Documents that need no model still complete on a closed lane; that half
+        is pinned by
+        ``test_batch_inference_pacing.py::test_a_fully_labelled_text_layer_invoice_completes_while_the_lane_is_closed``.
+        """
+        folder = tmp_path / "no_reader"
+        folder.mkdir()
+        for name in (_SCAN, "com_2026_0005_camera_photo.jpg", "commons_invoice_1.jpg"):
+            (folder / name).write_bytes((_CORPUS / name).read_bytes())
+
+        with serving_agent(lookup_refusal=ModelRunRefusalCode.NO_SELECTION) as service:
+            result = _run_batch(runtime_profile, sources=[folder], settings=load_settings())
+
+        refused = [item for item in result.items if item.status == "refused"]
+        paused = [item for item in result.items if item.status == "paused"]
+        # Each reader role learns it once: at most one document per role is spent.
+        assert 1 <= len(refused) <= len(EXTRACTION_READER_ROLES), [item.status for item in result.items]
+        assert paused, "the rest wait on the closed roles"
+        assert len(refused) + len(paused) == 3
+        assert service.runs == [], "nothing is sent for a role with no selection"
+        for item in refused:
+            assert item.refusal_verdict is not None
+            values = {
+                key: value for evidence in item.refusal_verdict.evidence for key, value in evidence.values.items()
+            }
+            assert values["model_run_refusal"] == ModelRunRefusalCode.NO_SELECTION.value
+        assert all(item.refusal_verdict is None for item in paused), "a paused item carries no per-item refusal"
+        assert all(item.needed_inference for item in result.items)
+        assert result.inference_pause is not None
+        stated = {
+            key: value
+            for item in result.inference_pause.precondition_verdict.evidence
+            for key, value in item.values.items()
+        }
+        assert stated["model_run_refusal"] == ModelRunRefusalCode.NO_SELECTION.value
+        assert stated["role_selection_required"] is True
+
+    def test_a_document_needing_a_reader_is_read_when_one_is_there(
+        self,
+        runtime_profile: TestRuntimeProfile,
+        tmp_path: Path,
+    ) -> None:
+        """The positive control this class was missing, and the reason it was missing.
+
+        Every other inference-path assertion here is a NEGATIVE — paused, or
+        refused. All of them would still pass against a runner that could never
+        read anything at all, because this host has no reader and the absence is
+        indistinguishable from a lane that is simply broken. Until something
+        proves a document actually gets READ, "the lane opens" is unmeasured.
+
+        A real loopback endpoint supplies the reply, so the router, the provider
+        client and the socket are all production code and no model runs.
+        """
+        pdf = text_pdf_bytes(
+            (
+                "Factura de Suministros Batch SL",
+                f"NIF: {_SUPPLIER_CIF}",
+                "Numero de factura: 2026-0777",
+                "Fecha: 2026-04-02",
+                "Base imponible: 100,00",
+                "IVA 21%: 21,00",
+                "Total factura: 121,00",
+            ),
+        )
+        folder = tmp_path / "readable"
+        folder.mkdir()
+        (folder / "factura.pdf").write_bytes(pdf)
+
+        with serving_a_loopback_reader(
+            (
+                (
+                    "2026-0777",
+                    {
+                        "supplier_tax_id": _SUPPLIER_CIF,
+                        "invoice_number": "2026-0777",
+                        "invoice_date": "2026-04-02",
+                        "taxable_base": "100,00",
+                        "iva_rate": "21",
+                        "iva_amount": "21,00",
+                        "grand_total": "121,00",
+                    },
+                ),
+            ),
+        ):
+            result = _run_batch(
+                runtime_profile,
+                sources=[folder],
+                settings=load_settings(),
+            )
+
+        assert result.inference_pause is None, "a reachable reader must leave the lane open"
+        assert not result.any_deferred
+        assert result.items[0].status in {"ingested", "pending_review"}, (
+            f"a document with a reader available must be READ, not {result.items[0].status}"
+        )
+        drafts = load_extraction_drafts(_BUCKET_ID, load_settings()).drafts
+        assert drafts and drafts[0].draft.invoice_number == "2026-0777", (
+            "the draft must carry what the reader actually returned"
+        )
+
+    def test_a_run_of_structured_records_never_pauses_and_never_probes(
+        self,
+        runtime_profile: TestRuntimeProfile,
+        tmp_path: Path,
+    ) -> None:
+        """Positive control for the whole class: pacing must not fire on work needing no model.
+
+        Deliberately run with the CONTENDED selection. Nothing here needs a reader,
+        so a closed lane is irrelevant to it — and a run that paused these
+        anyway would be pacing on the machine's state rather than on the work's
+        actual needs.
+        """
+        folder = tmp_path / "structured"
+        folder.mkdir()
+        for name in (_STRUCTURED, "facturae_32_recargo_invoice.xml"):
+            (folder / name).write_bytes((_CORPUS / name).read_bytes())
+
+        result = _run_batch(
+            runtime_profile,
+            sources=[folder],
+            lane=_OVERSIZED_LANE,
+        )
+
+        assert result.inference_pause is None, "a run with no model in its future must not probe the hardware"
+        assert not result.any_deferred
+        assert all(item.status != "paused" for item in result.items)
+
+
+def test_a_raising_progress_callback_does_not_cost_the_run_its_results(
+    runtime_profile: TestRuntimeProfile,
+    batch_dir: Path,
+) -> None:
+    """Progress reporting is incidental; losing a batch to it would be absurd."""
+
+    def explode(_row: object) -> None:
+        raise RuntimeError("the progress sink failed")
+
+    result = _run_batch(runtime_profile, sources=[batch_dir], on_item=explode)
+
+    assert len(result.items) == 2
+
+
+def test_every_completed_item_is_announced_to_the_progress_sink(
+    runtime_profile: TestRuntimeProfile,
+    batch_dir: Path,
+) -> None:
+    """Positive control for the guard above: the callback is genuinely called."""
+    seen: list[str] = []
+
+    _run_batch(
+        runtime_profile,
+        sources=[batch_dir],
+        on_item=lambda row: seen.append(row.content_address),
+    )
+
+    assert len(seen) == 2

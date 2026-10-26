@@ -1,0 +1,161 @@
+---
+tags:
+  - '#exec'
+  - '#runtime-without-service-manager'
+date: '2026-10-03'
+modified: '2026-10-03'
+body_schema: 'body-v2'
+body_hash: 'sha256:b9adf10d25fb7ec3cc75e2f306bdc4dc0f35d06ee1e2367f97004cc9ad5de2a5'
+related:
+  - "[[2026-10-03-runtime-without-service-manager-plan]]"
+---
+
+# `runtime-without-service-manager` ledger
+
+## Changes
+
+- `S01` `M` `.vault/adr/2026-09-26-mcp-purpose-authentication-adr.md`
+- `S01` `M` `.vault/adr/2026-09-26-mcp-purpose-authentication-profile-access-adr.md`
+- `S01` `M` `.vault/adr/2026-10-03-runtime-without-service-manager-adr.md`
+- `S01` `M` `.vault/plan/2026-09-26-mcp-purpose-authentication-plan.md`
+- `S01` `M` `.vault/plan/2026-10-03-runtime-without-service-manager-plan.md`
+- `S01` `A` `.vault/audit/2026-10-03-runtime-without-service-manager-scope-removal-audit.md`
+- `S01` `verify:` `vaultspec-core vault adr crossref 2026-09-26-mcp-purpose-authentication-adr 2026-09-26-mcp-purpose-authentication-profile-access-adr 2026-10-03-runtime-without-service-manager-adr --json` -> `pass`
+- `S02` `M` `src/cadrumo/adapters/local_runtime/startup.py`
+- `S02` `M` `src/cadrumo/adapters/local_runtime/runtime_client.py`
+- `S02` `M` `src/cadrumo/entrypoints/runtime/bootstrap.py`
+- `S02` `M` `src/cadrumo/entrypoints/runtime/main.py`
+- `S02` `M` `src/cadrumo/adapters/local_runtime/tests/test_launch_door.py`
+- `S02` `M` `src/cadrumo/adapters/local_runtime/tests/test_launch_door_cleanup.py`
+- `S03` `M` `src/cadrumo/application/runtime/profile_access.py`
+- `S03` `M` `src/cadrumo/application/runtime/transport.py`
+- `S03` `M` `src/cadrumo/adapters/local_runtime/server.py`
+- `S03` `M` `src/cadrumo/adapters/local_runtime/server_connection_handling.py`
+- `S03` `M` `src/cadrumo/adapters/local_runtime/runtime_verified_transport.py`
+- `S03` `M` `src/cadrumo/adapters/local_runtime/runtime_profile_transport.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/command_specs.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/_bootstrap_exempt.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/app.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/launcher.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/installed_session.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/runtime_admission.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/runtime_session.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/secret/runtime_login.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/secret/runtime_login_form.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_admission.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_session.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_root_shell.py`
+- `S03` `M` `src/cadrumo/adapters/local_runtime/tests/test_framing.py`
+- `S03` `M` `src/cadrumo/adapters/local_runtime/tests/test_server.py`
+- `S03` `M` `src/cadrumo/adapters/local_runtime/tests/test_connection_serialization.py`
+- `S03` `M` `src/cadrumo/adapters/local_runtime/tests/test_submission_stream_client.py`
+- `S03` `M` `src/cadrumo/adapters/local_runtime/tests/test_windows.py`
+- `S03` `M` `src/cadrumo/adapters/local_runtime/tests/test_posix.py`
+- `S03` `M` `src/cadrumo_harness/mcp/tests/test_adapter_cleanup.py`
+- `S03` `M` `src/cadrumo/entrypoints/tests/test_runtime_client.py`
+- `S03` `M` `src/cadrumo/entrypoints/tests/test_operation_catalogue.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/secret/tests/test_runtime_login_native.py`
+- `S03` `verify:` `uv run --no-sync pytest -q -n0 -m 'unit or integration' src/cadrumo/adapters/local_runtime/tests/test_framing.py src/cadrumo/entrypoints/tui/tests/test_runtime_session.py src/cadrumo/entrypoints/tui/tests/test_runtime_root_shell.py src/cadrumo_harness/mcp/tests/test_adapter_cleanup.py --tb=short` -> `pass`
+- `S04` `M` `src/cadrumo/adapters/local_runtime/manager_commands.py`
+- `S04` `verify:` `platform registration and management reference inspection` -> `pass`
+- `S05` `M` `docs/how-to/connect-an-agent.md`
+- `S05` `D` `docs/cli/app/runtime.rst`
+- `S05` `M` `docs/_static/cli-tree.json`
+- `S05` `M` `src/cadrumo/locales/en/common.yml`
+- `S05` `M` `src/cadrumo/locales/en/cli.yml`
+- `S05` `M` `src/cadrumo/locales/es/common.yml`
+- `S05` `M` `src/cadrumo/locales/es/cli.yml`
+- `S05` `M` `src/cadrumo/locales/ca/common.yml`
+- `S05` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S05` `M` `src/cadrumo/locales/hu/common.yml`
+- `S05` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S05` `M` `src/cadrumo/adapters/local_runtime/tests/test_runtime_client.py`
+- `S05` `verify:` `CLI reference and tree generation` -> `pass`
+- `S05` `verify:` `CLI runtime command absence` -> `pass`
+- `S05` `verify:` `locale catalogue audit` -> `fail`
+- `S05` `verify:` `documentation sequence coherence` -> `fail`
+- `S06` `M` `.vault/audit/2026-10-03-runtime-without-service-manager-scope-removal-audit.md`
+- `S06` `verify:` `focused framing TUI session shell MCP cleanup 75 tests` -> `pass`
+- `S06` `verify:` `independent login access 60 tests` -> `pass`
+- `S06` `verify:` `runtime opener cleanup 15 tests` -> `pass`
+- `S06` `verify:` `targeted production ty check` -> `pass`
+- `S06` `verify:` `runtime frontend ruff check` -> `pass`
+- `S06` `verify:` `native endpoint installed checks 14 passed 26 skipped 1 failed` -> `fail`
+- `S06` `verify:` `TUI admission collection` -> `fail`
+- `S06` `verify:` `full import gate` -> `fail`
+- `S06` `verify:` `feature vault checks` -> `pass`
+- `S07` `M` `.vault/adr/2026-10-03-runtime-without-service-manager-adr.md`
+- `S07` `M` `src/cadrumo/tests/README.md`
+- `S07` `M` `src/cadrumo/adapters/local_runtime/tests/test_launch_door.py`
+- `S07` `M` `src/cadrumo/entrypoints/runtime/tests/test_installed_runtime.py`
+- `S07` `M` `src/cadrumo/entrypoints/runtime/tests/test_approval_task_authority.py`
+- `S07` `M` `src/cadrumo/entrypoints/runtime/tests/admission_cancellation_fixture.py`
+- `S07` `M` `src/cadrumo/adapters/local_runtime/tests/worker_approval_fixture.py`
+- `S07` `verify:` `native fixture failure cleanup 1 test` -> `pass`
+- `S07` `verify:` `approval task isolation followed by enrollment 7 tests` -> `pass`
+- `S07` `verify:` `runtime frontend tests 114 passed 1 failed` -> `fail`
+- `S07` `verify:` `runtime boundaries 714 passed 71 skipped 6 failed` -> `fail`
+- `S07` `M` `src/cadrumo/entrypoints/tests/test_runtime_credentials.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_automation_decision.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_password_rotation.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_reference_login.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/secret/tests/test_runtime_login_native.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/operations/tests/test_runtime_controller.py`
+- `S07` `M` `src/cadrumo/entrypoints/runtime/tests/test_access_management.py`
+- `S07` `M` `src/cadrumo/entrypoints/runtime/tests/test_automation_approval.py`
+- `S07` `M` `src/cadrumo/entrypoints/runtime/tests/test_automation_decision_client.py`
+- `S07` `M` `src/cadrumo/entrypoints/runtime/tests/test_automation_enrollment.py`
+- `S07` `M` `src/cadrumo/entrypoints/runtime/tests/test_automation_inventory.py`
+- `S07` `M` `src/cadrumo/entrypoints/runtime/tests/test_automation_inventory_client.py`
+- `S07` `M` `src/cadrumo/entrypoints/runtime/tests/test_descendants_operation.py`
+- `S07` `M` `src/cadrumo/entrypoints/runtime/tests/test_frontend_client.py`
+- `S07` `M` `src/cadrumo/entrypoints/runtime/tests/test_grant_change.py`
+- `S07` `M` `src/cadrumo/entrypoints/runtime/tests/test_login_lifecycle.py`
+- `S07` `M` `src/cadrumo/entrypoints/runtime/tests/test_modelo_metadata.py`
+- `S07` `M` `src/cadrumo/entrypoints/runtime/tests/test_modelo_metadata_history.py`
+- `S07` `M` `src/cadrumo/entrypoints/runtime/tests/test_modelo_revision_lifecycle.py`
+- `S07` `M` `src/cadrumo/entrypoints/runtime/tests/test_operation_secret.py`
+- `S07` `M` `src/cadrumo/entrypoints/runtime/tests/test_optional_automation_custody.py`
+- `S07` `M` `src/cadrumo/entrypoints/runtime/tests/test_plantilla_media_client.py`
+- `S07` `M` `src/cadrumo/entrypoints/runtime/tests/test_profile_connections.py`
+- `S07` `M` `src/cadrumo/entrypoints/runtime/tests/test_profile_mutation_client.py`
+- `S07` `M` `src/cadrumo/entrypoints/runtime/tests/test_profile_patch_client.py`
+- `S07` `M` `src/cadrumo/entrypoints/runtime/tests/test_projection_pages.py`
+- `S07` `M` `src/cadrumo/entrypoints/runtime/tests/test_receipt_login.py`
+- `S07` `M` `src/cadrumo/entrypoints/runtime/tests/test_refusal_detail_authority.py`
+- `S07` `M` `src/cadrumo/entrypoints/runtime/tests/test_runtime_password_rotation.py`
+- `S07` `M` `src/cadrumo/entrypoints/runtime/tests/test_submission_stream_native.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_metadata.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/config/tests/isolated_storage_fixture.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_access_management_native.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_api_key_authentication.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_automation_change_native.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_automation_create_native.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_automation_decision_native.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_automation_list_native.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_login.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_profile_view.py`
+- `S07` `M` `src/cadrumo/adapters/local_runtime/tests/job_fixture.py`
+- `S07` `M` `src/cadrumo/adapters/local_runtime/tests/windows_inheritance_fixture.py`
+- `S07` `verify:` `40 prepared runtime fixture files ruff and ty` -> `pass`
+- `S07` `verify:` `installed convergence and restart 1 test 58.64s` -> `pass`
+- `S07` `verify:` `Windows job inheritance and process containment 11 tests 48.97s` -> `pass`
+- `S07` `verify:` `MCP installed and parity acceptance 9 passed 3 skipped 7 unavailable native custody failures 711.55s` -> `fail`
+- `S07` `M` `.vault/audit/2026-10-03-runtime-without-service-manager-scope-removal-audit.md`
+- `S07` `verify:` `prepared native runtime fixtures 25 passed 39 failed 4 errors in 1591.74s` -> `fail`
+- `S07` `verify:` `latest isolated worker import` -> `pass`
+- `S07` `verify:` `latest concurrent profile worker test 47.76s` -> `fail`
+- `S07` `verify:` `changed fixture lint format and type checks` -> `pass`
+- `S07` `verify:` `runtime feature vault checks` -> `pass`
+
+## Notes
+
+- `S01` Hosted relationship check reported truncated sources/candidates; relevant complete decisions were inspected locally.
+- `S02` Installed convergence did not reach readiness; separate concurrent activity-asset imports block integration. No commit requested; shared in-flight changes remain uncommitted.
+- `S03` 75 tests passed. Other TUI admission collection blocked by unrelated activity-asset imports.
+- `S04` Exclusive manager modules and tests removed as recorded in REMOVAL-001 audit; transient worker containment preserved.
+- `S05` Locale audit reports modelo.schema.131 revision.2026-late missing and `workbench.grid.row_boxes` extra in each locale, unrelated to removed catalogues. Documentation coherence blocked by concurrent WorkflowObligationSnapshot import failure.
+- `S06` Integrated review remains PENDING. See VALIDATION-002 for registry readiness timeout, concurrent activity/workflow import failures, source mutation during import gate, and untested native POSIX coverage. No commits made.
+- `S07` Full entrypoint first execution was contaminated by a test binding ProfileWorkerCustody inside pytest; child-process isolation fixed and full rerun in progress. Added typed lease to outdated cancellation fault fixture and atomic PID publication to native approval fixture.
+- `S07` Actual installed cold-start measurement reached verified handshake after 27.186s; fixture setup and loser convergence now share a bounded 60s cold-start budget while request deadlines stay unchanged. Lightweight child fixtures no longer import profile fixture composition before publishing native process records.
+- `S07` Integration acceptance remains pending; exact run evidence and the changing import diagnosis are in VALIDATION-003 through VALIDATION-007. Set ignored local env/.env `CADRUMO_DEV_RUNTIME_SESSION_OVERRIDE=0` as explicitly requested; current implementation still treats 1 as override and 0 as strict. No commits.

@@ -1,0 +1,10 @@
+{
+  "output_sha256": "3a17d02bc64acf228ccf089a3f1913bb4ba5dc9df5fb3dd19f9333c099b63444",
+  "output_size_bytes": 536,
+  "provenance": "synthetic_generated",
+  "role": "dialect_normalization_anchor",
+  "licence": "CC0-1.0",
+  "structural_difficulty": [
+    "Expense-tracker export"
+  ]
+}

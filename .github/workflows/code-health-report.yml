@@ -1,0 +1,61 @@
+# Code-health report (issue #416), dispatch-only.
+#
+# The workflow runs `just report-code-health-monthly`, the composed
+# duplication, import-layering, and complexity dashboard (`dev/audit/report.py`),
+# on demand (operator ruling 2026-07-21: no schedules, no standing compute). Both the text and the JSON output remain in the job logs
+# (zero Actions-artifact posture; the storage quota is broken on the Free
+# plan and every other workflow already carries the same rule).
+#
+# This workflow is deliberately non-blocking. The diagnostic dashboard
+# combines import-layering, duplication, and complexity signals.
+# The main continuous integration (CI) workflow enforces every declared
+# `.importlinter` contract through `just check-import-boundaries`; this workflow
+# records and displays a diagnostic failure without failing the job.
+
+name: Cadrumo Code Health Report
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  health-report:
+    name: "Check: Code health (Linux)"
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 150
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up just
+        uses: taiki-e/install-action@6012bba2f8e3e666a2b212f8823c06831704ce92 # just
+        with:
+          tool: just@1.38.0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          prune-cache: false
+          version: "0.11.29"
+          # Self-hosted: the runner-local uv cache persists between jobs; the
+          # GitHub cloud-cache round-trip only adds transfer time.
+          enable-cache: false
+
+      - name: Initialize the worktree
+        run: just setup
+
+      - name: Run code-health report (text)
+        # Informational only: a failed diagnostic verdict must not fail this job.
+        # See the workflow header and `dev/audit/report.py` for the distinction
+        # between the blocking import boundary and the scheduled combined report.
+        run: just report-code-health-monthly
+        continue-on-error: true

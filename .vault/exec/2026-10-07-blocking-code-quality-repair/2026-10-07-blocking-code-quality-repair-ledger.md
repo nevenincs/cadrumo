@@ -1,0 +1,358 @@
+---
+tags:
+  - '#exec'
+  - '#blocking-code-quality-repair'
+date: '2026-10-07'
+modified: '2026-10-07'
+body_schema: 'body-v2'
+body_hash: 'sha256:fb5373a2ac79ee5e19beaff11fd8dcf9df6884d22188f266c17ea9cd7268ba73'
+related:
+  - "[[2026-10-07-blocking-code-quality-repair-plan]]"
+---
+
+# `blocking-code-quality-repair` ledger
+
+## Changes
+
+- `S02` `M` `src/cadrumo/domain/calculations/registry/form_projection_fields.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/withholding_bindings.py`
+- `S02` `M` `src/cadrumo/application/operations/terminated_owner.py`
+- `S02` `M` `src/cadrumo/application/operations/_supervisor_settlement.py`
+- `S02` `A` `src/cadrumo/application/operations/settlement_snapshot.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/config/tests/live_export_acceptance.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/config/tests/live_google_session.py`
+- `S02` `A` `src/cadrumo/entrypoints/cli/config/tests/test_live_export_acceptance_payloads.py`
+- `S02` `M` `native/desktop/src-tauri/src/python/manager_dispatch.py`
+- `S02` `M` `native/desktop/tests/packaged/runtime_fixture.py`
+- `S02` `verify:` `focused Ruff lint and format on 10 paths` -> `pass`
+- `S02` `verify:` `focused ty Windows Linux Darwin on 10 paths` -> `pass`
+- `S02` `verify:` `focused production basedpyright and pyrefly` -> `pass`
+- `S02` `verify:` `withholding projection and malformed CLI evidence tests 64 cases` -> `pass`
+- `S02` `verify:` `terminated owner and supervisor integration tests 70 cases` -> `pass`
+- `S02` `verify:` `actual Windows token IID and job handle cleanup smoke` -> `pass`
+- `S02` `by:` `vaultspec-standard-executor`
+- `S03` `M` `src/cadrumo/adapters/outbound/google/_calc_sheets_apply_values.py`
+- `S03` `M` `src/cadrumo/adapters/outbound/google/api.py`
+- `S03` `M` `src/cadrumo/adapters/outbound/google/calc_sheets_apply.py`
+- `S03` `D` `src/cadrumo/adapters/outbound/google/calc_sheets_pull.py`
+- `S03` `D` `src/cadrumo/adapters/outbound/google/calc_sheets_pull_records.py`
+- `S03` `M` `src/cadrumo/adapters/outbound/google/records.py`
+- `S03` `M` `src/cadrumo/adapters/outbound/google/session_store.py`
+- `S03` `A` `src/cadrumo/adapters/outbound/google/tests/session_records.py`
+- `S03` `M` `src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_apply_no_empty_window.py`
+- `S03` `D` `src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_create_retry_policy.py`
+- `S03` `M` `src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_export_preview.py`
+- `S03` `D` `src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_pull_typing.py`
+- `S03` `M` `src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_transport_parity.py`
+- `S03` `M` `src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_typed_outcomes.py`
+- `S03` `D` `src/cadrumo/adapters/outbound/google/tests/test_compute_from_pull.py`
+- `S03` `M` `src/cadrumo/adapters/outbound/google/tests/test_drive_entries.py`
+- `S03` `M` `src/cadrumo/adapters/outbound/google/tests/test_form_geometry.py`
+- `S03` `D` `src/cadrumo/adapters/outbound/google/tests/test_native_sheet_creation.py`
+- `S03` `D` `src/cadrumo/adapters/outbound/google/tests/test_pull_adapter_helpers.py`
+- `S03` `D` `src/cadrumo/adapters/outbound/google/tests/test_pull_result_roundtrip.py`
+- `S03` `M` `src/cadrumo/adapters/outbound/google/tests/test_session_store_logout_atomicity.py`
+- `S03` `M` `src/cadrumo/adapters/outbound/google/tests/test_session_store_namespace_binding.py`
+- `S03` `M` `src/cadrumo/adapters/outbound/google/tests/test_session_store_roundtrip.py`
+- `S03` `M` `src/cadrumo/adapters/outbound/google/tests/test_sign_in_state.py`
+- `S03` `D` `src/cadrumo/adapters/outbound/google/tests/test_worksheet_export_pull_roundtrip.py`
+- `S03` `M` `src/cadrumo/adapters/outbound/storage/tests/test_factory.py`
+- `S03` `D` `src/cadrumo/application/calculations/row_set_assembly.py`
+- `S03` `D` `src/cadrumo/application/calculations/tests/test_grouping_dispatch_coverage.py`
+- `S03` `D` `src/cadrumo/application/calculations/tests/test_row_producer_default_op_detection.py`
+- `S03` `D` `src/cadrumo/application/calculations/tests/test_row_set_assembly.py`
+- `S03` `D` `src/cadrumo/application/calculations/tests/test_row_set_assembly_coercion.py`
+- `S03` `M` `src/cadrumo/application/export/managed_artifact_ports.py`
+- `S03` `M` `src/cadrumo/application/modelo/modelo_spreadsheet_access.py`
+- `S03` `M` `src/cadrumo/application/modelo/modelo_spreadsheet_executor.py`
+- `S03` `D` `src/cadrumo/application/modelo/modelo_spreadsheet_observations.py`
+- `S03` `M` `src/cadrumo/application/modelo/modelo_spreadsheet_operation.py`
+- `S03` `M` `src/cadrumo/application/modelo/modelo_spreadsheet_operation_contracts.py`
+- `S03` `M` `src/cadrumo/application/modelo/modelo_spreadsheet_operation_projections.py`
+- `S03` `D` `src/cadrumo/application/modelo/modelo_spreadsheet_operation_scenario.py`
+- `S03` `M` `src/cadrumo/application/modelo/modelo_spreadsheet_registration.py`
+- `S03` `M` `src/cadrumo/application/modelo/tests/test_modelo_spreadsheet_operation.py`
+- `S03` `D` `src/cadrumo/application/storage/calc_sheets/_parity_comparison.py`
+- `S03` `D` `src/cadrumo/application/storage/calc_sheets/casilla_parity.py`
+- `S03` `M` `src/cadrumo/application/storage/calc_sheets/errors.py`
+- `S03` `M` `src/cadrumo/application/storage/calc_sheets/fictional_rows.py`
+- `S03` `D` `src/cadrumo/application/storage/calc_sheets/parity_harness.py`
+- `S03` `M` `src/cadrumo/application/storage/calc_sheets/records.py`
+- `S03` `D` `src/cadrumo/application/storage/calc_sheets/row_set_assembly.py`
+- `S03` `D` `src/cadrumo/application/storage/calc_sheets/tests/test_parity_comparison.py`
+- `S03` `D` `src/cadrumo/application/storage/calc_sheets/tests/test_parity_harness_hardening.py`
+- `S03` `D` `src/cadrumo/application/storage/calc_sheets/tests/test_row_set_assembly.py`
+- `S03` `M` `src/cadrumo/application/storage/calc_sheets/workbook_exclusions.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/_modelo_spreadsheet_command_specs.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/_modelo_spreadsheet_payloads.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_google_configuration_native.py`
+- `S03` `D` `src/cadrumo/entrypoints/cli/google_review_rendering.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/runtime_modelo_spreadsheet.py`
+- `S03` `D` `src/cadrumo/entrypoints/cli/tests/test_google_payloads.py`
+- `S03` `D` `src/cadrumo/entrypoints/cli/tests/test_google_review_rendering.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_payloads.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_archive_native.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_spreadsheet.py`
+- `S03` `D` `src/cadrumo/entrypoints/review_publication_presentation.py`
+- `S03` `M` `src/cadrumo/entrypoints/tests/conformance_google_support.py`
+- `S03` `M` `src/cadrumo/entrypoints/tests/conformance_modelo_spreadsheet_support.py`
+- `S03` `M` `src/cadrumo/entrypoints/tests/conformance_profile_archive_support.py`
+- `S03` `D` `src/cadrumo/entrypoints/tests/review_publication_fixture.py`
+- `S03` `M` `src/cadrumo/entrypoints/tests/test_calc_sheets_error_hierarchy.py`
+- `S03` `M` `src/cadrumo/entrypoints/tests/test_google_configuration_operation_composition.py`
+- `S03` `D` `src/cadrumo/entrypoints/tests/test_review_publication_presentation.py`
+- `S03` `M` `src/cadrumo/entrypoints/tests/test_runtime_attached_repositories_part1.py`
+- `S03` `D` `src/cadrumo/entrypoints/tui/review_publication.py`
+- `S03` `D` `src/cadrumo/entrypoints/tui/review_publication_flow.py`
+- `S03` `D` `src/cadrumo/entrypoints/tui/tests/test_review_publication.py`
+- `S03` `D` `src/cadrumo/entrypoints/tui/tests/test_review_publication_flow.py`
+- `S03` `verify:` `scoped Google and spreadsheet Ruff lint and format` -> `pass`
+- `S03` `verify:` `scoped ty basedpyright and pyrefly` -> `pass`
+- `S03` `verify:` `publication TUI and Google configuration integration tests 38 cases` -> `pass`
+- `S03` `verify:` `historical saved revision and native plan tests 5 cases` -> `pass`
+- `S03` `verify:` `real supervisor XLSX conformance 2 cases` -> `pass`
+- `S03` `verify:` `Google export payload and transport focused tests 21 cases` -> `pass`
+- `S03` `verify:` `Google partial session encrypted storage seed unit tests 23 cases` -> `pass`
+- `S03` `by:` `vaultspec-high-executor`
+- `S03` `M` `src/cadrumo/core/errors/registry/_application_part2.py`
+- `S03` `verify:` `scoped Google and spreadsheet Ruff lint and format` -> `pass`
+- `S03` `verify:` `scoped ty basedpyright and pyrefly` -> `pass`
+- `S03` `verify:` `publication TUI and Google configuration integration tests 38 cases` -> `pass`
+- `S03` `verify:` `historical saved revision and native plan tests 5 cases` -> `pass`
+- `S03` `verify:` `real supervisor XLSX conformance 2 cases` -> `pass`
+- `S03` `verify:` `Google export payload and transport focused tests 21 cases` -> `pass`
+- `S03` `verify:` `Google partial session encrypted storage seed unit tests 23 cases` -> `pass`
+- `S03` `verify:` `root error registry enforcement tests` -> `pass`
+- `S04` `M` `dev/ci/tests/test_domain_buckets_payload_version_contract.py`
+- `S04` `M` `dev/packaging/native/tests/test_storage_root_vectors.py`
+- `S04` `M` `src/cadrumo/adapters/local_runtime/tests/test_profile_worker.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/operations/tests/test_auth_operation_definitions.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/operations/tests/test_operation_definitions.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/operations/tests/test_profile_additional_mutations.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/operations/tests/test_profile_operation_concurrency.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/operations/tests/test_profile_view_operation.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/profile/tests/profile_registration.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/custody/acceleration_receipt_crypto.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/enrollment_support.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_automation_store.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_delete_a_signed_in_profile.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_passphrase_replacement_contract.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_passphrase_rotation.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_password_login_recovery_independence.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_profile_session_admission.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_recovery_enrollment.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_registration.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_session_authority.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_setup_state_must_be_stated.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/master_key/login_handover_journal.py`
+- `S04` `A` `src/cadrumo/adapters/persistence/storage/master_key/tests/profile_process_support.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/master_key/tests/test_bucket_created_through_the_sanctioned_door_can_read_records.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/master_key/tests/test_delete_while_logged_in.py`
+- `S04` `D` `src/cadrumo/adapters/persistence/storage/master_key/tests/test_login_handover.py`
+- `S04` `D` `src/cadrumo/adapters/persistence/storage/master_key/tests/test_login_handover_sequential_registration.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/master_key/tests/test_login_interaction.py`
+- `S04` `D` `src/cadrumo/adapters/persistence/storage/master_key/tests/test_logout_strong_close.py`
+- `S04` `A` `src/cadrumo/adapters/persistence/storage/master_key/tests/test_profile_invocation_authentication.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/master_key/tests/test_record_authority_retires_with_the_bucket_session.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/master_key/tests/test_registration_retires_displaced_profile.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/profile_login_session.py`
+- `S04` `A` `src/cadrumo/adapters/persistence/storage/tests/profile_session_setup.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/tests/test_language_resolver.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/tests/test_plantilla_media_rows.py`
+- `S04` `M` `src/cadrumo/application/auth/operation_definitions.py`
+- `S04` `M` `src/cadrumo/application/auth/tests/test_operation_definitions.py`
+- `S04` `D` `src/cadrumo/application/user_profile/login_handover.py`
+- `S04` `M` `src/cadrumo/application/user_profile/login_session.py`
+- `S04` `M` `src/cadrumo/application/user_profile/login_session_port.py`
+- `S04` `M` `src/cadrumo/application/user_profile/profile_operation_contracts.py`
+- `S04` `M` `src/cadrumo/application/user_profile/profile_record_repository.py`
+- `S04` `M` `src/cadrumo/application/user_profile/registration.py`
+- `S04` `M` `src/cadrumo/application/user_profile/session_admission.py`
+- `S04` `A` `src/cadrumo/application/user_profile/tests/foreign_operation_payload.py`
+- `S04` `M` `src/cadrumo/application/user_profile/tests/test_operation_access_resolution.py`
+- `S04` `M` `src/cadrumo/application/user_profile/tests/test_profile_operation_access.py`
+- `S04` `M` `src/cadrumo/core/errors/registry/_application_part2.py`
+- `S04` `M` `src/cadrumo/core/storage_environment.py`
+- `S04` `A` `src/cadrumo/core/tests/storage_roots.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/config/tests/test_custody_enrollment_prompt_guard.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/config/tests/test_profile_recovery_cli.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/config/tests/test_runtime_google_configuration_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/_machine_secret_channels_support.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/native_profile_cli_support.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_cli_commands_leave_no_unsealed_bucket_session.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_config_capabilities.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_config_custody_profile_lifecycle.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_allocate_classification.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_bulk_classify.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_evidence_followup_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_list_filter.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_llm_autosplit.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_source_mesh_calculate.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_work_wizard.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_overview_pipeline_verb.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_session_root_resume.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_recovery_isolation_cli_matrix.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_refusal_names_its_profile.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_invoice_add.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_invoice_catalogue_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_attachment_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_evidence_add_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_lifecycle_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_participation_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_prefix_refusals_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_reads_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_review_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_ledger_rules_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_m303_attestation_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_dependencies_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_m145_communication_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_review_package_exchange_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_work_create_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_work_history_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_modelo_work_review_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_quickfile_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_review_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_runtime_workflow_runs_native.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_work_resume.py`
+- `S04` `M` `src/cadrumo/entrypoints/runtime/tests/test_descendants_operation.py`
+- `S04` `M` `src/cadrumo/entrypoints/runtime/tests/test_operation_provenance.py`
+- `S04` `M` `src/cadrumo/entrypoints/runtime/tests/test_plantilla_media_client.py`
+- `S04` `M` `src/cadrumo/entrypoints/runtime/tests/test_profile_connections.py`
+- `S04` `M` `src/cadrumo/entrypoints/runtime/tests/test_profile_mutation_client.py`
+- `S04` `M` `src/cadrumo/entrypoints/runtime/tests/test_profile_patch_client.py`
+- `S04` `M` `src/cadrumo/entrypoints/runtime/tests/test_profile_status_client.py`
+- `S04` `M` `src/cadrumo/entrypoints/runtime/tests/test_profile_worker_operations.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/profile/tests/test_acquisition_launch_write_serialisation.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/profile/tests/test_runtime_overview.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/secret/tests/test_secret_journeys.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/tests/fixture.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/tests/test_login_screen_restored_profile.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/tests/test_manager_field_editors.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/tests/test_manager_language_switch.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/tests/test_manager_masked_field_preservation.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/tests/test_manager_masked_required_field.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/tests/test_manager_required_field_refusal.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/tests/test_manager_screen.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/tests/test_registration_language_switch.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/tests/test_registration_screen.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/tests/test_terminal_sizes.py`
+- `S04` `verify:` `Ruff lint and format 110 current S04 files` -> `pass`
+- `S04` `verify:` `ty Windows 110 current S04 files` -> `pass`
+- `S04` `verify:` `login source basedpyright and pyrefly` -> `pass`
+- `S04` `verify:` `custody password selection TUI and native status 79 distinct behavioral cases` -> `pass`
+- `S04` `verify:` `root core storage and authentication lane after strict foreign payload repair` -> `pass`
+- `S04` `verify:` `foreign payload owner and routing tests 111 cases` -> `pass`
+- `S04` `verify:` `legacy logout operation refusal regression` -> `pass`
+- `S04` `by:` `vaultspec-standard-executor and supervisor`
+- `S06` `M` `src/cadrumo/domain/modelos/calculation_revision_rendering.py`
+- `S06` `M` `src/cadrumo/domain/calculations/registry/schema.py`
+- `S06` `A` `src/cadrumo/domain/modelos/tests/test_calculation_revision_rendering.py`
+- `S06` `M` `src/cadrumo/adapters/persistence/profile/tests/test_calculation_repository_roundtrip.py`
+- `S06` `verify:` `focused Ruff lint format and ty on four S06 files` -> `pass`
+- `S06` `verify:` `actual predecessor and grounded-root saved snapshot strict roundtrip` -> `pass`
+- `S06` `verify:` `existing valid snapshot omission shape and digest preserved` -> `pass`
+- `S06` `verify:` `directory context digest tamper and malformed authored predecessor refusal` -> `pass`
+- `S06` `verify:` `domain and actual encrypted catalogue readback suite 24 cases` -> `pass`
+- `S06` `verify:` `independent corrected rendering boundary review` -> `pass`
+- `S06` `by:` `vaultspec-standard-executor`
+- `S07` `M` `src/cadrumo/application/filing/_m200_projection.py`
+- `S07` `M` `src/cadrumo/application/filing/producer_snapshot.py`
+- `S07` `M` `src/cadrumo/application/filing/producer_snapshot_m200.py`
+- `S07` `M` `src/cadrumo/core/filing_projection_ref.py`
+- `S07` `M` `src/cadrumo/domain/calculations/registry/gasto193_bindings.py`
+- `S07` `D` `src/cadrumo/domain/calculations/registry/tests/test_gasto193_observation.py`
+- `S07` `M` `src/cadrumo/domain/calculations/registry/withholding296_bindings.py`
+- `S07` `verify:` `focused Ruff lint format and diff hygiene six current files` -> `pass`
+- `S07` `verify:` `ty Windows Linux Darwin and production basedpyright pyrefly` -> `pass`
+- `S07` `verify:` `provider registration terminal audit and projection reference unit tests 116 cases` -> `pass`
+- `S07` `verify:` `actual Modelo296 repeated-detail and projection-plan integration tests 34 cases` -> `pass`
+- `S07` `verify:` `producer snapshot unit tests 62 cases` -> `pass`
+- `S07` `verify:` `AST comparison retains provider fields selector validators and projection executable bodies` -> `pass`
+- `S07` `by:` `vaultspec-standard-executor`
+- `S05` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S05` `M` `dev/quality/metadata/import_load_targets.dev.json`
+- `S05` `M` `dev/quality/metadata/import_load_targets.json`
+- `S05` `M` `src/cadrumo/domain/calculations/registry/schema.py`
+- `S05` `M` `src/cadrumo/domain/modelos/calculation_revision_rendering.py`
+- `S05` `M` `src/cadrumo/domain/modelos/tests/test_calculation_revision_rendering.py`
+- `S05` `verify:` `directory accessor owner repair Ruff lint and format` -> `pass`
+- `S05` `verify:` `directory accessor owner repair ty basedpyright and pyrefly` -> `pass`
+- `S05` `verify:` `directory accessor owner repair domain and encrypted repository readback 24 cases` -> `pass`
+- `S05` `by:` `supervisor`
+- `S01` `M` `dev/deploy/docs_delivery_probe.py`
+- `S01` `M` `dev/deploy/docs_site_build.py`
+- `S01` `M` `dev/deploy/docs_site_languages.py`
+- `S01` `M` `dev/deploy/tests/test_docs_static_site.py`
+- `S01` `M` `dev/deploy/tests/test_publish_preflight_search_records.py`
+- `S01` `M` `dev/docs/_locale_chrome.py`
+- `S01` `M` `dev/docs/casilla_schema_compilation.py`
+- `S01` `M` `dev/docs/compile_once.py`
+- `S01` `M` `dev/docs/i18n.py`
+- `S01` `M` `dev/docs/sequences/export_evidence.py`
+- `S01` `M` `dev/docs/sequences/receipt_fixture.py`
+- `S01` `M` `dev/docs/sequences/tests/test_modelo_export_evidence.py`
+- `S01` `M` `dev/docs/sequences/tests/test_runtime_fixture.py`
+- `S01` `M` `dev/docs/tests/test_compile_once.py`
+- `S01` `M` `dev/docs/tests/test_deployment_search_parity.py`
+- `S01` `M` `dev/docs/tests/test_sequence_goldens.py`
+- `S01` `M` `dev/docs/tests/test_shared_search_index.py`
+- `S01` `M` `dev/docs/untranslated_typesetting.py`
+- `S01` `M` `dev/packaging/native/docs_build.py`
+- `S01` `M` `dev/packaging/native/docs_stage.py`
+- `S01` `M` `dev/packaging/native/platforms/tests/test_pe.py`
+- `S01` `M` `dev/packaging/native/platforms/tests/test_posix.py`
+- `S01` `M` `dev/packaging/native/tests/test_docs_build_environment.py`
+- `S01` `M` `dev/packaging/native/tests/test_standalone_presets.py`
+- `S01` `D` `dev/packaging/tests/test_native_docs_build.py`
+- `S01` `M` `dev/packaging/tests/test_native_startup_presence.py`
+- `S01` `D` `dev/registry/form_layout/tests/_member_scalar_history.py`
+- `S01` `D` `dev/registry/form_layout/tests/test_casilla_split_reconciliation.py`
+- `S01` `M` `dev/registry/form_layout/tests/test_row_binding_reconciliation.py`
+- `S01` `M` `dev/registry/tests/test_modelo_156_member_bindings.py`
+- `S01` `M` `dev/registry/tests/test_workbook_probe.py`
+- `S01` `M` `dev/registry/workbook_demo_members.py`
+- `S01` `M` `src/cadrumo/application/ledger/actions_export.py`
+- `S01` `M` `src/cadrumo/domain/buckets/tests/test_payload_value_bounding.py`
+- `S01` `D` `src/cadrumo/domain/modelos/m156_row_materialisation.py`
+- `S01` `A` `dev/docs/sequences/tests/modelo_export_evidence_support.py`
+- `S01` `A` `dev/registry/form_layout/tests/member_scalar_history.py`
+- `S01` `A` `dev/registry/m156_row_materialisation.py`
+- `S01` `A` `dev/registry/pipeline/tests/test_casilla_split_reconciliation.py`
+- `S01` `verify:` `Ruff lint and format developer tooling 1887 files` -> `pass`
+- `S01` `verify:` `ty focused developer tooling fixtures and actual consumers 29 files` -> `pass`
+- `S01` `verify:` `focused tooling consumer and boundary tests 259 cases` -> `pass`
+- `S01` `verify:` `final canonical native worker browser ledger and Modelo export evidence 49 completed cases` -> `pass`
+- `S01` `verify:` `remaining deployment selectors 4 cases` -> `pass`
+- `S01` `verify:` `all fifteen original Modelo303 native verification and export cases` -> `pass`
+- `S01` `verify:` `independent integrated source review of 39 tooling paths` -> `pass`
+- `S01` `by:` `vaultspec-standard-executor`
+- `S05` `verify:` `just generate-import-load-targets canonical owner generation` -> `pass`
+- `S05` `verify:` `full configured platform and checker type convergence` -> `pass`
+- `S05` `verify:` `just check-import-boundaries stable authoritative graph zero hard findings zero debt and all load targets` -> `pass`
+- `S05` `verify:` `final just check-code all twelve configured blocking gates on stable source` -> `pass`
+- `S05` `verify:` `independent final integrated source and evidence review` -> `pass`
+- `S05` `verify:` `vault feature health check zero errors and warnings` -> `pass`
+- `S05` `verify:` `vault plan check approved completed repair plan` -> `pass`
+
+## Notes
+
+- `S02` Only the root nonoptional narrowing hunk belongs to this Step in the already dirty packaged runtime fixture; peer lifecycle edits are preserved.
+- `S03` Retired inbound calculation and pull prototypes are outside supported product enrollment; the enrolled review publication and historical saved revision readers remain covered.
+- `S04` Root core lane had 254 passing and 5 failing cases; the strict test-model repair resolved all failures in its 111-case rerun. Eight OS credential store cases were refused by this Windows logon and one POSIX permission case was unavailable on Windows; none is claimed verified.
+- `S04` The worker first lane excluded 10 OS-keychain or external cases; 79 distinct selected behavioral cases passed after precise throttle-state and selection fixture corrections.
+- `S04` Test import migrations shared with S03 were already committed in that atomic consumer update; the remaining Step paths contain S04 production retirement and setup migrations.
+- `S06` Captured directory IDs are copied from the validated owner and participate in rendering integrity; no current authority lookup, inferred references, weakened validators or durability changes were introduced.
+- `S06` Reusable adapters retain identical validated shapes and remove measured repeated schema construction in the saved-rendering traversal.
+- `S07` Only the two unenrolled observation value classes and three exclusively prototype test cases were retired; actual provider registrations and typed detail-record projection are unchanged.
+- `S05` The preceding integrated run passed ten of twelve gates. Import contracts and zero debt passed but source movement invalidated graph authority; source-stable reruns remain required.
+- `S05` Five concurrent CMake type diagnostics were repaired by their peer owner and are not claimed as source edits in this Step.
+- `S05` The directory accessor now reads its unchanged private state inside ModeloDefinition; actual production and test consumers were updated atomically.
+- `S01` The final original 56-case export batch passed 49 cases before the unchanged 300-second Modelo100 double-release fixture timeout; four remaining deployment cases passed separately. Exactly 53 of that population are verified, and all three Modelo100 assertions remain unverified.
+- `S01` Isolated Modelo100 reproduced the existing timeout; one bounded copied-child profile reproduced the pre-repair runtime connection refusal shape without a serializer exception or established new regression. Payload calls totaled 4.090 seconds, and measured container validation was 0.098 seconds in the first profile. No production timing, durability, protocol, cache, skip or validator change was made.
+- `S01` All diagnostic children were closed through their fixture ownership; peer workers were preserved. S06 direct domain/encrypted and actual Modelo303 coverage supports the repaired rendering boundary.
+- `S05` Stable import convergence loaded all 4513 governed non-test modules and kept all fifteen contracts with equal before and after source snapshots.
+- `S05` The final integrated dashboard is still pending; standalone convergence evidence does not close this Step by itself.
+- `S05` Final just check-code exited zero at 08:57 UTC with its defined silent success output; source files were unchanged since 08:37 UTC, before the 08:42 UTC start.
+- `S05` Final review verdict is PASS. Three Modelo100 assertions and the previously unavailable host credential-store/POSIX cases remain explicitly unverified; all checker scopes, timeouts and validators are unchanged.
+- `S05` Plan check retains intentional PLAN022: canonical S06 was inserted before S01 to express its discovered dependency; canonical identifiers were not renumbered.

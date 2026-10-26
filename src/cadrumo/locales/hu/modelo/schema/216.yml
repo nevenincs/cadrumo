@@ -1,0 +1,120 @@
+modelo:
+  schema:
+    '216':
+      casilla:
+        continuidad:
+          cuota-a-ingresar:
+            label: Fizetendő összeg
+          irnr-retencion-resultados-anteriores:
+            label: Azonos adónemre, évre és időszakra vonatkozó korábbi bevallások
+              fizetendő összege
+      construct:
+        modelo-216-calculation-construct:
+          field:
+            title: '216-os nyomtatvány: az IRNR forrásadójának számítása'
+        modelo-216-liquidacion:
+          field:
+            title: '216-os nyomtatvány: az IRNR forrásadójának elszámolása'
+      field:
+        official_name: Modelo 216. A külföldi illetőségűek jövedelemadója. Állandó
+          telephely közbenjárása nélkül elért jövedelmek. Adóelőleg-levonások és -befizetések.
+          Bevallás és befizetési dokumentum.
+        title: IRNR adóelőleg-levonások és -befizetések
+      form:
+        column:
+          base: A levont adó és az adóelőleg alapja
+          numero-rentas: Jövedelemtételek száma
+          retenciones: Levont adó és adóelőleg
+        context:
+          apellidos: Vezetéknév vagy cégnév
+          declaracion-complementaria: Kiegészítő önadózási bevallás
+          ejercicio: Adóév
+          iban: IBAN
+          justificante-anterior: Az előző önadózási bevallás igazolásszáma
+          nif: Adóazonosító szám (NIF)
+          nombre: Utónév
+          nombre-completo: Teljes név vagy cégnév
+          periodo: Időszak
+        page:
+          pag-1:
+            heading: Nem rezidensek jövedelemadója · Levont adó és adóelőleg
+        row:
+          base-historica: Adólevonás és adóelőleg alapja / Jövedelem összege
+          dividendos: Osztalék és tulajdoni részesedésből származó egyéb jövedelem
+          otras-rentas: Egyéb jövedelem
+          totales: Összesen
+        section:
+          complementaria:
+            heading: Kiegészítő bevallás
+          devengo:
+            heading: Adómegállapítási időszak
+          identificacion:
+            heading: Azonosítás
+          ingreso:
+            heading: Befizetés
+          liquidacion:
+            heading: Adóelszámolás
+          no-sometidas:
+            heading: II. Adólevonás vagy adóelőleg alá nem eső jövedelmek
+          sometidas:
+            heading: I. Adólevonás vagy adóelőleg alá eső jövedelmek
+      revision:
+        2020-2023:
+          casilla:
+            '1':
+              label: Adólevonás alá eső jövedelmek száma
+            '2':
+              label: A levonások és adóelőlegek alapja
+            '3':
+              label: Levonások és adóelőlegek
+            '4':
+              label: Adólevonás alá nem eső jövedelmek száma
+            '5':
+              label: Adólevonás alá nem eső jövedelmek összege
+          field:
+            label: EHA/3290/2008 rendelet, 2020–2023. adóévek
+        2024-y-siguientes:
+          casilla:
+            '05':
+              label: Jövedelmek száma. Osztalék és társaságok saját tőkéjében fennálló
+                részesedésből származó egyéb jövedelem
+            '06':
+              label: Jövedelmek száma. Egyéb jövedelmek
+            '07':
+              label: Jövedelmek száma. Összesen
+            08:
+              label: Levonások és előlegfizetések adóalapja. Osztalék és társaságok
+                saját tőkéjében fennálló részesedésből származó egyéb jövedelem
+            09:
+              label: Levonások és előlegfizetések adóalapja. Egyéb jövedelmek
+            '10':
+              label: Levonások és előlegfizetések adóalapja. Összesen
+            '11':
+              label: Forrásadó és részletfizetés. Osztalék és társaságok saját tőkéjében
+                fennálló részesedésből származó egyéb jövedelem
+            '12':
+              label: Forrásadó és részletfizetés. Egyéb jövedelmek
+            '13':
+              label: Forrásadó és részletfizetés. Összesen
+            '14':
+              label: Levonás vagy előlegfizetés alá nem tartozó jövedelmek. Jövedelmek
+                száma. Osztalék és társaságok saját tőkéjében fennálló részesedésből
+                származó egyéb jövedelem
+            '15':
+              label: Levonás vagy előlegfizetés alá nem tartozó jövedelmek. Jövedelmek
+                száma. Egyéb jövedelmek
+            '16':
+              label: Levonás vagy előlegfizetés alá nem tartozó jövedelmek. Jövedelmek
+                száma. Összesen
+            '17':
+              label: Levonás vagy előlegfizetés alá nem tartozó jövedelmek. Adóalap.
+                Osztalék és társaságok saját tőkéjében fennálló részesedésből származó
+                egyéb jövedelem
+            '18':
+              label: Levonás vagy előlegfizetés alá nem tartozó jövedelmek. Adóalap.
+                Egyéb jövedelmek
+            '19':
+              label: Levonás vagy előlegfizetés alá nem tartozó jövedelmek. Adóalap.
+                Összesen
+          field:
+            label: HAC/56/2024 rendelet, 2024. adóévtől

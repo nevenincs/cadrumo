@@ -1,0 +1,200 @@
+"""Closed Declarations route catalogue and injected root factory."""
+
+from __future__ import annotations
+
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Final, override
+
+from textual.app import ComposeResult
+from textual.screen import Screen
+from textual.widgets import DataTable, Static
+
+from ....application.modelo.declarations_calendar import (
+    DeclarationsCalendarProjectionV1,
+    DeclarationsCalendarSource,
+)
+from ....application.modelo.declarations_workspace_contracts import (
+    DeclarationsWorkspaceAvailability,
+    DeclarationsWorkspaceProjectionV1,
+    DeclarationsWorkspaceZone,
+)
+from ....application.overview.home import HomeAvailability
+from ....core.i18n.render import tr
+from ..components.language import localized
+from ..components.widgets import ContentDataTable, ContentScroll
+from ..destination_alias import closed_destination_ids
+from ..navigation import TuiScreenContextV1, TuiScreenFactoryV1
+from .action_guards import require_canonical_declarations_actions
+from .calendar import DeclarationsCalendarScreen
+from .controller import DeclarationsCalendarController, DeclarationsWorkspaceController, DeclarationsWorkspaceScreen
+from .filing_history import DeclarationsFilingHistoryScreen
+from .models import (
+    DeclarationsDestinationIdV1,
+    DeclarationsRouteTargetV1,
+    DeclarationsWorkspaceWiringV1,
+)
+from .overview import DeclarationsModeloWorkspaceLauncherScreen, DeclarationsOverviewScreen
+from .revisions import DeclarationsRevisionsScreen
+
+type DeclarationsInternalScreenFactoryV1 = Callable[[DeclarationsWorkspaceController], DeclarationsWorkspaceScreen]
+
+
+class DeclarationsUnavailableScreen(DeclarationsWorkspaceScreen):
+    """Explicit refusal without fabricating an empty result."""
+
+    def __init__(self, controller: DeclarationsWorkspaceController, target: DeclarationsRouteTargetV1) -> None:
+        """Retain the refused typed target."""
+        super().__init__(controller, id="declarations-unavailable-screen")
+        self.target = target
+
+    @override
+    def compose(self) -> ComposeResult:
+        yield localized(
+            Static(tr("workspace.declarations.unavailable.title"), classes="cadrumo-banner", markup=False),
+            "workspace.declarations.unavailable.title",
+        )
+        with ContentScroll(id="declarations-page", classes="cadrumo-scroll declarations-page"):
+            yield ContentDataTable[str](id="declarations-navigation", cursor_type="row", zebra_stripes=True)
+            yield localized(
+                Static(
+                    tr("workspace.declarations.refusal.source"),
+                    id="declarations-refusal",
+                    classes="declarations-refusal",
+                    markup=False,
+                ),
+                "workspace.declarations.refusal.source",
+            )
+
+    def on_mount(self) -> None:
+        """Populate navigation while preserving the visible refusal."""
+        self.populate_navigation()
+        self.query_one("#declarations-navigation", DataTable).focus()
+
+    def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
+        """Permit navigation away from the unavailable body."""
+        self.handle_navigation(event)
+
+
+@dataclass(frozen=True, slots=True)
+class DeclarationsRouteV1:
+    """One route and its projection zone."""
+
+    destination: DeclarationsDestinationIdV1
+    zone: DeclarationsWorkspaceZone | None
+    factory: DeclarationsInternalScreenFactoryV1 | None
+
+
+DECLARATIONS_ROUTES: Final = (
+    DeclarationsRouteV1("declarations.overview", DeclarationsWorkspaceZone.DECLARATIONS, DeclarationsOverviewScreen),
+    DeclarationsRouteV1(
+        "declarations.revisions", DeclarationsWorkspaceZone.CALCULATION_REVISIONS, DeclarationsRevisionsScreen
+    ),
+    DeclarationsRouteV1(
+        "declarations.filing_history", DeclarationsWorkspaceZone.FILING_HISTORY, DeclarationsFilingHistoryScreen
+    ),
+    DeclarationsRouteV1("declarations.calendar", None, None),
+    DeclarationsRouteV1("declarations.modelo_workspace", DeclarationsWorkspaceZone.DECLARATIONS, None),
+)
+_ROUTES_BY_ID: Final = {route.destination: route for route in DECLARATIONS_ROUTES}
+
+
+if frozenset(_ROUTES_BY_ID) != closed_destination_ids(DeclarationsDestinationIdV1) or len(_ROUTES_BY_ID) != len(
+    DECLARATIONS_ROUTES
+):
+    raise ValueError("Declarations routes must cover the closed catalogue exactly once")
+
+
+def _calendar_is_observable(calendar: DeclarationsCalendarProjectionV1) -> bool:
+    """Return whether the authoritative schedule source can be displayed."""
+    return next(
+        item.availability for item in calendar.sources if item.source is DeclarationsCalendarSource.SCHEDULE
+    ) in {HomeAvailability.AVAILABLE, HomeAvailability.STALE}
+
+
+def _workspace_route_is_available(
+    controller: DeclarationsWorkspaceController,
+    route: DeclarationsRouteV1,
+    zone: DeclarationsWorkspaceZone,
+) -> bool:
+    """Require both an observable zone and a concrete screen admission."""
+    state = controller.zone_state(zone)
+    observable = state.availability in {
+        DeclarationsWorkspaceAvailability.AVAILABLE,
+        DeclarationsWorkspaceAvailability.STALE,
+    }
+    return observable and (route.factory is not None or controller.modelo_workspace_factory is not None)
+
+
+def _resolve_calendar_screen(
+    controller: DeclarationsWorkspaceController,
+    target: DeclarationsRouteTargetV1,
+) -> Screen[None]:
+    """Resolve the calendar only after its schedule source is observable."""
+    calendar = controller.calendar_projection
+    if calendar is None or not _calendar_is_observable(calendar):
+        return DeclarationsUnavailableScreen(controller, target)
+    return DeclarationsCalendarScreen(
+        DeclarationsCalendarController(
+            controller.context,
+            calendar,
+            entry_handoff=controller.calendar_entry_handoff,
+            entry_can_open=controller.calendar_entry_can_open,
+            recovery_handoff=controller.calendar_recovery_handoff,
+        )
+    )
+
+
+def resolve_declarations_screen(
+    controller: DeclarationsWorkspaceController,
+    target: DeclarationsRouteTargetV1,
+) -> Screen[None]:
+    """Resolve a target without I/O or controller construction."""
+    route = _ROUTES_BY_ID[target.destination]
+    if target.zone is not route.zone:
+        raise ValueError("Declarations route target and zone disagree")
+    if route.destination == "declarations.calendar":
+        return _resolve_calendar_screen(controller, target)
+    if route.zone is None:
+        raise ValueError("Declarations non-calendar route requires a workspace zone")
+    if not _workspace_route_is_available(controller, route, route.zone):
+        return DeclarationsUnavailableScreen(controller, target)
+    if route.factory is None:
+        return DeclarationsModeloWorkspaceLauncherScreen(controller)
+    return route.factory(controller)
+
+
+def declarations_screen_factory(
+    projection: DeclarationsWorkspaceProjectionV1,
+    wiring: DeclarationsWorkspaceWiringV1,
+) -> TuiScreenFactoryV1:
+    """Bind only injected facts, admissions, and typed handoffs."""
+    require_canonical_declarations_actions(
+        work_action=wiring.work_action,
+        revisions_action=wiring.revisions_action,
+        filing_action=wiring.filing_action,
+    )
+
+    def create(context: TuiScreenContextV1) -> Screen[None]:
+        controller = DeclarationsWorkspaceController(context, projection, wiring)
+        # A caller that asks for a calendar row -- Home's agenda -- opens the
+        # calendar itself; everything else opens on the overview, which
+        # restores a declaration row from the same focus.
+        focus = context.focus
+        opening = (
+            "declarations.calendar"
+            if focus is not None and focus.semantic_key.startswith("declarations.calendar")
+            else "declarations.overview"
+        )
+        return resolve_declarations_screen(controller, controller.target(opening))
+
+    return create
+
+
+__all__ = [
+    "DECLARATIONS_ROUTES",
+    "DeclarationsRouteV1",
+    "DeclarationsUnavailableScreen",
+    "declarations_screen_factory",
+    "resolve_declarations_screen",
+]

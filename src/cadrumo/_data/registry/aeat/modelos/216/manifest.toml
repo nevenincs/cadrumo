@@ -1,0 +1,18 @@
+[modelo]
+id = "216"
+tax_domain = "irnr"
+cadence = "profile_based"
+jurisdiction = "ES-AEAT"
+legal_refs = [
+    "orden-eha-3290-2008:art-1",
+    "orden-eha-3290-2008:art-1",
+    "orden-eha-3290-2008:art-4",
+    "trlirnr-rdleg-5-2004:art-24",
+]
+source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]
+
+[modelo.inception.unauthored]
+earliest_authored = 2020
+reason = "Governed by Orden EHA/3290/2008; the same consolidated text shows Modelo 216 filed under the Orden of 21 December 2000, so filing years before 2020 existed in law and are not authored. The earliest held design, aeat-dr-216-2020-2023, is one unchanged era for ejercicios 2020 to 2023 and is rendered by the 2020-2023 edition at applicability grade: its wire layout names the seven liquidacion boxes only 'Partida 1' to 'Partida 7', and the pre-2024 form that numbers them and the instructions that group them are not held, so no calculation or filing claim is made for those years."
+legal_refs = ["orden-eha-3290-2008:art-1"]
+source_refs = ["aeat-dr-216-2020-2023"]

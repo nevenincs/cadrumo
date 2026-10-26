@@ -1,0 +1,489 @@
+"""One entry point over every registry declaration screen.
+
+Each screen owns one condition and is runnable on its own. This module runs all
+of them against a single loaded authority and prints one census line per screen,
+so a maintainer asking "what is the state of the declarations" has one command
+rather than seven, and so the registry is loaded once rather than seven times.
+
+It adds no analysis of its own and owns no condition. Every count it prints
+comes from the screen that owns that condition, which is where the rule, the
+docstring explaining it, and the detector test all live. A screen missing from
+the table below is simply not run; there is no discovery by naming convention,
+because a screen that silently stopped running would be indistinguishable from
+a condition that stopped occurring.
+
+Screens report and never gate. The conditions that are clean corpus-wide are
+additionally gated in ``dev/registry/tests/test_declaration_invariant_gates.py``
+as invariants rather than counts.
+"""
+
+from __future__ import annotations
+
+import importlib
+import sys
+from collections.abc import Callable, Sequence
+from dataclasses import dataclass
+from pathlib import Path
+from types import ModuleType
+from typing import Final, Literal
+
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+
+from ..compiler.authority import compiled_bundled_authority
+from .capability_continuity import screen_authority as capability_continuity_screen
+from .casilla_id_grammar import screen_authority as grammar_screen
+from .continuity_integrity import screen_authority as continuity_screen
+from .cross_revision_wire_shape import screen_authority as cross_revision_wire_shape_screen
+from .delta_minimality import screen_authority as delta_minimality_screen
+from .export_derivation_attestation import screen_authority as export_attestation_screen
+from .export_ref_symmetry import screen_authority as export_ref_screen
+from .fabricated_required_ness import screen_authority as fabricated_required_screen
+from .footnote_only_wire_facts import screen_authority as footnote_only_screen
+from .grade_earned import screen_authority as grade_screen
+from .hand_authored_type_column import screen_authority as hand_authored_type_column_screen
+from .manifest_uncited_references import screen_authority as manifest_uncited_screen
+from .modelo_capability import screen_authority as modelo_capability_screen
+from .monetary_scale import screen_authority as monetary_scale_screen
+from .note_label_scope import screen_corpus as note_label_scope_screen
+from .note_text_drift import screen_corpus as note_text_drift_screen
+from .provenance_consistency import outside_reference_index
+from .provenance_consistency import screen_authority as provenance_screen
+from .revision_name_window import screen_authority as revision_name_screen
+from .rule_grounding_coverage import screen_authority as rule_grounding_screen
+from .sign_position_coverage import screen_authority as sign_position_coverage_screen
+from .temporal_site_agreement import screen_authority as temporal_site_screen
+from .type_convention_notes import screen_authority as type_convention_screen
+from .unnumbered_note_scope import screen_corpus as unnumbered_note_scope_screen
+from .unresolvable_note_pointers import screen_authority as unresolvable_note_pointer_screen
+from .wire_type_compatibility import screen_authority as wire_type_screen
+
+#: A newline, named so the entry-point search below carries no escape.
+LINE_BREAK = chr(10)
+
+#: Named once per module rather than repeated at each read site, where a typo
+#: would be a silent decode change rather than an error.
+_UTF_8: Final[str] = "utf-8"
+
+__all__ = [
+    "CORPUS_SCREENS",
+    "FINDING_IDENTITY_CONTRACT",
+    "SCREENS",
+    "SCREEN_ENTRY_POINTS",
+    "CorpusScreenEntry",
+    "ScreenEntry",
+    "run_corpus_screens",
+    "run_screens",
+    "screen_findings",
+    "screen_module",
+    "screen_module_names",
+]
+
+
+# The analysis package has a finite, explicit screen population. Keep the
+# module objects in a closed map so callers that need a screen's own docstring
+# or finding declarations do not reconstruct import paths from discovered
+# names. A computed import is an open-ended dependency and cannot tell the
+# boundary checker which modules the runner actually owns.
+_SCREEN_MODULES: dict[str, ModuleType] = {
+    "capability_continuity": importlib.import_module("dev.registry.analysis.capability_continuity"),
+    "casilla_id_grammar": importlib.import_module("dev.registry.analysis.casilla_id_grammar"),
+    "continuity_integrity": importlib.import_module("dev.registry.analysis.continuity_integrity"),
+    "cross_revision_wire_shape": importlib.import_module("dev.registry.analysis.cross_revision_wire_shape"),
+    "delta_minimality": importlib.import_module("dev.registry.analysis.delta_minimality"),
+    "export_derivation_attestation": importlib.import_module("dev.registry.analysis.export_derivation_attestation"),
+    "export_ref_symmetry": importlib.import_module("dev.registry.analysis.export_ref_symmetry"),
+    "fabricated_required_ness": importlib.import_module("dev.registry.analysis.fabricated_required_ness"),
+    "footnote_only_wire_facts": importlib.import_module("dev.registry.analysis.footnote_only_wire_facts"),
+    "grade_earned": importlib.import_module("dev.registry.analysis.grade_earned"),
+    "hand_authored_type_column": importlib.import_module("dev.registry.analysis.hand_authored_type_column"),
+    "manifest_uncited_references": importlib.import_module("dev.registry.analysis.manifest_uncited_references"),
+    "modelo_capability": importlib.import_module("dev.registry.analysis.modelo_capability"),
+    "monetary_scale": importlib.import_module("dev.registry.analysis.monetary_scale"),
+    "note_label_scope": importlib.import_module("dev.registry.analysis.note_label_scope"),
+    "note_text_drift": importlib.import_module("dev.registry.analysis.note_text_drift"),
+    "provenance_consistency": importlib.import_module("dev.registry.analysis.provenance_consistency"),
+    "revision_name_window": importlib.import_module("dev.registry.analysis.revision_name_window"),
+    "rule_grounding_coverage": importlib.import_module("dev.registry.analysis.rule_grounding_coverage"),
+    "sign_position_coverage": importlib.import_module("dev.registry.analysis.sign_position_coverage"),
+    "temporal_site_agreement": importlib.import_module("dev.registry.analysis.temporal_site_agreement"),
+    "type_convention_notes": importlib.import_module("dev.registry.analysis.type_convention_notes"),
+    "unnumbered_note_scope": importlib.import_module("dev.registry.analysis.unnumbered_note_scope"),
+    "unresolvable_note_pointers": importlib.import_module("dev.registry.analysis.unresolvable_note_pointers"),
+    "wire_type_compatibility": importlib.import_module("dev.registry.analysis.wire_type_compatibility"),
+}
+
+
+def screen_module(name: str) -> ModuleType:
+    """Return the explicitly enrolled analysis module named ``name``."""
+    return _SCREEN_MODULES[name]
+
+
+@dataclass(frozen=True, slots=True)
+class ScreenEntry:
+    """One screen, and how to reduce its result to a reportable count."""
+
+    name: str
+    run: Callable[[ValidatedRegistryAuthority, tuple[str, ...]], Sequence[object]]
+    counts: str
+    #: What the SCREEN's own entry point returns, which is not always findings.
+    #:
+    #: ``findings`` - every row is a finding.
+    #: ``census`` - the entry returns everything it examined, carrying a flag,
+    #: and only flagged rows are findings.
+    #:
+    #: Declared because it cannot be read from the outside and was guessed
+    #: wrongly: a report counted the wire-type screen's 13,624 examined
+    #: transitions as findings where 29 diverge. Nothing here VERIFIES the
+    #: declaration - no mechanical test distinguishes a census from a finding
+    #: set - so it is an author's statement, and its worth is that a consumer
+    #: reads it instead of inferring one.
+    entry_returns: Literal["findings", "census"] = "findings"
+    #: The screen this one is built ON, when it re-describes another's findings
+    #: rather than measuring its own population.
+    #:
+    #: The grounding screen calls the pointer screen and emits one finding per
+    #: field it returns, so their populations are identical by construction -
+    #: measured, 41 findings over the same 41 cells. A consumer counting
+    #: distinct conditions per revision therefore counts that pair twice and
+    #: reports a revision as more contradictory than it is.
+    #:
+    #: Unlike the entry shape above, half of this IS verifiable: a derived
+    #: screen's population must be contained in its source's, and a gate asserts
+    #: that much. What no test can decide is whether a screen that happens to
+    #: agree today was actually built on the other.
+    derives_from: str | None = None
+
+
+def _divergent_transitions(authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]) -> Sequence[object]:
+    """Return the distinct divergent type transitions, not one row per casilla.
+
+    The screen measures per casilla, which is right, but the census a maintainer
+    reads first should count what they would act on. Across the corpus 3,349
+    divergent casillas resolve to 27 distinct declared-to-wire transitions, and
+    the step that settles them declares transitions rather than adjudicating
+    fields. Counting casillas here overstated that work by two orders of
+    magnitude.
+    """
+    return sorted(
+        {
+            (str(item.casilla_type), str(item.wire_type))
+            for item in wire_type_screen(authority, modelo_ids)
+            if item.divergent
+        }
+    )
+
+
+def _monetary_findings_needing_action(
+    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+) -> Sequence[object]:
+    """Return the monetary findings that need a decision, not the shapes reported for visibility.
+
+    The screen reports four conditions and one of them is not a defect: a
+    monetary casilla carried by several fields of one record is the official
+    integer-and-decimal part split, reported so the shape is countable. It is
+    the large majority of the screen's rows, so counting them here presented a
+    several-fold overstatement of the work as the first number a maintainer
+    reads. The screen still reports them; this census does not count them as
+    findings.
+
+    The proportion is deliberately not written as a pair of numbers. It was, and
+    the totals drifted while the argument stayed true - which is the same defect
+    this package exists to find, in the explanation of a screen rather than in a
+    declaration.
+    """
+    return [item for item in monetary_scale_screen(authority, modelo_ids) if item.kind != "money_split_representation"]
+
+
+def _outside_references(authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]) -> Sequence[object]:
+    """Return the references that sit outside a manifest, not every child citing one.
+
+    One missing reference is cited by every casilla, formula and binding that
+    names it, so the raw row count exceeds the number of things to fix by roughly
+    nineteen to one.
+    """
+    return sorted(outside_reference_index(tuple(provenance_screen(authority, modelo_ids))))
+
+
+def _fields_without_grounding(authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]) -> Sequence[object]:
+    """Return only the fields for which no official wording was located.
+
+    The grounding screen's own total is, by construction, the count of fields
+    needing a rule - which is what the pointer screen beside it already reports.
+    Two rows carrying the same number read as one measurement taken twice. What
+    this screen adds is the RESIDUE: the fields that no type convention and no
+    design note speaks to, and which therefore have nowhere for a reviewed rule
+    to come from. That is nought today and it is the number worth watching,
+    because it rises the moment a design arrives without either.
+    """
+    return [item for item in rule_grounding_screen(authority, modelo_ids) if item.kind == "ungrounded"]
+
+
+def _hand_authored_type_contradictions(
+    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+) -> Sequence[object]:
+    """Return only the contradictions; the alignment census is what the screen examined."""
+    _alignments, contradictions = hand_authored_type_column_screen(authority, modelo_ids)
+    return contradictions
+
+
+def _mixing_modelos(authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]) -> Sequence[object]:
+    """Return only the modelos using more than one identifier grammar."""
+    return [use for use in grammar_screen(authority, modelo_ids) if use.mixes]
+
+
+#: What a caller may assume about any screen's FINDING, and nothing more.
+#:
+#: Every finding type this package defines identifies the modelo it concerns.
+#: That is the whole contract, and it is a statement about the screens' own
+#: findings rather than about the rows this runner reports: two entries below
+#: collapse their screen onto a different unit - a reference that sits outside
+#: a manifest, a wire-type transition - and those rows are a report, not a
+#: finding. A caller reading this runner gets whatever the entry chose; a
+#: caller calling a screen gets a finding, and a finding names its modelo.
+#: A revision coordinate is carried by eight of the nine finding types and is
+#: deliberately absent from the ninth, because a continuity chain spans
+#: revisions and pinning one would name a revision the defect does not belong
+#: to. A condition discriminator is carried only by the screens reporting more
+#: than one condition; on a single-condition screen it would be a constant
+#: column.
+#:
+#: Written down because assuming more than this has misread these screens seven
+#: times in one campaign - a cross-screen key on `kind` reported two screens as
+#: collapsing every row onto one coordinate, which was the absent attribute
+#: reading as None rather than any property of the screens.
+FINDING_IDENTITY_CONTRACT: tuple[str, ...] = ("modelo",)
+
+
+SCREENS: tuple[ScreenEntry, ...] = (
+    ScreenEntry("export_ref_symmetry", export_ref_screen, "casillas claiming an uncarried export field"),
+    ScreenEntry("casilla_id_grammar", _mixing_modelos, "modelos mixing identifier grammars"),
+    ScreenEntry(
+        "cross_revision_wire_shape",
+        cross_revision_wire_shape_screen,
+        "fields whose emitted wire shape moves between revisions of one modelo",
+    ),
+    ScreenEntry(
+        "export_derivation_attestation",
+        export_attestation_screen,
+        "shipped export revisions, and whether each records a derivation or only cites a design",
+        entry_returns="census",
+    ),
+    ScreenEntry(
+        "unresolvable_note_pointers",
+        unresolvable_note_pointer_screen,
+        "shipped fields whose governing note label carries several texts, so no reading is provable",
+    ),
+    ScreenEntry(
+        "fabricated_required_ness",
+        fabricated_required_screen,
+        "fields declared optional because the design was silent rather than because it said so",
+        entry_returns="census",
+    ),
+    ScreenEntry(
+        "hand_authored_type_column",
+        _hand_authored_type_contradictions,
+        "hand-authored fields the official design types signed but the layout ships unsigned",
+    ),
+    ScreenEntry(
+        "sign_position_coverage",
+        sign_position_coverage_screen,
+        "money fields starting on a design SIGNO byte that declare no sign_position",
+    ),
+    ScreenEntry(
+        "revision_name_window",
+        revision_name_screen,
+        "revision names that misstate the window they declare, or claim none",
+    ),
+    ScreenEntry(
+        "temporal_site_agreement", temporal_site_screen, "revisions whose temporal sites fall silent or disagree"
+    ),
+    ScreenEntry(
+        "wire_type_compatibility",
+        _divergent_transitions,
+        "distinct casilla-to-wire type transitions that diverge",
+        entry_returns="census",
+    ),
+    ScreenEntry(
+        "continuity_integrity", continuity_screen, "modelos with no continuity, and chains that do not hold together"
+    ),
+    ScreenEntry(
+        "delta_minimality",
+        delta_minimality_screen,
+        "successor casilla rows stated identically to the row they would inherit, plus rows it cannot judge",
+    ),
+    ScreenEntry(
+        "monetary_scale",
+        _monetary_findings_needing_action,
+        "monetary fields whose scale is missing, unusual, or unlike their siblings",
+    ),
+    ScreenEntry(
+        "grade_earned",
+        grade_screen,
+        "disagreements between a declared grade and what its prerequisites support, in either direction",
+    ),
+    ScreenEntry("provenance_consistency", _outside_references, "references cited from outside their revision manifest"),
+    ScreenEntry(
+        "modelo_capability",
+        modelo_capability_screen,
+        "disagreements between a revision's declared filing rung and the machinery behind it",
+    ),
+    ScreenEntry(
+        "capability_continuity",
+        capability_continuity_screen,
+        "capabilities a revision stopped declaring after its predecessor had them",
+    ),
+    ScreenEntry(
+        "manifest_uncited_references",
+        manifest_uncited_screen,
+        "manifest references no child of the revision cites",
+    ),
+    ScreenEntry(
+        "footnote_only_wire_facts",
+        footnote_only_screen,
+        "fields whose wire fact sits behind a footnote pointer rather than in their own cell",
+    ),
+    ScreenEntry(
+        "type_convention_notes",
+        type_convention_screen,
+        "design notes stating a wire convention for a whole AEAT type",
+    ),
+    ScreenEntry(
+        "rule_grounding_coverage",
+        _fields_without_grounding,
+        "fields needing a reviewed rule for which no official wording was located at all",
+        derives_from="footnote_only_wire_facts",
+    ),
+)
+
+
+@dataclass(frozen=True, slots=True)
+class CorpusScreenEntry:
+    """One screen that reads the design corpus rather than the loaded authority.
+
+    A separate table because the signature genuinely differs - these take no
+    authority and no modelo set, since a transcription belongs to a design and
+    not to a revision - and forcing them through :class:`ScreenEntry` would mean
+    passing arguments they ignore. They are screens in every other sense, and
+    the enrolment gate treats both tables as one population: a module presenting
+    either entry point must appear in the matching table and in the contributor
+    README.
+    """
+
+    name: str
+    run: Callable[[], Sequence[object]]
+    counts: str
+    #: As on :class:`ScreenEntry`; every corpus screen returns findings today.
+    entry_returns: Literal["findings", "census"] = "findings"
+    #: As on :class:`ScreenEntry`. Carried here too so the two entry types can
+    #: declare the same things: an asymmetry between them is a place where a
+    #: consumer has to know which table a screen sits in before it can ask, and
+    #: this field was briefly absent here for exactly that reason.
+    derives_from: str | None = None
+
+
+CORPUS_SCREENS: tuple[CorpusScreenEntry, ...] = (
+    CorpusScreenEntry(
+        "note_label_scope",
+        note_label_scope_screen,
+        "designs where one note label is defined on more than one sheet",
+    ),
+    CorpusScreenEntry(
+        "note_text_drift",
+        note_text_drift_screen,
+        "note labels whose wording differs between a modelo's designs",
+    ),
+    CorpusScreenEntry(
+        "unnumbered_note_scope",
+        unnumbered_note_scope_screen,
+        "designs carrying an unnumbered note, by the structure that bears on its scope",
+    ),
+)
+
+
+def run_screens(authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]) -> tuple[tuple[str, int, str], ...]:
+    """Run every enrolled screen and return its name, count and what the count means."""
+    return tuple((entry.name, len(entry.run(authority, modelo_ids)), entry.counts) for entry in SCREENS)
+
+
+#: The function names by which a module presents itself as a screen.
+#:
+#: Declared once because nine gates were narrow in this one way, each written
+#: when `screen_authority` was the only entry point, and every one of them
+#: silently stopped covering a whole class of screen the day `screen_corpus`
+#: appeared. Two carried their own copy of this literal, four iterated the
+#: authority table, two ran only the authority runner, and one claimed a scope
+#: its body did not have. A check that recognises one shape of a thing reports
+#: its blind spot as absence.
+SCREEN_ENTRY_POINTS: tuple[str, ...] = ("screen_authority", "screen_corpus")
+
+
+def screen_module_names() -> frozenset[str]:
+    """Return every analysis module presenting a screen entry point.
+
+    The walk lives here rather than in the gates that need it, so a new entry
+    point is added in one place and every gate widens with it.
+    """
+    analysis = Path(__file__).resolve().parent
+    return frozenset(
+        path.stem
+        for path in analysis.glob("*.py")
+        if path.name != Path(__file__).name
+        and any(f"{LINE_BREAK}def {entry}(" in path.read_text(encoding=_UTF_8) for entry in SCREEN_ENTRY_POINTS)
+    )
+
+
+def screen_findings(
+    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+) -> tuple[tuple[str, tuple[object, ...]], ...]:
+    """Return each screen's OWN findings, by name, from both tables.
+
+    Every screen is called through its own entry point rather than through the
+    table's ``run``, and the difference matters. A table entry may project - to
+    the subset needing action, to an index, to the residue - so the runner can
+    report one meaningful number per screen. Those projections drop findings by
+    design, and a gate reading them inspects whatever survived rather than what
+    the screen emits.
+
+    The earlier version of this helper read the table, and four kinds were
+    invisible to the kind-naming gate because of it: the monetary screen's
+    split-representation kind, filtered out by the projection that keeps only
+    findings needing action, and all three grounded kinds of the grounding
+    screen, whose entry projects onto its ungrounded residue - which is empty,
+    so not one of its kinds reached the gate at all. Both projections are right
+    for the runner and wrong for a gate, which is why the two now read different
+    functions.
+    """
+    findings: list[tuple[str, tuple[object, ...]]] = []
+    for name in sorted(screen_module_names()):
+        module = screen_module(name)
+        authority_entry = getattr(module, "screen_authority", None)
+        if authority_entry is not None:
+            findings.append((name, tuple(authority_entry(authority, modelo_ids))))
+        else:
+            findings.append((name, tuple(module.screen_corpus())))
+    return tuple(findings)
+
+
+def run_corpus_screens() -> tuple[tuple[str, int, str], ...]:
+    """Run every enrolled corpus screen and return its name, count and meaning."""
+    return tuple((entry.name, len(entry.run()), entry.counts) for entry in CORPUS_SCREENS)
+
+
+def main() -> int:
+    """Print one census row per screen and a closing total; always exit 0."""
+    authority = compiled_bundled_authority()
+    modelo_ids = tuple(sorted(str(modelo.id) for modelo in authority.modelos))
+    results = run_screens(authority, modelo_ids)
+    for name, count, meaning in results:
+        sys.stdout.write(f"screen name={name} rows={count} counts={meaning!r}\n")
+    total = sum(count for _, count, _ in results)
+    # `rows`, not `findings`. Two entries report a collapsed unit rather than
+    # the screen's own findings, and calling every row a finding is the exact
+    # conflation the identity contract above separates. Each line's `counts`
+    # label says what that screen's rows actually are.
+    sys.stdout.write(f"summary screens={len(results)} rows={total}\n")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

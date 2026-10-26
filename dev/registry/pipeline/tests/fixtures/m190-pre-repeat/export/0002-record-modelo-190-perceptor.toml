@@ -1,0 +1,1385 @@
+[[revisions.2025-y-siguientes.export_layouts]]
+id = 'modelo-190-fichero-boe'
+
+[[revisions.2025-y-siguientes.export_layouts.records]]
+id = 'modelo-190-perceptor'
+record_type = 'perceptor'
+order = 1
+encoding = 'iso-8859-1'
+line_ending = 'none'
+required = true
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-record-type'
+offset = 1
+length = 1
+kind = 'literal'
+literal = '2'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-modelo'
+offset = 2
+length = 3
+kind = 'literal'
+literal = '190'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-year'
+offset = 5
+length = 4
+kind = 'draft'
+draft_attribute = 'filing_year'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'four-digit-year'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-declarante-nif'
+offset = 9
+length = 9
+kind = 'header'
+producer_key = 'presenter.tax_id'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-nif'
+offset = 18
+length = 9
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-nif'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-nif-representante-legal'
+offset = 27
+length = 9
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-nif-representante'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-nombre'
+offset = 36
+length = 40
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-name'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-codigo-provincia'
+offset = 76
+length = 2
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-provincia'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'identifier-digits'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-clave'
+offset = 78
+length = 1
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-clave'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-subclave'
+offset = 79
+length = 2
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-subclave'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'identifier-digits'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-signo-percepcion-dineraria'
+offset = 81
+length = 1
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-percibido-dinerario'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'signed-component-sign'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-percepcion-dineraria'
+offset = 82
+length = 13
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-percibido-dinerario'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'signed-component-magnitude'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-retenciones-practicadas'
+offset = 95
+length = 13
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-retencion-practicada'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-signo-percepcion-especie'
+offset = 108
+length = 1
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-percibido-especie'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'signed-component-sign'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-percepcion-especie'
+offset = 109
+length = 13
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-percibido-especie'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'signed-component-magnitude'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-ingresos-a-cuenta'
+offset = 122
+length = 13
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-ingreso-a-cuenta'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-ingresos-a-cuenta-repercutidos'
+offset = 135
+length = 13
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-ingreso-a-cuenta-repercutido'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-ejercicio-devengo'
+offset = 148
+length = 4
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-ejercicio-devengo'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'four-digit-year'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-ceuta-melilla'
+offset = 152
+length = 1
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-territorial-deduccion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-ano-nacimiento'
+offset = 153
+length = 4
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-ano-nacimiento'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'four-digit-year'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-situacion-familiar'
+offset = 157
+length = 1
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-situacion-familiar'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-nif-conyuge'
+offset = 158
+length = 9
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-nif-conyuge-titular'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-discapacidad'
+offset = 167
+length = 1
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-discapacidad'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-35-2006:art-60',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-contrato-relacion'
+offset = 168
+length = 1
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-contrato-relacion'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-titular-unidad-convivencia'
+offset = 169
+length = 1
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-titular-unidad'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-movilidad-geografica'
+offset = 170
+length = 1
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-movilidad-geografica'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-35-2006:art-19',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-reducciones-aplicables-integer-part'
+offset = 171
+length = 11
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-reducciones'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-35-2006:art-18',
+    'ley-35-2006:art-32',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-reducciones-aplicables-fractional-digits'
+offset = 182
+length = 2
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-reducciones'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-35-2006:art-18',
+    'ley-35-2006:art-32',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-gastos-deducibles-integer-part'
+offset = 184
+length = 11
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-gastos-deducibles'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-35-2006:art-19',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-gastos-deducibles-fractional-digits'
+offset = 195
+length = 2
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-gastos-deducibles'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-35-2006:art-19',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-pensiones-compensatorias-integer-part'
+offset = 197
+length = 11
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-pension-compensatoria'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-pensiones-compensatorias-fractional-digits'
+offset = 208
+length = 2
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-pension-compensatoria'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-anualidades-alimentos-integer-part'
+offset = 210
+length = 11
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-anualidades-alimentos'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'integer-part'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-anualidades-alimentos-fractional-digits'
+offset = 221
+length = 2
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-anualidades-alimentos'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'fractional-digits'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-descendientes-menores-3-total'
+offset = 223
+length = 1
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-descendientes-menores-3-total'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-35-2006:art-58',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-descendientes-menores-3-entero'
+offset = 224
+length = 1
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-descendientes-menores-3-entero'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-35-2006:art-58',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-descendientes-resto-total'
+offset = 225
+length = 2
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-descendientes-resto-total'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-35-2006:art-58',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-descendientes-resto-entero'
+offset = 227
+length = 2
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-descendientes-resto-entero'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-35-2006:art-58',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-descendientes-disc-33-65-total'
+offset = 229
+length = 2
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-descendientes-disc-33-65-total'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-35-2006:art-60',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-descendientes-disc-33-65-entero'
+offset = 231
+length = 2
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-descendientes-disc-33-65-entero'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-35-2006:art-60',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-descendientes-disc-movilidad-total'
+offset = 233
+length = 2
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-descendientes-disc-movilidad-total'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-35-2006:art-60',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-descendientes-disc-movilidad-entero'
+offset = 235
+length = 2
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-descendientes-disc-movilidad-entero'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-35-2006:art-60',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-descendientes-disc-65-total'
+offset = 237
+length = 2
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-descendientes-disc-65-total'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-35-2006:art-60',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-descendientes-disc-65-entero'
+offset = 239
+length = 2
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-descendientes-disc-65-entero'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-35-2006:art-60',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-ascendientes-menores-75-total'
+offset = 241
+length = 1
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-ascendientes-menores-75-total'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-35-2006:art-59',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-ascendientes-menores-75-entero'
+offset = 242
+length = 1
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-ascendientes-menores-75-entero'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-35-2006:art-59',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-ascendientes-75-mas-total'
+offset = 243
+length = 1
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-ascendientes-75-mas-total'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-35-2006:art-59',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-ascendientes-75-mas-entero'
+offset = 244
+length = 1
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-ascendientes-75-mas-entero'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-35-2006:art-59',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-ascendientes-disc-33-65-total'
+offset = 245
+length = 1
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-ascendientes-disc-33-65-total'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-35-2006:art-60',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-ascendientes-disc-33-65-entero'
+offset = 246
+length = 1
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-ascendientes-disc-33-65-entero'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-35-2006:art-60',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-ascendientes-disc-movilidad-total'
+offset = 247
+length = 1
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-ascendientes-disc-movilidad-total'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-35-2006:art-60',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-ascendientes-disc-movilidad-entero'
+offset = 248
+length = 1
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-ascendientes-disc-movilidad-entero'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-35-2006:art-60',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-ascendientes-disc-65-total'
+offset = 249
+length = 1
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-ascendientes-disc-65-total'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-35-2006:art-60',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-ascendientes-disc-65-entero'
+offset = 250
+length = 1
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-ascendientes-disc-65-entero'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-35-2006:art-60',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-computo-hijo-1'
+offset = 251
+length = 1
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-computo-hijo-1'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-35-2006:art-58',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-computo-hijo-2'
+offset = 252
+length = 1
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-computo-hijo-2'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-35-2006:art-58',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-computo-hijo-3'
+offset = 253
+length = 1
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-computo-hijo-3'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-35-2006:art-58',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-comunicacion-prestamos-vivienda'
+offset = 254
+length = 1
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-prestamos-vivienda'
+data_type = 'integer'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'unsigned-integer'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'rd-439-2007:art-86',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-signo-incapacidad-dineraria'
+offset = 255
+length = 1
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-incapacidad-dineraria-percepcion'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'signed-component-sign'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-incapacidad-dineraria-percepcion'
+offset = 256
+length = 13
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-incapacidad-dineraria-percepcion'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'signed-component-magnitude'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-incapacidad-dineraria-retenciones'
+offset = 269
+length = 13
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-incapacidad-dineraria-retenciones'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-signo-incapacidad-especie'
+offset = 282
+length = 1
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-incapacidad-especie-valoracion'
+data_type = 'text'
+required = false
+padding = 'none'
+justification = 'none'
+signed = false
+value_policy = 'signed-component-sign'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-incapacidad-especie-valoracion'
+offset = 283
+length = 13
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-incapacidad-especie-valoracion'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = false
+value_policy = 'signed-component-magnitude'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'modelo-190-perc-incapacidad-especie-ingresos-a-cuenta'
+offset = 296
+length = 13
+kind = 'binding'
+binding = 'modelo-190-perceptor-row-incapacidad-especie-ingresos-a-cuenta'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+value_policy = 'implied-decimal'
+legal_refs = [
+    'orden-eha-3127-2009:art-1',
+    'orden-hac-1431-2025:art-2',
+    'rd-439-2007:art-108',
+    'ley-35-2006:art-99',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-190-2025']
+
+[revisions.2025-y-siguientes.export_layouts.records.row_field_casilla_ids]

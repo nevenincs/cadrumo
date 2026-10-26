@@ -1,0 +1,23 @@
+{
+  "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
+  "modelo": "117",
+  "retrieved_at": "2026-07-21",
+  "source_pages": [
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html"
+  ],
+  "artefact_count": 1,
+  "artefacts": [
+    {
+      "modelo": "117",
+      "title": "117 - Ejercicio 2019 y siguientes",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_17/DR117e17v14.xls",
+      "stored_path": "files/01-117-ejercicio-2019-y-siguientes.xls",
+      "original_filename": "DR117e17v14.xls",
+      "content_type": "application/vnd.ms-excel",
+      "bytes": 192512,
+      "sha256": "ea0c13a8ddf5874a944cc0acc3d26e7f4c85bec50271e734f20e81ecb68f046f",
+      "retrieved_at": "2026-07-21"
+    }
+  ]
+}

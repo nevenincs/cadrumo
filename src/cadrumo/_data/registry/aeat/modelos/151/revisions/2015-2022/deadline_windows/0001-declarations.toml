@@ -1,0 +1,30 @@
+# Modelo 151 filing window, ejercicio 2022 (the only supported year this
+# edition governs).
+#
+# Orden HAP/2783/2015 art. 3.1 sets the plazo BY REMISSION: it "sera el mismo
+# que se apruebe cada ejercicio, con caracter general, para las declaraciones
+# del Impuesto sobre la Renta de las Personas Fisicas". For ejercicio 2022 that
+# general plazo is Orden HFP/310/2023 art. 8, "entre los dias 11 de abril y 30
+# de junio de 2023", and AEAT's Calendario del Contribuyente 2023 lists
+# "Declaracion del regimen especial de tributacion para trabajadores desplazados
+# 2022: 151" under "Hasta el 30 de junio".
+#
+# No payment_cutoff_on is declared, because the two official statements of the
+# domiciliacion deadline disagree: art. 4.2 of the same orden, never amended
+# (BOE analysis of BOE-A-2015-14021 records only the derogation of arts. 6 to
+# 10), fixes it "hasta el 25 de junio", while the Calendario del Contribuyente
+# 2023 table of domiciliacion deadlines gives "Modelos 100, 151 y 714: hasta 27
+# de junio". The filing window itself is uncontested; the cutoff stays
+# undeclared until that contradiction is ruled on.
+#
+# Ejercicios 2015 to 2021 are below the support floor and are not declared.
+
+[[revisions."2015-2022".deadline_windows]]
+id = "modelo-151-2022-0a"
+filing_year = 2022
+period = "2022 0A"
+period_kind = "annual"
+opens_on = 2023-04-11
+closes_on = 2023-06-30
+legal_refs = ["orden-hap-2783-2015:art-3", "orden-hfp-310-2023:art-8"]
+source_refs = ["aeat-modelo-151-procedure", "aeat-calendario-contribuyente-2023"]

@@ -1,0 +1,260 @@
+[sources."boe-convenio-es-ar-1992-art-19"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/convenio-es-ar-1992-art-19.html"
+sha256 = "4a35e249cf5f89a7b584fa2fd206a15b37aff70b9005250ee59808a832861422"
+bytes = 1877
+retrieved_at = 2026-09-09
+published_at = 1994-09-09
+applies_from = 1994-07-28
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-1994-20084"
+review_status = "agent_reviewed"
+
+[sources."boe-convenio-es-be-1995-art-10"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/convenio-es-be-1995-art-10.html"
+sha256 = "a881e16a803e61f35ed79ae61795a3ffed6c9382f3f2b299475f56b0bc0fa5b6"
+bytes = 1617
+retrieved_at = 2026-09-09
+applies_from = 2003-06-25
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-13375"
+review_status = "agent_reviewed"
+
+[sources."boe-convenio-es-be-1995-art-11"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/convenio-es-be-1995-art-11.html"
+sha256 = "46a487371d066b12739e881a57ee6d85b7a3d48c9bf096f2868a1776062ab662"
+bytes = 1096
+retrieved_at = 2026-09-09
+applies_from = 2003-06-25
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-13375"
+review_status = "agent_reviewed"
+
+[sources."boe-convenio-es-be-1995-art-12"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/convenio-es-be-1995-art-12.html"
+sha256 = "8103b8dce354fcd9b8b4b0d44a965acc5ca03d2344a59bccc2c1cacb20dcc175"
+bytes = 981
+retrieved_at = 2026-09-09
+applies_from = 2003-06-25
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-13375"
+review_status = "agent_reviewed"
+
+[sources."boe-convenio-es-de-2011-art-10"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/convenio-es-de-2011-art-10.html"
+sha256 = "4e539e893715643beb1e8439d0a7e774611a4ac168cc8063b7e4f25fc3c67e25"
+bytes = 1591
+retrieved_at = 2026-09-09
+published_at = 2012-07-30
+applies_from = 2012-10-18
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2012-10212"
+review_status = "agent_reviewed"
+
+[sources."boe-convenio-es-de-2011-art-11"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/convenio-es-de-2011-art-11.html"
+sha256 = "139185a2426101b16c502fbcea0c0b43e4664077895fdce0efcb5dc2e62a99f7"
+bytes = 1365
+retrieved_at = 2026-09-09
+published_at = 2012-07-30
+applies_from = 2012-10-18
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2012-10212"
+review_status = "agent_reviewed"
+
+[sources."boe-convenio-es-de-2011-art-12"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/convenio-es-de-2011-art-12.html"
+sha256 = "e0ac872b6b4f1c952e6da85b1aaf85ad4ea72a73ba743ee899ebdb7d256f586f"
+bytes = 1372
+retrieved_at = 2026-09-09
+published_at = 2012-07-30
+applies_from = 2012-10-18
+source_url = "https://www.boe.es/eli/es/ai/2011/02/03/(1)/con"
+review_status = "agent_reviewed"
+
+[sources."boe-convenio-es-fr-1995-art-10"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/convenio-es-fr-1995-art-10.html"
+sha256 = "3ac48662ed0201a055891fddacdd15bdcbb0d3de905db80b17379ea13966bf6e"
+bytes = 1431
+retrieved_at = 2026-09-09
+published_at = 1997-06-12
+applies_from = 1997-07-01
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-1997-12729"
+review_status = "agent_reviewed"
+
+[sources."boe-convenio-es-fr-1995-art-11"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/convenio-es-fr-1995-art-11.html"
+sha256 = "ab4d2b3fe43c4c1b3cdd6b036b005d3884779a75883a85f67fbcf9f52ffc3bb7"
+bytes = 1005
+retrieved_at = 2026-09-09
+published_at = 1997-06-12
+applies_from = 1997-07-01
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-1997-12729"
+review_status = "agent_reviewed"
+
+[sources."boe-convenio-es-fr-1995-art-12"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/convenio-es-fr-1995-art-12.html"
+sha256 = "b32251e45aa9ce4d6ac1264bec3cead89cfedddd2d8a3ca3bfb56fab69cdb77e"
+bytes = 1427
+retrieved_at = 2026-09-09
+published_at = 1997-06-12
+applies_from = 1997-07-01
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-1997-12729"
+review_status = "agent_reviewed"
+
+[sources."boe-convenio-es-gb-2013-art-6"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/convenio-es-gb-2013-art-6.html"
+sha256 = "83a94a613cb787afc56445bbd0f6d3618488236491e40c2572c5060b24309b98"
+bytes = 871
+retrieved_at = 2026-09-09
+published_at = 2014-05-15
+applies_from = 2014-06-12
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2014-5171"
+review_status = "agent_reviewed"
+
+[sources."boe-convenio-es-ma-1978-art-11"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/convenio-es-ma-1978-art-11.html"
+sha256 = "e5eb41cc150880354e56ace43b6227564b9a9f4879ec215ecdb497d73f003315"
+bytes = 1070
+retrieved_at = 2026-09-09
+published_at = 1985-05-22
+applies_from = 1985-05-16
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-1985-9280"
+review_status = "agent_reviewed"
+
+[sources."boe-convenio-es-nl-1971-art-10"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/convenio-es-nl-1971-art-10.html"
+sha256 = "069a460cca75ed4116c6ec4612babd1deb0b9e754567f13bcf82e328957c78a5"
+bytes = 1080
+retrieved_at = 2026-09-09
+applies_from = 1972-09-20
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-1972-1469"
+review_status = "agent_reviewed"
+
+[sources."boe-convenio-es-nl-1971-art-11"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/convenio-es-nl-1971-art-11.html"
+sha256 = "70c380e98df2dd436f18de3835ca4513dc408f8f100202359376e6645377bac9"
+bytes = 931
+retrieved_at = 2026-09-09
+applies_from = 1972-09-20
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-1972-1469"
+review_status = "agent_reviewed"
+
+[sources."boe-convenio-es-nl-1971-art-12"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/convenio-es-nl-1971-art-12.html"
+sha256 = "dbddd6b2ba8e06b1306c396f48e7700197ffff0b4f25614b969c5255092285dd"
+bytes = 1210
+retrieved_at = 2026-09-09
+applies_from = 1972-09-20
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-1972-1469"
+review_status = "agent_reviewed"
+
+[sources."boe-convenio-es-pt-1993-art-10"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/convenio-es-pt-1993-art-10.html"
+sha256 = "65b5a4a73bcb38cae1716cf53c6d55769a590eaf3f06b5988e35871466641bf6"
+bytes = 1368
+retrieved_at = 2026-09-09
+applies_from = 1995-06-28
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-1995-24001"
+review_status = "agent_reviewed"
+
+[sources."boe-convenio-es-pt-1993-art-11"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/convenio-es-pt-1993-art-11.html"
+sha256 = "7f3f899433cf22bb1622ccb47b15c407442612002009d3ff7b52af743548aead"
+bytes = 1028
+retrieved_at = 2026-09-09
+applies_from = 1995-06-28
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-1995-24001"
+review_status = "agent_reviewed"
+
+[sources."boe-convenio-es-pt-1993-art-12"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/convenio-es-pt-1993-art-12.html"
+sha256 = "dde29cf8560dc69bb07adf1be1ccb40075837ba2cd02f71d573fae2b5e8f340f"
+bytes = 991
+retrieved_at = 2026-09-09
+applies_from = 1995-06-28
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-1995-24001"
+review_status = "agent_reviewed"
+
+[sources."boe-convenio-es-us-1990-art-10"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/convenio-es-us-1990-art-10.html"
+sha256 = "a79425061f4199c98758107bee95901302f9af499ca9c5e4b7038e6e44cab019"
+bytes = 2233
+retrieved_at = 2026-09-09
+applies_from = 2019-11-27
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-1990-30940"
+review_status = "agent_reviewed"
+
+[sources."boe-convenio-es-us-1990-art-11"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/convenio-es-us-1990-art-11.html"
+sha256 = "d77256012394fb07fe41f40b3bd94dd6065f4f5a2624b8cef2ba2efb31fec887"
+bytes = 1720
+retrieved_at = 2026-09-09
+applies_from = 2019-11-27
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-1990-30940"
+review_status = "agent_reviewed"
+
+[sources."boe-convenio-es-us-1990-art-12"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/convenio-es-us-1990-art-12.html"
+sha256 = "1df077c970a59fd4bc6a4dd347dd2f32fde64a6e01f7344cf40ccd52ff21002f"
+bytes = 1734
+retrieved_at = 2026-09-09
+applies_from = 2019-11-27
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-1990-30940"
+review_status = "agent_reviewed"

@@ -1,0 +1,43 @@
+---
+tags:
+  - '#audit'
+  - '#secure-storage-production-hardening'
+date: '2026-06-03'
+modified: '2026-10-03'
+body_hash: 'sha256:39625a88c8dd650c65c4edb45e0e12d1d8a3c2e1072bc13a4258dd3f66380a8a'
+related: []
+---
+
+# `secure-storage-production-hardening` `W12.P26.S143` Review
+
+## S143-001 | PASS | Google Drive provider no longer constructs settings at import time
+
+The provider previously read `Settings().aeat_google_drive_vault_folder_name` into a module constant. That bypassed the active factory path, made import behavior depend on settings construction, and violated the central settings routing rule.
+
+Resolution: the provider accepts `vault_folder_name` at construction time, falls back to `load_settings()` only when directly constructed without the argument, and the factory passes `settings_resolved.aeat_google_drive_vault_folder_name` explicitly. A source-boundary test asserts `_google_drive.py` does not call `Settings()` or `_Settings()`.
+
+## S143-002 | PASS | Provider refusals are localized and structured
+
+Drive provider validation, import, request, ownership, response-shape, not-found, and integrity failures now carry `translated_message` keys and structured context. Raw upstream exception text is no longer embedded in the operator-facing message, debug log line, exception cause, or exception context for Drive request failures.
+
+Resolution: new locale keys were scaffolded and authored through `python -m aeat.locales`. `python -m aeat.locales audit` passes for `ca.yml`, `en.yml`, `es.yml`, and `hu.yml`.
+
+## S143-003 | PASS | Exception boundary logs and re-raises typed errors
+
+The provider still has two broad catches at the Google API boundary because the upstream Drive request object can raise heterogeneous third-party exceptions. Those catches now log sanitized debug evidence and re-raise the mapped `OutboundStorageError` subclass with structured context.
+
+Resolution: the broad catches are retained only at the third-party request boundary. No exception is swallowed, and the translated error is raised outside the raw exception context so `__cause__` and `__context__` remain empty.
+
+## S143-004 | PASS | Tests cover real pre-service refusal behavior without fakes
+
+The new Google Drive provider tests instantiate the real provider and exercise constructor and validation refusals that happen before service construction. They also drive the `_execute` request boundary with a plain non-request object to prove the typed error redacts upstream detail and has no raw cause/context. They do not patch dependencies, fake the Drive API, monkeypatch environment variables, skip, or xfail.
+
+Validation:
+
+- the historical check passed with 14 selected tests.
+- the historical check passed with 8 tests.
+- the historical check passed.
+- `uv run --no-sync -q python -m aeat.locales audit` passed.
+- Source scan found no direct `Settings()`, `_Settings()`, `PROJECT_ROOT`, `os.environ`, print/echo output, suppression pragmas, monkeypatching, fakes/stubs, skips, xfails, or `json` suppression pattern in the S143 slice.
+
+Disposition: close `AFR-041` as `remote-mirror`.

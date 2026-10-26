@@ -1,0 +1,32 @@
+[[revisions.2019-2022.deadline_windows]]
+id = "modelo-202-2022-1p"
+filing_year = 2022
+period = "2022 1P"
+period_kind = "quarterly"
+opens_on = 2022-04-01
+closes_on = 2022-04-20
+payment_cutoff_on = 2022-04-15
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-modelo-202-instructions-2018-2022", "aeat-calendario-contribuyente-2022"]
+
+[[revisions.2019-2022.deadline_windows]]
+id = "modelo-202-2022-2p"
+filing_year = 2022
+period = "2022 2P"
+period_kind = "quarterly"
+opens_on = 2022-10-01
+closes_on = 2022-10-20
+payment_cutoff_on = 2022-10-15
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-modelo-202-instructions-2018-2022", "aeat-calendario-contribuyente-2022"]
+
+[[revisions.2019-2022.deadline_windows]]
+id = "modelo-202-2022-3p"
+filing_year = 2022
+period = "2022 3P"
+period_kind = "quarterly"
+opens_on = 2022-12-01
+closes_on = 2022-12-20
+payment_cutoff_on = 2022-12-15
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-modelo-202-instructions-2018-2022", "aeat-calendario-contribuyente-2022"]

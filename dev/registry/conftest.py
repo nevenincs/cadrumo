@@ -1,0 +1,54 @@
+"""Pytest controls for the development registry compiler.
+
+The mutable registry compiler has process-local loader and fingerprint caches.
+Their session boundary belongs to this development-only tree: shipped Cadrumo
+tests consume the published authority and must not import the authoring
+compiler merely to clear its caches. Application-backed fixtures are discovered
+from the repository-root test host and are not forwarded through this conftest.
+"""
+
+from collections.abc import Iterator
+
+import pytest
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _isolate_registry_caches() -> Iterator[None]:
+    """Clear development compiler caches at each pytest session boundary."""
+    from .compiler.loader import load_registry_tree_cached
+    from .compiler.loader_fingerprints import clear_fingerprint_cache
+
+    def _reset() -> None:
+        load_registry_tree_cached.cache_clear()
+        clear_fingerprint_cache()
+
+    _reset()
+    yield
+    _reset()
+
+
+@pytest.fixture
+def authored_history_fact_scope() -> Iterator[None]:
+    """Scope governed facts against the AUTHORED history rather than the filing span."""
+    from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
+
+    from .tests.profile_schema_support import authored_history_authority
+
+    with validating_governed_facts(authored_history_authority()):
+        yield
+
+
+@pytest.fixture
+def governed_fact_scope() -> Iterator[None]:
+    """Resolve registry tokens in one requesting test against the compiled authored facts.
+
+    Governed-fact resolvers refuse to run without an explicit authority scope.
+    Only a test whose body constructs registry-validated values requests this
+    fixture, and the scope ends with that test, so no other test inherits it.
+    """
+    from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
+
+    from .compiler.authority import compiled_bundled_authority
+
+    with validating_governed_facts(compiled_bundled_authority()):
+        yield

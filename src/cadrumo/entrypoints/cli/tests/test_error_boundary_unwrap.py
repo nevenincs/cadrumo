@@ -1,0 +1,296 @@
+"""Boundary test: SQLAlchemy-wrapped CadrumoError is forwarded as a clean refusal.
+
+When an :class:`cadrumo.core.errors.CadrumoError` is raised inside SQLAlchemy
+bind-param processing (an encrypted-column codec that needs an unlocked
+session), SQLAlchemy catches it and re-raises it wrapped in a
+:class:`sqlalchemy.exc.StatementError`, with the original on ``orig``.
+
+The CLI error boundary must unwrap that and emit the typed refusal
+verbatim. Otherwise the no-session refusal is mis-classified as an
+unexpected internal error and a full traceback is written to the log
+file, where ``aeat config repair logs`` later echoes it back at the
+operator as if it were a live crash.
+"""
+
+from __future__ import annotations
+
+import json
+import logging
+from collections.abc import Callable
+
+import pytest
+import sqlalchemy.exc as sa_exc
+import typer
+from pydantic import TypeAdapter, ValidationError
+
+from cadrumo_client.commands.errors import CliUnexpectedBoundaryError
+
+from ....adapters.outbound.llm.models import LLMRequest, PromptDefinition
+from ....adapters.persistence.storage.master_key.active_session import NoActiveBucketSessionError
+from ....core.errors.error_codes import build_error_envelope, render_error_text
+from ....core.errors.hierarchy import CadrumoError
+from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
+from ..errors import (
+    _project_validation_error,
+    _unwrap_cadrumo_error,
+    command_error_boundary,
+)
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+# The real typed refusal raised by an encrypted-column codec when no
+# bucket session is unlocked — the exact error the boundary must
+# forward verbatim instead of mis-reporting as an internal defect.
+_ProbeRefusal = NoActiveBucketSessionError
+
+
+def test_validation_log_omits_rejected_financial_input(caplog: pytest.LogCaptureFixture) -> None:
+    rejected = "unparseable-918273.45"
+    with pytest.raises(ValidationError) as raised:
+        TypeAdapter(int).validate_python(rejected)
+
+    with caplog.at_level(logging.ERROR, logger="cadrumo.entrypoints.cli.errors"):
+        _project_validation_error(raised.value, lambda: None)
+
+    record = next(record for record in caplog.records if "pydantic ValidationError" in record.message)
+    assert rejected not in record.message
+    assert record.exc_info is None
+    assert "int_parsing" in record.message
+
+
+def test_terminal_nested_llm_validation_preserves_typed_refusal_in_every_locale(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The standalone terminal uses the callback projector for Pydantic errors."""
+    from .._terminal_errors import run_standalone_with_error_contract
+
+    for locale in SUPPORTED_OUTPUT_LANGUAGES:
+        with pytest.raises(SystemExit) as exited:
+            run_standalone_with_error_contract(
+                lambda: LLMRequest(prompt=" \t"),
+                argv=["--language", locale, "--format", "json"],
+            )
+        captured = capsys.readouterr()
+        document = json.loads(captured.err)
+        error = document["error"]
+        assert error["code"] == "REFUSED_CLI_VALIDATION_BOUNDARY"
+        assert error["category"] == "REFUSED"
+        assert error["action"]["failed_condition_id"] == "llm.request.prompt_nonempty"
+        assert error["action"]["evidence"][0]["values"] == {"request_prompt_nonempty": False}
+        assert error["action"]["action"] is None
+        assert error["action"]["conditionality"] == "not_applicable"
+        assert error["action"]["no_recovery_outcome"] == "operator_decision"
+        assert exited.value.code == 2
+
+        with pytest.raises(SystemExit):
+            run_standalone_with_error_contract(
+                lambda: LLMRequest(prompt=" \t"),
+                argv=["--language", locale],
+            )
+        text = capsys.readouterr().err
+        assert 'action.failed_condition_id: "llm.request.prompt_nonempty"' in text
+        assert "action.action: null" in text
+
+
+@pytest.mark.parametrize(
+    "dispatch",
+    [
+        lambda: LLMRequest(prompt="valid", max_tokens=0),
+        lambda: TypeAdapter(tuple[LLMRequest, PromptDefinition]).validate_python(
+            (
+                {"prompt": " \t"},
+                {"id": "Not canonical", "version": 1, "template": "{{ value }}", "description": "x"},
+            ),
+        ),
+    ],
+)
+def test_terminal_validation_fails_closed_without_one_typed_candidate(
+    dispatch: Callable[[], object],
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Non-typed and ambiguous nested validation retain the generic outcome."""
+    from .._terminal_errors import run_standalone_with_error_contract
+
+    with pytest.raises(SystemExit):
+        run_standalone_with_error_contract(dispatch, argv=["--format", "json"])
+    action = json.loads(capsys.readouterr().err)["error"]["action"]
+    assert action["failed_condition_id"] == "cli.validation.boundary_clean"
+    assert action["action"] is None
+    assert action["no_recovery_outcome"] == "operator_decision"
+
+
+def test_unwrap_finds_cadrumo_error_through_sqlalchemy_orig() -> None:
+    """A StatementError carrying an CadrumoError on ``orig`` unwraps to it."""
+
+    refusal = _ProbeRefusal("no active bucket session")
+    statement_error = sa_exc.StatementError(
+        message="bind-param processing failed",
+        statement="SELECT 1",
+        params={},
+        orig=refusal,
+    )
+
+    assert _unwrap_cadrumo_error(statement_error) is refusal
+
+
+def test_unwrap_finds_cadrumo_error_through_cause_chain() -> None:
+    """An exception chained via ``__cause__`` unwraps to the CadrumoError."""
+
+    refusal = _ProbeRefusal("no active bucket session")
+    try:
+        try:
+            raise refusal
+        except _ProbeRefusal as exc:
+            raise RuntimeError("library wrapper") from exc
+    except RuntimeError as wrapper:
+        assert _unwrap_cadrumo_error(wrapper) is refusal
+
+
+def test_unwrap_returns_none_for_plain_exception() -> None:
+    """A genuine non-CadrumoError exception unwraps to None."""
+
+    assert _unwrap_cadrumo_error(RuntimeError("genuine bug")) is None
+
+
+def test_boundary_forwards_wrapped_refusal_without_logging_traceback(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """The boundary emits the wrapped refusal and logs no exc_info traceback.
+
+    A traceback in the log is exactly what feeds the
+    ``aeat config repair logs`` mis-render. The boundary must classify
+    the wrapped refusal as the typed CadrumoError, not as
+    CliUnexpectedBoundaryError.
+    """
+
+    refusal = _ProbeRefusal("no active bucket session; run switch")
+
+    def _callback() -> None:
+        raise sa_exc.StatementError(
+            message="bind-param processing failed",
+            statement="SELECT secure_objects.payload FROM secure_objects",
+            params={},
+            orig=refusal,
+        )
+
+    wrapped = command_error_boundary(_callback)
+
+    with (
+        caplog.at_level(logging.ERROR, logger="cadrumo.entrypoints.cli.errors"),
+        pytest.raises(typer.Exit) as exit_info,
+    ):
+        wrapped()
+
+    # Exit code is the typed refusal's category code, never the
+    # unexpected-error code.
+    assert exit_info.value.exit_code != 0
+    # No "unexpected exception" traceback was logged: that log line is
+    # what lands in cadrumo.log and is later echoed by `repair logs`.
+    assert not any("unexpected exception" in record.message for record in caplog.records), [
+        record.message for record in caplog.records
+    ]
+
+
+def test_boundary_still_reports_genuine_bug_as_unexpected(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A genuine non-CadrumoError bug is still classified as unexpected.
+
+    The unwrap must not swallow real defects: an exception with no
+    CadrumoError in its chain keeps the CliUnexpectedBoundaryError path
+    and its diagnostic log line.
+    """
+
+    def _callback() -> None:
+        raise RuntimeError("a genuine internal defect")
+
+    wrapped = command_error_boundary(_callback)
+
+    with (
+        caplog.at_level(logging.DEBUG, logger="cadrumo.entrypoints.cli.errors"),
+        pytest.raises(typer.Exit),
+    ):
+        wrapped()
+
+    crashes = [record for record in caplog.records if "unexpected exception" in record.message]
+    assert crashes, [record.message for record in caplog.records]
+    assert crashes[0].levelno == logging.DEBUG
+    assert crashes[0].exc_info is None
+    assert "a genuine internal defect" not in crashes[0].message
+    assert "RuntimeError" in crashes[0].message
+
+
+def test_cli_unexpected_boundary_error_is_cadrumo_error() -> None:
+    """Sanity: the unexpected-boundary wrapper is itself an CadrumoError."""
+
+    assert issubclass(CliUnexpectedBoundaryError, CadrumoError)
+
+
+def test_unexpected_boundary_does_not_smuggle_a_recovery_command() -> None:
+    """An internal fault reports diagnostics without claiming a CLI remedy."""
+    boundary = CliUnexpectedBoundaryError(RuntimeError("an import error, say"))
+
+    rendered = render_error_text(boundary)
+    assert "aeat config repair logs" not in rendered, rendered
+    assert "repair integrity" not in rendered, rendered
+
+    envelope = build_error_envelope(boundary)
+    assert "suggestion" not in envelope.model_dump(mode="json")
+
+
+def test_terminal_boundary_logs_the_identifier_chain_for_a_genuine_crash(
+    caplog: pytest.LogCaptureFixture,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The terminal document's diagnostic record retains types and raising frames."""
+    from .._terminal_errors import _emit_crash
+
+    def genuine_crash() -> None:
+        raise RuntimeError("a genuine internal defect")
+
+    with (
+        caplog.at_level(logging.ERROR, logger="cadrumo_client.commands.errors"),
+        pytest.raises(SystemExit),
+    ):
+        try:
+            genuine_crash()
+        except RuntimeError as error:
+            _emit_crash(error)
+    capsys.readouterr()
+
+    crashes = [record for record in caplog.records if getattr(record, "failure_boundary", None) == "cli_terminal"]
+    assert crashes, [record.message for record in caplog.records]
+    assert crashes[0].exc_info is None
+    assert "a genuine internal defect" not in crashes[0].message
+    assert crashes[0].levelno == logging.ERROR
+    chain = getattr(crashes[0], "error_chain", None)
+    root_cause = getattr(crashes[0], "root_cause", None)
+    trace_id = getattr(crashes[0], "trace_id", None)
+    assert isinstance(chain, str) and "CliUnexpectedBoundaryError" in chain
+    assert isinstance(root_cause, str) and "RuntimeError" in root_cause
+    assert ":genuine_crash:" in root_cause
+    assert isinstance(trace_id, str) and len(trace_id) == 32
+
+
+def test_terminal_boundary_logs_a_typed_refusal_without_a_crash_wrapper(
+    caplog: pytest.LogCaptureFixture,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A command-resolution refusal retains its registered type and safe reason."""
+    from .._terminal_errors import _emit_crash
+
+    with (
+        caplog.at_level(logging.WARNING, logger="cadrumo_client.commands.errors"),
+        pytest.raises(SystemExit),
+    ):
+        _emit_crash(_ProbeRefusal("no active bucket session; run switch"))
+    capsys.readouterr()
+
+    refusals = [record for record in caplog.records if getattr(record, "failure_boundary", None) == "cli_terminal"]
+    assert refusals, [record.message for record in caplog.records]
+    assert refusals[0].levelno == logging.WARNING
+    assert refusals[0].exc_info is None
+    chain = getattr(refusals[0], "error_chain", None)
+    assert isinstance(chain, str) and _ProbeRefusal.__name__ in chain
+    assert "CliUnexpectedBoundaryError" not in chain
+    assert "no active bucket session; run switch" not in refusals[0].message

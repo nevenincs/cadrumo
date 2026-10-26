@@ -1,0 +1,8 @@
+# The source-printed totals belong to this edition; fiscal formula expressions are unchanged.
+[[revisions.2023.constructs]]
+id = "modelo-303-printed-disclosure-arithmetic-2023"
+casilla_ids = ["88"]
+formulas = ["modelo-303-volumen-operaciones-anual"]
+application_links = ["modelo-303-review", "modelo-303-approval", "modelo-303-reconciliation", "modelo-303-workflow", "modelo-303-calculation"]
+legal_refs = ["ley-37-1992:art-121", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1", "ley-37-1992:art-88", "ley-37-1992:art-92"]
+source_refs = ["boe-modelo-303-2023-form-pdf", "aeat-dr-303-2023", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]

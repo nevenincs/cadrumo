@@ -1,0 +1,42 @@
+# Source-stated numeric widths and precision for M341 2016 page 01.
+schema_version = 1
+fragment_id = "numeric-representation"
+width_17_rules = []
+signed_composite_rules = []
+literal_numeric_rules = []
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "M34101"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+record_identity = "M34101"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m341-2016-row-15-year-yyyy"
+decision_statement = "Encode source row 15 @103+4 as year-yyyy."
+justification = "The source labels this four-byte numeric field Devengo - Ejercicio."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "M34101"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+record_identity = "M34101"
+
+[design_identity]
+modelo = "341"
+design_epoch = "2016"
+source_ref = "aeat-dr-341-2016"
+source_sha256 = "7bb06cb80b865993fa60fe6ecceae8d28da1126fae5174b56cbe2cf13b534600"

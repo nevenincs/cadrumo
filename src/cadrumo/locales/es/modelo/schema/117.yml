@@ -1,0 +1,86 @@
+modelo:
+  schema:
+    '117':
+      construct:
+        modelo-117-total-liquidacion-calculation:
+          field:
+            title: Modelo 117 total liquidación / resultado a ingresar
+      field:
+        official_name: Modelo 117. Retenciones e ingresos a cuenta. Rentas o ganancias
+          patrimoniales obtenidas como consecuencia de las transmisiones o reembolsos
+          de acciones y participaciones de instituciones de inversión colectiva.
+        title: Retenciones e ingresos a cuenta - rentas o ganancias por transmisión
+          o reembolso de acciones y participaciones de IIC
+      form:
+        column:
+          derechos-suscripcion: Transmisiones de derechos de suscripción
+          inversion-colectiva: Transmisiones o reembolsos de acciones y participaciones
+            de instituciones de inversión colectiva
+        context:
+          apellidos: Apellidos o razón social
+          declaracion-complementaria: Autoliquidación complementaria
+          ejercicio: Ejercicio
+          iban: Código IBAN
+          justificante-anterior: N.º de justificante de la autoliquidación anterior
+          nif: NIF
+          nombre: Nombre
+          periodo: Período
+        page:
+          dr-11701:
+            heading: Retenciones y pagos a cuenta sobre instituciones de inversión
+              colectiva y derechos de suscripción
+        row:
+          base: Base de retenciones e ingresos a cuenta
+          perceptores: Número de perceptores
+          retenciones: Retenciones e ingresos a cuenta
+        section:
+          complementaria:
+            heading: Complementaria (6)
+          devengo:
+            heading: Devengo (2)
+          identificacion:
+            heading: Identificación (1)
+          ingreso:
+            heading: Ingreso (4)
+          liquidacion:
+            heading: Liquidación (3) · A) Retenciones e ingresos a cuenta
+          pago-cuenta:
+            heading: B) Pago a cuenta
+          total:
+            heading: Total liquidación
+      revision:
+        2019-y-siguientes:
+          casilla:
+            '01':
+              label: Número de perceptores por transmisiones o reembolsos de acciones
+                y participaciones de IIC
+            '02':
+              label: Base de retenciones e ingresos a cuenta por transmisiones o reembolsos
+                de acciones y participaciones de IIC
+            '03':
+              label: Retenciones e ingresos a cuenta por transmisiones o reembolsos
+                de acciones y participaciones de IIC
+            '04':
+              label: Número de perceptores por transmisiones de derechos de suscripción
+            '05':
+              label: Base de retenciones e ingresos a cuenta por transmisiones de
+                derechos de suscripción
+            '06':
+              label: Retenciones e ingresos a cuenta por transmisiones de derechos
+                de suscripción
+            '07':
+              label: Base del pago a cuenta previsto en la disposición adicional decimonovena
+                de la Ley 35/2006
+            08:
+              label: Pago a cuenta previsto en la disposición adicional decimonovena
+                de la Ley 35/2006
+            09:
+              label: 'Total liquidación: suma de retenciones, ingresos a cuenta, pagos
+                a cuenta y regularización'
+            '10':
+              label: Resultados a ingresar de anteriores declaraciones por el mismo
+                concepto, ejercicio y periodo
+            '11':
+              label: Resultado a ingresar
+          field:
+            label: Orden EHA/3435/2007, ejercicios 2019 y siguientes

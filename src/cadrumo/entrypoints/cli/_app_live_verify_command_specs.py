@@ -1,0 +1,215 @@
+from __future__ import annotations
+
+from typing import Final
+
+from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
+from cadrumo_client.commands.shared_contracts import (
+    DeferredTarget,
+    LazyBinding,
+    ParameterConstraint,
+    ParameterDefault,
+    ResultSchemaSpec,
+    SchemaState,
+    ValueContract,
+)
+from cadrumo_client.commands.shared_contracts import translation_key as _key
+from cadrumo_client.commands.spec import CommandSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
+
+from ._app_live_command_spec_support import (
+    _ENCRYPTED_LOCAL_READ_POLICY,
+    _LEAF_INVOCATION,
+    _METADATA_GROUP_INVOCATION,
+    _METADATA_POLICY,
+    _PROFILE_BOUND_NETWORK_CAPTURE_POLICY,
+    NO_RESULT_SCHEMA,
+)
+
+_VERIFY_EXPECTED_OPTION: Final[OptionSpec] = OptionSpec(
+    name="expected",
+    declarations=("--expected",),
+    value=ValueContract(DeferredTarget("builtins", "str")),
+    default=ParameterDefault.value(None),
+    help_key=_key("cli.app.live.verify.expected_help"),
+    multiple=False,
+    is_flag=False,
+    flag_value=None,
+    constraint=ParameterConstraint(minimum=None, maximum=None),
+)
+
+LIVE_VERIFY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
+    CommandSpec(
+        "app_live_verify",
+        "app_live",
+        "verify",
+        kind=CommandNodeKind.GROUP,
+        help_key=_key("cli.app.live.verify.app_help"),
+        short_help_key=None,
+        invocation=_METADATA_GROUP_INVOCATION,
+        parameters=(),
+        policy=_METADATA_POLICY,
+        handler=None,
+        result_schema=NO_RESULT_SCHEMA,
+    ),
+    CommandSpec(
+        "app_live_verify_list",
+        "app_live_verify",
+        "list",
+        kind=CommandNodeKind.LEAF,
+        help_key=_key("cli.app.live.verify.list_help"),
+        short_help_key=None,
+        invocation=_LEAF_INVOCATION,
+        parameters=(
+            OptionSpec(
+                name="surface",
+                declarations=("--surface",),
+                value=ValueContract(DeferredTarget("...application.live.verify", "VerifySurface", __package__)),
+                default=ParameterDefault.value(None),
+                help_key=_key("cli.app.live.verify.surface_help"),
+                multiple=False,
+                is_flag=False,
+                flag_value=None,
+                constraint=ParameterConstraint(minimum=None, maximum=None),
+            ),
+            OptionSpec(
+                name="nif",
+                declarations=("--nif",),
+                value=ValueContract(DeferredTarget("builtins", "str")),
+                default=ParameterDefault.value(None),
+                help_key=_key("cli.app.live.verify.nif_help"),
+                multiple=False,
+                is_flag=False,
+                flag_value=None,
+                constraint=ParameterConstraint(minimum=None, maximum=None),
+            ),
+        ),
+        policy=_ENCRYPTED_LOCAL_READ_POLICY,
+        handler=LazyBinding.available(DeferredTarget(".app_live_verify_commands", "verify_list", __package__)),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            target=DeferredTarget(".app_live_verify_results", "VerifyListResult", __package__),
+            identity="app.live.verify.list",
+        ),
+    ),
+    CommandSpec(
+        "app_live_verify_view",
+        "app_live_verify",
+        "view",
+        kind=CommandNodeKind.LEAF,
+        help_key=_key("cli.app.live.verify.view_help"),
+        short_help_key=None,
+        invocation=_LEAF_INVOCATION,
+        parameters=(
+            ArgumentSpec(
+                name="observation_id",
+                value=ValueContract(DeferredTarget("builtins", "str")),
+                default=ParameterDefault.required(),
+                help_key=_key("cli.app.live.verify.observation_id_help"),
+                constraint=ParameterConstraint(minimum=None, maximum=None),
+            ),
+        ),
+        policy=_ENCRYPTED_LOCAL_READ_POLICY,
+        handler=LazyBinding.available(DeferredTarget(".app_live_verify_commands", "verify_show", __package__)),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            target=DeferredTarget(".app_live_verify_results", "VerifyViewResult", __package__),
+            identity="app.live.verify.view",
+        ),
+    ),
+    CommandSpec(
+        "app_live_verify_latest",
+        "app_live_verify",
+        "latest",
+        kind=CommandNodeKind.LEAF,
+        help_key=_key("cli.app.live.verify.latest_help"),
+        short_help_key=None,
+        invocation=_LEAF_INVOCATION,
+        parameters=(
+            OptionSpec(
+                name="surface",
+                declarations=("--surface",),
+                value=ValueContract(DeferredTarget("...application.live.verify", "VerifySurface", __package__)),
+                default=ParameterDefault.required(),
+                help_key=_key("cli.app.live.verify.latest_surface_help"),
+                multiple=False,
+                is_flag=False,
+                flag_value=None,
+                constraint=ParameterConstraint(minimum=None, maximum=None),
+            ),
+            OptionSpec(
+                name="nif",
+                declarations=("--nif",),
+                value=ValueContract(DeferredTarget("builtins", "str")),
+                default=ParameterDefault.required(),
+                help_key=_key("cli.app.live.verify.latest_nif_help"),
+                multiple=False,
+                is_flag=False,
+                flag_value=None,
+                constraint=ParameterConstraint(minimum=None, maximum=None),
+            ),
+        ),
+        policy=_ENCRYPTED_LOCAL_READ_POLICY,
+        handler=LazyBinding.available(DeferredTarget(".app_live_verify_commands", "verify_latest", __package__)),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            target=DeferredTarget(".app_live_verify_results", "VerifyLatestResult", __package__),
+            identity="app.live.verify.latest",
+        ),
+    ),
+    CommandSpec(
+        "app_live_verify_nif_iva",
+        "app_live_verify",
+        "nif-iva",
+        kind=CommandNodeKind.LEAF,
+        help_key=_key("cli.app.live.verify.nif_iva_help"),
+        short_help_key=None,
+        invocation=_LEAF_INVOCATION,
+        parameters=(
+            ArgumentSpec(
+                name="nif",
+                value=ValueContract(DeferredTarget("builtins", "str")),
+                default=ParameterDefault.required(),
+                help_key=_key("cli.app.live.verify.nif_iva_arg_help"),
+                constraint=ParameterConstraint(minimum=None, maximum=None),
+            ),
+            _VERIFY_EXPECTED_OPTION,
+        ),
+        policy=_PROFILE_BOUND_NETWORK_CAPTURE_POLICY,
+        handler=LazyBinding.available(DeferredTarget(".app_live_verify_commands", "verify_nif_iva", __package__)),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            target=DeferredTarget(".app_live_verify_results", "VerifyNifIvaResult", __package__),
+            identity="app.live.verify.nif_iva",
+        ),
+    ),
+    CommandSpec(
+        "app_live_verify_tgvi",
+        "app_live_verify",
+        "tgvi",
+        kind=CommandNodeKind.LEAF,
+        help_key=_key("cli.app.live.verify.tgvi_help"),
+        short_help_key=None,
+        invocation=_LEAF_INVOCATION,
+        parameters=(
+            ArgumentSpec(
+                name="nif",
+                value=ValueContract(DeferredTarget("builtins", "str")),
+                default=ParameterDefault.required(),
+                help_key=_key("cli.app.live.verify.tgvi_arg_help"),
+                constraint=ParameterConstraint(minimum=None, maximum=None),
+            ),
+            _VERIFY_EXPECTED_OPTION,
+        ),
+        policy=_PROFILE_BOUND_NETWORK_CAPTURE_POLICY,
+        handler=LazyBinding.available(DeferredTarget(".app_live_verify_commands", "verify_tgvi", __package__)),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            target=DeferredTarget(".app_live_verify_results", "VerifyTgviResult", __package__),
+            identity="app.live.verify.tgvi",
+        ),
+    ),
+)
+
+__all__ = ["LIVE_VERIFY_COMMAND_SPECS"]
+"""Authored CommandSpec declarations for the live verify service."""
+"""Authored CommandSpec declarations for the live verify service."""

@@ -1,0 +1,16 @@
+# Quarterly only, as the period selector admits; the monthly grandes-empresas
+# modality the calendars list beside it is outside this edition's periods.
+[[revisions."2020-2023".filing_schedules]]
+id = "modelo-216-trimestral"
+period_kind = "quarterly"
+periods = ["1T", "2T", "3T", "4T"]
+legal_refs = ["orden-eha-3290-2008:art-4", "orden-eha-3290-2008:art-1", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-calendario-contribuyente-2022", "aeat-calendario-contribuyente-2023"]
+
+[[revisions."2020-2023".filing_schedules.profile_conditions]]
+field = "enrollment.large_company"
+op = "equals"
+value = false
+explanation = "Modelo 216 trimestral para retenedores no sujetos a autoliquidacion mensual por gran empresa; el plazo es de los veinte primeros dias naturales de abril, julio, octubre y enero."
+legal_refs = ["orden-eha-3290-2008:art-4"]
+source_refs = ["aeat-calendario-contribuyente-2022"]

@@ -1,0 +1,327 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-02 00:01+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: hu\n"
+"Language-Team: hu <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../how-to/onboarding.md:1
+msgid "The filing journey: from bank records to a filed modelo"
+msgstr "A benyújtás útja: a banki nyilvántartásoktól a benyújtott modelóig"
+
+#: ../../how-to/onboarding.md:3
+msgid ""
+"New to Cadrumo? This guide maps the whole journey, from your bank records"
+" to a tax form you file yourself, and points you to the right guide at "
+"each stage."
+msgstr ""
+"Új vagy a Cadrumóban? Ez az útmutató felvázolja a teljes utat a banki "
+"adataidtól az általad önállóan benyújtott adónyomtatványig, és minden "
+"szakaszban a megfelelő útmutatóra irányít."
+
+#: ../../how-to/onboarding.md:6
+msgid ""
+"Cadrumo prepares, checks, and exports Spanish tax forms as local files on"
+" your own machine. It never submits anything to the Agencia Estatal de "
+"Administración Tributaria (AEAT). You review each result, and you present"
+" the modelo yourself through the official AEAT portal, signed with your "
+"own credentials. Preparation is local and human-gated: the tool builds "
+"the filing, you file it."
+msgstr ""
+"A Cadrumo helyi fájlokként készíti elő, ellenőrzi és exportálja a spanyol"
+" adónyomtatványokat a saját gépeden. Soha nem nyújt be semmit az Agencia "
+"Estatal de Administración Tributariánál (AEAT). Te nézed át az "
+"eredményeket, és te magad nyújtod be a nyomtatványt a hivatalos AEAT-"
+"portálon, a saját hitelesítő adataiddal aláírva. Az előkészítés helyi és "
+"emberi jóváhagyáshoz kötött: az eszköz állítja össze a bevallást, te "
+"nyújtod be."
+
+#: ../../how-to/onboarding.md:12
+msgid ""
+"Want the shortest concrete command path instead of the map? Follow the "
+"[Quickstart](quickstart.md), which runs one complete example end to end. "
+"This page is the orientation; the Quickstart and the linked guides are "
+"where the commands live."
+msgstr ""
+"A térkép helyett inkább a legrövidebb, konkrét parancsutat szeretnéd? "
+"Kövesd a [Gyorsindítót](quickstart.md), amely egy teljes példát futtat "
+"végig az elejétől a végéig. Ez az oldal a tájékozódásra szolgál; a "
+"parancsok a Gyorsindítóban és a hivatkozott útmutatókban találhatók."
+
+#: ../../how-to/onboarding.md:17
+msgid "The journey at a glance"
+msgstr "Az út egy pillantásra"
+
+#: ../../how-to/onboarding.md:19
+msgid "A first filing moves through six stages:"
+msgstr "Egy első benyújtás hat szakaszon halad végig:"
+
+#: ../../how-to/onboarding.md:21
+msgid "Set up your taxpayer profile."
+msgstr "Állítsd be az adózói profilodat."
+
+#: ../../how-to/onboarding.md:22
+msgid "Bring in your transactions."
+msgstr "Hozd be a tranzakcióidat."
+
+#: ../../how-to/onboarding.md:23
+msgid "Classify each transaction."
+msgstr "Sorold be az egyes tranzakciókat."
+
+#: ../../how-to/onboarding.md:24
+msgid "Find out which modelos apply to you."
+msgstr "Derítsd ki, mely nyomtatványok vonatkoznak rád."
+
+#: ../../how-to/onboarding.md:25
+msgid "Confirm readiness, calculate, and check the draft."
+msgstr "Győződj meg a készenlétről, számolj, és ellenőrizd a piszkozatot."
+
+#: ../../how-to/onboarding.md:26
+msgid "Export and file at AEAT."
+msgstr "Exportálj, és nyújtsd be az AEAT-nál."
+
+#: ../../how-to/onboarding.md:28
+msgid ""
+"Each stage says what it is and why it matters, then links to the guide "
+"that walks the commands."
+msgstr ""
+"Minden szakasz elmondja, mi az és miért fontos, majd arra az útmutatóra "
+"hivatkozik, amely végigvezet a parancsokon."
+
+#: ../../how-to/onboarding.md:31
+msgid "Before you begin"
+msgstr "Mielőtt hozzákezdesz"
+
+#: ../../how-to/onboarding.md:33
+msgid ""
+"Install `cadrumo` and confirm it runs. See [Install Cadrumo"
+"](../workstation-setup.md) for installation."
+msgstr ""
+"Telepítsd a `cadrumo`-t, és győződj meg róla, hogy elindul. A "
+"telepítéshez lásd: [Cadrumo telepítése](../workstation-setup.md)."
+
+#: ../../how-to/onboarding.md:36
+msgid ""
+"Every command that touches your data needs your passphrase, which "
+"protects your encrypted local store. The tool prompts for it the first "
+"time in a session."
+msgstr ""
+"Minden, az adataidhoz hozzáférő parancshoz szükség van a jelmondatodra, "
+"amely védi a titkosított helyi tárolódat. Az eszköz egy munkamenetben "
+"először kéri be."
+
+#: ../../how-to/onboarding.md:40
+msgid ""
+"The examples in this documentation are recorded in English. `aeat` prints"
+" its messages in Spanish unless you [choose another language](profile-"
+"setup.md#choose-the-output-language)."
+msgstr ""
+"A dokumentáció példái angol nyelven készültek. Az `aeat` spanyolul írja "
+"ki az üzeneteit, hacsak nem [válassz másik nyelvet](profile-setup.md"
+"#choose-the-output-language)."
+
+#: ../../how-to/onboarding.md:45
+msgid "Stage 1: Set up your taxpayer profile"
+msgstr "1. szakasz: Állítsd be az adózói profilodat"
+
+#: ../../how-to/onboarding.md:47
+msgid ""
+"A profile holds the facts about one taxpayer that every later command "
+"reads: identity (NIF or NIE), activity, regime, and residence. The "
+"profile decides which forms apply and how each value is computed, so it "
+"is the foundation of every filing."
+msgstr ""
+"Egy profil egy adózó azon tényeit tárolja, amelyeket minden későbbi "
+"parancs beolvas: a személyazonosságot (NIF vagy NIE), a tevékenységet, a "
+"rendszert és a lakóhelyet. A profil dönti el, mely nyomtatványok "
+"alkalmazhatók, és hogyan számítódnak ki az egyes értékek, ezért minden "
+"benyújtás alapja."
+
+#: ../../how-to/onboarding.md:51
+msgid "Start here: [Set up your taxpayer profile](profile-setup.md)."
+msgstr "Itt kezdd: [Állítsd be az adózói profilodat](profile-setup.md)."
+
+#: ../../how-to/onboarding.md:54
+msgid "Stage 2: Bring in your transactions"
+msgstr "2. szakasz: Hozd be a tranzakcióidat"
+
+#: ../../how-to/onboarding.md:56
+msgid ""
+"Your tax figures come from your income and expense records. Import a bank"
+" statement, or add rows by hand. Nothing is imported until you run an "
+"import command."
+msgstr ""
+"Az adózási adataid a bevételi és kiadási nyilvántartásaidból származnak. "
+"Importálj egy bankszámlakivonatot, vagy vegyél fel sorokat kézzel. "
+"Importálás csak akkor történik, ha importparancsot futtatsz."
+
+#: ../../how-to/onboarding.md:60
+msgid ""
+"Continue with: [Import and manage transactions](import-bank-"
+"statements.md)."
+msgstr ""
+"Folytasd ezzel: [Tranzakciók importálása és kezelése](import-bank-"
+"statements.md)."
+
+#: ../../how-to/onboarding.md:63
+msgid "Stage 3: Classify each transaction"
+msgstr "3. szakasz: Osztályozza minden tranzakciót"
+
+#: ../../how-to/onboarding.md:65
+msgid ""
+"An imported row has a date and an amount but no tax meaning yet. Classify"
+" each one as business, personal, or mixed, and give business expenses a "
+"category, so the calculation counts the right amounts."
+msgstr ""
+"Egy importált sornak van dátuma és összege, de még nincs adójogi "
+"jelentése. Sorold be mindegyiket üzleti, személyes vagy vegyes "
+"kategóriába, és rendelj kategóriát az üzleti kiadásokhoz, hogy a számítás"
+" a megfelelő összegeket vegye figyelembe."
+
+#: ../../how-to/onboarding.md:69
+msgid "Continue with: [Classify transactions](classify-transactions.md)."
+msgstr "Folytasd ezzel: [Tranzakciók besorolása](classify-transactions.md)."
+
+#: ../../how-to/onboarding.md:72
+msgid "Stage 4: Find out which modelos apply"
+msgstr "4. szakasz: Derítsd ki, mely modelók vonatkoznak"
+
+#: ../../how-to/onboarding.md:74
+msgid ""
+"A modelo is a numbered AEAT form. Which ones you must file follows from "
+"your profile facts, not from guesswork. Ask the tool for a verdict and "
+"its reasons before you prepare anything."
+msgstr ""
+"A modelo egy számozott AEAT-nyomtatvány. Hogy melyiket kell benyújtanod, "
+"az a profiladataidból következik, nem találgatásból. Mielőtt bármit "
+"előkészítenél, kérj az eszköztől döntést és indoklást."
+
+#: ../../how-to/onboarding.md:78
+msgid "Continue with: [Find out which modelos apply to you](choose-modelo.md)."
+msgstr ""
+"Folytasd ezzel: [Tudd meg, mely nyomtatványok vonatkoznak rád](choose-"
+"modelo.md)."
+
+#: ../../how-to/onboarding.md:81
+msgid "Stage 5: Confirm readiness, calculate, and check the draft"
+msgstr ""
+"5. szakasz: Erősítsd meg a készenlétet, számolj, és ellenőrizd a "
+"piszkozatot"
+
+#: ../../how-to/onboarding.md:83
+msgid ""
+"Before you calculate, confirm the profile facts and transactions a form "
+"needs are in place. Then calculate the form's values from your records, "
+"and check the draft against the tax rules. The check is local; it does "
+"not contact AEAT."
+msgstr ""
+"Mielőtt számolsz, győződj meg róla, hogy rendelkezésre állnak a "
+"nyomtatványhoz szükséges profiladatok és tranzakciók. Ezután számítsd ki "
+"a nyomtatvány értékeit a nyilvántartásaidból, és ellenőrizd a piszkozatot"
+" az adószabályok szerint. Az ellenőrzés helyi; nem lép kapcsolatba az "
+"AEAT-tal."
+
+#: ../../how-to/onboarding.md:87
+msgid ""
+"Continue with: [Check that a filing is ready](filing-readiness.md), then "
+"[Check a draft declaration and act on the issues](verification-"
+"reports.md)."
+msgstr ""
+"Folytasd ezzel: [Ellenőrizd, hogy készen áll-e a benyújtás](filing-"
+"readiness.md), majd [Ellenőrizd a bevallástervezetet, és intézkedj a "
+"problémák alapján](verification-reports.md)."
+
+#: ../../how-to/onboarding.md:90
+msgid "Stage 6: Export and file at AEAT"
+msgstr "6. szakasz: Exportálj, és nyújtsd be az AEAT-nál"
+
+#: ../../how-to/onboarding.md:92
+msgid ""
+"Export the checked draft to a local file. Present the modelo yourself at "
+"the AEAT portal, signed with your own certificate or Cl@ve. Cadrumo's "
+"Modelo 303 and Modelo 390 files carry a development software identity "
+"that AEAT won't accept, so key the calculated box values into the portal "
+"form. For Modelo 130, import the file if the portal offers a file import;"
+" otherwise key the values in too. Then record the filing in Cadrumo and "
+"reconcile the AEAT receipt against your record."
+msgstr ""
+"Exportáld az ellenőrzött piszkozatot helyi fájlba. Te magad nyújtsd be a "
+"nyomtatványt az AEAT-portálon, a saját tanúsítványoddal vagy Cl@ve-vel "
+"aláírva. A Cadrumo Modelo 303 és Modelo 390 fájljai fejlesztői "
+"szoftverazonosítót tartalmaznak, amelyet az AEAT nem fogad el, ezért a "
+"kiszámított rovatértékeket írd be a portál űrlapjába. A Modelo 130 "
+"esetében importáld a fájlt, ha a portál kínál fájlimportálást; ha nem, "
+"akkor is írd be az értékeket. Ezután rögzítsd a benyújtást a Cadrumóban, "
+"és egyeztesd az AEAT-igazolást a saját nyilvántartásoddal."
+
+#: ../../how-to/onboarding.md:99
+msgid ""
+"Finish with: [File your modelo at the AEAT portal](file-at-aeat.md), then"
+" [Reconcile a filed modelo against its AEAT receipt](reconcile.md)."
+msgstr ""
+"Fejezd be ezzel: [Nyújtsd be a nyomtatványodat az AEAT-portálon](file-at-"
+"aeat.md), majd [Egy benyújtott nyomtatvány egyeztetése az AEAT-"
+"igazolással](reconcile.md)."
+
+#: ../../how-to/onboarding.md:101
+msgid "Where to go next"
+msgstr "Merre tovább"
+
+#: ../../how-to/onboarding.md:103
+msgid ""
+"[How your records become tax figures](../explanation/from-records-to-"
+"figures.md): understand the transaction-to-box pipeline behind these "
+"stages."
+msgstr ""
+"[Hogyan lesznek a nyilvántartásaidból adóadatok](../explanation/from-"
+"records-to-figures.md): értsd meg, milyen folyamat vezet a tranzakcióktól"
+" a rovatokig ezekben a szakaszokban."
+
+#: ../../how-to/onboarding.md:105
+msgid ""
+"[Recording a filing, and why the tool never files for "
+"you](../explanation/recording-a-filing-and-the-boundary.md): why the tool"
+" never submits, and what \"recorded as filed\" means."
+msgstr ""
+"[Benyújtás rögzítése, és miért nem nyújt be soha az eszköz "
+"helyetted](../explanation/recording-a-filing-and-the-boundary.md): miért "
+"nem nyújt be soha az eszköz, és mit jelent a „benyújtottként rögzítve”."
+
+#: ../../how-to/onboarding.md:107
+msgid "[Plan your filing calendar](filing-calendar.md): see what is due and when."
+msgstr ""
+"[Tervezd meg a benyújtási naptáradat](filing-calendar.md): nézd meg, mi "
+"és mikor esedékes."
+
+#: ../../how-to/onboarding.md:108
+msgid ""
+"[Diagnose and repair your local setup](troubleshooting.md): if a command "
+"stops or the local state looks wrong."
+msgstr ""
+"[Diagnosztizáld és javítsd a helyi beállításodat](troubleshooting.md): ha"
+" egy parancs megáll, vagy a helyi állapot hibásnak tűnik."
+
+#: ../../how-to/onboarding.md:111
+#, python-brace-format
+msgid ""
+"Unfamiliar terms are defined in the {doc}`glossary "
+"</_generated/glossary>`. Before you share command output to ask for help,"
+" remove personal tax identifiers such as your NIF, NIE, or NII."
+msgstr ""
+"Az ismeretlen kifejezéseket a {doc}`szójegyzék </_generated/glossary>` "
+"magyarázza. Mielőtt segítségkéréshez megosztod a parancs kimenetét, "
+"távolítsd el belőle a személyes adóazonosítóidat, például a NIF-, NIE- "
+"vagy NII-számodat."

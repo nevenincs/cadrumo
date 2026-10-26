@@ -1,0 +1,11 @@
+# CPack loads this per generator, including a direct `cpack` invocation.
+if(CPACK_GENERATOR STREQUAL "DEB" OR CPACK_GENERATOR STREQUAL "RPM")
+  execute_process(
+    COMMAND "@CADRUMO_DEV_PYTHON@" -B -m dev.packaging.native.linux_packages author-gates
+      --build "@CMAKE_BINARY_DIR@" --identity "@CADRUMO_PATH_GENERATED@/identity.json"
+    WORKING_DIRECTORY "@CADRUMO_SOURCE_ROOT@"
+    COMMAND_ERROR_IS_FATAL ANY)
+  set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "@CADRUMO_PATH_INSTALLATION_METADATA@/linux-gate/preinst")
+  set(CPACK_DEBIAN_PACKAGE_CONTROL_STRICT_PERMISSION TRUE)
+  set(CPACK_RPM_PRE_INSTALL_SCRIPT_FILE "@CADRUMO_PATH_INSTALLATION_METADATA@/linux-gate/rpm-preinstall.sh")
+endif()

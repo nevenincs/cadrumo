@@ -1,0 +1,200 @@
+# Isolated field-fact loader fixture: the verified DR 11500 prefix only.
+# Retained independently of the live layout's conversion to typed envelope roles.
+# Official design SHA256: d0b4c2cb344fe2d4b91a082bc85cc7906e383be792134504ddaedd0dc8bb2694
+
+# Modelo 115 -- IRPF retenciones sobre rendimientos de arrendamiento de inmuebles
+# urbanos -- fichero BOE.
+#
+# Transcribed position by position from the bundled AEAT Diseno de Registros
+# cited in source_refs. Every offset and length below is read from that file;
+# none is derived, inferred or rounded.
+#
+# The file envelope's 'Version del Programa' (@93+4) and 'NIF Empresa Desarrollo'
+# (@101+9) are the design's Nota 1 slots for the entidad desarrolladora. Cadrumo
+# holds no AEAT developer registration, so both take the all-zero development
+# mock identity from the governed fact aeat-eedd:development-mock-software-identity,
+# and an export carrying it is graded as not presentable at AEAT.
+
+[[revisions."2019-y-siguientes".export_layouts]]
+id = "modelo-115-fichero-boe"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+
+# Design sheet 'DR 11500': the file envelope, positions 1-328.
+[[revisions."2019-y-siguientes".export_layouts.records]]
+id = "modelo-115-envelope-header"
+record_type = "envelope_header"
+order = 0
+encoding = "iso-8859-1"
+line_ending = "none"
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-envelope-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-envelope-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "115"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-envelope-discriminante"
+offset = 6
+length = 1
+kind = "literal"
+literal = "0"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-envelope-ejercicio"
+offset = 7
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-envelope-periodo"
+offset = 11
+length = 2
+kind = "draft"
+draft_attribute = "period_code"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-envelope-marker"
+offset = 13
+length = 5
+kind = "literal"
+literal = "0000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-envelope-aux-open"
+offset = 18
+length = 5
+kind = "literal"
+literal = "<AUX>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-envelope-reserved-1"
+offset = 23
+length = 70
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+# Design 'Nota 1' slot 'Version del Programa', left to the entidad desarrolladora: the development-mock
+# software identity fact supplies it.
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-envelope-header-version-programa"
+offset = 93
+length = 4
+kind = "literal"
+literal_fact = { fact_id = "aeat-eedd:development-mock-software-identity", key = "program_identifier" }
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-envelope-reserved-2"
+offset = 97
+length = 4
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+# Design 'Nota 1' slot 'NIF Empresa Desarrollo', left to the entidad desarrolladora: the development-mock
+# software identity fact supplies it.
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-envelope-header-nif-empresa-desarrollo"
+offset = 101
+length = 9
+kind = "literal"
+literal_fact = { fact_id = "aeat-eedd:development-mock-software-identity", key = "developer_tax_id" }
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-envelope-reserved-3"
+offset = 110
+length = 213
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-115-envelope-aux-close"
+offset = 323
+length = 6
+kind = "literal"
+literal = "</AUX>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-115-2019-v13"]
+

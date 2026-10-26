@@ -1,0 +1,262 @@
+[[revisions."2022".casillas]]
+id = "declarante-nif"
+continuidad_id = "irpf-declarante-nif"
+number = "tipo1.nif-declarante"
+section = ["identificacion_declaracion"]
+data_type = "nif"
+semantic_role = "irpf_declarante_nif"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+
+[[revisions."2022".casillas]]
+id = "ejercicio-declaracion"
+continuidad_id = "filing-year"
+number = "tipo1.ejercicio"
+section = ["identificacion_declaracion"]
+data_type = "year"
+semantic_role = "filing_year"
+legal_refs = ["orden-eha-3481-2008:art-1", "orden-eha-3481-2008:art-5"]
+
+[[revisions."2022".casillas]]
+id = "declarado-nif"
+continuidad_id = "m189-declarado-nif"
+number = "tipo2.nif-declarado"
+section = ["declarado"]
+data_type = "nif"
+semantic_role = "m189_declarado_nif"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+
+[[revisions."2022".casillas]]
+id = "declarado-nombre"
+continuidad_id = "m189-declarado-nombre"
+number = "tipo2.nombre-declarado"
+section = ["declarado"]
+data_type = "name"
+semantic_role = "m189_declarado_nombre"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+
+[[revisions."2022".casillas]]
+id = "codigo-pais"
+continuidad_id = "m189-codigo-pais"
+number = "tipo2.78-79"
+section = ["declarado", "localizacion"]
+data_type = "country_code"
+semantic_role = "m189_codigo_pais"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+additional_source_refs = ["aeat-dr-189-2021-2022"]
+
+[[revisions."2022".casillas]]
+id = "clave-valor"
+continuidad_id = "m189-clave-valor"
+number = "tipo2.81"
+section = ["valores_seguros_rentas", "identificacion_valor"]
+data_type = "text"
+semantic_role = "m189_clave_valor"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+additional_source_refs = ["aeat-dr-189-2021-2022"]
+
+# VALORACIÓN, tipo 2 positions 108-123, as the 2021-2022 design states it: its
+# valuation rules cover claves A to E. Orden HFP/1180/2023, which adds the clave
+# F rule, first applies to ejercicio 2023.
+[[revisions."2022".casillas]]
+id = "valoracion"
+continuidad_id = "m189-valoracion"
+number = "tipo2.108-123"
+section = ["valores_seguros_rentas", "valoracion"]
+semantic_role = "m189_valoracion"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+additional_source_refs = ["aeat-dr-189-2021-2022"]
+
+# NÚMERO DE VALORES occupies 130-145 (130-139 entera, 140-145 decimal) per Orden
+# HFP/1351/2021 art. sexto apartado Dos, and NOMINAL UNITARIO DE LOS VALORES
+# 146-163 (146-159 entera, 160-163 decimal) per Orden HFP/115/2022 disposicion
+# final primera, which also moves BLANCOS to 164-500. Orden HFP/1284/2023 moves
+# the pair to 130-146 and 147-164 from ejercicio 2023.
+[[revisions."2022".casillas]]
+id = "numero-valores"
+continuidad_id = "m189-numero-valores"
+number = "tipo2.130-145"
+section = ["valores_seguros_rentas", "detalle_valor"]
+data_type = "decimal"
+semantic_role = "m189_numero_valores"
+legal_refs = ["orden-hfp-1351-2021:art-sexto"]
+additional_source_refs = ["aeat-dr-189-2021-2022"]
+
+[[revisions."2022".casillas]]
+id = "nominal-unitario-valores"
+continuidad_id = "m189-nominal-unitario-valores"
+number = "tipo2.146-163"
+section = ["valores_seguros_rentas", "detalle_valor"]
+semantic_role = "m189_nominal_unitario_valores"
+legal_refs = ["orden-hfp-115-2022:df-primera"]
+additional_source_refs = ["aeat-dr-189-2021-2022"]
+# Registro de tipo 1 (registro de declarante) -- positions transcribed from the
+# bundled Diseño de Registro, source aeat-dr-189-2021-2022, sha256
+# 9cfcec402edf965492be9c0d2aed91eed5e2b58e0f37e52bbc9c24af47f26421. The record
+# is 500 bytes and its declared field lengths sum to exactly 500, closing at
+# "168-500 ------------ BLANCOS".
+
+[[revisions."2022".casillas]]
+id = "declarante-razon-social"
+continuidad_id = "m189-declarante-razon-social"
+number = "tipo1.18-57"
+section = ["identificacion_declaracion"]
+data_type = "name"
+semantic_role = "m189_declarante_razon_social"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+additional_source_refs = ["aeat-dr-189-2021-2022"]
+
+[[revisions."2022".casillas]]
+id = "tipo-soporte"
+continuidad_id = "m189-tipo-soporte"
+number = "tipo1.58"
+section = ["identificacion_declaracion"]
+data_type = "text"
+semantic_role = "m189_tipo_soporte"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+additional_source_refs = ["aeat-dr-189-2021-2022"]
+
+[[revisions."2022".casillas]]
+id = "persona-relacion"
+continuidad_id = "m189-persona-relacion"
+number = "tipo1.59-107"
+section = ["identificacion_declaracion"]
+data_type = "text"
+semantic_role = "m189_persona_relacion"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+additional_source_refs = ["aeat-dr-189-2021-2022"]
+
+[[revisions."2022".casillas]]
+id = "numero-justificante"
+continuidad_id = "m189-numero-justificante"
+number = "tipo1.108-120"
+section = ["identificacion_declaracion"]
+data_type = "integer"
+semantic_role = "m189_numero_justificante"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+additional_source_refs = ["aeat-dr-189-2021-2022"]
+
+[[revisions."2022".casillas]]
+id = "declaracion-complementaria-sustitutiva"
+continuidad_id = "m189-declaracion-complementaria-sustitutiva"
+number = "tipo1.121-122"
+section = ["identificacion_declaracion"]
+data_type = "text"
+semantic_role = "m189_declaracion_complementaria_sustitutiva"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One combined 'Declaracion complementaria / sustitutiva' box on this informativa; the role is modelo-scoped, so no sibling casilla can carry it. Modelo 190 records the same decision for its own complementaria and sustitutiva boxes."
+legal_refs = ["orden-eha-3481-2008:art-1"]
+additional_source_refs = ["aeat-dr-189-2021-2022"]
+
+[[revisions."2022".casillas]]
+id = "numero-identificativo-anterior"
+continuidad_id = "m189-numero-identificativo-anterior"
+number = "tipo1.123-135"
+section = ["identificacion_declaracion"]
+data_type = "integer"
+semantic_role = "m189_numero_identificativo_anterior"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+additional_source_refs = ["aeat-dr-189-2021-2022"]
+
+[[revisions."2022".casillas]]
+id = "numero-total-declarados"
+continuidad_id = "m189-numero-total-declarados"
+number = "tipo1.136-144"
+section = ["identificacion_declaracion"]
+data_type = "integer"
+semantic_role = "m189_numero_total_declarados"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+additional_source_refs = ["aeat-dr-189-2021-2022"]
+
+[[revisions."2022".casillas]]
+id = "valoracion-total"
+continuidad_id = "m189-valoracion-total"
+number = "tipo1.145-167"
+section = ["identificacion_declaracion", "valoracion"]
+semantic_role = "m189_valoracion_total"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+additional_source_refs = ["aeat-dr-189-2021-2022"]
+
+# Registro de tipo 2 (registro de declarado) -- 500 bytes, declared field
+# lengths sum to exactly 500, closing at "164-500 ------------ BLANCOS". Same
+# bundled Diseño de Registro. Positions 96-107 are BLANCOS in the design and
+# carry no casilla.
+
+[[revisions."2022".casillas]]
+id = "representante-legal-nif"
+continuidad_id = "m189-representante-legal-nif"
+number = "tipo2.27-35"
+section = ["declarado"]
+data_type = "nif"
+semantic_role = "m189_representante_legal_nif"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+additional_source_refs = ["aeat-dr-189-2021-2022"]
+
+[[revisions."2022".casillas]]
+id = "codigo-provincia"
+continuidad_id = "m189-codigo-provincia"
+number = "tipo2.76-77"
+section = ["declarado", "localizacion"]
+data_type = "province_code"
+semantic_role = "m189_codigo_provincia"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+additional_source_refs = ["aeat-dr-189-2021-2022"]
+
+[[revisions."2022".casillas]]
+id = "clave-mercado"
+continuidad_id = "m189-clave-mercado"
+number = "tipo2.80"
+section = ["valores_seguros_rentas", "identificacion_valor"]
+data_type = "text"
+semantic_role = "m189_clave_mercado"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+additional_source_refs = ["aeat-dr-189-2021-2022"]
+
+[[revisions."2022".casillas]]
+id = "clave-identificacion"
+continuidad_id = "m189-clave-identificacion"
+number = "tipo2.82"
+section = ["valores_seguros_rentas", "identificacion_valor"]
+data_type = "text"
+semantic_role = "m189_clave_identificacion"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+additional_source_refs = ["aeat-dr-189-2021-2022"]
+
+[[revisions."2022".casillas]]
+id = "identificacion-valores"
+continuidad_id = "m189-identificacion-valores"
+number = "tipo2.83-94"
+section = ["valores_seguros_rentas", "identificacion_valor"]
+data_type = "text"
+semantic_role = "m189_identificacion_valores"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+additional_source_refs = ["aeat-dr-189-2021-2022"]
+
+[[revisions."2022".casillas]]
+id = "clave-representacion"
+continuidad_id = "m189-clave-representacion"
+number = "tipo2.95"
+section = ["valores_seguros_rentas", "identificacion_valor"]
+data_type = "text"
+semantic_role = "m189_clave_representacion"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+additional_source_refs = ["aeat-dr-189-2021-2022"]
+
+[[revisions."2022".casillas]]
+id = "porcentaje-participacion"
+continuidad_id = "m189-porcentaje-participacion"
+number = "tipo2.124-128"
+section = ["valores_seguros_rentas", "detalle_valor"]
+data_type = "decimal"
+semantic_role = "m189_porcentaje_participacion"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+additional_source_refs = ["aeat-dr-189-2021-2022"]
+
+[[revisions."2022".casillas]]
+id = "clave-titularidad"
+continuidad_id = "m189-clave-titularidad"
+number = "tipo2.129"
+section = ["valores_seguros_rentas", "detalle_valor"]
+data_type = "text"
+semantic_role = "m189_clave_titularidad"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+additional_source_refs = ["aeat-dr-189-2021-2022"]

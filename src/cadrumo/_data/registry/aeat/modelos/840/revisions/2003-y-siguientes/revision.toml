@@ -1,0 +1,176 @@
+[revisions."2003-y-siguientes"]
+casilla_source_refs = ["aeat-dr-840"]
+live_cross_reference_source_refs = ["aeat-modelo-840-procedure"]
+authority_grade = "applicability"
+# valid_from is canonicalised to the ejercicio-start convention (January 1 of
+# period_selector.year_from), not the orden's own effective date -- that fact
+# already has its home on orden-hac-85-2003:art-1's legal.effective_from.
+valid_from = 2003-01-01
+period_selector = { year_from = 2003, periods = ["0A"] }
+legal_refs = [
+    "rdl-2-2004:art-78",
+    "rdl-2-2004:art-82",
+    "rdl-2-2004:art-90",
+    "orden-hac-2572-2003:apartado-1",
+    "orden-hac-2572-2003:apartado-6",
+]
+orden_aplicabilidad = [
+    "orden-hac-2572-2003:apartado-1",
+]
+source_refs = [
+    "aeat-dr-840",
+    "aeat-modelo-840-procedure",
+    "boe-modelo-840-2003-form",
+]
+review_status = "agent_reviewed"
+reviewed_by = """\
+agent: applicability-grade review of the IAE alta/variacion/baja declaration. DISCLOSURE \
+-- self-review: the same agent authored all 119 new casillas across six units, re-grounded \
+the two pre-existing ones onto AEAT bracket numbers, and swept construct membership each \
+time. VERIFIED -- COVERAGE 0 -> 108 of 108 derived casillas, with 121 casillas in total. \
+Every AEAT box number the bundled aeat-dr-840 diseno prints across its three records is \
+now modelled. The two original casillas had carried SLUG numbers, which match no design \
+box and were the sole reason the report once read zero. VERIFIED -- TILING re-checked \
+before every transcription: Pag. 1 tiles 1..1132 and Pag. 2 tiles 1..1165, each exactly \
+once, no gap, no overlap. VERIFIED -- CONSTRUCT MEMBERSHIP exact, 121 of 121 both \
+directions. VERIFIED -- WHY 121 CASILLAS COVER 108 BOXES: where several physical positions \
+share one printed number, ONE casilla carries AEAT's number and each remaining position \
+becomes its own casilla with a descriptive slug, on modelo 604's precedent for its eight \
+signo casillas. A slug-numbered casilla does not count toward coverage, so the casilla \
+count tracks positions and coverage tracks boxes. The shapes differ and the treatment \
+follows the shape: 53, 54 and 55 each head a triplet of independently-set flags (three \
+casillas each, since collapsing loses two facts per triplet); 62 is ONE date split across \
+dia, mes and ano component fields (one date casilla, since splitting invents three facts); \
+63 and 86 each label two different concepts (two casillas each); 109 is a notification \
+block of five positions reduced to three casillas, lugar, fecha and calidad. VERIFIED -- \
+DATA TYPES come from the design type_code (An / Num) with one refinement: a Num field \
+whose value is a fixed-width CODE stays text, because a leading zero is significant and an \
+integer round-trip drops it. Following type_code blindly would have mis-typed five fields; \
+following the label would have mis-typed nine. VERIFIED -- NON-MONOTONIC NUMBERING: AEAT \
+numbers by printed form, not byte order, and nine fields are out of sequence (11@213 \
+before 10@215; 31@485, 29@487, 30@522; 72@1018, 70@1020, 71@1055, 73@1061). Pairing \
+numbers to offsets by sorting would mis-assign every one while the offsets still tiled. \
+NOT CLAIMED -- BOX 56 DOES NOT EXIST and none was invented. The printed sequence runs 55, \
+then two UNNUMBERED flags at @698 and @699 (campamento turistico, recepcion de loterias), \
+then 57. The gap falls exactly where a 56 would sit; both flags carry slugs instead. NOT \
+CLAIMED -- BOXES 79 AND 48 ARE \"Pto.\" AND THEIR LABELS KEEP THAT ABBREVIATION. The \
+diseno never expands it and each sits near a \"Pta.\" (Puerta). Expanding it needs an \
+official source. NOT CLAIMED -- THE ANEXO IS NOT MODELLED AS CASILLAS, and that is its \
+shape rather than an omission: 165 fields carrying only 4 distinct box numbers, almost \
+entirely one relacion-de-locales block restated with no number on any repetition. The same \
+holds for most of Pag. 2, where 24 of 110 fields are casillas. Those repetitions are the \
+binding_record / repeat = binding_rows shape modelo 720 uses; minting a byte-span number \
+per repetition would model a repeating structure as fixed positions. What modelo 840 needs \
+next is a BINDING SET, then a layout -- not more casillas. NOT CLAIMED -- NO EXPORT \
+LAYOUT: the application still cannot file this modelo, it stays on the filing-capability \
+worklist, and model_law_authority_scope remains inspection_only. NOT CLAIMED -- the \
+earlier review reasoning that this modelo is not a return this application emits is NOT \
+relied on; the worklist gate docstring treats an individually-defensible withdrawal record \
+as the historical defect. NOT CLAIMED -- independent_check_coverage is n/a: NO CLAIM, not \
+zero. NOT CLAIMED -- all 121 labels are populated and non-null across es/en/ca/hu, \
+verified by counting values rather than keys after an earlier check that counted keys \
+proved unable to fail; the strings were not audited for accuracy."""
+reviewed_at = 2026-08-22
+
+[revisions."2003-y-siguientes".family_dispositions.formulas]
+reason = "The declarant reports its OWN actividad economica, declaring alta, variacion or baja in the matricula del IAE. The cuota is not self-assessed here: TRLRHL art. 90 puts the gestion tributaria of the impuesto with the matricula and the liquidation with the administration, so this form computes no liability and the formula family is inapplicable by this modelo's nature rather than merely absent."
+legal_refs = [
+    "orden-hac-2572-2003:apartado-1",
+]
+source_refs = [
+    "aeat-dr-840",
+    "aeat-modelo-840-procedure",
+    "boe-modelo-840-2003-form",
+]
+
+[revisions."2003-y-siguientes".family_dispositions.deadline_windows]
+reason = """\
+Orden HAC/2572/2003 apartado sexto delegates the plazo in full: la presentacion de la \
+declaracion del Impuesto sobre Actividades Economicas, modelo 840, debera realizarse, \
+segun se trate de declaraciones de alta, variacion o baja, en los plazos regulados en los \
+articulos 5, 6 y 7 del Real Decreto 243/1995. Every plazo is therefore anchored to an \
+EVENT -- the start, the variacion or the cese of the actividad -- rather than to the \
+calendar, so no recurring calendar window exists to declare and none is fabricated. Real \
+Decreto 243/1995 is not bundled in this corpus, so the concrete event-relative periods are \
+cited by delegation through the bundled apartado rather than reproduced here; declaring \
+windows would require inventing dates this registry cannot evidence."""
+legal_refs = [
+    "orden-hac-2572-2003:apartado-6",
+]
+source_refs = [
+    "aeat-modelo-840-procedure",
+    "boe-modelo-840-2003-form",
+]
+[revisions."2003-y-siguientes".family_dispositions.parameters]
+reason = """\
+A parameter holds a regulatory value a formula of this revision applies -- a rate, a threshold, \
+a coefficient. This revision applies none, because it declares no formula at all: its \
+family_dispositions.formulas records that the IAE cuota is not self-assessed here, TRLRHL art. \
+90 placing the gestion with the matricula and the liquidacion with the administration. The \
+tarifas and cuotas of the impuesto are real regulatory values, but they are applied by the \
+administration liquidating from the matricula, never by a formula of this revision, so there is \
+nothing here for a parameter to feed."""
+legal_refs = [
+    "rdl-2-2004:art-78",
+    "rdl-2-2004:art-90",
+    "orden-hac-2572-2003:apartado-1",
+]
+source_refs = [
+    "aeat-dr-840",
+    "aeat-modelo-840-procedure",
+]
+
+[revisions."2003-y-siguientes".family_dispositions.dependency_classifications]
+reason = """\
+A dependency classification declares which OTHER modelo's filing a value here derives from, and \
+modelo 840 derives from none. It declares the taxpayer's own alta, variacion or baja in the \
+matricula del IAE -- facts about the declarant's actividad economica, held by the declarant and \
+reported directly. No value on this form is folded in from another return, and its plazos are \
+anchored to the event rather than to a prior period's filing (Orden HAC/2572/2003 apartado \
+sexto, by remission to RD 243/1995 arts. 5, 6 and 7), so there is no cross-period source for the \
+family to classify."""
+legal_refs = [
+    "rdl-2-2004:art-78",
+    "rdl-2-2004:art-90",
+    "orden-hac-2572-2003:apartado-1",
+]
+source_refs = [
+    "aeat-dr-840",
+    "aeat-modelo-840-procedure",
+]
+
+[revisions."2003-y-siguientes".family_dispositions.verification_expectations]
+reason = """\
+A verification expectation reconciles a FILED return against this application's engine, and \
+neither side of that reconciliation exists here. This application does not emit the modelo -- \
+the revision header records that the IAE alta, baja and variacion communication is administered \
+municipally -- and the engine computes no value for it, since family_dispositions.formulas \
+already establishes that no formula applies. An expectation authored here would compare nothing \
+against nothing."""
+legal_refs = [
+    "rdl-2-2004:art-78",
+    "rdl-2-2004:art-90",
+    "orden-hac-2572-2003:apartado-1",
+]
+source_refs = [
+    "aeat-dr-840",
+    "aeat-modelo-840-procedure",
+]
+
+[revisions."2003-y-siguientes".family_dispositions.verification_predicates]
+reason = """\
+A verification predicate guards a CALCULATED result, and this revision calculates none. \
+family_dispositions.formulas records why: TRLRHL art. 90 leaves the liquidacion of the IAE with \
+the administration working from the matricula, so this form carries census facts rather than an \
+amount the engine derives. With no derived value there is no result for a predicate to guard, \
+and a predicate over the declared census facts would assert a relationship the modelo does not \
+establish."""
+legal_refs = [
+    "rdl-2-2004:art-78",
+    "rdl-2-2004:art-90",
+    "orden-hac-2572-2003:apartado-1",
+]
+source_refs = [
+    "aeat-dr-840",
+    "aeat-modelo-840-procedure",
+]

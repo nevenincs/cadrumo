@@ -1,0 +1,134 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 4,
+    "minor": 4,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "distribution-windows-x64",
+      "displayName": "Distribution, Windows x64",
+      "generator": "Visual Studio 17 2022",
+      "binaryDir": "${sourceDir}/../../../build/${presetName}",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "cacheVariables": {
+        "CADRUMO_TARGET": "windows-x86-64"
+      }
+    },
+    {
+      "name": "distribution-linux-x86-64",
+      "displayName": "Distribution, linux-x86-64",
+      "generator": "Ninja Multi-Config",
+      "binaryDir": "${sourceDir}/../../../build/${presetName}",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      },
+      "cacheVariables": {
+        "CADRUMO_TARGET": "linux-x86-64"
+      }
+    },
+    {
+      "name": "distribution-linux-aarch64",
+      "displayName": "Distribution, linux-aarch64",
+      "generator": "Ninja Multi-Config",
+      "binaryDir": "${sourceDir}/../../../build/${presetName}",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      },
+      "cacheVariables": {
+        "CADRUMO_TARGET": "linux-aarch64"
+      }
+    },
+    {
+      "name": "distribution-macos-arm64",
+      "displayName": "Distribution, macos-arm64",
+      "generator": "Ninja Multi-Config",
+      "binaryDir": "${sourceDir}/../../../build/${presetName}",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      },
+      "cacheVariables": {
+        "CADRUMO_TARGET": "macos-arm64"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "distribution-windows-msi",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "configurePreset": "distribution-windows-x64",
+      "configuration": "Release",
+      "targets": ["msi"]
+    },
+    {
+      "name": "distribution-linux-x86-64-deb",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      },
+      "configurePreset": "distribution-linux-x86-64",
+      "configuration": "Release",
+      "targets": ["deb"]
+    },
+    {
+      "name": "distribution-linux-x86-64-rpm",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      },
+      "configurePreset": "distribution-linux-x86-64",
+      "configuration": "Release",
+      "targets": ["rpm"]
+    },
+    {
+      "name": "distribution-linux-aarch64-deb",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      },
+      "configurePreset": "distribution-linux-aarch64",
+      "configuration": "Release",
+      "targets": ["deb"]
+    },
+    {
+      "name": "distribution-linux-aarch64-rpm",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      },
+      "configurePreset": "distribution-linux-aarch64",
+      "configuration": "Release",
+      "targets": ["rpm"]
+    },
+    {
+      "name": "distribution-macos-dmg",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      },
+      "configurePreset": "distribution-macos-arm64",
+      "configuration": "Release",
+      "targets": ["dmg"]
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "result_version": 1,
+  "profile_id": "13000000-0000-4000-8000-000000000730",
+  "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
+  "outcome": {
+    "outcome": "refused",
+    "refusal": {
+      "kind": "stale_edit_baseline",
+      "edit_contract_version": 1,
+      "baseline_id": "e0b003fe32cd6a17155e1e99d20a8d7943aa2c2967478ebc87905262563050c1",
+      "mismatching_coordinates": [
+        "work_unit_record_digest",
+        "calculation_head_digest",
+        "current_calculation_revision_id"
+      ],
+      "responsible_owner": "modelo.edit",
+      "reconsideration_condition": "admit a fresh baseline and resubmit",
+      "recovery_action": null
+    }
+  },
+  "parsed": [],
+  "findings": [],
+  "operator_entries_unknown": false,
+  "refusal_words": "The declaration changed since it was opened, so the edit was not applied. Reopen it and edit again.",
+  "rebase": []
+}

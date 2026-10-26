@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-hap-72-2013-art-7.html",
+  "source_sha256": "3386fbc8a168d94b1bea8b9e172e8793fb74e566c886868089fe793ac898ccb6",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.4",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "La presentación del modelo 720, «Declaración informativa sobre bienes y derechos situados en el extranjero», se realizará entre el 1 de enero y el 31 de marzo del año siguiente a aquel al que se refiera la información a suministrar.",
+      "title": "Artículo 7. Plazo de presentación del modelo 720.",
+      "section": "Artículo 7. Plazo de presentación del modelo 720.",
+      "anchor": "#a7"
+    }
+  ]
+}

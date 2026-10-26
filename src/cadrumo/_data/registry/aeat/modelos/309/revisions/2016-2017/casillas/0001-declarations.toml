@@ -1,0 +1,171 @@
+[[revisions."2016-2017".casillas]]
+id = "decl.tipo-trigger"
+continuidad_id = "motivo-declaracion-no-periodica"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "NOT A PRINTED BOX. This row carries the slug number 'tipo-trigger' and no position: it is the internal motivo-declaracion-no-periodica concept enrolling the modelo-309-iva-no-periodica construct, input_kind informational, occupying no byte of any record. the 2016-2017 record design (aeat-dr-309-2016, corpus/.../modelo_309/files/03-309-...-2016-y-2017.xls.extracted.md, sha256 1bb317f154d6) lists 61 positional campos and prints no such field; the 2004-2015 record design (aeat-dr-309-2004, corpus/.../modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf, sha256 7a855ce41e9b) lists 64 positional campos and prints none either. The 2018-2022 revision's own grounded evidence for this same chain calls it 'this virtual application concept'. It is absent from the predecessor edition because it is not on the form at all."
+number = "tipo-trigger"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "motivo_declaracion_no_periodica"
+required = true
+input_kind = "informational"
+legal_refs = ["rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
+# Modelo 309 casillas: the liquidacion's operator values, plus the
+# design's own computed totals ([22] and [24]).
+
+[[revisions."2016-2017".casillas]]
+id = "decl.tipo-declaracion"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_id = "declaracion-tipo-309"
+continuidad_evidence = "THE PREDECESSOR DESIGN PRINTS IT; THE PREDECESSOR EDITION DOES NOT DECLARE IT. the 2016-2017 record design (aeat-dr-309-2016, corpus/.../modelo_309/files/03-309-...-2016-y-2017.xls.extracted.md, sha256 1bb317f154d6) prints campo 6, position 13, length 1, 'Tipo de declaracion' (nota 1: 'I (ingreso)'). the 2004-2015 record design (aeat-dr-309-2004, corpus/.../modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf, sha256 7a855ce41e9b) prints the same field as campo 3, position 5, length 1, 'tipo declaracion constante I a ingresar' - the one and only occurrence of the phrase 'tipo declaracion' in that design. The 2004-2015 revision declares no casilla for it: its rows cover positions 15, 25, 34, 74, 88-99 and 100-561 plus boxes [01]-[24], and none carries this field. The gap is in the corpus's predecessor declaration, not on the official form."
+# Modern chain starts here; no predecessor link is asserted to the 2004
+# combined-name, country-description or separate category-flag surfaces.
+number = "13"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "declaracion_tipo_309"
+# Design tipo de declaracion.
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+
+[[revisions."2016-2017".casillas]]
+id = "decl.nombre"
+continuidad_id = "declarante-nombre-309"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "the 2016-2017 record design (aeat-dr-309-2016, corpus/.../modelo_309/files/03-309-...-2016-y-2017.xls.extracted.md, sha256 1bb317f154d6) prints campo 9, position 83, length 20, 'Identificacion - Nombre', beside campo 8 'Identificacion - Apellidos o Denominacion Social' at position 23. the 2004-2015 record design (aeat-dr-309-2004, corpus/.../modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf, sha256 7a855ce41e9b) identifies the declarante by campo 4 'identificacion - n.i.f.' at position 6 and campo 5 'letras etiqueta (persona fisica)' at position 15 only; its single occurrence of 'apellidos' and its single occurrence of 'nombre' both fall inside campo 9 'transmitente - apellidos y nombre o razon social', which is the TRANSMITENTE, not the declarante. The predecessor form carries no declarante name field at any position, so this box is new on this edition's official form."
+# Modern chain starts here; no predecessor link is asserted to the 2004
+# combined-name, country-description or separate category-flag surfaces.
+number = "83-102"
+section = ["declarante", "liquidacion"]
+data_type = "name"
+semantic_role = "declarante_nombre_309"
+# The person declarante's given name.
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+
+[[revisions."2016-2017".casillas]]
+id = "decl.transmitente-apellidos"
+continuidad_id = "transmitente-apellidos"
+# Modern chain starts here; no predecessor link is asserted to the 2004
+# combined-name, country-description or separate category-flag surfaces.
+number = "118-177"
+section = ["declarante", "liquidacion"]
+data_type = "name"
+semantic_role = "transmitente_apellidos"
+# Design transmitente apellidos o denominacion social.
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+
+[[revisions."2016-2017".casillas]]
+id = "decl.transmitente-nombre"
+continuidad_id = "transmitente-nombre"
+# Modern chain starts here; no predecessor link is asserted to the 2004
+# combined-name, country-description or separate category-flag surfaces.
+number = "178-197"
+section = ["declarante", "liquidacion"]
+data_type = "name"
+semantic_role = "transmitente_nombre"
+# Design transmitente nombre.
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+
+[[revisions."2016-2017".casillas]]
+id = "decl.transmitente-pais"
+continuidad_id = "transmitente-pais"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-309-2004 campo 10, pais del transmitente como descripcion alfabetica de 14 caracteres, y aeat-dr-309-2016 M30901 campo 15, pais del mismo transmitente como codigo de dos caracteres: misma jurisdiccion de la misma parte de la operacion no periodica. Cambia la representacion texto/codigo, declarada mediante representation_evolved; no se retira el concepto pais."
+number = "198-199"
+section = ["declarante", "liquidacion"]
+data_type = "country_code"
+semantic_role = "transmitente_pais"
+# Design transmitente pais.
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+
+[[revisions."2016-2017".casillas]]
+id = "decl.situacion-tributaria"
+continuidad_id = "situacion-tributaria"
+# Modern chain starts here; no predecessor link is asserted to the 2004
+# combined-name, country-description or separate category-flag surfaces.
+number = "200"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "situacion_tributaria"
+# Design situacion tributaria (5).
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+
+[revisions."2016-2017".casillas.constraints]
+enum = ["1", "2", "3", "4", "5", "6"]
+[[revisions."2016-2017".casillas]]
+id = "decl.hecho-imponible"
+continuidad_id = "hecho-imponible"
+# Modern chain starts here; no predecessor link is asserted to the 2004
+# combined-name, country-description or separate category-flag surfaces.
+number = "201"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "hecho_imponible"
+# Design hecho imponible (6).
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+
+[revisions."2016-2017".casillas.constraints]
+enum = ["1", "2", "3", "4", "5", "6"]
+[[revisions."2016-2017".casillas]]
+id = "decl.complementaria"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "the 2016-2017 record design (aeat-dr-309-2016, corpus/.../modelo_309/files/03-309-...-2016-y-2017.xls.extracted.md, sha256 1bb317f154d6) prints campo 56, position 977, length 1, 'Declaracion complementaria', content 'blanco o X' - a marker box - separately from campo 57 at position 978, 'Numero de justificante de la declaracion anterior'. the 2004-2015 record design (aeat-dr-309-2004, corpus/.../modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf, sha256 7a855ce41e9b) has exactly one occurrence of 'declaracion complementaria': campo 61, position 818, length 13, 'declaracion complementaria - no de justificante', which is the justificante number and which the 2004-2015 revision already declares as decl.justificante-anterior. The predecessor form prints no one-character complementaria marker at any position, so this box is new on this edition's official form."
+number = "977"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "declaracion_complementaria"
+continuidad_id = "declaracion-complementaria"
+# Design declaracion complementaria (9).
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+
+[[revisions."2016-2017".casillas]]
+id = "decl.iban"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "the 2016-2017 record design (aeat-dr-309-2016, corpus/.../modelo_309/files/03-309-...-2016-y-2017.xls.extracted.md, sha256 1bb317f154d6) prints campo 58, position 991, length 34, 'IBAN (exclusivamente en Predeclaracion)'. the 2004-2015 record design (aeat-dr-309-2004, corpus/.../modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf, sha256 7a855ce41e9b) contains no occurrence of 'iban' at all, and its campo 3 fixes the tipo de declaracion to the constant 'I' (a ingresar), so the predecessor form carries no refund account field and no refund path whatever. The box did not exist on the predecessor form and is new on this edition's official form."
+number = "991-1024"
+section = ["declarante", "liquidacion"]
+data_type = "iban"
+semantic_role = "devolucion_iban_309"
+continuidad_id = "devolucion-iban-309"
+# Design IBAN (10).
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+
+
+
+
+
+[[revisions."2016-2017".casillas]]
+id = "iva.autorepercutido.intracomunitaria"
+continuidad_id = "iva-cuota-autorepercutida-intracomunitaria"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "NOT A PRINTED BOX. This row carries a slug number equal to its own id and no position: it is a bound cuota leaf in the inversion_sujeto_pasivo section, input_kind bound to a ledger binding rather than to a record byte. the 2016-2017 record design (aeat-dr-309-2016, corpus/.../modelo_309/files/03-309-...-2016-y-2017.xls.extracted.md, sha256 1bb317f154d6) lists 61 positional campos and prints no field of this name; the 2004-2015 record design (aeat-dr-309-2004, corpus/.../modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf, sha256 7a855ce41e9b) lists 64 positional campos and prints none either. The only printed liquidacion fields either design carries are the numbered boxes [01]-[24], which this modelo declares as separate rows. The row is absent from the predecessor edition because it is not on the form at all."
+number = "iva.autorepercutido.intracomunitaria"
+section = ["iva", "no_periodica", "inversion_sujeto_pasivo"]
+semantic_role = "iva_cuota_autorepercutida_intracomunitaria"
+input_kind = "bound"
+binding = "modelo-309-iva-autorepercutido-intracomunitaria-cuota"
+legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
+
+[[revisions."2016-2017".casillas]]
+id = "iva.soportado.recargo-equivalencia"
+continuidad_id = "iva-cuota-soportada-recargo-equivalencia"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "NOT A PRINTED BOX. This row carries a slug number equal to its own id and no position: it is a bound cuota leaf in the soportado section, input_kind bound to a ledger binding rather than to a record byte. the 2016-2017 record design (aeat-dr-309-2016, corpus/.../modelo_309/files/03-309-...-2016-y-2017.xls.extracted.md, sha256 1bb317f154d6) lists 61 positional campos and prints no field of this name; the 2004-2015 record design (aeat-dr-309-2004, corpus/.../modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf, sha256 7a855ce41e9b) lists 64 positional campos and prints none either. The only printed liquidacion fields either design carries are the numbered boxes [01]-[24], which this modelo declares as separate rows. The row is absent from the predecessor edition because it is not on the form at all."
+number = "iva.soportado.recargo-equivalencia"
+section = ["iva", "no_periodica", "soportado"]
+semantic_role = "iva_cuota_soportada_recargo_equivalencia"
+input_kind = "bound"
+binding = "modelo-309-iva-soportado-recargo-equivalencia-cuota"
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
+
+[[revisions."2016-2017".casillas]]
+id = "iva.cuota-no-periodica-total"
+continuidad_id = "iva-cuota-no-periodica-total"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "NOT A PRINTED BOX. This row is declared internal_only = true, input_kind computed, driven by the formula modelo-309-iva-cuota-no-periodica-total, and carries a slug number with no position. the 2016-2017 record design (aeat-dr-309-2016, corpus/.../modelo_309/files/03-309-...-2016-y-2017.xls.extracted.md, sha256 1bb317f154d6) lists 61 positional campos and prints no such field; the 2004-2015 record design (aeat-dr-309-2004, corpus/.../modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf, sha256 7a855ce41e9b) lists 64 positional campos and prints none either. The printed totals both designs do carry are the numbered boxes [22] total cuota devengada and [24] resultado a ingresar, which this modelo declares as separate rows. The row is absent from the predecessor edition because it is not on the form at all."
+internal_only = true
+number = "iva.cuota-no-periodica-total"
+section = ["iva", "no_periodica", "totales"]
+semantic_role = "iva_cuota_no_periodica_total"
+input_kind = "computed"
+formula = "modelo-309-iva-cuota-no-periodica-total"
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]

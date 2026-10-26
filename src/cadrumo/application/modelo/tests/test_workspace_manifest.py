@@ -1,0 +1,466 @@
+"""Integration contracts for the generated Modelo Workspace field manifest."""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from functools import cache
+from typing import TYPE_CHECKING, Annotated, Literal, get_args
+
+import pytest
+from pydantic import BaseModel, ValidationError
+
+from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.binding_provider_registration import BINDING_PROVIDER_REGISTRATIONS
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
+from ..workspace_manifest import (
+    ModeloWorkspaceFieldManifestEntryV1,
+    ModeloWorkspaceFieldManifestV1,
+    ModeloWorkspaceManifestCapture,
+    ModeloWorkspaceManifestCaptureError,
+    ModeloWorkspaceManifestCurrentCoordinate,
+    _manifest_digest,
+    _model_annotations,
+    _Node,
+    _walk_annotation,
+    capture_modelo_workspace_manifest,
+    capture_modelo_workspace_manifest_for_inspection,
+    generate_modelo_workspace_field_manifest,
+    generate_modelo_workspace_field_manifest_for_inspection,
+)
+from ..workspace_models import ModeloWorkspaceSchemaClassification, ModeloWorkspaceSchemaReferenceV1
+from ..workspace_producers import (
+    MODELO_WORKSPACE_FIELD_MANIFEST_PRODUCER_CONTRACT_V1,
+    ModeloWorkspaceContributorKindV1,
+)
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+
+
+type _NestedTraversalAlias = Mapping[str, tuple[int, ...]]
+
+if TYPE_CHECKING:
+
+    class MissingWorkspaceType: ...
+
+
+class _NestedTraversalModel(BaseModel):
+    value: str
+
+
+class _ForwardReferenceLeaf(BaseModel):
+    value: Literal["forward"]
+
+
+class _ForwardReferenceRoot(BaseModel):
+    child: _ForwardReferenceLeaf
+
+
+class _AnnotatedForwardReferenceRoot(BaseModel):
+    child: Annotated[_ForwardReferenceLeaf, "workspace-contract"]
+
+
+class _UnresolvedForwardReference(BaseModel):
+    missing: MissingWorkspaceType
+
+
+@cache
+def _snapshot():
+    """Use one real, exported authority snapshot with generated export layouts."""
+    return published_snapshot("303", filing_year=2025, period="4T")
+
+
+@cache
+def _manifest() -> ModeloWorkspaceFieldManifestV1:
+    return generate_modelo_workspace_field_manifest(_snapshot())
+
+
+@cache
+def _inspection():
+    """Use one real, exported static-inspection projection for the same coordinate."""
+    with bundled_indexed_authority().operation() as operation:
+        return operation.capture_law_selected_projection("303", filing_year=2025, period="4T").projection
+
+
+@cache
+def _inspection_manifest() -> ModeloWorkspaceFieldManifestV1:
+    return generate_modelo_workspace_field_manifest_for_inspection(_inspection())
+
+
+def _rebuild_manifest(
+    manifest: ModeloWorkspaceFieldManifestV1,
+    *,
+    traversal_roots: tuple[str, ...] | None = None,
+    entries: tuple[ModeloWorkspaceFieldManifestEntryV1, ...] | None = None,
+) -> ModeloWorkspaceFieldManifestV1:
+    roots = manifest.traversal_roots if traversal_roots is None else traversal_roots
+    manifest_entries = manifest.entries if entries is None else entries
+    return ModeloWorkspaceFieldManifestV1(
+        traversal_roots=roots,
+        entries=manifest_entries,
+        manifest_digest=_manifest_digest(roots, manifest_entries),
+    )
+
+
+def test_workspace_manifest_is_a_real_authority_fixed_point_with_safe_classifications() -> None:
+    snapshot = _snapshot()
+    manifest = _manifest()
+
+    assert generate_modelo_workspace_field_manifest(snapshot) == manifest
+    assert manifest.entries == tuple(sorted(manifest.entries, key=lambda entry: entry.path))
+    assert len({entry.path for entry in manifest.entries}) == len(manifest.entries)
+    assert {entry.classification for entry in manifest.entries} == {
+        ModeloWorkspaceSchemaClassification.PROJECTED,
+        ModeloWorkspaceSchemaClassification.DERIVED,
+        ModeloWorkspaceSchemaClassification.BACKEND_ONLY,
+    }
+    assert any(entry.path.startswith("derived.export_layout.") for entry in manifest.entries)
+    assert all(
+        entry.classification is ModeloWorkspaceSchemaClassification.DERIVED
+        for entry in manifest.entries
+        if entry.path.startswith("derived.export_layout.")
+    )
+    assert any(entry.destination is not None for entry in manifest.entries)
+    assert any(entry.reason == "selector_configuration" for entry in manifest.entries)
+
+
+def test_workspace_manifest_includes_every_public_selector_root_and_its_extra_universe() -> None:
+    manifest = _manifest()
+    selector_roots = tuple(root for root in manifest.traversal_roots if root.startswith("selector."))
+    selector_entries = tuple(entry for entry in manifest.entries if entry.path.startswith("selector."))
+
+    expected_roots = tuple(sorted(f"selector.{kind.value}" for kind in BINDING_PROVIDER_REGISTRATIONS))
+    assert selector_roots == expected_roots
+    assert selector_entries
+    assert len(selector_entries) < len(manifest.entries)
+    for root in selector_roots:
+        assert any(entry.path.startswith(f"{root}.") for entry in selector_entries)
+
+    without_selectors = _rebuild_manifest(
+        manifest,
+        traversal_roots=tuple(root for root in manifest.traversal_roots if not root.startswith("selector.")),
+        entries=tuple(entry for entry in manifest.entries if not entry.path.startswith("selector.")),
+    )
+    assert without_selectors != generate_modelo_workspace_field_manifest(_snapshot())
+
+
+def test_workspace_manifest_walks_existing_tagged_union_and_collection_coordinates() -> None:
+    nodes: dict[str, _Node] = {}
+    _walk_annotation(
+        annotation=ModeloWorkspaceSchemaReferenceV1,
+        path="workspace_schema_reference",
+        nodes=nodes,
+        visited=set(),
+        active=(),
+        discriminator=None,
+    )
+
+    assert any(".variant=kind=casilla" in path for path in nodes)
+    assert any(".variant=kind=formula_operand_casilla" in path for path in nodes)
+    assert any("collection_item" in entry.path for entry in _manifest().entries)
+    assert len(nodes) == len(set(nodes))
+
+
+def test_workspace_manifest_projects_only_representable_live_formula_operands() -> None:
+    """M303 proves compiler grammar cannot masquerade as a Workspace operand DTO."""
+    entries_by_suffix = {
+        entry.path.removeprefix("registry_snapshot.revision.formulas.collection_item.expression."): entry
+        for entry in _manifest().entries
+        if entry.path.startswith("registry_snapshot.revision.formulas.collection_item.expression.")
+    }
+
+    projected = entries_by_suffix["binding.variant=union=BindingId"]
+    assert projected.classification is ModeloWorkspaceSchemaClassification.PROJECTED
+    assert projected.destination == "ModeloWorkspaceFormulaOperandReferenceV1"
+
+    literal = entries_by_suffix["literal.variant=union=Decimal"]
+    assert literal.classification is ModeloWorkspaceSchemaClassification.PROJECTED
+    assert literal.destination == "ModeloWorkspaceFormulaOperandReferenceV1"
+
+    for suffix in (
+        "binding.variant=union=NoneType",
+        "op.variant=union=Literal",
+        "dispatch_table.variant=union=Mapping",
+    ):
+        entry = entries_by_suffix[suffix]
+        assert entry.classification is ModeloWorkspaceSchemaClassification.BACKEND_ONLY
+        assert entry.destination is None
+        assert entry.owner == "domain.calculations.registry"
+        assert entry.reason == "registry_declaration"
+
+
+def test_workspace_manifest_walks_nested_union_containers_and_aliases() -> None:
+    nodes: dict[str, _Node] = {}
+    _walk_annotation(
+        annotation=_NestedTraversalAlias | tuple[_NestedTraversalModel, ...] | Literal["literal"] | int | None,
+        path="synthetic",
+        nodes=nodes,
+        visited=set(),
+        active=(),
+        discriminator=None,
+    )
+
+    assert any(path.endswith(".mapping_value.collection_item") for path in nodes)
+    assert any(path.endswith(".collection_item.value") for path in nodes)
+    assert any(path.endswith("variant=union=Literal") for path in nodes)
+    assert any(path.endswith("variant=union=int") for path in nodes)
+    assert any(path.endswith("variant=union=NoneType") for path in nodes)
+
+
+def test_workspace_manifest_resolves_future_forward_references_with_public_typing_apis() -> None:
+    """The walker receives real types while retaining ``Annotated`` metadata."""
+    resolved = _model_annotations(_ForwardReferenceRoot)
+    assert resolved["child"] is _ForwardReferenceLeaf
+
+    annotated = _model_annotations(_AnnotatedForwardReferenceRoot)["child"]
+    assert get_args(annotated)[0] is _ForwardReferenceLeaf
+    assert get_args(annotated)[1:] == ("workspace-contract",)
+
+    nodes: dict[str, _Node] = {}
+    _walk_annotation(
+        annotation=_ForwardReferenceRoot,
+        path="forward",
+        nodes=nodes,
+        visited=set(),
+        active=(),
+        discriminator=None,
+    )
+    assert "forward.child.value" in nodes
+
+
+def test_workspace_manifest_uses_pydantic_field_annotations_for_local_models() -> None:
+    """A model assembled in a local scope still resolves after public rebuild."""
+
+    class LocalLeaf(BaseModel):
+        value: Literal["local"]
+
+    class LocalRoot(BaseModel):
+        child: LocalLeaf
+
+    LocalRoot.model_rebuild(_types_namespace={"LocalLeaf": LocalLeaf})
+
+    assert _model_annotations(LocalRoot)["child"] is LocalLeaf
+
+
+def test_workspace_manifest_refuses_unresolved_forward_references() -> None:
+    """An unresolved string cannot silently become a schema-type label."""
+    with pytest.raises(ValueError, match=r"_UnresolvedForwardReference\.missing"):
+        _model_annotations(_UnresolvedForwardReference)
+
+
+def test_workspace_manifest_walks_live_dispatch_parameter_identity() -> None:
+    entries = {
+        entry.path: entry
+        for entry in _manifest().entries
+        if entry.path.startswith("registry_snapshot.revision.formulas.collection_item.expression.dispatch_table")
+    }
+    dispatch = entries[
+        "registry_snapshot.revision.formulas.collection_item.expression.dispatch_table.variant=union=Mapping"
+    ]
+    parameter = entries[
+        "registry_snapshot.revision.formulas.collection_item.expression.dispatch_table.variant=union=Mapping.mapping_value"
+    ]
+
+    assert dispatch.classification is ModeloWorkspaceSchemaClassification.BACKEND_ONLY
+    assert dispatch.destination is None
+    assert parameter.schema_type == "ParameterId"
+    assert parameter.classification is ModeloWorkspaceSchemaClassification.PROJECTED
+    assert parameter.destination == "ModeloWorkspaceParameterReferenceV1"
+
+
+def test_workspace_manifest_refuses_duplicate_stale_and_unclassified_fixed_points() -> None:
+    manifest = _manifest()
+    payload = manifest.model_dump()
+    payload["traversal_roots"] = tuple(payload["traversal_roots"])
+    payload["entries"] = tuple([payload["entries"][0], *payload["entries"]])
+    with pytest.raises(ValidationError, match="sorted and unique"):
+        ModeloWorkspaceFieldManifestV1.model_validate(payload)
+
+    stale_payload = manifest.model_dump()
+    stale_payload["traversal_roots"] = tuple(stale_payload["traversal_roots"])
+    stale_payload["entries"] = tuple(stale_payload["entries"][1:])
+    with pytest.raises(ValidationError, match="digest does not reproduce"):
+        ModeloWorkspaceFieldManifestV1.model_validate(stale_payload)
+
+    changed_entry = manifest.entries[0].model_copy(update={"path": "registry_snapshot.unknown_field"})
+    unclassified = _rebuild_manifest(
+        manifest,
+        entries=tuple(sorted((changed_entry, *manifest.entries[1:]), key=lambda entry: entry.path)),
+    )
+    assert unclassified != generate_modelo_workspace_field_manifest(_snapshot())
+
+
+def test_workspace_field_manifest_declares_the_single_s126_contributor_contract() -> None:
+    contract = MODELO_WORKSPACE_FIELD_MANIFEST_PRODUCER_CONTRACT_V1
+
+    assert contract.contributor_kind is ModeloWorkspaceContributorKindV1.FIELD_MANIFEST
+    assert contract.contributor.owner == "application.modelo.workspace_manifest"
+    assert contract.projection_discriminator == "workspace_field_manifest"
+
+
+def test_capture_republishes_the_sole_walker_manifest_without_rewalking() -> None:
+    """The capture carries exactly what the one generating authority produced."""
+    snapshot = _snapshot()
+
+    captured = capture_modelo_workspace_manifest(snapshot)
+
+    assert captured.manifest == generate_modelo_workspace_field_manifest(snapshot)
+    assert generate_modelo_workspace_field_manifest(snapshot) == captured.manifest
+
+
+def test_capture_is_singleflight_and_current_against_its_own_coordinate() -> None:
+    """An unchanged schema denominator shares one generation and stays current."""
+    snapshot = _snapshot()
+
+    first = capture_modelo_workspace_manifest(snapshot)
+    second = capture_modelo_workspace_manifest(snapshot)
+
+    assert first.generation == second.generation
+    assert first.comparison_domain == second.comparison_domain
+
+    current = ModeloWorkspaceManifestCurrentCoordinate(
+        comparison_domain=second.comparison_domain,
+        generation=second.generation,
+    )
+    assert first.require_current(current) is first
+
+
+def test_a_distinct_snapshot_coordinate_is_a_distinct_owner_scope() -> None:
+    """Two filing coordinates never validate each other's capture."""
+    snapshot = _snapshot()
+    other = published_snapshot("303", filing_year=2025, period="3T")
+
+    captured = capture_modelo_workspace_manifest(snapshot)
+    other_capture = capture_modelo_workspace_manifest(other)
+    other_coordinate = ModeloWorkspaceManifestCurrentCoordinate(
+        comparison_domain=other_capture.comparison_domain,
+        generation=other_capture.generation,
+    )
+
+    assert captured.comparison_domain != other_coordinate.comparison_domain
+    with pytest.raises(ModeloWorkspaceManifestCaptureError):
+        captured.require_current(other_coordinate)
+
+
+def test_a_superseded_generation_is_refused_within_one_owner_scope() -> None:
+    """A coordinate from a different manifest digest refuses the earlier capture."""
+    snapshot = _snapshot()
+    captured = capture_modelo_workspace_manifest(snapshot)
+
+    superseded = ModeloWorkspaceManifestCurrentCoordinate(
+        comparison_domain=captured.comparison_domain,
+        generation=captured.generation + 1,
+    )
+
+    with pytest.raises(ModeloWorkspaceManifestCaptureError):
+        captured.require_current(superseded)
+
+
+def test_capture_exposes_no_snapshot_internals_and_no_second_manifest_shape() -> None:
+    """The capture adds a coordinate only; it derives no parallel manifest."""
+    from dataclasses import fields
+
+    snapshot = _snapshot()
+    captured = capture_modelo_workspace_manifest(snapshot)
+
+    assert {field.name for field in fields(ModeloWorkspaceManifestCapture)} == {
+        "manifest",
+        "comparison_domain",
+        "generation",
+    }
+    assert {field.name for field in fields(ModeloWorkspaceManifestCurrentCoordinate)} == {
+        "comparison_domain",
+        "generation",
+    }
+    assert str(snapshot.revision.id) not in captured.comparison_domain
+
+
+# STATIC_INSPECTION gets its own complete manifest, over its own
+# type universe, never a filtered view into the snapshot-rooted manifest ---
+
+
+def test_inspection_manifest_is_a_real_authority_fixed_point_with_safe_classifications() -> None:
+    inspection = _inspection()
+    manifest = _inspection_manifest()
+
+    assert generate_modelo_workspace_field_manifest_for_inspection(inspection) == manifest
+    assert manifest.entries == tuple(sorted(manifest.entries, key=lambda entry: entry.path))
+    assert len({entry.path for entry in manifest.entries}) == len(manifest.entries)
+    assert any(entry.destination is not None for entry in manifest.entries)
+    assert any(entry.reason == "selector_configuration" for entry in manifest.entries)
+    assert all(path.startswith(("registry_revision_inspection", "selector.")) for path in manifest.traversal_roots)
+
+
+def test_inspection_manifest_has_no_export_layout_root() -> None:
+    """RegistryRevisionInspection carries no full ModeloRevision, so it derives no export layout."""
+    manifest = _inspection_manifest()
+
+    assert not any(path.startswith("derived.export_layout.") for path in manifest.traversal_roots)
+    assert not any(entry.path.startswith("derived.export_layout.") for entry in manifest.entries)
+
+
+def test_inspection_manifest_never_reaches_filing_grade_content() -> None:
+    """Admission-honesty: no entry can name a materialization, verification, or filing-state field.
+
+    RegistryRevisionInspection structurally has no such fields at all, so this
+    is a property of the walked type rather than a filter -- the manifest
+    cannot accidentally claim availability the inspection has no data for.
+    """
+    manifest = _inspection_manifest()
+
+    for entry in manifest.entries:
+        # Field names only: a variant coordinate such as ``kind=non_calculation``
+        # names a tag value, not a field the inspection could expose.
+        field_names = ".".join(segment for segment in entry.path.split(".") if "=" not in segment)
+        assert "materializ" not in field_names
+        assert "verification" not in field_names
+        assert "filed_at" not in field_names
+        assert "calculation" not in field_names
+
+
+def test_inspection_manifest_is_stable_across_regeneration() -> None:
+    inspection = _inspection()
+
+    first = generate_modelo_workspace_field_manifest_for_inspection(inspection)
+    second = generate_modelo_workspace_field_manifest_for_inspection(inspection)
+
+    assert first == second
+    assert first.manifest_digest == second.manifest_digest
+
+
+def test_inspection_manifest_digest_differs_from_the_snapshot_manifest_for_the_same_coordinate() -> None:
+    """Two distinct authority claims over the identical (modelo, revision) never collide."""
+    snapshot_manifest = _manifest()
+    inspection_manifest = _inspection_manifest()
+
+    assert snapshot_manifest.manifest_digest != inspection_manifest.manifest_digest
+    assert snapshot_manifest.traversal_roots != inspection_manifest.traversal_roots
+
+
+def test_inspection_capture_is_singleflight_and_current_against_its_own_coordinate() -> None:
+    inspection = _inspection()
+
+    first = capture_modelo_workspace_manifest_for_inspection(inspection)
+    second = capture_modelo_workspace_manifest_for_inspection(inspection)
+
+    assert first.generation == second.generation
+    assert first.comparison_domain == second.comparison_domain
+
+    current = ModeloWorkspaceManifestCurrentCoordinate(
+        comparison_domain=second.comparison_domain,
+        generation=second.generation,
+    )
+    assert first.require_current(current) is first
+
+
+def test_inspection_and_snapshot_manifest_captures_never_share_a_comparison_domain() -> None:
+    """The two admissions' captures must never validate against each other's coordinate."""
+    inspection_captured = capture_modelo_workspace_manifest_for_inspection(_inspection())
+    snapshot_capture = capture_modelo_workspace_manifest(_snapshot())
+    snapshot_coordinate = ModeloWorkspaceManifestCurrentCoordinate(
+        comparison_domain=snapshot_capture.comparison_domain,
+        generation=snapshot_capture.generation,
+    )
+
+    assert inspection_captured.comparison_domain != snapshot_coordinate.comparison_domain
+    with pytest.raises(ModeloWorkspaceManifestCaptureError):
+        inspection_captured.require_current(snapshot_coordinate)

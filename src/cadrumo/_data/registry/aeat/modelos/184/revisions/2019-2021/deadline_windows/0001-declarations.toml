@@ -1,0 +1,29 @@
+[[revisions."2019-2021".deadline_windows]]
+id = "modelo-184-2019-0a"
+filing_year = 2019
+period = "2019 0A"
+period_kind = "annual"
+opens_on = 2020-02-01
+closes_on = 2020-02-29
+legal_refs = ["orden-hap-2250-2015:art-4", "ley-58-2003:art-93"]
+source_refs = ["boe-modelo-184-2015-form", "aeat-modelo-184-procedure"]
+
+[[revisions."2019-2021".deadline_windows]]
+id = "modelo-184-2020-0a"
+filing_year = 2020
+period = "2020 0A"
+period_kind = "annual"
+opens_on = 2021-02-01
+closes_on = 2021-02-28
+legal_refs = ["orden-hap-2250-2015:art-4", "ley-58-2003:art-93"]
+source_refs = ["boe-modelo-184-2015-form", "aeat-modelo-184-procedure"]
+
+[[revisions."2019-2021".deadline_windows]]
+id = "modelo-184-2021-0a"
+filing_year = 2021
+period = "2021 0A"
+period_kind = "annual"
+opens_on = 2022-02-01
+closes_on = 2022-02-28
+legal_refs = ["orden-hap-2250-2015:art-4", "ley-58-2003:art-93"]
+source_refs = ["boe-modelo-184-2015-form", "aeat-modelo-184-procedure"]

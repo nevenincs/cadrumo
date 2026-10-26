@@ -1,0 +1,91 @@
+"""Read the confirmed external filing without implying a local reconciliation."""
+
+from typing import ClassVar, override
+
+from textual.app import ComposeResult
+from textual.binding import Binding
+from textual.containers import Vertical
+from textual.screen import ModalScreen
+from textual.widgets import Button, Static
+
+from ....application.modelo.declarations_list import DeclarationListRow, aeat_filing_notes
+from ....core.external_constants import OutputLanguage
+from ....core.i18n.render import output_language, tr
+from ..components.language import localized, refresh_localized_widgets
+from ..components.theme import tokenised
+from ..components.widgets import ContentScroll
+from .row_words import row_lines
+
+
+class ExternalFilingDetailsScreen(ModalScreen[None]):
+    """Present independent official completion and the installed action limits."""
+
+    BINDINGS: ClassVar = [Binding("escape", "close", show=False), Binding("t", "technical", show=False)]
+    DEFAULT_CSS = tokenised("""
+    ExternalFilingDetailsScreen { align: center middle; }
+    #external-filing-dialog {
+        width: 100%; height: $cadrumo-modal-height;
+        padding: $cadrumo-gutter-y $cadrumo-gutter;
+        border: $cadrumo-radius-overlay $primary;
+    }
+    #external-filing-body { height: 1fr; }
+    #external-filing-technical { display: none; height: auto; }
+    #external-filing-close { width: 100%; }
+    """)
+
+    def __init__(self, row: DeclarationListRow) -> None:
+        """Keep only the application row's safe observation metadata."""
+        super().__init__()
+        self.row = row
+
+    @override
+    def compose(self) -> ComposeResult:
+        language = OutputLanguage(output_language())
+        left, right = row_lines(self.row, language, can_open=False, can_create=False)
+        with Vertical(id="external-filing-dialog"):
+            with ContentScroll(id="external-filing-body"):
+                yield Static("\n".join(left + right), id="external-filing-summary", markup=False)
+                yield Static(self._notes_text(language), id="external-filing-notes", markup=False)
+                yield Static(id="external-filing-technical", markup=False)
+            yield localized(
+                Button(tr("workspace.modelo.issues.technical"), id="external-filing-more"),
+                "workspace.modelo.issues.technical",
+            )
+            yield localized(
+                Button(tr("workspace.modelo.key.close"), id="external-filing-close"),
+                "workspace.modelo.key.close",
+            )
+
+    def _notes_text(self, language: OutputLanguage) -> str:
+        """What the application says about a return the AEAT holds, one note to a line."""
+        return "\n".join(aeat_filing_notes(self.row, language) or ())
+
+    def on_mount(self) -> None:
+        """Make closing the primary keyboard action."""
+        self.query_one("#external-filing-close", Button).focus()
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Close or reveal the exact observed filing reference on request."""
+        if event.button.id == "external-filing-more":
+            self.action_technical()
+        elif event.button.id == "external-filing-close":
+            self.action_close()
+
+    def action_technical(self) -> None:
+        """Reveal the source reference without borrowing a local draft's amount."""
+        detail = self.query_one("#external-filing-technical", Static)
+        detail.display = not detail.display
+        reference = None if self.row.calendar is None else self.row.calendar.aeat_reference_id
+        detail.update(reference or tr("workspace.declarations.calendar.none"))
+
+    def action_close(self) -> None:
+        """Return to the selected portfolio row."""
+        self.dismiss(None)
+
+    async def refresh_language(self) -> None:
+        """Reword the open dialog without changing its inputs or decision."""
+        refresh_localized_widgets(self)
+        language = OutputLanguage(output_language())
+        left, right = row_lines(self.row, language, can_open=False, can_create=False)
+        self.query_one("#external-filing-summary", Static).update("\n".join(left + right))
+        self.query_one("#external-filing-notes", Static).update(self._notes_text(language))

@@ -1,0 +1,172 @@
+"""Real-authority tests for the non-filing revision inspection projection."""
+
+from __future__ import annotations
+
+import ast
+
+import pytest
+
+from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
+from dev._paths import REPO_ROOT
+
+from ..compiler.authority import compiled_bundled_authority
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+_REPOSITORY_ROOT = REPO_ROOT
+_SOURCE_ROOT = _REPOSITORY_ROOT / "src" / "cadrumo"
+_STATIC_CONSUMERS = (
+    _REPOSITORY_ROOT / "dev" / "registry" / "pipeline" / "semantic_map_validation.py",
+    _REPOSITORY_ROOT / "dev" / "registry" / "pipeline" / "record_design_intermediate.py",
+    _REPOSITORY_ROOT / "dev" / "registry" / "pipeline" / "joined_record_design.py",
+    _REPOSITORY_ROOT / "dev" / "registry" / "analysis" / "_dp30302_field_matrix.py",
+    _REPOSITORY_ROOT / "dev" / "registry" / "pipeline" / "_export_tree.py",
+    _REPOSITORY_ROOT / "dev" / "registry" / "pipeline" / "export_tree_field_derivation.py",
+    _REPOSITORY_ROOT / "dev" / "registry" / "pipeline" / "variable_envelope.py",
+)
+_LEGACY_STATIC_SYMBOLS = frozenset(
+    {
+        "RegistrySnapshot",
+        "build_snapshot",
+        "load_modelo_directory",
+        "validate_snapshot_source_authority",
+        "validate_semantic_map_against_inspection",
+        "join_record_design_semantics_inspection",
+    },
+)
+
+
+def _attribute_path(node: ast.expr) -> str | None:
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute) and (parent := _attribute_path(node.value)) is not None:
+        return f"{parent}.{node.attr}"
+    return None
+
+
+def _registry_api_references(tree: ast.AST, symbols: frozenset[str]) -> set[str]:
+    """Resolve direct and aliased registry API imports through the AST."""
+    module_aliases: dict[str, str] = {}
+    referenced: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom):
+            referenced.update(alias.name for alias in node.names if alias.name in symbols)
+            if node.module is not None:
+                for alias in node.names:
+                    qualified = f"{node.module}.{alias.name}"
+                    if qualified.startswith("cadrumo.domain.calculations.registry"):
+                        module_aliases[alias.asname or alias.name] = qualified
+        elif isinstance(node, ast.Import):
+            for alias in node.names:
+                local = alias.asname or alias.name.split(".", maxsplit=1)[0]
+                module_aliases[local] = alias.name
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Attribute) or (path := _attribute_path(node)) is None:
+            continue
+        local, _, suffix = path.partition(".")
+        imported_module = module_aliases.get(local)
+        if imported_module is None:
+            continue
+        qualified = f"{imported_module}.{suffix}" if suffix else imported_module
+        if qualified.startswith("cadrumo.domain.calculations.registry.") and node.attr in symbols:
+            referenced.add(node.attr)
+    return referenced
+
+
+def _function_definitions(tree: ast.AST) -> set[str]:
+    return {node.name for node in ast.walk(tree) if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))}
+
+
+def test_m303_midyear_designs_are_canonically_selected_without_a_snapshot() -> None:
+    """Static inspection follows temporal selection yet retains no filing context."""
+    early = compiled_bundled_authority().inspect_revision("303", filing_year=2024, period="2T")
+    late = compiled_bundled_authority().inspect_revision("303", filing_year=2024, period="3T")
+
+    assert isinstance(early, RegistryRevisionInspection)
+    assert early.revision_id == "2024-hasta-08-y-2t"
+    assert late.revision_id == "2024-desde-09-y-3t"
+    assert "aeat-dr-303-2024-early" in early.revision_source_refs
+    assert "aeat-dr-303-2024-late" in late.revision_source_refs
+    assert "filing_year" not in RegistryRevisionInspection.model_fields
+    assert "period" not in RegistryRevisionInspection.model_fields
+
+
+def test_m038_inspection_retains_exact_model_law_and_construct_evidence() -> None:
+    """The non-filing projection carries the selected revision's evidence union.
+
+    The expected values track modelo 038's re-grounding from the 2002 orden onto
+    Orden HAC/646/2024: the revision was renamed, its legal refs gained the 2024
+    orden, its layout source became the 2024 design, and its parity ref was
+    renamed to match. The casillas, bindings and cross references are unchanged
+    by that move. This test asserted the pre-move values and had therefore never
+    passed since; four of its seven assertions were stale together.
+    """
+    inspection = compiled_bundled_authority().inspect_revision("038", filing_year=2025, period="01")
+
+    assert inspection.revision_id == "2025-y-siguientes"
+    assert inspection.legal_ref_ids == frozenset(
+        {
+            "ley-58-2003:art-93",
+            "orden-hac-66-2002:art-1",
+            "orden-hac-66-2002:art-6",
+            "orden-hac-646-2024:art-1",
+            "orden-hac-646-2024:df-unica",
+        },
+    )
+    assert inspection.source_ref_ids == frozenset(
+        {
+            "aeat-dr-038-2024",
+            "enrolled-modelo-038-procedure",
+        },
+    )
+    assert inspection.casilla_ids == frozenset({"decl.ejercicio", "decl.tipo-declaracion"})
+    assert inspection.binding_ids == frozenset()
+    assert tuple(ref.id for ref in inspection.workbook_parity_refs) == ("modelo-038-static-layout",)
+    assert inspection.live_cross_references == ()
+
+
+_MINIMUM_SMALL_CORPUS = 2
+
+
+def test_static_map_authority_has_no_snapshot_or_raw_loader_compatibility() -> None:
+    """Static compiler stages admit only inspection authority, never filing state.
+
+    Five consumers carry this boundary. Both claims below are absences over
+    that set, so a relocation emptying it reports the boundary intact.
+    """
+    assert len(_STATIC_CONSUMERS) >= _MINIMUM_SMALL_CORPUS, (
+        f"only {len(_STATIC_CONSUMERS)} static consumer(s) were resolved; below this both "
+        "absence claims below hold because there is nothing to inspect"
+    )
+
+    imported_legacy = {
+        path.relative_to(_REPOSITORY_ROOT): _registry_api_references(
+            ast.parse(path.read_text(encoding="utf-8")), _LEGACY_STATIC_SYMBOLS
+        )
+        for path in _STATIC_CONSUMERS
+        if _registry_api_references(ast.parse(path.read_text(encoding="utf-8")), _LEGACY_STATIC_SYMBOLS)
+    }
+    defined_legacy = {
+        path.relative_to(_REPOSITORY_ROOT): _function_definitions(
+            ast.parse(path.read_text(encoding="utf-8"))
+        ).intersection(_LEGACY_STATIC_SYMBOLS)
+        for path in _STATIC_CONSUMERS
+        if _function_definitions(ast.parse(path.read_text(encoding="utf-8"))).intersection(_LEGACY_STATIC_SYMBOLS)
+    }
+
+    assert imported_legacy == {}
+    assert defined_legacy == {}
+
+
+def test_legacy_census_detects_private_module_alias_bypass() -> None:
+    """A static compiler cannot restore snapshot/loaders through module aliases."""
+    legacy_alias = ast.parse(
+        "import cadrumo.domain.calculations.registry.loader as loader\nvalue = loader.load_modelo_directory\n"
+    )
+    imported_legacy_alias = ast.parse(
+        "from cadrumo.domain.calculations.registry import _loader as l\nvalue = l.load_modelo_directory\n"
+    )
+
+    assert _registry_api_references(legacy_alias, _LEGACY_STATIC_SYMBOLS) == {"load_modelo_directory"}
+    assert _registry_api_references(imported_legacy_alias, _LEGACY_STATIC_SYMBOLS) == {"load_modelo_directory"}

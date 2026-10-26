@@ -1,0 +1,194 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "edit",
+        "docs-sequence-sandbox",
+        "--quiet",
+        "--accept-defaults",
+        "--irpf-income-categories",
+        "trabajo",
+        "--taxpayer-birth-date",
+        "1985-06-15",
+        "--tax-residence-ccaa",
+        "madrid",
+        "--taxation-type",
+        "1",
+        "--taxpayer-sex",
+        "H",
+        "--taxpayer-marital-status",
+        "1"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "create",
+        "--modelo",
+        "100",
+        "--year",
+        "2025",
+        "--period",
+        "0A"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "calculate",
+        "--modelo",
+        "100",
+        "--year",
+        "2025",
+        "--period",
+        "0A",
+        "--casilla",
+        "0003=24000",
+        "--binding",
+        "renta-certificado-trabajo-retenciones=2400",
+        "--binding",
+        "renta-base-liquidable-negativa-general-anterior=0"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "verify",
+        "--modelo",
+        "100",
+        "--year",
+        "2025",
+        "--period",
+        "0A"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "export",
+        "--modelo",
+        "100",
+        "--year",
+        "2025",
+        "--period",
+        "0A",
+        "--output",
+        "./modelo-100.boe"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.export",
+        "notices": [
+          {
+            "action": null,
+            "code": "modelo.export.local_export_not_official_evidence",
+            "context": {
+              "evidence_status": "local_export_not_official_aeat_filing_evidence",
+              "filing_year": "2025",
+              "modelo": "100",
+              "period": "0A"
+            },
+            "message": "The exported file is not an AEAT filing receipt.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
+        "result": {
+          "bucket_event_id": "62edc63629e6bf6190ad8d64897f564ca72e137ed1fe0151cb82032381e3f76d",
+          "bucket_id": "<bucket-id>",
+          "byte_size": 2207,
+          "calculation_revision_id": "f2338e419417695788b877549a1cfecca523cd2c308d52a967acbc3323621bf4",
+          "file_sha256": "e39e9ea0333bce06abf58cece98e21ce5dabfaf7b34b39643740f97e796dd1d0",
+          "filing_year": 2025,
+          "format": "xml-dictionary",
+          "iva_wallet_decision_provenance": null,
+          "modelo": "100",
+          "operation": "modelo.export",
+          "output_path": "<sandbox-workdir>/modelo-100.boe",
+          "payment_election": null,
+          "period": {
+            "code": "0A",
+            "filing_year": 2025
+          },
+          "prior_domiciliation_election": {
+            "baseline_evidence_reference_id": null,
+            "baseline_filing_record_id": null,
+            "baseline_result_disposition": null,
+            "baseline_source_header_locator": null,
+            "election": "keep"
+          },
+          "refund_election": null,
+          "resolved_result_disposition": null,
+          "software_identity_grade": null,
+          "work_unit_id": "d36dd9ebe261dac47a36150e43ff53fdb815d4d1a45c0adbd4b8cdafd119d9fd"
+        },
+        "schema_version": "2",
+        "status": "warning"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 2,
+  "sequence_id": "modelo-100-export-file"
+}

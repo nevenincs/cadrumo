@@ -1,0 +1,137 @@
+from __future__ import annotations
+
+from cadrumo_client.commands.parameters import ArgumentSpec
+from cadrumo_client.commands.shared_contracts import (
+    DeferredTarget,
+    LazyBinding,
+    ParameterConstraint,
+    ParameterDefault,
+    ResultSchemaSpec,
+    SchemaState,
+    ValueContract,
+)
+from cadrumo_client.commands.shared_contracts import translation_key as _key
+from cadrumo_client.commands.spec import CommandSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
+
+from ._app_live_command_spec_support import (
+    _ENCRYPTED_LOCAL_READ_POLICY,
+    _LEAF_INVOCATION,
+    _METADATA_GROUP_INVOCATION,
+    _METADATA_POLICY,
+    _OPTIONAL_MODELOS_OPTION,
+    _OPTIONAL_YEAR_FROM_OPTION,
+    _OPTIONAL_YEAR_OPTION,
+    _OPTIONAL_YEAR_TO_OPTION,
+    _PROFILE_BOUND_NETWORK_CAPTURE_POLICY,
+    NO_RESULT_SCHEMA,
+)
+
+LIVE_EXPEDIENTES_COMMAND_SPECS: tuple[CommandSpec, ...] = (
+    CommandSpec(
+        "app_live_expedientes",
+        "app_live",
+        "expedientes",
+        kind=CommandNodeKind.GROUP,
+        help_key=_key("cli.app.live.expedientes.app_help"),
+        short_help_key=None,
+        invocation=_METADATA_GROUP_INVOCATION,
+        parameters=(),
+        policy=_METADATA_POLICY,
+        handler=None,
+        result_schema=NO_RESULT_SCHEMA,
+    ),
+    CommandSpec(
+        "app_live_expedientes_pull",
+        "app_live_expedientes",
+        "pull",
+        kind=CommandNodeKind.LEAF,
+        help_key=_key("cli.app.live.expedientes.pull_help"),
+        short_help_key=None,
+        invocation=_LEAF_INVOCATION,
+        parameters=(
+            _OPTIONAL_MODELOS_OPTION,
+            _OPTIONAL_YEAR_OPTION,
+            _OPTIONAL_YEAR_FROM_OPTION,
+            _OPTIONAL_YEAR_TO_OPTION,
+        ),
+        policy=_PROFILE_BOUND_NETWORK_CAPTURE_POLICY,
+        handler=LazyBinding.available(
+            DeferredTarget(".app_live_expedientes_commands", "expedientes_pull", __package__)
+        ),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            target=DeferredTarget(".app_live_expedientes_results", "ExpedientesCaptureResult", __package__),
+            identity="app.live.expedientes.pull",
+        ),
+    ),
+    CommandSpec(
+        "app_live_expedientes_list",
+        "app_live_expedientes",
+        "list",
+        kind=CommandNodeKind.LEAF,
+        help_key=_key("cli.app.live.expedientes.list_help"),
+        short_help_key=None,
+        invocation=_LEAF_INVOCATION,
+        parameters=(),
+        policy=_ENCRYPTED_LOCAL_READ_POLICY,
+        handler=LazyBinding.available(
+            DeferredTarget(".app_live_expedientes_commands", "expedientes_list", __package__)
+        ),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            target=DeferredTarget(".app_live_expedientes_results", "ExpedientesListResult", __package__),
+            identity="app.live.expedientes.list",
+        ),
+    ),
+    CommandSpec(
+        "app_live_expedientes_view",
+        "app_live_expedientes",
+        "view",
+        kind=CommandNodeKind.LEAF,
+        help_key=_key("cli.app.live.expedientes.view_help"),
+        short_help_key=None,
+        invocation=_LEAF_INVOCATION,
+        parameters=(
+            ArgumentSpec(
+                name="snapshot_id",
+                value=ValueContract(DeferredTarget("builtins", "str")),
+                default=ParameterDefault.required(),
+                help_key=_key("cli.app.live.expedientes.snapshot_id_help"),
+                constraint=ParameterConstraint(minimum=None, maximum=None),
+            ),
+        ),
+        policy=_ENCRYPTED_LOCAL_READ_POLICY,
+        handler=LazyBinding.available(
+            DeferredTarget(".app_live_expedientes_commands", "expedientes_show", __package__)
+        ),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            target=DeferredTarget(".app_live_expedientes_results", "ExpedientesViewResult", __package__),
+            identity="app.live.expedientes.view",
+        ),
+    ),
+    CommandSpec(
+        "app_live_expedientes_latest",
+        "app_live_expedientes",
+        "latest",
+        kind=CommandNodeKind.LEAF,
+        help_key=_key("cli.app.live.expedientes.latest_help"),
+        short_help_key=None,
+        invocation=_LEAF_INVOCATION,
+        parameters=(),
+        policy=_ENCRYPTED_LOCAL_READ_POLICY,
+        handler=LazyBinding.available(
+            DeferredTarget(".app_live_expedientes_commands", "expedientes_latest", __package__)
+        ),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            target=DeferredTarget(".app_live_expedientes_results", "ExpedientesLatestResult", __package__),
+            identity="app.live.expedientes.latest",
+        ),
+    ),
+)
+
+__all__ = ["LIVE_EXPEDIENTES_COMMAND_SPECS"]
+"""Authored CommandSpec declarations for the live expedientes service."""
+"""Authored CommandSpec declarations for the live expedientes service."""

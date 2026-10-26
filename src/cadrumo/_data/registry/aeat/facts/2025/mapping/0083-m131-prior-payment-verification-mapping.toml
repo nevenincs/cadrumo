@@ -1,0 +1,35 @@
+[fact]
+fact_id = "m130-prior-payment-verification-mapping"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "m130-prior-payment-verification-mapping:2019-y-siguientes"
+date_axis = "filing_period"
+valid_from = 2019-01-01
+legal_refs = ["rd-439-2007:art-110"]
+source_refs = ["aeat-modelo-130-instructions"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = [
+  "Casilla 05.",
+  "la suma de las cantidades positivas consignadas en la casilla 07 de las autoliquidaciones, modelo 130, correspondientes a los trimestres anteriores del mismo ejercicio",
+  "minorada en el importe de la suma de las cantidades consignadas en la casilla 16",
+]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "modelo", value = "130" },
+  { key = "revision", value = "2019-y-siguientes" },
+  { key = "casilla.prior_payment", value = "05" },
+  { key = "casilla.cumulative_income", value = "01" },
+  { key = "casilla.prior_positive_part", value = "07" },
+  { key = "casilla.prior_minoracion", value = "16" },
+  { key = "relation.kind", value = "same_ejercicio_previous_period" },
+  { key = "relation.predicate.not_deducted", value = "prior_payment_zero_when_cumulative_income_positive_and_prior_filing_present" },
+  { key = "relation.predicate.minoracion_not_captured", value = "prior_positive_part_present_and_prior_minoracion_absent" },
+  { key = "applicability.source", value = "selected_modelo_131_revision" },
+]

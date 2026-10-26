@@ -1,0 +1,13 @@
+[
+  {
+    "chapter_id": "cap1",
+    "title": "Cuestiones generales",
+    "summary": "Concepto del Impuesto sobre Sociedades, contribuyentes, obligación de declarar, período impositivo y devengo.",
+    "sections": [
+      {
+        "section_id": "sec1",
+        "relative_path": "structure/sections/cap1/sec1.json"
+      }
+    ]
+  }
+]

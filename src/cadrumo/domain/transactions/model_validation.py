@@ -1,0 +1,178 @@
+"""Validation helpers for strict transaction boundary models.
+
+The transaction models keep their Pydantic validators on the boundary records,
+while this helper module owns the reusable parsing and invariant checks those
+validators call. It normalizes UTC timestamps, classifier
+provenance, confidence ranges, identifier tuples, lineage text, and non-negative
+tax amount fields without turning those rules into a separate public API.
+
+See Also:
+    :class:`~domain.transactions.models.Transaction`
+        Strict transaction record whose validators delegate to these helpers.
+    :class:`~domain.transactions.enums.BusinessClassification`
+        Classification enum coupled to ``business_pct`` by this module.
+    :class:`~domain.transactions.errors.TransactionValidationError`
+        Typed domain error raised for validation failures.
+    :func:`~core.time.utc.validate_utc_aware`
+        UTC-awareness gate wrapped into the transaction error hierarchy.
+"""
+
+from __future__ import annotations
+
+from datetime import datetime
+from decimal import Decimal
+
+from ...core.errors.hierarchy import CoreValidationError
+from ...core.external_constants import CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL
+from ...core.time.utc import parse_iso_datetime, validate_utc_aware
+from ...core.unit_proportion import is_unit_proportion
+from .enums import BusinessClassification, takes_business_share
+from .errors import TransactionValidationError
+
+_NON_NEGATIVE_DECIMAL_HINTS = {
+    "taxable_base": (
+        "taxable_base must be non-negative; it is the IVA-exclusive base amount, "
+        "and the income/expense direction is taken from the transaction itself, "
+        "not from the sign of this value"
+    ),
+    "iva_amount": "iva_amount must be non-negative; it is the IVA charged on the row, never a signed delta",
+    "iva_rate": "iva_rate must be non-negative; express the rate as a fraction such as 0.21",
+    "recargo_amount": (
+        "recargo_amount must be non-negative; it is the recargo de equivalencia "
+        "cuota the supplier charged on a repercutido sale to a recargo-regime "
+        "retailer, never a signed delta"
+    ),
+}
+
+
+def require_aware_datetime(value: datetime) -> datetime:
+    """Return *value* if it is UTC-aware, as a transaction error if not.
+
+    Delegates to the canonical awareness check and only translates the
+    exception, so the rule stays in one place.
+    """
+    try:
+        return validate_utc_aware(value)
+    except CoreValidationError as exc:
+        raise TransactionValidationError(str(exc)) from exc
+
+
+def validate_classified_by_shape(value: str) -> str:
+    """Return the classifier attribution if it names a recognised author."""
+    normalized = value.strip()
+    if normalized in {CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL}:
+        return normalized
+    for prefix in ("rule:", "llm:", "derived:"):
+        if normalized.startswith(prefix) and normalized.removeprefix(prefix).strip():
+            return normalized
+    raise TransactionValidationError(
+        "classified_by must be 'auto', 'manual', 'rule:<rule-id>', 'llm:<model>', or 'derived:<basis>'",
+    )
+
+
+def validate_confidence_range(value: Decimal | None) -> Decimal | None:
+    """Return a classifier confidence if it is a share of one, or None."""
+    if value is None:
+        return None
+    if not is_unit_proportion(value):
+        raise TransactionValidationError("confidence must be within the inclusive 0..1 range")
+    return value
+
+
+def classification_for_business_share(share: Decimal) -> BusinessClassification:
+    """Return the classification a business share of this size implies.
+
+    The inverse of :func:`validate_business_pct_coupling`, and its other half:
+    that one answers "may this classification carry a share", this one answers
+    "which classification does this share mean". Kept beside it because the two
+    describe one relationship, and a surface that knew only one of them had to
+    invent the other.
+
+    A whole share is wholly business and a zero share wholly personal --
+    neither is a mixture, and calling either MIXED would be a false statement
+    about the row rather than a conservative one. Only a share strictly between
+    is genuinely apportioned. An allocate path that hard-coded MIXED labelled a
+    fully-business expense as mixed-use, which is the mistake this exists to
+    stop repeating.
+
+    Args:
+        share: The business proportion, as a unit proportion in ``0..1``.
+
+    Returns:
+        The classification the share implies.
+
+    Raises:
+        TransactionValidationError: When ``share`` is not a unit proportion.
+            A proportion outside ``0..1`` names no classification at all, and
+            answering MIXED for one would carry the bad value onward.
+    """
+    if not is_unit_proportion(share):
+        raise TransactionValidationError(
+            "a business share must be within the inclusive 0..1 range to imply a classification",
+            context={"business_pct": str(share)},
+        )
+    if share == 1:
+        return BusinessClassification.BUSINESS
+    if share == 0:
+        return BusinessClassification.PERSONAL
+    return BusinessClassification.MIXED
+
+
+def validate_business_pct_coupling(
+    state: BusinessClassification,
+    pct: Decimal | None,
+) -> None:
+    """Refuse a business share that disagrees with its classification.
+
+    A share-bearing classification must carry a share and any other must not,
+    which is the coupling every write path checks. WHICH classifications bear
+    one is :func:`~domain.transactions.enums.takes_business_share`, read here
+    rather than spelled out, so this check and the command that offers the flag
+    cannot come to disagree about it.
+    """
+    if takes_business_share(state):
+        if pct is None:
+            raise TransactionValidationError("business_pct is required when classification is MIXED")
+        if not is_unit_proportion(pct):
+            raise TransactionValidationError("business_pct must be within 0..1 when classification is MIXED")
+        return
+    if pct is not None:
+        raise TransactionValidationError("business_pct must be None unless classification is MIXED")
+
+
+def normalize_identifier_tuple(value: tuple[str, ...]) -> tuple[str, ...]:
+    """Return the identifiers stripped, refusing blanks and duplicates."""
+    normalized = tuple(item.strip() for item in value if item.strip())
+    if len(normalized) != len(value):
+        raise TransactionValidationError("identifier fields must not contain blank values")
+    if len(set(normalized)) != len(normalized):
+        raise TransactionValidationError("identifier fields must not contain duplicates")
+    return normalized
+
+
+def trim_lineage_text(value: str | None) -> str | None:
+    """Return lineage prose stripped, or None when it carries nothing."""
+    if value is None:
+        return None
+    trimmed = value.strip()
+    if not trimmed:
+        raise TransactionValidationError("lineage text fields must not be blank")
+    return trimmed
+
+
+def parse_required_aware_datetime(value: object, *, field_name: str) -> datetime:
+    """Return *value* as a UTC-aware datetime, naming the field on refusal."""
+    if isinstance(value, str):
+        value = parse_iso_datetime(value)
+    if not isinstance(value, datetime):
+        raise TransactionValidationError(f"{field_name} must be a datetime")
+    return require_aware_datetime(value)
+
+
+def validate_non_negative_decimal(value: Decimal | None, *, field_name: str) -> Decimal | None:
+    """Return *value* if it is not negative, naming the field on refusal."""
+    if value is not None and value < Decimal("0"):
+        raise TransactionValidationError(
+            _NON_NEGATIVE_DECIMAL_HINTS.get(field_name, f"{field_name} must be non-negative"),
+        )
+    return value

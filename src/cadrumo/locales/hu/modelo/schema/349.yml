@@ -1,0 +1,106 @@
+modelo:
+  schema:
+    '349':
+      construct:
+        modelo-349-informative:
+          field:
+            title: 'Modelo 349 nyomtatvány: a közösségen belüli ügyletekről szóló
+              adatszolgáltatás'
+      field:
+        official_name: Modelo 349. Adatszolgáltatási bevallás. A Közösségen belüli
+          ügyletek összesítő nyilatkozata.
+        title: A Közösségen belüli ügyletek összesítő nyilatkozata
+      form:
+        authored:
+          base:
+            heading: Adóalap vagy összeg
+          base-anterior:
+            heading: Korábban bevallott adóalap
+          base-rectificada:
+            heading: Helyesbített adóalap
+          clave:
+            heading: Ügyletkód
+          contacto:
+            heading: Kapcsolattartó és telefonszáma
+          contacto-nombre:
+            heading: Kapcsolattartó
+          contacto-telefono:
+            heading: Kapcsolattartó telefonszáma
+          declaracion:
+            heading: Kiegészítő vagy helyettesítő nyilatkozat
+          ejercicio:
+            heading: Év
+          identificacion:
+            heading: Nyilatkozattevő
+          nif:
+            heading: A nyilatkozattevő adóazonosítója
+          nif-comunitario:
+            heading: Közösségi adószám
+          nombre:
+            heading: Teljes név vagy cégnév
+          operaciones:
+            heading: Közösségen belüli ügyletek
+          operador-nombre:
+            heading: A partner neve
+          pais:
+            heading: Országkód
+          period-code:
+            heading: Időszak
+          periodo:
+            heading: Év és időszak
+          rectificaciones:
+            heading: Korábbi időszakok helyesbítései
+          resumen:
+            heading: Összesítő lap
+          resumen-importes:
+            heading: A nyilatkozat összesítése
+          sustituto-nif:
+            heading: Az új végső címzett adószáma
+          sustituto-nombre:
+            heading: Az új végső címzett neve
+      revision:
+        2020-y-siguientes:
+          casilla:
+            x-chim6r1ecdgmqoj9dsmn0pbid5nm8qb3d5i62p0:
+              label: A bevallási kötelezettség gyakoriságának változását jelző mező
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
+              label: Kiegészítő vagy helyettesítő bevallás
+            x-chim6r1ed5mn0rriehiiqrrgclp62or9dtn6aso:
+              label: Közösségen belüli ügyletek összege
+            x-chim6r1ed5mn0rriehiiqsj5cdq6ipj9cdgm6qbfdpin6:
+              label: Helyesbítések összege
+            x-chim6r1edpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
+              label: A bevalló törvényes képviselőjének adószáma
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
+              label: A bevallás azonosító száma
+            x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
+              label: Az előző bevallás azonosító száma
+            x-chim6r1edpqmqpbidsmmus35e9gm8rriclpg:
+              label: Közösségen belüli szereplők teljes száma
+            x-chim6r1edpqmqpbidsmn4pb3ehkmcqb3c5hmirreclpg:
+              label: Helyesbítéssel érintett közösségen belüli szereplők teljes száma
+            x-dto2sobgclm6oqb4dtpiqsj1f9nmsbbjdthmiobc:
+              label: A közösségi szereplő családi és utóneve vagy cégneve
+            x-dto2soj1ediiqqbde1nmsqb2dhig:
+              label: A közösségen belüli ügylet adóalapja vagy összege
+            x-dto2sorcc5r6abbfe1in4ob3d5nms:
+              label: Közösségen belüli ügylet kódja
+            x-dto2sorfchkmerpde1gmiso:
+              label: A közösségi szereplő országkódja
+            x-dto2srj9comm6rrdeln6it31e9kmu:
+              label: A közösségi szereplő közösségi adószáma
+            x-e9im6t1ec9gn6p9dc5n78pbid5nn4:
+              label: Korábban bevallott adóalap
+            x-e9im6t1ec9gn6p9de9im6t39cpkm6ob4c4:
+              label: Helyesbített adóalap vagy összegek
+            x-e9im6t1ecll6asj3d5hmirpde9im6t39cpkm6ob4ds:
+              label: Helyesbített adóév
+            x-e9im6t1ee1in4qbfchniqsj5cdq6ipj9cdgm8ro:
+              label: Helyesbített időszak
+            x-edqn6t39ehqn8rpec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
+              label: A helyettesítő adóalany vezeték- és keresztneve vagy cégneve
+            x-edqn6t39ehqn8rpedpkmc:
+              label: A helyettesítő végső címzett vállalkozó vagy szakember adószáma
+                (NIF)
+          field:
+            label: 349-es modelo, 2020. adóévtől (HAC/174/2020 rendelet)

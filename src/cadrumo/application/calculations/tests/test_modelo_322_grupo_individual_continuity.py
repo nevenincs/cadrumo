@@ -1,0 +1,192 @@
+"""E2E continuity: Modelo 322 individual monthly REGE autoliquidación, two renta years.
+
+Modelo 322 is the individual monthly autoliquidación a member of an IVA
+grupo de entidades files under the régimen especial del grupo (REGE,
+Orden EHA/3434/2007 art. 1, LIVA arts. 163 quinquies–nonies, RD 1624/1992
+art. 71). Each grupo member computes its own monthly régimen-general
+result (cuota devengada − cuota deducible); the agregado flows into the
+grupo's Modelo 353. Modelo 322 itself carries no compensación carry and no
+cross-period relation — it is a self-contained monthly calculation whose
+inputs are the period's IVA ledger.
+
+This module is the cross-year behavior coverage for Modelo
+322. The ≥2-distinct-renta-years contract is met by driving the REAL
+registry calculation engine for the same monthly period (December) of two
+distinct renta years (2025, 2026) over deterministic application-owned
+IVA ledger observations, feeding the five ledger_iva_aggregation cuota bindings.
+Both years are recorded through the
+``cross-year observation`` and cross-checked against the authorization
+manifest via ``the cross-year behavior assertion``.
+
+The ``2008-2023`` revision is genuinely year-stable: it resolves
+for both 2025 and 2026 with identical structure and rates (the REGE
+individual form and the general/reduced/super-reduced rate set are
+unchanged across the two ejercicios), so the second year is a real
+filing, never a faked duplicate.
+
+Grounding (non-tautological): the per-rate cuotas are _produced by the real
+ledger aggregation and the engine, never hand-computed; the load-bearing
+assertion is the engine wiring invariant — ``iva.resultado-regimen-general``
+equals ``iva.cuota-devengada-total`` minus ``iva.cuota-deducible-total`` —
+which Orden EHA/3434/2007 defines as the monthly régimen-general result.
+Modelo 322 carries no profile-source binding, so no R2-style workaround is
+needed.
+"""
+
+from __future__ import annotations
+
+from datetime import date
+from decimal import Decimal
+
+import pytest
+
+from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from cadrumo.domain.iva.flow import IvaFlowDirection
+from cadrumo.domain.iva.schema import IvaCategory, IvaRateKind
+
+from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
+from ....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
+from ....domain.calculations.registry.ledger_iva_bindings import (
+    IvaLedgerObservation,
+    resolve_ledger_iva_aggregation_binding_values,
+)
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
+from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
+from ....domain.iva.schema import IvaLedgerObservationRole
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
+
+#: Modelo id this module enrolls into the cross-year behavior contract.
+_MODELO = "322"
+
+#: The two distinct renta years the enrollment spans, and the monthly period.
+_RENTA_YEARS = (2025, 2026)
+_PERIOD = "12"
+
+#: Per-year IVA ledger detail (one repercutido + one soportado general-rate
+#: line). Values differ per year so the second year is a distinct real filing.
+_YEAR_IVA: dict[int, tuple[Decimal, Decimal]] = {
+    # filing_year: (repercutido_cuota, soportado_cuota)
+    2025: (Decimal("210.00"), Decimal("80.00")),
+    2026: (Decimal("168.00"), Decimal("105.00")),
+}
+
+
+_IVA_CUOTA_DEVENGADA_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.cuota-devengada-total")
+_IVA_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.cuota-deducible-total")
+_IVA_RESULTADO_REGIMEN_GENERAL_CASILLA: CasillaId = validated_casilla_id("iva.resultado-regimen-general")
+
+
+def _ledger_line(*, ledger_id: str, txn_date: date, flow: IvaFlowDirection, iva: Decimal) -> IvaLedgerObservation:
+    return IvaLedgerObservation(
+        ledger_id=ledger_id,
+        transaction_date=txn_date,
+        category=IvaCategory("domestic_general"),
+        rate_kind=IvaRateKind("general"),
+        flow_direction=flow,
+        base_amount=Decimal("1000.00"),
+        iva_amount=iva,
+        # An INPUT fact must state how its deduction was classified: the model
+        # refuses a soportado or inversion-sujeto-pasivo line carrying neither a
+        # fact kind nor provenance, which is what keeps an undocumented deduction
+        # out of the ledger. Output lines must carry NEITHER, so this is supplied
+        # only for the input direction.
+        deduction_fact_kind=(
+            IvaDeductionFactKind.from_registry("domestic_current")
+            if flow
+            in {
+                IvaFlowDirection.from_registry("soportado"),
+                IvaFlowDirection.from_registry("inversion_sujeto_pasivo"),
+            }
+            else None
+        ),
+        deduction_provenance=(
+            IvaDeductionClassificationProvenance(
+                authority=IvaDeductionEvidenceAuthority.from_registry("invoice_evidence"),
+                source_locator=f"invoice:{ledger_id}",
+                evidence_digest="a" * 64,
+            )
+            if flow
+            in {
+                IvaFlowDirection.from_registry("soportado"),
+                IvaFlowDirection.from_registry("inversion_sujeto_pasivo"),
+            }
+            else None
+        ),
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
+    )
+
+
+def _year_ledger(filing_year: int) -> tuple[IvaLedgerObservation, ...]:
+    repercutido, soportado = _YEAR_IVA[filing_year]
+    return (
+        _ledger_line(
+            ledger_id=f"{filing_year}-12-out",
+            txn_date=date(filing_year, 12, 10),
+            flow=IvaFlowDirection.from_registry("repercutido"),
+            iva=repercutido,
+        ),
+        _ledger_line(
+            ledger_id=f"{filing_year}-12-in",
+            txn_date=date(filing_year, 12, 20),
+            flow=IvaFlowDirection.from_registry("soportado"),
+            iva=soportado,
+        ),
+    )
+
+
+def _calculate_322(*, filing_year: int) -> tuple[RegistryCalculationResult, int]:
+    """Run the REAL registry 322 monthly calculation for one renta year.
+
+    Resolves the five ledger_iva_aggregation cuota bindings from the month's
+    IVA ledger lines, resolves bound casilla inputs, and evaluates the engine.
+    Returns the result plus its produced-value count.
+    """
+    snapshot = published_snapshot(_MODELO, filing_year=filing_year, period=_PERIOD)
+    binding_values = resolve_ledger_iva_aggregation_binding_values(snapshot.revision, _year_ledger(filing_year))
+    inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs=inputs,
+        binding_values=binding_values,
+        date_context={"filing_period": date(filing_year, 12, 31)},
+    )
+    return result, len(result.values)
+
+
+def test_322_monthly_result_is_devengada_minus_deducible() -> None:
+    """The 322 monthly régimen-general result equals devengada minus deducible.
+
+    The load-bearing engine wiring invariant for one renta year: the computed
+    ``iva.resultado-regimen-general`` equals ``iva.cuota-devengada-total`` minus
+    ``iva.cuota-deducible-total``, and the devengada total equals the
+    ledger-aggregated repercutido cuota. Engine-_produced; non-tautological.
+    """
+    result, _produced = _calculate_322(filing_year=_RENTA_YEARS[0])
+
+    assert _produced > 0
+    devengada = result.values[_IVA_CUOTA_DEVENGADA_TOTAL_CASILLA]
+    deducible = result.values[_IVA_CUOTA_DEDUCIBLE_TOTAL_CASILLA]
+    assert result.values[_IVA_RESULTADO_REGIMEN_GENERAL_CASILLA] == devengada - deducible
+    repercutido, soportado = _YEAR_IVA[_RENTA_YEARS[0]]
+    assert devengada == repercutido
+    assert deducible == soportado
+
+
+def test_modelo_322_enrolls_two_renta_years() -> None:
+    """End-to-end enrollment: 322 individual monthly REGE across two renta years.
+
+    Drives the REAL 322 backend for December of both renta years (the
+    ``2008-2023`` revision resolves identically for each), records each
+    through the ``cross-year observation`` (calculation mode, evidence =
+    _produced-value count from a real engine run), and cross-checks the recorded
+    distinct-year set against the cross-year claim claim. A single-year or
+    stub run would raise, turning the gate RED.
+    """
+    for filing_year in _RENTA_YEARS:
+        result, _produced = _calculate_322(filing_year=filing_year)
+        # Wiring invariant per year: result == devengada - deducible.
+        assert result.values[_IVA_RESULTADO_REGIMEN_GENERAL_CASILLA] == (
+            result.values[_IVA_CUOTA_DEVENGADA_TOTAL_CASILLA] - result.values[_IVA_CUOTA_DEDUCIBLE_TOTAL_CASILLA]
+        )

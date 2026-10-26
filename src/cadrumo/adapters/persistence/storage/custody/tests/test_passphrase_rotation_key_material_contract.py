@@ -1,0 +1,175 @@
+"""What a passphrase rotation may and may not change about key material.
+
+Rotation re-wraps the SAME data-encryption key under a new password. These
+tests pin the two substrate facts that decide whether it can be implemented
+safely, both of which were established by measurement rather than by reading,
+and both of which a future author could silently break.
+
+Neither test drives the rotation door. They characterise the custody
+substrate the rotation is built on, so the constraints hold at the substrate
+whatever the door above it does.
+"""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from uuid import UUID
+
+import pytest
+
+from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
+from cadrumo.adapters.persistence.storage.custody.envelope import create_profile_custody_password_envelope
+from cadrumo.adapters.persistence.storage.custody.recovery import (
+    PROFILE_CUSTODY_RECOVERY_FILENAME,
+    parse_profile_custody_recovery_envelope,
+    unlock_profile_custody_recovery_envelope,
+)
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    profile_authority_contexts as _profile_contexts_for_test,
+)
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+from cadrumo.application.user_profile.capsule_record import (
+    ProfileRecordIntegrityError,
+    ProfileRecordSession,
+    ProfileRecordStore,
+)
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
+
+_LABEL = "Rotation Contract Subject"
+_CREDENTIAL_INPUT = "rotation-contract-current-operator-secret"
+_NEW_CREDENTIAL_INPUT = "rotation-contract-replacement-operator-secret"
+
+
+def test_rotation_must_preserve_the_dek_epoch_so_an_enrolled_recovery_envelope_still_opens(
+    tmp_path: Path,
+) -> None:
+    """Minting a fresh DEK epoch during rotation would strand every enrolled recovery wrapper.
+
+    The recovery wrapper and the committed sentinel are both bound to
+    ``(profile_id, dek_epoch)`` and to neither the password envelope's digest
+    nor its generation. So a re-wrap that keeps the epoch leaves an
+    already-issued recovery code working, and a re-wrap that mints a new one
+    silently destroys the only second door a taxpayer holds — without any
+    error, at the moment they change their password.
+
+    This test exists to fail loudly for whoever writes ``dek_epoch=`` with a
+    fresh value in the rotation path.
+    """
+    handed: list[str] = []
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        outcome = _register(tmp_path, handed)
+        profile_id = UUID(outcome.profile_id)
+        material = load_committed_profile_password_material(profile_id)
+        dek = _unlock_dek(material)
+
+        rotated = create_profile_custody_password_envelope(
+            profile_id=profile_id,
+            password=_NEW_CREDENTIAL_INPUT,
+            dek=dek,
+            dek_epoch=material.envelope.dek_epoch,
+            kdf=material.envelope.kdf,
+            password_generation=material.envelope.password_generation + 1,
+        )
+
+        assert rotated.self_digest != material.envelope.self_digest
+        assert rotated.dek_epoch == material.envelope.dek_epoch
+
+        recovery = parse_profile_custody_recovery_envelope(
+            (material.capsule_path / "custody" / PROFILE_CUSTODY_RECOVERY_FILENAME).read_bytes(),
+        )
+        proved = unlock_profile_custody_recovery_envelope(
+            recovery,
+            handed[0],
+            sentinel=material.sentinel,
+            expected_profile_id=profile_id,
+            expected_dek_epoch=material.envelope.dek_epoch,
+        )
+
+        assert proved.dek == dek
+        assert proved.dek_epoch == rotated.dek_epoch
+
+
+def test_rotation_must_re_head_the_record_row_because_its_header_binds_the_envelope(
+    tmp_path: Path,
+) -> None:
+    """A bare envelope re-wrap yields a profile that cannot read its own record.
+
+    ``ProfileRecordSession.write_provenance`` folds the envelope digest and the
+    password generation into the persisted row header, and every read
+    recomputes that from the live session. After a re-wrap the recomputed
+    witness no longer matches the stored one, so the record is refused — the
+    operator authenticates under their new password and then finds their
+    profile unreadable.
+
+    Rotation must therefore re-head the current row inside the same
+    transaction as the envelope swap. This test pins the reason that step
+    cannot be dropped as an optimisation.
+    """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    handed: list[str] = []
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        outcome = _register(tmp_path, handed)
+        profile_id = UUID(outcome.profile_id)
+        material = load_committed_profile_password_material(profile_id)
+        dek = _unlock_dek(material)
+
+        rotated = create_profile_custody_password_envelope(
+            profile_id=profile_id,
+            password=_NEW_CREDENTIAL_INPUT,
+            dek=dek,
+            dek_epoch=material.envelope.dek_epoch,
+            kdf=material.envelope.kdf,
+            password_generation=material.envelope.password_generation + 1,
+        )
+
+        # The control: the row is readable under the envelope it was written
+        # with, so the refusal below is caused by the re-wrap and nothing else.
+        current = ProfileRecordSession.from_envelope(
+            envelope=material.envelope, dek=dek, profile_decode_context=_profile_decode_context_for_test
+        )
+        try:
+            assert ProfileRecordStore(session=current).load().record.profile_id == str(profile_id)
+        finally:
+            current.close()
+
+        after = ProfileRecordSession.from_envelope(
+            envelope=rotated, dek=dek, profile_decode_context=_profile_decode_context_for_test
+        )
+        try:
+            with pytest.raises(ProfileRecordIntegrityError, match="provenance"):
+                ProfileRecordStore(session=after).load()
+        finally:
+            after.close()
+
+
+def _register(tmp_path: Path, handed: list[str]):
+    """Register one profile, then enrol recovery on it, capturing its code."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    from cadrumo.application.user_profile.recovery_custody import enroll_profile_recovery
+    from cadrumo.application.user_profile.registration import register_profile_with_credentials
+
+    outcome = register_profile_with_credentials(
+        label=f"{_LABEL} {tmp_path.name}",
+        passphrase=_CREDENTIAL_INPUT,
+        profile_create_context=_profile_create_context_for_test,
+        profile_decode_context=_profile_decode_context_for_test,
+    )
+    enroll_profile_recovery(
+        profile_id=UUID(outcome.profile_id),
+        current_passphrase=_CREDENTIAL_INPUT,
+        recovery_handover=lambda enrollment: handed.append(enrollment.recovery_key.code) or handed[-1],
+    )
+    return outcome
+
+
+def _unlock_dek(material) -> bytes:
+    """Return the profile's DEK through the real password door."""
+    from cadrumo.application.user_profile.custody_ports import unlock_profile_custody_password
+
+    return unlock_profile_custody_password(material, password=_CREDENTIAL_INPUT).dek

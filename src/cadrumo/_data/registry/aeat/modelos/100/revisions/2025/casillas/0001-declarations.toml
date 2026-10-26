@@ -1,0 +1,1223 @@
+[[revisions."2025".casillas]]
+id = "0058"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-60 (BOE-A-2024-26694 DF 7.4; alta 2025-01-01) introduce la reduccion por rendimientos artisticos excepcionales. aeat-dr-100-2025-dictionary:113 declara TPRART, ruta /DatosEconomicos/TomaDatosAmpliada/RdtoTrabajo/TPRART, tipo P102; ese campo/contexto no existe en aeat-dr-100-2024-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+number = "0058"
+section = ["rendimientos_trabajo"]
+semantic_role = "irpf_rendimiento_trabajo_reduccion_actividades_artisticas_excepcional"
+legal_refs = ["ley-35-2006:da-60"]
+additional_source_refs = ["aeat-renta-2025-manual-parte1"]
+[[revisions."2025".casillas]]
+id = "0163"
+number = "0163"
+section = ["toma_datos_ampliada", "regimenes_especiales", "re_at_rentas"]
+data_type = "boolean"
+semantic_role = "irpf_re_atrib_tipo_regimen_agricola_flag"
+legal_refs = ["ley-35-2006:art-31", "ley-35-2006:art-86", "rd-439-2007:art-39", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "0164"
+number = "0164"
+section = ["toma_datos_ampliada", "regimenes_especiales", "re_at_rentas"]
+data_type = "boolean"
+semantic_role = "irpf_re_atrib_tipo_regimen_resto_flag"
+legal_refs = ["ley-35-2006:art-86", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "0196"
+number = "0196"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+semantic_role = "irpf_ed_regularizacion_reta_ingresar"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+additional_source_refs = ["aeat-renta-2025-manual-parte1"]
+[[revisions."2025".casillas]]
+id = "0197"
+number = "0197"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+semantic_role = "irpf_ed_regularizacion_reta_devolver"
+legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
+additional_source_refs = ["aeat-renta-2025-manual-parte1"]
+[[revisions."2025".casillas]]
+id = "0237"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-60 (BOE-A-2024-26694 DF 7.4; alta 2025-01-01) introduce la reduccion por rendimientos artisticos excepcionales. aeat-dr-100-2025-dictionary:328 declara E1RED4, ruta /DatosEconomicos/Resultados/RegEstimaDirectaRes/E1RED4, tipo P102; ese campo/contexto no existe en aeat-dr-100-2024-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+number = "0237"
+section = ["rendimientos_actividades_economicas", "estimacion_directa"]
+semantic_role = "irpf_ed_reduccion_rendimientos_artisticos_excepcionales"
+legal_refs = ["ley-35-2006:da-60"]
+additional_source_refs = ["aeat-renta-2025-manual-parte1"]
+[[revisions."2025".casillas]]
+id = "0238"
+number = "0238"
+section = ["toma_datos_ampliada", "reg_estima_obj", "actividad_est_obj"]
+semantic_role = "irpf_eo_reintegro_subvenciones"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "2025-only ordinary objective-estimation subsidy-reintegration field; registry separates it from agricultural EO."
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "0239"
+number = "0239"
+section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
+semantic_role = "irpf_eo_agr_reintegro_subvenciones"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "2025-only agricultural objective-estimation subsidy-reintegration field; label includes index-applied subsidy amount."
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "0255"
+number = "0255"
+section = ["resultados", "deduccion_autonomica_res", "la_rioja_res"]
+semantic_role = "irpf_deduccion_la_rioja_vehiculos_electricos"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "0360"
+number = "0360"
+section = ["toma_datos_ampliada", "gp_premios", "juegos"]
+semantic_role = "irpf_ganancia_premios_juegos_valoracion_b"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "2025-only prizes/gambling second valuation line; prior 0360 revisions are cadastral-reference rows."
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "0361"
+number = "0361"
+section = ["toma_datos_ampliada", "gp_premios", "juegos_pub"]
+semantic_role = "irpf_ganancia_premios_juegos_pub_valoracion_b"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "2025-only public-source prizes/gambling second valuation line; prior 0361 revisions are cadastral-reference rows."
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "0362"
+number = "0362"
+section = ["toma_datos_ampliada", "gp_premios", "otras"]
+semantic_role = "irpf_ganancia_premios_bono_social_termico"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "0384"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-60 (BOE-A-2024-26694 DF 7.4; alta 2025-01-01) introduce la reduccion por rendimientos artisticos excepcionales. aeat-dr-100-2025-dictionary:480 declara F1EIR4, ruta /DatosEconomicos/TomaDatosAmpliada/RegimenesEspeciales/REAtRentas/ENTIDADAR/F1EIR4, tipo P102; ese campo/contexto no existe en aeat-dr-100-2024-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+number = "0384"
+section = ["toma_datos_ampliada", "regimenes_especiales", "re_at_rentas"]
+semantic_role = "irpf_re_atrib_reduccion_actividades_artisticas"
+legal_refs = ["ley-35-2006:da-60", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "0413"
+number = "0413"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+data_type = "text"
+semantic_role = "irpf_ganancia_inmueble_referencia_catastral_4"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "2025-only fourth cadastral-reference slot in gp_otros_inmuebles; prior revisions expose slots 1-3 only, and slot numbers are data-entry structure."
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "0414"
+continuidad_id = "irpf-deduccion-obtencion-rendimientos-trabajo"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "Ley 5/2025, disposicion final tercera, introduce DA61 LIRPF con efectos 2025-01-01: nueva deduccion por obtencion de rendimientos del trabajo. AEAT confirma el alta legal y su incorporacion al modelo: https://sede.agenciatributaria.gob.es/Sede/irpf/novedades-impuesto/novedades-normativa-2025/principales-novedades-tributarias-introducidas-ley-julio.html ; aeat-dr-100-2025-dictionary:954, CLDED2, /DatosEconomicos/Resultados/CalculoImpuestoRes/CuotaAutoliquidacionRes/CLDED2, P102; este campo no existe en 2024. El antiguo numero 0414 de 2020-2022 designaba G5RE1, numero de operaciones, no este beneficio fiscal."
+number = "0414"
+section = ["resultado_declaracion"]
+semantic_role = "irpf_deduccion_obtencion_rendimientos_trabajo"
+additional_source_refs = ["boe-modelo-100-2025-form"]
+[[revisions."2025".casillas]]
+id = "0757"
+number = "0757"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "0760"
+number = "0760"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "0765"
+number = "0765"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "0767"
+number = "0767"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "0769"
+number = "0769"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "0776"
+number = "0776"
+section = ["resultados", "deduccion_autonomica_res", "cantabria_res"]
+semantic_role = "irpf_deduccion_cantabria_desplazamiento_nuevos_residentes_generado"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "2025-only Cantabria CANT20 new-resident displacement generated-amount slot."
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "0780"
+number = "0780"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "0785"
+number = "0785"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "0795"
+number = "0795"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "0798"
+number = "0798"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "0829"
+number = "0829"
+section = ["resultados", "deduccion_autonomica_res", "galicia_res"]
+semantic_role = "irpf_deduccion_galicia_inmueble_vacio_adecuacion_generado"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "0969"
+number = "0969"
+section = ["resultados", "deduccion_autonomica_res", "castilla_la_mancha_res"]
+semantic_role = "irpf_deduccion_castilla_la_mancha_otras"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "0981"
+number = "0981"
+section = ["resultados", "deduccion_autonomica_res", "galicia_res"]
+semantic_role = "irpf_deduccion_galicia_inmueble_vacio_adecuacion_pendiente"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "0995"
+number = "0995"
+section = ["resultados", "deduccion_autonomica_res", "andalucia_res"]
+semantic_role = "irpf_deduccion_andalucia_gastos_veterinarios"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "1121"
+number = "1121"
+section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
+semantic_role = "irpf_deduccion_c_valenciana_otras"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2002"
+number = "2002"
+section = ["resultados", "deduccion_autonomica_res", "catalunya_res"]
+semantic_role = "irpf_deduccion_catalunya_alquiler_victimas_violencia"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2003"
+number = "2003"
+section = ["resultados", "deduccion_autonomica_res", "catalunya_res"]
+semantic_role = "irpf_deduccion_catalunya_cooperativas_agrarias"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2004"
+number = "2004"
+section = ["resultados", "deduccion_autonomica_res", "catalunya_res"]
+semantic_role = "irpf_deduccion_catalunya_cooperativas_agrarias_generado"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2005"
+number = "2005"
+section = ["resultados", "deduccion_autonomica_res", "catalunya_res"]
+semantic_role = "irpf_deduccion_catalunya_cooperativas_agrarias_pendiente"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2006"
+number = "2006"
+section = ["resultados", "deduccion_autonomica_res", "extremadura_res"]
+semantic_role = "irpf_deduccion_extremadura_arrendadores_viviendas_vacias"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2007"
+number = "2007"
+section = ["resultados", "deduccion_autonomica_res", "extremadura_res"]
+semantic_role = "irpf_deduccion_extremadura_rehabilitacion_rural"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2008"
+number = "2008"
+section = ["resultados", "deduccion_autonomica_res", "extremadura_res"]
+semantic_role = "irpf_deduccion_extremadura_donaciones_culturales"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2009"
+number = "2009"
+section = ["resultados", "deduccion_autonomica_res", "extremadura_res"]
+semantic_role = "irpf_deduccion_extremadura_traslado_residencia"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2010"
+number = "2010"
+section = ["resultados", "deduccion_autonomica_res", "extremadura_res"]
+semantic_role = "irpf_deduccion_extremadura_ayudas_subvenciones_ca"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2011"
+number = "2011"
+section = ["resultados", "deduccion_autonomica_res", "extremadura_res"]
+semantic_role = "irpf_deduccion_extremadura_ela"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2012"
+number = "2012"
+section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
+semantic_role = "irpf_deduccion_c_valenciana_aportaciones_fondos_propios_generado_pendiente_1"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "2025-only VA43 fondos propios 2024 generated carry-forward amount slot."
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2013"
+number = "2013"
+section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
+semantic_role = "irpf_deduccion_c_valenciana_autoconsumo_pendiente_2"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "2025-only C. Valenciana autoconsumo generated-2023 pending row; the source label encodes 2023 and this line is distinct from the generic pending rows."
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2014"
+number = "2014"
+section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
+semantic_role = "irpf_deduccion_c_valenciana_danos_vivienda_dana_pendiente_1"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "2025-only VA42 DANA 2024 pending carry-forward amount slot."
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2015"
+number = "2015"
+section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
+semantic_role = "irpf_deduccion_c_valenciana_aportaciones_fondos_propios_pendiente_1"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "2025-only VA43 fondos propios 2024 pending carry-forward amount slot."
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2022"
+number = "2022"
+section = ["resultados", "deduccion_autonomica_res", "madrid_res"]
+semantic_role = "irpf_deduccion_madrid_nuevos_contribuyentes_pendiente_1"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "2025-only Madrid nuevos-contribuyentes generated-2024 pending line; the source label encodes 2024 and it is distinct from the generic pending row."
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2023"
+number = "2023"
+section = ["resultados", "deduccion_autonomica_res", "madrid_res"]
+semantic_role = "irpf_deduccion_madrid_nuevos_contribuyentes_pendiente_ejercicio_anterior"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2024"
+number = "2024"
+section = ["resultados", "anexo_c_res", "excesos_eficiencia_energetica_res"]
+semantic_role = "irpf_anexo_c_exceso_eficiencia_energetica_pendiente_inicio"
+legal_refs = ["ley-35-2006:da-50", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2025"
+number = "2025"
+section = ["resultados", "anexo_c_res", "excesos_eficiencia_energetica_res"]
+semantic_role = "irpf_anexo_c_exceso_eficiencia_energetica_aplicado"
+legal_refs = ["ley-35-2006:da-50", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2048"
+continuidad_id = "irpf-anexo-c-exceso-eficiencia-energetica-pendiente-fin-c3efepfem3"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2024-dictionary:2312 y aeat-dr-100-2025-dictionary:2456: C3EFEPFEM3, ruta /DatosEconomicos/Resultados/AnexoCRes/ExcesosEficienciaEnergeticaRes/C3EFEPFEM3, tipo P102; descripcion oficial equivalente salvo formato, abreviatura DT, marcador de nota, localizacion del anexo C y actualizacion relativa del ejercicio; mismo ambito legal en ambas ediciones."
+number = "2048"
+section = ["resultados", "anexo_c_res", "excesos_eficiencia_energetica_res"]
+semantic_role = "irpf_anexo_c_exceso_eficiencia_energetica_pendiente_fin"
+legal_refs = ["ley-35-2006:da-50", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2056"
+number = "2056"
+section = ["resultados", "deduccion_autonomica_res", "la_rioja_res"]
+semantic_role = "irpf_deduccion_la_rioja_cuotas_organizaciones_agrarias"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2057"
+number = "2057"
+section = ["resultados", "deduccion_autonomica_res", "la_rioja_res"]
+semantic_role = "irpf_deduccion_la_rioja_fijacion_poblacion_rural"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2058"
+number = "2058"
+section = ["resultados", "deduccion_autonomica_res", "la_rioja_res"]
+semantic_role = "irpf_deduccion_la_rioja_fijacion_poblacion_rural_generado"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2059"
+number = "2059"
+section = ["resultados", "deduccion_autonomica_res", "la_rioja_res"]
+semantic_role = "irpf_deduccion_la_rioja_fijacion_poblacion_rural_pendiente"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2060"
+number = "2060"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2061"
+number = "2061"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2149"
+number = "2149"
+section = ["resultados", "deduccion_autonomica_res", "murcia_res"]
+semantic_role = "irpf_deduccion_murcia_cristales_lentes"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2150"
+number = "2150"
+section = ["resultados", "deduccion_autonomica_res", "murcia_res"]
+semantic_role = "irpf_deduccion_murcia_deporte_actividades_saludables"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2151"
+number = "2151"
+section = ["resultados", "deduccion_autonomica_res", "murcia_res"]
+semantic_role = "irpf_deduccion_murcia_enfermedades_raras"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2152"
+number = "2152"
+section = ["resultados", "deduccion_autonomica_res", "murcia_res"]
+semantic_role = "irpf_deduccion_murcia_economia_social"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2153"
+number = "2153"
+section = ["resultados", "deduccion_autonomica_res", "murcia_res"]
+semantic_role = "irpf_deduccion_murcia_gastos_veterinarios"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2154"
+number = "2154"
+section = ["resultados", "deduccion_autonomica_res", "murcia_res"]
+data_type = "text"
+semantic_role = "irpf_deduccion_murcia_vehiculo_matricula"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "official Modelo 100 source places this vehicle field under the Murcia autonomous deduction section"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2155"
+number = "2155"
+section = ["resultados", "deduccion_autonomica_res", "murcia_res"]
+semantic_role = "irpf_deduccion_murcia_vehiculo_importe"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "official Modelo 100 source places this vehicle amount under the Murcia autonomous deduction section"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2156"
+number = "2156"
+section = ["resultados", "deduccion_autonomica_res", "murcia_res"]
+semantic_role = "irpf_deduccion_murcia_vehiculo_generado"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2157"
+number = "2157"
+section = ["resultados", "deduccion_autonomica_res", "murcia_res"]
+semantic_role = "irpf_deduccion_murcia_infraestructuras_recarga"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2158"
+number = "2158"
+section = ["resultados", "deduccion_autonomica_res", "murcia_res"]
+data_type = "text"
+semantic_role = "irpf_deduccion_murcia_infraestructuras_referencia_catastral"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2159"
+number = "2159"
+section = ["resultados", "deduccion_autonomica_res", "murcia_res"]
+data_type = "boolean"
+semantic_role = "irpf_deduccion_murcia_sin_referencia_catastral_flag"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2162"
+number = "2162"
+section = ["resultados", "deduccion_autonomica_res", "murcia_res"]
+semantic_role = "irpf_deduccion_murcia_infraestructuras_generado"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2163"
+number = "2163"
+section = ["resultados", "deduccion_autonomica_res", "murcia_res"]
+semantic_role = "irpf_deduccion_murcia_recursos_energeticos_renovables_pendiente_1"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "2025-only Murcia recursos energeticos renovables generated-2024 pending line; the source label encodes 2024 and it is distinct from the generic pending row."
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2164"
+number = "2164"
+section = ["resultados", "deduccion_autonomica_res", "murcia_res"]
+semantic_role = "irpf_deduccion_murcia_vehiculo_pendiente"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2165"
+number = "2165"
+section = ["resultados", "deduccion_autonomica_res", "murcia_res"]
+semantic_role = "irpf_deduccion_murcia_infraestructuras_pendiente"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2166"
+number = "2166"
+section = ["resultados", "deduccion_autonomica_res", "murcia_res"]
+semantic_role = "irpf_deduccion_murcia_recursos_energeticos_renovables_pendiente_ejercicio_anterior"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2167"
+number = "2167"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_scav"]
+data_type = "nif"
+semantic_role = "irpf_deduccion_inversion_empresarial_entidad_nif"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2168"
+number = "2168"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_scav"]
+semantic_role = "irpf_anexo_b_deduccion_inversion_importe"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2169"
+number = "2169"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_scav"]
+data_type = "nif"
+semantic_role = "irpf_deduccion_inversion_empresarial_entidad_nif"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2170"
+number = "2170"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_scav"]
+semantic_role = "irpf_anexo_b_deduccion_inversion_importe"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2171"
+number = "2171"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_scav"]
+semantic_role = "irpf_anexo_b_importe_total_deduccion_por_tipo"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2172"
+number = "2172"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_scav"]
+semantic_role = "irpf_deduccion_autonomica_importe"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2173"
+number = "2173"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_rcince"]
+data_type = "text"
+semantic_role = "irpf_anexo_b_referencia_catastral"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2174"
+number = "2174"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_rcince"]
+data_type = "boolean"
+semantic_role = "irpf_anexo_b_no_catastral_flag"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2175"
+number = "2175"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_rcince"]
+semantic_role = "irpf_anexo_b_deduccion_inversion_importe"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2176"
+number = "2176"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_rcince"]
+data_type = "text"
+semantic_role = "irpf_anexo_b_referencia_catastral"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2177"
+number = "2177"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_rcince"]
+data_type = "boolean"
+semantic_role = "irpf_anexo_b_no_catastral_flag"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2178"
+number = "2178"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_rcince"]
+semantic_role = "irpf_anexo_b_deduccion_inversion_importe"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2179"
+number = "2179"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_rcince"]
+data_type = "nif"
+semantic_role = "irpf_deduccion_inversion_empresarial_entidad_nif"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2180"
+number = "2180"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_rcince"]
+semantic_role = "irpf_anexo_b_deduccion_inversion_importe"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2181"
+number = "2181"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_rcince"]
+data_type = "nif"
+semantic_role = "irpf_deduccion_inversion_empresarial_entidad_nif"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2182"
+number = "2182"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_rcince"]
+semantic_role = "irpf_anexo_b_deduccion_inversion_importe"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2183"
+number = "2183"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_rcince"]
+semantic_role = "irpf_anexo_b_importe_total_deduccion_por_tipo"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2184"
+number = "2184"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_rcince"]
+semantic_role = "irpf_deduccion_autonomica_importe"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2185"
+number = "2185"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_aav"]
+data_type = "text"
+semantic_role = "irpf_anexo_b_contribuyente_con_derecho_clave"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2186"
+number = "2186"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_aav"]
+data_type = "nif"
+semantic_role = "irpf_deduccion_autonomica_prestador_servicio_nif"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2187"
+number = "2187"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_aav"]
+semantic_role = "irpf_anexo_b_importe_anual_satisfecho"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2188"
+number = "2188"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_aav"]
+data_type = "nif"
+semantic_role = "irpf_deduccion_autonomica_prestador_servicio_nif"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2189"
+number = "2189"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_aav"]
+semantic_role = "irpf_anexo_b_importe_anual_satisfecho"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2190"
+number = "2190"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_aav"]
+data_type = "nif"
+semantic_role = "irpf_deduccion_autonomica_prestador_servicio_nif"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2191"
+number = "2191"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_aav"]
+semantic_role = "irpf_anexo_b_importe_anual_satisfecho"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2192"
+number = "2192"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_aav"]
+data_type = "nif"
+semantic_role = "irpf_deduccion_autonomica_prestador_servicio_nif"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2193"
+number = "2193"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_aav"]
+semantic_role = "irpf_anexo_b_importe_anual_satisfecho"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2194"
+number = "2194"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_aav"]
+data_type = "nif"
+semantic_role = "irpf_deduccion_autonomica_prestador_servicio_nif"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2195"
+number = "2195"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_aav"]
+semantic_role = "irpf_anexo_b_importe_anual_satisfecho"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2196"
+number = "2196"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_aav"]
+data_type = "nif"
+semantic_role = "irpf_deduccion_autonomica_prestador_servicio_nif"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2197"
+number = "2197"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_aav"]
+semantic_role = "irpf_anexo_b_importe_anual_satisfecho"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2198"
+number = "2198"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_aav"]
+data_type = "nif"
+semantic_role = "irpf_deduccion_autonomica_prestador_servicio_nif"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2199"
+number = "2199"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_aav"]
+semantic_role = "irpf_anexo_b_importe_anual_satisfecho"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2200"
+number = "2200"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_aav"]
+data_type = "nif"
+semantic_role = "irpf_deduccion_autonomica_prestador_servicio_nif"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2201"
+number = "2201"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_aav"]
+semantic_role = "irpf_anexo_b_importe_anual_satisfecho"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2202"
+number = "2202"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_aav"]
+semantic_role = "irpf_anexo_b_aav_importe_satisfecho"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "2025-only Anexo B AAV total satisfied-amount field; section an_b_inf_adc_aav is source-specific."
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2203"
+number = "2203"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_aav"]
+semantic_role = "irpf_anexo_b_aav_importe_aplicado"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2204"
+number = "2204"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_aav"]
+semantic_role = "irpf_anexo_b_aav_importe_pendiente"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2205"
+number = "2205"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_arrvm"]
+data_type = "text"
+semantic_role = "irpf_arrendador_nif_o_id_extranjero"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2206"
+number = "2206"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_arrvm"]
+data_type = "boolean"
+semantic_role = "irpf_anexo_b_foreign_nif_flag"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2207"
+number = "2207"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_arrvm"]
+semantic_role = "irpf_anexo_b_importe_satisfecho"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2208"
+number = "2208"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_arrvm"]
+data_type = "text"
+semantic_role = "irpf_arrendador_nif_o_id_extranjero"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2209"
+number = "2209"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_arrvm"]
+data_type = "boolean"
+semantic_role = "irpf_anexo_b_foreign_nif_flag"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2210"
+number = "2210"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_arrvm"]
+semantic_role = "irpf_anexo_b_importe_satisfecho"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2211"
+number = "2211"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_arrvm"]
+semantic_role = "irpf_anexo_b_importe_total_satisfecho"
+input_kind = "computed"
+formula = "renta-atencion-percibida-importe-total"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2212"
+number = "2212"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_arrvm"]
+semantic_role = "irpf_anexo_b_cantidades_deducibles_satisfechas"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2213"
+number = "2213"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_arrvm"]
+semantic_role = "irpf_deduccion_autonomica_importe"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2214"
+number = "2214"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_ad_cm_viv_hab"]
+data_type = "text"
+semantic_role = "irpf_anexo_b_cm_viv_hab_titular_cuenta"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2215"
+number = "2215"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_ad_cm_viv_hab"]
+data_type = "text"
+semantic_role = "irpf_anexo_b_account_opening_date"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2216"
+number = "2216"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_ad_cm_viv_hab"]
+data_type = "text"
+semantic_role = "irpf_anexo_b_account_identifier"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2217"
+number = "2217"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_ad_cm_viv_hab"]
+data_type = "boolean"
+semantic_role = "irpf_anexo_b_account_foreign_flag"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2218"
+number = "2218"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_ad_cm_viv_hab"]
+semantic_role = "irpf_anexo_b_account_balance_increase"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2219"
+number = "2219"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_ad_cm_viv_hab"]
+data_type = "text"
+semantic_role = "irpf_anexo_b_cm_viv_hab_titular_cuenta"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2220"
+number = "2220"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_ad_cm_viv_hab"]
+data_type = "text"
+semantic_role = "irpf_anexo_b_account_opening_date"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2221"
+number = "2221"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_ad_cm_viv_hab"]
+data_type = "text"
+semantic_role = "irpf_anexo_b_account_identifier"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2222"
+number = "2222"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_ad_cm_viv_hab"]
+data_type = "boolean"
+semantic_role = "irpf_anexo_b_account_foreign_flag"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2223"
+number = "2223"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_ad_cm_viv_hab"]
+semantic_role = "irpf_anexo_b_account_balance_increase"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2224"
+number = "2224"
+section = ["toma_datos_ampliada"]
+data_type = "text"
+semantic_role = "irpf_toma_datos_declarante_selector"
+legal_refs = ["ley-35-2006:art-11", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2225"
+number = "2225"
+section = ["toma_datos_ampliada", "gp_fondos_coti", "fondo"]
+data_type = "nif"
+semantic_role = "irpf_fondo_inversion_nif"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2226"
+number = "2226"
+section = ["toma_datos_ampliada", "gp_fondos_coti", "fondo"]
+data_type = "text"
+semantic_role = "irpf_ganancia_fondos_coti_denominacion"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2227"
+number = "2227"
+section = ["toma_datos_ampliada", "gp_fondos_coti", "fondo"]
+semantic_role = "irpf_ganancia_fondos_coti_valor_transmision_global"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "2025-only quoted-fund coti transmission-global slot; BOE order separates gp_fondos_coti from general funds."
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2228"
+number = "2228"
+section = ["toma_datos_ampliada", "gp_fondos_coti", "fondo"]
+semantic_role = "irpf_ganancia_fondos_coti_valor_transmision_renta_vitalicia"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "2025-only quoted-fund coti life-annuity transmission slot; BOE order separates gp_fondos_coti from general funds."
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2229"
+number = "2229"
+section = ["toma_datos_ampliada", "gp_fondos_coti", "fondo"]
+semantic_role = "irpf_ganancia_fondos_coti_valor_adquisicion_global"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "2025-only quoted-fund coti acquisition-global slot; BOE order separates gp_fondos_coti from general funds."
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2230"
+number = "2230"
+section = ["toma_datos_ampliada", "gp_fondos_coti", "fondo"]
+semantic_role = "irpf_ganancia_fondos_coti_ganancia"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "2025-only quoted-fund coti capital-gain slot; BOE order separates gp_fondos_coti from general funds."
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2231"
+number = "2231"
+section = ["toma_datos_ampliada", "gp_fondos_coti", "fondo"]
+semantic_role = "irpf_ganancia_fondos_coti_exenta_renta_vitalicia"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "2025-only quoted-fund coti life-annuity exempt gain slot; BOE order separates gp_fondos_coti from general funds."
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2232"
+number = "2232"
+section = ["toma_datos_ampliada", "gp_fondos_coti", "fondo"]
+semantic_role = "irpf_ganancia_fondos_coti_ganancia_no_exenta"
+input_kind = "computed"
+formula = "renta-criptomonedas-ganancia-reducida-no-exenta"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2233"
+number = "2233"
+section = ["toma_datos_ampliada", "gp_fondos_coti", "fondo"]
+semantic_role = "irpf_perdida_fondos_coti_importe"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "2025-only quoted-fund coti capital-loss slot; BOE order separates gp_fondos_coti from general funds."
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2234"
+number = "2234"
+section = ["toma_datos_ampliada", "gp_fondos_coti", "fondo"]
+semantic_role = "irpf_perdida_fondos_coti_importe_computable"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "2025-only quoted-fund coti computable-loss slot; BOE order separates gp_fondos_coti from general funds."
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2235"
+number = "2235"
+section = ["resultados", "gp_fondos_coti_res"]
+semantic_role = "irpf_gyp_subtotales_ganancias_patrimoniales"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2236"
+number = "2236"
+section = ["resultados", "gp_fondos_coti_res"]
+semantic_role = "irpf_gyp_renta_fija_suma_perdidas"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2237"
+number = "2237"
+section = ["resultados", "deduccion_autonomica_res", "i_baleares_res"]
+semantic_role = "irpf_deduccion_baleares_vivienda_ocupada_ilegalmente"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2238"
+number = "2238"
+section = ["resultados", "deduccion_autonomica_res", "galicia_res"]
+semantic_role = "irpf_deduccion_galicia_subvenciones_danos"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2239"
+number = "2239"
+section = ["resultados", "deduccion_autonomica_res", "galicia_res"]
+semantic_role = "irpf_deduccion_galicia_ayudas_als"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2240"
+number = "2240"
+section = ["resultados", "deduccion_autonomica_res", "galicia_res"]
+semantic_role = "irpf_deduccion_galicia_libros_texto"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2241"
+number = "2241"
+section = ["resultados", "deduccion_autonomica_res", "galicia_res"]
+semantic_role = "irpf_deduccion_galicia_ayudas_talidomida"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2242"
+number = "2242"
+section = ["resultados", "deduccion_autonomica_res", "asturias_res"]
+semantic_role = "irpf_deduccion_asturias_enfermedad_celiaca"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2243"
+number = "2243"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+data_type = "text"
+semantic_role = "irpf_ganancia_inmueble_anexo_c1_referencia_catastral_4"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "2025-only Anexo C1 fourth cadastral-reference slot in gp_otros_inmuebles; prior Anexo C1 rows expose slots 1-3 only, and slot numbers are data-entry structure."
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2244"
+number = "2244"
+section = ["resultados", "deduccion_autonomica_res", "andalucia_res"]
+data_type = "text"
+semantic_role = "irpf_deduccion_andalucia_medico_colegiado"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2245"
+number = "2245"
+section = ["resultados", "deduccion_autonomica_res", "asturias_res"]
+data_type = "text"
+semantic_role = "irpf_deduccion_asturias_medico_colegiado"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2246"
+number = "2246"
+section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
+semantic_role = "irpf_deduccion_canarias_acciones_participaciones"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "official Modelo 100 source places this shares and participations deduction under the Canarias autonomous deduction section"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2247"
+number = "2247"
+section = ["resultados", "deduccion_autonomica_res", "la_rioja_res"]
+data_type = "text"
+semantic_role = "irpf_deduccion_la_rioja_medico_colegiado"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+[[revisions."2025".casillas]]
+id = "2248"
+number = "2248"
+section = ["resultados", "deduccion_autonomica_res", "la_rioja_res"]
+semantic_role = "irpf_deduccion_la_rioja_enfermedad_celiaca"
+legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
+# Anexo A deduction column "A", which AEAT identifies by LETTER rather
+# than by number. Its identity and concept are the bundled dictionary"s own:
+# entry VHADQ carries casilla_id "A" and the label this casilla
+# records. The conformance comparison reported it as declared by the
+# dictionary and absent from the registry.
+
+# Internal computed ceiling (Ley 35/2006 art. 50.3): the maximum
+# ejercicio-2024 negative base liquidable general compensable this period.
+# The positive base liquidable general before this carry is
+# max(0, 0435 − 0461 − 0468), so the ceiling is the lesser of that amount
+# and the opening pending balance in 1388.
+#
+# This is NOT an AEAT form box (no export_refs, internal_only): it is the
+# app-internal ceiling consumed by the BLOCKING verification predicate that
+# prevents an amount above the available Art. 50.3 compensation.
+[[revisions."2025".casillas]]
+id = "base-liq-neg-general-2024-aplicada-maxima"
+number = "base-liq-neg-general-2024-aplicada-maxima"
+section = ["resultados", "anexo_c_res", "base_liq_neg_res"]
+semantic_role = "irpf_anexo_c_base_liq_neg_aplicada_maxima"
+input_kind = "computed"
+formula = "renta-base-liquidable-negativa-general-2024-aplicada-maxima"
+internal_only = true
+data_type = "decimal"
+legal_refs = ["ley-35-2006:art-50"]
+additional_source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+# Exempt employment income of a trabajador del mar: the art. 7.p) LIRPF
+# pathway (work abroad, capped annually) or the REBECA pathway (Ley 19/1994
+# arts. 73 and 75, a fraction of the navigation income). Both are plain
+# exemptions. They are not rentas exentas con progresividad (DA 20ª LIRPF),
+# which is what box 0525 carries: the 2025 input dictionary files 0525 under
+# "Rentas exentas, excepto para determinar el tipo de gravamen"
+# (aeat-dr-100-2025-input-dictionary:1279) and the 2025 manual, cap. 15,
+# defines that class as treaty income that still sets the rate. No AEAT box
+# carries the maritime amount, so it is an internal node and files nowhere.
+[[revisions."2025".casillas]]
+id = "trabajo-mar-renta-exenta"
+number = "trabajo-mar-renta-exenta"
+section = ["toma_datos_ampliada", "rdto_trabajo"]
+semantic_role = "irpf_trabajo_mar_renta_exenta"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "2025-only internal carrier of the maritime-worker exemption (art. 7.p LIRPF or REBECA); AEAT's record design has no box for it and no sibling revision models it."
+input_kind = "computed"
+formula = "renta-maritime-exempt-income"
+internal_only = true
+legal_refs = ["ley-35-2006:art-7", "ley-19-1994:art-75"]
+source_refs = ["boe-lirpf-statutory-facts", "boe-ley-19-1994-art-75-statutory-facts", "aeat-renta-2025-manual-parte1"]

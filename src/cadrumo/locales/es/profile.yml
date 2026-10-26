@@ -1,0 +1,821 @@
+profile:
+  errors:
+    foral_regime: 'Los residentes en {tax_region} tributan ante la Hacienda Foral
+      correspondiente, no ante la AEAT: los territorios vascos en virtud del Concierto
+      Económico (Ley 12/2002) y Navarra en virtud del Convenio Económico (Ley 28/1990).
+      Este CLI no modela declaraciones forales. Consulta sede.bizkaia.eus (Bizkaia),
+      gipuzkoa.eus/ogasuna (Gipuzkoa), araba.eus/ogasun (Álava) o hacienda.navarra.es
+      (Navarra) según tu territorio.'
+    not_configured: No hay ningún perfil de residencia fiscal configurado para RENTA.
+      Ejecuta `aeat config profile edit NAME --tax-residence-ccaa <ccaa>` para configurarlo.
+  journey:
+    source:
+      censal_review:
+        action: Revisar censo
+        description: Lee el registro censal del contribuyente y revisa los cambios
+          propuestos antes de adoptarlos.
+        title: Censo de la AEAT
+      credential_requirement:
+        held: Credencial de la AEAT registrada
+        missing: Requiere autenticación con la AEAT (no configurada)
+      filed_history:
+        action: Obtener historial
+        description: Obtén el historial de declaraciones del contribuyente en la AEAT
+          para arrastrar los datos ya declarados.
+        title: Declaraciones anteriores
+  keys:
+    activities:
+      description: Actividad económica (texto normal; usa el epígrafe IAE si lo conoces)
+    capabilities:
+      google_export: ¿Activar la exportación a Google Sheets?
+      llm_vision: ¿Activar la visión LLM local para leer facturas?
+    censo:
+      activity_start_date: ¿Desde qué fecha tienes obligaciones de declaración / cuándo
+        te diste de alta? (AAAA-MM-DD, opcional)
+      large_company: Condición de gran empresa
+      public_administration_budget_gt_6000000: Presupuesto de administración pública
+        superior a 6.000.000 EUR
+    contact:
+      postcode: Código postal del domicilio fiscal
+    description: Claves de configuración del perfil y sus descripciones
+    identity:
+      legal_name: Razón social de la entidad para cabeceras de exportación
+      name: Nombre visible mostrado en revisiones locales
+      notes: Notas para tus propios registros (opcional)
+      surnames: Apellidos o razón social para cabeceras de exportación
+      tax_id: Identificador fiscal (NIF/CIF/DNI/NIE) para declaraciones
+    irpf:
+      art109_activity_income_withholding_ge_70pct: Aplica la excepción Art. 109 por
+        cobertura del 70% de ingresos de actividad
+      estimation_regime: Régimen de estimación IRPF
+      objective_estimation_modulos_iae_epigraph: Epígrafe IAE para módulos de estimación
+        objetiva
+      objective_estimation_modulos_module_1_units: Unidades anuales del módulo 1
+      objective_estimation_modulos_module_2_units: Unidades anuales del módulo 2
+      objective_estimation_modulos_module_3_units: Unidades anuales del módulo 3
+      objective_estimation_modulos_module_4_units: Unidades anuales del módulo 4
+      objective_estimation_modulos_module_5_units: Unidades anuales del módulo 5
+      objective_estimation_modulos_module_6_units: Unidades anuales del módulo 6
+      objective_estimation_modulos_module_7_units: Unidades anuales del módulo 7
+      special_regime: Régimen especial IRPF (Ley Beckham / Art. 93 LIRPF)
+      special_regime_start_date: Fecha de inicio del régimen especial (AAAA-MM-DD)
+    iva:
+      cash_accounting_regime_enrolled: ¿Estás inscrito en el régimen especial del
+        criterio de caja?
+      does_intracomunitario: Realiza operaciones intracomunitarias
+      group_dominant_entity_enrolled: Alta como entidad dominante de un grupo de IVA
+      group_member_enrolled: Alta como entidad miembro de un grupo de IVA
+      hydrocarbon_deposit_advance_payment_deduction_entitled: ¿Tienes derecho a deducir
+        pagos anticipados del régimen de depósitos fiscales de hidrocarburos?
+      intracommunity_operations_exceed_50000_eur: Operaciones intracomunitarias superan
+        50.000 EUR
+      m303_regime_composition: ¿Qué composición de regímenes se aplica al Modelo 303?
+      oss_enrolled: Alta en OSS
+      redeme_enrolled: Inscrito en REDEME (Registro de Devolución Mensual del IVA)
+      regime: ¿Qué régimen de IVA aplica?
+      roi_enrolled: Alta en ROI
+      sii_enrolled: Inscrito en el SII (Suministro Inmediato de Información)
+      voluntary_sii_enrolled: ¿Estás inscrito voluntariamente en el SII?
+    obligations:
+      bienes_extranjero_above_threshold: Bienes en el extranjero superan el umbral
+        del Modelo 720
+      monedas_virtuales_extranjero_above_threshold: Monedas virtuales en el extranjero
+        superan el umbral del Modelo 721
+      premio_loteria_gravamen_especial_sin_retencion: Premio de loterías o apuestas
+        sujeto al gravamen especial obtenido sin retención ni ingreso a cuenta (Modelo
+        136)
+      premio_loteria_gravamen_especial_trimestres: Trimestres en que se cobró ese
+        premio de loterías o apuestas (Modelo 136), como tokens AAAA-nT separados
+        por |
+      third_party_transactions_above_347_threshold: En el año natural que cubre el
+        Modelo 347, ¿tus operaciones con una misma persona o entidad superaron 3.005,06
+        € (300,51 € en los cobros que hagas por cuenta de terceros), contando por
+        separado las ventas y las compras?
+    preferences:
+      output_language: Idioma de salida de la CLI para este perfil
+    renta_family:
+      descendants_eu_eea_deduction: Descendientes UE/EEE en la deducción por unidad
+        familiar
+      minor_children_in_unit: Hijos menores en la unidad familiar
+      situacion_familiar: Situación familiar (Art. 82 LIRPF)
+    renta_filing:
+      declaration_type: Código del tipo de tributación
+    renta_spouse:
+      birth_date: Fecha de nacimiento del cónyuge
+      disability_grade: Grado de discapacidad del cónyuge (si aplica)
+      eu_eea_country: País de residencia UE/EEE del cónyuge
+      eu_eea_resident: Cónyuge residente en la UE/EEE
+      name: Nombre del cónyuge
+      non_resident_irpf: Cónyuge no residente (no contribuyente IRPF)
+      sex: Sexo del cónyuge
+      surnames: Apellidos del cónyuge
+      tax_id: NIF/NIE del cónyuge
+    renta_taxpayer:
+      birth_date: Fecha de nacimiento del primer declarante
+      death_date: Fecha de fallecimiento del primer declarante
+      disability_grade: Clave de discapacidad del primer declarante
+      marital_status: Estado civil del primer declarante
+      marriage_date: Fecha de inicio del matrimonio (AAAA-MM-DD)
+      sex: Sexo del primer declarante
+    tax:
+      id: Identificador fiscal (NIF/CIF/DNI/NIE)
+    tax_residence:
+      ccaa: Comunidad autónoma de residencia fiscal
+      jurisdiction_scope: ¿Qué territorio tributario se aplica a este Modelo 303?
+    taxpayer_type:
+      country_of_fiscal_residence: País de residencia fiscal (código ISO 3166-1 alfa-2,
+        p.ej. GB, DE, FR)
+      declaration_roles: ¿La entidad declarante desempeña alguno de estos roles institucionales
+        a efectos del Modelo 347 (operaciones con terceros)?
+      entity_type: Tipo de entidad
+      fiscal_residency: Categoría de residencia fiscal
+      incn_prior_12_months: ¿Cuál fue su importe neto de la cifra de negocios en los
+        últimos 12 meses? (en euros, opcional)
+      irpf_income_categories: Categorías de renta IRPF
+      legal_entity_form: Forma jurídica
+      ley_49_2002_special_regime_option_date: Fecha declarada de la opción por el
+        régimen especial de la Ley 49/2002
+      ley_49_2002_special_regime_option_declared: ¿La entidad ha presentado en el
+        modelo 036 la opción por el régimen fiscal especial del título II de la Ley
+        49/2002?
+      ley_49_2002_special_regime_renunciation_date: Fecha declarada de la renuncia
+        al régimen especial de la Ley 49/2002
+      ley_49_2002_special_regime_renunciation_declared: ¿La entidad ha presentado
+        en el modelo 036 la renuncia al régimen fiscal especial del título II de la
+        Ley 49/2002?
+      new_entity_first_two_profit_periods: ¿Es una entidad de nueva creación en uno
+        de sus dos primeros periodos impositivos con beneficios?
+      representante_fiscal_nif: NIF/NIE del representante fiscal en España (obligatorio
+        fuera UE/EEE)
+      representante_fiscal_nombre: Nombre del representante fiscal en España
+    withholding:
+      has_employees: Tiene empleados y paga salarios con retención
+      modelo_111_no_retenciones_periods: Periodos Modelo 111 sin retenciones
+      modelo_115_no_relevant_payment_periods: Periodos Modelo 115 sin pago relevante
+      pays_capital_income_with_retencion: Paga rentas de capital con retención
+      pays_professionals_with_retencion: Paga a profesionales con retención
+      pays_rent_with_retencion: Paga alquiler de local con retención
+  schema:
+    field:
+      activities:
+        cnae:
+          label: Código CNAE
+        description:
+          label: Descripción de la actividad
+        iae_epigraph:
+          label: Epígrafe IAE
+      attribution_entity:
+        legal_form:
+          choices:
+            comunidad_bienes: Comunidad de bienes
+            herencia_yacente: Herencia yacente
+            other: Otra
+            sociedad_civil: Sociedad civil
+          label: Forma jurídica de la entidad en atribución
+      attribution_entity_socios:
+        base_imponible_assigned:
+          label: Base imponible atribuida al socio
+        clave:
+          label: Clave del rendimiento (Modelo 184)
+        clave_declarado:
+          label: Clave de titularidad del inmueble
+        codigo_provincia:
+          label: Código de provincia
+        country_of_residence:
+          label: País de residencia (sólo no residente sin establecimiento permanente)
+        dias_arrendamiento:
+          label: Días de arrendamiento del inmueble
+        dias_miembro:
+          label: Número de días como miembro
+        domicilio_fiscal:
+          label: Domicilio fiscal del miembro
+        miembro_a_31_diciembre:
+          label: Miembro a 31 de diciembre
+        name:
+          label: Nombre del socio
+        naturaleza_inmueble:
+          label: Naturaleza del inmueble
+        nif:
+          label: NIF del socio
+        participe_clave:
+          label: Clave tipo de partícipe
+        porcentaje_titularidad_inmueble:
+          label: Porcentaje de titularidad del inmueble
+        reduccion:
+          label: Reducción aplicable al rendimiento
+        referencia_catastral:
+          label: Referencia catastral
+        rendimiento_neto_minorado_agricola_eo:
+          label: Rendimiento neto minorado agrícola (estimación objetiva)
+        rendimiento_neto_previo_eo:
+          label: Rendimiento neto previo (estimación objetiva)
+        role:
+          choices:
+            comunero: Comunero
+            participe: Partícipe
+            socio: Socio
+          label: Papel del miembro
+        share_pct:
+          label: Porcentaje de participación
+        situacion_inmueble:
+          label: Situación del inmueble
+        subclave:
+          label: Subclave del rendimiento (Modelo 184)
+      attribution_received:
+        base_imponible_attributed:
+          label: Base imponible atribuida al miembro
+        entity_name:
+          label: Nombre de la entidad atribuyente
+        entity_nif:
+          label: NIF de la entidad atribuyente
+        filing_year:
+          label: Ejercicio de la atribución
+        share_pct:
+          label: Porcentaje de participación atribuido
+      auth:
+        clave_movil_route:
+          label: Ruta de Cl@ve Móvil
+        dni_nie:
+          label: DNI o NIE para Cl@ve
+        fecha_validez:
+          label: Fecha de validez
+        numero_soporte:
+          label: Número de soporte
+        provider:
+          label: Método de autenticación
+      capabilities:
+        cloud_evidence_upload:
+          label: Lectura de documentos fuera del equipo
+        google_export:
+          label: Exportación a Google
+        llm_vision:
+          label: Lectura de imágenes en local
+      censo:
+        activity_end_date:
+          label: Fecha de baja de la actividad
+        activity_start_date:
+          label: Fecha de alta de la actividad
+        divergencia:
+          label: Divergencias del cotejo censal
+        elected_withholding_pct:
+          label: Tipo de retención elegido
+        establecimiento_type:
+          choices:
+            arrendado: Arrendado
+            cedido_gratuitamente: Cedido gratuitamente
+            propio: Propio
+          label: Tipo de establecimiento
+        large_company:
+          label: Condición de gran empresa
+        public_administration_budget_gt_6000000:
+          label: Presupuesto de administración pública superior a 6.000.000 EUR
+        status:
+          choices:
+            alta: Alta
+            baja: Baja
+            modificacion: Modificación
+          label: Estado del censo
+      contact:
+        contact_person_name:
+          label: Apellidos y nombre de la persona con quien relacionarse
+        contact_person_phone:
+          label: Teléfono de la persona con quien relacionarse
+        fiscal_address:
+          label: Domicilio fiscal
+        fiscal_address_cadastral_reference:
+          label: Referencia catastral del domicilio fiscal
+        fiscal_address_is_habitual_vivienda:
+          label: El domicilio fiscal es la vivienda habitual
+        postcode:
+          label: Código postal
+      identity:
+        email:
+          label: Correo electrónico de contacto
+        legal_name:
+          label: Razón social
+        name:
+          label: Nombre
+        notes:
+          label: Notas
+        surnames:
+          label: Apellidos
+        tax_id:
+          help:
+            what: 'Tu número de identificación fiscal: el NIF de tu DNI, tu NIE si
+              eres extranjero, o el NIF de una entidad.'
+            where: En tu DNI o tarjeta de NIE, o en la tarjeta de NIF emitida por
+              la AEAT. También aparece en cualquier declaración anterior o carta de
+              la AEAT.
+            why: Todas las declaraciones se presentan con este número; es como te
+              identifica la AEAT.
+          label: NIF/NIE/CIF de identificación
+      irpf:
+        activity_kind:
+          choices:
+            profesional: Actividad profesional
+            sectorial: Actividad sectorial (tipos del art. 95 RIRPF)
+          label: Tipo de actividad
+        art109_activity_income_withholding_ge_70pct:
+          label: Cumple la excepción del 70 % del art. 109 RIRPF
+        estimation_regime:
+          choices:
+            directa_normal: Estimación directa normal
+            directa_simplificada: Estimación directa simplificada
+            objetiva: Estimación objetiva (módulos)
+          label: Régimen de estimación
+        objective_estimation_modulos_iae_epigraph:
+          label: Epígrafe IAE (módulos)
+        objective_estimation_modulos_module_1_units:
+          label: Unidades del módulo 1
+        objective_estimation_modulos_module_2_units:
+          label: Unidades del módulo 2
+        objective_estimation_modulos_module_3_units:
+          label: Unidades del módulo 3
+        objective_estimation_modulos_module_4_units:
+          label: Unidades del módulo 4
+        objective_estimation_modulos_module_5_units:
+          label: Unidades del módulo 5
+        objective_estimation_modulos_module_6_units:
+          label: Unidades del módulo 6
+        objective_estimation_modulos_module_7_units:
+          label: Unidades del módulo 7
+        objective_estimation_prior_year_agri_livestock_forest_gross_eur:
+          label: Ingresos agrícolas, ganaderos y forestales del año anterior
+        objective_estimation_prior_year_gross_income_eur:
+          label: Volumen de ingresos del año anterior (módulos)
+        objective_estimation_prior_year_invoice_gross_income_eur:
+          label: Ingresos facturados del año anterior (módulos)
+        objective_estimation_prior_year_purchases_eur:
+          label: Compras del año anterior (módulos)
+        pagadores_count:
+          label: Número de pagadores
+        pagadores_secondary_income:
+          label: Ingresos de pagadores secundarios
+        pagadores_total_work_income:
+          label: Rendimientos íntegros del trabajo
+        plantilla_media:
+          label: Plantilla media por año natural
+        professional_income_withholding_ge_70pct:
+          label: Retención profesional alcanza el 70 %
+        special_regime:
+          choices:
+            general: Régimen general
+            impatriado: Régimen de impatriados (art. 93 LIRPF)
+          label: Régimen especial
+        special_regime_start_date:
+          label: Fecha de inicio del régimen especial
+      iva:
+        autoconsumo_promotor_base:
+          label: Base imponible del autoconsumo (promotor)
+        cash_accounting_regime_enrolled:
+          help:
+            what: Si optaste por el régimen especial del criterio de caja del IVA.
+            where: Se elige en el modelo 036 y figura en tus datos censales. Si no
+              optaste por él, la respuesta es No.
+            why: Con él, el IVA se devenga al cobrar o pagar las facturas y no al
+              emitirlas, lo que cambia las cifras de cada periodo.
+          label: Inscripción en el criterio de caja
+        does_intracomunitario:
+          label: Operaciones intracomunitarias
+        group_dominant_entity_enrolled:
+          label: Entidad dominante del grupo de IVA (Modelo 353)
+        group_member_enrolled:
+          label: Miembro de grupo de IVA (Modelo 322)
+        hydrocarbon_deposit_advance_payment_deduction_entitled:
+          help:
+            what: Si puedes deducir los pagos anticipados de IVA hechos al sacar hidrocarburos
+              de un régimen de depósito fiscal.
+            where: Solo afecta a empresas que sacan combustible de un depósito fiscal.
+              La mayoría de contribuyentes responde No.
+            why: Esos pagos anticipados se deducen en la declaración de IVA, así que
+              el derecho cambia el importe a ingresar.
+          label: Derecho a deducir anticipos de depósitos de hidrocarburos
+        intracommunity_operations_exceed_50000_eur:
+          label: Operaciones intracomunitarias superiores a 50.000 EUR
+        m303_regime_composition:
+          choices:
+            general: Solo régimen general
+            mixed: Régimen general y simplificado
+            simplified: Solo régimen simplificado
+          help:
+            what: 'Qué regímenes de IVA combina tu modelo 303: solo el general, solo
+              el simplificado o ambos.'
+            where: Se deduce del régimen de IVA de cada una de tus actividades en
+              tu declaración censal.
+            why: El modelo 303 tiene una parte distinta para cada régimen; esto decide
+              qué partes se rellenan.
+          label: Composición de regímenes del Modelo 303
+        oss_enrolled:
+          label: Inscripción en OSS/IOSS
+        redeme_enrolled:
+          help:
+            what: Si estás inscrito en el REDEME, el registro de devolución mensual
+              del IVA.
+            where: Se solicita en el modelo 036 y figura en tus datos censales. Si
+              nunca lo pediste, la respuesta es No.
+            why: La inscripción hace que tu declaración de IVA sea mensual en lugar
+              de trimestral y obliga al SII.
+          label: Inscripción en REDEME
+        regime:
+          choices:
+            EXENTO: Exento
+            GENERAL: General
+            REAGP: Régimen especial de la agricultura, ganadería y pesca (REAGP)
+            RECARGO_EQUIVALENCIA: Recargo de equivalencia
+            SIMPLIFICADO: Simplificado
+          help:
+            what: El régimen de IVA en el que está dada de alta tu actividad.
+            where: En tu declaración censal (modelo 036 o 037), o en tus datos censales
+              en la sede electrónica de la AEAT.
+            why: Decide qué declaraciones de IVA presentas y cómo se calcula el IVA
+              de tus ventas y compras.
+          label: Régimen de IVA
+        roi_enrolled:
+          label: Inscripción en el ROI/VIES
+        sii_enrolled:
+          label: Inscripción en el SII
+        voluntary_sii_enrolled:
+          help:
+            what: Si te adheriste voluntariamente al SII, el suministro inmediato
+              de tus libros registro de IVA a la AEAT.
+            where: La adhesión voluntaria se solicita en el modelo 036 y figura en
+              tus datos censales. Si nunca la pediste, la respuesta es No.
+            why: Quien está en el SII lleva sus libros de IVA en línea con la AEAT,
+              lo que cambia algunas obligaciones y plazos.
+          label: Inscripción voluntaria en el SII
+      maritime_worker:
+        annual_salary:
+          label: Salario anual
+        exemption_path_rebeca:
+          label: Vía de exención REBECA
+        gross_navigation_income:
+          label: Ingresos brutos de navegación
+        pending_eu_clearance:
+          label: Pendiente de autorización de ayudas de Estado (UE)
+        qualifying_days:
+          label: Días computables
+        retmar_registered:
+          label: Inscripción en RETMAR
+        tuna_fleet:
+          label: Flota atunera
+        vessel_flag:
+          choices:
+            ES: Pabellón español
+            foreign: Pabellón extranjero
+          label: Pabellón del buque
+        vessel_registry:
+          choices:
+            REBECA: Registro Especial de Buques de Canarias (REBECA)
+            other: Otra
+            rebeca_eu_eea: Naviera REBECA con buque en otro registro UE/EEE
+            scheduled_canary_route: Línea regular Canarias - península
+          label: Registro del buque
+        waters_type:
+          choices:
+            international: Aguas internacionales
+            national: Aguas nacionales
+          label: Tipo de aguas
+        worker_class:
+          choices:
+            trabajador_del_mar: Trabajador del mar
+          label: Clasificación de trabajador del mar
+      obligations:
+        bienes_extranjero_above_threshold:
+          label: Umbral del Modelo 720 superado
+        monedas_virtuales_extranjero_above_threshold:
+          label: Umbral del Modelo 721 superado
+        premio_loteria_gravamen_especial_sin_retencion:
+          label: Premio de lotería sin retención (Modelo 136)
+        premio_loteria_gravamen_especial_trimestres:
+          label: Trimestres del premio (Modelo 136)
+        third_party_transactions_above_347_threshold:
+          label: 'Umbral del Modelo 347 superado: 3.005,06 € por persona o entidad
+            en el año natural (300,51 € en cobros por cuenta de terceros)'
+      preferences:
+        output_language:
+          label: Idioma de salida
+      properties:
+        cadastral_reference:
+          label: Referencia catastral
+        use_type:
+          choices:
+            habitual: Vivienda habitual
+            imputed_income: Imputación de rentas (sin alquilar)
+            mixed: Uso mixto
+            other: Otra
+            rental: Arrendado
+          label: Uso del inmueble
+      provenance:
+        source:
+          choices:
+            aeat_censo_read: Leído del censo de la AEAT
+            censo_artefact_g313: Leído de un certificado de situación censal aportado
+            manual_cli: Introducido a mano
+            modelo_036_import: Importado del modelo 036
+            registry_inference: Deducido de las reglas del registro
+            setup_wizard: Asistente de configuración
+          label: Origen del dato
+        valid_from:
+          label: Válido desde
+        valid_to:
+          label: Válido hasta
+      renta_family:
+        anualidades_alimentos_euros:
+          label: Anualidades por alimentos a favor de los hijos por decisión judicial
+        ascendants:
+          label: Ascendientes
+        cotizaciones_ss_madre_2024:
+          label: Cotizaciones a la Seguridad Social de la madre (2024)
+        descendants:
+          label: Descendientes
+        descendants_eu_eea_deduction:
+          label: Deducción por descendientes UE/EEE
+        descendiente:
+          label: Descendiente
+        descendientes_count:
+          label: Número de descendientes
+        madrid_nacimiento_adopcion_eligible_count:
+          label: Descendientes elegibles para la deducción de Madrid por nacimiento
+            o adopción
+        minor_children_in_unit:
+          label: Hijos menores en la unidad familiar
+        situacion_familiar:
+          choices:
+            casado: Casado o casada
+            pareja_hecho_no_registrada: Pareja de hecho no registrada
+            pareja_hecho_registrada: Pareja de hecho registrada
+            separado_divorciado: Separado o divorciado
+            soltero: Soltero o soltera
+          label: Situación familiar
+        unidad_familiar_otros_miembros_base:
+          label: Base imponible de otros miembros de la unidad familiar (Madrid)
+      renta_filing:
+        declaration_type:
+          label: Tipo de declaración
+      renta_rental:
+        reduccion_art_23_2_tier_2024:
+          choices:
+            tier-50: Reducción del 50 %
+            tier-60: Reducción del 60 %
+            tier-70: Reducción del 70 %
+            tier-90: Reducción del 90 %
+          label: Tramo de reducción por alquiler (art. 23.2)
+      renta_spouse:
+        birth_date:
+          label: Fecha de nacimiento del cónyuge
+        disability_grade:
+          label: Grado de discapacidad del cónyuge
+        eu_eea_country:
+          label: País de residencia UE/EEE del cónyuge
+        eu_eea_resident:
+          label: Cónyuge residente en la UE/EEE
+        name:
+          label: Nombre del cónyuge
+        non_resident_irpf:
+          label: Cónyuge no residente (no contribuyente IRPF)
+        sex:
+          choices:
+            H: Hombre
+            M: Mujer
+          label: Sexo del cónyuge
+        surnames:
+          label: Apellidos del cónyuge
+        tax_id:
+          label: NIF/NIE del cónyuge
+      renta_taxpayer:
+        birth_date:
+          label: Fecha de nacimiento
+        death_date:
+          label: Fecha de fallecimiento
+        disability_grade:
+          label: Grado de discapacidad
+        marital_status:
+          label: Estado civil
+        marriage_date:
+          label: Fecha de inicio del matrimonio
+        marriage_full_year:
+          label: Matrimonio vigente todo el año (calculado)
+        marriage_month_end:
+          label: Mes de fin del matrimonio (calculado)
+        marriage_month_start:
+          label: Mes de inicio del matrimonio (calculado)
+        sex:
+          choices:
+            H: Hombre
+            M: Mujer
+          label: Sexo
+      tax_residence:
+        ccaa:
+          choices:
+            andalucia: Andalucía
+            aragon: Aragón
+            asturias: Principado de Asturias
+            baleares: Illes Balears
+            canarias: Canarias
+            cantabria: Cantabria
+            castilla_la_mancha: Castilla-La Mancha
+            castilla_y_leon: Castilla y León
+            cataluna: Cataluña
+            comunidad_valenciana: Comunitat Valenciana
+            extremadura: Extremadura
+            galicia: Galicia
+            la_rioja: La Rioja
+            madrid: Comunidad de Madrid
+            murcia: Región de Murcia
+          label: Comunidad autónoma de residencia
+        jurisdiction_scope:
+          choices:
+            common_regime: Territorio común
+            foral_unsupported: Territorio foral (País Vasco o Navarra) - aún no admitido
+          help:
+            what: Si tus impuestos se rigen por el territorio común o por un territorio
+              foral (País Vasco o Navarra).
+            where: 'Se deduce de tu domicilio fiscal: un domicilio en Álava, Bizkaia,
+              Gipuzkoa o Navarra es foral; en el resto de España es territorio común.'
+            why: Decide qué administración tributaria y qué normas se aplican. Los
+              territorios forales presentan ante su propia Hacienda, algo que aún
+              no se admite.
+          label: Régimen territorial
+      taxpayer_type:
+        country_of_fiscal_residence:
+          label: País de residencia fiscal
+        declaration_roles:
+          label: Roles declarantes de terceros (modelo 347)
+        entity_type:
+          choices:
+            attribution_entity: Entidad en atribución de rentas
+            legal_entity: Persona jurídica (sociedad)
+            natural_person: Persona física
+          label: Tipo de contribuyente
+        fiscal_residency:
+          choices:
+            non_resident_irnr: No residente (IRNR)
+            resident_irpf: Residente en España (IRPF)
+          label: Residencia fiscal
+        incn_prior_12_months:
+          label: INCN de los 12 meses anteriores
+        irpf_income_categories:
+          label: Categorías de renta IRPF
+        legal_entity_form:
+          choices:
+            cooperativa: Cooperativa
+            other: Otra
+            sa: Sociedad anónima (S.A.)
+            sal: Sociedad anónima laboral (S.A.L.)
+            sin_fines_lucrativos: Entidad sin fines lucrativos
+            sl: Sociedad limitada (S.L.)
+            sll: Sociedad limitada laboral (S.L.L.)
+            sociedad_civil_mercantil: Sociedad civil con objeto mercantil
+          label: Forma jurídica
+        ley_49_2002_special_regime_option_date:
+          label: Fecha de opción por la Ley 49/2002
+        ley_49_2002_special_regime_option_declared:
+          label: Opción por el régimen de la Ley 49/2002
+        ley_49_2002_special_regime_renunciation_date:
+          label: Fecha de renuncia a la Ley 49/2002
+        ley_49_2002_special_regime_renunciation_declared:
+          label: Renuncia al régimen de la Ley 49/2002
+        new_entity_first_two_profit_periods:
+          label: En uno de los dos primeros períodos con beneficio
+        representante_fiscal_nif:
+          label: NIF del representante fiscal
+        representante_fiscal_nombre:
+          label: Nombre del representante fiscal
+        sal_capital_social:
+          label: Capital social
+        sal_reserva_especial_dotada:
+          label: Reserva especial ya dotada
+        sal_socios_trabajadores_count:
+          label: Número de socios trabajadores
+        tributacion_estado_porcentaje:
+          label: Porcentaje de tributación al Estado
+      usage_ratios:
+        business_ratio:
+          label: Ratio de uso empresarial
+        category_id:
+          label: Categoría
+      vivienda_office:
+        office_m2:
+          label: Superficie destinada a oficina (m2)
+        total_m2:
+          label: Superficie total de la vivienda (m2)
+      withholding:
+        colegio_concertado:
+          label: Es un colegio concertado
+        has_employees:
+          label: Tiene empleados
+        modelo_111_no_retenciones_periods:
+          label: Períodos sin retenciones del Modelo 111
+        modelo_115_no_relevant_payment_periods:
+          label: Períodos Modelo 115 sin pago relevante
+        pays_capital_income_with_retencion:
+          label: Paga rendimientos de capital con retención
+        pays_professionals_with_retencion:
+          label: Paga a profesionales con retención
+        pays_rent_with_retencion:
+          label: Paga alquileres con retención
+    section:
+      activities:
+        summary: Las actividades económicas que realizas, una fila por actividad.
+        title: Actividades económicas
+      attribution_entity:
+        summary: La forma jurídica de la entidad en atribución de rentas (comunidad
+          de bienes, sociedad civil) que gestionas.
+        title: Forma jurídica de la entidad en atribución
+      attribution_entity_socios:
+        summary: Los socios de esa entidad y la parte de la renta atribuida a cada
+          uno.
+        title: Socios de la entidad en atribución
+      attribution_received:
+        summary: Rentas que te atribuyen las entidades de las que eres socio.
+        title: Rentas atribuidas recibidas
+      auth:
+        summary: 'Cómo te identificas ante la AEAT: certificado, Cl@ve Móvil o Cl@ve
+          PIN.'
+        title: Autenticación con la AEAT
+      capabilities:
+        summary: Qué servicios opcionales puede usar este perfil, como leer documentos
+          escaneados en este equipo.
+        title: Capacidades del servicio
+      censo:
+        summary: Tu alta en el censo de la AEAT (modelo 036/037) y sus fechas.
+        title: Censo y alta
+      contact:
+        summary: Dónde puede contactarte la AEAT y tu domicilio fiscal.
+        title: Contacto y domicilio fiscal
+      identity:
+        summary: 'Tu nombre y NIF: para quién se preparan las declaraciones.'
+        title: Identidad
+      irpf:
+        summary: Cómo se calcula tu IRPF y qué retenciones soportas.
+        title: IRPF y retenciones
+      iva:
+        summary: Tu régimen de IVA y con qué frecuencia lo presentas.
+        title: Perfil de IVA
+      maritime_worker:
+        summary: 'Solo para trabajadores del mar: la clasificación que decide deducciones
+          especiales.'
+        title: Clasificación de trabajador del mar
+      obligations:
+        summary: Umbrales que deciden si debes presentar determinadas declaraciones.
+        title: Umbrales de obligación de declarar
+      preferences:
+        summary: Cómo se comunica contigo la aplicación, por ejemplo el idioma de
+          cada pantalla.
+        title: Preferencias del operador
+      properties:
+        summary: Inmuebles que posees o alquilas, una fila por inmueble.
+        title: Inmuebles y alquiler
+      provenance:
+        summary: De dónde proceden los datos del perfil y desde cuándo se aplican.
+        title: Origen y vigencia
+      renta_family:
+        summary: Hijos y otros familiares que pueden darte derecho a mínimos familiares.
+        title: Familia (Renta)
+      renta_filing:
+        summary: Cómo presentas tu declaración anual de la Renta.
+        title: Contexto de presentación (Renta)
+      renta_rental:
+        summary: Contexto de los alquileres en tu declaración anual.
+        title: Contexto de alquiler (Renta)
+      renta_spouse:
+        summary: Los datos de tu cónyuge, necesarios para la declaración conjunta.
+        title: Cónyuge (Renta)
+      renta_taxpayer:
+        summary: Circunstancias personales del contribuyente que usa la declaración
+          anual.
+        title: Contribuyente (Renta)
+      tax_residence:
+        summary: Dónde tienes tu residencia fiscal, lo que decide las normas y el
+          territorio aplicables.
+        title: Residencia fiscal y jurisdicción
+      taxpayer_type:
+        summary: Qué tipo de contribuyente eres y qué tipos de renta obtienes.
+        title: Tipo de contribuyente y categorías de renta
+      usage_ratios:
+        summary: La parte de uso profesional de bienes compartidos, como un coche
+          o un teléfono.
+        title: Ratios de uso y deducibilidad
+      vivienda_office:
+        summary: Si usas parte de tu vivienda habitual como oficina para tu actividad.
+        title: Afectación de la vivienda habitual como oficina
+      withholding:
+        summary: Retenciones que debes practicar cuando pagas a otros, como empleados
+          o arrendadores.
+        title: Obligaciones como pagador con retención
+  validation:
+    boolean_field_invalid: El campo booleano no es válido
+    conditional_required_field_missing: Falta un campo requerido condicionalmente
+    conditionally_forbidden_field: Campo prohibido condicionalmente
+    derived_field_not_editable: El campo derivado no se puede editar
+    effective_window_end_not_enforced: El final de la ventana de vigencia no se aplica
+    effective_window_unused: La ventana de vigencia no se utiliza
+    indexed_instance_invalid: La instancia indexada no es válida
+    invalid_date_value: Valor de fecha no válido
+    invalid_email_value: Valor de correo electrónico no válido
+    invalid_enum_value: Valor de enumeración no válido
+    modelo_work_profile_baseline_missing: Falta un campo base del perfil para el trabajo
+      del modelo
+    numeric_field_invalid: El campo numérico no es válido
+    required_field_missing: Falta un campo obligatorio del perfil.
+    unknown_field: Campo desconocido

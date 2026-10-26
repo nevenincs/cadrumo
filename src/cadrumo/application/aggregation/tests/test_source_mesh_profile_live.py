@@ -1,0 +1,336 @@
+"""Source mesh coverage for profile-backed calculation sources."""
+
+from __future__ import annotations
+
+from collections.abc import Iterator
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from decimal import Decimal
+from functools import cache
+
+import pytest
+
+from cadrumo.domain.calculations.registry.tests.published_authority import (
+    leased_profile_create_context as _profile_creation_context_for_test,
+)
+from cadrumo.domain.calculations.registry.tests.published_authority import (
+    published_snapshot,
+    published_supported_filing_years,
+)
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+
+from ....core.aggregation import CalculationSourceLineageRole
+from ....core.authority_grade import RegistryAuthorityGrade
+from ....core.config import Settings
+from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
+from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.iva_compensation.reconciliation import (
+    IvaCompensationAuthoritySource,
+    IvaCompensationWalletObservationProtocol,
+    reconcile_iva_compensation_wallet,
+)
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ...calculations.iva_wallet_reconciliation import IvaWalletDecisionSourceResolver
+from ...modelo.profile_binding import resolve_profile_sourced_bindings
+from ..source_mesh import CalculationSourceContext
+from ..source_profile import ProfileSourceResolver
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
+
+
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Lease one generation through direct and source-mesh profile resolution."""
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
+
+
+_CLOCK = datetime(2026, 5, 21, 10, 0, 0, tzinfo=UTC)
+_PROFILE_ID = "10010010-0100-4100-8100-100100100100"
+_EXTERNAL = Settings.external_constants()
+WALLET_URL = f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}"
+_BUCKET_ID = _PROFILE_ID
+_CCAA_BINDING = "renta-profile-tax-residence-ccaa"
+# Derived-fact profile bindings that unconditionally resolve a grounded value
+# (zero/false for a childless, non-Madrid, non-anualidades profile) alongside
+# the CCAA binding: minimo por descendientes estatal + autonomico (Art. 58/61
+# LIRPF, with the autonomico half carrying a CCAA-conditional Madrid override),
+# Madrid nacimiento/adopcion (casilla 1039, DL 1/2010), and the anualidades sin
+# minimo separate-escala eligibility flag (Art. 64/75 LIRPF), and the maternity
+# deduction (Art. 81.1 LIRPF, casilla 0611), zero without children under three.
+_DERIVED_FACT_PROFILE_BINDINGS = frozenset(
+    {
+        "renta-profile-minimo-descendientes-estatal",
+        "renta-profile-minimo-descendientes-autonomico",
+        "renta-profile-has-economic-activity",
+        "renta-profile-madrid-nacimiento-adopcion-eligible-count",
+        "renta-profile-unidad-familiar-otros-miembros-base",
+        "renta-profile-anualidades-sin-minimo-descendientes",
+        "renta-profile-deduccion-maternidad",
+        "renta-maritime-path-rebeca",
+        "renta-maritime-gross-navigation-income",
+        "renta-maritime-annual-salary",
+        "renta-maritime-qualifying-days",
+    },
+)
+
+
+@pytest.fixture
+def bucket_id() -> str:
+    return _BUCKET_ID
+
+
+@cache
+def _modelo_100_snapshot() -> RegistrySnapshot:
+    return published_snapshot("100", filing_year=2025, period="0A")
+
+
+def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
+    return _create_profile_record_for_test(
+        setup_state=ProfileSetupState.COMPLETE,
+        profile_id=_PROFILE_ID,
+        facts=(
+            UserProfileFact(path="identity.tax_id", value="12345678Ñ"),
+            UserProfileFact(path="tax_residence.ccaa", value=ccaa),
+        ),
+        created_at=_CLOCK,
+        updated_at=_CLOCK,
+        context=_profile_creation_context_for_test(),
+    )
+
+
+def _registered_modelo_profile() -> UserProfileRecord:
+    """Supply one calculation-relevant fact for every registered modelo profile surface."""
+    return _create_profile_record_for_test(
+        setup_state=ProfileSetupState.COMPLETE,
+        profile_id=_PROFILE_ID,
+        facts=(
+            UserProfileFact(path="censo.status", value="alta"),
+            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+            UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
+            UserProfileFact(path="taxpayer_type.new_entity_first_two_profit_periods", value=False),
+            UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("500000")),
+            UserProfileFact(path="taxpayer_type.tributacion_estado_porcentaje", value=Decimal("100")),
+            UserProfileFact(path="taxpayer_type.sal_reserva_especial_dotada", value=Decimal("0")),
+            UserProfileFact(path="taxpayer_type.sal_capital_social", value=Decimal("5000")),
+            UserProfileFact(path="taxpayer_type.country_of_fiscal_residence", value="FR"),
+            UserProfileFact(path="iva.autoconsumo_promotor_base", value=Decimal("123")),
+        ),
+        created_at=_CLOCK,
+        updated_at=_CLOCK,
+        context=_profile_creation_context_for_test(),
+    )
+
+
+@dataclass(frozen=True)
+class _WalletObservation:
+    """Inward structural fake for the wallet fields consumed by source policy."""
+
+    taxpayer_nif: str
+    target_year: int
+    target_period: Period
+    total_pending: Decimal
+    source_url: str
+    captured_at: datetime
+
+
+def _wallet(amount: Decimal) -> IvaCompensationWalletObservationProtocol:
+    return _WalletObservation(
+        taxpayer_nif="12345678Z",
+        target_year=2026,
+        target_period=Period.from_year_and_code(2026, "2T"),
+        total_pending=amount,
+        source_url=WALLET_URL,
+        captured_at=_CLOCK,
+    )
+
+
+def test_profile_source_resolver_matches_direct_profile_binding_resolution(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    snapshot = _modelo_100_snapshot()
+    profile_record = _profile_with_ccaa("madrid")
+
+    direct_resolution = resolve_profile_sourced_bindings(
+        snapshot,
+        bucket_id=_BUCKET_ID,
+        profile_record=profile_record,
+        operation=authority_operation,
+    )
+    resolution = ProfileSourceResolver(
+        registry_snapshot=snapshot,
+        profile_record=profile_record,
+        operation=authority_operation,
+    ).resolve(
+        CalculationSourceContext(
+            bucket_id=_BUCKET_ID,
+            modelo="100",
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "0A"),
+            revision=snapshot.revision,
+        ),
+    )
+
+    assert resolution.binding_values == direct_resolution.binding_values
+    assert resolution.enum_binding_values == direct_resolution.enum_binding_values
+    assert resolution.source_transaction_ids == ()
+    assert resolution.provenance
+    assert {item.source_ref for item in resolution.provenance if item.contributor_source_kind == "profile"} == {
+        f"profile:{_BUCKET_ID}:binding:{binding_id}"
+        for binding_id in ({_CCAA_BINDING} | _DERIVED_FACT_PROFILE_BINDINGS)
+    }
+    assert {item.fingerprint for item in resolution.provenance if item.contributor_source_kind == "profile"} == {
+        item.fingerprint for item in direct_resolution.provenance
+    }
+
+
+def test_profile_source_resolver_respects_caller_owned_precedence(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    snapshot = _modelo_100_snapshot()
+    profile_record = _profile_with_ccaa("cataluna")
+
+    resolution = ProfileSourceResolver(
+        registry_snapshot=snapshot,
+        profile_record=profile_record,
+        caller_binding_ids=(_CCAA_BINDING,),
+        operation=authority_operation,
+    ).resolve(
+        CalculationSourceContext(
+            bucket_id=_BUCKET_ID,
+            modelo="100",
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "0A"),
+            revision=snapshot.revision,
+        ),
+    )
+
+    assert _CCAA_BINDING not in resolution.binding_values
+    assert _CCAA_BINDING not in resolution.enum_binding_values
+    # Only the CCAA binding is caller-owned here; the unconditional derived-fact
+    # profile bindings (minimo por descendientes, Madrid nacimiento/adopcion,
+    # anualidades sin minimo) still resolve their grounded zero/false values.
+    assert {item.source_ref for item in resolution.provenance if item.contributor_source_kind == "profile"} == {
+        f"profile:{_BUCKET_ID}:binding:{binding_id}" for binding_id in _DERIVED_FACT_PROFILE_BINDINGS
+    }
+
+
+def test_profile_source_snapshot_below_the_supported_floor_is_refused() -> None:
+    """A modelo 100 year below the published floor has no filing revision to project from."""
+    supported_years = published_supported_filing_years()
+    assert supported_years is not None
+    with pytest.raises(FilingYearOutsideSupportEnvelopeError):
+        published_snapshot(
+            "100", filing_year=supported_years.floor - 1, period="0A", grade=RegistryAuthorityGrade.APPLICABILITY
+        )
+
+
+@pytest.mark.parametrize(
+    ("modelo", "filing_year", "period", "binding_id", "channel", "expected_value"),
+    (
+        ("036", 2026, "alta", "modelo-036-profile-censo-status", "enum", "alta"),
+        ("100", 2022, "0A", "renta-profile-tax-residence-ccaa", "enum", "madrid"),
+        ("100", 2023, "0A", "renta-profile-tax-residence-ccaa", "enum", "madrid"),
+        ("100", 2024, "0A", "renta-profile-tax-residence-ccaa", "enum", "madrid"),
+        ("100", 2025, "0A", "renta-profile-tax-residence-ccaa", "enum", "madrid"),
+        (
+            "200",
+            2025,
+            "0A",
+            "modelo-200-profile-incn-prior-12-months",
+            "decimal",
+            Decimal("500000"),
+        ),
+        (
+            "202",
+            2025,
+            "1P",
+            "modelo-202-incn-prior-12-months",
+            "decimal",
+            Decimal("500000"),
+        ),
+        ("210", 2025, "0A", "m210-profile-country-of-fiscal-residence", "enum", "FR"),
+        ("303", 2026, "1T", "modelo-303-autoconsumo-promotor-base", "decimal", Decimal("123")),
+    ),
+)
+def test_profile_source_resolver_projects_each_registered_modelo_revision(
+    modelo: str,
+    filing_year: int,
+    period: str,
+    binding_id: str,
+    channel: str,
+    expected_value: Decimal | str,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """Every registered profile-source revision projects its fact and provenance through the live mesh."""
+    # Reading a profile FACT through the mesh needs only the rung that declares
+    # bindings, and every registered modelo carries them at applicability grade.
+    # Asking for filing here would refuse 036, which is censal and never filable,
+    # and 200, whose filing boundary is deliberately shut while its revision spans
+    # two layouts.
+    snapshot = published_snapshot(
+        modelo, filing_year=filing_year, period=period, grade=RegistryAuthorityGrade.APPLICABILITY
+    )
+
+    resolution = ProfileSourceResolver(
+        registry_snapshot=snapshot,
+        profile_record=_registered_modelo_profile(),
+        operation=authority_operation,
+    ).resolve(
+        CalculationSourceContext(
+            bucket_id=_BUCKET_ID,
+            modelo=modelo,
+            filing_year=filing_year,
+            period=Period.from_year_and_code(filing_year, "0A" if modelo == "036" else period),
+            revision=snapshot.revision,
+        ),
+    )
+
+    resolved_values = resolution.enum_binding_values if channel == "enum" else resolution.binding_values
+    assert resolved_values[binding_id] == expected_value
+    assert f"profile:{_BUCKET_ID}:binding:{binding_id}" in {
+        item.source_ref for item in resolution.provenance if item.contributor_source_kind == "profile"
+    }
+
+
+def test_live_iva_wallet_source_resolution_carries_decision_fingerprint() -> None:
+    snapshot = published_snapshot("303", filing_year=2026, period="2T")
+    decision = reconcile_iva_compensation_wallet(
+        taxpayer_nif="12345678Z",
+        target_year=2026,
+        target_period=Period.from_year_and_code(2026, "2T"),
+        target_registry_snapshot_ref=snapshot.snapshot_ref,
+        wallet=_wallet(Decimal("1200")),
+        local_recurrence_amount=Decimal("1200"),
+        local_recurrence_source=IvaCompensationAuthoritySource(
+            source_kind="local_recurrence",
+            amount=Decimal("1200"),
+            source_locator="local-recurrence:modelo-303-compensacion-pendiente-anteriores",
+            captured_at=_CLOCK,
+            source_modelo="303",
+            source_filing_year=2026,
+            source_periods=(Period.from_year_and_code(2026, "2T"),),
+            registry_snapshot_refs=(snapshot.snapshot_ref,),
+        ),
+        decided_at=_CLOCK,
+    )
+
+    resolution = IvaWalletDecisionSourceResolver(decision).resolve(
+        CalculationSourceContext(
+            bucket_id=_BUCKET_ID,
+            modelo="303",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "2T"),
+            revision=snapshot.revision,
+        ),
+    )
+
+    assert resolution.binding_values == {"modelo-303-compensacion-pendiente-anteriores": Decimal("1200")}
+    assert resolution.provenance
+    primary = tuple(item for item in resolution.provenance if item.lineage_role is CalculationSourceLineageRole.PRIMARY)
+    assert len(primary) == 1
+    assert primary[0].fingerprint is not None and primary[0].fingerprint
+    assert all(item.parent_source_ref == primary[0].source_ref for item in resolution.provenance[1:])

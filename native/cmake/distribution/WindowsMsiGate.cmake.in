@@ -1,0 +1,5 @@
+if(CPACK_GENERATOR STREQUAL "WIX")
+  execute_process(COMMAND "@CADRUMO_DEV_PYTHON@" -B -m dev.packaging.native.windows_msi
+    reject-combined --build "@CMAKE_BINARY_DIR@"
+    WORKING_DIRECTORY "@CADRUMO_SOURCE_ROOT@" COMMAND_ERROR_IS_FATAL ANY)
+endif()

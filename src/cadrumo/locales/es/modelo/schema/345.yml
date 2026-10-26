@@ -1,0 +1,97 @@
+modelo:
+  schema:
+    '345':
+      casilla:
+        continuidad:
+          m345-anio-nacimiento:
+            label: Año de nacimiento
+          m345-beneficiario-nif:
+            label: NIF del beneficiario persona con discapacidad
+          m345-clave:
+            label: Clave
+          m345-codigo-provincia:
+            label: Código provincia
+          m345-datos-adicionales-clave-i:
+            label: Datos adicionales para la clave I
+          m345-datos-adicionales-clave-m:
+            label: Datos adicionales para la clave M
+          m345-datos-adicionales-claves-abc:
+            label: Datos adicionales para las claves A, B y C
+          m345-datos-identificativos-empleador:
+            label: Datos identificativos del empleador promotor o tomador del sistema
+              de previsión social
+          m345-declaracion-complementaria-sustitutiva:
+            label: Declaración complementaria o sustitutiva
+          m345-declarado-nif:
+            label: NIF del declarado
+          m345-declarado-nombre:
+            label: Apellidos y nombre del declarado
+          m345-declarante-nif:
+            label: NIF del declarante
+          m345-declarante-razon-social:
+            label: Apellidos y nombre o razón social del declarante
+          m345-devoluciones-excesos:
+            label: Devoluciones o reintegros por excesos de aportaciones
+          m345-ejercicio-declaracion:
+            label: Ejercicio de declaración
+          m345-empleador-nif:
+            label: NIF del empleador promotor o tomador
+          m345-empleador-nombre:
+            label: Apellidos y nombre o razón social del empleador
+          m345-entidad-aseguradora-nif:
+            label: NIF de la entidad aseguradora
+          m345-fondo-pensiones-nif:
+            label: NIF del fondo de pensiones
+          m345-fondo-pensiones-numero-registro:
+            label: Número de registro del fondo de pensiones
+          m345-importe:
+            label: Importe
+          m345-importe-total-aportaciones:
+            label: Importe total de las aportaciones
+          m345-numero-identificativo-anterior:
+            label: Número identificativo de la declaración anterior
+          m345-numero-identificativo-declaracion:
+            label: Número identificativo de la declaración
+          m345-pepp-cuenta-subcuenta:
+            label: Cuenta/subcuenta
+          m345-pepp-denominacion:
+            label: Denominación del PEPP
+          m345-pepp-numero-inscripcion:
+            label: Número de inscripción del PEPP
+          m345-persona-relacion:
+            label: Persona con quien relacionarse
+          m345-pias-fecha-primera-prima:
+            label: Fecha de pago de la primera prima
+          m345-pias-importe-acumulado:
+            label: Importe acumulado PIAS
+          m345-plan-pensiones-denominacion:
+            label: Denominación del plan de pensiones
+          m345-rendimientos-trabajo-no-superiores-60000:
+            label: Rendimientos íntegros del trabajo no superiores a 60.000 euros
+          m345-representante-legal-nif:
+            label: NIF del representante legal
+          m345-subclave:
+            label: Subclave
+          m345-total-declarados:
+            label: Número total de declarados
+      field:
+        official_name: Modelo 345. Declaración informativa. Planes, fondos de pensiones
+          y sistemas alternativos. Declaración anual partícipes, aportaciones y contribuciones.
+        title: Declaración informativa anual de planes y fondos de pensiones, partícipes,
+          aportaciones y contribuciones
+      revision:
+        '2022':
+          field:
+            label: Modelo 345, ejercicio 2022
+        '2023':
+          field:
+            label: Modelo 345, ejercicio 2023
+        '2024':
+          field:
+            label: Modelo 345, ejercicio 2024
+        '2025':
+          casilla:
+            rendimientos-trabajo-superiores-60000:
+              label: Rendimientos íntegros del trabajo superiores a 60000 euros
+          field:
+            label: Modelo 345 ejercicio 2025 (Orden HFP/823/2022 y Orden HAC/1430/2025)

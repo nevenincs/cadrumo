@@ -1,0 +1,700 @@
+"""Developer CLI for modelo registry conformance governance.
+
+A dev / maintenance module CLI invoked as ``python -m dev.registry.conformance``,
+mirroring the ``dev.registry.newmodelo``, ``dev.locales`` and
+``dev.docs.terminology_handbook`` precedents. It is NOT part of the operator
+``aeat config`` / ``aeat app`` surface, so it does not bear on the
+two-CLI-roots architecture rule; like ``apidocs`` it emits plain English
+maintenance output rather than localised strings.
+
+Verbs:
+
+* ``report`` -- every conformance axis, one row per modelo revision.
+* ``coverage`` -- per-axis measured counts against their real populations.
+* ``valid`` -- fail-closed whole-registry and legal-catalogue validation.
+* ``source-load`` -- mutable registry TOML loadability, independent of the published artifact.
+* ``runtime-load`` -- exact artifact-backed bundled-authority loadability.
+* ``integrity`` -- fail-closed registry, legal-corpus and authority-artifact
+  currency gate.
+* ``edition MODELO REVISION`` -- one edition as the complete edition it
+  compiles to, with the provenance of every casilla row and the reach of its
+  review stamp. A registry that declares no such modelo or edition is refused
+  on stderr with exit code 2.
+* ``closure [--check]`` -- the derived temporal and filing release predicate.
+  ``--check`` blocks a shipped-completeness claim while any limb is refused or
+  the two denominators disagree.
+* ``stamp`` -- write a revision's DECLARED governance provenance. It cannot
+  write ``operator_reviewed``: this CLI is agent-driven, and an agent recording
+  an operator's signoff is the exact dishonesty the feature exists to detect.
+  The schema still accepts the value, so the operator signs off by editing
+  ``revision.toml`` directly.
+
+``report`` and ``coverage`` ALWAYS exit 0, deliberately. The picture they render
+is currently a bad one — ninety unreviewed revisions, five dead schema axes, an
+independent-check coverage under five per cent — and a screen that refused to
+render would leave that backlog unread while teaching every peer to route
+around the tool. ``closure`` renders under the same screen posture and gates
+only under ``--check``, which blocks the separate, explicit completeness claim
+while any release limb remains refused.
+
+Reading the output
+------------------
+
+``n/a`` means NOT MEASURED or NO CLAIM MADE. It is never a zero, and the two
+must not be conflated: a revision that reconciles nothing makes no
+independent-check claim, while a revision that reconciles two hundred and
+checks none of them makes one and fails it. ``-`` is a real empty list.
+
+Every independent-check figure is COVERAGE OF INDEPENDENT CHECKING, never
+correctness. ``0.0460`` does NOT mean 4.6% of the registry is right; it means
+4.6% of what the registry reconciles is cross-checked against a figure AEAT
+published rather than one this application computed. The remaining 95.4% is
+the engine agreeing with itself, which is a statement about evidence, not about
+arithmetic.
+
+``--no-validate`` selects the degraded read, which survives a
+concurrently-edited registry the validating authority would refuse outright.
+Every row is then stamped ``registry_validated=false`` and the three axes
+needing that authority — evidence-tier coverage, the support probe, and the
+authority-dependent support data — report ``n/a`` rather than a fabricated zero.
+
+See Also:
+    :mod:`~dev.registry.conformance.manager`
+        Pure folds and renderers behind every verb here.
+    :func:`~dev.registry.conformance.profile.audit_bundled_registry_conformance`
+        Development-only conformance composer used by the manager.
+    :mod:`~entrypoints.cli._modelo_discovery_cli`
+        Operator-facing support-matrix command over the same shipped capability
+        authority ``report`` probes per revision.
+"""
+
+from __future__ import annotations
+
+import json
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import TYPE_CHECKING, Annotated, NoReturn
+
+import typer
+
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthority, ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
+
+from ..compiler.authority import compile_validated_authority
+from ..compiler.legal_grounding import verify_legal_catalogue_grounding
+from ..compiler.loader import load_registry_tree
+from ..pipeline.authority_publication import AuthorityDatabaseCurrency, authority_database_currency
+from .edition import RegistryEditionView, read_registry_edition, render_registry_edition
+from .errors import RegistryApplicationInputError
+from .manager import (
+    ConformanceReport,
+    build_coverage_report,
+    load_conformance_report,
+    render_coverage,
+    render_report,
+    vacuity_warning,
+)
+from .stamp import StampableReviewStatus, StampError, bundled_registry_root, stamp_revision
+
+if TYPE_CHECKING:
+    from .closure import RegistryClosureReport
+
+app = typer.Typer(
+    name="conformance",
+    help="Report modelo registry conformance: provenance, grounding, coherence, enforcement.",
+    no_args_is_help=True,
+)
+
+
+def validate_registry(
+    *,
+    registry_root: Path | None = None,
+    source_root: Path | None = None,
+) -> ValidatedRegistryAuthority:
+    """Compile and verify the complete registry authority without publishing it."""
+    resolved_registry_root = registry_root or bundled_path("registry", "aeat")
+    resolved_source_root = source_root or bundled_path()
+    authority = compile_validated_authority(resolved_registry_root, resolved_source_root)
+    verify_legal_catalogue_grounding(authority.catalogues.legal, source_root=resolved_source_root)
+    return authority
+
+
+def load_bundled_runtime_authority() -> IndexedRegistryAuthority:
+    """Load the exact artifact-backed authority used by the product runtime."""
+    return IndexedRegistryAuthority(bundled_authority_descriptor_path())
+
+
+_NoValidate = Annotated[
+    bool,
+    typer.Option(
+        "--no-validate",
+        help=(
+            "Degraded read: use the non-validating tree loader, which survives a registry a peer "
+            "is mid-edit. Every row is stamped registry_validated=false and the axes needing the "
+            "validating authority report n/a, never zero."
+        ),
+    ),
+]
+
+_AsJson = Annotated[
+    bool,
+    typer.Option("--json", help="Emit the strict payload as JSON instead of greppable key=value rows."),
+]
+
+
+@app.command("report")
+def report(as_json: _AsJson = False, no_validate: _NoValidate = False) -> None:
+    """Print every conformance axis, one row per modelo revision.
+
+    Composes the shipped conformance profile — declared governance provenance,
+    this revision's own capabilities, evidence-tier coverage, the modelo-level
+    support probe, external-oracle grounding, classification
+    coherence, registry-scope diagnostics — and adds schema-local translation
+    coverage. Always exits 0: this is a screen, not a gate.
+    """
+    composed = load_conformance_report(validate=not no_validate)
+    if as_json:
+        typer.echo(composed.model_dump_json(indent=2))
+        _warn_if_vacuous(composed)
+        return
+    typer.echo(render_report(composed))
+    _warn_if_vacuous(composed)
+
+
+@app.command("coverage")
+def coverage(as_json: _AsJson = False, no_validate: _NoValidate = False) -> None:
+    """Print each conformance axis's measured count against its real population.
+
+    Population matters as much as the count: ``0 of 43`` is a dead schema
+    surface while ``0 of 0`` says only that nothing could have declared it
+    either way. Axes whose plain name would mislead carry a ``caveat`` field,
+    which rides in the JSON payload as well as the text so a programmatic
+    consumer cannot read the number without it. Always exits 0.
+    """
+    composed = load_conformance_report(validate=not no_validate)
+    projected = build_coverage_report(composed)
+    if as_json:
+        typer.echo(projected.model_dump_json(indent=2))
+        _warn_if_vacuous(composed)
+        return
+    typer.echo(render_coverage(projected))
+    _warn_if_vacuous(composed)
+
+
+@app.command("valid")
+def valid(
+    as_json: _AsJson = False,
+    registry_root: Annotated[
+        Path | None,
+        typer.Option("--registry-root", help="Registry tree to verify; defaults to the bundled registry."),
+    ] = None,
+    source_root: Annotated[
+        Path | None,
+        typer.Option("--source-root", help="Source tree holding the legal corpus; defaults to bundled data."),
+    ] = None,
+) -> None:
+    """Fail closed unless the complete registry and legal catalogue validate."""
+    try:
+        authority = validate_registry(registry_root=registry_root, source_root=source_root)
+    except Exception as error:
+        detail = f"{type(error).__name__}: {error}"
+        if as_json:
+            typer.echo(json.dumps({"status": "failed", "detail": detail}, indent=2), err=True)
+        else:
+            typer.echo(f"registry-valid\tstatus=failed\tdetail={detail}", err=True)
+        raise typer.Exit(code=1) from error
+
+    revision_count = sum(len(modelo.revisions) for modelo in authority.modelos)
+    if as_json:
+        typer.echo(
+            json.dumps(
+                {
+                    "status": "passed",
+                    "modelo_count": len(authority.modelos),
+                    "revision_count": revision_count,
+                    "legal_reference_count": len(authority.catalogues.legal),
+                },
+                indent=2,
+            )
+        )
+        return
+    typer.echo(
+        "registry-valid"
+        "\tstatus=passed"
+        f"\tmodelos={len(authority.modelos)}"
+        f"\trevisions={revision_count}"
+        f"\tlegal_references={len(authority.catalogues.legal)}",
+    )
+
+
+@app.command("runtime-load")
+def runtime_load(as_json: _AsJson = False) -> None:
+    """Fail closed unless the production artifact-backed authority loads exactly."""
+    try:
+        authority = load_bundled_runtime_authority()
+    except Exception as error:
+        detail = f"{type(error).__name__}: {error}"
+        if as_json:
+            typer.echo(json.dumps({"status": "failed", "loadable": False, "detail": detail}, indent=2), err=True)
+        else:
+            typer.echo(f"registry-runtime-load\tstatus=failed\tloadable=false\tdetail={detail}", err=True)
+        raise typer.Exit(code=1) from error
+
+    try:
+        with authority.operation() as operation:
+            modelo_count = len(operation.modelo_ids())
+            revision_count = len(operation.revision_ids())
+    finally:
+        authority.close()
+    if as_json:
+        typer.echo(
+            json.dumps(
+                {
+                    "status": "passed",
+                    "loadable": True,
+                    "modelo_count": modelo_count,
+                    "revision_count": revision_count,
+                    "descriptor": str(bundled_authority_descriptor_path()),
+                },
+                indent=2,
+            )
+        )
+        return
+    typer.echo(
+        "registry-runtime-load"
+        "\tstatus=passed"
+        "\tloadable=true"
+        f"\tmodelos={modelo_count}"
+        f"\trevisions={revision_count}"
+        f"\tdescriptor={bundled_authority_descriptor_path()}",
+    )
+
+
+@app.command("source-load")
+def source_load(
+    as_json: _AsJson = False,
+    registry_root: Annotated[
+        Path | None,
+        typer.Option("--registry-root", help="Mutable registry tree; defaults to the bundled source tree."),
+    ] = None,
+) -> None:
+    """Fail first unless the mutable registry source parses and loads as one tree."""
+    resolved = registry_root or bundled_path("registry", "aeat")
+    try:
+        modelos, catalogues = load_registry_tree(resolved)
+    except Exception as error:
+        detail = f"{type(error).__name__}: {error}"
+        if as_json:
+            typer.echo(json.dumps({"status": "failed", "loadable": False, "detail": detail}, indent=2), err=True)
+        else:
+            typer.echo(f"registry-source-load\tstatus=failed\tloadable=false\tdetail={detail}", err=True)
+        raise typer.Exit(code=1) from error
+    revision_count = sum(len(modelo.revisions) for modelo in modelos)
+    if as_json:
+        typer.echo(
+            json.dumps(
+                {
+                    "status": "passed",
+                    "loadable": True,
+                    "modelo_count": len(modelos),
+                    "revision_count": revision_count,
+                    "legal_reference_count": len(catalogues.legal),
+                },
+                indent=2,
+            )
+        )
+        return
+    typer.echo(
+        "registry-source-load"
+        "\tstatus=passed"
+        "\tloadable=true"
+        f"\tmodelos={len(modelos)}"
+        f"\trevisions={revision_count}"
+        f"\tlegal_references={len(catalogues.legal)}",
+    )
+
+
+@app.command("integrity")
+def integrity(
+    as_json: _AsJson = False,
+    registry_root: Annotated[
+        Path | None,
+        typer.Option("--registry-root", help="Registry tree to verify; defaults to the bundled registry."),
+    ] = None,
+    source_root: Annotated[
+        Path | None,
+        typer.Option("--source-root", help="Source tree holding the legal corpus; defaults to bundled data."),
+    ] = None,
+    authority_descriptor: Annotated[
+        Path | None,
+        typer.Option(
+            "--authority-descriptor",
+            help=(
+                "Indexed authority descriptor that must be current for the verified registry and "
+                "source trees; defaults to the bundled descriptor."
+            ),
+        ),
+    ] = None,
+) -> None:
+    """Fail closed on a stale indexed authority, registry validity, or missing legal-corpus quotation.
+
+    This is a development and release gate. It first requires the published
+    runtime authority descriptor to record the identity of the registry and
+    source evidence as they stand -- a stale or unreadable descriptor exits 1
+    with a refusal on stderr -- then validates the complete registry authority
+    and every legal catalogue reference's declared corpus text. It does not
+    claim calculation or filing correctness.
+    """
+    resolved_registry_root = registry_root or bundled_path("registry", "aeat")
+    resolved_source_root = source_root or bundled_path()
+    currency = authority_database_currency(
+        authority_descriptor or bundled_authority_descriptor_path(),
+        registry_root=resolved_registry_root,
+        source_root=resolved_source_root,
+    )
+    if not currency.is_current:
+        _refuse_authority_database(currency, as_json=as_json)
+    authority = validate_registry(registry_root=resolved_registry_root, source_root=resolved_source_root)
+    revision_count = sum(len(modelo.revisions) for modelo in authority.modelos)
+    if as_json:
+        typer.echo(
+            json.dumps(
+                {
+                    "registry_root": str(resolved_registry_root),
+                    "source_root": str(resolved_source_root),
+                    "status": "passed",
+                    "modelo_count": len(authority.modelos),
+                    "revision_count": revision_count,
+                    "legal_reference_count": len(authority.catalogues.legal),
+                    "authority_descriptor": str(currency.descriptor_path),
+                    "authority_identity_digest": currency.candidate_identity_digest,
+                },
+                indent=2,
+            )
+        )
+        return
+    typer.echo(
+        "integrity"
+        f"\tregistry_root={resolved_registry_root}"
+        f"\tsource_root={resolved_source_root}"
+        "\tstatus=passed"
+        f"\tmodelos={len(authority.modelos)}"
+        f"\trevisions={revision_count}"
+        f"\tlegal_references={len(authority.catalogues.legal)}"
+        f"\tauthority_descriptor={currency.descriptor_path}"
+        f"\tauthority_identity_digest={currency.candidate_identity_digest}",
+    )
+
+
+_AUTHORITY_REPUBLISH_COMMAND = "python -m dev.registry.pipeline publish-authority"
+
+
+def _refuse_authority_database(currency: AuthorityDatabaseCurrency, *, as_json: bool) -> NoReturn:
+    """Report a stale or unreadable indexed authority on stderr and exit 1."""
+    refusal = {
+        "status": "refused",
+        "authority_descriptor": str(currency.descriptor_path),
+        "currency": currency.status.value,
+        "recorded_identity_digest": currency.recorded_identity_digest,
+        "candidate_identity_digest": currency.candidate_identity_digest,
+        "detail": currency.detail,
+        "republish_with": _AUTHORITY_REPUBLISH_COMMAND,
+    }
+    if as_json:
+        typer.echo(json.dumps(refusal, indent=2), err=True)
+    else:
+        typer.echo("integrity" + "".join(f"\t{key}={value}" for key, value in refusal.items()), err=True)
+    raise typer.Exit(code=1)
+
+
+_EDITION_REFUSED_EXIT_CODE = 2
+
+
+@app.command("edition")
+def edition(
+    modelo: Annotated[str, typer.Argument(help="Modelo id whose edition to print, e.g. 303.")],
+    revision: Annotated[str, typer.Argument(help="Revision id of the edition, e.g. 2025.")],
+    as_json: _AsJson = False,
+    registry_root: Annotated[
+        Path | None,
+        typer.Option("--registry-root", help="Registry tree to read; defaults to the bundled registry."),
+    ] = None,
+) -> None:
+    """Print one edition of one modelo as the complete edition the registry compiles.
+
+    An edition that names a predecessor states only the rows it changed; this
+    prints the whole edition those rows and the inherited ones make. The text
+    form is TOML in the shape a revision file declares, with comments marking
+    the edition that states each casilla row and how far the review stamp
+    reaches. ``--json`` emits the same document beside the structured
+    provenance and review scope.
+    """
+    try:
+        report = read_registry_edition(modelo.strip(), revision.strip(), registry_root=registry_root)
+    except RegistryApplicationInputError as exc:
+        condition_id = exc.precondition_verdict.failed_condition_id
+        if as_json:
+            refusal = {"status": "refused", "failed_condition_id": condition_id, "context": exc.context}
+            typer.echo(json.dumps(refusal, indent=2, default=str), err=True)
+        else:
+            context = "".join(f"	{key}={value}" for key, value in exc.context.items())
+            typer.echo(f"edition	status=refused	condition={condition_id}{context}", err=True)
+        raise typer.Exit(code=_EDITION_REFUSED_EXIT_CODE) from exc
+    if as_json:
+        typer.echo(RegistryEditionView.from_report(report).model_dump_json(indent=2))
+        return
+    typer.echo(render_registry_edition(report), nl=False)
+
+
+@app.command("closure")
+def closure(
+    check: Annotated[
+        bool,
+        typer.Option(
+            "--check",
+            help=(
+                "Gate: exit 1 unless every law-selectable revision satisfies temporal coverage, "
+                "filing export with no join disagreement."
+            ),
+        ),
+    ] = False,
+    as_json: _AsJson = False,
+    offline: Annotated[
+        bool,
+        typer.Option(
+            "--offline",
+            help="Evaluate without a live filing-export proof authority.",
+        ),
+    ] = False,
+) -> None:
+    """Render the derived cross-authority release report and optional blocking gate.
+
+    The default report derives temporal and filing facts through the canonical
+    live authority. ``--offline`` is the explicit no-proof mode. Command
+    context cannot replace the authority with a pre-authorized claim. Neither
+    mode treats absent proof as a pass: the filing limb remains an owned
+    refusal, and ``--check`` blocks the release claim.
+    """
+    from .closure import load_registry_closure_report
+
+    try:
+        if offline:
+            report = load_registry_closure_report()
+        else:
+            # Closure alone needs filing-proof composition. Keeping this import at
+            # the command boundary lets the integrity gate compile mutable source
+            # inputs without importing product runtime dependencies, which are
+            # deliberately artifact-backed.
+            from .authorities import canonical_live_registry_closure_authorities
+
+            repository_root = Path(__file__).resolve().parents[3]
+            authorities = canonical_live_registry_closure_authorities(repository_root)
+            report = load_registry_closure_report(
+                registry_authority=authorities.registry,
+                filing_proof_authority=authorities.filing_export,
+            )
+    except Exception as error:
+        # A composition failure is the command's refusal, not a crash: name it on
+        # the diagnostic stream so an exit 1 is never silent.
+        detail = f"{type(error).__name__}: {error}"
+        if as_json:
+            typer.echo(json.dumps({"status": "failed", "detail": detail}, indent=2), err=True)
+        else:
+            typer.echo(f"closure\tstatus=failed\tdetail={detail}", err=True)
+        raise typer.Exit(code=1) from error
+    emit_registry_closure_command(report, check=check, as_json=as_json)
+
+
+def emit_registry_closure_command(
+    report: RegistryClosureReport,
+    *,
+    check: bool,
+    as_json: bool,
+) -> None:
+    """Emit one already-composed report through the closure command contract."""
+    from .closure import check_registry_closure_release, render_registry_closure_report
+
+    result = check_registry_closure_release(report)
+    if as_json:
+        typer.echo(report.model_dump_json(indent=2))
+    else:
+        typer.echo(render_registry_closure_report(report))
+    if check and not result.passed:
+        raise typer.Exit(code=1)
+
+
+@app.command("stamp")
+def stamp(
+    modelo: Annotated[str, typer.Argument(help="Modelo id to stamp, e.g. 130.")],
+    revision: Annotated[str, typer.Argument(help="Revision id to stamp, e.g. 2019-y-siguientes.")],
+    engineered_by: Annotated[
+        str | None,
+        typer.Option("--engineered-by", help="Who built this revision."),
+    ] = None,
+    clear_engineered_by: Annotated[
+        bool,
+        typer.Option("--clear-engineered-by", help="Drop the authorship claim so a wrong name is correctable."),
+    ] = False,
+    review_status: Annotated[
+        StampableReviewStatus | None,
+        typer.Option(
+            "--review-status",
+            help=(
+                "How far the review has progressed. operator_reviewed is deliberately absent: this "
+                "CLI is agent-driven and cannot record a human's signoff. Author it in revision.toml."
+            ),
+        ),
+    ] = None,
+    reviewed_by: Annotated[
+        str | None,
+        typer.Option("--reviewed-by", help="Who reviewed it. Required when advancing the status."),
+    ] = None,
+    reviewed_at: Annotated[
+        datetime | None,
+        typer.Option("--reviewed-at", formats=["%Y-%m-%d"], help="Date of review. Defaults to today."),
+    ] = None,
+    registry_root: Annotated[
+        Path | None,
+        typer.Option(
+            "--registry-root",
+            help=(
+                "Registry tree root to stamp. Required unless --bundled-registry names the shipped "
+                "tree instead; there is no default, because the only value a default could have is "
+                "the shipped registry."
+            ),
+        ),
+    ] = None,
+    bundled_registry: Annotated[
+        bool,
+        typer.Option(
+            "--bundled-registry",
+            help=(
+                "Stamp the SHIPPED AEAT registry that ships in the wheel. The only door to it, and "
+                "unmistakable by design: a forgotten flag can no longer send a write there."
+            ),
+        ),
+    ] = False,
+) -> None:
+    """Write one modelo revision's declared governance provenance.
+
+    Writes ONLY the four governance scalars, and ONLY into the revision's own
+    ``revision.toml`` manifest: a stamp declared inside a per-section fragment
+    once merged silently and won, so a revision could read unstamped while the
+    compiled snapshot claimed a completed review. Advancing the status to
+    ``agent_reviewed`` records a reviewer and a date. Returning it to
+    ``pending_review`` drops the declared reviewer, because the schema refuses a
+    reviewer attached to a review the status denies; but naming a reviewer while
+    the status stays ``pending_review`` is REFUSED rather than dropped, so a
+    caller is never told the write succeeded while their claim was discarded.
+
+    The stamp is validated by the real revision schema before anything is
+    written, and the whole modelo is re-loaded through the real loader
+    afterwards; a manifest the loader would reject is restored to its previous
+    bytes rather than left on disk.
+
+    The target tree must be NAMED. Exactly one of ``--registry-root`` and
+    ``--bundled-registry`` is required and there is no default, because the only
+    value a default could have is the shipped registry — and it did have it. A
+    caller one layer up that dropped the root sent this verb at the bundled
+    Modelo 130 manifest and left a fabricated agent review in shipped data, and a
+    second reviewer reported an unattributable stamp appearing in the tree the
+    same session. Stamping the shipped registry stays legal, because declaring
+    authorship and agent review over it is what the verb is for; it is simply no
+    longer something that can happen because a flag was forgotten.
+
+    ``--registry-root`` pointed at the bundled tree is refused for the same
+    reason: two doors to shipped data, one of them not saying so, is the state
+    this closes. The refusal names the flag that does say so.
+    """
+    root = _resolve_registry_root(registry_root, bundled_registry=bundled_registry)
+    resolved_date = reviewed_at.date() if reviewed_at is not None else None
+    if review_status is StampableReviewStatus.AGENT_REVIEWED and resolved_date is None:
+        # Defaulted rather than demanded: the review being recorded is happening
+        # now, so today is the true date. It is echoed back so the written value
+        # is never implicit.
+        #
+        # Deliberately NOT widened to a lone ``--reviewed-by``. That path used to
+        # inherit the declared reviewer's date and record a person as having
+        # reviewed on a day they did not, and the writer now REFUSES it rather
+        # than defaulting: a reviewer change carries no warrant that the review
+        # is happening now, and defaulting would silently move a real review's
+        # date whenever a caller only meant to correct a misspelt name. Widening
+        # this condition would re-open that trade. See the writer's own rule.
+        resolved_date = datetime.now(tz=UTC).date()
+    try:
+        result = stamp_revision(
+            modelo,
+            revision,
+            engineered_by=engineered_by,
+            clear_engineered_by=clear_engineered_by,
+            review_status=review_status,
+            reviewed_by=reviewed_by,
+            reviewed_at=resolved_date,
+            registry_root=root,
+        )
+    except StampError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    typer.echo(result.render())
+
+
+def _resolve_registry_root(registry_root: Path | None, *, bundled_registry: bool) -> Path:
+    """Resolve the tree to stamp, refusing anything that leaves the target implicit.
+
+    Three refusals, one rule: the tree a write lands in is stated by the caller,
+    never inferred.
+
+    Neither flag is a refusal rather than a bundled-tree default, which is the
+    whole change — the default WAS the bundled tree, and a caller that forgot to
+    pass a root wrote a fabricated review into shipped data. Both flags together
+    is a refusal because the two answers cannot be reconciled and picking one
+    would guess. And ``--registry-root`` resolved to the bundled tree is a
+    refusal because it is a second, silent door to shipped data: the point of
+    ``--bundled-registry`` is that reaching the shipped registry is visible in
+    the command line and in shell history, and a path that happens to resolve
+    there is not.
+
+    Args:
+        registry_root: The root the caller named, or :data:`None`.
+        bundled_registry: Whether the caller asked for the shipped tree by name.
+
+    Returns:
+        The resolved registry root to stamp.
+
+    Raises:
+        click.exceptions.BadParameter: Neither door was named, both were, or the
+            named path resolves to the shipped tree.
+    """
+    bundled = bundled_registry_root()
+    if bundled_registry and registry_root is not None:
+        raise typer.BadParameter(
+            f"--registry-root {str(registry_root)!r} and --bundled-registry name two different trees; "
+            "supply exactly one",
+        )
+    if bundled_registry:
+        return bundled
+    if registry_root is None:
+        raise typer.BadParameter(
+            "no registry tree named: pass --registry-root PATH for a copy, or --bundled-registry to "
+            f"stamp the shipped AEAT registry at {bundled}. There is deliberately no default: the "
+            "only value it could have is the shipped registry, and a caller that forgot the flag "
+            "wrote a fabricated review into it.",
+        )
+    if registry_root.resolve() == bundled:
+        raise typer.BadParameter(
+            f"--registry-root {str(registry_root)!r} resolves to the shipped AEAT registry at "
+            f"{bundled}. Writing there is legal and is what this verb is for, but it is stated with "
+            "--bundled-registry so the act is visible in the command line rather than hidden in a "
+            "path that happens to resolve there.",
+        )
+    return registry_root
+
+
+def _warn_if_vacuous(composed: ConformanceReport) -> None:
+    """Echo the vacuity warning when the screen rendered nothing at all."""
+    warning = vacuity_warning(composed)
+    if warning is not None:
+        typer.echo(warning)
+
+
+__all__ = ["app", "load_bundled_runtime_authority", "validate_registry"]

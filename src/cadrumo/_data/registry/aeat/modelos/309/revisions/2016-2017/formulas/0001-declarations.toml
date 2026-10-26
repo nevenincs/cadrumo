@@ -1,0 +1,14 @@
+[[revisions."2016-2017".formulas]]
+id = "modelo-309-iva-cuota-no-periodica-total"
+target_casilla_id = "iva.cuota-no-periodica-total"
+expression.op = "add"
+expression.args = [
+    { casilla_id = "iva.autorepercutido.intracomunitaria" },
+    { casilla_id = "iva.soportado.recargo-equivalencia" },
+]
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+
+[[revisions."2016-2017".formulas.source_citations]]
+source_ref = "aeat-modelo-309-instructions"
+required_text = ["modelo 309", "cuota"]

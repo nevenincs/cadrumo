@@ -1,0 +1,900 @@
+---
+tags:
+  - '#exec'
+  - '#desktop-ledger-editor'
+date: '2026-10-23'
+modified: '2026-10-25'
+body_schema: 'body-v2'
+body_hash: 'sha256:0cd4d3c57d947a434622fea2031da9e87fedc8062afa39a06907951941d8c8ce'
+related:
+  - "[[2026-10-23-desktop-ledger-editor-plan]]"
+---
+
+# `desktop-ledger-editor` ledger
+
+## Changes
+
+- `S01` `A` `native/desktop/src-tauri/src/shell/relay.rs`
+- `S01` `A` `native/desktop/src-tauri/src/shell/ledger/mod.rs`
+- `S01` `A` `native/desktop/src-tauri/src/shell/ledger/admitted.rs`
+- `S01` `A` `native/desktop/src-tauri/src/shell/ledger/tests.rs`
+- `S01` `A` `native/desktop/src-tauri/src/shell/ledger/relay_contracts.py`
+- `S01` `A` `native/desktop/src-tauri/src/shell/ledger/relay_contracts.json`
+- `S01` `M` `native/desktop/src-tauri/src/shell/user_profile.rs`
+- `S01` `M` `native/desktop/src-tauri/src/shell/mod.rs`
+- `S01` `M` `native/desktop/src-tauri/src/agent/person.rs`
+- `S01` `M` `native/desktop/src-tauri/src/agent/mod.rs`
+- `S01` `M` `native/desktop/src-tauri/src/app.rs`
+- `S01` `M` `native/desktop/CMakeLists.txt`
+- `S01` `verify:` `tauri.mjs test-unit ledger` -> `pass`
+- `S01` `verify:` `tauri.mjs test-unit shell::user_profile` -> `pass`
+- `S01` `verify:` `tauri.mjs test-unit app::tests` -> `pass`
+- `S01` `verify:` `tauri.mjs test-unit agent::person` -> `pass`
+- `S01` `verify:` `tauri.mjs clippy-backend` -> `pass`
+- `S01` `verify:` `relay_contracts.py --check` -> `pass`
+- `S01` `verify:` `ruff check and format --check relay_contracts.py` -> `pass`
+- `S01` `by:` `vaultspec-high-executor`
+- `S02` `A` `native/desktop/src-tauri/src/shell/ledger/files.rs`
+- `S02` `M` `native/desktop/src-tauri/src/shell/ledger/mod.rs`
+- `S02` `M` `native/desktop/src-tauri/src/shell/ledger/tests.rs`
+- `S02` `M` `native/desktop/src-tauri/src/shell/relay.rs`
+- `S02` `M` `native/desktop/src-tauri/src/agent/person.rs`
+- `S02` `verify:` `tauri.mjs test-unit ledger` -> `pass`
+- `S02` `verify:` `tauri.mjs test-unit agent::` -> `pass`
+- `S02` `verify:` `tauri.mjs test-unit shell::user_profile` -> `pass`
+- `S02` `verify:` `tauri.mjs test-unit app::tests` -> `pass`
+- `S02` `verify:` `tauri.mjs clippy-backend` -> `pass`
+- `S02` `by:` `vaultspec-high-executor`
+- `S03` `A` `native/desktop/frontend/src/shell/ledger.ts`
+- `S03` `A` `native/desktop/frontend/src/shell/tauriLedger.ts`
+- `S03` `M` `native/desktop/frontend/src/shell/tauriHost.ts`
+- `S03` `M` `native/desktop/frontend/src/shell/host.ts`
+- `S03` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S03` `M` `native/desktop/frontend/eslint.config.js`
+- `S03` `M` `native/desktop/frontend/README.md`
+- `S03` `M` `native/desktop/src-tauri/src/shell/ledger/relay_contracts.py`
+- `S03` `verify:` `npx tsc --noEmit` -> `pass`
+- `S03` `verify:` `npx eslint on touched files` -> `pass`
+- `S03` `verify:` `npx prettier --check on touched files` -> `pass`
+- `S03` `verify:` `relay_contracts.py --check (and a deliberate mirror drift refused)` -> `pass`
+- `S03` `verify:` `ruff check and format --check relay_contracts.py` -> `pass`
+- `S03` `by:` `vaultspec-high-executor`
+- `S04` `A` `native/desktop/frontend/src/dev/ledgerFixture.ts`
+- `S04` `A` `native/desktop/frontend/src/dev/fixtures/ledger.ts`
+- `S04` `M` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S04` `M` `native/desktop/frontend/src/dev/scenarios.ts`
+- `S04` `M` `native/desktop/frontend/src/dev/main.tsx`
+- `S04` `M` `native/desktop/frontend/README.md`
+- `S04` `verify:` `npx tsc --noEmit` -> `pass`
+- `S04` `verify:` `npx eslint on touched files` -> `pass`
+- `S04` `verify:` `npx prettier --check on touched files` -> `pass`
+- `S04` `verify:` `scratch semantics probe of the scenario ledger (esbuild bundle run in node, 31 checks)` -> `pass`
+- `S04` `by:` `vaultspec-high-executor`
+- `S01` `M` `native/desktop/src-tauri/src/shell/ledger/mod.rs`
+- `S01` `M` `native/desktop/src-tauri/src/shell/ledger/tests.rs`
+- `S01` `M` `.vault/adr/2026-10-23-desktop-ledger-editor-adr.md`
+- `S01` `verify:` `desktop-host-unit-test` -> `pass`
+- `S01` `verify:` `desktop-host-unit-clippy` -> `pass`
+- `S05` `A` `native/desktop/frontend/src/components/ui/data-grid.tsx`
+- `S05` `A` `native/desktop/frontend/src/components/ui/dataGridModel.ts`
+- `S05` `A` `native/desktop/frontend/src/components/ui/combobox.tsx`
+- `S05` `A` `native/desktop/frontend/src/components/ui/sheet.tsx`
+- `S05` `A` `native/desktop/frontend/src/components/ui/filter-chip.tsx`
+- `S05` `A` `native/desktop/frontend/src/components/ui/data-grid.stories.tsx`
+- `S05` `A` `native/desktop/frontend/src/components/ui/combobox.stories.tsx`
+- `S05` `A` `native/desktop/frontend/src/components/ui/sheet.stories.tsx`
+- `S05` `A` `native/desktop/frontend/src/components/ui/filter-chip.stories.tsx`
+- `S05` `M` `native/desktop/frontend/src/components/ui/icon.tsx`
+- `S05` `M` `native/desktop/frontend/src/components/ui/cn.ts`
+- `S05` `M` `native/desktop/frontend/src/components/ui/popover.tsx`
+- `S05` `M` `native/desktop/frontend/src/components/ui/dialog.tsx`
+- `S05` `M` `native/desktop/frontend/src/styles/tokens.css`
+- `S05` `M` `native/desktop/frontend/src/styles/theme.css`
+- `S05` `M` `native/desktop/frontend/src/components/calendar/calendarMarks.ts`
+- `S05` `M` `native/desktop/frontend/src/dev/catalogue/Foundations.stories.tsx`
+- `S05` `A` `native/desktop/frontend/primitives.html`
+- `S05` `A` `native/desktop/frontend/src/dev/primitives/main.tsx`
+- `S05` `A` `native/desktop/frontend/src/dev/primitives/DataGridHarness.tsx`
+- `S05` `A` `native/desktop/frontend/src/dev/primitives/CompanionsHarness.tsx`
+- `S05` `A` `native/desktop/frontend/src/dev/primitives/gridSample.ts`
+- `S05` `M` `native/desktop/frontend/README.md`
+- `S05` `verify:` `npx tsc --noEmit` -> `pass`
+- `S05` `verify:` `npx eslint <touched files>` -> `pass`
+- `S05` `verify:` `npx prettier --check <touched files>` -> `pass`
+- `S05` `verify:` `node --test dev/eslint/tests/` -> `pass`
+- `S05` `by:` `vaultspec-high-executor`
+- `S06` `A` `native/desktop/frontend/tests/data-grid.spec.ts`
+- `S06` `A` `native/desktop/frontend/tests/scenarios/data-grid.spec.ts`
+- `S06` `verify:` `npx playwright test tests/data-grid.spec.ts (19 pure tests, server-free config)` -> `pass`
+- `S06` `verify:` `npx playwright test tests/scenarios/data-grid.spec.ts (16 tests on /primitives.html, dev server started and stopped by this run)` -> `pass`
+- `S06` `verify:` `npx playwright test tests/scenarios/accessibility.spec.ts design-system.spec.ts keyboard.spec.ts` -> `pass`
+- `S06` `verify:` `npx tsc --noEmit; npx eslint; npx prettier --check` -> `pass`
+- `S06` `by:` `vaultspec-high-executor`
+- `S18` `A` `native/desktop/frontend/src/shell/ledgerGrammar.ts`
+- `S18` `A` `native/desktop/frontend/src/shell/ledgerWindow.ts`
+- `S18` `A` `native/desktop/frontend/src/shell/ledgerStage.ts`
+- `S18` `A` `native/desktop/frontend/src/shell/ledgerPlan.ts`
+- `S18` `A` `native/desktop/frontend/src/shell/ledgerApply.ts`
+- `S18` `A` `native/desktop/frontend/tests/support/ledger.ts`
+- `S18` `A` `native/desktop/frontend/tests/ledger-grammar.spec.ts`
+- `S18` `A` `native/desktop/frontend/tests/ledger-window.spec.ts`
+- `S18` `A` `native/desktop/frontend/tests/ledger-stage.spec.ts`
+- `S18` `A` `native/desktop/frontend/tests/ledger-plan.spec.ts`
+- `S18` `A` `native/desktop/frontend/tests/ledger-apply.spec.ts`
+- `S18` `verify:` `npx tsc --noEmit` -> `pass`
+- `S18` `verify:` `npx eslint ledger model sources and specs` -> `pass`
+- `S18` `verify:` `npx prettier --check ledger model sources and specs` -> `pass`
+- `S18` `verify:` `npx playwright test -c scratchpad/ledgertest/pw.config.mjs ledger-grammar ledger-window ledger-stage ledger-plan ledger-apply (54 tests)` -> `pass`
+- `S18` `verify:` `uv run --no-sync python scratchpad/ledgertest/gen/check.py payloads.json (planner bulk CSV, single classify, update and add payloads through the product request parsers)` -> `pass`
+- `S18` `verify:` `mutation check of bulk-never-clears, stale-drop, unknown-pauses and mixed-share-in-bulk, each restored byte-for-byte` -> `pass`
+- `S18` `by:` `implementation-engineer-high`
+- `S07` `A` `native/desktop/frontend/src/components/ledger/LedgerPage.tsx`
+- `S07` `A` `native/desktop/frontend/src/components/ledger/LedgerHeader.tsx`
+- `S07` `A` `native/desktop/frontend/src/components/ledger/PeriodSelector.tsx`
+- `S07` `A` `native/desktop/frontend/src/components/ledger/ledgerWords.ts`
+- `S07` `A` `native/desktop/frontend/src/shell/ledgerYears.ts`
+- `S07` `A` `native/desktop/frontend/src/shell/ledgerReadiness.ts`
+- `S07` `A` `native/desktop/frontend/tests/scenarios/ledger-shell.spec.ts`
+- `S07` `M` `native/desktop/frontend/src/App.tsx`
+- `S07` `M` `native/desktop/frontend/src/shell/layout.ts`
+- `S07` `M` `native/desktop/frontend/src/components/PaneHeader.tsx`
+- `S07` `M` `native/desktop/frontend/src/components/ui/icon.tsx`
+- `S07` `M` `native/desktop/frontend/src/dev/fixtures/ledger.ts`
+- `S07` `M` `native/desktop/frontend/src/dev/scenarios.ts`
+- `S07` `M` `native/desktop/frontend/tests/scenarios/accessibility.spec.ts`
+- `S07` `M` `native/desktop/frontend/tests/scenarios/scenarios.spec.ts`
+- `S07` `M` `native/desktop/frontend/README.md`
+- `S07` `M` `dev/locales/desktop_chrome.py`
+- `S07` `M` `src/cadrumo/locales/en/common.yml`
+- `S07` `M` `src/cadrumo/locales/es/common.yml`
+- `S07` `M` `src/cadrumo/locales/ca/common.yml`
+- `S07` `M` `src/cadrumo/locales/hu/common.yml`
+- `S07` `verify:` `npx tsc --noEmit` -> `pass`
+- `S07` `verify:` `npx eslint .` -> `pass`
+- `S07` `verify:` `npx prettier --check <touched files>` -> `pass`
+- `S07` `verify:` `playwright scenarios ledger-shell accessibility keyboard (107)` -> `pass`
+- `S07` `verify:` `playwright scenarios scenarios.spec view-preferences columns touch panel (174)` -> `pass`
+- `S07` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py` -> `pass`
+- `S07` `by:` `vaultspec-high-executor`
+- `S11` `A` `native/desktop/frontend/src/components/ledger/transfer/ImportDialog.tsx`
+- `S11` `A` `native/desktop/frontend/src/components/ledger/transfer/ExportDialog.tsx`
+- `S11` `A` `native/desktop/frontend/src/components/ledger/transfer/importModel.ts`
+- `S11` `A` `native/desktop/frontend/src/components/ledger/transfer/tsv.ts`
+- `S11` `A` `native/desktop/frontend/src/components/ledger/transfer/transferWords.ts`
+- `S11` `A` `native/desktop/frontend/src/shell/ledgerImports.ts`
+- `S11` `M` `native/desktop/frontend/src/components/ledger/LedgerPage.tsx`
+- `S11` `M` `native/desktop/frontend/src/App.tsx`
+- `S11` `M` `native/desktop/frontend/src/shell/ledger.ts`
+- `S11` `M` `native/desktop/frontend/src/shell/ledgerApply.ts`
+- `S11` `M` `native/desktop/frontend/src/shell/layout.ts`
+- `S11` `M` `native/desktop/frontend/src/components/ui/icon.tsx`
+- `S11` `M` `native/desktop/frontend/src/dev/ledgerFixture.ts`
+- `S11` `A` `native/desktop/frontend/src/dev/primitives/LedgerExportHarness.tsx`
+- `S11` `M` `native/desktop/frontend/src/dev/primitives/main.tsx`
+- `S11` `M` `native/desktop/frontend/tests/ledger-apply.spec.ts`
+- `S11` `A` `native/desktop/frontend/tests/scenarios/ledger-transfer.spec.ts`
+- `S11` `M` `native/desktop/frontend/tests/scenarios/ledger-shell.spec.ts`
+- `S11` `M` `dev/locales/desktop_chrome.py`
+- `S11` `M` `src/cadrumo/locales/en/common.yml`
+- `S11` `M` `src/cadrumo/locales/es/common.yml`
+- `S11` `M` `src/cadrumo/locales/ca/common.yml`
+- `S11` `M` `src/cadrumo/locales/hu/common.yml`
+- `S11` `verify:` `npx tsc --noEmit (files of this Step)` -> `pass`
+- `S11` `verify:` `npx eslint and prettier --check on the Step's files` -> `pass`
+- `S11` `verify:` `playwright ledger-apply/grammar/plan/stage/window pure specs (54)` -> `pass`
+- `S11` `verify:` `playwright scenarios ledger-transfer (8), ledger-shell, accessibility` -> `pass`
+- `S11` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py (19 of 20; the drift test fails only on another Step's undeclared keys)` -> `pass`
+- `S11` `by:` `implementation-engineer-high`
+- `S08` `A` `native/desktop/frontend/src/components/ledger/movements/ClassifyDialog.tsx`
+- `S08` `A` `native/desktop/frontend/src/components/ledger/movements/ColumnChooser.tsx`
+- `S08` `A` `native/desktop/frontend/src/components/ledger/movements/MovementCells.tsx`
+- `S08` `A` `native/desktop/frontend/src/components/ledger/movements/MovementsGrid.tsx`
+- `S08` `A` `native/desktop/frontend/src/components/ledger/movements/MovementsSection.tsx`
+- `S08` `A` `native/desktop/frontend/src/components/ledger/movements/MovementsToolbar.tsx`
+- `S08` `A` `native/desktop/frontend/src/components/ledger/movements/ReadinessStrip.tsx`
+- `S08` `A` `native/desktop/frontend/src/components/ledger/movements/movementWords.ts`
+- `S08` `A` `native/desktop/frontend/src/components/ledger/movements/movementsModel.ts`
+- `S08` `A` `native/desktop/frontend/src/components/ledger/movements/useMovementsView.ts`
+- `S08` `A` `native/desktop/frontend/src/shell/ledgerCommands.ts`
+- `S08` `A` `native/desktop/frontend/src/shell/ledgerVocabulary.ts`
+- `S08` `A` `native/desktop/frontend/src/shell/ledgerMovementReads.ts`
+- `S08` `A` `native/desktop/frontend/tests/ledger-movements.spec.ts`
+- `S08` `A` `native/desktop/frontend/tests/scenarios/ledger-movements.spec.ts`
+- `S08` `M` `native/desktop/frontend/src/shell/ledgerWindow.ts`
+- `S08` `M` `native/desktop/frontend/src/components/ledger/LedgerPage.tsx`
+- `S08` `M` `native/desktop/frontend/src/components/ui/icon.tsx`
+- `S08` `M` `native/desktop/frontend/src/dev/ledgerFixture.ts`
+- `S08` `M` `native/desktop/frontend/src/dev/fixtures/ledger.ts`
+- `S08` `M` `native/desktop/frontend/tests/scenarios/accessibility.spec.ts`
+- `S08` `M` `native/desktop/frontend/scripts/benchmark.mjs`
+- `S08` `M` `native/desktop/frontend/README.md`
+- `S08` `M` `dev/locales/desktop_chrome.py`
+- `S08` `M` `src/cadrumo/locales/en/common.yml`
+- `S08` `M` `src/cadrumo/locales/es/common.yml`
+- `S08` `M` `src/cadrumo/locales/ca/common.yml`
+- `S08` `M` `src/cadrumo/locales/hu/common.yml`
+- `S08` `verify:` `npm run check (tsc, eslint with design-system rules, eslint rule tests, prettier)` -> `pass`
+- `S08` `verify:` `playwright pure specs ledger-movements/window/stage/plan/grammar/apply (62)` -> `pass`
+- `S08` `verify:` `playwright scenarios ledger-movements (12), ledger-shell (10), accessibility incl. 6 new Ledger surfaces, keyboard` -> `pass`
+- `S08` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py (20)` -> `pass`
+- `S08` `verify:` `ledger benchmark section on the scenario build: 5,040 movements read 255-328 ms, scroll frame p95 33.4 ms, select-all 1-5 ms, sort 24-29 ms, 39 rows drawn` -> `pass`
+- `S08` `by:` `implementation-engineer-high`
+- `S08` `M` `src/cadrumo/application/ledger/transaction_projection.py`
+- `S08` `M` `src/cadrumo/application/ledger/list_operation.py`
+- `S08` `M` `src/cadrumo/application/ledger/tests/test_list_query.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_list_sort.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/ledger/tests/categorisation_entry_fixtures.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/ledger/tests/entries_door_fixtures.py`
+- `S08` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S08` `verify:` `pytest ledger list + TUI ledger (717)` -> `pass`
+- `S08` `verify:` `operation_contract_manifest --check` -> `pass`
+- `S12` `A` `native/desktop/frontend/src/components/ledger/invoices/InvoicesSection.tsx`
+- `S12` `A` `native/desktop/frontend/src/components/ledger/invoices/InvoiceEditor.tsx`
+- `S12` `A` `native/desktop/frontend/src/components/ledger/invoices/InvoiceLines.tsx`
+- `S12` `A` `native/desktop/frontend/src/components/ledger/invoices/InvoiceFields.tsx`
+- `S12` `A` `native/desktop/frontend/src/components/ledger/invoices/invoiceModel.ts`
+- `S12` `A` `native/desktop/frontend/src/components/ledger/invoices/invoiceWords.ts`
+- `S12` `A` `native/desktop/frontend/src/components/ledger/invoices/invoiceWrites.ts`
+- `S12` `A` `native/desktop/frontend/src/components/ledger/invoices/useInvoiceCatalogue.ts`
+- `S12` `M` `native/desktop/frontend/src/components/ledger/LedgerPage.tsx`
+- `S12` `M` `native/desktop/frontend/src/components/ledger/LedgerHeader.tsx`
+- `S12` `M` `native/desktop/frontend/src/shell/ledger.ts`
+- `S12` `M` `native/desktop/frontend/src/dev/ledgerFixture.ts`
+- `S12` `A` `native/desktop/frontend/src/dev/ledgerInvoiceFixture.ts`
+- `S12` `A` `native/desktop/frontend/src/dev/fixtures/ledgerInvoices.ts`
+- `S12` `M` `native/desktop/frontend/src/dev/fixtures/ledger.ts`
+- `S12` `A` `native/desktop/frontend/tests/ledger-invoices-model.spec.ts`
+- `S12` `A` `native/desktop/frontend/tests/scenarios/ledger-invoices.spec.ts`
+- `S12` `M` `dev/locales/desktop_chrome.py`
+- `S12` `M` `src/cadrumo/locales/en/common.yml`
+- `S12` `M` `src/cadrumo/locales/es/common.yml`
+- `S12` `M` `src/cadrumo/locales/ca/common.yml`
+- `S12` `M` `src/cadrumo/locales/hu/common.yml`
+- `S12` `verify:` `npx tsc --noEmit` -> `pass`
+- `S12` `verify:` `npx playwright test tests/ledger-invoices-model.spec.ts` -> `pass`
+- `S12` `verify:` `npx playwright test tests/scenarios/ledger-invoices.spec.ts` -> `pass`
+- `S12` `verify:` `python -m dev.locales.desktop_chrome --output <tmp>` -> `pass`
+- `S12` `by:` `implementation-engineer-high`
+- `S09` `A` `native/desktop/frontend/src/components/ledger/editing/CellEditor.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/ledger/editing/ChangesTray.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/ledger/editing/EditedCells.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/ledger/editing/LeaveDialog.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/ledger/editing/LedgerEditing.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/ledger/editing/MovementEditing.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/ledger/editing/PasteDialog.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/ledger/editing/ReviewDialog.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/ledger/editing/WindowedList.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/ledger/editing/editingModel.ts`
+- `S09` `A` `native/desktop/frontend/src/components/ledger/editing/editingWords.ts`
+- `S09` `A` `native/desktop/frontend/src/components/ledger/editing/useLedgerApply.ts`
+- `S09` `A` `native/desktop/frontend/tests/ledger-editing.spec.ts`
+- `S09` `A` `native/desktop/frontend/tests/scenarios/ledger-editing.spec.ts`
+- `S09` `M` `dev/locales/desktop_chrome.py`
+- `S09` `M` `native/desktop/frontend/src/App.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/Titlebar.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/LedgerPage.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/movements/MovementsGrid.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/movements/MovementsSection.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/movements/movementWords.ts`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/movements/movementsModel.ts`
+- `S09` `M` `native/desktop/frontend/src/dev/ledgerFixture.ts`
+- `S09` `M` `native/desktop/frontend/src/shell/ledger.ts`
+- `S09` `M` `native/desktop/frontend/src/shell/ledgerApply.ts`
+- `S09` `M` `native/desktop/frontend/src/shell/ledgerPlan.ts`
+- `S09` `M` `native/desktop/frontend/src/shell/ledgerStage.ts`
+- `S09` `M` `native/desktop/frontend/tests/ledger-apply.spec.ts`
+- `S09` `M` `native/desktop/frontend/tests/ledger-movements.spec.ts`
+- `S09` `M` `native/desktop/frontend/tests/ledger-plan.spec.ts`
+- `S09` `M` `native/desktop/frontend/tests/ledger-stage.spec.ts`
+- `S09` `M` `native/desktop/frontend/tests/scenarios/ledger-movements.spec.ts`
+- `S09` `M` `native/desktop/frontend/tests/scenarios/ledger-shell.spec.ts`
+- `S09` `M` `native/desktop/frontend/tests/support/ledger.ts`
+- `S09` `M` `src/cadrumo/locales/ca/common.yml`
+- `S09` `M` `src/cadrumo/locales/en/common.yml`
+- `S09` `M` `src/cadrumo/locales/es/common.yml`
+- `S09` `M` `src/cadrumo/locales/hu/common.yml`
+- `S09` `verify:` `npx tsc --noEmit (index of fa2ece7b7f)` -> `pass`
+- `S09` `verify:` `eslint + prettier --check on S09 files` -> `pass`
+- `S09` `verify:` `playwright pure specs ledger-*.spec.ts (81)` -> `pass`
+- `S09` `verify:` `playwright tests/scenarios/ledger-editing.spec.ts (19)` -> `pass`
+- `S09` `verify:` `playwright scenarios ledger-movements/shell/transfer` -> `pass`
+- `S09` `verify:` `python -m dev.locales.desktop_chrome --output <tmp>` -> `pass`
+- `S09` `by:` `vaultspec-high-executor`
+- `S01` `M` `native/desktop/src-tauri/src/shell/relay.rs`
+- `S01` `verify:` `desktop-host-unit-test` -> `fail`
+- `S02` `verify:` `desktop-host-unit-test` -> `fail`
+- `S14` `A` `native/desktop/frontend/src/components/ledger/setup/AccountsPane.tsx`
+- `S14` `A` `native/desktop/frontend/src/components/ledger/setup/AssetsPane.tsx`
+- `S14` `A` `native/desktop/frontend/src/components/ledger/setup/CapitalGoodsPane.tsx`
+- `S14` `A` `native/desktop/frontend/src/components/ledger/setup/CounterpartiesPane.tsx`
+- `S14` `A` `native/desktop/frontend/src/components/ledger/setup/DiagnosticsPane.tsx`
+- `S14` `A` `native/desktop/frontend/src/components/ledger/setup/HealthSection.tsx`
+- `S14` `A` `native/desktop/frontend/src/components/ledger/setup/InventoryPane.tsx`
+- `S14` `A` `native/desktop/frontend/src/components/ledger/setup/ProrrataPane.tsx`
+- `S14` `A` `native/desktop/frontend/src/components/ledger/setup/RatiosPane.tsx`
+- `S14` `A` `native/desktop/frontend/src/components/ledger/setup/RegistersSection.tsx`
+- `S14` `A` `native/desktop/frontend/src/components/ledger/setup/RuleDialog.tsx`
+- `S14` `A` `native/desktop/frontend/src/components/ledger/setup/RulesSection.tsx`
+- `S14` `A` `native/desktop/frontend/src/components/ledger/setup/SetupParts.tsx`
+- `S14` `A` `native/desktop/frontend/src/components/ledger/setup/setupModel.ts`
+- `S14` `A` `native/desktop/frontend/src/components/ledger/setup/setupProps.ts`
+- `S14` `A` `native/desktop/frontend/src/components/ledger/setup/setupWords.ts`
+- `S14` `A` `native/desktop/frontend/src/shell/ledgerSetup.ts`
+- `S14` `A` `native/desktop/frontend/src/dev/ledgerSetupFixture.ts`
+- `S14` `A` `native/desktop/frontend/tests/scenarios/ledger-setup.spec.ts`
+- `S14` `A` `native/desktop/frontend/tests/ledger-setup-model.spec.ts`
+- `S14` `M` `native/desktop/frontend/src/components/ledger/LedgerPage.tsx`
+- `S14` `M` `native/desktop/frontend/src/shell/ledger.ts`
+- `S14` `M` `native/desktop/frontend/src/shell/ledgerCommands.ts`
+- `S14` `M` `native/desktop/frontend/src/shell/ledgerStage.ts`
+- `S14` `M` `native/desktop/frontend/src/shell/ledgerPlan.ts`
+- `S14` `M` `native/desktop/frontend/src/dev/ledgerFixture.ts`
+- `S14` `M` `native/desktop/frontend/src/dev/fixtures/ledger.ts`
+- `S14` `M` `dev/locales/desktop_chrome.py`
+- `S14` `M` `src/cadrumo/locales/en/common.yml`
+- `S14` `M` `src/cadrumo/locales/es/common.yml`
+- `S14` `M` `src/cadrumo/locales/ca/common.yml`
+- `S14` `M` `src/cadrumo/locales/hu/common.yml`
+- `S14` `verify:` `npx tsc --noEmit` -> `pass`
+- `S14` `verify:` `npx eslint (touched files)` -> `pass`
+- `S14` `verify:` `npx prettier --check (touched files)` -> `pass`
+- `S14` `verify:` `playwright tests/ledger-setup-model.spec.ts` -> `pass`
+- `S14` `verify:` `playwright tests/scenarios/ledger-setup.spec.ts ledger-shell.spec.ts` -> `pass`
+- `S14` `verify:` `python -m dev.locales.desktop_chrome --output` -> `pass`
+- `S14` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py` -> `fail`
+- `S14` `by:` `vaultspec-high-executor`
+- `S13` `A` `native/desktop/frontend/src/components/ledger/documents/DocumentPanels.tsx`
+- `S13` `A` `native/desktop/frontend/src/components/ledger/documents/DocumentsSection.tsx`
+- `S13` `A` `native/desktop/frontend/src/components/ledger/documents/DraftReview.tsx`
+- `S13` `A` `native/desktop/frontend/src/components/ledger/documents/EvidenceRecords.tsx`
+- `S13` `A` `native/desktop/frontend/src/components/ledger/documents/OffHostDialog.tsx`
+- `S13` `A` `native/desktop/frontend/src/components/ledger/documents/documentWords.ts`
+- `S13` `A` `native/desktop/frontend/src/components/ledger/documents/documentsModel.ts`
+- `S13` `A` `native/desktop/frontend/src/components/ledger/documents/useLedgerRead.ts`
+- `S13` `A` `native/desktop/frontend/src/components/ledger/matching/MatchQueue.tsx`
+- `S13` `A` `native/desktop/frontend/src/components/ledger/matching/matchingModel.ts`
+- `S13` `A` `native/desktop/frontend/src/components/ledger/matching/matchingWords.ts`
+- `S13` `A` `native/desktop/frontend/src/components/ledger/matching/useMatchingFacts.ts`
+- `S13` `A` `native/desktop/frontend/src/dev/ledgerEvidenceFixture.ts`
+- `S13` `A` `native/desktop/frontend/tests/ledger-matching.spec.ts`
+- `S13` `A` `native/desktop/frontend/tests/ledger-documents-model.spec.ts`
+- `S13` `A` `native/desktop/frontend/tests/scenarios/ledger-documents.spec.ts`
+- `S13` `A` `native/desktop/frontend/tests/scenarios/ledger-matching.spec.ts`
+- `S13` `M` `native/desktop/frontend/src/shell/ledger.ts`
+- `S13` `M` `native/desktop/frontend/src/components/ledger/LedgerPage.tsx`
+- `S13` `M` `native/desktop/frontend/src/dev/ledgerFixture.ts`
+- `S13` `M` `native/desktop/frontend/src/dev/fixtures/ledger.ts`
+- `S13` `M` `dev/locales/desktop_chrome.py`
+- `S13` `M` `src/cadrumo/locales/en/common.yml`
+- `S13` `M` `src/cadrumo/locales/es/common.yml`
+- `S13` `M` `src/cadrumo/locales/ca/common.yml`
+- `S13` `M` `src/cadrumo/locales/hu/common.yml`
+- `S13` `verify:` `npx tsc --noEmit (S13 files)` -> `pass`
+- `S13` `verify:` `npx eslint and prettier --check on S13 files` -> `pass`
+- `S13` `verify:` `playwright pure specs tests/ledger-matching.spec.ts tests/ledger-documents-model.spec.ts (14)` -> `pass`
+- `S13` `verify:` `playwright --project=scenarios ledger-documents, ledger-matching, ledger-transfer (26)` -> `pass`
+- `S13` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py` -> `fail`
+- `S13` `by:` `implementation-engineer-high`
+- `S05` `M` `native/desktop/frontend/src/components/ui/data-grid.tsx`
+- `S05` `M` `native/desktop/frontend/src/components/ui/dataGridModel.ts`
+- `S05` `M` `native/desktop/frontend/src/components/ui/combobox.tsx`
+- `S05` `verify:` `npx tsc --noEmit` -> `pass`
+- `S06` `M` `native/desktop/frontend/tests/data-grid.spec.ts`
+- `S06` `M` `native/desktop/frontend/tests/scenarios/data-grid.spec.ts`
+- `S06` `M` `native/desktop/frontend/tests/scenarios/ledger-editing.spec.ts`
+- `S06` `verify:` `playwright data-grid.spec.ts scenarios/data-grid.spec.ts scenarios/ledger-editing.spec.ts` -> `pass`
+- `S01` `M` `native/desktop/src-tauri/src/shell/ledger/admitted.rs`
+- `S01` `verify:` `desktop-host-unit-test` -> `pass`
+- `S10` `M` `native/desktop/frontend/src/components/ledger/LedgerPage.tsx`
+- `S10` `A` `native/desktop/frontend/src/components/ledger/inspector/ActionDialog.tsx`
+- `S10` `A` `native/desktop/frontend/src/components/ledger/inspector/ClassifySection.tsx`
+- `S10` `A` `native/desktop/frontend/src/components/ledger/inspector/DetailsSection.tsx`
+- `S10` `A` `native/desktop/frontend/src/components/ledger/inspector/DocumentsSection.tsx`
+- `S10` `A` `native/desktop/frontend/src/components/ledger/inspector/HistorySection.tsx`
+- `S10` `A` `native/desktop/frontend/src/components/ledger/inspector/InspectorField.tsx`
+- `S10` `A` `native/desktop/frontend/src/components/ledger/inspector/InvoiceSection.tsx`
+- `S10` `A` `native/desktop/frontend/src/components/ledger/inspector/JumpIndex.tsx`
+- `S10` `A` `native/desktop/frontend/src/components/ledger/inspector/LedgerInspector.tsx`
+- `S10` `A` `native/desktop/frontend/src/components/ledger/inspector/ModelSuggestion.tsx`
+- `S10` `A` `native/desktop/frontend/src/components/ledger/inspector/MovementInspector.tsx`
+- `S10` `A` `native/desktop/frontend/src/components/ledger/inspector/RightPanel.tsx`
+- `S10` `A` `native/desktop/frontend/src/components/ledger/inspector/SelectionInspector.tsx`
+- `S10` `A` `native/desktop/frontend/src/components/ledger/inspector/SplitDialog.tsx`
+- `S10` `A` `native/desktop/frontend/src/components/ledger/inspector/inspectorContext.ts`
+- `S10` `A` `native/desktop/frontend/src/components/ledger/inspector/inspectorModel.ts`
+- `S10` `A` `native/desktop/frontend/src/components/ledger/inspector/inspectorWords.ts`
+- `S10` `A` `native/desktop/frontend/src/components/ledger/inspector/movementFields.ts`
+- `S10` `A` `native/desktop/frontend/src/components/ledger/inspector/useInspectorReads.ts`
+- `S10` `M` `native/desktop/frontend/src/components/ledger/movements/MovementsSection.tsx`
+- `S10` `M` `native/desktop/frontend/src/components/ui/icon.tsx`
+- `S10` `M` `native/desktop/frontend/src/dev/ledgerFixture.ts`
+- `S10` `A` `native/desktop/frontend/src/dev/ledgerMovementActionFixture.ts`
+- `S10` `M` `native/desktop/frontend/src/shell/ledger.ts`
+- `S10` `M` `native/desktop/frontend/src/shell/ledgerCommands.ts`
+- `S10` `M` `native/desktop/frontend/src/styles/tokens.css`
+- `S10` `A` `native/desktop/frontend/tests/ledger-inspector-model.spec.ts`
+- `S10` `A` `native/desktop/frontend/tests/scenarios/ledger-inspector.spec.ts`
+- `S10` `M` `native/desktop/frontend/src/shell/ledgerPlan.ts`
+- `S10` `M` `native/desktop/frontend/src/shell/ledgerStage.ts`
+- `S10` `M` `dev/locales/desktop_chrome.py`
+- `S10` `M` `src/cadrumo/locales/ca/common.yml`
+- `S10` `M` `src/cadrumo/locales/en/common.yml`
+- `S10` `M` `src/cadrumo/locales/es/common.yml`
+- `S10` `M` `src/cadrumo/locales/hu/common.yml`
+- `S10` `verify:` `npx tsc --noEmit` -> `pass`
+- `S10` `verify:` `npx eslint and prettier --check on touched files` -> `pass`
+- `S10` `verify:` `playwright tests/ledger-inspector-model.spec.ts ledger-plan ledger-stage` -> `pass`
+- `S10` `verify:` `playwright tests/scenarios/ledger-inspector.spec.ts ledger-movements ledger-shell` -> `pass`
+- `S10` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py` -> `fail`
+- `S10` `by:` `implementation-high`
+- `S15` `M` `dev/locales/desktop_chrome.py`
+- `S15` `M` `src/cadrumo/locales/en/common.yml`
+- `S15` `M` `src/cadrumo/locales/es/common.yml`
+- `S15` `M` `src/cadrumo/locales/ca/common.yml`
+- `S15` `M` `src/cadrumo/locales/hu/common.yml`
+- `S15` `verify:` `dev/locales/tests/test_desktop_chrome.py` -> `fail`
+- `S08` `M` `native/desktop/frontend/src/components/ledger/movements/movementsModel.ts`
+- `S08` `M` `native/desktop/frontend/src/components/ledger/movements/MovementCells.tsx`
+- `S08` `M` `native/desktop/frontend/src/components/ledger/movements/MovementsGrid.tsx`
+- `S08` `verify:` `playwright ledger-movements, ledger-matching, ledger-inspector, ledger-editing` -> `pass`
+- `S13` `M` `native/desktop/frontend/src/components/ledger/documents/DraftReview.tsx`
+- `S13` `M` `native/desktop/frontend/tests/scenarios/ledger-documents.spec.ts`
+- `S13` `verify:` `playwright ledger-documents` -> `pass`
+- `S14` `M` `native/desktop/frontend/src/components/ledger/setup/SetupParts.tsx`
+- `S14` `M` `native/desktop/frontend/src/components/ledger/setup/HealthSection.tsx`
+- `S14` `M` `native/desktop/frontend/src/components/ledger/setup/AccountsPane.tsx`
+- `S14` `M` `native/desktop/frontend/src/components/ledger/setup/InventoryPane.tsx`
+- `S14` `M` `native/desktop/frontend/src/shell/ledgerSetup.ts`
+- `S14` `M` `native/desktop/frontend/tests/scenarios/ledger-setup.spec.ts`
+- `S14` `verify:` `playwright ledger-setup` -> `pass`
+- `S12` `M` `native/desktop/frontend/src/components/ledger/invoices/InvoicesSection.tsx`
+- `S12` `verify:` `playwright ledger-invoices` -> `pass`
+- `S11` `M` `native/desktop/frontend/src/components/ledger/transfer/ImportDialog.tsx`
+- `S11` `verify:` `playwright ledger-transfer` -> `pass`
+- `S16` `A` `native/desktop/frontend/src/dev/ledgerClassesFixture.ts`
+- `S16` `M` `native/desktop/frontend/src/dev/ledgerFixture.ts`
+- `S16` `M` `native/desktop/frontend/src/dev/fixtures/ledger.ts`
+- `S16` `A` `native/desktop/frontend/tests/ledger-classes.spec.ts`
+- `S16` `A` `native/desktop/frontend/tests/ledger-fixture-host.spec.ts`
+- `S16` `A` `native/desktop/frontend/tests/scenarios/ledger-benchmark.spec.ts`
+- `S16` `A` `native/desktop/frontend/tests/scenarios/ledger-sweep.spec.ts`
+- `S16` `M` `native/desktop/frontend/tests/scenarios/ledger-shell.spec.ts`
+- `S16` `verify:` `playwright ledger specs (254 passed, 2 failed: focus return)` -> `pass`
+- `S16` `by:` `implementer`
+- `S08` `M` `native/desktop/frontend/src/components/ledger/movements/movementWords.ts`
+- `S08` `M` `native/desktop/frontend/src/components/ledger/movements/MovementsSection.tsx`
+- `S08` `M` `native/desktop/frontend/tests/ledger-movements.spec.ts`
+- `S08` `verify:` `playwright ledger-movements, scenarios ledger-movements and ledger-shell` -> `pass`
+- `S18` `M` `native/desktop/frontend/src/shell/ledgerPlan.ts`
+- `S18` `M` `native/desktop/frontend/tests/ledger-plan.spec.ts`
+- `S18` `M` `native/desktop/frontend/src/shell/ledgerWindow.ts`
+- `S18` `M` `native/desktop/frontend/tests/ledger-window.spec.ts`
+- `S18` `M` `native/desktop/frontend/src/shell/ledgerApply.ts`
+- `S18` `M` `native/desktop/frontend/tests/ledger-apply.spec.ts`
+- `S18` `verify:` `npx tsc --noEmit -p .` -> `pass`
+- `S18` `verify:` `npx playwright test ledger-plan ledger-apply ledger-window ledger-editing ledger-stage ledger-movements ledger-inspector-model (124 incl. scenarios)` -> `pass`
+- `S18` `by:` `implementation-engineer`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/inspector/ModelSuggestion.tsx`
+- `S09` `verify:` `npx playwright test scenarios/ledger-inspector.spec.ts scenarios/ledger-editing.spec.ts (40)` -> `pass`
+- `S09` `verify:` `npx eslint ModelSuggestion.tsx` -> `pass`
+- `S09` `by:` `implementation-engineer`
+- `S09` `A` `native/desktop/frontend/src/components/ledger/WritePause.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/ledger/useSealedMovements.ts`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/documents/DocumentPanels.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/documents/DraftReview.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/documents/EvidenceRecords.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/documents/useLedgerRead.ts`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/editing/ChangesTray.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/editing/LedgerEditing.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/editing/ReviewDialog.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/editing/editingModel.ts`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/editing/useLedgerApply.ts`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/inspector/LedgerInspector.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/invoices/InvoiceEditor.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/invoices/invoiceWrites.ts`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/invoices/useInvoiceCatalogue.ts`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/transfer/ImportDialog.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/transfer/ExportDialog.tsx`
+- `S09` `M` `native/desktop/frontend/tests/ledger-editing.spec.ts`
+- `S09` `A` `native/desktop/frontend/tests/scenarios/ledger-focus.spec.ts`
+- `S09` `verify:` `npx tsc --noEmit -p .` -> `pass`
+- `S09` `verify:` `npx playwright test ledger-editing ledger-setup ledger-apply ledger-plan ledger-invoices ledger-documents ledger-transfer ledger-pause ledger-focus` -> `pass`
+- `S09` `by:` `implementation-engineer-high`
+- `S14` `M` `native/desktop/frontend/src/components/ledger/setup/AssetsPane.tsx`
+- `S14` `M` `native/desktop/frontend/src/components/ledger/setup/CapitalGoodsPane.tsx`
+- `S14` `M` `native/desktop/frontend/src/components/ledger/setup/CounterpartiesPane.tsx`
+- `S14` `M` `native/desktop/frontend/src/components/ledger/setup/ProrrataPane.tsx`
+- `S14` `M` `native/desktop/frontend/src/components/ledger/setup/RatiosPane.tsx`
+- `S14` `M` `native/desktop/frontend/src/components/ledger/setup/RuleDialog.tsx`
+- `S14` `M` `native/desktop/frontend/src/components/ledger/setup/RulesSection.tsx`
+- `S14` `M` `native/desktop/frontend/src/components/ledger/setup/setupModel.ts`
+- `S14` `M` `native/desktop/frontend/src/components/ledger/setup/setupWords.ts`
+- `S14` `A` `native/desktop/frontend/tests/scenarios/ledger-pause.spec.ts`
+- `S14` `verify:` `npx playwright test scenarios/ledger-pause.spec.ts` -> `pass`
+- `S14` `verify:` `npx playwright test scenarios/ledger-setup.spec.ts` -> `pass`
+- `S14` `by:` `implementation-engineer-high`
+- `S16` `A` `native/desktop/frontend/tests/scenarios/ledger-focus.spec.ts`
+- `S16` `verify:` `playwright ledger-focus` -> `pass`
+- `S13` `M` `native/desktop/frontend/src/components/ledger/documents/DocumentsSection.tsx`
+- `S13` `M` `native/desktop/frontend/src/components/ledger/documents/EvidenceRecords.tsx`
+- `S13` `M` `native/desktop/frontend/src/components/ledger/documents/documentsModel.ts`
+- `S13` `verify:` `npx playwright test scenarios/ledger-documents.spec.ts` -> `pass`
+- `S13` `verify:` `npx tsc --noEmit -p .` -> `pass`
+- `S14` `verify:` `npx playwright test scenarios/ledger-setup.spec.ts` -> `pass`
+- `S14` `verify:` `npx tsc --noEmit -p .` -> `pass`
+- `S13` `verify:` `npx playwright test scenarios/ledger-documents.spec.ts` -> `pass`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/editing/CellEditor.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/editing/MovementEditing.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/editing/PasteDialog.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/WritePause.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/ui/dialog.tsx`
+- `S09` `M` `native/desktop/frontend/tests/scenarios/ledger-editing.spec.ts`
+- `S09` `verify:` `npx tsc --noEmit -p .` -> `pass`
+- `S09` `verify:` `npx eslint (touched files)` -> `pass`
+- `S09` `verify:` `npx prettier --check (touched files)` -> `pass`
+- `S09` `verify:` `playwright ledger-editing.spec.ts` -> `fail`
+- `S09` `by:` `implementation-engineer`
+- `S11` `M` `native/desktop/frontend/src/components/ledger/transfer/ExportDialog.tsx`
+- `S11` `M` `native/desktop/frontend/src/components/ledger/transfer/importModel.ts`
+- `S11` `M` `native/desktop/frontend/tests/scenarios/ledger-transfer.spec.ts`
+- `S11` `verify:` `npx tsc --noEmit -p .` -> `pass`
+- `S11` `verify:` `npx eslint (touched files)` -> `pass`
+- `S11` `verify:` `npx prettier --check (touched files)` -> `pass`
+- `S11` `verify:` `playwright ledger-transfer.spec.ts ledger-pause.spec.ts ledger-focus.spec.ts` -> `pass`
+- `S11` `by:` `implementation-engineer`
+- `S08` `M` `native/desktop/frontend/src/components/ui/data-grid.tsx`
+- `S08` `M` `native/desktop/frontend/tests/scenarios/data-grid.spec.ts`
+- `S08` `M` `native/desktop/frontend/src/shell/ledgerCommands.ts`
+- `S08` `M` `native/desktop/frontend/src/shell/ledgerVocabulary.ts`
+- `S08` `M` `native/desktop/frontend/src/components/ledger/movements/ClassifyDialog.tsx`
+- `S08` `M` `native/desktop/frontend/src/components/ledger/movements/MovementsToolbar.tsx`
+- `S08` `M` `native/desktop/frontend/src/components/ledger/movements/ReadinessStrip.tsx`
+- `S08` `M` `native/desktop/frontend/tests/scenarios/ledger-movements.spec.ts`
+- `S08` `M` `native/desktop/frontend/tests/scenarios/ledger-editing.spec.ts`
+- `S08` `verify:` `npx tsc --noEmit -p .` -> `pass`
+- `S08` `verify:` `npx eslint and prettier --check on lane B files` -> `pass`
+- `S08` `verify:` `playwright scenarios/ledger-movements ledger-inspector ledger-setup ledger-editing ledger-pause data-grid accessibility(Ledger) and model specs` -> `pass`
+- `S08` `verify:` `playwright scenarios/ledger-benchmark.spec.ts` -> `fail`
+- `S10` `M` `native/desktop/frontend/src/components/ledger/inspector/ActionDialog.tsx`
+- `S10` `M` `native/desktop/frontend/src/components/ledger/inspector/InspectorField.tsx`
+- `S10` `M` `native/desktop/frontend/src/components/ledger/inspector/LedgerInspector.tsx`
+- `S10` `M` `native/desktop/frontend/src/components/ledger/inspector/MovementInspector.tsx`
+- `S10` `M` `native/desktop/frontend/src/components/ledger/inspector/SelectionInspector.tsx`
+- `S10` `M` `native/desktop/frontend/src/components/ledger/inspector/inspectorContext.ts`
+- `S10` `M` `native/desktop/frontend/src/components/ledger/inspector/movementFields.ts`
+- `S10` `M` `native/desktop/frontend/src/components/ledger/inspector/ModelSuggestion.tsx`
+- `S10` `M` `native/desktop/frontend/tests/ledger-inspector-model.spec.ts`
+- `S10` `M` `native/desktop/frontend/tests/scenarios/ledger-inspector.spec.ts`
+- `S10` `M` `native/desktop/frontend/tests/scenarios/ledger-pause.spec.ts`
+- `S10` `verify:` `npx tsc --noEmit -p .` -> `pass`
+- `S10` `verify:` `npx eslint and prettier --check on lane B files` -> `pass`
+- `S10` `verify:` `playwright scenarios/ledger-movements ledger-inspector ledger-setup ledger-editing ledger-pause data-grid accessibility(Ledger) and model specs` -> `pass`
+- `S10` `by:` `implementation-engineer-high`
+- `S14` `M` `native/desktop/frontend/tests/ledger-setup-model.spec.ts`
+- `S14` `verify:` `npx tsc --noEmit -p .` -> `pass`
+- `S14` `verify:` `npx eslint and prettier --check on lane B files` -> `pass`
+- `S14` `verify:` `playwright scenarios/ledger-movements ledger-inspector ledger-setup ledger-editing ledger-pause data-grid accessibility(Ledger) and model specs` -> `pass`
+- `S08` `M` `native/desktop/frontend/src/components/ui/combobox.tsx`
+- `S08` `A` `native/desktop/frontend/tests/combobox-ranking.spec.ts`
+- `S08` `verify:` `playwright data-grid, ledger-movements, ledger-inspector, ledger-invoices, ledger-benchmark` -> `pass`
+- `S15` `verify:` `desktop chrome drift check` -> `pass`
+- `S10` `M` `native/desktop/frontend/src/components/ledger/inspector/inspectorModel.ts`
+- `S10` `verify:` `npx playwright test tests/ledger-inspector-model.spec.ts tests/scenarios/ledger-inspector.spec.ts` -> `pass`
+- `S08` `verify:` `npx playwright test tests/scenarios/ledger-movements.spec.ts -g duplicate` -> `pass`
+- `S08` `verify:` `npx playwright test tests/ledger-movements.spec.ts tests/scenarios/ledger-movements.spec.ts -g compact|widens|duplicate` -> `pass`
+- `S08` `M` `native/desktop/frontend/src/components/ui/dataGridModel.ts`
+- `S08` `M` `native/desktop/frontend/tests/data-grid.spec.ts`
+- `S08` `verify:` `npx playwright test tests/data-grid.spec.ts tests/scenarios/data-grid.spec.ts` -> `pass`
+- `S10` `M` `native/desktop/frontend/src/components/ledger/inspector/RightPanel.tsx`
+- `S10` `verify:` `npx playwright test tests/scenarios/ledger-inspector.spec.ts -g 1280` -> `pass`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/LedgerPage.tsx`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/movements/MovementsSection.tsx`
+- `S07` `M` `native/desktop/frontend/tests/scenarios/ledger-movements.spec.ts`
+- `S07` `verify:` `npx playwright test tests/scenarios/ledger-movements.spec.ts -g header` -> `pass`
+- `S07` `by:` `implementation-engineer-high`
+- `S19` `A` `src/cadrumo/application/ledger/evidence_page_contracts.py`
+- `S19` `A` `src/cadrumo/application/ledger/evidence_page_errors.py`
+- `S19` `A` `src/cadrumo/application/ledger/evidence_page_operation.py`
+- `S19` `A` `src/cadrumo/adapters/inbound/pdf/page_image.py`
+- `S19` `A` `src/cadrumo/adapters/inbound/pdf/tests/test_page_image.py`
+- `S19` `A` `src/cadrumo/entrypoints/evidence_page_operation_composition.py`
+- `S19` `A` `src/cadrumo/entrypoints/cli/operation_ledger_evidence_page.py`
+- `S19` `A` `src/cadrumo/entrypoints/cli/tests/test_ledger_evidence_page_command.py`
+- `S19` `A` `src/cadrumo/entrypoints/tests/test_ledger_evidence_page_settlement.py`
+- `S19` `A` `src/cadrumo/entrypoints/tests/conformance_ledger_evidence_page_support.py`
+- `S19` `M` `src/cadrumo/core/errors/registry/_application_part3a2.py`
+- `S19` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S19` `M` `src/cadrumo/application/operations/access_facts.py`
+- `S19` `M` `src/cadrumo/entrypoints/cli/command_operation_table.py`
+- `S19` `M` `src/cadrumo/entrypoints/cli/_profile_authentication_gate.py`
+- `S19` `M` `src/cadrumo/entrypoints/cli/ledger_evidence_commands.py`
+- `S19` `M` `src/cadrumo/entrypoints/cli/_app_ledger_evidence_command_specs.py`
+- `S19` `M` `src/cadrumo/entrypoints/cli/ledger_business_payloads.py`
+- `S19` `M` `src/cadrumo/entrypoints/tests/conformance_families.py`
+- `S19` `M` `stubs/pypdfium2/__init__.pyi`
+- `S19` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S19` `A` `native/desktop/frontend/src/components/ledger/documents/DocumentViewer.tsx`
+- `S19` `M` `native/desktop/frontend/src/components/ledger/documents/DraftReview.tsx`
+- `S19` `M` `native/desktop/frontend/src/dev/ledgerEvidenceFixture.ts`
+- `S19` `A` `native/desktop/frontend/src/dev/fixtures/documentPage.ts`
+- `S19` `M` `native/desktop/frontend/src/shell/ledger.ts`
+- `S19` `M` `native/desktop/frontend/tests/scenarios/ledger-documents.spec.ts`
+- `S19` `M` `native/desktop/src-tauri/src/shell/ledger/admitted.rs`
+- `S19` `M` `native/desktop/src-tauri/src/shell/ledger/relay_contracts.json`
+- `S19` `M` `native/desktop/src-tauri/src/shell/ledger/mod.rs`
+- `S19` `M` `native/desktop/src-tauri/src/shell/ledger/tests.rs`
+- `S19` `verify:` `uv run --no-sync pytest src/cadrumo/adapters/inbound/pdf/tests/test_page_image.py` -> `pass`
+- `S19` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tests/test_ledger_evidence_page_settlement.py` -> `pass`
+- `S19` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py -k ledger.evidence.page` -> `pass`
+- `S19` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/cli/tests/test_ledger_evidence_page_command.py` -> `pass`
+- `S19` `verify:` `uv run --no-sync python -m dev.operation_contract_manifest.generate --check` -> `pass`
+- `S19` `verify:` `uv run --no-sync python native/desktop/src-tauri/src/shell/ledger/relay_contracts.py --check` -> `pass`
+- `S19` `verify:` `uv run --no-sync lint-imports --config .importlinter --no-cache` -> `pass`
+- `S19` `verify:` `ruff check + ruff format --check + ty + basedpyright + pyrefly on S19 files` -> `pass`
+- `S19` `verify:` `cmake --build build/windows-x64 --config Debug --target desktop-host-unit-test` -> `pass`
+- `S19` `verify:` `npx tsc --noEmit -p . (S19 files)` -> `pass`
+- `S19` `verify:` `npx playwright test tests/scenarios/ledger-documents.spec.ts` -> `pass`
+- `S19` `verify:` `uv run --no-sync pytest dev/operation_contract_manifest/tests` -> `fail`
+- `S19` `by:` `implementation-engineer`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/useSealedMovements.ts`
+- `S09` `M` `native/desktop/frontend/src/components/ledger/transfer/importModel.ts`
+- `S09` `verify:` `npx tsc --noEmit -p .` -> `pass`
+- `S09` `verify:` `npx eslint (touched files)` -> `pass`
+- `S09` `verify:` `playwright ledger-plan.spec.ts scenarios/ledger-pause.spec.ts` -> `pass`
+- `S09` `by:` `vaultspec-high-executor`
+- `S08` `A` `native/desktop/frontend/src/components/ledger/setup/useConfiguredRatios.ts`
+- `S08` `M` `native/desktop/frontend/tests/ledger-plan.spec.ts`
+- `S08` `M` `native/desktop/frontend/tests/ledger-fixture-host.spec.ts`
+- `S08` `verify:` `npx tsc --noEmit -p .` -> `pass`
+- `S08` `verify:` `playwright ledger-plan.spec.ts ledger-fixture-host.spec.ts` -> `pass`
+- `S08` `by:` `vaultspec-high-executor`
+- `S14` `M` `native/desktop/frontend/tests/scenarios/ledger-pause.spec.ts`
+- `S14` `verify:` `npx tsc --noEmit -p .` -> `pass`
+- `S14` `verify:` `playwright scenarios/ledger-pause.spec.ts scenarios/ledger-setup.spec.ts` -> `pass`
+- `S14` `by:` `vaultspec-high-executor`
+- `S10` `M` `native/desktop/frontend/src/components/ledger/inspector/inspectorWords.ts`
+- `S10` `verify:` `npx playwright test (10 ledger and grid specs incl. ledger-benchmark)` -> `pass`
+- `S08` `verify:` `npx playwright test tests/scenarios/ledger-movements.spec.ts` -> `pass`
+- `S08` `by:` `implementation-engineer-high`
+- `S07` `verify:` `npx tsc --noEmit -p .` -> `pass`
+- `S13` `A` `native/desktop/frontend/src/components/ledger/documents/documentLanding.ts`
+- `S13` `M` `native/desktop/frontend/src/components/ledger/documents/DocumentPanels.tsx`
+- `S13` `verify:` `npx tsc --noEmit -p . (documents files)` -> `pass`
+- `S13` `verify:` `npx eslint src/components/ledger/documents/` -> `pass`
+- `S13` `verify:` `npx prettier --check src/components/ledger/documents/` -> `pass`
+- `S13` `verify:` `npx playwright test tests/scenarios/ledger-documents.spec.ts tests/scenarios/ledger-pause.spec.ts` -> `pass`
+- `S13` `by:` `implementation-engineer`
+- `S19` `M` `pyproject.toml`
+- `S19` `M` `dev/locales/desktop_chrome.py`
+- `S19` `M` `src/cadrumo/locales/en/common.yml`
+- `S19` `M` `src/cadrumo/locales/en/cli.yml`
+- `S19` `M` `src/cadrumo/locales/en/errors.yml`
+- `S19` `verify:` `dev/packaging/tests/test_inference_imports_are_declared.py` -> `pass`
+- `S08` `verify:` `npx playwright test tests/ledger-movements.spec.ts tests/scenarios/ledger-movements.spec.ts` -> `pass`
+- `S09` `verify:` `npx tsc --noEmit -p .` -> `pass`
+- `S09` `verify:` `npx eslint WritePause.tsx LedgerPage.tsx` -> `pass`
+- `S09` `verify:` `playwright scenarios/ledger-pause ledger-documents ledger-setup ledger-transfer ledger-invoices` -> `pass`
+- `S10` `M` `native/desktop/frontend/src/shell/ledgerApply.ts`
+- `S10` `M` `native/desktop/frontend/src/components/ledger/editing/LedgerEditing.tsx`
+- `S10` `M` `native/desktop/frontend/tests/ledger-apply.spec.ts`
+- `S10` `verify:` `npx tsc --noEmit -p .` -> `pass`
+- `S10` `verify:` `npx eslint and prettier --check on the Step's files` -> `pass`
+- `S10` `verify:` `npx playwright test tests/ledger-apply.spec.ts` -> `pass`
+- `S10` `verify:` `npx playwright test tests/scenarios/ledger-inspector.spec.ts` -> `fail`
+- `S10` `by:` `vaultspec-high-executor`
+- `S14` `M` `native/desktop/frontend/src/dev/ledgerSetupFixture.ts`
+- `S14` `verify:` `npx tsc --noEmit -p .` -> `pass`
+- `S14` `verify:` `npx playwright test tests/scenarios/ledger-setup.spec.ts` -> `pass`
+- `S13` `M` `native/desktop/frontend/src/components/ledger/transfer/importModel.ts`
+- `S13` `M` `native/desktop/frontend/src/components/ledger/transfer/ImportDialog.tsx`
+- `S13` `verify:` `npx tsc --noEmit -p .` -> `pass`
+- `S13` `verify:` `npx playwright test tests/scenarios/ledger-documents.spec.ts tests/scenarios/ledger-transfer.spec.ts tests/scenarios/ledger-pause.spec.ts` -> `pass`
+- `S13` `by:` `vaultspec-high-executor`
+- `S09` `M` `native/desktop/frontend/src/shell/ledgerCommands.ts`
+- `S09` `verify:` `npx tsc --noEmit -p .` -> `pass`
+- `S09` `verify:` `npm run check` -> `pass`
+- `S09` `verify:` `npx playwright test tests/ledger-movements.spec.ts tests/scenarios/ledger-movements.spec.ts tests/scenarios/ledger-editing.spec.ts` -> `pass`
+- `S17` `M` `native/desktop/frontend/src/App.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/LedgerPage.tsx`
+- `S17` `A` `native/desktop/frontend/src/components/ledger/gridRoom.ts`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/inspector/RightPanel.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/ui/data-grid.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/ui/dataGridModel.ts`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/movements/MovementsGrid.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/movements/movementsModel.ts`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/movements/MovementsSection.tsx`
+- `S17` `M` `native/desktop/frontend/src/shell/ledgerPlan.ts`
+- `S17` `M` `native/desktop/frontend/tests/data-grid.spec.ts`
+- `S17` `M` `native/desktop/frontend/tests/scenarios/ledger-inspector.spec.ts`
+- `S17` `M` `dev/locales/desktop_chrome.py`
+- `S17` `verify:` `npx tsc --noEmit -p .` -> `pass`
+- `S17` `verify:` `playwright data-grid ledger-plan ledger-inspector ledger-movements` -> `pass`
+- `S10` `M` `src/cadrumo/application/ledger/llm_review_contracts.py`
+- `S10` `M` `src/cadrumo/application/ledger/llm_review_operation.py`
+- `S10` `M` `src/cadrumo/application/ledger/llm_review_execution.py`
+- `S10` `M` `src/cadrumo/application/operations/_supervisor_settlement.py`
+- `S10` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S10` `M` `src/cadrumo/entrypoints/cli/_ledger_llm_cli.py`
+- `S10` `M` `src/cadrumo/entrypoints/cli/ledger_lifecycle_cli.py`
+- `S10` `M` `src/cadrumo_runtime/host/frontend/tui/runtime_ledger_categorisation.py`
+- `S10` `M` `src/cadrumo/adapters/persistence/operations/tests/test_llm_review_operation_persistence.py`
+- `S10` `M` `src/cadrumo/entrypoints/tests/conformance_ledger_classification_support.py`
+- `S10` `M` `src/cadrumo/entrypoints/tests/test_ledger_classification_reader_refusal_settlement.py`
+- `S10` `M` `src/cadrumo/entrypoints/tests/dependency_operation_gating_support.py`
+- `S10` `M` `src/cadrumo/entrypoints/cli/tests/test_operation_ledger_llm.py`
+- `S10` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_categorisation.py`
+- `S10` `M` `src/cadrumo/entrypoints/tests/ledger_frontend_parity_test_support.py`
+- `S10` `verify:` `uv run --no-sync python -m dev.operation_contract_manifest.generate --check` -> `pass`
+- `S10` `verify:` `pytest src/cadrumo (persistence/operations, CLI ledger llm, TUI categorisation, entrypoint review, parity, gating, censal)` -> `pass`
+- `S10` `verify:` `pytest src/cadrumo_runtime host/tests/frontend/tui/test_runtime_ledger_categorisation.py` -> `pass`
+- `S10` `verify:` `pytest dev/operation_contract_manifest/tests` -> `pass`
+- `S01` `M` `native/desktop/src-tauri/src/shell/settle.rs`
+- `S01` `M` `native/desktop/src-tauri/src/shell/ledger/relay_contracts.py`
+- `S01` `M` `native/desktop/src-tauri/src/shell/ledger/relay_contracts.json`
+- `S01` `M` `native/desktop/src-tauri/src/shell/modelo/mod.rs`
+- `S01` `M` `native/desktop/src-tauri/src/shell/modelo/tests.rs`
+- `S01` `verify:` `cmake --build build/windows-x64 --config Debug --target desktop-host-unit-test` -> `pass`
+- `S01` `verify:` `uv run --no-sync python native/desktop/src-tauri/src/shell/ledger/relay_contracts.py --check` -> `pass`
+- `S17` `verify:` `playwright ledger-inspector at-1280 scenario` -> `pass`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/movements/ReadinessStrip.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/setup/HealthSection.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/transfer/ExportDialog.tsx`
+- `S17` `M` `native/desktop/frontend/src/dev/ledgerFixture.ts`
+- `S17` `M` `native/desktop/frontend/src/shell/ledgerReadiness.ts`
+- `S17` `M` `native/desktop/frontend/tests/ledger-movements.spec.ts`
+- `S17` `M` `native/desktop/frontend/tests/scenarios/ledger-movements.spec.ts`
+- `S17` `M` `native/desktop/frontend/tests/scenarios/ledger-setup.spec.ts`
+- `S17` `M` `native/desktop/frontend/tests/scenarios/ledger-transfer.spec.ts`
+- `S17` `verify:` `npx playwright test ledger-setup ledger-movements ledger-transfer ledger-inspector scenarios and tests/ledger-movements.spec.ts` -> `pass`
+- `S17` `by:` `vaultspec-high-executor`
+- `S16` `A` `native/desktop/frontend/tests/live/ledger-privacy.live.ts`
+- `S16` `A` `native/desktop/frontend/tests/live/privacy.ts`
+- `S16` `A` `native/desktop/frontend/tests/live/privacy.unit.ts`
+- `S16` `M` `native/desktop/frontend/tests/live/playwright.config.ts`
+- `S16` `M` `native/desktop/frontend/tests/live/README.md`
+- `S16` `M` `native/desktop/frontend/package.json`
+- `S16` `M` `dev/desktop_agent_live/lane.py`
+- `S16` `A` `dev/desktop_agent_live/tests/test_ledger_privacy.py`
+- `S16` `verify:` `node --test tests/live/privacy.unit.ts` -> `pass`
+- `S16` `verify:` `npx tsc -p tests/live/tsconfig.json --noEmit` -> `pass`
+- `S16` `verify:` `npx tsc --noEmit` -> `pass`
+- `S16` `verify:` `eslint and prettier --check tests/live` -> `pass`
+- `S16` `verify:` `uv run --no-sync pytest dev/desktop_agent_live/tests -q` -> `pass`
+- `S16` `verify:` `ruff check and ruff format --check on lane.py and test_ledger_privacy.py` -> `pass`
+- `S16` `by:` `vaultspec-high-executor`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/documents/DocumentViewer.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/documents/DocumentsSection.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/documents/DraftReview.tsx`
+- `S17` `M` `native/desktop/frontend/src/dev/ledgerEvidenceFixture.ts`
+- `S17` `M` `native/desktop/frontend/tests/scenarios/ledger-documents.spec.ts`
+- `S17` `verify:` `npx playwright test tests/scenarios/ledger-documents.spec.ts tests/scenarios/ledger-provisioning.spec.ts` -> `pass`
+- `S17` `M` `native/desktop/frontend/src/components/PaneHeader.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/LedgerHeader.tsx`
+- `S17` `verify:` `playwright ledger shell focus inspector movements accessibility` -> `pass`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/documents/documentsModel.ts`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/matching/matchingModel.ts`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/inspector/InvoiceSection.tsx`
+- `S17` `M` `native/desktop/frontend/tests/ledger-matching.spec.ts`
+- `S17` `verify:` `npx playwright test tests/scenarios/ledger-documents.spec.ts tests/ledger-matching.spec.ts` -> `pass`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/WritePause.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/editing/useLedgerApply.ts`
+- `S17` `M` `native/desktop/frontend/src/shell/ledgerApply.ts`
+- `S17` `M` `native/desktop/frontend/tests/scenarios/ledger-pause.spec.ts`
+- `S17` `verify:` `npx playwright test tests/scenarios/ledger-pause.spec.ts tests/ledger-apply.spec.ts` -> `pass`
+- `S17` `M` `native/desktop/frontend/src/shell/ledger.ts`
+- `S17` `M` `native/desktop/frontend/tests/ledger-plan.spec.ts`
+- `S17` `M` `native/desktop/frontend/tests/ledger-fixture-host.spec.ts`
+- `S17` `verify:` `playwright ledger-plan ledger-fixture-host ledger-apply ledger-editing ledger-transfer` -> `pass`
+- `S10` `M` `src/cadrumo/entrypoints/cli/operation_ledger_view.py`
+- `S10` `M` `src/cadrumo/entrypoints/tests/conformance_ledger_seed_support.py`
+- `S10` `M` `dev/operation_contract_manifest/tests/test_command_operation_join.py`
+- `S10` `verify:` `uv run --no-sync python -m dev.operation_contract_manifest.generate --check` -> `pass`
+- `S10` `verify:` `pytest src/cadrumo/adapters/persistence/operations/tests/test_llm_review_operation_persistence.py` -> `pass`
+- `S10` `verify:` `pytest src/cadrumo/entrypoints/cli/tests/test_operation_ledger_llm.py` -> `pass`
+- `S10` `verify:` `pytest src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py -k review` -> `pass`
+- `S10` `verify:` `pytest src/cadrumo_runtime host/tests/frontend/tui/test_runtime_ledger_categorisation.py` -> `pass`
+- `S10` `verify:` `pytest dev/operation_contract_manifest/tests (join, generate, census, frontend parity, source scan, runtime requests)` -> `pass`
+- `S10` `verify:` `cmake --build build/windows-x64 --config Debug --target desktop-host-unit-test` -> `pass`
+- `S10` `verify:` `relay_contracts.py --check` -> `pass`
+- `S17` `M` `native/desktop/frontend/src/components/ui/combobox.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/movements/movementWords.ts`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/editing/CellEditor.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/editing/ReviewDialog.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/inspector/inspectorWords.ts`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/movements/ClassifyDialog.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/setup/RuleDialog.tsx`
+- `S17` `M` `native/desktop/frontend/tests/combobox-ranking.spec.ts`
+- `S17` `verify:` `npx playwright test tests/combobox-ranking.spec.ts ledger-editing ledger-inspector ledger-movements ledger-setup data-grid scenarios` -> `pass`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/useSealedMovements.ts`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/editing/LedgerEditing.tsx`
+- `S17` `verify:` `npx playwright test ledger-pause ledger-editing ledger-inspector scenarios` -> `pass`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/transfer/ImportDialog.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/ui/icon.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/editing/MovementEditing.tsx`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/editing/editingWords.ts`
+- `S17` `M` `native/desktop/frontend/src/shell/ledgerCommands.ts`
+- `S17` `verify:` `npx playwright test ledger-movements ledger-pause ledger-editing ledger-transfer ledger-setup ledger-documents scenarios` -> `pass`
+- `S17` `M` `native/desktop/src-tauri/src/shell/external.rs`
+- `S17` `M` `native/desktop/src-tauri/src/shell/modelo/mod.rs`
+- `S17` `M` `native/desktop/src-tauri/src/shell/ledger/files.rs`
+- `S17` `M` `native/desktop/src-tauri/src/shell/ledger/mod.rs`
+- `S17` `M` `native/desktop/src-tauri/src/shell/ledger/tests.rs`
+- `S17` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S17` `M` `native/desktop/frontend/src/shell/tauriLedger.ts`
+- `S17` `M` `native/desktop/frontend/tests/support/ledger.ts`
+- `S17` `verify:` `cmake --build build/windows-x64 --config Debug --target desktop-host-unit-test` -> `pass`
+- `S17` `M` `native/desktop/frontend/src/components/ledger/PeriodSelector.tsx`
+- `S17` `M` `native/desktop/frontend/tests/scenarios/ledger-shell.spec.ts`
+- `S17` `verify:` `npx playwright test ledger-shell ledger-transfer ledger-pause scenarios` -> `pass`
+- `S17` `verify:` `npx playwright test data-grid ledger-inspector ledger-movements ledger-editing ledger-focus ledger-benchmark scenarios and tests/data-grid.spec.ts` -> `pass`
+- `S17` `M` `native/desktop/src-tauri/src/shell/settle.rs`
+- `S17` `M` `native/desktop/src-tauri/src/shell/relay.rs`
+- `S17` `verify:` `cmake --build build/windows-x64 --config Debug --target desktop-host-unit-test` -> `pass`
+
+## Notes
+
+- `S04` Playwright scenario suite not run here: it starts the fixed-port development and preview servers; the Ledger page's scenario tests belong to P04.S16.
+- `S01` Follow-up correction: results reach the window with file names, not paths (ADR amendment 2026-10-24)
+- `S07` Pre-existing, not from this Step: a 'Maximum update depth exceeded' console error in scenarios.spec 'a reader far from the end is never given the whole log to draw', reproduced with the committed App.tsx; dev/locales test failures on provenance.source and TUI registries come from concurrent Modelo work.
+- `S11` Likely duplicates are compared in the result step, after import: the dry-run projection names neither the incoming row's fields nor the existing movement.
+- `S11` The invoice-book preview shows file name and size only; the host offers no digest before apply, so the digest is shown from the result.
+- `S11` Export receives staged=0 from the page until staged editing lands; the warning is verified through the primitives harness.
+- `S08` S08 The full benchmark.mjs stops before the ledger section: its start-up step waits for terminals that the current scenario build never reports (not from this Step); the ledger section was measured on its own against the same build.
+- `S08` S08 Under four Playwright workers on the loaded host, three tests timed out (an accessibility calendar surface, keyboard F6, the column chooser test); each passed when rerun with one worker.
+- `S08` S08 The list projection carries no own account id, import batch or import note: the account, import and import-note filters are product list reads whose ids the grid keeps, and the grid has no Account column.
+- `S08` S08 Staging is held in the page (reduceStage) and the classify command stages through it; the unsaved marker, tray and review land with S09.
+- `S08` Follow-up: list rows carry the own-account register id so the desktop grid can show and group by account
+- `S12` `dev/locales/tests/test_desktop_chrome.py` drift check fails in the working tree only on S09's uncommitted desktop.ledger.apply/edit/tray keys; no invoices key drifts.
+- `S12` ledger.invoice.wizard and the per-line OSS rate kind are not offered; the structured add covers creation.
+- `S09` Native window close (Alt+F4 or the OS close) is not guarded: the host closes without asking the page; the titlebar close button, shell navigation, sign-out and profile switch are guarded.
+- `S09` M1 permanent links and M5 model approvals are covered by pure specs and review rendering; their scenario paths wait for the S10/S13 staging routes.
+- `S01` 993f39151f fixes P01 highs 1-3; the one failing host test is the unrelated `sign_in` admission timing test (539 passed); high 4, the native relay secret wipe, waits on the native application owner
+- `S02` 993f39151f fixes P01 highs 1-3; the one failing host test is the unrelated `sign_in` admission timing test (539 passed); high 4, the native relay secret wipe, waits on the native application owner
+- `S14` `test_desktop_chrome` fails only on S13 documents and S10 inspector keys not yet declared; no Setup drift.
+- `S14` Rule counterparty and amount-range matching and stored rule names need a product contract change, deferred by the orchestrator; closing-authority file pick needs a host .json purpose, an orchestrator follow-up; a JSON paste field ships now.
+- `S13` `test_desktop_chrome` drift test fails only on CADRUMO-UX-MODELO's undeclared `desktop.declarations.*` and `desktop.modelo.*` keys in the shared working tree; S13 keys are declared and consumed.
+- `S13` Commits 3f8439a34f, 1af741c564, ec6a40e5b0, bc1b6a3eb3, 16cbd0f2aa.
+- `S05` 9fe5eef35d fixes the P02 mediums (shell chord copy, AltGr, select-all) and lows (combobox enter, position count); tsc is clean on these files, the only errors are CADRUMO-UX-MODELO's untracked workspace files
+- `S01` 434aaab711 reduced `provider_locator` and file: URIs in results; recorded here as the review asked
+- `S01` 81e11327f6 derives the payload bound from the native relay; the native wipe landed in a61193c467; all four P01 highs and the relay-bound-pin medium are resolved
+- `S10` `test_desktop_chrome:` the one failure is `test_the_shell_source_names_exactly_the_declared_keys,` whose drift is only S13's undeclared `desktop.ledger.documents.*` keys and the unused `desktop.ledger.matching.open_named;` every `desktop.ledger.inspector.*` key is declared and generated.
+- `S15` 797c4ab08a; no desktop.ledger key drifts, every ledger key is authored in four catalogues, no hard-coded ledger text; the one failing test flags only CADRUMO-UX-MODELO's uncommitted declarations, modelo and workspace keys
+- `S08` 1e55936f02 adds M6's Match column after Amount; failures seen under shared-server contention passed when re-run serially
+- `S13` cd708fab1b: provenance as a glyph, extractor id in tooltip; off-host dialog audited after its fade-in (the audit failed at HEAD before)
+- `S14` cd708fab1b folds the reset; 797c4ab08a reads a closing authority or purchase cost from a file (TUI parity)
+- `S12` e451d06c49 pins the total to the end edge
+- `S11` e451d06c49 drops the repeated What to import label
+- `S16` ledger-focus.spec.ts left uncommitted: import and export dialogs lose focus to body on Escape (product defect)
+- `S08` 51fd4ee2b8 resolves P03·status-done-unchecked
+- `S09` Sealed set read per movement through ledger.track, bounded at 400 per window read: no period-level source exists
+- `S16` the Import/Export focus defect S16 found is fixed in eb80a4f385
+- `S13` uxC: 12 of 12 documents scenarios pass (the off-host one on its own re-run); viewer deferred to P03.S19; commit ffc0fd495d
+- `S14` uxC: 16 of 16 setup scenarios pass (the rules dry run passed on its own re-run after a transient vite overlay); Health reuses the readiness strip; commit 5aa92c6e9d
+- `S13` uxC: 13 of 13 documents scenarios pass; flagged-field glyph goes to its question
+- `S09` UX review fixes in commit 01dc4011ca. 16 of 22 editing scenarios pass; the 6 failures all wait for the Group column, which lane B's uncommitted narrow-width preset hides at 1440 with the agent pane open.
+- `S11` UX review fixes in commit 8834d9d5be. Preview duplicate pairing (R12) is not possible: the dry run names no row facts; the chip and its note are done.
+- `S08` ledger-benchmark filter step measured 541-861 ms against its 500 ms budget while a concurrent Release build loaded the machine; the committed grid text without the click fix also measured 599 once, so no lane B cause is established
+- `S08` d7311a0669: one shared grid tooltip; filter after select-all of 5000 rows `~750` ms to `~440` ms; a8e5d5320b combobox ranking; 24016487a6 pinned Description
+- `S15` 67afa01221 adds and rewords 110 keys plural-free; 703653a275 and 8d10ad2e6f retire 18
+- `S19` `dev/operation_contract_manifest/tests/test_command_operation_join.py` fails on errors.py/main.py findings and config profile dependencies.status rows from another session's commit ca8b1943ac; the derived row for app ledger evidence page matches the recorded table.
+- `S19` 4fd1d57cdb strings (92b51eefeb restored strings it dropped); 3d46e89c4a drops the stale deptry Pillow suppression; deptry itself crashes in importlib metadata on HEAD as well; generated CLI docs are gitignored build outputs
+- `S10` ledger-inspector.spec.ts:966 (at 1280 with the agent open) fails on a concurrent layout change outside this Step; every model review scenario passes
+- `S13` ledger-documents.spec.ts:71 failed once in the batch run and passed on its own re-run
+- `S09` three ledger-editing scenarios failed once in the batch run and passed on their own re-run
+- `S17` UX2 narrow-grid-hides-description fixed in db2410b0cd; bulk split by halving in 00902a1a1c
+- `S17` 1236ded35a: column frame read from styles; the new band assertion fails at 136 `<` 159 with the old measurement
+- `S17` UX2 preflight-failure-hides-selection ed394518c8, restored in 0246e4cdb8 after cf177d8bb7 reverted it; health-other-period-stale, countless-warning-zero-to-fix, export-other-period-sentence, unknown-pill-shape, reason-chip-names-repeat and the whole-ledger status counts in 16a0c6fb0a
+- `S16` S16 294041c3f0 packaged-window ledger privacy check not run here: just desktop-agent-live --ledger-privacy needs the Release bundle, the remote-debugging host and the person's signed-in window
+- `S17` UX2 viewer-scrolls-away 5c1b42b6bd; scrolling the viewer to a reading's place is not done: the reading contract carries no position
+- `S17` ff9165347e grid floor with the panel shut and narrow header; 7dcf276adc UX2 strings batches 1-2
+- `S17` UX2 total-answer-not-kept 3db3117515: the product derives the total by design `(invoice_confirmation` `printed_total_discrepancy;` resolutions only gate), so the window says so; ticket-no-link-path 5745d2b430
+- `S17` UX2 reread-banner-lists-every-name 32b32f97a9; Show selects the counted movements rather than adding a filter chip
+- `S17` e70e0f6305 relay bounds from the generated relayBounds.ts; 4f16c85131 and 2e743779d1 UX2 strings batch 3
+- `S17` UX2 category-ranking-scatter 24f03943ce; two setup scenarios failed once in the batch and passed on their own re-run
+- `S17` UX2 sealed-holdback-rounds ea24622217: the page's lock-read budget raced across overlapping reads, and the review read at most 400; three scenarios failed once in the batch and passed alone
+- `S17` UX2 duplicate-glyph-mismatch e42cf47f36; usage-ratio-copy, colon-count-copy, rule-saved-silently, bulk-chord-overwrites-silently cf829606b6
+- `S17` 28b8bef784 `ledger_files_reveal` for UX2 unknown-export-reread; 08948df368 canonical review id in the scenario host
+- `S17` UX2 period-years-late f6222c7b22; export-saveas-clipped 06e10cb8d8; unknown-export-reread 15d2761612 on the host's revealFile (28b8bef784)
+- `S17` UX2 partial-column-fragments 7c0d45c3c9 (start-edge snap; a column the end group cuts stays counted by its cue); the 5,000-row benchmark missed its budget on some runs on HEAD's grid as well, under machine load
+- `S17` 547927be55 P04R follow-ring-unbounded-residents, host half
+- `S17` b29928b58a: a forgotten write stays unknown to the window (corrects 547927be55, raised by CADRUMO-UX-MODELO)

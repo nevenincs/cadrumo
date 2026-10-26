@@ -1,0 +1,16 @@
+# Official workbook parity anchor for the modelo 190 ejercicio-2022 fichero BOE.
+#
+# NOT CLAIMED: no fixture of this name exists, and runner_required is false, so
+# nothing dereferences the label. The row records which official design this
+# edition's layout was transcribed from, which is what the parity family is
+# read for here.
+
+[[revisions."2022".workbook_parity_refs]]
+id = "modelo-190-dr-pdf"
+workbook_source = "aeat-dr-190-2020"
+fixture_id = "modelo-190-2022-record-design-layout"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.01"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2020"]

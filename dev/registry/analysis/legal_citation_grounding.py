@@ -1,0 +1,163 @@
+"""Screen: does every required_text quote occur in the excerpt it cites?
+
+``required_text`` exists so a reader can confirm the registry's legal claim
+against the source it names. A quote that cannot be found in its own
+``corpus_ref`` does not fail loudly -- nothing refuses, nothing warns -- so the
+claim quietly rests on the author's word instead of the BOE's text.
+
+Three defects produce that, and they are not equally dangerous:
+
+``whitespace``  The quote spans a Unicode space the excerpt writes differently,
+                usually U+00A0 between a word and a number ("modelo<nbsp>390").
+                grep renders nbsp as a space, so a human checking by eye
+                CONFIRMS the citation while a strict check finds nothing. This
+                is the worst class precisely because it reads as verified.
+                Whitespace is typography and carries no legal meaning, so the
+                screen folds it on both sides and the authored quote stands.
+
+``diacritic``  The quote drops accents the source carries ("articulos" for
+                "artículos"). Orthography is not typography: the accented form
+                is what the BOE published, so the QUOTE is wrong and gets
+                re-quoted. This screen never folds accents -- doing so would
+                accept a quote that does not exist.
+
+``case``       The quote differs from the source only in letter case, usually a
+                heading the citation wrote in lowercase. The gate casefolds, so
+                these pass; they are listed because a citation that is not the
+                source's own casing is not verbatim.
+
+``absent``     The text is nowhere in the cited excerpt under any folding.
+                Either the citation names the wrong article, or the claim is
+                not grounded by the document it points at. Needs a person.
+
+The screen reads authored TOML directly and never imports the domain, so it
+keeps reporting when the registry does not load. It exits 0 whatever it finds.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+import unicodedata
+from collections.abc import Iterator, Mapping
+from dataclasses import asdict, dataclass
+from pathlib import Path
+from typing import Any, Final
+
+from cadrumo.core.toml import parse_toml
+
+_DATA: Final = Path(__file__).resolve().parents[3] / "src" / "cadrumo" / "_data"
+_LEGAL: Final = _DATA / "registry" / "aeat" / "legal"
+
+CITATION_CLASSES: Final[tuple[str, ...]] = ("whitespace", "diacritic", "case", "absent")
+
+
+@dataclass(frozen=True, slots=True)
+class Finding:
+    """One quote that does not occur verbatim in the excerpt it cites."""
+
+    catalogue: str
+    legal_id: str
+    kind: str
+    quote: str
+
+
+def _fold_space(value: str) -> str:
+    """Collapse every Unicode whitespace run to one space; NFC, nothing more."""
+    return " ".join(unicodedata.normalize("NFC", value).split())
+
+
+def _fold_accents(value: str) -> str:
+    return "".join(c for c in unicodedata.normalize("NFD", value) if unicodedata.category(c) != "Mn")
+
+
+def _excerpt_for(data_root: Path, corpus_ref: str) -> Path | None:
+    target = data_root / corpus_ref.split("#", 1)[0]
+    extracted = target.with_name(target.name + ".extracted.md")
+    for candidate in (extracted, target):
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def scan(data_root: Path = _DATA, legal_root: Path = _LEGAL) -> Iterator[Finding]:
+    """Yield every citation whose quote is not verbatim in its cited excerpt."""
+    cache: dict[Path, tuple[str, str, str]] = {}
+    for catalogue in sorted(legal_root.glob("*.toml")):
+        document = parse_toml(catalogue.read_text(encoding="utf-8"))
+        for legal_id, entry in document.get("legal", {}).items():
+            yield from _entry_findings(catalogue.name, legal_id, entry, data_root=data_root, cache=cache)
+
+
+def _entry_findings(
+    catalogue: str,
+    legal_id: str,
+    entry: Mapping[str, Any],
+    *,
+    data_root: Path,
+    cache: dict[Path, tuple[str, str, str]],
+) -> Iterator[Finding]:
+    corpus_ref, quotes = entry.get("corpus_ref"), entry.get("required_text")
+    if not corpus_ref or not quotes:
+        return
+    excerpt = _excerpt_for(data_root, corpus_ref)
+    if excerpt is None:
+        return
+    if excerpt not in cache:
+        text = excerpt.read_text(encoding="utf-8")
+        spaced = _fold_space(text)
+        cache[excerpt] = (text, spaced, _fold_accents(spaced))
+    text, spaced, folded = cache[excerpt]
+    for quote in quotes:
+        finding = _quote_finding(catalogue, legal_id, quote, text=text, spaced=spaced, folded=folded)
+        if finding is not None:
+            yield finding
+
+
+def _quote_finding(
+    catalogue: str,
+    legal_id: str,
+    quote: str,
+    *,
+    text: str,
+    spaced: str,
+    folded: str,
+) -> Finding | None:
+    if quote in text:
+        return None
+    if _fold_space(quote) in spaced:
+        kind = "whitespace"
+    elif _fold_accents(_fold_space(quote)) in folded:
+        kind = "diacritic"
+    elif _fold_accents(_fold_space(quote)).casefold() in folded.casefold():
+        kind = "case"
+    else:
+        kind = "absent"
+    return Finding(catalogue, legal_id, kind, quote)
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Scan bundled legal citations and render their grounding findings."""
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--json", action="store_true")
+    parser.add_argument("--findings", action="store_true")
+    args = parser.parse_args(argv)
+
+    findings = tuple(scan())
+    counts = {kind: sum(1 for f in findings if f.kind == kind) for kind in CITATION_CLASSES}
+
+    if args.json:
+        print(json.dumps({"counts": counts, "findings": [asdict(f) for f in findings]}, indent=2))
+        return 0
+
+    print("# legal_citation_grounding schema=1")
+    print(f"citations ungrounded={len(findings)} " + " ".join(f"{k}={v}" for k, v in counts.items()))
+    if args.findings:
+        for finding in sorted(findings, key=lambda f: (f.kind, f.catalogue, f.legal_id)):
+            print(f"  {finding.kind} {finding.catalogue} {finding.legal_id}: {finding.quote[:70]!r}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,0 +1,19 @@
+schema_version = 1
+fragment_id = "records"
+modelo = "185"
+design_epoch = "2026"
+source_ref = "aeat-dr-185-2026"
+source_sha256 = "102dc91b4e9484b830c81e790cf08569be95e2854fee1138f63f363d35d2bcae"
+
+
+[[records]]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+export_record_id = "m185-declarante"
+record_type = "declarante"
+
+[[records]]
+sheet = "Tipo 2 - Registro De Declarado"
+record_identity = "Tipo 2 - Registro De Declarado"
+export_record_id = "m185-declarado"
+record_type = "declarado"

@@ -1,0 +1,43 @@
+[modelo]
+id = "280"
+tax_domain = "irpf"
+cadence = "annual"
+jurisdiction = "ES-AEAT"
+calculation_class = "informative"
+legal_refs = [
+    "orden-hap-2118-2015:art-1",
+    "orden-hap-2118-2015:art-2",
+    "orden-hap-2118-2015:art-4",
+    "orden-hap-2118-2015:art-5",
+    "ley-35-2006:da-26",
+    "orden-hfp-1822-2016:art-sexto",
+    "orden-hac-1276-2019:art-quinto",
+    "orden-hfp-1192-2022:art-cuarto",
+]
+source_refs = [
+    "aeat-modelo-280-procedure",
+    "aeat-dr-280-2022",
+    "boe-modelo-280-base-order",
+    "boe-modelo-280-2016-amendment-hfp-1822",
+    "boe-modelo-280-2019-amendment-hac-1276",
+    "boe-modelo-280-2022-amendment-hfp-1192",
+]
+
+# EDITIONS 2022-2024 AUTHORED 2026-09-12 as ONE span, on the shape this note
+# planned: the consolidated text of BOE-A-2015-11074 lists three amendments to the
+# anexo and none after Orden HFP/1192/2022, so no instrument exists by which 2023
+# or 2024 could differ from 2022. 27 casillas emitted by generator from
+# aeat-dr-280-2022, matching the 2025 edition concept for concept; both records
+# tile 1..500 exactly once.
+#
+# STILL OPEN, and deliberately not closed by the authoring: the span is a LEGAL
+# claim about amending ordenes, not a byte comparison -- only one design is
+# bundled. A DR_280_2023 or DR_280_2024 may exist unfetched, and would split the
+# span. Deadline windows for February 2023, 2024 and 2025 are NOT authored: art. 4
+# fixes the plazo «durante el mes de febrero de cada año», but the calendario
+# evidence for those three Februaries was not opened, and inferring the closes
+# from working-day arithmetic is not grounding.
+[modelo.inception.unauthored]
+earliest_authored = 2022
+reason = "Approved by Orden HAP/2118/2015 in force from 2016; filing years 2016-2021 existed in law and are not yet authored."
+legal_refs = ["orden-hap-2118-2015:art-1"]

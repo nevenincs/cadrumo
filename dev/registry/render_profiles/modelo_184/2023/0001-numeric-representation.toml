@@ -1,0 +1,2938 @@
+schema_version = 1
+fragment_id = "numeric-representation"
+width_17_rules = []
+
+[design_identity]
+modelo = "184"
+design_epoch = "2023"
+source_ref = "aeat-dr-184-2023-2024"
+source_sha256 = "c96f23aa7ddf0f48b5388d69a397140135e8a4a8b2cd0568658cafad495f8aee"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["1"]
+
+[singleton_rules.anchor]
+sheet = "PDF record design"
+source_row = 45
+ordinal = "1"
+record_identity = "PDF record design"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-declarante-tipo-registro"
+decision_statement = "One digit carrying the constant 1."
+justification = "The design declares this position the constant record-type digit 1. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "PDF record design"
+source_row = 45
+ordinal = "1"
+record_identity = "PDF record design"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["184"]
+
+[singleton_rules.anchor]
+sheet = "PDF record design"
+source_row = 47
+ordinal = "2"
+record_identity = "PDF record design"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-declarante-modelo"
+decision_statement = "Three digits carrying the constant 184."
+justification = "The design declares this position the constant modelo number 184. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "PDF record design"
+source_row = 47
+ordinal = "2"
+record_identity = "PDF record design"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "PDF record design"
+source_row = 49
+ordinal = "3"
+record_identity = "PDF record design"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-declarante-ejercicio"
+decision_statement = "Four digits of the ejercicio, unsigned."
+justification = "The design heads the field EJERCICIO over four positions. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "PDF record design"
+source_row = 49
+ordinal = "3"
+record_identity = "PDF record design"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "PDF record design"
+source_row = 89
+ordinal = "8"
+record_identity = "PDF record design"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-decl-numero-justificante"
+decision_statement = "Thirteen identifier digits, not an arithmetic quantity."
+justification = "The declaration's own identifying number over thirteen positions; an identifier renders as digits and is never signed or scaled. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "PDF record design"
+source_row = 89
+ordinal = "8"
+record_identity = "PDF record design"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "PDF record design"
+source_row = 116
+ordinal = "10"
+record_identity = "PDF record design"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-decl-justificante-anterior"
+decision_statement = "Thirteen identifier digits, not an arithmetic quantity."
+justification = "The same identifying number of the declaration being replaced, carrying the identical representation as the field above it. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "PDF record design"
+source_row = 116
+ordinal = "10"
+record_identity = "PDF record design"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "PDF record design"
+source_row = 129
+ordinal = "11"
+record_identity = "PDF record design"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-decl-total-socios"
+decision_statement = "Nine digits, unsigned integer count."
+justification = "The design states 'NUMERO TOTAL DE REGISTROS DE SOCIOS, HEREDEROS, COMUNEROS O PARTICIPES' -- a count of records, which cannot be negative or fractional. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "PDF record design"
+source_row = 129
+ordinal = "11"
+record_identity = "PDF record design"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "PDF record design"
+source_row = 139
+ordinal = "13"
+record_identity = "PDF record design"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-decl-tipo-entidad-espanola"
+decision_statement = "One digit of the tipo de entidad code."
+justification = "The design states 'TIPO DE ENTIDAD: campo numerico' over one position and enumerates the entity types; a code, never an arithmetic value. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "PDF record design"
+source_row = 139
+ordinal = "13"
+record_identity = "PDF record design"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "PDF record design"
+source_row = 147
+ordinal = "14"
+record_identity = "PDF record design"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-decl-actividad-principal"
+decision_statement = "One digit of the actividad principal code."
+justification = "The design states 'ACTIVIDAD PRINCIPAL: Se hara constar el digito numerico que corresponda a la actividad' -- an assigned code. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "PDF record design"
+source_row = 147
+ordinal = "14"
+record_identity = "PDF record design"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "PDF record design"
+source_row = 160
+ordinal = "16"
+record_identity = "PDF record design"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-decl-tipo-entidad-extranjera"
+decision_statement = "One digit of the tipo de entidad code for a foreign entity."
+justification = "The design states 'TIPO DE ENTIDAD:' over one position inside the row it declares 'se subdivide en cuatro'; a code, never an arithmetic value. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "PDF record design"
+source_row = 160
+ordinal = "16"
+record_identity = "PDF record design"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "PDF record design"
+source_row = 193
+ordinal_absent = true
+record_identity = "PDF record design"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-decl-porcentaje-renta-residentes"
+decision_statement = "Five digits as three integer digits and two implied decimals, unsigned."
+justification = "AEAT printed this row with an EMPTY naturaleza cell, so the parser stamps the absent-naturaleza marker rather than guessing, and the wire fact has to come from a reviewed rule. The design's own prose supplies it: '151-155 PORCENTAJE DE RENTA ATRIBUIBLE A MIEMBROS RESIDENTES: campo numerico' and 'Este campo se subdivide en otros dos: 151-153 ENTERO: Numerico. Parte entera' and '154-155 DECIMAL: Numerico. Parte decimal', which is three integer digits and two decimals. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "PDF record design"
+source_row = 193
+ordinal_absent = true
+record_identity = "PDF record design"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "PDF record design"
+source_row = 222
+ordinal_absent = true
+record_identity = "PDF record design"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-decl-157-entero"
+decision_statement = "13 digits carrying the integer euros of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one ENTERO: Numerico. Parte entera. The design states the convention for every numeric field of this modelo: \"Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.\""
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "PDF record design"
+source_row = 222
+ordinal_absent = true
+record_identity = "PDF record design"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "PDF record design"
+source_row = 224
+ordinal_absent = true
+record_identity = "PDF record design"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-decl-170-decimal"
+decision_statement = "2 digits carrying the cents of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one DECIMAL: Numerico. Parte decimal. The design states the convention for every numeric field of this modelo: \"Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.\""
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "PDF record design"
+source_row = 224
+ordinal_absent = true
+record_identity = "PDF record design"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["2"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 271
+ordinal = "1"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-entidad-tipo-registro"
+decision_statement = "One digit carrying the constant 2."
+justification = "The design declares this position the constant record-type digit 2. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 271
+ordinal = "1"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["184"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 273
+ordinal = "2"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-entidad-modelo"
+decision_statement = "Three digits carrying the constant 184."
+justification = "The design declares this position the constant modelo number 184. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 273
+ordinal = "2"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 275
+ordinal = "3"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-entidad-ejercicio"
+decision_statement = "Four digits of the ejercicio, unsigned."
+justification = "The design heads the field EJERCICIO over four positions. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 275
+ordinal = "3"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 540
+ordinal = "12"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-ent-regimen-determinacion"
+decision_statement = "One digit of the regimen determination code."
+justification = "The design heads the field 'REGIMEN DETERMINACION RENDIMIENTOS' over one position and enumerates its claves; a code. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 540
+ordinal = "12"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 552
+ordinal = "13"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-ent-tipo-actividad"
+decision_statement = "One digit of the tipo de actividad code."
+justification = "The design heads the field 'TIPO DE ACTIVIDAD' over one position and enumerates its claves; a code. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 552
+ordinal = "13"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 570
+ordinal = "14"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-ent-epigrafe-iae"
+decision_statement = "Four digits of the IAE grupo o epigrafe."
+justification = "The design heads the field 'GRUPO O EPIGRAFE IAE' -- the IAE tariff code, an assigned identifier rendered as digits. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 570
+ordinal = "14"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 609
+ordinal = "18"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-ent-fecha-adquisicion-anio"
+decision_statement = "Four digits of the year, unsigned."
+justification = "The design labels this sub-field 'Ano' inside the fecha de adquisicion row. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 609
+ordinal = "18"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "month_mm"
+value_policy = "two-digit-month"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 610
+ordinal = "19"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-ent-fecha-adquisicion-mes"
+decision_statement = "Two digits of the month."
+justification = "The design labels this sub-field 'Mes' inside the fecha de adquisicion row; a calendar component, never an arithmetic value. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 610
+ordinal = "19"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "day_dd"
+value_policy = "two-digit-day"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 611
+ordinal = "20"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-ent-fecha-adquisicion-dia"
+decision_statement = "Two digits of the day."
+justification = "The design labels this sub-field 'Dia' inside the fecha de adquisicion row; a calendar component, never an arithmetic value. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 611
+ordinal = "20"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 11
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 629
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-ent-125-entero"
+decision_statement = "11 digits carrying the integer euros of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one ENTERO: Numerico. Parte entera. The design states the convention for every numeric field of this modelo: \"Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.\""
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 629
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 631
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-ent-136-decimal"
+decision_statement = "2 digits carrying the cents of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one DECIMAL: Numerico. Parte decimal. The design states the convention for every numeric field of this modelo: \"Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.\""
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 631
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 11
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 650
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-ent-138-entero"
+decision_statement = "11 digits carrying the integer euros of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one ENTERO: Numerico. Parte entera. The design states the convention for every numeric field of this modelo: \"Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.\""
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 650
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 652
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-ent-149-decimal"
+decision_statement = "2 digits carrying the cents of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one DECIMAL: Numerico. Parte decimal. The design states the convention for every numeric field of this modelo: \"Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.\""
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 652
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 10
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 810
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-ent-165-entero"
+decision_statement = "10 digits carrying the integer euros of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one ENTERO: Numerico. Parte entera. The design states the convention for every numeric field of this modelo: \"Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.\""
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 810
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 812
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-ent-175-decimal"
+decision_statement = "2 digits carrying the cents of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one DECIMAL: Numerico. Parte decimal. The design states the convention for every numeric field of this modelo: \"Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.\""
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 812
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 936
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-ent-191-entero"
+decision_statement = "3 digits carrying the integer percentage of a split percentage."
+justification = "The design splits this amount into two printed fields and labels this one ENTERO: Numerico. Parte entera. The design states the convention for every numeric field of this modelo: \"Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.\""
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 936
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 939
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-ent-194-decimal"
+decision_statement = "2 digits carrying the decimal fraction of a split percentage."
+justification = "The design splits this amount into two printed fields and labels this one DECIMAL: Numerico. Parte decimal. The design states the convention for every numeric field of this modelo: \"Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.\""
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 939
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 11
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1105
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-ent-208-entero"
+decision_statement = "11 digits carrying the integer euros of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one ENTERO: Numerico. Parte entera. The design states the convention for every numeric field of this modelo: \"Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.\""
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1105
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1107
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-ent-219-decimal"
+decision_statement = "2 digits carrying the cents of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one DECIMAL: Numerico. Parte decimal. The design states the convention for every numeric field of this modelo: \"Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.\""
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1107
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 10
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1222
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-ent-221-entero"
+decision_statement = "10 digits carrying the integer euros of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one ENTERO: Numerico. Parte entera. The design states the convention for every numeric field of this modelo: \"Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.\""
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1222
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1224
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-ent-231-decimal"
+decision_statement = "2 digits carrying the cents of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one DECIMAL: Numerico. Parte decimal. The design states the convention for every numeric field of this modelo: \"Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.\""
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1224
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 10
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1281
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-ent-233-entero"
+decision_statement = "10 digits carrying the integer euros of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one ENTERO: Numerico. Parte entera. The design states the convention for every numeric field of this modelo: \"Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.\""
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1281
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1283
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-ent-243-decimal"
+decision_statement = "2 digits carrying the cents of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one DECIMAL: Numerico. Parte decimal. The design states the convention for every numeric field of this modelo: \"Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.\""
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1283
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1286
+ordinal = "31"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-ent-situacion-inmueble"
+decision_statement = "One digit of the situacion del inmueble clave."
+justification = "The design heads 'SITUACION DEL INMUEBLE' over one position and enumerates its claves. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1286
+ordinal = "31"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 10
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1331
+ordinal = "34"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-266-entero"
+decision_statement = "10 digits carrying the integer euros of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'ENTERO: Numerico. Parte entera', so it carries the integer euros alone and the cents live in the DECIMAL field beside it. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1331
+ordinal = "34"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1334
+ordinal = "35"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-276-decimal"
+decision_statement = "2 digits carrying the cents of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'DECIMAL: Numerico. Parte decimal', so it carries the cents alone. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1334
+ordinal = "35"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 10
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1347
+ordinal = "36"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-278-entero"
+decision_statement = "10 digits carrying the integer euros of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'ENTERO: Numerico. Parte entera', so it carries the integer euros alone and the cents live in the DECIMAL field beside it. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1347
+ordinal = "36"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1350
+ordinal = "37"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-288-decimal"
+decision_statement = "2 digits carrying the cents of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'DECIMAL: Numerico. Parte decimal', so it carries the cents alone. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1350
+ordinal = "37"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 10
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1358
+ordinal = "38"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-290-entero"
+decision_statement = "10 digits carrying the integer euros of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'ENTERO: Numerico. Parte entera', so it carries the integer euros alone and the cents live in the DECIMAL field beside it. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1358
+ordinal = "38"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1361
+ordinal = "39"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-300-decimal"
+decision_statement = "2 digits carrying the cents of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'DECIMAL: Numerico. Parte decimal', so it carries the cents alone. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1361
+ordinal = "39"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 10
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1372
+ordinal = "40"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-302-entero"
+decision_statement = "10 digits carrying the integer euros of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'ENTERO: Numerico. Parte entera', so it carries the integer euros alone and the cents live in the DECIMAL field beside it. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1372
+ordinal = "40"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1375
+ordinal = "41"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-312-decimal"
+decision_statement = "2 digits carrying the cents of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'DECIMAL: Numerico. Parte decimal', so it carries the cents alone. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1375
+ordinal = "41"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 10
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1387
+ordinal = "42"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-314-entero"
+decision_statement = "10 digits carrying the integer euros of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'ENTERO: Numerico. Parte entera', so it carries the integer euros alone and the cents live in the DECIMAL field beside it. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1387
+ordinal = "42"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1390
+ordinal = "43"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-324-decimal"
+decision_statement = "2 digits carrying the cents of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'DECIMAL: Numerico. Parte decimal', so it carries the cents alone. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1390
+ordinal = "43"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 10
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1402
+ordinal = "44"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-326-entero"
+decision_statement = "10 digits carrying the integer euros of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'ENTERO: Numerico. Parte entera', so it carries the integer euros alone and the cents live in the DECIMAL field beside it. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1402
+ordinal = "44"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1405
+ordinal = "45"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-336-decimal"
+decision_statement = "2 digits carrying the cents of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'DECIMAL: Numerico. Parte decimal', so it carries the cents alone. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1405
+ordinal = "45"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 10
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1414
+ordinal = "46"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-338-entero"
+decision_statement = "10 digits carrying the integer euros of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'ENTERO: Numerico. Parte entera', so it carries the integer euros alone and the cents live in the DECIMAL field beside it. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1414
+ordinal = "46"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1417
+ordinal = "47"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-348-decimal"
+decision_statement = "2 digits carrying the cents of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'DECIMAL: Numerico. Parte decimal', so it carries the cents alone. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1417
+ordinal = "47"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 10
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1431
+ordinal = "48"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-350-entero"
+decision_statement = "10 digits carrying the integer euros of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'ENTERO: Numerico. Parte entera', so it carries the integer euros alone and the cents live in the DECIMAL field beside it. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1431
+ordinal = "48"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1434
+ordinal = "49"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-360-decimal"
+decision_statement = "2 digits carrying the cents of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'DECIMAL: Numerico. Parte decimal', so it carries the cents alone. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1434
+ordinal = "49"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 10
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1445
+ordinal = "50"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-362-entero"
+decision_statement = "10 digits carrying the integer euros of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'ENTERO: Numerico. Parte entera', so it carries the integer euros alone and the cents live in the DECIMAL field beside it. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1445
+ordinal = "50"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1448
+ordinal = "51"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-372-decimal"
+decision_statement = "2 digits carrying the cents of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'DECIMAL: Numerico. Parte decimal', so it carries the cents alone. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1448
+ordinal = "51"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 10
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1481
+ordinal = "52"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-374-entero"
+decision_statement = "10 digits carrying the integer euros of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'ENTERO: Numerico. Parte entera', so it carries the integer euros alone and the cents live in the DECIMAL field beside it. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1481
+ordinal = "52"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1484
+ordinal = "53"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-384-decimal"
+decision_statement = "2 digits carrying the cents of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'DECIMAL: Numerico. Parte decimal', so it carries the cents alone. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1484
+ordinal = "53"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1494
+ordinal = "54"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-386-entero"
+decision_statement = "8 digits carrying the integer euros of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'ENTERO: Numerico. Parte entera', so it carries the integer euros alone and the cents live in the DECIMAL field beside it. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1494
+ordinal = "54"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1497
+ordinal = "55"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-394-decimal"
+decision_statement = "2 digits carrying the cents of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'DECIMAL: Numerico. Parte decimal', so it carries the cents alone. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1497
+ordinal = "55"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1500
+ordinal = "56"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-ent-criterio-cobros-pagos"
+decision_statement = "One digit of the criterio de cobros y pagos flag."
+justification = "The design heads 'CRITERIO DE COBROS Y PAGOS' over one position as a flag. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1500
+ordinal = "56"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1529
+ordinal = "58"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-397-entero"
+decision_statement = "9 digits carrying the integer euros of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'ENTERO: Numerico. Parte entera', so it carries the integer euros alone and the cents live in the DECIMAL field beside it. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1529
+ordinal = "58"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1532
+ordinal = "59"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-406-decimal"
+decision_statement = "2 digits carrying the cents of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'DECIMAL: Numerico. Parte decimal', so it carries the cents alone. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1532
+ordinal = "59"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1540
+ordinal = "60"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-408-entero"
+decision_statement = "9 digits carrying the integer euros of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'ENTERO: Numerico. Parte entera', so it carries the integer euros alone and the cents live in the DECIMAL field beside it. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1540
+ordinal = "60"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1543
+ordinal = "61"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-417-decimal"
+decision_statement = "2 digits carrying the cents of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'DECIMAL: Numerico. Parte decimal', so it carries the cents alone. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1543
+ordinal = "61"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1553
+ordinal = "62"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-419-entero"
+decision_statement = "9 digits carrying the integer euros of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'ENTERO: Numerico. Parte entera', so it carries the integer euros alone and the cents live in the DECIMAL field beside it. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1553
+ordinal = "62"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1561
+ordinal = "63"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-428-decimal"
+decision_statement = "2 digits carrying the cents of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'DECIMAL: Numerico. Parte decimal', so it carries the cents alone. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1561
+ordinal = "63"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1570
+ordinal = "64"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-430-entero"
+decision_statement = "8 digits carrying the integer euros of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'ENTERO: Numerico. Parte entera', so it carries the integer euros alone and the cents live in the DECIMAL field beside it. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1570
+ordinal = "64"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1573
+ordinal = "65"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-438-decimal"
+decision_statement = "2 digits carrying the cents of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'DECIMAL: Numerico. Parte decimal', so it carries the cents alone. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1573
+ordinal = "65"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1580
+ordinal = "66"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-440-entero"
+decision_statement = "9 digits carrying the integer euros of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'ENTERO: Numerico. Parte entera', so it carries the integer euros alone and the cents live in the DECIMAL field beside it. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1580
+ordinal = "66"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1583
+ordinal = "67"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-449-decimal"
+decision_statement = "2 digits carrying the cents of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'DECIMAL: Numerico. Parte decimal', so it carries the cents alone. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1583
+ordinal = "67"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1593
+ordinal = "68"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-451-entero"
+decision_statement = "8 digits carrying the integer euros of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'ENTERO: Numerico. Parte entera', so it carries the integer euros alone and the cents live in the DECIMAL field beside it. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1593
+ordinal = "68"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1596
+ordinal = "69"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-459-decimal"
+decision_statement = "2 digits carrying the cents of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'DECIMAL: Numerico. Parte decimal', so it carries the cents alone. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1596
+ordinal = "69"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1610
+ordinal = "70"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-461-entero"
+decision_statement = "8 digits carrying the integer euros of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'ENTERO: Numerico. Parte entera', so it carries the integer euros alone and the cents live in the DECIMAL field beside it. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1610
+ordinal = "70"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1613
+ordinal = "71"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-469-decimal"
+decision_statement = "2 digits carrying the cents of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'DECIMAL: Numerico. Parte decimal', so it carries the cents alone. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1613
+ordinal = "71"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1621
+ordinal = "72"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-471-entero"
+decision_statement = "8 digits carrying the integer euros of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'ENTERO: Numerico. Parte entera', so it carries the integer euros alone and the cents live in the DECIMAL field beside it. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1621
+ordinal = "72"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1624
+ordinal = "73"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-479-decimal"
+decision_statement = "2 digits carrying the cents of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'DECIMAL: Numerico. Parte decimal', so it carries the cents alone. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1624
+ordinal = "73"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 6
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1633
+ordinal = "74"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-481-entero"
+decision_statement = "6 digits carrying the integer euros of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'ENTERO: Numerico. Parte entera', so it carries the integer euros alone and the cents live in the DECIMAL field beside it. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1633
+ordinal = "74"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1636
+ordinal = "75"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-487-decimal"
+decision_statement = "2 digits carrying the cents of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'DECIMAL: Numerico. Parte decimal', so it carries the cents alone. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1636
+ordinal = "75"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 7
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1644
+ordinal = "76"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-489-entero"
+decision_statement = "7 digits carrying the integer euros of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'ENTERO: Numerico. Parte entera', so it carries the integer euros alone and the cents live in the DECIMAL field beside it. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1644
+ordinal = "76"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1648
+ordinal = "77"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-496-decimal"
+decision_statement = "2 digits carrying the cents of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one 'DECIMAL: Numerico. Parte decimal', so it carries the cents alone. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1648
+ordinal = "77"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1657
+ordinal = "78"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-ent-dias-arrendamiento"
+decision_statement = "Three digits, unsigned integer day count."
+justification = "The design states 'NUMERO DE DIAS DE ARRENDAMIENTO O CESION DE USO Y DISFRUTE' -- a count of days, which cannot be negative or fractional. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Rentas De La"
+source_row = 1657
+ordinal = "78"
+record_identity = "Tipo 2 - Registro De Rentas De La"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["2"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 1680
+ordinal = "1"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-socio-tipo-registro"
+decision_statement = "One digit carrying the constant 2."
+justification = "The design declares this position the constant record-type digit 2. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 1680
+ordinal = "1"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["184"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 1682
+ordinal = "2"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-socio-modelo"
+decision_statement = "Three digits carrying the constant 184."
+justification = "The design declares this position the constant modelo number 184. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 1682
+ordinal = "2"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 1684
+ordinal = "3"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-socio-ejercicio"
+decision_statement = "Four digits of the ejercicio, unsigned."
+justification = "The design heads the field EJERCICIO over four positions. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 1684
+ordinal = "3"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 1754
+ordinal = "9"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-soc-codigo-provincia"
+decision_statement = "Two digits of the provincia code."
+justification = "The design heads 'CODIGO PROVINCIA' over two positions and enumerates the provincia table; a code, never an arithmetic value. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 1754
+ordinal = "9"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 1803
+ordinal = "11"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-soc-clave-tipo-participe"
+decision_statement = "One digit of the clave tipo de participe."
+justification = "The design heads 'CLAVE TIPO DE PARTICIPE' over one position and enumerates its claves. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 1803
+ordinal = "11"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 1812
+ordinal = "13"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-soc-dias-miembro"
+decision_statement = "Three digits, unsigned integer day count."
+justification = "The design states 'NUMERO DIAS MIEMBRO' -- a count of days, which cannot be negative or fractional. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 1812
+ordinal = "13"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 1821
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-soc-86-entero"
+decision_statement = "3 digits carrying the integer percentage of a split percentage."
+justification = "The design splits this amount into two printed fields and labels this one ENTERO: Numerico. Parte entera. The design states the convention for every numeric field of this modelo: \"Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.\""
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 1821
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 4
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 1823
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-soc-89-decimal"
+decision_statement = "4 digits carrying the decimal fraction of a split percentage."
+justification = "The design splits this amount into two printed fields and labels this one DECIMAL: Numerico. Parte decimal. The design states the convention for every numeric field of this modelo: \"Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.\""
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 1823
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 1847
+ordinal = "16"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-soc-subclave"
+decision_statement = "Two digits of the subclave code."
+justification = "The design heads 'SUBCLAVE' over two positions and enumerates its values against the clave; a code. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 1847
+ordinal = "16"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 2066
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-soc-109-entero"
+decision_statement = "9 digits carrying the integer euros of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one ENTERO: Numerico. Parte entera. The design states the convention for every numeric field of this modelo: \"Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.\""
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 2066
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 2068
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-soc-118-decimal"
+decision_statement = "2 digits carrying the cents of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one DECIMAL: Numerico. Parte decimal. The design states the convention for every numeric field of this modelo: \"Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.\""
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 2068
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 10
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 2074
+ordinal = "20"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-soc-provisiones-dificil-justificacion"
+decision_statement = "Twelve digits as ten integer digits and two implied decimals, unsigned. A euro amount whose own entry states 'sin signo y sin coma decimal', so the two decimal positions are implied by the source rather than printed. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+justification = "A euro amount whose own entry states 'sin signo y sin coma decimal', so the two decimal positions are implied by the source rather than printed. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 2074
+ordinal = "20"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 2095
+ordinal = "21"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-soc-naturaleza-inmueble"
+decision_statement = "One digit of the naturaleza del inmueble clave."
+justification = "The design heads 'NATURALEZA DEL INMUEBLE' over one position and enumerates its claves. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 2095
+ordinal = "21"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 2103
+ordinal = "22"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-soc-situacion-inmueble"
+decision_statement = "One digit of the situacion del inmueble clave."
+justification = "The design heads 'SITUACION DEL INMUEBLE' over one position and enumerates its claves. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 2103
+ordinal = "22"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 2141
+ordinal = "25"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-soc-porcentaje-titularidad"
+decision_statement = "Five digits as three integer digits and two implied decimals, unsigned."
+justification = "The design states the split outright: 'Se subdivide en dos campos: 195-197: Figurara la parte entera del porcentaje', leaving 198-199 as the two decimal positions. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 2141
+ordinal = "25"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 2152
+ordinal = "26"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-soc-dias-arrendamiento"
+decision_statement = "Three digits, unsigned integer day count."
+justification = "The design states 'NUMERO DE DIAS DE ARRENDAMIENTO O CESION DE USO Y DISFRUTE DEL INMUEBLE' -- a count of days, which cannot be negative or fractional. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 2152
+ordinal = "26"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 11
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 2186
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-soc-203-entero"
+decision_statement = "11 digits carrying the integer euros of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one ENTERO: Numerico. Parte entera. The design states the convention for every numeric field of this modelo: \"Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.\""
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 2186
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 2188
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-soc-214-decimal"
+decision_statement = "2 digits carrying the cents of a split amount."
+justification = "The design splits this amount into two printed fields and labels this one DECIMAL: Numerico. Parte decimal. The design states the convention for every numeric field of this modelo: \"Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.\""
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 2188
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 12
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 2191
+ordinal = "28"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-soc-rendimiento-neto-minorado-agricola"
+decision_statement = "Fourteen digits as twelve integer digits and two implied decimals, unsigned. A euro amount whose own entry states 'sin signo y sin coma decimal', so the two decimal positions are implied by the source rather than printed. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+justification = "A euro amount whose own entry states 'sin signo y sin coma decimal', so the two decimal positions are implied by the source rather than printed. The design states the convention for every numeric field of this modelo: 'Todos los campos numericos se presentaran alineados a la derecha y rellenos a ceros por la izquierda sin signos y sin empaquetar.'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 2191
+ordinal = "28"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "PDF record design"
+source_row = 83
+ordinal_absent = true
+record_identity = "PDF record design"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-decl-telefono-contacto"
+decision_statement = "Nine digits of the contact phone number."
+justification = "The design states \"TELEFONO: Campo numerico de nueve posiciones\" over positions 59-67; a contact phone number rendered as digits."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "PDF record design"
+source_row = 83
+ordinal_absent = true
+record_identity = "PDF record design"
+
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "mistyped_alphanumeric_text"
+value_policy = "mistyped-alphanumeric-text"
+integer_digits = 0
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "PDF record design"
+source_row = 85
+ordinal_absent = true
+record_identity = "PDF record design"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m184-decl-nombre-contacto"
+decision_statement = "The contact person name carries alphanumeric text and renders blank-filled and left-justified."
+justification = "The design heads \"APELLIDOS Y NOMBRE: Se consignara el primer apellido...\" over positions 68-107; a contact name which is alphanumeric text."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "PDF record design"
+source_row = 85
+ordinal_absent = true
+record_identity = "PDF record design"
+

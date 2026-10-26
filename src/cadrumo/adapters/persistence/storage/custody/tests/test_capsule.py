@@ -1,0 +1,1112 @@
+"""Real filesystem contracts for current profile-custody capsule publication."""
+
+from __future__ import annotations
+
+import base64
+import json
+import os
+import sys
+from dataclasses import FrozenInstanceError
+from datetime import UTC, datetime
+from pathlib import Path
+from uuid import UUID, uuid4
+
+import pytest
+
+from ......core.config import Settings
+from ......core.directory_scan import scan_directory
+from ......core.hashing import prefixed_digest
+from ......core.profile_publication import ProfilePublicationKind
+from ......core.storage_taxonomy import StorageCategory
+from ......core.storage_taxonomy_locations import storage_location
+from ......tests.path_obstruction import obstructed_path
+from ..capsule import (
+    install_committed_profile_custody_recovery_envelope,
+    list_current_profile_custody_capsule_ids,
+    list_current_profile_custody_capsule_summary_witnesses,
+    load_committed_profile_password_material,
+    load_committed_profile_recovery_material,
+    publish_profile_custody_capsule,
+    recognize_current_profile_capsule,
+    remove_committed_profile_custody_recovery_envelope,
+)
+from ..capsule_records import ProfileCustodyCapsuleLabel, ProfileCustodyCommit, parse_profile_custody_commit
+from ..envelope import create_profile_custody_password_envelope
+from ..errors import (
+    ProfileCustodyRecordError,
+    ProfileCustodyRecoveryGuidance,
+    ProfileCustodyRecoverySecretError,
+    ProfileCustodyRefusal,
+    ProfileCustodyRefusedError,
+)
+from ..kdf_supervision import unlock_profile_custody
+from ..paths import profile_custody_path
+from ..records import ProfileCustodyEnvelope, ProfileCustodyKdfParameters, ProfileCustodyWrappedDek
+from ..recovery import (
+    PROFILE_CUSTODY_RECOVERY_FILENAME,
+    PROFILE_CUSTODY_RECOVERY_MAX_BYTES,
+    ProfileCustodyRecoveryEnvelope,
+    create_profile_custody_recovery_envelope,
+    parse_profile_custody_recovery_envelope,
+    unlock_profile_custody_recovery_envelope,
+)
+from ..sentinel import PROFILE_CUSTODY_SENTINEL_FILENAME, create_profile_custody_sentinel
+from ..sentinel_contract import verify_profile_custody_sentinel
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+
+_PROFILE_ID = UUID("327b296d-8377-4be0-b13a-ca4d8f692e1d")
+_DEK = bytes(range(32))
+_EPOCH = base64.b64encode(b"e" * 16).decode("ascii")
+_PASSPHRASE = "profile " + "password" + " 123"
+_RECOVERY_SECRET = "-".join(("ABCDE", "FGHJK", "LMNPQ", "RSTUV", "WXYZ2", "34567"))
+_WRONG_RECOVERY_SECRET = "-".join(("ABCDE", "FGHJK", "LMNPQ", "RSTUV", "WXYZ2", "34568"))
+
+
+def _settings(tmp_path: Path) -> Settings:
+    return Settings(cadrumo_local_storage_root=tmp_path)
+
+
+def _kdf() -> ProfileCustodyKdfParameters:
+    return ProfileCustodyKdfParameters(
+        algorithm="argon2id",
+        version=19,
+        memory_mib=19,
+        iterations=2,
+        parallelism=1,
+        salt_b64=base64.b64encode(b"k" * 16).decode("ascii"),
+        output_bytes=32,
+    )
+
+
+def _wrapped_dek() -> ProfileCustodyWrappedDek:
+    return ProfileCustodyWrappedDek(
+        nonce_b64=base64.b64encode(b"n" * 12).decode("ascii"),
+        ciphertext_b64=base64.b64encode(b"c" * 32).decode("ascii"),
+        tag_b64=base64.b64encode(b"t" * 16).decode("ascii"),
+    )
+
+
+def _password_envelope(*, profile_id: UUID = _PROFILE_ID, dek_epoch: str = _EPOCH) -> ProfileCustodyEnvelope:
+    return ProfileCustodyEnvelope.create(
+        profile_id=profile_id,
+        password_generation=1,
+        dek_epoch=dek_epoch,
+        kdf=_kdf(),
+        wrapped_dek=_wrapped_dek(),
+    )
+
+
+def _recovery_envelope(*, profile_id: UUID = _PROFILE_ID, dek_epoch: str = _EPOCH) -> ProfileCustodyRecoveryEnvelope:
+    return ProfileCustodyRecoveryEnvelope.create(
+        profile_id=profile_id,
+        recovery_generation=1,
+        dek_epoch=dek_epoch,
+        kdf=_kdf(),
+        wrapped_dek=_wrapped_dek(),
+    )
+
+
+def _publish_supervised_capsule(settings: Settings) -> Path:
+    """Publish one committed capsule whose envelope is a real Argon2id wrapper."""
+    envelope = create_profile_custody_password_envelope(
+        profile_id=_PROFILE_ID,
+        password=_PASSPHRASE,
+        dek=_DEK,
+        dek_epoch=_EPOCH,
+        kdf=_kdf(),
+        settings=settings,
+    )
+    return publish_profile_custody_capsule(
+        profile_id=_PROFILE_ID,
+        transaction_id=uuid4(),
+        publication_kind=ProfilePublicationKind.ENROLL,
+        password_envelope=envelope,
+        sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_DEK),
+        data_files={"state/current.bin": b"current encrypted payload"},
+        settings=settings,
+    )
+
+
+def _supervised_recovery_envelope(
+    settings: Settings,
+    *,
+    profile_id: UUID = _PROFILE_ID,
+    dek_epoch: str = _EPOCH,
+) -> ProfileCustodyRecoveryEnvelope:
+    """Wrap the shared DEK under the recovery code through the supervised KDF."""
+    return create_profile_custody_recovery_envelope(
+        profile_id=profile_id,
+        recovery_secret=_RECOVERY_SECRET,
+        dek=_DEK,
+        dek_epoch=dek_epoch,
+        kdf=_kdf(),
+        settings=settings,
+    )
+
+
+def test_installed_recovery_envelope_and_password_path_prove_the_same_dek(tmp_path: Path) -> None:
+    """The enrolment write, the recovery read set and the recovery proof agree with the password door."""
+    settings = _settings(tmp_path)
+    capsule = _publish_supervised_capsule(settings)
+    recovery = _supervised_recovery_envelope(settings)
+
+    install_committed_profile_custody_recovery_envelope(_PROFILE_ID, recovery.canonical_json_bytes(), settings=settings)
+
+    assert (capsule / "custody" / PROFILE_CUSTODY_RECOVERY_FILENAME).read_bytes() == recovery.canonical_json_bytes()
+    material = load_committed_profile_recovery_material(_PROFILE_ID, settings=settings)
+    assert material.capsule_path == capsule
+    assert material.recovery_envelope == recovery
+    password_material = load_committed_profile_password_material(_PROFILE_ID, settings=settings)
+    assert material.password_envelope == password_material.envelope
+    assert material.sentinel == password_material.sentinel
+
+    proved = unlock_profile_custody_recovery_envelope(
+        material.recovery_envelope,
+        _RECOVERY_SECRET,
+        sentinel=material.sentinel,
+        expected_profile_id=_PROFILE_ID,
+        expected_dek_epoch=material.password_envelope.dek_epoch,
+        settings=settings,
+    )
+    assert proved.dek == _DEK
+    assert proved.recovery_digest == recovery.self_digest
+    assert (
+        unlock_profile_custody(
+            password_material.envelope,
+            _PASSPHRASE,
+            sentinel=password_material.sentinel,
+            settings=settings,
+        ).dek
+        == proved.dek
+    )
+    with pytest.raises(ProfileCustodyRecoverySecretError):
+        unlock_profile_custody_recovery_envelope(
+            material.recovery_envelope,
+            _WRONG_RECOVERY_SECRET,
+            sentinel=material.sentinel,
+            expected_profile_id=_PROFILE_ID,
+            expected_dek_epoch=material.password_envelope.dek_epoch,
+            settings=settings,
+        )
+
+
+def test_recovery_proof_refuses_an_envelope_named_for_another_capsule_before_any_kdf_work(tmp_path: Path) -> None:
+    settings = _settings(tmp_path)
+    _publish_supervised_capsule(settings)
+    material = load_committed_profile_password_material(_PROFILE_ID, settings=settings)
+    recovery = _supervised_recovery_envelope(settings)
+    other_epoch = base64.b64encode(b"x" * 16).decode("ascii")
+
+    for expected_profile_id, expected_dek_epoch in ((uuid4(), _EPOCH), (_PROFILE_ID, other_epoch)):
+        with pytest.raises(ProfileCustodyRecordError, match="UUID or DEK epoch"):
+            unlock_profile_custody_recovery_envelope(
+                recovery,
+                _RECOVERY_SECRET,
+                sentinel=material.sentinel,
+                expected_profile_id=expected_profile_id,
+                expected_dek_epoch=expected_dek_epoch,
+                settings=settings,
+            )
+
+
+def test_recovery_enrollment_is_exclusive_and_bound_to_the_committed_capsule(tmp_path: Path) -> None:
+    """Every refusal of the enrolment write leaves the capsule exactly as it was."""
+    settings = _settings(tmp_path)
+    with pytest.raises(ProfileCustodyRecordError, match="requires a committed capsule"):
+        install_committed_profile_custody_recovery_envelope(
+            _PROFILE_ID,
+            _recovery_envelope().canonical_json_bytes(),
+            settings=settings,
+        )
+
+    capsule = _publish_supervised_capsule(settings)
+    recovery_path = capsule / "custody" / PROFILE_CUSTODY_RECOVERY_FILENAME
+    other_epoch = base64.b64encode(b"x" * 16).decode("ascii")
+    refusals = (
+        (b'{"not": "a recovery envelope"}', "not a valid envelope"),
+        (_recovery_envelope(profile_id=uuid4()).canonical_json_bytes(), "names a different profile"),
+        (_recovery_envelope(dek_epoch=other_epoch).canonical_json_bytes(), "does not wrap the committed DEK epoch"),
+    )
+    for payload, reason in refusals:
+        with pytest.raises(ProfileCustodyRecordError, match=reason):
+            install_committed_profile_custody_recovery_envelope(_PROFILE_ID, payload, settings=settings)
+        assert not os.path.lexists(recovery_path)
+    with pytest.raises(ProfileCustodyRecordError, match="not enrolled"):
+        load_committed_profile_recovery_material(_PROFILE_ID, settings=settings)
+
+    installed = _recovery_envelope().canonical_json_bytes()
+    install_committed_profile_custody_recovery_envelope(_PROFILE_ID, installed, settings=settings)
+    with pytest.raises(ProfileCustodyRecordError, match="already enrolled"):
+        install_committed_profile_custody_recovery_envelope(
+            _PROFILE_ID,
+            _recovery_envelope().canonical_json_bytes(),
+            settings=settings,
+        )
+    assert recovery_path.read_bytes() == installed
+
+
+def test_recovery_revocation_is_a_compare_and_remove_on_the_enrolled_envelope(tmp_path: Path) -> None:
+    settings = _settings(tmp_path)
+    with pytest.raises(ProfileCustodyRecordError, match="requires a committed capsule"):
+        remove_committed_profile_custody_recovery_envelope(_PROFILE_ID, expected_sha256="sha256:0", settings=settings)
+
+    capsule = _publish_supervised_capsule(settings)
+    recovery_path = capsule / "custody" / PROFILE_CUSTODY_RECOVERY_FILENAME
+    with pytest.raises(ProfileCustodyRecordError, match="not enrolled"):
+        remove_committed_profile_custody_recovery_envelope(_PROFILE_ID, expected_sha256="sha256:0", settings=settings)
+
+    installed = _recovery_envelope().canonical_json_bytes()
+    install_committed_profile_custody_recovery_envelope(_PROFILE_ID, installed, settings=settings)
+    stale_witness = prefixed_digest(installed[:-1])
+    with pytest.raises(ProfileCustodyRecordError, match="witness is stale"):
+        remove_committed_profile_custody_recovery_envelope(
+            _PROFILE_ID,
+            expected_sha256=stale_witness,
+            settings=settings,
+        )
+    assert recovery_path.read_bytes() == installed
+
+    remove_committed_profile_custody_recovery_envelope(
+        _PROFILE_ID,
+        expected_sha256=prefixed_digest(installed),
+        settings=settings,
+    )
+    assert not os.path.lexists(recovery_path)
+    assert recognize_current_profile_capsule(_PROFILE_ID, settings=settings) == capsule
+    with pytest.raises(ProfileCustodyRecordError, match="not enrolled"):
+        load_committed_profile_recovery_material(_PROFILE_ID, settings=settings)
+
+
+def test_committed_recovery_read_set_refuses_a_wrapper_that_belongs_to_another_capsule(tmp_path: Path) -> None:
+    """A wrapper smuggled past the exclusive install is still refused at read time."""
+    settings = _settings(tmp_path)
+    capsule = _publish_supervised_capsule(settings)
+    recovery_path = capsule / "custody" / PROFILE_CUSTODY_RECOVERY_FILENAME
+    foreign = _recovery_envelope(profile_id=uuid4()).canonical_json_bytes()
+    recovery_path.write_bytes(foreign)
+
+    with pytest.raises(ProfileCustodyRecordError, match="does not belong to its committed capsule"):
+        load_committed_profile_recovery_material(_PROFILE_ID, settings=settings)
+
+    recovery_path.write_bytes(b"not a recovery envelope")
+    with pytest.raises(ProfileCustodyRecordError, match="not a valid canonical record"):
+        load_committed_profile_recovery_material(_PROFILE_ID, settings=settings)
+
+
+def test_recovery_envelope_parse_refuses_unknown_noncanonical_and_oversize_records() -> None:
+    envelope = _recovery_envelope()
+    canonical = envelope.canonical_json_bytes()
+    assert parse_profile_custody_recovery_envelope(canonical) == envelope
+
+    unknown = canonical.replace(b"{", b'{"unexpected":true,', 1)
+    reordered = json.dumps(dict(reversed(tuple(json.loads(canonical).items()))), separators=(",", ":")).encode("utf-8")
+    pretty = json.dumps(json.loads(canonical), indent=2).encode("utf-8")
+    duplicated = canonical.replace(b'"schema_version":1', b'"schema_version":1,"schema_version":1', 1)
+    forged_digest = canonical.replace(envelope.self_digest.encode("ascii"), b"sha256:" + b"0" * 64, 1)
+    oversize = canonical + b" " * PROFILE_CUSTODY_RECOVERY_MAX_BYTES
+
+    for value in (unknown, reordered, pretty, duplicated, forged_digest, oversize, b"\xff"):
+        with pytest.raises(ProfileCustodyRecordError):
+            parse_profile_custody_recovery_envelope(value)
+
+
+def test_committed_capsule_is_published_once_with_immutable_marker_and_password_only_read_set(tmp_path: Path) -> None:
+    settings = _settings(tmp_path)
+    envelope = create_profile_custody_password_envelope(
+        profile_id=_PROFILE_ID,
+        password=_PASSPHRASE,
+        dek=_DEK,
+        dek_epoch=_EPOCH,
+        kdf=_kdf(),
+        settings=settings,
+    )
+    recovery = _supervised_recovery_envelope(settings)
+    sentinel = create_profile_custody_sentinel(envelope=envelope, dek=_DEK)
+    published_at = datetime(2026, 8, 13, 12, 34, 56, 123456, tzinfo=UTC)
+
+    capsule = publish_profile_custody_capsule(
+        profile_id=_PROFILE_ID,
+        transaction_id=UUID("4f28d1c4-e466-4a08-a25a-ea5925146f36"),
+        publication_kind=ProfilePublicationKind.ENROLL,
+        password_envelope=envelope,
+        sentinel=sentinel,
+        data_files={"state/current.bin": b"current encrypted payload"},
+        settings=settings,
+        published_at=published_at,
+    )
+    install_committed_profile_custody_recovery_envelope(_PROFILE_ID, recovery.canonical_json_bytes(), settings=settings)
+
+    marker = parse_profile_custody_commit((capsule / "profile.commit.v1.json").read_bytes())
+    assert marker.profile_id == _PROFILE_ID
+    assert marker.published_at == "2026-08-13T12:34:56.123456Z"
+    assert recognize_current_profile_capsule(_PROFILE_ID, settings=settings) == capsule
+    recovery_path = capsule / "custody" / PROFILE_CUSTODY_RECOVERY_FILENAME
+    assert recovery_path.read_bytes() == recovery.canonical_json_bytes()
+    recovery_path.unlink()
+    recovery_path.mkdir()
+    recovery_accesses: list[str] = []
+
+    def observe_open(event: str, arguments: tuple[object, ...]) -> None:
+        if event == "open" and arguments and isinstance(arguments[0], str) and Path(arguments[0]) == recovery_path:
+            recovery_accesses.append("audit-open")
+
+    def observe_filesystem_calls(frame: object, event: str, argument: object) -> None:
+        if event != "c_call" or getattr(argument, "__name__", "") not in {"stat", "lstat", "open", "read"}:
+            return
+        local_values = getattr(frame, "f_locals", {}).values()
+        if any(isinstance(value, Path) and value == recovery_path for value in local_values):
+            recovery_accesses.append(getattr(argument, "__name__", "unknown"))
+
+    # This observes the process's actual open audit stream, independently of
+    # the custody receipt.  The profile hook also observes C-level stat/open/
+    # read calls made by real filesystem code with a recovery path local.
+    # The recovery path is deliberately a directory, so an accidental ordinary
+    # file open is also a hard real-FS error.
+    sys.addaudithook(observe_open)
+    previous_profile = sys.getprofile()
+    sys.setprofile(observe_filesystem_calls)
+    try:
+        password_material = load_committed_profile_password_material(_PROFILE_ID, settings=settings)
+        assert (
+            unlock_profile_custody(
+                password_material.envelope,
+                _PASSPHRASE,
+                sentinel=password_material.sentinel,
+                settings=settings,
+            ).dek
+            == _DEK
+        )
+    finally:
+        sys.setprofile(previous_profile)
+    assert password_material.envelope == envelope
+    assert password_material.sentinel == sentinel
+    assert recovery_path not in {operation.path for operation in password_material.access_trace}
+    assert {operation.operation for operation in password_material.access_trace} == {"stat", "open", "read"}
+    assert recovery_accesses == []
+    assert (capsule / "data" / "state" / "current.bin").read_bytes() == b"current encrypted payload"
+    verify_profile_custody_sentinel(
+        dek=_DEK,
+        profile_id=_PROFILE_ID,
+        dek_epoch=_EPOCH,
+        sentinel=password_material.sentinel,
+    )
+
+
+def test_capsule_summary_witness_observes_only_validated_commit_and_uuid_bound_label(tmp_path: Path) -> None:
+    settings = _settings(tmp_path)
+    envelope = _password_envelope()
+    sentinel = create_profile_custody_sentinel(envelope=envelope, dek=_DEK)
+    label = ProfileCustodyCapsuleLabel.create(profile_id=_PROFILE_ID, label="Summary profile")
+    capsule = publish_profile_custody_capsule(
+        profile_id=_PROFILE_ID,
+        transaction_id=UUID("60a1e2f8-eeb3-4256-b04d-0aaccc49c43d"),
+        publication_kind=ProfilePublicationKind.ENROLL,
+        password_envelope=envelope,
+        sentinel=sentinel,
+        data_files={"profile-label.v1.json": label.canonical_json_bytes()},
+        settings=settings,
+    )
+    # If the summary path crosses custody or sentinel boundaries, these real
+    # non-regular members make the accidental read fail loudly.
+    (capsule / storage_location(StorageCategory.PROFILE_CAPSULE_PASSWORD_ENVELOPE).relative_path()).unlink()
+    (capsule / storage_location(StorageCategory.PROFILE_CAPSULE_PASSWORD_ENVELOPE).relative_path()).mkdir()
+    (capsule / "data" / PROFILE_CUSTODY_SENTINEL_FILENAME).unlink()
+    (capsule / "data" / PROFILE_CUSTODY_SENTINEL_FILENAME).mkdir()
+
+    (witness,) = list_current_profile_custody_capsule_summary_witnesses(settings=settings)
+
+    assert witness.profile_id == _PROFILE_ID
+    assert witness.capsule_path == capsule
+    assert witness.commit.profile_id == witness.label.profile_id == _PROFILE_ID
+    assert witness.label == label
+    with pytest.raises(FrozenInstanceError):
+        type(witness).__setattr__(witness, "capsule_path", tmp_path / "replacement")
+
+
+def test_capsule_summary_witness_refuses_foreign_or_linked_label_provenance(tmp_path: Path) -> None:
+    settings = _settings(tmp_path)
+    envelope = _password_envelope()
+    sentinel = create_profile_custody_sentinel(envelope=envelope, dek=_DEK)
+    label = ProfileCustodyCapsuleLabel.create(profile_id=_PROFILE_ID, label="Summary profile")
+    capsule = publish_profile_custody_capsule(
+        profile_id=_PROFILE_ID,
+        transaction_id=UUID("5f274feb-21c8-4f16-b049-bff720e699c4"),
+        publication_kind=ProfilePublicationKind.ENROLL,
+        password_envelope=envelope,
+        sentinel=sentinel,
+        data_files={"profile-label.v1.json": label.canonical_json_bytes()},
+        settings=settings,
+    )
+    label_path = capsule / "data" / "profile-label.v1.json"
+    label_path.write_bytes(
+        ProfileCustodyCapsuleLabel.create(profile_id=uuid4(), label="Foreign profile").canonical_json_bytes()
+    )
+    with pytest.raises(ProfileCustodyRecordError, match="label UUID differs"):
+        list_current_profile_custody_capsule_summary_witnesses(settings=settings)
+
+    label_path.unlink()
+    outside = tmp_path / "outside-label.json"
+    outside.write_bytes(label.canonical_json_bytes())
+    os.symlink(outside, label_path)
+    with pytest.raises(ProfileCustodyRecordError, match=r"regular|reparse|unavailable"):
+        list_current_profile_custody_capsule_summary_witnesses(settings=settings)
+
+
+def test_summary_discovery_reuses_each_anchored_commit_observation_once(tmp_path: Path) -> None:
+    """The populated summary path never reparses a marker after discovery."""
+    settings = _settings(tmp_path)
+    other_profile_id = UUID("1a5c1a5c-87fa-4b8d-8ec2-a209a6f2d435")
+    labels = {
+        _PROFILE_ID: ProfileCustodyCapsuleLabel.create(profile_id=_PROFILE_ID, label="First summary"),
+        other_profile_id: ProfileCustodyCapsuleLabel.create(profile_id=other_profile_id, label="Second summary"),
+    }
+    for profile_id, label in labels.items():
+        envelope = _password_envelope(profile_id=profile_id)
+        publish_profile_custody_capsule(
+            profile_id=profile_id,
+            transaction_id=uuid4(),
+            publication_kind=ProfilePublicationKind.ENROLL,
+            password_envelope=envelope,
+            sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_DEK),
+            data_files={"profile-label.v1.json": label.canonical_json_bytes()},
+            settings=settings,
+        )
+
+    parsed_markers: list[object] = []
+    previous_profile = sys.getprofile()
+
+    def observe_parse(frame: object, event: str, argument: object) -> None:
+        if event == "call" and getattr(frame, "f_code", None) is parse_profile_custody_commit.__code__:
+            parsed_markers.append(argument)
+
+    sys.setprofile(observe_parse)
+    try:
+        witnesses = list_current_profile_custody_capsule_summary_witnesses(settings=settings)
+    finally:
+        sys.setprofile(previous_profile)
+
+    assert tuple(witness.profile_id for witness in witnesses) == tuple(sorted(labels, key=str))
+    assert tuple(witness.label for witness in witnesses) == tuple(labels[witness.profile_id] for witness in witnesses)
+    assert len(parsed_markers) == len(labels)
+
+
+def test_summary_discovery_refuses_unbound_label_after_its_single_marker_parse(tmp_path: Path) -> None:
+    """A marker alone cannot become a reusable summary observation."""
+    settings = _settings(tmp_path)
+    envelope = _password_envelope()
+    capsule = publish_profile_custody_capsule(
+        profile_id=_PROFILE_ID,
+        transaction_id=uuid4(),
+        publication_kind=ProfilePublicationKind.ENROLL,
+        password_envelope=envelope,
+        sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_DEK),
+        data_files={
+            "profile-label.v1.json": ProfileCustodyCapsuleLabel.create(
+                profile_id=uuid4(),
+                label="Foreign summary",
+            ).canonical_json_bytes()
+        },
+        settings=settings,
+    )
+
+    assert (capsule / "profile.commit.v1.json").is_file()
+    with pytest.raises(ProfileCustodyRecordError, match="label UUID differs"):
+        list_current_profile_custody_capsule_summary_witnesses(settings=settings)
+
+
+def test_summary_discovery_refuses_a_malformed_label_without_repairing_it(tmp_path: Path) -> None:
+    """A malformed label remains an explicit durable failure, never a repair input."""
+    settings = _settings(tmp_path)
+    envelope = _password_envelope()
+    capsule = publish_profile_custody_capsule(
+        profile_id=_PROFILE_ID,
+        transaction_id=uuid4(),
+        publication_kind=ProfilePublicationKind.ENROLL,
+        password_envelope=envelope,
+        sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_DEK),
+        data_files={
+            "profile-label.v1.json": ProfileCustodyCapsuleLabel.create(
+                profile_id=_PROFILE_ID,
+                label="Malformed summary",
+            ).canonical_json_bytes()
+        },
+        settings=settings,
+    )
+    label_path = capsule / "data" / "profile-label.v1.json"
+    malformed = b"not a canonical profile custody label"
+    label_path.write_bytes(malformed)
+
+    with pytest.raises(ProfileCustodyRecordError, match="summary witness is invalid"):
+        list_current_profile_custody_capsule_summary_witnesses(settings=settings)
+
+    assert label_path.read_bytes() == malformed
+
+
+def test_summary_discovery_refuses_a_real_permission_denial_without_mutating_the_label(tmp_path: Path) -> None:
+    """A read-only summary cannot repair an unreadable provenance record."""
+    settings = _settings(tmp_path)
+    label = ProfileCustodyCapsuleLabel.create(profile_id=_PROFILE_ID, label="Denied summary")
+    envelope = _password_envelope()
+    capsule = publish_profile_custody_capsule(
+        profile_id=_PROFILE_ID,
+        transaction_id=uuid4(),
+        publication_kind=ProfilePublicationKind.ENROLL,
+        password_envelope=envelope,
+        sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_DEK),
+        data_files={"profile-label.v1.json": label.canonical_json_bytes()},
+        settings=settings,
+    )
+    label_path = capsule / "data" / "profile-label.v1.json"
+
+    with obstructed_path(label_path), pytest.raises(ProfileCustodyRecordError, match=r"regular|opened|label"):
+        list_current_profile_custody_capsule_summary_witnesses(settings=settings)
+
+    assert label_path.read_bytes() == label.canonical_json_bytes()
+
+
+def test_summary_discovery_keeps_one_anchored_generation_during_a_real_directory_swap(tmp_path: Path) -> None:
+    """A concurrent replacement cannot splice an old marker to a new label."""
+    settings = _settings(tmp_path / "current")
+    replacement_settings = _settings(tmp_path / "replacement-source")
+    original_label = ProfileCustodyCapsuleLabel.create(profile_id=_PROFILE_ID, label="Original summary")
+    replacement_label = ProfileCustodyCapsuleLabel.create(profile_id=_PROFILE_ID, label="Replacement summary")
+    original_envelope = _password_envelope()
+    original_capsule = publish_profile_custody_capsule(
+        profile_id=_PROFILE_ID,
+        transaction_id=UUID("7a3d6e8a-d2f7-4bf8-9e16-cc7d7b3594f6"),
+        publication_kind=ProfilePublicationKind.ENROLL,
+        password_envelope=original_envelope,
+        sentinel=create_profile_custody_sentinel(envelope=original_envelope, dek=_DEK),
+        data_files={"profile-label.v1.json": original_label.canonical_json_bytes()},
+        settings=settings,
+    )
+    replacement_envelope = _password_envelope()
+    replacement_capsule = publish_profile_custody_capsule(
+        profile_id=_PROFILE_ID,
+        transaction_id=UUID("2f57e4d6-f3a7-48bd-bce7-2b73126bf7bb"),
+        publication_kind=ProfilePublicationKind.ENROLL,
+        password_envelope=replacement_envelope,
+        sentinel=create_profile_custody_sentinel(envelope=replacement_envelope, dek=_DEK),
+        data_files={"profile-label.v1.json": replacement_label.canonical_json_bytes()},
+        settings=replacement_settings,
+    )
+    parked = original_capsule.parent / ".original-parked"
+    replacement = original_capsule.parent / ".replacement-ready"
+    replacement_capsule.rename(replacement)
+    swap_attempted = False
+    swapped = False
+    swap_errors: list[OSError] = []
+    previous_profile = sys.getprofile()
+
+    def replace_after_marker_parse(frame: object, event: str, argument: object) -> None:
+        nonlocal swap_attempted, swapped
+        if (
+            swap_attempted
+            or event != "return"
+            or getattr(frame, "f_code", None) is not parse_profile_custody_commit.__code__
+        ):
+            return
+        swap_attempted = True
+        try:
+            original_capsule.rename(parked)
+            try:
+                replacement.rename(original_capsule)
+            except OSError:
+                parked.rename(original_capsule)
+                raise
+        except OSError as exc:
+            swap_errors.append(exc)
+        else:
+            swapped = True
+
+    sys.setprofile(replace_after_marker_parse)
+    try:
+        witnesses = list_current_profile_custody_capsule_summary_witnesses(settings=settings)
+    finally:
+        sys.setprofile(previous_profile)
+
+    assert swap_attempted
+    assert swapped or swap_errors, "the real replacement must either occur or be kernel-refused by its anchor"
+    assert len(witnesses) == 1
+    assert witnesses[0].commit.transaction_id == UUID("7a3d6e8a-d2f7-4bf8-9e16-cc7d7b3594f6")
+    assert witnesses[0].label == original_label
+    if swapped:
+        assert original_capsule.is_dir()
+        assert (
+            original_capsule / "data" / "profile-label.v1.json"
+        ).read_bytes() == replacement_label.canonical_json_bytes()
+
+
+def test_uncommitted_or_identity_mixed_capsules_are_not_usable(tmp_path: Path) -> None:
+    settings = _settings(tmp_path)
+    candidate = profile_custody_path(_PROFILE_ID, StorageCategory.PROFILE_CAPSULE_COMMIT, settings=settings).parent
+    candidate.mkdir(parents=True)
+
+    assert recognize_current_profile_capsule(_PROFILE_ID, settings=settings) is None
+    with pytest.raises(ProfileCustodyRecordError, match="not committed"):
+        load_committed_profile_password_material(_PROFILE_ID, settings=settings)
+
+
+def test_password_read_opens_marker_once_and_detects_a_changed_identity_on_next_call(tmp_path: Path) -> None:
+    settings = _settings(tmp_path)
+    envelope = _password_envelope()
+    capsule = publish_profile_custody_capsule(
+        profile_id=_PROFILE_ID,
+        transaction_id=uuid4(),
+        publication_kind=ProfilePublicationKind.ENROLL,
+        password_envelope=envelope,
+        sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_DEK),
+        data_files={},
+        settings=settings,
+    )
+    marker = capsule / "profile.commit.v1.json"
+    for _ in range(2):
+        material = load_committed_profile_password_material(_PROFILE_ID, settings=settings)
+        assert sum(op.operation == "open" and op.path == marker for op in material.access_trace) == 1
+        assert material.envelope == envelope
+
+    marker.write_bytes(
+        ProfileCustodyCommit.create(
+            profile_id=uuid4(),
+            transaction_id=uuid4(),
+            publication_kind=ProfilePublicationKind.ENROLL,
+        ).canonical_json_bytes()
+    )
+    with pytest.raises(ProfileCustodyRecordError, match="commit UUID"):
+        load_committed_profile_password_material(_PROFILE_ID, settings=settings)
+
+
+def test_password_read_keeps_one_generation_during_a_real_directory_swap(tmp_path: Path) -> None:
+    """Recognition and material reads must retain the same capsule identity."""
+    settings = _settings(tmp_path / "current")
+    original_envelope = _password_envelope()
+    replacement_envelope = _password_envelope(dek_epoch=base64.b64encode(b"r" * 16).decode("ascii"))
+
+    def publish(target: Settings, envelope: ProfileCustodyEnvelope) -> Path:
+        return publish_profile_custody_capsule(
+            profile_id=_PROFILE_ID,
+            transaction_id=uuid4(),
+            publication_kind=ProfilePublicationKind.ENROLL,
+            password_envelope=envelope,
+            sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_DEK),
+            data_files={},
+            settings=target,
+        )
+
+    original = publish(settings, original_envelope)
+    original_commit = parse_profile_custody_commit((original / "profile.commit.v1.json").read_bytes())
+    replacement = publish(_settings(tmp_path / "replacement"), replacement_envelope)
+    parked = original.parent / ".parked"
+    attempted = False
+    swapped = False
+    refused: list[OSError] = []
+
+    def swap_after_marker(frame: object, event: str, argument: object) -> None:
+        nonlocal attempted, swapped
+        if (
+            attempted
+            or event != "return"
+            or getattr(frame, "f_code", None) is not parse_profile_custody_commit.__code__
+        ):
+            return
+        attempted = True
+        try:
+            original.rename(parked)
+            try:
+                replacement.rename(original)
+            except OSError:
+                parked.rename(original)
+                raise
+        except OSError as exc:
+            refused.append(exc)
+        else:
+            swapped = True
+
+    previous = sys.getprofile()
+    sys.setprofile(swap_after_marker)
+    try:
+        material = load_committed_profile_password_material(_PROFILE_ID, settings=settings)
+    finally:
+        sys.setprofile(previous)
+    assert attempted and (swapped or refused)
+    assert material.commit == original_commit
+    assert material.envelope == original_envelope
+    assert material.sentinel.dek_epoch == original_envelope.dek_epoch
+
+    # Handles are released at return; the next call must read the new capsule.
+    if not swapped:
+        original.rename(parked)
+        replacement.rename(original)
+    assert load_committed_profile_password_material(_PROFILE_ID, settings=settings).envelope == replacement_envelope
+
+
+def test_absent_capsule_ancestry_is_not_committed_but_linked_ancestry_is_refused(tmp_path: Path) -> None:
+    """Nothing can exist below an absent directory; a linked one is never walked through."""
+    settings = _settings(tmp_path)
+    capsules_root = profile_custody_path(
+        _PROFILE_ID, StorageCategory.PROFILE_CAPSULE_COMMIT, settings=settings
+    ).parent.parent
+    assert not os.path.lexists(capsules_root)
+
+    assert recognize_current_profile_capsule(_PROFILE_ID, settings=settings) is None
+    with pytest.raises(ProfileCustodyRecordError, match="not committed"):
+        load_committed_profile_password_material(_PROFILE_ID, settings=settings)
+
+    envelope = _password_envelope()
+    published = publish_profile_custody_capsule(
+        profile_id=_PROFILE_ID,
+        transaction_id=uuid4(),
+        publication_kind=ProfilePublicationKind.ENROLL,
+        password_envelope=envelope,
+        sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_DEK),
+        data_files={},
+        settings=settings,
+    )
+    moved_capsules = tmp_path / "moved-capsules"
+    published.parent.rename(moved_capsules)
+    os.symlink(moved_capsules, capsules_root, target_is_directory=True)
+
+    with pytest.raises(ProfileCustodyRecordError, match=r"unsafe|reparse"):
+        recognize_current_profile_capsule(_PROFILE_ID, settings=settings)
+    with pytest.raises(ProfileCustodyRecordError, match=r"unsafe|reparse"):
+        load_committed_profile_password_material(_PROFILE_ID, settings=settings)
+
+
+def test_discovery_refuses_a_retired_manifest_by_stat_only_without_opening_its_bytes(tmp_path: Path) -> None:
+    """Retired custody is a typed refusal; its untrusted contents are never read."""
+    settings = _settings(tmp_path)
+    retired = (
+        tmp_path
+        / storage_location(StorageCategory.BUCKETS).relative_path()
+        / str(_PROFILE_ID)
+        / storage_location(StorageCategory.BUCKET_MANIFEST).relative_path()
+    )
+    retired.parent.mkdir(parents=True)
+    retired.write_bytes(b"retired manifest bytes must never be parsed")
+    opened_retired_paths: list[object] = []
+
+    def record_open(event: str, arguments: tuple[object, ...]) -> None:
+        if event != "open" or not arguments:
+            return
+        candidate = arguments[0]
+        if isinstance(candidate, (str, bytes, os.PathLike)) and os.fspath(candidate) == os.fspath(retired):
+            opened_retired_paths.append(os.fspath(candidate))
+
+    sys.addaudithook(record_open)
+    with pytest.raises(ProfileCustodyRefusedError) as captured:
+        list_current_profile_custody_capsule_ids(settings=settings)
+    with pytest.raises(ProfileCustodyRefusedError):
+        list_current_profile_custody_capsule_summary_witnesses(settings=settings)
+
+    assert captured.value.refusal is ProfileCustodyRefusal.LEGACY_CUSTODY_DETECTED
+    assert captured.value.recovery_guidance == (
+        ProfileCustodyRecoveryGuidance.DESTRUCTIVE_RESET,
+        ProfileCustodyRecoveryGuidance.REENROLL_PROFILE,
+    )
+    assert captured.value.context == {
+        "refusal": "LEGACY_CUSTODY_DETECTED",
+        "recovery_guidance": ("DESTRUCTIVE_RESET", "REENROLL_PROFILE"),
+        "capsules_root": str(tmp_path / "buckets"),
+        "keystore_root": str(tmp_path / "keystore"),
+        "retired_member_paths": ("manifest.toml",),
+        "capsules_root_retired_matches": ("*/manifest.toml",),
+    }
+    assert opened_retired_paths == []
+
+
+def test_discovery_refuses_a_retired_keystore_member_by_stat_only_without_opening_its_bytes(tmp_path: Path) -> None:
+    """A retired shared-master wrapped DEK is recognised outside the buckets tree.
+
+    The keystore is a sibling of ``buckets/``, so this store's buckets tree is
+    entirely current-format and carries no retired member at all.  Only the
+    keystore holds retired key material, which is the case a buckets-only
+    detector reported as a clean, profile-less store.
+    """
+    settings = _settings(tmp_path)
+    retired = tmp_path / "keystore" / str(_PROFILE_ID) / "bucket.dek.json"
+    retired.parent.mkdir(parents=True)
+    retired.write_bytes(b"retired wrapped DEK bytes must never be parsed")
+    opened_retired_paths: list[object] = []
+
+    def record_open(event: str, arguments: tuple[object, ...]) -> None:
+        if event != "open" or not arguments:
+            return
+        candidate = arguments[0]
+        if isinstance(candidate, (str, bytes, os.PathLike)) and os.fspath(candidate) == os.fspath(retired):
+            opened_retired_paths.append(os.fspath(candidate))
+
+    sys.addaudithook(record_open)
+    with pytest.raises(ProfileCustodyRefusedError) as captured:
+        list_current_profile_custody_capsule_ids(settings=settings)
+
+    assert captured.value.refusal is ProfileCustodyRefusal.LEGACY_CUSTODY_DETECTED
+    assert captured.value.recovery_guidance == (
+        ProfileCustodyRecoveryGuidance.DESTRUCTIVE_RESET,
+        ProfileCustodyRecoveryGuidance.REENROLL_PROFILE,
+    )
+    assert captured.value.context == {
+        "refusal": "LEGACY_CUSTODY_DETECTED",
+        "recovery_guidance": ("DESTRUCTIVE_RESET", "REENROLL_PROFILE"),
+        "capsules_root": str(tmp_path / "buckets"),
+        "keystore_root": str(tmp_path / "keystore"),
+        "retired_member_paths": ("bucket.dek.json",),
+        "keystore_root_retired_matches": ("*/bucket.dek.json",),
+    }
+    # The buckets root is still named -- it is part of the prescribed reset --
+    # but it contributes no match, so the operator is not sent looking for a
+    # retired member in a tree that has none.
+    assert "capsules_root_retired_matches" not in captured.value.context
+    assert opened_retired_paths == []
+
+
+def test_a_store_retired_in_both_roots_pairs_each_match_with_the_root_it_was_found_under(
+    tmp_path: Path,
+) -> None:
+    """Two retired members must not collapse into an unpaired list of names.
+
+    A flat union answers "which member" but not "where", and the flat union
+    answers "where" only by accident when exactly one member is detected. The
+    operator's route from the refusal to its cause is the pairing, and it costs
+    no read: which name matched below which root is what the scan already
+    observed.
+    """
+    settings = _settings(tmp_path)
+    retired_manifest = (
+        tmp_path
+        / storage_location(StorageCategory.BUCKETS).relative_path()
+        / str(_PROFILE_ID)
+        / storage_location(StorageCategory.BUCKET_MANIFEST).relative_path()
+    )
+    retired_manifest.parent.mkdir(parents=True)
+    retired_manifest.write_bytes(b"retired manifest bytes must never be parsed")
+    retired_dek = tmp_path / "keystore" / str(_PROFILE_ID) / "bucket.dek.json"
+    retired_dek.parent.mkdir(parents=True)
+    retired_dek.write_bytes(b"retired wrapped DEK bytes must never be parsed")
+
+    with pytest.raises(ProfileCustodyRefusedError) as captured:
+        list_current_profile_custody_capsule_ids(settings=settings)
+
+    assert captured.value.context == {
+        "refusal": "LEGACY_CUSTODY_DETECTED",
+        "recovery_guidance": ("DESTRUCTIVE_RESET", "REENROLL_PROFILE"),
+        "capsules_root": str(tmp_path / "buckets"),
+        "keystore_root": str(tmp_path / "keystore"),
+        "retired_member_paths": ("bucket.dek.json", "manifest.toml"),
+        "capsules_root_retired_matches": ("*/manifest.toml",),
+        "keystore_root_retired_matches": ("*/bucket.dek.json",),
+    }
+
+
+def test_the_refusal_never_names_the_candidate_directory_it_found_a_retired_member_in(
+    tmp_path: Path,
+) -> None:
+    """The search pattern must stay a wildcard, never a resolved identity.
+
+    Disclosing the candidate name would assert that the directory IS a retired
+    profile -- an identity inferred from retired custody. The pattern is the
+    whole of what the operator gets, and it must remain unresolved.
+    """
+    settings = _settings(tmp_path)
+    retired_manifest = (
+        tmp_path
+        / storage_location(StorageCategory.BUCKETS).relative_path()
+        / str(_PROFILE_ID)
+        / storage_location(StorageCategory.BUCKET_MANIFEST).relative_path()
+    )
+    retired_manifest.parent.mkdir(parents=True)
+    retired_manifest.write_bytes(b"retired manifest bytes must never be parsed")
+
+    with pytest.raises(ProfileCustodyRefusedError) as captured:
+        list_current_profile_custody_capsule_ids(settings=settings)
+
+    context = captured.value.context
+    assert context is not None
+    rendered = " ".join(str(value) for key, value in context.items() if key not in {"capsules_root", "keystore_root"})
+    assert str(_PROFILE_ID) not in rendered
+    assert context["capsules_root_retired_matches"] == ("*/manifest.toml",)
+
+
+def test_a_current_store_with_live_keystore_sidecars_is_not_refused(tmp_path: Path) -> None:
+    """The other half of the detector: it must refuse a retired store and nothing else.
+
+    A detector that refuses every store is as broken as one that refuses none,
+    so this exercises a published capsule whose keystore carries the LIVE
+    sidecars (the persisted session record and the login-throttle cache) and
+    asserts discovery still returns that capsule.
+    """
+    settings = _settings(tmp_path)
+    envelope = _password_envelope()
+    publish_profile_custody_capsule(
+        profile_id=_PROFILE_ID,
+        transaction_id=uuid4(),
+        publication_kind=ProfilePublicationKind.ENROLL,
+        password_envelope=envelope,
+        sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_DEK),
+        data_files={"state/current.bin": b"current encrypted payload"},
+        settings=settings,
+    )
+    live_keystore = tmp_path / "keystore" / str(_PROFILE_ID)
+    live_keystore.mkdir(parents=True, exist_ok=True)
+    (live_keystore / "session.v2.json").write_bytes(b"{}")
+    (live_keystore / "login-throttle.json").write_bytes(b"{}")
+
+    assert list_current_profile_custody_capsule_ids(settings=settings) == (_PROFILE_ID,)
+
+
+def test_discovery_refuses_an_invalid_current_marker_instead_of_skipping_it(tmp_path: Path) -> None:
+    """A UUID candidate with a marker is current-format integrity state, never absence."""
+    settings = _settings(tmp_path)
+    marker = profile_custody_path(_PROFILE_ID, StorageCategory.PROFILE_CAPSULE_COMMIT, root=tmp_path)
+    marker.parent.mkdir(parents=True)
+    marker.write_bytes(b"not a current profile commit")
+
+    with pytest.raises(ProfileCustodyRecordError):
+        list_current_profile_custody_capsule_ids(settings=settings)
+    with pytest.raises(ProfileCustodyRecordError):
+        list_current_profile_custody_capsule_summary_witnesses(settings=settings)
+
+
+def test_committed_capsule_enumeration_refuses_linked_candidate_and_unsafe_root_ancestry(tmp_path: Path) -> None:
+    """Discovery is anchored at the custody root and never follows a UUID-named link."""
+    settings = _settings(tmp_path)
+    envelope = _password_envelope()
+    sentinel = create_profile_custody_sentinel(envelope=envelope, dek=_DEK)
+    published = publish_profile_custody_capsule(
+        profile_id=_PROFILE_ID,
+        transaction_id=uuid4(),
+        publication_kind=ProfilePublicationKind.ENROLL,
+        password_envelope=envelope,
+        sentinel=sentinel,
+        data_files={
+            "profile-label.v1.json": ProfileCustodyCapsuleLabel.create(
+                profile_id=_PROFILE_ID,
+                label="Anchored operator",
+            ).canonical_json_bytes()
+        },
+        settings=settings,
+    )
+    other_profile = uuid4()
+    outside = tmp_path / "outside-capsule"
+    outside.mkdir()
+    os.symlink(outside, published.parent / str(other_profile), target_is_directory=True)
+
+    assert list_current_profile_custody_capsule_ids(settings=settings) == (_PROFILE_ID,)
+    assert tuple(
+        witness.profile_id for witness in list_current_profile_custody_capsule_summary_witnesses(settings=settings)
+    ) == (_PROFILE_ID,)
+
+    moved_capsules = tmp_path / "real-capsules"
+    published.parent.rename(moved_capsules)
+    os.symlink(moved_capsules, tmp_path / "buckets", target_is_directory=True)
+    with pytest.raises(ProfileCustodyRecordError, match=r"link|unsafe|root|reparse"):
+        list_current_profile_custody_capsule_ids(settings=settings)
+    with pytest.raises(ProfileCustodyRecordError, match=r"link|unsafe|root|reparse"):
+        list_current_profile_custody_capsule_summary_witnesses(settings=settings)
+    assert not (outside / "profile.commit.v1.json").exists()
+
+
+def test_crash_boundary_never_recognizes_a_marker_written_only_in_sibling_staging(tmp_path: Path) -> None:
+    settings = _settings(tmp_path)
+    transaction_id = uuid4()
+    staged = profile_custody_path(
+        _PROFILE_ID, StorageCategory.PROFILE_CAPSULE_COMMIT, settings=settings
+    ).parent.parent / (f".{_PROFILE_ID}.staging-{transaction_id}")
+    staged.mkdir(parents=True)
+    (staged / "profile.commit.v1.json").write_bytes(
+        ProfileCustodyCommit.create(
+            profile_id=_PROFILE_ID,
+            transaction_id=transaction_id,
+            publication_kind=ProfilePublicationKind.ENROLL,
+        ).canonical_json_bytes()
+    )
+
+    # This is the durable state if a process terminates after marker fsync but
+    # before the only publication rename.  Recognition has no staging scan.
+    assert recognize_current_profile_capsule(_PROFILE_ID, settings=settings) is None
+    assert list_current_profile_custody_capsule_summary_witnesses(settings=settings) == ()
+    with pytest.raises(ProfileCustodyRecordError, match="not committed"):
+        load_committed_profile_password_material(_PROFILE_ID, settings=settings)
+
+
+def test_publication_refuses_traversal_and_leaves_no_staging_capsule(tmp_path: Path) -> None:
+    settings = _settings(tmp_path)
+    envelope = _password_envelope()
+    sentinel = create_profile_custody_sentinel(envelope=envelope, dek=_DEK)
+
+    with pytest.raises(ProfileCustodyRecordError, match="escapes its staging root"):
+        publish_profile_custody_capsule(
+            profile_id=_PROFILE_ID,
+            transaction_id=uuid4(),
+            publication_kind=ProfilePublicationKind.ENROLL,
+            password_envelope=envelope,
+            sentinel=sentinel,
+            data_files={"../outside": b"must never be written"},
+            settings=settings,
+        )
+
+    capsules_root = profile_custody_path(
+        _PROFILE_ID, StorageCategory.PROFILE_CAPSULE_COMMIT, settings=settings
+    ).parent.parent
+    assert not scan_directory(capsules_root, pattern=f".{_PROFILE_ID}.staging-*")
+    assert not os.path.lexists(capsules_root / str(_PROFILE_ID))
+
+
+def test_publication_refuses_a_real_directory_reparse_point_at_the_capsules_root(tmp_path: Path) -> None:
+    settings = _settings(tmp_path / "state")
+    envelope = _password_envelope()
+    sentinel = create_profile_custody_sentinel(envelope=envelope, dek=_DEK)
+    capsules_root = profile_custody_path(
+        _PROFILE_ID, StorageCategory.PROFILE_CAPSULE_COMMIT, settings=settings
+    ).parent.parent
+    capsules_root.parent.mkdir(parents=True, exist_ok=True)
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    os.symlink(outside, capsules_root, target_is_directory=True)
+
+    with pytest.raises(ProfileCustodyRecordError, match="root must not be a link"):
+        publish_profile_custody_capsule(
+            profile_id=_PROFILE_ID,
+            transaction_id=uuid4(),
+            publication_kind=ProfilePublicationKind.ENROLL,
+            password_envelope=envelope,
+            sentinel=sentinel,
+            data_files={},
+            settings=settings,
+        )
+    assert not (outside / "profile.commit.v1.json").exists()
+
+
+def test_publication_collision_refuses_replacement_and_safely_removes_own_stage(tmp_path: Path) -> None:
+    settings = _settings(tmp_path)
+    envelope = create_profile_custody_password_envelope(
+        profile_id=_PROFILE_ID,
+        password=_PASSPHRASE,
+        dek=_DEK,
+        dek_epoch=_EPOCH,
+        kdf=_kdf(),
+        settings=settings,
+    )
+    sentinel = create_profile_custody_sentinel(envelope=envelope, dek=_DEK)
+    destination = profile_custody_path(_PROFILE_ID, StorageCategory.PROFILE_CAPSULE_COMMIT, settings=settings).parent
+    destination.mkdir(parents=True)
+    transaction_id = uuid4()
+
+    with pytest.raises(ProfileCustodyRecordError, match="destination already exists"):
+        publish_profile_custody_capsule(
+            profile_id=_PROFILE_ID,
+            transaction_id=transaction_id,
+            publication_kind=ProfilePublicationKind.ENROLL,
+            password_envelope=envelope,
+            sentinel=sentinel,
+            data_files={},
+            settings=settings,
+        )
+
+    assert destination.is_dir()
+    assert not os.path.lexists(
+        profile_custody_path(
+            _PROFILE_ID, StorageCategory.PROFILE_CAPSULE_COMMIT, settings=settings
+        ).parent.parent.joinpath(f".{_PROFILE_ID}.staging-{transaction_id}")
+    )

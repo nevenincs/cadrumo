@@ -1,0 +1,23 @@
+# Plazo from Orden HFP/823/2022 artículo 4, verbatim in the bundled corpus: «El
+# plazo de presentación del modelo 345 será el comprendido entre el 1 y el 31 de
+# enero de cada año, en relación con la información y operaciones que correspondan
+# al año natural inmediato anterior.» The rule is recurring, so it needs no fresh
+# orden per ejercicio; the ejercicio-2022 declaración is presented in January 2023.
+#
+# The close date stored is the NOMINAL statutory one. 31 January 2023 is a
+# Tuesday, so no business-day move arises here at all; storing nominal is also
+# what the sibling 2025 revision does, and keeps the statutory date recoverable
+# rather than overwritten by an operational one.
+#
+# No AEAT procedure or plazos page is cited: both bundled modelo 345 guidance
+# sources declare applies_from 2025-01-01 and so do not cover this ejercicio.
+
+[[revisions."2022".deadline_windows]]
+id = "modelo-345-2022-0a"
+filing_year = 2022
+period = "2022 0A"
+period_kind = "annual"
+opens_on = 2023-01-01
+closes_on = 2023-01-31
+legal_refs = ["orden-hfp-823-2022:art-4"]
+source_refs = ["boe-modelo-345-base-order"]

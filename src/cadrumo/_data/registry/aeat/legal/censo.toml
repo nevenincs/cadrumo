@@ -1,0 +1,399 @@
+[legal."rd-1065-2007:art-9"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1065-2007-art-9.html#a9"
+document_id = "BOE-A-2007-15984"
+article = "9"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984#a9"
+published_at = 2007-09-05
+effective_from = 2008-01-01
+review_status = "operator_reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "operator"
+notes = "Reglamento General de las actuaciones y los procedimientos de gestion e inspeccion tributaria (RGAT) art 9: declaracion de alta en el Censo de Empresarios, Profesionales y Retenedores. Base reglamentaria del flujo de alta del Modelo 036."
+required_text = [
+    "Declaración de alta en el Censo de Empresarios, Profesionales y Retenedores",
+    "deberán presentar una declaración de alta en dicho censo",
+    "número de identificación fiscal",
+]
+
+[legal."rd-1065-2007:art-10"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1065-2007-art-10.html#a10"
+document_id = "BOE-A-2007-15984"
+article = "10"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984#a10"
+published_at = 2007-09-05
+effective_from = 2008-01-01
+review_status = "operator_reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "operator"
+notes = "RGAT art 10: declaracion de modificacion en el Censo. Base reglamentaria del flujo de modificacion del Modelo 036 (cambio de domicilio fiscal, variacion de datos censales, inicio de actividad)."
+required_text = [
+    "Declaración de modificación en el Censo de Empresarios, Profesionales y Retenedores",
+    "el obligado tributario deberá comunicar a la Administración tributaria",
+    "cambio de domicilio fiscal",
+]
+
+[legal."rd-1065-2007:art-11"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1065-2007-art-11.html#a11"
+document_id = "BOE-A-2007-15984"
+article = "11"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984#a11"
+published_at = 2007-09-05
+effective_from = 2008-01-01
+review_status = "operator_reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "operator"
+notes = "RGAT art 11: declaracion de baja en el Censo. Base reglamentaria del flujo de baja del Modelo 036 (cese de actividad, plazo de un mes, sucesores)."
+required_text = [
+    "Declaración de baja en el Censo de Empresarios, Profesionales y Retenedores",
+    "cesen en el desarrollo de todo tipo de actividades empresariales o profesionales",
+    "en el plazo de un mes",
+]
+
+[legal."rdleg-1-2004:art-6.3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rdleg-1-2004-art-6.html#a6"
+document_id = "BOE-A-2004-4163"
+article = "6.3"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2004-4163#a6"
+published_at = 2004-03-08
+effective_from = 2011-03-06
+review_status = "agent_reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "verified against official BOE-A-2004-4163 consolidated art. 6; corpus excerpt bundled"
+notes = "RDLeg 1/2004 art 6.3 defines the cadastral reference as the alphanumeric identifier assigned to each immovable property and requires that identifier in documents with economic or tax relevance linked to the property. Grounds the fiscal-address cadastral-reference profile/censo field."
+required_text = [
+    "referencia catastral",
+    "código alfanumérico",
+    "cartografía oficial del Catastro",
+    "trascendencia tributaria vinculadas al inmueble",
+]
+
+[legal."orden-eha-1274-2007:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-1274-2007-art-1.html#ar"
+document_id = "BOE-A-2007-9508"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-9508#ar"
+published_at = 2007-05-10
+effective_from = 2007-07-01
+consolidated_as_of = 2025-02-03
+review_status = "operator_reviewed"
+reviewed_at = 2026-05-14
+reviewed_by = "operator"
+notes = "Articulo 1 de la Orden EHA/1274/2007: aprobacion del Modelo 036 de declaracion censal de alta, modificacion y baja."
+required_text = [
+    "Aprobación del modelo 036 de declaración censal",
+    "se aprueba el modelo 036, de declaración censal de alta, modificación y baja",
+    "Censo de empresarios, profesionales y retenedores que figura en el anexo I de esta orden",
+]
+
+[legal."orden-eha-1274-2007:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-1274-2007-art-2.html#ar-2"
+document_id = "BOE-A-2007-9508"
+article = "2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-9508#ar-2"
+published_at = 2007-05-10
+effective_from = 2007-07-01
+consolidated_as_of = 2025-02-03
+review_status = "operator_reviewed"
+reviewed_at = 2026-05-14
+reviewed_by = "operator"
+notes = "Articulo 2 de la Orden EHA/1274/2007: obligados a presentar declaracion censal y declaracion de baja mediante Modelo 036."
+required_text = [
+    "Obligados a presentar declaración censal",
+    "deberán presentar una declaración de alta en el mismo",
+    "Quienes desarrollen o vayan a desarrollar en territorio español actividades empresariales o profesionales",
+]
+
+[legal."orden-hfp-381-2023:art-primero"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-381-2023.html#articulo-primero"
+document_id = "BOE-A-2023-9634"
+article = "primero"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-9634"
+published_at = 2023-04-20
+effective_from = 2023-04-25
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2023-9634 articulo primero; pending operator re-stamp)"
+notes = "Articulo primero de la Orden HFP/381/2023: anade la letra f) al articulo 11.2 de la Orden EHA/1274/2007 (solicitud de inclusion en el Registro de extractores de depositos fiscales) y sustituye su anexo I, el modelo 036. AEAT's record design for the replaced form adds boxes [716.a/b] and [717.a/b] for that registry and [744]."
+required_text = [
+    "Se añade una letra f) al apartado 2 del artículo 11",
+    "Registro de extractores de depósitos fiscales",
+    "El anexo I se sustituye por el anexo de esta orden.",
+]
+
+[legal."orden-hfp-381-2023:df-unica"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-381-2023.html#disposicion-final-unica"
+document_id = "BOE-A-2023-9634"
+article = "disposición final única"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-9634"
+published_at = 2023-04-20
+effective_from = 2023-04-25
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared (corpus-grounded against the bundled as-published BOE-A-2023-9634 disposicion final unica and its BOE analysis; pending operator re-stamp)"
+notes = "Orden HFP/381/2023 disposicion final unica: entra en vigor el mismo dia que el Real Decreto 249/2023, which BOE's analysis of this orden records as 25/04/2023 (its articulo segundo from 1 July 2023). That day closes the modelo 036 design of Orden HAC/609/2021 and opens the one this orden's anexo replaces it with."
+required_text = [
+    "La presente orden entrará en vigor el mismo día de la entrada en vigor del Real Decreto 249/2023",
+    "No obstante, el artículo 2 entrará en vigor el 1 de julio de 2023.",
+]
+
+[legal."orden-hac-1526-2024:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1526-2024-art-1.html#a1"
+document_id = "BOE-A-2025-410"
+article = "1"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-410#articulo-primero"
+published_at = 2025-01-09
+effective_from = 2025-02-03
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-10
+reviewed_by = "agent-replaced the bundled excerpt with the BOE published text of BOE-A-2025-410; the prior excerpt was hand-shaped; operator to re-stamp"
+notes = "Articulo primero de la Orden HAC/1526/2024: modifica la Orden EHA/1274/2007 para mantener Modelo 036 y suprimir las superficies activas del Modelo 037."
+required_text = [
+    "modelo 036",
+    "Se suprimen los artículos 14, 15 y 16",
+    "Se suprime el anexo II",
+]
+
+[legal."orden-hac-1526-2024:df-unica"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1526-2024-df-unica.html#df-unica"
+document_id = "BOE-A-2025-410"
+article = "disposicion final unica"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-410#disposicionfinalunica"
+published_at = 2025-01-09
+effective_from = 2025-02-03
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-10
+reviewed_by = "agent-replaced the bundled excerpt with the BOE published text of BOE-A-2025-410; the prior excerpt was hand-shaped; operator to re-stamp"
+notes = "Disposicion final unica de la Orden HAC/1526/2024: entrada en vigor el 3 de febrero de 2025 para los Modelos 030 y 036."
+required_text = [
+    "Entrada en vigor",
+    "3 de febrero de 2025",
+    "modelos 030 y 036",
+]
+
+[sources."aeat-dr-036-2023"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2023"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx"
+sha256 = "3ecea6c06e3d280d946c619f621efe64d5334ffd0da44568f0c85b2fc8923cf2"
+bytes = 108629
+retrieved_at = 2026-05-03
+# AEAT titles this "Ejercicio 2023 y siguientes" -- open-ended when published,
+# and closed here the day before aeat-dr-036-2025 takes effect (2025-02-03).
+# The title's open end states what AEAT knew at publication, not that the
+# design still governs after its successor. It opens on 2023-04-25, not on
+# 1 January: its own VERSION field dates it to April 2023 and it adds boxes
+# [744], [716.a/b] and [717.a/b], which aeat-dr-036-v35 does not print. Orden
+# HFP/381/2023, which replaced the modelo 036 form (anexo I of Orden
+# EHA/1274/2007), entered into force on 2023-04-25.
+applies_from = 2023-04-25
+applies_to = 2025-02-02
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_01_99/archivos/DR036v41.xlsx"
+review_status = "pending_review"
+
+[sources."aeat-dr-036-2025"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2025"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx"
+sha256 = "791479fbf9e905faf1e43fa0bfbff974d5edaf85d198495892fa8446a1da2ebd"
+bytes = 126664
+retrieved_at = 2026-05-03
+applies_from = 2025-02-03
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_01_99/archivos/DR036v43.xlsx"
+review_status = "pending_review"
+
+# These exact AEAT artefacts are retained as hash-pinned historical corpus
+# evidence. Their titles establish publication/version dates, but not a
+# non-overlapping filing-selection window against the active editions below;
+# do not make an epoch or applicability claim until that authority is reviewed.
+[sources."aeat-dr-036-v42"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+# AEAT titles this "(03-02-2025 y siguientes). PROVISIONAL", and it is DR036v42
+# -- the draft of the window aeat-dr-036-2025 (DR036v43) carries definitively.
+# A provisional edition superseded by the final one for its own window is
+# exactly this group's case: the bytes are real and pinned, and no applicability
+# claim follows from them.
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_036/files/02-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-provisional-107-kb-xlsx.xlsx"
+sha256 = "d0a52e57b23236cd2e8566aeca19a3c9012e24e34f49e179e520f9d5e606c251"
+bytes = 120743
+retrieved_at = 2026-05-03
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_01_99/archivos/DR036v42.xlsx"
+review_status = "pending_review"
+
+[sources."aeat-dr-036-v40"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_036/files/04-036-ejercicio-2021-y-siguientes-actualizado-11-04-2023-106-kb-xlsx.xlsx"
+sha256 = "2638409df538acdd6f1532accb8f111d4f702600026a71b577926756b4ed0fa6"
+bytes = 108655
+retrieved_at = 2026-05-03
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_01_99/archivos/DR036v40.xlsx"
+review_status = "pending_review"
+
+# vers. 3.8, whose VERSION field states entrada en vigor 20210701 -- the day
+# Orden HAC/609/2021 replaced the modelo 036 and 037 forms. It governs until
+# Orden HFP/381/2023 replaced the form again on 2023-04-25; the next design,
+# aeat-dr-036-v40 and its re-issue aeat-dr-036-2023, prints the same records
+# with boxes [744], [716.a/b] and [717.a/b] added in reserved space, every other
+# field at the same position.
+[sources."aeat-dr-036-v35"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2021"
+applies_from = 2021-07-01
+applies_to = 2023-04-24
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_036/files/05-036-ejercicio-2021-y-siguientes-actualizado-13-05-2021-102-kb-xlsx.xlsx"
+sha256 = "fd9b1379b78f6bdcefd4d3392f224bbd9bbeb4c22a41d70ac391385366ff8d30"
+bytes = 104353
+retrieved_at = 2026-05-03
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_01_99/archivos/DR036v35.xlsx"
+review_status = "pending_review"
+
+[sources."aeat-modelo-036-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_036/aeat-modelo-036-procedure.html"
+sha256 = "fd5264e1a8c371eb2bad45347a0defa5cc79882051cd6e90d9980a70722f53bd"
+bytes = 36079
+retrieved_at = 2026-05-08
+applies_from = 2025-02-03
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G322.shtml"
+review_status = "pending_review"
+
+[sources."boe-modelo-036-filing-order"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-1274-2007-art-2.html"
+sha256 = "9f578bf51fbc13d34160e963ff389107e50060f7e6e9f666a8eb9622e72e362a"
+bytes = 5685
+retrieved_at = 2026-05-14
+published_at = 2007-05-10
+applies_from = 2007-07-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-9508#ar-2"
+review_status = "operator_reviewed"
+
+[sources."aeat-nif-personas-fisicas"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/identity/aeat-nif-personas-fisicas.html"
+sha256 = "8b549313b4e556cd894f62825932dc74952091facd08210e055652bfc55f4371"
+bytes = 50822
+retrieved_at = 2026-09-12
+source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/guia-practica-cumplimentacion-modelo-censal-036/anexos/anexo-01-solicitud-nif-documentacion-aportar/informacion-sobre-numero-identificacion-fiscal/composicion-nif/personas-fisicas.html"
+review_status = "agent_reviewed"
+
+[sources."aeat-nif-personas-juridicas"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/identity/aeat-nif-personas-juridicas.html"
+sha256 = "95baa7af5bd9d796f15f6d3a9aca7f0170e212d43465dc1b17836811905d75b2"
+bytes = 24107
+retrieved_at = 2026-09-12
+source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/guia-practica-cumplimentacion-modelo-censal-036/anexos/anexo-01-solicitud-nif-documentacion-aportar/informacion-sobre-numero-identificacion-fiscal/composicion-nif/personas-juridicas-entidades.html"
+review_status = "agent_reviewed"
+
+[sources."dgoj-nif-nie-control"]
+evidence_tier = "official_source_guidance"
+authority = "other"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/identity/dgoj-nif-nie-control.html"
+sha256 = "29746b2205a646aa14d057cf61763d983a22953af9914931273c5854fbb6828b"
+bytes = 47647
+retrieved_at = 2026-09-12
+source_url = "https://www.ordenacionjuego.es/ca/node/2988"
+review_status = "agent_reviewed"
+
+[sources."boe-modelo-037-historical-suppression"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "suppression_notice"
+corpus_path = "corpus/aeat_official/historical_retired_modelos/modelo_037/files/BOE-A-2025-410-orden-hac-1526-2024-supresion-m037.txt"
+sha256 = "b2f95c5922f90460a4f22af355efce444399ab59cdc659bb3aea87ea4d9ba5cd"
+bytes = 24141
+retrieved_at = 2026-05-27
+published_at = 2025-01-09
+applies_from = 2025-02-03
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-410"
+review_status = "pending_review"
+
+[legal."rd-1065-2007:art-25"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1065-2007.html#a25"
+document_id = "BOE-A-2007-15984"
+article = "25"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984#a25"
+published_at = 2007-09-05
+effective_from = 2008-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-08-13
+reviewed_by = "agent-review"
+notes = """\
+RGAT art 25: especialidades del NIF a efectos del IVA. Establece que para quienes realizan \
+operaciones intracomunitarias el numero de identificacion es el del reglamento anteponiendole EL \
+PREFIJO ES, conforme al estandar ISO-3166 alfa 2. Es la provision que fija el FORMATO IMPRESO del \
+NIF-IVA espanol, y por tanto la base para admitir ES en el vocabulario de prefijos de IDENTIFICACION \
+-- eje distinto del de establecimiento, que se resuelve por pais y codigo postal y para el que ES no \
+resuelve nada por diseno. Se cita porque el resto de prefijos del vocabulario se reconocen validando \
+el cuerpo contra el patron que su prefijo declara, mientras que los identificadores espanoles \
+validan por la letra de control de la AEAT: ES no podia entrar como entraron sus hermanos, y la \
+asimetria resultante dejaba la identificacion del propio declarante solo asertable. CAMBIO DE \
+DOCUMENTO CITADO, 2026-08-13. La entrada citaba rd-1065-2007-art-25.xml, una captura del endpoint \
+de articulo que concatena DOS redacciones fechadas (fecha_vigencia 20080101 de BOE-A-2007-15984 y \
+20100303 de BOE-A-2010-3370) en una sola unidad extraida de 8873 caracteres, de modo que la \
+comprobacion de required_text se ejecutaba contra texto derogado y texto vigente fundidos. Se \
+repunta al documento consolidado empaquetado rd-1065-2007.html, cuya unidad #a25 contiene el \
+articulo vigente y solo el vigente (4619 caracteres, titulo 'Articulo 25. Especialidades del numero \
+de identificacion fiscal de los empresarios...'). Las tres frases de required_text se han verificado \
+presentes en esa unidad leyendo el fichero empaquetado. OBSERVACION NO RESUELTA AQUI: effective_from \
+sigue declarando 2008-01-01, que corresponde a la redaccion original; el texto en vigor procede de \
+BOE-A-2010-3370. Determinar la fecha citable exige leer la nota de la norma modificante y no el \
+atributo fecha_vigencia, que no es la fecha de efectos, por lo que se deja constancia en lugar de \
+cambiarla."""
+required_text = [
+    "Impuesto sobre el Valor Añadido",
+    "al que se antepondrá el prefijo ES",
+    "ISO-3166 alfa 2",
+]

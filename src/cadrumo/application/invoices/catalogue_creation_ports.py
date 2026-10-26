@@ -1,0 +1,135 @@
+"""Application-owned capabilities for catalogue-invoice creation.
+
+The creation service needs three distinct authorities: a guarded invoice
+catalogue mutation, a guarded bucket-event append, and an exchange-rate source.
+This module owns the narrow contracts and the bucket-scoped bundle.  Concrete
+encrypted repositories and outbound rate providers are composed outside the
+application layer.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Callable
+from dataclasses import dataclass
+from datetime import date
+from typing import Protocol
+
+from ...core.errors.hierarchy import CadrumoError
+from ...domain.buckets.event import BucketEvent, BucketEventHistoryCatalogue
+from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.currency.models import EurRateLookup
+from ...domain.invoices.models import InvoiceCatalogue
+
+
+class CatalogueInvoicePersistenceError(CadrumoError):
+    """Translated failure from the invoice or event persistence capability."""
+
+    def __init__(self, operation: str) -> None:
+        """Carry only the application operation, never storage details."""
+        self.operation = operation
+        super().__init__(f"catalogue invoice persistence operation failed: {operation}")
+
+
+class CatalogueInvoiceRateError(CadrumoError):
+    """Translated failure from the catalogue invoice rate capability."""
+
+    def __init__(self, operation: str) -> None:
+        """Carry only the application operation, never outbound details."""
+        self.operation = operation
+        super().__init__(f"catalogue invoice rate operation failed: {operation}")
+
+
+class CatalogueInvoiceRepositoryPort(Protocol):
+    """Guarded invoice-catalogue mutation capability for one bucket."""
+
+    def load(self) -> InvoiceCatalogue:
+        """Return the bucket's current invoice catalogue."""
+        ...
+
+    def mutate(self, mutation: Callable[[InvoiceCatalogue], InvoiceCatalogue]) -> InvoiceCatalogue:
+        """Apply ``mutation`` as one revision-guarded catalogue write.
+
+        Core types:
+        :class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`.
+        """
+        ...
+
+
+class CatalogueInvoiceAuditCommitPort(Protocol):
+    """Persist an invoice mutation and its durable audit entry as one commit.
+
+    The port owns the revisioned read/retry loop because the two encrypted
+    singleton catalogues must be derived again after either one changes.  An
+    application caller supplies only pure catalogue mutation and event values;
+    it never observes an invoice write without its audit record.
+    """
+
+    def mutate_with_event(
+        self,
+        mutation: Callable[[InvoiceCatalogue], InvoiceCatalogue],
+        event: BucketEvent,
+        *,
+        attempts: int = 4,
+    ) -> InvoiceCatalogue:
+        """Commit ``mutation`` and ``event`` atomically under both revisions.
+
+        Core types:
+        :class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`.
+        """
+        ...
+
+
+class CatalogueInvoiceEventRepositoryPort(BucketEventHistoryRepositoryProtocol, Protocol):
+    """Guarded event-history capability for one bucket."""
+
+    def append_guarded(
+        self,
+        appender: Callable[[BucketEventHistoryCatalogue], BucketEventHistoryCatalogue],
+        *,
+        attempts: int = 4,
+    ) -> BucketEventHistoryCatalogue:
+        """Append through the event catalogue's revision guard."""
+        ...
+
+
+class CatalogueInvoiceRateProviderPort(Protocol):
+    """Exchange-rate capability used while constructing a catalogue invoice."""
+
+    @property
+    def rate_source_id(self) -> str:
+        """Return the authority identifier stamped on converted invoices."""
+        ...
+
+    def lookup_eur_rate(self, currency: str, rate_date: date) -> EurRateLookup:
+        """Return the currency-to-EUR lookup for that date, naming the observation used."""
+        ...
+
+
+@dataclass(frozen=True, slots=True)
+class CatalogueCreationPorts:
+    """Required authorities for one bucket-scoped catalogue creation."""
+
+    invoice_repository: CatalogueInvoiceRepositoryPort
+    event_repository: CatalogueInvoiceEventRepositoryPort
+    audit_commit: CatalogueInvoiceAuditCommitPort
+    rate_provider: CatalogueInvoiceRateProviderPort
+
+
+class CatalogueCreationPortsFactory(Protocol):
+    """Construct the complete creation bundle for one profile bucket."""
+
+    def __call__(self, *, bucket_id: str) -> CatalogueCreationPorts:
+        """Return all creation authorities bound to ``bucket_id``."""
+        ...
+
+
+__all__ = [
+    "CatalogueCreationPorts",
+    "CatalogueCreationPortsFactory",
+    "CatalogueInvoiceAuditCommitPort",
+    "CatalogueInvoiceEventRepositoryPort",
+    "CatalogueInvoicePersistenceError",
+    "CatalogueInvoiceRateError",
+    "CatalogueInvoiceRateProviderPort",
+    "CatalogueInvoiceRepositoryPort",
+]

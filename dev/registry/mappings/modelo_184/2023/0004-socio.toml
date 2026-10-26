@@ -1,0 +1,453 @@
+schema_version = 1
+fragment_id = "socio"
+modelo = "184"
+design_epoch = "2023"
+source_ref = "aeat-dr-184-2023-2024"
+source_sha256 = "c96f23aa7ddf0f48b5388d69a397140135e8a4a8b2cd0568658cafad495f8aee"
+
+
+[[entries]]
+export_field_id = "m184-2023.socio.f001"
+kind = "literal"
+literal = "2"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 1680
+ordinal = "1"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[entries]]
+export_field_id = "m184-2023.socio.f002"
+kind = "literal"
+literal = "184"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 1682
+ordinal = "2"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[entries]]
+export_field_id = "m184-2023.socio.f003"
+kind = "draft"
+draft_attribute = "filing_year"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 1684
+ordinal = "3"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[entries]]
+export_field_id = "m184-2023.socio.f004"
+kind = "header"
+producer_key = "taxpayer.tax_id"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 1687
+ordinal = "4"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[entries]]
+export_field_id = "m184-2023.socio.f005"
+kind = "binding"
+binding = "modelo-184-member-row-nif"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 1690
+ordinal = "5"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[entries]]
+export_field_id = "m184-2023.socio.f006"
+kind = "casilla"
+casilla_id = "tipo3.representante-fiscal-nif"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 1718
+ordinal = "6"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[entries]]
+export_field_id = "m184-2023.socio.f007"
+kind = "binding"
+binding = "modelo-184-member-row-name"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 1736
+ordinal = "7"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[entries]]
+export_field_id = "m184-2023.socio.f008"
+kind = "literal"
+literal = "S"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 1752
+ordinal = "8"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[entries]]
+export_field_id = "m184-2023.socio.f009"
+kind = "binding"
+binding = "modelo-184-member-row-codigo-provincia"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 1754
+ordinal = "9"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[entries]]
+export_field_id = "m184-2023.socio.f010"
+kind = "casilla"
+casilla_id = "tipo3.clave-pais"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 1788
+ordinal = "10"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[entries]]
+export_field_id = "m184-2023.socio.f011"
+kind = "casilla"
+casilla_id = "tipo3.clave-tipo-participe"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 1803
+ordinal = "11"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[entries]]
+export_field_id = "m184-2023.socio.f012"
+kind = "binding"
+binding = "modelo-184-member-row-miembro-a-31-diciembre"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 1808
+ordinal = "12"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[entries]]
+export_field_id = "m184-2023.socio.f013"
+kind = "binding"
+binding = "modelo-184-member-row-dias-miembro"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 1812
+ordinal = "13"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[entries]]
+export_field_id = "m184-2023.socio.f014"
+kind = "binding"
+binding = "modelo-184-member-row-share"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 1821
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[entries]]
+export_field_id = "m184-2023.socio.f015"
+kind = "binding"
+binding = "modelo-184-member-row-share"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 1823
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[entries]]
+export_field_id = "m184-2023.socio.f016"
+kind = "binding"
+binding = "modelo-184-member-row-clave"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 1826
+ordinal = "15"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[entries]]
+export_field_id = "m184-2023.socio.f017"
+kind = "binding"
+binding = "modelo-184-member-row-subclave"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 1847
+ordinal = "16"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[entries]]
+export_field_id = "m184-2023.socio.f018"
+kind = "binding"
+binding = "modelo-184-member-row-base-assigned"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 1901
+ordinal = "17"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[entries]]
+export_field_id = "m184-2023.socio.f019"
+kind = "binding"
+binding = "modelo-184-member-row-reduccion"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 2066
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[entries]]
+export_field_id = "m184-2023.socio.f020"
+kind = "binding"
+binding = "modelo-184-member-row-reduccion"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 2068
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[entries]]
+export_field_id = "m184-2023.socio.f021"
+kind = "binding"
+binding = "modelo-184-member-row-domicilio-fiscal"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 2071
+ordinal = "19"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[entries]]
+export_field_id = "m184-2023.socio.f022"
+kind = "casilla"
+casilla_id = "tipo3.provisiones-gastos-dificil-justificacion"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 2074
+ordinal = "20"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[entries]]
+export_field_id = "m184-2023.socio.f023"
+kind = "binding"
+binding = "modelo-184-member-row-naturaleza-inmueble"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 2095
+ordinal = "21"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[entries]]
+export_field_id = "m184-2023.socio.f024"
+kind = "binding"
+binding = "modelo-184-member-row-situacion-inmueble"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 2103
+ordinal = "22"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[entries]]
+export_field_id = "m184-2023.socio.f025"
+kind = "binding"
+binding = "modelo-184-member-row-referencia-catastral"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 2117
+ordinal = "23"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[entries]]
+export_field_id = "m184-2023.socio.f026"
+kind = "binding"
+binding = "modelo-184-member-row-clave-declarado"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 2126
+ordinal = "24"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[entries]]
+export_field_id = "m184-2023.socio.f027"
+kind = "binding"
+binding = "modelo-184-member-row-porcentaje-titularidad-inmueble"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 2141
+ordinal = "25"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[entries]]
+export_field_id = "m184-2023.socio.f028"
+kind = "binding"
+binding = "modelo-184-member-row-dias-arrendamiento"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 2152
+ordinal = "26"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[entries]]
+export_field_id = "m184-2023.socio.f029"
+kind = "binding"
+binding = "modelo-184-member-row-rendimiento-neto-previo-eo"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 2186
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[entries]]
+export_field_id = "m184-2023.socio.f030"
+kind = "binding"
+binding = "modelo-184-member-row-rendimiento-neto-previo-eo"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 2188
+ordinal_absent = true
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[entries]]
+export_field_id = "m184-2023.socio.f031"
+kind = "binding"
+binding = "modelo-184-member-row-rendimiento-neto-minorado-agricola-eo"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 2191
+ordinal = "28"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"
+
+
+[[entries]]
+export_field_id = "m184-2023.socio.f032"
+kind = "filler"
+legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socio, Heredero,"
+source_row = 2226
+ordinal = "29"
+record_identity = "Tipo 2 - Registro De Socio, Heredero,"

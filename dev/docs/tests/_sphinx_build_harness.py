@@ -1,0 +1,207 @@
+"""Shared harness for the real nitpicky Sphinx build gates.
+
+The docs lane's dominant cost is its real ``-n -W`` Sphinx builds: the
+full-scope read, the one compile that carries every language, and the one
+language's own build the compile is measured against
+(``test_docs_build_localized_compile``). Two structural choices keep the lane
+fast without weakening any check:
+
+* **One heavy build per test module.** pytest-xdist distributes by file
+  (``--dist=loadfile``), so a module that carries several multi-minute builds
+  serialises them all on one worker while the rest of the lane idles. Each
+  gate build therefore lives in its own module, importing this harness, and
+  the builds run concurrently.
+* **Build-invariant hook work runs once per lane, not once per build.** Every
+  gate build sets the explicit opt-outs for the two ``builder-inited`` hooks
+  whose outcome cannot vary across these builds and which the lane already
+  enforces through dedicated gates: the cli-sequence golden check (the check
+  subprocess pins its own environment — scrubbed ``CADRUMO_*``, English
+  output — so its verdict is identical for every scope/language; the
+  dedicated goldens gate executes it once, and the divergence-reds fixture
+  proves the hook itself still fails a build) and the ``cli-tree.json``
+  projection (a walk of the live CLI tree with its own gate coverage; the
+  ``dummy`` builder ships no static assets, so the artifact is unread here).
+  Production builds set neither opt-out and keep both hooks live.
+
+The remaining per-build hook work (CLI reference, glossary, and casilla page
+generation) is genuinely needed by each build's read set — the pages must
+exist for the toctrees and cross-references the ``-n -W`` gate resolves — and
+stays untouched.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import re
+import shutil
+import sys
+from pathlib import Path
+
+from dev._paths import REPO_ROOT
+from dev.packaging.command_execution import CommandResult, run_command
+
+DOCS = REPO_ROOT / "docs"
+
+#: Bounded default width for gate builds: parallel enough to finish, small
+#: enough to leave the host usable. Overridable via ``CADRUMO_DOCS_JOBS``.
+_GATE_BUILD_JOBS_DEFAULT = "4"
+
+
+def gate_build_jobs() -> str:
+    """Resolve the Sphinx ``-j`` width for a gate build.
+
+    A gate wants determinism and a bounded footprint, not peak speed, so this
+    does NOT default to ``auto``. ``auto`` takes one worker per core -- 24 on
+    the current build host -- which is the same unbounded-width pattern
+    the CI lanes ban for ``pytest -n auto``, and for the
+    same reason: co-resident CI lanes and peer agents already contend for those
+    cores, so an uncapped build starves itself and everything beside it.
+
+    An explicit ``CADRUMO_DOCS_JOBS`` is validated through the shared
+    :func:`~dev.docs.build.docs_build_jobs` resolver so the deployment knob
+    keeps one validation path rather than two. A direct serial pytest run
+    keeps that width; an xdist worker already owns one shared-machine slot
+    and therefore runs one Sphinx reader, even with an explicit override.
+
+    Windows note: Sphinx parallel workers require ``os.fork``
+    (``sphinx.util.parallel.parallel_available`` is ``False`` on win32), so on
+    a Windows host EVERY value here is a no-op and the build runs serial.
+    Tuning this number locally on Windows measures nothing; it only ever
+    bounds POSIX (Linux CI) builds.
+
+    Returns:
+        The ``-j`` value string to hand to ``sphinx-build``.
+    """
+    if "CADRUMO_DOCS_JOBS" in os.environ:
+        from ..build import docs_build_jobs
+
+        requested = docs_build_jobs(os.environ)
+    else:
+        requested = _GATE_BUILD_JOBS_DEFAULT
+    # xdist already allocated this process one slot in the shared machine
+    # budget. A Sphinx pool inside every slot would multiply that budget.
+    return "1" if _outer_worker_owns_parallelism() else requested
+
+
+def _outer_worker_owns_parallelism() -> bool:
+    """Whether xdist already assigned this build its machine-share slot."""
+    return bool(os.environ.get("PYTEST_XDIST_WORKER"))
+
+
+def gate_build_concurrency() -> int:
+    """Keep the compile and witness inside one outer worker's build slot.
+
+    Direct serial pytest retains the two concurrent builds. Under xdist,
+    both builds still execute, sequentially, with one Sphinx reader each.
+    """
+    return 1 if _outer_worker_owns_parallelism() else 2
+
+
+def copy_docs_source(tmp_path: Path) -> Path:
+    """Copy the committed docs tree into an isolated per-test source root.
+
+    Excludes the build output and the generated ``cli`` reference tree (the
+    ``builder-inited`` hook regenerates it fresh inside the copy), exactly as
+    every gate build has always done.
+    """
+    docs_source = tmp_path / "docs-source"
+    shutil.copytree(DOCS, docs_source, ignore=shutil.ignore_patterns("_build", "cli"))
+    return docs_source
+
+
+def gate_build_env(tmp_path: Path, **extra: str) -> dict[str, str]:
+    """Build the hermetic environment for one gate build subprocess.
+
+    Offline intersphinx, an isolated storage root, and the two build-invariant
+    hook opt-outs described in the module docstring. ``extra`` entries win.
+    """
+    env = {
+        **os.environ,
+        "CADRUMO_DOCS_OFFLINE": "1",
+        "CADRUMO_DOCS_PROJECT_ROOT": str(REPO_ROOT),
+        "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "cadrumo-docs-state"),
+        "CADRUMO_DOCS_SKIP_SEQUENCE_CHECK": "1",
+        "CADRUMO_DOCS_SKIP_CLI_TREE": "1",
+    }
+    env.update(extra)
+    return env
+
+
+def run_nitpicky_dummy_build(
+    docs_source: Path,
+    out_dir: Path,
+    env: dict[str, str],
+) -> CommandResult:
+    """Run one real ``-b dummy -n -W`` Sphinx build over ``docs_source``.
+
+    Uses the ``dummy`` builder, not ``html``: the gate only asserts that the
+    full parse and cross-reference resolution (where ``-n`` nitpicky warnings
+    fire) raise no warnings under ``-W``; it does not need rendered HTML, so
+    rendered-page emission is skipped.
+    """
+    return run_command(
+        [
+            sys.executable,
+            "-m",
+            "sphinx",
+            "-b",
+            "dummy",
+            "-n",
+            "-W",
+            "-j",
+            gate_build_jobs(),
+            str(docs_source),
+            str(out_dir),
+        ],
+        cwd=REPO_ROOT,
+        environment=env,
+    )
+
+
+def persist_sphinx_build_output(
+    result: CommandResult,
+    *,
+    artifacts_directory: Path,
+    label: str,
+) -> tuple[Path, Path, Path]:
+    """Retain the complete Sphinx streams and invocation beside the test-run log.
+
+    The assertion message intentionally shows only a short tail for readable
+    failures. These artifacts preserve every byte captured by ``run_command``
+    so a later reviewer can inventory the full warning set without repeating
+    an expensive build.
+
+    Args:
+        result: The complete captured Sphinx subprocess result.
+        artifacts_directory: The current ``dev.test_runs`` run's artifacts
+            directory.
+        label: A short, filename-safe name for this build within the run.
+
+    Returns:
+        Paths to the UTF-8 stdout, stderr, and command metadata artifacts.
+    """
+    if re.fullmatch(r"[a-z0-9][a-z0-9-]*", label) is None:
+        raise ValueError(f"unsafe Sphinx artifact label: {label!r}")
+    if not artifacts_directory.is_dir():
+        raise FileNotFoundError(f"test-run artifact directory does not exist: {artifacts_directory}")
+
+    prefix = f"sphinx-{label}"
+    stdout_path = artifacts_directory / f"{prefix}.stdout.log"
+    stderr_path = artifacts_directory / f"{prefix}.stderr.log"
+    metadata_path = artifacts_directory / f"{prefix}.command.json"
+    for path, content in ((stdout_path, result.stdout), (stderr_path, result.stderr)):
+        with path.open("w", encoding="utf-8", newline="") as stream:
+            stream.write(content)
+    metadata = {
+        "argv": list(result.argv),
+        "completed_at": result.completed_at.isoformat(),
+        "cwd": result.cwd,
+        "duration_seconds": result.duration_seconds,
+        "returncode": result.returncode,
+        "started_at": result.started_at.isoformat(),
+        "stderr": str(stderr_path),
+        "stdout": str(stdout_path),
+    }
+    metadata_path.write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8", newline="")
+    return stdout_path, stderr_path, metadata_path

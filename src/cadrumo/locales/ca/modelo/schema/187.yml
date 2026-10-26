@@ -1,0 +1,34 @@
+modelo:
+  schema:
+    '187':
+      construct:
+        modelo-187-calculation-construct:
+          field:
+            title: 'Model 187: càlcul de l''autoliquidació'
+      field:
+        official_name: Modelo 187. Declaració informativa d'accions i participacions
+          representatives del capital o patrimoni de les institucions d'inversió col·lectiva
+          i resum anual de retencions i ingressos a compte de l'IRPF, l'IS i l'IRNR
+          en relació amb les rendes o guanys patrimonials obtinguts.
+        title: Accions i participacions d'IIC - resum anual
+      revision:
+        2022-y-siguientes:
+          casilla:
+            '01':
+              help: Nombre total d'operacions declarades, equivalent al nombre de
+                registres de tipus 2 del disseny de registre.
+              label: Nombre total d'operacions
+            '02':
+              help: Suma dels imports de les operacions d'adquisició o subscripció
+                d'accions i participacions.
+              label: Import total de les adquisicions
+            '03':
+              help: Suma dels imports de les operacions d'alienació o reemborsament
+                d'accions i participacions.
+              label: Import total de les alienacions
+            '04':
+              help: Suma de les retencions i ingressos a compte practicats sobre les
+                operacions declarades.
+              label: Import total de les retencions i ingressos a compte
+          field:
+            label: Ordre HAP/1608/2014, exercicis 2022 i següents

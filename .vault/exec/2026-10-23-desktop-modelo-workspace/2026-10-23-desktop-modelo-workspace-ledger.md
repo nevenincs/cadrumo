@@ -1,0 +1,910 @@
+---
+tags:
+  - '#exec'
+  - '#desktop-modelo-workspace'
+date: '2026-10-23'
+modified: '2026-10-25'
+body_schema: 'body-v2'
+body_hash: 'sha256:5cf73e82b598f17862fc0276f0b7e8a3bf73b008d478c74932f3ce589e540384'
+related:
+  - "[[2026-10-23-desktop-modelo-workspace-plan]]"
+---
+
+# `desktop-modelo-workspace` ledger
+
+## Changes
+
+- `S01` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S01` `M` `src/cadrumo/application/modelo/work_form_field_projection.py`
+- `S01` `M` `src/cadrumo/application/modelo/work_form_layout.py`
+- `S01` `M` `src/cadrumo/application/modelo/workbench_projection.py`
+- `S01` `M` `src/cadrumo/application/modelo/tests/test_work_form_filer_attention.py`
+- `S01` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/vocabulary.py`
+- `S01` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list_models.py`
+- `S01` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/page_items.py`
+- `S01` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_grid_tables_real.py`
+- `S01` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_marks.py`
+- `S01` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S01` `verify:` `pytest -n0 test_work_form_filer_attention, test_workbench_marks, test_grid_tables_real (49)` -> `pass`
+- `S01` `verify:` `pytest -n0 workbench_operations, work_form_loading, contract_manifest, work_form, work_form_grids (44)` -> `pass`
+- `S01` `verify:` `mutation: page correction disabled fails test_a_page_that_does_not_apply_asks_for_no_value` -> `pass`
+- `S01` `verify:` `ruff check+format, lint-imports (30 kept), dev.quality.types (0)` -> `pass`
+- `S01` `verify:` `operation contract manifest regenerated; only modelo.work.form result schema changed` -> `pass`
+- `S02` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S02` `M` `src/cadrumo/application/modelo/work_form_layout.py`
+- `S02` `M` `src/cadrumo/application/modelo/work_form_inspection.py`
+- `S02` `M` `src/cadrumo/application/modelo/workbench_projection.py`
+- `S02` `A` `src/cadrumo/application/modelo/tests/test_work_form_field_rules.py`
+- `S02` `M` `src/cadrumo/application/modelo/tests/test_work_form_filer_attention.py`
+- `S02` `M` `src/cadrumo/entrypoints/tests/test_modelo_work_form_loading.py`
+- `S02` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S02` `verify:` `pytest -n0 field_rules, filer_attention, work_form, work_form_grids, every_revision, contract_manifest (84)` -> `pass`
+- `S02` `verify:` `pytest -n0 work_form_loading, workbench_operations (14)` -> `pass`
+- `S02` `verify:` `pytest -n0 TUI review_effect, confirmation, scoped_confirm, bulk_confirm_real, confirm_real (35)` -> `pass`
+- `S02` `verify:` `mutation: design-constant standing correction removed fails its regression test` -> `pass`
+- `S02` `verify:` `ruff, format, lint-imports (30 kept), dev.quality.types (0), contract manifest check` -> `pass`
+- `S03` `A` `src/cadrumo/application/modelo/work_form_wording.py`
+- `S03` `M` `dev/locales/fstring_registry.py`
+- `S03` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S03` `M` `src/cadrumo/application/modelo/tests/test_work_form_filer_attention.py`
+- `S03` `M` `src/cadrumo/application/modelo/work_form.py`
+- `S03` `M` `src/cadrumo/application/modelo/work_form_layout.py`
+- `S03` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S03` `M` `src/cadrumo/application/modelo/workbench_projection.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/declarations/controller.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/declarations/picker.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/declarations/portfolio_rows.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/declarations/row_words.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/declarations/tests/test_calendar.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list_models.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list_values.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/editor.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/editor_explanations.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/header.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/page_items.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/progress.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/review.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen_editor.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen_help_content.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen_navigation.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen_operation.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/sources.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_casilla_editor_panel.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_casilla_list.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_casilla_row_anatomy.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_held_values_and_sources.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_rate_boxes_real.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_bulk_confirm_real.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_confirm_real.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_deadline_parity.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_export_state.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_header.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_marks.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_origin_in_help.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_progress.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_refinements_real.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_review_check.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/vocabulary.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/wording.py`
+- `S03` `verify:` `pytest -n0 TUI modelo workbench + declarations suites (383 + 513)` -> `pass`
+- `S03` `verify:` `pytest -n0 application form, loading, projection, every-revision, manifest (78)` -> `pass`
+- `S03` `verify:` `ruff, format, lint-imports (30 kept), dev.quality.types (0), operation contract manifest regenerated` -> `pass`
+- `S03` `verify:` `dev.locales status: no moved key family became catalogue-only` -> `pass`
+- `S04` `M` `src/cadrumo/application/modelo/work_form_wording.py`
+- `S04` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S04` `M` `src/cadrumo/application/modelo/workbench_projection.py`
+- `S04` `M` `src/cadrumo/application/modelo/tests/test_work_form_filer_attention.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list_values.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list_layout.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/page_items.py`
+- `S04` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S04` `verify:` `pytest work_form_filer_attention, TUI casilla_list/grid/rate/held/formula, workbench operations and form loading` -> `pass`
+- `S04` `verify:` `dev.quality.types --count` -> `pass`
+- `S04` `verify:` `lint-imports` -> `pass`
+- `S04` `verify:` `operation_contract_manifest.generate --check` -> `pass`
+- `S05` `A` `src/cadrumo/application/modelo/work_form_next_step.py`
+- `S05` `A` `src/cadrumo/application/modelo/tests/test_work_form_next_step.py`
+- `S05` `A` `src/cadrumo/application/modelo/tests/work_form_fixture.py`
+- `S05` `M` `dev/locales/fstring_registry.py`
+- `S05` `M` `dev/tui/harness/sequences.py`
+- `S05` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S05` `M` `src/cadrumo/application/modelo/tests/test_work_form_filer_attention.py`
+- `S05` `M` `src/cadrumo/application/modelo/workbench_projection.py`
+- `S05` `M` `src/cadrumo/application/modelo/workbench_read.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/header.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/issue_scale.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/navigator.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/progress.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen_constants.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen_help_content.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen_next_step.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen_operation.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen_presentation.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_applicability.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_apply_prerequisite.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_check_route_real.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_filing_gates.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_finding_words.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_formula_values_real.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_missing_count.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_progress.py`
+- `S05` `verify:` `pytest TUI modelo workbench suite, application next-step/filer-attention/field-rules, workbench operations and form loading (779)` -> `pass`
+- `S05` `verify:` `dev.quality.types --count` -> `pass`
+- `S05` `verify:` `lint-imports` -> `pass`
+- `S05` `verify:` `operation_contract_manifest.generate` -> `pass`
+- `S06` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S06` `M` `src/cadrumo/application/modelo/tests/test_work_form_filer_attention.py`
+- `S06` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S06` `M` `src/cadrumo/application/modelo/work_form_wording.py`
+- `S06` `M` `src/cadrumo/application/modelo/workbench_projection.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/declarations/picker.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/declarations/portfolio_rows.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/declarations/row_words.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/header.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/sources.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_header.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/wording.py`
+- `S06` `verify:` `pytest form identity words (en/es), declarations TUI tests and workbench header (229), filer attention, workbench operations` -> `pass`
+- `S06` `verify:` `dev.quality.types --count` -> `pass`
+- `S06` `verify:` `lint-imports` -> `pass`
+- `S06` `verify:` `operation_contract_manifest.generate` -> `pass`
+- `S07` `A` `src/cadrumo/application/modelo/declarations_list_operation.py`
+- `S07` `A` `src/cadrumo/application/modelo/tests/test_declarations_list_operation.py`
+- `S07` `M` `src/cadrumo/application/modelo/declarations_list.py`
+- `S07` `M` `src/cadrumo/application/modelo/tests/test_declarations_list.py`
+- `S07` `M` `src/cadrumo/application/workbench_generation_reader.py`
+- `S07` `M` `src/cadrumo/entrypoints/workbench_generation_composition.py`
+- `S07` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S07` `M` `src/cadrumo/application/operations/access_facts.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/command_operation_table.py`
+- `S07` `M` `src/cadrumo/entrypoints/tests/registered_executor_conformance_expectations.py`
+- `S07` `M` `src/cadrumo/entrypoints/tests/registered_executor_payload_support.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/declarations/row_words.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/declarations/portfolio_rendering.py`
+- `S07` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S07` `verify:` `pytest declarations list and list operation, TUI declarations (189), registered executor conformance case and completeness, access facts, MCP surfaces, operation contract manifest tests (136), no-AEAT-write gate` -> `pass`
+- `S07` `verify:` `dev.quality.types --count` -> `pass`
+- `S07` `verify:` `lint-imports` -> `pass`
+- `S07` `verify:` `operation_contract_manifest.generate --check` -> `pass`
+- `S08` `A` `src/cadrumo/application/modelo/work_form_source_groups.py`
+- `S08` `A` `src/cadrumo/application/modelo/tests/test_work_form_source_groups.py`
+- `S08` `M` `src/cadrumo/application/modelo/work_form.py`
+- `S08` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S08` `M` `src/cadrumo/application/modelo/workbench_projection.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/sources.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen_next_step.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_held_values_and_sources.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_sources.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_sources_real.py`
+- `S08` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S08` `verify:` `pytest source groups, TUI sources and real sources, check route, progress, responsive surfaces, form tests, workbench operations and loading (166)` -> `pass`
+- `S08` `verify:` `lint-imports` -> `pass`
+- `S08` `verify:` `operation_contract_manifest.generate` -> `pass`
+- `S09` `A` `src/cadrumo/application/modelo/tests/test_casilla_help_outside_figures.py`
+- `S09` `M` `src/cadrumo/application/modelo/casilla_help.py`
+- `S09` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S09` `verify:` `pytest casilla help, formula values, outside figures, workbench operations (39), TUI help, footer, freshness, affects text, installed factory (67)` -> `pass`
+- `S09` `verify:` `basedpyright casilla_help` -> `pass`
+- `S09` `verify:` `operation_contract_manifest.generate` -> `pass`
+- `S10` `M` `src/cadrumo/application/modelo/edit_models.py`
+- `S10` `M` `src/cadrumo/application/modelo/edit_parsing.py`
+- `S10` `M` `src/cadrumo/application/modelo/edit_apply_contracts.py`
+- `S10` `M` `src/cadrumo/application/modelo/edit_apply_scalar_contracts.py`
+- `S10` `M` `src/cadrumo/application/modelo/edit_operator_input.py`
+- `S10` `M` `src/cadrumo/application/modelo/workbench_operations.py`
+- `S10` `M` `src/cadrumo/application/modelo/tests/test_edit_parsing.py`
+- `S10` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/editor.py`
+- `S10` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/factory.py`
+- `S10` `M` `src/cadrumo/entrypoints/tests/test_modelo_workbench_operations.py`
+- `S10` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S10` `verify:` `pytest application edit tests (154), TUI editing (161), edit conformance (4), workbench operations incl. typed preflight and apply refusal, native submission stream (3), operation contract manifest tests (136)` -> `pass`
+- `S10` `verify:` `basedpyright edit modules` -> `pass`
+- `S10` `verify:` `operation_contract_manifest.generate` -> `pass`
+- `S13` `M` `src/cadrumo_runtime/host/session_hold_operations.py`
+- `S13` `M` `src/cadrumo_runtime/host/tests/test_session_hold_operations.py`
+- `S13` `M` `src/cadrumo_runtime/host/tests/test_submission_stream_native.py`
+- `S13` `verify:` `pytest held relay, bridge and product-neutral gate (27), native submission stream incl. no-operand refusal (3)` -> `pass`
+- `S13` `verify:` `ty session_hold_operations` -> `pass`
+- `S13` `M` `native/application/src/person_operations.rs`
+- `S13` `M` `native/desktop/src-tauri/src/agent/person.rs`
+- `S13` `verify:` `ctest application.rust (74)` -> `pass`
+- `S13` `verify:` `desktop-host-unit-test (502)` -> `pass`
+- `S13` `verify:` `desktop-host-unit-clippy` -> `pass`
+- `S11` `M` `src/cadrumo/locales`
+- `S11` `M` `dev/locales/fstring_registry.py`
+- `S11` `M` `dev/locales/_ast_key_policy.py`
+- `S11` `verify:` `TUI declarations, header, progress, sources, filing gates, casilla list, live language refresh (291)` -> `pass`
+- `S11` `verify:` `dev/locales test_dynamic_prefix_registry_coverage (32)` -> `pass`
+- `S14` `M` `.vault/plan/2026-10-23-desktop-modelo-workspace-plan.md`
+- `S30` `A` `src/cadrumo/application/modelo/work_form_header.py`
+- `S30` `A` `src/cadrumo/application/modelo/tests/test_work_form_header.py`
+- `S30` `M` `src/cadrumo/application/modelo/workbench_read.py`
+- `S30` `M` `src/cadrumo/application/modelo/workbench_projection.py`
+- `S30` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/header.py`
+- `S30` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen_constants.py`
+- `S30` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen_footer.py`
+- `S30` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen_operation.py`
+- `S30` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_applicability.py`
+- `S30` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_header.py`
+- `S30` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_issues.py`
+- `S30` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_marks.py`
+- `S30` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_missing_count.py`
+- `S30` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S30` `verify:` `ruff check and format` -> `pass`
+- `S30` `verify:` `lint-imports` -> `pass`
+- `S30` `verify:` `basedpyright touched files` -> `pass`
+- `S30` `verify:` `operation_contract_manifest --check` -> `pass`
+- `S30` `verify:` `pytest test_work_form_header.py` -> `pass`
+- `S30` `verify:` `pytest TUI header suites` -> `pass`
+- `S30` `by:` `opus-p01-lane`
+- `S34` `A` `src/cadrumo/application/modelo/work_form_issue_lines.py`
+- `S34` `A` `src/cadrumo/application/modelo/tests/test_work_form_issue_lines.py`
+- `S34` `M` `src/cadrumo/application/modelo/workbench_read.py`
+- `S34` `M` `src/cadrumo/application/modelo/workbench_projection.py`
+- `S34` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/issue_projection.py`
+- `S34` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/issue_scale.py`
+- `S34` `verify:` `ruff check and format` -> `pass`
+- `S34` `verify:` `lint-imports` -> `pass`
+- `S34` `verify:` `basedpyright touched files` -> `pass`
+- `S34` `verify:` `pytest issue lines and header` -> `pass`
+- `S34` `verify:` `pytest TUI issue suites` -> `pass`
+- `S34` `by:` `opus-p01-lane-2`
+- `S15` `A` `native/desktop/src-tauri/src/shell/modelo/admitted.rs`
+- `S15` `A` `native/desktop/src-tauri/src/shell/modelo/files.rs`
+- `S15` `A` `native/desktop/src-tauri/src/shell/modelo/mod.rs`
+- `S15` `A` `native/desktop/src-tauri/src/shell/modelo/relay_contracts.json`
+- `S15` `A` `native/desktop/src-tauri/src/shell/modelo/relay_contracts.py`
+- `S15` `A` `native/desktop/src-tauri/src/shell/modelo/scripted.rs`
+- `S15` `A` `native/desktop/src-tauri/src/shell/modelo/settle.rs`
+- `S15` `A` `native/desktop/src-tauri/src/shell/modelo/tests.rs`
+- `S15` `M` `native/desktop/src-tauri/src/app.rs`
+- `S15` `M` `native/desktop/src-tauri/src/shell/mod.rs`
+- `S15` `M` `native/desktop/CMakeLists.txt`
+- `S15` `verify:` `desktop-host-unit-test` -> `pass`
+- `S15` `verify:` `desktop-host-unit-clippy` -> `pass`
+- `S15` `verify:` `relay_contracts.py --check` -> `pass`
+- `S15` `by:` `opus-host-lane`
+- `S16` `A` `native/desktop/src-tauri/src/shell/modelo/admitted.rs`
+- `S16` `A` `native/desktop/src-tauri/src/shell/modelo/files.rs`
+- `S16` `A` `native/desktop/src-tauri/src/shell/modelo/mod.rs`
+- `S16` `A` `native/desktop/src-tauri/src/shell/modelo/relay_contracts.json`
+- `S16` `A` `native/desktop/src-tauri/src/shell/modelo/relay_contracts.py`
+- `S16` `A` `native/desktop/src-tauri/src/shell/modelo/scripted.rs`
+- `S16` `A` `native/desktop/src-tauri/src/shell/modelo/settle.rs`
+- `S16` `A` `native/desktop/src-tauri/src/shell/modelo/tests.rs`
+- `S16` `M` `native/desktop/src-tauri/src/app.rs`
+- `S16` `M` `native/desktop/src-tauri/src/shell/mod.rs`
+- `S16` `M` `native/desktop/CMakeLists.txt`
+- `S16` `verify:` `desktop-host-unit-test` -> `pass`
+- `S16` `verify:` `desktop-host-unit-clippy` -> `pass`
+- `S16` `verify:` `relay_contracts.py --check` -> `pass`
+- `S16` `by:` `opus-host-lane`
+- `S11` `M` `dev/locales/_ast_key_syntax.py`
+- `S11` `M` `dev/locales/_ast_key_wrappers.py`
+- `S11` `M` `dev/locales/_ast_key_calls.py`
+- `S11` `A` `dev/locales/tests/test_translator_wrapper_call_scope.py`
+- `S11` `verify:` `ruff check and format` -> `pass`
+- `S11` `verify:` `pytest translator wrapper scope and dynamic prefix registry` -> `pass`
+- `S11` `by:` `opus-wording-lane`
+- `S16` `A` `native/desktop/src-tauri/src/shell/settle.rs`
+- `S16` `R` `native/desktop/src-tauri/src/shell/modelo/scripted.rs` -> `native/desktop/src-tauri/src/shell/scripted.rs`
+- `S16` `M` `native/desktop/src-tauri/src/shell/relay.rs`
+- `S16` `M` `native/desktop/src-tauri/src/shell/ledger/admitted.rs`
+- `S16` `M` `native/desktop/src-tauri/src/shell/ledger/mod.rs`
+- `S16` `M` `native/desktop/src-tauri/src/shell/ledger/tests.rs`
+- `S16` `M` `native/desktop/src-tauri/src/shell/modelo/admitted.rs`
+- `S16` `M` `native/desktop/src-tauri/src/shell/modelo/files.rs`
+- `S16` `M` `native/desktop/src-tauri/src/shell/modelo/mod.rs`
+- `S16` `M` `native/desktop/src-tauri/src/shell/modelo/relay_contracts.json`
+- `S16` `M` `native/desktop/src-tauri/src/shell/modelo/relay_contracts.py`
+- `S16` `D` `native/desktop/src-tauri/src/shell/modelo/settle.rs`
+- `S16` `M` `native/desktop/src-tauri/src/shell/modelo/tests.rs`
+- `S07` `M` `src/cadrumo/application/modelo/declarations_list_operation.py`
+- `S07` `M` `src/cadrumo/application/modelo/tests/test_declarations_list_operation.py`
+- `S07` `verify:` `ruff check and format` -> `pass`
+- `S07` `verify:` `lint-imports` -> `pass`
+- `S07` `verify:` `operation_contract_manifest --check` -> `pass`
+- `S07` `verify:` `pytest integrated modelo, TUI, CLI amend and MCP suites` -> `pass`
+- `S07` `by:` `opus-p01-lane`
+- `S31` `M` `src/cadrumo/application/modelo/declarations_list.py`
+- `S31` `M` `src/cadrumo/application/modelo/declarations_list_operation.py`
+- `S31` `M` `src/cadrumo/application/modelo/work_form_header.py`
+- `S31` `M` `src/cadrumo/application/overview/calendar.py`
+- `S31` `M` `src/cadrumo/entrypoints/tui/declarations/portfolio_rendering.py`
+- `S31` `M` `src/cadrumo/entrypoints/tui/declarations/portfolio_rows.py`
+- `S31` `M` `src/cadrumo/entrypoints/tui/declarations/grouped.py`
+- `S31` `M` `src/cadrumo/entrypoints/tui/declarations/calendar.py`
+- `S31` `M` `src/cadrumo/entrypoints/tui/declarations/controller.py`
+- `S31` `M` `dev/locales/tests/test_dynamic_prefix_registry_coverage.py`
+- `S31` `verify:` `ruff check and format` -> `pass`
+- `S31` `verify:` `lint-imports` -> `pass`
+- `S31` `verify:` `operation_contract_manifest --check` -> `pass`
+- `S31` `verify:` `pytest integrated modelo, TUI, CLI amend and MCP suites` -> `pass`
+- `S31` `by:` `opus-p01-lane`
+- `S32` `M` `src/cadrumo/application/modelo/work_form_next_step.py`
+- `S32` `M` `src/cadrumo/application/modelo/workbench_read.py`
+- `S32` `A` `src/cadrumo/application/modelo/edit_prerequisite_wording.py`
+- `S32` `M` `src/cadrumo/application/modelo/workbench_operations.py`
+- `S32` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen_next_step.py`
+- `S32` `A` `src/cadrumo/application/modelo/tests/test_edit_prerequisite_wording.py`
+- `S32` `M` `src/cadrumo/application/modelo/tests/test_work_form_next_step.py`
+- `S32` `verify:` `ruff check and format` -> `pass`
+- `S32` `verify:` `lint-imports` -> `pass`
+- `S32` `verify:` `operation_contract_manifest --check` -> `pass`
+- `S32` `verify:` `pytest integrated modelo, TUI, CLI amend and MCP suites` -> `pass`
+- `S32` `by:` `opus-p01-lane`
+- `S33` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S33` `M` `src/cadrumo/application/modelo/work_form_wording.py`
+- `S33` `M` `src/cadrumo/application/modelo/work_form_layout.py`
+- `S33` `M` `src/cadrumo/application/modelo/workbench_projection.py`
+- `S33` `M` `src/cadrumo/application/operations/financial_operand_contract.py`
+- `S33` `D` `src/cadrumo/entrypoints/tui/modelo/workbench/wording.py`
+- `S33` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/page_items.py`
+- `S33` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list_models.py`
+- `S33` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/vocabulary.py`
+- `S33` `A` `src/cadrumo/application/modelo/tests/test_work_form_gate_agreement.py`
+- `S33` `A` `src/cadrumo/application/modelo/tests/test_work_form_page_and_box_words.py`
+- `S33` `M` `dev/quality/metadata/import_load_targets.json`
+- `S33` `verify:` `ruff check and format` -> `pass`
+- `S33` `verify:` `lint-imports` -> `pass`
+- `S33` `verify:` `operation_contract_manifest --check` -> `pass`
+- `S33` `verify:` `pytest integrated modelo, TUI, CLI amend and MCP suites` -> `pass`
+- `S33` `by:` `opus-p01-lane`
+- `S35` `A` `src/cadrumo/application/modelo/work_history_read.py`
+- `S35` `M` `src/cadrumo/application/modelo/history_operation.py`
+- `S35` `M` `src/cadrumo/application/workbench_generation_reader.py`
+- `S35` `M` `src/cadrumo/entrypoints/cli/operation_modelo_work_history.py`
+- `S35` `A` `src/cadrumo/application/modelo/tests/test_work_history_read.py`
+- `S35` `verify:` `ruff check and format` -> `pass`
+- `S35` `verify:` `lint-imports` -> `pass`
+- `S35` `verify:` `operation_contract_manifest --check` -> `pass`
+- `S35` `verify:` `pytest integrated modelo, TUI, CLI amend and MCP suites` -> `pass`
+- `S35` `by:` `opus-p01-lane-2`
+- `S37` `A` `src/cadrumo/application/modelo/edit_review_wording.py`
+- `S37` `M` `src/cadrumo/application/modelo/workbench_operations.py`
+- `S37` `M` `src/cadrumo/application/modelo/edit_operator_input.py`
+- `S37` `M` `src/cadrumo/application/modelo/edit_operation_requests.py`
+- `S37` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S37` `M` `src/cadrumo/application/modelo/work_form_wording.py`
+- `S37` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/factory.py`
+- `S37` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/session.py`
+- `S37` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/header.py`
+- `S37` `M` `src/cadrumo/application/operations/registry_schema_validation.py`
+- `S37` `M` `src/cadrumo_mcp/mcp/admitted_operations.py`
+- `S37` `A` `src/cadrumo/application/modelo/tests/test_work_form_field_words.py`
+- `S37` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_confirm_real.py`
+- `S37` `verify:` `ruff check and format` -> `pass`
+- `S37` `verify:` `lint-imports` -> `pass`
+- `S37` `verify:` `operation_contract_manifest --check` -> `pass`
+- `S37` `verify:` `pytest integrated modelo, TUI, CLI amend and MCP suites` -> `pass`
+- `S37` `by:` `opus-p01-lane-2`
+- `S38` `A` `src/cadrumo/application/modelo/work_amend_correction.py`
+- `S38` `M` `src/cadrumo/application/modelo/amendment_context_operation.py`
+- `S38` `M` `src/cadrumo/application/modelo/edit_models.py`
+- `S38` `M` `src/cadrumo/application/modelo/edit_parsing.py`
+- `S38` `M` `src/cadrumo/entrypoints/cli/modelo_amend_wizard_commands.py`
+- `S38` `A` `src/cadrumo/application/modelo/tests/test_work_amend_correction.py`
+- `S38` `verify:` `ruff check and format` -> `pass`
+- `S38` `verify:` `lint-imports` -> `pass`
+- `S38` `verify:` `operation_contract_manifest --check` -> `pass`
+- `S38` `verify:` `pytest integrated modelo, TUI, CLI amend and MCP suites` -> `pass`
+- `S38` `by:` `opus-p01-lane-3`
+- `S39` `A` `src/cadrumo/application/modelo/work_form_typing_effect.py`
+- `S39` `A` `src/cadrumo/application/modelo/work_form_export_offer.py`
+- `S39` `M` `src/cadrumo/application/modelo/workbench_read.py`
+- `S39` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S39` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/review.py`
+- `S39` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/export.py`
+- `S39` `A` `src/cadrumo/application/modelo/tests/test_work_form_export_offer.py`
+- `S39` `verify:` `ruff check and format` -> `pass`
+- `S39` `verify:` `lint-imports` -> `pass`
+- `S39` `verify:` `operation_contract_manifest --check` -> `pass`
+- `S39` `verify:` `pytest integrated modelo, TUI, CLI amend and MCP suites` -> `pass`
+- `S39` `by:` `opus-p01-lane-3`
+- `S17` `M` `native/desktop/frontend/src/shell/modelo.ts`
+- `S17` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S17` `M` `native/desktop/frontend/src/shell/tauriModelo.ts`
+- `S17` `M` `native/desktop/frontend/src/dev/modeloFixture.ts`
+- `S17` `M` `native/desktop/frontend/tests/modelo-port.spec.ts`
+- `S17` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S17` `M` `native/desktop/frontend/scripts/modelo-fixtures.mjs`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-en.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-es.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-en.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-es.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-347-0A-en.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-347-0A-es.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-390-0A-en.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-390-0A-es.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-checked-en.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-checked-es.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-filed-en.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-filed-es.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-130-01-en.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-130-01-es.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-130-03-en.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-130-03-es.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-130-07-en.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-130-07-es.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-130-19-en.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-130-19-es.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-303-27-en.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-303-27-es.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-303-71-en.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-303-71-es.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-en.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-es.json`
+- `S17` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130.json`
+- `S17` `M` `native/desktop/frontend/src/shell/host.ts`
+- `S17` `M` `native/desktop/frontend/src/shell/tauriHost.ts`
+- `S17` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S17` `M` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S17` `M` `native/desktop/frontend/eslint.config.js`
+- `S17` `verify:` `modelo-fixtures.mjs --check` -> `pass`
+- `S17` `verify:` `playwright modelo-port.spec` -> `pass`
+- `S17` `verify:` `tsc --noEmit` -> `pass`
+- `S17` `verify:` `prettier and eslint` -> `pass`
+- `S17` `by:` `opus-port-lane`
+- `S36` `M` `native/desktop/frontend/src/shell/modelo.ts`
+- `S36` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S36` `M` `native/desktop/frontend/src/shell/tauriModelo.ts`
+- `S36` `M` `native/desktop/frontend/src/dev/modeloFixture.ts`
+- `S36` `M` `native/desktop/frontend/tests/modelo-port.spec.ts`
+- `S36` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S36` `M` `native/desktop/frontend/scripts/modelo-fixtures.mjs`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-en.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-es.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-en.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-303-1T-es.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-347-0A-en.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-347-0A-es.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-390-0A-en.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-390-0A-es.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-checked-en.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-checked-es.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-filed-en.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-filed-es.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-130-01-en.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-130-01-es.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-130-03-en.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-130-03-es.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-130-07-en.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-130-07-es.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-130-19-en.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-130-19-es.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-303-27-en.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-303-27-es.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-303-71-en.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/help-303-71-es.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-en.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/declarations-es.json`
+- `S36` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130.json`
+- `S36` `M` `native/desktop/frontend/src/shell/host.ts`
+- `S36` `M` `native/desktop/frontend/src/shell/tauriHost.ts`
+- `S36` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S36` `M` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S36` `M` `native/desktop/frontend/eslint.config.js`
+- `S36` `verify:` `modelo-fixtures.mjs --check` -> `pass`
+- `S36` `verify:` `playwright modelo-port.spec` -> `pass`
+- `S36` `verify:` `tsc --noEmit` -> `pass`
+- `S36` `verify:` `prettier and eslint` -> `pass`
+- `S36` `by:` `opus-port-lane`
+- `S18` `A` `native/desktop/frontend/src/components/modelo/declarations/DeclarationsPage.tsx`
+- `S18` `A` `native/desktop/frontend/src/components/modelo/declarations/DeclarationsPane.tsx`
+- `S18` `A` `native/desktop/frontend/src/components/modelo/declarations/NewDeclarationDialog.tsx`
+- `S18` `A` `native/desktop/frontend/src/components/modelo/declarations/useDeclarationsList.ts`
+- `S18` `A` `native/desktop/frontend/src/components/modelo/declarations/declarationsWords.ts`
+- `S18` `A` `native/desktop/frontend/src/components/modelo/declarations/DeclarationsPage.stories.tsx`
+- `S18` `A` `native/desktop/frontend/tests/scenarios/modelo-declarations.spec.ts`
+- `S18` `M` `native/desktop/frontend/src/App.tsx`
+- `S18` `M` `native/desktop/frontend/src/shell/layout.ts`
+- `S18` `M` `native/desktop/frontend/src/dev/main.tsx`
+- `S18` `verify:` `playwright modelo-declarations scenarios` -> `pass`
+- `S18` `verify:` `tsc --noEmit` -> `pass`
+- `S18` `verify:` `eslint and prettier` -> `pass`
+- `S18` `by:` `opus-p04-lane-a`
+- `S19` `A` `native/desktop/frontend/src/components/modelo/workspace/Workspace.tsx`
+- `S19` `A` `native/desktop/frontend/src/components/modelo/workspace/Marks.tsx`
+- `S19` `A` `native/desktop/frontend/src/components/modelo/workspace/WorkspaceScreen.tsx`
+- `S19` `A` `native/desktop/frontend/src/components/modelo/workspace/Workspace.stories.tsx`
+- `S19` `A` `native/desktop/frontend/tests/scenarios/modelo-workspace.spec.ts`
+- `S19` `verify:` `playwright modelo-workspace scenarios` -> `pass`
+- `S19` `verify:` `tsc --noEmit` -> `pass`
+- `S19` `verify:` `eslint and prettier` -> `pass`
+- `S19` `by:` `opus-p04-lane-b`
+- `S20` `A` `native/desktop/frontend/src/components/modelo/form/FormView.tsx`
+- `S20` `A` `native/desktop/frontend/src/components/modelo/form/SectionView.tsx`
+- `S20` `A` `native/desktop/frontend/src/components/modelo/form/GridBlock.tsx`
+- `S20` `A` `native/desktop/frontend/src/components/modelo/form/RecordsBlock.tsx`
+- `S20` `A` `native/desktop/frontend/src/components/modelo/form/FieldRow.tsx`
+- `S20` `A` `native/desktop/frontend/src/components/modelo/form/BoxNumber.tsx`
+- `S20` `A` `native/desktop/frontend/src/components/modelo/form/formContext.ts`
+- `S20` `A` `native/desktop/frontend/src/components/modelo/form/originLook.ts`
+- `S20` `A` `native/desktop/frontend/src/components/modelo/form/FormView.stories.tsx`
+- `S20` `verify:` `playwright modelo-form-model` -> `pass`
+- `S20` `verify:` `tsc --noEmit` -> `pass`
+- `S20` `verify:` `eslint and prettier` -> `pass`
+- `S20` `by:` `opus-p04-lane-c`
+- `S21` `A` `native/desktop/frontend/src/components/modelo/form/ValueCell.tsx`
+- `S21` `A` `native/desktop/frontend/src/components/modelo/form/session.ts`
+- `S21` `A` `native/desktop/frontend/src/components/modelo/form/stagedWords.ts`
+- `S21` `A` `native/desktop/frontend/tests/modelo-form-model.spec.ts`
+- `S21` `verify:` `tsc --noEmit` -> `pass`
+- `S21` `verify:` `eslint and prettier` -> `pass`
+- `S21` `by:` `opus-p04-lane-c`
+- `S22` `A` `native/desktop/frontend/src/components/modelo/dialogs/ReviewDialog.tsx`
+- `S22` `A` `native/desktop/frontend/src/components/modelo/dialogs/useEditReview.ts`
+- `S22` `A` `native/desktop/frontend/src/components/modelo/dialogs/operationRun.ts`
+- `S22` `A` `native/desktop/frontend/src/components/modelo/dialogs/Dialogs.stories.tsx`
+- `S22` `A` `native/desktop/frontend/tests/modelo-operation-run.spec.ts`
+- `S22` `verify:` `playwright modelo-operation-run` -> `pass`
+- `S22` `verify:` `tsc --noEmit` -> `pass`
+- `S22` `verify:` `eslint and prettier` -> `pass`
+- `S22` `by:` `opus-p04-lane-d`
+- `S23` `A` `native/desktop/frontend/src/components/modelo/details/Details.tsx`
+- `S23` `A` `native/desktop/frontend/src/components/modelo/details/TodoRail.tsx`
+- `S23` `A` `native/desktop/frontend/src/components/modelo/details/useHelpCard.ts`
+- `S23` `A` `native/desktop/frontend/src/components/modelo/details/Details.stories.tsx`
+- `S23` `verify:` `tsc --noEmit` -> `pass`
+- `S23` `verify:` `eslint and prettier` -> `pass`
+- `S23` `by:` `opus-p04-lane-d`
+- `S24` `A` `native/desktop/frontend/src/components/modelo/workspace/CheckView.tsx`
+- `S24` `verify:` `tsc --noEmit` -> `pass`
+- `S24` `verify:` `eslint and prettier` -> `pass`
+- `S24` `by:` `opus-p04-lane-b`
+- `S25` `A` `native/desktop/frontend/src/components/modelo/dialogs/FilingView.tsx`
+- `S25` `verify:` `tsc --noEmit` -> `pass`
+- `S25` `verify:` `eslint and prettier` -> `pass`
+- `S25` `by:` `opus-p04-lane-d`
+- `S26` `A` `native/desktop/frontend/src/components/modelo/workspace/SourcesView.tsx`
+- `S26` `A` `native/desktop/frontend/src/components/modelo/workspace/HistoryView.tsx`
+- `S26` `A` `native/desktop/frontend/src/components/modelo/workspace/HistoryView.stories.tsx`
+- `S26` `A` `native/desktop/frontend/src/components/modelo/workspace/CorrectionDialog.tsx`
+- `S26` `verify:` `tsc --noEmit` -> `pass`
+- `S26` `verify:` `eslint and prettier` -> `pass`
+- `S26` `by:` `opus-p04-lane-b`
+- `S12` `M` `dev/locales/desktop_chrome.py`
+- `S12` `M` `dev/locales/tests/test_desktop_chrome.py`
+- `S12` `M` `native/desktop/CMakeLists.txt`
+- `S12` `D` `native/desktop/frontend/src/dev/fixtures/modelo/catalogue.json`
+- `S12` `M` `native/desktop/frontend/src/dev/prototypes/modelo/DeclarationsHub.tsx`
+- `S12` `M` `native/desktop/frontend/src/dev/prototypes/modelo/FormView.tsx`
+- `S12` `M` `native/desktop/frontend/src/dev/prototypes/modelo/Inspector.tsx`
+- `S12` `M` `native/desktop/frontend/src/dev/prototypes/modelo/Panels.tsx`
+- `S12` `M` `native/desktop/frontend/src/dev/prototypes/modelo/Workspace.tsx`
+- `S12` `M` `native/desktop/frontend/src/dev/prototypes/modelo/vocabulary.ts`
+- `S12` `M` `native/desktop/frontend/src/dev/prototypes/modelo/words.ts`
+- `S12` `M` `native/desktop/frontend/src/dev/prototypes/modelo/scenarios.ts`
+- `S12` `M` `native/desktop/frontend/src/dev/prototypes/modelo/types.ts`
+- `S12` `verify:` `desktop-frontend-chrome target` -> `pass`
+- `S12` `verify:` `tsc --noEmit` -> `pass`
+- `S12` `verify:` `eslint and prettier` -> `pass`
+- `S12` `by:` `opus-wording-lane`
+- `S40` `M` `src/cadrumo/application/modelo/calculation_note_gate.py`
+- `S40` `M` `src/cadrumo/application/modelo/work_form_notes.py`
+- `S40` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S40` `M` `src/cadrumo/application/modelo/work_form_next_step.py`
+- `S40` `M` `src/cadrumo/application/modelo/work_form.py`
+- `S40` `M` `src/cadrumo/application/modelo/work_form_inspection.py`
+- `S40` `M` `src/cadrumo/application/modelo/work_form_issue_lines.py`
+- `S40` `M` `src/cadrumo/application/modelo/tests/test_work_form_gate_agreement.py`
+- `S40` `M` `src/cadrumo/application/modelo/tests/test_work_form_issue_lines.py`
+- `S40` `M` `src/cadrumo/application/modelo/tests/test_work_form_calculation_notes.py`
+- `S40` `M` `src/cadrumo/application/modelo/tests/test_work_form_filer_attention.py`
+- `S40` `verify:` `ruff check and format` -> `pass`
+- `S40` `verify:` `basedpyright touched files` -> `pass`
+- `S40` `verify:` `lint-imports` -> `pass`
+- `S40` `verify:` `operation_contract_manifest --check` -> `pass`
+- `S40` `verify:` `pytest application form and gate suites` -> `pass`
+- `S40` `verify:` `pytest TUI declarations and workbench suites` -> `pass`
+- `S40` `by:` `opus-p01-lane`
+- `S41` `M` `src/cadrumo/application/modelo/declarations_list.py`
+- `S41` `M` `src/cadrumo/application/modelo/tests/test_declarations_list.py`
+- `S41` `M` `src/cadrumo/entrypoints/tui/declarations/external_details.py`
+- `S41` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S41` `verify:` `pytest test_declarations_list` -> `pass`
+- `S41` `by:` `opus-p01-lane`
+- `S42` `M` `src/cadrumo/application/modelo/work_form_service.py`
+- `S42` `M` `src/cadrumo/application/modelo/declaration_summary.py`
+- `S42` `M` `src/cadrumo/entrypoints/workbench_generation_composition.py`
+- `S42` `A` `src/cadrumo/application/modelo/tests/test_declaration_summary_grade.py`
+- `S42` `M` `src/cadrumo/application/modelo/work_form_issue_lines.py`
+- `S42` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/issue_projection.py`
+- `S42` `M` `src/cadrumo/application/modelo/tests/test_work_form_issue_lines.py`
+- `S42` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S42` `verify:` `ruff check and format` -> `pass`
+- `S42` `verify:` `lint-imports` -> `pass`
+- `S42` `verify:` `basedpyright` -> `pass`
+- `S42` `verify:` `operation_contract_manifest --check` -> `pass`
+- `S42` `verify:` `pytest application, profile persistence and TUI suites` -> `pass`
+- `S42` `by:` `opus-p01-lane-2`
+- `S27` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S27` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S27` `M` `native/desktop/frontend/src/dev/modeloFixture.ts`
+- `S27` `M` `native/desktop/frontend/src/components/modelo/declarations/AeatFilingDialog.tsx`
+- `S27` `M` `native/desktop/frontend/src/components/modelo/workspace/CheckView.tsx`
+- `S27` `A` `native/desktop/frontend/tests/scenarios/modelo.spec.ts`
+- `S27` `M` `native/desktop/frontend/tests/scenarios/modelo-declarations.spec.ts`
+- `S27` `M` `native/desktop/frontend/tests/scenarios/accessibility.spec.ts`
+- `S27` `M` `native/desktop/frontend/src/dev/fixtures/modelo`
+- `S27` `verify:` `playwright modelo port, form, run and scenario specs` -> `pass`
+- `S27` `verify:` `playwright accessibility Modelo surfaces` -> `pass`
+- `S27` `verify:` `modelo-fixtures.mjs --check` -> `pass`
+- `S27` `verify:` `tsc --noEmit` -> `pass`
+- `S27` `by:` `opus-p05-lane`
+- `S44` `M` `src/cadrumo/application/modelo/work_form_export_offer.py`
+- `S44` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S44` `M` `src/cadrumo/application/modelo/work_form_typing_effect.py`
+- `S44` `M` `src/cadrumo/application/modelo/workbench_operations.py`
+- `S44` `M` `src/cadrumo/application/modelo/workbench_projection.py`
+- `S44` `M` `src/cadrumo/application/modelo/workbench_read.py`
+- `S44` `A` `src/cadrumo/application/modelo/work_form_rebase.py`
+- `S44` `A` `src/cadrumo/application/modelo/tests/test_work_form_rebase.py`
+- `S44` `A` `src/cadrumo/application/modelo/tests/test_workbench_read_admission.py`
+- `S44` `M` `src/cadrumo/application/modelo/tests/test_work_form_export_offer.py`
+- `S44` `M` `src/cadrumo/entrypoints/tests/test_modelo_workbench_operations.py`
+- `S44` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/session.py`
+- `S44` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/factory.py`
+- `S44` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen_operation.py`
+- `S44` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/editor.py`
+- `S44` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S44` `verify:` `ruff check and format` -> `pass`
+- `S44` `verify:` `lint-imports` -> `pass`
+- `S44` `verify:` `basedpyright application files` -> `pass`
+- `S44` `verify:` `operation_contract_manifest --check` -> `pass`
+- `S44` `verify:` `pytest application modelo suites` -> `pass`
+- `S44` `verify:` `pytest full TUI modelo tree` -> `pass`
+- `S44` `by:` `opus-p01-lanes-1-and-2`
+- `S43` `M` `native/application/src/person_operations.rs`
+- `S43` `M` `native/application/src/runtime_client.rs`
+- `S43` `A` `native/application/tests/data/modelo-303-admitted-baseline.json`
+- `S43` `M` `native/desktop/src-tauri/src/agent/person.rs`
+- `S43` `M` `native/desktop/src-tauri/src/agent/person/native.rs`
+- `S43` `M` `native/desktop/src-tauri/src/shell/relay.rs`
+- `S43` `M` `native/desktop/src-tauri/src/shell/modelo/mod.rs`
+- `S43` `M` `native/desktop/src-tauri/src/shell/modelo/tests.rs`
+- `S43` `M` `native/desktop/src-tauri/src/shell/modelo/admitted.rs`
+- `S43` `M` `native/desktop/src-tauri/src/shell/ledger/mod.rs`
+- `S43` `M` `native/desktop/src-tauri/src/shell/ledger/tests.rs`
+- `S43` `M` `native/desktop/src-tauri/src/shell/ledger/admitted.rs`
+- `S43` `M` `native/desktop/scripts/backend-snapshot.mjs`
+- `S43` `verify:` `native_client_live against a real runtime` -> `pass`
+- `S43` `verify:` `application.rust ctest` -> `pass`
+- `S43` `verify:` `relay_contracts.py --check` -> `pass`
+- `S43` `verify:` `backend-snapshot node tests` -> `pass`
+- `S43` `by:` `opus-host-lane`
+- `S13` `M` `native/application/src/runtime_client.rs`
+- `S13` `A` `native/application/tests/data/modelo-303-admitted-baseline.json`
+- `S13` `M` `native/desktop/src-tauri/src/agent/person/native.rs`
+- `S13` `M` `native/desktop/src-tauri/src/shell/relay.rs`
+- `S13` `M` `native/desktop/src-tauri/src/shell/modelo/mod.rs`
+- `S13` `M` `native/desktop/src-tauri/src/shell/modelo/tests.rs`
+- `S13` `M` `native/desktop/src-tauri/src/shell/modelo/admitted.rs`
+- `S13` `M` `native/desktop/src-tauri/src/shell/ledger/mod.rs`
+- `S13` `M` `native/desktop/src-tauri/src/shell/ledger/tests.rs`
+- `S13` `M` `native/desktop/src-tauri/src/shell/ledger/admitted.rs`
+- `S13` `M` `native/desktop/scripts/backend-snapshot.mjs`
+- `S13` `verify:` `native_client_live against a real runtime` -> `pass`
+- `S13` `verify:` `application.rust ctest` -> `pass`
+- `S13` `verify:` `relay_contracts.py --check` -> `pass`
+- `S13` `verify:` `backend-snapshot node tests` -> `pass`
+- `S13` `by:` `opus-host-lane`
+- `S16` `M` `native/application/src/person_operations.rs`
+- `S16` `M` `native/application/src/runtime_client.rs`
+- `S16` `A` `native/application/tests/data/modelo-303-admitted-baseline.json`
+- `S16` `M` `native/desktop/src-tauri/src/agent/person.rs`
+- `S16` `M` `native/desktop/src-tauri/src/agent/person/native.rs`
+- `S16` `M` `native/desktop/scripts/backend-snapshot.mjs`
+- `S16` `verify:` `native_client_live against a real runtime` -> `pass`
+- `S16` `verify:` `application.rust ctest` -> `pass`
+- `S16` `verify:` `relay_contracts.py --check` -> `pass`
+- `S16` `verify:` `backend-snapshot node tests` -> `pass`
+- `S45` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S45` `M` `native/desktop/frontend/scripts/modelo-fixtures.mjs`
+- `S45` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S45` `M` `native/desktop/frontend/src/shell/modelo.ts`
+- `S45` `M` `native/desktop/frontend/src/dev/modeloFixture.ts`
+- `S45` `M` `native/desktop/frontend/tests/modelo-port.spec.ts`
+- `S45` `M` `native/desktop/frontend/src/dev/fixtures/modelo`
+- `S45` `verify:` `modelo-fixtures.mjs --check` -> `pass`
+- `S45` `verify:` `playwright modelo-port.spec` -> `pass`
+- `S45` `verify:` `tsc --noEmit` -> `pass`
+- `S45` `by:` `opus-port-lane`
+- `S46` `M` `native/desktop/frontend/src/components/modelo/form/session.ts`
+- `S46` `M` `native/desktop/frontend/src/components/modelo/form/ValueCell.tsx`
+- `S46` `M` `native/desktop/frontend/src/components/modelo/dialogs/FilingView.tsx`
+- `S46` `M` `native/desktop/frontend/src/components/modelo/dialogs/ReviewDialog.tsx`
+- `S46` `M` `native/desktop/frontend/src/components/modelo/dialogs/useEditReview.ts`
+- `S46` `M` `native/desktop/frontend/src/components/modelo/workspace/CorrectionDialog.tsx`
+- `S46` `M` `native/desktop/frontend/src/components/modelo/workspace/WorkspaceScreen.tsx`
+- `S46` `M` `native/desktop/frontend/src/components/modelo/workspace/CheckView.tsx`
+- `S46` `M` `native/desktop/frontend/src/components/modelo/workspace/Workspace.tsx`
+- `S46` `M` `native/desktop/frontend/src/components/modelo/details/TodoRail.tsx`
+- `S46` `M` `native/desktop/frontend/src/components/modelo/declarations/NewDeclarationDialog.tsx`
+- `S46` `M` `dev/locales/desktop_chrome.py`
+- `S46` `M` `src/cadrumo/locales/en/common.yml`
+- `S46` `verify:` `tsc --noEmit` -> `pass`
+- `S46` `verify:` `eslint and prettier` -> `pass`
+- `S46` `verify:` `playwright modelo workspace and declarations scenarios` -> `pass`
+- `S46` `by:` `opus-p04-lane-b`
+- `S47` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S47` `M` `native/desktop/frontend/scripts/modelo-fixtures.mjs`
+- `S47` `M` `native/desktop/frontend/src/dev/modeloFixture.ts`
+- `S47` `M` `native/desktop/frontend/src/dev/fixtures/modelo`
+- `S47` `M` `native/desktop/frontend/tests/scenarios/modelo.spec.ts`
+- `S47` `M` `native/desktop/frontend/tests/modelo-port.spec.ts`
+- `S47` `verify:` `modelo-fixtures.mjs --check` -> `pass`
+- `S47` `verify:` `playwright port, form, run, modelo, declarations and workspace specs` -> `pass`
+- `S47` `verify:` `playwright accessibility Modelo surfaces` -> `pass`
+- `S47` `verify:` `tsc --noEmit` -> `pass`
+- `S47` `by:` `opus-p05-lane`
+- `S48` `M` `src/cadrumo/application/modelo/edit_models.py`
+- `S48` `M` `src/cadrumo/application/modelo/edit_apply_contracts.py`
+- `S48` `M` `src/cadrumo/application/modelo/edit_operator_input.py`
+- `S48` `M` `src/cadrumo/application/modelo/work_form_rebase.py`
+- `S48` `M` `src/cadrumo/application/modelo/workbench_operations.py`
+- `S48` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S48` `M` `src/cadrumo/application/modelo/workbench_projection.py`
+- `S48` `M` `src/cadrumo/application/modelo/work_form_export_offer.py`
+- `S48` `M` `src/cadrumo/application/modelo/tests/test_work_form_export_offer.py`
+- `S48` `M` `src/cadrumo/application/modelo/tests/test_work_form_rebase.py`
+- `S48` `M` `src/cadrumo/application/modelo/tests/test_work_form_field_words.py`
+- `S48` `M` `src/cadrumo/entrypoints/tests/test_modelo_workbench_operations.py`
+- `S48` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/session.py`
+- `S48` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S48` `verify:` `ruff check and format` -> `pass`
+- `S48` `verify:` `basedpyright touched files` -> `pass`
+- `S48` `verify:` `operation_contract_manifest --check` -> `pass`
+- `S48` `verify:` `pytest application modelo suites` -> `pass`
+- `S48` `verify:` `pytest full TUI modelo tree` -> `pass`
+- `S48` `by:` `opus-p01-lanes-1-and-2`
+- `S49` `M` `native/desktop/src-tauri/src/shell/modelo/mod.rs`
+- `S49` `M` `native/desktop/src-tauri/src/shell/modelo/tests.rs`
+- `S49` `M` `native/desktop/src-tauri/src/shell/settle.rs`
+- `S49` `M` `native/desktop/src-tauri/src/agent/person/native.rs`
+- `S49` `M` `native/desktop/scripts/backend-snapshot.mjs`
+- `S49` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S49` `A` `native/desktop/frontend/src/shell/relayBounds.ts`
+- `S49` `M` `native/application/src/runtime_client.rs`
+- `S49` `M` `native/application/tests/data/modelo-303-admitted-baseline.json`
+- `S49` `M` `dev/runtime_lifecycle/native_client_live.py`
+- `S49` `verify:` `native_client_live against a real runtime` -> `pass`
+- `S49` `verify:` `desktop-host unit tests` -> `pass`
+- `S49` `verify:` `desktop-host clippy` -> `pass`
+- `S49` `verify:` `application.rust ctest` -> `pass`
+- `S49` `verify:` `modelo-fixtures.mjs --check` -> `pass`
+- `S49` `by:` `opus-host-lane`
+- `S50` `M` `native/desktop/frontend/src/components/modelo/form/session.ts`
+- `S50` `M` `native/desktop/frontend/src/components/modelo/dialogs/useEditReview.ts`
+- `S50` `M` `native/desktop/frontend/src/components/modelo/dialogs/ReviewDialog.tsx`
+- `S50` `M` `native/desktop/frontend/tests/modelo-form-model.spec.ts`
+- `S50` `verify:` `tsc --noEmit` -> `pass`
+- `S50` `verify:` `playwright modelo, form-model, workspace and declarations specs` -> `pass`
+- `S50` `by:` `opus-p04-lane-b`
+- `S51` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S51` `M` `native/desktop/frontend/src/dev/modeloFixture.ts`
+- `S51` `M` `native/desktop/frontend/tests/scenarios/modelo.spec.ts`
+- `S51` `M` `native/desktop/frontend/src/dev/fixtures/modelo`
+- `S51` `verify:` `modelo-fixtures.mjs --check` -> `pass`
+- `S51` `verify:` `playwright modelo.spec rebase cases` -> `pass`
+- `S51` `verify:` `playwright accessibility Modelo surfaces` -> `pass`
+- `S51` `by:` `opus-p05-lane`
+- `S52` `M` `src/cadrumo/application/modelo/workbench_operations.py`
+- `S52` `M` `src/cadrumo/entrypoints/tests/test_modelo_workbench_operations.py`
+- `S52` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S52` `verify:` `ruff check and format` -> `pass`
+- `S52` `verify:` `basedpyright` -> `pass`
+- `S52` `verify:` `pytest test_modelo_workbench_operations` -> `pass`
+- `S52` `verify:` `operation_contract_manifest --check` -> `pass`
+- `S52` `by:` `opus-p01-lane-2`
+- `S53` `M` `native/desktop/frontend/src/components/modelo/dialogs/useEditReview.ts`
+- `S53` `M` `native/desktop/frontend/src/components/modelo/dialogs/ReviewDialog.tsx`
+- `S53` `M` `native/desktop/frontend/src/components/modelo/dialogs/FilingView.tsx`
+- `S53` `M` `native/desktop/frontend/src/components/modelo/form/session.ts`
+- `S53` `verify:` `tsc --noEmit` -> `pass`
+- `S53` `verify:` `playwright modelo, form-model, workspace and declarations specs` -> `pass`
+- `S53` `by:` `opus-p04-lane-b`
+- `S54` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S54` `M` `native/desktop/frontend/src/dev/modeloFixture.ts`
+- `S54` `M` `native/desktop/frontend/tests/scenarios/modelo.spec.ts`
+- `S54` `M` `native/desktop/frontend/src/dev/fixtures/modelo`
+- `S54` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S54` `M` `native/application/tests/data/modelo-303-admitted-baseline.json`
+- `S54` `verify:` `modelo-fixtures.mjs --check` -> `pass`
+- `S54` `verify:` `playwright full modelo suite` -> `pass`
+- `S54` `verify:` `playwright accessibility Modelo surfaces` -> `pass`
+- `S54` `verify:` `native_client_live` -> `pass`
+- `S54` `by:` `opus-p05-lane`
+- `S55` `M` `native/desktop/frontend/src/components/modelo/dialogs/useEditReview.ts`
+- `S55` `M` `native/desktop/frontend/src/components/modelo/dialogs/ReviewDialog.tsx`
+- `S55` `M` `native/desktop/frontend/src/components/modelo/dialogs/FilingView.tsx`
+- `S55` `M` `native/desktop/frontend/src/components/modelo/form/session.ts`
+- `S55` `M` `native/desktop/frontend/src/components/modelo/workspace/WorkspaceScreen.tsx`
+- `S55` `M` `native/desktop/frontend/tests/modelo-form-model.spec.ts`
+- `S55` `verify:` `tsc --noEmit` -> `pass`
+- `S55` `verify:` `playwright modelo, form-model, workspace and declarations specs` -> `pass`
+- `S55` `by:` `opus-p04-lane-b`
+- `S56` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S56` `M` `native/desktop/frontend/src/dev/modeloFixture.ts`
+- `S56` `M` `native/desktop/frontend/tests/scenarios/modelo.spec.ts`
+- `S56` `M` `native/desktop/frontend/src/dev/fixtures/modelo`
+- `S56` `verify:` `modelo-fixtures.mjs --check` -> `pass`
+- `S56` `verify:` `playwright full modelo suite` -> `pass`
+- `S56` `verify:` `playwright accessibility Modelo surfaces` -> `pass`
+- `S56` `by:` `opus-p05-lane`
+- `S57` `M` `native/desktop/frontend/src/components/modelo/dialogs/useEditReview.ts`
+- `S57` `M` `native/desktop/frontend/src/components/modelo/dialogs/ReviewDialog.tsx`
+- `S57` `M` `native/desktop/frontend/src/components/modelo/form/session.ts`
+- `S57` `M` `native/desktop/frontend/tests/modelo-form-model.spec.ts`
+- `S57` `M` `dev/locales/desktop_chrome.py`
+- `S57` `verify:` `tsc --noEmit` -> `pass`
+- `S57` `verify:` `playwright modelo-form-model` -> `pass`
+- `S57` `by:` `opus-p04-lane-b`
+- `S58` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S58` `M` `native/desktop/frontend/src/dev/modeloFixture.ts`
+- `S58` `M` `native/desktop/frontend/tests/scenarios/modelo.spec.ts`
+- `S58` `M` `native/desktop/frontend/src/dev/fixtures/modelo`
+- `S58` `verify:` `modelo-fixtures.mjs --check` -> `pass`
+- `S58` `verify:` `playwright full modelo suite` -> `pass`
+- `S58` `verify:` `playwright accessibility Modelo surfaces` -> `pass`
+- `S58` `by:` `opus-p05-lane`
+
+## Notes
+
+- `S02` Fixes an S01 defect: a design-constant cell kept the standing of its pre-copy origin; field copies that change state now go through `revised_field`
+- `S03` Also moved period and date wording from the TUI (needed by origin words); the frontend-neutral key namespace remains P02
+- `S05` Scope corrected from `work_form.py` to the new defining module `work_form_next_step.py;` TUI counters and ladder moved there with every consumer repointed
+- `S06` Period words already moved in S03; this step moved modelo titles and put title, number and period words on the form. The list projection that uses them is S07
+- `S07` The list read captures through the generation's own door with a list-only method, so the runtime gains no special case; row words and steps moved from the TUI `row_words`
+- `S08` Scope corrected from `source_policy.py` to the new defining module `work_form_source_groups.py.` Type gate clean for these files; remaining findings are in another session's statement-reading files
+- `S09` Citation text already reached the card's legal basis; this step proves it and adds the off-form figures. lint-imports shows one broken contract from another session's `cadrumo/tests/statement_reader_fixtures.py,` not from this step
+- `S10` The native disconnect/session-lock test failed once under concurrent load and passed on rerun with all three native tests; lint-imports' one broken contract is another session's `cadrumo/tests/statement_reader_fixtures.py`
+- `S13` The relay names no definition: it forwards `operation_financial_submit` as the runtime's financial input and the runtime refuses any definition whose contract takes no financial operand, so the product-neutral bridge gate still holds. Python strings cannot be zeroed; the relay drops its references to the input after transfer
+- `S13` The desktop's person session now relays in Rust (another session's 4e256a9e95/8821a09cfe); the same `operation_financial_submit` action is added there, with the encoded input and its request zeroized after sending
+- `S11` First part of S11: `tui.modelo.workbench.*` and `tui.declarations.*` moved to `workspace.modelo.*` and `workspace.declarations.*` through dev.locales move (469 and 201 keys per locale, values unchanged) and 3734 code references repointed in 111 files. `test_audit` still reports catalogue keys with no code reference `(next.check_aeat,` `next.link_aeat,` state.correction) and a missing provenance.source, all unreferenced before this step. The missing list and refusal keys and the key-hint removal follow
+- `S14` Not implemented: the desktop's person session now relays in Rust and another session lifted the person reply bound to the relay's 16 MiB assembled-document bound in 931da66b20, which carries a 390-sized form read in one reply; the bounded-parts mechanism is unnecessary
+- `S34` `contract_manifest.json` left out: the working tree also carries S31, S37 and S38 schema changes; it is regenerated and committed once those steps land
+- `S16` follow-up to S16: the duplicated settle layer moved into shell/settle.rs, reviewed by the desktop ledger session; adds `modelo_files_reveal`
+- `S07` committed together in 44d85df020 because the read-model files interleave every lane's hunks; six MCP stdio, attendance and remedy tests failed only under the 40-minute combined run and pass in isolation
+- `S31` committed together in 44d85df020 because the read-model files interleave every lane's hunks; six MCP stdio, attendance and remedy tests failed only under the 40-minute combined run and pass in isolation
+- `S32` committed together in 44d85df020 because the read-model files interleave every lane's hunks; six MCP stdio, attendance and remedy tests failed only under the 40-minute combined run and pass in isolation
+- `S33` committed together in 44d85df020 because the read-model files interleave every lane's hunks; six MCP stdio, attendance and remedy tests failed only under the 40-minute combined run and pass in isolation
+- `S35` committed together in 44d85df020 because the read-model files interleave every lane's hunks; six MCP stdio, attendance and remedy tests failed only under the 40-minute combined run and pass in isolation
+- `S37` committed together in 44d85df020 because the read-model files interleave every lane's hunks; six MCP stdio, attendance and remedy tests failed only under the 40-minute combined run and pass in isolation
+- `S38` committed together in 44d85df020 because the read-model files interleave every lane's hunks; six MCP stdio, attendance and remedy tests failed only under the 40-minute combined run and pass in isolation
+- `S39` committed together in 44d85df020 because the read-model files interleave every lane's hunks; six MCP stdio, attendance and remedy tests failed only under the 40-minute combined run and pass in isolation
+- `S17` committed together in 78f2da88ea; S36 found no modelo that produces a missing-value finding through the real executors
+- `S36` committed together in 78f2da88ea; S36 found no modelo that produces a missing-value finding through the real executors
+- `S18` committed in e2f4030f14 with the app wiring, the desktop strings generator and the prototype; App.tsx and CMakeLists.txt were staged as HEAD plus this work only, beside another session's uncommitted navigation-register edits
+- `S19` committed in e2f4030f14 with the app wiring, the desktop strings generator and the prototype; App.tsx and CMakeLists.txt were staged as HEAD plus this work only, beside another session's uncommitted navigation-register edits
+- `S20` committed in e2f4030f14 with the app wiring, the desktop strings generator and the prototype; App.tsx and CMakeLists.txt were staged as HEAD plus this work only, beside another session's uncommitted navigation-register edits
+- `S21` committed in e2f4030f14 with the app wiring, the desktop strings generator and the prototype; App.tsx and CMakeLists.txt were staged as HEAD plus this work only, beside another session's uncommitted navigation-register edits
+- `S22` committed in e2f4030f14 with the app wiring, the desktop strings generator and the prototype; App.tsx and CMakeLists.txt were staged as HEAD plus this work only, beside another session's uncommitted navigation-register edits
+- `S23` committed in e2f4030f14 with the app wiring, the desktop strings generator and the prototype; App.tsx and CMakeLists.txt were staged as HEAD plus this work only, beside another session's uncommitted navigation-register edits
+- `S24` committed in e2f4030f14 with the app wiring, the desktop strings generator and the prototype; App.tsx and CMakeLists.txt were staged as HEAD plus this work only, beside another session's uncommitted navigation-register edits
+- `S25` committed in e2f4030f14 with the app wiring, the desktop strings generator and the prototype; App.tsx and CMakeLists.txt were staged as HEAD plus this work only, beside another session's uncommitted navigation-register edits
+- `S26` committed in e2f4030f14 with the app wiring, the desktop strings generator and the prototype; App.tsx and CMakeLists.txt were staged as HEAD plus this work only, beside another session's uncommitted navigation-register edits
+- `S12` committed in e2f4030f14 with the app wiring, the desktop strings generator and the prototype; App.tsx and CMakeLists.txt were staged as HEAD plus this work only, beside another session's uncommitted navigation-register edits
+- `S40` committed in 46f9e9219b with the `aeat_filing` row field for P04.S41
+- `S41` the row field half of S41, committed in 46f9e9219b; the AEAT reference stays out of the public row by its owner's custody decision, a known gap against the TUI's technical toggle
+- `S42` also carries the issue-line where fix that removes the box from place words
+- `S27` committed in 35fff18be9; no modelo yields a missing-value finding through the real executors, so missing values are proven by the drawn dash
+- `S44` committed in f5a6e55f11; items a and d by lane 1, b and c by lane 2
+- `S43` committed in 788d9231f0, reviewed by CADRUMO-RUST-NATIVE and CADRUMO-UX-LEDGER; desktop-host-unit-test and clippy blocked by other sessions' uncommitted shell/setup and Cargo.lock work, last direct run 541 passed with the lane's one failure fixed
+- `S13` committed in 788d9231f0, reviewed by CADRUMO-RUST-NATIVE and CADRUMO-UX-LEDGER; desktop-host-unit-test and clippy blocked by other sessions' uncommitted shell/setup and Cargo.lock work, last direct run 541 passed with the lane's one failure fixed
+- `S16` committed in 788d9231f0, reviewed by CADRUMO-RUST-NATIVE and CADRUMO-UX-LEDGER; desktop-host-unit-test and clippy blocked by other sessions' uncommitted shell/setup and Cargo.lock work, last direct run 541 passed with the lane's one failure fixed
+- `S45` committed in 5da639c4ba against HEAD 788d9231f0
+- `S46` committed in ddecebc18e with S47; my `saved_unread` key and chrome declarations were wiped once by another writer and re-applied before commit
+- `S47` committed in ddecebc18e; no history envelope is written because a reduced receipt path fails the history model's validator; hu 347 navigation failure seen by lane B not reproduced in 27 runs
+- `S48` committed in 5ccbb347f8; held changes ride the preflight's transient operand rather than a value-free token, keeping the exact rebase; lint-imports breaks only through another session's uncommitted diagnostics.py
+- `S49` committed in 7f2a1fd88b with the port lane's regeneration, S50 and S51; the live test admits a real Modelo 303 preflight, apply and renewal
+- `S50` committed in 7f2a1fd88b
+- `S51` committed in 7f2a1fd88b; the renewal-notice defect it caught was fixed in S50 before commit
+- `S52` committed in 9a503d410f
+- `S53` committed in 790d21f36f; the review package title key's desktop declaration was removed and landed in the ledger session's 6650242b18
+- `S54` committed in 790d21f36f; a Hungarian failure traced to a fixture rewritten by a concurrent regeneration, not to the window
+- `S55` committed in 4c1b5c81da with S56
+- `S56` committed in 4c1b5c81da; write specs run in English only, every edit envelope being read on the English form's baseline
+- `S57` committed in e4db8638d4 with S58; scenario specs proven by the proof lane's full run
+- `S58` committed in e4db8638d4

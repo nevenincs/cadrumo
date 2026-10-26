@@ -1,0 +1,51 @@
+[fact]
+fact_id = "lirpf-modelo-145-family-situation-vocabulary"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "lirpf-modelo-145-family-situation-vocabulary:2011-01-05"
+date_axis = "filing_period"
+valid_from = 2011-01-05
+legal_refs = [
+  "rd-439-2007:art-88",
+  "resolucion-dgt-2011-01-03-modelo-145:aprobacion",
+]
+source_refs = [
+  "boe-rirpf-category-profile-authority",
+  "boe-modelo-145-2011-approval",
+]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-rirpf-category-profile-authority"
+required_text = [
+  "En cuanto a la situación del contribuyente, ésta podrá ser una de las tres siguientes:",
+  "Contribuyente soltero, viudo, divorciado o separado legalmente.",
+  "Contribuyente cuyo cónyuge no obtenga rentas superiores a 1.500 euros, excluidas las exentas.",
+]
+
+[[fact.variants.source_citations]]
+source_ref = "boe-modelo-145-2011-approval"
+required_text = [
+  "Aprobación del modelo 145",
+  "comunicación de datos del perceptor de rentas del trabajo a su pagador",
+]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "situacion_familiar_m145.order", value = "familia_1,familia_2,familia_3" },
+  { key = "situacion_familiar_m145.familia_1.value", value = "familia_1" },
+  { key = "situacion_familiar_m145.familia_1.description", value = "Viudo/a o casado/a separado/a legalmente con descendientes que dan derecho a la totalidad del mínimo por descendientes; elegible para la reducción complementaria de retenciones del RIRPF art. 81.1.1.º." },
+  { key = "situacion_familiar_m145.familia_1.legal_refs", value = "rd-439-2007:art-88,resolucion-dgt-2011-01-03-modelo-145:aprobacion" },
+  { key = "situacion_familiar_m145.familia_1.supplementary_reduction_eligible", value = "true" },
+  { key = "situacion_familiar_m145.familia_2.value", value = "familia_2" },
+  { key = "situacion_familiar_m145.familia_2.description", value = "Casado/a y no separado/a legalmente cuyo cónyuge no obtiene rentas anuales superiores a 1.500 euros, excluidas las exentas; elegible para la reducción complementaria de retenciones del RIRPF art. 81.1.2.º." },
+  { key = "situacion_familiar_m145.familia_2.legal_refs", value = "rd-439-2007:art-88,resolucion-dgt-2011-01-03-modelo-145:aprobacion" },
+  { key = "situacion_familiar_m145.familia_2.supplementary_reduction_eligible", value = "true" },
+  { key = "situacion_familiar_m145.familia_3.value", value = "familia_3" },
+  { key = "situacion_familiar_m145.familia_3.description", value = "Situación familiar distinta de las anteriores; es la situación por defecto y no da derecho a la reducción complementaria de retenciones." },
+  { key = "situacion_familiar_m145.familia_3.legal_refs", value = "rd-439-2007:art-88,resolucion-dgt-2011-01-03-modelo-145:aprobacion" },
+  { key = "situacion_familiar_m145.familia_3.supplementary_reduction_eligible", value = "false" },
+]

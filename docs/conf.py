@@ -1,0 +1,2241 @@
+"""Sphinx configuration for the Cadrumo documentation set."""
+
+from __future__ import annotations
+
+import ast
+import os
+import warnings
+from functools import cache
+from importlib import import_module
+from importlib.util import resolve_name
+
+from cadrumo.core.toml import load_toml
+
+# Pin the CLI output language to English BEFORE any project module is imported.
+# CLI help strings are tr() values resolved at import time; the sphinx-click
+# build-time CLI reference renders them, so the language must be fixed for the
+# whole build process here, at the top of conf.py.
+os.environ["CADRUMO_OUTPUT_LANGUAGE"] = "en"
+
+import sys
+from pathlib import Path
+from typing import Annotated, get_origin, override
+from urllib.parse import urlsplit
+
+from docutils import nodes
+from docutils.parsers.rst import Directive
+from sphinx.deprecation import RemovedInSphinx90Warning
+
+# Make `cadrumo` importable for autodoc without installing the wheel.
+_PROJECT_ROOT = Path(os.environ.get("CADRUMO_DOCS_PROJECT_ROOT", Path(__file__).resolve().parents[1])).resolve()
+sys.path.insert(0, str(_PROJECT_ROOT / "src"))
+
+scan_directory = import_module("cadrumo.core.directory_scan").scan_directory
+OutputLanguage = import_module("cadrumo.core.external_constants").OutputLanguage
+PRODUCT_IDENTITY = import_module("cadrumo.core.product_identity").PRODUCT_IDENTITY
+API_SOURCE_ROOTS = import_module("dev.docs.apidocs.manager").API_SOURCE_ROOTS
+typehints_formatter = import_module("dev.docs.apidocs.rendering").TypeHintsFormatter()
+external_type_url = import_module("dev.docs.apidocs.rendering").external_type_url
+
+# Site chrome (header, broadcast strip, footer, accessible names, and the
+# strings the interaction layer writes into the DOM) is not page content, so
+# gettext never reaches it. It is resolved from the locale catalogues in the
+# language this root is being built for; a key with no authored value raises
+# here rather than rendering English inside a localized site.
+site_chrome = import_module("dev.docs.site_chrome").site_chrome
+site_labels = import_module("dev.docs.site_chrome").site_labels
+_DOCS_HTML_ROOT = import_module("dev.docs.build_paths").docs_html_root(_PROJECT_ROOT)
+_DOCS_SITE_PREFIX = import_module("dev.docs.build_paths").docs_site_prefix(os.environ)
+_DOCS_SITE_PREFIXES = import_module("dev.docs.build_paths").docs_site_prefixes
+_LANGUAGE_SWITCHER = import_module("dev.docs.language_switcher")
+_UNTRANSLATED_TYPESETTING = import_module("dev.docs.untranslated_typesetting")
+_PAGE_DESCRIPTIONS = import_module("dev.docs.page_descriptions")
+
+warnings.filterwarnings("ignore", category=RemovedInSphinx90Warning, module=r"hoverxref\.extension")
+
+
+def _project_metadata() -> dict[str, object]:
+    """Load project metadata from ``pyproject.toml`` for Sphinx display fields."""
+    pyproject = _PROJECT_ROOT / "pyproject.toml"
+    with pyproject.open("rb") as stream:
+        project_metadata = load_toml(stream).get("project")
+    if not isinstance(project_metadata, dict) or not all(isinstance(key, str) for key in project_metadata):
+        raise ValueError("pyproject.toml must declare a string-keyed [project] table")
+    return {key: value for key, value in project_metadata.items()}
+
+
+_PYPROJECT = _project_metadata()
+_PROJECT_URLS = _PYPROJECT.get("urls", {})
+if not isinstance(_PROJECT_URLS, dict):
+    raise ValueError("pyproject.toml [project.urls] must be a table")
+
+# ── Build flavor ─────────────────────────────────────────────────────────────
+# ``CADRUMO_DOCS_FLAVOR`` selects who the built pages are for:
+#   * ``web`` (default): the published site.
+#   * ``desktop``: the copy packaged into the desktop application, where every
+#     page runs inside the application window's documentation frame and nothing
+#     may load from the network. It drops the hoverxref extension, whose glossary
+#     tooltips fetch the Read the Docs embed API and whose always-include asset
+#     policy is what puts the MathJax CDN script on every page (no page renders
+#     math), and the Open Graph extension, whose tags only a link preview
+#     reads; it carries no web base URL, and loads the frame bridge before
+#     ``cadrumo-docs.js``.
+_DOCS_FLAVOR = os.environ.get("CADRUMO_DOCS_FLAVOR", "web")
+if _DOCS_FLAVOR not in {"web", "desktop"}:
+    raise ValueError(f"CADRUMO_DOCS_FLAVOR must be 'web' or 'desktop'; got {_DOCS_FLAVOR!r}")
+_DESKTOP_FLAVOR = _DOCS_FLAVOR == "desktop"
+_DOCS_BASE_URL = "" if _DESKTOP_FLAVOR else os.environ.get("CADRUMO_DOCS_BASE_URL", "").rstrip("/")
+# Cadrumo documentation type ramp: Newsreader for display headings,
+# Hanken Grotesk for text, JetBrains Mono for code. The display face matches
+# the product site so headings read as one brand across both surfaces.
+_DOCS_FONT_STACK = (
+    '"Hanken Grotesk", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif'
+)
+_DOCS_HEADING_FONT_STACK = '"Newsreader", ui-serif, Georgia, "Times New Roman", serif'
+_DOCS_MONO_FONT_STACK = '"JetBrains Mono", ui-monospace, "Cascadia Code", "SFMono-Regular", Consolas, monospace'
+_REPOSITORY_URL = str(_PROJECT_URLS.get("Repository", ""))
+_ISSUES_URL = str(_PROJECT_URLS.get("Issues", ""))
+_RELEASES_URL = f"{_REPOSITORY_URL}/releases" if _REPOSITORY_URL else ""
+
+# ── Project metadata ────────────────────────────────────────────────────────
+project = PRODUCT_IDENTITY.display_name
+_PROJECT_AUTHORS = _PYPROJECT.get("authors", [])
+if not isinstance(_PROJECT_AUTHORS, list) or not all(
+    isinstance(item, dict) and isinstance(item.get("name"), str) for item in _PROJECT_AUTHORS
+):
+    raise ValueError("pyproject.toml project authors must be named tables")
+author = ", ".join(item["name"] for item in _PROJECT_AUTHORS)
+# Human-facing footer credit; the packaging author handle stays in pyproject.
+copyright = f"2026, the {PRODUCT_IDENTITY.prose_name} authors"
+release = str(_PYPROJECT["version"])
+version = release
+
+# ── Build scope ──────────────────────────────────────────────────────────────
+# ``CADRUMO_DOCS_SCOPE`` selects how much of the set this invocation builds:
+#   * ``full`` (default, CI + deploy): the whole handbook including the API
+#     autodoc tree (``docs/api/*.rst`` — ``automodule`` stubs that import the
+#     entire application, generated at ``builder-inited`` and never committed)
+#     and the viewcode ``_modules`` source tree.
+#   * ``user``: ONLY the operator-facing surface (index / how-to / explanation /
+#     reference / architecture / cli / glossary / the executed cli-sequences).
+#     The API autodoc tree and the ``_modules`` tree are excluded and the
+#     autodoc / viewcode / typehints extensions are never loaded, so the
+#     application is never imported for *rendering* — cutting the ~60 user pages
+#     free of the ~1,150 app-importing API pages so user-docs iteration builds in
+#     minutes instead of an hour.
+_DOCS_SCOPE = os.environ.get("CADRUMO_DOCS_SCOPE", "full")
+if _DOCS_SCOPE not in {"full", "user"}:
+    raise ValueError(f"CADRUMO_DOCS_SCOPE must be 'full' or 'user'; got {_DOCS_SCOPE!r}")
+_USER_SCOPE = _DOCS_SCOPE == "user"
+_I18N_MODE = os.environ.get("CADRUMO_DOCS_I18N_MODE") == "1"
+
+
+def _skip_generated_output_for_i18n(generator: str) -> bool:
+    """Report and skip one generated output outside authored gettext scope."""
+    if not _I18N_MODE:
+        return False
+    import logging
+
+    logging.getLogger(__name__).info(
+        "DOCS_I18N_GENERATOR generator=%s status=skipped reason=excluded_from_authored_gettext_scope",
+        generator,
+    )
+    return True
+
+
+# ── Extensions ──────────────────────────────────────────────────────────────
+extensions = [
+    "sphinx.ext.autodoc",
+    "dev.docs.apidocs.attribute_types",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.intersphinx",
+    "sphinx_autodoc_typehints",
+    "sphinx_copybutton",
+    "sphinx_design",
+    "sphinxext.opengraph",
+    "notfound.extension",
+    "sphinxcontrib.mermaid",
+    "hoverxref.extension",
+    "myst_parser",
+]
+if _USER_SCOPE:
+    # Drop ONLY the app-importing autodoc machinery; every narrative/rendering
+    # extension (myst, design, mermaid, copybutton, hoverxref, opengraph,
+    # notfound, intersphinx, napoleon) stays so the user surface renders
+    # identically. napoleon is left loaded but inert (its docstring transform
+    # never fires without autodoc).
+    _AUTODOC_ONLY_EXTENSIONS = {
+        "dev.docs.apidocs.attribute_types",
+        "sphinx.ext.autodoc",
+        "sphinx.ext.viewcode",
+        "sphinx_autodoc_typehints",
+    }
+    extensions = [name for name in extensions if name not in _AUTODOC_ONLY_EXTENSIONS]
+if _DESKTOP_FLAVOR:
+    # The tooltips load from ``/_/api/v3/embed/``, an endpoint only Read the
+    # Docs serves; ``:term:`` references stay ordinary links to the glossary.
+    # Open Graph tags describe a page to a site that previews its link; a
+    # packaged page has no public address to share.
+    extensions = [name for name in extensions if name not in {"hoverxref.extension", "sphinxext.opengraph"}]
+else:
+    # Hover tooltip cards on :term: cross-references to the generated glossary.
+    # One term per glossary entry (the shared-entry rendering bug); aliases ride
+    # as additional term lines on the same entry, so every declared surface
+    # resolves.
+    hoverxref_roles = ["term"]
+    hoverxref_role_types = {"term": "tooltip"}
+
+# Source file types — both reStructuredText (autodoc stubs, index) and MyST
+# Markdown (narrative pages, generated API surface) are first-class.
+source_suffix = {
+    ".rst": "restructuredtext",
+    ".md": "markdown",
+}
+
+master_doc = os.environ.get("CADRUMO_DOCS_MASTER_DOC", "index")
+# The build language is read from CADRUMO_DOCS_LANGUAGE and validated against the
+# OutputLanguage closed set (es/en/ca/hu) - the single language authority shared
+# with the runtime CLI catalogues, never a second hand-listed set. English is the
+# msgid source (the default) and carries no catalogue; es/ca/hu substitute
+# translated paragraphs from docs/locales/<lang>/LC_MESSAGES. The CLI OUTPUT
+# language stays pinned to English at the top of this module (executed sequences
+# render live CLI output as evidence, not translatable prose). gettext_compact is
+# disabled so each source page owns one catalogue, which the all-languages
+# completeness gate reads per page. Documentation translation must not reuse the
+# runtime CLI translation catalogues.
+_VALID_DOCS_LANGUAGES = {member.value for member in OutputLanguage}
+language = os.environ.get("CADRUMO_DOCS_LANGUAGE", "en")
+if language not in _VALID_DOCS_LANGUAGES:
+    raise ValueError(
+        f"CADRUMO_DOCS_LANGUAGE must be one of {sorted(_VALID_DOCS_LANGUAGES)}; got {language!r}",
+    )
+locale_dirs = ["locales"]
+gettext_compact = False
+_BUILD_LANGUAGE = OutputLanguage(language)
+
+# ── One compile carrying every language ──────────────────────────────────────
+# ``CADRUMO_DOCS_MULTILINGUAL`` makes this the ONE compile the documentation
+# gets: wherever a string depends on the language the pages carry a mark and
+# every language's string for it is recorded beside them, and the driver that
+# ran this build factors the output into the structure and each language's text
+# (:mod:`dev.docs.compile_slots`, :func:`dev.docs.compile_once.compile_once`).
+# Recording starts here, above the first resolver that resolves a string, and
+# the record is written into the output when the build finishes, because the
+# resolvers run inside this child process and the driver does not.
+_COMPILE_SLOTS = import_module("dev.docs.compile_slots")
+_MESSAGE_MARKS = import_module("dev.docs.message_marks")
+_MESSAGE_MARKS_TRANSFORM = _MESSAGE_MARKS.DeclareBlockLanguage
+_MESSAGE_MARKS_TITLE_TRANSFORM = _MESSAGE_MARKS.NoteToctreeTitleMarks
+_MESSAGE_MARKS_HEADING_TRANSFORM = _MESSAGE_MARKS.NoteDroppedHeadingTranslations
+_MESSAGE_MARKS_POST_TRANSFORM = _MESSAGE_MARKS.ResolveOwnPageAnchors
+_MULTILINGUAL = os.environ.get("CADRUMO_DOCS_MULTILINGUAL") == "1"
+if _MULTILINGUAL:
+    _COMPILE_SLOTS.activate([member.value for member in OutputLanguage])
+    # The authored pages are translated through gettext, so the one compile
+    # needs a catalogue of its own: it is generated into the source tree being
+    # read, and its translation of every message is that message's mark
+    # (:mod:`dev.docs.message_marks`). It is kept out of ``locales``, where the
+    # authored catalogues live, and searched first so it is the primary one.
+    locale_dirs = [_MESSAGE_MARKS.PSEUDO_LOCALE_DIR, *locale_dirs]
+
+_SITE_LABELS = site_labels(_BUILD_LANGUAGE)
+
+exclude_patterns = [
+    "_build",
+    "Thumbs.db",
+    ".DS_Store",
+    "**/test_*.py",
+    "**/_test_*.py",
+    "USERDOCS-KICKOFF-BRIEF.md",
+]
+# The pages only the English full-scope root publishes: the generated API
+# reference, the viewcode ``_modules`` source pages and the technical collection.
+# They document the code for the people who work on it, in English, and are not
+# part of what a taxpayer reads, of what is translated, or of what is packaged.
+# No other language's root has them, so this one list decides both what the user
+# scope leaves out and where the language switcher sends a reader from one.
+_ENGLISH_ONLY_SOURCES = ("api/**", "_modules/**", "technical/**")
+if _USER_SCOPE:
+    # Excluded from the read set entirely, so no app module is imported to
+    # render them.
+    exclude_patterns += list(_ENGLISH_ONLY_SOURCES)
+
+_DOCS_ROOT = Path(__file__).resolve().parent
+
+# The committed generator-owned pages, which nobody translates and which are
+# therefore typeset in the language they are authored in rather than four ways
+# (:mod:`dev.docs.untranslated_typesetting`). Read here, before this build's own
+# generators write their pages into the source tree: those carry each language's
+# own strings and are translated prose.
+cadrumo_source_language_pages = _UNTRANSLATED_TYPESETTING.source_language_pages(_DOCS_ROOT)
+
+_ONLY_SOURCES = {
+    Path(item).as_posix() for item in os.environ.get("CADRUMO_DOCS_ONLY", "").split(os.pathsep) if item.strip()
+}
+if _ONLY_SOURCES:
+    _discovered_sources = {
+        _source.relative_to(_DOCS_ROOT).as_posix()
+        for _source in _DOCS_ROOT.rglob("*")
+        if _source.suffix in {".md", ".rst"}
+    }
+    if not _USER_SCOPE:
+        # The API stubs are written at builder-inited, after this list is taken,
+        # so the ones the build will generate are named by the generator rather
+        # than found on disk; otherwise every stub would join the read set.
+        from dev.docs.apidocs.manager import ApiStubManager, stub_filename
+
+        _discovered_sources |= {
+            f"api/{stub_filename(_name)}"
+            for _name, _ in ApiStubManager.for_repository(
+                _PROJECT_ROOT,
+                docs_api=_DOCS_ROOT / "api",
+            ).discover_modules()
+        }
+    exclude_patterns += sorted(_discovered_sources - _ONLY_SOURCES)
+
+# The docs-check gate builds nitpicky (-n) with warnings-as-errors (-W), so
+# unresolved cross-references must be fixed or added to nitpick_ignore_regex
+# below. Two categories are suppressed at the source because they are not
+# fixable broken references:
+#   * ``ref.python`` — the "more than one target found for cross-reference"
+#     ambiguity raised when a builtin type name (``bytes``, ``date``) collides
+#     with project fields of the same name. The genuine "target not found"
+#     nitpicks use distinct subtypes (``ref.class``/``ref.data``/...), so this
+#     does not mask any real missing reference.
+#   * the sphinx_autodoc_typehints extension's pydantic forward-reference and
+#     guarded-import notices (Field's JsonValue, the optional email_validator).
+suppress_warnings = [
+    "ref.python",
+    "sphinx_autodoc_typehints.forward_reference",
+    "sphinx_autodoc_typehints.guarded_import",
+]
+if bool(os.environ.get("CADRUMO_DOCS_SINGLE_PAGE")):
+    suppress_warnings.append("toc.excluded")
+    suppress_warnings.append("toc.not_included")
+if _USER_SCOPE:
+    # The root toctree carries one ``API <api/index>`` entry (docs/index.md);
+    # under user scope that target is excluded, so the toctree reference to it is
+    # a benign ``toc.excluded`` — the entry simply drops from the nav. This is the
+    # only excluded toctree target in the user set, so the suppression is scoped
+    # to exactly the pruned API entry, and the ``-n -W`` gate stays on for every
+    # other reference class.
+    suppress_warnings.append("toc.excluded")
+
+# ── Autodoc / Napoleon ──────────────────────────────────────────────────────
+napoleon_google_docstring = True
+napoleon_numpy_docstring = False
+napoleon_include_init_with_doc = False
+napoleon_include_private_with_doc = False
+napoleon_use_admonition_for_examples = False
+napoleon_use_admonition_for_notes = False
+napoleon_use_admonition_for_references = False
+# Emit Attributes: sections as ``:ivar:`` (instance variable entries) rather
+# than ``:py:attribute:`` entries.  This prevents autodoc member enumeration
+# from colliding with Napoleon's Attributes-section output for pydantic and
+# StrEnum classes, which would otherwise produce duplicate-object-description
+# warnings when the two mechanisms register the same qualified name twice.
+napoleon_use_ivar = True
+napoleon_use_param = True
+napoleon_use_rtype = True
+napoleon_attr_annotations = True
+
+autodoc_default_options = {
+    "members": True,
+    # Keep undocumented members out of the rendered surface. Enabling them
+    # roughly triples the documented object count (every constant, alias, and
+    # helper), which makes the nitpicky gate build minutes-to-tens-of-minutes
+    # slower without improving the public API reference. Undocumented module
+    # constants and type aliases that are referenced by other docstrings are
+    # instead covered by nitpick_ignore_regex below.
+    "undoc-members": False,
+    "show-inheritance": True,
+    "member-order": "bysource",
+    # Hide concretised module-level values (e.g. PROJECT_ROOT resolves to
+    # the build host's absolute path, which is environment-specific noise).
+    # The accompanying docstring carries the relevant meaning.
+    "no-value": True,
+    # Suppress dunder/private noise so pydantic-settings BaseSettings
+    # subclasses do not leak their full underscore-prefixed constructor
+    # signature into the rendered Settings page.
+    "exclude-members": (
+        "__init__,__pydantic_serializer__,__pydantic_validator__,"
+        "model_config,model_fields,model_computed_fields,"
+        "Config,model_post_init,settings_customise_sources,model_validate,"
+        "model_validate_json,model_validate_strings,model_dump,model_dump_json,"
+        "model_copy,model_construct,model_extra,model_fields_set,"
+        "model_json_schema,model_parametrized_name,model_rebuild,"
+        "_abc_impl,_check_frozen,_iter,_calculate_keys,_get_value,"
+        "_copy_and_set_values"
+    ),
+}
+
+# Use the class docstring only (avoid duplicating __init__ docstring after the
+# class summary, which causes the visible "duplicate enum member emission").
+autoclass_content = "class"
+
+autodoc_typehints = "description"
+autodoc_typehints_format = "short"
+
+# Be tolerant of the wider AEAT dep tree at autodoc-import time. These are
+# either heavy native deps that pull a lot of platform-specific shared
+# libraries, or optional vault tooling that isn't installed in every env.
+# Listing them here lets autodoc render module pages even when the underlying
+# import would raise.
+autodoc_mock_imports = [
+    "tree_sitter",
+    "tree_sitter_language_pack",
+    "qdrant_client",
+    "playwright",
+    "playwright_stealth",
+    "pikepdf",
+    "pdfplumber",
+    "pikepdf._core",
+    "ofxtools",
+    "openpyxl",
+    "argon2",
+    "argon2.low_level",
+    "keyring",
+    "anthropic",
+]
+
+add_module_names = False
+# Keep cross-reference resolution exact (the default). Enabling unqualified type
+# names makes every annotation xref "refspecific" (a fuzzy suffix search), which
+# resolves a builtin like ``bytes`` against project fields that happen to be
+# named ``bytes`` and raises spurious "more than one target" ambiguities; the
+# autodoc_typehints_format="short" setting already shortens the displayed type.
+python_use_unqualified_type_names = False
+
+# ── Intersphinx ─────────────────────────────────────────────────────────────
+# Inventories vendored under docs/_inventories/ are read from disk, so the
+# nitpicky gate resolves stdlib/builtin and SQLAlchemy targets exactly (an exact
+# ``bytes`` builtin target short-circuits the fuzzy resolver that would otherwise
+# flag every project field named ``bytes`` as an ambiguous cross-reference)
+# without any network fetch. Inventories with no vendored copy (pydantic, httpx,
+# typer) resolve online when available and are covered by nitpick_ignore_regex
+# when the gate runs offline.
+_INVENTORIES = Path(__file__).resolve().parent / "_inventories"
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3", str(_INVENTORIES / "python.inv")),
+    "sqlalchemy": ("https://docs.sqlalchemy.org/en/20/", str(_INVENTORIES / "sqlalchemy.inv")),
+    # textual is vendored rather than left to nitpick_ignore because the TUI
+    # screens subclass it, so autodoc documents the inherited members and every
+    # base class is a real cross-reference a reader will follow. Suppressing
+    # them would silence the warning while leaving the link dead.
+    "textual": ("https://textual.textualize.io/", str(_INVENTORIES / "textual.inv")),
+    "pydantic": ("https://docs.pydantic.dev/latest", None),
+    "typer": ("https://typer.tiangolo.com/", None),
+}
+_SELF_INVENTORY = _DOCS_HTML_ROOT / "objects.inv"
+if bool(os.environ.get("CADRUMO_DOCS_SELF_INVENTORY")) and _SELF_INVENTORY.is_file():
+    intersphinx_mapping["cadrumo-local"] = ((_SELF_INVENTORY.parent).as_uri() + "/", str(_SELF_INVENTORY))
+intersphinx_disabled_reftypes = ["std:doc"]
+
+# Offline-hermetic gate: the docs-check build sets CADRUMO_DOCS_OFFLINE to keep only
+# the vendored local inventories (read from disk) and drop the network-only
+# mappings, so the build resolves stdlib/SQLAlchemy targets deterministically
+# without any network access. The dropped third-party namespaces are covered by
+# nitpick_ignore_regex below.
+if bool(os.environ.get("CADRUMO_DOCS_OFFLINE")):
+    intersphinx_mapping = {
+        name: (uri, inv)
+        for name, (uri, inv) in intersphinx_mapping.items()
+        if (inv is not None and inv) and Path(inv).is_file()
+    }
+
+# ── HTML theme ──────────────────────────────────────────────────────────────
+html_theme = "furo"
+html_title = _SITE_LABELS["meta_title"]
+html_short_title = _SITE_LABELS["meta_short_title"]
+if _MULTILINGUAL and _DOCS_BASE_URL:
+    # A single-language build is given the address of its OWN root, because
+    # that is the only root it writes. One compile writes every root, so it is
+    # given the address ABOVE the language directories and completes it here
+    # with the language's own code -- as a mark, which is what makes the
+    # canonical link, ``og:url``, ``og:image`` and the absolute links of the
+    # error page each language's own instead of the compile's
+    # (:func:`dev.docs.compile_once.compile_language_roots`). The strings are
+    # recorded verbatim: a language tag carries no character any writer between
+    # here and the page would escape, and one of those writers is an inline
+    # script's own text.
+    _LANGUAGE_SEGMENT = _COMPILE_SLOTS.language_text(
+        lambda carried: carried,
+        language,
+        rendering=_COMPILE_SLOTS.Rendering.VERBATIM,
+    )
+    _DOCS_BASE_URL = f"{_DOCS_BASE_URL}/{_LANGUAGE_SEGMENT}"
+html_baseurl = f"{_DOCS_BASE_URL}/" if _DOCS_BASE_URL else ""
+# The error page is served at whatever path missed, so its links are absolute.
+# They are rooted at this site root's own path; the extension's default is a
+# Read the Docs layout ("/en/latest/") no Cadrumo root lives under.
+notfound_urls_prefix = urlsplit(html_baseurl).path or "/"
+html_meta = {"description": _SITE_LABELS["meta_description"]}
+html_favicon = "_static/cadrumo-favicon.svg"
+html_static_path = ["_static"]
+templates_path = ["_templates"]
+# Search is Pagefind, so Sphinx builds no index of its own (see
+# ``_skip_stock_search_index``) and the search page is rendered as an ordinary
+# additional page from the same template.
+html_additional_pages = {"search": "search.html"}
+# The theme's view and edit buttons link to the repository (``source_repository``
+# below), so no page links the ``_sources`` copy Sphinx would write of every
+# source file into every site root.
+html_copy_source = False
+html_css_files = [
+    "cadrumo-docs.css",
+    # The generated reference surfaces carry their own stylesheets so the
+    # taxpayer-facing presentation of a casilla, a provision and a glossary
+    # term can evolve without editing the site-wide sheet.
+    "cadrumo-casilla-reference.css",
+    "cadrumo-legal-reference.css",
+]
+# The desktop bridge goes first, so its capture-phase key listener exists
+# before ``cadrumo-docs.js`` registers its own.
+html_js_files = ["cadrumo-desktop-bridge.js", "cadrumo-docs.js"] if _DESKTOP_FLAVOR else ["cadrumo-docs.js"]
+# The left sidebar carries the command-palette trigger and the navigation tree;
+# brand and the stock search box move into the sticky site header / palette.
+html_sidebars = {
+    "**": [
+        "sidebar/cadrumo-search.html",
+        "sidebar/scroll-start.html",
+        "sidebar/navigation.html",
+        "sidebar/scroll-end.html",
+    ],
+}
+# The legal reference is one page per official document. Its index lists them
+# all, so a provision page's sidebar names the section and the document being
+# read rather than repeating every other document on every one of them.
+cadrumo_navigation_listed_on_index = [f"{import_module('dev.docs.legal_reference_routing').LEGAL_REFERENCE_DIR}/index"]
+html_theme_options = {
+    "light_logo": "cadrumo-mark-light.svg",
+    "dark_logo": "cadrumo-mark-dark.svg",
+    "sidebar_hide_name": True,
+    "announcement": "cadrumo-site-broadcast",
+    "light_css_variables": {
+        # Cadrumo documentation theme tokens: warm paper neutrals — page
+        # #faf8f4, surface #f1eee7, border #e4ded4, ink #1c1a17 — with the
+        # rust accent mapped onto Furo's semantic variables.
+        #
+        # THE ACCENT HAS TWO ROLES AND THIS PALETTE NOW HONOURS BOTH.
+        # #c4553b is the canonical brand accent and it measures 4.20:1
+        # against the page ground, 3.85:1 against the secondary surface and
+        # 4.46:1 against a card. Every one of those is under the 4.5 that
+        # body-size text needs, and these variables colour LINKS — the most
+        # common piece of coloured text in a documentation site. So every
+        # link on every page failed WCAG 1.4.3, on all three grounds.
+        #
+        # The product site hit this exact wall and resolved it by splitting
+        # the accent rather than moving it: the brand value stays canonical
+        # for fills, rules and display italics, and a darker sibling carries
+        # the accent wherever it is INK AT READING SIZE. #9e4029 is that
+        # sibling, and it measures 6.15 / 5.63 / 6.52 on the three grounds.
+        # These variables are the ink role, so they take the ink value; the
+        # brand value survives as --cadrumo-accent in cadrumo-docs.css for
+        # the decorative uses.
+        "color-brand-primary": "#1c1a17",
+        "color-brand-content": "#9e4029",
+        "color-brand-visited": "#9e4029",
+        "color-foreground-primary": "#1c1a17",
+        "color-foreground-secondary": "#5f594f",
+        "color-foreground-muted": "#6b655c",
+        "color-foreground-border": "#d5cec1",
+        "color-background-primary": "#faf8f4",
+        "color-background-secondary": "#f1eee7",
+        "color-background-hover": "#ece8df",
+        "color-background-hover--transparent": "#ece8df00",
+        "color-background-border": "#e4ded4",
+        "color-card-border": "#e4ded4",
+        "color-card-background": "#ffffff",
+        "color-card-marginals-background": "#f1eee7",
+        "color-link": "#9e4029",
+        "color-link--hover": "#7f3320",
+        "color-link--visited": "#9e4029",
+        "color-link--visited--hover": "#7f3320",
+        "color-link-underline": "transparent",
+        "color-link-underline--hover": "#c4553b",
+        "color-link-underline--visited": "transparent",
+        "color-link-underline--visited--hover": "#c4553b",
+        "color-inline-code-background": "#f1eee7",
+        "color-admonition-background": "#f1eee7",
+        "color-admonition-title": "#1c1a17",
+        "color-admonition-title-background": "transparent",
+        "color-admonition-title-background--important": "transparent",
+        "color-admonition-title--important": "#1c1a17",
+        "color-admonition-title-background--warning": "transparent",
+        "color-admonition-title--warning": "#1c1a17",
+        "color-sidebar-background": "transparent",
+        "color-sidebar-background-border": "transparent",
+        "color-sidebar-link-text": "#5f594f",
+        "color-sidebar-link-text--top-level": "#4d483f",
+        "color-sidebar-item-background--current": "#ece8df",
+        "color-sidebar-item-background--hover": "#ece8df",
+        "color-toc-background": "transparent",
+        "color-toc-item-text": "#5f594f",
+        "color-toc-item-text--hover": "#1c1a17",
+        "color-toc-item-text--active": "#9e4029",
+        "color-toc-title-text": "#6b655c",
+        "font-stack": _DOCS_FONT_STACK,
+        "font-stack--headings": _DOCS_HEADING_FONT_STACK,
+        "font-stack--monospace": _DOCS_MONO_FONT_STACK,
+    },
+    "dark_css_variables": {
+        # Dark companion to the brand palette: the same warm hue family
+        # inverted onto the ink #1c1a17, with the rust accent lifted for
+        # contrast on dark surfaces.
+        "color-brand-primary": "#f1eee7",
+        "color-brand-content": "#e0785c",
+        "color-brand-visited": "#e0785c",
+        "color-foreground-primary": "#f1eee7",
+        "color-foreground-secondary": "#b3ab9d",
+        "color-foreground-muted": "#8f887b",
+        "color-foreground-border": "#4a453c",
+        "color-background-primary": "#1c1a17",
+        "color-background-secondary": "#24211c",
+        "color-background-hover": "#2c2822",
+        "color-background-hover--transparent": "#2c282200",
+        "color-background-border": "#38342c",
+        "color-card-border": "#38342c",
+        "color-card-background": "#24211c",
+        "color-card-marginals-background": "#24211c",
+        "color-link": "#e0785c",
+        "color-link--hover": "#ec8a68",
+        "color-link--visited": "#e0785c",
+        "color-link--visited--hover": "#ec8a68",
+        "color-link-underline": "transparent",
+        "color-link-underline--hover": "#dd7a5f",
+        "color-link-underline--visited": "transparent",
+        "color-link-underline--visited--hover": "#dd7a5f",
+        "color-inline-code-background": "#26231d",
+        "color-admonition-background": "#24211c",
+        "color-admonition-title": "#f1eee7",
+        "color-admonition-title-background": "transparent",
+        "color-admonition-title-background--important": "transparent",
+        "color-admonition-title--important": "#f1eee7",
+        "color-admonition-title-background--warning": "transparent",
+        "color-admonition-title--warning": "#f1eee7",
+        "color-sidebar-background": "transparent",
+        "color-sidebar-background-border": "transparent",
+        "color-sidebar-link-text": "#b3ab9d",
+        "color-sidebar-link-text--top-level": "#d5cec1",
+        "color-sidebar-item-background--current": "#2c2822",
+        "color-sidebar-item-background--hover": "#2c2822",
+        "color-toc-background": "transparent",
+        "color-toc-item-text": "#b3ab9d",
+        "color-toc-item-text--hover": "#f1eee7",
+        "color-toc-item-text--active": "#dd7a5f",
+        "color-toc-title-text": "#8f887b",
+    },
+    "source_repository": _REPOSITORY_URL,
+    "source_branch": "main",
+    "source_directory": "docs/",
+    "top_of_page_buttons": ["view", "edit"],
+}
+
+html_context = {
+    "cadrumo_repository_url": _REPOSITORY_URL,
+    "cadrumo_nav": [
+        {"label": _SITE_LABELS["nav_getting_started"], "doc": "how-to/index"},
+        {"label": _SITE_LABELS["nav_cli_reference"], "doc": "cli/index"},
+        {"label": _SITE_LABELS["nav_how_it_works"], "doc": "explanation/index"},
+        {"label": _SITE_LABELS["nav_api"], "doc": "api/index"},
+    ],
+    "cadrumo_broadcasts": [
+        {
+            "label": _SITE_LABELS["broadcast_label"],
+            "message": _SITE_LABELS["broadcast_message"],
+            "links": [
+                {"label": _SITE_LABELS["link_updates"], "doc": "updates"},
+                # The download page lists the live install channels. The GitHub
+                # releases/latest page carries no assets, so it is not where a
+                # reader looking for the software should be sent.
+                {"label": _SITE_LABELS["link_get_cadrumo"], "doc": "download"},
+                {"label": _SITE_LABELS["link_report_issue"], "url": _ISSUES_URL},
+            ],
+        }
+    ],
+    "cadrumo_footer_groups": [
+        {
+            "title": _SITE_LABELS["footer_stay_current"],
+            "links": [
+                {"label": _SITE_LABELS["link_critical_updates"], "doc": "updates", "fragment": "critical-updates"},
+                {"label": _SITE_LABELS["link_get_cadrumo"], "doc": "download"},
+                {"label": _SITE_LABELS["link_release_notes"], "url": _RELEASES_URL},
+            ],
+        },
+        {
+            "title": _SITE_LABELS["footer_get_help"],
+            "links": [
+                {"label": _SITE_LABELS["link_report_issue"], "url": _ISSUES_URL},
+                {"label": _SITE_LABELS["nav_cli_reference"], "doc": "cli/index"},
+                {"label": _SITE_LABELS["nav_how_it_works"], "doc": "explanation/index"},
+            ],
+        },
+        {
+            "title": _SITE_LABELS["footer_trust_and_responsibility"],
+            "links": [
+                {"label": _SITE_LABELS["link_disclaimer"], "doc": "disclaimer"},
+                {
+                    "label": _SITE_LABELS["link_events_and_deadlines"],
+                    "doc": "updates",
+                    "fragment": "events-and-deadlines",
+                },
+                {"label": _SITE_LABELS["link_repository"], "url": _REPOSITORY_URL},
+            ],
+        },
+    ],
+    "cadrumo_footer_note": _SITE_LABELS["footer_note"],
+    # The packaged copy serves neither .ico nor .webmanifest, and a desktop
+    # frame shows no tab or home-screen icon, so only the web site links them.
+    "cadrumo_web_icons": not _DESKTOP_FLAVOR,
+}
+if _USER_SCOPE:
+    # The header nav carries an "API" entry pointing at the excluded api/index
+    # overview; drop it so the user-scope preview nav has no dead API link.
+    html_context["cadrumo_nav"] = [entry for entry in html_context["cadrumo_nav"] if entry.get("doc") != "api/index"]
+
+# ── Language switcher ────────────────────────────────────────────────────────
+# The header language switcher (docs/_templates) links the current page to its
+# counterpart under each language root. The set derives from OutputLanguage
+# (English first as the authoring source, then the translation targets in enum
+# order) - never a second hand-listed set - and each entry carries its endonym,
+# the language's own name, which is the same in every build. Where each of those
+# roots is served is the layout's own fact, which the switcher reads from the
+# prefixes below rather than from the language.
+_DOCS_LANGUAGE_ENDONYMS = {
+    OutputLanguage.EN: "English",
+    OutputLanguage.ES: "Español",
+    OutputLanguage.CA: "Català",
+    OutputLanguage.HU: "Magyar",
+}
+_DOCS_LANGUAGE_ORDER = (OutputLanguage.EN, *(member for member in OutputLanguage if member is not OutputLanguage.EN))
+html_context["cadrumo_docs_languages"] = [
+    {"code": member.value, "label": _DOCS_LANGUAGE_ENDONYMS[member]} for member in _DOCS_LANGUAGE_ORDER
+]
+
+
+def _per_language_template_value(value_of):
+    """Return each carried language's own value as one mark, or this build's value alone.
+
+    The theme's templates write these, so under the one compile they are
+    recorded as the templates' own: Sphinx renders them without autoescaping,
+    and nothing a template writes meets the smart-quotes transform.
+
+    Args:
+        value_of: Returns the value for one language tag.
+
+    Returns:
+        The mark reading every carried language's value, or the build
+        language's value outside the one compile.
+    """
+    slots = _COMPILE_SLOTS.active()
+    if slots is None:
+        return value_of(language)
+    return slots.mark(_COMPILE_SLOTS.Rendering.TEMPLATE, [value_of(carried) for carried in slots.languages])
+
+
+# The ``lang`` attribute of every page, which the theme takes from the template
+# context when it is set there and from the build's one Sphinx language when it
+# is not.
+html_context["language"] = _per_language_template_value(lambda carried: carried)
+# This root's own path inside the served site, which the search controller needs
+# because the site carries ONE index, at the apex above every language root. The
+# prefix is how a page walks back from its own root to that apex, and how a
+# record shared by every language is opened inside the root being read.
+_SITE_PREFIXES = _DOCS_SITE_PREFIXES(
+    [member.value for member in OutputLanguage],
+    build_language=language,
+    source_language=OutputLanguage.EN.value,
+    environ=os.environ,
+)
+html_context["cadrumo_docs_site_prefix"] = _per_language_template_value(lambda carried: _SITE_PREFIXES[carried])
+# The whole layout, which the language switcher needs because it writes a link
+# from this page to every other root: where each one is served is a property of
+# the layout and not of the language, and it is the same mapping in every root,
+# so it is carried as itself rather than as one value per language.
+html_context["cadrumo_docs_site_prefixes"] = _SITE_PREFIXES
+# The Python module index is written only where modules are documented, which
+# is the English full-scope root, so it joins the pages no other root has.
+html_context["cadrumo_docs_english_only_pages"] = (*_ENGLISH_ONLY_SOURCES, "py-modindex")
+
+# ── Site chrome ──────────────────────────────────────────────────────────────
+# Every template-rendered label, accessible name, and interaction-layer string,
+# flat and resolved for this root's language. The templates read it by name and
+# the build publishes it once per root as the script docs/_static/cadrumo-docs.js
+# reads, so the server-rendered and browser-written chrome share one authority.
+# The endonym is the name of the language the ROOT is in, so under the one
+# compile it depends on the language exactly as the chrome around it does: a
+# value resolved for one language would read "Language: English" inside every
+# other root.
+html_context["cadrumo_chrome"] = site_chrome(
+    _BUILD_LANGUAGE,
+    language_endonym=_per_language_template_value(lambda carried: _DOCS_LANGUAGE_ENDONYMS[OutputLanguage(carried)]),
+)
+
+# ── Publishing metadata ─────────────────────────────────────────────────────
+#: The most characters a page's description reads as. Cadrumo's own, because
+#: the description is derived here rather than by the Open Graph extension
+#: (:mod:`dev.docs.page_descriptions`); the extension is told the same number
+#: so nothing it computes is shaped by a second one.
+_DESCRIPTION_LENGTH = 180
+ogp_site_name = _SITE_LABELS["meta_short_title"]
+ogp_site_url = html_baseurl
+ogp_description_length = _DESCRIPTION_LENGTH
+ogp_type = "website"
+ogp_image = "_static/cadrumo-icon-square-512.png"
+
+# ── Syntax highlighting ─────────────────────────────────────────────────────
+# Bare code fences are overwhelmingly operator command transcripts; lexing them
+# as ``console`` colours the ``$``/``PS>`` prompts and keeps plain output calm.
+# Explicit ```bash fences keep their bash lexer.
+highlight_language = "console"
+pygments_style = "friendly"
+pygments_dark_style = "github-dark"
+
+# ── Mermaid diagrams ────────────────────────────────────────────────────────
+# ```mermaid fences render as client-side mermaid.js diagrams. The extension
+# observes the Furo light/dark state and re-renders on toggle; the grayscale
+# "neutral" theme matches the documentation's neutral palette in light mode.
+# The renderer is vendored locally so the site is offline-first and pins one
+# auditable version. ``mermaid.min.mjs`` is the self-contained 11.12.1 UMD
+# build (every diagram type inlined, no lazy chunk imports) with its trailing
+# classic-script global assignment swapped for an ESM ``export default`` so the
+# extension's ``import mermaid from`` resolves it. The file keeps a ``.js``
+# extension (not ``.mjs``) so every static host — and the local dev server —
+# serves it with a JavaScript MIME type; browsers enforce strict MIME on module
+# scripts and reject the ``text/plain`` that ``.mjs`` gets by default. The
+# extension also emits a d3 dependency in raw mode (only exercised by
+# zoom/fullscreen, both off here); it is vendored too so no page reaches the
+# CDN. Sphinx resolves the bare filenames per-page relative to ``_static``.
+mermaid_version = "11.12.1"
+mermaid_use_local = "mermaid.min.js"
+d3_version = "7.9.0"
+d3_use_local = "d3.min.js"
+mermaid_light_theme = "neutral"
+mermaid_dark_theme = "dark"
+# The extension serialises this dict into a JS template literal via
+# JSON.parse, so values must stay free of double quotes — CSS accepts the
+# unquoted multi-word family names.
+mermaid_init_config = {
+    "startOnLoad": False,
+    "fontFamily": "Hanken Grotesk, Segoe UI, system-ui, sans-serif",
+}
+
+# ── Copy buttons ────────────────────────────────────────────────────────────
+copybutton_prompt_text = r">>> |\.\.\. |\$ |PS> "
+copybutton_prompt_is_regexp = True
+copybutton_only_copy_prompt_lines = False
+copybutton_remove_prompts = True
+
+# ── MyST ────────────────────────────────────────────────────────────────────
+myst_enable_extensions = [
+    "colon_fence",
+    "deflist",
+    "fieldlist",
+    "tasklist",
+]
+myst_heading_anchors = 3
+# Route ```mermaid fences to the mermaid directive instead of a literal block.
+myst_fence_as_directive = ["mermaid"]
+
+# ── Nitpicky cross-reference baseline ─────────────────────────────────────────
+# docs-check builds with -n -W. The autodoc_mock_imports above replace heavy
+# native deps with mocks whose types cannot resolve as cross-reference targets;
+# those are ignored here so the gate flags only real, fixable broken refs. This
+# baseline is curated alongside autodoc_mock_imports - adding a mock import
+# without its ignore entry is incomplete.
+nitpick_ignore_regex = [
+    # Heavy native deps are replaced by autodoc mocks, and ReportLab ships no
+    # inventory; their types have no cross-reference target.
+    (
+        r"py:.*",
+        r"^(tree_sitter|tree_sitter_language_pack|qdrant_client|playwright|"
+        r"playwright_stealth|pikepdf|pdfplumber|ofxtools|openpyxl|reportlab|"
+        r"argon2|keyring|anthropic)(\..*)?$",
+    ),
+    # pydantic constrained-type aliases render as a whole
+    # ``typing.Annotated[str, StringConstraints(...)]`` expression target across
+    # py:class and py:obj references; any target containing a non-identifier
+    # character (brackets, parentheses, ``=``, regex fragments) is not a real
+    # Python object reference.
+    (r"py:.*", r".*[^A-Za-z0-9_.].*"),
+    # pydantic / typing internals and constrained-type alias names that carry
+    # no autodoc cross-reference target.
+    (
+        r"py:.*",
+        r"^(FieldInfo|MinLen|MaxLen|NoneType|EllipsisType|Annotated|"
+        r"Strict[A-Za-z]*|[A-Za-z]*Constraints|_PydanticGeneralMetadata)$",
+    ),
+    # pydantic's ``JsonValue`` is a recursive type alias, not a class, and
+    # autodoc renders it by its BARE name wherever a signature carries it, so
+    # even the online pydantic inventory has nothing the short form reaches.
+    (r"py:class", r"^JsonValue$"),
+    # A fragment of a regular expression. A pydantic field's ``pattern`` is
+    # rendered inside its annotation, the annotation is split at ``|``, and the
+    # alternative ``activities(...)`` of the censal fact-path pattern leaves
+    # this one word as a cross-reference target. It is not a type.
+    (r"py:class", r"^activities$"),
+    # Autodoc's ``show-inheritance`` renders a base class by its BARE name, so a
+    # TUI class deriving from Textual emits ``Widget`` rather than
+    # ``textual.widget.Widget``. The vendored inventory carries the qualified
+    # target as ``py:class`` — verified by reading the entry — so the link is not
+    # dead, merely unreachable from the short form autodoc emits. The short-name
+    # bridge above resolves bare names only against IN-TREE objects by design,
+    # and widening it to intersphinx would risk binding a bare project name to a
+    # same-named third-party target.
+    (r"py:class", r"^Widget$"),
+    # ``Buffer`` is the real stdlib ``collections.abc.Buffer`` (PEP 688, 3.12+),
+    # used as an annotation across the master-key recovery surface. autodoc
+    # renders an annotation by its BARE name, so the reference emitted is
+    # ``Buffer`` rather than ``collections.abc.Buffer``, and this gate builds
+    # with ``CADRUMO_DOCS_OFFLINE`` set, so no stdlib inventory is loaded to
+    # resolve either spelling. Same category as ``NoneType`` above: a genuine
+    # type with no reachable target here, not a typo.
+    #
+    # This surfaced only once the sequence-golden hook stopped aborting the
+    # nitpicky build at ``builder-inited``. Cross-reference resolution had never
+    # run to completion before, so this was the first cross-reference finding the
+    # gate had ever produced.
+    (r"py:class", r"^Buffer$"),
+    # Bare ``TypeVar`` parameters (``TPayload``, ``PayloadT``, ``T_co``) and the
+    # single-letter PEP 695 type parameters used in ``class Foo[T, K: Hashable]``
+    # generic syntax (``K``, ``V``) are not documentable objects; they appear in
+    # generic signatures only. Listed explicitly so the pattern cannot mask a
+    # real CamelCase class.
+    (
+        r"py:.*",
+        r"^(T|K|V|Key|KT|VT|RT|_T|T_co|T_contra|TPayload|PayloadT|PayloadT_co|ResultT|RecordT|PayloadType|CasillaKey|CasillaValue|BindingKey|ExpectedKey|CheckerObservation|ObservationT|DocumentT|CalendarMoment)$",
+    ),
+    # SQLAlchemy column/type vocabulary referenced from the encrypted-column
+    # adapters; resolved online via the vendored sqlalchemy inventory under its
+    # fully-qualified name, but written short (or under SQLAlchemy's private
+    # ``_types`` path) in the inherited docstrings.
+    (
+        r"py:.*",
+        r"^(_types(\..*)?|TypeDecorator|UserDefinedType|ExternalType|Dialect|"
+        r"TypeEngine)$",
+    ),
+    # Typed-id NewType aliases (CasillaId, SourceRefId, ...) are documented at
+    # their definition, not as standalone class targets.
+    (r"py:.*", r".*\._ids\.[A-Za-z]\w*$"),
+    # PEP 695 ``type`` aliases are ``TypeAliasType`` instances, not classes, so a
+    # bare cross-reference to one has no autodoc target. The typed-id family
+    # (``type CasillaId = Annotated[...]``, ``RelationId``, ``ModeloId``, ... — 24
+    # ``*Id`` aliases declared across the ``_ids.py`` modules) is matched by the
+    # ``*Id`` suffix, with the two genuine ``*Id`` StrEnum classes (``ManualId``,
+    # ``RegistryManualId``) excluded by negative lookahead so the suppression
+    # cannot mask a real class.
+    (r"py:.*", r"^(?!ManualId$)(?!RegistryManualId$)[A-Z][A-Za-z0-9]*Id$"),
+    # The non-``Id`` PEP 695 ``type`` aliases (every ``type X = ...`` alias whose
+    # name does not end in ``Id``), enumerated by exact name so the suppression
+    # is confined to confirmed aliases and cannot match a real class.
+    (
+        r"py:.*",
+        r"^(CasillaDelta|CasillaInputs|CounterpartSourceKind|FiledCaptureReport|"
+        r"FiledDeclaracionArtefactSink|IvaCompensationAuthority|JsonObject|"
+        r"IvaCompensationAuthorityKind|IvaCompensationDivergence|LlmReviewResult|"
+        r"LocaleNode|ModeloAmendment|ModeloCalculationRevisionDefault|ModeloCode|"
+        r"ModeloInputScalar|ModeloInputValue|ModeloInputs|ModeloWorkTarget|"
+        r"PlaywrightStorageState|ProviderSessionMetadata|RegisteredSchema|"
+        r"ReviewedSuggestion|SourceEvidenceFingerprint|UserProfileFactValue)$",
+    ),
+    # References into private (single-underscore) modules or to private classes
+    # (``pkg._mod.Thing``, ``pkg.mod._Private``), which are implementation
+    # internals excluded from the documented cross-reference surface.
+    (r"py:.*", r".*\._[a-z]\w*\.[A-Za-z_]\w*$"),
+    (r"py:.*", r".*\._[A-Z]\w*$"),
+    # Private functions or methods referenced by a dotted path ending in the
+    # private name (``pkg.mod._default_policy_for``, ``Engine._drive``), and
+    # members reached through a private class (``mod._SensitivityClass.MEMBER``).
+    (r"py:.*", r".*\._[a-z]\w*$"),
+    (r"py:.*", r".*\._[A-Z]\w*\.[A-Za-z_]\w*$"),
+    # ``TypeAliasType`` re-imported from typing_extensions into a project module
+    # and referenced through that module's path; it is an external alias type.
+    (r"py:.*", r".*\.TypeAliasType$"),
+    # Bare references to private (single-underscore) helpers — ``_now``,
+    # ``_coerce_utc_aware`` — written without a module
+    # path. Private members are not part of the documented surface, so a literal
+    # would be more correct, but the reference itself carries no public target.
+    (r"py:.*", r"^_[A-Za-z]\w*$"),
+    # Module-level ``ALL_CAPS`` constants (registry tables, key tuples) are data,
+    # not part of the class/function cross-reference surface; references to them
+    # by name (``PORTAL_REGISTRY``, ``IVA_RATE_TABLE``) have no autodoc target.
+    (r"py:.*", r"(^|.*\.)[A-Z][A-Z0-9]*(_[A-Z0-9]+)+$"),
+    # Third-party namespaces with no vendored inventory (python.inv and
+    # sqlalchemy.inv are vendored under docs/_inventories/ and resolve stdlib,
+    # builtin, and SQLAlchemy targets exactly). pydantic / httpx / typer / click
+    # and the other rendering-tooling namespaces below resolve online when
+    # available; offline they have no inventory, so their fully-qualified targets
+    # are ignored here to keep the gate hermetic.
+    (
+        r"py:.*",
+        r"^(pydantic|pydantic_core|pydantic_settings|httpx|typer|click|"
+        r"rich|yaml|rtoml|tomli|cryptography|jinja2|markupsafe|numpy|"
+        r"prompt_toolkit|google|typing_extensions|asyncio|anyio|contextvars|"
+        r"_pytest|playwright|_schema|_orm|annotated_types)(\..*)?$",
+    ),
+    # Test modules are excluded from the documented API surface (see
+    # ApiStubManager exclusions), so references into them have no stub target.
+    (r"py:.*", r".*\btest_[A-Za-z0-9_]*$"),
+    (r"py:.*", r"^cadrumo\.tests(\..*)?$"),
+    # Dunder, numeric-literal, and hex-like HTML-id targets that leak out of
+    # docstrings as bogus cross-references (``:class:`1``` or AEAT source
+    # anchors such as ``89ab``), never real documentable objects.
+    (r"py:.*", r"^([0-9][0-9a-fA-F]*|__all__|__repr__|__str__|__init__|__init_subclass__)$"),
+    # Playwright SDK classes referenced bare (``:class:`Page```, ``BrowserContext``,
+    # ``Locator``, ``Response``, ``Playwright``) from the browser/sede adapters.
+    # Playwright is in ``autodoc_mock_imports`` (offline, no inventory), so the
+    # dotted ignore above does not cover these short forms; the names are
+    # playwright-owned in this codebase (no project class shares them).
+    (r"py:.*", r"^(Playwright|Page|BrowserContext|Locator|Response)$"),
+    # Project anchors referenced by bare short name (per the docstring-anchor
+    # convention; qualifying a bare anchor is barred by
+    # aeat-documentation) whose short name the auto short-reference
+    # resolver cannot uniquely map: ``CCAA`` (documented under more than one
+    # public package).
+    (r"py:.*", r"^CCAA$"),
+    # Bare project-package ``:mod:`` short references (``:mod:`domain.iva```,
+    # ``:mod:`application.ledger```, bare ``:mod:`application```, ...) used
+    # project-wide in module docstrings per the docstring-anchor convention. The
+    # short-reference resolver maps py:class / func / obj short names but not the
+    # py:mod reftype, and a single-segment module name (``application``) or a
+    # docs-excluded module (``entrypoints.cli``) cannot be uniquely mapped
+    # anyway; until a py:mod-aware resolver lands these bare project-module short
+    # forms are ignored rather than reded. Scoped to the first-segment project
+    # package names so an external / stdlib ``:mod:`` reference is unaffected.
+    # Any ``:mod:`` short reference that is NOT already ``cadrumo.``-qualified: the
+    # short-reference resolver maps py:class/func/obj short names but not the
+    # py:mod reftype, so a bare project-module reference (``:mod:`domain.iva```,
+    # ``:mod:`registry```, ...) has no target. External / stdlib ``:mod:`` refs
+    # are covered by the third-party namespace patterns above; a genuine
+    # ``cadrumo.``-qualified module reference still resolves and is unaffected here.
+    (r"py:mod", r"^(?!cadrumo\.)[a-z].*"),
+    # External library types written bare (no vendored inventory offline, so the
+    # dotted third-party namespace patterns above do not cover the short forms):
+    # the ``cryptography`` elliptic-curve / Edwards key classes
+    # (``Ed25519PrivateKey``, ``X25519PublicKey``, ...) referenced from the
+    # secure-storage key adapters, the ``_typeshed`` ``SupportsAllComparisons``
+    # protocol used in sort-key signatures, and the pydantic ``BaseModel``
+    # serialisation methods (``model_dump_json`` / ``model_validate_json``)
+    # referenced bare in roundtrip docstrings. All are external-owned; no project
+    # symbol shares these names.
+    (
+        r"py:.*",
+        r"^(Ed25519PrivateKey|Ed25519PublicKey|X25519PrivateKey|X25519PublicKey|"
+        r"SupportsAllComparisons|model_dump_json|model_validate_json)$",
+    ),
+    # Project short references the bare/unrooted resolver cannot uniquely map.
+    # Two shapes: (1) an AMBIGUOUS bare helper name with two or more documented
+    # definitions across modules (``write_manifest`` x4; ``project_answers`` /
+    # ``sha256_file`` / ``save_envelope`` / ``extract_pages_text`` /
+    # ``extract_pages_text_from_bytes`` / ``LLMProvider`` x2), which the
+    # last-segment suffix resolver cannot disambiguate by design; and (2) a
+    # project object written by a path that omits the ``cadrumo.`` root
+    # (``application.modelo.emit_collab_workspace_opened_event``,
+    # ``adapters.persistence.storage.SensitivityClass.SECRET``). ``core-struct-
+    # docstring-links`` bars adding a dotted path to a bare project anchor, so
+    # these are ignored rather than qualified; a py:func / py:attr short-reference
+    # resolver enhancement that disambiguates ambiguous and unrooted project
+    # targets is a future follow-up.
+    (
+        r"py:.*",
+        r"^(utc_now|project_answers|write_manifest|sha256_file|save_envelope|"
+        r"reset_workflow_state|output_language|extract_pages_text|"
+        r"extract_pages_text_from_bytes|emit_collab_workspace_opened_event|"
+        r"LLMProvider|PersonaAction|parse_declaracion|parse_declaracion_bytes|"
+        r"parse_justificante|parse_justificante_bytes|zeroise|write_all|"
+        r"NotificationsSnapshot)$",
+    ),
+    # Enum members are emitted as ``:ivar:`` entries by Napoleon
+    # (``napoleon_use_ivar``), never as ``py:attribute`` objects, so an
+    # ``:attr:`` reference to one has no target whether it is written bare
+    # (``VERIFIED``) or through its class (``IvaFlowDirection.SOPORTADO``,
+    # ``llm.LLMProvider.LOCAL``). Scoped to ``py:attr`` with an ALL-CAPS final
+    # segment, which no class or function name takes, so the suppression cannot
+    # mask a missing class. The underscored-constant pattern above covers the
+    # multi-word members; this covers the single-word ones.
+    (r"py:attr", r"^(?:[A-Za-z_][\w.]*\.)?[A-Z][A-Z0-9]*$"),
+    # Members reached through a class whose own definition lives in a private
+    # module: ``SecureObjectRepository`` is public, but ``apply_batch`` is
+    # defined on the write-operations base in
+    # ``sql/_secure_object_writes.py``, which is excluded from the documented
+    # surface, so the inherited member has no object to link to. The private
+    # dotted patterns above match a private segment in the reference path, and
+    # this reference names only public segments.
+    (
+        r"py:meth",
+        r"^(?:cadrumo\.)?adapters\.persistence\.storage\.sql\.secure_objects\."
+        r"SecureObjectRepository\.(apply_batch|save)$",
+    ),
+    # Support classes under a package's ``tests`` subpackage are excluded from
+    # the documented API surface (see the ApiStubManager exclusions), so a
+    # reference into one has no stub target. The ``test_*`` pattern above only
+    # catches test MODULES; these are helpers beside them.
+    (r"py:.*", r"^(?:cadrumo\.)?[\w.]*\.tests\.[\w.]+$"),
+    # Private-module references written WITHOUT a leading package segment
+    # (``_validate_constructs.validate_construct_closure``). The dotted private
+    # patterns above require a segment before the private one.
+    (r"py:.*", r"^_[a-z]\w*\.[A-Za-z_]\w*$"),
+    # Runtime type objects that autodoc renders into an annotation but that have
+    # no documentable definition anywhere: ``types.MappingProxyType``'s runtime
+    # ``mappingproxy`` spelling, and the ``GenericAlias`` that a subscripted
+    # alias reports as its own class under the module that declares it.
+    (r"py:class", r"^(mappingproxy|[\w.]*\.GenericAlias)$"),
+    # Stdlib and typing targets the vendored ``python.inv`` does not carry under
+    # the reftype the docstring uses: ``date.min`` is an attribute rather than
+    # ``py:data``, ``Path.with_name`` is absent from the inventory, and
+    # ``typing.PydanticArgs`` is a pydantic-injected name in the ``typing``
+    # namespace rather than a real typing object.
+    (
+        r"py:(data|meth|obj)",
+        r"^(datetime\.date\.min|pathlib\.Path\.with_name|typing\.PydanticArgs)$",
+    ),
+    # Stdlib classes autodoc renders by their BARE name in an annotation
+    # (``threading.RLock`` and ``Event``, ``logging.Logger``, the ``contextlib``
+    # context-manager bases), exactly as ``Buffer`` above, and
+    # ``weakref.ReferenceType``, which the inventory carries only as
+    # ``weakref.ref``. No project class has any of these names.
+    (
+        r"py:class",
+        r"^(RLock|Event|Logger|AbstractContextManager|AbstractAsyncContextManager|"
+        r"ReferenceType|weakref\.ReferenceType)$",
+    ),
+    # A ``ParamSpec`` named ``P`` is rendered under ``typing``, where no such
+    # object exists; same category as the bare type parameters above.
+    (r"py:obj", r"^typing\.P$"),
+    # ``PyOVERLAPPED`` is pywin32's overlapped-I/O structure, annotated in the
+    # Windows native I/O adapter. pywin32 ships no inventory.
+    (r"py:class", r"^PyOVERLAPPED$"),
+    # Textual and Rich classes autodoc renders by their BARE name, exactly as
+    # ``Widget`` above: the TUI screens subclass ``Screen`` and annotate Rich
+    # ``Style`` and Textual ``AutopilotCallbackType``. The vendored textual
+    # inventory carries the qualified targets, unreachable from the short form.
+    (r"py:class", r"^(Screen|Style|AutopilotCallbackType)$"),
+    # The same, for what the profile and workbench screens annotate: Textual's
+    # ``App`` and its visual types, Rich's ``RenderableType``, and the message
+    # classes Textual nests in a widget (``Button.Pressed``), which autodoc
+    # renders as written in the handler's signature.
+    (
+        r"py:class",
+        r"^(App|VisualType|ContentText|RenderableType|"
+        r"Button\.Pressed|DataTable\.RowHighlighted|Worker\.StateChanged)$",
+    ),
+    # ``TYPE_CHECKING``-only aliases of googleapiclient stub types; the Google
+    # API client ships no inventory, and the aliases are not project classes.
+    (r"py:class", r"^(SheetsValueRange|SheetsResource|DriveResource)$"),
+    # Project objects written by a path that omits the ``cadrumo.`` root and
+    # whose package is excluded from the documented surface (``entrypoints.cli``
+    # has no stubs) or whose bare name the resolver cannot reach
+    # (``application.workflow.persistence``, ``llm.invoice_extraction_prompt``).
+    (
+        r"py:.*",
+        r"^(entrypoints\.cli\.[\w.]+|application\.workflow\.persistence\.[\w.]+|"
+        r"llm\.invoice_extraction_prompt\.[\w.]+)$",
+    ),
+    (
+        r"py:.*",
+        r"^(application\.modelo\.emit_collab_workspace_opened_event|"
+        r"adapters\.persistence\.storage\.SensitivityClass\.SECRET)$",
+    ),
+    # Registry typed-id aliases (``CasillaId``, ``RelationId``, ``OracleId``,
+    # ``BindingId``, ... ) are PEP 695 aliases, not documentable classes, so a
+    # ``:class:`` reference to their registry path has no py:class target. List
+    # the aliases explicitly so a future real ``*Id`` class cannot be hidden.
+    # ``ModeloDetailRow`` is a re-exported alias referenced bare.
+    (
+        r"py:.*",
+        r"^(?:cadrumo\.)?domain\.calculations\.registry\.(?:"
+        r"ApplicationLinkId|BindingId|CasillaId|ConstructId|CrossReferenceId|"
+        r"DeadlineWindowId|DependencyClassificationId|ExportFieldId|ExportLayoutId|"
+        r"ExtractionProfileId|FormulaId|LegalRefId|ModeloId|OracleId|ParameterId|"
+        r"RecordId|RelationId|RevisionId|SourceRefId|"
+        r"VerificationExpectationId|WorkbookFixtureId|WorkbookOutputId|WorkbookParityRefId)$",
+    ),
+    # ``OneBasedExportOffset`` is the same category as the registry typed-id
+    # aliases above -- a PEP 695 ``type`` alias
+    # (``type OneBasedExportOffset = Annotated[int, Field(ge=1)]``), not a
+    # documentable class -- but it is declared in ``_schema_surfaces`` and reaches
+    # the gate through its BARE short-form render, which the qualified
+    # ``domain.calculations.registry.*`` pattern above cannot match. Named on its
+    # own rather than folded into a broader alias pattern so it cannot mask a
+    # future real class of the same name.
+    (r"py:.*", r"^OneBasedExportOffset$"),
+    (r"py:.*", r"^ModeloDetailRow$"),
+    # Bound-method references on external (pydantic / SQLAlchemy / asyncio /
+    # google) types written ``Owner.method`` or ``obj.method``; the owning type
+    # resolves via inventory but the short method target does not.
+    (
+        r"py:.*",
+        r"^(model_copy|process_bind_param|process_result_value|run_in_executor|"
+        r"from_service_account_file|create_pipe_input|normalise|reconfigure)$",
+    ),
+    # Bare sentinel / alias names that survive short-name rendering and carry no
+    # in-tree and no inventory target (Ellipsis from ``tuple[X, ...]``
+    # annotations, NoneType/EllipsisType, the short pydantic-constraint alias
+    # names, and the unqualified renders of common stdlib/SQLAlchemy types whose
+    # canonical fully-qualified target resolves via the vendored inventory but
+    # whose ``autodoc_typehints_format = "short"`` display form is a bare name).
+    (
+        r"py:.*",
+        r"^(Ellipsis|NoneType|EllipsisType|PydanticUndefined|TypeDecorator|"
+        r"Session|Ge|Le|Gt|Lt|Len|Interval|MultipleOf|BaseModel|Decimal|Path|"
+        r"Mapping|MutableMapping|Sequence|Iterable|Iterator|Mapped|StrEnum|"
+        r"datetime|date|time|timedelta|UUID|"
+        # Short pydantic / pydantic-settings / SQLAlchemy / stdlib public names
+        # referenced without a module path.
+        r"ValidationError|SecretStr|BaseSettings|AnyUrl|AnyHttpUrl|EmailStr|"
+        r"Field|TypeAliasType|SkipValidation|PrivateAttr|PydanticBaseSettingsSource|"
+        r"CliSettingsSource|PathType|DotenvType|EnvPrefixTarget|Engine|sessionmaker|"
+        r"MappingProxyType|ContextVar|deque|InvalidOperation|APIRequestContext|"
+        r"MonkeyPatch|Credentials|"
+        # prompt_toolkit Input/Output rendered short-form from a wizard prompter
+        # signature, and the private Callable protocol aliases used as workflow
+        # source types - neither is a documentable cross-reference target.
+        r"Input|Output|ExpedientesSource|NotificationsSource|"
+        # Period-token regex fragments (``Q``, ``annual`` from a
+        # StringConstraints ``^(Q[1-4]|...|annual)$`` pattern) that autodoc
+        # mis-renders as bare class targets.
+        r"Q|annual)$",
+    ),
+    # Bound-method references on external (stdlib / pydantic) types, written
+    # ``datetime.now`` / ``date.today``; the owning type resolves via inventory
+    # but the bare method name has no cross-reference target.
+    (
+        r"py:.*",
+        r"^(datetime|date|time|Decimal|Path|UUID|dict|list|set|str|bytes)\.[a-z]\w*$",
+    ),
+    # The CLI entrypoint subtree is intentionally excluded from the API stub set
+    # (its commands are documented in the generated CLI reference under
+    # docs/cli/), so module references into it have no autodoc target.
+    (r"py:.*", r"^cadrumo\.entrypoints\.cli(\..*)?$"),
+]
+if _USER_SCOPE:
+    # Markdown links into the excluded API tree resolve in the full build only.
+    # MyST reports them itself, bypassing the ``missing-reference`` event that
+    # ``_suppress_api_scope_reference`` answers, and consults this list before it
+    # logs: a logging filter cannot stand in, because a parallel build's workers
+    # hand their warnings to the main process without passing through it. Only
+    # the committed ``api/index.md`` is a valid link target from a narrative
+    # page; the generated stubs do not exist until a full-scope build writes them.
+    nitpick_ignore_regex.append(("myst", r"api/.*"))
+
+# ── Linkcheck (advisory, never a blocking local gate) ─────────────────────────
+# `sphinx-build -b linkcheck` is CI-scheduled and advisory: several AEAT/BOE
+# endpoints rate-limit or block automated clients, so their failures must never
+# red the local docs-check gate.
+linkcheck_ignore = [
+    r"https?://(www\.|sede\.)?agenciatributaria\.(es|gob\.es).*",
+    r"https?://(www\.)?boe\.es.*",
+]
+linkcheck_timeout = 30
+
+
+def _specific_build_sources() -> list[Path] | None:
+    """Return Sphinx command-line source filenames for a specific-file build.
+
+    The command line is parsed with Sphinx's own argument parser, so an option
+    placed after the positional directories is read as the option it is.
+    ``sphinx-autobuild`` invokes ``python -m sphinx build SOURCEDIR OUTPUTDIR -b
+    html -j auto``, and reading every non-option token after ``OUTPUTDIR`` as a
+    filename classified that whole-site build as a two-file build of ``html``
+    and ``auto``, which switched off every generated reference it serves.
+
+    Returns:
+        ``None`` for the normal update/full build mode or when this process is
+        not a Sphinx build of this source tree, otherwise the filenames given
+        after ``sourcedir`` and ``outputdir``.
+    """
+    from sphinx.cmd.build import get_parser
+
+    docs_root = Path(__file__).resolve().parent
+    args = sys.argv[1:]
+    if args[:1] == ["build"]:
+        args = args[1:]
+    if not any(_names_path(arg, docs_root) for arg in args):
+        return None
+    try:
+        parsed = get_parser().parse_args(args)
+    except SystemExit:
+        return None
+    if not _names_path(parsed.sourcedir, docs_root) or not parsed.filenames:
+        return None
+    return [Path(item).resolve() for item in parsed.filenames]
+
+
+def _names_path(argument: str, path: Path) -> bool:
+    """Return whether one command-line argument names *path*."""
+    try:
+        return Path(argument).resolve() == path
+    except OSError:
+        return False
+
+
+def _build_reads(relative_target: str) -> bool:
+    """Return whether this invocation's read set covers ``relative_target``.
+
+    ``relative_target`` is a generated page or page tree, relative to the docs
+    root. ``True`` on a normal full or update build, which reads everything the
+    source tree offers.
+
+    A specific-source build reads ONLY the filenames named on the command line,
+    so a generated tree none of them lives in cannot change what that build
+    produces: its pages are never parsed, and a reference into them resolves no
+    better for existing -- an unread page contributes nothing to the environment
+    the references resolve against. Generating it anyway is pure cost, and for a
+    one-page build it is nearly the whole cost, because these producers compile
+    the registry authority and the Handbook before writing a line.
+
+    Args:
+        relative_target: The generated page or directory, relative to the docs
+            root, that the producer writes.
+
+    Returns:
+        Whether the producer's output can influence this build.
+    """
+    specific_sources = _specific_build_sources()
+    if specific_sources is None:
+        return True
+    target = (Path(__file__).resolve().parent / relative_target).resolve()
+    return any(source == target or target in source.parents for source in specific_sources)
+
+
+def _should_generate_cli_reference() -> bool:
+    """Return whether this Sphinx invocation needs generated ``docs/cli`` pages."""
+    if bool(os.environ.get("CADRUMO_DOCS_SKIP_CLI_REFERENCE")):
+        return False
+    return _build_reads("cli")
+
+
+def _should_generate_api_stubs() -> bool:
+    """Return whether this Sphinx invocation needs generated ``docs/api`` stubs.
+
+    Only a full-scope build reads the API tree; user scope excludes it and
+    never imports the application to render it.
+    """
+    if _USER_SCOPE:
+        return False
+    return _build_reads("api")
+
+
+def _should_resolve_deferred_models() -> bool:
+    """Return whether this Sphinx invocation needs diagnostics model rebuilding."""
+    if _USER_SCOPE:
+        # The deferred-model rebuild only exists so autodoc can import the
+        # diagnostics report models; user scope loads no autodoc, so importing
+        # the application here would defeat the whole point of the scope.
+        return False
+    if bool(os.environ.get("CADRUMO_DOCS_SKIP_DEFERRED_MODELS")):
+        return False
+    specific_sources = _specific_build_sources()
+    if specific_sources is None:
+        return True
+    docs_root = Path(__file__).resolve().parent
+    diagnostic_pages = {
+        (docs_root / "api" / "cadrumo.application.diagnostics.rst").resolve(),
+        (docs_root / "api" / "cadrumo.application.auth.diagnostics.rst").resolve(),
+        (docs_root / "api" / "cadrumo.application.transactions._diagnostics.rst").resolve(),
+    }
+    return any(source in diagnostic_pages for source in specific_sources)
+
+
+_PY_SUFFIX_INDEX: dict[str, list[str]] = {}
+
+
+def _declared_type_hint_names() -> frozenset[str]:
+    """Return PEP 695 and typing.TypeVar parameters rendered inline by typehints."""
+    names: set[str] = set()
+    for source_root_name in API_SOURCE_ROOTS:
+        source_root = _PROJECT_ROOT.joinpath(*Path(source_root_name).parts)
+        for path in scan_directory(source_root, pattern="*.py", recursive=True):
+            tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+            for node in ast.walk(tree):
+                if isinstance(node, ast.TypeVar):
+                    names.add(node.name)
+                elif (
+                    isinstance(node, ast.Assign)
+                    and isinstance(node.value, ast.Call)
+                    and isinstance(node.value.func, ast.Name)
+                    and node.value.func.id == "TypeVar"
+                ):
+                    names.update(target.id for target in node.targets if isinstance(target, ast.Name))
+    return frozenset(names)
+
+
+_LITERAL_TYPE_HINT_NAMES = _declared_type_hint_names()
+
+
+def _is_ordered_subsequence(needle: list[str], haystack: list[str]) -> bool:
+    """Return whether every item of *needle* appears in *haystack*, in order.
+
+    Used to match a public dotted reference path against a defining-module
+    qualified name that interleaves extra private segments.
+
+    Args:
+        needle: The reference's dotted components.
+        haystack: A candidate object's dotted components.
+
+    Returns:
+        ``True`` when *needle* is an ordered (not necessarily contiguous)
+        subsequence of *haystack*.
+    """
+    it = iter(haystack)
+    return all(part in it for part in needle)
+
+
+def _build_py_suffix_index(env):
+    """Index every documented Python object by its bare (final-segment) name.
+
+    Args:
+        env: The Sphinx build environment after the read phase.
+
+    Returns:
+        A mapping of bare object name to the list of fully-qualified names that
+        end in it (for example ``InboundDeclaracionObservation`` ->
+        ``["cadrumo.adapters.inbound.declaracion.schema.InboundDeclaracionObservation"]``).
+    """
+    index: dict[str, list[str]] = {}
+    for fullname in env.get_domain("py").objects:
+        index.setdefault(fullname.rsplit(".", 1)[-1], []).append(fullname)
+    return index
+
+
+def _api_source_path(module_name: str) -> Path | None:
+    """Resolve a documented first-party module to its source file."""
+    for source_root_name in API_SOURCE_ROOTS:
+        source_root = _PROJECT_ROOT / source_root_name
+        package_name = source_root.name
+        if module_name != package_name and not module_name.startswith(package_name + "."):
+            continue
+        module_path = source_root.joinpath(*module_name.split(".")[1:])
+        if module_path.is_dir():
+            return module_path / "__init__.py"
+        return module_path.with_suffix(".py")
+    return None
+
+
+@cache
+def _source_bindings(module_name: str) -> dict[str, str]:
+    """Parse one module's final source bindings once per documentation build."""
+    source_path = _api_source_path(module_name)
+    if source_path is None or not source_path.is_file():
+        return {}
+    try:
+        tree = ast.parse(source_path.read_text(encoding="utf-8"), filename=str(source_path))
+    except (OSError, SyntaxError, UnicodeDecodeError):
+        return {}
+
+    package = module_name if source_path.name == "__init__.py" else module_name.rpartition(".")[0]
+    bindings: dict[str, str] = {}
+    for statement in tree.body:
+        if isinstance(statement, ast.ImportFrom):
+            for imported in statement.names:
+                if imported.name == "*":
+                    continue
+                if statement.module is None:
+                    try:
+                        imported_module = resolve_name("." * statement.level, package)
+                    except (ImportError, ValueError):
+                        continue
+                elif statement.level:
+                    try:
+                        imported_module = resolve_name("." * statement.level + statement.module, package)
+                    except (ImportError, ValueError):
+                        continue
+                else:
+                    imported_module = statement.module
+                bindings[imported.asname or imported.name] = f"{imported_module}.{imported.name}"
+            continue
+
+        bound_names: set[str] = set()
+        if isinstance(statement, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
+            bound_names.add(statement.name)
+        elif isinstance(statement, ast.TypeAlias):
+            bound_names.add(statement.name.id)
+        elif isinstance(statement, (ast.Assign, ast.AnnAssign)):
+            targets = statement.targets if isinstance(statement, ast.Assign) else (statement.target,)
+            for target in targets:
+                bound_names.update(node.id for node in ast.walk(target) if isinstance(node, ast.Name))
+        for symbol in bound_names:
+            bindings[symbol] = f"{module_name}.{symbol}"
+    return bindings
+
+
+def _source_binding_target(module_name: str, symbol: str) -> str | None:
+    """Return the source-level owner bound to *symbol* in one API module."""
+    return _source_bindings(module_name).get(symbol)
+
+
+def _clear_source_binding_cache(app, env, docnames) -> None:
+    """Discard prior-build bindings before Sphinx reads the next source set."""
+    _source_bindings.cache_clear()
+
+
+def _contextual_api_target(env, node, symbol: str, candidates: list[str]) -> str | None:
+    """Resolve an ambiguous short API name through its current source import."""
+    module_name = node.get("py:module")
+    if not isinstance(module_name, str):
+        docname = node.get("refdoc") or env.docname
+        module_name = docname.removeprefix("api/") if isinstance(docname, str) else ""
+    if not isinstance(module_name, str) or _api_source_path(module_name) is None:
+        return None
+    target = _source_binding_target(module_name, symbol)
+    return target if target in candidates else None
+
+
+def _contextual_external_reference(app, env, node, contnode):
+    """Resolve source-imported short names against the loaded inventories."""
+    from sphinx.ext.intersphinx import InventoryAdapter, missing_reference
+
+    target = node.get("reftarget", "")
+    module_name = node.get("py:module")
+    if not isinstance(module_name, str):
+        docname = node.get("refdoc") or env.docname
+        module_name = docname.removeprefix("api/") if isinstance(docname, str) else ""
+    root, _, nested = target.partition(".")
+    imported = _source_binding_target(module_name, root)
+    if imported is None or _api_source_path(imported) is not None:
+        return None
+    qualified = f"{imported}.{nested}" if nested else imported
+    parts = qualified.split(".")
+    # Textual exposes widgets through a lazy public module; its inventory uses
+    # the defining private module for nested events. Match the imported path
+    # in order, and refuse ambiguous inventory owners.
+    candidates = {
+        name
+        for objects in InventoryAdapter(env).main_inventory.values()
+        for name in objects
+        if name.rsplit(".", 1)[-1] == parts[-1] and _is_ordered_subsequence(parts, name.split("."))
+    }
+    if len(candidates) != 1:
+        return None
+    qualified_node = node.copy()
+    qualified_node["reftarget"] = candidates.pop()
+    return missing_reference(app, env, qualified_node, contnode)
+
+
+def _resolve_short_reference(app, env, node, contnode):
+    """Bridge a short cross-reference to its single canonical defining-module target.
+
+    Stubs document every symbol exactly once, at its defining ``__module__``
+    (``:ignore-module-all:``). Docstrings, however, reference re-exported public
+    API either by bare name (``:class:`Name```) or by the public package path it
+    is re-exported under (``:class:`cadrumo.domain.filing.ModeloDraft```), neither
+    of which autodoc can resolve to the qualified defining-module target. This
+    resolver keys on the reference's final segment: when that bare name maps to
+    exactly one documented object it returns a reference to it. Ambiguous names
+    (several definitions) and unknown names are left untouched so they still
+    surface as nitpicky warnings.
+
+    Args:
+        app: The Sphinx application.
+        env: The build environment.
+        node: The pending cross-reference node.
+        contnode: The node holding the reference's display text.
+
+    Returns:
+        A resolved reference node, or ``None`` to defer to other resolvers.
+    """
+    from sphinx.util.nodes import make_refnode
+
+    if node.get("refdomain") not in ("py", ""):
+        return None
+    target = node.get("reftarget", "")
+    external_url = external_type_url(target)
+    if external_url is not None:
+        return nodes.reference("", "", contnode, refuri=external_url)
+    parts = target.split(".") if target else []
+    short = parts[-1] if parts else ""
+    if not short or not short.isidentifier():
+        return None
+    contextual_external = _contextual_external_reference(app, env, node, contnode)
+    if contextual_external is not None:
+        return contextual_external
+    # ``country`` is an upstream locale-library annotation, not the unrelated
+    # in-tree callable that happens to share its final component.
+    if target == "country":
+        return contnode
+
+    if not _PY_SUFFIX_INDEX:
+        _PY_SUFFIX_INDEX.update(_build_py_suffix_index(env))
+    candidates = _PY_SUFFIX_INDEX.get(short)
+    if not (candidates is not None and candidates):
+        # Postponed annotations reach the extension as unresolved strings, so
+        # ``typehints_formatter`` cannot inspect their runtime TypeVar identity.
+        # Public source aliases have generated ``py:type`` targets; these
+        # remaining declared names are generic parameters, which stay inline.
+        if short in _LITERAL_TYPE_HINT_NAMES:
+            return contnode
+        if target.startswith(("bs4.", "textual.")) or target in {
+            "Coordinate",
+            "CursorType",
+            "PlaywrightError",
+            "Shape",
+            "TC",
+            "calc_sheets_export",
+            "country",
+            "textual.geometry.Size",
+            "typing.Union",
+        }:
+            return contnode
+        return None
+
+    # A public re-export path (``cadrumo.domain.iva.verify_catalogue``) maps onto a
+    # defining-module path that carries extra private segments
+    # (``cadrumo.domain.iva._catalogue.verify_catalogue``). The public components
+    # still appear, in order, within the defining path, so disambiguate by
+    # keeping the candidates whose dotted components contain the reference's
+    # components as an ordered subsequence. This separates same-named symbols
+    # that live under different public packages (``iva`` vs ``normatives``).
+    if len(candidates) > 1:
+        contextual = _contextual_api_target(env, node, short, candidates)
+        if contextual is not None:
+            candidates = [contextual]
+    if len(candidates) > 1 and len(parts) > 1:
+        subseq = [name for name in candidates if _is_ordered_subsequence(parts, name.split("."))]
+        if len(subseq) == 1:
+            candidates = subseq
+    if len(candidates) != 1:
+        return None
+
+    fullname = candidates[0]
+    entry = env.get_domain("py").objects[fullname]
+    return make_refnode(app.builder, node.get("refdoc", env.docname), entry.docname, entry.node_id, contnode, fullname)
+
+
+def _paramref_role(name, rawtext, text, lineno, inliner, options=None, content=None):
+    """Render SQLAlchemy's ``:paramref:`` cross-references as plain literals.
+
+    SQLAlchemy documents its mapped-attribute and engine constructs with the
+    ``:paramref:`` role supplied by its own ``zzzeeksphinx`` Sphinx extension.
+    Autodoc pulls those inherited docstrings into the ORM module pages, so the
+    role appears in our build without the extension that defines it. Rendering
+    the trailing ``ClassName.param`` segment as inline literal text keeps the
+    inherited prose readable without erroring the nitpicky gate.
+
+    Args:
+        name: The role name as invoked.
+        rawtext: The entire role markup including the target.
+        text: The interpreted target (a dotted parameter reference).
+        lineno: The line number of the role in the source.
+        inliner: The docutils inliner driving the parse.
+        options: Role options (unused).
+        content: Role content (unused).
+
+    Returns:
+        A docutils node list and an (always empty) system-message list.
+    """
+    label = text.split(".")[-1].strip("`") or text
+    return [nodes.literal(rawtext, label)], []
+
+
+def _convert_markdown_fences_in_inherited_docstrings(app, what, name, obj, options, lines):
+    """Rewrite Markdown code fences in inherited docstrings as RST literal blocks.
+
+    Same remedy as the ``:paramref:`` role and ``.. legacy::`` directive shims
+    above, for a different upstream: keep inherited third-party prose readable
+    instead of erroring the nitpicky gate.
+
+    Textual documents ``Widget.compose`` — which every screen in
+    ``entrypoints.tui`` inherits — with a Markdown fenced block::
+
+        ```python
+        def compose(self) -> ComposeResult:
+            yield Label("Press the button below:")
+        ```
+
+    Sphinx parses reStructuredText, where ```` ``` ```` opens an inline literal
+    that never closes and the indented body reads as a stray block quote. That
+    single upstream docstring produced 18 of the 22 warnings this gate reported
+    the first time it ever completed: "Inline literal start-string without
+    end-string", "Inline interpreted text ... without end-string", and "Block
+    quote ends without a blank line", once per inheriting screen.
+
+    Rewriting rather than suppressing is deliberate. Suppressing the ``docutils``
+    category would hide the identical warnings in OUR OWN docstrings, where they
+    are real markup defects worth failing on; dropping
+    ``autodoc_inherit_docstrings`` would silently delete inherited prose the API
+    pages legitimately carry. This converts the fence to an RST literal block and
+    leaves the body verbatim, so the reader sees the example the upstream author
+    wrote.
+
+    Args:
+        app: The Sphinx application (unused).
+        what: The kind of object being documented (unused).
+        name: The fully-qualified object name (unused).
+        obj: The object being documented (unused).
+        options: The autodoc options in force (unused).
+        lines: The docstring lines, mutated IN PLACE as autodoc requires.
+    """
+    if not any(line.lstrip().startswith("```") for line in lines):
+        return
+    converted: list[str] = []
+    inside = False
+    for line in lines:
+        stripped = line.lstrip()
+        if stripped.startswith("```"):
+            if inside:
+                inside = False
+                converted.append("")
+            else:
+                inside = True
+                converted.append("::")
+                converted.append("")
+            continue
+        converted.append(f"   {line}" if inside else line)
+    lines[:] = converted
+
+
+class _LegacyDirective(Directive):
+    """Render SQLAlchemy's ``.. legacy::`` admonition as a generic note.
+
+    SQLAlchemy's ``zzzeeksphinx`` extension defines a ``.. legacy::`` admonition
+    that surfaces through autodoc'd inherited docstrings. Without the extension
+    the directive is unknown and errors the gate; emitting an ``admonition``
+    node with the parsed body preserves the inherited guidance.
+    """
+
+    has_content = True
+    required_arguments = 0
+    optional_arguments = 0
+    final_argument_whitespace = True
+
+    @override
+    def run(self):
+        """Build a generic ``Legacy`` admonition from the directive body.
+
+        Returns:
+            A single-element list holding the admonition node.
+        """
+        admonition = nodes.admonition()
+        admonition += nodes.title(text="Legacy")
+        self.state.nested_parse(self.content, self.content_offset, admonition)
+        return [admonition]
+
+
+def _suppress_api_scope_reference(app, env, node, contnode):
+    """Resolve references into the excluded API surface inertly under user scope.
+
+    The user-scope build (``CADRUMO_DOCS_SCOPE=user``) excludes ``docs/api/**``
+    and loads no autodoc, so the py domain is intentionally empty and the API
+    reference doc is absent. Two reference classes then have no target and would
+    red the ``-n -W`` gate even though they resolve in the full/deployed build:
+
+    * every py-domain cross-reference (``:class:`` / ``:func:`` / ... — chiefly
+      the generated CLI reference pages, which point at the application symbols
+      autodoc documents in full scope); and
+    * the ``std:doc`` links into ``api/`` from the reference / architecture pages.
+
+    This handler — connected ONLY under user scope — resolves exactly those to
+    their plain display text (dropping the hyperlink), so the preview builds
+    clean while every OTHER missing reference still reds the gate. It is the
+    documented, scope-aware suppression of just the API-domain missing-reference
+    class (never a blanket ``-W`` off); full-scope builds never connect it.
+    """
+    if node.get("refdomain") == "py":
+        return contnode
+    if (
+        node.get("refdomain") == "std"
+        and node.get("reftype") == "doc"
+        and node.get("reftarget", "").lstrip("/").startswith("api/")
+    ):
+        return contnode
+    return None
+
+
+def setup(app):
+    """Resolve deferred pydantic forward references before autodoc runs.
+
+    Several diagnostics report models defer ``model_rebuild()`` to a lazy
+    runtime path so the ``aeat --version`` fast path stays light. Autodoc
+    imports those modules directly and would crash on a not-fully-defined
+    model; the docs build is not the fast path, so the rebuild is triggered
+    once the builder is initialised and mock imports are active.
+
+    The ``:paramref:`` role and ``.. legacy::`` directive belong to
+    SQLAlchemy's documentation toolchain; they reach our build only through
+    autodoc'd inherited docstrings, so tolerant shims are registered rather
+    than vendoring the upstream extension.
+
+    Args:
+        app: The Sphinx application instance.
+
+    Returns:
+        The extension metadata declaring parallel-read/write safety.
+    """
+    # Sphinx's own words come from one translator the build language settles.
+    # They are replaced here, before the builder captures one for its
+    # templates, so the one compile can answer them for every language.
+    from dev.docs.sphinx_messages import register as _register_sphinx_messages
+
+    _register_sphinx_messages(app)
+
+    def _skip_non_owner_autodoc_member(app, what, name, obj, skip, options):
+        """Keep private/generated typing objects out of public object indexing."""
+        if name in {"__pydantic_serializer__", "__pydantic_validator__"}:
+            return True
+        generic_metadata = getattr(obj, "__pydantic_generic_metadata__", None)
+        if isinstance(generic_metadata, dict) and generic_metadata.get("origin") is not None:
+            return True
+        if get_origin(obj) is Annotated:
+            return True
+        return None
+
+    # Napoleon's optional private/special-member listener probes ``__doc__``
+    # on every candidate before deciding to skip it.  A deferred Pydantic
+    # serializer deliberately raises on that probe, even though autodoc's own
+    # exclude-members contract has already made the descriptor non-public.
+    # None of Napoleon's inclusion switches are enabled here, so disconnecting
+    # that redundant selector preserves member selection and prevents an
+    # excluded implementation descriptor from aborting public API discovery.
+    for listener in tuple(app.events.listeners.get("autodoc-skip-member", ())):
+        handler = listener.handler
+        if handler.__module__ == "sphinx.ext.napoleon" and handler.__name__ == "_skip_member":
+            if any(
+                (
+                    app.config.napoleon_include_init_with_doc,
+                    app.config.napoleon_include_private_with_doc,
+                    app.config.napoleon_include_special_with_doc,
+                )
+            ):
+                raise RuntimeError("Napoleon member inclusion is incompatible with the Pydantic API boundary")
+            app.disconnect(listener.id)
+
+    def _resolve_deferred_models(app):
+        """Run the idempotent deferred-model rebuilds autodoc depends on.
+
+        Both rebuilds are called through their owning modules: the diagnostics
+        report models resolve their heavy forward references, and the canonical
+        error envelope resolves its action DTO. Neither is reached incidentally
+        by importing the other, so autodoc needs both named here.
+
+        Args:
+            app: The Sphinx application instance (unused).
+        """
+        if not _should_resolve_deferred_models():
+            return
+        from cadrumo.application import diagnostics
+        from cadrumo.core.errors.error_codes import ErrorEnvelope, complete_error_envelope_model
+
+        diagnostics._ensure_models_rebuilt()
+        complete_error_envelope_model()
+        if not ErrorEnvelope.__pydantic_complete__:
+            raise RuntimeError("the canonical ErrorEnvelope model did not resolve for API documentation")
+
+    def _generate_cli_reference(app):
+        """Render the CLI reference fresh from the live command tree.
+
+        The ``docs/cli/`` pages are a build-time projection of the materialised
+        command tree and its English ``tr()`` help: they are regenerated on every
+        build and are gitignored, never committed, so they cannot drift from the
+        code. The output language is pinned to English at the top of this module
+        before any project import. Generating in ``builder-inited`` writes the
+        pages before Sphinx reads the source tree.
+
+        Args:
+            app: The Sphinx application instance (unused).
+        """
+        if _skip_generated_output_for_i18n("cli_reference") or not _should_generate_cli_reference():
+            return
+        from dev.docs.cli_reference import generate_cli_reference
+
+        generate_cli_reference(Path(__file__).resolve().parent)
+
+    def _generate_api_stubs(app):
+        """Write the ``api/*.rst`` automodule stubs from every canonical source root.
+
+        The stubs are a pure function of the canonical ``src/`` package roots,
+        so they are build output: written into the source tree this build reads
+        (``app.srcdir``, which is a private copy when the build isolates its
+        source), gitignored, and never committed. Unchanged stubs keep their
+        bytes and mtime, so an incremental build re-reads only the pages whose
+        module set changed. Generating in ``builder-inited`` writes them before
+        Sphinx discovers the source tree for its read phase.
+
+        Args:
+            app: The Sphinx application instance.
+        """
+        if _skip_generated_output_for_i18n("api_stubs") or not _should_generate_api_stubs():
+            return
+        from dev.docs.apidocs.manager import ApiStubManager
+
+        ApiStubManager.for_repository(_PROJECT_ROOT, docs_api=Path(app.srcdir) / "api").scaffold()
+
+    def _generate_glossary_reference(app):
+        """Render the glossary fresh from the approved Handbook concepts.
+
+        The ``docs/_generated/glossary.rst`` page is a build-time projection of
+        the Terminology Handbook: regenerated on every build and gitignored,
+        never committed, so it cannot drift from the curated concepts. Only
+        approved concepts render; drafts are search-only. Generating in
+        ``builder-inited`` writes the page before Sphinx reads the source tree,
+        so its ``:term:`` anchors resolve and the nitpicky ``-n -W`` gate
+        enforces enrolment and single declaration. Guarded like the sibling
+        CLI-reference hook: a specific-source build that does not read the page
+        skips the projection (:func:`_build_reads`).
+
+        Args:
+            app: The Sphinx application instance (unused).
+        """
+        if _skip_generated_output_for_i18n("glossary_reference"):
+            return
+        from dev.docs.glossary_reference import GLOSSARY_REFERENCE_RELPATH, generate_glossary_reference
+
+        if not _build_reads(GLOSSARY_REFERENCE_RELPATH):
+            return
+        generate_glossary_reference(Path(__file__).resolve().parent, repo_root=_PROJECT_ROOT)
+
+    def _generate_casilla_reference(app):
+        """Render the per-modelo casilla reference pages fresh from the registry.
+
+        The ``docs/_generated/casillas/<modelo>.rst`` pages are a build-time
+        projection of the registry casilla set (the same projection the injected
+        search records use): regenerated on every build and gitignored, never
+        committed, so they cannot drift from the registry. Generating in
+        ``builder-inited`` writes the pages before Sphinx reads the source tree,
+        so their anchors resolve and the nitpicky ``-n -W`` gate holds. These
+        pages are the destination the search palette's casilla results deep-link
+        to (they carry each casilla's full legal/source grounding). Guarded like
+        the sibling CLI-reference hook: a specific-source build that does not read
+        the tree skips the projection (:func:`_build_reads`), which is what makes
+        a one-page build a one-page build rather than a registry compile.
+
+        Args:
+            app: The Sphinx application instance (unused).
+        """
+        if _skip_generated_output_for_i18n("casilla_reference"):
+            return
+        from dev.docs.terminology.casilla_anchor import CASILLA_REFERENCE_DIR
+
+        if not _build_reads(CASILLA_REFERENCE_DIR):
+            return
+        from dev.docs.casilla_reference import generate_casilla_reference
+
+        generate_casilla_reference(Path(__file__).resolve().parent, repo_root=_PROJECT_ROOT)
+
+    def _generate_legal_reference(app):
+        """Render the per-document legal reference pages fresh from the catalogue.
+
+        The ``docs/_generated/legal/`` pages are a build-time projection of
+        the authored registry legal tables.  They are regenerated before
+        Sphinx reads the source tree and are never committed.  The generator
+        also owns the page/anchor target inventory consumed by the later legal
+        search-record projection. Guarded like the sibling CLI-reference hook: a
+        specific-source build that does not read the tree skips the projection
+        (:func:`_build_reads`).
+
+        Args:
+            app: The Sphinx application instance (unused).
+        """
+        if _skip_generated_output_for_i18n("legal_reference"):
+            return
+        from dev.docs.legal_reference import generate_legal_reference
+        from dev.docs.legal_reference_routing import LEGAL_REFERENCE_DIR
+
+        if not _build_reads(LEGAL_REFERENCE_DIR):
+            return
+        generate_legal_reference(Path(__file__).resolve().parent, repo_root=_PROJECT_ROOT)
+
+    def _emit_cli_tree(app):
+        """Write a fresh ``_static/cli-tree.json`` help projection for the widget.
+
+        The projection is a build-time asset the ``cli-sequence`` browser widget
+        fetches for hover help. It is gitignored and regenerated, never
+        committed. Guarded like the sibling
+        CLI-reference hook: an incremental changed-page build whose artifact
+        already exists skips the projection's subprocess cost (the CLI tree
+        cannot change on a docs-only page build).
+
+        Args:
+            app: The Sphinx application instance.
+        """
+        if _skip_generated_output_for_i18n("cli_tree"):
+            return
+        from dev.docs.sequence_build_gate import emit_cli_tree
+
+        emit_cli_tree(app, specific_sources=_specific_build_sources())
+
+    def _skip_stock_search_index(app):
+        """Build no Sphinx search index, which nothing in the site reads.
+
+        The search page and the command palette query the Pagefind index the
+        post-build pass writes. Sphinx's own ``searchindex.js`` was two megabytes
+        in every site root and a pass over every page to build.
+
+        Args:
+            app: The Sphinx application instance.
+        """
+        from sphinx.builders.html import StandaloneHTMLBuilder
+
+        if isinstance(app.builder, StandaloneHTMLBuilder):
+            app.builder.search = False
+
+    def _check_cli_sequences(app):
+        """Fail the build on any cli-sequence golden divergence.
+
+        The docs-build half of the two-surfaces-one-engine gate: runs the engine
+        check mode so a divergence or a failed ``@expect`` reds the build. Scoped
+        to the changed-page set on an incremental changed-page build (the same
+        specific-source detection the CLI reference and deferred-model hooks use),
+        unscoped on a full build.
+
+        Args:
+            app: The Sphinx application instance.
+        """
+        from dev.docs.sequence_build_gate import check_sequence_goldens
+
+        specific_sources = _specific_build_sources()
+        pages: list[str] | None
+        if specific_sources is None:
+            pages = None
+        else:
+            docs_root = Path(app.srcdir)
+            pages = []
+            for source in specific_sources:
+                if source.suffix != ".md":
+                    continue
+                try:
+                    pages.append(source.relative_to(docs_root).with_suffix("").as_posix())
+                except ValueError:
+                    continue
+        check_sequence_goldens(app, pages=pages)
+
+    def _mark_authored_messages(app):
+        """Put a mark where each authored page's translation goes, for every language.
+
+        The source tree is discovered here rather than waited for, because the
+        generated catalogue has to exist before Sphinx reads a document and the
+        fragment documents have to exist before it lists them. Discovery is the
+        builder's own, so the pages marked are exactly the pages this scope
+        reads.
+
+        Args:
+            app: The Sphinx application instance.
+        """
+        import logging
+
+        slots = _COMPILE_SLOTS.active()
+        if slots is None:
+            return
+        plan = _MESSAGE_MARKS.prepare(
+            Path(app.srcdir),
+            slots=slots,
+            # The exclusions are the builder's own, so the pages marked are the
+            # pages this scope reads and no more; Sphinx discovers again for
+            # its read phase and picks the fragment documents up then.
+            docnames=app.project.discover(
+                app.config.exclude_patterns + app.config.templates_path + app.builder.get_asset_paths(),
+                app.config.include_patterns,
+            ),
+            doc2path=lambda docname: Path(app.project.doc2path(docname, absolute=True)),
+            source_language=OutputLanguage.EN.value,
+            compact=app.config.gettext_compact,
+        )
+        logging.getLogger(__name__).info(
+            "DOCS_MESSAGE_MARKS pages=%d messages=%d languages=%d",
+            len(plan.pages),
+            plan.messages,
+            len(plan.languages),
+        )
+
+    def _read_authored_messages(app, exception):
+        """Record what each fragment document rendered, then drop the fragments.
+
+        Args:
+            app: The Sphinx application instance.
+            exception: The build's failure, or None when it succeeded.
+        """
+        slots = _COMPILE_SLOTS.active()
+        plan = _MESSAGE_MARKS.active()
+        if exception is not None or slots is None or plan is None:
+            return
+        # What the read phase noted lives on the environment, because a worker
+        # process reading its own chunk of documents can return nothing else.
+        _MESSAGE_MARKS.collect_notes(app.env, plan)
+        _MESSAGE_MARKS.harvest(plan, slots, lambda docname: Path(app.builder.get_outfilename(docname)))
+
+    def _write_compile_slots(app, exception):
+        """Leave the recorded marks where the driver that ran this build reads them.
+
+        Args:
+            app: The Sphinx application instance.
+            exception: The build's failure, or None when it succeeded. A failed
+                build's record says nothing about a site that was not written.
+        """
+        slots = _COMPILE_SLOTS.active()
+        if exception is not None or slots is None:
+            return
+        slots.write(Path(app.outdir) / _COMPILE_SLOTS.SLOTS_FILE)
+
+    #: Each reserved mark standing for a page's description, and the page's own
+    #: text it is derived from. The text still holds this compile's marks, so
+    #: the descriptions are finished once every one of them has its strings.
+    description_marks: dict[str, str] = {}
+
+    def _write_page_description(app, pagename, templatename, context, doctree):
+        """Replace the page's description tags with one derived from its blocks of text.
+
+        Runs after ``sphinxext.opengraph``'s own handler, whose description is
+        a join of the doctree's LEAF text cut at a character count: under the
+        one compile the count is of marks rather than of the text they stand
+        for, and the join loses the whitespace around inline markup in every
+        build (:mod:`dev.docs.page_descriptions`).
+
+        Under the one compile the tag carries a mark, because the text each
+        language reads is not known until every message has been rendered;
+        :func:`_supply_page_descriptions` finishes them.
+
+        Args:
+            app: The Sphinx application instance.
+            pagename: The page being written (unused).
+            templatename: The template rendering it (unused).
+            context: The template context, whose meta tags are rewritten.
+            doctree: The page's resolved doctree, or None for a page the
+                builder collected rather than read, which has no text of its
+                own to describe.
+        """
+        if not doctree:
+            return
+        # The title as the page's own heading reads, which stands in og:title
+        # already and so is left out of the description, exactly as the
+        # extension leaves it out.
+        titles = {_COMPILE_SLOTS.plain_text(context.get("title") or "")}
+        source = _PAGE_DESCRIPTIONS.description_source(doctree, titles=titles)
+        slots = _COMPILE_SLOTS.active()
+        if slots is None or not source:
+            content = _PAGE_DESCRIPTIONS.description_content(source, length=_DESCRIPTION_LENGTH)
+        else:
+            content = slots.reserve(_COMPILE_SLOTS.Rendering.VERBATIM)
+            description_marks[content] = source
+        context["metatags"] = _PAGE_DESCRIPTIONS.with_description(context["metatags"], content)
+
+    def _supply_page_descriptions(app, exception):
+        """Record what each page's description reads in every language.
+
+        Between the pass that reads the rendered translations back and the one
+        that writes the record: a description is the page's own text, so it can
+        only be cut once every mark in that text has its strings, and it has to
+        be recorded before the record is written.
+
+        Args:
+            app: The Sphinx application instance (unused).
+            exception: The build's failure, or None when it succeeded.
+        """
+        slots = _COMPILE_SLOTS.active()
+        if exception is not None or slots is None:
+            return
+        for mark, source in description_marks.items():
+            descriptions = [
+                _PAGE_DESCRIPTIONS.description_content(
+                    slots.plain_resolved(source, index),
+                    length=_DESCRIPTION_LENGTH,
+                )
+                for index in range(len(slots.languages))
+            ]
+            slots.supply(mark, descriptions, descriptions)
+        description_marks.clear()
+
+    def _write_the_compiled_site_in_this_process(app):
+        """Keep the one compile's write phase in the process that records its marks.
+
+        Sphinx writes documents in worker processes where it can, and discards
+        whatever they leave behind: a worker's return value is thrown away and
+        its memory goes with it. The marks for Sphinx's own interface strings,
+        the language switcher and the per-language scripts are created while a
+        page is written, so under the one compile they have to be created here.
+        Reading stays parallel, which is where the time goes, and clearing the
+        builder's own permission rather than declaring an extension unsafe is
+        what keeps the build quiet about it (``Builder.build`` asks the builder
+        first and only then asks the extensions).
+
+        Args:
+            app: The Sphinx application instance.
+        """
+        app.builder.allow_parallel = False
+
+    if _MULTILINGUAL:
+        # The messages are marked after the generated pages are written, so the
+        # discovered source tree is the one Sphinx will read, and read back
+        # before the marks are written, which is what the record needs them for.
+        app.connect("builder-inited", _mark_authored_messages, priority=900)
+        app.connect("builder-inited", _write_the_compiled_site_in_this_process)
+        app.connect("env-purge-doc", _MESSAGE_MARKS.purge_notes)
+        app.connect("env-merge-info", _MESSAGE_MARKS.merge_notes)
+        app.connect("build-finished", _read_authored_messages, priority=100)
+        app.connect("build-finished", _supply_page_descriptions, priority=150)
+        app.connect("build-finished", _write_compile_slots, priority=200)
+        app.add_transform(_MESSAGE_MARKS_TITLE_TRANSFORM)
+        app.add_transform(_MESSAGE_MARKS_HEADING_TRANSFORM)
+        app.add_transform(_MESSAGE_MARKS_TRANSFORM)
+        app.add_post_transform(_MESSAGE_MARKS_POST_TRANSFORM)
+    if not _DESKTOP_FLAVOR:
+        # Priority 600 runs after sphinxext.opengraph's own handler, which sits
+        # at the default and whose description tags this one replaces. The
+        # packaged copy loads no Open Graph extension and carries no
+        # description tags at all, so nothing there is described either.
+        app.connect("html-page-context", _write_page_description, priority=600)
+    _LANGUAGE_SWITCHER.register(app)
+    # Every build, not only the one compile: a page no language translates is
+    # typeset in the language it is authored in wherever it is built, which is
+    # what makes one page in one compile the page every language publishes.
+    _UNTRANSLATED_TYPESETTING.register(app)
+    # Ahead of the default priority, so the fences are gone before the type-hint
+    # extension reads the docstring: it parses every docstring once on its own
+    # to find where a return type goes, and what it reported there carried no
+    # source, once for every screen that inherits Textual's ``compose``.
+    app.connect("autodoc-process-docstring", _convert_markdown_fences_in_inherited_docstrings, priority=400)
+    app.connect("autodoc-skip-member", _skip_non_owner_autodoc_member, priority=100)
+    app.connect("env-before-read-docs", _clear_source_binding_cache)
+    app.connect("builder-inited", _resolve_deferred_models)
+    app.connect("builder-inited", _generate_cli_reference)
+    app.connect("builder-inited", _generate_api_stubs)
+    app.connect("builder-inited", _generate_glossary_reference)
+    app.connect("builder-inited", _generate_casilla_reference)
+    app.connect("builder-inited", _generate_legal_reference)
+    app.connect("builder-inited", _emit_cli_tree)
+    app.connect("builder-inited", _check_cli_sequences)
+    app.connect("builder-inited", _skip_stock_search_index)
+    # Priority 700 runs after intersphinx (which resolves external targets at the
+    # default priority) so the short-name bridge only fires for genuinely
+    # unresolved in-tree references.
+    app.connect("missing-reference", _resolve_short_reference, priority=700)
+    if _USER_SCOPE:
+        # Scope-aware API-reference suppression: the missing-reference handler
+        # runs LAST (priority 900, after the short-name bridge) so it only inerts
+        # references the full build would resolve against the excluded autodoc
+        # surface. MyST's markdown links into api/ never reach that event; the
+        # user-scope ``nitpick_ignore_regex`` entry covers them.
+        app.connect("missing-reference", _suppress_api_scope_reference, priority=900)
+    app.add_role("paramref", _paramref_role)
+    app.add_directive("legacy", _LegacyDirective)
+
+    # Register the cli-sequence directive: server-rendered executed-CLI frames
+    # plus one inline JSON payload per sequence.
+    from dev.docs.sequence_directive import register as _register_cli_sequence
+
+    _register_cli_sequence(app)
+
+    # Each page's sidebar is the collapsed toctree rather than the whole site
+    # tree, which the theme would otherwise recompute and embed on every page.
+    from dev.docs.navigation import register as _register_collapsed_navigation
+
+    _register_collapsed_navigation(app)
+
+    # A generated page's heading is written in the reader's language, so the
+    # anchor its section would be named after is too. Each such heading names
+    # its own anchor instead, the same one in every language root.
+    from dev.docs.section_anchors import register as _register_section_anchors
+
+    _register_section_anchors(app)
+
+    # The theme variables and the chrome strings are one file per site root
+    # rather than a block in every page's head.
+    from dev.docs.shared_page_assets import register as _register_shared_page_assets
+
+    _register_shared_page_assets(app)
+
+    # Sphinx's own interface strings are one script per language, which the one
+    # compile writes for every language rather than for the build's own.
+    from dev.docs.translations_js import register as _register_translations_js
+
+    _register_translations_js(app)
+    return {"parallel_read_safe": True, "parallel_write_safe": True}

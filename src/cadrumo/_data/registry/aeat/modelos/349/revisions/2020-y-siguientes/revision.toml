@@ -1,0 +1,102 @@
+[revisions."2020-y-siguientes"]
+binding_source_refs = ["aeat-dr-349-2020-current"]
+casilla_source_refs = ["aeat-dr-349-2020-current"]
+extraction_profile_source_refs = ["aeat-dr-349-2020-current"]
+filing_schedule_source_refs = ["aeat-modelo-349-procedure"]
+# Prepared and reviewed by an agent against the bundled diseño de registros and
+# the ordenes this revision cites; NO human operator has countersigned it, and
+# 'agent_reviewed' plus this reviewer token record that state honestly rather
+# than claiming the operator's own sign-off.
+#
+# What the review established, by measurement:
+#   - every casilla legal_ref and source_ref resolves to the legal catalogue, and
+#     every cited source's corpus file is present on disk;
+#   - every formula targets a casilla of this revision;
+#   - every enrolled schema family resolves;
+#   - every cited source's applicability window overlaps this revision's own life;
+#   - and all 3 fixed-width records of the DERIVED layout were paired to their
+#     design sheet and cover it, with NO design DATA position left unaddressed.
+#
+# Two pairing facts are recorded here because an automated pairing pass abstains
+# on both, and the abstention was a measurement artefact rather than a defect:
+#
+#   - The rectificaciones record pairs to the sheet AEAT names "Tipo 2 - Registro
+#     De Retificaciones". That is AEAT's own spelling, missing the first "c", so a
+#     noun match between the record id and the sheet identity finds nothing.
+#   - The operador record emits 500 positions while its sheet's LAST LISTED
+#     position is 235. 235 is not the record length. The sibling Tipo 2
+#     rectificaciones sheet carries identical fields at 179..195 and 196..235 and
+#     then an explicit trailing block at 236..500; the operador sheet simply stops
+#     listing after its last data field. A fixed-width file interleaves tipo 1,
+#     tipo 2 operador and tipo 2 rectificaciones lines, and the other two records
+#     are 500, so a 235-position operador line would make the file unparseable.
+#
+# The coverage figure is measured on the layout AFTER binding derivation, which
+# is what the renderer and the completeness gate consume.
+#
+# What it does NOT establish: that the figures a filing produces are correct
+# against AEAT. That is a tax review against official sources, and it is what an
+# operator re-stamping this to 'operator_reviewed' would be attesting.
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-08-19
+authority_grade = "filing"
+id = "2020-y-siguientes"
+valid_from = 2020-01-01
+period_selector = { year_from = 2020, periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "1T", "2T", "3T", "4T"] }
+legal_refs = [
+    "orden-eha-769-2010:art-1",
+    "orden-hac-174-2020:art-1",
+    "ley-58-2003:art-93",
+    "rd-1624-1992:art-81",
+]
+orden_aplicabilidad = [
+    "orden-eha-769-2010:art-1",
+    "orden-hac-174-2020:art-1",
+]
+source_refs = [
+    "aeat-dr-349-2020-current",
+    "aeat-modelo-349-instructions",
+    "aeat-modelo-349-procedure",
+    "aeat-calendario-contribuyente-2022",
+    "aeat-calendario-contribuyente-2023",
+    "aeat-calendario-contribuyente-2024",
+    "aeat-calendario-contribuyente-2025",
+    "aeat-calendario-contribuyente-2026",
+]
+
+[revisions."2020-y-siguientes".family_dispositions.projection_endpoints]
+reason = """
+FilingProjectionRef (cadrumo.core) is a closed discriminated union of exactly seven projection_kind members, all prefixed m303_ and used exclusively by modelo 303's engine-computed IVA facts; ProjectionEndpointDeclaration.projection_ref accepts only that union, so no declaration naming modelo 349's own casillas can validate. Modelo 349 is not modelo 303, so the projection_endpoints family cannot be populated by construction. This revision's own export_layouts already demonstrate the mechanism \
+that serves its repeating rows: at least one authored ExportRecordDefinition declares repeat == \"binding_rows\", materializing repeating rows from binding values rather than from a projection_endpoints declaration."""
+legal_refs = [
+    "orden-eha-769-2010:art-1",
+    "orden-hac-174-2020:art-1",
+    "ley-58-2003:art-93",
+    "rd-1624-1992:art-81",
+]
+source_refs = [
+    "aeat-dr-349-2020-current",
+    "aeat-modelo-349-instructions",
+    "aeat-modelo-349-procedure",
+]
+[revisions."2020-y-siguientes".family_dispositions.formulas]
+reason = """
+Modelo 349 is a declaracion RECAPITULATIVA: it lists the intracomunitario operations of the period so AEAT can cross-check them against the VIES declarations filed in other member states. It settles no tax, determines no base and no cuota, and computes no taxpayer liability of its own. Measured on the revision itself, none of its 18 casillas declares a formula_id and none is input_kind computed. Its four declarante totals are not an exception: decl.numero-operadores, decl.importe-operaciones, \
+decl.numero-rectificaciones and decl.importe-rectificaciones are all input_kind = 'bound', arriving through this revision's binding layer rather than through a registry formula, so the aggregation they represent has a home and it is not this family. Empty by this modelo's nature and by where its aggregation lives, not by omission."""
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "rd-1624-1992:art-81"]
+source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-instructions"]
+
+[revisions."2020-y-siguientes".family_dispositions.parameters]
+reason = """
+A parameter holds a regulatory value a formula of this revision applies -- a rate, a threshold, a coefficient. Modelo 349 declares no formulas at all (see the formulas disposition on this same revision), so there is no expression that could reference one. It is a recapitulative listing of intracomunitario operations and their amounts as invoiced; no rate, tranche or coefficient is applied to any figure it carries. Contrast modelo 115, which holds irpf.urban_rental_withholding_rate because its \
+casilla 03 is computed as percent(02, rate). The family is empty by the shape of this modelo's calculation rather than by omission."""
+legal_refs = ["orden-eha-769-2010:art-1", "rd-1624-1992:art-81"]
+source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-instructions"]
+
+[revisions."2020-y-siguientes".family_dispositions.dependency_classifications]
+reason = """
+A dependency classification declares which OTHER modelo's filing a value here derives from, and modelo 349 derives from none. It recapitulates the declarant's own intracomunitario deliveries and acquisitions of the period, read from its own invoicing records. The cross-check this declaration exists for runs OUTWARD and across borders -- AEAT reconciles it against the VIES declarations the counterparties file in their own member states -- not inward from another Spanish modelo. Its IVA siblings \
+are not upstream of it either: modelo 303 declares the same operations as part of a periodic liquidacion, but neither derives its figures from the other and both read the same underlying invoices. Inapplicable by this modelo's position rather than merely unpopulated."""
+legal_refs = ["orden-eha-769-2010:art-1", "rd-1624-1992:art-81", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-procedure"]

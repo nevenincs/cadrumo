@@ -1,0 +1,34 @@
+[fact]
+fact_id = "sal-special-reserve-formula-spec"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "sal-special-reserve-formula-spec:2015-11-15"
+date_axis = "filing_period"
+valid_from = 2015-11-15
+legal_refs = ["ley-44-2015:art-14"]
+source_refs = ["boe-ley-44-2015-art-14-statutory-facts"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-ley-44-2015-art-14-statutory-facts"
+required_text = ["diez por ciento del beneficio líquido", "doble del capital social"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "applicability.entity", value = "sal_sll" },
+  { key = "applicability.capital_social", value = "positive" },
+  { key = "applicability.inputs_non_negative", value = "beneficio_neto,reserva_dotada" },
+  { key = "formula.kind", value = "min(allocation,cap_headroom)" },
+  { key = "formula.input.beneficio_neto", value = "operator_input" },
+  { key = "formula.input.reserva_dotada", value = "operator_input" },
+  { key = "formula.input.capital_social", value = "operator_input" },
+  { key = "formula.allocation.rate_fact_id", value = "sal-special-reserve-allocation-rate" },
+  { key = "formula.allocation", value = "round_money(beneficio_neto * allocation_rate)" },
+  { key = "formula.capital.multiple_fact_id", value = "sal-special-reserve-capital-multiple" },
+  { key = "formula.capital.multiple", value = "round_money(capital_social * capital_multiple)" },
+  { key = "formula.capital.strict_boundary", value = "reserve must exceed capital_multiple_times_capital_social by one_cent" },
+  { key = "formula.cap_headroom", value = "max(0.00, capital_multiple_value + one_cent - reserva_dotada)" },
+  { key = "formula.result", value = "round_money(min(allocation,cap_headroom))" },
+  { key = "formula.rounding", value = "money-2" },
+]

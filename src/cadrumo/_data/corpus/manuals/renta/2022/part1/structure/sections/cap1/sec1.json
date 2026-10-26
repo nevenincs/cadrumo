@@ -1,0 +1,22 @@
+{
+  "section_id": "sec1",
+  "chapter_id": "cap1",
+  "title": "Obligación de declarar",
+  "summary": "Resumen de las personas físicas obligadas a declarar por el IRPF.",
+  "prose": [
+    {
+      "paragraph_id": "p1",
+      "text": "Están obligados a declarar los contribuyentes que obtengan rentas superiores a los límites establecidos por la Ley en función de su procedencia y cuantía.",
+      "page": 1
+    }
+  ],
+  "rules": [],
+  "references_sections": [],
+  "references_legal_acts": [],
+  "source": {
+    "manual_url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2022/ManualRenta2022_es_es.pdf",
+    "page": 1
+  },
+  "definition_reviewed_by": "operator",
+  "definition_reviewed_at": "2026-06-08"
+}

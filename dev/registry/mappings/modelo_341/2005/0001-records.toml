@@ -1,0 +1,333 @@
+schema_version = 1
+fragment_id = 'records'
+modelo = '341'
+design_epoch = '2005'
+source_ref = 'aeat-dr-341-2005-2015'
+source_sha256 = 'c1c59a317be87dbb4898c017ace8f6327e9df340648808fb6d1831a0c7295c3d'
+
+[[records]]
+sheet = 'PDF record design'
+record_identity = 'PDF record design'
+export_record_id = 'modelo-341-historical-record'
+record_type = 'historical_fixed_width'
+required = true
+
+[[entries]]
+export_field_id = 'modelo-341-historical-modelo'
+kind = 'literal'
+literal = '341'
+legal_refs = [
+    'orden-min-2000-12-15-m341:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-341-2005-2015']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 4
+record_identity = 'PDF record design'
+ordinal = '1'
+
+[[entries]]
+export_field_id = 'modelo-341-historical-tipo-declaracion'
+kind = 'literal'
+literal = 'D'
+legal_refs = [
+    'orden-min-2000-12-15-m341:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-341-2005-2015']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 5
+record_identity = 'PDF record design'
+ordinal = '2'
+
+[[entries]]
+export_field_id = 'modelo-341-historical-nif'
+kind = 'header'
+producer_key = 'taxpayer.tax_id'
+legal_refs = [
+    'orden-min-2000-12-15-m341:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-341-2005-2015']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 7
+record_identity = 'PDF record design'
+ordinal = '3'
+
+[[entries]]
+export_field_id = 'modelo-341-historical-letras-etiqueta'
+kind = 'casilla'
+casilla_id = 'wire.letras-etiqueta'
+legal_refs = [
+    'orden-min-2000-12-15-m341:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-341-2005-2015']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 8
+record_identity = 'PDF record design'
+ordinal = '4'
+
+[[entries]]
+export_field_id = 'modelo-341-historical-ejercicio'
+kind = 'draft'
+draft_attribute = 'filing_year'
+legal_refs = [
+    'orden-min-2000-12-15-m341:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-341-2005-2015']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 9
+record_identity = 'PDF record design'
+ordinal = '5'
+
+[[entries]]
+export_field_id = 'modelo-341-historical-periodo'
+kind = 'draft'
+draft_attribute = 'period_code'
+legal_refs = [
+    'orden-min-2000-12-15-m341:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-341-2005-2015']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 10
+record_identity = 'PDF record design'
+ordinal = '6'
+
+[[entries]]
+export_field_id = 'modelo-341-historical-importe-operaciones-01'
+kind = 'casilla'
+casilla_id = '01'
+legal_refs = [
+    'orden-min-2000-12-15-m341:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-341-2005-2015']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 11
+record_identity = 'PDF record design'
+ordinal = '7'
+
+[[entries]]
+export_field_id = 'modelo-341-historical-importe-operaciones-02'
+kind = 'casilla'
+casilla_id = '02'
+legal_refs = [
+    'orden-min-2000-12-15-m341:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-341-2005-2015']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 12
+record_identity = 'PDF record design'
+ordinal = '8'
+
+[[entries]]
+export_field_id = 'modelo-341-historical-importe-operaciones-03'
+kind = 'casilla'
+casilla_id = '03'
+legal_refs = [
+    'orden-min-2000-12-15-m341:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-341-2005-2015']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 13
+record_identity = 'PDF record design'
+ordinal = '9'
+
+[[entries]]
+export_field_id = 'modelo-341-historical-porcentaje-compensacion-04'
+kind = 'casilla'
+casilla_id = '04'
+legal_refs = [
+    'orden-min-2000-12-15-m341:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-341-2005-2015']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 14
+record_identity = 'PDF record design'
+ordinal = '10'
+
+[[entries]]
+export_field_id = 'modelo-341-historical-porcentaje-compensacion-05'
+kind = 'casilla'
+casilla_id = '05'
+legal_refs = [
+    'orden-min-2000-12-15-m341:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-341-2005-2015']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 15
+record_identity = 'PDF record design'
+ordinal = '11'
+
+[[entries]]
+export_field_id = 'modelo-341-historical-porcentaje-compensacion-06'
+kind = 'casilla'
+casilla_id = '06'
+legal_refs = [
+    'orden-min-2000-12-15-m341:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-341-2005-2015']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 16
+record_identity = 'PDF record design'
+ordinal = '12'
+
+[[entries]]
+export_field_id = 'modelo-341-historical-importe-compensacion-07'
+kind = 'casilla'
+casilla_id = '07'
+legal_refs = [
+    'orden-min-2000-12-15-m341:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-341-2005-2015']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 17
+record_identity = 'PDF record design'
+ordinal = '13'
+
+[[entries]]
+export_field_id = 'modelo-341-historical-importe-compensacion-08'
+kind = 'casilla'
+casilla_id = '08'
+legal_refs = [
+    'orden-min-2000-12-15-m341:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-341-2005-2015']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 18
+record_identity = 'PDF record design'
+ordinal = '14'
+
+[[entries]]
+export_field_id = 'modelo-341-historical-importe-compensacion-09'
+kind = 'casilla'
+casilla_id = '09'
+legal_refs = [
+    'orden-min-2000-12-15-m341:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-341-2005-2015']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 19
+record_identity = 'PDF record design'
+ordinal = '15'
+
+[[entries]]
+export_field_id = 'modelo-341-historical-importe-total-10'
+kind = 'casilla'
+casilla_id = '10'
+legal_refs = [
+    'orden-min-2000-12-15-m341:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-341-2005-2015']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 20
+record_identity = 'PDF record design'
+ordinal = '16'
+
+[[entries]]
+export_field_id = 'modelo-341-historical-codigo-cuenta-cliente'
+kind = 'casilla'
+casilla_id = 'wire.codigo-cuenta-cliente'
+legal_refs = [
+    'orden-min-2000-12-15-m341:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-341-2005-2015']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 21
+record_identity = 'PDF record design'
+ordinal = '17'
+
+[[entries]]
+export_field_id = 'modelo-341-historical-contacto-nombre'
+kind = 'header'
+producer_key = 'contact_person.full_name'
+legal_refs = [
+    'orden-min-2000-12-15-m341:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-341-2005-2015']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 22
+record_identity = 'PDF record design'
+ordinal = '18'
+
+[[entries]]
+export_field_id = 'modelo-341-historical-contacto-telefono'
+kind = 'header'
+producer_key = 'contact_person.phone'
+legal_refs = [
+    'orden-min-2000-12-15-m341:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-341-2005-2015']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 23
+record_identity = 'PDF record design'
+ordinal = '19'
+
+[[entries]]
+export_field_id = 'modelo-341-historical-observaciones'
+kind = 'casilla'
+casilla_id = 'wire.observaciones'
+legal_refs = [
+    'orden-min-2000-12-15-m341:art-1',
+    'ley-58-2003:art-93',
+]
+source_refs = ['aeat-dr-341-2005-2015']
+
+[entries.anchor]
+sheet = 'PDF record design'
+source_row = 24
+record_identity = 'PDF record design'
+ordinal = '20'

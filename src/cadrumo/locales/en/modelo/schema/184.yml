@@ -1,0 +1,495 @@
+modelo:
+  schema:
+    '184':
+      casilla:
+        continuidad:
+          actividad-principal-espanola:
+            label: MAIN ACTIVITY
+          base-deduccion-o-importe:
+            help: Amount declared on modelo 184. The design splits it into an integer
+              and a decimal part.
+            label: Deduction base / amount
+          cesionario-denominacion:
+            label: NAME OR COMPANY NAME OF THE TRANSFEREE / NAME OF THE COLLECTIVE
+              INVESTMENT INSTITUTION
+          cesionario-nif:
+            label: NIF OF THE TRANSFEREE PERSON OR ENTITY / NIF OF THE COLLECTIVE
+              INVESTMENT INSTITUTION
+          clave-declarado:
+            help: Field declared on modelo 184, the informative return of income-attribution
+              entities.
+            label: Reported-party code
+          clave-pais-entidad-extranjera:
+            label: COUNTRY CODE
+          clave-pais-renta:
+            label: COUNTRY CODE
+          clave-tipo-participe:
+            label: PARTICIPANT TYPE CODE
+          criterio-cobros-y-pagos:
+            label: CASH RECEIPTS AND PAYMENTS BASIS
+          declaracion-complementaria-sustitutiva:
+            label: SUPPLEMENTARY OR REPLACEMENT RETURN
+          epigrafe-iae:
+            label: IAE GROUP OR HEADING
+          fecha-adquisicion:
+            label: Year
+          filing-year:
+            label: Tax year the return refers to
+          ganancias-perdidas-patrimoniales-atribuibles:
+            help: Amount declared on modelo 184. The design splits it into an integer
+              and a decimal part.
+            label: Gains / losses
+          gasto-actividad-amortizaciones:
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Economic-activity expenses. Depreciation
+          gasto-actividad-arrendamientos-canones:
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Economic-activity expenses. Leases and royalties
+          gasto-actividad-consumos-explotacion:
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Economic-activity expenses. Operating consumption
+          gasto-actividad-gastos-financieros:
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Economic-activity expenses. Financial expenses
+          gasto-actividad-gastos-personal:
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Economic-activity expenses. Staff costs
+          gasto-actividad-otros-gastos-deducibles:
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Economic-activity expenses. Other tax-deductible expenses
+          gasto-actividad-provisiones:
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Economic-activity expenses. Provisions
+          gasto-actividad-reparaciones-conservacion:
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Economic-activity expenses. Repairs and maintenance
+          gasto-actividad-servicios-profesionales:
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Economic-activity expenses. Independent professional services
+          gasto-actividad-suministros:
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Economic-activity expenses. Utilities
+          gasto-actividad-tributos-deducibles:
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Economic-activity expenses. Tax-deductible levies
+          gasto-inmobiliario-amortizacion-bienes-muebles:
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Real-estate capital expenses. Depreciation of movable assets
+          gasto-inmobiliario-amortizacion-inmueble:
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Real-estate capital expenses. Depreciation of the property
+          gasto-inmobiliario-cantidades-devengadas-terceros:
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Real-estate capital expenses. Amounts accrued by third parties
+          gasto-inmobiliario-conservacion-reparacion:
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Real-estate capital expenses. Maintenance and repair
+          gasto-inmobiliario-intereses-financiacion:
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Real-estate capital expenses. Interest and other financing costs
+          gasto-inmobiliario-intereses-gastos-reparacion:
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Real-estate capital expenses. Outstanding interest and repair or
+              maintenance costs
+          gasto-inmobiliario-otros-gastos-deducibles:
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Real-estate capital expenses. Other deductible expenses
+          gasto-inmobiliario-primas-seguros:
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Real-estate capital expenses. Insurance premiums
+          gasto-inmobiliario-saldos-dudoso-cobro:
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Real-estate capital expenses. Doubtful balances
+          gasto-inmobiliario-tributos-recargos:
+            help: Tax-deductible expense declared in modelo 184's entity record. The
+              design splits it into an integer and a decimal part.
+            label: Real-estate capital expenses. Levies and surcharges
+          gastos-deducibles-atribuibles:
+            help: Amount declared on modelo 184. The design splits it into an integer
+              and a decimal part.
+            label: Expenses / excess negative income
+          importe-atribuido-miembro:
+            label: AMOUNT (INCOME / WITHHOLDING / DEDUCTION)
+          importe-neto-cifra-negocios:
+            help: Amount declared on modelo 184. The design splits it into an integer
+              and a decimal part.
+            label: Net turnover
+          ingresos-integros-atribuibles:
+            help: Field declared on modelo 184, the informative return of income-attribution
+              entities.
+            label: Gross income / amount of accrued returns / accounting result
+          miembro-a-31-diciembre:
+            help: Field of the member declared in modelo 184's type 3 record.
+            label: Member as at 31 December
+          miembro-clave-pais:
+            label: COUNTRY CODE
+          miembro-codigo-provincia:
+            help: Field of the member declared in modelo 184's type 3 record.
+            label: Province code
+          miembro-domicilio-fiscal:
+            label: TAX ADDRESS OF THE ENTITY MEMBER
+          miembro-nif:
+            help: Field of the member declared in modelo 184's type 3 record.
+            label: NIF of the member
+          miembro-nombre-razon-social:
+            help: Field of the member declared in modelo 184's type 3 record.
+            label: Surnames and first name, company name or denomination of the member
+          miembro-representante-fiscal-nif:
+            help: Field declared on modelo 184, the informative return of income-attribution
+              entities.
+            label: NIF of the tax representative
+          naturaleza-inmueble:
+            help: Field of the member declared in modelo 184's type 3 record.
+            label: Nature of the property
+          numero-dias-arrendamiento:
+            label: NUMBER OF DAYS OF LETTING OR TRANSFER OF USE AND ENJOYMENT
+          numero-dias-miembro:
+            help: Field of the member declared in modelo 184's type 3 record.
+            label: Number of days as a member
+          numero-justificante:
+            label: IDENTIFYING NUMBER OF THE RETURN
+          objeto-entidad-extranjera:
+            label: PURPOSE
+          persona-relacion:
+            label: TELEPHONE
+          porcentaje-participacion:
+            help: Amount declared on modelo 184. The design splits it into an integer
+              and a decimal part.
+            label: Participation percentage
+          porcentaje-reduccion-renta-atribuible:
+            help: Amount declared on modelo 184. The design splits it into an integer
+              and a decimal part.
+            label: Reduction percentage
+          porcentaje-renta-atribuible-residentes:
+            help: Field declared on modelo 184, the informative return of income-attribution
+              entities.
+            label: Percentage of attributable income
+          porcentaje-titularidad-inmueble:
+            label: PERCENTAGE OF OWNERSHIP OF THE PROPERTY
+          provisiones-y-gastos-dificil-justificacion:
+            label: DEDUCTIBLE PROVISIONS AND HARD-TO-JUSTIFY EXPENSES
+          reduccion-atribuida-miembro:
+            help: Amount declared on modelo 184. The design splits it into an integer
+              and a decimal part.
+            label: Reduction
+          referencia-catastral:
+            label: CADASTRAL REFERENCE
+          regimen-determinacion-rendimientos:
+            label: RETURN DETERMINATION REGIME
+          rendimiento-neto-minorado-agricola-estimacion-objetiva:
+            label: REDUCED NET RETURN FROM AGRICULTURAL, LIVESTOCK AND FORESTRY ACTIVITIES
+              UNDER OBJECTIVE ASSESSMENT
+          rendimiento-neto-previo-estimacion-objetiva:
+            help: Amount declared on modelo 184. The design splits it into an integer
+              and a decimal part.
+            label: Prior net return of activities under objective assessment
+          renta-atribuible-con-derecho-reduccion:
+            label: ATTRIBUTABLE INCOME WITH THE RIGHT TO A REDUCTION
+          renta-atribuible-importe:
+            label: Amount of income attributable / net return attributable to the
+              entity member (unsigned, no decimal comma, in euros)
+          representante-nif:
+            label: N.I.F. OF THE REPRESENTATIVE
+          representante-nombre:
+            label: SURNAMES AND FIRST NAME OR COMPANY NAME OF THE REPRESENTATIVE
+          retenciones-ingresos-a-cuenta-atribuibles:
+            help: Amount declared on modelo 184. The design splits it into an integer
+              and a decimal part.
+            label: Withholdings and payments on account
+          situacion-inmueble:
+            label: LOCATION OF THE PROPERTY
+          tipo-actividad:
+            label: ACTIVITY TYPE
+          tipo-declaracion:
+            label: Type of return (original / replacement / supplementary)
+          tipo-entidad-espanola:
+            label: ENTITY TYPE
+          tipo-entidad-extranjera:
+            label: ENTITY TYPE
+          tipo-hoja:
+            label: SHEET TYPE
+          tipo-renta-atribuida-clave:
+            label: Attributed-income type key (A=movable capital, C=real-estate capital,
+              D=economic activities, F=gains/losses excl. transfer, G=gains/losses
+              on transfer, I=IRPF deductions, J=IS deductions, K=withholdings borne,
+              L=excess negative income from no-treaty countries)
+          tipo-renta-atribuida-subclave:
+            label: Attributed-income subtype key (granularity by domestic/foreign
+              geographic origin, applicable reductions, etc.)
+          tipo-soporte:
+            label: MEDIUM TYPE
+          tipo3-clave:
+            label: CODE
+          tipo3-dias-arrendamiento:
+            label: NUMBER OF DAYS OF LETTING OR TRANSFER OF USE AND ENJOYMENT OF THE
+              PROPERTY
+          tipo3-referencia-catastral:
+            label: CADASTRAL REFERENCE
+          tipo3-situacion-inmueble:
+            label: LOCATION OF THE PROPERTY
+          tipo3-subclave:
+            label: SUB-CODE
+          tipo3-tipo-hoja:
+            label: SHEET TYPE
+          total-registros-socios:
+            label: TOTAL NUMBER OF RECORDS OF MEMBERS, HEIRS, CO-OWNERS OR PARTICIPANTS
+          tributacion-impuesto-sociedades:
+            label: TAXATION UNDER THE CORPORATE INCOME TAX REGIME
+          valor-adquisicion-o-ajustes-disminuciones:
+            help: Amount declared on modelo 184. The design splits it into an integer
+              and a decimal part.
+            label: Acquisition, subscription or book value
+          valor-liquidativo-o-ajustes-aumentos:
+            help: Amount declared on modelo 184. The design splits it into an integer
+              and a decimal part.
+            label: 'Net asset value / adjustments: increases'
+      construct:
+        modelo-184-informative:
+          field:
+            title: Modelo 184 informative return for entities under the income attribution
+              regime
+      field:
+        official_name: Modelo 184. Annual informative return of income-attribution
+          entities.
+        title: Income-attribution entities (annual informative return)
+      revision:
+        '2015':
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: Box ejercicio of modelo 184, tax year 2015.
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: Box tipo-declaracion of modelo 184, tax year 2015.
+          field:
+            label: Modelo 184, tax year 2015
+        2016-2018:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: Box ejercicio of modelo 184, tax years 2016 to 2018.
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: Box tipo-declaracion of modelo 184, tax years 2016 to 2018.
+          field:
+            label: Modelo 184, tax years 2016 to 2018
+        2019-2021:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: Box ejercicio of modelo 184, tax years 2019 to 2021.
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: Box tipo-declaracion of modelo 184, tax years 2019 to 2021.
+          field:
+            label: Modelo 184, tax years 2019 to 2021
+        '2022':
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: Box ejercicio of modelo 184, tax year 2022.
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: Box tipo-declaracion of modelo 184, tax year 2022.
+          field:
+            label: Modelo 184, tax year 2022
+        2023-2024:
+          casilla:
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
+              help: Box 121-122 of modelo 184, tax years 2023 and 2024.
+            x-chim6r1ecll6asj3d5hmiro:
+              help: Box ejercicio of modelo 184, tax years 2023 and 2024.
+            x-chim6r1ecln78qb4c5i2qpbje1gmsrrcc4n62orkd5r6ip31cgmn0sj9dphmis31dg:
+              help: Box 146 of modelo 184, tax years 2023 and 2024.
+            x-chim6r1ecln78qb4c5i2qpbje1gmsrrcc4n78qbgdsmmarjkd5i62p0:
+              help: Box 145 of modelo 184, tax years 2023 and 2024.
+            x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bj3dhgncp9de1gmiso:
+              help: Box 149-150 of modelo 184, tax years 2023 and 2024.
+            x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjfc9l6at3f:
+              help: Box 148 of modelo 184, tax years 2023 and 2024.
+            x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjkd5o6ubb5dpq6ip31cg:
+              help: Box 147 of modelo 184, tax years 2023 and 2024.
+            x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
+              help: Box 108-120 of modelo 184, tax years 2023 and 2024.
+            x-chim6r1ee1in4srfdpgiqsj5dhgm6qbfdo:
+              help: Box 59-107 of modelo 184, tax years 2023 and 2024.
+            x-chim6r1ee9in0sj5edimst31dpq6abbed5j0:
+              help: Box 172-180 of modelo 184, tax years 2023 and 2024.
+            x-chim6r1ee9in0sj5edimst31dpq6abbedtmm4sj5:
+              help: Box 181-220 of modelo 184, tax years 2023 and 2024.
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: Box tipo-declaracion of modelo 184, tax years 2023 and 2024.
+            x-chim6r1eehkn0rpdednn0rriehig:
+              help: Box 58 of modelo 184, tax years 2023 and 2024.
+            x-chim6r1eehnn8obc5lpmuor9dtpg:
+              help: Box 136-144 of modelo 184, tax years 2023 and 2024.
+            x-chim6r1eehp6iojlehgm6qbfdommirbgelin6t3f5lpmuor9cli62p35ec:
+              help: Box 156 of modelo 184, tax years 2023 and 2024.
+            x-ehkn0rpi5phmasr9dtn62sj9dsmm8pbedtmmirj1cdkmurg:
+              help: Box 97-116 of modelo 184, tax years 2023 and 2024.
+            x-ehkn0rpi5phmasr9dtn62sj9dsmmsqb6:
+              help: Box 88-96 of modelo 184, tax years 2023 and 2024.
+            x-ehkn0rpi5phmoobmck:
+              help: Box 77 of modelo 184, tax years 2023 and 2024.
+            x-ehkn0rpi5phmoobmckmn0ob9ec:
+              help: Box 80-81 of modelo 184, tax years 2023 and 2024.
+            x-ehkn0rpi5phn4qbkclp6irpdcdnm4sjfecmn0ob7dtpg:
+              help: Box 396 of modelo 184, tax years 2023 and 2024.
+            x-ehkn0rpi5pi6iobj5lgn4sj5dpi62rb9cln78ro:
+              help: Box 498-500 of modelo 184, tax years 2023 and 2024.
+            x-ehkn0rpi5pin0qb7e9gmcp9dd5gma:
+              help: Box 84-87 of modelo 184, tax years 2023 and 2024.
+            x-ehkn0rpi5pj6aor8c4mm2p3helkn6qb3d5nms:
+              help: Box 117-124 of modelo 184, tax years 2023 and 2024.
+            x-ehkn0rpi5pp6apj5e9imsor9c4mm6obkc5pn8sj1dg:
+              help: Box 246-265 of modelo 184, tax years 2023 and 2024.
+            x-ehkn0rpi5pp6apr9dlimsbb4clq6asjdd5n62or9dtn2qsj5dpi6irb9cln78rrj:
+              help: Box 82 of modelo 184, tax years 2023 and 2024.
+            x-ehkn0rpi5pp6arjkc4mm2t3id5h7aqb2dhiiqorfdomn4pb4elhm6qbfdo:
+              help: Box 196-207 of modelo 184, tax years 2023 and 2024.
+            x-ehkn0rpi5pp6arjkc4mm2t3id5h7aqb2dhiiqqbde1nn4t35:
+              help: Box 177-190 of modelo 184, tax years 2023 and 2024.
+            x-ehkn0rpi5ppmit3lc5hmirre5lkmsrblclh6op8:
+              help: Box 245 of modelo 184, tax years 2023 and 2024.
+            x-ehkn0rpi5ppnaoj3dhgncp8:
+              help: Box 78-79 of modelo 184, tax years 2023 and 2024.
+            x-ehkn0rpi5pq6is3f5lgm6t39epkm8ob4:
+              help: Box 83 of modelo 184, tax years 2023 and 2024.
+            x-ehkn0rpi5pq6is3f5lk6uqj1:
+              help: Box 76 of modelo 184, tax years 2023 and 2024.
+            x-ehkn0rpj5phmoobmck:
+              help: Box 93 of modelo 184, tax years 2023 and 2024.
+            x-ehkn0rpj5phmoobmckmn0ob9ec:
+              help: Box 79-80 of modelo 184, tax years 2023 and 2024.
+            x-ehkn0rpj5phmoobmckmn8qbgdsmn0obiehkm6qbgck:
+              help: Box 81 of modelo 184, tax years 2023 and 2024.
+            x-ehkn0rpj5pi6iobj5lgn4sj5dpi62rb9cln78ro:
+              help: Box 200-202 of modelo 184, tax years 2023 and 2024.
+            x-ehkn0rpj5pi6urb9cdkmoqbf5lj6isr3c5m0:
+              help: Box 120-159 of modelo 184, tax years 2023 and 2024.
+            x-ehkn0rpj5pkmqs3fe9q6a:
+              help: Box 96-108 of modelo 184, tax years 2023 and 2024.
+            x-ehkn0rpj5po6usj3cln78obackmn8qbkelm62sj9chgm8bb9dpmnapb2dhig:
+              help: Box 195-199 of modelo 184, tax years 2023 and 2024.
+            x-ehkn0rpj5po74rrmd5pmirreclpiqpr1edq6uspdchkmcqb3d5m2qqjledq6ipj9cdgm6qbfdo:
+              help: Box 160-171 of modelo 184, tax years 2023 and 2024.
+            x-ehkn0rpj5pp6apj5e9imsor9c4mm6obkc5pn8sj1dg:
+              help: Box 174-193 of modelo 184, tax years 2023 and 2024.
+            x-ehkn0rpj5pp6arj4d5mmipbeehniqrj5ehniqrb9dpnn4ob4dsmm2prid5hmur315limu:
+              help: Box 216-229 of modelo 184, tax years 2023 and 2024.
+            x-ehkn0rpj5ppmit3lc5hmirre5lkmsrblclh6op8:
+              help: Box 173 of modelo 184, tax years 2023 and 2024.
+            x-ehkn0rpj5ppnaoj3dhgncp8:
+              help: Box 94-95 of modelo 184, tax years 2023 and 2024.
+            x-ehkn0rpj5pq6is3f5lk6uqj1:
+              help: Box 76 of modelo 184, tax years 2023 and 2024.
+          field:
+            label: Modelo 184, tax years 2023 and 2024
+        2025-y-siguientes:
+          casilla:
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
+              help: Box 121-122 of modelo 184, tax year 2025.
+            x-chim6r1ecll6asj3d5hmiro:
+              help: Box ejercicio of modelo 184, tax year 2025.
+            x-chim6r1ecln78qb4c5i2qpbje1gmsrrcc4n62orkd5r6ip31cgmn0sj9dphmis31dg:
+              help: Box 146 of modelo 184, tax year 2025.
+            x-chim6r1ecln78qb4c5i2qpbje1gmsrrcc4n78qbgdsmmarjkd5i62p0:
+              help: Box 145 of modelo 184, tax year 2025.
+            x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bj3dhgncp9de1gmiso:
+              help: Box 149-150 of modelo 184, tax year 2025.
+            x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjfc9l6at3f:
+              help: Box 148 of modelo 184, tax year 2025.
+            x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjkd5o6ubb5dpq6ip31cg:
+              help: Box 147 of modelo 184, tax year 2025.
+            x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
+              help: Box 108-120 of modelo 184, tax year 2025.
+            x-chim6r1ee1in4srfdpgiqsj5dhgm6qbfdo:
+              help: Box 59-107 of modelo 184, tax year 2025.
+            x-chim6r1ee9in0sj5edimst31dpq6abbed5j0:
+              help: Box 172-180 of modelo 184, tax year 2025.
+            x-chim6r1ee9in0sj5edimst31dpq6abbedtmm4sj5:
+              help: Box 181-220 of modelo 184, tax year 2025.
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              help: Box tipo-declaracion of modelo 184, tax year 2025.
+            x-chim6r1eehkn0rpdednn0rriehig:
+              help: Box 58 of modelo 184, tax year 2025.
+            x-chim6r1eehnn8obc5lp6apr9edq74rrj5limst39chgm8:
+              help: Field declared on modelo 184, the informative return of income-attribution
+                entities.
+              label: Total number of entity records
+            x-chim6r1eehnn8obc5lpmuor9dtpg:
+              help: Box 136-144 of modelo 184, tax year 2025.
+            x-chim6r1eehp6iojlehgm6qbfdommirbgelin6t3f5lpmuor9cli62p35ec:
+              help: Box 156 of modelo 184, tax year 2025.
+            x-ehkn0rpi5phmasr9dtn62sj9dsmm8pbedtmmirj1cdkmurg:
+              help: Box 97-116 of modelo 184, tax year 2025.
+            x-ehkn0rpi5phmasr9dtn62sj9dsmmsqb6:
+              help: Box 88-96 of modelo 184, tax year 2025.
+            x-ehkn0rpi5phmoobmck:
+              help: Box 77 of modelo 184, tax year 2025.
+            x-ehkn0rpi5phmoobmckmn0ob9ec:
+              help: Box 80-81 of modelo 184, tax year 2025.
+            x-ehkn0rpi5phn4qbkclp6irpdcdnm4sjfecmn0ob7dtpg:
+              help: Box 396 of modelo 184, tax year 2025.
+            x-ehkn0rpi5pi6iobj5lgn4sj5dpi62rb9cln78ro:
+              help: Box 498-500 of modelo 184, tax year 2025.
+            x-ehkn0rpi5pin0qb7e9gmcp9dd5gma:
+              help: Box 84-87 of modelo 184, tax year 2025.
+            x-ehkn0rpi5pj6aor8c4mm2p3helkn6qb3d5nms:
+              help: Box 117-124 of modelo 184, tax year 2025.
+            x-ehkn0rpi5pp6apj5e9imsor9c4mm6obkc5pn8sj1dg:
+              help: Box 246-265 of modelo 184, tax year 2025.
+            x-ehkn0rpi5pp6apr9dlimsbb4clq6asjdd5n62or9dtn2qsj5dpi6irb9cln78rrj:
+              help: Box 82 of modelo 184, tax year 2025.
+            x-ehkn0rpi5pp6arjkc4mm2t3id5h7aqb2dhiiqorfdomn4pb4elhm6qbfdo:
+              help: Box 196-207 of modelo 184, tax year 2025.
+            x-ehkn0rpi5pp6arjkc4mm2t3id5h7aqb2dhiiqqbde1nn4t35:
+              help: Box 177-190 of modelo 184, tax year 2025.
+            x-ehkn0rpi5ppmit3lc5hmirre5lkmsrblclh6op8:
+              help: Box 245 of modelo 184, tax year 2025.
+            x-ehkn0rpi5ppnaoj3dhgncp8:
+              help: Box 78-79 of modelo 184, tax year 2025.
+            x-ehkn0rpi5pq6is3f5lgm6t39epkm8ob4:
+              help: Box 83 of modelo 184, tax year 2025.
+            x-ehkn0rpi5pq6is3f5lk6uqj1:
+              help: Box 76 of modelo 184, tax year 2025.
+            x-ehkn0rpj5phmoobmck:
+              help: Box 93 of modelo 184, tax year 2025.
+            x-ehkn0rpj5phmoobmckmn0ob9ec:
+              help: Box 79-80 of modelo 184, tax year 2025.
+            x-ehkn0rpj5phmoobmckmn8qbgdsmn0obiehkm6qbgck:
+              help: Box 81 of modelo 184, tax year 2025.
+            x-ehkn0rpj5pi6iobj5lgn4sj5dpi62rb9cln78ro:
+              help: Box 200-202 of modelo 184, tax year 2025.
+            x-ehkn0rpj5pi6urb9cdkmoqbf5lj6isr3c5m0:
+              help: Box 120-159 of modelo 184, tax year 2025.
+            x-ehkn0rpj5pkmqs3fe9q6a:
+              help: Box 96-108 of modelo 184, tax year 2025.
+            x-ehkn0rpj5po6usj3cln78obackmn8qbkelm62sj9chgm8bb9dpmnapb2dhig:
+              help: Box 195-199 of modelo 184, tax year 2025.
+            x-ehkn0rpj5po74rrmd5pmirreclpiqpr1edq6uspdchkmcqb3d5m2qqjledq6ipj9cdgm6qbfdo:
+              help: Box 160-171 of modelo 184, tax year 2025.
+            x-ehkn0rpj5pp6apj5e9imsor9c4mm6obkc5pn8sj1dg:
+              help: Box 174-193 of modelo 184, tax year 2025.
+            x-ehkn0rpj5pp6arj4d5mmipbeehniqrj5ehniqrb9dpnn4ob4dsmm2prid5hmur315limu:
+              help: Box 216-229 of modelo 184, tax year 2025.
+            x-ehkn0rpj5ppmit3lc5hmirre5lkmsrblclh6op8:
+              help: Box 173 of modelo 184, tax year 2025.
+            x-ehkn0rpj5ppnaoj3dhgncp8:
+              help: Box 94-95 of modelo 184, tax year 2025.
+            x-ehkn0rpj5pq6is3f5lk6uqj1:
+              help: Box 76 of modelo 184, tax year 2025.
+          field:
+            label: Modelo 184, tax years 2025 onwards

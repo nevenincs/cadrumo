@@ -1,0 +1,277 @@
+"""The off-host consent ledger records every dispatch it permits, or refuses it.
+
+Four properties, each proved against a real encrypted secure-object backend
+(the package ``conftest`` binds a per-test bucket) and a real
+:class:`~llm.EvidenceConsentToken`:
+
+* **positive control** -- with the append working, a consented off-host
+  evidence request DOES reach the provider adapter, and exactly one entry lands.
+  Without this, the refusal test below is worthless: a probe whose "permitted"
+  case cannot transmit either proves nothing about the "refused" case.
+* **the entry carries no content** -- the persisted bytes hold the content
+  ADDRESS, provider, model and surface, and neither the prompt nor the response
+  text. An audit trail that copies the document is a second leak.
+* **a failed append refuses the dispatch** -- the adapter is never reached. The
+  failure is a real one (no bucket session is bound, the production condition
+  the ledger raises on), and the refusal is pinned to the LEDGER's own message,
+  because everything downstream of the append needs storage too and would
+  otherwise refuse for its own reasons.
+* **the append precedes the cache read** -- proved with storage healthy and a
+  primed entry, so the confound above is absent: only a failing ledger
+  distinguishes the refused call from the cache hit the call before it served.
+
+The agent service behind the model-run port is a recording stand-in, replacing
+exactly one thing: the model run. Nothing else in the dispatch path is
+substituted -- the settings, the gate, the token, the ledger, the storage and the
+agent adapter are all real -- because what is
+under test is the ORDER of the real steps, and a substituted step cannot be
+ordered against. The one exception is the last test's deliberately-failing
+ledger, which is the injected collaborator whose failure IS the property.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import json
+from collections.abc import Iterator
+from typing import override
+
+import pytest
+
+from cadrumo_client.contracts.model_runs import ModelRunLane
+
+from .....core.config import Settings
+from .....core.config_support import LLMProvider
+from .....core.external_constants import UTF_8_ENCODING
+from .....core.model_roles import ModelRole
+from .....domain.evidence_consent.record import EvidenceConsentLedgerEntry
+from ....persistence.llm import consent_ledger as consent_ledger_module
+from ....persistence.llm.consent_ledger import EvidenceConsentLedger
+from ....persistence.storage.master_key.active_session import close_active_bucket_session
+from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+from ....persistence.storage.secure_object_namespaces import LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE
+from ..client import LLMClient
+from ..consent import EvidenceConsentToken
+from ..errors import LLMConsentError
+from ..models import LLMRequest
+from ..providers.agent import lane_model_label
+from .model_run_support import DEFAULT_LANE, ON_HOST_LANE, RecordingModelRuns
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+
+_ADDRESS = "a" * 64
+_SURFACE = "app.ledger.invoice.read"
+_PROMPT = "Read the invoice total from this document, DISTINCTIVE-PROMPT-TOKEN."
+_COMPLETION_TEXT = "DISTINCTIVE-RESPONSE-TOKEN: 1.234,56 EUR"
+
+
+class _CapturingClient(LLMClient):
+    """``LLMClient`` whose agent service is a recording stand-in; everything else is real."""
+
+    def __init__(
+        self,
+        *,
+        settings: Settings | None = None,
+        consent_ledger: EvidenceConsentLedger | None = None,
+        lane: ModelRunLane = DEFAULT_LANE,
+    ) -> None:
+        """Forward the dependencies the cases here vary, and bind the recording service on ``lane``."""
+        self.service = RecordingModelRuns(replies=(_COMPLETION_TEXT,), lane=lane)
+        super().__init__(settings=settings, consent_ledger=consent_ledger, model_runs=self.service)
+
+
+def _consented_settings() -> Settings:
+    return Settings(
+        cadrumo_evidence_gestor_mode=False,
+        cadrumo_evidence_cloud_upload_permitted=True,
+    )
+
+
+def _evidence_request() -> LLMRequest:
+    return LLMRequest(
+        prompt=_PROMPT,
+        provider_override=LLMProvider.AGENT,
+        model_role=ModelRole.TEXT_EXTRACTION,
+        evidence_derived=True,
+        consent_token=EvidenceConsentToken(surface=_SURFACE, evidence_content_address=_ADDRESS),
+    )
+
+
+@pytest.fixture
+def client(secure_object_test_profile: object) -> Iterator[_CapturingClient]:
+    _ = secure_object_test_profile
+    yield _CapturingClient(settings=_consented_settings())
+
+
+def test_a_consented_off_host_dispatch_reaches_the_adapter_and_lands_one_entry(
+    client: _CapturingClient,
+) -> None:
+    """The positive control: consent working means the transmission DOES happen."""
+    response = asyncio.run(client.complete(_evidence_request()))
+
+    assert len(client.service.runs) == 1, "the positive control must actually transmit"
+    assert response.text == _COMPLETION_TEXT
+
+    entries = EvidenceConsentLedger().load_entries()
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry.evidence_content_address == _ADDRESS
+    assert entry.provider == LLMProvider.AGENT.value
+    assert entry.model == lane_model_label(DEFAULT_LANE)
+    assert entry.surface == _SURFACE
+    assert entry.profile_bucket_id
+
+
+def test_save_custody_surrounds_the_real_append_and_ends_before_dispatch(
+    secure_object_test_profile: object,
+) -> None:
+    """A runtime may mark the exact audit write without holding model inference."""
+    _ = secure_object_test_profile
+    observed: list[tuple[str, bool | None]] = []
+    ledger = EvidenceConsentLedger(
+        before_save=lambda: observed.append(("before", None)),
+        after_save=lambda saved: observed.append(("after", saved)),
+    )
+    client = _CapturingClient(settings=_consented_settings(), consent_ledger=ledger)
+
+    asyncio.run(client.complete(_evidence_request()))
+
+    assert observed == [("before", None), ("after", True)]
+    assert len(EvidenceConsentLedger().load_entries()) == 1
+    assert len(client.service.runs) == 1
+
+
+def test_save_failure_reports_unknown_extent_and_refuses_dispatch(
+    secure_object_test_profile: object, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A failing save releases custody but cannot claim no write happened."""
+    _ = secure_object_test_profile
+    observed: list[tuple[str, bool | None]] = []
+
+    class _FailingRepository:
+        def save(self, **_kwargs: object) -> None:
+            raise OSError("synthetic storage failure")
+
+    monkeypatch.setattr(
+        consent_ledger_module,
+        "secure_object_repository_for_active_bucket",
+        lambda: _FailingRepository(),
+    )
+    ledger = EvidenceConsentLedger(
+        before_save=lambda: observed.append(("before", None)),
+        after_save=lambda saved: observed.append(("after", saved)),
+    )
+    client = _CapturingClient(settings=_consented_settings(), consent_ledger=ledger)
+
+    with pytest.raises(LLMConsentError):
+        asyncio.run(client.complete(_evidence_request()))
+
+    assert observed == [("before", None), ("after", False)]
+    assert client.service.runs == []
+
+
+def test_save_custody_requires_both_callbacks() -> None:
+    with pytest.raises(ValueError, match="both save callbacks"):
+        EvidenceConsentLedger(before_save=lambda: None)
+
+
+def test_an_on_host_or_unmarked_request_records_nothing(client: _CapturingClient) -> None:
+    """The ledger records off-host EVIDENCE dispatches, not every completion.
+
+    An evidence read on a lane that stays on this computer completes without
+    an entry. An unmarked request on the off-host lane is sent without consent,
+    so the service refuses it, and it records nothing either.
+    """
+    on_host = _CapturingClient(settings=_consented_settings(), lane=ON_HOST_LANE)
+    on_host_request = _evidence_request().model_copy(update={"consent_token": None})
+    unmarked = LLMRequest(prompt=_PROMPT, provider_override=LLMProvider.AGENT, model_role=ModelRole.TEXT_EXTRACTION)
+
+    assert asyncio.run(on_host.complete(on_host_request)).text == _COMPLETION_TEXT
+    with pytest.raises(LLMConsentError):
+        asyncio.run(client.complete(unmarked))
+
+    assert (len(on_host.service.runs), len(client.service.runs)) == (1, 1)
+    assert EvidenceConsentLedger().load_entries() == ()
+
+
+def test_the_persisted_entry_carries_neither_prompt_nor_response_text(client: _CapturingClient) -> None:
+    """The ledger holds the address, never the bytes."""
+    asyncio.run(client.complete(_evidence_request()))
+
+    stored = list(
+        secure_object_repository_for_active_bucket().list_records(
+            LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE.namespace,
+            expected_class=LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE.sensitivity,
+            max_supported_version=LLM_EVIDENCE_CONSENT_LEDGER_NAMESPACE.schema_version,
+        ),
+    )
+    assert len(stored) == 1
+    payload = stored[0].payload.decode(UTF_8_ENCODING)
+    assert "DISTINCTIVE-PROMPT-TOKEN" not in payload
+    assert "DISTINCTIVE-RESPONSE-TOKEN" not in payload
+    assert json.loads(payload)["entry"]["evidence_content_address"] == _ADDRESS
+
+
+def test_a_failed_append_refuses_the_dispatch_and_the_adapter_is_never_reached(
+    client: _CapturingClient,
+) -> None:
+    """A ledger that cannot record must stop the transmission, not proceed unrecorded.
+
+    A real append failure, not a patched one: with no bucket session bound there
+    is nothing to record against, and the ledger raises on exactly that. The
+    message assertion is what makes this discriminating -- everything downstream
+    of the append also needs storage, so the refusal must be shown to be the
+    LEDGER's and not a later guard's.
+    """
+    close_active_bucket_session()
+
+    with pytest.raises(LLMConsentError) as excinfo:
+        asyncio.run(client.complete(_evidence_request()))
+
+    assert "audit trail" in str(excinfo.value), "the refusal must be the ledger's, not a downstream storage guard's"
+    assert client.service.runs == [], "a dispatch whose consent entry could not be appended must not reach the provider"
+
+
+class _FailingLedger(EvidenceConsentLedger):
+    """A ledger whose append fails the way a storage fault makes it fail."""
+
+    @override
+    def append(
+        self,
+        *,
+        evidence_content_address: str,
+        provider: str,
+        model: str,
+        surface: str,
+    ) -> EvidenceConsentLedgerEntry:
+        msg = "Failed to record the off-host evidence-consent entry; the dispatch is refused."
+        raise LLMConsentError(msg)
+
+
+def test_a_failed_append_refuses_even_a_cache_hit(secure_object_test_profile: object) -> None:
+    """The append precedes the cache read, so a primed entry cannot serve an unrecorded dispatch.
+
+    The discriminating ordering probe. Storage stays fully healthy here and the
+    first call proves the request IS cacheable and IS servable; only the ledger
+    is swapped for one that fails. If the append were ordered after the cache
+    read -- or were best-effort -- the second call would return the primed
+    response with no entry behind it, which is precisely the silent gap the
+    ledger exists to close.
+    """
+    _ = secure_object_test_profile
+    settings = _consented_settings()
+
+    primed = _CapturingClient(settings=settings)
+    first = asyncio.run(primed.complete(_evidence_request()))
+    assert first.cache_hit is False
+    assert len(primed.service.runs) == 1
+
+    served = _CapturingClient(settings=settings)
+    cache_hit = asyncio.run(served.complete(_evidence_request()))
+    assert cache_hit.cache_hit is True, "the positive control must show the entry really is served from cache"
+    assert served.service.runs == []
+
+    refused = _CapturingClient(settings=settings, consent_ledger=_FailingLedger())
+    with pytest.raises(LLMConsentError):
+        asyncio.run(refused.complete(_evidence_request()))
+    assert refused.service.runs == []

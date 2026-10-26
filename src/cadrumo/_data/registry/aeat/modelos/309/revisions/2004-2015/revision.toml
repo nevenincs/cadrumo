@@ -1,0 +1,16 @@
+[revisions."2004-2015"]
+formula_source_refs = ["aeat-dr-309-2004", "boe-modelo-309-2003-form-pdf", "aeat-modelo-309-instructions"]
+casilla_source_refs = ["aeat-dr-309-2004"]
+authority_grade = "applicability"
+# The complete archived PDF proves a single 1,300-position record only. This
+# revision remains applicability-grade, so the normal two-record writer cannot
+# be selected for historical filing.
+valid_from = 2004-01-01
+valid_to = 2015-12-31
+period_selector = { year_from = 2004, year_to = 2015, periods = ["1T", "2T", "3T", "4T"] }
+orden_aplicabilidad = ["orden-hac-3625-2003:apartado-1"]
+legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
+source_refs = ["aeat-dr-309-2004", "aeat-modelo-309-procedure", "boe-modelo-309-2003-form"]
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-08-26

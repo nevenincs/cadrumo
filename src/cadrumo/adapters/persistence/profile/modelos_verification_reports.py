@@ -1,0 +1,306 @@
+"""Encrypted SQL repository for modelo verification reports.
+
+:class:`VerificationReportCatalogueRepository` persists and loads
+:class:`VerificationReport` entries in a :class:`VerificationReportCatalogue`
+via :class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository` at
+``FINANCIAL`` :class:`~core.classification.policies.SensitivityClass`. The
+catalogue is stored as a single encrypted BLOB per profile bucket, wrapped in
+:class:`~adapters.persistence.storage.envelope.contract.Envelope` before serialisation.
+
+This concrete repository is the persistence adapter behind the read-side
+:class:`~VerificationReportCatalogueRepositoryProtocol`. It
+lives in the persistence adapter (not in :mod:`~domain.modelos`) because its
+secure-object coupling is SQL/crypto-bound; the domain package owns only the
+typed :class:`VerificationReportCatalogue` model and its pure mutators.
+
+See Also:
+    ``adapters.persistence.profile._modelo_runtime``
+        Bucket-id resolution and runtime secure-object factory shared by modelo
+        persistence adapters.
+    :class:`~VerificationReportCatalogue`
+        Domain catalogue payload encrypted by this repository.
+    :class:`~VerificationReportCatalogueRepositoryProtocol`
+        Domain port this concrete persistence adapter implements.
+    :data:`~adapters.persistence.storage.secure_object_namespaces.MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE`
+        Central namespace, sensitivity, schema-version, and singleton-key
+        contract for these secure objects.
+    :mod:`~adapters.persistence.profile.modelos_calculation`
+        Sibling calculation-revision repository whose revisions are assessed by
+        verification reports stored here.
+    :func:`~application.calculations.verification_report_gate.require_verification_report_coordinates_current`
+        Application gate that checks the coordinates of reports loaded through
+        this repository boundary.
+"""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from ....core.bucket_pointer import resolve_repository_bucket_id
+from ....core.external_constants import UTF_8_ENCODING
+from ....core.logging import get_logger
+from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
+from ....domain.calculations.registry.tax_id_format import SubjectTaxId
+from ....domain.modelos.errors import raise_catalogue_integrity_error
+from ....domain.modelos.verification_report import VerificationReportCatalogue
+from ....domain.modelos.verification_repository import VerificationReportPersistenceError
+from ..storage.runtime_repository import secure_object_repository_for_bucket
+from ..storage.secure_object_namespaces import MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE
+from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
+
+if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
+    from ....core.secure_object_write import SecureObjectWrite
+    from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ..storage.sql.secure_objects import SecureObjectRepository
+
+_LOGGER = get_logger(__name__)
+_VERIFICATION_NAMESPACE = MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE.namespace
+_VERIFICATION_OBJECT_KEY = MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE.require_default_object_key()
+_VERIFICATION_CATALOGUE_VERSION = MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE.schema_version
+_VERIFICATION_CATALOGUE_SENSITIVITY = MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE.sensitivity
+_VERIFICATION_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_verification_report_persistence"
+
+
+class VerificationReportCatalogueRepository:
+    """Repository over encrypted SQL-backed verification-report catalogue storage.
+
+    The write path (``to_secure_object_write`` / ``save`` / ``exists``)
+    composes
+    :class:`~adapters.persistence.profile._secure_enveloped_document.ProfileEnvelopedModelSecurePersistence`
+    for the shared Envelope-construction mechanic; ``load`` stays hand-rolled
+    here because it translates a classification or schema-version mismatch
+    into :class:`VerificationReportPersistenceError` via
+    :func:`~domain.modelos.errors.raise_catalogue_integrity_error`. This class is
+    the concrete load/save implementation behind
+    :class:`~VerificationReportCatalogueRepositoryProtocol`.
+    """
+
+    def __init__(
+        self,
+        *,
+        bucket_id: str | None = None,
+        objects: SecureObjectRepository | None = None,
+        m303_rectificativa_taxpayer_tax_id: SubjectTaxId | None = None,
+    ) -> None:
+        """Bind to a profile bucket's secure-object store, or an injected one.
+
+        Args:
+            bucket_id: Profile bucket whose encrypted store backs this repository;
+                resolved from the active session when ``None``.
+            objects: Optional injected secure-object repository (testing seam).
+            m303_rectificativa_taxpayer_tax_id: Taxpayer identity the calculation
+                catalogue needs to revalidate a stored rectificativa when reports
+                are resolved against it.
+        """
+        self._bucket_id = bucket_id.strip() if bucket_id is not None else None
+        self._m303_rectificativa_taxpayer_tax_id = m303_rectificativa_taxpayer_tax_id
+        if objects is not None:
+            self._objects = objects
+        else:
+            self._bucket_id = resolve_repository_bucket_id(
+                bucket_id,
+                error_type=VerificationReportPersistenceError,
+            )
+            self._objects = secure_object_repository_for_bucket(self._bucket_id)
+        self._storage = ProfileEnvelopedModelSecurePersistence(
+            objects=self._objects,
+            definition=MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE,
+            model_type=VerificationReportCatalogue,
+            empty_document=VerificationReportCatalogue,
+        )
+
+    @property
+    def bucket_id(self) -> str | None:
+        """Return the profile bucket id when this repository resolved one."""
+        return self._bucket_id
+
+    def exists(self) -> bool:
+        """Report whether a stored verification-report catalogue is present."""
+        return self._storage.exists()
+
+    def _assert_reports_resolve_to_local_revisions(
+        self,
+        catalogue: VerificationReportCatalogue,
+        *,
+        boundary: str,
+        operation: PinnedAuthorityOperation | None = None,
+    ) -> None:
+        """Refuse reports whose parent calculation revision is not in this bucket.
+
+        A verification report is a decision *about* one
+        :class:`~CalculationRevision`; detached from that parent
+        it asserts an audit outcome nothing in the bucket can be checked
+        against. The sibling calculation catalogue is derived from this
+        repository's own secure-object store rather than resolved
+        independently, so the two reads cannot disagree about which bucket they
+        are answering for.
+
+        Args:
+            catalogue: The catalogue being written or read back.
+            boundary: ``"save"`` or ``"load"``, recorded on the refusal context.
+            operation: Retained published authority for nested calculation
+                decoding, when the caller already owns one.
+
+        Raises:
+            :class:`VerificationReportPersistenceError`: When any report names a
+                ``calculation_revision_id`` this bucket does not hold.
+        """
+        if not len(catalogue):
+            return
+        from .modelos_calculation import CalculationRevisionCatalogueRepository
+
+        revisions = CalculationRevisionCatalogueRepository(
+            objects=self._objects,
+            m303_rectificativa_taxpayer_tax_id=self._m303_rectificativa_taxpayer_tax_id,
+        ).load(operation=operation)
+        unresolved = sorted(
+            {
+                report.calculation_revision_id
+                for report in catalogue.values()
+                if revisions.get(report.calculation_revision_id) is None
+            },
+        )
+        if not unresolved:
+            mismatched = sorted(
+                report.calculation_revision_id
+                for report in catalogue.values()
+                if (revision := revisions.get(report.calculation_revision_id)) is not None
+                and report.registry_snapshot_ref != revision.registry_snapshot_ref
+            )
+            if not mismatched:
+                return
+            raise VerificationReportPersistenceError(
+                "verification report registry coordinate differs from its calculation revision",
+                translated_message=_VERIFICATION_PERSISTENCE_MESSAGE,
+                context={
+                    "reason": "registry_snapshot_ref_mismatch",
+                    "boundary": boundary,
+                    "calculation_revision_ids": mismatched,
+                },
+            )
+        _LOGGER.error(
+            "verification report references a calculation revision outside this bucket",
+            extra={"boundary": boundary, "unresolved_count": len(unresolved)},
+        )
+        raise VerificationReportPersistenceError(
+            "verification report references a calculation revision outside this bucket",
+            translated_message=_VERIFICATION_PERSISTENCE_MESSAGE,
+            context={
+                "reason": "foreign_calculation_revision",
+                "boundary": boundary,
+                "calculation_revision_ids": unresolved,
+            },
+        )
+
+    def load(self, *, operation: PinnedAuthorityOperation | None = None) -> VerificationReportCatalogue:
+        """Load and decrypt this bucket's verification-report catalogue.
+
+        Returns:
+            The stored :class:`VerificationReportCatalogue`, or an empty one
+            when nothing has been persisted for this bucket.
+
+        Raises:
+            :class:`VerificationReportPersistenceError`: If the stored record
+                fails the sensitivity-class check, carries an envelope schema
+                version newer than this consumer supports, or trips a
+                storage-layer classification or envelope-version integrity
+                error.
+        """
+        catalogue, _revision_id = self.load_revisioned(operation=operation)
+        return catalogue
+
+    def load_revisioned(
+        self, *, operation: PinnedAuthorityOperation | None = None
+    ) -> tuple[VerificationReportCatalogue, str]:
+        """Return the validated catalogue and its revision for guarded filing."""
+        from ..storage.envelope.contract import Envelope
+        from ..storage.errors import ClassificationError, EnvelopeVersionError
+        from ..storage.schema_lineage import (
+            inner_envelope_classification_is_expected,
+            inner_envelope_version_is_current,
+        )
+
+        try:
+            record = self._objects.load(
+                _VERIFICATION_NAMESPACE,
+                _VERIFICATION_OBJECT_KEY,
+                expected_class=_VERIFICATION_CATALOGUE_SENSITIVITY,
+                max_supported_version=_VERIFICATION_CATALOGUE_VERSION,
+            )
+        except (ClassificationError, EnvelopeVersionError) as exc:
+            raise_catalogue_integrity_error(
+                exc,
+                error_cls=VerificationReportPersistenceError,
+                label="verification-report",
+                translated_message=_VERIFICATION_PERSISTENCE_MESSAGE,
+                logger=_LOGGER,
+            )
+        if record is None:
+            return VerificationReportCatalogue(), ABSENT_SECURE_OBJECT_REVISION_ID
+        envelope = Envelope[VerificationReportCatalogue].model_validate_json(record.payload.decode(UTF_8_ENCODING))
+        if not inner_envelope_classification_is_expected(envelope.classification, _VERIFICATION_CATALOGUE_SENSITIVITY):
+            _LOGGER.error(
+                "verification-report catalogue classification mismatch",
+                extra={
+                    "expected_classification": _VERIFICATION_CATALOGUE_SENSITIVITY.value,
+                    "actual_classification": envelope.classification.value,
+                },
+            )
+            raise VerificationReportPersistenceError(
+                "verification-report catalogue classification mismatch",
+                translated_message=_VERIFICATION_PERSISTENCE_MESSAGE,
+                context={
+                    "reason": "classification_mismatch",
+                    "expected_classification": _VERIFICATION_CATALOGUE_SENSITIVITY.value,
+                    "actual_classification": envelope.classification.value,
+                },
+            )
+        if not inner_envelope_version_is_current(envelope.schema_version, _VERIFICATION_CATALOGUE_VERSION):
+            _LOGGER.error(
+                "verification-report catalogue envelope version unsupported",
+                extra={
+                    "stored_schema_version": envelope.schema_version,
+                    "max_supported_version": _VERIFICATION_CATALOGUE_VERSION,
+                },
+            )
+            raise VerificationReportPersistenceError(
+                "verification-report catalogue envelope version unsupported",
+                translated_message=_VERIFICATION_PERSISTENCE_MESSAGE,
+                context={
+                    "reason": "unsupported_envelope_version",
+                    "stored_schema_version": envelope.schema_version,
+                    "max_supported_version": _VERIFICATION_CATALOGUE_VERSION,
+                },
+            )
+        self._assert_reports_resolve_to_local_revisions(envelope.payload, boundary="load", operation=operation)
+        return envelope.payload, record.revision_id
+
+    def to_secure_object_write(
+        self,
+        catalogue: VerificationReportCatalogue,
+        *,
+        expected_revision_id: str,
+        operation: PinnedAuthorityOperation | None = None,
+    ) -> SecureObjectWrite:
+        """Assert the reviewed report catalogue has not changed in a filing batch."""
+        self._assert_reports_resolve_to_local_revisions(catalogue, boundary="save", operation=operation)
+        return self._storage.to_secure_object_write(catalogue, expected_revision_id=expected_revision_id)
+
+    def save(
+        self, catalogue: VerificationReportCatalogue, *, operation: PinnedAuthorityOperation | None = None
+    ) -> None:
+        """Encrypt and persist the verification-report catalogue for this bucket.
+
+        Args:
+            catalogue: The full :class:`VerificationReportCatalogue` to store,
+                keyed by each report's verification-report identifier.
+            operation: Retained published authority for parent calculation
+                validation when the caller already owns one.
+        """
+        self._assert_reports_resolve_to_local_revisions(catalogue, boundary="save", operation=operation)
+        self._storage.save(catalogue)
+
+
+__all__ = [
+    "VerificationReportCatalogueRepository",
+]

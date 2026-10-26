@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-eha-3021-2007.html",
+  "source_sha256": "6df4763c9d0c370adfec71e1358bab25509880040f73519f976bf9e6e2acd7bf",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.4",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Se aprueba el modelo 182 «Impuesto sobre la Renta de las Personas Físicas, Impuesto sobre la Renta de no Residentes e Impuesto sobre Sociedades. Declaración informativa de donativos, donaciones y aportaciones recibidas y disposiciones realizadas».",
+      "title": "Artículo 1. Aprobación del modelo 182.",
+      "section": "Artículo 1. Aprobación del modelo 182.",
+      "anchor": "#a1"
+    },
+    {
+      "text": "La presentación de la declaración informativa de donativos, donaciones y aportaciones recibidas y disposiciones realizadas, modelo 182, se realizará en el mes de enero de cada año.",
+      "title": "Artículo 5. Plazo de presentación del modelo 182.",
+      "section": "Artículo 5. Plazo de presentación del modelo 182.",
+      "anchor": "#a5"
+    }
+  ]
+}

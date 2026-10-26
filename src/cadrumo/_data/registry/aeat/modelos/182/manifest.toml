@@ -1,0 +1,29 @@
+[modelo]
+id = "182"
+tax_domain = "informative"
+cadence = "annual"
+calculation_class = "informative"
+jurisdiction = "ES-AEAT"
+legal_refs = [
+    "orden-eha-3021-2007:art-1",
+    "orden-eha-3021-2007:art-5",
+    "ley-35-2006:art-68.3",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "enrolled-modelo-182-procedure",
+    "enrolled-modelo-182-layout",
+]
+
+# ACQUIRABLE DEBT -- promotion of 182/2024 to filing grade. Geometry is grounded
+# verbatim and would not change; no instrucciones source covers the ejercicio.
+#   - AEAT modelo 182 instrucciones as they stood for ejercicio 2024
+#
+# Filing years below the support floor existed in law under Orden EHA/3021/2007
+# and are not authored. 2022 and 2023 are authored from aeat-dr-182-2021-2023,
+# the design Orden HFP/1351/2021 fixed, and 2024 onward from aeat-dr-182-2024.
+[modelo.inception.unauthored]
+earliest_authored = 2022
+reason = "Approved by Orden EHA/3021/2007 art. 1, which carries no year bound; filing years before 2022 existed in law and lie below the supported floor, so they are not authored. Ejercicios 2022 and 2023 are authored at applicability grade from aeat-dr-182-2021-2023, the design Orden HFP/1351/2021 first applied to 2021 and Orden HAC/1504/2024 next amended from 2024; 2024 onward is authored from aeat-dr-182-2024 and its successors."
+legal_refs = ["orden-eha-3021-2007:art-1"]
+source_refs = ["aeat-dr-182-2021-2023"]

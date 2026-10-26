@@ -1,0 +1,246 @@
+"""Gates for the generated download-channel matrix.
+
+Real-behavior tests over :mod:`dev.docs.download_matrix`: the descriptor loads
+and strictly validates, every :class:`~dev.packaging.cohort_manifest.ArtifactKind`
+is surfaced by exactly one documented channel (parity), the ``--check`` drift gate
+fires on a mutated zone, and ``docs/download.md`` carries the generated marker
+zone. No mocks — the real descriptor, the real page, and the real cohort schema.
+"""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import Final
+
+import pytest
+
+from dev._paths import REPO_ROOT
+from dev.packaging.cohort_manifest import ArtifactKind
+
+from ..download_matrix import (
+    _ZONE_BEGIN,
+    _ZONE_END,
+    DownloadDescriptor,
+    _run_generate,
+    build_download_latest,
+    download_page_path,
+    load_descriptor,
+    main,
+    render_page,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
+
+_REPO_ROOT: Final[Path] = REPO_ROOT
+
+
+def test_descriptor_loads_and_validates() -> None:
+    """The committed descriptor loads under the strict pydantic schema."""
+    descriptor = load_descriptor()
+    assert isinstance(descriptor, DownloadDescriptor)
+    assert descriptor.channel, "descriptor must declare at least one channel"
+
+
+def test_every_artifact_kind_has_a_documented_channel() -> None:
+    """Parity: every cohort ArtifactKind is surfaced by exactly one channel row.
+
+    A cohort ArtifactKind with no documented channel row is the failure this
+    gate exists to catch — a new artifact kind that ships without a place in the
+    download page.
+    """
+    descriptor = load_descriptor()
+    covered: dict[ArtifactKind, list[str]] = {}
+    for channel in descriptor.channel:
+        for kind in channel.artifact_kinds:
+            covered.setdefault(kind, []).append(channel.id)
+
+    missing = sorted(kind.value for kind in ArtifactKind if kind not in covered)
+    assert not missing, (
+        f"cohort ArtifactKind(s) {missing} have no documented download channel; "
+        "add them to a channel's artifact_kinds in docs/_data/download_channels.toml"
+    )
+    duplicated = {kind.value: ids for kind, ids in covered.items() if len(ids) > 1}
+    assert not duplicated, f"artifact kind(s) claimed by more than one channel: {duplicated}"
+
+
+def test_runtime_wheelhouse_belongs_to_the_base_python_channel() -> None:
+    """The generic offline runtime closure is part of Python acquisition.
+
+    It must not recreate a host-extension or client-specific download channel.
+    """
+    descriptor = load_descriptor()
+    owners = [channel.id for channel in descriptor.channel if ArtifactKind.PYTHON_WHEELHOUSE in channel.artifact_kinds]
+    assert owners == ["python"]
+    # The wheelhouse belongs to the language registry, which is where the
+    # product's dependency resolution happens.
+    owner = next(channel for channel in descriptor.channel if channel.id == "python")
+    assert owner.registry == "PyPI listing"
+
+
+def test_generated_zone_present_in_download_page() -> None:
+    """docs/download.md carries the generated marker zone."""
+    page_text = download_page_path().read_text(encoding="utf-8")
+    assert _ZONE_BEGIN in page_text
+    assert _ZONE_END in page_text
+    assert page_text.index(_ZONE_BEGIN) < page_text.index(_ZONE_END)
+    assert "data-cadrumo-downloads" in page_text, "Tier-2 mount element must be present in the generated zone"
+
+
+def test_check_is_clean_for_committed_page() -> None:
+    """The committed download.md is in sync with the descriptor (drift gate clean)."""
+    assert main(["--check"]) == 0
+
+
+def test_check_fires_on_a_terminator_translated_page(tmp_path: Path) -> None:
+    """A CRLF-translated page is drift, not freshness.
+
+    The gate compared decoded text, and decoding folds carriage returns away: a
+    page whose terminators were translated after checkout decoded to exactly the
+    canonical string and was reported fresh, while its bytes differed from
+    everything this generator emits. Measured on the real tree, docs/download.md
+    carried 133 CRLF pairs and no bare line feed, --check printed OK, and
+    generate skipped the write for the same reason, so the generator could not
+    repair its own artefact. The index-side LF normalisation kept git diff silent
+    too, leaving no reader that could see it.
+
+    Driven over an isolated copy, so the shared working tree is never mutated.
+    """
+    canonical = download_page_path().read_bytes()
+    assert b"\r\n" not in canonical, "the committed page must be LF for the plant to mean anything"
+
+    page = tmp_path / "download.md"
+    page.write_bytes(canonical)
+    assert _run_generate(check=True, page=page) == 0, "the untouched copy must read fresh"
+
+    page.write_bytes(canonical.replace(b"\n", b"\r\n"))
+    assert page.read_text(encoding="utf-8") == canonical.decode("utf-8"), (
+        "the planted page must still decode to the canonical text, or this proves "
+        "nothing about the comparison that normalised terminators away"
+    )
+    assert _run_generate(check=True, page=page) == 1, "a CRLF-translated page must read as drift"
+
+
+def test_check_fails_on_mutated_zone() -> None:
+    """Mutating the generated zone makes render_page differ from disk (drift detected)."""
+    descriptor = load_descriptor()
+    page_text = download_page_path().read_text(encoding="utf-8")
+    fresh = render_page(descriptor, page_text)
+    # Corrupt the zone body between the markers.
+    begin = fresh.index(_ZONE_BEGIN) + len(_ZONE_BEGIN)
+    mutated = fresh[:begin] + "\nMUTATED DRIFT LINE\n" + fresh[begin:]
+    assert mutated != fresh
+    # A re-render of the mutated page restores the canonical zone, proving the
+    # check would flag the mutation as drift.
+    restored = render_page(descriptor, mutated)
+    assert restored == fresh
+
+
+def _write_cohort_manifest(directory: Path) -> Path:
+    """Write a minimal-but-valid cohort manifest and its artifact files."""
+    from datetime import UTC, datetime
+
+    from dev.packaging.cohort_manifest import (
+        REQUIRED_ARTIFACT_KINDS,
+        BuildIdentity,
+        SourceIdentity,
+        create_manifest,
+        write_manifest,
+    )
+
+    artifacts: list[tuple[str, ArtifactKind, Path]] = []
+    for name, kind in REQUIRED_ARTIFACT_KINDS.items():
+        artifact = directory / f"{name}.bin"
+        artifact.write_bytes(name.encode("utf-8"))
+        artifacts.append((name, kind, artifact))
+    manifest = create_manifest(
+        root=directory,
+        version="9.9.9",
+        source=SourceIdentity(source_digest="a" * 64),
+        created_at=datetime(2026, 1, 1, tzinfo=UTC),
+        builder=BuildIdentity(
+            implementation="dev.packaging.release_cohort",
+            format_version=1,
+            python="3.13.0",
+            uv="0.0.0",
+            platform="test",
+            architecture="x86_64",
+            build_constraints_sha256="b" * 64,
+        ),
+        artifacts=artifacts,
+    )
+    return write_manifest(directory, manifest)
+
+
+def test_emit_latest_projects_cohort_manifest(tmp_path: Path) -> None:
+    """emit-latest projects a real cohort manifest into a typed download payload."""
+    manifest_path = _write_cohort_manifest(tmp_path)
+    payload = build_download_latest(
+        cohort_manifest_path=manifest_path,
+        release_base_url="https://github.com/nevenincs/cadrumo/releases/download/v9.9.9",
+    )
+    assert payload.schema_name == "cadrumo.download-latest.v1"
+    assert payload.version == "9.9.9"
+    assert payload.assets, "payload must carry the cohort assets"
+    for asset in payload.assets:
+        assert asset.url is not None and asset.url.endswith(asset.filename)
+        assert len(asset.sha256) == 64
+
+    # The emitted JSON round-trips back through the typed model.
+    output = tmp_path / "download-latest.json"
+    assert main(["emit-latest", "--cohort-manifest", str(manifest_path), "--output", str(output)]) == 0
+    reloaded = json.loads(output.read_text(encoding="utf-8"))
+    assert reloaded["schema_name"] == "cadrumo.download-latest.v1"
+
+
+@pytest.mark.parametrize(
+    "release_base_url",
+    ("not-a-url", "http://example.invalid/releases/v9.9.9", "https://example.invalid/releases/v9.9.9?asset=x"),
+)
+def test_emit_latest_refuses_malformed_or_noncanonical_release_base_url(tmp_path: Path, release_base_url: str) -> None:
+    """Asset URLs are derived only from an unambiguous HTTPS release directory."""
+    manifest_path = _write_cohort_manifest(tmp_path)
+
+    with pytest.raises(ValueError, match="release_base_url"):
+        build_download_latest(cohort_manifest_path=manifest_path, release_base_url=release_base_url)
+
+
+def test_the_structured_channel_names_agree_with_the_install_commands() -> None:
+    """The descriptor's tap, bucket and repository names must reach the page.
+
+    ``bucket``, ``bucket_repo``, ``tap``, ``marketplace`` and
+    ``marketplace_source`` are the descriptor's single source of truth for where
+    a channel lives, and not one of them was read anywhere in the tree. The
+    generated page is driven instead by hand-written ``install_commands`` that
+    restate the same names, so the declaration and the rendered instruction
+    could diverge with nothing to notice: renaming the tap in the descriptor
+    would leave every published command pointing at the old one.
+
+    Asserted as containment rather than by pinning the names, so moving the tap
+    stays a one-line descriptor edit that this gate then forces through to the
+    commands.
+    """
+    descriptor = load_descriptor()
+
+    checked = 0
+    for channel in descriptor.channel:
+        commands = chr(10).join(channel.install_commands)
+        for label, value in (
+            ("tap", channel.tap),
+            ("bucket", channel.bucket),
+            ("bucket_repo", channel.bucket_repo),
+            ("marketplace", channel.marketplace),
+            ("marketplace_source", channel.marketplace_source),
+        ):
+            if value is None:
+                continue
+            checked += 1
+            assert value in commands, (
+                f"channel {channel.id!r} declares {label}={value!r} but no install command "
+                "mentions it; the descriptor and the published instructions disagree"
+            )
+
+    assert checked, (
+        "no channel declared any of the location fields, so this gate proved nothing. "
+        "Either the descriptor lost them or the fields are genuinely unused and should go"
+    )

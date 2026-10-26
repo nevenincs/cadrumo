@@ -1,0 +1,81 @@
+# Modelo 303 projections, profile bindings, and registry scope
+
+[Technical overview](../architecture.md) · [Article index](catalogue.md) · [Snapshot and reading guide](../reading-guide.md)
+
+> This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
+
+**Report:** `STAGE-2-132` · **Topic:** [Tax calculation domain](../topics/tax-calculation-domain.md)
+
+<!-- preserved:article -->
+## Scope and method
+
+This chunk covers 25 registry-domain modules, 4,608 physical lines, 189,845 bytes, and 42,087 measured `o200k_base` proxy tokens. All eight bounded pages were read. Static inspection only; no application code or tests were run and no source was changed. The modules combine Modelo 303 filing projections and dated catalogues with registry scope, localization, period matching, profile bindings, prorrata vocabularies, and shared quantity-screen support.
+
+## Filing projection and authority
+
+The DP30302 simplified-regime projector maps typed authored references to canonical row evidence and an immutable calculation result. It separates agricultural and non-agricultural activity cohorts, projects at most two rows of each into each record, and refuses mismatched row types. Activity identities use explicit wire conversion for IAE epigraphs, accepting only ASCII three-digit or canonical dotted four-digit forms rather than silently truncating. Declared facts come from the selected row; calculated facts and module cuotas must match exactly one calculation result with the same activity and annual-Orden identity, and module identity and declared quantity must agree. Revision epochs constrain repeated Mesa/Horno endpoints to the multiplicity supported by the record design. DP30302 endpoint epoch validation (`src/cadrumo/domain/calculations/registry/m303_regimen_simplificado_projection.py`) Typed row projection (`src/cadrumo/domain/calculations/registry/m303_regimen_simplificado_projection.py`) IAE wire conversion (`src/cadrumo/domain/calculations/registry/m303_regimen_simplificado_projection.py`)
+
+The adjacent M303 schema vocabulary projects tax territories and regime compositions from a dated governed mapping fact. It preserves authored choice order and carries descriptions, legal references, foral status, State-attribution ratios, record marks, export codes and simplified-regime scope. It enforces exactly one foral territory, ratios in 0–100, token/value identity, distinct tokens, and closed simplified-scope values. These are typed projections of the installed fact authority, not a check that the published legal content is currently correct. Territory catalogue (`src/cadrumo/domain/calculations/registry/m303_schema_vocabulary.py`) Regime-composition catalogue (`src/cadrumo/domain/calculations/registry/m303_schema_vocabulary.py`)
+
+Modelo 347 threshold logic is centralized for counterpart totals and the separate clave-C beneficiary total. Each threshold comes from its own dated scalar fact with provenance, the payload must be Decimal, and a party is included only when its total is strictly greater than the floor. Centralizing the comparison prevents the ordinary and clave-C paths from drifting to different inclusive/exclusive operators. General threshold selection (`src/cadrumo/domain/calculations/registry/m347_threshold.py`) Clave-C threshold selection (`src/cadrumo/domain/calculations/registry/m347_threshold.py`)
+
+The annual-prorrata binding fixes source model 303, four quarter periods and a canonical ordered set of source casillas, while exposing whether the definitive-percentage source is declared and whether output lands in M303/44 or the M390 annual-summary surface. Prorrata regularisation selector (`src/cadrumo/domain/calculations/registry/prorrata_regularizacion_bindings.py`)
+
+## Scope, presentation, and filing continuity
+
+Manual-input bindings accept either a casilla value or a fixed-width record-field value. The shapes are exclusive; record coordinates must be complete; boolean casillas require explicit true/false wire values; and a sign marker is allowed only on money record fields. This module validates selector metadata; it does not itself collect operator input or serialize the filing record. Manual-input shape model (`src/cadrumo/domain/calculations/registry/manual_input_selector.py`)
+
+The inception declaration distinguishes a model that did not yet exist in law (a hard year gate backed by legal references) from one that existed but is not authored for early years (visible authoring debt, not a gate). Pending-Orden declarations represent the third state where annual authority is not yet published; the expected publication year must follow the filing year. Separately, the Orden-applicability validator requires every revision to name approval authority, resolves each cited reference in the legal catalogue, requires corpus references and inclusion in revision `legal_refs`, and checks overlap with the filing-plus-presentation interval. Together these declarations keep “out of scope,” “not authored,” and “authority not yet available” distinguishable. Inception alternatives (`src/cadrumo/domain/calculations/registry/modelo_inception.py`) Pending Orden model (`src/cadrumo/domain/calculations/registry/modelo_pending_orden.py`) Orden applicability gate (`src/cadrumo/domain/calculations/registry/orden_applicability.py`)
+
+Obligation scope itself is a governed mapping that partitions recognized model codes into product-out-of-scope, suppressed and registry-out-of-scope sets, with reasons. The resolver checks that these partitions refer only to the declared catalogue and derives both the public reason map and non-registry set. Rendering declarations are also resolved from governed authority with no default value when a key is absent. Modelo obligation-scope projection (`src/cadrumo/domain/calculations/registry/modelo_obligation_scope.py`) Rendering declarations (`src/cadrumo/domain/calculations/registry/modelo_rendering.py`)
+
+Localization derives injective dotted-key identities for model, revision, construct, binding, casilla occurrence/continuity and aliases. Revision enrollment attaches identities without copying translations. Lookup first locates the nearest Spanish source value, then permits a requested translation only through that semantic tier; this prevents an older, less-specific translation from overriding a newer Spanish label. It can also report which key and locale served the text, and required lookups fail explicitly when no source text exists. Locale-key encoding (`src/cadrumo/domain/calculations/registry/modelo_localization.py`) Locale resolution and source selection (`src/cadrumo/domain/calculations/registry/modelo_localization.py`)
+
+The non-Spanish NIF-IVA catalogue is a dated format specification: it validates anchored regular expressions, checks one declared example per prefix, requires canonical ISO aliases and rejects duplicate country aliases and Spain. It provides structural format metadata, not full identity verification. NIF-IVA catalogue (`src/cadrumo/domain/calculations/registry/nif_iva_catalogue.py`)
+
+## Shared registry mechanics and prorrata knowledge
+
+Observation folding requires exactly one source filing per declared period, checks casilla presence, selects exactly one fully observed cadence when a requirement declares alternatives, then applies only `sum` or single-value `copy`. Period helpers share offset arithmetic across previous-filing and relation paths, including quarter, pago-fraccionado and monthly periods. Selector overlap accounts for year-specific period overrides so an open-ended selector can be compared without iterating every future year. Observation gathering and cadence choice (`src/cadrumo/domain/calculations/registry/observation_fold.py`) Offset arithmetic (`src/cadrumo/domain/calculations/registry/period_offset_math.py`) Year-aware overlap (`src/cadrumo/domain/calculations/registry/period_selector_overlap.py`)
+
+Profile selectors distinguish scalar keys, formatted multi-key projections, and typed profile-model fields. A reverse grounding index gathers the models and legal/source references attached to every consuming selector. It deliberately excludes `required_when_profile_key`, since that key gates applicability instead of supplying the filed value. A generation-keyed, bounded cache avoids repeating the registry-wide walk. Profile selector (`src/cadrumo/domain/calculations/registry/profile_bindings.py`) Profile-key grounding index (`src/cadrumo/domain/calculations/registry/profile_grounding.py`)
+
+Prorrata catalogues project dated 0116 vocabularies for art. 104.Tres exclusions, regimes, lifecycle kinds, input-use classifications, special-regime transitions, provisional-percentage provenance, and differentiated-sector letters. They preserve legal references and authored order, distinguish operator-declared exclusions from automatically derived ones, and validate default membership, apportioning behavior, legal ranges, and catalogue cardinalities. The input-classification projection makes the deductible percentage source explicit: a class either supplies its fixed percentage or uses the general percentage, never both or neither. Annual regularisation source values and period sets are pinned to all four Modelo 303 quarters. Exclusion partition (`src/cadrumo/domain/calculations/registry/prorrata_exclusions.py`) Prorrata regime catalogue (`src/cadrumo/domain/calculations/registry/prorrata_regime.py`) Register catalogue assembly (`src/cadrumo/domain/calculations/registry/prorrata_register_catalogue.py`) Input classification rules (`src/cadrumo/domain/calculations/registry/prorrata_vocabulary.py`) Register typed models (`src/cadrumo/domain/calculations/registry/prorrata_register_models.py`)
+
+The quantity-screen enrolment helper derives independent facts as the complement of explicitly justified alternative measures, then checks that each such fact has exactly one declared observation reader. New facts therefore enter screening by default unless a reviewer documents why they merely remeasure an existing quantity. The companion provenance enum distinguishes BOE-attested, presumptive, authored and out-of-scope conclusions without asserting that any particular artifact meets one. Quantity-screen contract (`src/cadrumo/domain/calculations/registry/quantity_screen_enrolment.py`) Provenance levels (`src/cadrumo/domain/calculations/registry/provenance.py`)
+
+## Security, quality, and follow-up
+
+These modules are configuration and evidence boundaries rather than user-facing trust controls. They use strict typed shapes, dated governed facts, legal/source references and immutable row models. The profile grounder indexes keys and provenance, not taxpayer values. No authentication, network transfer, filesystem operation, credential handling, or redaction behavior is implemented in these assigned files; that does not establish the rest of the product's behavior. Correctness still depends on the publication pipeline, upstream profile and ledger values, and callers wiring the separate epoch and model-scope checks.
+
+Three focused follow-ups are warranted. The profile grounding cache returns the ordinary mutable dictionary built by `_compute_profile_grounding_index` under a `Mapping` annotation, so a caller that mutates it could affect subsequent reads for that generation; an immutable wrapper would make the cached contract real. The DP30302 projector checks that references are nonempty and unique but does not itself call its separate epoch validator, so integration must ensure incompatible endpoint multiplicities are rejected before projection. Finally, monthly period parsing uses `str.isdigit()` before `int()`, which accepts some non-ASCII numeral strings even though the interface describes canonical zero-padded month tokens; explicitly enforcing ASCII digits would make this helper's boundary consistent. These are local robustness/integration findings, not proof of a production filing error. No tests were run; static review cannot certify legal currency or calculated totals.
+
+## Coverage appendix
+
+All 25 assigned files were fully read across eight bounded pages; no unread ranges remain.
+
+- registry/m303_regimen_simplificado_projection.py (`src/cadrumo/domain/calculations/registry/m303_regimen_simplificado_projection.py`) — 1–384
+- registry/m303_schema_vocabulary.py (`src/cadrumo/domain/calculations/registry/m303_schema_vocabulary.py`) — 1–439
+- registry/m347_threshold.py (`src/cadrumo/domain/calculations/registry/m347_threshold.py`) — 1–155
+- registry/manual_input_selector.py (`src/cadrumo/domain/calculations/registry/manual_input_selector.py`) — 1–180
+- registry/modelo_inception.py (`src/cadrumo/domain/calculations/registry/modelo_inception.py`) — 1–138
+- registry/modelo_localization.py (`src/cadrumo/domain/calculations/registry/modelo_localization.py`) — 1–410
+- registry/modelo_obligation_scope.py (`src/cadrumo/domain/calculations/registry/modelo_obligation_scope.py`) — 1–147
+- registry/modelo_pending_orden.py (`src/cadrumo/domain/calculations/registry/modelo_pending_orden.py`) — 1–125
+- registry/modelo_rendering.py (`src/cadrumo/domain/calculations/registry/modelo_rendering.py`) — 1–49
+- registry/nif_iva_catalogue.py (`src/cadrumo/domain/calculations/registry/nif_iva_catalogue.py`) — 1–174
+- registry/observation_fold.py (`src/cadrumo/domain/calculations/registry/observation_fold.py`) — 1–184
+- registry/orden_applicability.py (`src/cadrumo/domain/calculations/registry/orden_applicability.py`) — 1–193
+- registry/period_offset_math.py (`src/cadrumo/domain/calculations/registry/period_offset_math.py`) — 1–82
+- registry/period_selector_match.py (`src/cadrumo/domain/calculations/registry/period_selector_match.py`) — 1–47
+- registry/period_selector_overlap.py (`src/cadrumo/domain/calculations/registry/period_selector_overlap.py`) — 1–101
+- registry/profile_bindings.py (`src/cadrumo/domain/calculations/registry/profile_bindings.py`) — 1–108
+- registry/profile_grounding.py (`src/cadrumo/domain/calculations/registry/profile_grounding.py`) — 1–160
+- registry/prorrata_exclusions.py (`src/cadrumo/domain/calculations/registry/prorrata_exclusions.py`) — 1–164
+- registry/prorrata_regime.py (`src/cadrumo/domain/calculations/registry/prorrata_regime.py`) — 1–125
+- registry/prorrata_register_catalogue.py (`src/cadrumo/domain/calculations/registry/prorrata_register_catalogue.py`) — 1–381
+- registry/prorrata_register_models.py (`src/cadrumo/domain/calculations/registry/prorrata_register_models.py`) — 1–258
+- registry/prorrata_regularizacion_bindings.py (`src/cadrumo/domain/calculations/registry/prorrata_regularizacion_bindings.py`) — 1–115
+- registry/prorrata_vocabulary.py (`src/cadrumo/domain/calculations/registry/prorrata_vocabulary.py`) — 1–363
+- registry/provenance.py (`src/cadrumo/domain/calculations/registry/provenance.py`) — 1–16
+- registry/quantity_screen_enrolment.py (`src/cadrumo/domain/calculations/registry/quantity_screen_enrolment.py`) — 1–110
+<!-- /preserved:article -->

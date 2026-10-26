@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="72" viewBox="0 0 240 72" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">Cadrumo documentation</title>
+  <desc id="desc">The Cadrumo mark and wordmark for the documentation site.</desc>
+  <defs>
+    <clipPath id="cad-tile-l">
+      <path d="M0 56C0 25.0721 25.0721 0 56 0H180V124C180 154.928 154.928 180 124 180H0V56Z"/>
+    </clipPath>
+  </defs>
+  <g transform="translate(22 14)">
+    <g transform="scale(0.24444)" clip-path="url(#cad-tile-l)">
+      <path d="M0 56C0 25.0721 25.0721 0 56 0H180V124C180 154.928 154.928 180 124 180H0V56Z" fill="#E4DED4"/>
+      <circle cx="46" cy="135" r="70" fill="#55876B"/>
+      <circle cx="133" cy="47" r="70" fill="#C4553B"/>
+      <path d="M170 90C100.909 96.0224 96.0247 100.906 89.9992 170C83.9753 100.906 79.0898 96.0224 10 90C79.0898 83.9744 83.9753 79.0905 89.9992 10C96.0247 79.0905 100.909 83.9744 170 90Z" fill="#FAF8F4"/>
+    </g>
+    <text x="56" y="32" font-family="Instrument Serif, Georgia, 'Times New Roman', serif" font-size="27" fill="#1c1a17">CADRUMO</text>
+  </g>
+</svg>

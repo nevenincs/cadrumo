@@ -1,0 +1,32 @@
+[[revisions."2021".formulas]]
+id = "renta-deduccion-eficiencia-energetica-vivienda-suma"
+target_casilla_id = "0567"
+expression = { op = "sum", args = [
+    { casilla_id = "1662" },
+    { casilla_id = "1670" },
+    { casilla_id = "1679" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:da-50", "ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["deducciones", "cuota líquida"]
+[[revisions."2021".formulas]]
+id = "renta-trabajo-otros-gastos"
+target_casilla_id = "0019"
+expression = { op = "min", args = [
+        { literal = "2000" },
+        { op = "max", args = [
+                { literal = "0" },
+                { casilla_id = "0018" },
+            ] },
+    ] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-19"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["otros gastos distintos de los anteriores, 2.000 euros anuales"]

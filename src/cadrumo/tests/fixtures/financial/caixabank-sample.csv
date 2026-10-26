@@ -1,0 +1,3 @@
+Fecha movimiento;Fecha valor;Concepto;Importe;Divisa;Saldo;Referencia operación
+14/04/2026;14/04/2026;Cobro factura F-2026-014;920,10;EUR;6634,22;CX-001
+15/04/2026;15/04/2026;Pago gestoría mensual;-75,00;EUR;6559,22;CX-002

@@ -1,0 +1,15 @@
+# Modelo 181 record-design parity anchor. Redirected 2026-08-15 to the real
+# bundled Diseño de Registro (aeat-dr-181-2022) after the prior workbook_source
+# (enrolled-modelo-181-layout, a 1105-byte orden excerpt) was found to carry
+# no layout content and retiered to official_source_guidance. runner_required
+# stays false pending a verified byte-position parity run against the design.
+
+[[revisions."2022-y-siguientes".workbook_parity_refs]]
+id = "modelo-181-orden-static-layout"
+workbook_source = "aeat-dr-181-2022"
+fixture_id = "modelo-181-orden-eha-3514-2009-layout"
+formula_coverage = "static_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-181-2022"]

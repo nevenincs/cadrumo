@@ -1,0 +1,1793 @@
+modelo:
+  schema:
+    '036':
+      casilla:
+        continuidad:
+          act-actividad-descripcion:
+            label: Activity. Description of the activity
+          act-actividad-iae-seccion-grupo:
+            label: Activity. I.A.E. section and group or heading
+          act-actividad-tipo-actividad:
+            label: Activity. Type of activity
+          act-indicadores-local-directo-1:
+            label: Cadastral reference indicators. Indicator for the first directly
+              affected premises
+          act-indicadores-local-directo-2:
+            label: Cadastral reference indicators. Indicator for the second directly
+              affected premises
+          act-indicadores-local-indirecto-1:
+            label: Cadastral reference indicators. Indicator for the first indirectly
+              affected premises
+          act-indicadores-local-indirecto-2:
+            label: Cadastral reference indicators. Indicator for the second indirectly
+              affected premises
+          act-local-directo-1-alta:
+            label: Directly affected premises (first). Registration
+          act-local-directo-1-alta-fecha:
+            label: Directly affected premises (first). Date of registration
+          act-local-directo-1-baja:
+            label: Directly affected premises (first). Deregistration
+          act-local-directo-1-baja-fecha:
+            label: Directly affected premises (first). Date of deregistration
+          act-local-directo-1-codigo-postal:
+            label: Directly affected premises (first). Postal code
+          act-local-directo-1-codigo-provincia:
+            label: Directly affected premises (first). Province code
+          act-local-directo-1-grado-afectacion:
+            label: Directly affected premises (first). Degree of allocation to the
+              activity
+          act-local-directo-1-municipio:
+            label: Directly affected premises (first). Municipality
+          act-local-directo-1-nombre-via:
+            label: Directly affected premises (first). Street name
+          act-local-directo-1-numero:
+            label: Directly affected premises (first). Number
+          act-local-directo-1-numero-referencia-alta:
+            label: Directly affected premises (first). Registration reference number
+          act-local-directo-1-piso:
+            label: Directly affected premises (first). Floor
+          act-local-directo-1-puerta:
+            label: Directly affected premises (first). Door
+          act-local-directo-1-referencia-catastral:
+            label: Directly affected premises (first). Cadastral reference
+          act-local-directo-1-seccion-grafica:
+            label: Directly affected premises (first). Cadastral graphic section
+          act-local-directo-1-superficie:
+            label: Directly affected premises (first). Floor area in square metres
+          act-local-directo-1-variacion:
+            label: Directly affected premises (first). Change
+          act-local-directo-1-variacion-fecha:
+            label: Directly affected premises (first). Date of change
+          act-local-directo-1-variacion-numero-referencia:
+            label: Directly affected premises (first). Reference number of the change
+          act-local-directo-2-alta:
+            label: Directly affected premises (second). Registration
+          act-local-directo-2-alta-fecha:
+            label: Directly affected premises (second). Date of registration
+          act-local-directo-2-baja:
+            label: Directly affected premises (second). Deregistration
+          act-local-directo-2-baja-fecha:
+            label: Directly affected premises (second). Date of deregistration
+          act-local-directo-2-codigo-postal:
+            label: Directly affected premises (second). Postal code
+          act-local-directo-2-codigo-provincia:
+            label: Directly affected premises (second). Province code
+          act-local-directo-2-grado-afectacion:
+            label: Directly affected premises (second). Degree of allocation to the
+              activity
+          act-local-directo-2-municipio:
+            label: Directly affected premises (second). Municipality
+          act-local-directo-2-nombre-via:
+            label: Directly affected premises (second). Street name
+          act-local-directo-2-numero:
+            label: Directly affected premises (second). Number
+          act-local-directo-2-numero-referencia-alta:
+            label: Directly affected premises (second). Registration reference number
+          act-local-directo-2-piso:
+            label: Directly affected premises (second). Floor
+          act-local-directo-2-puerta:
+            label: Directly affected premises (second). Door
+          act-local-directo-2-referencia-catastral:
+            label: Directly affected premises (second). Cadastral reference
+          act-local-directo-2-seccion-grafica:
+            label: Directly affected premises (second). Cadastral graphic section
+          act-local-directo-2-superficie:
+            label: Directly affected premises (second). Floor area in square metres
+          act-local-directo-2-variacion:
+            label: Directly affected premises (second). Change
+          act-local-directo-2-variacion-fecha:
+            label: Directly affected premises (second). Date of change
+          act-local-directo-2-variacion-numero-referencia:
+            label: Directly affected premises (second). Reference number of the change
+          act-local-indirecto-1-alta:
+            label: Indirectly affected premises (first). Registration
+          act-local-indirecto-1-alta-fecha:
+            label: Indirectly affected premises (first). Date of registration
+          act-local-indirecto-1-baja:
+            label: Indirectly affected premises (first). Deregistration
+          act-local-indirecto-1-baja-fecha:
+            label: Indirectly affected premises (first). Date of deregistration
+          act-local-indirecto-1-codigo-postal:
+            label: Indirectly affected premises (first). Postal code
+          act-local-indirecto-1-codigo-provincia:
+            label: Indirectly affected premises (first). Province code
+          act-local-indirecto-1-grado-afectacion:
+            label: Indirectly affected premises (first). Degree of allocation to the
+              activity
+          act-local-indirecto-1-municipio:
+            label: Indirectly affected premises (first). Municipality
+          act-local-indirecto-1-nombre-via:
+            label: Indirectly affected premises (first). Street name
+          act-local-indirecto-1-numero:
+            label: Indirectly affected premises (first). Number
+          act-local-indirecto-1-numero-referencia-alta:
+            label: Indirectly affected premises (first). Registration reference number
+          act-local-indirecto-1-piso:
+            label: Indirectly affected premises (first). Floor
+          act-local-indirecto-1-puerta:
+            label: Indirectly affected premises (first). Door
+          act-local-indirecto-1-referencia-catastral:
+            label: Indirectly affected premises (first). Cadastral reference
+          act-local-indirecto-1-seccion-grafica:
+            label: Indirectly affected premises (first). Cadastral graphic section
+          act-local-indirecto-1-superficie:
+            label: Indirectly affected premises (first). Floor area in square metres
+          act-local-indirecto-1-uso-destino:
+            label: Indirectly affected premises (first). Use or purpose
+          act-local-indirecto-1-variacion:
+            label: Indirectly affected premises (first). Change
+          act-local-indirecto-1-variacion-fecha:
+            label: Indirectly affected premises (first). Date of change
+          act-local-indirecto-1-variacion-numero-referencia:
+            label: Indirectly affected premises (first). Reference number of the change
+          act-local-indirecto-2-alta:
+            label: Indirectly affected premises (second). Registration
+          act-local-indirecto-2-alta-fecha:
+            label: Indirectly affected premises (second). Date of registration
+          act-local-indirecto-2-baja:
+            label: Indirectly affected premises (second). Deregistration
+          act-local-indirecto-2-baja-fecha:
+            label: Indirectly affected premises (second). Date of deregistration
+          act-local-indirecto-2-codigo-postal:
+            label: Indirectly affected premises (second). Postal code
+          act-local-indirecto-2-codigo-provincia:
+            label: Indirectly affected premises (second). Province code
+          act-local-indirecto-2-grado-afectacion:
+            label: Indirectly affected premises (second). Degree of allocation to
+              the activity
+          act-local-indirecto-2-municipio:
+            label: Indirectly affected premises (second). Municipality
+          act-local-indirecto-2-nombre-via:
+            label: Indirectly affected premises (second). Street name
+          act-local-indirecto-2-numero:
+            label: Indirectly affected premises (second). Number
+          act-local-indirecto-2-numero-referencia-alta:
+            label: Indirectly affected premises (second). Registration reference number
+          act-local-indirecto-2-piso:
+            label: Indirectly affected premises (second). Floor
+          act-local-indirecto-2-puerta:
+            label: Indirectly affected premises (second). Door
+          act-local-indirecto-2-referencia-catastral:
+            label: Indirectly affected premises (second). Cadastral reference
+          act-local-indirecto-2-seccion-grafica:
+            label: Indirectly affected premises (second). Cadastral graphic section
+          act-local-indirecto-2-superficie:
+            label: Indirectly affected premises (second). Floor area in square metres
+          act-local-indirecto-2-uso-destino:
+            label: Indirectly affected premises (second). Use or purpose
+          act-local-indirecto-2-variacion:
+            label: Indirectly affected premises (second). Change
+          act-local-indirecto-2-variacion-fecha:
+            label: Indirectly affected premises (second). Date of change
+          act-local-indirecto-2-variacion-numero-referencia:
+            label: Indirectly affected premises (second). Reference number of the
+              change
+          act-sin-local-alta:
+            label: Activity carried on outside fixed premises. Registration
+          act-sin-local-alta-fecha:
+            label: Activity carried on outside fixed premises. Date of registration
+          act-sin-local-baja:
+            label: Activity carried on outside fixed premises. Deregistration
+          act-sin-local-baja-fecha:
+            label: Activity carried on outside fixed premises. Date of deregistration
+          act-sin-local-municipio:
+            label: Activity carried on outside fixed premises. Municipality
+          act-sin-local-numero-referencia:
+            label: Activity carried on outside fixed premises. Reference number
+          decl-apellidos-razon-social:
+            label: Surnames if a natural person, or legal name if a legal entity
+          decl-causa-110:
+            label: Application for a Tax Identification Number (NIF)
+          decl-causa-111:
+            label: Registration in the census of entrepreneurs, professionals and
+              withholders
+          decl-causa-120:
+            label: Application for a definitive NIF when holding a provisional one
+          decl-causa-121:
+            label: Application for a new NIF accreditation card
+          decl-causa-122:
+            label: Change of tax domicile (pages 2A, 2B and 2C)
+          decl-causa-123:
+            label: Change of registered office or administrative management address
+              (pages 2A and 2B)
+          decl-causa-124:
+            label: Change or removal of the address for notification purposes (pages
+              2A, 2B and 2C)
+          decl-causa-125:
+            label: Change of other identifying data or domain (pages 2A, 2B and 2C)
+          decl-causa-126:
+            label: Change of representative data (page 3)
+          decl-causa-127:
+            label: Change of data on economic activities and premises (page 4)
+          decl-causa-128:
+            label: Change of Large Enterprise status, or Public Administration with
+              a budget above 6,000,000 euros (page 5)
+          decl-causa-129:
+            label: Application to join or leave the monthly refund register (page
+              5)
+          decl-causa-130:
+            label: Application to join or leave the register of intra-Community operators
+              (page 5)
+          decl-causa-131:
+            label: Change of Value Added Tax data (page 5)
+          decl-causa-132:
+            label: Change of Personal Income Tax data (page 6)
+          decl-causa-133:
+            label: Change of Corporate Income Tax data (page 6)
+          decl-causa-134:
+            label: Change of Non-Resident Income Tax data for permanent establishments,
+              or for income-attribution entities formed abroad with a presence in
+              Spanish territory (page 6)
+          decl-causa-135:
+            label: Election of, or withdrawal from, the special tax regime under Title
+              II of Law 49/2002 (page 6)
+          decl-causa-136:
+            label: Change of data on withholdings and payments on account (page 7)
+          decl-causa-137:
+            label: Change to data on other taxes and registers (page 7)
+          decl-causa-138:
+            label: Change of data on special intra-Community trade regimes (page 7)
+          decl-causa-139:
+            label: Change of data on the list of partners, members or participants
+              (page 8)
+          decl-causa-140:
+            label: Ceasing all business and/or professional activities (legal persons
+              and entities, without liquidation; inactive entities)
+          decl-causa-142:
+            label: Change or removal of telephone numbers and electronic addresses
+              for receiving notices from the AEAT, TEA and DGT (pages 2A, 2B and 2C)
+          decl-causa-143:
+            label: Notification of election of, or withdrawal from, keeping the VAT
+              record books through the AEAT electronic office (page 5)
+          decl-causa-150:
+            label: Deregistration from the census of entrepreneurs, professionals
+              and withholders
+          decl-causa-baja:
+            label: Reason for deregistration from the census of traders, professionals
+              and withholders
+          decl-fecha-efectiva-baja:
+            label: Effective date of deregistration from the census
+          decl-fecha-efectiva-cese:
+            label: Effective date of cessation of all business or professional activities
+          decl-nif:
+            label: Tax identification number (NIF) of the declarant
+          decl-nombre:
+            label: Forename, for natural persons
+          ep-avisos-email:
+            label: Permanent establishment. Alerts. E-mail
+          ep-avisos-prefijo-pais-movil:
+            label: Permanent establishment. Alerts. Country dialling prefix of the
+              mobile telephone
+          ep-avisos-telefono-movil:
+            label: Permanent establishment. Alerts. Mobile telephone
+          ep-domicilio-fiscal-bloque:
+            label: Permanent establishment. Tax address in Spain. Block
+          ep-domicilio-fiscal-calificador-numero:
+            label: Permanent establishment. Tax address in Spain. Number qualifier
+          ep-domicilio-fiscal-codigo-postal:
+            label: Permanent establishment. Tax address in Spain. Postal code
+          ep-domicilio-fiscal-codigo-provincia:
+            label: Permanent establishment. Tax address in Spain. Province code
+          ep-domicilio-fiscal-complemento-domicilio:
+            label: Permanent establishment. Tax address in Spain. Address complement
+          ep-domicilio-fiscal-escalera:
+            label: Permanent establishment. Tax address in Spain. Staircase
+          ep-domicilio-fiscal-indicador-referencia-catastral:
+            label: Permanent establishment. Tax address in Spain. Cadastral reference
+              indicator of the tax address
+          ep-domicilio-fiscal-localidad:
+            label: Permanent establishment. Tax address in Spain. Locality or town
+          ep-domicilio-fiscal-municipio:
+            label: Permanent establishment. Tax address in Spain. Municipality name
+          ep-domicilio-fiscal-nombre-via:
+            label: Permanent establishment. Tax address in Spain. Street name
+          ep-domicilio-fiscal-numero-casa:
+            label: Permanent establishment. Tax address in Spain. House number
+          ep-domicilio-fiscal-planta:
+            label: Permanent establishment. Tax address in Spain. Floor
+          ep-domicilio-fiscal-portal:
+            label: Permanent establishment. Tax address in Spain. Entrance
+          ep-domicilio-fiscal-puerta:
+            label: Permanent establishment. Tax address in Spain. Door
+          ep-domicilio-fiscal-referencia-catastral:
+            label: Permanent establishment. Tax address in Spain. Cadastral reference
+          ep-domicilio-fiscal-tipo-numero:
+            label: Permanent establishment. Tax address in Spain. Number type
+          ep-domicilio-fiscal-tipo-via:
+            label: Permanent establishment. Tax address in Spain. Street type
+          ep-domicilio-notificaciones-apartado-calidad:
+            label: Permanent establishment. Address for notifications. Acting as,
+              for the post office box
+          ep-domicilio-notificaciones-apartado-codigo-postal:
+            label: Permanent establishment. Address for notifications. Postal code
+              of the post office box
+          ep-domicilio-notificaciones-apartado-codigo-provincia:
+            label: Permanent establishment. Address for notifications. Province code
+              of the post office box
+          ep-domicilio-notificaciones-apartado-correos:
+            label: Permanent establishment. Address for notifications. Post office
+              box number
+          ep-domicilio-notificaciones-apartado-destinatario:
+            label: Permanent establishment. Address for notifications. Addressee of
+              the post office box, if different from the filer
+          ep-domicilio-notificaciones-apartado-poblacion:
+            label: Permanent establishment. Address for notifications. Town or city
+              of the post office box
+          ep-domicilio-notificaciones-baja-domicilio:
+            label: Permanent establishment. Address for notifications. Deregistration
+              indicator of the notification address
+          ep-domicilio-notificaciones-bloque:
+            label: Permanent establishment. Address for notifications. Block (address
+              1)
+          ep-domicilio-notificaciones-calidad:
+            label: Permanent establishment. Address for notifications. Acting as (address
+              1)
+          ep-domicilio-notificaciones-calificador-numero:
+            label: Permanent establishment. Address for notifications. Number qualifier
+              (address 1)
+          ep-domicilio-notificaciones-codigo-postal:
+            label: Permanent establishment. Address for notifications. Postal code
+              (address 1)
+          ep-domicilio-notificaciones-codigo-provincia:
+            label: Permanent establishment. Address for notifications. Province code
+              (address 1)
+          ep-domicilio-notificaciones-complemento-domicilio:
+            label: Permanent establishment. Address for notifications. Address complement
+              (address 1)
+          ep-domicilio-notificaciones-destinatario:
+            label: Permanent establishment. Address for notifications. Addressee,
+              if different from the filer (address 1)
+          ep-domicilio-notificaciones-escalera:
+            label: Permanent establishment. Address for notifications. Stairway (address
+              1)
+          ep-domicilio-notificaciones-localidad:
+            label: Permanent establishment. Address for notifications. Locality or
+              town (address 1)
+          ep-domicilio-notificaciones-municipio:
+            label: Permanent establishment. Address for notifications. Municipality
+              name (address 1)
+          ep-domicilio-notificaciones-nombre-via:
+            label: Permanent establishment. Address for notifications. Street name
+              (address 1)
+          ep-domicilio-notificaciones-numero-casa:
+            label: Permanent establishment. Address for notifications. House number
+              (address 1)
+          ep-domicilio-notificaciones-planta:
+            label: Permanent establishment. Address for notifications. Floor (address
+              1)
+          ep-domicilio-notificaciones-portal:
+            label: Permanent establishment. Address for notifications. Entrance (address
+              1)
+          ep-domicilio-notificaciones-puerta:
+            label: Permanent establishment. Address for notifications. Door (address
+              1)
+          ep-domicilio-notificaciones-tipo-numero:
+            label: Permanent establishment. Address for notifications. Number type
+              (address 1)
+          ep-domicilio-notificaciones-tipo-via:
+            label: Permanent establishment. Address for notifications. Street type
+              (address 1)
+          ep-identificacion-anagrama:
+            label: Permanent establishment. Identification. Logotype name
+          ep-identificacion-dominio-internet:
+            label: Permanent establishment. Identification. Internet domain or address
+          ep-identificacion-dominio-internet-secundario:
+            label: Permanent establishment. Identification. Internet domain or address
+              (second)
+          ep-identificacion-es-sucursal:
+            label: Permanent establishment. Identification. Whether it is a branch
+              of the non-resident entity
+          ep-identificacion-fecha-constitucion:
+            label: Permanent establishment. Identification. Date of incorporation
+          ep-identificacion-fecha-inscripcion-registro-mercantil:
+            label: Permanent establishment. Identification. Date of entry in the commercial
+              register
+          ep-identificacion-matriz-estado-residencia:
+            label: Permanent establishment. Identification. State of residence of
+              the non-resident person or entity it depends on
+          ep-identificacion-matriz-nif:
+            label: Permanent establishment. Identification. Tax identification number
+              of the non-resident person or entity it depends on, if any
+          ep-identificacion-matriz-razon-social:
+            label: Permanent establishment. Identification. Legal name of the non-resident
+              person or entity it depends on
+          ep-identificacion-nif:
+            label: Permanent establishment. Identification. Tax identification number
+              (NIF)
+          ep-identificacion-nif-estado-residencia:
+            label: Permanent establishment. Identification. Tax identification code
+              of the State of residence or NVAT
+          ep-identificacion-razon-social:
+            label: Permanent establishment. Identification. Legal name
+          ep-identificacion-tipo-establecimiento:
+            label: Permanent establishment. Identification. Type of permanent establishment
+          extractores-depositos-alcohol-fecha:
+            label: Register of extractors from tax warehouses. Date of the application
+              for alcohol and derived beverages
+          extractores-depositos-hidrocarburos-fecha:
+            label: Register of extractors from tax warehouses. Date of the application
+              for hydrocarbons
+          iva-facturacion-factura-por-destinatarios:
+            label: VAT. Invoicing. The obligation to issue invoices is met by the
+              recipients or by third parties
+          iva-facturacion-factura-por-destinatarios-fecha:
+            label: VAT. Invoicing. Invoicing by recipients or third parties. Date
+          iva-gran-empresa-es-admon-publica-presupuesto:
+            label: Large enterprise and public administrations. Is a public administration
+              whose last approved annual budget exceeds 6 million euros
+          iva-gran-empresa-es-gran-empresa:
+            label: Large enterprise and public administrations. Has large-enterprise
+              status
+          iva-gran-empresa-fecha-admon-publica-presupuesto:
+            label: Large enterprise and public administrations. Date of the public-administration
+              status with a budget over 6 million euros
+          iva-gran-empresa-fecha-gran-empresa:
+            label: Large enterprise and public administrations. Date of large-enterprise
+              status
+          iva-importacion-forales-iva-importacion-fecha:
+            label: VAT. Imports. Chartered territories. Payment of import VAT. Date
+          iva-importacion-ingreso-iva-importacion-fecha:
+            label: VAT. Imports. Payment of import VAT. Date
+          iva-inicio-actividad-comienzo-habitual:
+            label: VAT. Start of activity. Habitual commencement of supplies of goods
+              or services
+          iva-inicio-actividad-entregas-posterior:
+            label: VAT. Start of activity. Supplies of goods or services subsequent
+              to the acquisition
+          iva-inicio-actividad-entregas-previa-o-simultanea:
+            label: VAT. Start of activity. Supplies of goods or services prior to
+              or simultaneous with the acquisition
+          iva-inicio-actividad-fecha-comienzo-habitual:
+            label: VAT. Start of activity. Date of the habitual commencement of supplies
+          iva-inicio-actividad-fecha-entregas-posterior:
+            label: VAT. Start of activity. Date of the subsequent supplies
+          iva-inicio-actividad-fecha-entregas-previa-o-simultanea:
+            label: VAT. Start of activity. Date of the prior or simultaneous supplies
+          iva-inicio-actividad-fecha-sector-diferenciado:
+            label: VAT. Start of activity. Date of the start of the activity constituting
+              a differentiated sector
+          iva-inicio-actividad-sector-diferenciado:
+            label: VAT. Start of activity. Start of a new activity constituting a
+              differentiated sector
+          iva-libros-registro-llevanza-sede-electronica-fecha:
+            label: VAT. Record books. Keeping the record books through the electronic
+              office. Date
+          iva-obligaciones-establecido-en-tai:
+            label: VAT. Obligations. Is established in the territory where the tax
+              applies, or has a permanent establishment there
+          iva-obligaciones-revendedor-dispositivos:
+            label: VAT. Obligations. Has reseller status for mobile phones, consoles,
+              laptops and tablets
+          iva-obligaciones-solo-operaciones-sin-autoliquidacion:
+            label: VAT. Obligations. Carries out only non-taxable or exempt transactions
+              that do not require a periodic self-assessment
+          iva-prorrata-porcentaje-provisional:
+            label: VAT. Deductible proportion and differentiated sectors. Proposes
+              a provisional deduction percentage
+          iva-prorrata-sector-1-cnae-1:
+            label: VAT. Deductible proportion and differentiated sectors. Sector I.
+              C.N.A.E. code (first)
+          iva-prorrata-sector-1-cnae-2:
+            label: VAT. Deductible proportion and differentiated sectors. Sector I.
+              C.N.A.E. code (second)
+          iva-prorrata-sector-1-cnae-3:
+            label: VAT. Deductible proportion and differentiated sectors. Sector I.
+              C.N.A.E. code (third)
+          iva-prorrata-sector-1-prorrata-especial:
+            label: VAT. Deductible proportion and differentiated sectors. Sector I.
+              Election for the special deductible proportion
+          iva-prorrata-sector-2-cnae-1:
+            label: VAT. Deductible proportion and differentiated sectors. Sector II.
+              C.N.A.E. code (first)
+          iva-prorrata-sector-2-cnae-2:
+            label: VAT. Deductible proportion and differentiated sectors. Sector II.
+              C.N.A.E. code (second)
+          iva-prorrata-sector-2-cnae-3:
+            label: VAT. Deductible proportion and differentiated sectors. Sector II.
+              C.N.A.E. code (third)
+          iva-prorrata-sector-2-prorrata-especial:
+            label: VAT. Deductible proportion and differentiated sectors. Sector II.
+              Election for the special deductible proportion
+          iva-prorrata-sector-3-cnae-1:
+            label: VAT. Deductible proportion and differentiated sectors. Sector III.
+              C.N.A.E. code (first)
+          iva-prorrata-sector-3-cnae-2:
+            label: VAT. Deductible proportion and differentiated sectors. Sector III.
+              C.N.A.E. code (second)
+          iva-prorrata-sector-3-cnae-3:
+            label: VAT. Deductible proportion and differentiated sectors. Sector III.
+              C.N.A.E. code (third)
+          iva-prorrata-sector-3-prorrata-especial:
+            label: VAT. Deductible proportion and differentiated sectors. Sector III.
+              Election for the special deductible proportion
+          iva-prorrata-sin-sectores-diferenciados:
+            label: VAT. Deductible proportion and differentiated sectors. Has no differentiated
+              sectors
+          iva-regimenes-agencias-viajes:
+            label: VAT. Schemes. Special travel agents scheme, transaction by transaction
+          iva-regimenes-agencias-viajes-fecha:
+            label: VAT. Schemes. Travel agents. Date
+          iva-regimenes-agencias-viajes-iae:
+            label: VAT. Schemes. Travel agents. I.A.E. group or heading, or activity
+              code
+          iva-regimenes-bienes-usados-margen-global:
+            label: VAT. Schemes. Special second-hand goods scheme, global profit margin
+          iva-regimenes-bienes-usados-margen-global-fecha:
+            label: VAT. Schemes. Second-hand goods global profit margin. Date
+          iva-regimenes-bienes-usados-margen-global-iae:
+            label: VAT. Schemes. Second-hand goods global profit margin. I.A.E. group
+              or heading, or activity code
+          iva-regimenes-bienes-usados-operacion:
+            label: VAT. Schemes. Special second-hand goods scheme, transaction by
+              transaction
+          iva-regimenes-bienes-usados-operacion-fecha:
+            label: VAT. Schemes. Second-hand goods transaction by transaction. Date
+          iva-regimenes-bienes-usados-operacion-iae:
+            label: VAT. Schemes. Second-hand goods transaction by transaction. I.A.E.
+              group or heading, or activity code
+          iva-regimenes-general:
+            label: VAT. Schemes. General scheme
+          iva-regimenes-general-fecha:
+            label: VAT. Schemes. General scheme. Date
+          iva-regimenes-general-iae:
+            label: VAT. Schemes. General scheme. I.A.E. group or heading, or activity
+              code
+          iva-regimenes-oro-inversion:
+            label: VAT. Schemes. Special investment gold scheme
+          iva-regimenes-oro-inversion-fecha:
+            label: VAT. Schemes. Investment gold. Date
+          iva-regimenes-oro-inversion-iae:
+            label: VAT. Schemes. Investment gold. I.A.E. group or heading, or activity
+              code
+          iva-regimenes-recargo-equivalencia:
+            label: VAT. Schemes. Special equivalence surcharge scheme
+          iva-regimenes-recargo-equivalencia-fecha:
+            label: VAT. Schemes. Equivalence surcharge. Date
+          iva-regimenes-recargo-equivalencia-iae:
+            label: VAT. Schemes. Equivalence surcharge. I.A.E. group or heading, or
+              activity code
+          iva-registros-operadores-intracomunitarios-fecha:
+            label: VAT. Registers. Intra-Community operators register. Date
+          iva-revendedores-alta-baja-fecha:
+            label: VAT. Resellers of devices. Reseller registration or removal. Date
+          obl-irnr-obligacion-declarar:
+            label: Non-resident income tax. Permanent establishment. Obligation to
+              file a return
+          obl-irnr-obligacion-declarar-fecha:
+            label: Non-resident income tax. Permanent establishment. Date of the obligation
+              to file a return
+          obl-irnr-opcion-art-40-3:
+            label: Non-resident income tax. Permanent establishment. Election for
+              the calculation system of art. 40.3
+          obl-irnr-opcion-art-40-3-fecha:
+            label: Non-resident income tax. Permanent establishment. Date of the election
+              for the calculation system of art. 40.3
+          obl-irnr-opcion-regimen-general:
+            label: Non-resident income tax. Permanent establishment. Election for
+              the general regime
+          obl-irnr-opcion-regimen-general-fecha:
+            label: Non-resident income tax. Permanent establishment. Date of the election
+              for the general regime
+          obl-irpf-estimacion-directa-normal-fecha:
+            label: Personal income tax (IRPF). Standard direct assessment method.
+              Date
+          obl-irpf-estimacion-directa-simplificada-fecha:
+            label: Personal income tax (IRPF). Simplified direct assessment method.
+              Date
+          obl-irpf-estimacion-objetiva-fecha:
+            label: Personal income tax (IRPF). Objective assessment method. Date
+          obl-irpf-pagos-fraccionados-actividad:
+            label: Personal income tax (IRPF). Obligation to make instalment payments
+              from economic activities
+          obl-irpf-pagos-fraccionados-actividad-fecha:
+            label: Personal income tax (IRPF). Date of the instalment-payment obligation
+              from economic activities
+          obl-irpf-pagos-fraccionados-atribucion:
+            label: Personal income tax (IRPF). Obligation to make instalment payments
+              as a member of an income-attribution entity
+          obl-irpf-pagos-fraccionados-atribucion-fecha:
+            label: Personal income tax (IRPF). Date of the instalment-payment obligation
+              as a member of an attribution entity
+          obl-regimen-ley-49-2002-ejerce-opcion:
+            label: Special tax regime under Law 49/2002. Exercises the election for
+              the special tax regime
+          obl-regimen-ley-49-2002-ejerce-opcion-fecha:
+            label: Special tax regime under Law 49/2002. Date of the election for
+              the special tax regime
+          obl-regimen-ley-49-2002-renuncia:
+            label: Special tax regime under Law 49/2002. Waiver of the special tax
+              regime
+          obl-regimen-ley-49-2002-renuncia-fecha:
+            label: Special tax regime under Law 49/2002. Date of the waiver of the
+              special tax regime
+          obl-sociedades-cierre-ejercicio:
+            label: Corporate income tax. Closing date of the financial year, day and
+              month
+          obl-sociedades-entidad-exenta:
+            label: Corporate income tax. Status as an exempt entity
+          obl-sociedades-obligacion-declarar:
+            label: Corporate income tax. Obligation to file a return
+          obl-sociedades-obligacion-declarar-fecha:
+            label: Corporate income tax. Date of the obligation to file a return
+          obl-sociedades-opcion-art-40-3:
+            label: Corporate income tax. Election for the calculation system of art.
+              40.3
+          obl-sociedades-opcion-art-40-3-fecha:
+            label: Corporate income tax. Date of the election for the calculation
+              system of art. 40.3
+          obl-sociedades-renuncia-consolidacion:
+            label: Corporate income tax. Waiver of the tax consolidation regime
+          obl-sociedades-renuncia-consolidacion-fecha:
+            label: Corporate income tax. Date of the waiver of the tax consolidation
+              regime
+          persona-juridica-domicilio-social-bloque:
+            label: Legal person or entity. Registered office. Block
+          persona-juridica-domicilio-social-nombre-via:
+            label: Legal person or entity. Registered office. Street name
+          persona-juridica-domicilio-social-numero-casa:
+            label: Legal person or entity. Registered office. House number
+          pf-avisos-email:
+            label: Alerts. E-mail
+          pf-avisos-telefono-movil:
+            label: Alerts. Mobile telephone
+          pf-domicilio-fiscal-bloque:
+            label: Tax address in Spain. Block
+          pf-domicilio-fiscal-calificador-numero:
+            label: Tax address in Spain. Number qualifier
+          pf-domicilio-fiscal-codigo-postal:
+            label: Tax address in Spain. Postal code
+          pf-domicilio-fiscal-codigo-provincia:
+            label: Tax address in Spain. Province code
+          pf-domicilio-fiscal-complemento-domicilio:
+            label: Tax address in Spain. Address complement
+          pf-domicilio-fiscal-escalera:
+            label: Tax address in Spain. Staircase
+          pf-domicilio-fiscal-indicador-referencia-catastral:
+            label: Tax address in Spain. Cadastral reference indicator of the tax
+              address
+          pf-domicilio-fiscal-localidad:
+            label: Tax address in Spain. Locality or town
+          pf-domicilio-fiscal-municipio:
+            label: Tax address in Spain. Municipality name
+          pf-domicilio-fiscal-nombre-via:
+            label: Tax address in Spain. Street name
+          pf-domicilio-fiscal-numero-casa:
+            label: Tax address in Spain. House number
+          pf-domicilio-fiscal-planta:
+            label: Tax address in Spain. Floor
+          pf-domicilio-fiscal-portal:
+            label: Tax address in Spain. Entrance
+          pf-domicilio-fiscal-puerta:
+            label: Tax address in Spain. Door
+          pf-domicilio-fiscal-referencia-catastral:
+            label: Tax address in Spain. Cadastral reference
+          pf-domicilio-fiscal-tipo-numero:
+            label: Tax address in Spain. Number type
+          pf-domicilio-fiscal-tipo-via:
+            label: Tax address in Spain. Street type
+          pf-domicilio-gestion-administrativa-bloque:
+            label: Administrative management address. Block
+          pf-domicilio-gestion-administrativa-calificador-numero:
+            label: Administrative management address. Number qualifier
+          pf-domicilio-gestion-administrativa-codigo-postal:
+            label: Administrative management address. Postal code
+          pf-domicilio-gestion-administrativa-codigo-provincia:
+            label: Administrative management address. Province code
+          pf-domicilio-gestion-administrativa-complemento-domicilio:
+            label: Administrative management address. Address complement
+          pf-domicilio-gestion-administrativa-escalera:
+            label: Administrative management address. Staircase
+          pf-domicilio-gestion-administrativa-indicador-baja:
+            label: Administrative management address. Deregistration indicator of
+              the administrative management address
+          pf-domicilio-gestion-administrativa-localidad:
+            label: Administrative management address. Locality or town
+          pf-domicilio-gestion-administrativa-municipio:
+            label: Administrative management address. Municipality name
+          pf-domicilio-gestion-administrativa-nombre-via:
+            label: Administrative management address. Street name
+          pf-domicilio-gestion-administrativa-numero-casa:
+            label: Administrative management address. House number
+          pf-domicilio-gestion-administrativa-planta:
+            label: Administrative management address. Floor
+          pf-domicilio-gestion-administrativa-portal:
+            label: Administrative management address. Entrance
+          pf-domicilio-gestion-administrativa-puerta:
+            label: Administrative management address. Door
+          pf-domicilio-gestion-administrativa-tipo-numero:
+            label: Administrative management address. Number type
+          pf-domicilio-gestion-administrativa-tipo-via:
+            label: Administrative management address. Street type
+          pf-domicilio-notificaciones-apartado-calidad:
+            label: Address for notifications. Acting as, for the post office box
+          pf-domicilio-notificaciones-apartado-codigo-postal:
+            label: Address for notifications. Postal code of the post office box
+          pf-domicilio-notificaciones-apartado-codigo-provincia:
+            label: Address for notifications. Province code of the post office box
+          pf-domicilio-notificaciones-apartado-correos:
+            label: Address for notifications. Post office box number
+          pf-domicilio-notificaciones-apartado-destinatario:
+            label: Address for notifications. Addressee of the post office box, if
+              different from the filer
+          pf-domicilio-notificaciones-apartado-poblacion:
+            label: Address for notifications. Town or city of the post office box
+          pf-domicilio-notificaciones-baja-domicilio:
+            label: Address for notifications. Deregistration of the notification address
+          pf-domicilio-notificaciones-bloque:
+            label: Address for notifications. Block (address 1)
+          pf-domicilio-notificaciones-calidad:
+            label: Address for notifications. Acting as (address 1)
+          pf-domicilio-notificaciones-calificador-numero:
+            label: Address for notifications. Number qualifier (address 1)
+          pf-domicilio-notificaciones-codigo-postal:
+            label: Address for notifications. Postal code (address 1)
+          pf-domicilio-notificaciones-codigo-provincia:
+            label: Address for notifications. Province code (address 1)
+          pf-domicilio-notificaciones-complemento-domicilio:
+            label: Address for notifications. Address complement (address 1)
+          pf-domicilio-notificaciones-destinatario:
+            label: Address for notifications. Addressee, if different from the filer
+              (address 1)
+          pf-domicilio-notificaciones-escalera:
+            label: Address for notifications. Stairway (address 1)
+          pf-domicilio-notificaciones-localidad:
+            label: Address for notifications. Locality or town (address 1)
+          pf-domicilio-notificaciones-municipio:
+            label: Address for notifications. Municipality name (address 1)
+          pf-domicilio-notificaciones-nombre-via:
+            label: Address for notifications. Street name (address 1)
+          pf-domicilio-notificaciones-numero-casa:
+            label: Address for notifications. House number (address 1)
+          pf-domicilio-notificaciones-planta:
+            label: Address for notifications. Floor (address 1)
+          pf-domicilio-notificaciones-portal:
+            label: Address for notifications. Entrance (address 1)
+          pf-domicilio-notificaciones-puerta:
+            label: Address for notifications. Door (address 1)
+          pf-domicilio-notificaciones-tipo-numero:
+            label: Address for notifications. Number type (address 1)
+          pf-domicilio-notificaciones-tipo-via:
+            label: Address for notifications. Street type (address 1)
+          pf-domicilio-residencia-extranjero-codigo-pais:
+            label: Address in the State of residence. Country code
+          pf-domicilio-residencia-extranjero-codigo-postal:
+            label: Address in the State of residence. Postal code
+          pf-domicilio-residencia-extranjero-complemento-domicilio:
+            label: Address in the State of residence. Address complement
+          pf-domicilio-residencia-extranjero-domicilio:
+            label: Address in the State of residence. Address
+          pf-domicilio-residencia-extranjero-pais:
+            label: Address in the State of residence. Country
+          pf-domicilio-residencia-extranjero-poblacion:
+            label: Address in the State of residence. Town or city
+          pf-domicilio-residencia-extranjero-provincia-region:
+            label: Address in the State of residence. Province, region or state
+          pf-establecimientos-permanentes-cuantos:
+            label: Permanent establishments. Number of permanent establishments
+          pf-establecimientos-permanentes-denominacion-1:
+            label: Permanent establishments. Name of permanent establishment 1
+          pf-establecimientos-permanentes-denominacion-2:
+            label: Permanent establishments. Name of permanent establishment 2
+          pf-establecimientos-permanentes-denominacion-3:
+            label: Permanent establishments. Name of permanent establishment 3
+          pf-establecimientos-permanentes-opera-establecimiento-permanente:
+            label: Permanent establishments. Operates in Spain through a permanent
+              establishment
+          pf-identificacion-apellido-1:
+            label: Identification. First surname
+          pf-identificacion-apellido-2:
+            label: Identification. Second surname
+          pf-identificacion-codigo-pais-residencia:
+            label: Identification. Country code of the State of residence
+          pf-identificacion-dominio-internet:
+            label: Identification. Internet domain or address
+          pf-identificacion-erl-alta-baja:
+            label: Identification. Registration or deregistration as a limited-liability
+              entrepreneur
+          pf-identificacion-erl-fecha:
+            label: Identification. Date of registration or deregistration as a limited-liability
+              entrepreneur
+          pf-identificacion-nacionalidad:
+            label: Identification. Nationality of the non-resident
+          pf-identificacion-nif:
+            label: Identification. Tax identification number (NIF or NIE)
+          pf-identificacion-nif-estado-residencia:
+            label: Identification. Tax identification code of the State of residence
+              or VAT number
+          pf-identificacion-nombre:
+            label: Identification. Given name
+          pf-identificacion-nombre-comercial:
+            label: Identification. Trade name
+          pj-aviso-email:
+            label: Legal person or entity. Alerts. E-mail
+          pj-aviso-prefijo-pais-movil:
+            label: Legal person or entity. Alerts. Country dialling prefix of the
+              mobile telephone
+          pj-aviso-telefono-movil:
+            label: Legal person or entity. Alerts. Mobile telephone
+          pj-dext-codigo-pais:
+            label: Legal person or entity. Address in the State of residence. Country
+              code
+          pj-dext-codigo-postal:
+            label: Legal person or entity. Address in the State of residence. Postal
+              code
+          pj-dext-complemento-domicilio:
+            label: Legal person or entity. Address in the State of residence. Address
+              complement
+          pj-dext-domicilio:
+            label: Legal person or entity. Address in the State of residence. Address
+          pj-dext-pais:
+            label: Legal person or entity. Address in the State of residence. Country
+          pj-dext-poblacion:
+            label: Legal person or entity. Address in the State of residence. Town
+              or city
+          pj-dext-provincia-region:
+            label: Legal person or entity. Address in the State of residence. Province,
+              region or state
+          pj-dfisc-bloque:
+            label: Legal person or entity. Tax address in Spain. Block
+          pj-dfisc-calificador-numero:
+            label: Legal person or entity. Tax address in Spain. Number qualifier
+          pj-dfisc-codigo-postal:
+            label: Legal person or entity. Tax address in Spain. Postal code
+          pj-dfisc-codigo-provincia:
+            label: Legal person or entity. Tax address in Spain. Province code
+          pj-dfisc-complemento-domicilio:
+            label: Legal person or entity. Tax address in Spain. Address complement
+          pj-dfisc-escalera:
+            label: Legal person or entity. Tax address in Spain. Staircase
+          pj-dfisc-indicador-referencia-catastral:
+            label: Legal person or entity. Tax address in Spain. Cadastral reference
+              indicator of the tax address
+          pj-dfisc-localidad:
+            label: Legal person or entity. Tax address in Spain. Locality or town
+          pj-dfisc-municipio:
+            label: Legal person or entity. Tax address in Spain. Municipality name
+          pj-dfisc-nombre-via:
+            label: Legal person or entity. Tax address in Spain. Street name
+          pj-dfisc-numero-casa:
+            label: Legal person or entity. Tax address in Spain. House number
+          pj-dfisc-planta:
+            label: Legal person or entity. Tax address in Spain. Floor
+          pj-dfisc-portal:
+            label: Legal person or entity. Tax address in Spain. Entrance
+          pj-dfisc-puerta:
+            label: Legal person or entity. Tax address in Spain. Door
+          pj-dfisc-referencia-catastral:
+            label: Legal person or entity. Tax address in Spain. Cadastral reference
+          pj-dfisc-tipo-numero:
+            label: Legal person or entity. Tax address in Spain. Number type
+          pj-dfisc-tipo-via:
+            label: Legal person or entity. Tax address in Spain. Street type
+          pj-dnoti-apartado-calidad:
+            label: Legal person or entity. Address for notifications. Acting as, for
+              the post office box
+          pj-dnoti-apartado-codigo-postal:
+            label: Legal person or entity. Address for notifications. Postal code
+              of the post office box
+          pj-dnoti-apartado-codigo-provincia:
+            label: Legal person or entity. Address for notifications. Province code
+              of the post office box
+          pj-dnoti-apartado-correos:
+            label: Legal person or entity. Address for notifications. Post office
+              box number
+          pj-dnoti-apartado-destinatario:
+            label: Legal person or entity. Address for notifications. Addressee of
+              the post office box, if different from the filer
+          pj-dnoti-apartado-poblacion:
+            label: Legal person or entity. Address for notifications. Town or city
+              of the post office box
+          pj-dnoti-bloque:
+            label: Legal person or entity. Address for notifications. Block (address
+              1)
+          pj-dnoti-calidad:
+            label: Legal person or entity. Address for notifications. Acting as (address
+              1)
+          pj-dnoti-calificador-numero:
+            label: Legal person or entity. Address for notifications. Number qualifier
+              (address 1)
+          pj-dnoti-codigo-postal:
+            label: Legal person or entity. Address for notifications. Postal code
+              (address 1)
+          pj-dnoti-codigo-provincia:
+            label: Legal person or entity. Address for notifications. Province code
+              (address 1)
+          pj-dnoti-complemento-domicilio:
+            label: Legal person or entity. Address for notifications. Address complement
+              (address 1)
+          pj-dnoti-destinatario:
+            label: Legal person or entity. Address for notifications. Addressee, if
+              different from the filer (address 1)
+          pj-dnoti-escalera:
+            label: Legal person or entity. Address for notifications. Stairway (address
+              1)
+          pj-dnoti-localidad:
+            label: Legal person or entity. Address for notifications. Locality or
+              town (address 1)
+          pj-dnoti-municipio:
+            label: Legal person or entity. Address for notifications. Municipality
+              name (address 1)
+          pj-dnoti-nombre-via:
+            label: Legal person or entity. Address for notifications. Street name
+              (address 1)
+          pj-dnoti-numero-casa:
+            label: Legal person or entity. Address for notifications. House number
+              (address 1)
+          pj-dnoti-planta:
+            label: Legal person or entity. Address for notifications. Floor (address
+              1)
+          pj-dnoti-portal:
+            label: Legal person or entity. Address for notifications. Entrance (address
+              1)
+          pj-dnoti-puerta:
+            label: Legal person or entity. Address for notifications. Door (address
+              1)
+          pj-dnoti-tipo-numero:
+            label: Legal person or entity. Address for notifications. Number type
+              (address 1)
+          pj-dnoti-tipo-via:
+            label: Legal person or entity. Address for notifications. Street type
+              (address 1)
+          pj-dsoc-calificador-numero:
+            label: Legal person or entity. Registered office. Number qualifier
+          pj-dsoc-codigo-postal:
+            label: Legal person or entity. Registered office. Postal code
+          pj-dsoc-codigo-provincia:
+            label: Legal person or entity. Registered office. Province code
+          pj-dsoc-complemento-domicilio:
+            label: Legal person or entity. Registered office. Address complement
+          pj-dsoc-escalera:
+            label: Legal person or entity. Registered office. Staircase
+          pj-dsoc-localidad:
+            label: Legal person or entity. Registered office. Locality or town
+          pj-dsoc-municipio:
+            label: Legal person or entity. Registered office. Municipality name
+          pj-dsoc-planta:
+            label: Legal person or entity. Registered office. Floor
+          pj-dsoc-portal:
+            label: Legal person or entity. Registered office. Entrance
+          pj-dsoc-puerta:
+            label: Legal person or entity. Registered office. Door
+          pj-dsoc-tipo-numero:
+            label: Legal person or entity. Registered office. Number type
+          pj-dsoc-tipo-via:
+            label: Legal person or entity. Registered office. Street type
+          pj-eperm-cuantos:
+            label: Legal person or entity. Permanent establishments. Number of permanent
+              establishments
+          pj-eperm-denominacion-1:
+            label: Legal person or entity. Permanent establishments. Name of permanent
+              establishment 1
+          pj-eperm-denominacion-2:
+            label: Legal person or entity. Permanent establishments. Name of permanent
+              establishment 2
+          pj-eperm-denominacion-3:
+            label: Legal person or entity. Permanent establishments. Name of permanent
+              establishment 3
+          pj-eperm-nif-1:
+            label: Legal person or entity. Permanent establishments. Tax identification
+              number of permanent establishment 1
+          pj-eperm-nif-2:
+            label: Legal person or entity. Permanent establishments. Tax identification
+              number of permanent establishment 2
+          pj-eperm-nif-3:
+            label: Legal person or entity. Permanent establishments. Tax identification
+              number of permanent establishment 3
+          pj-eperm-opera-establecimiento-permanente:
+            label: Legal person or entity. Permanent establishments. Operates in Spain
+              through a permanent establishment
+          pj-ident-anagrama:
+            label: Legal person or entity. Identification. Logotype name
+          pj-ident-dominio-internet:
+            label: Legal person or entity. Identification. Internet domain or address
+          pj-ident-dominio-internet-secundario:
+            label: Legal person or entity. Identification. Internet domain or address
+              (second)
+          pj-ident-fecha-acuerdo-voluntades:
+            label: Legal person or entity. Identification. Date of the agreement of
+              wills
+          pj-ident-fecha-constitucion:
+            label: Legal person or entity. Identification. Date of incorporation
+          pj-ident-fecha-inscripcion-registral:
+            label: Legal person or entity. Identification. Date of entry in the register
+          pj-ident-nif:
+            label: Legal person or entity. Identification. Tax identification number
+              (NIF)
+          pj-ident-nif-estado-residencia:
+            label: Legal person or entity. Identification. Tax identification code
+              of the State of residence
+          pj-ident-nif-otros-paises:
+            label: Legal person or entity. Identification. Tax identification number
+              in other countries
+          pj-ident-pais-constitucion:
+            label: Legal person or entity. Identification. Non-resident entity or
+              one incorporated abroad
+          pj-ident-razon-social:
+            label: Legal person or entity. Identification. Legal name
+          pj-pjur-atribucion-espana-con-actividad:
+            label: Legal person or entity. Legal personality and class of entity.
+              Income-attribution entity incorporated in Spain with economic activity
+          pj-pjur-atribucion-espana-con-actividad-clase:
+            label: Legal person or entity. Legal personality and class of entity.
+              Class of income-attribution entity incorporated in Spain with economic
+              activity
+          pj-pjur-atribucion-espana-sin-actividad-clase:
+            label: Legal person or entity. Legal personality and class of entity.
+              Class of income-attribution entity incorporated in Spain without economic
+              activity
+          pj-pjur-atribucion-extranjero-con-presencia-clase:
+            label: Legal person or entity. Legal personality and class of entity.
+              Class of income-attribution entity incorporated abroad with a presence
+              in Spain
+          pj-pjur-atribucion-extranjero-sin-presencia-clase:
+            label: Legal person or entity. Legal personality and class of entity.
+              Class of income-attribution entity incorporated abroad without a presence
+              in Spain
+          pj-pjur-es-persona-juridica:
+            label: Legal person or entity. Legal personality and class of entity.
+              Legal person
+          pj-pjur-forma-juridica:
+            label: Legal person or entity. Legal personality and class of entity.
+              Legal form
+          pj-pjur-otras-entidades:
+            label: Legal person or entity. Legal personality and class of entity.
+              Other entities
+          pj-pjur-otras-entidades-clase:
+            label: Legal person or entity. Legal personality and class of entity.
+              Other entities. Class of entity
+          pj-pjur-tiene-personalidad-juridica:
+            label: Legal person or entity. Legal personality and class of entity.
+              Has legal personality
+          rep1-apellidos-razon-social:
+            label: Surnames and forename, or legal name, of the representative (first
+              representative, block 3.1)
+          rep1-designada-apellido-1:
+            label: First surname of the designated natural person (first representative,
+              block 3.1)
+          rep1-designada-apellido-2:
+            label: Second surname of the designated natural person (first representative,
+              block 3.1)
+          rep1-designada-fecha-causa:
+            label: Effective date of the reason for filing regarding the designated
+              natural person (first representative, block 3.1)
+          rep1-designada-nif:
+            label: Tax identification number (NIF) of the designated natural person
+              (first representative, block 3.1)
+          rep1-designada-nombre:
+            label: Forename of the designated natural person (first representative,
+              block 3.1)
+          rep1-fecha-causa:
+            label: Effective date of the reason for filing regarding the representative
+              (first representative, block 3.1)
+          rep1-nif:
+            label: Tax identification number (NIF) of the representative (first representative,
+              block 3.1)
+          rep1-representacion-legal-clave:
+            label: Code of the legal representation (first representative, block 3.1)
+          rep1-residente:
+            label: 'Whether the representative is resident: yes or no (first representative,
+              block 3.1)'
+          rep1-tipo-representacion:
+            label: Code of the type of representation (first representative, block
+              3.1)
+          rep1-titulo-representacion:
+            label: Code of the title of representation (first representative, block
+              3.1)
+          rep2-apellidos-razon-social:
+            label: Surnames and forename, or legal name, of the representative (second
+              representative, block 3.2)
+          rep2-designada-apellido-1:
+            label: First surname of the designated natural person (second representative,
+              block 3.2)
+          rep2-designada-apellido-2:
+            label: Second surname of the designated natural person (second representative,
+              block 3.2)
+          rep2-designada-fecha-causa:
+            label: Effective date of the reason for filing regarding the designated
+              natural person (second representative, block 3.2)
+          rep2-designada-nif:
+            label: Tax identification number (NIF) of the designated natural person
+              (second representative, block 3.2)
+          rep2-designada-nombre:
+            label: Forename of the designated natural person (second representative,
+              block 3.2)
+          rep2-fecha-causa:
+            label: Effective date of the reason for filing regarding the representative
+              (second representative, block 3.2)
+          rep2-nif:
+            label: Tax identification number (NIF) of the representative (second representative,
+              block 3.2)
+          rep2-representacion-legal-clave:
+            label: Code of the legal representation (second representative, block
+              3.2)
+          rep2-residente:
+            label: 'Whether the representative is resident: yes or no (second representative,
+              block 3.2)'
+          rep2-tipo-representacion:
+            label: Code of the type of representation (second representative, block
+              3.2)
+          rep2-titulo-representacion:
+            label: Code of the title of representation (second representative, block
+              3.2)
+          ret-extractores-depositos-alcohol:
+            label: Register of extractors from tax warehouses. Applies for registration
+              or removal for products under the excise duties on alcohol and derived
+              beverages
+          ret-extractores-depositos-hidrocarburos:
+            label: Register of extractors from tax warehouses. Applies for registration
+              or removal for products under the excise duties on hydrocarbons
+          ret-impuestos-especiales-impuesto-electricidad:
+            label: Excise duties. Required to file a self-assessment for the electricity
+              tax
+          ret-impuestos-especiales-impuesto-electricidad-fecha:
+            label: Excise duties. Date. Required to file a self-assessment for the
+              electricity tax
+          ret-impuestos-especiales-inscripcion-registro-territorial:
+            label: Excise duties. Obligation to register the establishments in the
+              territorial register of the managing office
+          ret-impuestos-especiales-inscripcion-registro-territorial-fecha:
+            label: Excise duties. Date. Obligation to register the establishments
+              in the territorial register of the managing office
+          ret-impuestos-especiales-primas-seguros:
+            label: Excise duties. Obligation to file a return for the excise duty
+              on insurance premiums
+          ret-impuestos-especiales-primas-seguros-fecha:
+            label: Excise duties. Date. Obligation to file a return for the excise
+              duty on insurance premiums
+          ret-impuestos-especiales-resumen-anual-carbon:
+            label: Excise duties. Required to file the annual summary return for the
+              excise duty on coal
+          ret-impuestos-especiales-resumen-anual-carbon-fecha:
+            label: Excise duties. Date. Required to file the annual summary return
+              for the excise duty on coal
+          ret-medioambientales-obligacion-declarar:
+            label: Environmental taxes. Obligation to file a return
+          ret-medioambientales-obligacion-declarar-fecha:
+            label: Environmental taxes. Date of the obligation to file a return
+          ret-retenciones-actividades-profesionales:
+            label: Withholdings and payments on account. Obligation to withhold or
+              make a payment on account on income from professional activities
+          ret-retenciones-actividades-profesionales-fecha:
+            label: Withholdings and payments on account. Date of the obligation on
+              income from professional activities
+          ret-retenciones-arrendamiento:
+            label: Withholdings and payments on account. Obligation to withhold or
+              make a payment on account on income from letting or subletting
+          ret-retenciones-arrendamiento-fecha:
+            label: Withholdings and payments on account. Date of the obligation on
+              income from letting or subletting
+          ret-retenciones-capital-mobiliario-contraprestacion:
+            label: Withholdings and payments on account. Obligation to withhold or
+              make a payment on account on investment income obtained as consideration
+          ret-retenciones-capital-mobiliario-contraprestacion-fecha:
+            label: Withholdings and payments on account. Date of the obligation on
+              investment income obtained as consideration
+          ret-retenciones-capital-mobiliario-operaciones:
+            label: Withholdings and payments on account. Obligation to withhold or
+              make a payment on account on investment income arising from transactions
+          ret-retenciones-capital-mobiliario-operaciones-fecha:
+            label: Withholdings and payments on account. Date of the obligation on
+              investment income arising from transactions
+          ret-retenciones-capital-mobiliario-otros:
+            label: Withholdings and payments on account. Obligation to withhold or
+              make a payment on account on other investment income
+          ret-retenciones-capital-mobiliario-otros-fecha:
+            label: Withholdings and payments on account. Date of the obligation on
+              other investment income
+          ret-retenciones-capital-mobiliario-transmision:
+            label: Withholdings and payments on account. Obligation to withhold or
+              make a payment on account on investment income derived from transfers
+          ret-retenciones-capital-mobiliario-transmision-fecha:
+            label: Withholdings and payments on account. Date of the obligation on
+              investment income derived from transfers
+          ret-retenciones-trabajo-personal:
+            label: Withholdings and payments on account. Obligation to withhold or
+              make a payment on account on income from personal employment
+          ret-retenciones-trabajo-personal-fecha:
+            label: Withholdings and payments on account. Date of the obligation on
+              income from personal employment
+          ret-retenciones-transmision-acciones:
+            label: Withholdings and payments on account. Obligation to withhold or
+              make a payment on account on transfers or redemptions of shares or holdings
+          ret-retenciones-transmision-acciones-fecha:
+            label: Withholdings and payments on account. Date of the obligation on
+              transfers or redemptions of shares or holdings
+          ret-servicios-digitales-obligacion-autoliquidar:
+            label: Tax on certain digital services. Required to file a self-assessment
+          ret-servicios-digitales-obligacion-autoliquidar-fecha:
+            label: Tax on certain digital services. Date of the obligation to file
+              a self-assessment
+          ret-telecom-art-70-uno-4-destino:
+            label: Telecommunications, broadcasting and electronic services (art.
+              70.Uno.4.a). Taxation at destination
+          ret-telecom-art-70-uno-4-fecha:
+            label: Telecommunications, broadcasting and electronic services (art.
+              70.Uno.4.a). Date
+          ret-telecom-art-70-uno-4-revocacion:
+            label: Telecommunications, broadcasting and electronic services (art.
+              70.Uno.4.a). Revocation
+          ret-telecom-art-70-uno-8-destino:
+            label: Telecommunications, broadcasting and electronic services (art.
+              70.Uno.8). Taxation at destination
+          ret-telecom-art-70-uno-8-fecha:
+            label: Telecommunications, broadcasting and electronic services (art.
+              70.Uno.8). Date
+          ret-telecom-art-70-uno-8-revocacion:
+            label: Telecommunications, broadcasting and electronic services (art.
+              70.Uno.8). Revocation
+          socio-principal-causa-fecha:
+            label: Partners, members or participants. Date of the reason for filing
+          socio-principal-cuota-atribucion:
+            label: Partners, members or participants. Share or percentage of attribution
+          socio-principal-cuota-participacion:
+            label: Partners, members or participants. Share or percentage of participation
+          socio-principal-nif:
+            label: Partners, members or participants. Tax identification number (NIF)
+          socio-principal-nombre-razon-social:
+            label: Partners, members or participants. Surnames and forename, or legal
+              name
+          suc-a-nif:
+            label: Tax identification number (NIF) of the successor or beneficiary
+              (successor 13a)
+          suc-b-nif:
+            label: Tax identification number (NIF) of the successor or beneficiary
+              (successor 13b)
+          suc-c-nif:
+            label: Tax identification number (NIF) of the successor or beneficiary
+              (successor 13c)
+          suc-d-nif:
+            label: Tax identification number (NIF) of the successor or beneficiary
+              (successor 13d)
+          suc-e-nif:
+            label: Tax identification number (NIF) of the successor or beneficiary
+              (successor 13e)
+          suc-f-nif:
+            label: Tax identification number (NIF) of the successor or beneficiary
+              (successor 13f)
+      construct:
+        modelo-036-censo-foundation:
+          field:
+            title: 'Modelo 036: census data foundation'
+      field:
+        official_name: Modelo 036. Census declaration of registration, amendment and
+          deregistration in the Register of entrepreneurs, professionals and withholders.
+        title: Register of entrepreneurs, professionals and withholders
+      revision:
+        2022-hasta-2023-04-24:
+          casilla:
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qp3fdlkmsqbf5lkmst35e9n6at1dedim6tbechgn4qbf:
+              label: Identification. Internet domain or address (second)
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qpj5cdk62bb5cpim6t3fecmn4pbjd5i6arj3d5gg:
+              label: Identification. Effective date of tax residence
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qsj5edkm8pbecdkm2bb9dpi6ior1chnn4:
+              label: Identification. Whether the natural person is resident or non-resident
+                in Spain
+            x-e1l2sqb4cln78bb6clhmgo9dclj6aorkdtpiqsj5edkm8pbecdkm2:
+              label: Legal person or entity. Identification. Effective date of tax
+                residence
+            x-edqm6bb15phnarrkc4mmoqbhelkm8ob3d5nms:
+              label: Share of liquidation, assets or estate of the successor or beneficiary
+                (successor 13a)
+            x-edqm6bb15pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              label: Surnames and forename, or legal name, of the successor or beneficiary
+                (successor 13a)
+            x-edqm6bb15po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              label: Percentage of liquidation, holding or inheritance of the successor
+                or beneficiary (successor 13a)
+            x-edqm6bb25phnarrkc4mmoqbhelkm8ob3d5nms:
+              label: Share of liquidation, assets or estate of the successor or beneficiary
+                (successor 13b)
+            x-edqm6bb25pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              label: Surnames and forename, or legal name, of the successor or beneficiary
+                (successor 13b)
+            x-edqm6bb25po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              label: Percentage of liquidation, holding or inheritance of the successor
+                or beneficiary (successor 13b)
+            x-edqm6bb35phnarrkc4mmoqbhelkm8ob3d5nms:
+              label: Share of liquidation, assets or estate of the successor or beneficiary
+                (successor 13c)
+            x-edqm6bb35pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              label: Surnames and forename, or legal name, of the successor or beneficiary
+                (successor 13c)
+            x-edqm6bb35po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              label: Percentage of liquidation, holding or inheritance of the successor
+                or beneficiary (successor 13c)
+            x-edqm6bb45phnarrkc4mmoqbhelkm8ob3d5nms:
+              label: Share of liquidation, assets or estate of the successor or beneficiary
+                (successor 13d)
+            x-edqm6bb45pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              label: Surnames and forename, or legal name, of the successor or beneficiary
+                (successor 13d)
+            x-edqm6bb45po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              label: Percentage of liquidation, holding or inheritance of the successor
+                or beneficiary (successor 13d)
+            x-edqm6bb55phnarrkc4mmoqbhelkm8ob3d5nms:
+              label: Share of liquidation, assets or estate of the successor or beneficiary
+                (successor 13e)
+            x-edqm6bb55pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              label: Surnames and forename, or legal name, of the successor or beneficiary
+                (successor 13e)
+            x-edqm6bb55po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              label: Percentage of liquidation, holding or inheritance of the successor
+                or beneficiary (successor 13e)
+            x-edqm6bb65phnarrkc4mmoqbhelkm8ob3d5nms:
+              label: Share of liquidation, assets or estate of the successor or beneficiary
+                (successor 13f)
+            x-edqm6bb65pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
+              label: Surnames and forename, or legal name, of the successor or beneficiary
+                (successor 13f)
+            x-edqm6bb65po6usj3cln78obackmmoqbhelkm8ob3d5nms:
+              label: Percentage of liquidation, holding or inheritance of the successor
+                or beneficiary (successor 13f)
+          field:
+            label: Modelo 036, from 2022 until 24 April 2023
+        2023-hasta-2025-02-02:
+          field:
+            label: Modelo 036, from 25 April 2023 until 2 February 2025
+        2025-02-03-y-siguientes:
+          casilla:
+            x-c5hn8bjjd5n2qr3fcdgmobb3dti6iprf5lo74rrmd5n66qb1:
+              label: Activity carried on outside fixed premises. Province code
+            x-chim6r1ecdgnasr15koj8d0:
+              label: Application for NIF reinstatement
+            x-chim6r1ecdgnasr15koj8d8:
+              label: Change of data on beneficial owners (page 10)
+            x-chim6r1ecdgnasr15koj8dg:
+              label: Change relating to entities in liquidation
+            x-chim6r1eclr6arjk5llmirj4:
+              label: Census return type
+            x-chim6r1ecpkn4rb15lhm2r39chgm8:
+              label: Capacity in which the return is signed
+            x-chim6r1ecpkn4rb15lj6aor8c4:
+              label: Date on which the return is signed
+            x-chim6r1ecpkn4rb15lj6isjdc5n78p8:
+              label: Forename and surnames of the person signing the return
+            x-chim6r1ecpkn4rb15lm7apr1e8:
+              label: Place where the return is signed
+            x-chim6r1eepkmepbecdkm2b9i60p3a:
+              label: Regulation in force from 3 February 2025
+            x-clo2sobmd5pmuspdc5im2t1dc5m78o8:
+              label: Permanent establishment. Alerts. Registration for AEAT alerts
+            x-clo2sobmd5pmuspdc5im2t1dc9gmko8:
+              label: Permanent establishment. Alerts. Deregistration from AEAT alerts
+            x-clo2sobmd5pmuspdc5o70bb1clgn8bb1dhq62:
+              label: Permanent establishment. Alerts. Registration in the AEAT mobile
+                application
+            x-clo2sobmd5pmuspdc5o70bb1clgn8bb2c5l62:
+              label: Permanent establishment. Alerts. Deregistration from the AEAT
+                mobile application
+            x-clo2sobmd5pmuspdchjn8bb1dhq62:
+              label: Permanent establishment. Alerts. Registration for DGT alerts
+            x-clo2sobmd5pmuspdchjn8bb2c5l62:
+              label: Permanent establishment. Alerts. Deregistration from DGT alerts
+            x-clo2sobmd5pmuspdclmm2qbc5lgmot31:
+              label: Permanent establishment. Alerts. Registration or change of the
+                alert e-mail
+            x-clo2sobmd5pmuspdclmm2qbc5lh62qj1:
+              label: Permanent establishment. Alerts. Deregistration of the alert
+                e-mail
+            x-clo2sobmd5pmuspddlnncqbc5lgmot31:
+              label: Permanent establishment. Alerts. Registration or change of the
+                mobile telephone
+            x-clo2sobmd5pmuspddlnncqbc5lh62qj1:
+              label: Permanent establishment. Alerts. Deregistration of the mobile
+                telephone
+            x-clo2sobmd5pmuspdehim2bb1dhq62:
+              label: Permanent establishment. Alerts. Registration for TEA alerts
+            x-clo2sobmd5pmuspdehim2bb2c5l62:
+              label: Permanent establishment. Alerts. Deregistration from TEA alerts
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmmqtbed5hmis39dsmmirj5:
+              label: Permanent establishment. Tax address in Spain. INE municipality
+                code
+            x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmncqb15lkmsp8:
+              label: Permanent establishment. Tax address in Spain. INE street code
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpddlqmsqb3d5o6irpdd5n6a:
+              label: Permanent establishment. Address for notifications. INE municipality
+                code (address 1)
+            x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpdepkm2bb9dpig:
+              label: Permanent establishment. Address for notifications. INE street
+                code (address 1)
+            x-d5r62bj9dlo6usjkc5hmirre5lj6usj1dhin6bb9epgiqqbde1nn4t31cdkmurg:
+              label: VAT. Imports. Chartered territories. Payment of import VAT. Election
+                or waiver
+            x-d5r62bj9dlo6usjkc5hmirre5lkmspriclpmubb9epgiqqbde1nn4t31cdkmurg:
+              label: VAT. Imports. Payment of import VAT. Election, waiver, revocation
+                or removal
+            x-d5r62bjcd5h74rrj5lp6apr9edq74rpddhm6atj1dpt62bbjcli6abb5dhim6t3idtn6ior1:
+              label: VAT. Record books. Keeping the record books through the AEAT
+                electronic office
+            x-d5r62bjicljmirb5dpin6bb1ctp6iorldhq7asj15ljm2rj1chin4qb15lo6asr3c4:
+              label: VAT. Schemes. Special agriculture, livestock and fisheries scheme
+            x-d5r62bjicljmirb5dpin6bb1ctp6iorldhq7asj15ljm2rj1chin4qb15lo6asr3c4mmcpb3d1gg:
+              label: VAT. Schemes. Agriculture, livestock and fisheries. Date
+            x-d5r62bjicljmirb5dpin6bb1ctp6iorldhq7asj15ljm2rj1chin4qb15lo6asr3c4mmiob5:
+              label: VAT. Schemes. Agriculture, livestock and fisheries. I.A.E. group
+                or heading, or activity code
+            x-d5r62bjicljmirb5dpin6bb3e9kn8pbid5niqor1d9gg:
+              label: VAT. Schemes. Special cash accounting scheme
+            x-d5r62bjicljmirb5dpin6bb3e9kn8pbid5niqor1d9giqpj5cdk62:
+              label: VAT. Schemes. Cash accounting. Date
+            x-d5r62bjicljmirb5dpin6bb3e9kn8pbid5niqor1d9giqqb1ck:
+              label: VAT. Schemes. Cash accounting. I.A.E. group or heading, or activity
+                code
+            x-d5r62bjicljmirb5dpin6bbjd5mn0r39cpkm6ob4ds:
+              label: VAT. Schemes. Special simplified scheme
+            x-d5r62bjicljmirb5dpin6bbjd5mn0r39cpkm6ob4dsmmcpb3d1gg:
+              label: VAT. Schemes. Simplified scheme. Date
+            x-d5r62bjicljmirb5dpin6bbjd5mn0r39cpkm6ob4dsmmiob5:
+              label: VAT. Schemes. Simplified scheme. I.A.E. group or heading, or
+                activity code
+            x-d5r62bjicljmisrke9nn6bb4clr6ur3lcdkmurhddlimssrlc5m0:
+              label: VAT. Registers. Applies for registration in or removal from the
+                monthly refund register
+            x-d5r62bjicljmisrke9nn6bbfe1in4ob4dtp6aspdd5n78sj1cdnmqtbed5q62sj9dtpg:
+              label: VAT. Registers. Applies for registration in or removal from the
+                intra-Community operators register
+            x-dth6obj9e9n74bbddti62r39chgm8:
+              label: Non-resident income tax. Permanent establishment. Type of permanent
+                establishment
+            x-dth6obj9e9o6cbb5chpiqc9dd5gma:
+              label: Personal income tax (IRPF). I.A.E. section and group or heading,
+                activity 1 declared under the simplified method
+            x-dth6obj9e9o6cbb5chpiqc9dehkn0rpdc5hn8qbmd5i62p0:
+              label: Personal income tax (IRPF). Type of activity, activity 1 declared
+                under the simplified method
+            x-dth6obj9e9o6cbb5chpiqchdd5gma:
+              label: Personal income tax (IRPF). I.A.E. section and group or heading,
+                activity 2 declared under the simplified method
+            x-dth6obj9e9o6cbb5chpiqchdehkn0rpdc5hn8qbmd5i62p0:
+              label: Personal income tax (IRPF). Type of activity, activity 2 declared
+                under the simplified method
+            x-dth6obj9e9o6cbb5chpiqcpdd5gma:
+              label: Personal income tax (IRPF). I.A.E. section and group or heading,
+                activity 3 declared under the simplified method
+            x-dth6obj9e9o6cbb5chpiqcpdehkn0rpdc5hn8qbmd5i62p0:
+              label: Personal income tax (IRPF). Type of activity, activity 3 declared
+                under the simplified method
+            x-dth6obj9e9o6cbb5chpiqd1dd5gma:
+              label: Personal income tax (IRPF). I.A.E. section and group or heading,
+                activity 4 declared under the simplified method
+            x-dth6obj9e9o6cbb5chpiqd1dehkn0rpdc5hn8qbmd5i62p0:
+              label: Personal income tax (IRPF). Type of activity, activity 4 declared
+                under the simplified method
+            x-dth6obj9e9o6cbb5dsmj2bb9c5ig:
+              label: Personal income tax (IRPF). I.A.E. section and group or heading,
+                activity 1 declared under the objective assessment method
+            x-dth6obj9e9o6cbb5dsmj2bbkd5o6ubb1cdq6itj9chgm8:
+              label: Personal income tax (IRPF). Type of activity, activity 1 declared
+                under the objective assessment method
+            x-dth6obj9e9o6cbb5dsmj4bb9c5ig:
+              label: Personal income tax (IRPF). I.A.E. section and group or heading,
+                activity 2 declared under the objective assessment method
+            x-dth6obj9e9o6cbb5dsmj4bbkd5o6ubb1cdq6itj9chgm8:
+              label: Personal income tax (IRPF). Type of activity, activity 2 declared
+                under the objective assessment method
+            x-dth6obj9e9o6cbb5dsmj6bb9c5ig:
+              label: Personal income tax (IRPF). I.A.E. section and group or heading,
+                activity 3 declared under the objective assessment method
+            x-dth6obj9e9o6cbb5dsmj6bbkd5o6ubb1cdq6itj9chgm8:
+              label: Personal income tax (IRPF). Type of activity, activity 3 declared
+                under the objective assessment method
+            x-dth6obj9e9o6cbb5dsmj8bb9c5ig:
+              label: Personal income tax (IRPF). I.A.E. section and group or heading,
+                activity 4 declared under the objective assessment method
+            x-dth6obj9e9o6cbb5dsmj8bbkd5o6ubb1cdq6itj9chgm8:
+              label: Personal income tax (IRPF). Type of activity, activity 4 declared
+                under the objective assessment method
+            x-dth6obj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqrjfe9mm2r0:
+              label: Personal income tax (IRPF). Standard direct assessment method
+            x-dth6obj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqsr9dlo6oqb6d5hm2p31:
+              label: Personal income tax (IRPF). Simplified direct assessment method
+            x-dth6obj9e9o6cbb5edq6irb1cdkmurhddth6kpbkd5r62:
+              label: Personal income tax (IRPF). Objective assessment method
+            x-dth6objjdthmipb4c5i6aspdcls6arj3d5nms:
+              label: Corporate income tax. Exemption
+            x-dth6objjdthmipb4c5i6aspdcls6arj3d5nmsbb6clhmgo8:
+              label: Corporate income tax. Exemption. Date
+            x-e1j2sobmd5pmuspdc5im2t1dc5m78o8:
+              label: Alerts. Registration for AEAT alerts
+            x-e1j2sobmd5pmuspdc5im2t1dc9gmko8:
+              label: Alerts. Deregistration from AEAT alerts
+            x-e1j2sobmd5pmuspdc5o70bb1clgn8bb1dhq62:
+              label: Alerts. Registration in the AEAT mobile application
+            x-e1j2sobmd5pmuspdc5o70bb1clgn8bb2c5l62:
+              label: Alerts. Deregistration from the AEAT mobile application
+            x-e1j2sobmd5pmuspdchjn8bb1dhq62:
+              label: Alerts. Registration for DGT alerts
+            x-e1j2sobmd5pmuspdchjn8bb2c5l62:
+              label: Alerts. Deregistration from DGT alerts
+            x-e1j2sobmd5pmuspdclmm2qbc5lgmot31:
+              label: Alerts. Registration or change of the alert e-mail
+            x-e1j2sobmd5pmuspdclmm2qbc5lh62qj1:
+              label: Alerts. Deregistration of the alert e-mail
+            x-e1j2sobmd5pmuspddlnncqbc5lgmot31:
+              label: Alerts. Registration or change of the mobile telephone
+            x-e1j2sobmd5pmuspddlnncqbc5lh62qj1:
+              label: Alerts. Deregistration of the mobile telephone
+            x-e1j2sobmd5pmuspde1p6apj9d9niqs31d5piqrbfepkmo:
+              label: Alerts. Country dialling prefix of the mobile telephone
+            x-e1j2sobmd5pmuspdehim2bb1dhq62:
+              label: Alerts. Registration for TEA alerts
+            x-e1j2sobmd5pmuspdehim2bb2c5l62:
+              label: Alerts. Deregistration from TEA alerts
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmmqtbed5hmis39dsmmirj5:
+              label: Tax address in Spain. INE municipality code
+            x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmncqb15lkmsp8:
+              label: Tax address in Spain. INE street code
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmup39ctniqrbldpkm6qbgd5niqqbeck:
+              label: Administrative management address. INE municipality code
+            x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmup39ctniqtj9c4mmirj5:
+              label: Administrative management address. INE street code
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpddlqmsqb3d5o6irpdd5n6a:
+              label: Address for notifications. INE municipality code (address 1)
+            x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpdepkm2bb9dpig:
+              label: Address for notifications. INE street code (address 1)
+            x-e1j2sqb4cln78qb6d5hm2or9dtn2qpj5cdk62bb5cpim6t3fecmn4pbjd5i6arj3d5gg:
+              label: Identification. Effective date of tax residence
+            x-e1l2sobmd5pmubb1clgn8bb1dhq62:
+              label: Legal person or entity. Alerts. Registration for AEAT alerts
+            x-e1l2sobmd5pmubb1clgn8bb2c5l62:
+              label: Legal person or entity. Alerts. Deregistration from AEAT alerts
+            x-e1l2sobmd5pmubb1e1o2qob5c5q2qobcehgg:
+              label: Legal person or entity. Alerts. Registration in the AEAT mobile
+                application
+            x-e1l2sobmd5pmubb1e1o2qob5c5q2qoj1d9gg:
+              label: Legal person or entity. Alerts. Deregistration from the AEAT
+                mobile application
+            x-e1l2sobmd5pmubb4ctq2qobcehgg:
+              label: Legal person or entity. Alerts. Registration for DGT alerts
+            x-e1l2sobmd5pmubb4ctq2qoj1d9gg:
+              label: Legal person or entity. Alerts. Deregistration from DGT alerts
+            x-e1l2sobmd5pmubb5dlgmir1dc5m78o8:
+              label: Legal person or entity. Alerts. Registration or change of the
+                alert e-mail
+            x-e1l2sobmd5pmubb5dlgmir1dc9gmko8:
+              label: Legal person or entity. Alerts. Deregistration of the alert e-mail
+            x-e1l2sobmd5pmubbddtr6ir1dc5m78o8:
+              label: Legal person or entity. Alerts. Registration or change of the
+                mobile telephone
+            x-e1l2sobmd5pmubbddtr6ir1dc9gmko8:
+              label: Legal person or entity. Alerts. Deregistration of the mobile
+                telephone
+            x-e1l2sobmd5pmubbkclgiqobcehgg:
+              label: Legal person or entity. Alerts. Registration for TEA alerts
+            x-e1l2sobmd5pmubbkclgiqoj1d9gg:
+              label: Legal person or entity. Alerts. Deregistration from TEA alerts
+            x-e1l2sp35f1q2qqbechkm6ob4dtp2qp3fdlkm6qbcd5niqpboehp62rjaclp6u:
+              label: Legal person or entity. Address in the State of residence. Indicator
+                of a tax address or registered office abroad
+            x-e1l2sp36d5pm6bb3dti6iprf5lmnarj9cdkn0qbf5lkmsp8:
+              label: Legal person or entity. Tax address in Spain. INE municipality
+                code
+            x-e1l2sp36d5pm6bb3dti6iprf5lr6io9dd5n6a:
+              label: Legal person or entity. Tax address in Spain. INE street code
+            x-e1l2sp3edtq6ibb2c5l62bb4dtmmior9dhkmu:
+              label: Legal person or entity. Address for notifications. Deregistration
+                indicator of the notification address
+            x-e1l2sp3edtq6ibb3dti6iprf5lmnarj9cdkn0qbf5lkmsp8:
+              label: Legal person or entity. Address for notifications. INE municipality
+                code (address 1)
+            x-e1l2sp3edtq6ibb3dti6iprf5lr6io9dd5n6a:
+              label: Legal person or entity. Address for notifications. INE street
+                code (address 1)
+            x-e1l2sp3jdthiqorfchkmerpddlqmsqb3d5o6irpdd5n6a:
+              label: Legal person or entity. Registered office. INE municipality code
+            x-e1l2sp3jdthiqorfchkmerpdepkm2bb9dpig:
+              label: Legal person or entity. Registered office. INE street code
+            x-e1l2sqb4cln78bb6clhmgo9dclj6aorkdtpiqsj5edkm8pbecdkm2:
+              label: Legal person or entity. Identification. Effective date of tax
+                residence
+            x-e1l2sqb4cln78bbiclpmip35dphmio9dd5n68qb3c5i6usg:
+              label: Legal person or entity. Identification. Whether the entity is
+                resident or incorporated in Spain, or non-resident
+            x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5edo62rj15lpmirhdc5hn8qbmd5i62p0:
+              label: Legal person or entity. Legal personality and class of entity.
+                Income-attribution entity incorporated in Spain without economic activity
+            x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5f1q74obed9in4rpdcdnmsbbge9in6pbecdkm2:
+              label: Legal person or entity. Legal personality and class of entity.
+                Income-attribution entity incorporated abroad with a presence in Spain
+            x-e1l2ss3aelp2qobke9km4tb3d5nmsbb5f1q74obed9in4rpdedkmsbbge9in6pbecdkm2:
+              label: Legal person or entity. Legal personality and class of entity.
+                Income-attribution entity incorporated abroad without a presence in
+                Spain
+            x-e9in0c9ecdgnasr15lo74pbjcln78ob3d5nms:
+              label: 'Reason for filing: registration, deregistration or change of
+                the representative (first representative, block 3.1)'
+            x-e9in0c9ecdgnasr15lp6as3iclpmarjkc5hmirre:
+              label: Reason for the representation (first representative, block 3.1)
+            x-e9in0c9echin6qb7dpgm8o9dcdgnasr15lo74pbjcln78ob3d5nms:
+              label: Reason for filing regarding the designated natural person (first
+                representative, block 3.1)
+            x-e9in0checdgnasr15lo74pbjcln78ob3d5nms:
+              label: 'Reason for filing: registration, deregistration or change of
+                the representative (second representative, block 3.2)'
+            x-e9in0checdgnasr15lp6as3iclpmarjkc5hmirre:
+              label: Reason for the representation (second representative, block 3.2)
+            x-e9in0chechin6qb7dpgm8o9dcdgnasr15lo74pbjcln78ob3d5nms:
+              label: Reason for filing regarding the designated natural person (second
+                representative, block 3.2)
+            x-e9in8bj9epgiqqbeehp62orfdlqmsqbkc5p6irpddto66qbfdomn4pb7d5mmarhdctimspbic5m0:
+              label: VAT. Intra-Community acquisitions. Election for the general VAT
+                regime, taxable or not taxable
+            x-e9in8bj9epgiqqbeehp62orfdlqmsqbkc5p6irpdelmm4sj1dgmj2c1g60o0:
+              label: VAT. Intra-Community acquisitions. Has exceeded the 10,000 euro
+                threshold
+            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqd1delmm4sj1dgmj2c1g60o0:
+              label: Telecommunications, broadcasting and electronic services (art.
+                70.Uno.4.a). Has exceeded the 10,000 euro threshold
+            x-e9in8bjkclm6aorfdkmm2sjk5krj0bbldpniqe1delmm4sj1dgmj2c1g60o0:
+              label: Telecommunications, broadcasting and electronic services (art.
+                70.Uno.8). Has exceeded the 10,000 euro threshold
+            x-ednm6bj3c5qn6o9de1p6asr5dpq62or9dtn0:
+              label: Partners, members or participants. Reason for filing
+            x-ednm6bj9e9o6cbb5edq6irb1cdkmurhdchkn4pb3ehgiqsr9dlo6oqb6d5hm2p31:
+              label: 'Partners, members or participants. Personal income tax, simplified
+                direct assessment: waiver or revocation'
+            x-ednm6bj9e9o6cbb5edq6irb1cdkmurhddth6kpbkd5r62:
+              label: 'Partners, members or participants. Personal income tax, objective
+                assessment: waiver or revocation'
+            x-ednm6bj9epgiqsj5c5jn0:
+              label: 'Partners, members or participants. VAT, special agriculture,
+                livestock and fisheries scheme: waiver or revocation'
+            x-ednm6bj9epgiqsj5ctkmqpbe5lpmirbgdhkmcqb3c5i6u:
+              label: 'Partners, members or participants. VAT, simplified scheme: waiver
+                or revocation'
+            x-ehkn8bj15lhm2tbjc4mmcpb3d1gg:
+              label: Beneficial owners. Date of the reason for filing, beneficial
+                owner 14a
+            x-ehkn8bj15lhm2tbjc4mn0sj5edimst31cdkmurg:
+              label: Beneficial owners. Reason for filing, beneficial owner 14a
+            x-ehkn8bj15lj6aor8c4mmsob3d5mmipbeehng:
+              label: Beneficial owners. Date of birth, beneficial owner 14a
+            x-ehkn8bj15lkm8pbeehkmcqb3c5hmirre:
+              label: Beneficial owners. Tax identification number or foreign identification
+                code, beneficial owner 14a
+            x-ehkn8bj15ln62or9dtn62r39chgm8:
+              label: Beneficial owners. Nationality, beneficial owner 14a
+            x-ehkn8bj15ln6urb2e9ig:
+              label: Beneficial owners. Surnames and forename, beneficial owner 14a
+            x-ehkn8bj15lo62qbj5lings35chkm6qbfdo:
+              label: Beneficial owners. Country of issue of the identification document,
+                beneficial owner 14a
+            x-ehkn8bj15lo62qbj5lp6asr9chimsor9c4:
+              label: Beneficial owners. Country of residence, beneficial owner 14a
+            x-ehkn8bj15lq6is3f5li6uorldlimst3f:
+              label: Beneficial owners. Type of identification document, beneficial
+                owner 14a
+            x-ehkn8bj25lhm2tbjc4mmcpb3d1gg:
+              label: Beneficial owners. Date of the reason for filing, beneficial
+                owner 14b
+            x-ehkn8bj25lhm2tbjc4mn0sj5edimst31cdkmurg:
+              label: Beneficial owners. Reason for filing, beneficial owner 14b
+            x-ehkn8bj25lj6aor8c4mmsob3d5mmipbeehng:
+              label: Beneficial owners. Date of birth, beneficial owner 14b
+            x-ehkn8bj25lkm8pbeehkmcqb3c5hmirre:
+              label: Beneficial owners. Tax identification number or foreign identification
+                code, beneficial owner 14b
+            x-ehkn8bj25ln62or9dtn62r39chgm8:
+              label: Beneficial owners. Nationality, beneficial owner 14b
+            x-ehkn8bj25ln6urb2e9ig:
+              label: Beneficial owners. Surnames and forename, beneficial owner 14b
+            x-ehkn8bj25lo62qbj5lings35chkm6qbfdo:
+              label: Beneficial owners. Country of issue of the identification document,
+                beneficial owner 14b
+            x-ehkn8bj25lo62qbj5lp6asr9chimsor9c4:
+              label: Beneficial owners. Country of residence, beneficial owner 14b
+            x-ehkn8bj25lq6is3f5li6uorldlimst3f:
+              label: Beneficial owners. Type of identification document, beneficial
+                owner 14b
+            x-ehkn8bj35lhm2tbjc4mmcpb3d1gg:
+              label: Beneficial owners. Date of the reason for filing, beneficial
+                owner 14c
+            x-ehkn8bj35lhm2tbjc4mn0sj5edimst31cdkmurg:
+              label: Beneficial owners. Reason for filing, beneficial owner 14c
+            x-ehkn8bj35lj6aor8c4mmsob3d5mmipbeehng:
+              label: Beneficial owners. Date of birth, beneficial owner 14c
+            x-ehkn8bj35lkm8pbeehkmcqb3c5hmirre:
+              label: Beneficial owners. Tax identification number or foreign identification
+                code, beneficial owner 14c
+            x-ehkn8bj35ln62or9dtn62r39chgm8:
+              label: Beneficial owners. Nationality, beneficial owner 14c
+            x-ehkn8bj35ln6urb2e9ig:
+              label: Beneficial owners. Surnames and forename, beneficial owner 14c
+            x-ehkn8bj35lo62qbj5lings35chkm6qbfdo:
+              label: Beneficial owners. Country of issue of the identification document,
+                beneficial owner 14c
+            x-ehkn8bj35lo62qbj5lp6asr9chimsor9c4:
+              label: Beneficial owners. Country of residence, beneficial owner 14c
+            x-ehkn8bj35lq6is3f5li6uorldlimst3f:
+              label: Beneficial owners. Type of identification document, beneficial
+                owner 14c
+            x-ehkn8bj45lhm2tbjc4mmcpb3d1gg:
+              label: Beneficial owners. Date of the reason for filing, beneficial
+                owner 14d
+            x-ehkn8bj45lhm2tbjc4mn0sj5edimst31cdkmurg:
+              label: Beneficial owners. Reason for filing, beneficial owner 14d
+            x-ehkn8bj45lj6aor8c4mmsob3d5mmipbeehng:
+              label: Beneficial owners. Date of birth, beneficial owner 14d
+            x-ehkn8bj45lkm8pbeehkmcqb3c5hmirre:
+              label: Beneficial owners. Tax identification number or foreign identification
+                code, beneficial owner 14d
+            x-ehkn8bj45ln62or9dtn62r39chgm8:
+              label: Beneficial owners. Nationality, beneficial owner 14d
+            x-ehkn8bj45ln6urb2e9ig:
+              label: Beneficial owners. Surnames and forename, beneficial owner 14d
+            x-ehkn8bj45lo62qbj5lings35chkm6qbfdo:
+              label: Beneficial owners. Country of issue of the identification document,
+                beneficial owner 14d
+            x-ehkn8bj45lo62qbj5lp6asr9chimsor9c4:
+              label: Beneficial owners. Country of residence, beneficial owner 14d
+            x-ehkn8bj45lq6is3f5li6uorldlimst3f:
+              label: Beneficial owners. Type of identification document, beneficial
+                owner 14d
+            x-ehkn8bj4clhmoobic5hmirre5ln6ubbmc5p6iob3d5nms:
+              label: Beneficial owners. Declaration that the data has not changed
+            x-ehkn8bj55lhm2tbjc4mmcpb3d1gg:
+              label: Beneficial owners. Date of the reason for filing, beneficial
+                owner 14e
+            x-ehkn8bj55lhm2tbjc4mn0sj5edimst31cdkmurg:
+              label: Beneficial owners. Reason for filing, beneficial owner 14e
+            x-ehkn8bj55lj6aor8c4mmsob3d5mmipbeehng:
+              label: Beneficial owners. Date of birth, beneficial owner 14e
+            x-ehkn8bj55lkm8pbeehkmcqb3c5hmirre:
+              label: Beneficial owners. Tax identification number or foreign identification
+                code, beneficial owner 14e
+            x-ehkn8bj55ln62or9dtn62r39chgm8:
+              label: Beneficial owners. Nationality, beneficial owner 14e
+            x-ehkn8bj55ln6urb2e9ig:
+              label: Beneficial owners. Surnames and forename, beneficial owner 14e
+            x-ehkn8bj55lo62qbj5lings35chkm6qbfdo:
+              label: Beneficial owners. Country of issue of the identification document,
+                beneficial owner 14e
+            x-ehkn8bj55lo62qbj5lp6asr9chimsor9c4:
+              label: Beneficial owners. Country of residence, beneficial owner 14e
+            x-ehkn8bj55lq6is3f5li6uorldlimst3f:
+              label: Beneficial owners. Type of identification document, beneficial
+                owner 14e
+            x-ehkn8bj65lhm2tbjc4mmcpb3d1gg:
+              label: Beneficial owners. Date of the reason for filing, beneficial
+                owner 14f
+            x-ehkn8bj65lhm2tbjc4mn0sj5edimst31cdkmurg:
+              label: Beneficial owners. Reason for filing, beneficial owner 14f
+            x-ehkn8bj65lj6aor8c4mmsob3d5mmipbeehng:
+              label: Beneficial owners. Date of birth, beneficial owner 14f
+            x-ehkn8bj65lkm8pbeehkmcqb3c5hmirre:
+              label: Beneficial owners. Tax identification number or foreign identification
+                code, beneficial owner 14f
+            x-ehkn8bj65ln62or9dtn62r39chgm8:
+              label: Beneficial owners. Nationality, beneficial owner 14f
+            x-ehkn8bj65ln6urb2e9ig:
+              label: Beneficial owners. Surnames and forename, beneficial owner 14f
+            x-ehkn8bj65lo62qbj5lings35chkm6qbfdo:
+              label: Beneficial owners. Country of issue of the identification document,
+                beneficial owner 14f
+            x-ehkn8bj65lo62qbj5lp6asr9chimsor9c4:
+              label: Beneficial owners. Country of residence, beneficial owner 14f
+            x-ehkn8bj65lq6is3f5li6uorldlimst3f:
+              label: Beneficial owners. Type of identification document, beneficial
+                owner 14f
+            x-ehkn8bjjd5n2qrr2dhkmeob3d5nmsbb9chimst39cpkm6obi:
+              label: Beneficial owners. Entity not required to identify the beneficial
+                owner
+          field:
+            label: Modelo 036 from 3 February 2025

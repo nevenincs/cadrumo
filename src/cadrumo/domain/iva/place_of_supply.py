@@ -1,0 +1,288 @@
+"""Which provision places an operation, and whether it fixes the supply's nature.
+
+The classification rules decide WHERE an operation is located and therefore how
+it is treated. Until now they carried none of the law that establishes those
+decisions: the predicates encoded the conditions in Python and the regulatory
+content -- which article places the operation, and whether that article speaks to
+goods or to services -- existed nowhere. A predicate is logic and belongs in
+Python; the provision behind it is regulatory content, versioned by filing year,
+and belongs in the registry.
+
+**The goods/services fork is why this is not the per-category table.** LIVA art.
+68 locates *entregas de bienes*; arts. 69 and 70 locate *prestaciones de
+servicios*. On a cross-border branch the same two parties, the same amount and
+the same day are placed by different articles and can reach different treatments.
+Several rules share one category while resting on different provisions -- three
+separate reverse-charge rules all resolve to ``DOMESTIC_REVERSE_CHARGE`` -- so a
+table keyed by category cannot express what establishes each one.
+
+**An absent nature is a finding, not a blank.** A rule whose provisions do not fix
+whether goods or services were supplied omits ``supply_nature``, and that omission
+means the articles are silent. It never means the row is unfinished. The worked
+case is the Union scheme: LIVA art. 163 unvicies reaches "presten servicios"
+*and* "ventas a distancia intracomunitarias de bienes", so citing it alone
+determines nothing -- the goods rules that ride it are fixed by art. 68 instead,
+and the services rule by art. 69.
+
+**The domestic rules omit it deliberately.** Both placement rules put a domestic
+operation in the same territory, so its treatment is settled by the rate tier
+rather than by what was supplied. Demanding the distinction there would refuse
+invoices for a fact their own treatment ignores, which is the laziness property
+the supply-nature axis exists to keep.
+
+**Refusal rather than a guess.** :func:`place_of_supply_rule` raises for a rule
+with no row, and carries a ``supply_nature`` of ``None`` for a rule whose
+provisions are silent. Neither substitutes a default; a caller that cannot
+determine the placement is expected to say so, and the two conditions stay
+distinguishable -- an ungrounded rule raises where a silent one answers.
+
+See Also:
+    :class:`~domain.iva.schema.IvaCategory`
+        The treatments these rules resolve into.
+    :class:`~domain.iva.supply_nature.SupplyNature`
+        The axis a cross-border rule's provisions may or may not fix.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from datetime import date
+from types import MappingProxyType
+from typing import TYPE_CHECKING
+
+from pydantic import BaseModel, Field, model_validator
+
+from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.type_guards import is_object_mapping
+from ...core.validity_window import ValidityWindow, years_covered_by_every_group
+from .errors import IvaCatalogueError
+from .supply_nature import SupplyNature
+
+if TYPE_CHECKING:
+    from ..calculations.registry.authority import PinnedAuthorityOperation
+
+
+__all__ = [
+    "IvaPlaceOfSupplyRule",
+    "load_place_of_supply_table",
+    "place_of_supply_rule",
+    "place_of_supply_years",
+]
+
+
+class IvaPlaceOfSupplyRule(BaseModel):
+    """The legal grounding of one classification rule's placement.
+
+    Attributes:
+        rule_id: The classification rule this grounds, matching the id the
+            decision table declares. A parity gate proves the two sets are equal
+            in both directions, so a rule cannot ship ungrounded and a row cannot
+            outlive its rule.
+        supply_nature: The nature the cited provisions fix, or ``None`` when they
+            are silent on it. ``None`` is a statement about the statute.
+        legal_references: Every provision the rule rests on, in reading order.
+            At least one.
+        establishing_reference: The one provision that establishes the treatment,
+            which must also appear in :attr:`legal_references`. Citing the whole
+            reading list leaves unanswered which article actually decides.
+        notes: Reviewer prose in Spanish, matching the sibling catalogue.
+        valid_from: First date this grounding is asserted to hold. Required on a
+            grounded row, absent on a legal-basis-exempt one.
+        valid_to: Last date, inclusive. Same rule.
+
+    The window attaches to the RULE rather than to a citation because the rule is
+    the grounding-bearing row here: its provisions are bare reference ids with no
+    table of their own to carry a span. The bounds are closed and a gate holds
+    them inside the intersection of the cited provisions' effective spans.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    rule_id: str = Field(min_length=1)
+    supply_nature: SupplyNature | None = None
+    legal_references: tuple[str, ...] = ()
+    establishing_reference: str = ""
+    notes: str = ""
+    legal_basis_exempt: bool = False
+    valid_from: date | None = None
+    valid_to: date | None = None
+
+    @property
+    def window(self) -> ValidityWindow | None:
+        """Return the span this grounding is asserted over, or ``None`` when exempt.
+
+        Returns:
+            The declared :class:`~core.validity_window.ValidityWindow`, or
+            ``None`` for a legal-basis-exempt row, which grounds nothing and so
+            is asserted over nothing.
+        """
+        if self.valid_from is None or self.valid_to is None:
+            return None
+        return ValidityWindow(valid_from=self.valid_from, valid_to=self.valid_to)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _each_row_carries_exactly_what_its_kind_claims(self) -> IvaPlaceOfSupplyRule:
+        """Refuse a row whose citations do not match the kind of rule it grounds.
+
+        A grounded row must cite at least one provision and must name a deciding
+        one among them; the two fields would otherwise drift apart silently,
+        leaving a row that calls an article decisive while reading a different
+        set. An exempt row must cite nothing at all, which is what keeps the
+        exemption from becoming a place to park a half-filled row.
+
+        A rule that codifies no tax treatment cannot be grounded, and demanding an
+        article for it would manufacture the appearance of a legal basis it has
+        none of by design. That is the same distinction the sibling regulation
+        table draws, and it is narrow: it is not an escape for a rule that DOES
+        need grounding and has not been given it yet.
+        """
+        if self.legal_basis_exempt:
+            _validate_legal_basis_exempt_row(self)
+        else:
+            _validate_grounded_row(self)
+        return self
+
+
+def _validate_legal_basis_exempt_row(rule: IvaPlaceOfSupplyRule) -> None:
+    """Require an exempt row to carry no grounding claim at all."""
+    if rule.legal_references or rule.establishing_reference:
+        raise IvaCatalogueError(
+            f"place-of-supply rule {rule.rule_id!r}: a legal-basis-exempt row cites no provision, "
+            "because it codifies no tax treatment to ground",
+        )
+    if rule.supply_nature is not None:
+        raise IvaCatalogueError(
+            f"place-of-supply rule {rule.rule_id!r}: a legal-basis-exempt row fixes no supply nature",
+        )
+    if rule.valid_from is not None or rule.valid_to is not None:
+        raise IvaCatalogueError(
+            f"place-of-supply rule {rule.rule_id!r}: a legal-basis-exempt row declares no validity "
+            "window, because a row that grounds nothing is asserted over nothing",
+        )
+
+
+def _validate_grounded_row(rule: IvaPlaceOfSupplyRule) -> None:
+    """Require a grounded row to carry a bounded, internally cited provision."""
+    if rule.valid_from is None or rule.valid_to is None:
+        raise IvaCatalogueError(
+            f"place-of-supply rule {rule.rule_id!r}: a grounded row must declare both validity bounds; "
+            "an absent bound would read as effective from the beginning of time or until further "
+            "notice, and neither is a claim anybody made",
+        )
+    # Constructing the window is the validation: an inverted span covers no
+    # year and would make the rule vanish from every filing year instead of
+    # failing where it was written.
+    _ = rule.window
+    if not rule.legal_references:
+        raise IvaCatalogueError(
+            f"place-of-supply rule {rule.rule_id!r}: must cite the provision that establishes its placement",
+        )
+    if rule.establishing_reference not in rule.legal_references:
+        raise IvaCatalogueError(
+            f"place-of-supply rule {rule.rule_id!r}: establishing_reference "
+            f"{rule.establishing_reference!r} is not among its legal_references",
+        )
+
+
+def load_place_of_supply_table(
+    *,
+    operation: PinnedAuthorityOperation,
+) -> Mapping[str, IvaPlaceOfSupplyRule]:
+    """Adapt the published place-of-supply grounding table.
+
+    Returns:
+        Rules keyed by rule id, each carrying the span it is asserted over.
+
+    """
+    from ..calculations.registry.runtime_catalogues import PublishedIvaPlaceOfSupplyRule
+
+    loaded = operation.runtime_catalogue("iva_place_of_supply")
+    if not is_object_mapping(loaded):
+        raise IvaCatalogueError("indexed authority place-of-supply component has an invalid shape")
+    published_values: list[tuple[str, PublishedIvaPlaceOfSupplyRule]] = []
+    for rule_id, published in loaded.items():
+        if not isinstance(rule_id, str) or not isinstance(published, PublishedIvaPlaceOfSupplyRule):
+            raise IvaCatalogueError("indexed authority place-of-supply component has an invalid shape")
+        published_values.append((rule_id, published))
+
+    return MappingProxyType(
+        {
+            rule_id: IvaPlaceOfSupplyRule.model_validate(
+                {
+                    "rule_id": published.rule_id,
+                    "supply_nature": (
+                        SupplyNature(published.supply_nature) if published.supply_nature is not None else None
+                    ),
+                    "legal_references": published.legal_references,
+                    "establishing_reference": published.establishing_reference,
+                    "notes": published.notes,
+                    "legal_basis_exempt": published.legal_basis_exempt,
+                    "valid_from": published.valid_from,
+                    "valid_to": published.valid_to,
+                }
+            )
+            for rule_id, published in published_values
+        }
+    )
+
+
+def place_of_supply_years(*, operation: PinnedAuthorityOperation) -> frozenset[int]:
+    """Return every filing year the table can be resolved for.
+
+    A year counts only when EVERY grounded rule is asserted over it. A rule whose
+    provisions stop earlier stops the table, because a classification answered
+    from a rule that does not apply is worse than a refusal. Legal-basis-exempt
+    rows ground nothing and are excluded rather than treated as covering
+    everything or nothing.
+
+    Returns:
+        The derived set of resolvable filing years.
+    """
+    windows = [
+        rule.window for rule in load_place_of_supply_table(operation=operation).values() if rule.window is not None
+    ]
+    return years_covered_by_every_group([window] for window in windows)
+
+
+def place_of_supply_rule(
+    rule_id: str,
+    *,
+    on: date,
+    operation: PinnedAuthorityOperation,
+    projected_year: int,
+) -> IvaPlaceOfSupplyRule:
+    """Return the grounding for ``rule_id`` in the filing year of ``on``.
+
+    Args:
+        rule_id: The classification rule's declared id.
+        on: A date in the filing year whose table applies.
+        operation: The pinned authority operation supplying the place-of-supply table.
+        projected_year: The filing year whose grounded rules are required.
+
+    Returns:
+        :class:`IvaPlaceOfSupplyRule`: The grounding row.
+
+    Raises:
+        IvaCatalogueError: When the table grounds no such year, or carries no row
+            for the rule, or the row is not asserted over that year. Raising is
+            correct rather than returning a permissive default: an ungrounded
+            placement has no provision behind it, and answering anyway would
+            manufacture one.
+    """
+    rules = load_place_of_supply_table(operation=operation)
+    grounded_years = place_of_supply_years(operation=operation)
+    if projected_year not in grounded_years:
+        raise IvaCatalogueError(
+            f"no place-of-supply grounding for year={on.year}; the table grounds "
+            f"{sorted(grounded_years)}. Ground the year against BOE or AEAT -- never widen a rule's "
+            "window to admit it.",
+        )
+    rule = rules.get(rule_id)
+    if rule is None or (rule.window is not None and not rule.window.covers_year(projected_year)):
+        raise IvaCatalogueError(
+            f"place-of-supply rule {rule_id!r} is not grounded for year={on.year}; "
+            "every classification rule must cite the provision that establishes its placement",
+        )
+    return rule

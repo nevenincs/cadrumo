@@ -1,0 +1,127 @@
+modelo:
+  schema:
+    '111':
+      construct:
+        modelo-111-withholding-workflow:
+          field:
+            title: 'Modelo 111: withholdings and payments on account'
+      field:
+        official_name: Personal Income Tax withholdings and payments on account. Employment
+          and business income, prizes and certain capital gains and income attributions.
+        title: IRPF withholdings and payments on account
+      form:
+        column:
+          contraprestaciones_satisfechas: Consideration paid
+        context:
+          apellidos: Surname or registered business name
+          declaracion-complementaria: Supplementary self-assessment
+          ejercicio: Tax year
+          iban: IBAN
+          justificante-anterior: Previous self-assessment receipt number
+          nif: Tax identification number (NIF)
+          nombre: Given name
+          periodo: Period
+        page:
+          dr-m11101:
+            heading: Page 1 · Withholdings and payments on account
+        row:
+          contraprestaciones:
+            heading: Cash or in-kind consideration
+          percep-dinerarias:
+            heading: Cash payments
+          percep-en-especie:
+            heading: Payments in kind
+          premios-dinerarios:
+            heading: Cash prizes
+          premios-en-especie:
+            heading: Prizes in kind
+          rendimientos-dinerarios:
+            heading: Cash income
+          rendimientos-en-especie:
+            heading: Income in kind
+        section:
+          complementaria:
+            heading: Supplementary return (6)
+          contraprest-cesion-dchos-imagen:
+            heading: Consideration for image rights
+          devengo:
+            heading: Tax period (2)
+          ganancias-patrim-aprovecham-forestales:
+            heading: Capital gains from forestry use
+          identificacion:
+            heading: Declarant (1)
+          ingreso:
+            heading: Payment (4)
+          premios:
+            heading: Prizes
+          rendim-actividades-economicas:
+            heading: Business income
+          rendim-del-trabajo:
+            heading: Employment income
+          total-liquidacion:
+            heading: Return total
+      revision:
+        2019-y-siguientes:
+          casilla:
+            '01':
+              label: Employment income in cash, number of recipients
+            '02':
+              label: Employment income in cash, amount received
+            '03':
+              label: Employment income in cash, amount withheld
+            '04':
+              label: Employment income in kind, number of recipients
+            '05':
+              label: Employment income in kind, value received
+            '06':
+              label: Employment income in kind, payment on account
+            '07':
+              label: Business/professional income in cash, number of recipients
+            08:
+              label: Business/professional income in cash, amount received
+            09:
+              label: Business/professional income in cash, amount withheld
+            '10':
+              label: Business/professional income in kind, number of recipients
+            '11':
+              label: Business/professional income in kind, value received
+            '12':
+              label: Business/professional income in kind, payment on account
+            '13':
+              label: Prizes in cash, number of recipients
+            '14':
+              label: Prizes in cash, amount received
+            '15':
+              label: Prizes in cash, amount withheld
+            '16':
+              label: Prizes in kind, number of recipients
+            '17':
+              label: Prizes in kind, value received
+            '18':
+              label: Prizes in kind, payment on account
+            '19':
+              label: Forestry capital gains in cash, number of recipients
+            '20':
+              label: Forestry capital gains in cash, amount received
+            '21':
+              label: Forestry capital gains in cash, amount withheld
+            '22':
+              label: Forestry capital gains in kind, number of recipients
+            '23':
+              label: Forestry capital gains in kind, value received
+            '24':
+              label: Forestry capital gains in kind, payment on account
+            '25':
+              label: Image rights assignment, number of recipients
+            '26':
+              label: Image rights assignment, consideration paid
+            '27':
+              label: Image rights assignment, payment on account
+            '28':
+              label: Total withholdings and payments on account
+            '29':
+              label: Result of previous self-assessments
+            '30':
+              label: Result payable
+          field:
+            label: Order EHA/586/2011, tax years 2019 onwards

@@ -1,0 +1,23 @@
+{
+  "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
+  "modelo": "156",
+  "retrieved_at": "2026-07-21",
+  "source_pages": [
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html"
+  ],
+  "artefact_count": 1,
+  "artefacts": [
+    {
+      "modelo": "156",
+      "title": "156 - Diseño de registro vigente",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/156_HAC_3580_2003.pdf",
+      "stored_path": "files/01-156-diseno-de-registro-vigente.pdf",
+      "original_filename": "156_HAC_3580_2003.pdf",
+      "content_type": "application/pdf",
+      "bytes": 39458,
+      "sha256": "d387cfeb7254e49d539d5c3a731c0bd6bf275c8c1fdae80e6faa5a1006d5d068",
+      "retrieved_at": "2026-07-21"
+    }
+  ]
+}

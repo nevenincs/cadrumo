@@ -1,0 +1,80 @@
+{
+  "modelo": "349",
+  "candidate_kind": "fillable",
+  "source_page_url": "https://fiscalbot.es/modelos-tributarios/modelo-349/",
+  "source_pdf_url": "https://fiscalbot.es/assets/pdf/Modelo349_rellenable.pdf?v=3",
+  "retrieved_on": "2026-08-23",
+  "source_chain": {
+    "classification": "third_party_hosted_external_layout_candidate",
+    "host": "fiscalbot.es"
+  },
+  "authority_adjudication": {
+    "artifact_authenticity": {
+      "verdict": "third_party_sample",
+      "evidence_summary": "The committed bytes display FiscalBot's example-only disclaimer and placeholder receipt number, and their third-party producer history plus empty fields confirm that this artifact is not an official BOE or AEAT publication byte."
+    },
+    "official_base_derivation": {
+      "verdict": "verified_official_base_derivative",
+      "official_source": {
+        "authority": "boe",
+        "document_id": "BOE-A-2010-5098 Annex I",
+        "source_url": "https://boe.es/boe/dias/2010/03/29/pdfs/BOE-A-2010-5098.pdf",
+        "sha256": "3e194f09e71174b115ccdd6627656259cbbfd2f18fd44147d9091527a3909c69",
+        "page_mapping": [
+          {"candidate_page": 1, "official_page": 13},
+          {"candidate_page": 2, "official_page": 15}
+        ]
+      },
+      "comparison_method": "pdf_text_geometry_and_normalized_render",
+      "comparison_summary": "The summary page has 261 ordered matching tokens with affine R-squared 0.952/0.996; the interior page has 165 matches with R-squared 0.977/0.994. This proves historical physical-form lineage, not exact official bytes or applicability to the current electronic-only registry contract.",
+      "pair_render": {
+        "counterpart_kind": "plain",
+        "counterpart_sha256": "dc77e58a8eb5b24fb5f7dccf65c51dcfc495debd0b053e1d091c9fca8e6abbed",
+        "comparison_method": "normalized_96_dpi_render_similarity",
+        "comparison_summary": "At 96 dpi, pages 1 and 2 have normalized MAE 0.001850 and 0.000877 respectively. The small overlay differences prevent an exact-render claim."
+      }
+    },
+    "registry_applicability": {
+      "verdict": "historical_layout_without_authored_revision",
+      "revision_id": null
+    }
+  },
+  "content": {
+    "sha256": "0457d6a646e2af9ef95ec5be59e3546f31ecd164f9a96899cbe15e26b0d2c539",
+    "size_bytes": 189086
+  },
+  "pdf": {
+    "version": "1.7",
+    "header_version": "1.4",
+    "page_count": 2,
+    "page_sizes_points": [
+      [595.276, 841.89],
+      [595.276, 841.89]
+    ],
+    "encrypted": false,
+    "acroform_top_level_field_count": 82,
+    "acroform_nonempty_value_count": 0,
+    "document_info": {
+      "Author": "AEAT",
+      "Creator": "AEAT",
+      "Keywords": "AEAT, Justificante, Declaracion, Predeclaracion, Vista Previa",
+      "ModDate": "D:20251217195708+01'00'",
+      "Producer": "3.0.30 (5.1.14) ",
+      "Subject": "Justificante AEAT. CSV=U336UXUN3M4Y29U9",
+      "Title": "Justificante AEAT. CSV=U336UXUN3M4Y29U9"
+    }
+  },
+  "observations": {
+    "text_layer_character_count": 5321,
+    "nif_like_match_count": 0,
+    "iban_like_match_count": 0,
+    "email_like_match_count": 0,
+    "printed_placeholder_justificante_number_present": true,
+    "value_observation": "All 82 top-level AcroForm fields have empty or off values; extracted text contains the printed placeholder justificante number 1234567890, but no NIF-like, IBAN-like, or email-like token."
+  },
+  "limitations": [
+    "FiscalBot hosts these bytes; document metadata and AEAT branding do not establish AEAT provenance or publication authority.",
+    "The fillable variant label describes the link exposed by the source page and does not promote the candidate to an official source class.",
+    "A blank external layout can probe parser behavior but cannot ground populated-value placement or taxpayer-specific output."
+  ]
+}

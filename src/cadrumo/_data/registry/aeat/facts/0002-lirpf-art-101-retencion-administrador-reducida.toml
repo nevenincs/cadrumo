@@ -1,0 +1,122 @@
+[fact]
+fact_id = "lirpf-art-101:retencion-administrador-reducida"
+family = "scalar"
+
+[[fact.variants]]
+variant_id = "lirpf-art-101:retencion-administrador-reducida:2015-01-01"
+date_axis = "filing_period"
+valid_from = 2015-01-01
+valid_to = 2015-07-11
+legal_refs = ["ley-35-2006:art-101"]
+source_refs = ["boe-lirpf-art-101-administrator-2015-01-01"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-lirpf-art-101-administrator-2015-01-01"
+required_text = ["importe neto de la cifra de negocios inferior a 100.000 euros", "será del 19 por ciento"]
+
+[fact.variants.payload]
+kind = "scalar"
+value_type = "decimal"
+value = "0.19"
+unit = "fraction"
+
+[[fact.variants]]
+variant_id = "lirpf-art-101:retencion-administrador-reducida:2015-07-12"
+date_axis = "filing_period"
+valid_from = 2015-07-12
+valid_to = 2018-07-04
+legal_refs = ["ley-35-2006:art-101"]
+source_refs = ["boe-lirpf-art-101-administrator-2015-07-12"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-lirpf-art-101-administrator-2015-07-12"
+required_text = ["importe neto de la cifra de negocios inferior a 100.000 euros", "será del 19 por ciento"]
+
+[fact.variants.payload]
+kind = "scalar"
+value_type = "decimal"
+value = "0.19"
+unit = "fraction"
+
+[[fact.variants]]
+variant_id = "lirpf-art-101:retencion-administrador-reducida:2018-07-05"
+date_axis = "filing_period"
+valid_from = 2018-07-05
+valid_to = 2018-12-28
+legal_refs = ["ley-35-2006:art-101"]
+source_refs = ["boe-lirpf-art-101-administrator-2018-07-05"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-lirpf-art-101-administrator-2018-07-05"
+required_text = ["importe neto de la cifra de negocios inferior a 100.000 euros", "será del 19 por ciento"]
+
+[fact.variants.payload]
+kind = "scalar"
+value_type = "decimal"
+value = "0.19"
+unit = "fraction"
+
+[[fact.variants]]
+variant_id = "lirpf-art-101:retencion-administrador-reducida:2018-12-29"
+date_axis = "filing_period"
+valid_from = 2018-12-29
+valid_to = 2020-12-31
+legal_refs = ["ley-35-2006:art-101"]
+source_refs = ["boe-lirpf-art-101-administrator-2018-12-29"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-lirpf-art-101-administrator-2018-12-29"
+required_text = ["importe neto de la cifra de negocios inferior a 100.000 euros", "será del 19 por ciento"]
+
+[fact.variants.payload]
+kind = "scalar"
+value_type = "decimal"
+value = "0.19"
+unit = "fraction"
+
+[[fact.variants]]
+variant_id = "lirpf-art-101:retencion-administrador-reducida:2021-01-01"
+date_axis = "filing_period"
+valid_from = 2021-01-01
+valid_to = 2022-12-31
+legal_refs = ["ley-35-2006:art-101"]
+source_refs = ["boe-lirpf-art-101-administrator-2021-01-01"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-lirpf-art-101-administrator-2021-01-01"
+required_text = ["importe neto de la cifra de negocios inferior a 100.000 euros", "será del 19 por ciento"]
+
+[fact.variants.payload]
+kind = "scalar"
+value_type = "decimal"
+value = "0.19"
+unit = "fraction"
+
+[[fact.variants]]
+variant_id = "lirpf-art-101:retencion-administrador-reducida:2023-01-01"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+legal_refs = ["ley-35-2006:art-101"]
+source_refs = ["boe-lirpf-art-101-administrator-2023-01-01"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-lirpf-art-101-administrator-2023-01-01"
+required_text = ["importe neto de la cifra de negocios inferior a 100.000 euros", "será del 19 por ciento"]
+
+[fact.variants.payload]
+kind = "scalar"
+value_type = "decimal"
+value = "0.19"
+unit = "fraction"

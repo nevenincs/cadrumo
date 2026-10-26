@@ -1,0 +1,398 @@
+[importlinter]
+# Every first-party root is named here.  The source tree, the separately
+# shipped MCP service, repository-only tooling, documentation namespace, test
+# support, and generated companion namespace are all part of the closed
+# classification.
+root_packages =
+    cadrumo
+    cadrumo_client
+    cadrumo_runtime
+    cadrumo_mcp
+    cadrumo_agent_service
+    dev
+    docs
+include_external_packages = False
+# Import form does not change the architectural verdict.  In particular,
+# TYPE_CHECKING imports and function-local imports remain in the graph.
+exclude_type_checking_imports = False
+
+# ---------------------------------------------------------------------------
+# Closed package classification
+# ---------------------------------------------------------------------------
+
+[importlinter:contract:closed-cadrumo-classification]
+type = layers
+name = Every cadrumo source package has a declared lane
+containers = cadrumo
+layers =
+    _data : adapters : application : conftest : core : domain : entrypoints : tests : (locales)
+exhaustive = True
+
+[importlinter:contract:closed-mcp-classification]
+type = layers
+name = Every MCP service source package has a declared lane
+containers = cadrumo_mcp
+layers =
+    mcp
+exhaustive = True
+
+[importlinter:contract:closed-client-classification]
+type = layers
+name = Every shared client source package has a declared lane
+containers = cadrumo_client
+layers =
+    contracts : commands : transport : logging
+exhaustive = True
+
+[importlinter:contract:closed-runtime-classification]
+type = layers
+name = Every installed runtime source package has a declared lane
+containers = cadrumo_runtime
+layers =
+    (_data) : contracts : application : adapters : host : commands
+exhaustive = True
+
+[importlinter:contract:closed-service-classification]
+type = layers
+name = Every agent service source package has a declared lane
+containers = cadrumo_agent_service
+layers =
+    adapters : host : installed_client : main : providers : service : admin : contracts : (locales)
+exhaustive = True
+
+[importlinter:contract:closed-dev-classification]
+type = layers
+name = Every repository tooling package has a declared lane
+containers = dev
+layers =
+    _paths : acceptance : actionlint : audit : cache_root : ci : ci_reports : conftest : corpus : deploy : desktop_agent_live : desktop_profile_fixture : docs : env : exit_codes : first_party_source : identity : ingest_harness : init : locales : mcp_eval : operation_contract_manifest : packaging : product_environment : quality : readme : registry : release : report_storage : runtime_lifecycle : sanitizer : smoke : source_tree : test_runs : tests : tui
+exhaustive = True
+
+[importlinter:contract:closed-documentation-classification]
+type = layers
+name = Every documentation package has a declared lane
+containers = docs
+layers =
+    conf
+exhaustive = True
+
+# ---------------------------------------------------------------------------
+# Repository-only and separately shipped-root boundaries
+# ---------------------------------------------------------------------------
+
+[importlinter:contract:shipped-code-never-reaches-repository-only]
+type = forbidden
+name = Shipped code never reaches repository-only roots
+source_modules =
+    cadrumo
+    cadrumo_client
+    cadrumo_runtime
+    cadrumo_mcp
+forbidden_modules =
+    dev
+    docs
+allow_indirect_imports = False
+
+[importlinter:contract:service-never-reaches-repository-only]
+type = forbidden
+name = Agent service never reaches repository-only roots
+source_modules =
+    cadrumo_agent_service
+forbidden_modules =
+    dev
+    docs
+allow_indirect_imports = False
+
+# ---------------------------------------------------------------------------
+# Consumer-only trees (read by the import gate; Import Linter ignores them)
+# ---------------------------------------------------------------------------
+# Every repository-root directory or module holding Python is a root above,
+# an entry here, or an [import-gate:excluded-trees] entry; the gate refuses
+# anything else.  Each entry is one repository-root path and its reason.
+# Consumer trees import first-party roots but are not importable packages
+# (``packaging`` would shadow the PyPI distribution and ``src-tauri`` is not a
+# module name), so Import Linter cannot graph them.  The gate parses every
+# file below them as a consumer: its static and dynamic first-party targets
+# must exist, be public, and name their canonical defining module.
+
+[import-gate:consumer-trees]
+conftest.py = Repository pytest root configuration, loaded by pytest from the checkout rather than imported as a package.
+native = Native build, installer and desktop scripts: embedded interpreter bootstrap and probes, desktop fixture generators and packaged smoke tests run by CMake, Cargo and the bundled interpreter.
+packaging = Distribution build hooks and Homebrew and Scoop manifest generators, run by the build backend and release tooling from the checkout.
+
+# Consumer paths shipped inside installed artifacts are held to the forbidden
+# modules of the shipped-code contract, as the shipped roots are.
+
+[import-gate:consumer-contract:shipped-code-never-reaches-repository-only]
+native/application/src = Probe and runtime-identity scripts embedded with include_str in the installed native application.
+native/desktop/src-tauri/src/python = Desktop CLI entrypoint and manager dispatch scripts embedded with include_str in the installed desktop shell.
+native/interpreter = Interpreter bootstrap copied into every installed runtime by the packaging assembly.
+
+# ---------------------------------------------------------------------------
+# Inward dependency direction
+# ---------------------------------------------------------------------------
+
+[importlinter:contract:tax-has-no-agent-or-mcp-dependency]
+type = forbidden
+name = Tax and runtime source do not know the agent products
+source_modules =
+    cadrumo
+    cadrumo_runtime
+forbidden_modules =
+    cadrumo_agent_service
+    cadrumo_mcp
+allow_indirect_imports = False
+
+[importlinter:contract:client-and-mcp-do-not-know-the-agent-service]
+type = forbidden
+name = Shared client and MCP service do not know the agent service
+source_modules =
+    cadrumo_client
+    cadrumo_mcp
+forbidden_modules =
+    cadrumo_agent_service
+allow_indirect_imports = False
+
+[importlinter:contract:core-is-innermost]
+type = forbidden
+name = Core has no outward dependency
+source_modules =
+    cadrumo.core
+forbidden_modules =
+    cadrumo.domain
+    cadrumo.application
+    cadrumo.adapters
+    cadrumo.entrypoints
+    cadrumo_client
+    cadrumo_runtime
+    cadrumo_agent_service
+    cadrumo_mcp
+    dev
+    docs
+allow_indirect_imports = False
+
+[importlinter:contract:domain-is-inward]
+type = forbidden
+name = Domain has no outward dependency
+source_modules =
+    cadrumo.domain
+forbidden_modules =
+    cadrumo.application
+    cadrumo.adapters
+    cadrumo.entrypoints
+    cadrumo_client
+    cadrumo_runtime
+    cadrumo_agent_service
+    cadrumo_mcp
+    dev
+    docs
+allow_indirect_imports = False
+
+[importlinter:contract:application-is-inward]
+type = forbidden
+name = Application has no concrete outer dependency
+source_modules =
+    cadrumo.application
+forbidden_modules =
+    cadrumo.adapters
+    cadrumo.entrypoints
+    cadrumo_client.commands
+    cadrumo_client.transport
+    cadrumo_runtime
+    cadrumo_agent_service
+    cadrumo_mcp
+    dev
+    docs
+allow_indirect_imports = False
+
+[importlinter:contract:shared-tests-are-core-only]
+type = forbidden
+name = cadrumo.tests remains core-only shared support
+source_modules =
+    cadrumo.tests
+forbidden_modules =
+    cadrumo.domain
+    cadrumo.application
+    cadrumo.adapters
+    cadrumo.entrypoints
+    cadrumo_client
+    cadrumo_runtime
+    cadrumo_agent_service
+    cadrumo_mcp
+    dev
+    docs
+allow_indirect_imports = False
+
+[importlinter:contract:resource-data-isolated]
+type = forbidden
+name = Resource data does not depend on product layers
+source_modules =
+    cadrumo._data
+forbidden_modules =
+    cadrumo.core
+    cadrumo.domain
+    cadrumo.application
+    cadrumo.adapters
+    cadrumo.entrypoints
+    cadrumo_client
+    cadrumo_runtime
+    cadrumo_agent_service
+    cadrumo_mcp
+    dev
+    docs
+allow_indirect_imports = False
+
+[importlinter:contract:mcp-has-no-entrypoint-or-repository-dependency]
+type = forbidden
+name = The separately shipped MCP service consumes inward code only
+source_modules =
+    cadrumo_mcp
+forbidden_modules =
+    cadrumo.entrypoints
+    dev
+    docs
+allow_indirect_imports = False
+
+[importlinter:contract:tax-application-never-reaches-runtime-host]
+type = forbidden
+name = The tax application cannot import the runtime host
+source_modules =
+    cadrumo
+forbidden_modules =
+    cadrumo_runtime
+allow_indirect_imports = False
+
+[importlinter:contract:mcp-never-reaches-runtime-host]
+type = forbidden
+name = The MCP service is a runtime client and cannot import the runtime host
+source_modules =
+    cadrumo_mcp
+forbidden_modules =
+    cadrumo_runtime
+allow_indirect_imports = False
+
+# The agent service is admitted as a runtime client and holds no login, session
+# or custody authority.  Its generic Windows Job Object launcher lives in
+# cadrumo_client.transport, so the service reaches no cadrumo_runtime module.
+[importlinter:contract:service-never-reaches-runtime-authority]
+type = forbidden
+name = The agent service is a runtime client and cannot import runtime authority or tax composition
+source_modules =
+    cadrumo_agent_service
+forbidden_modules =
+    cadrumo_runtime
+    cadrumo.entrypoints
+allow_indirect_imports = False
+
+[importlinter:contract:person-bridge-knows-no-product-setup]
+type = forbidden
+name = The held person bridge relays registered operations without importing product setup code
+source_modules =
+    cadrumo_runtime.host.session_hold
+    cadrumo_runtime.host.session_hold_operations
+forbidden_modules =
+    cadrumo.application.dependency_contracts
+    cadrumo.application.dependency_registry
+    cadrumo.application.dependency_wording
+    cadrumo.application.provisioning
+    cadrumo.adapters.outbound.google
+    cadrumo.entrypoints
+allow_indirect_imports = False
+
+[importlinter:contract:runtime-commands-know-no-product-setup]
+type = forbidden
+name = The runtime's commands run no product setup or Google sign-in code; the product's registered operations do
+source_modules =
+    cadrumo_runtime.commands
+forbidden_modules =
+    cadrumo.application.dependency_contracts
+    cadrumo.application.dependency_registry
+    cadrumo.application.dependency_wording
+    cadrumo.adapters.outbound.google
+allow_indirect_imports = False
+
+[importlinter:contract:shared-client-never-reaches-runtime-host]
+type = forbidden
+name = Shared client contracts and transports cannot import the runtime host
+source_modules =
+    cadrumo_client
+forbidden_modules =
+    cadrumo_runtime
+allow_indirect_imports = False
+
+[importlinter:contract:tax-does-not-construct-its-managing-host]
+type = forbidden
+name = Tax interfaces receive services without constructing their managing host
+source_modules =
+    cadrumo
+forbidden_modules =
+    cadrumo_client.transport.installed_client
+    cadrumo_client.transport.credentials
+    cadrumo_client.commands.profile_admission
+allow_indirect_imports = False
+
+[importlinter:contract:shared-client-never-reaches-tax-frontends]
+type = forbidden
+name = Shared client code does not depend on tax frontends
+source_modules =
+    cadrumo_client
+forbidden_modules =
+    cadrumo.entrypoints
+allow_indirect_imports = False
+
+[importlinter:contract:client-contracts-are-innermost]
+type = forbidden
+name = Client contracts do not depend on transport or host composition
+source_modules =
+    cadrumo_client.contracts
+forbidden_modules =
+    cadrumo_client.commands
+    cadrumo_client.transport
+    cadrumo_client.logging
+    cadrumo_runtime
+allow_indirect_imports = False
+
+# ---------------------------------------------------------------------------
+# Outer peer boundaries
+# ---------------------------------------------------------------------------
+
+[importlinter:contract:adapters-do-not-reach-composition]
+type = forbidden
+name = Adapters do not reach entrypoint composition
+source_modules =
+    cadrumo.adapters
+forbidden_modules =
+    cadrumo.entrypoints
+    cadrumo_mcp
+    dev
+    docs
+allow_indirect_imports = False
+
+[importlinter:contract:cli-does-not-reach-tui]
+type = forbidden
+name = Tax CLI and TUI are independent frontends
+source_modules =
+    cadrumo.entrypoints.cli
+forbidden_modules =
+    cadrumo.entrypoints.tui
+allow_indirect_imports = False
+
+[importlinter:contract:tui-does-not-reach-cli]
+type = forbidden
+name = Tax TUI does not depend on the tax CLI
+source_modules =
+    cadrumo.entrypoints.tui
+forbidden_modules =
+    cadrumo.entrypoints.cli
+allow_indirect_imports = False
+
+[importlinter:contract:tax-shared-entrypoint-code-does-not-reach-tui]
+type = forbidden
+name = Tax entrypoints do not cross frontend boundaries
+source_modules =
+    cadrumo.entrypoints
+forbidden_modules =
+    cadrumo.entrypoints.cli
+    cadrumo.entrypoints.tui
+allow_indirect_imports = False
+

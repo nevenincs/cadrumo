@@ -1,0 +1,248 @@
+"""Censal effects, provenance, interactions and cleanup at the CLI seam.
+
+The censo pull verb reaches the censal operation through one public driver,
+which submits and starts it against the real composed operation services and
+answers its review. These cases drive that same driver and then read the
+durable profile record back through its production repository, so what is
+asserted is what a later session would actually load.
+
+Provenance is the part with no other home. Existing coverage establishes that
+applying advances the record revision; nothing establishes that the adopted
+values arrive carrying the censo source tag, which is the difference between a
+value the operator typed and a value the tax authority asserted.
+
+Filed-history is deliberately out of scope here. That operation has no
+production caller on any frontend, so nothing about it can be proven end to
+end from a frontend seam, and a green result here says nothing about it.
+"""
+
+from __future__ import annotations
+
+import asyncio
+from pathlib import Path
+
+import pytest
+
+from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
+from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    profile_authority_contexts as _profile_contexts_for_test,
+)
+
+from ...application.user_profile.censal_readback import read_latest_censal_observation
+from ...application.user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS, CENSO_SOURCE_TAG
+from ...application.user_profile.profile_record_repository import ProfileRecordRepository
+from ...application.user_profile.projections import record_to_effective_facts
+from ...core.paths import effective_storage_root
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from . import registered_executor_case_support as conformance
+from .censal_review_test_support import review_censal_with_services
+from .registered_executor_case_support import OperationRuntimeCloseWitness, conformance_operation_runtime
+from .test_censal_operation_operand import _operand
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_ACTOR = "operator:censal-sync-test"
+
+
+def _decide(*, apply: bool):
+    """Return a decision callback recording the projection it was shown."""
+    seen: list[object] = []
+
+    def decide(projection) -> bool:
+        seen.append(projection)
+        return apply
+
+    return decide, seen
+
+
+def test_applied_censal_review_lands_adopted_values_with_censo_provenance(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    """Adopted values reach the durable record carrying the censo source tag."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    cleanup = OperationRuntimeCloseWitness()
+    with conformance_operation_runtime(tmp_path / "censal-apply", cleanup=cleanup) as (driver, _registry, profile_id):
+        repository = ProfileRecordRepository.for_current_session(
+            profile_id, profile_decode_context=_profile_decode_context_for_test
+        )
+        before = repository.load(profile_id)
+        before_facts = record_to_effective_facts(before)
+        decide, seen = _decide(apply=True)
+
+        result = asyncio.run(
+            review_censal_with_services(
+                driver.services,
+                operation=operation,
+                actor_ref=_ACTOR,
+                decide=decide,
+            )
+        )
+
+        after = repository.load(profile_id)
+        after_facts = record_to_effective_facts(after)
+
+        assert result.applied is True
+        assert len(seen) == 1
+
+        # EFFECT: the durable record advanced, read back through the same
+        # repository a later session would load it with.
+        assert after.record_revision == before.record_revision + 1
+        assert after.content_digest != before.content_digest
+
+        adopted = {
+            field.path: field.observed_value
+            for field in result.projection.fields
+            if field.observed_value is not None and field.path in set(CENSAL_ADOPTABLE_PATHS)
+        }
+
+        # The proof is only worth something if something was actually adopted
+        # and it actually changed the record.
+        assert adopted
+        changed = {
+            path
+            for path, value in adopted.items()
+            if (previous := before_facts.get(path)) is None or previous.value != value
+        }
+        assert changed
+
+        # PROVENANCE: every adopted value arrives attributed to the tax
+        # authority, not merely present.
+        for path, value in adopted.items():
+            landed = after_facts.get(path)
+            assert landed is not None, path
+            assert landed.value == value, path
+            assert landed.source == CENSO_SOURCE_TAG, path
+
+        # CLEANUP: the executor's owned acquisition resource was closed.
+        assert cleanup.closed is True
+
+
+def test_rejected_censal_review_leaves_the_record_and_its_provenance_untouched(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    """A rejected review neither writes values nor stamps censo provenance."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    cleanup = OperationRuntimeCloseWitness()
+    with conformance_operation_runtime(tmp_path / "censal-reject", cleanup=cleanup) as (driver, _registry, profile_id):
+        repository = ProfileRecordRepository.for_current_session(
+            profile_id, profile_decode_context=_profile_decode_context_for_test
+        )
+        before = repository.load(profile_id)
+        decide, seen = _decide(apply=False)
+
+        result = asyncio.run(
+            review_censal_with_services(
+                driver.services,
+                operation=operation,
+                actor_ref=_ACTOR,
+                decide=decide,
+            )
+        )
+
+        after = repository.load(profile_id)
+
+        assert result.applied is False
+        assert len(seen) == 1
+        assert after == before
+        assert not any(fact.source == CENSO_SOURCE_TAG for fact in record_to_effective_facts(after).values())
+
+        # Cleanup is owed on the rejected path exactly as on the applied one.
+        assert cleanup.closed is True
+
+
+def test_each_censal_acquisition_publishes_exactly_one_answerable_review(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    """Two runs each review once; neither reuses the other's interaction."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    first_cleanup = OperationRuntimeCloseWitness()
+    second_cleanup = OperationRuntimeCloseWitness()
+
+    with conformance_operation_runtime(tmp_path / "censal-first", cleanup=first_cleanup) as (
+        driver,
+        _registry,
+        profile_id,
+    ):
+        repository = ProfileRecordRepository.for_current_session(
+            profile_id, profile_decode_context=_profile_decode_context_for_test
+        )
+        decide_first, first_seen = _decide(apply=True)
+        first = asyncio.run(
+            review_censal_with_services(
+                driver.services,
+                operation=operation,
+                actor_ref=_ACTOR,
+                decide=decide_first,
+            )
+        )
+        after_first = repository.load(profile_id)
+
+    with conformance_operation_runtime(tmp_path / "censal-second", cleanup=second_cleanup) as (
+        driver,
+        _registry,
+        profile_id,
+    ):
+        decide_second, second_seen = _decide(apply=False)
+        second = asyncio.run(
+            review_censal_with_services(
+                driver.services,
+                operation=operation,
+                actor_ref=_ACTOR,
+                decide=decide_second,
+            )
+        )
+
+    # INTERACTIONS: one review per acquisition, and the two operations are
+    # distinct records rather than one interaction answered twice.
+    assert len(first_seen) == 1
+    assert len(second_seen) == 1
+    assert first.operation_id != second.operation_id
+    assert first.applied is True
+    assert second.applied is False
+    assert after_first.record_revision > 0
+    assert first_cleanup.closed is True
+    assert second_cleanup.closed is True
+
+
+@pytest.mark.parametrize("apply", [False, True])
+def test_complete_capture_is_readable_after_review_even_when_adoption_is_declined(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+    monkeypatch: pytest.MonkeyPatch,
+    apply: bool,
+) -> None:
+    """Fresh journal/custody readers preserve all evidence independently of local adoption."""
+    from datetime import timedelta
+
+    observation = _operand().observation
+    monkeypatch.setattr(conformance, "_observation", lambda: observation)
+    with conformance_operation_runtime(tmp_path / "censal-readback", cleanup=OperationRuntimeCloseWitness()) as (
+        driver,
+        _registry,
+        profile_id,
+    ):
+
+        def read():
+            return asyncio.run(
+                read_latest_censal_observation(
+                    profile_id,
+                    journal=OperationJournalRepository(storage_root=effective_storage_root() / "operations"),
+                    operands=operation_secure_reference_repository(),
+                )
+            )
+
+        assert read() is None
+        for _ in range(2):
+            result = asyncio.run(
+                review_censal_with_services(
+                    driver.services,
+                    operation=operation,
+                    actor_ref=_ACTOR,
+                    decide=lambda _projection: apply,
+                )
+            )
+            assert result.applied is apply
+            assert read() == observation
+            assert read() == observation
+            observation = observation.model_copy(update={"captured_at": observation.captured_at + timedelta(seconds=1)})

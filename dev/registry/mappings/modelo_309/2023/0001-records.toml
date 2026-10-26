@@ -1,0 +1,169 @@
+schema_version = 1
+fragment_id = "records"
+modelo = "309"
+design_epoch = "2023"
+source_ref = "aeat-dr-309-2023"
+source_sha256 = "a84c6347a87ac4c4db8610010e100cb8632518a9d20e54e79ffbc713d770beb5"
+
+[[records]]
+sheet = "M30901"
+record_identity = "M30901"
+export_record_id = "modelo-309-page-01"
+record_type = "page_01"
+required = true
+
+[[variable_envelopes]]
+source_ref = "aeat-dr-309-2023"
+source_sha256 = "a84c6347a87ac4c4db8610010e100cb8632518a9d20e54e79ffbc713d770beb5"
+record_identity = "M30900"
+body_record_ids = ["modelo-309-page-01"]
+
+[[variable_envelopes.prefix_fields]]
+role = "opening_tag"
+
+[variable_envelopes.prefix_fields.anchor]
+sheet = "M30900"
+source_row = 6
+record_identity = "M30900"
+source_cell = "A6"
+ordinal = "1"
+
+[[variable_envelopes.prefix_fields]]
+role = "modelo"
+
+[variable_envelopes.prefix_fields.anchor]
+sheet = "M30900"
+source_row = 7
+record_identity = "M30900"
+source_cell = "A7"
+ordinal = "2"
+
+[[variable_envelopes.prefix_fields]]
+role = "discriminant"
+
+[variable_envelopes.prefix_fields.anchor]
+sheet = "M30900"
+source_row = 8
+record_identity = "M30900"
+source_cell = "A8"
+ordinal = "3"
+
+[[variable_envelopes.prefix_fields]]
+role = "filing_year"
+
+[variable_envelopes.prefix_fields.anchor]
+sheet = "M30900"
+source_row = 9
+record_identity = "M30900"
+source_cell = "A9"
+ordinal = "4"
+
+[[variable_envelopes.prefix_fields]]
+role = "period"
+
+[variable_envelopes.prefix_fields.anchor]
+sheet = "M30900"
+source_row = 10
+record_identity = "M30900"
+source_cell = "A10"
+ordinal = "5"
+
+[[variable_envelopes.prefix_fields]]
+role = "record_type"
+
+[variable_envelopes.prefix_fields.anchor]
+sheet = "M30900"
+source_row = 11
+record_identity = "M30900"
+source_cell = "A11"
+ordinal = "6"
+
+[[variable_envelopes.prefix_fields]]
+role = "aux_opening_tag"
+
+[variable_envelopes.prefix_fields.anchor]
+sheet = "M30900"
+source_row = 12
+record_identity = "M30900"
+source_cell = "A12"
+ordinal = "7"
+
+[[variable_envelopes.prefix_fields]]
+role = "pre_program_filler"
+
+[variable_envelopes.prefix_fields.anchor]
+sheet = "M30900"
+source_row = 13
+record_identity = "M30900"
+source_cell = "A13"
+ordinal = "8"
+
+[[variable_envelopes.prefix_fields]]
+role = "program_identifier"
+
+[variable_envelopes.prefix_fields.anchor]
+sheet = "M30900"
+source_row = 14
+record_identity = "M30900"
+source_cell = "A14"
+ordinal = "9"
+
+[[variable_envelopes.prefix_fields]]
+role = "between_identities_filler"
+
+[variable_envelopes.prefix_fields.anchor]
+sheet = "M30900"
+source_row = 15
+record_identity = "M30900"
+source_cell = "A15"
+ordinal = "10"
+
+[[variable_envelopes.prefix_fields]]
+role = "developer_tax_id"
+
+[variable_envelopes.prefix_fields.anchor]
+sheet = "M30900"
+source_row = 16
+record_identity = "M30900"
+source_cell = "A16"
+ordinal = "11"
+
+[[variable_envelopes.prefix_fields]]
+role = "post_developer_filler"
+
+[variable_envelopes.prefix_fields.anchor]
+sheet = "M30900"
+source_row = 17
+record_identity = "M30900"
+source_cell = "A17"
+ordinal = "12"
+
+[[variable_envelopes.prefix_fields]]
+role = "aux_closing_tag"
+
+[variable_envelopes.prefix_fields.anchor]
+sheet = "M30900"
+source_row = 18
+record_identity = "M30900"
+source_cell = "A18"
+ordinal = "13"
+
+[variable_envelopes.body_anchor]
+sheet = "M30900"
+source_row = 19
+ordinal = "14"
+record_identity = "M30900"
+source_cell = "A19"
+
+[variable_envelopes.closer_anchor]
+sheet = "M30900"
+source_row = 20
+ordinal = "15"
+record_identity = "M30900"
+source_cell = "A20"
+
+[variable_envelopes.total_anchor]
+source_row = 21
+source_cell = "A21"
+label = "total"
+length = "Variable"

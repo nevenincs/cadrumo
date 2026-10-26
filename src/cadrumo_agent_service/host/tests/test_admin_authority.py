@@ -1,0 +1,168 @@
+"""Hosted gateway credentials cannot exercise parent-only admin ingress."""
+
+from __future__ import annotations
+
+import json
+import socket
+import struct
+from threading import Event
+from uuid import uuid4
+
+import pytest
+from pydantic import JsonValue, ValidationError
+
+from ...admin import AdminRequest, AdminServer
+from ...contracts import ServiceStartupFrame
+from ...service import _GatewayCredentials
+from ..controller import AgentGenerations, ResolvedAgentCredentials
+from ..credential_frame import build_credential_frame, wipe
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+class _CredentialSource:
+    def resolve_for_agent(self) -> ResolvedAgentCredentials:
+        return ResolvedAgentCredentials(AgentGenerations("synthetic-session", "synthetic-settings"), {})
+
+    def current_generations(self) -> AgentGenerations:
+        return AgentGenerations("synthetic-session", "synthetic-settings")
+
+
+class _AdminRecorder:
+    def __init__(self) -> None:
+        self.actions: list[str] = []
+        self.secret: bytearray | None = None
+
+    def admin(self, action: str, *, secret: bytearray | None = None, **metadata: object) -> dict[str, JsonValue]:
+        self.actions.append(action)
+        self.secret = secret
+        if action == "set":
+            assert secret == bytearray(b"synthetic-provider-secret")
+        return {"kind": "served", "action": action}
+
+
+def _send(stream: socket.socket, payload: bytes | bytearray) -> None:
+    stream.sendall(struct.pack("!I", len(payload)) + payload)
+
+
+def _read(stream: socket.socket) -> dict[str, object]:
+    def exact(size: int) -> bytes:
+        result = bytearray()
+        while len(result) < size:
+            value = stream.recv(size - len(result))
+            if not value:
+                raise EOFError("admin_response_incomplete")
+            result.extend(value)
+        return bytes(result)
+
+    (size,) = struct.unpack("!I", exact(4))
+    document = json.loads(exact(size))
+    assert isinstance(document, dict)
+    return {str(key): value for key, value in document.items()}
+
+
+@pytest.mark.parametrize(
+    "action",
+    [
+        "catalog",
+        "status",
+        "set",
+        "remove",
+        "turn_on",
+        "reset",
+        "auth",
+        "sign_in",
+        "start",
+        "stop",
+        "connect",
+        "connect_status",
+        "connect_cancel",
+        "model_roles",
+        "model_role_set",
+        "model_role_clear",
+        "model_roles_reset",
+    ],
+)
+def test_gateway_frame_secret_is_refused_and_parent_admin_secret_dispatches(action: str) -> None:
+    startup = ServiceStartupFrame(bearer="a" * 64, gateway_bearer="b" * 64)
+    parent = bytearray(startup.bearer, "ascii")
+    gateway = bytearray(startup.gateway_bearer, "ascii")
+    host_token = bytearray(b"c" * 43)
+    resolved = _GatewayCredentials(_CredentialSource(), gateway, host_token, Event()).resolve_for_agent()
+    agent_frame = build_credential_frame(
+        resolved.credentials, gateway_bearer=resolved.gateway_bearer, host_token=resolved.host_token
+    )
+    agent_token = json.loads(agent_frame)["gateway_bearer"].encode("ascii")
+    assert parent not in agent_frame
+    assert json.loads(agent_frame)["host_token"] == host_token.decode("ascii")
+    target = _AdminRecorder()
+    server = AdminServer(target, bearer=parent)
+    request: dict[str, object] = {"version": 1, "request_id": str(uuid4()), "action": action}
+    if action in {"set", "remove", "turn_on", "reset", "auth", "sign_in", "connect"}:
+        request.update(provider="synthetic", expected_revision="0" * 64)
+    if action == "connect":
+        request["method"] = "browser"
+    if action in {"connect_status", "connect_cancel"}:
+        request["attempt_id"] = str(uuid4())
+    if action == "auth":
+        request["choice"] = "provider_sign_in"
+    if action in {"model_role_set", "model_role_clear", "model_roles_reset"}:
+        request["expected_revision"] = "0" * 64
+    if action in {"model_role_set", "model_role_clear"}:
+        request["role"] = "text_extraction"
+    if action == "model_role_set":
+        request.update(provider="synthetic_api", model="synthetic-model-1")
+    secret = b"synthetic-provider-secret"
+    if action == "set":
+        request["secret_bytes"] = len(secret)
+    try:
+        with socket.create_connection(("127.0.0.1", server.port), timeout=5) as stream:
+            _send(stream, agent_token)
+            assert _read(stream) == {"kind": "refused", "code": "unauthenticated"}
+        assert target.actions == []
+        with socket.create_connection(("127.0.0.1", server.port), timeout=5) as stream:
+            _send(stream, parent)
+            _send(stream, json.dumps(request).encode())
+            if action == "set":
+                assert _read(stream) == {"event": "secret_ready", "request_id": request["request_id"]}
+                _send(stream, secret)
+            assert _read(stream) == {
+                "version": 1,
+                "request_id": request["request_id"],
+                "result": {"kind": "served", "action": action},
+            }
+        assert target.actions == [action]
+        if action == "set":
+            assert target.secret == bytearray()
+    finally:
+        server.close()
+        wipe(parent)
+        wipe(gateway)
+        wipe(agent_frame)
+        if resolved.gateway_bearer is not None:
+            wipe(resolved.gateway_bearer)
+
+
+@pytest.mark.parametrize(
+    "document",
+    [
+        {"bearer": "a" * 64},
+        {"gateway_bearer": "b" * 64},
+        {"bearer": "a" * 64, "gateway_bearer": "a" * 64},
+    ],
+)
+def test_startup_refuses_missing_or_shared_authority(document: dict[str, str]) -> None:
+    with pytest.raises(ValidationError):
+        ServiceStartupFrame.model_validate(document)
+
+
+@pytest.mark.parametrize("model", ["synthetic-vision:1", "synthetic vision/1", "m" * 512, "é" * 512])
+def test_a_role_selection_names_any_model_id_the_catalogues_carry(model: str) -> None:
+    request = AdminRequest(version=1, request_id=uuid4(), action="model_role_set", model=model)
+    assert request.model == model
+
+
+@pytest.mark.parametrize("model", ["", "m" * 513, "tab\there", "line\nbreak", "del\x7f"])
+def test_a_model_id_outside_the_shared_rule_is_refused(model: str) -> None:
+    with pytest.raises(ValidationError):
+        AdminRequest(version=1, request_id=uuid4(), action="model_role_set", model=model)

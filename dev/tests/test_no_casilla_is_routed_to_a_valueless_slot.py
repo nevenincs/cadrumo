@@ -1,0 +1,176 @@
+"""No casilla declares an export field that writes no value.
+
+WHAT THIS CATCHES. A casilla points at its wire position through ``export_refs``,
+naming an entry in the generator's semantic map. Most such entries are ``casilla``
+or ``projection`` -- both carry a value. Two kinds do not: ``filler`` pads a gap
+and ``literal`` writes a constant. A casilla pointing at either declares a home
+that can never hold its figure, so the value is computed, grounded, and then
+dropped on the way to the file.
+
+Nothing else sees it. The reference is not dangling, so referential integrity
+passes. The position is covered, so no contiguity or coverage check fires. The
+casilla simply never appears among the layout's casilla fields, and a reader of
+the fixed-width record cannot tell the difference between "declared zero" and
+"never written".
+
+THE INSTANCE THAT PROMPTED THIS. Modelo 322's revision ``2008-2023`` declared
+casilla ``171`` -- operaciones intragrupo, base imponible, money -- pointing at
+``m322-2023.page-01.f097``, a ``filler``. Box 171 exists in the 2024-2025 and
+2026 designs and in NEITHER design that revision is governed by, so it was an
+era bleed: a box from a later form left in an earlier revision, routed to padding.
+It was the only such casilla in the registry, and removing it is what makes this
+module green.
+
+WHY ``projection`` IS ALLOWED. A projection field is a real value derived from a
+casilla, and modelo 303 routes ten casillas that way legitimately. Treating any
+non-``casilla`` kind as the defect would fire on all of them -- the measurement
+was corrected once already for exactly that reason, and the narrower predicate is
+the one that discards only false positives.
+
+SCOPE. Only ``export_refs`` that RESOLVE against a bundled semantic map are
+judged. A revision whose layout is hand-authored rather than generated has no map
+entry to look up, and inventing a verdict for it would be a guess.
+
+This gate reads the dev-authored semantic-map mappings directly, so it lives
+here rather than under ``src/cadrumo``: the mappings tree is the generator's
+input, and the shipped registry authority is its compiled output.
+"""
+
+from __future__ import annotations
+
+import pytest
+
+from cadrumo.core.toml import TomlDecodeError, parse_toml
+from dev._paths import REPO_ROOT
+from dev.quality.unread_inputs import report_unread
+from dev.registry.compiler.authority import compiled_bundled_authority
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_MAPPINGS = REPO_ROOT / "dev" / "registry" / "mappings"
+#: Map entry kinds that write no casilla value: padding and constants.
+_VALUELESS_KINDS = frozenset({"filler", "literal"})
+#: Below these the walk found nothing and every assertion would be vacuous.
+#: They are anti-vacuity checks and nothing more: live the walk indexes over
+#: twenty thousand entries, so EVERY modelo family -- including the largest,
+#: which alone is most of the corpus -- fits inside the slack above these
+#: numbers. A family that stopped being mapped would leave both totals clear.
+_MINIMUM_ENTRIES = 1000
+_MINIMUM_RESOLVED = 500
+
+#: So the corpus is floored per FAMILY as well. A modelo whose maps stop
+#: being read contributes no entries, every export ref into it then reads as
+#: a hand-authored layout, and its casillas are never judged -- the same
+#: silent conversion of judged routings into unjudged ones the unread
+#: announcement above exists to prevent, arriving by a different route.
+#: A floor, not a pin: a new modelo raises the live count freely and only a
+#: family LEAVING reds. Not caught, stated rather than implied: a family
+#: that shrinks to a handful of entries still counts as present.
+_MINIMUM_MAPPED_FAMILIES = 17
+
+
+def _entry_family(export_field_id: str) -> str:
+    """Return the modelo family an export field id belongs to."""
+    return export_field_id.split("-", 1)[0].split(".", 1)[0]
+
+
+def _entry_kinds() -> dict[str, str]:
+    """Return ``export_field_id -> kind`` across every bundled semantic map."""
+    kinds: dict[str, str] = {}
+    unread: list[str] = []
+    for fragment in sorted(_MAPPINGS.rglob("*.toml")):
+        try:
+            data = parse_toml(fragment.read_text(encoding="utf-8"))
+        except (OSError, TomlDecodeError) as refusal:
+            # Malformedness itself is another gate's subject, but its CONSEQUENCE
+            # lands here: a fragment that does not parse contributes no entries,
+            # so every export ref into it reads as ``kind is None`` below and is
+            # skipped as a hand-authored layout rather than judged. A silent skip
+            # therefore converts judged routings into unjudged ones, which is
+            # indistinguishable from a clean result.
+            # An UNREADABLE fragment converts the same routings the same way:
+            # the walk can list a path a peer removes before the read reaches
+            # it. The corpus is shortened either way, so the loss is announced
+            # here rather than ending the run before any routing is judged.
+            # Relative where it can be, absolute otherwise: the announcement must
+            # never be more fragile than the walk it reports on.
+            named = fragment.as_posix()
+            if fragment.is_relative_to(REPO_ROOT):
+                named = fragment.relative_to(REPO_ROOT).as_posix()
+            unread.append(f"{named} ({refusal})")
+            continue
+        for entry in data.get("entries", []):
+            kinds[entry["export_field_id"]] = entry["kind"]
+
+    report_unread(
+        "valueless-slot routing gate",
+        "these mapping fragments contributed no entries, so export refs into them read as "
+        "hand-authored layouts below and were never judged",
+        unread,
+    )
+    return kinds
+
+
+def _routed() -> tuple[list[tuple[str, str, str, str, str]], int]:
+    """Return valueless routings, and how many refs were resolvable at all."""
+    kinds = _entry_kinds()
+    assert len(kinds) >= _MINIMUM_ENTRIES, f"only {len(kinds)} map entries indexed; the mappings tree was not read"
+    families = {_entry_family(field_id) for field_id in kinds}
+    assert len(families) >= _MINIMUM_MAPPED_FAMILIES, (
+        f"only {len(families)} modelo families contributed map entries against a floor of "
+        f"{_MINIMUM_MAPPED_FAMILIES}: {sorted(families)}; a family whose maps went unread "
+        "has every export ref into it read as a hand-authored layout and none of its "
+        "casillas judged, which the entry total above is far too loose to notice"
+    )
+    offenders: list[tuple[str, str, str, str, str]] = []
+    resolved = 0
+    for modelo in compiled_bundled_authority().modelos:
+        for revision_id, revision in modelo.revisions.items():
+            for casilla in revision.casillas:
+                for ref in list(getattr(casilla, "export_refs", []) or []):
+                    kind = kinds.get(ref)
+                    if kind is None:
+                        continue  # hand-authored layout: no map entry to judge
+                    resolved += 1
+                    if kind in _VALUELESS_KINDS:
+                        offenders.append((str(modelo.id), revision_id, str(casilla.number), ref, kind))
+    return offenders, resolved
+
+
+def test_no_casilla_points_at_a_filler_or_literal_slot() -> None:
+    offenders, resolved = _routed()
+
+    assert resolved >= _MINIMUM_RESOLVED, (
+        f"only {resolved} export refs resolved against a map; the walk found nothing "
+        "to judge and this assertion would pass without checking anything"
+    )
+    assert not offenders, (
+        "these casillas declare an export field that writes no value, so their figure "
+        "is computed and then dropped: "
+        + ", ".join(
+            f"modelo {m} revision {r} casilla [{n}] -> {ref} ({kind})" for m, r, n, ref, kind in sorted(offenders)
+        )
+    )
+
+
+def test_value_bearing_kinds_are_not_swept_up() -> None:
+    """The predicate must stay narrow enough to admit legitimate routings.
+
+    ``projection`` entries are real derived values and several modelos route
+    casillas through them. If the valueless set ever widened to catch those, this
+    fails rather than letting a correct registry look broken.
+    """
+    kinds = _entry_kinds()
+    routed_kinds = set()
+    for modelo in compiled_bundled_authority().modelos:
+        for revision in modelo.revisions.values():
+            for casilla in revision.casillas:
+                for ref in list(getattr(casilla, "export_refs", []) or []):
+                    if ref in kinds:
+                        routed_kinds.add(kinds[ref])
+
+    assert routed_kinds, "no casilla resolved to any map entry; nothing was measured"
+    assert routed_kinds - _VALUELESS_KINDS, (
+        "every routed kind is treated as valueless, so the predicate has swallowed "
+        f"the legitimate ones: {sorted(routed_kinds)}"
+    )

@@ -1,0 +1,99 @@
+modelo:
+  schema:
+    '189':
+      casilla:
+        continuidad:
+          filing-year:
+            label: Ejercicio de declaración
+          irpf-declarante-nif:
+            label: NIF del declarante
+          m189-clave-identificacion:
+            label: Clave de identificación
+          m189-clave-mercado:
+            label: Clave de mercado
+          m189-clave-representacion:
+            label: Clave de representación
+          m189-clave-titularidad:
+            label: Clave de titularidad
+          m189-clave-valor:
+            label: Clave de valor
+          m189-codigo-pais:
+            label: Código país
+          m189-codigo-provincia:
+            label: Código provincia
+          m189-declaracion-complementaria-sustitutiva:
+            label: Declaración complementaria o sustitutiva
+          m189-declarado-nif:
+            label: NIF del declarado
+          m189-declarado-nombre:
+            label: Apellidos y nombre, razón social o denominación del declarado
+          m189-declarante-razon-social:
+            label: Razón social del declarante
+          m189-identificacion-valores:
+            label: Identificación de los valores
+          m189-nominal-unitario-valores:
+            label: Nominal unitario de los valores
+          m189-numero-identificativo-anterior:
+            label: Número identificativo de la declaración anterior
+          m189-numero-justificante:
+            label: Número de justificante de la declaración
+          m189-numero-total-declarados:
+            label: Número total de declarados
+          m189-numero-valores:
+            label: Número de valores
+          m189-persona-relacion:
+            label: Persona con quien relacionarse
+          m189-porcentaje-participacion:
+            label: Porcentaje de participación
+          m189-representante-legal-nif:
+            label: NIF del representante legal
+          m189-tipo-soporte:
+            label: Tipo de soporte
+          m189-valoracion:
+            label: Valoración
+          m189-valoracion-total:
+            label: Valoración total
+      construct:
+        modelo-189-informative:
+          field:
+            title: Modelo 189. Declaración informativa anual acerca de valores, seguros
+              y rentas
+      field:
+        official_name: Modelo 189. Declaración informativa anual acerca de valores,
+          seguros y rentas.
+        title: Declaración informativa anual acerca de valores, seguros y rentas
+      form:
+        page:
+          detalle:
+            heading: Detalle de valores, seguros y rentas
+          hoja-resumen:
+            heading: Hoja resumen
+        section:
+          declaracion:
+            heading: Declaración complementaria o sustitutiva
+          declarante:
+            heading: Declarante
+          ejercicio:
+            heading: Ejercicio y presentación
+          identificacion:
+            heading: Identificación del declarado
+          resumen:
+            heading: Resumen de los datos incluidos en la declaración
+          valor:
+            heading: Identificación de los valores, seguros o rentas
+          valoracion:
+            heading: Valoración y titularidad
+      revision:
+        '2022':
+          field:
+            label: Modelo 189, ejercicio 2022
+        '2023':
+          field:
+            label: Modelo 189, ejercicio 2023
+        '2024':
+          field:
+            label: Modelo 189, ejercicio 2024
+        '2025':
+          field:
+            label: Modelo 189 ejercicio 2025 (Orden EHA/3481/2008; Ordenes HFP/1180/2023,
+              HFP/1284/2023 y HAC/132/2026)

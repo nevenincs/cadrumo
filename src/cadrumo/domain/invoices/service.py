@@ -1,0 +1,398 @@
+"""Service helpers for invoice catalogues.
+
+Exposes pure-function service operations over an
+:class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`: lookup
+(:func:`suggest_reconciliations`), in-memory linking
+(:func:`link_transaction`), reconciliation suggestions
+(:func:`suggest_reconciliations`), and bidirectional consistency checks
+(:func:`verify_link_consistency`). Operations that span both the invoice
+catalogue and the :class:`TransactionCatalogue` accept each as an
+independent argument. Persisted cross-catalogue workflows belong in
+:mod:`cadrumo.application.invoices`.
+"""
+
+from __future__ import annotations
+
+from bisect import bisect_left
+from decimal import Decimal
+
+from pydantic import BaseModel, Field, ValidationError, field_validator
+
+from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.identity.hex_ids import InvoiceId
+from ...core.identity.transaction_ids import TransactionId
+from ...core.invoice_link import LinkInconsistencyDirection
+from ...core.logging import get_logger
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ..iva.schema import InvoiceKind
+from ..transactions.enums import TransactionDirection
+from ..transactions.models import Transaction, TransactionCatalogue
+from .errors import (
+    InvoiceLinkError,
+    InvoiceNotFoundError,
+    InvoiceValidationError,
+)
+from .models import Invoice, InvoiceCatalogue
+
+_LOGGER = get_logger(__name__)
+#: Default closeness for proposing an invoice-to-transaction link.
+#:
+#: DELIBERATELY NOT :data:`~core.money.rounding.CENT`, despite carrying the same value.
+#: CENT bounds rounding noise: it answers "could these two figures be the same
+#: number, differently rounded". This answers something else -- "are these two
+#: figures close enough that a human should be offered the link" -- which is a
+#: matching heuristic, not an arithmetic invariant. It is a per-call default the
+#: caller may widen; CENT is a quantum nobody may widen without changing what
+#: rounding means. The two agreeing today is a coincidence of scale, and folding
+#: this onto CENT would make a later loosening of link suggestions silently
+#: loosen every rounding check in the codebase.
+_DEFAULT_AMOUNT_TOLERANCE = Decimal("0.01")
+
+
+class ReconciliationSuggestion(BaseModel):
+    """Immutable suggestion emitted by the reconciliation heuristic.
+
+    Attributes:
+        invoice_id: Stable invoice identifier.
+        transaction_id: Candidate transaction identifier.
+        amount_match: Whether the sign-aware amount matches within tolerance.
+        counterparty_match: Whether the counterparty name overlaps
+            (case-insensitive substring match either direction).
+        score: Confidence in the inclusive ``0..1`` range.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    invoice_id: InvoiceId
+    transaction_id: TransactionId
+    amount_match: bool
+    counterparty_match: bool
+    score: Decimal
+
+    @field_validator("score")
+    @classmethod
+    @pydantic_validation_boundary
+    def _require_score_in_range(cls, value: Decimal) -> Decimal:
+        if not (0 <= value <= 1):
+            raise InvoiceValidationError("score must be in the inclusive 0..1 range")
+        return value
+
+
+class LinkInconsistency(BaseModel):
+    """Immutable record describing a one-sided link between the two catalogues.
+
+    Attributes:
+        invoice_id: Identifier of the invoice involved in the bad link.
+        transaction_id: Identifier of the transaction involved.
+        direction: Which side cites the other without being cited back, as a
+            :class:`LinkInconsistencyDirection` member.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    # NOT core.identity.InvoiceId, deliberately: the TRANSACTION_ONLY branch
+    # (verify_link_consistency) feeds this from transaction.invoice_id, which
+    # is domain.transactions.Transaction's own bare `str | None` foreign key
+    # -- unconstrained today, and this function's entire purpose is to
+    # detect a transaction whose invoice_id does NOT resolve to a real
+    # invoice. A stricter type here would make the diagnostic itself raise
+    # on exactly the dangling reference it exists to report.
+    invoice_id: str = Field(min_length=1)
+    transaction_id: TransactionId
+    direction: LinkInconsistencyDirection
+
+
+def link_transaction(
+    catalogue: InvoiceCatalogue,
+    invoice_id: str,
+    transaction_id: str,
+) -> InvoiceCatalogue:
+    """Return a new catalogue with ``transaction_id`` linked to ``invoice_id``.
+
+    Args:
+        catalogue: Source catalogue.
+        invoice_id: Invoice identifier to update.
+        transaction_id: Transaction identifier to append to the invoice's
+            ``linked_transaction_ids`` tuple.
+
+    Returns:
+        A fresh immutable :class:`InvoiceCatalogue` with the updated invoice. Duplicate
+        links are idempotent: calling this helper with an already-linked
+        transaction returns a value-equal catalogue rather than raising.
+
+    Raises:
+        InvoiceLinkError: If ``transaction_id`` is not a 64-character
+            lowercase hex digest.
+    """
+    invoice = _require_invoice(catalogue, invoice_id)
+    normalized_tx = transaction_id.strip().lower()
+    if len(normalized_tx) != 64 or any(char not in "0123456789abcdef" for char in normalized_tx):
+        raise InvoiceLinkError(
+            translated_message="errors.error.error_financial_invoices_invoice_link",
+            context={"transaction_id": transaction_id, "hex_digest_shape_valid": False},
+        )
+    if normalized_tx in invoice.linked_transaction_ids:
+        _LOGGER.debug(
+            "link_transaction: transaction=%s already linked to invoice=%s; skipping",
+            normalized_tx,
+            invoice_id,
+        )
+        return catalogue
+    updated_ids = (*invoice.linked_transaction_ids, normalized_tx)
+    try:
+        updated_invoice = Invoice.model_validate(
+            {**invoice.model_dump(mode="python"), "linked_transaction_ids": updated_ids},
+        )
+    except ValidationError as exc:
+        raise InvoiceLinkError(
+            translated_message="errors.error.error_financial_invoices_invoice_link",
+            context={"invoice_id": invoice_id, "link_update_error_type": type(exc).__name__},
+        ) from exc
+    return _replace_invoice(catalogue, updated_invoice)
+
+
+def suggest_reconciliations(
+    invoices: InvoiceCatalogue,
+    transactions: TransactionCatalogue,
+    *,
+    amount_tolerance: Decimal = _DEFAULT_AMOUNT_TOLERANCE,
+) -> tuple[ReconciliationSuggestion, ...]:
+    """Return auto-suggested invoice/transaction links sorted by score.
+
+    Only unlinked invoices (empty ``linked_transaction_ids``) and
+    transactions whose ``invoice_id`` is ``None`` are considered.
+    Suggestions are emitted only when the amount matches within
+    ``amount_tolerance``. Counterparty similarity acts as a score-boost
+    (case-insensitive substring match) but is never sufficient on its
+    own.
+
+    Args:
+        invoices: The :class:`InvoiceCatalogue` to match invoices from.
+        transactions: Source :class:`TransactionCatalogue` to match transactions from.
+        amount_tolerance: Absolute tolerance applied to sign-aware amount
+            comparisons; defaults to one cent.
+
+    Returns:
+        Deterministic tuple of :class:`ReconciliationSuggestion` objects sorted by
+        ``(score desc, invoice_id asc, transaction_id asc)``.
+    """
+    unmatched_invoices = _unmatched_reconciliation_invoices(invoices)
+    amount_index = _ReconciliationAmountIndex(_unlinked_reconciliation_transactions(transactions))
+    suggestions: list[ReconciliationSuggestion] = []
+    for invoice in unmatched_invoices:
+        for transaction in amount_index.candidates(invoice, amount_tolerance=amount_tolerance):
+            suggestion = _suggestion_for_pair(invoice, transaction, amount_tolerance=amount_tolerance)
+            if suggestion is not None:
+                suggestions.append(suggestion)
+    suggestions.sort(key=lambda s: (-s.score, s.invoice_id, s.transaction_id))
+    _LOGGER.debug("suggest_reconciliations: %d candidate(s)", len(suggestions))
+    return tuple(suggestions)
+
+
+def _unmatched_reconciliation_invoices(catalogue: InvoiceCatalogue) -> tuple[Invoice, ...]:
+    """Return invoices eligible for reconciliation suggestions."""
+    return tuple(invoice for invoice in catalogue.values() if not invoice.linked_transaction_ids)
+
+
+def _unlinked_reconciliation_transactions(catalogue: TransactionCatalogue) -> tuple[Transaction, ...]:
+    """Return transactions eligible for reconciliation suggestions."""
+    return tuple(transaction for transaction in catalogue.values() if transaction.invoice_id is None)
+
+
+class _ReconciliationAmountIndex:
+    """Transactions bucketed by direction and sorted by amount, probed per invoice.
+
+    A pair can only become a suggestion when its direction is the invoice's
+    expected flow and :func:`_reconciliation_amount_matches` accepts it, so the
+    index yields exactly the transactions of the expected direction that the
+    amount rule itself accepts, without visiting the rest.
+
+    Invariant: for one settlement ``s``, ``|round(amount - s)| <= tolerance`` is
+    monotone on each side of ``s``. Every :mod:`decimal` rounding mode is
+    monotone with ``round(0) == 0``, so among amounts ``>= s`` the accepted ones
+    form a prefix of the ascending order, and among amounts ``< s`` they form a
+    suffix. Walking outward from the insertion point of ``s`` and stopping at the
+    first refusal on each side therefore visits every accepted transaction. A
+    negative tolerance accepts nothing and stops both walks at once. The
+    insertion point uses exact :class:`~decimal.Decimal` comparison, and the
+    acceptance test is the unchanged amount rule, so no tolerance arithmetic is
+    duplicated here.
+    """
+
+    __slots__ = ("_by_direction",)
+
+    def __init__(self, transactions: tuple[Transaction, ...]) -> None:
+        grouped: dict[TransactionDirection, list[Transaction]] = {}
+        for transaction in transactions:
+            grouped.setdefault(transaction.direction, []).append(transaction)
+        self._by_direction: dict[TransactionDirection, tuple[list[Decimal], list[Transaction]]] = {}
+        for direction, members in grouped.items():
+            members.sort(key=lambda transaction: transaction.raw.amount)
+            self._by_direction[direction] = ([member.raw.amount for member in members], members)
+
+    def candidates(self, invoice: Invoice, *, amount_tolerance: Decimal) -> list[Transaction]:
+        """Return the expected-direction transactions whose amount the rule accepts."""
+        bucket = self._by_direction.get(_expected_reconciliation_direction(invoice))
+        if bucket is None:
+            return []
+        amounts, members = bucket
+        start = bisect_left(amounts, _reconciliation_settlement(invoice))
+        stop = start
+        while stop < len(members) and _reconciliation_amount_matches(
+            invoice,
+            members[stop],
+            amount_tolerance=amount_tolerance,
+        ):
+            stop += 1
+        while start > 0 and _reconciliation_amount_matches(
+            invoice,
+            members[start - 1],
+            amount_tolerance=amount_tolerance,
+        ):
+            start -= 1
+        return members[start:stop]
+
+
+def _expected_reconciliation_direction(invoice: Invoice) -> TransactionDirection:
+    """Return the ledger flow expected for an invoice kind."""
+    # ``amount`` is a non-negative magnitude; flow is carried by ``direction``.
+    # An ISSUED invoice reconciles against an INCOMING transaction, a RECEIVED
+    # invoice against an OUTGOING transaction.
+    return TransactionDirection.INCOMING if invoice.kind is InvoiceKind.ISSUED else TransactionDirection.OUTGOING
+
+
+def _reconciliation_amount_matches(
+    invoice: Invoice,
+    transaction: Transaction,
+    *,
+    amount_tolerance: Decimal,
+) -> bool:
+    """Return whether the transaction settles the invoice within the requested tolerance."""
+    return abs(transaction.raw.amount - _reconciliation_settlement(invoice)) <= amount_tolerance
+
+
+def _reconciliation_settlement(invoice: Invoice) -> Decimal:
+    """Return the cash an invoice settles for.
+
+    A retención is withheld at source, so the cash that moves is the total less
+    the withheld figure; the total itself never reaches the bank.
+    """
+    return invoice.grand_total - (invoice.retention_amount or Decimal("0"))
+
+
+def _reconciliation_counterparty_matches(invoice: Invoice, transaction: Transaction) -> bool:
+    """Return whether both counterparties have a non-empty overlapping name."""
+    invoice_counterparty = invoice.counterparty_name.strip().lower()
+    tx_counterparty = transaction.raw.counterparty
+    if tx_counterparty is None or not invoice_counterparty:
+        return False
+    tx_normalised = tx_counterparty.strip().lower()
+    # ``bool(tx_normalised)`` guards against the empty-string case; without it
+    # ``"" in invoice_counterparty`` returns True and grants a false-positive
+    # 0.5 score boost.
+    return bool(tx_normalised) and (invoice_counterparty in tx_normalised or tx_normalised in invoice_counterparty)
+
+
+def _reconciliation_score(*, amount_match: bool, counterparty_match: bool) -> Decimal:
+    """Calculate the existing amount and counterparty confidence score."""
+    score = Decimal("0.5") * (1 if amount_match else 0)
+    score += Decimal("0.5") * (1 if counterparty_match else 0)
+    return score
+
+
+def _suggestion_for_pair(
+    invoice: Invoice,
+    transaction: Transaction,
+    *,
+    amount_tolerance: Decimal,
+) -> ReconciliationSuggestion | None:
+    """Build one suggestion when a candidate pair satisfies flow and amount."""
+    if transaction.direction is not _expected_reconciliation_direction(invoice):
+        return None
+    amount_match = _reconciliation_amount_matches(
+        invoice,
+        transaction,
+        amount_tolerance=amount_tolerance,
+    )
+    if not amount_match:
+        return None
+    counterparty_match = _reconciliation_counterparty_matches(invoice, transaction)
+    return ReconciliationSuggestion(
+        invoice_id=invoice.invoice_id,
+        transaction_id=transaction.transaction_id,
+        amount_match=amount_match,
+        counterparty_match=counterparty_match,
+        score=_reconciliation_score(
+            amount_match=amount_match,
+            counterparty_match=counterparty_match,
+        ),
+    )
+
+
+def verify_link_consistency(
+    invoices: InvoiceCatalogue,
+    transactions: TransactionCatalogue,
+) -> tuple[LinkInconsistency, ...]:
+    """Return every one-sided link between the two catalogues.
+
+    A link is ``invoice-only`` when an invoice cites a transaction that
+    does not cite it back, and ``transaction-only`` when a transaction
+    cites an invoice that does not cite it back.
+
+    Args:
+        invoices: The :class:`InvoiceCatalogue` to check links from.
+        transactions: The :class:`TransactionCatalogue` to check links from.
+
+    Returns:
+        Deterministic tuple of :class:`LinkInconsistency` items sorted by
+        ``(invoice_id, transaction_id)``.
+    """
+    inconsistencies: list[LinkInconsistency] = []
+    for invoice in invoices.values():
+        for tx_id in invoice.linked_transaction_ids:
+            transaction = transactions.get(tx_id)
+            if transaction is None or transaction.invoice_id != invoice.invoice_id:
+                inconsistencies.append(
+                    LinkInconsistency(
+                        invoice_id=invoice.invoice_id,
+                        transaction_id=tx_id,
+                        direction=LinkInconsistencyDirection.INVOICE_ONLY,
+                    ),
+                )
+    for transaction in transactions.values():
+        if transaction.invoice_id is None:
+            continue
+        invoice = invoices.get(transaction.invoice_id)
+        if invoice is None or transaction.transaction_id not in invoice.linked_transaction_ids:
+            inconsistencies.append(
+                LinkInconsistency(
+                    invoice_id=transaction.invoice_id,
+                    transaction_id=transaction.transaction_id,
+                    direction=LinkInconsistencyDirection.TRANSACTION_ONLY,
+                ),
+            )
+    inconsistencies.sort(key=lambda item: (item.invoice_id, item.transaction_id))
+    if inconsistencies:
+        _LOGGER.warning(
+            "verify_link_consistency: %d one-sided link(s) detected",
+            len(inconsistencies),
+        )
+    return tuple(inconsistencies)
+
+
+def _replace_invoice(catalogue: InvoiceCatalogue, invoice: Invoice) -> InvoiceCatalogue:
+    """Return a new catalogue with one invoice replaced."""
+    updated = dict(catalogue.invoices)
+    updated[invoice.invoice_id] = invoice
+    return InvoiceCatalogue.model_validate({"invoices": updated})
+
+
+def _require_invoice(catalogue: InvoiceCatalogue, invoice_id: str) -> Invoice:
+    """Return one invoice or raise a typed not-found error."""
+    invoice = catalogue.get(invoice_id)
+    if invoice is None:
+        raise InvoiceNotFoundError(
+            translated_message="errors.error.error_financial_invoices_invoice_not_found",
+            context={"invoice_id": invoice_id, "invoice_present": False},
+        )
+    return invoice

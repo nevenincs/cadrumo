@@ -1,0 +1,41 @@
+"""Verification-expectation source-tier validation."""
+
+from __future__ import annotations
+
+import pytest
+
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+
+from ..conformance.registry_schema_support import (
+    committed_registry as _committed_registry,
+)
+from ..conformance.registry_schema_support import (
+    revision as _revision,
+)
+from ..conformance.registry_schema_support import (
+    with_revision as _with_revision,
+)
+from .profile_schema_support import committed_registry_validator
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
+
+
+def test_validator_rejects_verification_expectation_without_official_guidance_source() -> None:
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    expectation = revision.verification_expectations[0]
+    mutated_expectation = expectation.model_copy(update={"source_refs": ("aeat-dr-130-2019-v12",)})
+    mutated_revision = revision.model_copy(
+        update={"verification_expectations": (mutated_expectation, *revision.verification_expectations[1:])},
+    )
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=(
+            r"verification expectation modelo-130-calculation-verification "
+            r"requires official_source_guidance source evidence"
+        ),
+    ):
+        committed_registry_validator(catalogues).validate_modelo(
+            _with_revision(modelo, mutated_revision),
+        )

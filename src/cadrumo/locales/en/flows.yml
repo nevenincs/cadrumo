@@ -1,0 +1,340 @@
+flows:
+  compare_select:
+    candidate: '{label} (source: {provenance})'
+    defer_label: Decide this later
+  confirm:
+    'no': 'No'
+    'yes': 'Yes'
+  errors:
+    blank_required: This field is required - enter a value.
+    checkbox_required: Select at least one option.
+    checkbox_unknown: 'Unknown option - accepted values: %{choices}.'
+    checkpoint_store_missing: Flow {flow_id} offers save-and-exit in mode {mode},
+      but no checkpoint store is wired, so the run was refused instead of losing your
+      answers.
+    invalid_confirm: Answer yes or no.
+    invalid_date: Enter a date as YYYY-MM-DD (for example 2026-05-14).
+    invalid_decimal: Enter an amount using a decimal point (for example 1234.56).
+    invalid_integer: Enter a whole number.
+    select_unknown: 'Choose one of the accepted values: %{choices}.'
+    unsupported_console: This console cannot host interactive questions. Run the flow
+      from a real terminal, or drive it with a scripted answer file.
+  manager:
+    action:
+      auth_clave_movil_route_app_request: Request in app
+      auth_clave_movil_route_qr: QR code
+    censal_review:
+      apply: Apply this exact proposal
+    choice_unavailable: Unavailable choice
+    column:
+      field: Field
+      state: State
+      value: Value
+    complete_setup:
+      button: Declare setup complete ({key})
+      completed: Setup is complete. Declarations that needed it are now open to you.
+      failed: Setup could not be completed.
+      incomplete: 'Setup cannot be completed yet. Still missing: {fields}.'
+      incomplete_unnamed: 'Setup cannot be completed yet: some required answers are
+        still missing or inconsistent.'
+      running: Checking the profile and completing setup…
+    edit:
+      cancel: Cancel
+      choose_one: Choose one of the options, or cancel to leave the value unchanged.
+      clear: Clear
+      completed_refresh_unavailable: The operation completed, but its updated view
+        is unavailable. Return to Home to refresh it.
+      conflict: The profile changed while you were editing. Your change was not saved.
+        Review the current profile and open the field again; press F5 if you need
+        to reload.
+      masked_kept: This value is hidden, so the box starts empty. Leave it empty to
+        keep the value on record, or type a new one to replace it.
+      no_change: No changes were needed.
+      refresh_failed: The current profile could not be loaded. Press F5 to try again
+        before editing.
+      required_blank: '{field} is required, so it cannot be left blank. Enter a value,
+        or cancel to leave it unchanged.'
+      save: Save
+      saved: Saved.
+      shape:
+        date: 'Format: YYYY-MM-DD - for example 1978-03-15.'
+        decimal: A number, using a point for decimals - for example 1234.56.
+        email: An email address - for example nombre@ejemplo.es.
+        integer: A whole number, with no thousands separator.
+        money: An amount in euros, using a point for decimals - for example 1234.56.
+      stale_result: The save completed, but a newer profile version is already visible.
+        The older result was not displayed.
+      write_failed: The field could not be saved. Try again.
+      write_in_flight: Saving the previous field. Wait for it to finish, then try
+        again.
+    field_unavailable: Unavailable profile field
+    help:
+      about: 'About this setting:'
+      what: 'What it is:'
+      where: 'Where to find it:'
+      why: 'Why it is needed:'
+    language:
+      unavailable: This profile does not offer a language setting.
+    namespace_detail: detail {number}
+    onboarding:
+      continue: Continue
+      finish: Finish setup
+      heading: Set up your profile
+      progress: '{answered} of {total} required answers'
+      question: Question {number} of {total} · {section}
+      required_only: Required only
+      search_empty: No setting matches “{query}”.
+      search_placeholder: Search settings
+      section_done: ✓ {title} - {present}/{total}
+      section_pending: '! {title} - required still missing: {missing}'
+      sources_summary: Fill the profile from AEAT records or your own documents instead
+        of typing it.
+      sources_title: Import data (optional)
+      to_workbench: Continue to Home
+    plantilla_media:
+      average_workforce: Average workforce
+      list_failed: The declared years could not be read. Try again.
+      none_declared: No year is declared yet.
+      remove: Remove this year
+      state: State
+      state_committed: Committed (the year is still open)
+      state_observed: Observed (the year is closed)
+      state_required: Choose whether the figure is observed or committed.
+      workforce_not_number: Enter the average workforce as a number, using a point
+        for decimals - for example 12.50.
+      year: Calendar year
+      year_not_whole: Enter the calendar year as a whole number - for example 2025.
+    profile_missing_fields: 'Profile is missing %{count} required field(s): %{fields}'
+    required_field_unavailable: Required profile field
+    rows:
+      add: Add row
+      remove: Remove row
+      remove_confirm: Remove row %{row} from section %{section}?
+    section_title: '{title} - {present}/{total}'
+    setup:
+      achievement: '✓ Secure profile created
+
+        ✓ Required details saved
+
+        ✓ Setup confirmed'
+      answer_required: Complete required
+      edit_intro: Open a section, then select a field to edit it. * Required · Other
+        fields are optional. Each change is saved immediately.
+      get_data_copy: Optional. Import available records, or skip this step and enter
+        the required details yourself. You do not need AEAT access to finish setup.
+      get_data_title: Get data
+      nav_get_data: Import
+      nav_overview: Start
+      nav_ready: Ready
+      nav_required: Required
+      nav_review: Review
+      overview_checklist: '✓ Secure profile created
+
+        ○ Import data, or skip it
+
+        ○ Complete required details
+
+        ○ Review and finish'
+      overview_copy: Your secure profile is created. We will ask only for the details
+        setup needs, then let you review them before finishing. You can leave and
+        return; each answer is saved as you go.
+      overview_title: Overview
+      previous: Previous
+      ready_copy: Well done! Your profile setup is complete and your answers are saved.
+        Continue to Home to start preparing a declaration. You can edit your profile
+        at any time.
+      ready_title: Ready
+      required_complete: Required details complete
+      required_copy: '{missing} required answers left. Continue guides you through
+        them. Fields marked * are required; optional details can wait.'
+      required_title: Required
+      review_copy: Check the details you saved. Expand a section to edit it. Optional
+        fields can stay blank. Finish setup confirms this profile is ready to use;
+        each declaration has its own checks.
+      review_missing: '{missing} required answers still need attention. Continue takes
+        you to them.'
+      review_saved: ✓ All required answers saved. Optional details do not block completion.
+      review_title: Review
+      skip_import: Skip import
+      start: Start setup
+      step: Step {step} of {steps} · {remaining} remaining
+    title: 'Profile: {profile}'
+  modelo_review:
+    filter:
+      option:
+        binding_source:
+          afiliado_cotizacion: Member contributions
+          atribucion_member: Income-attribution member
+          bienes_inversion_regularizacion: Investment-goods adjustment
+          borrador: AEAT draft
+          collectible_invoice: Sales invoices
+          design_constant: Design constant
+          foreign_asset: Foreign asset
+          gasto193_contributor: Expenses per contribuyente (modelo 193)
+          inventory: Inventory
+          iva_compensation_annual_partition: Annual VAT compensation
+          iva_wallet_decision: VAT wallet decision
+          ledger_impatriado_income_aggregation: Inbound-expatriate income totals
+          ledger_irnr_income_aggregation: Non-resident income totals
+          ledger_iva_aggregation: VAT records
+          ledger_oss_aggregation: OSS sales records
+          ledger_renta_gastos_estimacion_directa_aggregation: Expense records (direct
+            estimation)
+          ledger_renta_gastos_pago_fraccionado_aggregation: Expense records
+          ledger_renta_income_aggregation: Income records
+          ledger_transaction: Record
+          m303_regimen_simplificado_annual_summary: Modelo 303 simplified-regime summary
+          m347_third_party_operation: Third-party operation
+          m349_intracommunity_operation: Intra-community operation
+          manual_input: Manual input
+          payable_invoice: Supplier invoice
+          previous_filing: Previous filing
+          profile: Profile
+          prorrata_regularizacion: Pro-rata adjustment
+          purchase_invoice_evidence: Purchase-invoice evidence
+          relation_prefill: Related filing
+          retenciones_aggregation: Withholding totals
+          withholding: Withholding record
+          withholding296: Withholding perceptor (modelo 296)
+        estado_casilla_oficial:
+          addressed: Directly addressed
+          represented_via_binding: Represented through binding
+          undefined: Undefined
+        finding_kind:
+          advisory: Advisory
+          blocking_rule: Blocking rule
+          cross_period_dependency_unclean: Prior-period dependency not clean
+          missing_required_casilla: Missing required casilla
+          reconciliation_mismatch: Reconciliation mismatch
+          stale_calculation: Calculation out of date
+        finding_severity:
+          blocking: Blocking
+          warning: Warning
+        input_kind:
+          bound: Bound
+          computed: Computed
+          informational: Informational
+          manual: Manual
+          projection_only: Projection only
+        operator_action:
+          capture_external_evidence: Capture external evidence
+          complete_document_evidence: Complete document evidence
+          confirm_group_membership: Confirm group membership
+          file_prior_period: File prior period
+          import_ledger_data: Import ledger data
+          re_verify: Verify again
+          resolve_identity: Resolve identity
+          resolve_revision_mismatch: Resolve revision mismatch
+          resolve_value_divergence: Resolve value difference
+          review_advisory: Review advisory
+          set_profile_fact: Set profile fact
+          supply_manual_input: Supply manual input
+        origin_anomaly:
+          broken_calculation_chain: Broken calculation chain
+          operator_override: Operator override
+        realised_kind:
+          COMPUTED: Computed
+          DEFAULT: Default
+          EMPTY: Empty
+          INHERITED: Inherited
+          LITERAL: Literal
+        relation_channel:
+          alternate_binding: Alternate binding
+          formula_binding: Formula binding
+          primary_binding: Primary binding
+  modelo_workspace_overview:
+    column:
+      field: Field
+      value: Value
+  passphrase:
+    cancel_button: Cancel
+    change_button: Change password
+    confirm_label: Confirm new password
+    current_label: Current password
+    intro: This replaces the password protecting your profile. The data it protects
+      is not re-encrypted, only re-wrapped.
+    new_hint: At least 12 characters, mixing letters, numbers or symbols.
+    new_label: New password
+    refusal:
+      change_failed: The password could not be changed.
+      confirmation_mismatch: The confirmation does not match the new password.
+      current_required: Enter your current password.
+    section: Password
+    title: Change your password
+  progress:
+    current_answer: 'Current answer: {value}'
+    current_answer_secret: 'Current answer: (hidden)'
+    failure_mode: 'Watch out: {text}'
+    format_hint: 'Format: {hint}'
+    legal_ref: 'Legal basis: %{ref} - %{label}'
+    optional: Optional
+    page_header: Question {position} of {total} - section {section}
+    required: Required
+  registration:
+    confirm_label: Repeat the password
+    create_button: Create profile
+    intro: Choose a name and password to create your secure profile. You can complete
+      its details afterward.
+    password_help: Password protection and recovery
+    password_hint: At least {minimum_length} characters. A few ordinary words strung
+      together are easier to remember and harder to guess than one short complicated
+      word.
+    password_label: Password
+    progress: 1 · Create your secure profile    2 · Set up your details
+    recovery:
+      cancel_button: Cancel
+      confirm_button: I have written it down
+      offer_consequence: 'Without it, a forgotten password means the data cannot be
+        recovered. You can also set it up later with: cadrumo-runtime config profile
+        recovery enable'
+      offer_explanation: A recovery code lets you set a new password if you forget
+        it. It is shown once; write it down and keep it apart from this computer.
+      offer_heading: Set up a recovery code?
+      progress: Setting up recovery
+      setup_button: Set up recovery
+      skip_button: Skip for now
+    refusal:
+      confirmation_mismatch: The two passwords do not match.
+      profile_already_exists: A profile named '%{profile}' already exists. Choose
+        a different name, or leave this screen and sign in to that profile instead.
+      username_required: Enter a name for this profile.
+    requirements: Name and both password fields are required. You can change the language
+      later.
+    section: Name and password
+    strength:
+      fair: Reasonable.
+      strong: Strong.
+      weak: Accepted, but weak. Making it longer helps more than adding symbols.
+    title: Create your profile
+    username_hint: How this profile appears in lists. You can change it later.
+    username_label: Profile name
+    why_password: Your tax data stays on this computer and is never sent anywhere.
+      The password encrypts it on disk, so it cannot be read without you. If you lose
+      it, the data is unrecoverable unless you set up a recovery code, which you will
+      be offered next.
+  review:
+    action_edit: Edit an answer
+    action_prompt: What do you want to do?
+    action_restart: Start over
+    action_save_exit: Save and exit
+    action_submit: Submit
+    edit_not_editable: Question {page_key} can no longer be edited.
+    edit_unknown: There is no question numbered {number}.
+    edit_which: 'Which question number do you want to edit? '
+    header: Review - {answered} questions answered.
+    page_deferred: Question %{page_key} is deferred - decide before submitting.
+    page_invalid: Question %{page_key} has an invalid answer.
+    page_stale: Question %{page_key} needs revisiting - an earlier answer changed.
+    required_unanswered: Required question %{page_key} is unanswered.
+    reset_stale_confirm: Question {page_key} is no longer asked. Clear its stored
+      answer?
+    reset_stale_done: Cleared the stored answer for {page_key}.
+    restart_confirm: Start over and discard every answer?
+    row: '{number}. {page_key} - status: {status}'
+    save_unavailable: Save and exit is not available in mode {mode}; finish the flow
+      in one sitting.
+  status:
+    profiles:
+      status:
+        complete: Complete
+        incomplete: Incomplete

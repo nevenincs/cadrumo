@@ -1,0 +1,528 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "dependencies",
+        "--modelo",
+        "100",
+        "--year",
+        "2025",
+        "--period",
+        "0A"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.work.dependencies",
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
+        "result": {
+          "clean_state": {
+            "blockers": [
+              "missing_observation",
+              "missing_current_filing_record"
+            ],
+            "clean": false,
+            "dependencies": [
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2024,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "0A",
+                  "filing_year": 2024
+                },
+                "source_modelo": "100",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "1T",
+                  "filing_year": 2025
+                },
+                "source_modelo": "130",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "2T",
+                  "filing_year": 2025
+                },
+                "source_modelo": "130",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "3T",
+                  "filing_year": 2025
+                },
+                "source_modelo": "130",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "4T",
+                  "filing_year": 2025
+                },
+                "source_modelo": "130",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "1T",
+                  "filing_year": 2025
+                },
+                "source_modelo": "131",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "2T",
+                  "filing_year": 2025
+                },
+                "source_modelo": "131",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "3T",
+                  "filing_year": 2025
+                },
+                "source_modelo": "131",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "4T",
+                  "filing_year": 2025
+                },
+                "source_modelo": "131",
+                "unexpected_member_nifs": []
+              }
+            ],
+            "requires_clean_state": true,
+            "target_filing_year": 2025,
+            "target_modelo": "100",
+            "target_period": {
+              "code": "0A",
+              "filing_year": 2025
+            }
+          },
+          "filing_year": 2025,
+          "items": [
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2024,
+                  "legal_refs": [
+                    "ley-35-2006:art-50",
+                    "orden-hac-277-2026:art-3"
+                  ],
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "renta-base-liquidable-negativa-general-anterior"
+                  ],
+                  "period": {
+                    "code": "0A",
+                    "filing_year": 2024
+                  },
+                  "required_source_casilla_ids": [
+                    "1391"
+                  ],
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "1391"
+                  ],
+                  "source_modelo": "100",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-dr-100-2025-dictionary",
+                    "aeat-renta-2025-manual-parte1",
+                    "boe-modelo-100-2025-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "orden-eha-672-2007:art-1",
+                    "orden-hac-277-2026:art-3",
+                    "rd-439-2007:art-109"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-modelo-130-pagos-fraccionados"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "19"
+                  ],
+                  "source_modelo": "130",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-renta-2025-manual-parte1",
+                    "boe-modelo-100-2025-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "orden-eha-672-2007:art-1",
+                    "orden-hac-277-2026:art-3",
+                    "rd-439-2007:art-109"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-modelo-130-pagos-fraccionados"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "19"
+                  ],
+                  "source_modelo": "130",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-renta-2025-manual-parte1",
+                    "boe-modelo-100-2025-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "orden-eha-672-2007:art-1",
+                    "orden-hac-277-2026:art-3",
+                    "rd-439-2007:art-109"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-modelo-130-pagos-fraccionados"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "19"
+                  ],
+                  "source_modelo": "130",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-renta-2025-manual-parte1",
+                    "boe-modelo-100-2025-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "orden-eha-672-2007:art-1",
+                    "orden-hac-277-2026:art-3",
+                    "rd-439-2007:art-109"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-modelo-130-pagos-fraccionados"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "19"
+                  ],
+                  "source_modelo": "130",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-renta-2025-manual-parte1",
+                    "boe-modelo-100-2025-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "orden-eha-672-2007:art-3",
+                    "orden-hac-277-2026:art-3",
+                    "rd-439-2007:art-109"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-modelo-131-pagos-fraccionados"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "15"
+                  ],
+                  "source_modelo": "131",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-renta-2025-manual-parte1",
+                    "boe-modelo-100-2025-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "orden-eha-672-2007:art-3",
+                    "orden-hac-277-2026:art-3",
+                    "rd-439-2007:art-109"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-modelo-131-pagos-fraccionados"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "15"
+                  ],
+                  "source_modelo": "131",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-renta-2025-manual-parte1",
+                    "boe-modelo-100-2025-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "orden-eha-672-2007:art-3",
+                    "orden-hac-277-2026:art-3",
+                    "rd-439-2007:art-109"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-modelo-131-pagos-fraccionados"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "15"
+                  ],
+                  "source_modelo": "131",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-renta-2025-manual-parte1",
+                    "boe-modelo-100-2025-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "orden-eha-672-2007:art-3",
+                    "orden-hac-277-2026:art-3",
+                    "rd-439-2007:art-109"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-modelo-131-pagos-fraccionados"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "15"
+                  ],
+                  "source_modelo": "131",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-renta-2025-manual-parte1",
+                    "boe-modelo-100-2025-form"
+                  ]
+                }
+              ],
+              "dependency_count": 9,
+              "source_modelos": [
+                "100",
+                "130",
+                "131"
+              ],
+              "target_filing_year": 2025,
+              "target_modelo": "100",
+              "target_period": {
+                "code": "0A",
+                "filing_year": 2025
+              },
+              "target_revision_id": "2025"
+            }
+          ],
+          "modelo_filter": "100",
+          "operation": "modelo.work.dependencies",
+          "period_filter": "0A",
+          "source_modelos": [
+            "100",
+            "130",
+            "131"
+          ],
+          "target_count": 1,
+          "target_modelos": [
+            "100"
+          ]
+        },
+        "schema_version": "2",
+        "status": "warning"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 2,
+  "sequence_id": "renta-assembly-dependencies"
+}

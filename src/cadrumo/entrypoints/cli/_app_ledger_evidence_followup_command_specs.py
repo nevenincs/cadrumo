@@ -1,0 +1,153 @@
+from __future__ import annotations
+
+from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
+from cadrumo_client.commands.shared_contracts import (
+    DeferredTarget,
+    LazyBinding,
+    ParameterConstraint,
+    ParameterDefault,
+    ResultSchemaSpec,
+    SchemaState,
+    TranslationKey,
+    ValueContract,
+)
+from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
+
+from ._app_ledger_command_spec_policies import _POLICY_5
+
+LEDGER_EVIDENCE_FOLLOWUP_COMMAND_SPECS: tuple[CommandSpec, ...] = (
+    CommandSpec(
+        "app_ledger_evidence_consent_list",
+        "app_ledger_evidence_consent",
+        "list",
+        kind=CommandNodeKind.LEAF,
+        help_key=TranslationKey("cli.app.ledger.evidence.consent.list_help"),
+        short_help_key=None,
+        invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
+        parameters=(),
+        policy=_POLICY_5,
+        handler=LazyBinding.available(DeferredTarget(".ledger_evidence_consent_commands", "consent_list", __package__)),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            target=DeferredTarget(".ledger_business_payloads", "EvidenceConsentListResult", __package__),
+            identity="ledger.evidence.consent.list",
+        ),
+    ),
+    CommandSpec(
+        "app_ledger_evidence_review_list",
+        "app_ledger_evidence_review",
+        "list",
+        kind=CommandNodeKind.LEAF,
+        help_key=TranslationKey("cli.app.ledger.evidence.review.list_help"),
+        short_help_key=None,
+        invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
+        parameters=(
+            OptionSpec(
+                name="reason",
+                declarations=("--reason",),
+                value=ValueContract(
+                    DeferredTarget("...core.confirmation_gate", "ConfirmationBlockReason", __package__)
+                ),
+                default=ParameterDefault.value(None),
+                help_key=TranslationKey("cli.app.ledger.evidence.review.reason_help"),
+                metavar=None,
+                is_flag=False,
+                flag_value=None,
+                multiple=False,
+                count=False,
+                eager=False,
+                constraint=ParameterConstraint(),
+                show_default=True,
+                hidden=False,
+            ),
+            OptionSpec(
+                name="finding",
+                declarations=("--finding",),
+                value=ValueContract(DeferredTarget("...core.draft_discrepancy", "DraftDiscrepancyKind", __package__)),
+                default=ParameterDefault.value(None),
+                help_key=TranslationKey("cli.app.ledger.evidence.review.finding_help"),
+                metavar=None,
+                is_flag=False,
+                flag_value=None,
+                multiple=False,
+                count=False,
+                eager=False,
+                constraint=ParameterConstraint(),
+                show_default=True,
+                hidden=False,
+            ),
+            OptionSpec(
+                name="advisory",
+                declarations=("--advisory",),
+                value=ValueContract(DeferredTarget("...core.confirmation_gate", "ReviewAdvisoryKind", __package__)),
+                default=ParameterDefault.value(None),
+                help_key=TranslationKey("cli.app.ledger.evidence.review.advisory_help"),
+                metavar=None,
+                is_flag=False,
+                flag_value=None,
+                multiple=False,
+                count=False,
+                eager=False,
+                constraint=ParameterConstraint(),
+                show_default=True,
+                hidden=False,
+            ),
+            OptionSpec(
+                name="blocking_only",
+                declarations=("--blocking",),
+                value=ValueContract(DeferredTarget("builtins", "bool")),
+                default=ParameterDefault.value(False),
+                help_key=TranslationKey("cli.app.ledger.evidence.review.blocking_help"),
+                metavar=None,
+                is_flag=True,
+                flag_value=True,
+                multiple=False,
+                count=False,
+                eager=False,
+                constraint=ParameterConstraint(),
+                show_default=True,
+                hidden=False,
+            ),
+        ),
+        policy=_POLICY_5,
+        handler=LazyBinding.available(DeferredTarget(".ledger_evidence_review_commands", "review_list", __package__)),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            target=DeferredTarget(".ledger_business_payloads", "EvidenceReviewListResult", __package__),
+            identity="ledger.evidence.review.list",
+        ),
+    ),
+    CommandSpec(
+        "app_ledger_evidence_review_view",
+        "app_ledger_evidence_review",
+        "view",
+        kind=CommandNodeKind.LEAF,
+        help_key=TranslationKey("cli.app.ledger.evidence.review.view_help"),
+        short_help_key=None,
+        invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
+        parameters=(
+            ArgumentSpec(
+                name="reference",
+                value=ValueContract(DeferredTarget("builtins", "str")),
+                default=ParameterDefault.required(),
+                help_key=TranslationKey("cli.app.ledger.evidence.review.reference_help"),
+                metavar=None,
+                constraint=ParameterConstraint(),
+                show_default=True,
+                hidden=False,
+            ),
+        ),
+        policy=_POLICY_5,
+        handler=LazyBinding.available(DeferredTarget(".ledger_evidence_review_commands", "review_view", __package__)),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            target=DeferredTarget(".ledger_business_payloads", "EvidenceReviewViewResult", __package__),
+            identity="ledger.evidence.review.view",
+        ),
+    ),
+)
+
+__all__ = ["LEDGER_EVIDENCE_FOLLOWUP_COMMAND_SPECS"]
+"""Authored CommandSpec declarations for the ledger evidence followup surface."""
+"""Authored CommandSpec declarations for the ledger evidence followup surface."""

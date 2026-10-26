@@ -1,0 +1,200 @@
+"""Construct closure evidence validation.
+
+The modelo validator must route
+:class:`~domain.calculations.registry.ConstructDefinition` rows through the
+same official-source evidence gate as the revision-closure dispatcher, so a
+layout-only source cannot make a construct filing-grade.
+
+See Also:
+    :func:`~dev.registry.compiler.validate_constructs.validate_construct_closure`
+        Construct grounding gate exercised through the public validator.
+    :class:`~dev.registry.compiler.validator.RegistryValidator`
+        Modelo-level validator whose call path this regression pins.
+"""
+
+from __future__ import annotations
+
+import pytest
+
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.reference_checker import IdReferenceChecker
+from cadrumo.domain.calculations.registry.reference_sections import CONSTRUCT_MEMBER_ID_AXES
+from cadrumo.domain.calculations.registry.schema_revision_members import ConstructDefinition
+
+from ..compiler.validate_constructs import CONSTRUCT_MEMBER_ATTRIBUTES, validate_construct_closure
+from ..compiler.validate_evidence import EvidenceValidator
+from ..compiler.validator import RegistryValidator
+from ._referential_integrity_support import (
+    REFERENCE_LEGAL_ID,
+    REFERENCE_SOURCE_ID,
+    minimal_casilla,
+    minimal_catalogues,
+    minimal_modelo,
+    minimal_revision,
+)
+from .profile_schema_support import load_user_profile_schema
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+def test_modelo_validation_rejects_construct_without_official_source_evidence() -> None:
+    """The revision validator must route constructs through evidence-tier checks."""
+
+    catalogues = minimal_catalogues()
+    layout_only_source = catalogues.sources[REFERENCE_SOURCE_ID].model_copy(
+        update={"evidence_tier": "layout_authority"}
+    )
+    casilla = minimal_casilla()
+    construct = ConstructDefinition(
+        id="construct.without-guidance",
+        localization_keys=("test.schema.construct.without-guidance.title",),
+        casilla_ids=(casilla.id,),
+        legal_refs=(REFERENCE_LEGAL_ID,),
+        source_refs=(REFERENCE_SOURCE_ID,),
+    )
+    revision = minimal_revision(casillas=(casilla,), constructs=(construct,))
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"construct construct\.without-guidance requires official_source_guidance source evidence",
+    ):
+        RegistryValidator(
+            catalogues.model_copy(update={"sources": {REFERENCE_SOURCE_ID: layout_only_source}}),
+            user_profile_schema=load_user_profile_schema(),
+        ).validate_modelo(minimal_modelo(revision))
+
+
+def test_a_construct_member_missing_legal_refs_is_refused_not_silently_skipped() -> None:
+    """The bite proof: a member object that does not carry ``legal_refs`` /
+    ``source_refs`` must be refused, not silently treated as requiring none.
+
+    Every one of the fourteen construct-member kinds this validator recognises
+    (``CONSTRUCT_MEMBER_ATTRIBUTES``) declares both fields on its own schema class
+    -- confirmed programmatically across casilla, formula, parameter, binding,
+    relation, export layout, extraction profile,
+    cross-reference, workbook parity reference, verification expectation,
+    application link, deadline window, filing schedule, and dependency
+    classification. Before the fix, ``getattr(member, "legal_refs", ())``
+    treated a member object lacking the field as requiring NO legal grounding
+    at all -- silently under-counting the construct's required refs, which is
+    exactly the failure mode `no-silent-under-declaration` forbids. This
+    stands in for a schema drift (a member class that dropped the field) with
+    a plain object carrying neither attribute, and proves the fixed direct
+    attribute read fails loud instead of silently passing.
+    """
+
+    class _DriftedMember:
+        """Stands in for a member kind whose class dropped legal_refs/source_refs."""
+
+    construct = ConstructDefinition(
+        id="construct.drift-probe",
+        localization_keys=("test.schema.construct.drift-probe.title",),
+        formulas=("f1",),
+        legal_refs=(REFERENCE_LEGAL_ID,),
+        source_refs=(REFERENCE_SOURCE_ID,),
+    )
+    revision = minimal_revision(constructs=(construct,))
+    catalogues = minimal_catalogues()
+    member_objects: dict[str, dict[str, object]] = {kind: {} for kind in CONSTRUCT_MEMBER_ATTRIBUTES}
+    member_objects["formula"]["f1"] = _DriftedMember()
+    evidence = EvidenceValidator(legal_refs=catalogues.legal, source_refs=catalogues.sources, source_root=None)
+
+    with pytest.raises(AttributeError):
+        validate_construct_closure(
+            "test-scope",
+            revision,
+            member_objects=member_objects,
+            legal_refs=catalogues.legal,
+            source_refs=catalogues.sources,
+            evidence=evidence,
+        )
+
+
+#: Identity and grounding fields on ``ConstructDefinition`` that are not
+#: member-reference sections: ``id``/``localization_keys`` name the construct
+#: itself, ``legal_refs``/``source_refs`` are the construct's OWN grounding
+#: declaration (what ``validate_construct_closure`` checks member refs
+#: AGAINST), never a set of member ids to walk.
+_NON_MEMBER_CONSTRUCT_FIELDS = frozenset({"id", "localization_keys", "legal_refs", "source_refs"})
+
+
+def test_construct_member_attrs_is_exactly_the_construct_definitions_member_sections() -> None:
+    """``CONSTRUCT_MEMBER_ATTRIBUTES`` must name every member-reference field and no other.
+
+    Read live from :class:`ConstructDefinition` rather than restated, so a
+    field added to or removed from the model is what this test measures, not
+    a copy of the model that could itself drift.
+
+    Containment alone would only catch a value that points at a field the
+    model no longer has. What actually matters is completeness: a new
+    section-bearing field on ``ConstructDefinition`` — a fifteenth member kind
+    a future revision might declare — currently has nothing forcing a
+    matching ``CONSTRUCT_MEMBER_ATTRIBUTES`` entry, so
+    ``validate_construct_closure`` would silently never walk it: construct
+    members of that new kind would go unvalidated with no failure, no
+    refusal, and no visible gap. Asserting both directions is what makes that
+    addition fail loudly instead.
+    """
+    construct_member_sections = frozenset(ConstructDefinition.model_fields) - _NON_MEMBER_CONSTRUCT_FIELDS
+    declared_attrs = frozenset(CONSTRUCT_MEMBER_ATTRIBUTES.values())
+
+    assert declared_attrs <= construct_member_sections, (
+        f"CONSTRUCT_MEMBER_ATTRIBUTES names {sorted(declared_attrs - construct_member_sections)!r}, which "
+        "ConstructDefinition no longer declares as a member-reference field"
+    )
+    assert construct_member_sections <= declared_attrs, (
+        f"ConstructDefinition declares member-reference field(s) "
+        f"{sorted(construct_member_sections - declared_attrs)!r} that CONSTRUCT_MEMBER_ATTRIBUTES does not "
+        "walk -- construct members of this kind are never validated for legal/source ref inclusion"
+    )
+
+
+def test_construct_member_attrs_keys_are_unique_diagnostic_labels() -> None:
+    """The prose ``kind`` labels can't be derived (there is no enum for them), but they
+    must stay one-to-one with the member-reference fields: a duplicate or missing label
+    would make ``member_objects[kind]`` ambiguous or unreachable for the field it names.
+    """
+    assert len(CONSTRUCT_MEMBER_ATTRIBUTES) == len(set(CONSTRUCT_MEMBER_ATTRIBUTES.values()))
+
+
+def test_construct_member_id_axes_walks_every_member_section_against_a_real_id_set() -> None:
+    """``CONSTRUCT_MEMBER_ID_AXES`` must pair every member field with a live checker id set.
+
+    Two distinct silent failures, one per direction. A member field the axes do
+    not name is walked by nothing: its references are never resolved, so a
+    construct joining a member that does not exist passes the referential gate
+    with no finding. An axis naming an id set the checker does not carry would
+    raise on the first construct that reaches it, which is loud but only at
+    runtime, and only for a modelo that happens to declare that member kind.
+
+    Both sides are read live -- the fields from :class:`ConstructDefinition`,
+    the id sets from :class:`IdReferenceChecker` -- so this measures the models
+    themselves rather than a third copy that could drift with them.
+    """
+    construct_member_sections = frozenset(ConstructDefinition.model_fields) - _NON_MEMBER_CONSTRUCT_FIELDS
+    walked_sections = frozenset(attr for attr, _id_set in CONSTRUCT_MEMBER_ID_AXES)
+    named_id_sets = frozenset(id_set for _attr, id_set in CONSTRUCT_MEMBER_ID_AXES)
+
+    assert walked_sections <= construct_member_sections, (
+        f"CONSTRUCT_MEMBER_ID_AXES walks {sorted(walked_sections - construct_member_sections)!r}, which "
+        "ConstructDefinition no longer declares as a member-reference field"
+    )
+    assert construct_member_sections <= walked_sections, (
+        f"ConstructDefinition declares member-reference field(s) "
+        f"{sorted(construct_member_sections - walked_sections)!r} that CONSTRUCT_MEMBER_ID_AXES does not walk -- "
+        "references of this kind are never resolved and a dangling one raises no finding"
+    )
+    assert named_id_sets <= frozenset(IdReferenceChecker.__slots__), (
+        f"CONSTRUCT_MEMBER_ID_AXES names id set(s) {sorted(named_id_sets - frozenset(IdReferenceChecker.__slots__))!r} "
+        "that IdReferenceChecker does not carry"
+    )
+
+
+def test_each_member_section_resolves_against_its_own_id_set() -> None:
+    """The teeth of the pairing: a field walked against another kind's id set would
+    accept an id from the wrong family and reject its own. Every axis is one-to-one,
+    so no two member fields share a checker bucket.
+    """
+    named_id_sets = [id_set for _attr, id_set in CONSTRUCT_MEMBER_ID_AXES]
+
+    assert len(named_id_sets) == len(set(named_id_sets))

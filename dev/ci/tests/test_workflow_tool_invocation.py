@@ -1,0 +1,172 @@
+"""A packaged tool invoked as a script cannot import its own package.
+
+`python3 dev/ci/some_tool.py` sets `__package__` to None, so a
+module-level `from .._paths import ...` raises
+
+    ImportError: attempted relative import with no known parent package
+
+before the tool's first line of real work. The tool then fails identically on
+every run, for a reason that has nothing to do with what it checks.
+
+This is not hypothetical. One tool was invoked as a script from five
+workflows and had therefore never once executed, while its step name said
+it was guarding something -- so its failures read as the tool DOING its job,
+and the lane looked correctly guarded when it was not guarded at all. That
+tool has since been deleted for unrelated reasons; the shape it proved has
+not, and every packaged tool a workflow calls is still subject to it.
+"""
+
+from __future__ import annotations
+
+import re
+from pathlib import Path
+from typing import Any
+
+import pytest
+import yaml
+
+from dev._paths import REPO_ROOT
+
+from ..workflow_run_text import executed_text
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+#: `run:` lines invoking a repo-relative .py file directly, e.g.
+#: `python3 dev/ci/some_tool.py`. The `-m` form is not matched
+#: because it carries no path.
+_SCRIPT_CALL = re.compile(r"python3?\s+((?:dev|packaging|src)/[\w/]+\.py)")
+
+#: A module-level relative import. Indented forms are deliberately excluded:
+#: an import inside a function or a `sys.path`-adjusted block does not fail at
+#: module load, and several tools legitimately do that.
+_MODULE_LEVEL_RELATIVE_IMPORT = re.compile(r"^from\s+\.", re.MULTILINE)
+
+#: A module that assigns its own `__package__` has deliberately made itself
+#: runnable as a script, and its relative imports resolve. `smoke_homebrew`
+#: does exactly this, with a `sys.path` insert beside it, and forcing it to
+#: `-m` would be churn on working code. Excluding it here keeps this guard
+#: pointed at the real defect - a package-relative module with no such shim,
+#: invoked in a way that cannot import it.
+_SELF_PACKAGING_SHIM = re.compile(r"^\s*__package__\s*=", re.MULTILINE)
+
+
+def _workflow_files() -> list[Path]:
+    """Return every workflow document, both suffixes Actions reads.
+
+    A "*.yml" glob skips a lane filed as .yaml, and this list feeds an
+    offender check asserted for ABSENCE -- so an unswept lane reads exactly
+    like a clean one.
+    """
+    workflows = REPO_ROOT / ".github" / "workflows"
+    return sorted(path for path in workflows.iterdir() if path.suffix in (".yml", ".yaml"))
+
+
+def _script_invocation_offenders(workflows: list[Path], *, repo_root: Path) -> list[str]:
+    """Return workflow calls that execute a relative-importing file directly.
+
+    A call naming a file that is not there is reported rather than skipped.
+    Skipping it made an absent target indistinguishable from a compliant one:
+    this check asserts an ABSENCE, so a tool moved out from under its five call
+    sites would empty the offender list and read as the gate passing, while
+    every one of those lanes died on `No such file or directory`. All four
+    call sites resolve today, so the guard never fires on a healthy tree and
+    exists only to hide that rename.
+    """
+    offenders: list[str] = []
+    for workflow in workflows:
+        for match in _SCRIPT_CALL.finditer(workflow.read_text(encoding="utf-8")):
+            target = repo_root / match.group(1)
+            if not target.is_file():
+                offenders.append(f"{workflow.name} runs {match.group(1)}, which does not exist")
+                continue
+            source = target.read_text(encoding="utf-8")
+            if _SELF_PACKAGING_SHIM.search(source):
+                continue
+            if _MODULE_LEVEL_RELATIVE_IMPORT.search(source):
+                dotted = match.group(1).removesuffix(".py").replace("/", ".")
+                offenders.append(f"{workflow.name} runs {match.group(1)} as a script; use `python3 -m {dotted}`")
+    return offenders
+
+
+def test_no_workflow_runs_a_relative_importing_module_as_a_script() -> None:
+    """Every call site of a package-relative tool must use `python -m`.
+
+    Checks the two halves against each other rather than either alone: a script
+    invocation is fine for a standalone file, and a relative import is fine in a
+    module someone runs with `-m`. Only the COMBINATION is broken, and only the
+    combination is reported - so this refuses the real defect without forbidding
+    either practice on its own.
+    """
+    offenders = _script_invocation_offenders(_workflow_files(), repo_root=REPO_ROOT)
+    assert not offenders, "packaged tool(s) invoked as scripts:\n  " + "\n  ".join(offenders)
+
+
+def _executable_run_surface(text: str) -> str:
+    """Return the shell a workflow actually executes, comments excluded.
+
+    Reading the raw file instead accepts a state this gate's own claim
+    forbids: commenting out every `uv run ... -m <module>` line leaves the
+    bytes in place, so a substring check stays green while not one of the
+    tools runs. The parsed reading keeps only live `run:` bodies, so a
+    prose-only or commented-out workflow cannot satisfy the contract.
+    """
+    document: Any = yaml.safe_load(text)
+    assert isinstance(document, dict)
+    jobs = document["jobs"]
+    assert isinstance(jobs, dict)
+    return executed_text(
+        step["run"]
+        for job in jobs.values()
+        for step in job.get("steps") or []
+        if isinstance(step, dict) and "run" in step
+    )
+
+
+def test_release_workflow_uses_module_entry_points() -> None:
+    """Inventory and cohort tools run with package context intact."""
+    workflow = REPO_ROOT / ".github" / "workflows" / "release.yml"
+    surface = _executable_run_surface(workflow.read_text(encoding="utf-8"))
+    for module in ("dev.ci.python_runtime_matrix", "dev.packaging.release_cohort"):
+        assert f"uv run --no-sync python -m {module}" in surface, f"{module} is not invoked by any live run step"
+
+
+def test_executable_surface_ignores_a_commented_out_invocation(tmp_path: Path) -> None:
+    """A commented-out module call is bytes in the file, not an invocation."""
+    workflow = tmp_path / "commented.yml"
+    workflow.write_text(
+        "name: commented\n"
+        "on: [workflow_dispatch]\n"
+        "jobs:\n"
+        "  run:\n"
+        "    runs-on: [self-hosted, Linux, X64]\n"
+        "    steps:\n"
+        "      - run: |\n"
+        "          # uv run --no-sync python -m dev.ci.python_runtime_matrix\n"
+        "          echo skipped\n",
+        encoding="utf-8",
+    )
+    text = workflow.read_text(encoding="utf-8")
+    call = "uv run --no-sync python -m dev.ci.python_runtime_matrix"
+    assert call in text
+    assert call not in _executable_run_surface(text)
+
+
+def test_direct_script_detector_has_detector_teeth(tmp_path: Path) -> None:
+    """An isolated relative-importing tool called by path is rejected."""
+    tool = tmp_path / "dev" / "ci" / "offender.py"
+    tool.parent.mkdir(parents=True)
+    tool.write_text("from .._paths import REPO_ROOT\n", encoding="utf-8")
+    workflow = tmp_path / "offender.yml"
+    workflow.write_text(
+        "name: offender\n"
+        "on: [workflow_dispatch]\n"
+        "jobs:\n"
+        "  run:\n"
+        "    runs-on: [self-hosted, Linux, X64]\n"
+        "    steps:\n"
+        "      - run: python3 dev/ci/offender.py\n",
+        encoding="utf-8",
+    )
+
+    offenders = _script_invocation_offenders([workflow], repo_root=tmp_path)
+    assert offenders and "offender.py" in offenders[0]

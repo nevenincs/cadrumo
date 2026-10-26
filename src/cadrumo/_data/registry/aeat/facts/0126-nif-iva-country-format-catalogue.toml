@@ -1,0 +1,237 @@
+[fact]
+fact_id = "nif-iva-country-format-catalogue"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "nif-iva-country-format-catalogue:2020-01-01"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+source_refs = ["aeat-vies-gestiones-procedure"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-vies-gestiones-procedure"
+required_text = ["Consultar operadores intracomunitarios No españoles"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "nif_iva.order", value = "AT,BE,BG,CY,CZ,DE,DK,EE,EL,FI,FR,HR,HU,IE,IT,LT,LU,LV,MT,NL,PL,PT,RO,SE,SI,SK,XI" },
+
+  { key = "nif_iva.prefix.AT.value", value = "AT" },
+  { key = "nif_iva.prefix.AT.iso_country", value = "AT" },
+  { key = "nif_iva.prefix.AT.iso_aliases", value = "AT" },
+  { key = "nif_iva.prefix.AT.country_name", value = "Austria" },
+  { key = "nif_iva.prefix.AT.pattern", value = "^ATU\\d{8}$" },
+  { key = "nif_iva.prefix.AT.description", value = "ATU + 8 digits" },
+  { key = "nif_iva.prefix.AT.example", value = "ATU12345678" },
+
+  { key = "nif_iva.prefix.BE.value", value = "BE" },
+  { key = "nif_iva.prefix.BE.iso_country", value = "BE" },
+  { key = "nif_iva.prefix.BE.iso_aliases", value = "BE" },
+  { key = "nif_iva.prefix.BE.country_name", value = "Belgium" },
+  { key = "nif_iva.prefix.BE.pattern", value = "^BE[01]\\d{9}$" },
+  { key = "nif_iva.prefix.BE.description", value = "BE + 10 digits (first digit 0 or 1)" },
+  { key = "nif_iva.prefix.BE.example", value = "BE0123456789" },
+
+  { key = "nif_iva.prefix.BG.value", value = "BG" },
+  { key = "nif_iva.prefix.BG.iso_country", value = "BG" },
+  { key = "nif_iva.prefix.BG.iso_aliases", value = "BG" },
+  { key = "nif_iva.prefix.BG.country_name", value = "Bulgaria" },
+  { key = "nif_iva.prefix.BG.pattern", value = "^BG\\d{9,10}$" },
+  { key = "nif_iva.prefix.BG.description", value = "BG + 9 or 10 digits" },
+  { key = "nif_iva.prefix.BG.example", value = "BG123456789" },
+
+  { key = "nif_iva.prefix.CY.value", value = "CY" },
+  { key = "nif_iva.prefix.CY.iso_country", value = "CY" },
+  { key = "nif_iva.prefix.CY.iso_aliases", value = "CY" },
+  { key = "nif_iva.prefix.CY.country_name", value = "Cyprus" },
+  { key = "nif_iva.prefix.CY.pattern", value = "^CY\\d{8}[A-Z]$" },
+  { key = "nif_iva.prefix.CY.description", value = "CY + 8 digits + 1 letter" },
+  { key = "nif_iva.prefix.CY.example", value = "CY12345678L" },
+
+  { key = "nif_iva.prefix.CZ.value", value = "CZ" },
+  { key = "nif_iva.prefix.CZ.iso_country", value = "CZ" },
+  { key = "nif_iva.prefix.CZ.iso_aliases", value = "CZ" },
+  { key = "nif_iva.prefix.CZ.country_name", value = "Czechia" },
+  { key = "nif_iva.prefix.CZ.pattern", value = "^CZ\\d{8,10}$" },
+  { key = "nif_iva.prefix.CZ.description", value = "CZ + 8, 9 or 10 digits" },
+  { key = "nif_iva.prefix.CZ.example", value = "CZ12345678" },
+
+  { key = "nif_iva.prefix.DE.value", value = "DE" },
+  { key = "nif_iva.prefix.DE.iso_country", value = "DE" },
+  { key = "nif_iva.prefix.DE.iso_aliases", value = "DE" },
+  { key = "nif_iva.prefix.DE.country_name", value = "Germany" },
+  { key = "nif_iva.prefix.DE.pattern", value = "^DE\\d{9}$" },
+  { key = "nif_iva.prefix.DE.description", value = "DE + 9 digits" },
+  { key = "nif_iva.prefix.DE.example", value = "DE123456789" },
+
+  { key = "nif_iva.prefix.DK.value", value = "DK" },
+  { key = "nif_iva.prefix.DK.iso_country", value = "DK" },
+  { key = "nif_iva.prefix.DK.iso_aliases", value = "DK" },
+  { key = "nif_iva.prefix.DK.country_name", value = "Denmark" },
+  { key = "nif_iva.prefix.DK.pattern", value = "^DK\\d{8}$" },
+  { key = "nif_iva.prefix.DK.description", value = "DK + 8 digits" },
+  { key = "nif_iva.prefix.DK.example", value = "DK12345678" },
+
+  { key = "nif_iva.prefix.EE.value", value = "EE" },
+  { key = "nif_iva.prefix.EE.iso_country", value = "EE" },
+  { key = "nif_iva.prefix.EE.iso_aliases", value = "EE" },
+  { key = "nif_iva.prefix.EE.country_name", value = "Estonia" },
+  { key = "nif_iva.prefix.EE.pattern", value = "^EE\\d{9}$" },
+  { key = "nif_iva.prefix.EE.description", value = "EE + 9 digits" },
+  { key = "nif_iva.prefix.EE.example", value = "EE123456789" },
+
+  { key = "nif_iva.prefix.EL.value", value = "EL" },
+  { key = "nif_iva.prefix.EL.iso_country", value = "GR" },
+  { key = "nif_iva.prefix.EL.iso_aliases", value = "GR,EL" },
+  { key = "nif_iva.prefix.EL.country_name", value = "Greece" },
+  { key = "nif_iva.prefix.EL.pattern", value = "^EL\\d{9}$" },
+  { key = "nif_iva.prefix.EL.description", value = "EL + 9 digits" },
+  { key = "nif_iva.prefix.EL.example", value = "EL123456789" },
+
+  { key = "nif_iva.prefix.FI.value", value = "FI" },
+  { key = "nif_iva.prefix.FI.iso_country", value = "FI" },
+  { key = "nif_iva.prefix.FI.iso_aliases", value = "FI" },
+  { key = "nif_iva.prefix.FI.country_name", value = "Finland" },
+  { key = "nif_iva.prefix.FI.pattern", value = "^FI\\d{8}$" },
+  { key = "nif_iva.prefix.FI.description", value = "FI + 8 digits" },
+  { key = "nif_iva.prefix.FI.example", value = "FI12345678" },
+
+  { key = "nif_iva.prefix.FR.value", value = "FR" },
+  { key = "nif_iva.prefix.FR.iso_country", value = "FR" },
+  { key = "nif_iva.prefix.FR.iso_aliases", value = "FR" },
+  { key = "nif_iva.prefix.FR.country_name", value = "France" },
+  { key = "nif_iva.prefix.FR.pattern", value = "^FR[A-Z0-9]{2}\\d{9}$" },
+  { key = "nif_iva.prefix.FR.description", value = "FR + 2 letters/digits + 9 digits" },
+  { key = "nif_iva.prefix.FR.example", value = "FR12345678901" },
+
+  { key = "nif_iva.prefix.HR.value", value = "HR" },
+  { key = "nif_iva.prefix.HR.iso_country", value = "HR" },
+  { key = "nif_iva.prefix.HR.iso_aliases", value = "HR" },
+  { key = "nif_iva.prefix.HR.country_name", value = "Croatia" },
+  { key = "nif_iva.prefix.HR.pattern", value = "^HR\\d{11}$" },
+  { key = "nif_iva.prefix.HR.description", value = "HR + 11 digits" },
+  { key = "nif_iva.prefix.HR.example", value = "HR12345678901" },
+
+  { key = "nif_iva.prefix.HU.value", value = "HU" },
+  { key = "nif_iva.prefix.HU.iso_country", value = "HU" },
+  { key = "nif_iva.prefix.HU.iso_aliases", value = "HU" },
+  { key = "nif_iva.prefix.HU.country_name", value = "Hungary" },
+  { key = "nif_iva.prefix.HU.pattern", value = "^HU\\d{8}$" },
+  { key = "nif_iva.prefix.HU.description", value = "HU + 8 digits" },
+  { key = "nif_iva.prefix.HU.example", value = "HU12345678" },
+
+  { key = "nif_iva.prefix.IE.value", value = "IE" },
+  { key = "nif_iva.prefix.IE.iso_country", value = "IE" },
+  { key = "nif_iva.prefix.IE.iso_aliases", value = "IE" },
+  { key = "nif_iva.prefix.IE.country_name", value = "Ireland" },
+  { key = "nif_iva.prefix.IE.pattern", value = "^IE(\\d{7}[A-W]|\\d[A-Z0-9+*]\\d{5}[A-W]|\\d{7}[A-W][A-W])$" },
+  { key = "nif_iva.prefix.IE.description", value = "IE + 7 digits + 1-2 letters" },
+  { key = "nif_iva.prefix.IE.example", value = "IE1234567T" },
+
+  { key = "nif_iva.prefix.IT.value", value = "IT" },
+  { key = "nif_iva.prefix.IT.iso_country", value = "IT" },
+  { key = "nif_iva.prefix.IT.iso_aliases", value = "IT" },
+  { key = "nif_iva.prefix.IT.country_name", value = "Italy" },
+  { key = "nif_iva.prefix.IT.pattern", value = "^IT\\d{11}$" },
+  { key = "nif_iva.prefix.IT.description", value = "IT + 11 digits" },
+  { key = "nif_iva.prefix.IT.example", value = "IT12345678901" },
+
+  { key = "nif_iva.prefix.LT.value", value = "LT" },
+  { key = "nif_iva.prefix.LT.iso_country", value = "LT" },
+  { key = "nif_iva.prefix.LT.iso_aliases", value = "LT" },
+  { key = "nif_iva.prefix.LT.country_name", value = "Lithuania" },
+  { key = "nif_iva.prefix.LT.pattern", value = "^LT(\\d{9}|\\d{12})$" },
+  { key = "nif_iva.prefix.LT.description", value = "LT + 9 or 12 digits" },
+  { key = "nif_iva.prefix.LT.example", value = "LT123456789" },
+
+  { key = "nif_iva.prefix.LU.value", value = "LU" },
+  { key = "nif_iva.prefix.LU.iso_country", value = "LU" },
+  { key = "nif_iva.prefix.LU.iso_aliases", value = "LU" },
+  { key = "nif_iva.prefix.LU.country_name", value = "Luxembourg" },
+  { key = "nif_iva.prefix.LU.pattern", value = "^LU\\d{8}$" },
+  { key = "nif_iva.prefix.LU.description", value = "LU + 8 digits" },
+  { key = "nif_iva.prefix.LU.example", value = "LU12345678" },
+
+  { key = "nif_iva.prefix.LV.value", value = "LV" },
+  { key = "nif_iva.prefix.LV.iso_country", value = "LV" },
+  { key = "nif_iva.prefix.LV.iso_aliases", value = "LV" },
+  { key = "nif_iva.prefix.LV.country_name", value = "Latvia" },
+  { key = "nif_iva.prefix.LV.pattern", value = "^LV\\d{11}$" },
+  { key = "nif_iva.prefix.LV.description", value = "LV + 11 digits" },
+  { key = "nif_iva.prefix.LV.example", value = "LV12345678901" },
+
+  { key = "nif_iva.prefix.MT.value", value = "MT" },
+  { key = "nif_iva.prefix.MT.iso_country", value = "MT" },
+  { key = "nif_iva.prefix.MT.iso_aliases", value = "MT" },
+  { key = "nif_iva.prefix.MT.country_name", value = "Malta" },
+  { key = "nif_iva.prefix.MT.pattern", value = "^MT\\d{8}$" },
+  { key = "nif_iva.prefix.MT.description", value = "MT + 8 digits" },
+  { key = "nif_iva.prefix.MT.example", value = "MT12345678" },
+
+  { key = "nif_iva.prefix.NL.value", value = "NL" },
+  { key = "nif_iva.prefix.NL.iso_country", value = "NL" },
+  { key = "nif_iva.prefix.NL.iso_aliases", value = "NL" },
+  { key = "nif_iva.prefix.NL.country_name", value = "Netherlands" },
+  { key = "nif_iva.prefix.NL.pattern", value = "^NL\\d{9}B\\d{2}$" },
+  { key = "nif_iva.prefix.NL.description", value = "NL + 9 digits + 'B' + 2 digits" },
+  { key = "nif_iva.prefix.NL.example", value = "NL123456789B01" },
+
+  { key = "nif_iva.prefix.PL.value", value = "PL" },
+  { key = "nif_iva.prefix.PL.iso_country", value = "PL" },
+  { key = "nif_iva.prefix.PL.iso_aliases", value = "PL" },
+  { key = "nif_iva.prefix.PL.country_name", value = "Poland" },
+  { key = "nif_iva.prefix.PL.pattern", value = "^PL\\d{10}$" },
+  { key = "nif_iva.prefix.PL.description", value = "PL + 10 digits" },
+  { key = "nif_iva.prefix.PL.example", value = "PL1234567890" },
+
+  { key = "nif_iva.prefix.PT.value", value = "PT" },
+  { key = "nif_iva.prefix.PT.iso_country", value = "PT" },
+  { key = "nif_iva.prefix.PT.iso_aliases", value = "PT" },
+  { key = "nif_iva.prefix.PT.country_name", value = "Portugal" },
+  { key = "nif_iva.prefix.PT.pattern", value = "^PT\\d{9}$" },
+  { key = "nif_iva.prefix.PT.description", value = "PT + 9 digits" },
+  { key = "nif_iva.prefix.PT.example", value = "PT123456789" },
+
+  { key = "nif_iva.prefix.RO.value", value = "RO" },
+  { key = "nif_iva.prefix.RO.iso_country", value = "RO" },
+  { key = "nif_iva.prefix.RO.iso_aliases", value = "RO" },
+  { key = "nif_iva.prefix.RO.country_name", value = "Romania" },
+  { key = "nif_iva.prefix.RO.pattern", value = "^RO\\d{2,10}$" },
+  { key = "nif_iva.prefix.RO.description", value = "RO + 2 to 10 digits" },
+  { key = "nif_iva.prefix.RO.example", value = "RO1234567890" },
+
+  { key = "nif_iva.prefix.SE.value", value = "SE" },
+  { key = "nif_iva.prefix.SE.iso_country", value = "SE" },
+  { key = "nif_iva.prefix.SE.iso_aliases", value = "SE" },
+  { key = "nif_iva.prefix.SE.country_name", value = "Sweden" },
+  { key = "nif_iva.prefix.SE.pattern", value = "^SE\\d{12}$" },
+  { key = "nif_iva.prefix.SE.description", value = "SE + 12 digits" },
+  { key = "nif_iva.prefix.SE.example", value = "SE123456789012" },
+
+  { key = "nif_iva.prefix.SI.value", value = "SI" },
+  { key = "nif_iva.prefix.SI.iso_country", value = "SI" },
+  { key = "nif_iva.prefix.SI.iso_aliases", value = "SI" },
+  { key = "nif_iva.prefix.SI.country_name", value = "Slovenia" },
+  { key = "nif_iva.prefix.SI.pattern", value = "^SI\\d{8}$" },
+  { key = "nif_iva.prefix.SI.description", value = "SI + 8 digits" },
+  { key = "nif_iva.prefix.SI.example", value = "SI12345678" },
+
+  { key = "nif_iva.prefix.SK.value", value = "SK" },
+  { key = "nif_iva.prefix.SK.iso_country", value = "SK" },
+  { key = "nif_iva.prefix.SK.iso_aliases", value = "SK" },
+  { key = "nif_iva.prefix.SK.country_name", value = "Slovakia" },
+  { key = "nif_iva.prefix.SK.pattern", value = "^SK\\d{10}$" },
+  { key = "nif_iva.prefix.SK.description", value = "SK + 10 digits" },
+  { key = "nif_iva.prefix.SK.example", value = "SK1234567890" },
+
+  { key = "nif_iva.prefix.XI.value", value = "XI" },
+  { key = "nif_iva.prefix.XI.iso_country", value = "XI" },
+  { key = "nif_iva.prefix.XI.iso_aliases", value = "XI" },
+  { key = "nif_iva.prefix.XI.country_name", value = "Northern Ireland" },
+  { key = "nif_iva.prefix.XI.pattern", value = "^XI(\\d{9}|\\d{12}|GD\\d{3}|HA\\d{3})$" },
+  { key = "nif_iva.prefix.XI.description", value = "XI + 9 or 12 digits (or GD/HA + 3 digits)" },
+  { key = "nif_iva.prefix.XI.example", value = "XI123456789" },
+]

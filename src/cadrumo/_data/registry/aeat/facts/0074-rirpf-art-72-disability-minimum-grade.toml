@@ -1,0 +1,19 @@
+[fact]
+fact_id = "rirpf-art-72-disability-minimum-grade"
+family = "scalar"
+
+[[fact.variants]]
+variant_id = "rirpf-art-72-disability-minimum-grade:2007-04-01"
+date_axis = "filing_period"
+valid_from = 2007-04-01
+legal_refs = ["rd-439-2007:art-72"]
+source_refs = ["lirpf-cuota-chain-authority"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["con discapacidad"]
+[fact.variants.payload]
+kind = "scalar"
+value = 33
+unit = "percent"

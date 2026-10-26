@@ -1,0 +1,13 @@
+[[revisions.2024-hasta-08-y-2t.casillas]]
+id = "iva.repercutido.super-reducido.transitorio"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "aeat-dr-303-2024-early declara la liquidacion del regimen general mediante casillas numeradas de base, tipo y cuota. Esta fila sin numero impreso es el acumulador auxiliar de cuota superreducida transitoria de modelo-303-iva-repercutido-super-reducido-transitorio-cuota; mantiene separados el tipo ordinario y el transitorio y no afirma que apareciese una nueva casilla impresa en este intervalo."
+number = "iva.repercutido.super-reducido.transitorio"
+section = ["iva", "regimen_general", "devengado"]
+semantic_role = "iva_cuota_repercutida_super_reducido_transitorio"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "RD-ley 4/2024 transitional super-reducido rate (2pct, from 10/4T 2024) coexists with the ordinary 4pct rate rather than replacing it, so this is a genuine second super-reducido carrier on its own AEAT rung, not a typo twin."
+continuidad_id = "iva-cuota-repercutida-super-reducido-transitorio"
+input_kind = "bound"
+binding = "modelo-303-iva-repercutido-super-reducido-transitorio-cuota"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]

@@ -1,0 +1,13 @@
+desktop:
+  startup:
+    environment: Alkalmazásfájlok és beállítások előkészítése…
+    environment_step: Alkalmazás előkészítése
+    failed: A Cadrumo nem indult el
+    failure: Az indítást nem sikerült befejezni.
+    interrupted: Az indítás megszakadt.
+    progress: Indítási folyamat
+    runtime: Helyi szolgáltatás indítása és ellenőrzése…
+    runtime_step: Helyi szolgáltatás indítása
+    starting: A Cadrumo indítása…
+    workspace: Munkaterület megnyitása…
+    workspace_step: Munkaterület megnyitása

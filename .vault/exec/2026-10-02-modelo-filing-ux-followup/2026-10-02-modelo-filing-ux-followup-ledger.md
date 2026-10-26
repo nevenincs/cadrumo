@@ -1,0 +1,170 @@
+---
+tags:
+  - '#exec'
+  - '#modelo-filing-ux-followup'
+date: '2026-10-02'
+modified: '2026-10-02'
+body_schema: 'body-v2'
+body_hash: 'sha256:16e27ee1ac162d5bbefacb78c5344084a9c5531ba8529a7c85c16000095fd14a'
+related:
+  - "[[2026-10-02-modelo-filing-ux-followup-plan]]"
+---
+
+# `modelo-filing-ux-followup` ledger
+
+## Changes
+
+- `S01` `M` `src/cadrumo/application/modelo/declarations_list.py`
+- `S01` `M` `src/cadrumo/application/modelo/tests/test_declarations_list.py`
+- `S01` `M` `src/cadrumo/entrypoints/tui/declarations/grouped.py`
+- `S01` `M` `src/cadrumo/entrypoints/tui/declarations/row_words.py`
+- `S01` `M` `src/cadrumo/entrypoints/tui/declarations/picker.py`
+- `S01` `M` `src/cadrumo/entrypoints/tui/declarations/tests/test_new_declaration_picker.py`
+- `S01` `M` `src/cadrumo/entrypoints/tui/declarations/tests/test_row_words.py`
+- `S01` `A` `src/cadrumo/entrypoints/tui/declarations/tests/test_declarations_guidance.py`
+- `S01` `M` `src/cadrumo/locales/es/common.yml`
+- `S01` `M` `src/cadrumo/locales/en/common.yml`
+- `S01` `M` `src/cadrumo/locales/ca/common.yml`
+- `S01` `M` `src/cadrumo/locales/hu/common.yml`
+- `S01` `verify:` `focused live declaration units (39)` -> `pass`
+- `S01` `verify:` `real keyboard guidance and picker integrations (33)` -> `pass`
+- `S01` `verify:` `calendar external completion and declarations projection units (32)` -> `pass`
+- `S01` `verify:` `installed encrypted creation and external details integrations (17)` -> `pass`
+- `S01` `verify:` `Ruff format check all eight Python paths` -> `pass`
+- `S01` `verify:` `Ruff check all eight Python paths` -> `pass`
+- `S01` `verify:` `configured ty check all eight Python paths` -> `pass`
+- `S01` `verify:` `exact twelve after hashes match reviewed5b7d candidate` -> `pass`
+- `S01` `verify:` `vault plan check` -> `pass`
+- `S01` `M` `dev/locales/fstring_registry.py`
+- `S01` `M` `dev/locales/tests/test_dynamic_prefix_registry_coverage.py`
+- `S01` `verify:` `s01-locale-discovery 30 cases` -> `pass`
+- `S01` `verify:` `s01-caption-ui 16 integrations` -> `pass`
+- `S01` `verify:` `s01-caption format lint configured-ty` -> `pass`
+- `S01` `verify:` `s02-locale-inventory introduced four missing cells` -> `fail`
+- `S01` `verify:` `s01-locale-inventory-repaired required missing0` -> `pass`
+- `S01` `verify:` `s04-native-frozen16 declarations stable and principal accepted` -> `pass`
+- `S02` `M` `src/cadrumo/locales/es/common.yml`
+- `S02` `M` `src/cadrumo/locales/en/common.yml`
+- `S02` `M` `src/cadrumo/locales/ca/common.yml`
+- `S02` `M` `src/cadrumo/locales/hu/common.yml`
+- `S02` `M` `docs/how-to/fill-in-and-file-in-the-workbench.md`
+- `S02` `M` `docs/locales/es/LC_MESSAGES/how-to/fill-in-and-file-in-the-workbench.po`
+- `S02` `M` `docs/locales/ca/LC_MESSAGES/how-to/fill-in-and-file-in-the-workbench.po`
+- `S02` `M` `docs/locales/hu/LC_MESSAGES/how-to/fill-in-and-file-in-the-workbench.po`
+- `S02` `verify:` `s02-scoped catalogue parity placeholders character/cell caps` -> `pass`
+- `S02` `verify:` `s02-help-contract 24 tests` -> `pass`
+- `S02` `verify:` `s04-docs-completeness 10 authored units` -> `pass`
+- `S02` `verify:` `s04-docs-full-strict-en full build` -> `pass`
+- `S02` `verify:` `s05-docs-frozen-authority-es full strict build` -> `pass`
+- `S02` `verify:` `s05-docs-frozen-authority-ca full strict build` -> `pass`
+- `S02` `verify:` `s05-docs-frozen-authority-hu full strict build` -> `pass`
+- `S02` `by:` `vaultspec-high-executor`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_help_and_footer.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_records_real.py`
+- `S03` `M` `docs/how-to/fill-in-and-file-in-the-workbench.md`
+- `S03` `M` `docs/locales/es/LC_MESSAGES/how-to/fill-in-and-file-in-the-workbench.po`
+- `S03` `M` `docs/locales/ca/LC_MESSAGES/how-to/fill-in-and-file-in-the-workbench.po`
+- `S03` `M` `docs/locales/hu/LC_MESSAGES/how-to/fill-in-and-file-in-the-workbench.po`
+- `S03` `verify:` `s03-footer-unit-corrected 50 tests` -> `pass`
+- `S03` `verify:` `s03-record-installed 37 tests` -> `pass`
+- `S03` `verify:` `s03 configured format lint types` -> `pass`
+- `S03` `verify:` `principal frozen-native record20 footer review` -> `pass`
+- `S03` `verify:` `two-paragraph scoped PO completeness and strict frozen locale builds` -> `pass`
+- `S03` `by:` `vaultspec-high-executor`
+- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/header.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_header.py`
+- `S05` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_formula_values_real.py`
+- `S05` `M` `src/cadrumo/locales/ca/common.yml`
+- `S05` `verify:` `s05-header-owning 59 tests` -> `pass`
+- `S05` `verify:` `s05-formula-consumer 24 tests` -> `pass`
+- `S05` `verify:` `s05 format lint configured types` -> `pass`
+- `S05` `verify:` `principal corrected-header external-detail 24-frame identity/action review` -> `pass`
+- `S05` `by:` `vaultspec-high-executor`
+- `S05` `M` `src/cadrumo/locales/es/common.yml`
+- `S05` `M` `src/cadrumo/locales/en/common.yml`
+- `S05` `M` `src/cadrumo/locales/hu/common.yml`
+- `S05` `verify:` `independent actual S05 parent-to-commit semantic leaf comparison` -> `pass`
+- `S06` `M` `src/cadrumo/application/modelo/_edit_execution.py`
+- `S06` `A` `src/cadrumo/application/modelo/edit_refusal_projection.py`
+- `S06` `M` `src/cadrumo/application/modelo/operation_definitions.py`
+- `S06` `A` `src/cadrumo/application/modelo/tests/test_edit_refusal_projection.py`
+- `S06` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/launcher.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/modelo/lifecycle.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/ports.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/installed.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/issues.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/session.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/page_items.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/casilla_list.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/editor.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/navigator.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/workbench_fixture.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_casilla_list.py`
+- `S06` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_browsing.py`
+- `S06` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_apply_prerequisite.py`
+- `S06` `M` `src/cadrumo/application/modelo/tests/test_lifecycle_operation_conformance.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/test_lifecycle_operation_composition.py`
+- `S06` `M` `dev/quality/metadata/import_load_targets.json`
+- `S06` `M` `src/cadrumo/locales/es/common.yml`
+- `S06` `M` `src/cadrumo/locales/en/common.yml`
+- `S06` `M` `src/cadrumo/locales/ca/common.yml`
+- `S06` `M` `src/cadrumo/locales/hu/common.yml`
+- `S06` `verify:` `s06-app-unit-corrected 73 cases` -> `pass`
+- `S06` `verify:` `s06-observer-resilience-corrected 11 cases` -> `pass`
+- `S06` `verify:` `s06-installed-edits-corrected 8 cases` -> `pass`
+- `S06` `verify:` `s06-s07-ui-final 81 cases` -> `pass`
+- `S06` `verify:` `s06-existing-editor-consumers 141 cases` -> `pass`
+- `S06` `verify:` `s06-scroll-breadcrumb-corrected 30 cases` -> `pass`
+- `S06` `verify:` `s06-navigator-ranges-final 35 cases` -> `pass`
+- `S06` `verify:` `s04-final configured format lint types 31 explicit Python paths` -> `pass`
+- `S06` `verify:` `s04-final-scoped-catalogue 38 keys 152 character and cell measurements` -> `pass`
+- `S06` `verify:` `s04-import-gate-coherent-final 15 contracts and 3001 loaded modules` -> `pass`
+- `S06` `verify:` `principal final recovery24 PNG/text current-copy and color review` -> `pass`
+- `S06` `verify:` `s04-locale-inventory-owned-final global census` -> `fail`
+- `S06` `by:` `vaultspec-high-executor`
+- `S07` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/screen.py`
+- `S07` `A` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_pending_output.py`
+- `S07` `verify:` `s07-pending-output-corrected 22 cases` -> `pass`
+- `S07` `verify:` `s06-s07-ui-final 81 cases` -> `pass`
+- `S07` `verify:` `s04-final configured format lint types 31 explicit Python paths` -> `pass`
+- `S07` `verify:` `principal final native pending-output four contexts with actual Review R cue` -> `pass`
+- `S07` `by:` `vaultspec-high-executor`
+- `S06` `verify:` `independent actual S06 committed Hungarian nine-leaf coverage before repair` -> `fail`
+- `S06` `verify:` `current four observed Hungarian required cells placeholders character/cell caps` -> `pass`
+- `S06` `verify:` `s06-app-observer-corrected actual 11-case receipt` -> `pass`
+- `S04` `A` `.vault/audit/2026-10-02-modelo-filing-ux-followup-audit.md`
+- `S04` `M` `.vault/index/modelo-filing-ux-followup.index.md`
+- `S04` `verify:` `principal final recovery24 PNG text and72 artifact hash review` -> `pass`
+- `S04` `verify:` `principal current Hungarian temporal Issues single-frame supplement` -> `pass`
+- `S04` `verify:` `s04-current-hu-saved-check-supplement-final supported official scenario` -> `pass`
+- `S04` `verify:` `independent final source and actual parent-to-commit review S02 S03 S05 S06 S07 and corrective S06` -> `pass`
+- `S04` `verify:` `committed nine new leaves four locales parity placeholders and character/cell caps` -> `pass`
+- `S04` `verify:` `s04-import-gate-coherent-final 15 contracts 3001 modules` -> `pass`
+- `S04` `verify:` `s04-final-scoped-catalogue 38 keys 152 measured cells` -> `pass`
+- `S04` `verify:` `s06-existing-editor-consumers 141 tests` -> `pass`
+- `S04` `verify:` `s06-navigator-ranges-final 35 tests` -> `pass`
+- `S04` `verify:` `s06-scroll-breadcrumb-corrected 30 tests` -> `pass`
+- `S04` `verify:` `s06-s07-ui-final 81 tests` -> `pass`
+- `S04` `verify:` `s04-final format lint types 31 Python paths` -> `pass`
+- `S04` `verify:` `typed original external completion separate draft and correction calendar semantics` -> `pass`
+- `S04` `verify:` `scoped two-paragraph docs completeness10 and strict EN ES CA HU builds` -> `pass`
+- `S04` `verify:` `s04-locale-inventory-owned-final global census` -> `fail`
+- `S04` `verify:` `vault feature check zero errors and warnings` -> `pass`
+- `S04` `by:` `vaultspec-high-executor`
+
+## Notes
+
+- `S01` Initial exact5b7d twelve-path integration committed3d40; later total typed caption map repairs obsolete discovery registration without duplicate state key. Full repaired census remains failing for baseline19 inventory plus in-progress docs4 and spelling tool; no aggregate-green claim. Receipt work/UX5-checks/s01-locale-inventory-delta.json separates the introduced four missing cells and their repair. Final native source receipt excludes unrelated auth/profile writes; calendar proof remains owning typed projection.
+- `S02` Live localized strict builds refused unrelated auth config.logout sequences; corrected frozen admitted-source builds pass. Native Hungarian human review remains release-pending. Foreign live informal-register overlap on two HU leaves is preserved and excluded from this Step's staged leaf delta; frozen accepted copy is evidence-versioned.
+- `S03` The initial scratch footer run was repaired to preserve fieldless Help plus actual named Next, worded Scroll and Back within 80 columns. Later narrow header findings belong S05; original footer captures are applicability evidence for this bounded action surface.
+- `S05` Initial return-contract consumer and wide test expectation were corrected before final checks. Native24 establishes identity, geometry and actions; `NO_COLOR` discovery excludes its severity-color acceptance, separately re-established in final correction captures.
+- `S05` Private-index header composition also normalized quotation of the same two owned proper-name leaves in ES/EN/HU without changing their values; actual touched paths are now explicit. Subsequent composition skips already matching values to avoid such syntax-only normalization.
+- `S06` Actual Modelo100 Apply remains an explained legacy-replay source refusal with unchanged saved1388 imported0 and retained0168 Yes; successful persistence, export wire and filing are unclaimed. The native40 source/24frames are immutable. Global census exit1 is classified in work/UX5-checks/s04-locale-inventory-final-disposition.json:25190 catalogue-only keys plus six inherited inventory/tool conditions and one missing frozen gettext source-manifest; required30040/30040, missing/repair/review/placeholder/discovery defects0. Earlier `NO_COLOR` and failed route/harness attempts remain evidence. Current shared register edits, including HU overlaps, are preserved and excluded from owned staged cells; native human HU review remains pending.
+- `S07` The direct e/export bypass is the reachable defect. Ordinary F8 already chose Apply while staged; the final filing callback guard is deliberate hardening. True, False, zero and clear plus late dialog changes retain drafts and call no export/record provider. Refusal copy is derived fresh from actual current count and `[R],` with active typed prerequisite taking Issues precedence. S06/S07 coexistence is verified by the final81-case and actual24-frame receipt; independent actual commit comparison is consolidated in S04.
+- `S06` P1 commit review found four required new HU cells omitted from75c462 because live-overlap skip was applied to absent parent leaves. S06 reopened. Corrective integration adds exactly current informal notice, next, action and `saved_with_changes` without modifying their words or any other foreign committed/index/live cells. The saved-check sentence alone changed after accepted native40 (75 to73cells) and has a separately reviewed current-copy boundary. The earlier observer verification label was descriptive; its exact durable receipt is work/UX5-checks/s06-app-observer-corrected-receipt.json.
+- `S04` Final cohesive audit PASS is scoped to owned filing UX. Actual supported100 remains an explained legacy-source refusal with retained answer and unchanged fresh encrypted saved head; no successful Apply, wire/export or AEAT filing claim. Native human Hungarian release review remains pending. Final census failure categories/counts and normalized baseline comparison are preserved in the audit/disposition receipt; required-cell and owned char/cell checks pass, while whole-doc snapshot extraction is unavailable. The import-only coherent snapshot addresses a foreign launcher-main/base-authority mismatch without changing accepted native/live source. Native24 and single current HU supplement are separate immutable copy versions, with earlier failures retained. Unrelated foreign parent/staged/live work is preserved.

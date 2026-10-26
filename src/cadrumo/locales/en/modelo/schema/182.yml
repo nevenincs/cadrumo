@@ -1,0 +1,44 @@
+modelo:
+  schema:
+    '182':
+      casilla:
+        continuidad:
+          donante-nif:
+            label: Donor's NIF (individual, legal entity, or the reference non-profit
+              donee entity)
+          donante-nombre:
+            label: Donor's surname and first name, or company name
+          donativo-recurrente:
+            label: Recurring donation indicator (multi-year donation to the same donee
+              entity, two or more consecutive tax years)
+          filing-year:
+            label: Tax year the return refers to
+          importe-donativo:
+            label: Amount of the donation or contribution received in the tax year
+              (unsigned, in euros)
+          porcentaje-deduccion:
+            label: Deduction percentage applicable to the donation (donor's tax regime,
+              art. 68.3 LIRPF / special regime Ley 49/2002)
+          tipo-declaracion:
+            label: Type of return (original / replacement / supplementary)
+      construct:
+        modelo-182-informative:
+          field:
+            title: 'Modelo 182: informative return of donations, gifts and contributions
+              received'
+      field:
+        official_name: Modelo 182. Personal Income Tax, Non-Resident Income Tax and
+          Corporate Income Tax. Informative return of donations, gifts and contributions
+          received and disposals made.
+        title: Donations, gifts and contributions received and disposals made (annual
+          informative return)
+      revision:
+        2022-2023:
+          field:
+            label: Modelo 182, tax years 2022 and 2023
+        '2024':
+          field:
+            label: Modelo 182, tax year 2024
+        '2025':
+          field:
+            label: Modelo 182, tax year 2025 (Order HAC/1430/2025)

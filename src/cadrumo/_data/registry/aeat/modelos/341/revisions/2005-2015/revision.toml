@@ -1,0 +1,29 @@
+[revisions."2005-2015"]
+formula_source_refs = ["boe-modelo-341-2000-form-pdf", "boe-modelo-341-2000-instructions-pdf"]
+casilla_source_refs = ["aeat-dr-341-2005-2015"]
+authority_grade = "applicability"
+# Exact 619-position fixed-width era from aeat-dr-341-2005-2015. This layout
+# authority proves byte geometry only; it does not promote the revision to
+# filing grade or claim operator-reviewed filing support. The year selector is
+# the natural ejercicio coordinate; valid_from is the independent optional
+# as-of axis. BOE-A-2004-17306's final provision admits telematic presentation
+# only from the first presentation period beginning after 2005-02-01. The
+# Modelo 341 quarterly deadline starts that first period on 2005-04-01, so an
+# earlier explicit as-of date truthfully refuses this otherwise-declared 2005
+# filing year.
+valid_from = 2005-04-01
+valid_to = 2015-12-31
+period_selector = { year_from = 2005, year_to = 2015, periods = ["1T", "2T", "3T", "4T"] }
+orden_aplicabilidad = ["orden-min-2000-12-15-m341:art-1"]
+legal_refs = [
+    "orden-min-2000-12-15-m341:art-1",
+    "orden-min-2000-12-15-m341:art-2",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "enrolled-modelo-341-procedure",
+    "aeat-dr-341-2005-2015",
+]
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-08-26

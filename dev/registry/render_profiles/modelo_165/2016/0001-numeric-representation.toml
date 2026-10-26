@@ -1,0 +1,729 @@
+schema_version = 1
+fragment_id = "numeric-representation"
+width_17_rules = []
+signed_composite_rules = []
+literal_numeric_rules = []
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["1"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 22
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal_absent = false
+ordinal = "1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m165-2016-row-22-offset-1"
+decision_statement = "Official 165 row 22 at 1+1 writes modelo-165-t1-record-type as enumeration."
+justification = "Exact aeat-dr-165-2016-2022 SHA 2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5, PDF row 22, positions 1-1; printed evidence: Constante número \"1\""
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 22
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal_absent = false
+ordinal = "1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["165"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 25
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal_absent = false
+ordinal = "2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m165-2016-row-25-offset-2"
+decision_statement = "Official 165 row 25 at 2+3 writes modelo-165-t1-modelo as enumeration."
+justification = "Exact aeat-dr-165-2016-2022 SHA 2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5, PDF row 25, positions 2-4; printed evidence: Constante \"165\""
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 25
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal_absent = false
+ordinal = "2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 28
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal_absent = false
+ordinal = "3"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m165-2016-row-28-offset-5"
+decision_statement = "Official 165 row 28 at 5+4 writes modelo-165-t1-ejercicio as year_yyyy."
+justification = "Exact aeat-dr-165-2016-2022 SHA 2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5, PDF row 28, positions 5-8; printed evidence: Las cuatro cifras del ejercicio fiscal al que corresponde la declaración"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 28
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal_absent = false
+ordinal = "3"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 71
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m165-2016-row-71-offset-59"
+decision_statement = "Official 165 row 71 at 59+9 writes modelo-165-t1-contact-phone as digit_string."
+justification = "Exact aeat-dr-165-2016-2022 SHA 2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5, PDF row 71, positions 59-67; printed evidence: TELÉFONO : Campo numérico de nueve"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 71
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 84
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal_absent = false
+ordinal = "8"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m165-2016-row-84-offset-108"
+decision_statement = "Official 165 row 84 at 108+13 writes modelo-165-t1-numero-identificativo as identifier_digits."
+justification = "Exact aeat-dr-165-2016-2022 SHA 2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5, PDF row 84, positions 108-120; printed evidence: Se consignará el número identificativo correspondiente a la declaración. Campo de contenido numérico de 13 posiciones. El número identificativo que habrá de figurar será un número secuencial cuyos tres primeros dígitos se corresponderán con el código 165."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 84
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal_absent = false
+ordinal = "8"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 119
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal_absent = false
+ordinal = "10"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m165-2016-row-119-offset-123"
+decision_statement = "Official 165 row 119 at 123+13 writes modelo-165-t1-numero-identificativo-anterior as identifier_digits."
+justification = "Exact aeat-dr-165-2016-2022 SHA 2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5, PDF row 119, positions 123-135; printed evidence: En el caso de que se haya consignado una “C” en el campo “Declaración complementaria” o en caso de que se haya consignado \"S\" en el campo \"Declaración sustitutiva\", se consignará el número identificativo correspondiente a la declaración a la que complementa o sustituye. Campo de contenido numérico de 13 posiciones. En "
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 119
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal_absent = false
+ordinal = "10"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 130
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal_absent = false
+ordinal = "11"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m165-2016-row-130-offset-136"
+decision_statement = "Official 165 row 130 at 136+9 writes modelo-165-t1-numero-total-declarados as integer."
+justification = "Exact aeat-dr-165-2016-2022 SHA 2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5, PDF row 130, positions 136-144; printed evidence: Se consignará el número total de registros de socios o partícipes (Registro de tipo 2) declarados por el declarante."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 130
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal_absent = false
+ordinal = "11"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 149
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal_absent = false
+ordinal = "13"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m165-2016-row-149-offset-145"
+decision_statement = "Official 165 row 149 at 145+13 writes modelo-165-t1-importe-total-suscripciones-component-145 as amount_integer_part."
+justification = "Exact aeat-dr-165-2016-2022 SHA 2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5, PDF row 149, positions 145-157; printed evidence: importe total de la adquisición."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 149
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal_absent = false
+ordinal = "13"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 151
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal_absent = false
+ordinal = "14"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m165-2016-row-151-offset-158"
+decision_statement = "Official 165 row 151 at 158+2 writes modelo-165-t1-importe-total-suscripciones-component-158 as amount_fractional_digits."
+justification = "Exact aeat-dr-165-2016-2022 SHA 2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5, PDF row 151, positions 158-159; printed evidence: importe total de la adquisición."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 151
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal_absent = false
+ordinal = "14"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_text_year"
+value_policy = "yyyymmdd-text-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 157
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal_absent = false
+ordinal = "16"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m165-2016-row-157-offset-160"
+decision_statement = "Official 165 row 157 at 160+4 writes modelo-165-t1-fecha-constitucion-component-160 as date_text_year."
+justification = "Exact aeat-dr-165-2016-2022 SHA 2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5, PDF row 157, positions 160-163; printed evidence: AÑO"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 157
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal_absent = false
+ordinal = "16"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_text_month"
+value_policy = "yyyymmdd-text-month"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 158
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal_absent = false
+ordinal = "17"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m165-2016-row-158-offset-164"
+decision_statement = "Official 165 row 158 at 164+2 writes modelo-165-t1-fecha-constitucion-component-164 as date_text_month."
+justification = "Exact aeat-dr-165-2016-2022 SHA 2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5, PDF row 158, positions 164-165; printed evidence: MES"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 158
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal_absent = false
+ordinal = "17"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_text_day"
+value_policy = "yyyymmdd-text-day"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 159
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal_absent = false
+ordinal = "18"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m165-2016-row-159-offset-166"
+decision_statement = "Official 165 row 159 at 166+2 writes modelo-165-t1-fecha-constitucion-component-166 as date_text_day."
+justification = "Exact aeat-dr-165-2016-2022 SHA 2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5, PDF row 159, positions 166-167; printed evidence: DÍA"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 159
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal_absent = false
+ordinal = "18"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "signed_amount_integer_part"
+value_policy = "signed-component-integer-part"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 184
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal_absent = false
+ordinal = "20"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m165-2016-row-184-offset-169"
+decision_statement = "Official 165 row 184 at 169+13 writes modelo-165-t1-importe-fondos-propios-component-169 as signed_amount_integer_part."
+justification = "Exact aeat-dr-165-2016-2022 SHA 2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5, PDF row 184, positions 169-181; printed evidence: consignará la parte entera del importe de los fondos propios."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 184
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal_absent = false
+ordinal = "20"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "signed_amount_fractional_digits"
+value_policy = "signed-component-fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 187
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal_absent = false
+ordinal = "21"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m165-2016-row-187-offset-182"
+decision_statement = "Official 165 row 187 at 182+2 writes modelo-165-t1-importe-fondos-propios-component-182 as signed_amount_fractional_digits."
+justification = "Exact aeat-dr-165-2016-2022 SHA 2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5, PDF row 187, positions 182-183; printed evidence: consignará la parte decimal del importe de los fondos propios."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 187
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal_absent = false
+ordinal = "21"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["2"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Socios O Partícipes"
+source_row = 212
+record_identity = "Tipo 2 - Registro De Socios O Partícipes"
+ordinal_absent = false
+ordinal = "1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m165-2016-row-212-offset-1"
+decision_statement = "Official 165 row 212 at 1+1 writes modelo-165-t2-record-type as enumeration."
+justification = "Exact aeat-dr-165-2016-2022 SHA 2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5, PDF row 212, positions 1-1; printed evidence: Constante '2'"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Socios O Partícipes"
+source_row = 212
+record_identity = "Tipo 2 - Registro De Socios O Partícipes"
+ordinal_absent = false
+ordinal = "1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["165"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Socios O Partícipes"
+source_row = 214
+record_identity = "Tipo 2 - Registro De Socios O Partícipes"
+ordinal_absent = false
+ordinal = "2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m165-2016-row-214-offset-2"
+decision_statement = "Official 165 row 214 at 2+3 writes modelo-165-t2-modelo as enumeration."
+justification = "Exact aeat-dr-165-2016-2022 SHA 2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5, PDF row 214, positions 2-4; printed evidence: Constante '165'."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Socios O Partícipes"
+source_row = 214
+record_identity = "Tipo 2 - Registro De Socios O Partícipes"
+ordinal_absent = false
+ordinal = "2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Socios O Partícipes"
+source_row = 216
+record_identity = "Tipo 2 - Registro De Socios O Partícipes"
+ordinal_absent = false
+ordinal = "3"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m165-2016-row-216-offset-5"
+decision_statement = "Official 165 row 216 at 5+4 writes modelo-165-t2-ejercicio as year_yyyy."
+justification = "Exact aeat-dr-165-2016-2022 SHA 2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5, PDF row 216, positions 5-8; printed evidence: Consignar lo contenido en estas mismas posiciones del registro de tipo 1."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Socios O Partícipes"
+source_row = 216
+record_identity = "Tipo 2 - Registro De Socios O Partícipes"
+ordinal_absent = false
+ordinal = "3"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 11
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Socios O Partícipes"
+source_row = 264
+record_identity = "Tipo 2 - Registro De Socios O Partícipes"
+ordinal_absent = false
+ordinal = "9"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m165-2016-row-264-offset-76"
+decision_statement = "Official 165 row 264 at 76+11 writes modelo-165-t2-importe-suscripcion-component-76 as amount_integer_part."
+justification = "Exact aeat-dr-165-2016-2022 SHA 2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5, PDF row 264, positions 76-86; printed evidence: parte entera del importe total de la adquisición."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Socios O Partícipes"
+source_row = 264
+record_identity = "Tipo 2 - Registro De Socios O Partícipes"
+ordinal_absent = false
+ordinal = "9"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Socios O Partícipes"
+source_row = 266
+record_identity = "Tipo 2 - Registro De Socios O Partícipes"
+ordinal_absent = false
+ordinal = "10"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m165-2016-row-266-offset-87"
+decision_statement = "Official 165 row 266 at 87+2 writes modelo-165-t2-importe-suscripcion-component-87 as amount_fractional_digits."
+justification = "Exact aeat-dr-165-2016-2022 SHA 2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5, PDF row 266, positions 87-88; printed evidence: la parte decimal del importe total de la adquisición (si no tiene, consignar CEROS)."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Socios O Partícipes"
+source_row = 266
+record_identity = "Tipo 2 - Registro De Socios O Partícipes"
+ordinal_absent = false
+ordinal = "10"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_text_year"
+value_policy = "yyyymmdd-text-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Socios O Partícipes"
+source_row = 274
+record_identity = "Tipo 2 - Registro De Socios O Partícipes"
+ordinal_absent = false
+ordinal = "12"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m165-2016-row-274-offset-89"
+decision_statement = "Official 165 row 274 at 89+4 writes modelo-165-t2-fecha-adquisicion-component-89 as date_text_year."
+justification = "Exact aeat-dr-165-2016-2022 SHA 2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5, PDF row 274, positions 89-92; printed evidence: AÑO"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Socios O Partícipes"
+source_row = 274
+record_identity = "Tipo 2 - Registro De Socios O Partícipes"
+ordinal_absent = false
+ordinal = "12"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_text_month"
+value_policy = "yyyymmdd-text-month"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Socios O Partícipes"
+source_row = 275
+record_identity = "Tipo 2 - Registro De Socios O Partícipes"
+ordinal_absent = false
+ordinal = "13"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m165-2016-row-275-offset-93"
+decision_statement = "Official 165 row 275 at 93+2 writes modelo-165-t2-fecha-adquisicion-component-93 as date_text_month."
+justification = "Exact aeat-dr-165-2016-2022 SHA 2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5, PDF row 275, positions 93-94; printed evidence: MES"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Socios O Partícipes"
+source_row = 275
+record_identity = "Tipo 2 - Registro De Socios O Partícipes"
+ordinal_absent = false
+ordinal = "13"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_text_day"
+value_policy = "yyyymmdd-text-day"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Socios O Partícipes"
+source_row = 276
+record_identity = "Tipo 2 - Registro De Socios O Partícipes"
+ordinal_absent = false
+ordinal = "14"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m165-2016-row-276-offset-95"
+decision_statement = "Official 165 row 276 at 95+2 writes modelo-165-t2-fecha-adquisicion-component-95 as date_text_day."
+justification = "Exact aeat-dr-165-2016-2022 SHA 2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5, PDF row 276, positions 95-96; printed evidence: DÍA"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Socios O Partícipes"
+source_row = 276
+record_identity = "Tipo 2 - Registro De Socios O Partícipes"
+ordinal_absent = false
+ordinal = "14"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Socios O Partícipes"
+source_row = 283
+record_identity = "Tipo 2 - Registro De Socios O Partícipes"
+ordinal_absent = false
+ordinal = "16"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m165-2016-row-283-offset-97"
+decision_statement = "Official 165 row 283 at 97+3 writes modelo-165-t2-porcentaje-participacion-component-97 as amount_integer_part."
+justification = "Exact aeat-dr-165-2016-2022 SHA 2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5, PDF row 283, positions 97-99; printed evidence: consignará la parte entera del porcentaje (si no tiene, consignar CEROS). socios o partícipes de entidades de nueva o reciente creación."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Socios O Partícipes"
+source_row = 283
+record_identity = "Tipo 2 - Registro De Socios O Partícipes"
+ordinal_absent = false
+ordinal = "16"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Socios O Partícipes"
+source_row = 292
+record_identity = "Tipo 2 - Registro De Socios O Partícipes"
+ordinal_absent = false
+ordinal = "17"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m165-2016-row-292-offset-100"
+decision_statement = "Official 165 row 292 at 100+2 writes modelo-165-t2-porcentaje-participacion-component-100 as amount_fractional_digits."
+justification = "Exact aeat-dr-165-2016-2022 SHA 2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5, PDF row 292, positions 100-101; printed evidence: consignará la parte decimal del porcentaje (si no tiene, consignar CEROS)."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Socios O Partícipes"
+source_row = 292
+record_identity = "Tipo 2 - Registro De Socios O Partícipes"
+ordinal_absent = false
+ordinal = "17"
+
+[design_identity]
+modelo = "165"
+design_epoch = "2016"
+source_ref = "aeat-dr-165-2016-2022"
+source_sha256 = "2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5"

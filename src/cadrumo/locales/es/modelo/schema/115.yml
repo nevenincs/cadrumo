@@ -1,0 +1,52 @@
+modelo:
+  schema:
+    '115':
+      construct:
+        modelo-115-quarterly-rental-withholding:
+          field:
+            title: 'Modelo 115: retenciones trimestrales sobre arrendamiento de inmuebles
+              urbanos'
+      field:
+        official_name: Retenciones e ingresos a cuenta. Rentas o rendimientos procedentes
+          del arrendamiento o subarrendamiento de inmuebles urbanos.
+        title: IRPF retenciones sobre arrendamientos urbanos
+      form:
+        context:
+          apellidos: Apellidos o razón social
+          declaracion-complementaria: Declaración complementaria
+          ejercicio: Ejercicio
+          iban: Código IBAN
+          justificante-anterior: N.º de justificante de la declaración anterior
+          nif: NIF
+          nombre: Nombre
+          periodo: Período
+        page:
+          dr-11501:
+            heading: Retenciones por arrendamiento de inmuebles urbanos
+        section:
+          complementaria:
+            heading: Complementaria (4)
+          devengo:
+            heading: Devengo (2)
+          identificacion:
+            heading: Identificación (1)
+          ingreso:
+            heading: Ingreso (5)
+          liquidacion:
+            heading: Liquidación (3)
+      revision:
+        2019-y-siguientes:
+          casilla:
+            '01':
+              label: Número de perceptores
+            '02':
+              label: Base de retenciones e ingresos a cuenta
+            '03':
+              label: Retenciones e ingresos a cuenta
+            '04':
+              label: Resultado de anteriores declaraciones
+            '05':
+              label: Resultado a ingresar
+          field:
+            label: Modelo 115 vigente (Orden de 20 de noviembre de 2000, BOE-A-2000-21430),
+              ejercicios 2019 y siguientes

@@ -1,0 +1,181 @@
+# Modelo 347 declaration-floor buckets: which claves de operación are summed
+# together, per counterparty, before the floor is compared. The entregas (B,
+# and the travel-agency ventas F) and the adquisiciones (A, and the
+# travel-agency compras G) are two buckets judged on their own, never one
+# combined total: RD 1065/2007 art. 33.1 "se computarán de forma separada las
+# entregas y las adquisiciones de bienes y servicios", and both designs define
+# A and B each "superiores a 3.005,06 euros". RD 1619/2012 disposición
+# adicional cuarta.7 has the agencies report F "en concepto de ventas" and G
+# "en concepto de compras". Clave C carries the separate 300,51 EUR floor of
+# arts. 32.c and 33.4, judged per persona imputada.
+#
+# Two groupings rest on a reading the bundled corpus does not settle, and each
+# bucket that does says so with reading_unsettled = "true". The source resolver
+# turns that flag into an unsettled_legal_reading advisory naming the
+# operations it affects, so the reading is declared and disclosed, never
+# presented as settled:
+# - Clave D (adquisiciones al margen de la actividad by the entities of art.
+#   31.2, art. 33.3 "que en su conjunto, para cada una de aquéllas") is kept as
+#   its own bucket under the general floor. No text joins it to the ordinary
+#   adquisiciones, and none separates it either; flagged in every edition.
+# - Clave E from 2014 to 2024, below.
+# The resolver also advises when a bucket with no floor admits a counterparty
+# whose net total is zero or negative: the bucket relates it whatever its
+# amount, but whether a nil or negative annual total belongs on the
+# declaration is not settled.
+#
+# Each bucket names either the scalar fact holding its floor or declares that
+# its operations are related whatever their amount. The floor values live on
+# their own facts (m347-counterparty-declaration-threshold and
+# m347-clave-c-beneficiary-declaration-threshold); this fact only says which
+# claves share one.
+[fact]
+fact_id = "m347-clave-threshold-buckets"
+family = "mapping"
+
+# Ejercicios 2011-2013, under the aeat-dr-347-2011 design, which applied to
+# them and is the only text quoted here. The bundled RGAT is the consolidated
+# text: its art. 33 is in the redaction of RD 828/2013 (BOE-A-2013-11216),
+# whose provisions the consolidated notes give "en vigor a partir del
+# 01/01/2014", so its wording is not cited for these years; the legal
+# references name the articles, not that later wording. The 2011 design
+# defines A, B and D each "superiores a 3.005,06 euros", C "superiores a 300,51
+# euros" and E "Subvenciones, auxilios y ayudas satisfechos por las
+# Administraciones Públicas superiores a 3.005,06 euros", so clave E keeps the
+# general floor here.
+[[fact.variants]]
+variant_id = "m347-clave-threshold-buckets:2011-01-01"
+date_axis = "filing_period"
+valid_from = 2011-01-01
+valid_to = 2013-12-31
+legal_refs = ["rd-1065-2007:art-33", "rd-1065-2007:art-32"]
+source_refs = ["aeat-dr-347-2011"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-347-2011"
+required_text = [
+    "Adquisiciones de bienes y servicios superiores a 3.005,06",
+    "Entregas de bienes y prestaciones de servicios superiores a",
+    "Cobros por cuenta de terceros superiores a 300,51 euros",
+    "Administraciones Públicas superiores a 3.005,06 euros",
+    "Ventas agencia viaje",
+    "Compras agencia viaje",
+]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+    { key = "bucket.order", value = "entregas,adquisiciones,cobros_por_cuenta_de_terceros,adquisiciones_al_margen_de_la_actividad,subvenciones_satisfechas" },
+    { key = "bucket.entregas.claves", value = "B,F" },
+    { key = "bucket.entregas.floor_fact", value = "m347-counterparty-declaration-threshold" },
+    { key = "bucket.adquisiciones.claves", value = "A,G" },
+    { key = "bucket.adquisiciones.floor_fact", value = "m347-counterparty-declaration-threshold" },
+    { key = "bucket.cobros_por_cuenta_de_terceros.claves", value = "C" },
+    { key = "bucket.cobros_por_cuenta_de_terceros.floor_fact", value = "m347-clave-c-beneficiary-declaration-threshold" },
+    { key = "bucket.adquisiciones_al_margen_de_la_actividad.claves", value = "D" },
+    { key = "bucket.adquisiciones_al_margen_de_la_actividad.floor_fact", value = "m347-counterparty-declaration-threshold" },
+    { key = "bucket.adquisiciones_al_margen_de_la_actividad.reading_unsettled", value = "true" },
+    { key = "bucket.subvenciones_satisfechas.claves", value = "E" },
+    { key = "bucket.subvenciones_satisfechas.floor_fact", value = "m347-counterparty-declaration-threshold" },
+]
+
+# Ejercicios 2014-2024. From 2014 the consolidated art. 33.3 has the
+# Administraciones Públicas relate the subvenciones "cualquiera que sea su
+# importe", so clave E carries no floor. These ejercicios are still filed on
+# the aeat-dr-347-2011 design, which keeps defining E as "superiores a 3.005,06
+# euros": the regulation and the record design disagree, so the bucket follows
+# the regulation and is flagged reading_unsettled. The C floor and the F/G
+# labels are quoted from the same design.
+[[fact.variants]]
+variant_id = "m347-clave-threshold-buckets:2014-01-01"
+date_axis = "filing_period"
+valid_from = 2014-01-01
+valid_to = 2024-12-31
+legal_refs = ["rd-1065-2007:art-33", "rd-1065-2007:art-32"]
+source_refs = ["boe-rd-1065-2007-statutory-facts", "aeat-dr-347-2011"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-rd-1065-2007-statutory-facts"
+required_text = [
+    "se computarán de forma separada las entregas y las adquisiciones de bienes y servicios",
+    "a quienes hayan satisfecho subvenciones, auxilios o ayudas, cualquiera que sea su importe",
+]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-347-2011"
+required_text = [
+    "Cobros por cuenta de terceros superiores a 300,51 euros",
+    "Administraciones Públicas superiores a 3.005,06 euros",
+    "Ventas agencia viaje",
+    "Compras agencia viaje",
+]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+    { key = "bucket.order", value = "entregas,adquisiciones,cobros_por_cuenta_de_terceros,adquisiciones_al_margen_de_la_actividad,subvenciones_satisfechas" },
+    { key = "bucket.entregas.claves", value = "B,F" },
+    { key = "bucket.entregas.floor_fact", value = "m347-counterparty-declaration-threshold" },
+    { key = "bucket.adquisiciones.claves", value = "A,G" },
+    { key = "bucket.adquisiciones.floor_fact", value = "m347-counterparty-declaration-threshold" },
+    { key = "bucket.cobros_por_cuenta_de_terceros.claves", value = "C" },
+    { key = "bucket.cobros_por_cuenta_de_terceros.floor_fact", value = "m347-clave-c-beneficiary-declaration-threshold" },
+    { key = "bucket.adquisiciones_al_margen_de_la_actividad.claves", value = "D" },
+    { key = "bucket.adquisiciones_al_margen_de_la_actividad.floor_fact", value = "m347-counterparty-declaration-threshold" },
+    { key = "bucket.adquisiciones_al_margen_de_la_actividad.reading_unsettled", value = "true" },
+    { key = "bucket.subvenciones_satisfechas.claves", value = "E" },
+    { key = "bucket.subvenciones_satisfechas.declared_regardless_of_amount", value = "true" },
+    { key = "bucket.subvenciones_satisfechas.reading_unsettled", value = "true" },
+]
+
+# Ejercicio 2025 y siguientes, under the aeat-dr-347-2025 design. Clave E is
+# "Subvenciones, auxilios y ayudas satisfechos por las Administraciones
+# Públicas cualquiera que sea su importe", matching art. 33.3, so its bucket
+# carries no floor and the reading is settled. The F/G grouping also cites RD
+# 1619/2012 disposición adicional cuarta.7, whose wording (in force from 2018)
+# is cited only for the edition it covers in full.
+[[fact.variants]]
+variant_id = "m347-clave-threshold-buckets:2025-01-01"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+legal_refs = ["rd-1065-2007:art-33", "rd-1065-2007:art-32", "rd-1619-2012:disp-adicional-4.7"]
+source_refs = ["boe-rd-1065-2007-statutory-facts", "aeat-dr-347-2025"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-rd-1065-2007-statutory-facts"
+required_text = [
+    "se computarán de forma separada las entregas y las adquisiciones de bienes y servicios",
+    "a quienes hayan satisfecho subvenciones, auxilios o ayudas, cualquiera que sea su importe",
+]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-347-2025"
+required_text = [
+    "Cobros por cuenta de terceros superiores a 300,51 euros",
+    "Administraciones Públicas cualquiera que sea su importe",
+    "Ventas agencia viaje",
+    "Compras agencia viaje",
+]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+    { key = "bucket.order", value = "entregas,adquisiciones,cobros_por_cuenta_de_terceros,adquisiciones_al_margen_de_la_actividad,subvenciones_satisfechas" },
+    { key = "bucket.entregas.claves", value = "B,F" },
+    { key = "bucket.entregas.floor_fact", value = "m347-counterparty-declaration-threshold" },
+    { key = "bucket.adquisiciones.claves", value = "A,G" },
+    { key = "bucket.adquisiciones.floor_fact", value = "m347-counterparty-declaration-threshold" },
+    { key = "bucket.cobros_por_cuenta_de_terceros.claves", value = "C" },
+    { key = "bucket.cobros_por_cuenta_de_terceros.floor_fact", value = "m347-clave-c-beneficiary-declaration-threshold" },
+    { key = "bucket.adquisiciones_al_margen_de_la_actividad.claves", value = "D" },
+    { key = "bucket.adquisiciones_al_margen_de_la_actividad.floor_fact", value = "m347-counterparty-declaration-threshold" },
+    { key = "bucket.adquisiciones_al_margen_de_la_actividad.reading_unsettled", value = "true" },
+    { key = "bucket.subvenciones_satisfechas.claves", value = "E" },
+    { key = "bucket.subvenciones_satisfechas.declared_regardless_of_amount", value = "true" },
+]

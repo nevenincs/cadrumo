@@ -1,0 +1,12 @@
+[sources.boe-2011-19396-modelo-193-form-pdf]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2011-19396-modelo-193.pdf"
+sha256 = "5f4a03dfd1e7cd0a1798ee47d9d9ee626324519fb3ba1714e358f8f94f7c1657"
+bytes = 1062003
+retrieved_at = 2026-10-06
+published_at = 2011-12-12
+applies_from = 2011-12-13
+source_url = "https://www.boe.es/boe/dias/2011/12/12/pdfs/BOE-A-2011-19396.pdf"
+review_status = "pending_review"

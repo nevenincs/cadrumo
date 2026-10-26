@@ -1,0 +1,433 @@
+"""Agenda-first host-neutral Declarations calendar screen."""
+
+from __future__ import annotations
+
+import asyncio
+from typing import ClassVar, cast, override
+
+from textual.app import ComposeResult
+from textual.binding import Binding
+from textual.widgets import DataTable, Input, Select, Static
+
+from ....application.modelo.declarations_calendar import (
+    DeclarationsCalendarEntryRefV1,
+    DeclarationsCalendarProjectionV1,
+    DeclarationsCalendarSource,
+)
+from ....application.modelo.declarations_list import source_words
+from ....application.operator_actions.models import DeclaredNextAction
+from ....application.overview.calendar import holiday_coverage_statement, shift_reason_statement
+from ....application.overview.home import HomeAvailability
+from ....core.errors.error_codes import resolve_error_message
+from ....core.errors.hierarchy import CadrumoError
+from ....core.external_constants import OutputLanguage
+from ....core.i18n.render import output_language, tr
+from ..components.account_chrome import AccountChromeScreen
+from ..components.dialogs import ConfirmScreen
+from ..components.language import localized, repaint_tables
+from ..components.theme import BASE_CSS, tokenised
+from ..components.widgets import ContentDataTable, ContentScroll
+from .controller import (
+    DeclarationsCalendarController,
+    calendar_aeat_label,
+    calendar_date_label,
+    calendar_legal_label,
+    calendar_local_label,
+    natural_address,
+    timestamp_label,
+)
+from .models import CalendarRecoveryHandoffV1, DeclarationsCalendarScopeV1
+
+_TUI_REFUSAL_LOCALE_KEYS: dict[str, str] = {
+    # The application's wording names the CLI command; here the same fix is a key away.
+    "application.modelo.errors.profile_readiness_setup_incomplete": (
+        "tui.declarations.calendar.recovery.setup_incomplete"
+    ),
+}
+
+
+def _identity(row: DeclarationsCalendarEntryRefV1) -> str:
+    modelo, year, period = row.semantic_key()
+    return f"{modelo}|{year}|{period}"
+
+
+class DeclarationsCalendarScreen(AccountChromeScreen):
+    """Three-control agenda over an injected immutable safe projection."""
+
+    BINDINGS: ClassVar = [Binding("escape", "back", "", show=False)]
+    CSS = BASE_CSS + tokenised(
+        """
+        .declarations-calendar-page { width: 100%; height: 1fr; }
+        #declarations-calendar-search, #declarations-calendar-scope { width: 100%; }
+        #declarations-calendar-agenda { width: 100%; }
+        #declarations-calendar-detail, #declarations-calendar-notice {
+            width: 100%;
+            height: auto;
+            padding: $cadrumo-space-0 $cadrumo-space-1;
+        }
+        #declarations-calendar-notice { color: $warning; text-style: bold; }
+        """
+    )
+
+    def __init__(self, controller: DeclarationsCalendarController) -> None:
+        """Retain the injected pure calendar controller."""
+        super().__init__(id="declarations-calendar-screen")
+        self.controller = controller
+        self._scope = DeclarationsCalendarScopeV1.ALL
+        self._selected_identity: str | None = controller.context_identity()
+        self._hidden_restore_identity: str | None = None
+        self._rows_by_identity: dict[str, DeclarationsCalendarEntryRefV1] = {}
+        self._pending_recovery: tuple[DeclaredNextAction, DeclarationsCalendarEntryRefV1] | None = None
+        self._recovery_in_flight = False
+
+    @override
+    def compose(self) -> ComposeResult:
+        yield localized(
+            Static(
+                tr("workspace.declarations.calendar.title"),
+                classes="cadrumo-banner",
+                markup=False,
+            ),
+            "workspace.declarations.calendar.title",
+        )
+        with ContentScroll(
+            id="declarations-calendar-page",
+            classes="cadrumo-scroll declarations-calendar-page",
+        ):
+            yield localized(
+                Input(
+                    placeholder=tr("workspace.declarations.calendar.search.placeholder"),
+                    id="declarations-calendar-search",
+                ),
+                "workspace.declarations.calendar.search.placeholder",
+            )
+            yield Select[str](
+                tuple(
+                    (
+                        tr(f"workspace.declarations.calendar.scope.{scope.value}"),
+                        scope.value,
+                    )
+                    for scope in DeclarationsCalendarScopeV1
+                ),
+                value=self._scope.value,
+                allow_blank=False,
+                id="declarations-calendar-scope",
+            )
+            yield ContentDataTable[str](id="declarations-calendar-agenda", cursor_type="row", zebra_stripes=True)
+            yield Static(id="declarations-calendar-detail", markup=False)
+            yield Static(id="declarations-calendar-notice", markup=False)
+
+    def on_mount(self) -> None:
+        """Build the table and place focus at the start of the three-control chain."""
+        self._configure_table()
+        self._refresh()
+        focus = self.controller.context.focus
+        if focus is not None and focus.semantic_key == "declarations.calendar.scope":
+            self.query_one("#declarations-calendar-scope", Select).focus()
+        elif focus is not None and focus.semantic_key.startswith("declarations.calendar"):
+            self.query_one("#declarations-calendar-agenda", DataTable).focus()
+        else:
+            self.query_one("#declarations-calendar-search", Input).focus()
+
+    @override
+    async def refresh_language(self) -> None:
+        """Reword the agenda in place, keeping scope, query and semantic selection."""
+        await super().refresh_language()
+        self.query_one("#declarations-calendar-search", Input).placeholder = tr(
+            "workspace.declarations.calendar.search.placeholder"
+        )
+        scope = self.query_one("#declarations-calendar-scope", Select)
+        chosen = scope.value
+        with self.prevent(Select.Changed):
+            scope.set_options(
+                tuple(
+                    (tr(f"workspace.declarations.calendar.scope.{item.value}"), item.value)
+                    for item in DeclarationsCalendarScopeV1
+                )
+            )
+            scope.value = chosen
+
+        def paint() -> None:
+            self._configure_table()
+            self._refresh()
+
+        repaint_tables(self, paint)
+
+    def _configure_table(self) -> None:
+        table = cast(
+            "ContentDataTable[str]",
+            self.query_one("#declarations-calendar-agenda", ContentDataTable),
+        )
+        table.add_column(tr("workspace.declarations.calendar.column.close"), width=10)
+        table.add_column(tr("workspace.declarations.calendar.column.declaration"), width=16)
+        table.add_column(tr("workspace.declarations.calendar.column.legal"), width=13)
+        table.add_column(tr("workspace.declarations.calendar.column.local"), width=13)
+        table.add_column(tr("workspace.declarations.calendar.column.aeat"), width=12)
+
+    def _refresh(self) -> None:
+        table = cast("DataTable[str]", self.query_one("#declarations-calendar-agenda", DataTable))
+        self._remember_current_selection(table)
+        query = self.query_one("#declarations-calendar-search", Input).value
+        rows = self.controller.visible_entries(self._scope, query)
+        self._populate_table(table, rows)
+        notice = self.query_one("#declarations-calendar-notice", Static)
+        if rows:
+            self._restore_visible_selection(table, rows, notice)
+        else:
+            self._render_empty_state(query, notice)
+
+    def _remember_current_selection(self, table: DataTable[str]) -> None:
+        current = self._selected_row(table)
+        if current is not None and self._hidden_restore_identity is None:
+            self._selected_identity = _identity(current)
+
+    def _populate_table(
+        self,
+        table: DataTable[str],
+        rows: tuple[DeclarationsCalendarEntryRefV1, ...],
+    ) -> None:
+        table.clear(columns=False)
+        self._rows_by_identity = {_identity(row): row for row in rows}
+        for row in rows:
+            table.add_row(
+                calendar_date_label(row.adjusted_closes_on),
+                natural_address(row.modelo, row.filing_year, row.period),
+                calendar_legal_label(row.legal_status),
+                calendar_local_label(row.local_filing_state),
+                calendar_aeat_label(row.aeat_submission_state),
+                key=_identity(row),
+            )
+
+    def _restore_visible_selection(
+        self,
+        table: DataTable[str],
+        rows: tuple[DeclarationsCalendarEntryRefV1, ...],
+        notice: Static,
+    ) -> None:
+        notice.update("")
+        restore = self._selected_identity
+        restored_index = next(
+            (index for index, row in enumerate(rows) if _identity(row) == restore),
+            None,
+        )
+        row_index = restored_index if restored_index is not None else 0
+        table.move_cursor(row=row_index)
+        if restored_index is not None:
+            self._selected_identity = _identity(rows[row_index])
+            self._hidden_restore_identity = None
+        elif restore is None:
+            self._selected_identity = _identity(rows[row_index])
+        else:
+            self._hidden_restore_identity = restore
+        self._render_detail(rows[row_index])
+
+    def _render_empty_state(self, query: str, notice: Static) -> None:
+        self._hidden_restore_identity = self._selected_identity
+        self.query_one("#declarations-calendar-detail", Static).update("")
+        notice.update(self._empty_copy(query))
+
+    def _empty_copy(self, query: str) -> str:
+        schedule = self.controller.source(DeclarationsCalendarSource.SCHEDULE)
+        if schedule.availability is HomeAvailability.STALE:
+            observed_at = schedule.observed_at
+            if observed_at is None:
+                raise ValueError("stale calendar schedule requires an observation time")
+            return tr(
+                "workspace.declarations.calendar.empty.stale",
+                observed=timestamp_label(observed_at),
+            )
+        if query or self.controller.projection.entries:
+            return tr("workspace.declarations.calendar.empty.search")
+        return tr("workspace.declarations.calendar.empty.known")
+
+    def _selected_row(self, table: DataTable[str]) -> DeclarationsCalendarEntryRefV1 | None:
+        if table.row_count == 0 or table.cursor_row < 0:
+            return None
+        key = table.coordinate_to_cell_key(table.cursor_coordinate).row_key.value
+        return self._rows_by_identity.get(str(key))
+
+    def _source_detail_lines(self) -> list[str]:
+        """Describe each authority's observation without inventing a timestamp, as the list says it."""
+        language = OutputLanguage(output_language())
+        return [source_words(self.controller.source(source), language) for source in DeclarationsCalendarSource]
+
+    def _render_detail(self, row: DeclarationsCalendarEntryRefV1) -> None:
+        lines = [
+            natural_address(row.modelo, row.filing_year, row.period),
+            tr(
+                "workspace.declarations.calendar.detail.dates",
+                opening=calendar_date_label(row.opens_on),
+                payment=calendar_date_label(row.payment_cutoff_on),
+                original=calendar_date_label(row.closes_on),
+                effective=calendar_date_label(row.adjusted_closes_on),
+                evaluated=calendar_date_label(row.evaluated_on),
+                overdue=row.days_overdue
+                if row.days_overdue is not None
+                else tr("workspace.declarations.calendar.none"),
+                shift=shift_reason_statement(row.shift_reason),
+            ),
+            tr(
+                "workspace.declarations.calendar.detail.holidays",
+                coverage=holiday_coverage_statement(row.holiday_coverage, row.holiday_territory),
+            ),
+            tr(
+                "workspace.declarations.calendar.detail.axes",
+                legal=calendar_legal_label(row.legal_status),
+                local=calendar_local_label(row.local_filing_state),
+                aeat=calendar_aeat_label(row.aeat_submission_state),
+                receipt=tr(
+                    "workspace.declarations.calendar.justificante.unknown"
+                    if row.justificante_verified is None
+                    else (
+                        "workspace.declarations.calendar.justificante.verified"
+                        if row.justificante_verified
+                        else "workspace.declarations.calendar.justificante.not_verified"
+                    )
+                ),
+                conflict=tr(
+                    "workspace.declarations.calendar.evidence.conflicted"
+                    if row.evidence_conflicted
+                    else "workspace.declarations.calendar.evidence.clear"
+                ),
+            ),
+        ]
+        lines.extend(self._source_detail_lines())
+        lines.append(
+            tr(
+                "workspace.declarations.calendar.detail.action",
+                action=tr(
+                    "workspace.declarations.calendar.action.create"
+                    if row.recovery_action is not None and self.controller.recovery_handoff is not None
+                    else "workspace.declarations.calendar.action.open"
+                    if self.controller.can_open(row)
+                    else "workspace.declarations.list.not_openable.help"
+                ),
+            )
+        )
+        self.query_one("#declarations-calendar-detail", Static).update("\n".join(lines))
+
+    def on_input_changed(self, event: Input.Changed) -> None:
+        """Apply live Unicode AND search."""
+        if event.input.id == "declarations-calendar-search":
+            self._refresh()
+
+    def on_select_changed(self, event: Select.Changed) -> None:
+        """Apply the selected closed agenda scope."""
+        if event.select.id != "declarations-calendar-scope" or not isinstance(event.value, str):
+            return
+        self._scope = DeclarationsCalendarScopeV1(event.value)
+        self._refresh()
+
+    def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
+        """Render details for the exact semantic row key."""
+        table = cast("DataTable[str]", event.data_table)
+        if table.id != "declarations-calendar-agenda":
+            return
+        row = self._rows_by_identity.get(str(event.row_key.value))
+        if row is not None:
+            identity = _identity(row)
+            if self._hidden_restore_identity is None or identity == self._hidden_restore_identity:
+                self._selected_identity = identity
+                self._hidden_restore_identity = None
+            self._render_detail(row)
+
+    def _confirm_recovery(self, action: DeclaredNextAction, row: DeclarationsCalendarEntryRefV1) -> None:
+        """Offer one pending recovery while preserving handoff admission."""
+        if self.controller.recovery_handoff is None:
+            self.query_one("#declarations-calendar-notice", Static).update(tr("workspace.declarations.refusal.handoff"))
+        elif self._pending_recovery is None and not self._recovery_in_flight:
+            self._pending_recovery = (action, row)
+            app = self.app
+            app.push_screen(
+                ConfirmScreen(
+                    title=lambda: tr("workspace.declarations.calendar.action.create"),
+                    message=lambda: natural_address(row.modelo, row.filing_year, row.period),
+                    confirm_label=lambda: tr("workspace.declarations.calendar.recovery.confirm"),
+                    cancel_label=lambda: tr("workspace.declarations.calendar.recovery.cancel"),
+                ),
+                self._resolve_recovery_confirmation,
+            )
+
+    def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
+        """Open a local confirmation before requesting a host-owned recovery."""
+        table = cast("DataTable[str]", event.data_table)
+        if table.id != "declarations-calendar-agenda":
+            return
+        row = self._rows_by_identity.get(str(event.row_key.value))
+        if row is None:
+            return
+        if row.recovery_action is not None:
+            self._confirm_recovery(row.recovery_action, row)
+        elif self.controller.can_open(row) and self.controller.entry_handoff is not None:
+            try:
+                child = self.controller.entry_handoff(row)
+                if child is not None:
+                    self.app.push_screen(child)
+            except CadrumoError as refusal:
+                self.query_one("#declarations-calendar-notice", Static).update(resolve_error_message(refusal))
+        else:
+            self.query_one("#declarations-calendar-notice", Static).update(tr("workspace.declarations.refusal.handoff"))
+
+    def _resolve_recovery_confirmation(self, confirmed: bool | None) -> None:
+        """Submit one pending recovery only after the local modal explicitly approves it."""
+        pending = self._pending_recovery
+        self._pending_recovery = None
+        if pending is None or confirmed is not True:
+            return
+        action, row = pending
+        handoff = self.controller.recovery_handoff
+        if handoff is None:
+            self.query_one("#declarations-calendar-notice", Static).update(tr("workspace.declarations.refusal.handoff"))
+            return
+        notice = self.query_one("#declarations-calendar-notice", Static)
+        # The handoff reads the profile and writes the work unit, so it runs on
+        # a worker thread; another row pressed meanwhile waits for it.
+        self._recovery_in_flight = True
+        notice.update(tr("workspace.declarations.calendar.recovery.progress"))
+        self.run_worker(self._submit_recovery(handoff, action, row), group="declarations-calendar-recovery")
+
+    async def _submit_recovery(
+        self,
+        handoff: CalendarRecoveryHandoffV1,
+        action: DeclaredNextAction,
+        row: DeclarationsCalendarEntryRefV1,
+    ) -> None:
+        notice = self.query_one("#declarations-calendar-notice", Static)
+        try:
+            await asyncio.to_thread(handoff, action, row)
+        except CadrumoError as refusal:
+            # The application's own reason -- setup not complete, the modelo
+            # not applying -- tells the operator what to fix; a generic line
+            # would not.
+            tui_key = _TUI_REFUSAL_LOCALE_KEYS.get(refusal.translated_message or "")
+            notice.update(tr(tui_key) if tui_key is not None else resolve_error_message(refusal))
+            return
+        except Exception:
+            notice.update(tr("workspace.declarations.calendar.recovery.failure"))
+            return
+        finally:
+            self._recovery_in_flight = False
+        notice.update(
+            tr(
+                "workspace.declarations.calendar.recovery.success",
+                address=natural_address(row.modelo, row.filing_year, row.period),
+            )
+        )
+
+    def replace_projection(self, projection: DeclarationsCalendarProjectionV1) -> None:
+        """Re-render a newly injected projection while preserving semantic focus."""
+        self.controller.replace_projection(projection)
+        self._refresh()
+
+    def action_back(self) -> None:
+        """Leave the calendar for Home.
+
+        The calendar is reached from Home's agenda as often as from the
+        Declarations overview and holds no workspace controller, so it closes
+        the destination rather than routing to an overview it was not opened
+        from.
+        """
+        self.dismiss(None)
+
+
+__all__ = ["DeclarationsCalendarScreen"]

@@ -1,0 +1,93 @@
+modelo:
+  schema:
+    '136':
+      casilla:
+        continuidad:
+          cuota-a-ingresar:
+            label: Result payable
+          m136-autoliquidacion-complementaria:
+            label: Supplementary self-assessment
+          m136-base-imponible-gravamen:
+            label: Taxable base
+          m136-codigo-iban:
+            label: IBAN code
+          m136-cuantia-exenta-gravamen:
+            label: Amount exempt from the special levy
+          m136-cuota-gravamen-especial:
+            label: Special levy tax liability
+          m136-declarante-nif:
+            label: Tax identification number (NIF)
+          m136-declarante-nombre:
+            label: Surname and given name or company name
+          m136-ejercicio-declaracion:
+            label: Tax year
+          m136-fecha-celebracion:
+            label: Draw date
+          m136-fecha-cobro-premio:
+            label: Prize collection date
+          m136-forma-pago:
+            label: Payment method
+          m136-importe-ingresado:
+            label: Amount paid to the Public Treasury
+          m136-importe-premio-declarante:
+            label: Amount or value of the prize corresponding individually to the
+              declarant
+          m136-importe-premio-total:
+            label: Amount of the prize obtained from the winning ticket, coupon or
+              bet
+          m136-justificante-anterior:
+            label: Reference number of the previous self-assessment
+          m136-loteria-apuesta-denominacion:
+            label: Name of the lottery or bet
+          m136-organizador-codigo-pais:
+            label: Country code of the organising body or entity
+          m136-organizador-denominacion:
+            label: Name or company name of the organising body or entity
+          m136-organizador-pais:
+            label: Country of the organising body or entity
+          m136-periodo-declaracion:
+            label: Period
+          m136-precio-unitario:
+            label: Unit price
+          m136-provincia-residencia-irpf:
+            label: Code of the taxpayer's habitual residence province for IRPF purposes
+          m136-resultados-anteriores-mismo-premio:
+            label: Amounts payable from previous self-assessments for the same item
+              and relating to the same prize
+      field:
+        official_name: Modelo 136. Personal Income Tax and Non-Resident Income Tax.
+          Special levy on prizes from certain lotteries and betting. Self-assessment.
+        title: Special levy on prizes from certain lotteries and betting. Self-assessment
+      form:
+        page:
+          pag-1:
+            heading: Special levy on prizes from certain lotteries and betting
+        section:
+          complementaria:
+            heading: Supplementary return
+          declarante:
+            heading: Declarant
+          devengo:
+            heading: Tax period
+          ingreso:
+            heading: Payment
+          liquidacion:
+            heading: Tax calculation
+          loteria:
+            heading: Winning lottery or bet
+      revision:
+        2022-2025:
+          construct:
+            modelo-136-calculation-construct:
+              field:
+                title: Modelo 136 special levy on certain lottery and betting prizes
+          field:
+            label: Modelo 136, tax years 2022 to 2025
+        '2026':
+          construct:
+            modelo-136-calculation-construct:
+              field:
+                title: 'Modelo 136: calculation of the special levy on lottery and
+                  betting prizes'
+          field:
+            label: Modelo 136 tax year 2026 (Order HAP/70/2013 and Order HAC/763/2018)

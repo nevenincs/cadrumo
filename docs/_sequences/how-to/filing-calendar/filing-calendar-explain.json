@@ -1,0 +1,103 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "edit",
+        "docs-sequence-sandbox",
+        "--quiet",
+        "--accept-defaults",
+        "--activity-start-date",
+        "2026-01-01",
+        "--irpf-income-categories",
+        "actividad_economica"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "overview",
+        "explain",
+        "130",
+        "--year",
+        "2026"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "overview.explain",
+        "notices": [
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
+        "result": {
+          "applicable": true,
+          "generated_at": "2026-04-01T09:00:00Z",
+          "legal_refs": [
+            "rd-439-2007:art-110",
+            "orden-eha-672-2007:art-1",
+            "ley-35-2006:art-99",
+            "trlirnr-rdleg-5-2004:art-2"
+          ],
+          "modelo": "130",
+          "out_of_plazo_warning": null,
+          "profile_facts": {
+            "art109_activity_income_withholding_ge_70pct": false,
+            "bienes_extranjero_above_threshold": "",
+            "does_intracomunitario": false,
+            "entity_type": "natural_person",
+            "fiscal_residency": "resident_irpf",
+            "has_employees": false,
+            "irpf_estimation_regime": "",
+            "irpf_income_categories": "actividad_economica",
+            "iva.group_dominant_entity_enrolled": false,
+            "iva.group_member_enrolled": false,
+            "iva.intracommunity_operations_exceed_50000_eur": false,
+            "iva.oss_enrolled": false,
+            "iva.roi_enrolled": false,
+            "iva_regime": "GENERAL",
+            "legal_entity_form": "",
+            "monedas_virtuales_extranjero_above_threshold": "",
+            "pays_capital_income_with_retencion": false,
+            "pays_professionals_with_retencion": false,
+            "pays_rent_with_retencion": false,
+            "premio_loteria_gravamen_especial_sin_retencion": "",
+            "premio_loteria_gravamen_especial_trimestres": "",
+            "tax_id": "sha256:1c9f9632",
+            "third_party_transactions_above_347_threshold": ""
+          },
+          "rationale": "Modelo 130 (pago fraccionado del IRPF): la persona física residente IRPF declara rendimientos de actividades económicas en estimación directa, que generan la obligación del pago fraccionado.",
+          "scheduling_rationale": "Autonomo en estimacion directa salvo la excepcion Art. 109 por cobertura de retencion o ingreso a cuenta en actividades profesionales, agricolas, ganaderas o forestales.",
+          "verdict": "applicable",
+          "year": 2026
+        },
+        "schema_version": "2",
+        "status": "warning"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 2,
+  "sequence_id": "filing-calendar-explain"
+}

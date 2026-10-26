@@ -1,0 +1,20 @@
+---
+name: 16-bundled-knowledge-and-localization
+trigger: always_on
+---
+
+# Bundled knowledge and localization
+
+The offline bundle supplies source material and declarative knowledge for search, explanations, model selection, calculations and layouts. It contains official AEAT artifacts, EU VAT references, Facturae vocabulary, worked examples, manuals, normative sources, normalized texts and declarative registry files. Discover current coverage through canonical manifests rather than frozen counts. Presence and syntax are strong inventory evidence; the large-document semantic reviews were representative and did not check current law.
+
+The registry links legal-source keys to form revisions, formulas, filing windows and generated placements. Read the current support envelope and selected revision claims from their canonical declarations; do not freeze year limits in consumers. Inherited live references require their own grounding, and missing render reproduction or legal attestation must remain explicit. A generated design is separate from an official export, a remote read or a confirmed filing ([year policy](../../src/cadrumo/_data/registry/aeat/legal/supported-filing-years.toml#L1), [303 revision](../../src/cadrumo/_data/registry/aeat/modelos/303/revisions/2026-y-siguientes/revision.toml#L1)).
+
+The profile schema declares sensitive taxpayer facts, derived-selector ownership, effective dates and provenance, plus snapshot and cloud-upload policies. Its capability defaults are prose descriptions, so runtime consent enforcement cannot be inferred from the schema alone; an operator-provided census artifact is expressly not AEAT verification ([profile capability fields](../../src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml#L146), [profile provenance](../../src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml#L2179)).
+
+Knowledge quality is bounded by edition and extraction. Flat normalized text can lose page/table boundaries and contains U+FFFE artifacts; a sampled normative record has apparently unrelated text. Locale catalogs mirror four languages, but sampled 2020 Modelo 100 key sets differ, while terminology contains draft/retired entries and placeholders. Consumers need revision-aware citations, lifecycle filtering and checked fallbacks before presenting these strings as reliable guidance.
+
+## Localization invariants
+
+Author locale changes through the canonical `dev.locales` workflow; do not edit generated catalogues or add parallel translation paths. Required keys need real translations in every supported locale. Reuse canonical keys when legal continuity is established; changed meaning needs a distinct key. Keep transport tokens and stored identifiers untranslated.
+
+Application-authored Spanish, Catalan and Hungarian address the operator informally in the singular. Preserve official quotations and grammatical third-person references. Verify key coverage, fallback/refusal behavior and actual CLI rendering. Do not restore retired aliases or locale families to satisfy stale tests.

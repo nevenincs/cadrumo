@@ -1,0 +1,378 @@
+---
+tags:
+  - '#exec'
+  - '#modelo-347-fileability'
+date: '2026-10-03'
+modified: '2026-10-03'
+body_schema: 'body-v2'
+body_hash: 'sha256:ceea0075392b7a112e746299597c1deb3fec610096cb48a5159c7550cb680b25'
+related:
+  - "[[2026-10-03-modelo-347-fileability-plan]]"
+---
+
+# `modelo-347-fileability` ledger
+
+## Changes
+
+- `S01` `M` `src/cadrumo/_data/registry/aeat/legal/operaciones-terceros.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/legal/iva-flow.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/facts/0139-modelo-payer-applicability-facts.toml`
+- `S01` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/bindings/0001-declarations.toml`
+- `S01` `verify:` `inspect_authoring_candidate` -> `pass`
+- `S02` `A` `src/cadrumo/_data/registry/aeat/facts/0148-m347-clave-threshold-buckets.toml`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/m347_threshold.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/invoice_bindings.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/_invoice_row_materialization.py`
+- `S02` `A` `src/cadrumo/domain/calculations/registry/tests/test_m347_threshold_buckets.py`
+- `S02` `A` `dev/registry/tests/test_m347_threshold_buckets_authored.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/profile/tests/test_source_resolver.py`
+- `S02` `M` `src/cadrumo/application/filing/tests/test_modelo_347_contraparte_export_parity.py`
+- `S02` `verify:` `pytest test_m347_threshold_buckets` -> `pass`
+- `S02` `verify:` `ruff check` -> `pass`
+- `S02` `verify:` `ty check` -> `pass`
+- `S10` `M` `src/cadrumo/domain/calculations/registry/schema_revision_members.py`
+- `S10` `M` `src/cadrumo/domain/calculations/registry/applicability.py`
+- `S10` `M` `src/cadrumo/domain/calculations/registry/applicability_payer_facts.py`
+- `S10` `M` `dev/registry/compiler/validate_applicability_section.py`
+- `S10` `M` `src/cadrumo/_data/registry/aeat/facts/0139-modelo-payer-applicability-facts.toml`
+- `S10` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/applicability/0001-declarations.toml`
+- `S10` `A` `dev/registry/tests/test_applicability_exclusions.py`
+- `S10` `M` `dev/registry/tests/test_payer_fact_declarations.py`
+- `S10` `M` `dev/registry/tests/test_modelo_applicability.py`
+- `S10` `M` `src/cadrumo/application/overview/tests/test_applicability.py`
+- `S10` `verify:` `pytest applicability suites` -> `pass`
+- `S10` `verify:` `inspect_authoring_candidate` -> `pass`
+- `S10` `verify:` `ruff check` -> `pass`
+- `S03` `M` `docs/how-to/review-calculation-values.md`
+- `S03` `M` `pyproject.toml`
+- `S03` `M` `src/cadrumo/_data/registry/aeat/facts/0080-detail-m349-m210-catalogues.toml`
+- `S03` `M` `src/cadrumo/application/invoices/source_resolver.py`
+- `S03` `M` `src/cadrumo/application/invoices/tests/test_source_resolver.py`
+- `S03` `M` `src/cadrumo/application/modelo/_calculation_modelo_adjustments.py`
+- `S03` `M` `src/cadrumo/application/modelo/calculate_input.py`
+- `S03` `M` `src/cadrumo/application/modelo/edit_models.py`
+- `S03` `M` `src/cadrumo/application/modelo/edit_services.py`
+- `S03` `M` `src/cadrumo/application/modelo/operation_definitions.py`
+- `S03` `M` `src/cadrumo/application/modelo/tests/test_amend_request_detail_rows.py`
+- `S03` `M` `src/cadrumo/application/modelo/tests/test_amendment_detail_rows.py`
+- `S03` `M` `src/cadrumo/application/modelo/tests/test_calculation_modelo_adjustments.py`
+- `S03` `M` `src/cadrumo/application/modelo/tests/test_detail_row_modelo_membership.py`
+- `S03` `M` `src/cadrumo/application/modelo/tests/test_edit_detail_row_reconstruction.py`
+- `S03` `M` `src/cadrumo/application/modelo/tests/test_edit_detail_row_wire_mirror.py`
+- `S03` `M` `src/cadrumo/core/errors/registry/_domain_part3.py`
+- `S03` `M` `src/cadrumo/domain/modelos/row_models.py`
+- `S03` `M` `src/cadrumo/domain/modelos/tests/test_calculation_revision_observations.py`
+- `S03` `A` `src/cadrumo/domain/modelos/tests/test_row_models_revision_ids.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/_modelo_cli_support.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/tests/test_amend_detail_row_argv.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/tests/test_work_calculate_row_flag.py`
+- `S03` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_347_declarado_rows.py`
+- `S03` `M` `src/cadrumo/locales/ca/application.yml`
+- `S03` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S03` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S03` `M` `src/cadrumo/locales/en/application.yml`
+- `S03` `M` `src/cadrumo/locales/en/cli.yml`
+- `S03` `M` `src/cadrumo/locales/en/errors.yml`
+- `S03` `M` `src/cadrumo/locales/es/application.yml`
+- `S03` `M` `src/cadrumo/locales/es/cli.yml`
+- `S03` `M` `src/cadrumo/locales/es/errors.yml`
+- `S03` `M` `src/cadrumo/locales/hu/application.yml`
+- `S03` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S03` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S03` `verify:` `pytest focused S03 suite` -> `pass`
+- `S03` `verify:` `ruff check` -> `pass`
+- `S12` `M` `src/cadrumo/application/overview/explain.py`
+- `S12` `M` `src/cadrumo/application/overview/tests/test_explain.py`
+- `S12` `M` `src/cadrumo/domain/calculations/registry/applicability_payer_facts.py`
+- `S12` `M` `src/cadrumo/locales/ca/profile.yml`
+- `S12` `M` `src/cadrumo/locales/ca/wizard.yml`
+- `S12` `M` `src/cadrumo/locales/en/profile.yml`
+- `S12` `M` `src/cadrumo/locales/en/wizard.yml`
+- `S12` `M` `src/cadrumo/locales/es/profile.yml`
+- `S12` `M` `src/cadrumo/locales/es/wizard.yml`
+- `S12` `M` `src/cadrumo/locales/hu/profile.yml`
+- `S12` `M` `src/cadrumo/locales/hu/wizard.yml`
+- `S12` `verify:` `pytest explain and applicability suites` -> `pass`
+- `S12` `verify:` `dev.locales status --check` -> `pass`
+- `S11` `M` `src/cadrumo/application/overview/agenda.py`
+- `S11` `A` `src/cadrumo/application/overview/applicability_evidence.py`
+- `S11` `M` `src/cadrumo/application/overview/backlog.py`
+- `S11` `M` `src/cadrumo/application/overview/calendar.py`
+- `S11` `M` `src/cadrumo/application/overview/calendar_warnings.py`
+- `S11` `A` `src/cadrumo/application/overview/tests/test_applicability_evidence.py`
+- `S11` `M` `src/cadrumo/application/user_profile/projections.py`
+- `S11` `M` `src/cadrumo/application/user_profile/tests/test_projections.py`
+- `S11` `M` `src/cadrumo/domain/calculations/registry/applicability.py`
+- `S11` `M` `src/cadrumo/domain/deadlines/models.py`
+- `S11` `M` `src/cadrumo/entrypoints/overview_read_composition.py`
+- `S11` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S11` `M` `src/cadrumo/locales/ca/common.yml`
+- `S11` `M` `src/cadrumo/locales/en/cli.yml`
+- `S11` `M` `src/cadrumo/locales/en/common.yml`
+- `S11` `M` `src/cadrumo/locales/es/cli.yml`
+- `S11` `M` `src/cadrumo/locales/es/common.yml`
+- `S11` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S11` `M` `src/cadrumo/locales/hu/common.yml`
+- `S11` `verify:` `pytest overview applicability projections suites` -> `pass`
+- `S11` `verify:` `ruff check` -> `pass`
+- `S02` `M` `dev/registry/tests/test_m347_threshold_buckets_authored.py`
+- `S02` `M` `src/cadrumo/_data/registry/aeat/facts/0148-m347-clave-threshold-buckets.toml`
+- `S02` `M` `src/cadrumo/_data/registry/aeat/legal/iva.toml`
+- `S02` `M` `src/cadrumo/application/aggregation/source_mesh.py`
+- `S02` `M` `src/cadrumo/application/invoices/source_resolver.py`
+- `S02` `M` `src/cadrumo/application/modelo/calculation_notes.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/tests/test_m347_threshold_buckets.py`
+- `S02` `M` `src/cadrumo/locales/ca/application.yml`
+- `S02` `M` `src/cadrumo/locales/en/application.yml`
+- `S02` `M` `src/cadrumo/locales/es/application.yml`
+- `S02` `M` `src/cadrumo/locales/hu/application.yml`
+- `S02` `verify:` `pytest 347 resolver suites in HEAD export with scratch authority` -> `pass`
+- `S02` `verify:` `ruff check` -> `pass`
+- `S02` `verify:` `ty check` -> `pass`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/facts/0084-iva-category-component-catalogue.toml`
+- `S08` `M` `src/cadrumo/_data/registry/aeat/legal/operaciones-terceros.toml`
+- `S08` `M` `src/cadrumo/adapters/persistence/profile/tests/test_source_resolver.py`
+- `S08` `M` `src/cadrumo/application/invoices/source_resolver.py`
+- `S08` `M` `src/cadrumo/domain/calculations/registry/iva_category_catalogue.py`
+- `S08` `A` `src/cadrumo/domain/calculations/registry/tests/test_iva_category_exclusions.py`
+- `S08` `verify:` `pytest 347 resolver suites in HEAD export with scratch authority` -> `pass`
+- `S08` `verify:` `ruff check` -> `pass`
+- `S08` `verify:` `ty check` -> `pass`
+- `S09` `M` `dev/quality/metadata/import_load_targets.json`
+- `S09` `A` `dev/registry/tests/test_m347_estimacion_objetiva_scope_authored.py`
+- `S09` `A` `src/cadrumo/_data/registry/aeat/facts/0149-m347-estimacion-objetiva-operation-scope.toml`
+- `S09` `M` `src/cadrumo/_data/registry/aeat/legal/operaciones-terceros.toml`
+- `S09` `M` `src/cadrumo/adapters/persistence/profile/tests/test_source_resolver.py`
+- `S09` `M` `src/cadrumo/application/aggregation/_modelo_bindings_support.py`
+- `S09` `M` `src/cadrumo/application/aggregation/modelo_bindings.py`
+- `S09` `M` `src/cadrumo/application/aggregation/modelo_bindings_renta_expenses.py`
+- `S09` `M` `src/cadrumo/application/aggregation/oss_ioss.py`
+- `S09` `M` `src/cadrumo/application/aggregation/source_resolution_operations.py`
+- `S09` `M` `src/cadrumo/application/invoices/source_resolver.py`
+- `S09` `A` `src/cadrumo/domain/calculations/registry/m347_operation_scope.py`
+- `S09` `A` `src/cadrumo/domain/calculations/registry/tests/test_m347_operation_scope.py`
+- `S09` `verify:` `pytest 347 resolver suites in HEAD export with scratch authority` -> `pass`
+- `S09` `verify:` `ruff check` -> `pass`
+- `S09` `verify:` `ty check` -> `pass`
+- `S04` `M` `dev/registry/mappings/modelo_347/2011/0001-records.toml`
+- `S04` `M` `dev/registry/mappings/modelo_347/2011/0002-declarante.toml`
+- `S04` `M` `dev/registry/mappings/modelo_347/2025/0001-records.toml`
+- `S04` `M` `dev/registry/mappings/modelo_347/2025/0002-declarante.toml`
+- `S04` `M` `dev/registry/mappings/modelo_347/2025/0003-declarado.toml`
+- `S04` `M` `dev/registry/pipeline/export_field_render_profile_derivation.py`
+- `S04` `M` `dev/registry/pipeline/render_profile_authority.py`
+- `S04` `M` `dev/registry/pipeline/render_profile_model.py`
+- `S04` `M` `dev/registry/pipeline/source_defects.py`
+- `S04` `M` `dev/registry/pipeline/tests/test_signed_composite_render_profile.py`
+- `S04` `M` `dev/registry/render_profiles/README.md`
+- `S04` `M` `dev/registry/render_profiles/modelo_347/2011/0001-numeric-representation.toml`
+- `S04` `A` `dev/registry/render_profiles/modelo_347/2011/0002-signed-composite.toml`
+- `S04` `M` `dev/registry/render_profiles/modelo_347/2025/0001-numeric-representation.toml`
+- `S04` `A` `dev/registry/render_profiles/modelo_347/2025/0002-signed-composite.toml`
+- `S04` `A` `dev/registry/tests/test_modelo_347_declarado_export.py`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/bindings/0001-declarations.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/casillas/0001-declarations.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/completeness_manifest/0001-declarations.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/constructs/0001-declarations.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/export/0001-record-m347-declarante.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/export/0002-record-m347-declarado.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/export/_generation.provenance.json`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/form_layouts/0001-form-layout.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/verification_expectations/0001-declarations.toml`
+- `S04` `A` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/bindings/0001-declarations.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/0001-record-m347-declarante.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/0002-record-m347-declarado.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/0003-record-m347-inmueble.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/_generation.provenance.json`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/revision.toml`
+- `S04` `M` `src/cadrumo/domain/calculations/registry/_invoice_row_materialization.py`
+- `S04` `M` `src/cadrumo/domain/calculations/registry/invoice_bindings.py`
+- `S04` `M` `src/cadrumo/locales/ca/modelo/schema/347.yml`
+- `S04` `M` `src/cadrumo/locales/en/modelo/schema/347.yml`
+- `S04` `M` `src/cadrumo/locales/es/modelo/schema/347.yml`
+- `S04` `M` `src/cadrumo/locales/hu/modelo/schema/347.yml`
+- `S04` `verify:` `inspect_authoring_candidate` -> `pass`
+- `S04` `verify:` `form_layout generate --check` -> `pass`
+- `S04` `verify:` `pytest 347 export suites` -> `pass`
+- `S05` `verify:` `inspect_authoring_candidate` -> `pass`
+- `S05` `verify:` `form_layout generate --check` -> `pass`
+- `S05` `verify:` `pytest 347 export suites` -> `pass`
+- `S07` `verify:` `inspect_authoring_candidate` -> `pass`
+- `S07` `verify:` `form_layout generate --check` -> `pass`
+- `S07` `verify:` `pytest 347 export suites` -> `pass`
+- `S11` `M` `dev/registry/compiler/validate_applicability_section.py`
+- `S11` `M` `dev/registry/tests/test_payer_fact_declarations.py`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/facts/0139-modelo-payer-applicability-facts.toml`
+- `S11` `M` `src/cadrumo/application/overview/applicability_evidence.py`
+- `S11` `M` `src/cadrumo/application/overview/explain.py`
+- `S11` `M` `src/cadrumo/application/overview/tests/test_applicability_evidence.py`
+- `S11` `M` `src/cadrumo/domain/calculations/registry/applicability_payer_facts.py`
+- `S11` `verify:` `pytest overview and payer-fact suites in HEAD export` -> `pass`
+- `S11` `verify:` `inspect_authoring_candidate` -> `pass`
+- `S18` `M` `src/cadrumo/application/invoices/source_resolver.py`
+- `S18` `M` `src/cadrumo/domain/calculations/registry/_invoice_row_materialization.py`
+- `S18` `M` `src/cadrumo/domain/calculations/registry/iva_category_catalogue.py`
+- `S18` `verify:` `pytest 347 resolver suites in HEAD export` -> `pass`
+- `S17` `M` `src/cadrumo/application/invoices/source_resolver.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/_invoice_row_materialization.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/iva_category_catalogue.py`
+- `S17` `verify:` `pytest 347 resolver suites in HEAD export` -> `pass`
+- `S15` `M` `src/cadrumo/application/operations/_supervisor_execution.py`
+- `S15` `M` `src/cadrumo/application/overview/read_calendar_item_projection.py`
+- `S15` `A` `src/cadrumo/application/overview/tests/test_read_calendar_item_projection.py`
+- `S15` `verify:` `inspect_authoring_candidate` -> `pass`
+- `S15` `verify:` `form_layout generate --check` -> `pass`
+- `S15` `verify:` `pytest 347 inmueble and renderer suites` -> `pass`
+- `S15` `M` `dev/registry/mappings/modelo_347/2011/0001-records.toml`
+- `S15` `M` `dev/registry/mappings/modelo_347/2025/0001-records.toml`
+- `S15` `D` `src/cadrumo/_data/registry/.aeat-generated-export-transaction-347-2011-2024.lock`
+- `S15` `D` `src/cadrumo/_data/registry/.aeat-generated-export-transaction-347-2025-y-siguientes.lock`
+- `S15` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/export/0003-record-m347-inmueble.toml`
+- `S15` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/export/_generation.provenance.json`
+- `S15` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/form_layouts/0001-form-layout.toml`
+- `S15` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/0003-record-m347-inmueble.toml`
+- `S15` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/_generation.provenance.json`
+- `S15` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S15` `M` `src/cadrumo/application/filing/record_renderer.py`
+- `S15` `M` `src/cadrumo/application/modelo/calculation_diagnostics.py`
+- `S15` `verify:` `inspect_authoring_candidate` -> `pass`
+- `S13` `M` `dev/registry/tests/test_modelo_347_registry.py`
+- `S13` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/revision.toml`
+- `S13` `M` `src/cadrumo/application/modelo/effective_deadline.py`
+- `S13` `M` `src/cadrumo/application/modelo/tests/test_effective_deadline_parity.py`
+- `S13` `M` `src/cadrumo/application/modelo/work_form_service.py`
+- `S13` `M` `src/cadrumo/application/overview/calendar_models.py`
+- `S13` `M` `src/cadrumo/application/overview/tests/test_calendar.py`
+- `S13` `M` `src/cadrumo/domain/deadlines/festivos.py`
+- `S13` `M` `src/cadrumo/domain/deadlines/tests/test_festivos.py`
+- `S13` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_deadline_effective_output.py`
+- `S13` `M` `src/cadrumo/entrypoints/tui/declarations/tests/test_calendar.py`
+- `S13` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_workbench_legend.py`
+- `S13` `M` `src/cadrumo/locales/ca/application.yml`
+- `S13` `M` `src/cadrumo/locales/en/application.yml`
+- `S13` `M` `src/cadrumo/locales/es/application.yml`
+- `S13` `M` `src/cadrumo/locales/hu/application.yml`
+- `S13` `verify:` `pytest deadline calendar parity suites` -> `pass`
+- `S13` `verify:` `inspect_authoring_candidate` -> `pass`
+- `S06` `M` `dev/registry/mappings/modelo_347/2011/0001-records.toml`
+- `S06` `M` `dev/registry/mappings/modelo_347/2011/0003-declarado.toml`
+- `S06` `M` `dev/registry/mappings/modelo_347/2025/0001-records.toml`
+- `S06` `M` `dev/registry/mappings/modelo_347/2025/0003-declarado.toml`
+- `S06` `M` `dev/registry/tests/test_modelo_347_declarado_export.py`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/export/0002-record-m347-declarado.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/export/_generation.provenance.json`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/form_layouts/0001-form-layout.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/0002-record-m347-declarado.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/_generation.provenance.json`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S06` `M` `src/cadrumo/domain/calculations/registry/export_value_policy.py`
+- `S06` `M` `src/cadrumo/domain/calculations/registry/fixed_width_codec.py`
+- `S06` `M` `src/cadrumo/domain/calculations/registry/tests/test_fixed_width_codec.py`
+- `S06` `verify:` `inspect_authoring_candidate` -> `pass`
+- `S06` `verify:` `form_layout generate --check` -> `pass`
+- `S06` `verify:` `pytest 347 export end to end` -> `pass`
+- `S11` `M` `src/cadrumo/application/workbench_capture_memory.py`
+- `S11` `M` `src/cadrumo/application/workbench_generation_calendar.py`
+- `S11` `M` `src/cadrumo/application/workbench_generation_reader.py`
+- `S11` `A` `src/cadrumo/entrypoints/tests/test_m347_ledger_verdict_parity.py`
+- `S11` `verify:` `pytest workbench and overview suites in HEAD export` -> `pass`
+- `S11` `verify:` `pytest CLI/TUI 347 verdict parity` -> `pass`
+- `S16` `M` `dev/registry/mappings/modelo_347/2011/0001-records.toml`
+- `S16` `M` `dev/registry/mappings/modelo_347/2011/0002-declarante.toml`
+- `S16` `M` `dev/registry/mappings/modelo_347/2011/0003-declarado.toml`
+- `S16` `M` `dev/registry/mappings/modelo_347/2011/0004-inmueble.toml`
+- `S16` `M` `dev/registry/mappings/modelo_347/2025/0001-records.toml`
+- `S16` `M` `dev/registry/mappings/modelo_347/2025/0002-declarante.toml`
+- `S16` `M` `dev/registry/mappings/modelo_347/2025/0003-declarado.toml`
+- `S16` `M` `dev/registry/mappings/modelo_347/2025/0004-inmueble.toml`
+- `S16` `A` `dev/registry/render_profiles/modelo_347/2011/0003-telematic-transport.toml`
+- `S16` `A` `dev/registry/render_profiles/modelo_347/2025/0003-telematic-transport.toml`
+- `S16` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/bindings/0001-declarations.toml`
+- `S16` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/casillas/0001-declarations.toml`
+- `S16` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/constructs/0001-declarations.toml`
+- `S16` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/export/0001-record-m347-declarante.toml`
+- `S16` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/export/0002-record-m347-declarado.toml`
+- `S16` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/export/0003-record-m347-inmueble.toml`
+- `S16` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/export/_generation.provenance.json`
+- `S16` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/form_layouts/0001-form-layout.toml`
+- `S16` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/verification_expectations/0001-declarations.toml`
+- `S16` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/0001-record-m347-declarante.toml`
+- `S16` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/0002-record-m347-declarado.toml`
+- `S16` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/0003-record-m347-inmueble.toml`
+- `S16` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/_generation.provenance.json`
+- `S16` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/form_layouts/0001-form-layout.toml`
+- `S16` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/revision.toml`
+- `S16` `M` `src/cadrumo/adapters/persistence/profile/tests/test_source_resolver.py`
+- `S16` `M` `src/cadrumo/application/filing/tests/test_modelo_347_contraparte_export_parity.py`
+- `S16` `M` `src/cadrumo/application/filing/tests/test_modelo_347_fichero_export.py`
+- `S16` `M` `src/cadrumo/application/filing/tests/test_modelo_347_inmueble_record_export.py`
+- `S16` `M` `src/cadrumo/application/filing/tests/test_optional_record_omission.py`
+- `S16` `M` `src/cadrumo/application/invoices/catalogue_add_contracts.py`
+- `S16` `M` `src/cadrumo/application/invoices/catalogue_add_operation.py`
+- `S16` `M` `src/cadrumo/application/invoices/catalogue_creation.py`
+- `S16` `M` `src/cadrumo/application/invoices/source_resolver.py`
+- `S16` `M` `src/cadrumo/application/invoices/tests/test_catalogue_add_operation.py`
+- `S16` `M` `src/cadrumo/application/invoices/tests/test_source_resolver.py`
+- `S16` `D` `src/cadrumo/application/modelo/_m347_inmueble_advisory.py`
+- `S16` `A` `src/cadrumo/application/modelo/_m347_uninvoiced_expense_advisory.py`
+- `S16` `M` `src/cadrumo/application/modelo/calculation_diagnostics.py`
+- `S16` `D` `src/cadrumo/application/modelo/tests/test_m347_inmueble_advisory.py`
+- `S16` `A` `src/cadrumo/application/modelo/tests/test_m347_uninvoiced_expense_advisory.py`
+- `S16` `M` `src/cadrumo/domain/calculations/registry/_invoice_row_materialization.py`
+- `S16` `M` `src/cadrumo/domain/calculations/registry/invoice_bindings.py`
+- `S16` `M` `src/cadrumo/domain/invoices/_payload_normalisation.py`
+- `S16` `M` `src/cadrumo/domain/invoices/models.py`
+- `S16` `A` `src/cadrumo/domain/invoices/tests/test_business_premises_lease.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/_app_ledger_invoice_intake_command_specs.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/app_ledger_invoice_common_command_parameters.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/tests/test_app_ledger_invoice_lifecycle_command_specs.py`
+- `S16` `M` `src/cadrumo/entrypoints/cli/tests/test_catalogue_invoice_lifecycle.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/ledger/invoice_entry.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/ledger/models.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/ledger/runtime_invoice_add.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_invoice_entry_lines.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_runtime_invoice_add.py`
+- `S16` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S16` `M` `src/cadrumo/locales/ca/common.yml`
+- `S16` `M` `src/cadrumo/locales/ca/modelo/schema/347.yml`
+- `S16` `M` `src/cadrumo/locales/en/cli.yml`
+- `S16` `M` `src/cadrumo/locales/en/common.yml`
+- `S16` `M` `src/cadrumo/locales/en/modelo/schema/347.yml`
+- `S16` `M` `src/cadrumo/locales/es/cli.yml`
+- `S16` `M` `src/cadrumo/locales/es/common.yml`
+- `S16` `M` `src/cadrumo/locales/es/modelo/schema/347.yml`
+- `S16` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S16` `M` `src/cadrumo/locales/hu/common.yml`
+- `S16` `M` `src/cadrumo/locales/hu/modelo/schema/347.yml`
+- `S16` `verify:` `inspect_authoring_candidate` -> `pass`
+- `S16` `verify:` `form_layout generate --check` -> `pass`
+- `S16` `verify:` `pytest S16 focused suite in HEAD export` -> `pass`
+- `S13` `M` `src/cadrumo/application/invoices/source_resolver.py`
+- `S13` `verify:` `pytest S13b focused suite in HEAD export` -> `pass`
+
+## Notes
+
+- `S01` stand-in rd-1065-2007-art-31.html and its sidecars are unreferenced and await deletion at Phase close
+- `S02` 44 tests that read the published authority await the P01 Phase-close publication
+- `S10` `applicability_payer_facts.py` includes another writer's helper split of the new code; published-authority tests await Phase publication
+- `S03` two known failures: one awaits publication of fact 0080, one is the pre-existing dead 349 summary loop (operator 349 rows do not reach type 1 totals), recorded as follow-up
+- `S12` census adoption not implemented: no census source Cadrumo reads carries SII, IVA regime, criterio de caja or estimation regime; needs a certificate or 036 read-back reader (new scope)
+- `S11` Step stays open: TUI reader wiring waits for another writer's uncommitted workbench calendar split, and overview explain must receive the per-year evidence; `_DECLARED_RECORD_COUNT_SOURCES` is a one-entry Python table that should move to registry data
+- `S02` commit 73cee8a07f; published-authority tests await the publication from c5546a23a5
+- `S08` commit bf204de53a; published-authority tests await the publication from c5546a23a5
+- `S09` commit c5546a23a5; published-authority tests await the publication from c5546a23a5
+- `S04` S04, S05 and S07 share commit c534d4350e so no commit carries stale generated trees; S07 inmueble repetition moved to S15/S16, per-row provincia to S06
+- `S05` S04, S05 and S07 share commit c534d4350e so no commit carries stale generated trees; S07 inmueble repetition moved to S15/S16, per-row provincia to S06
+- `S07` S04, S05 and S07 share commit c534d4350e so no commit carries stale generated trees; S07 inmueble repetition moved to S15/S16, per-row provincia to S06
+- `S11` explain wiring and registry-declared ledger source; TUI reader wiring still pending another writer's workbench calendar split
+- `S18` landed inside another writer's whole-tree snapshot commit f4729489f9; completeness confirmed by the implementer and repaired in f4729489f9
+- `S17` landed inside another writer's whole-tree snapshot commit f4729489f9; completeness confirmed by the implementer and repaired in f4729489f9
+- `S15` found two export blockers for S06: decl.ejercicio passed as Decimal, absent ejercicio-operacion written as 0000
+- `S15` correction: the previous S15 rows were read from another writer's commit 659fe64d35 by mistake; these rows are commit 57c565dbd1. Export blockers for S06: decl.ejercicio passed as Decimal, absent ejercicio-operacion written as 0000
+- `S13` part A in cd923576a0; part B (expense-without-invoice advisory, received-invoice dating, tipo de soporte) pending; follow-ups: capture the 2014-2024 347 diseño to restore filing grade for amendments, and a structured authority-grade limitation field (schema decision)
+- `S06` commit f2f8ca00a9; first half landed in snapshot f4729489f9 and repair 3d235bacde; seguro, arrendamiento, transmisiones, BDNS and representante remain single-valued casillas; criterio de caja amount, Spanish provincia and metalico have no source data and are advisories
+- `S11` TUI wiring in 939c990a5e closes S11
+- `S16` commit c2257ee05d carries S13 part B and S16 together; open: lease facts not shown in invoice view/list, no direccion or representante capture, tenant-side pos. 100, invoice wizard/update lease options
+- `S13` part B in c2257ee05d: uninvoiced expense advisory, received-invoice dating advisory, tipo de soporte rule

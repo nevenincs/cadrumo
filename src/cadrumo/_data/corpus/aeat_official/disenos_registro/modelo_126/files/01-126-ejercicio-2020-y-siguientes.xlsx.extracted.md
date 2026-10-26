@@ -1,0 +1,75 @@
+# Pág. 0
+
+ | Agencia Tributaria
+Modelo 126 |  | Diseño de registro. Castellano.
+1.07 |  | IRPF Impuesto sobre Sociedades. IRNR (establecimientos permanentes). Retenciones e ingresos a cuenta sobre rendimientos del capital mobiliario y rentas obtenidos por la contraprestación derivada de cuentas en toda clase de instituciones financieras, incluyendo las basadas en operaciones sobre activos financieros
+Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
+1 | 1 | 2 | An | Inicio del identificador de modelo y página. |  | Constante "<T"
+2 | 3 | 3 | An | Modelo. |  | Constante "126"
+3 | 6 | 1 | An | Discriminante |  | Constante "0"
+4 | 7 | 4 | An | Ejercicio de devengo (AAAA)
+5 | 11 | 2 | An | Periodo (PP) |  | 01.."12" o "1T".."4T"
+6 | 13 | 5 | An | Tipo y cierre |  | "0000>"
+7 | 18 | 5 | An | Constante |  | "<AUX>"
+8 | 23 | 70 | An | Reservado para la Administración. Rellenar con blancos |  | BLANCOS
+9 | 93 | 4 | An | Versión del Programa (**)
+10 | 97 | 4 | An | Reservado para la Administración. Rellenar con blancos
+11 | 101 | 9 | An | NIF Empresa Desarrollo (**)
+12 | 110 | 213 | An | Reservado para la Administración. Rellenar con blancos |  | BLANCOS
+13 | 323 | 6 | An | Constante |  | "</AUX>"
+14 | 329 | variable | An | Contenido del fichero. Aquí se debe incluir el contenido de las páginas correspondientes a la declaración según el formato descrito para cada página en este mismo documento
+15 | *** | 18 | An | Constante. </T+ modelo+discriminante+Ejercicio+periodo+Tipo+> |  | "</T1260AAAAPP0000>"
+TOTAL |  | variable | POSICIONES
+ |  |  |  | (**) A cumplimentar por las entidades desarrolladoras (EEDD)
+ |  |  |  | Versión del programa: Debe consignarse el identificador de la versión del SW desarrollado por la ED
+ |  |  |  | NIF Empresa Desarrollo: Debe consignarse el NIF de la ED del SW
+Nota2:
+1. Los campos deben ser A (Alfabético) An (Alfanumérico), Num (Numérico sin signo) o N (Numérico con signo).
+2. Los campos alfanuméricos (An) sólo admiten letras, números y blancos. Deberán estar alineados a la izquierda, rellenando con blancos por la derecha.
+3. Los campos numéricos (Num) sólo admiten números. Los datos numéricos deberán estar alineados a la derecha rellenando con ceros por la izquierda.
+4. Los campos numéricos con signo (N) admiten números más el carácter N . Los datos numéricos deberán estar alineados a la derecha rellenando con ceros por la izquierda.
+5. Los datos numéricos negativos llevarán una N en la primera posición del campo.
+
+# Pág. 1
+
+ | Agencia Tributaria
+Modelo 126 |  | Diseño de registro. Castellano.
+vers.1.05 |  | IRPF Impuesto sobre Sociedades. IRNR (establecimientos permanentes). Retenciones e ingresos a cuenta sobre rendimientos del capital mobiliario y rentas obtenidos por la contraprestación derivada de cuentas en toda clase de instituciones financieras, incluyendo las basadas en operaciones sobre activos financieros
+Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
+1 | 1 | 2 | An | Inicio del identificador de modelo y página. | Obligatorio | Constante "<T"
+2 | 3 | 3 | An | Modelo. | Obligatorio | Constante "126"
+3 | 6 | 5 | An | Página. | Obligatorio | Constante "01000"
+4 | 11 | 1 | An | Fin de identificador de modelo. | Obligatorio | Constante ">"
+5 | 12 | 1 | A | Indicador de página complementaria. |  | En blanco
+6 | 13 | 1 | A | Tipo de autoliquidación | Obligatorio | Ver Nota1
+7 | 14 | 9 | An | Identificación  - Nif | Obligatorio
+8 | 23 | 60 | An | Identificación - Apellidos o razón social | Obligatorio
+9 | 83 | 20 | An | Identificación - Nombre (solo personas físicas)
+10 | 103 | 4 | Num | Devengo - Ejercicio | Obligatorio
+11 | 107 | 2 | An | Devengo - Período | Obligatorio | "01".."12" o "1T".."4T"
+12 | 109 | 17 | Num | Ret. Ing. Cta. - Partida 1 - Base ret. ing. cuenta. |  | [15 enteros + 2 decimales]
+13 | 126 | 17 | Num | Ret. Ing. Cta. - Partida 2 - Retenciones ingresos a cuenta |  | [15 enteros + 2 decimales]
+14 | 143 | 17 | Num | Periodificación - Partida 3 - Base ret. ing. cuenta. |  | [15 enteros + 2 decimales]
+15 | 160 | 17 | Num | Periodificación - Partida 4- Ret. ing. cuenta. |  | [15 enteros + 2 decimales]
+16 | 177 | 17 | Num | Periodificación - Partida 5- Ing. Ej. Anteriories |  | [15 enteros + 2 decimales]
+17 | 194 | 17 | Num | Periodificación - Partida 6 - Resultado ingresar |  | [15 enteros + 2 decimales]
+18 | 211 | 17 | Num | Periodificación - Partida 7 - Base ret. ing. cuenta. |  | [15 enteros + 2 decimales]
+19 | 228 | 17 | Num | Periodificación - Partida 8 - Ret. ing. cuenta. |  | [15 enteros + 2 decimales]
+20 | 245 | 17 | Num | Periodificación - Partida 9- Ing. Ej. Anteriories |  | [15 enteros + 2 decimales]
+21 | 262 | 17 | Num | Liquidación - Partida 10 - Suma ret. ing. cuenta. |  | [15 enteros + 2 decimales]
+22 | 279 | 17 | Num | Liquidación - Partida 11 - Deducir ing. Ejerc. anteriores. |  | [15 enteros + 2 decimales]
+23 | 296 | 17 | Num | Liquidación - Partida 12- Resultado |  | [15 enteros + 2 decimales]
+24 | 313 | 34 | An | Domiciliación - IBAN
+25 | 347 | 1 | An | Complementaria - Declaración complementaria |  | blanco o "X"
+26 | 348 | 13 | An | Complementaria - Número justificante declaración anterior
+27 | 361 | 115 | An | RESERVADO PARA LA A.E.A.T. (Dejar en blanco)
+28 | 476 | 13 | An | SELLO ELECTRONICO RESERVADO PARA LA A.E.A.T. (Dejar en blanco)
+29 | 489 | 12 | An | Indicador de fin de registro | Obligatorio | Constante "</T12601000>"
+TOTAL |  | 500 | POSICIONES
+Nota1: El tipo de declaración puede ser: I (ingreso) N (negativa) G (ingreso a anotar en CCT) U (domiciliación del ingreso en CCC)
+Nota2:
+1. Los campos deben ser A (Alfabético) An (Alfanumérico), Num (Numérico sin signo) o N (Numérico con signo).
+2. Los campos alfanuméricos (An) sólo admiten letras, números y blancos. Deberán estar alineados a la izquierda, rellenando con blancos por la derecha.
+3. Los campos numéricos (Num) sólo admiten números. Los datos numéricos deberán estar alineados a la derecha rellenando con ceros por la izquierda.
+4. Los campos numéricos con signo (N) admiten números más el carácter N . Los datos numéricos deberán estar alineados a la derecha rellenando con ceros por la izquierda.
+5. Los datos numéricos negativos llevarán una N en la primera posición del campo.

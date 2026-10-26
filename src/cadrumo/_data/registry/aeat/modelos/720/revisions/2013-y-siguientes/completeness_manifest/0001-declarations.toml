@@ -1,0 +1,33 @@
+[revisions."2013-y-siguientes".completeness_manifest]
+source_ref = "aeat-dr-720"
+legal_refs = [
+    "ley-58-2003:art-93",
+    "ley-58-2003:da-18",
+    "orden-hap-72-2013:art-1",
+    "orden-hap-72-2013:art-2",
+    "orden-hap-72-2013:art-7",
+    "rd-1065-2007:art-42-bis",
+    "rd-1065-2007:art-42-ter",
+    "rd-1065-2007:art-54-bis",
+]
+source_refs = ["aeat-dr-720"]
+
+[[revisions."2013-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "decl.ejercicio"
+number = "ejercicio"
+
+[[revisions."2013-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "decl.tipo-declaracion"
+number = "tipo-declaracion"
+
+[[revisions."2013-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "cuentas.valoracion"
+number = "cuentas.valoracion"
+
+[[revisions."2013-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "inmuebles.valoracion"
+number = "inmuebles.valoracion"
+
+[[revisions."2013-y-siguientes".completeness_manifest.casillas]]
+casilla_id = "valores.valoracion"
+number = "valores.valoracion"

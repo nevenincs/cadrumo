@@ -1,0 +1,14 @@
+# The parity workbook is the Orden's own layout, bundled as
+# boe-modelo-188-form-layout with declared window applies_from 1999-11-21 and no
+# end date. It is the SAME artefact the 2023-y-siguientes edition names, which
+# is why the fixture id is the same one: a distinct id would imply a distinct
+# fixture, and no such fixture exists.
+[[revisions."2022".workbook_parity_refs]]
+id = "modelo-188-record-design"
+workbook_source = "boe-modelo-188-form-layout"
+fixture_id = "modelo-188-record-design-layout"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["orden-1999-11-17:apartado-quinto"]
+source_refs = ["boe-modelo-188-form-layout"]

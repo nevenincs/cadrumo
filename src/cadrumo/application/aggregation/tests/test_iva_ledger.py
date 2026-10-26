@@ -1,0 +1,953 @@
+"""Tests for bucket-local IVA ledger observation projection."""
+
+from __future__ import annotations
+
+from datetime import UTC, date, datetime
+from decimal import Decimal
+from pathlib import Path
+
+import pytest
+
+from ....core.aggregation import BindingAggregation, BindingAggregationOp
+from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from ....core.operator_action_enums import OperatorActionAxis
+from ....core.period import Period
+from ....core.prorrata_exclusions import Art104TresExclusion
+from ....domain.bienes_inversion.register import BienesInversionIvaRegister, BienInversionIvaRecord
+from ....domain.bienes_inversion.vocabulary import BienInversionKind
+from ....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from ....domain.calculations.registry.errors import RegistryValidationError
+from ....domain.calculations.registry.ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
+from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
+from ....domain.calculations.registry.schema_references import PeriodSelector
+from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
+from ....domain.iva.flow import IvaFlowDirection
+from ....domain.iva.prorrata import ProrrataKind, ProrrataRegime
+from ....domain.iva.schema import (
+    IvaCashAccountingTreatment,
+    IvaCategory,
+    IvaExemptionArticle,
+    IvaLedgerObservationRole,
+    IvaRateKind,
+)
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ...ledger.preflight import OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE
+from ..errors import AggregationValidationError
+from ..iva_ledger import (
+    IvaLedgerAggregation,
+    IvaLedgerAggregationIssueReason,
+)
+from ..iva_ledger import (
+    aggregate_iva_ledger_observations as _aggregate_iva_ledger_observations_with_authority,
+)
+from .renta_income_aggregation_support import _period
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
+
+_TEST_ASSET_REGISTER = BienesInversionIvaRegister()
+
+
+def aggregate_iva_ledger_observations(
+    transactions: TransactionCatalogue,
+    *,
+    period: Period,
+) -> IvaLedgerAggregation:
+    """Exercise the public path with an explicit empty authority owned by this test profile."""
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        return _aggregate_iva_ledger_observations_with_authority(
+            transactions,
+            period=period,
+            ledger_profile_id="test-profile",
+            investment_asset_register=_TEST_ASSET_REGISTER,
+            investment_asset_profile_id="test-profile",
+            operation=_authority_operation_for_test,
+        )
+
+
+def _iva_binding(
+    binding_id: str,
+    *,
+    categories: tuple[IvaCategory, ...],
+    rate_kinds: tuple[IvaRateKind, ...],
+    flow_direction: IvaFlowDirection,
+) -> BindingDefinition:
+    return BindingDefinition(
+        id=binding_id,
+        provider={
+            "kind": "ledger_iva_aggregation",
+            **{
+                "categories": categories,
+                "rate_kinds": rate_kinds,
+                "flow_direction": flow_direction,
+                "observation_roles": (IvaLedgerObservationRole.SETTLEMENT,),
+                "cash_accounting_treatments": (
+                    IvaCashAccountingTreatment("none"),
+                    IvaCashAccountingTreatment("supplier_regime"),
+                ),
+                "fact": "iva_amount_sum",
+            },
+        },
+        value={"data_type": "money", "channel": "decimal"},
+        aggregation=BindingAggregation(op=BindingAggregationOp.SUM),
+        legal_refs=("ley-37-1992:art-88",),
+        source_refs=("test-iva-ledger-binding",),
+    )
+
+
+def _revision_with_iva_bindings(revision_id: str, *bindings: BindingDefinition) -> ModeloRevision:
+    return ModeloRevision(
+        id=revision_id,
+        localization_key=f"test.schema.revision.{revision_id}.label",
+        valid_from=date(2026, 1, 1),
+        period_selector=PeriodSelector(year_from=2026, periods=("1T", "2T", "3T", "4T", "0A")),
+        legal_refs=("ley-37-1992:art-88",),
+        source_refs=("test-iva-ledger-binding",),
+        bindings=bindings,
+    )
+
+
+def _modelo_303_iva_revision() -> ModeloRevision:
+    return _revision_with_iva_bindings(
+        "2022",
+        _iva_binding(
+            "modelo-303-iva-repercutido-general-cuota",
+            categories=(IvaCategory("domestic_general"),),
+            rate_kinds=(IvaRateKind("general"),),
+            flow_direction=IvaFlowDirection.from_registry("repercutido"),
+        ),
+        _iva_binding(
+            "modelo-303-iva-soportado-interiores-cuota",
+            categories=(
+                IvaCategory("domestic_general"),
+                IvaCategory("domestic_reduced"),
+                IvaCategory("domestic_super_reduced"),
+            ),
+            rate_kinds=(IvaRateKind("general"), IvaRateKind("reduced"), IvaRateKind("super_reduced")),
+            flow_direction=IvaFlowDirection.from_registry("soportado"),
+        ),
+    )
+
+
+_Q2_2023 = _period(2023, "2T")
+_Q2_2026 = _period(2026, "2T")
+# Before Ley 41/1994 art. 78.Segundo took effect on 1 January 1995, so genuinely
+# outside the rate table's coverage: no ES window of any tier reaches back past
+# it.
+#
+# This probe has now moved TWICE, each time because the table gained real
+# coverage rather than because the distinction weakened. 2T 2023 served first,
+# until the general and reduced windows were corrected back to 2012; 2T 2012
+# served next, until the super-reducido window was corrected back to 1995 and
+# began covering the date the probe relied on being uncovered.
+#
+# The lesson is in the pattern, not the dates: a probe anchored to where the
+# data currently STOPS will be falsified every time the data is corrected, and
+# it fails by reporting the wrong reason rather than by looking wrong. Anchor it
+# to the earliest provision the table can ever cite, which is what this is.
+_BUCKET_ID = "14141414-1414-4414-8414-141414141414"
+_OTHER_BUCKET_ID = "15151515-1515-4515-8515-151515151515"
+
+
+def _raw_transaction(
+    provider_id: str,
+    *,
+    booked_date: date = date(2026, 4, 5),
+    value_date: date | None = date(2026, 4, 5),
+    amount: Decimal = Decimal("121.00"),
+    currency: str = "EUR",
+) -> RawTransaction:
+    return RawTransaction(
+        provider_transaction_id=provider_id,
+        booked_date=booked_date,
+        value_date=value_date,
+        amount=amount,
+        currency=currency,
+        counterparty="Cliente o proveedor",
+        description=f"ledger row {provider_id}",
+        provenance=RawProvenance(
+            source_path=Path(__file__),
+            source_sha256="b" * 64,
+            source_row_index=1,
+            source_format=SourceFormat.MANUAL,
+            ingested_at=datetime(2026, 4, 6, 12, 0, tzinfo=UTC),
+            provider_name="manual-ledger",
+        ),
+        raw_fields={"source_kind": "ledger_transaction"},
+    )
+
+
+def _transaction(
+    provider_id: str,
+    *,
+    amount: Decimal | None = None,
+    direction: TransactionDirection = TransactionDirection.OUTGOING,
+    business_classification: BusinessClassification = BusinessClassification.BUSINESS,
+    business_pct: Decimal | None = None,
+    booked_date: date = date(2026, 4, 5),
+    value_date: date | None = date(2026, 4, 5),
+    currency: str = "EUR",
+    taxable_base: Decimal | None = Decimal("100.00"),
+    iva_rate: Decimal | None = Decimal("0.21"),
+    iva_amount: Decimal | None = Decimal("21.00"),
+    prorrata_reference: str | None = None,
+    lifecycle_state: TransactionLifecycleState = TransactionLifecycleState.ACTIVE,
+    fx_rate: Decimal | None = None,
+    value_in_eur: Decimal | None = None,
+    iva_category: IvaCategory | None = None,
+    exemption_article: IvaExemptionArticle | None = None,
+    art_104_tres_exclusion: Art104TresExclusion | None = None,
+) -> Transaction:
+    # Keep the gross consistent with base + iva (the Transaction
+    # gross == taxable_base + iva_amount invariant). When the caller does not
+    # pin an explicit amount and both tax fields are present, derive the
+    # IVA-inclusive gross magnitude from them; flow is carried by ``direction``.
+    if amount is None:
+        amount = taxable_base + iva_amount if taxable_base is not None and iva_amount is not None else Decimal("121.00")
+    carries_input_iva = (
+        direction is TransactionDirection.OUTGOING
+        and taxable_base is not None
+        and iva_rate is not None
+        and iva_amount is not None
+    )
+    return Transaction.model_validate(
+        {
+            "raw": _raw_transaction(
+                provider_id,
+                booked_date=booked_date,
+                value_date=value_date,
+                amount=amount,
+                currency=currency,
+            ),
+            "direction": direction,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+            "business_classification": business_classification,
+            "business_pct": business_pct,
+            "taxable_base": taxable_base,
+            "iva_rate": iva_rate,
+            "iva_amount": iva_amount,
+            "iva_category": iva_category,
+            "deduction_fact_kind": (
+                IvaDeductionFactKind.from_registry("domestic_current") if carries_input_iva else None
+            ),
+            "deduction_provenance": (
+                IvaDeductionClassificationProvenance(
+                    authority=IvaDeductionEvidenceAuthority.from_registry("invoice_evidence"),
+                    source_locator=f"test-invoice:{provider_id}",
+                    evidence_digest="a" * 64,
+                )
+                if carries_input_iva
+                else None
+            ),
+            "exemption_article": exemption_article,
+            "art_104_tres_exclusion": art_104_tres_exclusion,
+            "prorrata_reference": prorrata_reference,
+            "lifecycle_state": lifecycle_state,
+            "fx_rate": fx_rate,
+            "value_in_eur": value_in_eur,
+            "classified_at": datetime(2026, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_by": "manual",
+        },
+    )
+
+
+def test_direct_aggregation_cannot_bypass_investment_reciprocity_authority() -> None:
+    transaction = _transaction("direct-investment").model_copy(
+        update={
+            "deduction_fact_kind": IvaDeductionFactKind.from_registry("domestic_investment"),
+            "investment_asset_id": "asset-direct",
+            "prorrata_sector_id": "sector-a",
+        }
+    )
+    catalogue = TransactionCatalogue.from_transactions((transaction,))
+
+    with (
+        _indexed_authority_for_test().operation() as _authority_operation_for_test,
+        pytest.raises(AggregationValidationError) as refusal,
+    ):
+        _aggregate_iva_ledger_observations_with_authority(
+            catalogue,
+            period=_Q2_2026,
+            ledger_profile_id="test-profile",
+            operation=_authority_operation_for_test,
+        )
+    assert refusal.value.context is not None
+    assert refusal.value.context["has_investment_asset_register"] is False
+
+
+def test_direct_aggregation_accepts_exact_reciprocal_investment_authority() -> None:
+    transaction = _transaction("direct-investment-valid").model_copy(
+        update={
+            "deduction_fact_kind": IvaDeductionFactKind.from_registry("domestic_investment"),
+            "investment_asset_id": "asset-direct",
+            "prorrata_sector_id": "sector-a",
+        }
+    )
+    register = BienesInversionIvaRegister(
+        records=(
+            BienInversionIvaRecord(
+                identifier="asset-direct",
+                description="Direct aggregation asset",
+                acquisition_year=2026,
+                cuota_soportada=Decimal("21.00"),
+                prorrata_inicial_pct=Decimal("100"),
+                kind=BienInversionKind.from_registry("mueble"),
+                acquisition_ledger_id=transaction.transaction_id,
+                prorrata_sector_id="sector-a",
+            ),
+        )
+    )
+
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        result = _aggregate_iva_ledger_observations_with_authority(
+            TransactionCatalogue.from_transactions((transaction,)),
+            period=_Q2_2026,
+            ledger_profile_id="test-profile",
+            investment_asset_register=register,
+            investment_asset_profile_id="test-profile",
+            operation=_authority_operation_for_test,
+        )
+
+    assert result.observations[0].investment_asset_id == "asset-direct"
+
+
+def test_art_104_tres_tagged_transaction_is_recorded_as_excluded_ledger_id() -> None:
+    """An operator-tagged art. 104.Tres judgment operation is recorded for prorrata exclusion.
+
+    The tagged sale still projects its IVA cuota observation (it is a real
+    taxable supply); only its ledger id is collected so the prorrata annual
+    volume rollup can skip it from both terms of the ratio.
+    """
+    untagged = _transaction("row-taxable-sale", direction=TransactionDirection.INCOMING)
+    tagged = _transaction(
+        "row-non-habitual-inmueble",
+        direction=TransactionDirection.INCOMING,
+        art_104_tres_exclusion=Art104TresExclusion("non_habitual_real_estate_or_financial"),
+    )
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((untagged, tagged)),
+        period=_Q2_2026,
+    )
+
+    assert len(result.observations) == 2
+    assert result.art_104_tres_excluded_ledger_ids == (tagged.transaction_id,)
+
+
+def test_outgoing_business_transaction_projects_to_soportado_iva_observation() -> None:
+    transaction = _transaction("row-expense")
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((transaction,)),
+        period=_Q2_2026,
+    )
+
+    assert result.issues == ()
+    assert len(result.observations) == 1
+    observation = result.observations[0]
+    assert observation.ledger_id == transaction.transaction_id
+    assert observation.transaction_date == date(2026, 4, 5)
+    assert observation.category == IvaCategory("domestic_general")
+    assert observation.rate_kind == IvaRateKind("general")
+    assert observation.flow_direction == IvaFlowDirection.from_registry("soportado")
+    assert observation.base_amount == transaction.taxable_base
+    assert observation.iva_amount == transaction.iva_amount
+
+
+def test_archived_and_stashed_transactions_do_not_feed_iva_projection() -> None:
+    active = _transaction("row-active")
+    archived = _transaction(
+        "row-archived",
+        taxable_base=Decimal("900.00"),
+        iva_amount=Decimal("189.00"),
+        lifecycle_state=TransactionLifecycleState.ARCHIVED,
+    )
+    stashed = _transaction(
+        "row-stashed",
+        taxable_base=Decimal("700.00"),
+        iva_amount=Decimal("147.00"),
+        lifecycle_state=TransactionLifecycleState.STASHED,
+    )
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((active, archived, stashed)),
+        period=_Q2_2026,
+    )
+
+    assert result.issues == ()
+    assert [observation.ledger_id for observation in result.observations] == [active.transaction_id]
+    assert result.observations[0].base_amount == active.taxable_base
+    assert result.observations[0].iva_amount == active.iva_amount
+
+
+def test_reviewed_excluded_transaction_omitted_from_iva_projection_without_issue() -> None:
+    """A reviewed-excluded row is silently omitted: no observation and no gate issue.
+
+    The operator reviewed the row and deliberately excluded it from filing (a
+    final disposition). It must not feed the aggregation, and — unlike an
+    unclassified row — it must not surface an ``UNCLASSIFIED_BUSINESS_STATE``
+    "classify me" advisory, since the exclusion is an explicit recorded decision.
+    """
+    active = _transaction("row-active")
+    excluded = _transaction(
+        "row-reviewed-excluded",
+        taxable_base=Decimal("900.00"),
+        iva_amount=Decimal("189.00"),
+        business_classification=BusinessClassification.REVIEWED_EXCLUDED,
+    )
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((active, excluded)),
+        period=_Q2_2026,
+    )
+
+    assert result.issues == ()
+    assert [observation.ledger_id for observation in result.observations] == [active.transaction_id]
+
+
+def test_incoming_business_transaction_projects_to_repercutido_iva_observation() -> None:
+    transaction = _transaction(
+        "row-income",
+        amount=Decimal("110.00"),
+        direction=TransactionDirection.INCOMING,
+        taxable_base=Decimal("100.00"),
+        iva_rate=Decimal("0.10"),
+        iva_amount=Decimal("10.00"),
+    )
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((transaction,)),
+        period=_Q2_2026,
+    )
+
+    assert result.issues == ()
+    observation = result.observations[0]
+    assert observation.category == IvaCategory("domestic_reduced")
+    assert observation.rate_kind == IvaRateKind("reduced")
+    assert observation.flow_direction == IvaFlowDirection.from_registry("repercutido")
+    assert observation.iva_amount == Decimal("10.00")
+
+
+def test_mixed_business_transaction_applies_business_percentage_to_iva_and_keeps_the_full_base() -> None:
+    """The business share reduces the cuota; the base is declared whole.
+
+    The Modelo 303 instructions state the deductible bases "sin prorratear",
+    and for bienes de inversion that the base goes unreduced even where the
+    partial-affectation deduction percentage (LIVA art. 95.Tres) applies.
+    """
+    transaction = _transaction(
+        "row-mixed",
+        business_classification=BusinessClassification.MIXED,
+        business_pct=Decimal("0.25"),
+        taxable_base=Decimal("200.00"),
+        iva_amount=Decimal("42.00"),
+    )
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((transaction,)),
+        period=_Q2_2026,
+    )
+
+    assert result.issues == ()
+    assert result.observations[0].base_amount == Decimal("200.00")
+    assert result.observations[0].iva_amount == Decimal("10.5000")
+
+
+def test_outgoing_input_row_carries_legal_prorrata_reference_separately_from_observation() -> None:
+    transaction = _transaction(
+        "row-prorrata",
+        taxable_base=Decimal("200.00"),
+        iva_amount=Decimal("42.00"),
+        prorrata_reference="prorrata:2026:provisional:general",
+    )
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((transaction,)),
+        period=_Q2_2026,
+    )
+
+    assert result.issues == ()
+    assert len(result.observations) == 1
+    assert len(result.prorrata_references) == 1
+    reference = result.prorrata_references[0]
+    assert reference.transaction_id == transaction.transaction_id
+    assert reference.transaction_date == date(2026, 4, 5)
+    assert reference.reference.year == 2026
+    assert reference.reference.kind == ProrrataKind.from_registry("provisional")
+    assert reference.reference.regime == ProrrataRegime("general")
+    assert reference.base_amount == Decimal("200.00")
+    assert reference.input_iva_amount == Decimal("42.00")
+    assert result.observations[0].iva_amount == Decimal("42.00")
+
+
+def test_mixed_input_row_applies_business_percentage_before_carrying_prorrata_reference() -> None:
+    transaction = _transaction(
+        "row-mixed-prorrata",
+        business_classification=BusinessClassification.MIXED,
+        business_pct=Decimal("0.25"),
+        taxable_base=Decimal("200.00"),
+        iva_amount=Decimal("42.00"),
+        prorrata_reference="prorrata:2026:provisional:especial:sector-retail",
+    )
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((transaction,)),
+        period=_Q2_2026,
+    )
+
+    assert result.issues == ()
+    assert result.prorrata_references[0].reference.sector_id == "sector-retail"
+    assert result.prorrata_references[0].base_amount == Decimal("200.00")
+    assert result.prorrata_references[0].input_iva_amount == Decimal("10.5000")
+
+
+def test_invalid_prorrata_reference_is_reported_without_dropping_iva_observation() -> None:
+    transaction = _transaction("row-bad-prorrata", prorrata_reference="telefonia_movil")
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((transaction,)),
+        period=_Q2_2026,
+    )
+
+    assert len(result.observations) == 1
+    assert result.prorrata_references == ()
+    assert result.issues[0].transaction_id == transaction.transaction_id
+    assert result.issues[0].reason is IvaLedgerAggregationIssueReason.INVALID_PRORRATA_REFERENCE
+
+
+def test_prorrata_reference_on_output_iva_row_is_reported_but_output_observation_survives() -> None:
+    transaction = _transaction(
+        "row-output-prorrata",
+        amount=Decimal("121.00"),
+        direction=TransactionDirection.INCOMING,
+        prorrata_reference="prorrata:2026:provisional:general",
+    )
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((transaction,)),
+        period=_Q2_2026,
+    )
+
+    assert result.observations[0].flow_direction == IvaFlowDirection.from_registry("repercutido")
+    assert result.prorrata_references == ()
+    assert result.issues[0].reason is IvaLedgerAggregationIssueReason.INVALID_PRORRATA_REFERENCE
+
+
+def test_personal_transaction_is_reported_without_iva_observation() -> None:
+    transaction = _transaction("row-personal", business_classification=BusinessClassification.PERSONAL)
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((transaction,)),
+        period=_Q2_2026,
+    )
+
+    assert result.observations == ()
+    assert result.issues[0].reason is IvaLedgerAggregationIssueReason.PERSONAL_TRANSACTION
+
+
+def test_missing_tax_fact_is_reported_before_projection() -> None:
+    transaction = _transaction("row-missing-rate", iva_rate=None)
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((transaction,)),
+        period=_Q2_2026,
+    )
+
+    assert result.observations == ()
+    assert result.issues[0].reason is IvaLedgerAggregationIssueReason.MISSING_IVA_RATE
+
+
+def test_non_canonical_iva_rate_is_reported() -> None:
+    transaction = _transaction("row-bad-rate", iva_rate=Decimal("0.07"), iva_amount=Decimal("7.00"))
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((transaction,)),
+        period=_Q2_2026,
+    )
+
+    assert result.observations == ()
+    assert result.issues[0].reason is IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_RATE
+
+
+def test_out_of_period_and_foreign_currency_rows_do_not_project() -> None:
+    old_row = _transaction("row-old", booked_date=date(2026, 1, 5), value_date=date(2026, 1, 5))
+    usd_row = _transaction("row-usd", currency="USD")
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((old_row, usd_row)),
+        period=_Q2_2026,
+    )
+
+    assert result.observations == ()
+    assert [issue.reason for issue in result.issues] == [
+        IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
+        IvaLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY,
+    ]
+
+
+def test_converted_foreign_currency_tax_substrate_does_not_project_as_eur() -> None:
+    converted_gbp = _transaction(
+        "row-gbp-converted",
+        currency="GBP",
+        taxable_base=Decimal("100.00"),
+        iva_amount=Decimal("21.00"),
+        value_in_eur=Decimal("142.35"),
+        fx_rate=Decimal("1.176"),
+    )
+    eur_row = _transaction("row-eur", taxable_base=Decimal("50.00"), iva_amount=Decimal("10.50"))
+    unconverted_usd = _transaction("row-usd-unconverted", currency="USD")
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((converted_gbp, eur_row, unconverted_usd)),
+        period=_Q2_2026,
+    )
+
+    assert [observation.ledger_id for observation in result.observations] == [eur_row.transaction_id]
+    assert result.observations[0].base_amount == Decimal("50.00")
+    assert result.observations[0].iva_amount == Decimal("10.50")
+    assert [(issue.transaction_id, issue.reason) for issue in result.issues] == [
+        (converted_gbp.transaction_id, IvaLedgerAggregationIssueReason.MISSING_EUR_TAX_SUBSTRATE),
+        (unconverted_usd.transaction_id, IvaLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY),
+    ]
+    assert "value_in_eur" in result.issues[0].detail
+    assert "native-currency facts" in result.issues[0].detail
+
+
+def test_iva_aggregation_buckets_on_value_date_caja_basis_only() -> None:
+    """Document the confirmed CAJA-only aggregation basis (no devengo selector).
+
+    The ledger keys a transaction into a filing period on a single
+    ``value_date or booked_date`` axis — a CASH (caja) basis. There is no
+    accrual/devengo basis selector anywhere in the aggregation surface.
+
+    This is a *documentation* test: it pins the current, intentionally
+    single-basis behaviour so a future devengo addition has a
+    regression anchor. If someone silently introduces a devengo branch (e.g.
+    bucketing on ``booked_date`` while ``value_date`` says otherwise, or a
+    new basis-selector argument), the assertions below turn RED.
+
+    Construction: ``value_date`` (the caja/payment date) lands inside 2026Q2,
+    while ``booked_date`` (the would-be devengo/accrual posting date) lands in
+    2026Q1. A devengo-basis path would exclude the row from 2026Q2; the
+    caja-basis path includes it and stamps the observation date as the
+    value_date. The mirror row inverts the two dates and must be excluded.
+    """
+    # value_date in-period (caja), booked_date out-of-period (devengo would differ).
+    caja_in_period = _transaction(
+        "row-caja-in-period",
+        booked_date=date(2026, 1, 31),
+        value_date=date(2026, 4, 2),
+    )
+    # value_date out-of-period (caja), booked_date in-period (devengo would include).
+    caja_out_of_period = _transaction(
+        "row-caja-out-of-period",
+        booked_date=date(2026, 4, 2),
+        value_date=date(2026, 1, 31),
+    )
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((caja_in_period, caja_out_of_period)),
+        period=_Q2_2026,
+    )
+
+    # Caja basis: the row whose VALUE_DATE is in-period is the only one projected,
+    # and the observation date is the value_date — never the booked_date.
+    assert [observation.ledger_id for observation in result.observations] == [caja_in_period.transaction_id]
+    assert result.observations[0].transaction_date == date(2026, 4, 2)
+    # The row whose value_date is out-of-period is excluded, keyed on value_date —
+    # a devengo basis (booked_date 2026-04-02) would instead have INCLUDED it.
+    assert [issue.transaction_id for issue in result.issues] == [caja_out_of_period.transaction_id]
+    assert result.issues[0].reason is IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD
+    assert "2026-01-31" in result.issues[0].detail
+
+
+def test_future_out_of_window_row_is_a_nonblocking_review_advisory() -> None:
+    future_row = _transaction(
+        "row-future-outside-period",
+        booked_date=date(2026, 7, 2),
+        value_date=date(2026, 7, 2),
+    )
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((future_row,)),
+        period=_Q2_2026,
+    )
+
+    assert result.observations == ()
+    assert len(result.issues) == 1
+    assert result.issues[0].reason is IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD
+    assert (
+        OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE[result.issues[0].reason] is OperatorActionAxis.REVIEW_ADVISORY
+    )
+
+
+def test_no_devengo_basis_selector_exists_on_iva_aggregation_surface() -> None:
+    """Assert the absence of any accrual/devengo basis selector (caja-only).
+
+    Confirms (against the live module/signature, re-read at runtime) that
+    neither the public IVA-aggregation entry points nor their parameters
+    expose a ``basis``/``devengo``/``accrual`` axis. Caja is the only basis.
+    A future devengo design will add such a selector; until then this
+    test fails RED the moment a basis selector is introduced without the
+    accompanying behaviour and tests.
+    """
+    import inspect
+
+    from .. import iva_ledger
+
+    forbidden_tokens = ("devengo", "accrual", "basis")
+    for entry_point in (
+        iva_ledger.aggregate_iva_ledger_observations,
+        iva_ledger.aggregate_iva_ledger_observations_from_repositories,
+    ):
+        params = inspect.signature(entry_point).parameters
+        assert not any(token in name.lower() for name in params for token in forbidden_tokens), (
+            f"{entry_point.__name__} unexpectedly grew a basis selector parameter: {tuple(params)}"
+        )
+
+    # No basis-selector symbol is exported from the aggregation package surface.
+    assert not any(token in symbol.lower() for symbol in iva_ledger.__all__ for token in forbidden_tokens), (
+        iva_ledger.__all__
+    )
+
+
+def test_internal_transfer_is_reported_as_unsupported_direction() -> None:
+    transaction = _transaction(
+        "row-transfer",
+        amount=Decimal("10.00"),
+        direction=TransactionDirection.INTERNAL_TRANSFER,
+        business_classification=BusinessClassification.NOT_YET_PROCESSED,
+        taxable_base=None,
+        iva_rate=None,
+        iva_amount=None,
+    )
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((transaction,)),
+        period=_Q2_2026,
+    )
+
+    assert result.observations == ()
+    assert result.issues[0].reason is IvaLedgerAggregationIssueReason.UNSUPPORTED_DIRECTION
+
+
+def test_missing_base_and_amount_are_reported_as_distinct_tax_fact_issues() -> None:
+    missing_base = _transaction("row-missing-base", taxable_base=None)
+    missing_amount = _transaction("row-missing-amount", iva_amount=None)
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((missing_base, missing_amount)),
+        period=_Q2_2026,
+    )
+
+    assert [issue.reason for issue in result.issues] == [
+        IvaLedgerAggregationIssueReason.MISSING_TAXABLE_BASE,
+        IvaLedgerAggregationIssueReason.MISSING_IVA_AMOUNT,
+    ]
+
+
+def test_a_period_below_the_supported_floor_is_refused_before_any_row_is_read() -> None:
+    """A correct rate on a date below the supported floor; the period is what is unsupported.
+
+    Every row must fall inside its period, so a row dated before the supported
+    floor can only arrive inside a period that is itself below the floor. That
+    period is refused at the support gate, whatever rates its rows carry, rather
+    than blaming any row's rate. The per-row coverage issue is reserved for a
+    supported date no positive tier reaches, which the rate-coverage tripwire
+    keeps unreachable today.
+    """
+    with _indexed_authority_for_test().operation() as operation:
+        below_floor = operation.supported_filing_years().floor - 1
+    period = _period(below_floor, "2T")
+    transaction = _transaction(
+        "row-pre-registry",
+        booked_date=period.start_date,
+        value_date=period.start_date,
+        iva_rate=Decimal("0.21"),
+    )
+
+    with pytest.raises(RegistryValidationError, match="outside the supported filing years"):
+        aggregate_iva_ledger_observations(
+            TransactionCatalogue.from_transactions((transaction,)),
+            period=period,
+        )
+
+
+def test_the_applied_rate_survives_tier_resolution() -> None:
+    """Two lines of one tier at different rates stay distinguishable.
+
+    Modelo 390 carries one box per rate per window where Modelo 303 carries one
+    per tier, because a tier's rate can change inside a filing year. Resolving to
+    the tier and discarding the value made those boxes unpopulatable: two lines
+    arrived downstream identical apart from their amounts.
+    """
+    general = _transaction("row-21", iva_rate=Decimal("0.21"), iva_amount=Decimal("21.00"))
+    reduced = _transaction("row-10", iva_rate=Decimal("0.10"), iva_amount=Decimal("10.00"))
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((general, reduced)),
+        period=_Q2_2026,
+    )
+
+    by_rate = {observation.applied_rate: observation for observation in result.observations}
+    assert set(by_rate) == {Decimal("0.21"), Decimal("0.10")}
+    # The tier is still carried, unchanged -- the value rides ALONGSIDE it, and a
+    # reader must not conclude one replaced the other.
+    assert by_rate[Decimal("0.21")].rate_kind == IvaRateKind("general")
+    assert by_rate[Decimal("0.10")].rate_kind == IvaRateKind("reduced")
+
+
+def test_a_covered_date_with_a_non_canonical_rate_still_blames_the_rate() -> None:
+    """The discriminator's other side: inside coverage, the rate is the fault.
+
+    Without this the new reason could swallow both conditions and the split
+    would buy nothing -- a genuinely wrong rate must still say so.
+    """
+    transaction = _transaction(
+        "row-bad-rate-covered",
+        iva_rate=Decimal("0.13"),
+        iva_amount=Decimal("13.00"),
+    )
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((transaction,)),
+        period=_Q2_2026,
+    )
+
+    assert result.observations == ()
+    assert result.issues[0].reason is IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_RATE
+
+
+def test_zero_and_super_reduced_rates_project_to_canonical_iva_categories() -> None:
+    zero = _transaction("row-zero", taxable_base=Decimal("100.00"), iva_rate=Decimal("0"), iva_amount=Decimal("0"))
+    super_reduced = _transaction(
+        "row-super",
+        taxable_base=Decimal("100.00"),
+        iva_rate=Decimal("0.04"),
+        iva_amount=Decimal("4.00"),
+    )
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((zero, super_reduced)),
+        period=_Q2_2026,
+    )
+
+    assert [observation.category for observation in result.observations] == [
+        IvaCategory("domestic_zero"),
+        IvaCategory("domestic_super_reduced"),
+    ]
+
+
+def test_transaction_exemption_article_projects_to_iva_observation() -> None:
+    transaction = _transaction(
+        "row-art-20-8",
+        amount=Decimal("400.00"),
+        direction=TransactionDirection.INCOMING,
+        taxable_base=Decimal("400.00"),
+        iva_rate=Decimal("0"),
+        iva_amount=Decimal("0"),
+        iva_category=IvaCategory("domestic_exempt"),
+        exemption_article=IvaExemptionArticle("art_20_uno_8"),
+    )
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((transaction,)),
+        period=_Q2_2026,
+    )
+
+    assert result.issues == ()
+    assert len(result.observations) == 1
+    observation = result.observations[0]
+    assert observation.category == IvaCategory("domestic_exempt")
+    assert observation.ledger_id == transaction.transaction_id
+    assert observation.exemption_article == IvaExemptionArticle("art_20_uno_8")
+
+
+def test_projected_observations_feed_modelo_303_binding_resolver() -> None:
+    incoming = _transaction(
+        "row-output",
+        amount=Decimal("121.00"),
+        direction=TransactionDirection.INCOMING,
+        taxable_base=Decimal("100.00"),
+        iva_rate=Decimal("0.21"),
+        iva_amount=Decimal("21.00"),
+    )
+    outgoing = _transaction(
+        "row-input",
+        taxable_base=Decimal("50.00"),
+        iva_rate=Decimal("0.10"),
+        iva_amount=Decimal("5.00"),
+    )
+    projection = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((incoming, outgoing)),
+        period=_Q2_2026,
+    )
+    revision = _modelo_303_iva_revision()
+
+    binding_values = resolve_ledger_iva_aggregation_binding_values(revision, projection.observations)
+
+    assert binding_values["modelo-303-iva-repercutido-general-cuota"] == incoming.iva_amount
+    assert binding_values["modelo-303-iva-soportado-interiores-cuota"] == outgoing.iva_amount
+
+
+def test_a_two_percent_food_sale_reaches_the_super_reducido_cuota() -> None:
+    """A rate the engine used to refuse now flows from transaction to binding value.
+
+    The acceptance test for the whole temporary-rate chain, driven from a real
+    transaction so every link is exercised: the rate record must exist, the
+    classifier must resolve 2 % to super-reducido on that date, and the M390
+    binding must aggregate it. Before the records existed this row was rejected
+    as an unsupported rate and contributed nothing to any form.
+
+    Started from a transaction rather than a hand-built observation
+    deliberately. An observation carries ``rate_kind`` as a field, so
+    constructing one directly sets by hand the very thing the rate table is
+    supposed to decide -- a test written that way passes with the rate record
+    deleted, which is exactly what a first attempt at this did.
+    """
+    food = _transaction(
+        "food-2pct",
+        booked_date=date(2024, 11, 15),
+        value_date=date(2024, 11, 15),
+        taxable_base=Decimal("1000.00"),
+        iva_rate=Decimal("0.02"),
+        iva_amount=Decimal("20.00"),
+        direction=TransactionDirection.INCOMING,
+    )
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((food,)),
+        period=_period(2024, "4T"),
+    )
+
+    assert result.observations != (), f"the 2 % sale was refused: {[i.reason for i in result.issues]}"
+    observation = result.observations[0]
+    assert observation.rate_kind == IvaRateKind("super_reduced")
+    assert observation.applied_rate == Decimal("0.02")
+
+
+def test_the_same_sale_dated_after_the_measure_expired_is_refused() -> None:
+    """The window is load-bearing, not decorative.
+
+    Without this the rate records could be open-ended and the test above would
+    still pass. A 2 % sale in June 2025 is not a legitimate Spanish rate.
+    """
+    late = _transaction(
+        "food-2pct-expired",
+        booked_date=date(2025, 6, 15),
+        value_date=date(2025, 6, 15),
+        taxable_base=Decimal("1000.00"),
+        iva_rate=Decimal("0.02"),
+        iva_amount=Decimal("20.00"),
+        direction=TransactionDirection.INCOMING,
+    )
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((late,)),
+        period=_period(2025, "2T"),
+    )
+
+    assert result.observations == ()
+    assert result.issues[0].reason is IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_RATE

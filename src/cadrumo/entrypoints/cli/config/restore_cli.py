@@ -1,0 +1,142 @@
+"""The ``config profile archive import`` verb: republish a capsule an operator holds.
+
+The restore door an operator reaches after a disk failure, after copying a
+``buckets/<profile-id>/`` directory out of a backup, after restoring a sealed
+archive written by ``config profile archive export``, or after a publication
+was interrupted part-way. It takes the capsule and the profile's passphrase,
+which proves the key, and publishes it back into the storage root as a usable
+profile.
+
+**One verb takes both source shapes**, a capsule DIRECTORY or a sealed ARCHIVE
+file, because the two differ only in how the material is READ. Both produce the
+same :class:`ProfileCapsuleSource`, and from there both reach the one shared
+publication authority. A separate ``archive import`` verb would be a second
+door onto that authority differing only in its reader, which is the fork this
+arrangement exists to prevent -- and it would leave an operator guessing which
+of two verbs restores their backup. The shapes are told apart by asking the
+filesystem, which is unambiguous, rather than by a flag the operator has to get
+right.
+
+A restore never installs recovery. The restored profile reports
+``recovery_enrolled`` as false on every restore so the operator knows to use
+the authentication command for recovery enrollment again if they want a second door.
+
+The verb is bootstrap-exempt. Gating it behind an active session would be a
+deadlock in the literal sense --- the profile the operator would log in to is
+the one they are restoring --- and it grants nothing, because the caller must
+already hold both the capsule bytes and the passphrase that opens them.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+from typing import TYPE_CHECKING
+
+import typer
+from pydantic import SecretStr
+
+from cadrumo_client.commands.secure_input import MachineSecretPayload, MachineSecretSelection
+
+from ....core.external_constants import OutputLanguage
+from ....core.i18n.render import tr
+from ..common import activate_subcommand_output_language as _activate_subcommand_output_language
+from ..common import emit_envelope
+
+if TYPE_CHECKING:
+    from ....application.user_profile.capsule_restore import ProfileCapsuleSource, ProfileRestoreOutcome
+
+
+class RestorePassphraseSecrets(MachineSecretPayload):
+    """Strict machine-channel payload for the passphrase door."""
+
+    passphrase: SecretStr
+
+
+def _collect_passphrase(*, selection: MachineSecretSelection | None) -> str:
+    """Resolve the profile passphrase from one explicit channel or a verified prompt."""
+    from cadrumo_client.commands.secure_input import prompt_secret_no_echo, read_machine_secret_payload
+
+    if selection is not None:
+        return read_machine_secret_payload(
+            RestorePassphraseSecrets,
+            selection=selection,
+        ).passphrase.get_secret_value()
+    return prompt_secret_no_echo(tr("cli.config.custody.current_passphrase_prompt"))
+
+
+def _read_capsule_source(source: Path) -> ProfileCapsuleSource:
+    """Read restorable capsule material from a directory or a sealed archive.
+
+    The application reader tells the two shapes apart by what the path is, so
+    everything downstream sees one :class:`ProfileCapsuleSource` and the
+    publication authority stays single.
+    """
+    from ....application.user_profile.capsule_archive import read_restorable_profile_capsule
+
+    return read_restorable_profile_capsule(source).source
+
+
+def _restore_lines(outcome: ProfileRestoreOutcome) -> tuple[str, ...]:
+    """Render the non-secret facts of one completed restore.
+
+    ``recovery_enrolled`` is stated on every restore, not only when it is
+    false, because a restore never carries recovery across: this is the
+    operator's cue to enrol again.
+    """
+    return (
+        f"profile_id\t{outcome.profile_id}",
+        f"label\t{outcome.label}",
+        f"authority\t{outcome.authority}",
+        f"recovery_enrolled\t{'yes' if outcome.recovery_enrolled else 'no'}",
+    )
+
+
+def profile_archive_import(
+    ctx: typer.Context,
+    label: str,
+    file: Path,
+    secrets_stdin: bool = False,
+    secrets_fd: int | None = None,
+    output_language: OutputLanguage | None = None,
+) -> None:
+    """Republish a capsule directory as a usable profile."""
+    _activate_subcommand_output_language(ctx, output_language)
+    from cadrumo_client.commands.payloads import ConfigProfileArchiveImportResult
+    from cadrumo_client.commands.secure_input import select_machine_secret_channel
+
+    from ....application.user_profile.capsule_restore import restore_profile_capsule_with_password
+    from ....domain.calculations.registry.authority import bundled_indexed_authority
+
+    # Refuse an ambiguous source before reading the capsule, prompting, proving
+    # custody, opening a publication transaction, or mutating storage.
+    selection = select_machine_secret_channel(
+        secrets_stdin=secrets_stdin,
+        secrets_fd=secrets_fd,
+    )
+
+    # Read the public capsule before consuming or prompting for its credential:
+    # a malformed source should not make an operator restage a secret.
+    capsule = _read_capsule_source(file)
+
+    with bundled_indexed_authority().operation() as operation:
+        outcome = restore_profile_capsule_with_password(
+            label=label,
+            capsule=capsule,
+            password=_collect_passphrase(selection=selection),
+            profile_decode_context=operation.profile_decode_context(),
+        )
+
+    emit_envelope(
+        ctx,
+        command="config.profile.archive.import",
+        result=ConfigProfileArchiveImportResult(
+            profile_id=outcome.profile_id,
+            label=outcome.label,
+            authority=outcome.authority,
+            recovery_enrolled=outcome.recovery_enrolled,
+        ),
+        lines=list(_restore_lines(outcome)),
+    )
+
+
+__all__ = ["profile_archive_import"]

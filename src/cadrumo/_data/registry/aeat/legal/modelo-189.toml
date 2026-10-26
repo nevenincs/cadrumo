@@ -1,0 +1,258 @@
+[legal."orden-eha-3481-2008:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3481-2008.html#a1"
+document_id = "BOE-A-2008-19523"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2008-19523#a1"
+published_at = 2008-12-04
+effective_from = 2009-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "downloaded official BOE-A-2008-19523 consolidated HTML from BOE on 2026-07-01"
+notes = "Orden EHA/3481/2008 articulo 1: aprueba el Modelo 189, declaracion informativa anual acerca de valores, seguros y rentas, y sus disenos fisicos y logicos."
+required_text = [
+    "Artículo 1. Aprobación del modelo 189",
+    "Se aprueba el modelo 189",
+    "valores, seguros y rentas",
+]
+
+[legal."orden-eha-3481-2008:art-5"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-3481-2008.html#a5"
+document_id = "BOE-A-2008-19523"
+article = "5"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2008-19523#a5"
+published_at = 2008-12-04
+effective_from = 2009-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "downloaded official BOE-A-2008-19523 consolidated HTML from BOE on 2026-07-01"
+notes = "Orden EHA/3481/2008 articulo 5: fija el plazo anual del Modelo 189 entre el dia 1 y el 31 de marzo de cada ano."
+required_text = [
+    "Artículo 5. Plazo de presentación del modelo 189",
+    "entre el día 1 y el 31 del mes de marzo",
+]
+
+[legal."orden-hfp-1180-2023:art-primero"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1180-2023.html#a1"
+document_id = "BOE-A-2023-22221"
+article = "primero"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-22221#a1"
+published_at = 2023-10-31
+effective_from = 2023-11-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "downloaded official BOE-A-2023-22221 HTML from BOE on 2026-07-01"
+notes = "Orden HFP/1180/2023 articulo primero: modifica los disenos de registro del Modelo 189 para campos de declarado como clave de valor y valoracion."
+required_text = [
+    "Artículo primero. Modificación de la Orden EHA/3481/2008",
+    "modelo 189",
+    "declaración informativa anual acerca de valores, seguros y rentas",
+    "Se modifica su artículo 3",
+]
+
+[legal."orden-hfp-1284-2023:art-11"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1284-2023.html#a11"
+document_id = "BOE-A-2023-24412"
+article = "11"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-24412#a11"
+published_at = 2023-11-30
+effective_from = 2023-12-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "downloaded official BOE-A-2023-24412 HTML from BOE on 2026-07-01"
+notes = "Orden HFP/1284/2023 articulo 11: modifica los campos codigo pais, numero de valores y nominal unitario de los valores en el registro de declarado del Modelo 189."
+required_text = [
+    "Artículo 11. Modificación de la Orden EHA/3481/2008",
+    "CÓDIGO PAÍS",
+    "NÚMERO DE VALORES",
+    "NOMINAL UNITARIO DE LOS VALORES",
+]
+
+[legal."orden-hac-132-2026:art-unico"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-132-2026.html#articulo-unico"
+document_id = "BOE-A-2026-4521"
+article = "unico"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-4521#a1"
+published_at = 2026-02-27
+effective_from = 2026-02-28
+review_status = "agent_reviewed"
+reviewed_at = 2026-07-01
+reviewed_by = "downloaded official BOE-A-2026-4521 HTML from BOE on 2026-07-01"
+notes = "Orden HAC/132/2026 articulo unico: aprueba las relaciones de valores negociados del cuarto trimestre de 2025 usadas para el Impuesto sobre Patrimonio 2025 y el Modelo 189."
+required_text = [
+    "Artículo único. Aprobación de las relaciones de valores negociados",
+    "cuarto trimestre de 2025",
+    "declaración informativa anual acerca de valores, seguros y rentas",
+]
+
+[legal."orden-hfp-1351-2021:art-sexto"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1351-2021.html#a6"
+document_id = "BOE-A-2021-20004"
+article = "sexto"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-20004#a6"
+published_at = 2021-12-03
+effective_from = 2021-12-04
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-12
+reviewed_by = "agent-review (verbatim against the bundled orden-hfp-1351-2021 excerpt, articulo sexto)"
+notes = """Articulo sexto de la Orden HFP/1351/2021: modifica la Orden EHA/3481/2008, que aprueba el modelo 189. Registrado porque la edicion 189/2022 no es papel que falte sino una frontera de epoca real: NUMERO DE VALORES ocupaba entonces 130-145 y NOMINAL 146-163, frente a 130-146 y 147-164 hoy. Este id cubre la mitad de lo que hace falta; la otra mitad es la Orden HFP/115/2022, aun no adquirida. El id sigue la grafia ordinal del hermano art-octavo, no la numerica. Cita corta a proposito: el excerpt usa espacios duros U+00A0 entre palabra y numero."""
+required_text = [
+    "Se introducen las siguientes modificaciones en la Orden EHA/3481/2008",
+]
+
+[legal."orden-hfp-115-2022:df-primera"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/xml/orden-hfp-115-2022-df-primera.xml#df"
+document_id = "BOE-A-2022-2980"
+article = "disposición final primera"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-2980#df"
+published_at = 2022-02-25
+effective_from = 2022-02-26
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-01
+reviewed_by = "agent-prepared from the BOE consolidated-text article endpoint (block df, single redaction fecha_vigencia 20220226, incorporating the corrections BOE-A-2022-3810 and BOE-A-2022-4629); pending operator re-stamp"
+notes = "Orden HFP/115/2022 disposicion final primera: modifica el anexo II de la Orden EHA/3481/2008 (modelo 189). NOMINAL UNITARIO DE LOS VALORES pasa a las posiciones 146-163 del registro de tipo 2 (146-159 parte entera, 160-163 parte decimal) y BLANCOS a 164-500. Es la ultima modificacion del anexo II antes de las Ordenes HFP/1180/2023 y HFP/1284/2023, que se aplican por primera vez al ejercicio 2023, segun el analisis del BOE de BOE-A-2008-19523; rige por tanto la declaracion del ejercicio 2022."
+required_text = [
+    "Nominal unitario de los valores.",
+    "146-159 Parte entera del importe del nominal unitario de la operación.",
+    "160-163 Parte decimal del importe del nominal unitario de la operación.",
+    "164-500",
+]
+
+[sources."aeat-modelo-189-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_189/files/modelo-189-procedure.html"
+sha256 = "ece09488551d152c56c8a41cf9a8e5a50a84e1320c2de795d40b0c852b729989"
+bytes = 63259
+retrieved_at = 2026-07-01
+# applies_from corrected to 2020-01-01. The bundled page contradicts the
+# previous date with the same evidence the modelo-190 correction was recorded
+# on (see aeat-modelo-190-procedure in irpf.toml): it carries the link title
+# "Modelo 189. Ejercicio 2020 y siguientes. Consultas y bajas de
+# declaraciones." -- the same sentence, in the same link, in the same position
+# as on 190, with only the modelo number changed. Leaving it at 2025-01-01 while 190
+# sits at 2020-01-01 on that identical string is an inconsistency in the corpus
+# rather than a difference between the documents.
+#
+# WHAT IS INFERRED HERE, stated so a reviewer can weigh it: the link scopes a
+# consultas-y-bajas SERVICE to ejercicio 2020 onward. Treating that as the
+# PROCEDURE DOCUMENT's own applicability window is an inference, and it is the
+# one the 190 correction already made rather than a new one. Anyone who thinks
+# it reasons too freely from a service scope to a document window should
+# revisit 190 first; these five stand or fall with it.
+applies_from = 2020-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI09.shtml"
+review_status = "pending_review"
+
+[sources."boe-modelo-189-base-order"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-3481-2008.html"
+sha256 = "e9af30dfd54d7ef5f682f0b9606dd1d2e1008c67031b6a29182abfdf5b54050c"
+bytes = 169772
+retrieved_at = 2026-07-01
+published_at = 2008-12-04
+applies_from = 2009-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2008-19523"
+review_status = "pending_review"
+
+[sources."boe-modelo-189-2023-amendment-hfp-1180"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hfp-1180-2023.html"
+sha256 = "b48fae937d979ce9653498b36ae1602bef36f5391cf02c12a9b93f72eba28d76"
+bytes = 68346
+retrieved_at = 2026-07-01
+published_at = 2023-10-31
+applies_from = 2023-11-01
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-22221"
+review_status = "pending_review"
+
+[sources."boe-modelo-189-2023-amendment-hfp-1284"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hfp-1284-2023.html"
+sha256 = "e0539c65dd6549863ff069b29dc0dc50067d46cdfe9e7d012814bf9935c73eff"
+bytes = 307871
+retrieved_at = 2026-05-05
+published_at = 2023-11-30
+applies_from = 2023-12-01
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-24412"
+review_status = "pending_review"
+
+# The AEAT sede bundled Diseño de Registro PDF for Modelo 189 (already present
+# in the corpus tree under disenos_registro/modelo_189/ per its own
+# manifest.json) was fetched 2026-07-21 but never registered as a legal
+# source. Registered now, grounded from the bundle's own manifest.json (real,
+# observed provenance, not re-fetched): the manifest records sha256/bytes/
+# retrieved_at/source_url for the exact stored file.
+[sources."aeat-dr-189-2023"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_189/files/01-189-diseno-de-registro-actualizado-en-2023.pdf"
+sha256 = "c493f8d9d927f28211336324cbe17ab7bae7b256d3c563273e01a76834757d6a"
+bytes = 240141
+retrieved_at = 2026-07-21
+record_design_epoch = "2023"
+applies_from = 2023-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_23/DR_Mod_189_2023.pdf"
+review_status = "pending_review"
+
+[sources."boe-modelo-189-2025-values"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-132-2026.html"
+sha256 = "f92f4e149281ece7213bb39b7dd73ae1372f4c66ffc9d3c9b148bb359cf32e7a"
+bytes = 234916
+retrieved_at = 2026-07-01
+published_at = 2026-02-27
+applies_from = 2026-02-28
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-4521"
+review_status = "pending_review"
+
+
+# AEAT's design "189 - Orden EHA/3481/2008, de 1 de diciembre (actualizada por la
+# Orden HFP/115/2022, de 23 de febrero)", headed "Ejercicio 2021". The BOE
+# analysis of BOE-A-2008-19523 lists the anexo II amendments in order: Orden
+# HFP/1351/2021 (first applicable to the 2021 declarations presented in 2022),
+# Orden HFP/115/2022, then Ordenes HFP/1180/2023 and HFP/1284/2023, both first
+# applicable to ejercicio 2023. So this design governs ejercicios 2021 and 2022.
+[sources."aeat-dr-189-2021-2022"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2021"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_189/files/02-189-orden-eha-3481-2008-de-1-de-diciembre-act.pdf"
+sha256 = "9cfcec402edf965492be9c0d2aed91eed5e2b58e0f37e52bbc9c24af47f26421"
+bytes = 244444
+retrieved_at = 2026-10-01
+applies_from = 2021-01-01
+applies_to = 2022-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/Dr_189_2022.pdf"
+review_status = "pending_review"

@@ -1,0 +1,59 @@
+[fact]
+fact_id = "liva-art-161:recargo-rate-reducido"
+family = "scalar"
+
+[[fact.variants]]
+variant_id = "liva-art-161:recargo-rate-reducido:1993-01-01"
+date_axis = "filing_period"
+valid_from = 1993-01-01
+valid_to = 1996-12-31
+legal_refs = ["ley-37-1992:art-161"]
+source_refs = ["boe-liva-art-161-1993-01-01"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-liva-art-161-1993-01-01"
+required_text = ["artículo 91, apartado uno de esta Ley, el 1 por 100."]
+[fact.variants.payload]
+kind = "scalar"
+value_type = "decimal"
+value = "0.01"
+unit = "fraction"
+
+[[fact.variants]]
+variant_id = "liva-art-161:recargo-rate-reducido:1997-01-01"
+date_axis = "filing_period"
+valid_from = 1997-01-01
+valid_to = 2012-08-31
+legal_refs = ["ley-37-1992:art-161"]
+source_refs = ["boe-liva-art-161-1997-01-01"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-liva-art-161-1997-01-01"
+required_text = ["artículo 91, apartado uno, de esta Ley, el 1 por 100."]
+[fact.variants.payload]
+kind = "scalar"
+value_type = "decimal"
+value = "0.01"
+unit = "fraction"
+
+[[fact.variants]]
+variant_id = "liva-art-161:recargo-rate-reducido:2012-09-01"
+date_axis = "filing_period"
+valid_from = 2012-09-01
+legal_refs = ["ley-37-1992:art-161"]
+source_refs = ["boe-liva-art-161-2012-07-15", "boe-rdl-20-2012-art-23-2012-09-01"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-liva-art-161-2012-07-15"
+required_text = ["artículo 91, apartado uno de esta Ley, el 1,4 por ciento."]
+[[fact.variants.source_citations]]
+source_ref = "boe-rdl-20-2012-art-23-2012-09-01"
+required_text = ["Con efectos desde 1 de septiembre de 2012"]
+[fact.variants.payload]
+kind = "scalar"
+value_type = "decimal"
+value = "0.014"
+unit = "fraction"

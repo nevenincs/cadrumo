@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "capability": {"minLength": 1, "type": "string"},
+    "capability_matrix": {
+      "additionalProperties": {"enum": ["required", "optional", "unsupported"]},
+      "minProperties": 1,
+      "type": "object"
+    },
+    "entrypoints": {
+      "additionalProperties": {"enum": ["verified", "unsupported"]},
+      "minProperties": 1,
+      "type": "object"
+    },
+    "event": {"const": "composition_integrity"},
+    "schema_version": {"const": 1},
+    "verdict": {"const": "clean"},
+    "vertical_slice_checks": {
+      "additionalProperties": false,
+      "properties": {
+        "adapter_dtos_and_errors_stay_outward": {"const": true},
+        "applicable_entrypoints_bind_implementation": {"const": true},
+        "application_has_no_concrete_adapter_import": {"const": true},
+        "capability_port_owned_inward": {"const": true},
+        "dependency_propagates_internally": {"const": true},
+        "dependency_required_at_use_case_boundary": {"const": true},
+        "integration_tests_live_at_outer_seam": {"const": true},
+        "no_concrete_infrastructure_default": {"const": true},
+        "no_global_service_locator": {"const": true},
+        "port_is_capability_level": {"const": true},
+        "real_binding_composition_proof": {"const": true},
+        "unsupported_entrypoints_declared": {"const": true}
+      },
+      "required": [
+        "adapter_dtos_and_errors_stay_outward",
+        "applicable_entrypoints_bind_implementation",
+        "application_has_no_concrete_adapter_import",
+        "capability_port_owned_inward",
+        "dependency_propagates_internally",
+        "dependency_required_at_use_case_boundary",
+        "integration_tests_live_at_outer_seam",
+        "no_concrete_infrastructure_default",
+        "no_global_service_locator",
+        "port_is_capability_level",
+        "real_binding_composition_proof",
+        "unsupported_entrypoints_declared"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "capability",
+    "capability_matrix",
+    "entrypoints",
+    "event",
+    "schema_version",
+    "verdict",
+    "vertical_slice_checks"
+  ],
+  "title": "Composition integrity retirement evidence",
+  "type": "object"
+}

@@ -1,0 +1,282 @@
+"""Real-behavior tests for the workstation-preflight health probes.
+
+Each probe answers one health question — per-provider certificate / Cl@ve Móvil
+configuration, secure-storage / bundled-corpus / configuration preflight,
+and registry referential integrity — and MUST return a typed
+:class:`~cadrumo.application.preflight.PreflightCheck` for both a healthy and an
+unhealthy workstation, never raising. These tests drive the real probes against
+real settings overrides, a real on-disk storage/corpus layout, and the real
+registry referential-integrity gate over the bundled production authority.
+"""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+import pytest
+from pydantic import SecretStr
+
+from ...core.auth_provider import AuthProviderKind
+from ...core.config import override_settings
+from ...core.resources.bundled_data import bundled_path
+from ..auth.operator_probe_ports import ClaveIdentityFailure
+from ..auth.probes import ProviderProbeResult
+from ..preflight import (
+    _ERROR_PROBE_RESULTS,
+    _OK_PROBE_RESULTS,
+    _UNCONFIGURED_PROBE_RESULTS,
+    _WARN_PROBE_RESULTS,
+    HealthSeverity,
+    PreflightCheck,
+    grade_provider_probe_result,
+    probe_auth_providers,
+    probe_portal_registry_health,
+    probe_storage_corpus_env,
+    run_preflight_checks,
+)
+from ._operator_probe_fakes import fake_operator_probe_ports
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
+
+#: The application probe accepts a caller-supplied positive suffix budget. The
+#: outbound adapter derives its real on-disk budget at its own seam; this
+#: inward suite uses the smallest valid contract value to exercise application
+#: grading without importing storage layout knowledge.
+_SUFFIX_LENGTH = 1
+_OPERATOR_PROBE_PORTS = fake_operator_probe_ports(active_profile_session_bound=False)
+
+
+def _row(rows: tuple[PreflightCheck, ...], check_id: str) -> PreflightCheck:
+    matches = [row for row in rows if row.check == check_id]
+    assert matches, f"no preflight row for {check_id!r} in {[r.check for r in rows]}"
+    return matches[0]
+
+
+# ── #286 — per-auth-provider certificate / Cl@ve Móvil health ────────────────
+
+
+def test_auth_provider_rows_are_ok_when_no_provider_configured() -> None:
+    """An unconfigured optional provider is OK — not-configured is not a fault."""
+    with override_settings(cadrumo_certificate_path=None, cadrumo_clave_movil_dni_nie=None):
+        rows = probe_auth_providers(operator_probe_ports=_OPERATOR_PROBE_PORTS)
+    cert = _row(rows, "auth-provider:certificate")
+    assert cert.healthy is True
+    assert cert.severity is HealthSeverity.OK
+    assert cert.precondition_verdict is None
+    assert cert.facts["probe_result"] in {
+        ProviderProbeResult.NO_PROVIDER.value,
+        ProviderProbeResult.NO_PATH_SET.value,
+    }
+
+
+def test_auth_provider_certificate_missing_file_is_error_with_remediation(tmp_path: Path) -> None:
+    """A configured certificate path pointing at a missing file is a red row."""
+    missing = tmp_path / "does-not-exist.p12"
+    with override_settings(cadrumo_certificate_path=missing):
+        rows = probe_auth_providers(operator_probe_ports=_OPERATOR_PROBE_PORTS)
+    cert = _row(rows, "auth-provider:certificate")
+    assert cert.healthy is False
+    assert cert.severity is HealthSeverity.ERROR
+    assert cert.precondition_verdict is not None
+    assert cert.precondition_verdict.action is not None
+    assert cert.precondition_verdict.action.action_id == "operator.auth.configure"
+    assert cert.precondition_verdict.evidence[0].values == cert.facts
+
+
+def test_auth_provider_clave_invalid_identity_is_error() -> None:
+    """A malformed Cl@ve Móvil DNI/NIE is classified as an error row."""
+    with override_settings(cadrumo_clave_movil_dni_nie=SecretStr("NOT-A-VALID-ID")):
+        rows = probe_auth_providers(
+            operator_probe_ports=fake_operator_probe_ports(
+                active_profile_session_bound=False,
+                clave_identity_results={
+                    "NOT-A-VALID-ID": ClaveIdentityFailure(detail="invalid test identity"),
+                },
+            ),
+        )
+    clave = _row(rows, "auth-provider:clave_movil")
+    assert clave.healthy is False
+    assert clave.severity is HealthSeverity.ERROR
+    assert clave.precondition_verdict is not None
+    assert clave.precondition_verdict.evidence[0].values == clave.facts
+
+
+def test_every_probe_result_belongs_to_exactly_one_severity_band() -> None:
+    """The four bands must partition ProviderProbeResult — no member ungraded, none double-graded.
+
+    This is the structural guarantee behind the doctor's honesty: a probe
+    result added without a band would otherwise be graded by the fall-through,
+    and the fall-through is a defect report, not a verdict. Reds the moment a
+    new member lands unclassified.
+    """
+    bands = {
+        "error": _ERROR_PROBE_RESULTS,
+        "warn": _WARN_PROBE_RESULTS,
+        "unconfigured": _UNCONFIGURED_PROBE_RESULTS,
+        "ok": _OK_PROBE_RESULTS,
+    }
+    declared = frozenset(ProviderProbeResult)
+    banded: set[ProviderProbeResult] = set()
+    for name, band in bands.items():
+        overlap = banded & band
+        assert not overlap, f"band {name} double-grades {sorted(overlap)}"
+        unknown = band - declared
+        assert not unknown, f"band {name} names non-members {sorted(unknown)}"
+        banded |= band
+    assert banded == declared, f"ungraded ProviderProbeResult members: {sorted(declared - banded)}"
+
+
+def test_every_declared_probe_result_grades_without_the_defect_fall_through() -> None:
+    """No real probe result reaches the fall-through, so the fall-through only reports defects."""
+    for member in ProviderProbeResult:
+        severity, healthy = grade_provider_probe_result(AuthProviderKind.CERTIFICATE, member)
+        if member in _OK_PROBE_RESULTS | _UNCONFIGURED_PROBE_RESULTS:
+            assert healthy is True and severity is HealthSeverity.OK, member.value
+
+
+# ── #102 — secure-storage, bundled-corpus, and configuration preflight ───────
+
+
+def test_storage_root_healthy_when_ancestor_writable(tmp_path: Path) -> None:
+    """A storage root under a writable directory is reachable and OK."""
+    with override_settings(cadrumo_local_storage_root=tmp_path / "storage" / "nested"):
+        rows = probe_storage_corpus_env(object_path_suffix_length=_SUFFIX_LENGTH)
+    storage = _row(rows, "storage:local-root")
+    assert storage.healthy is True
+    assert storage.severity is HealthSeverity.OK
+
+
+def test_storage_root_error_when_ancestor_is_a_file(tmp_path: Path) -> None:
+    """A storage root whose nearest existing ancestor is a file is a red row."""
+    blocker = tmp_path / "not-a-dir"
+    with override_settings(cadrumo_local_storage_root=blocker / "sub"):
+        # Configuration admits the path before the filesystem changes; the
+        # doctor must report the obstruction that appears afterwards.
+        blocker.write_text("x", encoding="utf-8")
+        rows = probe_storage_corpus_env(object_path_suffix_length=_SUFFIX_LENGTH)
+    storage = _row(rows, "storage:local-root")
+    assert storage.healthy is False
+    assert storage.severity is HealthSeverity.ERROR
+    assert storage.precondition_verdict is not None
+    assert storage.precondition_verdict.evidence[0].values == storage.facts
+
+
+def test_corpus_row_healthy_for_bundled_normatives() -> None:
+    """The bundled legal-normatives corpus ships with the package and is present."""
+    with override_settings(aeat_normatives_root=bundled_path("corpus", "normatives")):
+        rows = probe_storage_corpus_env(object_path_suffix_length=_SUFFIX_LENGTH)
+    normatives = _row(rows, "corpus:normatives")
+    assert normatives.healthy is True
+    assert normatives.severity is HealthSeverity.OK
+
+
+def test_corpus_row_error_when_corpus_root_missing(tmp_path: Path) -> None:
+    """A missing corpus root surfaces an error row with a reinstall remediation."""
+    with override_settings(aeat_normatives_root=tmp_path / "absent-corpus"):
+        rows = probe_storage_corpus_env(object_path_suffix_length=_SUFFIX_LENGTH)
+    normatives = _row(rows, "corpus:normatives")
+    assert normatives.healthy is False
+    assert normatives.severity is HealthSeverity.ERROR
+    assert normatives.facts["corpus_present"] is False
+    assert normatives.precondition_verdict is not None
+    assert normatives.precondition_verdict.action is None
+
+
+def test_env_configuration_warns_without_passphrase() -> None:
+    """An absent master-key passphrase is a non-blocking advisory (locked store)."""
+    with override_settings(cadrumo_secret_passphrase=None):
+        rows = probe_storage_corpus_env(object_path_suffix_length=_SUFFIX_LENGTH)
+    env = _row(rows, "env:configuration")
+    assert env.healthy is True
+    assert env.severity is HealthSeverity.WARN
+
+
+def test_env_configuration_ok_with_passphrase() -> None:
+    """A configured master-key passphrase reports an OK configuration row."""
+    with override_settings(cadrumo_secret_passphrase=SecretStr("workstation-secret")):
+        rows = probe_storage_corpus_env(object_path_suffix_length=_SUFFIX_LENGTH)
+    env = _row(rows, "env:configuration")
+    assert env.healthy is True
+    assert env.severity is HealthSeverity.OK
+
+
+# ── Aggregate ────────────────────────────────────────────────────────────────
+
+
+def test_run_preflight_checks_never_raises_and_covers_every_dimension() -> None:
+    """The aggregate returns typed rows for every dimension and never raises."""
+    rows = run_preflight_checks(
+        object_path_suffix_length=_SUFFIX_LENGTH,
+        operator_probe_ports=_OPERATOR_PROBE_PORTS,
+    )
+    ids = {row.check for row in rows}
+    assert {
+        "auth-provider:certificate",
+        "auth-provider:clave_movil",
+        "storage:local-root",
+        "corpus:normatives",
+        "corpus:manuals",
+        "env:configuration",
+        "storage:windows-long-path",
+        "portal-registry:health",
+    } <= ids
+    assert all(isinstance(row, PreflightCheck) for row in rows)
+
+
+# ── WIN-003 — Windows MAX_PATH (long-path) headroom ───────────────────────────
+
+
+def test_windows_long_path_row_ok_when_root_has_ample_headroom(tmp_path: Path) -> None:
+    """A short, shallow storage root leaves ample MAX_PATH headroom (or is OK off-Windows)."""
+    with override_settings(cadrumo_local_storage_root=tmp_path / "s"):
+        rows = probe_storage_corpus_env(object_path_suffix_length=_SUFFIX_LENGTH)
+    row = _row(rows, "storage:windows-long-path")
+    assert row.healthy is True
+
+
+def test_windows_long_path_row_flags_a_deep_root(tmp_path: Path) -> None:
+    """A storage root already close to MAX_PATH surfaces the ceiling detail on Windows.
+
+    Builds a genuinely deep on-disk path (not a mock) so
+    ``windows_storage_root_long_path_margin`` computes a real, small-or-negative
+    margin. The row's disposition legitimately depends on the workstation's own
+    ``LongPathsEnabled`` opt-in (a real, machine-wide OS setting this test must
+    not mutate): with the opt-in on, the row reports OK because the ceiling does
+    not apply; with it off, the deep root's real margin drives an ERROR or WARN
+    row naming the resolved root. Both are asserted as legitimate outcomes so the
+    test is honest about depending on real, unmutated machine state rather than
+    asserting a single hardcoded disposition.
+    """
+    from ...core.paths import windows_long_paths_enabled
+
+    deep_root = tmp_path
+    for segment in range(6):
+        deep_root = deep_root / f"segment-{segment}-{'x' * 30}"
+    with override_settings(cadrumo_local_storage_root=deep_root):
+        rows = probe_storage_corpus_env(object_path_suffix_length=_SUFFIX_LENGTH)
+    row = _row(rows, "storage:windows-long-path")
+
+    if sys.platform != "win32" or windows_long_paths_enabled() is True:
+        assert row.healthy is True
+        assert row.facts["path_limit_applicable"] is False
+    else:
+        assert row.facts["storage_root"] == str(deep_root)
+        assert row.severity in (HealthSeverity.ERROR, HealthSeverity.WARN)
+        if row.healthy:
+            assert row.precondition_verdict is None
+        else:
+            assert row.precondition_verdict is not None
+
+
+# ── Portal-registry health ───────────────────────────────────────────────────
+
+
+def test_portal_health_reports_the_assembled_registry_offline() -> None:
+    row = probe_portal_registry_health()
+    assert row.check == "portal-registry:health"
+    assert row.healthy is True
+    assert row.severity is HealthSeverity.OK
+    from ...domain.portals.registry import PORTAL_REGISTRY
+
+    assert row.facts == {"portal_count": len(PORTAL_REGISTRY)}

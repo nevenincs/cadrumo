@@ -1,0 +1,91 @@
+# Artículo 1. Aprobación del modelo 202 de pago fraccionado a cuenta del Impuesto sobre Sociedades.
+
+1. Se aprueba el modelo 202 «Impuesto sobre Sociedades. Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español). Pago fraccionado» que figura como anexo I de la presente orden.
+El citado modelo estará disponible exclusivamente en formato electrónico.
+El número de justificante que habrá de figurar en el mismo será un número secuencial cuyos tres primeros dígitos se corresponderán con el código 202.
+2. El modelo 202 de pago fraccionado será de uso obligatorio para efectuar los pagos fraccionados del Impuesto sobre Sociedades y del Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) previstos en el artículo 40 de la Ley del Impuesto sobre Sociedades, y en los artículos 23 y 38 del texto refundido de la Ley del Impuesto sobre la Renta de no Residentes aprobado por Real Decreto Legislativo 5/2004, de 5 de marzo, así como, en su caso, respecto de cada año natural, en las disposiciones al efecto contenidas en las Leyes de Presupuestos Generales del Estado.
+Asimismo, este modelo también será obligatorio para efectuar los pagos fraccionados del Impuesto sobre Sociedades y del Impuesto sobre la Renta de no Residentes por aquellos contribuyentes que estando sometidos a normativa foral, tributen conjuntamente a la Administración del Estado y a la foral, de conformidad con lo dispuesto en el Concierto Económico con la Comunidad Autónoma del País Vasco, aprobado por la Ley 12/2002, de 23 de mayo, o en el Convenio Económico entre el Estado y la Comunidad Foral de Navarra, aprobado por la Ley 28/1990, de 26 de diciembre.
+No obstante lo anterior, el modelo 202 de pago fraccionado no podrá ser utilizado por los grupos fiscales, incluidos los de cooperativas, que tributen por el régimen fiscal especial establecido en el capítulo VI del título VII de la Ley del Impuesto sobre Sociedades, y en el Real Decreto 1345/1992, de 6 de noviembre, por el que se dictan normas para la adaptación de las disposiciones que regulan la tributación sobre el beneficio consolidado a los grupos de sociedades cooperativas, respectivamente, los cuales habrán de utilizar, en todo caso, el modelo 222.
+3. La presentación del modelo 202 será obligatoria para aquellos contribuyentes cuyo importe neto de la cifra de negocios sea superior a 6 millones de euros durante los doce meses anteriores a la fecha en que se inicie el período impositivo al que corresponda el pago fraccionado.
+Para el resto de entidades, en los supuestos en que, de acuerdo con las normas reguladoras de los pagos fraccionados a cuenta del Impuesto sobre Sociedades o del Impuesto sobre la Renta de los no Residentes, no deba efectuarse ingreso alguno en concepto de pago fraccionado de los citados impuestos en el período correspondiente, no será obligatoria la presentación del modelo 202.
+En ningún caso estarán obligadas a la presentación del modelo las agrupaciones de interés económico españolas y uniones temporales de empresas acogidas al régimen especial del capítulo II del título VII de la Ley del Impuesto sobre Sociedades, en las que el porcentaje de participación en las mismas, en su totalidad, corresponda a socios o miembros residentes en territorio español.
+Tampoco deben efectuar el referido pago fraccionado, ni estarán obligadas a presentar el modelo de pago fraccionado, tal y como establece el artículo 40.1 de la Ley del Impuesto sobre Sociedades, las entidades a las que se refieren los apartados 4 y 5 del artículo 29 de la Ley del Impuesto sobre Sociedades.
+4. La comunicación de datos adicionales a la declaración (Anexo I, Parte 2) sólo será obligatoria para los contribuyentes cuyo importe neto de la cifra de negocios, en los doce meses anteriores a la fecha en que se inicie el período impositivo al que corresponda el pago fraccionado sea al menos de 10 millones de euros.
+Se modifica el apartado 2 por el art. 1.1 de la Orden HAC/941/2018, de 5 de septiembre. Ref. BOE-A-2018-12515
+Téngase en cuenta que esta modificación será aplicable por primera vez para los modelos de pagos fraccionados, cuyo plazo de presentación sea octubre de 2018, según establece la disposición final 3 de la citada Orden.
+
+# Artículo 2. Aprobación del modelo 222 de pago fraccionado a cuenta del Impuesto sobre Sociedades en régimen de consolidación fiscal.
+
+1. Se aprueba el modelo 222 «Impuesto sobre Sociedades. Régimen de consolidación fiscal. Pago fraccionado » que figura como anexo II de la presente orden.
+El citado modelo estará disponible exclusivamente en formato electrónico.
+El número de justificante que habrá de figurar en el modelo 222 de pago fraccionado será un número secuencial cuyos tres primeros dígitos se corresponderán con el código 222.
+2. El modelo 222 de pago fraccionado será de uso obligatorio para efectuar los pagos fraccionados del Impuesto sobre Sociedades previstos en el artículo 40 de la Ley del Impuesto sobre Sociedades, así como, en su caso, respecto de cada año natural, en las disposiciones al efecto contenidas en las Leyes de Presupuestos Generales del Estado para los grupos fiscales, incluidos los de cooperativas, que tributen por el régimen fiscal especial establecido en el capítulo VI del título VII de la Ley del Impuesto sobre Sociedades y en el Real Decreto 1345/1992, de 6 de noviembre, por el que se dictan normas para la adaptación de las disposiciones que regulan la tributación sobre el beneficio consolidado a los grupos de sociedades cooperativas, respectivamente.
+Asimismo, este modelo también será obligatorio para efectuar los pagos fraccionados a cuenta del Impuesto sobre Sociedades en régimen de consolidación fiscal por aquellos contribuyentes que estando sometidos a normativa foral, tributen conjuntamente a la Administración del Estado y a la foral, de conformidad con lo dispuesto en el Concierto Económico con la Comunidad Autónoma del País Vasco, aprobado por la Ley 12/2002, de 23 de mayo, o en el Convenio Económico entre el Estado y la Comunidad Foral de Navarra, aprobado por la Ley 28/1990, de 26 de diciembre.
+3. La presentación del modelo 222 será obligatoria incluso en los supuestos en que, de acuerdo con lo previsto en las normas reguladoras de los pagos fraccionados a cuenta del Impuesto sobre Sociedades, no deba efectuarse ingreso alguno en concepto de pago fraccionado en el período correspondiente.
+4. La comunicación de datos adicionales a la declaración (Anexo II, Parte 2) sólo será obligatoria para los grupos fiscales cuyo importe neto de la cifra de negocios, en los doce meses anteriores a la fecha en que se inicie el período impositivo al que corresponda el pago fraccionado sea al menos de 10 millones de euros.
+Se modifica el apartado 2 por el art. 1.2 de la Orden HAC/941/2018, de 5 de septiembre. Ref. BOE-A-2018-12515
+Téngase en cuenta que esta modificación será aplicable por primera vez para los modelos de pagos fraccionados, cuyo plazo de presentación sea octubre de 2018, según establece la disposición final 3 de la citada Orden.
+
+# Artículo 3. Forma de presentación de los modelos 202 y 222.
+
+1. La presentación de los modelos 202 y 222 deberá realizarse, obligatoriamente, por vía electrónica a través de Internet, de acuerdo con la habilitación, condiciones generales y el procedimiento establecido en el artículo 4 de esta orden.
+En particular, el modelo 202 se presentará de acuerdo con lo previsto en el apartado a) del artículo 2 de la Orden HAP/2194/2013, de 22 de noviembre, por la que se regulan los procedimientos y las condiciones generales para la presentación de determinadas autoliquidaciones, declaraciones informativas, declaraciones censales, comunicaciones y solicitudes de devolución, de naturaleza tributaria, con las especialidades establecidas en los apartados siguientes de este artículo, es decir, para el caso del modelo 202 serán admitidos, los siguientes sistemas electrónicos de identificación, autenticación y firma:
+a) Certificado electrónico reconocido, de acuerdo con lo previsto en el artículo 2.a).1.º de la Orden HAP/2194/2013, de 22 de noviembre.
+b) En el caso de obligados tributarios personas físicas, “Cl@ve PIN”, de acuerdo con lo previsto en el artículo 2.a).2.º de la Orden HAP/2194/2013, de 22 de noviembre.
+2. Lo dispuesto en el apartado 1 del presente artículo no será aplicable respecto de la presentación de los modelos 202 y 222 ante las Diputaciones Forales del País Vasco y/o la Comunidad Foral de Navarra por los contribuyentes que tributen conjuntamente a estas Administraciones Forales y a la Administración del Estado.
+Para la presentación de la autoliquidación en los supuestos en que, de acuerdo con lo dispuesto en el Concierto Económico con la Comunidad Autónoma del País Vasco, aprobado por la Ley 12/2002, de 23 de mayo, o en el Convenio Económico entre el Estado y la Comunidad Foral de Navarra, aprobado por la Ley 28/1990, de 26 de diciembre, el contribuyente se encuentre sometido a la normativa del Estado y deba tributar conjuntamente a ambas administraciones, estatal y foral, se seguirán las siguientes reglas:
+a) La autoliquidación a presentar ante la Administración del Estado se efectuará por vía electrónica en las condiciones y siguiendo el procedimiento establecido en el artículo 4 de la presente orden.
+b) Para la autoliquidación a presentar ante las Diputaciones Forales del País Vasco o ante la Comunidad Foral de Navarra, la forma y lugar serán los que correspondan de acuerdo con la normativa foral correspondiente, debiendo efectuarse, en su caso, ante dichas Administraciones el ingreso correspondiente de acuerdo con lo establecido en el artículo 17 del Concierto Económico con la Comunidad Autónoma del País Vasco, o en el artículo 24.1 del Convenio Económico entre el Estado y la Comunidad Foral de Navarra.
+3. Cuando el contribuyente se encuentre sometido a normativa foral y deba tributar conjuntamente a ambas administraciones, foral y estatal, la autoliquidación que deba presentar a la Administración del Estado se efectuará exclusivamente por vía electrónica a través de Internet, en las condiciones y siguiendo el procedimiento establecido en el artículo 4 de la presente orden.
+Se modifica el apartado 1 por la disposición final 2 de la Orden HAC/495/2024, de 21 de mayo. Ref. BOE-A-2024-10574
+Téngase en cuenta que esta modificación será aplicable por primera vez a los modelos cuyo plazo de presentación comience a partir del 28 de mayo de 2024, según establece la disposición final 3 de la citada Orden.
+
+# Artículo 4. Habilitación, condiciones generales y procedimiento para la presentación electrónica de los modelos 202 y 222.
+
+La presentación electrónica por Internet de las declaraciones correspondientes al modelo 202 y al modelo 222, se realizará con sujeción a la habilitación y las condiciones establecidas en el artículo 6 de la Orden HAP/2194/2013, de 22 de noviembre, por la que se regulan los procedimientos y las condiciones generales para la presentación de determinadas autoliquidaciones, declaraciones informativas, declaraciones censales, comunicaciones y solicitudes de devolución, de naturaleza tributaria y de acuerdo con el procedimiento establecido en los artículos 7 a 11 de esa misma orden.
+
+# Artículo 5. Plazo de presentación de los modelos 202 y 222.
+
+1. La presentación de la autoliquidación modelo 202, pago fraccionado a cuenta del Impuesto sobre Sociedades o del Impuesto sobre la Renta de no Residentes correspondiente a establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español, se efectuará durante los primeros veinte días naturales de los meses de abril, octubre y diciembre de cada año natural.
+2. La presentación de la autoliquidación modelo 222, pago fraccionado a cuenta del Impuesto sobre Sociedades para los grupos fiscales, se efectuará, durante los primeros veinte días naturales de los meses de abril, octubre y diciembre de cada año natural.
+3. La presentación de la autoliquidación modelo 202, pago fraccionado a cuenta del Impuesto sobre Sociedades o del Impuesto sobre la Renta de no Residentes, así como la presentación de la autoliquidación modelo 222, pago fraccionado a cuenta del Impuesto sobre Sociedades para los grupos fiscales, para el caso de contribuyentes que estando sometidos a normativa foral de Navarra, tributen conjuntamente a ambas administraciones, navarra y estatal, se efectuará durante los veinte primeros días naturales del mes de octubre de cada año. Si los contribuyentes están sometidos a normativa foral de País Vasco y tributan conjuntamente a ambas administraciones, vasca y estatal, la presentación de la autoliquidación modelo 202 y 222, se efectuará durante los veinticinco primeros días naturales del mes de octubre de cada año.
+4. Los contribuyentes o las entidades dominantes o cabeceras de grupos, podrán utilizar como medio de pago de las deudas tributarias resultantes de las mismas, la domiciliación bancaria en una entidad de depósito que actúe como colaboradora en la gestión recaudatoria (banco, caja de ahorro o cooperativa de crédito), sita en territorio español en la que se encuentre abierta a su nombre la cuenta en la que se domicilia el pago.
+Cuando se pretenda domiciliar el pago, el plazo de presentación electrónica de las autoliquidaciones del modelo 202 y del modelo 222 será desde el día 1 hasta el 15 de los meses de abril, octubre, y diciembre.
+Para el caso de contribuyentes que, estando sometidos a normativa foral, tributen conjuntamente a ambas administraciones, foral y estatal, el plazo de presentación electrónica de las autoliquidaciones del modelo 202 y del modelo 222 cuando se pretenda domiciliar el pago, finalizará 5 días naturales antes del aprobado por la normativa foral para su presentación.
+Se modifica el apartado 2 y se añade el 4 por el art. 1.3 y 4 de la Orden HAC/941/2018, de 5 de septiembre. Ref. BOE-A-2018-12515
+Téngase en cuenta que esta modificación será aplicable por primera vez para los modelos de pagos fraccionados, cuyo plazo de presentación sea octubre de 2018, según establece la disposición final 3 de la citada Orden.
+
+# Artículo 6. Procedimiento para la presentación electrónica por Internet de documentación complementaria a las declaraciones de los modelos 202 y 222.
+
+Cuando los contribuyentes deban acompañar a las declaraciones de los modelos 202 y 222 cualquier documentación, solicitudes o manifestaciones de opciones no contempladas expresamente en los propios modelos de declaración o en sus Anexos, dicha documentación se presentará por vía electrónica con arreglo al procedimiento establecido en el artículo 18 de la Orden HAP/2194/2013.
+
+# Disposición final única. Entrada en vigor.
+
+La presente orden entrará en vigor el día siguiente al de su publicación en el «Boletín Oficial del Estado» y será de aplicación para los pagos fraccionados cuyo plazo de declaración comience a partir del 1 de abril de 2017.
+Madrid, 13 de marzo de 2017.–El Ministro de Hacienda y Función Pública, Cristóbal Montoro Romero.
+
+# ANEXO I
+
+Se sustituye por el que figura como anexo I de la Orden HAC/262/2025, de 13 de marzo, según establece su art. único.1. Ref. BOE-A-2025-5407
+Téngase en cuenta que el nuevo modelo 202 será aplicable por primera vez para las autoliquidaciones de pagos fraccionados, cuyo plazo de presentación comienza en abril de 2025, según establece su disposición final única.
+Se sustituye por el art. único.1 de la Orden HFP/312/2023, de 28 de marzo, en la forma recogida en su anexo I. Ref. BOE-A-2023-8120
+Téngase en cuenta que los nuevos modelos serán aplicables por primera vez para las autoliquidaciones de pagos fraccionados cuyo plazo de presentación comienza en abril de 2023, segun establece su disposición final 2.
+Se sustituye por el art. 1.5 y anexo I de la Orden HAC/941/2018, de 5 de septiembre. Ref. BOE-A-2018-12515
+Téngase en cuenta que los nuevos modelos entran en vigor el 1 de enero de 2019, según establece la disposición final 3 de la citada Orden.
+
+# ANEXO II
+
+Se sustituye por el que figura como anexo II de la Orden HAC/262/2025, de 13 de marzo, según establece su art. único.2. Ref. BOE-A-2025-5407
+Téngase en cuenta que el nuevo modelo 222 será aplicable por primera vez para las autoliquidaciones de pagos fraccionados, cuyo plazo de presentación comienza en abril de 2025, según establece su disposición final única.
+Se sustituye por el art. único.2 de la Orden HFP/312/2023, de 28 de marzo, en la forma recogida en su anexo II. Ref. BOE-A-2023-8120
+Téngase en cuenta que los nuevos modelos serán aplicables por primera vez para las autoliquidaciones de pagos fraccionados cuyo plazo de presentación comienza en abril de 2023, segun establece su disposición final 2.
+Se sustutuye por el art. único y anexo de la Orden HFP/604/2022, de 30 de junio. Ref. BOE-A-2022-10854
+Téngase en cuenta que será de aplicación por primera vez para las declaraciones de pagos fraccionados cuyo plazo de presentación comienza en octubre de 2022, según establece la disposición final única de la citada Orden.
+Se sustituye por el art. 1.5 y anexo I de la Orden HAC/941/2018, de 5 de septiembre. Ref. BOE-A-2018-12515
+Téngase en cuenta que los nuevos modelos entran en vigor el 1 de enero de 2019, según establece la disposición final 3 de la citada Orden.
+Redactado conforme a la corrección de errores publicada en BOE núm 251, de 17 de octubre de 2018. Ref. BOE-A-2018-14179
+Se sustituye por la disposición final 1 y anexo V de la Orden HFP/441/2018, de 26 de abril. Ref. BOE-A-2018-5937
+Téngase en cuenta que los nuevos modelos entrarán en vigor para períodos impositivos que se inicien a partir del 1 de enero de 2019, según establece la disposición final 2 de la citada Orden.
+Redactado conforme a la corrección de errores en BOE núm. 94 de 20 de abril de 2017. Ref. BOE-A-2017-4294
+Este documento es de carácter informativo y no tiene valor jurídico.
+Ayúdenos a mejorar: puede dirigir sus comentarios y sugerencias a nuestro Servicio de atención al ciudadano

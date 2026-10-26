@@ -1,0 +1,5 @@
+@step Run the preflight check for the period you are calculating.
+aeat app ledger preflight --year 2026 --period 1T
+@result aeat --format json app ledger status
+@expect result.total_count == 0
+@expect exit_code == 0

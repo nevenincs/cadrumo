@@ -1,0 +1,23 @@
+# Exact enrolled-modelo-156-layout type1 positions121-135 and BOE AnnexI.
+# Each amendment requires the previous declaration number; ordinary blank
+# markers do not trigger these nonzero implications.
+[[revisions.2003-y-siguientes.verification_predicates]]
+id = "casilla-equals-implies-nonzero:complementaria-requiere-justificante-anterior"
+predicate_id = "modelo-156-2003-complementaria-requiere-justificante-anterior"
+expression = "casilla_equals_implies_nonzero([\"declaracion-complementaria-sustitutiva\", \"C \", \"numero-identificativo-anterior\"])"
+finding_kind = "BLOCKING_RULE"
+legal_refs = ["orden-hac-3580-2003:art-1"]
+
+[[revisions.2003-y-siguientes.verification_predicates]]
+id = "casilla-equals-implies-nonzero:sustitutiva-requiere-justificante-anterior"
+predicate_id = "modelo-156-2003-sustitutiva-requiere-justificante-anterior"
+expression = "casilla_equals_implies_nonzero([\"declaracion-complementaria-sustitutiva\", \" S\", \"numero-identificativo-anterior\"])"
+finding_kind = "BLOCKING_RULE"
+legal_refs = ["orden-hac-3580-2003:art-1"]
+
+[[revisions.2003-y-siguientes.verification_predicates]]
+id = "casilla-equals-implies-zero:ordinaria-sin-justificante-anterior"
+predicate_id = "modelo-156-2003-ordinaria-sin-justificante-anterior"
+expression = 'casilla_equals_implies_zero(["declaracion-complementaria-sustitutiva", "  ", "numero-identificativo-anterior"])'
+finding_kind = "BLOCKING_RULE"
+legal_refs = ["orden-hac-3580-2003:art-1"]

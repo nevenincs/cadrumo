@@ -1,0 +1,79 @@
+modelo:
+  schema:
+    '189':
+      casilla:
+        continuidad:
+          filing-year:
+            label: A bevallás éve
+          irpf-declarante-nif:
+            label: A bevalló NIF-azonosítója
+          m189-clave-identificacion:
+            label: Az azonosítás módjának kódja
+          m189-clave-mercado:
+            label: A piac típuskódja
+          m189-clave-representacion:
+            label: Az értékpapír megjelenítési kódja
+          m189-clave-titularidad:
+            label: A tulajdonlás típuskódja
+          m189-clave-valor:
+            label: Az értékpapír típuskódja
+          m189-codigo-pais:
+            label: Országkód
+          m189-codigo-provincia:
+            label: Tartománykód
+          m189-declaracion-complementaria-sustitutiva:
+            label: Kiegészítő vagy helyettesítő bevallás
+          m189-declarado-nif:
+            label: A bejelentett fél adószáma
+          m189-declarado-nombre:
+            label: A bejelentett fél neve, cégneve vagy elnevezése
+          m189-declarante-razon-social:
+            label: A bejelentő cégneve
+          m189-identificacion-valores:
+            label: Az értékpapírok azonosítója
+          m189-nominal-unitario-valores:
+            label: Az értékpapírok egységnyi névértéke
+          m189-numero-identificativo-anterior:
+            label: A korábbi bevallás azonosító száma
+          m189-numero-justificante:
+            label: A bevallás igazolásszáma
+          m189-numero-total-declarados:
+            label: A bejelentett felek teljes száma
+          m189-numero-valores:
+            label: Az értékpapírok száma
+          m189-persona-relacion:
+            label: Kapcsolattartó személy
+          m189-porcentaje-participacion:
+            label: Tulajdoni hányad százaléka
+          m189-representante-legal-nif:
+            label: A törvényes képviselő NIF-azonosítója
+          m189-tipo-soporte:
+            label: Az adathordozó típusa
+          m189-valoracion:
+            label: Értékelés
+          m189-valoracion-total:
+            label: Teljes értékelés
+      construct:
+        modelo-189-informative:
+          field:
+            title: Modelo 189. Éves adatszolgáltatás értékpapírokról, biztosításokról
+              és járadékokról
+      field:
+        official_name: Modelo 189. Éves adatszolgáltatási bevallás értékpapírokról,
+          biztosításokról és járadékokról.
+        title: Éves adatszolgáltatási bevallás értékpapírokról, biztosításokról és
+          járadékokról
+      revision:
+        '2022':
+          field:
+            label: 189-es modelo, 2022. adóév
+        '2023':
+          field:
+            label: 189-es modelo, 2023. adóév
+        '2024':
+          field:
+            label: 189-es modelo, 2024. adóév
+        '2025':
+          field:
+            label: 189-es modelo, 2025. adóév (EHA/3481/2008 rendelet; HFP/1180/2023,
+              HFP/1284/2023 és HAC/132/2026 rendeletek)

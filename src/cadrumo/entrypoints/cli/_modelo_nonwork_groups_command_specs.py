@@ -1,0 +1,118 @@
+from __future__ import annotations
+
+from cadrumo_client.commands.shared_contracts import ResultSchemaSpec, SchemaState, TranslationKey
+from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
+
+from ._modelo_nonwork_command_spec_policies import _METADATA
+
+MODELO_NONWORK_GROUP_COMMAND_SPECS: tuple[CommandSpec, ...] = (
+    CommandSpec(
+        "app_modelo_bindings",
+        "app_modelo",
+        "bindings",
+        kind=CommandNodeKind.GROUP,
+        help_key=TranslationKey("cli.app.modelo.bindings.app_help"),
+        short_help_key=None,
+        invocation=InvocationSpec(no_args_is_help=True),
+        parameters=(),
+        policy=_METADATA,
+        handler=None,
+        result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
+    ),
+    CommandSpec(
+        "app_modelo_filing_record",
+        "app_modelo",
+        "filing-record",
+        kind=CommandNodeKind.GROUP,
+        help_key=TranslationKey("cli.app.modelo.filing_record.app_help"),
+        short_help_key=None,
+        invocation=InvocationSpec(no_args_is_help=True),
+        parameters=(),
+        policy=_METADATA,
+        handler=None,
+        result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
+    ),
+    CommandSpec(
+        "app_modelo_verification_report",
+        "app_modelo",
+        "verification-report",
+        kind=CommandNodeKind.GROUP,
+        help_key=TranslationKey("cli.app.modelo.verification_report.app_help"),
+        short_help_key=None,
+        invocation=InvocationSpec(no_args_is_help=True),
+        parameters=(),
+        policy=_METADATA,
+        handler=None,
+        result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
+    ),
+    CommandSpec(
+        "app_modelo_reconcile",
+        "app_modelo",
+        "reconcile",
+        kind=CommandNodeKind.GROUP,
+        help_key=TranslationKey("cli.app.modelo.reconcile.app_help"),
+        short_help_key=None,
+        invocation=InvocationSpec(no_args_is_help=True),
+        parameters=(),
+        policy=_METADATA,
+        handler=None,
+        result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
+    ),
+    CommandSpec(
+        "app_modelo_m036",
+        "app_modelo",
+        "m036",
+        kind=CommandNodeKind.GROUP,
+        help_key=TranslationKey("cli.app.modelo.m036.group_help"),
+        short_help_key=None,
+        invocation=InvocationSpec(no_args_is_help=True),
+        parameters=(),
+        policy=_METADATA,
+        handler=None,
+        result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
+    ),
+    CommandSpec(
+        "app_modelo_m145",
+        "app_modelo",
+        "m145",
+        kind=CommandNodeKind.GROUP,
+        help_key=TranslationKey("cli.app.modelo.m145.group_help"),
+        short_help_key=None,
+        invocation=InvocationSpec(no_args_is_help=True),
+        parameters=(),
+        policy=_METADATA,
+        handler=None,
+        result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
+    ),
+    CommandSpec(
+        "app_modelo_iva_wallet",
+        "app_modelo",
+        "iva-wallet",
+        kind=CommandNodeKind.GROUP,
+        help_key=TranslationKey("cli.app.modelo.iva_wallet.group_help"),
+        short_help_key=None,
+        invocation=InvocationSpec(no_args_is_help=True),
+        parameters=(),
+        policy=_METADATA,
+        handler=None,
+        result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
+    ),
+    CommandSpec(
+        "app_modelo_review_package",
+        "app_modelo",
+        "review-package",
+        kind=CommandNodeKind.GROUP,
+        help_key=TranslationKey("cli.app.modelo.review_package.group_help"),
+        short_help_key=None,
+        invocation=InvocationSpec(no_args_is_help=True),
+        parameters=(),
+        policy=_METADATA,
+        handler=None,
+        result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
+    ),
+)
+
+__all__ = ["MODELO_NONWORK_GROUP_COMMAND_SPECS"]
+"""Authored CommandSpec declarations for the Modelo non-work groups family."""
+"""Authored CommandSpec declarations for the Modelo non-work groups family."""

@@ -1,0 +1,507 @@
+# One entry per exact AEAT source anchor. Split rows reuse the selected revision casilla endpoint.
+schema_version = 1
+fragment_id = "records"
+modelo = "165"
+design_epoch = "2023"
+source_ref = "aeat-dr-165-2026"
+source_sha256 = "bcc94b07d695703cfa66a3d8cbbb176841906ebf8cef57e2acd3e3fee452a263"
+
+[[records]]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+export_record_id = "modelo-165-declarante"
+record_type = "declarante"
+required = true
+
+[[records]]
+sheet = "Tipo 2 - Registro De Socios O Partícipes"
+record_identity = "Tipo 2 - Registro De Socios O Partícipes"
+export_record_id = "modelo-165-socio"
+record_type = "socio"
+required = true
+
+[[entries]]
+export_field_id = "modelo-165-t1-record-type"
+kind = "literal"
+literal = "1"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 19
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal = "1"
+
+[[entries]]
+export_field_id = "modelo-165-t1-modelo"
+kind = "literal"
+literal = "165"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 22
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal = "2"
+
+[[entries]]
+export_field_id = "modelo-165-t1-ejercicio"
+kind = "draft"
+draft_attribute = "filing_year"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 25
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal = "3"
+
+[[entries]]
+export_field_id = "modelo-165-t1-nif-declarante"
+kind = "header"
+producer_key = "taxpayer.tax_id"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 29
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal = "4"
+
+[[entries]]
+export_field_id = "modelo-165-t1-razon-social"
+kind = "casilla"
+casilla_id = "declarante-razon-social"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 54
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal = "5"
+
+[[entries]]
+export_field_id = "modelo-165-t1-tipo-soporte"
+kind = "literal"
+literal = "T"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 60
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal = "6"
+
+[[entries]]
+export_field_id = "modelo-165-t1-contact-phone"
+kind = "header"
+producer_key = "contact_person.phone"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 67
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-165-t1-contact-name"
+kind = "header"
+producer_key = "contact_person.full_name"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 69
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-165-t1-numero-identificativo"
+kind = "casilla"
+casilla_id = "numero-identificativo-declaracion"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 79
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal = "8"
+
+[[entries]]
+export_field_id = "modelo-165-t1-complementaria-sustitutiva"
+kind = "casilla"
+casilla_id = "declaracion-complementaria-sustitutiva"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 86
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal = "9"
+
+[[entries]]
+export_field_id = "modelo-165-t1-numero-identificativo-anterior"
+kind = "casilla"
+casilla_id = "numero-identificativo-anterior"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 113
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal = "10"
+
+[[entries]]
+export_field_id = "modelo-165-t1-numero-total-declarados"
+kind = "casilla"
+casilla_id = "numero-total-declarados"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 124
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal = "11"
+
+[[entries]]
+export_field_id = "modelo-165-t1-importe-total-suscripciones-component-145"
+kind = "casilla"
+casilla_id = "importe-total-suscripciones"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 142
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal = "13"
+
+[[entries]]
+export_field_id = "modelo-165-t1-importe-total-suscripciones-component-158"
+kind = "casilla"
+casilla_id = "importe-total-suscripciones"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 144
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal = "14"
+
+[[entries]]
+export_field_id = "modelo-165-t1-fecha-constitucion-component-160"
+kind = "casilla"
+casilla_id = "fecha-constitucion"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 150
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal = "16"
+
+[[entries]]
+export_field_id = "modelo-165-t1-fecha-constitucion-component-164"
+kind = "casilla"
+casilla_id = "fecha-constitucion"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 151
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal = "17"
+
+[[entries]]
+export_field_id = "modelo-165-t1-fecha-constitucion-component-166"
+kind = "casilla"
+casilla_id = "fecha-constitucion"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 152
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal = "18"
+
+[[entries]]
+export_field_id = "modelo-165-t1-importe-fondos-propios-sign"
+kind = "casilla"
+casilla_id = "importe-fondos-propios"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 153
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal = "19"
+
+[entries.part]
+offset = 168
+length = 1
+aeat_type = "Alfabético"
+statement = "168 SIGNO: campo alfabético"
+
+[[entries]]
+export_field_id = "modelo-165-t1-importe-fondos-propios-component-169"
+kind = "casilla"
+casilla_id = "importe-fondos-propios"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 176
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal = "20"
+
+[[entries]]
+export_field_id = "modelo-165-t1-importe-fondos-propios-component-182"
+kind = "casilla"
+casilla_id = "importe-fondos-propios"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 179
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal = "21"
+
+[[entries]]
+export_field_id = "modelo-165-t1-empresa-emergente"
+kind = "casilla"
+casilla_id = "empresa-emergente"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 182
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal = "22"
+
+[[entries]]
+export_field_id = "modelo-165-t1-blancos"
+kind = "filler"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 191
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+ordinal = "23"
+
+[[entries]]
+export_field_id = "modelo-165-t2-record-type"
+kind = "literal"
+literal = "2"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socios O Partícipes"
+source_row = 217
+record_identity = "Tipo 2 - Registro De Socios O Partícipes"
+ordinal = "1"
+
+[[entries]]
+export_field_id = "modelo-165-t2-modelo"
+kind = "literal"
+literal = "165"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socios O Partícipes"
+source_row = 219
+record_identity = "Tipo 2 - Registro De Socios O Partícipes"
+ordinal = "2"
+
+[[entries]]
+export_field_id = "modelo-165-t2-ejercicio"
+kind = "draft"
+draft_attribute = "filing_year"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socios O Partícipes"
+source_row = 221
+record_identity = "Tipo 2 - Registro De Socios O Partícipes"
+ordinal = "3"
+
+[[entries]]
+export_field_id = "modelo-165-t2-nif-declarante"
+kind = "header"
+producer_key = "taxpayer.tax_id"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socios O Partícipes"
+source_row = 224
+record_identity = "Tipo 2 - Registro De Socios O Partícipes"
+ordinal = "4"
+
+[[entries]]
+export_field_id = "modelo-165-t2-socio-nif"
+kind = "casilla"
+casilla_id = "socio-nif"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socios O Partícipes"
+source_row = 227
+record_identity = "Tipo 2 - Registro De Socios O Partícipes"
+ordinal = "5"
+
+[[entries]]
+export_field_id = "modelo-165-t2-representante-legal-nif"
+kind = "casilla"
+casilla_id = "representante-legal-nif"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socios O Partícipes"
+source_row = 244
+record_identity = "Tipo 2 - Registro De Socios O Partícipes"
+ordinal = "6"
+
+[[entries]]
+export_field_id = "modelo-165-t2-socio-nombre"
+kind = "casilla"
+casilla_id = "socio-nombre"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socios O Partícipes"
+source_row = 253
+record_identity = "Tipo 2 - Registro De Socios O Partícipes"
+ordinal = "7"
+
+[[entries]]
+export_field_id = "modelo-165-t2-importe-suscripcion-component-76"
+kind = "casilla"
+casilla_id = "importe-suscripcion"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socios O Partícipes"
+source_row = 267
+record_identity = "Tipo 2 - Registro De Socios O Partícipes"
+ordinal = "9"
+
+[[entries]]
+export_field_id = "modelo-165-t2-importe-suscripcion-component-87"
+kind = "casilla"
+casilla_id = "importe-suscripcion"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socios O Partícipes"
+source_row = 269
+record_identity = "Tipo 2 - Registro De Socios O Partícipes"
+ordinal = "10"
+
+[[entries]]
+export_field_id = "modelo-165-t2-fecha-adquisicion-component-89"
+kind = "casilla"
+casilla_id = "fecha-adquisicion"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socios O Partícipes"
+source_row = 277
+record_identity = "Tipo 2 - Registro De Socios O Partícipes"
+ordinal = "12"
+
+[[entries]]
+export_field_id = "modelo-165-t2-fecha-adquisicion-component-93"
+kind = "casilla"
+casilla_id = "fecha-adquisicion"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socios O Partícipes"
+source_row = 278
+record_identity = "Tipo 2 - Registro De Socios O Partícipes"
+ordinal = "13"
+
+[[entries]]
+export_field_id = "modelo-165-t2-fecha-adquisicion-component-95"
+kind = "casilla"
+casilla_id = "fecha-adquisicion"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socios O Partícipes"
+source_row = 279
+record_identity = "Tipo 2 - Registro De Socios O Partícipes"
+ordinal = "14"
+
+[[entries]]
+export_field_id = "modelo-165-t2-porcentaje-participacion-component-97"
+kind = "casilla"
+casilla_id = "porcentaje-participacion"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socios O Partícipes"
+source_row = 291
+record_identity = "Tipo 2 - Registro De Socios O Partícipes"
+ordinal = "16"
+
+[[entries]]
+export_field_id = "modelo-165-t2-porcentaje-participacion-component-100"
+kind = "casilla"
+casilla_id = "porcentaje-participacion"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socios O Partícipes"
+source_row = 294
+record_identity = "Tipo 2 - Registro De Socios O Partícipes"
+ordinal = "17"
+
+[[entries]]
+export_field_id = "modelo-165-t2-blancos"
+kind = "filler"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-165-2026"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Socios O Partícipes"
+source_row = 297
+record_identity = "Tipo 2 - Registro De Socios O Partícipes"
+ordinal = "18"
+

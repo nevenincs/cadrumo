@@ -1,0 +1,60 @@
+"""Portable command grammar and result-schema contracts for invoice wizard."""
+
+from __future__ import annotations
+
+import pytest
+
+from ..ledger_catalogue_invoice_results import CatalogueInvoiceWizardResult
+from .cli_runner import invoke_cached_cli
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+
+def test_wizard_help_keeps_the_complete_noninteractive_field_surface() -> None:
+    result = invoke_cached_cli(["app", "ledger", "invoice", "wizard", "--help"])
+    assert result.exit_code == 0, result.output
+    for option in (
+        "--counterparty-nif",
+        "--counterparty-name",
+        "--invoice-number",
+        "--invoice-date",
+        "--taxable-base",
+        "--iva-rate",
+        "--country-code",
+        "--operation-date",
+        "--retention-rate",
+        "--retention-amount",
+        "--iva-category",
+        "--recargo",
+    ):
+        assert option in result.output
+
+
+def test_wizard_without_required_inputs_returns_usage_without_prompting() -> None:
+    """A bare invocation is a usage error, not an interactive prompt.
+
+    ``--kind`` is declared first among the wizard's required options (see
+    ``INVOICE_INTAKE_WIZARD_CORE_OPTIONS`` in
+    ``app_ledger_invoice_common_command_parameters.py``), so click reports it
+    as the missing option before any of the others, including
+    ``--counterparty-nif``. The empty stdin (``input=""``) is what proves
+    non-interactivity: a command that tried to prompt would hang or raise.
+    """
+    result = invoke_cached_cli(["app", "ledger", "invoice", "wizard"], input="")
+    assert result.exit_code == 2
+    assert "Usage:" in result.output
+    assert "--kind" in result.output
+
+
+def test_wizard_output_schema_keeps_noop_and_extended_record_fields() -> None:
+    assert {
+        "already_existed",
+        "invoice_id",
+        "counterparty_tax_id",
+        "operation_date",
+        "retention_rate",
+        "retention_amount",
+        "recargo_amount",
+        "source_sha256",
+        "source_row_index",
+    }.issubset(CatalogueInvoiceWizardResult.model_fields)

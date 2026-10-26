@@ -1,0 +1,93 @@
+"""Calculation revision list with opaque semantic selection."""
+
+from __future__ import annotations
+
+from typing import cast, override
+
+from textual.app import ComposeResult
+from textual.widgets import DataTable, Static
+
+from ....core.i18n.render import tr
+from ..components.language import localized
+from ..components.widgets import ContentDataTable, ContentScroll
+from .controller import (
+    DeclarationsProjectionScreen,
+    DeclarationsWorkspaceController,
+    natural_address,
+    revision_state_label,
+    timestamp_label,
+)
+
+
+class DeclarationsRevisionsScreen(DeclarationsProjectionScreen):
+    """Distinguish calculation revision identity from registry revision vocabulary."""
+
+    def __init__(self, controller: DeclarationsWorkspaceController) -> None:
+        """Retain injected state and semantic selection."""
+        super().__init__(controller, id="declarations-revisions-screen")
+        self.selected_calculation_revision_id: str | None = None
+
+    @override
+    def compose(self) -> ComposeResult:
+        yield localized(
+            Static(tr("workspace.declarations.revisions.title"), classes="cadrumo-banner", markup=False),
+            "workspace.declarations.revisions.title",
+        )
+        with ContentScroll(id="declarations-page", classes="cadrumo-scroll declarations-page"):
+            yield ContentDataTable[str](id="declarations-navigation", cursor_type="row", zebra_stripes=True)
+            yield localized(
+                Static(tr("workspace.declarations.revisions.explanation"), markup=False),
+                "workspace.declarations.revisions.explanation",
+            )
+            yield ContentDataTable[str](id="declarations-revisions", cursor_type="row", zebra_stripes=True)
+            yield from self.compose_notices()
+
+    @override
+    def _populate_view(self) -> None:
+        """Populate calculation revisions from the safe projection."""
+        self.populate_navigation()
+        table = cast("DataTable[str]", self.query_one("#declarations-revisions", DataTable))
+        table.add_column(tr("workspace.declarations.column.declaration"), key="declaration", width=18)
+        table.add_column(tr("workspace.declarations.column.updated"), key="updated", width=20)
+        table.add_column(tr("workspace.declarations.column.local_state"), key="state", width=13)
+        table.add_column(tr("workspace.declarations.column.current"), key="current", width=7)
+        table.add_column(tr("workspace.declarations.column.filed"), key="filed", width=7)
+        for row in self.controller.projection.calculation_revisions:
+            table.add_row(
+                natural_address(row.modelo, row.filing_year, row.period),
+                timestamp_label(row.updated_at),
+                revision_state_label(row.state),
+                tr("workspace.declarations.value.yes" if row.is_current else "workspace.declarations.value.no"),
+                tr("workspace.declarations.value.yes" if row.is_filed else "workspace.declarations.value.no"),
+                key=row.calculation_revision_id,
+            )
+        if not table.row_count:
+            self.show_empty()
+        restored = self.controller.restored_id("declarations.calculation_revision")
+        index = next((i for i, item in enumerate(table.ordered_rows) if item.key.value == restored), None)
+        if index is None:
+            self.query_one("#declarations-navigation", DataTable).focus()
+        else:
+            table.move_cursor(row=index)
+            table.focus()
+
+    def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
+        """Route a navigation row or invoke the injected revision handoff."""
+        if self.handle_navigation(event):
+            return
+        table = cast("DataTable[str]", event.data_table)
+        if table.id != "declarations-revisions" or event.row_key.value is None:
+            return
+        row = next(
+            item
+            for item in self.controller.projection.calculation_revisions
+            if item.calculation_revision_id == event.row_key.value
+        )
+        self.selected_calculation_revision_id = row.calculation_revision_id
+        if self.controller.revision_handoff is None:
+            self.refuse_handoff()
+        else:
+            self.controller.revision_handoff(row)
+
+
+__all__ = ["DeclarationsRevisionsScreen"]

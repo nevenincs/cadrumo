@@ -1,0 +1,26 @@
+"""Public outbound boundary for registry-backed AEAT fichero-BOE rendering.
+
+AEAT remote submission and write-shaped portal walks are permanently
+forbidden. The local submission lifecycle is owned by
+:mod:`domain.submission`, including
+:class:`domain.submission.engine.SubmissionEngine`,
+:class:`domain.submission.preflight.Preflight`, and
+:class:`domain.submission.errors.SubmissionPreflightError`. Any live-write
+attempt is refused at the core access gate by
+:class:`core.access_gate.errors.LiveSubmitForbiddenError`.
+
+Inert namespace. The renderer is reached at
+:mod:`~adapters.outbound.aeat.export.registry_record_renderer`, which raises
+the domain export refusal. Fixed-width value semantics are owned by
+:mod:`domain.calculations.registry`.
+
+See Also:
+    :mod:`domain.submission`
+        Canonical local-only submission lifecycle and preflight engine.
+    :mod:`core.access_gate`
+        Core live-read gate and permanent live-write refusal policy.
+"""
+
+from __future__ import annotations
+
+__all__: tuple[str, ...] = ()

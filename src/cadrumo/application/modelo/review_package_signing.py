@@ -1,0 +1,275 @@
+"""Ed25519 signing and signature verification for review packages.
+
+This module implements the signing slice deferred by
+:mod:`~application.modelo.review_package`: that module's
+:func:`~application.modelo.review_package.verify_review_package` is an INTEGRITY check
+only (did every archived member arrive byte-for-byte as built); it makes no
+claim about WHO built the package. This module adds the AUTHENTICITY layer on
+top of that integrity check by signing the package's self-attesting
+:attr:`~core.corpus_manifest.manifest.CorpusManifest.manifest_sha256` digest with a
+per-profile Ed25519 keypair.
+
+Signing the manifest digest (not the archive bytes or a re-derived hash) means
+the signature transitively covers every archived member: the digest is a
+SHA-256 over the canonical JSON of the manifest's per-file entries, and a
+tampered member is already caught by
+:func:`~core.corpus_manifest.manifest.verify_corpus_bundle` before signature
+verification is even attempted (see :func:`verify_review_package_signature`).
+
+Key custody (``sensitive-financial-data-secure-storage-only`` /
+``no-legacy-compatibility``): the private key is generated once per profile
+bucket and persisted ONLY as ciphertext by the required signing-keypair
+capability. Its outer binding owns the secure-storage classification and
+failure translation. The key is never logged, never written to a plaintext
+file, and never leaves this module as raw bytes except transiently in process
+memory to sign. The public key is, by construction, safe to export and hand
+to a receiving accountant for signature verification -- it carries no secrecy
+requirement.
+
+Counter-signed accountant feedback-package round trips remain OUT OF SCOPE for
+this module; it exposes only the primitive: mint/load a per-profile keypair,
+sign a package's manifest digest, verify a signature against a public key.
+
+See Also:
+    :mod:`~application.modelo.review_package`
+        Builds and integrity-verifies the review package this module signs.
+    :mod:`~application.modelo.review_package_signing_ports`
+        Application-owned keypair capability contract.
+"""
+
+from __future__ import annotations
+
+from datetime import datetime
+from pathlib import Path
+from typing import TYPE_CHECKING
+
+from cryptography.hazmat.primitives.asymmetric.ed25519 import (
+    Ed25519PrivateKey,
+    Ed25519PublicKey,
+)
+from pydantic import BaseModel, Field
+
+from ...core.corpus_manifest.errors import CorpusBundleError, CorpusManifestTamperError
+from ...core.corpus_manifest.manifest import verify_corpus_bundle
+from ...core.ed25519_signing import (
+    digest_signature_is_valid,
+    ed25519_private_key_from_hex,
+    ed25519_public_key_from_hex,
+    sign_digest_hex,
+)
+from ...core.errors.hierarchy import CadrumoError
+from ...core.hex import HEX_PATTERN_64 as _HEX_PATTERN_64
+from ...core.hex import HEX_PATTERN_128 as _HEX_PATTERN_128
+from ...core.identity.bucket import BucketId
+from ...core.identity.hex_ids import CalculationRevisionId
+from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.time.clock import now as _utc_now
+from ...core.time.utc import UtcInstant
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from .review_package import assert_review_package_verifies
+
+if TYPE_CHECKING:
+    from .review_package_signing_ports import ReviewPackageSigningKeypairCapability
+
+#: Wire-format version of the signature envelope. Bumped when the envelope
+#: schema changes shape (e.g. a future multi-signer / counter-sign extension).
+_SIGNATURE_ENVELOPE_VERSION = 1
+
+
+class ReviewPackageSigningError(CadrumoError):
+    """Base error for review-package signing/verification failures."""
+
+
+class ReviewPackageSigningKeypair(BaseModel):
+    """A profile's Ed25519 signing keypair, private key included.
+
+    This model is the PLAINTEXT in-memory shape used only transiently around
+    generation, persistence, and signing; :meth:`private_key` /
+    :meth:`public_key` reconstruct live ``cryptography`` key objects from the
+    stored raw hex bytes. Nothing about this model changes the secure-storage
+    contract: the caller (:func:`ensure_review_package_signing_keypair`) is
+    responsible for obtaining it through the required signing-keypair
+    capability.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    bucket_id: BucketId
+    private_key_hex: str = Field(pattern=_HEX_PATTERN_64)
+    public_key_hex: str = Field(pattern=_HEX_PATTERN_64)
+    created_at: UtcInstant
+
+    def private_key(self) -> Ed25519PrivateKey:
+        """Reconstruct the live :class:`Ed25519PrivateKey` from stored raw bytes."""
+        return ed25519_private_key_from_hex(self.private_key_hex)
+
+    def public_key(self) -> Ed25519PublicKey:
+        """Reconstruct the live :class:`Ed25519PublicKey` from stored raw bytes."""
+        return ed25519_public_key_from_hex(self.public_key_hex)
+
+
+class SignedReviewPackage(BaseModel):
+    """Signature envelope binding a review package's manifest digest to a signer.
+
+    ``manifest_sha256`` is the review package's own self-attesting
+    :attr:`~core.corpus_manifest.manifest.CorpusManifest.manifest_sha256` (recovered
+    via :func:`~application.modelo.review_package.verify_review_package`), NOT a
+    re-derived hash of the archive bytes: signing the manifest digest
+    transitively covers every archived member because the manifest digest
+    already covers every per-file checksum record.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    envelope_version: int = Field(default=_SIGNATURE_ENVELOPE_VERSION, ge=1)
+    bucket_id: BucketId
+    calculation_revision_id: CalculationRevisionId
+    manifest_sha256: str = Field(pattern=_HEX_PATTERN_64)
+    signature_hex: str = Field(pattern=_HEX_PATTERN_128)
+    public_key_hex: str = Field(pattern=_HEX_PATTERN_64)
+    signed_at: UtcInstant
+
+
+def ensure_review_package_signing_keypair(
+    *,
+    bucket_id: str,
+    signing_keypair: ReviewPackageSigningKeypairCapability,
+    generated_at: datetime | None = None,
+) -> ReviewPackageSigningKeypair:
+    """Return the profile's Ed25519 signing keypair through its capability.
+
+    Args:
+        bucket_id: The active profile bucket id this keypair is scoped to.
+        signing_keypair: The required application-facing keypair capability.
+        generated_at: Optional override for the keypair's ``created_at``
+            timestamp (tests only); defaults to the current UTC time.
+    """
+    return signing_keypair.ensure_keypair(bucket_id=bucket_id, generated_at=generated_at)
+
+
+def sign_review_package(
+    package_path: Path,
+    *,
+    keypair: ReviewPackageSigningKeypair,
+    signed_at: datetime | None = None,
+    operation: PinnedAuthorityOperation | None = None,
+) -> SignedReviewPackage:
+    """Verify ``package_path``'s checksum manifest, then sign its digest.
+
+    Delegates the integrity check entirely to
+    :func:`~application.modelo.review_package.assert_review_package_verifies` (no
+    hashing logic is re-derived here): a package that is not checksum-clean
+    raises before any signature is produced, so a signature can never be
+    minted over a package this module itself cannot vouch is intact.
+
+    Args:
+        package_path: Path to the review-package ZIP to sign.
+        keypair: The signer's :class:`ReviewPackageSigningKeypair` (see
+            :func:`ensure_review_package_signing_keypair`).
+        signed_at: Optional override for the envelope's ``signed_at``
+            timestamp (tests only); defaults to the current UTC time.
+        operation: Retained authority operation for the package integrity check.
+
+    Raises:
+        FileNotFoundError: If ``package_path`` does not exist.
+        ReviewPackageIntegrityError: If the package fails checksum-manifest
+            verification (propagated from
+            :func:`~application.modelo.review_package.assert_review_package_verifies`).
+    """
+    if operation is None:
+        with bundled_indexed_authority().operation() as supplied_operation:
+            manifest = assert_review_package_verifies(package_path, operation=supplied_operation)
+    else:
+        manifest = assert_review_package_verifies(package_path, operation=operation)
+    manifest_sha256 = _package_manifest_sha256(package_path)
+    signature_hex = sign_digest_hex(
+        private_key_hex=keypair.private_key_hex,
+        digest_hex=manifest_sha256,
+    )
+
+    return SignedReviewPackage(
+        bucket_id=manifest.bucket_id,
+        calculation_revision_id=manifest.calculation_revision_id,
+        manifest_sha256=manifest_sha256,
+        signature_hex=signature_hex,
+        public_key_hex=keypair.public_key_hex,
+        signed_at=signed_at or _utc_now(),
+    )
+
+
+def verify_review_package_signature(
+    package_path: Path,
+    signed_package: SignedReviewPackage,
+    *,
+    public_key_hex: str,
+) -> bool:
+    """Verify ``signed_package``'s signature against ``public_key_hex``.
+
+    Re-runs the checksum-manifest integrity check (a fresh
+    :func:`~core.corpus_manifest.manifest.verify_corpus_bundle` call, not a trust
+    of ``signed_package.manifest_sha256``) first. This matters because
+    ``manifest_sha256`` is a digest over the embedded manifest's OWN recorded
+    per-file hashes -- it does NOT change if an archived member's bytes are
+    swapped without touching the manifest metadata; only the ``mismatched``
+    check (re-hashing every archived file against its manifest record) catches
+    that tamper. So a package whose CURRENT bytes are not checksum-clean, or
+    whose current manifest digest no longer matches the signed digest, fails
+    here even before the Ed25519 check runs.
+
+    Args:
+        package_path: Path to the review-package ZIP to verify.
+        signed_package: The :class:`SignedReviewPackage` envelope produced by
+            :func:`sign_review_package`.
+        public_key_hex: The signer's raw public key, as 64 lowercase hex
+            characters (see :attr:`~ReviewPackageSigningKeypair.public_key_hex`).
+            Passed explicitly (never read off ``signed_package``) so a
+            verifier must supply the key it actually trusts, rather than
+            trusting whatever key the envelope claims.
+
+    Returns:
+        ``True`` iff the package is currently checksum-clean, its manifest
+        digest matches the signed digest, AND the Ed25519 signature verifies
+        against ``public_key_hex``. Returns ``False`` (never raises) on any
+        mismatch or invalid-signature outcome -- signature verification is an
+        authenticity *check*, not an assertion; callers that want a raising
+        assertion should call :func:`sign_review_package`'s sibling
+        :func:`~application.modelo.review_package.assert_review_package_verifies` first
+        and test this function's boolean themselves.
+    """
+    try:
+        result = verify_corpus_bundle(package_path)
+    except (CorpusBundleError, CorpusManifestTamperError):
+        return False
+
+    if not result.is_clean:
+        return False
+    if result.manifest.manifest_sha256 != signed_package.manifest_sha256:
+        return False
+
+    return digest_signature_is_valid(
+        public_key_hex=public_key_hex,
+        digest_hex=signed_package.manifest_sha256,
+        signature_hex=signed_package.signature_hex,
+    )
+
+
+def _package_manifest_sha256(package_path: Path) -> str:
+    """Return the package's current self-attesting corpus manifest digest.
+
+    Re-runs :func:`~core.corpus_manifest.manifest.verify_corpus_bundle` directly
+    (the same checksum layer :func:`~application.modelo.review_package.verify_review_package`
+    delegates to) so the digest reflects the archive's CURRENT bytes, never a
+    cached value, and is available even when the caller only needs the digest
+    rather than the full review-specific verification result.
+    """
+    return verify_corpus_bundle(package_path).manifest.manifest_sha256
+
+
+__all__ = [
+    "ReviewPackageSigningError",
+    "ReviewPackageSigningKeypair",
+    "SignedReviewPackage",
+    "ensure_review_package_signing_keypair",
+    "sign_review_package",
+    "verify_review_package_signature",
+]

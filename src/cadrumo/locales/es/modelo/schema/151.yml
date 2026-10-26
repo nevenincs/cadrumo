@@ -1,0 +1,2336 @@
+modelo:
+  schema:
+    '151':
+      casilla:
+        continuidad:
+          contribuyente-fax-domicilio-espana:
+            label: Contribuyente. 61 - Nº de Fax.
+          contribuyente-fax-domicilio-extranjero:
+            label: Contribuyente Domicilio Extranjero. 72 - Nº Fax
+          cuota-cero:
+            label: Cuota cero
+          did-devolucion-swift-bic:
+            label: Devolución. SWIFT-BIC
+          filing-period:
+            label: Periodo (anual, 0A)
+          filing-year:
+            label: Ejercicio al que se refiere la declaración
+          impatriado-base-liquidable-ahorro:
+            label: 'Base liquidable del ahorro (parte de la base liquidable de las
+              rentas art. 25.1.f TRLIRNR: dividendos, intereses y ganancias patrimoniales
+              del ahorro de fuente española)'
+          impatriado-base-liquidable-general:
+            label: Base liquidable general (régimen impatriados, excluida la parte
+              del ahorro art. 25.1.f TRLIRNR)
+          impatriado-cuota-integra-ahorro:
+            label: Cuota íntegra del ahorro (escala del art. 93.2.e).2.º LIRPF sobre
+              la base liquidable del ahorro, en la redacción aplicable a cada ejercicio)
+          impatriado-cuota-integra-general:
+            label: 'Cuota íntegra general (escala del art. 93.2.e).1.º LIRPF: 24 %
+              hasta 600.000 € y el tipo superior del ejercicio sobre el exceso)'
+          impatriado-retenciones:
+            label: Retenciones e ingresos a cuenta (pagos a cuenta, art. 93.2.f)
+          m151-datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-origen-12:
+            label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+              Origen [12]
+          m151-datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-propiedad-10:
+            label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+              Propiedad (%) [10]
+          m151-datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-referencia-catastral-14:
+            label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+              Referencia catastral [14]
+          m151-datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-situacion-13:
+            label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+              Situación [13]
+          m151-datos-adicionales-de-las-rentas-derivadas-de-bienes-e-inmuebles-usufructo-11:
+            label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+              Usufructo (%) [11]
+          m151-ganancia-patrimonial-total-obtenida-10:
+            label: Ganancia Patrimonial total obtenida [10]
+          m151-retencion-o-ingreso-a-cuenta-11:
+            label: Retención o ingreso a cuenta [11]
+          p01-contribuyente-57-codigo-de-municipio:
+            label: Contribuyente. 57 - Código de Municipio.
+          p01-devengo-periodo:
+            label: Devengo - Periodo
+          p01-representante-57-codigo-de-municipio:
+            label: Representante. 57 - Código de Municipio.
+          p01-representante-apellidos:
+            label: Representante. Apellidos
+          p01-representante-nombre:
+            label: Representante. Nombre
+          p02-datos-adicionales-de-l-inmuebles-propiedad-10-01:
+            label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+              Propiedad (%) [10]
+          p02-datos-adicionales-de-l-inmuebles-propiedad-10-03:
+            label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+              Propiedad (%) [10]
+          p02-datos-adicionales-de-l-inmuebles-propiedad-10-04:
+            label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+              Propiedad (%) [10]
+          p02-datos-adicionales-de-l-inmuebles-situacion-13-01:
+            label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+              Situación [13]
+          p02-datos-adicionales-de-l-inmuebles-situacion-13-03:
+            label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+              Situación [13]
+          p02-datos-adicionales-de-l-inmuebles-situacion-13-04:
+            label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+              Situación [13]
+          p02-datos-adicionales-de-l-inmuebles-usufructo-11-01:
+            label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+              Usufructo (%) [11]
+          p02-datos-adicionales-de-l-inmuebles-usufructo-11-03:
+            label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+              Usufructo (%) [11]
+          p02-datos-adicionales-de-l-inmuebles-usufructo-11-04:
+            label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+              Usufructo (%) [11]
+          p02-datos-adicionales-de-l-referencia-catastral-14-01:
+            label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+              Referencia catastral [14]
+          p02-datos-adicionales-de-l-referencia-catastral-14-03:
+            label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+              Referencia catastral [14]
+          p02-datos-adicionales-de-l-referencia-catastral-14-04:
+            label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+              Referencia catastral [14]
+          p02-datos-adicionales-de-l-s-e-inmuebles-origen-12-01:
+            label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+              Origen [12]
+          p02-datos-adicionales-de-l-s-e-inmuebles-origen-12-03:
+            label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+              Origen [12]
+          p02-datos-adicionales-de-l-s-e-inmuebles-origen-12-04:
+            label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+              Origen [12]
+          p02-pagador-apellidos-o-razon-social-01:
+            label: Pagador. Apellidos o Razón social
+          p02-pagador-apellidos-o-razon-social-02:
+            label: Pagador. Apellidos o Razón social
+          p02-pagador-apellidos-o-razon-social-03:
+            label: Pagador. Apellidos o Razón social
+          p02-pagador-apellidos-o-razon-social-04:
+            label: Pagador. Apellidos o Razón social
+          p02-pagador-nombre-01:
+            label: Pagador. Nombre
+          p02-pagador-nombre-02:
+            label: Pagador. Nombre
+          p02-pagador-nombre-03:
+            label: Pagador. Nombre
+          p02-pagador-nombre-04:
+            label: Pagador. Nombre
+          p03-datos-adicionales-de-l-inmuebles-propiedad-10-01:
+            label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+              Propiedad (%) [10]
+          p03-datos-adicionales-de-l-inmuebles-propiedad-10-02:
+            label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+              Propiedad (%) [10]
+          p03-datos-adicionales-de-l-inmuebles-propiedad-10-03:
+            label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+              Propiedad (%) [10]
+          p03-datos-adicionales-de-l-inmuebles-propiedad-10-04:
+            label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+              Propiedad (%) [10]
+          p03-datos-adicionales-de-l-inmuebles-situacion-13-01:
+            label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+              Situación [13]
+          p03-datos-adicionales-de-l-inmuebles-situacion-13-02:
+            label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+              Situación [13]
+          p03-datos-adicionales-de-l-inmuebles-situacion-13-03:
+            label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+              Situación [13]
+          p03-datos-adicionales-de-l-inmuebles-situacion-13-04:
+            label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+              Situación [13]
+          p03-datos-adicionales-de-l-inmuebles-usufructo-11-01:
+            label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+              Usufructo (%) [11]
+          p03-datos-adicionales-de-l-inmuebles-usufructo-11-02:
+            label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+              Usufructo (%) [11]
+          p03-datos-adicionales-de-l-inmuebles-usufructo-11-03:
+            label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+              Usufructo (%) [11]
+          p03-datos-adicionales-de-l-inmuebles-usufructo-11-04:
+            label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+              Usufructo (%) [11]
+          p03-datos-adicionales-de-l-referencia-catastral-14-01:
+            label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+              Referencia catastral [14]
+          p03-datos-adicionales-de-l-referencia-catastral-14-02:
+            label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+              Referencia catastral [14]
+          p03-datos-adicionales-de-l-referencia-catastral-14-03:
+            label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+              Referencia catastral [14]
+          p03-datos-adicionales-de-l-referencia-catastral-14-04:
+            label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+              Referencia catastral [14]
+          p03-datos-adicionales-de-l-s-e-inmuebles-origen-12-01:
+            label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+              Origen [12]
+          p03-datos-adicionales-de-l-s-e-inmuebles-origen-12-02:
+            label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+              Origen [12]
+          p03-datos-adicionales-de-l-s-e-inmuebles-origen-12-03:
+            label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+              Origen [12]
+          p03-datos-adicionales-de-l-s-e-inmuebles-origen-12-04:
+            label: Datos Adicionales de las rentas derivadas de bienes e inmuebles.
+              Origen [12]
+          p03-pagador-apellidos-o-razon-social-01:
+            label: Pagador. Apellidos o Razón social
+          p03-pagador-apellidos-o-razon-social-02:
+            label: Pagador. Apellidos o Razón social
+          p03-pagador-apellidos-o-razon-social-03:
+            label: Pagador. Apellidos o Razón social
+          p03-pagador-apellidos-o-razon-social-04:
+            label: Pagador. Apellidos o Razón social
+          p03-pagador-nombre-01:
+            label: Pagador. Nombre
+          p03-pagador-nombre-02:
+            label: Pagador. Nombre
+          p03-pagador-nombre-03:
+            label: Pagador. Nombre
+          p03-pagador-nombre-04:
+            label: Pagador. Nombre
+          p03-total-rendimientos-int-nmobiliaria-imputada-15:
+            label: Total rendimientos íntegros/Renta inmobiliaria imputada [15]
+          p03-total-retenciones-o-ingresos-a-cuenta-16:
+            label: Total retenciones o ingresos a cuenta [16]
+          p05-rendimientos-negativos-rentencion-o-ingreso-a-cuenta-6:
+            label: Rendimientos Negativos. Retención o ingreso a cuenta [6]
+          p06-adquiriente-apellidos-o-razon-social-01:
+            label: Adquiriente. Apellidos o Razón social
+          p06-adquiriente-apellidos-o-razon-social-02:
+            label: Adquiriente. Apellidos o Razón social
+          p06-adquiriente-nombre-01:
+            label: Adquiriente. Nombre
+          p06-adquiriente-nombre-02:
+            label: Adquiriente. Nombre
+          p06-ganancia-patrimonial-total-obtenida-10-02:
+            label: Ganancia Patrimonial total obtenida [10]
+          p06-resto-ganancia-patrimonial-total-obtenida-10:
+            label: RESTO. Ganancia Patrimonial total obtenida [10]
+          p06-resto-retencion-o-ingreso-a-cuenta-11:
+            label: RESTO. Retención o ingreso a cuenta [11]
+          p06-retencion-o-ingreso-a-cuenta-11-02:
+            label: Retención o ingreso a cuenta [11]
+          p06-total-ganancias-patrimoniales-12:
+            label: Total ganancias patrimoniales [12]
+          p06-total-retenciones-o-ingresos-a-cuenta-13:
+            label: Total retenciones o ingresos a cuenta [13]
+          p08-base-liquidable-del-ahorro-18:
+            label: Base liquidable del ahorro [18]
+          p08-cuota-correspondiente-e-general-del-ahorro-20:
+            label: Cuota correspondiente a la base liquidable general del ahorro [20]
+          p08-cuota-integra-total-21:
+            label: Cuota íntegra total [21]
+          p08-cuota-integra-total-parte-autonomica-23:
+            label: Cuota íntegra total. Parte autonómica [23]
+          p08-cuota-integra-total-parte-estatal-22:
+            label: Cuota íntegra total. Parte estatal [22]
+          p08-cuota-liquida-total-30:
+            label: Cuota líquida total [30]
+          p08-cuota-liquida-total-parte-autonomica-32:
+            label: Cuota líquida total. Parte autonómica [32]
+          p08-cuota-liquida-total-parte-estatal-31:
+            label: Cuota líquida total. Parte estatal [31]
+          p08-cuotas-del-impuesto-so-as-en-la-declaracion-34:
+            label: Cuotas del impuesto sobre la Renta de no Residentes pagadas respecto
+              de las rentas incluidas en la declaración [34]
+          p08-deduccion-por-doble-im-anjero-parte-estatal-28:
+            label: Deducción por doble imposición internacional por razón de los rendimientos
+              de trabajo obtenidos y gravados en el extranjero. Parte estatal [28]
+          p08-deduccion-por-doble-im-dos-en-el-extranjero-27:
+            label: Deducción por doble imposición internacional por razón de los rendimientos
+              de trabajo obtenidos y gravados en el extranjero [27]
+          p08-deduccion-por-doble-im-ero-parte-autonomica-29:
+            label: Deducción por doble imposición internacional por razón de los rendimientos
+              de trabajo obtenidos y gravados en el extranjero. Parte autonómica [29]
+          p08-deduccion-por-donativos-24:
+            label: Deducción por donativos [24]
+          p08-deduccion-por-donativos-parte-autonomica-26:
+            label: Deducción por donativos. Parte autonómica [26]
+          p08-deduccion-por-donativos-parte-estatal-25:
+            label: Deducción por donativos. Parte estatal [25]
+          p08-devoluciones-acordadas-or-la-administracion-42:
+            label: Devoluciones acordadas por la Administración [42]
+          p08-epigrafe-a1-35:
+            label: Epígrafe A1 [35]
+          p08-epigrafe-a2-36:
+            label: Epígrafe A2 [36]
+          p08-epigrafe-b-37:
+            label: Epígrafe B [37]
+          p08-epigrafe-c-38:
+            label: Epígrafe C [38]
+          p08-epigrafe-d-39:
+            label: Epígrafe D [39]
+          p08-epigrafe-e1-y-e2-40:
+            label: Epígrafe E1 y E2 [40]
+          p08-resultado-de-la-declaracion-43:
+            label: Resultado de la declaración [43]
+          p08-resultados-a-ingresar-cion-administrativas-41:
+            label: Resultados a ingresar de las anteriores declaraciones o liquidación
+              administrativas [41]
+          representante-fax:
+            label: Representante. 61 - Nº de Fax.
+          tipo-de-declaracion:
+            label: Tipo de declaración
+      construct:
+        m151-impatriado-calculation:
+          field:
+            title: Modelo 151 IRPF régimen impatriados cuota
+      field:
+        official_name: Modelo 151. Declaración del IRPF para contribuyentes del Régimen
+          especial aplicable a los trabajadores desplazados a territorio español.
+        title: IRPF régimen especial de trabajadores desplazados (impatriados, Beckham)
+      revision:
+        2015-2022:
+          casilla:
+            x-chkm8bjeelmmasjf5li6abb3elimst315lkm4obe:
+              label: Número de Cuenta (IBAN)
+            x-chkm8bjicln7arj3d5giqo9ddhgiqp35epnmotb3d4mm2tjfe8mm8pbc5lq6asrfe9niqs3lc9m6iorf:
+              label: Renuncia a la devolución a favor del Tesoro Público
+            x-chkm8bjjdtm6ior9ehgiqr315li6atjfdhqm6qbfdomn0rri5lq74obeedj6asj5dphmio8:
+              label: Solicita la devolución por transferencia
+            x-d5mn0obke9km2p3f5phnarrkc4mm8qb6clp6arj3d5gmo:
+              label: Cuota diferencial (cuota integra general menos retenciones)
+            x-e0o32bj1edkmerj1cdkmurhdchiiqor1dpq6ip31chin6bb15lj6irj5ecmn6rr3d5gmopbj:
+              label: Asignación de cantidades a fines sociales
+            x-e0o32bj1edkmerj1cdkmurhdehp6iojlehgn4qb15lgiqr315lkmer35edkm2bb3c5q6ur39cdgg:
+              label: Asignación Tributaria a la Iglesia Católica
+            x-e0o32bj3dtmnarj9chgm8bb1elq6urjfdlgiqp355liiqpbc5limkpbicdkm6qbf5lkmsp39cdgm8ro:
+              label: Comunidad Autónoma de residencia durante el ejercicio indicado
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd1k5lq6is3f5li6abbmd5gg:
+              label: Contribuyente. 44 - Tipo de vía.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd1l5ln6urb2e9iiqp355lm62bbmd5giqs3lc9m6ior1:
+              label: Contribuyente. 45 - Nombre de la vía pública.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd1m5lq6is3f5li6abbeelmmasj1cdkmurg:
+              label: Contribuyente. 46 - Tipo de numeración.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd1n5ln7arb5e9niqp355lhm2sr1:
+              label: Contribuyente. 47 - Número de casa.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd1o5lhm2r39cpkm6ob4dtp2qp355ln7arb5e9ng:
+              label: Contribuyente. 48 - Calificador de número.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd1p5lh6orrhelig:
+              label: Contribuyente. 49 - Bloque.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd9g5lo6usjkc5m0:
+              label: Contribuyente. 50 - Portal.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd9h5lin6or1dhin4o8:
+              label: Contribuyente. 51 - Escalera.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd9i5lo6oobeehgg:
+              label: Contribuyente. 52 - Planta.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd9j5lo7apbiehgg:
+              label: Contribuyente. 53 - Puerta.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd9k5li62t3fecmmarb5dpq62sj9dtpiqp355li6urb9cdkmoqbf:
+              label: Contribuyente. 54 - Datos complementarios de domicilio.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd9l5lm6uor1dhkm8ob45lo6uojcc5hmirre:
+              label: Contribuyente. 55 - Localidad/Población
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd9m5lhmup39ctniqs3fedq62r0:
+              label: Contribuyente. 56 - Código postal.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd9o5lhmup39ctniqp355lo74rrmd5n66qb1:
+              label: Contribuyente. 58 - Código de Provincia.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqd9p5lq6ar35cpnmsrpdcpkmkro:
+              label: Contribuyente. 59 - Teléfono fijo.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqdhg5lq6ar35cpnmsrpddlnncqbc:
+              label: Contribuyente. 60 - Teléfono móvil.
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqor1dlh6irpdchiiqp3fdlkm6qbcd5ng:
+              label: Contribuyente. Cambio de domicilio
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb1cgmm2r1de9imcpbicln66qb15lhm2t31edq74obc:
+              label: Contribuyente Datos Adicionales vivienda actual. Referencia catastral
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb1cgmmarj4c4mm2orkelgmobbkd5q7ar31e9km8ob4:
+              label: Contribuyente Datos Adicionales vivienda actual. Titularidad
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb1cgmmusj3cln78obackmn0obiehkm6qbgc5hmirre:
+              label: Contribuyente Datos Adicionales vivienda actual. Porcentaje participación
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb1cgmncqb5dpi62bb1cdq7aobc5lpmit3lc5hmirre:
+              label: Contribuyente Datos Adicionales vivienda actual. Situación
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd4mm2rjaclp6ub9n60mn8pbcclj6urjf5lj6iqjf:
+              label: Contribuyente Domicilio Extranjero. 70 - Teléfono Fijo
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd4mmasjf5kr38bbgdth6oob3d5nmsbb3d5qm8ob4:
+              label: Contribuyente Domicilio Extranjero. 64 - Población/Ciudad
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd4mmau3ke9gmsqj5e9niqdhi5li6urb9cdkmoqbf:
+              label: Contribuyente Domicilio Extranjero. 62 - Domicilio
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd4mmqs3cclmmarjkc5p6irrj5li6urb9cdkmoqbf:
+              label: Contribuyente Domicilio Extranjero. 63 - Datos complementarios
+                domicilio
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd4mmsqj5e9niqdph5lq6ar35cpnmsrpddlnncqbc:
+              label: Contribuyente Domicilio Extranjero. 71 - Teléfono Móvil
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd4mn0sjfepkmsor9c4mn4pb7d5nmsbb5edq62p3f:
+              label: Contribuyente Domicilio Extranjero. 67 - Provincia/Región/Estado
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd4mn4rpd6or2qorfchkmerpde1nn6t31dgmnkqbg:
+              label: Contribuyente Domicilio Extranjero. 66 - Código postal/ZIP
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd5niqpboehp62rjaclp6ub9m6kmmarb1d5m0:
+              label: Contribuyente Domicilio Extranjero. 65 - Email
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd5niqpboehp62rjaclp6ub9m70mn0ob9ec:
+              label: Contribuyente Domicilio Extranjero. 68 - País
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqpj5cdk62bb4ckmmsob3d5mmipbeehng:
+              label: Contribuyente. Fecha de nacimiento
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqsr5f1ng:
+              label: Contribuyente. Sexo
+            x-e0o32bj4clhmoobic5hmirre5lhmurbgdhimqpbeehgn4qb1:
+              label: Declaración Complementaria
+            x-e0o32bj4clhmoobic5hmirre5lhmurbgdhimqpbeehgn4qb15kp0:
+              label: Declaración Complementaria 2
+            x-e0o32bjeelmmasjf5li6abbaelpn8qb6d5hm2rjkck:
+              label: Número de Justificante
+            x-e0o32bjiclo74pbjcln78obeehiiqd1k5lq6is3f5li6abbmd5gg:
+              label: Representante. 44 - Tipo de vía.
+            x-e0o32bjiclo74pbjcln78obeehiiqd1l5ln6urb2e9iiqp355lm62bbmd5giqs3lc9m6ior1:
+              label: Representante. 45 - Nombre de la vía pública.
+            x-e0o32bjiclo74pbjcln78obeehiiqd1m5lq6is3f5li6abbeelmmasj1cdkmurg:
+              label: Representante. 46 - Tipo de numeración.
+            x-e0o32bjiclo74pbjcln78obeehiiqd1n5ln7arb5e9niqp355lhm2sr1:
+              label: Representante. 47 - Número de casa.
+            x-e0o32bjiclo74pbjcln78obeehiiqd1o5lhm2r39cpkm6ob4dtp2qp355ln7arb5e9ng:
+              label: Representante. 48 - Calificador de número.
+            x-e0o32bjiclo74pbjcln78obeehiiqd1p5lh6orrhelig:
+              label: Representante. 49 - Bloque.
+            x-e0o32bjiclo74pbjcln78obeehiiqd9g5lo6usjkc5m0:
+              label: Representante. 50 - Portal.
+            x-e0o32bjiclo74pbjcln78obeehiiqd9h5lin6or1dhin4o8:
+              label: Representante. 51 - Escalera.
+            x-e0o32bjiclo74pbjcln78obeehiiqd9i5lo6oobeehgg:
+              label: Representante. 52 - Planta.
+            x-e0o32bjiclo74pbjcln78obeehiiqd9j5lo7apbiehgg:
+              label: Representante. 53 - Puerta.
+            x-e0o32bjiclo74pbjcln78obeehiiqd9k5li62t3fecmmarb5dpq62sj9dtpiqp355li6urb9cdkmoqbf:
+              label: Representante. 54 - Datos complementarios de domicilio.
+            x-e0o32bjiclo74pbjcln78obeehiiqd9l5lm6uor1dhkm8ob45lo6uojcc5hmirre:
+              label: Representante. 55 - Localidad/Población
+            x-e0o32bjiclo74pbjcln78obeehiiqd9m5lhmup39ctniqs3fedq62r0:
+              label: Representante. 56 - Código postal.
+            x-e0o32bjiclo74pbjcln78obeehiiqd9o5lhmup39ctniqp355lo74rrmd5n66qb1:
+              label: Representante. 58 - Código de Provincia.
+            x-e0o32bjiclo74pbjcln78obeehiiqd9p5lq6ar35cpnmsrpdcpkmkro:
+              label: Representante. 59 - Teléfono fijo.
+            x-e0o32bjiclo74pbjcln78obeehiiqdhg5lq6ar35cpnmsrpddlnncqbc:
+              label: Representante. 60 - Teléfono móvil.
+            x-e0o32bjiclo74pbjcln78obeehiiqrj9co:
+              label: Representante. NIF
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko32:
+              label: Datos Adicionales Rendimiento Trabajo. Impuesto satisfecho en
+                el extranjero [9]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko34:
+              label: Datos Adicionales Rendimiento Trabajo. Impuesto satisfecho en
+                el extranjero [9]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko36:
+              label: Datos Adicionales Rendimiento Trabajo. Impuesto satisfecho en
+                el extranjero [9]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko38:
+              label: Datos Adicionales Rendimiento Trabajo. Impuesto satisfecho en
+                el extranjero [9]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmncob4dsmmarhdclm2qpboehp62rjaclp6ub9o5ko32:
+              label: Datos Adicionales Rendimiento Trabajo. Rendimiento íntegro obtenido
+                y gravado en el extranjero [8]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmncob4dsmmarhdclm2qpboehp62rjaclp6ub9o5ko34:
+              label: Datos Adicionales Rendimiento Trabajo. Rendimiento íntegro obtenido
+                y gravado en el extranjero [8]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmncob4dsmmarhdclm2qpboehp62rjaclp6ub9o5ko36:
+              label: Datos Adicionales Rendimiento Trabajo. Rendimiento íntegro obtenido
+                y gravado en el extranjero [8]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmncob4dsmmarhdclm2qpboehp62rjaclp6ub9o5ko38:
+              label: Datos Adicionales Rendimiento Trabajo. Rendimiento íntegro obtenido
+                y gravado en el extranjero [8]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g64:
+              label: Ingresos a cuenta [4]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g68:
+              label: Ingresos a cuenta [4]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g6c:
+              label: Ingresos a cuenta [4]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g6g:
+              label: Ingresos a cuenta [4]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0c8:
+              label: Ingresos a cuenta repercutidos [5]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0cg:
+              label: Ingresos a cuenta repercutidos [5]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0co:
+              label: Ingresos a cuenta repercutidos [5]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0d0:
+              label: Ingresos a cuenta repercutidos [5]
+            x-e0o34bjec5q7asj1dhinko9d68mj0c8:
+              label: Naturaleza [2]
+            x-e0o34bjec5q7asj1dhinko9d68mj0cg:
+              label: Naturaleza [2]
+            x-e0o34bjec5q7asj1dhinko9d68mj0co:
+              label: Naturaleza [2]
+            x-e0o34bjec5q7asj1dhinko9d68mj0d0:
+              label: Naturaleza [2]
+            x-e0o34bjgc5jm2p3fe8mmcbba5ko32:
+              label: Pagador. F/J
+            x-e0o34bjgc5jm2p3fe8mmcbba5ko34:
+              label: Pagador. F/J
+            x-e0o34bjgc5jm2p3fe8mmcbba5ko36:
+              label: Pagador. F/J
+            x-e0o34bjgc5jm2p3fe8mmcbba5ko38:
+              label: Pagador. F/J
+            x-e0o34bjgc5jm2p3fe8mmsqb65ko32:
+              label: Pagador. NIF
+            x-e0o34bjgc5jm2p3fe8mmsqb65ko34:
+              label: Pagador. NIF
+            x-e0o34bjgc5jm2p3fe8mmsqb65ko36:
+              label: Pagador. NIF
+            x-e0o34bjgc5jm2p3fe8mmsqb65ko38:
+              label: Pagador. NIF
+            x-e0o34bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko32:
+              label: Rendimiento integro/Renta inmobiliaria imputada [6]
+            x-e0o34bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko34:
+              label: Rendimiento integro/Renta inmobiliaria imputada [6]
+            x-e0o34bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko36:
+              label: Rendimiento integro/Renta inmobiliaria imputada [6]
+            x-e0o34bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko38:
+              label: Rendimiento integro/Renta inmobiliaria imputada [6]
+            x-e0o34bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko32:
+              label: Rentención o ingreso a cuenta [7]
+            x-e0o34bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko34:
+              label: Rentención o ingreso a cuenta [7]
+            x-e0o34bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko36:
+              label: Rentención o ingreso a cuenta [7]
+            x-e0o34bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko38:
+              label: Rentención o ingreso a cuenta [7]
+            x-e0o34bjkd5o6ubb4ckmn4pbeehgiqc9d60og:
+              label: Tipo de Renta [1]
+            x-e0o34bjkd5o6ubb4ckmn4pbeehgiqc9d60p0:
+              label: Tipo de Renta [1]
+            x-e0o34bjkd5o6ubb4ckmn4pbeehgiqc9d60pg:
+              label: Tipo de Renta [1]
+            x-e0o34bjkd5o6ubb4ckmn4pbeehgiqc9d60q0:
+              label: Tipo de Renta [1]
+            x-e0o34bjmc5m6usj1cdkmurhd6cmj0c8:
+              label: Valoración [3]
+            x-e0o34bjmc5m6usj1cdkmurhd6cmj0cg:
+              label: Valoración [3]
+            x-e0o34bjmc5m6usj1cdkmurhd6cmj0co:
+              label: Valoración [3]
+            x-e0o34bjmc5m6usj1cdkmurhd6cmj0d0:
+              label: Valoración [3]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko32:
+              label: Datos Adicionales Rendimiento Trabajo. Impuesto satisfecho en
+                el extranjero [9]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko34:
+              label: Datos Adicionales Rendimiento Trabajo. Impuesto satisfecho en
+                el extranjero [9]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko36:
+              label: Datos Adicionales Rendimiento Trabajo. Impuesto satisfecho en
+                el extranjero [9]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko38:
+              label: Datos Adicionales Rendimiento Trabajo. Impuesto satisfecho en
+                el extranjero [9]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmncob4dsmmarhdclm2qpboehp62rjaclp6ub9o5ko32:
+              label: Datos Adicionales Rendimiento Trabajo. Rendimiento íntegro obtenido
+                y gravado en el extranjero [8]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmncob4dsmmarhdclm2qpboehp62rjaclp6ub9o5ko34:
+              label: Datos Adicionales Rendimiento Trabajo. Rendimiento íntegro obtenido
+                y gravado en el extranjero [8]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmncob4dsmmarhdclm2qpboehp62rjaclp6ub9o5ko36:
+              label: Datos Adicionales Rendimiento Trabajo. Rendimiento íntegro obtenido
+                y gravado en el extranjero [8]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmncob4dsmmarhdclm2qpboehp62rjaclp6ub9o5ko38:
+              label: Datos Adicionales Rendimiento Trabajo. Rendimiento íntegro obtenido
+                y gravado en el extranjero [8]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g64:
+              label: Ingresos a cuenta [4]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g68:
+              label: Ingresos a cuenta [4]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g6c:
+              label: Ingresos a cuenta [4]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g6g:
+              label: Ingresos a cuenta [4]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0c8:
+              label: Ingresos a cuenta repercutidos [5]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0cg:
+              label: Ingresos a cuenta repercutidos [5]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0co:
+              label: Ingresos a cuenta repercutidos [5]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0d0:
+              label: Ingresos a cuenta repercutidos [5]
+            x-e0o36bjec5q7asj1dhinko9d68mj0c8:
+              label: Naturaleza [2]
+            x-e0o36bjec5q7asj1dhinko9d68mj0cg:
+              label: Naturaleza [2]
+            x-e0o36bjec5q7asj1dhinko9d68mj0co:
+              label: Naturaleza [2]
+            x-e0o36bjec5q7asj1dhinko9d68mj0d0:
+              label: Naturaleza [2]
+            x-e0o36bjgc5jm2p3fe8mmcbba5ko32:
+              label: Pagador. F/J
+            x-e0o36bjgc5jm2p3fe8mmcbba5ko34:
+              label: Pagador. F/J
+            x-e0o36bjgc5jm2p3fe8mmcbba5ko36:
+              label: Pagador. F/J
+            x-e0o36bjgc5jm2p3fe8mmcbba5ko38:
+              label: Pagador. F/J
+            x-e0o36bjgc5jm2p3fe8mmsqb65ko32:
+              label: Pagador. NIF
+            x-e0o36bjgc5jm2p3fe8mmsqb65ko34:
+              label: Pagador. NIF
+            x-e0o36bjgc5jm2p3fe8mmsqb65ko36:
+              label: Pagador. NIF
+            x-e0o36bjgc5jm2p3fe8mmsqb65ko38:
+              label: Pagador. NIF
+            x-e0o36bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko32:
+              label: Rendimiento integro/Renta inmobiliaria imputada [6]
+            x-e0o36bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko34:
+              label: Rendimiento integro/Renta inmobiliaria imputada [6]
+            x-e0o36bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko36:
+              label: Rendimiento integro/Renta inmobiliaria imputada [6]
+            x-e0o36bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko38:
+              label: Rendimiento integro/Renta inmobiliaria imputada [6]
+            x-e0o36bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko32:
+              label: Rentención o ingreso a cuenta [7]
+            x-e0o36bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko34:
+              label: Rentención o ingreso a cuenta [7]
+            x-e0o36bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko36:
+              label: Rentención o ingreso a cuenta [7]
+            x-e0o36bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko38:
+              label: Rentención o ingreso a cuenta [7]
+            x-e0o36bjiclpn8rpde9imsp39dlkmarjkdsmmirjkckmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m:
+              label: RESTO. Rendimiento integro/Renta inmobiliaria imputada [6]
+            x-e0o36bjiclpn8rpde9imst35dphmirre5lniqqbectp6asrf5lgiqorlcln78o9d6s:
+              label: RESTO. Rentención o ingreso a cuenta [7]
+            x-e0o36bjkd5o6ubb4ckmn4pbeehgiqc9d60og:
+              label: Tipo de Renta [1]
+            x-e0o36bjkd5o6ubb4ckmn4pbeehgiqc9d60p0:
+              label: Tipo de Renta [1]
+            x-e0o36bjkd5o6ubb4ckmn4pbeehgiqc9d60pg:
+              label: Tipo de Renta [1]
+            x-e0o36bjkd5o6ubb4ckmn4pbeehgiqc9d60q0:
+              label: Tipo de Renta [1]
+            x-e0o36bjmc5m6usj1cdkmurhd6cmj0c8:
+              label: Valoración [3]
+            x-e0o36bjmc5m6usj1cdkmurhd6cmj0cg:
+              label: Valoración [3]
+            x-e0o36bjmc5m6usj1cdkmurhd6cmj0co:
+              label: Valoración [3]
+            x-e0o36bjmc5m6usj1cdkmurhd6cmj0d0:
+              label: Valoración [3]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g64:
+              label: Ingresos a cuenta [4]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g68:
+              label: Ingresos a cuenta [4]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g6c:
+              label: Ingresos a cuenta [4]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g6g:
+              label: Ingresos a cuenta [4]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g6k:
+              label: Ingresos a cuenta [4]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g6o:
+              label: Ingresos a cuenta [4]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g6s:
+              label: Ingresos a cuenta [4]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g70:
+              label: Ingresos a cuenta [4]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g74:
+              label: Ingresos a cuenta [4]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0c8:
+              label: Ingresos a cuenta repercutidos [5]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0cg:
+              label: Ingresos a cuenta repercutidos [5]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0co:
+              label: Ingresos a cuenta repercutidos [5]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0d0:
+              label: Ingresos a cuenta repercutidos [5]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0d8:
+              label: Ingresos a cuenta repercutidos [5]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0dg:
+              label: Ingresos a cuenta repercutidos [5]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0do:
+              label: Ingresos a cuenta repercutidos [5]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0e0:
+              label: Ingresos a cuenta repercutidos [5]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd6kmj0e8:
+              label: Ingresos a cuenta repercutidos [5]
+            x-e0o38bjec5q7asj1dhinko9d68mj0c8:
+              label: Naturaleza [2]
+            x-e0o38bjec5q7asj1dhinko9d68mj0cg:
+              label: Naturaleza [2]
+            x-e0o38bjec5q7asj1dhinko9d68mj0co:
+              label: Naturaleza [2]
+            x-e0o38bjec5q7asj1dhinko9d68mj0d0:
+              label: Naturaleza [2]
+            x-e0o38bjec5q7asj1dhinko9d68mj0d8:
+              label: Naturaleza [2]
+            x-e0o38bjec5q7asj1dhinko9d68mj0dg:
+              label: Naturaleza [2]
+            x-e0o38bjec5q7asj1dhinko9d68mj0do:
+              label: Naturaleza [2]
+            x-e0o38bjec5q7asj1dhinko9d68mj0e0:
+              label: Naturaleza [2]
+            x-e0o38bjec5q7asj1dhinko9d68mj0e8:
+              label: Naturaleza [2]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9m5ko32:
+              label: Rendimiento integro [6]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9m5ko34:
+              label: Rendimiento integro [6]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9m5ko36:
+              label: Rendimiento integro [6]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9m5ko38:
+              label: Rendimiento integro [6]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9m5ko3a:
+              label: Rendimiento integro [6]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9m5ko3c:
+              label: Rendimiento integro [6]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9m5ko3e:
+              label: Rendimiento integro [6]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9m5ko3g:
+              label: Rendimiento integro [6]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9m5ko3i:
+              label: Rendimiento integro [6]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko32:
+              label: Rentención o ingreso a cuenta [7]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko34:
+              label: Rentención o ingreso a cuenta [7]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko36:
+              label: Rentención o ingreso a cuenta [7]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko38:
+              label: Rentención o ingreso a cuenta [7]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko3a:
+              label: Rentención o ingreso a cuenta [7]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko3c:
+              label: Rentención o ingreso a cuenta [7]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko3e:
+              label: Rentención o ingreso a cuenta [7]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko3g:
+              label: Rentención o ingreso a cuenta [7]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9n5ko3i:
+              label: Rentención o ingreso a cuenta [7]
+            x-e0o38bjiclpn8rpde9imsp39dlkmarjkdtpiqqbeehimesjf5kr0:
+              label: RESTO. Rendimientos íntegro [6]
+            x-e0o38bjiclpn8rpde9imst35dphmirre5lniqqbectp6asrf5lgiqorlcln78o9d6s:
+              label: RESTO. Rentención o ingreso a cuenta [7]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc9d60og:
+              label: Tipo de Renta [1]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc9d60p0:
+              label: Tipo de Renta [1]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc9d60pg:
+              label: Tipo de Renta [1]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc9d60q0:
+              label: Tipo de Renta [1]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc9d60qg:
+              label: Tipo de Renta [1]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc9d60r0:
+              label: Tipo de Renta [1]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc9d60rg:
+              label: Tipo de Renta [1]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc9d60s0:
+              label: Tipo de Renta [1]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc9d60sg:
+              label: Tipo de Renta [1]
+            x-e0o38bjkdtq62r1de9imsp39dlkmarjkdtpiqqbeehimesjfecmjg:
+              label: Total rendimientos íntegros [8]
+            x-e0o38bjkdtq62r1de9in8pbecdkmurj5ecmmubb9dpjn4pbjdtpiqo9dcdqmarjkc4mji:
+              label: Total retenciones o ingresos a cuenta [9]
+            x-e0o38bjmc5m6usj1cdkmurhd6cmj0c8:
+              label: Valoración [3]
+            x-e0o38bjmc5m6usj1cdkmurhd6cmj0cg:
+              label: Valoración [3]
+            x-e0o38bjmc5m6usj1cdkmurhd6cmj0co:
+              label: Valoración [3]
+            x-e0o38bjmc5m6usj1cdkmurhd6cmj0d0:
+              label: Valoración [3]
+            x-e0o38bjmc5m6usj1cdkmurhd6cmj0d8:
+              label: Valoración [3]
+            x-e0o38bjmc5m6usj1cdkmurhd6cmj0dg:
+              label: Valoración [3]
+            x-e0o38bjmc5m6usj1cdkmurhd6cmj0do:
+              label: Valoración [3]
+            x-e0o38bjmc5m6usj1cdkmurhd6cmj0e0:
+              label: Valoración [3]
+            x-e0o38bjmc5m6usj1cdkmurhd6cmj0e8:
+              label: Valoración [3]
+            x-e0o3abj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d68mj0c8:
+              label: Ganancia Patrimonial[2]
+            x-e0o3abj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d68mj0cg:
+              label: Ganancia Patrimonial[2]
+            x-e0o3abj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d68mj0co:
+              label: Ganancia Patrimonial[2]
+            x-e0o3abj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d68mj0d0:
+              label: Ganancia Patrimonial[2]
+            x-e0o3abj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d68mj0d8:
+              label: Ganancia Patrimonial[2]
+            x-e0o3abj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d68mj0dg:
+              label: Ganancia Patrimonial[2]
+            x-e0o3abj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d68mj0do:
+              label: Ganancia Patrimonial[2]
+            x-e0o3abj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d68mj0e0:
+              label: Ganancia Patrimonial[2]
+            x-e0o3abj7c5pn8rrj5li6abb1e1p6utj9edkmurj1dkmm2r35ecmnibb4ckmn6tbdd5n6isrke9nn6b9k:
+              label: Gastos de aprovisionamiento de materiales y de suministros [4]
+            x-e0o3abj7c5pn8rrj5li6abbgclp76rrec5m2qco:
+              label: Gastos de personal [3]
+            x-e0o3abj9dpjn4pbjdtpiqqbeehimesjfecmj4:
+              label: Ingresos íntegros [2]
+            x-e0o3abjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9g64:
+              label: NIF de la sociedad o fondo de inversión
+            x-e0o3abjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9g68:
+              label: NIF de la sociedad o fondo de inversión
+            x-e0o3abjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9g6c:
+              label: NIF de la sociedad o fondo de inversión
+            x-e0o3abjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9g6g:
+              label: NIF de la sociedad o fondo de inversión
+            x-e0o3abjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9g6k:
+              label: NIF de la sociedad o fondo de inversión
+            x-e0o3abjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9g6o:
+              label: NIF de la sociedad o fondo de inversión
+            x-e0o3abjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9g6s:
+              label: NIF de la sociedad o fondo de inversión
+            x-e0o3abjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9g70:
+              label: NIF de la sociedad o fondo de inversión
+            x-e0o3abjicln68qbdd5imst3f5ln6at3f5kqg:
+              label: Rendimiento neto [5]
+            x-e0o3abjicln68qbdd5imst3fecmmspb7c5q6itjfecmn4pbechkmqqb5dpq6ubbeclq6ub9n:
+              label: Rendimientos Negativos. Rendimiento neto[7]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9j5ko32:
+              label: Rentención o ingreso a cuenta [3]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9j5ko34:
+              label: Rentención o ingreso a cuenta [3]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9j5ko36:
+              label: Rentención o ingreso a cuenta [3]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9j5ko38:
+              label: Rentención o ingreso a cuenta [3]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9j5ko3a:
+              label: Rentención o ingreso a cuenta [3]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9j5ko3c:
+              label: Rentención o ingreso a cuenta [3]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9j5ko3e:
+              label: Rentención o ingreso a cuenta [3]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9j5ko3g:
+              label: Rentención o ingreso a cuenta [3]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9m:
+              label: Rentención o ingreso a cuenta [6]
+            x-e0o3abjiclpn8rpdctgmsobecdkm2bbgc5q74qbddtn6iobc5kp0:
+              label: RESTO. Ganancia Patrimonial[2]
+            x-e0o3abjiclpn8rpde9imst35dphmirre5lniqqbectp6asrf5lgiqorlcln78o9d6c:
+              label: RESTO. Rentención o ingreso a cuenta [3]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc9d60og:
+              label: Tipo de Renta [1]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc9d60p0:
+              label: Tipo de Renta [1]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc9d60pg:
+              label: Tipo de Renta [1]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc9d60q0:
+              label: Tipo de Renta [1]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc9d60qg:
+              label: Tipo de Renta [1]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc9d60r0:
+              label: Tipo de Renta [1]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc9d60rg:
+              label: Tipo de Renta [1]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc9d60s0:
+              label: Tipo de Renta [1]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc9d60sg:
+              label: Tipo de Renta [1]
+            x-e0o3abjkdtq62r1dctgmsobecdkm2spde1gn8sj9dlnmsqb1dhin6b9k:
+              label: Total ganancias patrimoniales [4]
+            x-e0o3abjkdtq62r1de9imsp39dlkmarjkdtpiqrj5ehnn6b9o:
+              label: Total rendimientos netos [8]
+            x-e0o3abjkdtq62r1de9in8pbecdkmurj5ecmmubb9dpjn4pbjdtpiqo9dcdqmarjkc4mja:
+              label: Total retenciones o ingresos a cuenta [5]
+            x-e0o3abjkdtq62r1de9in8pbecdkmurj5ecmmubb9dpjn4pbjdtpiqo9dcdqmarjkc4mji:
+              label: Total retenciones o ingresos a cuenta [9]
+            x-e0o3cbhk6gmn8qbgdsmm8p9depkm2b9g64:
+              label: 44 - Tipo de vía.
+            x-e0o3cbhk6gmn8qbgdsmm8p9depkm2b9g68:
+              label: 44 - Tipo de vía.
+            x-e0o3cbhk6kmmsrrdc9p6abb4ckmmoo9depkm2bbgelh6oqb3c4mj0c8:
+              label: 45 - Nombre de la vía pública.
+            x-e0o3cbhk6kmmsrrdc9p6abb4ckmmoo9depkm2bbgelh6oqb3c4mj0cg:
+              label: 45 - Nombre de la vía pública.
+            x-e0o3cbhk6omn8qbgdsmm8p9ddpqmqpbic5hmirre5ko32:
+              label: 46 - Tipo de numeración.
+            x-e0o3cbhk6omn8qbgdsmm8p9ddpqmqpbic5hmirre5ko34:
+              label: 46 - Tipo de numeración.
+            x-e0o3cbhk6smmstbdclp6ubb4ckmm6objc4mj0c8:
+              label: 47 - Número de casa.
+            x-e0o3cbhk6smmstbdclp6ubb4ckmm6objc4mj0cg:
+              label: 47 - Número de casa.
+            x-e0o3cbhk70mm6obcd5j6ior1chnn4bb4ckmmstbdclp6ub9g64:
+              label: 48 - Calificador de número.
+            x-e0o3cbhk70mm6obcd5j6ior1chnn4bb4ckmmstbdclp6ub9g68:
+              label: 48 - Calificador de número.
+            x-e0o3cbhk74mm4r3fe5qmab9g64:
+              label: 49 - Bloque.
+            x-e0o3cbhk74mm4r3fe5qmab9g68:
+              label: 49 - Bloque.
+            x-e0o3cbhl60mn0rriehgmob9g64:
+              label: 50 - Portal.
+            x-e0o3cbhl60mn0rriehgmob9g68:
+              label: 50 - Portal.
+            x-e0o3cbhl64mmasr3c5m6asj15ko32:
+              label: 51 - Escalera.
+            x-e0o3cbhl64mmasr3c5m6asj15ko34:
+              label: 51 - Escalera.
+            x-e0o3cbhl68mn0r31dpq62b9g64:
+              label: 52 - Planta.
+            x-e0o3cbhl68mn0r31dpq62b9g68:
+              label: 52 - Planta.
+            x-e0o3cbhl6cmn0tb5e9q62b9g64:
+              label: 53 - Puerta.
+            x-e0o3cbhl6cmn0tb5e9q62b9g68:
+              label: 53 - Puerta.
+            x-e0o3cbhl6gmm8obkdtpiqorfdlo6opbdcln78obid5nn6bb4ckmm8rrdd5hmir39dsmj0c8:
+              label: 54 - Datos complementarios de domicilio.
+            x-e0o3cbhl6gmm8obkdtpiqorfdlo6opbdcln78obid5nn6bb4ckmm8rrdd5hmir39dsmj0cg:
+              label: 54 - Datos complementarios de domicilio.
+            x-e0o3cbhl6kmmorr3c5m6ip31cgmn0rr2dhgm6qbfdomj0c8:
+              label: 55 - Localidad/Población
+            x-e0o3cbhl6kmmorr3c5m6ip31cgmn0rr2dhgm6qbfdomj0cg:
+              label: 55 - Localidad/Población
+            x-e0o3cbhl6omm6rr4d5jmubbgdtpn8obc5ko32:
+              label: 56 - Código postal.
+            x-e0o3cbhl6omm6rr4d5jmubbgdtpn8obc5ko34:
+              label: 56 - Código postal.
+            x-e0o3cbhl6smmqtbed5hmis39dsmj0c8:
+              label: 57 - Municipio
+            x-e0o3cbhl6smmqtbed5hmis39dsmj0cg:
+              label: 57 - Municipio
+            x-e0o3cbhl70mn0sjfepkmsor9c4mj0c8:
+              label: 58 - Provincia.
+            x-e0o3cbhl70mn0sjfepkmsor9c4mj0cg:
+              label: 58 - Provincia.
+            x-e0o3cbhn6cmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc1h:
+              label: 73 - Referencia Catastral
+            x-e0o3cbhn6cmn4pb6clp6arj3d5giqor1ehgn6t3ic5m2qc1i:
+              label: 73 - Referencia Catastral
+            x-e0o3cbj1chonaqbid5imst355lj2qqhd60og:
+              label: Adquiriente. F/J
+            x-e0o3cbj1chonaqbid5imst355lj2qqhd60p0:
+              label: Adquiriente. F/J
+            x-e0o3cbj1chonaqbid5imst355ln6iphd60og:
+              label: Adquiriente. NIF
+            x-e0o3cbj1chonaqbid5imst355ln6iphd60p0:
+              label: Adquiriente. NIF
+            x-e0o3cbj3elnn8o9dchiiqs31e9q6ior9e1gm6qbfdomj0c8:
+              label: Cuota de participación
+            x-e0o3cbj3elnn8o9dchiiqs31e9q6ior9e1gm6qbfdomj0cg:
+              label: Cuota de participación
+            x-e0o3cbj4d5j6asj5dphmio9dc5i72tb9edkm6qbfdomj8b9g64:
+              label: Diferencia (Adquisición) [4]
+            x-e0o3cbj4d5j6asj5dphmio9dc5i72tb9edkm6qbfdomj8b9g68:
+              label: Diferencia (Adquisición) [4]
+            x-e0o3cbj4d5j6asj5dphmio9ddlimkrric4mmub9ic4mm2p3helkn6qb3d5nmsb9o5ko32:
+              label: Diferencia (Mejora o 2ª adquisición) [8]
+            x-e0o3cbj4d5j6asj5dphmio9ddlimkrric4mmub9ic4mm2p3helkn6qb3d5nmsb9o5ko34:
+              label: Diferencia (Mejora o 2ª adquisición) [8]
+            x-e0o3cbj4dthnarb5dpq6ubbgelh6oqb3dsmmubbge9kncob4dsmj0c8:
+              label: Documento publico o privado
+            x-e0o3cbj4dthnarb5dpq6ubbgelh6oqb3dsmmubbge9kncob4dsmj0cg:
+              label: Documento publico o privado
+            x-e0o3cbj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60og:
+              label: Fecha de adquisición
+            x-e0o3cbj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60p0:
+              label: Fecha de adquisición
+            x-e0o3cbj6clhmgo9dchiiqrb5d9nn4o9ddsmj4o9dc5i72tb9edkm6qbfdomj0c8:
+              label: Fecha de mejora o 2ª adquisición
+            x-e0o3cbj6clhmgo9dchiiqrb5d9nn4o9ddsmj4o9dc5i72tb9edkm6qbfdomj0cg:
+              label: Fecha de mejora o 2ª adquisición
+            x-e0o3cbj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60og:
+              label: Fecha de transmisión
+            x-e0o3cbj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60p0:
+              label: Fecha de transmisión
+            x-e0o3cbj7c5n62rj3d5giqrpde1in4p39chgiqob4e5qmisr9cdkmurhd6kmj0c8:
+              label: Ganancia o pérdida (Adquisición) [5]
+            x-e0o3cbj7c5n62rj3d5giqrpde1in4p39chgiqob4e5qmisr9cdkmurhd6kmj0cg:
+              label: Ganancia o pérdida (Adquisición) [5]
+            x-e0o3cbj7c5n62rj3d5giqrpde1in4p39chgiqrb5d9nn4o9ddsmj4o9dc5i72tb9edkm6qbfdomjib9g64:
+              label: Ganancia o pérdida (Mejora o 2ª adquisición) [9]
+            x-e0o3cbj7c5n62rj3d5giqrpde1in4p39chgiqrb5d9nn4o9ddsmj4o9dc5i72tb9edkm6qbfdomjib9g68:
+              label: Ganancia o pérdida (Mejora o 2ª adquisición) [9]
+            x-e0o3cbjedtq62sj9dsmmubb6cli6at31e9kmub9g64:
+              label: Notario o fedetario
+            x-e0o3cbjedtq62sj9dsmmubb6cli6at31e9kmub9g68:
+              label: Notario o fedetario
+            x-e0o3cbjeelmmasjf5li6abbge9nn8rr3dtm6ub9g64:
+              label: Número de protocolo
+            x-e0o3cbjeelmmasjf5li6abbge9nn8rr3dtm6ub9g68:
+              label: Número de protocolo
+            x-e0o3cbjeelmmasjf5ll7asrkd5j6ior1dpq6abb4clm2qrbfchimorpd68oj2b9g64:
+              label: Número Justificante del modelo 211
+            x-e0o3cbjeelmmasjf5ll7asrkd5j6ior1dpq6abb4clm2qrbfchimorpd68oj2b9g68:
+              label: Número Justificante del modelo 211
+            x-e0o3cbjkd5o6ubb4ckmn4pbeehgiqc9d60og:
+              label: Tipo de Renta [1]
+            x-e0o3cbjkd5o6ubb4ckmn4pbeehgiqc9d60p0:
+              label: Tipo de Renta [1]
+            x-e0o3cbjmc5m6ushdchiiqob4e5qmisr9cdkmurhdc5i72tb9edkm6qbfdomj6b9g64:
+              label: Valor de adquisición (Adquisición) [3]
+            x-e0o3cbjmc5m6ushdchiiqob4e5qmisr9cdkmurhdc5i72tb9edkm6qbfdomj6b9g68:
+              label: Valor de adquisición (Adquisición) [3]
+            x-e0o3cbjmc5m6ushdchiiqrb5d9nn4o9ddsmj4o9dc4mmkrric4mmub9ic4mm2p3helkn6qb3d5nmsb9n5ko32:
+              label: Valor de Mejora o 2ª adquisición (Mejora o 2ª adquisición) [7]
+            x-e0o3cbjmc5m6ushdchiiqrb5d9nn4o9ddsmj4o9dc4mmkrric4mmub9ic4mm2p3helkn6qb3d5nmsb9n5ko34:
+              label: Valor de Mejora o 2ª adquisición (Mejora o 2ª adquisición) [7]
+            x-e0o3cbjmc5m6ushdchiiqt3ic5n76rb9edkmurhdc5i72tb9edkm6qbfdomj4b9g64:
+              label: Valor de transmisión (Adquisición) [2]
+            x-e0o3cbjmc5m6ushdchiiqt3ic5n76rb9edkmurhdc5i72tb9edkm6qbfdomj4b9g68:
+              label: Valor de transmisión (Adquisición) [2]
+            x-e0o3cbjmc5m6ushdchiiqt3ic5n76rb9edkmurhddlimkrric4mmub9ic4mm2p3helkn6qb3d5nmsb9m5ko32:
+              label: Valor de transmisión (Mejora o 2ª adquisición) [6]
+            x-e0o3cbjmc5m6ushdchiiqt3ic5n76rb9edkmurhddlimkrric4mmub9ic4mm2p3helkn6qb3d5nmsb9m5ko34:
+              label: Valor de transmisión (Mejora o 2ª adquisición) [6]
+            x-e0o3ebj4clpm6sj9e1hmirre5li6abbcc4mmeobec5n66qb15lo62t3id5mmurj9c5m2qc1h:
+              label: Descripción de la ganancia patrimonial
+            x-e0o3ebj4clpm6sj9e1hmirre5li6abbcc4mmeobec5n66qb15lo62t3id5mmurj9c5m2qc1i:
+              label: Descripción de la ganancia patrimonial
+            x-e0o3ebj4clpm6sj9e1hmirre5li6abbcc4mmeobec5n66qb15lo62t3id5mmurj9c5m2qc1j:
+              label: Descripción de la ganancia patrimonial
+            x-e0o3ebj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko32:
+              label: Descripción del elemento patrimonial
+            x-e0o3ebj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko34:
+              label: Descripción del elemento patrimonial
+            x-e0o3ebj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko36:
+              label: Descripción del elemento patrimonial
+            x-e0o3ebj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko38:
+              label: Descripción del elemento patrimonial
+            x-e0o3ebj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko3a:
+              label: Descripción del elemento patrimonial
+            x-e0o3ebj4d5j6asj5dphmio9d6gmj0c8:
+              label: Diferencia [4]
+            x-e0o3ebj4d5j6asj5dphmio9d6gmj0cg:
+              label: Diferencia [4]
+            x-e0o3ebj4d5j6asj5dphmio9d6gmj0co:
+              label: Diferencia [4]
+            x-e0o3ebj4d5j6asj5dphmio9d6gmj0d0:
+              label: Diferencia [4]
+            x-e0o3ebj4d5j6asj5dphmio9d6gmj0d8:
+              label: Diferencia [4]
+            x-e0o3ebj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60og:
+              label: Fecha de adquisición
+            x-e0o3ebj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60p0:
+              label: Fecha de adquisición
+            x-e0o3ebj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60pg:
+              label: Fecha de adquisición
+            x-e0o3ebj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60q0:
+              label: Fecha de adquisición
+            x-e0o3ebj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60qg:
+              label: Fecha de adquisición
+            x-e0o3ebj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60og:
+              label: Fecha de transmisión
+            x-e0o3ebj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60p0:
+              label: Fecha de transmisión
+            x-e0o3ebj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60pg:
+              label: Fecha de transmisión
+            x-e0o3ebj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60q0:
+              label: Fecha de transmisión
+            x-e0o3ebj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60qg:
+              label: Fecha de transmisión
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6cmj0c8:
+              label: Ganancia patrimonial [3]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6cmj0cg:
+              label: Ganancia patrimonial [3]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6cmj0co:
+              label: Ganancia patrimonial [3]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6kmj0c8:
+              label: Ganancia patrimonial [5]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6kmj0cg:
+              label: Ganancia patrimonial [5]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6kmj0co:
+              label: Ganancia patrimonial [5]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6kmj0d0:
+              label: Ganancia patrimonial [5]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6kmj0d8:
+              label: Ganancia patrimonial [5]
+            x-e0o3ebjec5q7asj1dhinko9d68mj0c8:
+              label: Naturaleza [2]
+            x-e0o3ebjec5q7asj1dhinko9d68mj0cg:
+              label: Naturaleza [2]
+            x-e0o3ebjec5q7asj1dhinko9d68mj0co:
+              label: Naturaleza [2]
+            x-e0o3ebjiclpn8rpdctgmsobecdkm2bbgc5q74qbddtn6iobc5kpg:
+              label: RESTO. Ganancia patrimonial [3]
+            x-e0o3ebjiclpn8rpde9in8pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9k:
+              label: RESTO. Retención o ingreso a cuenta [4]
+            x-e0o3ebjiclq6arj3d5nmsbbf5lkmspriclpmubb15lhnapbeehgiqd1d60og:
+              label: Retención o ingreso a cuenta [4]
+            x-e0o3ebjiclq6arj3d5nmsbbf5lkmspriclpmubb15lhnapbeehgiqd1d60p0:
+              label: Retención o ingreso a cuenta [4]
+            x-e0o3ebjiclq6arj3d5nmsbbf5lkmspriclpmubb15lhnapbeehgiqd1d60pg:
+              label: Retención o ingreso a cuenta [4]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc9d60og:
+              label: Tipo de Renta [1]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc9d60p0:
+              label: Tipo de Renta [1]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc9d60pg:
+              label: Tipo de Renta [1]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc9d60q0:
+              label: Tipo de Renta [1]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc9d60qg:
+              label: Tipo de Renta [1]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc9d60r0:
+              label: Tipo de Renta [1]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc9d60rg:
+              label: Tipo de Renta [1]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc9d60s0:
+              label: Tipo de Renta [1]
+            x-e0o3ebjkdtq62r1dctgmsobecdkm2spde1gn8sj9dlnmsqb1dhin6b9l:
+              label: Total ganancias patrimoniales [5]
+            x-e0o3ebjkdtq62r1de9in8pbecdkmurhddsmmirj7e9in6rrj5lgiqorlcln78o9d6o:
+              label: Total retención o ingresos a cuenta [6]
+            x-e0o3ebjmc5m6ushdchiiqob4e5qmisr9cdkmurhd6cmj0c8:
+              label: Valor de adquisición [3]
+            x-e0o3ebjmc5m6ushdchiiqob4e5qmisr9cdkmurhd6cmj0cg:
+              label: Valor de adquisición [3]
+            x-e0o3ebjmc5m6ushdchiiqob4e5qmisr9cdkmurhd6cmj0co:
+              label: Valor de adquisición [3]
+            x-e0o3ebjmc5m6ushdchiiqob4e5qmisr9cdkmurhd6cmj0d0:
+              label: Valor de adquisición [3]
+            x-e0o3ebjmc5m6ushdchiiqob4e5qmisr9cdkmurhd6cmj0d8:
+              label: Valor de adquisición [3]
+            x-e0o3ebjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0c8:
+              label: Valor de transmisión [2]
+            x-e0o3ebjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0cg:
+              label: Valor de transmisión [2]
+            x-e0o3ebjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0co:
+              label: Valor de transmisión [2]
+            x-e0o3ebjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0d0:
+              label: Valor de transmisión [2]
+            x-e0o3ebjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0d8:
+              label: Valor de transmisión [2]
+            x-e0o3gbj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko32:
+              label: Descripción del elemento patrimonial
+            x-e0o3gbj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko34:
+              label: Descripción del elemento patrimonial
+            x-e0o3gbj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko36:
+              label: Descripción del elemento patrimonial
+            x-e0o3gbj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5ko38:
+              label: Descripción del elemento patrimonial
+            x-e0o3gbj4d5j6asj5dphmio9d6gmj0c8:
+              label: Diferencia [4]
+            x-e0o3gbj4d5j6asj5dphmio9d6gmj0cg:
+              label: Diferencia [4]
+            x-e0o3gbj4d5j6asj5dphmio9d6gmj0co:
+              label: Diferencia [4]
+            x-e0o3gbj4d5j6asj5dphmio9d6gmj0d0:
+              label: Diferencia [4]
+            x-e0o3gbj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60og:
+              label: Fecha de adquisición
+            x-e0o3gbj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60p0:
+              label: Fecha de adquisición
+            x-e0o3gbj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60pg:
+              label: Fecha de adquisición
+            x-e0o3gbj6clhmgo9dchiiqob4e5qmisr9cdkmurhd60q0:
+              label: Fecha de adquisición
+            x-e0o3gbj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60og:
+              label: Fecha de transmisión
+            x-e0o3gbj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60p0:
+              label: Fecha de transmisión
+            x-e0o3gbj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60pg:
+              label: Fecha de transmisión
+            x-e0o3gbj6clhmgo9dchiiqt3ic5n76rb9edkmurhd60q0:
+              label: Fecha de transmisión
+            x-e0o3gbj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6kmj0c8:
+              label: Ganancia patrimonial [5]
+            x-e0o3gbj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6kmj0cg:
+              label: Ganancia patrimonial [5]
+            x-e0o3gbj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6kmj0co:
+              label: Ganancia patrimonial [5]
+            x-e0o3gbj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d6kmj0d0:
+              label: Ganancia patrimonial [5]
+            x-e0o3gbjiclpn8rpdctgmsobecdkm2bbgc5q74qbddtn6iobc5kqg:
+              label: RESTO. Ganancia patrimonial [5]
+            x-e0o3gbjkd5o6ubb4ckmn4pbeehgiqc9d60og:
+              label: Tipo de Renta [1]
+            x-e0o3gbjkd5o6ubb4ckmn4pbeehgiqc9d60p0:
+              label: Tipo de Renta [1]
+            x-e0o3gbjkd5o6ubb4ckmn4pbeehgiqc9d60pg:
+              label: Tipo de Renta [1]
+            x-e0o3gbjkd5o6ubb4ckmn4pbeehgiqc9d60q0:
+              label: Tipo de Renta [1]
+            x-e0o3gbjkdtq62r1dctgmsobecdkm2spde1gn8sj9dlnmsqb1dhin6b9m:
+              label: Total ganancias patrimoniales [6]
+            x-e0o3gbjmc5m6ushdchiiqob4e5qmisr9cdkmurhd6cmj0c8:
+              label: Valor de adquisición [3]
+            x-e0o3gbjmc5m6ushdchiiqob4e5qmisr9cdkmurhd6cmj0cg:
+              label: Valor de adquisición [3]
+            x-e0o3gbjmc5m6ushdchiiqob4e5qmisr9cdkmurhd6cmj0co:
+              label: Valor de adquisición [3]
+            x-e0o3gbjmc5m6ushdchiiqob4e5qmisr9cdkmurhd6cmj0d0:
+              label: Valor de adquisición [3]
+            x-e0o3gbjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0c8:
+              label: Valor de transmisión [2]
+            x-e0o3gbjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0cg:
+              label: Valor de transmisión [2]
+            x-e0o3gbjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0co:
+              label: Valor de transmisión [2]
+            x-e0o3gbjmc5m6ushdchiiqt3ic5n76rb9edkmurhd68mj0d0:
+              label: Valor de transmisión [2]
+          field:
+            label: Modelo 151 ejercicios 2015 a 2022 (régimen impatriados; escala
+              general del art. 93.2.e).1.º y escala del ahorro del art. 93.2.e).2.º
+              en la redacción de cada ejercicio)
+        2025-y-siguientes:
+          casilla:
+            x-chim6r1ecll6asj3d5hmiro:
+              help: Ejercicio al que se refiere la declaración
+            x-chim6r1ee1in4qbfchng:
+              help: Periodo (anual, 0A)
+            x-chkm8bj4clr6ur3lcdkmurhdc9gmsorf5lh62rjb5ln62rb5:
+              label: Devolución - Banco/Bank name
+            x-chkm8bj4clr6ur3lcdkmurhdcdknap31cgmm6qbkf4:
+              label: Devolución - Ciudad/City
+            x-chkm8bj4clr6ur3lcdkmurhdcdnm8qb7dsmn0ob9ecmm6rrldpq74u9dcdnm8p8:
+              label: Devolución - Código País/Country code
+            x-chkm8bj4clr6ur3lcdkmurhdchkn4pb3cdkmurhdchimobb2c5n66rpdc9gmsqpdc5i68sj5edpg:
+              label: Devolución - Dirección del Banco/ Bank address
+            x-chkm8bj4clr6ur3lcdkmurhde9imstbecdkm2bb15lm62bb4clr6ur3lcdkmurhdc4mmcobmdtp2qp35dgmn8pbjdtp6ubbgelh6oq8:
+              label: Devolución. Renuncia a la devolución a favor del Tesoro Público
+            x-chkm8bj4clr6ur3lcdkmurhdednmoqb3d5q62bbcc4mm8pbmdtm7aor9dtn2qs3fe8mn8sj1dppmcpbicln66qb1:
+              label: Devolución. Solicita la devolución por transferencia
+            x-chkm8bj9dpjn4pbjdsmm8rrdd5hmir39c5hmirre5li6atjfdhqm6qbfdommioj1do:
+              label: Ingreso/Domiciliación/Devolución - IBAN
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hispr1dpgmsor9c4mn0obke9kmqrred5gmo:
+              help: Dato del anexo de transmisión de acciones o participaciones de
+                IIC del modelo 151.
+              label: Anexo. Transmisión de acciones o participaciones de IIC. Ganancia
+                patrimonial
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hisrj9commarjkd5i62p0:
+              help: Dato del anexo de transmisión de acciones o participaciones de
+                IIC del modelo 151.
+              label: Anexo. Transmisión de acciones o participaciones de IIC. NIF
+                de la sociedad o fondo de inversión
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hissj5ehimsor9dtn0:
+              help: Casilla 03 del modelo 151, ejercicio 2025.
+              label: Modelo
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist39e1niqsj5dpq62:
+              help: Casilla 01 del modelo 151, ejercicio 2025.
+              label: Inicio del identificador de modelo y página
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobb7c5n62rj3d5gn6:
+              help: Dato del anexo de transmisión de acciones o participaciones de
+                IIC del modelo 151.
+              label: Anexo. Transmisión de acciones o participaciones de IIC. Total
+                de ganancias patrimoniales
+            x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobbiclq6arj3d5nmspbj:
+              help: Dato del anexo de transmisión de acciones o participaciones de
+                IIC del modelo 151.
+              label: Anexo. Transmisión de acciones o participaciones de IIC. Total
+                de retenciones o ingresos a cuenta
+            x-d5mn0obke9km2p3f5ph62sr55lm6isbld5i62ojcckmmepbeclp62r0:
+              help: Base liquidable general (régimen impatriados, excluida la parte
+                del ahorro art. 25.1.f TRLIRNR)
+            x-d5mn0obke9km2p3f5phnarrkc4mm8qb6clp6arj3d5gmo:
+              label: Cuota diferencial (cuota integra general mas cuota integra del
+                ahorro, menos retenciones)
+            x-d5mn0obke9km2p3f5phnarrkc4mmirjkcljn4o9dctimspbic5m0:
+              help: 'Cuota integra general (escala art. 93.2.e.1º: 24% hasta 600.000
+                €, 47% sobre el exceso)'
+            x-d5mn0obke9km2p3f5pp6at35dphmirreclpg:
+              help: Retenciones e ingresos a cuenta (pagos a cuenta, art. 93.2.f)
+            x-e0o32bj1edkmerj1cdkmurhdchiiqor1dpq6ip31chin6bb15lj6irj5ecmn6rr3d5gmopbj5kp34:
+              label: Asignación de cantidades a fines sociales [22]
+            x-e0o32bj1edkmerj1cdkmurhdehp6iojlehgn4qb15lgiqr315lkmer35edkm2bb3c5q6ur39cdgiqchh:
+              label: Asignación Tributaria a la Iglesia Católica [21]
+            x-e0o32bj3dtmnarj9chgm8bb1elq6urjfdlgiqp355lp6asr9chimsor9c4mm8tbic5n78p9dclm2qpbaclp66qb3d5niqqbecgmj4c0:
+              label: Comunidad Autónoma de residencia durante el ejercicio indicado
+                [20]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqojcdtonap9d6cog:
+              label: Contribuyente. Bloque [31]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqor1dhkmcqb3c5i6ushdchiiqrjldlin4rpd6co0:
+              label: Contribuyente. Calificador de número [30]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqor1dlh6irpdchiiqp3fdlkm6qbcd5niqc9j:
+              label: Contribuyente. Cambio de domicilio [13]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqorfchkmerpdchiiqs3idtr6irj3d5giqd1g:
+              label: Contribuyente. Código de Provincia [40]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqorfchkmerpde1nn6t31dgmm8pbc5li6urb9cdkmoqbf5kpjg:
+              label: Contribuyente. Código postal del domicilio [38]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqorfdpi6ior9dtn2qorfdpq74qb2elsmarjkckmm2srfcdkm2p3f5lgiqrrke9niqs3id4mj0do:
+              label: Contribuyente. Condición. Contribuyente asociado a otro principal
+                [07]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqorfdpi6ior9dtn2qorfdpq74qb2elsmarjkckmn0sj9dphmis31dgmj0dg:
+              label: Contribuyente. Condición. Contribuyente principal [06]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb1chkm6qbfdpgmopbj5lr6itj9cln68o9dc5hn8tb1dgmn0rricdimst31d8mj2d8:
+              label: Contribuyente Datos Adicionales vivienda actual. Porcentaje participación
+                [15]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb1chkm6qbfdpgmopbj5lr6itj9cln68o9dc5hn8tb1dgmn4pb6clp6arj3d4mj2do:
+              label: Contribuyente Datos Adicionales vivienda actual. Referencia catastral
+                [17]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb1chkm6qbfdpgmopbj5lr6itj9cln68o9dc5hn8tb1dgmn6qbkelgm6qbfdomj2dg:
+              label: Contribuyente Datos Adicionales vivienda actual. Situación [16]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb1chkm6qbfdpgmopbj5lr6itj9cln68o9dc5hn8tb1dgmn8qbkelm62sj9cgmj2d0:
+              label: Contribuyente Datos Adicionales vivienda actual. Titularidad
+                [14]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb3dtmn0r35dlimst31e9kmuspdchimobb4dtmmior9dhkmub9j6o:
+              label: Contribuyente. Datos complementarios del domicilio [36]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb4clm2qorfdpq74qb2elsmarjkckmn0sj9dphmis31dgmm2s35dhm6ip3fecmj2cg:
+              label: Contribuyente. Datos del contribuyente principal. Apellidos y
+                nombre [12]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb4clm2qorfdpq74qb2elsmarjkckmn0sj9dphmis31dgmmsqb65koj2:
+              label: Contribuyente. Datos del contribuyente principal. NIF [11]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd5niqpboehp62rjaclp6ubb3dti6iprf5lo6usrkc5m2quj9e0mj8do:
+              label: Contribuyente Domicilio Extranjero. Código postal/ZIP [47]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd5niqpboehp62rjaclp6ubb4c5q6uspdcdnmqs3cclmmarjkc5p6irrj5kq38:
+              label: Contribuyente Domicilio Extranjero. Datos complementarios domicilio
+                [44]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd5niqpboehp62rjaclp6ubb4dtmmior9dhkmub9k6c:
+              label: Contribuyente Domicilio Extranjero. Domicilio [43]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd5niqpboehp62rjaclp6ubb5dlgmir1d6gr0:
+              label: Contribuyente Domicilio Extranjero. Email [46]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd5niqpboehp62rjaclp6ubbgc5kn6b9l60:
+              label: Contribuyente Domicilio Extranjero. País [50]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd5niqpboehp62rjaclp6ubbgdth6oob3d5nmsbb3d5qm8ob45kq3a:
+              label: Contribuyente Domicilio Extranjero. Población/Ciudad [45]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd5niqpboehp62rjaclp6ubbge9nncqbecdkm2bbicljmirre5lin6t31cgmj8e0:
+              label: Contribuyente Domicilio Extranjero. Provincia/Región/Estado [48]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd5niqpboehp62rjaclp6ubbkclm6apjfdpniqpj9d9niqd9h:
+              label: Contribuyente Domicilio Extranjero. Teléfono Fijo [51]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd5niqpboehp62rjaclp6ubbkclm6apjfdpniqrbfepkmob9l68:
+              label: Contribuyente Domicilio Extranjero. Teléfono Móvil [52]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqpbjcdgmopbic4mj6co:
+              label: Contribuyente. Escalera [33]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqpj5cdk62bb4ckmmsob3d5mmipbeehniqc1l:
+              label: Contribuyente. Fecha de nacimiento [05]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqr3fcdgmoqb4c5i2qs3fc9m62or9dtn2qcpn:
+              label: Contribuyente. Localidad/Población [37]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqrjfdlh74p9dchiiqr315lr6io9de1qm4r39cdgiqchn:
+              label: Contribuyente. Nombre de la vía pública [27]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqrjfdlh74p9dchimobbdeln6ior9e1kmub9j74:
+              label: Contribuyente. Nombre del Municipio [39]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqrjldlin4rpdchiiqor1edgiqchp:
+              label: Contribuyente. Número de casa [29]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqs3cc5n78o9d6cq0:
+              label: Contribuyente. Planta [34]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqs3fe9q62r1d6cp0:
+              label: Contribuyente. Portal [32]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqs3lclp78o9d6cqg:
+              label: Contribuyente. Puerta [35]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqsr5f1niqc1k:
+              label: Contribuyente. Sexo [04]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqt35dhimcrredsmmcqbadsmj8c8:
+              label: Contribuyente. Teléfono fijo [41]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqt35dhimcrredsmmqrrmd5m2qd1i:
+              label: Contribuyente. Teléfono móvil [42]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqt39e1niqp355ln7arb5e9gm6qbfdomj4e0:
+              label: Contribuyente. Tipo de numeración [28]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqt39e1niqp355lr6io9d68r0:
+              label: Contribuyente. Tipo de vía [26]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqt39e1niqp355lr6irj3elm62or9dtn2qorfdpsnapr55ko3g:
+              label: Contribuyente. Tipo de vinculación. Cónyuge [08]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqt39e1niqp355lr6irj3elm62or9dtn2qq39d9niqo9d64o0:
+              label: Contribuyente. Tipo de vinculación. Hijo/a [10]
+            x-e0o32bj3dtn78sj9c9qnipbeehiiqt39e1niqp355lr6irj3elm62or9dtn2qs3idtjmarj9ehnn4bbjd5n2qtj9dphnar3f5ko3i:
+              label: Contribuyente. Tipo de vinculación. Progenitor sin vínculo matrimonial
+                [09]
+            x-e0o32bj4clhmoobic5hmirre5lhmurbgdhimqpbeehgn4qb15kp2qchk:
+              label: Declaración Complementaria 2 [24]
+            x-e0o32bj4clhmoobic5hmirre5lhmurbgdhimqpbeehgn4qb15kp36:
+              label: Declaración Complementaria [23]
+            x-e0o32bjeelmmasjf5li6abbaelpn8qb6d5hm2rjkckmj4d8:
+              label: Número de Justificante [25]
+            x-e0o32bjiclo74pbjcln78obeehiiqobgclm6oqb4dtpiqu9ddpnmqojickmmubbic5t6urhdednm6qb1dgmmubb4cln6urb9domj2e8:
+              label: Representante. Apellidos y nombre o razón social o denominación
+                [19]
+            x-e0o32bjiclo74pbjcln78obeehiiqojcdtonap9d6cog:
+              label: Representante. Bloque [31]
+            x-e0o32bjiclo74pbjcln78obeehiiqor1dhkmcqb3c5i6ushdchiiqrjldlin4rpd6co0:
+              label: Representante. Calificador de número [30]
+            x-e0o32bjiclo74pbjcln78obeehiiqorfchkmerpdchiiqs3idtr6irj3d5giqd1g:
+              label: Representante. Código de Provincia [40]
+            x-e0o32bjiclo74pbjcln78obeehiiqorfchkmerpde1nn6t31dgmm8pbc5li6urb9cdkmoqbf5kpjg:
+              label: Representante. Código postal del domicilio [38]
+            x-e0o32bjiclo74pbjcln78obeehiiqp31ehnn6bb3dtmn0r35dlimst31e9kmuspdchimobb4dtmmior9dhkmub9j6o:
+              label: Representante. Datos complementarios del domicilio [36]
+            x-e0o32bjiclo74pbjcln78obeehiiqpbjcdgmopbic4mj6co:
+              label: Representante. Escalera [33]
+            x-e0o32bjiclo74pbjcln78obeehiiqr3fcdgmoqb4c5i2qs3fc9m62or9dtn2qsr95lin6bb4d5pn8qbeehgiqp35dgmmqtbed4mj6do:
+              label: Representante. Localidad/Población (si es distinta del municipio)
+                [37]
+            x-e0o32bjiclo74pbjcln78obeehiiqrj9comj2e0:
+              label: Representante. NIF [18]
+            x-e0o32bjiclo74pbjcln78obeehiiqrjfdlh74p9dchiiqr315lr6io9de1qm4r39cdgiqchn:
+              label: Representante. Nombre de la vía pública [27]
+            x-e0o32bjiclo74pbjcln78obeehiiqrjfdlh74p9dchimobbdeln6ior9e1kmub9j74:
+              label: Representante. Nombre del Municipio [39]
+            x-e0o32bjiclo74pbjcln78obeehiiqrjldlin4rpdchiiqor1edgiqchp:
+              label: Representante. Número de casa [29]
+            x-e0o32bjiclo74pbjcln78obeehiiqs3cc5n78o9d6cq0:
+              label: Representante. Planta [34]
+            x-e0o32bjiclo74pbjcln78obeehiiqs3fe9q62r1d6cp0:
+              label: Representante. Portal [32]
+            x-e0o32bjiclo74pbjcln78obeehiiqs3lclp78o9d6cqg:
+              label: Representante. Puerta [35]
+            x-e0o32bjiclo74pbjcln78obeehiiqt35dhimcrredsmmcqbadsmj8c8:
+              label: Representante. Teléfono fijo [41]
+            x-e0o32bjiclo74pbjcln78obeehiiqt35dhimcrredsmmqrrmd5m2qd1i:
+              label: Representante. Teléfono móvil [42]
+            x-e0o32bjiclo74pbjcln78obeehiiqt39e1niqp355ln7arb5e9gm6qbfdomj4e0:
+              label: Representante. Tipo de numeración [28]
+            x-e0o32bjiclo74pbjcln78obeehiiqt39e1niqp355lr6io9d68r0:
+              label: Representante. Tipo de vía [26]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmmirbgelin6t3f5lpm2t39edj6ab9g74mj0cg:
+              label: Datos Adicionales Rendimiento Trabajo. Impuesto satisfecho en
+                el extranjero [09]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmmirbgelin6t3f5lpm2t39edj6ab9g74mj0co:
+              label: Datos Adicionales Rendimiento Trabajo. Impuesto satisfecho en
+                el extranjero [09]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmmirbgelin6t3f5lpm2t39edj6ab9g74mj0d0:
+              label: Datos Adicionales Rendimiento Trabajo. Impuesto satisfecho en
+                el extranjero [09]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmmirbgelin6t3f5lpm2t39edj6aor8dsmj0e8:
+              label: Datos Adicionales Rendimiento Trabajo. Impuesto satisfecho en
+                el extranjero [09]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmn4pbechkmqqb5dpq6ubb9dpq6ab9g70mj0cg:
+              label: Datos Adicionales Rendimiento Trabajo. Rendimiento íntegro obtenido
+                y gravado en el extranjero [08]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmn4pbechkmqqb5dpq6ubb9dpq6ab9g70mj0co:
+              label: Datos Adicionales Rendimiento Trabajo. Rendimiento íntegro obtenido
+                y gravado en el extranjero [08]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmn4pbechkmqqb5dpq6ubb9dpq6ab9g70mj0d0:
+              label: Datos Adicionales Rendimiento Trabajo. Rendimiento íntegro obtenido
+                y gravado en el extranjero [08]
+            x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmn4pbechkmqqb5dpq6ubb9dpq6apridsmj0e0:
+              label: Datos Adicionales Rendimiento Trabajo. Rendimiento íntegro obtenido
+                y gravado en el extranjero [08]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d0:
+              label: Ingresos a cuenta [04]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d1d60p0:
+              label: Ingresos a cuenta [04]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d1d60pg:
+              label: Ingresos a cuenta [04]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d1d60q0:
+              label: Ingresos a cuenta [04]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qg:
+              label: Ingresos a cuenta repercutidos [05]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qiqc1i:
+              label: Ingresos a cuenta repercutidos [05]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qiqc1j:
+              label: Ingresos a cuenta repercutidos [05]
+            x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qiqc1k:
+              label: Ingresos a cuenta repercutidos [05]
+            x-e0o34bjec5q7asj1dhinko9d60p0:
+              label: Naturaleza [02]
+            x-e0o34bjec5q7asj1dhinko9d60p2qc1i:
+              label: Naturaleza [02]
+            x-e0o34bjec5q7asj1dhinko9d60p2qc1j:
+              label: Naturaleza [02]
+            x-e0o34bjec5q7asj1dhinko9d60p2qc1k:
+              label: Naturaleza [02]
+            x-e0o34bjgc5jm2p3fe8mm2s35dhm6ip3fecmnibbedtmm4sj55lniqsj1f9nmsbbjdthmiobc5kqj4:
+              label: Pagador. Apellidos y nombre o razón social [52]
+            x-e0o34bjgc5jm2p3fe8mm2s35dhm6ip3fecmnibbedtmm4sj55lniqsj1f9nmsbbjdthmiobc5kqj4b9g68:
+              label: Pagador. Apellidos y nombre o razón social [52]
+            x-e0o34bjgc5jm2p3fe8mm2s35dhm6ip3fecmnibbedtmm4sj55lniqsj1f9nmsbbjdthmiobc5kqj4b9g6c:
+              label: Pagador. Apellidos y nombre o razón social [52]
+            x-e0o34bjgc5jm2p3fe8mm2s35dhm6ip3fecmnibbedtmm4sj55lniqsj1f9nmsbbjdthmiobc5kqj4b9g6g:
+              label: Pagador. Apellidos y nombre o razón social [52]
+            x-e0o34bjgc5jm2p3fe8mmcbba5kqj2:
+              label: Pagador. F/J [51]
+            x-e0o34bjgc5jm2p3fe8mmcbba5kqj2b9g68:
+              label: Pagador. F/J [51]
+            x-e0o34bjgc5jm2p3fe8mmcbba5kqj2b9g6c:
+              label: Pagador. F/J [51]
+            x-e0o34bjgc5jm2p3fe8mmcbba5kqj2b9g6g:
+              label: Pagador. F/J [51]
+            x-e0o34bjgc5jm2p3fe8mmsqb65kqj0:
+              label: Pagador. NIF [50]
+            x-e0o34bjgc5jm2p3fe8mmsqb65kqj0b9g68:
+              label: Pagador. NIF [50]
+            x-e0o34bjgc5jm2p3fe8mmsqb65kqj0b9g6c:
+              label: Pagador. NIF [50]
+            x-e0o34bjgc5jm2p3fe8mmsqb65kqj0b9g6g:
+              label: Pagador. NIF [50]
+            x-e0o34bjicln68qbdd5imst3f5lkmst35ctp6ubbicln78o9dd5n6qrr2d5m6iobid5giqqbde1qn8ob4c4mj0dg:
+              label: Rendimiento integro/Renta inmobiliaria imputada [06]
+            x-e0o34bjicln68qbdd5imst3f5lkmst35ctp6ubbicln78o9dd5n6qrr2d5m6iobid5giqqbde1qn8ob4c4mj0dhd60p0:
+              label: Rendimiento integro/Renta inmobiliaria imputada [06]
+            x-e0o34bjicln68qbdd5imst3f5lkmst35ctp6ubbicln78o9dd5n6qrr2d5m6iobid5giqqbde1qn8ob4c4mj0dhd60pg:
+              label: Rendimiento integro/Renta inmobiliaria imputada [06]
+            x-e0o34bjicln68qbdd5imst3f5lkmst35ctp6ubbicln78o9dd5n6qrr2d5m6iobid5giqqbde1qn8ob4c4mj0dhd60q0:
+              label: Rendimiento integro/Renta inmobiliaria imputada [06]
+            x-e0o34bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6s:
+              label: Rentención o ingreso a cuenta [07]
+            x-e0o34bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6smj0cg:
+              label: Rentención o ingreso a cuenta [07]
+            x-e0o34bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6smj0co:
+              label: Rentención o ingreso a cuenta [07]
+            x-e0o34bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6smj0d0:
+              label: Rentención o ingreso a cuenta [07]
+            x-e0o34bjkd5o6ubb4ckmn4pbeehgiqc1h:
+              label: Tipo de Renta [01]
+            x-e0o34bjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
+              label: Tipo de Renta [01]
+            x-e0o34bjkd5o6ubb4ckmn4pbeehgiqc1h5ko36:
+              label: Tipo de Renta [01]
+            x-e0o34bjkd5o6ubb4ckmn4pbeehgiqc1h5ko38:
+              label: Tipo de Renta [01]
+            x-e0o34bjmc5m6usj1cdkmurhd60pg:
+              label: Valoración [03]
+            x-e0o34bjmc5m6usj1cdkmurhd60piqc1i:
+              label: Valoración [03]
+            x-e0o34bjmc5m6usj1cdkmurhd60piqc1j:
+              label: Valoración [03]
+            x-e0o34bjmc5m6usj1cdkmurhd60piqc1k:
+              label: Valoración [03]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmmirbgelin6t3f5lpm2t39edj6ab9g74mj0cg:
+              label: Datos Adicionales Rendimiento Trabajo. Impuesto satisfecho en
+                el extranjero [09]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmmirbgelin6t3f5lpm2t39edj6ab9g74mj0co:
+              label: Datos Adicionales Rendimiento Trabajo. Impuesto satisfecho en
+                el extranjero [09]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmmirbgelin6t3f5lpm2t39edj6ab9g74mj0d0:
+              label: Datos Adicionales Rendimiento Trabajo. Impuesto satisfecho en
+                el extranjero [09]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmmirbgelin6t3f5lpm2t39edj6aor8dsmj0e8:
+              label: Datos Adicionales Rendimiento Trabajo. Impuesto satisfecho en
+                el extranjero [09]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmn4pbechkmqqb5dpq6ubb9dpq6ab9g70mj0cg:
+              label: Datos Adicionales Rendimiento Trabajo. Rendimiento íntegro obtenido
+                y gravado en el extranjero [08]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmn4pbechkmqqb5dpq6ubb9dpq6ab9g70mj0co:
+              label: Datos Adicionales Rendimiento Trabajo. Rendimiento íntegro obtenido
+                y gravado en el extranjero [08]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmn4pbechkmqqb5dpq6ubb9dpq6ab9g70mj0d0:
+              label: Datos Adicionales Rendimiento Trabajo. Rendimiento íntegro obtenido
+                y gravado en el extranjero [08]
+            x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmn4pbechkmqqb5dpq6ubb9dpq6apridsmj0e0:
+              label: Datos Adicionales Rendimiento Trabajo. Rendimiento íntegro obtenido
+                y gravado en el extranjero [08]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d0:
+              label: Ingresos a cuenta [04]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d1d60p0:
+              label: Ingresos a cuenta [04]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d1d60pg:
+              label: Ingresos a cuenta [04]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d1d60q0:
+              label: Ingresos a cuenta [04]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qg:
+              label: Ingresos a cuenta repercutidos [05]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qiqc1i:
+              label: Ingresos a cuenta repercutidos [05]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qiqc1j:
+              label: Ingresos a cuenta repercutidos [05]
+            x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qiqc1k:
+              label: Ingresos a cuenta repercutidos [05]
+            x-e0o36bjec5q7asj1dhinko9d60p0:
+              label: Naturaleza [02]
+            x-e0o36bjec5q7asj1dhinko9d60p2qc1i:
+              label: Naturaleza [02]
+            x-e0o36bjec5q7asj1dhinko9d60p2qc1j:
+              label: Naturaleza [02]
+            x-e0o36bjec5q7asj1dhinko9d60p2qc1k:
+              label: Naturaleza [02]
+            x-e0o36bjgc5jm2p3fe8mm2s35dhm6ip3fecmnibbedtmm4sj55lniqsj1f9nmsbbjdthmiobc5kqj4:
+              label: Pagador. Apellidos y nombre o razón social [52]
+            x-e0o36bjgc5jm2p3fe8mm2s35dhm6ip3fecmnibbedtmm4sj55lniqsj1f9nmsbbjdthmiobc5kqj4b9g68:
+              label: Pagador. Apellidos y nombre o razón social [52]
+            x-e0o36bjgc5jm2p3fe8mm2s35dhm6ip3fecmnibbedtmm4sj55lniqsj1f9nmsbbjdthmiobc5kqj4b9g6c:
+              label: Pagador. Apellidos y nombre o razón social [52]
+            x-e0o36bjgc5jm2p3fe8mm2s35dhm6ip3fecmnibbedtmm4sj55lniqsj1f9nmsbbjdthmiobc5kqj4b9g6g:
+              label: Pagador. Apellidos y nombre o razón social [52]
+            x-e0o36bjgc5jm2p3fe8mmcbba5kqj2:
+              label: Pagador. F/J [51]
+            x-e0o36bjgc5jm2p3fe8mmcbba5kqj2b9g68:
+              label: Pagador. F/J [51]
+            x-e0o36bjgc5jm2p3fe8mmcbba5kqj2b9g6c:
+              label: Pagador. F/J [51]
+            x-e0o36bjgc5jm2p3fe8mmcbba5kqj2b9g6g:
+              label: Pagador. F/J [51]
+            x-e0o36bjgc5jm2p3fe8mmsqb65kqj0:
+              label: Pagador. NIF [50]
+            x-e0o36bjgc5jm2p3fe8mmsqb65kqj0b9g68:
+              label: Pagador. NIF [50]
+            x-e0o36bjgc5jm2p3fe8mmsqb65kqj0b9g6c:
+              label: Pagador. NIF [50]
+            x-e0o36bjgc5jm2p3fe8mmsqb65kqj0b9g6g:
+              label: Pagador. NIF [50]
+            x-e0o36bjicln68qbdd5imst3f5lkmst35ctp6ubbicln78o9dd5n6qrr2d5m6iobid5giqqbde1qn8ob4c4mj0dg:
+              label: Rendimiento integro/Renta inmobiliaria imputada [06]
+            x-e0o36bjicln68qbdd5imst3f5lkmst35ctp6ubbicln78o9dd5n6qrr2d5m6iobid5giqqbde1qn8ob4c4mj0dhd60p0:
+              label: Rendimiento integro/Renta inmobiliaria imputada [06]
+            x-e0o36bjicln68qbdd5imst3f5lkmst35ctp6ubbicln78o9dd5n6qrr2d5m6iobid5giqqbde1qn8ob4c4mj0dhd60pg:
+              label: Rendimiento integro/Renta inmobiliaria imputada [06]
+            x-e0o36bjicln68qbdd5imst3f5lkmst35ctp6ubbicln78o9dd5n6qrr2d5m6iobid5giqqbde1qn8ob4c4mj0dhd60q0:
+              label: Rendimiento integro/Renta inmobiliaria imputada [06]
+            x-e0o36bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6s:
+              label: Rentención o ingreso a cuenta [07]
+            x-e0o36bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6smj0cg:
+              label: Rentención o ingreso a cuenta [07]
+            x-e0o36bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6smj0co:
+              label: Rentención o ingreso a cuenta [07]
+            x-e0o36bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6smj0d0:
+              label: Rentención o ingreso a cuenta [07]
+            x-e0o36bjiclpn8rpde9imsp39dlkmarjkdsmmirjkcljn4rpde9imst315lkmsrbfc9kmoqb1e9km2bb9dlo7at31chgiqc1m:
+              label: RESTO. Rendimiento integro/Renta inmobiliaria imputada [06]
+            x-e0o36bjiclpn8rpde9imst35dphmirre5lniqqbectp6asrf5lgiqorlcln78o9d60rg:
+              label: RESTO. Rentención o ingreso a cuenta [07]
+            x-e0o36bjkd5o6ubb4ckmn4pbeehgiqc1h:
+              label: Tipo de Renta [01]
+            x-e0o36bjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
+              label: Tipo de Renta [01]
+            x-e0o36bjkd5o6ubb4ckmn4pbeehgiqc1h5ko36:
+              label: Tipo de Renta [01]
+            x-e0o36bjkd5o6ubb4ckmn4pbeehgiqc1h5ko38:
+              label: Tipo de Renta [01]
+            x-e0o36bjmc5m6usj1cdkmurhd60pg:
+              label: Valoración [03]
+            x-e0o36bjmc5m6usj1cdkmurhd60piqc1i:
+              label: Valoración [03]
+            x-e0o36bjmc5m6usj1cdkmurhd60piqc1j:
+              label: Valoración [03]
+            x-e0o36bjmc5m6usj1cdkmurhd60piqc1k:
+              label: Valoración [03]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d0:
+              label: Ingresos a cuenta [04]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d1d60p0:
+              label: Ingresos a cuenta [04]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d1d60pg:
+              label: Ingresos a cuenta [04]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d1d60q0:
+              label: Ingresos a cuenta [04]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d1d60qg:
+              label: Ingresos a cuenta [04]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d1d60r0:
+              label: Ingresos a cuenta [04]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d1d60rg:
+              label: Ingresos a cuenta [04]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d1d60s0:
+              label: Ingresos a cuenta [04]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d1d60sg:
+              label: Ingresos a cuenta [04]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qg:
+              label: Ingresos a cuenta repercutidos [05]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qiqc1i:
+              label: Ingresos a cuenta repercutidos [05]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qiqc1j:
+              label: Ingresos a cuenta repercutidos [05]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qiqc1k:
+              label: Ingresos a cuenta repercutidos [05]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qiqc1l:
+              label: Ingresos a cuenta repercutidos [05]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qiqc1m:
+              label: Ingresos a cuenta repercutidos [05]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qiqc1n:
+              label: Ingresos a cuenta repercutidos [05]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qiqc1o:
+              label: Ingresos a cuenta repercutidos [05]
+            x-e0o38bj9dpjn4pbjdtpiqo9dcdqmarjkc4mn4pbgclp66tbkd5i6uspd60qiqc1p:
+              label: Ingresos a cuenta repercutidos [05]
+            x-e0o38bjec5q7asj1dhinko9d60p0:
+              label: Naturaleza [02]
+            x-e0o38bjec5q7asj1dhinko9d60p2qc1i:
+              label: Naturaleza [02]
+            x-e0o38bjec5q7asj1dhinko9d60p2qc1j:
+              label: Naturaleza [02]
+            x-e0o38bjec5q7asj1dhinko9d60p2qc1k:
+              label: Naturaleza [02]
+            x-e0o38bjec5q7asj1dhinko9d60p2qc1l:
+              label: Naturaleza [02]
+            x-e0o38bjec5q7asj1dhinko9d60p2qc1m:
+              label: Naturaleza [02]
+            x-e0o38bjec5q7asj1dhinko9d60p2qc1n:
+              label: Naturaleza [02]
+            x-e0o38bjec5q7asj1dhinko9d60p2qc1o:
+              label: Naturaleza [02]
+            x-e0o38bjec5q7asj1dhinko9d60p2qc1p:
+              label: Naturaleza [02]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9g6o:
+              label: Rendimiento integro [06]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9g6omj0cg:
+              label: Rendimiento integro [06]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9g6omj0co:
+              label: Rendimiento integro [06]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9g6omj0d0:
+              label: Rendimiento integro [06]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9g6omj0d8:
+              label: Rendimiento integro [06]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9g6omj0dg:
+              label: Rendimiento integro [06]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9g6omj0do:
+              label: Rendimiento integro [06]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9g6omj0e0:
+              label: Rendimiento integro [06]
+            x-e0o38bjicln68qbdd5imst3f5lkmst35ctp6ub9g6omj0e8:
+              label: Rendimiento integro [06]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6s:
+              label: Rentención o ingreso a cuenta [07]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6smj0cg:
+              label: Rentención o ingreso a cuenta [07]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6smj0co:
+              label: Rentención o ingreso a cuenta [07]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6smj0d0:
+              label: Rentención o ingreso a cuenta [07]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6smj0d8:
+              label: Rentención o ingreso a cuenta [07]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6smj0dg:
+              label: Rentención o ingreso a cuenta [07]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6smj0do:
+              label: Rentención o ingreso a cuenta [07]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6smj0e0:
+              label: Rentención o ingreso a cuenta [07]
+            x-e0o38bjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6smj0e8:
+              label: Rentención o ingreso a cuenta [07]
+            x-e0o38bjiclpn8rpde9imsp39dlkmarjkdtpiqqbeehimesjf5ko3c:
+              label: RESTO. Rendimientos íntegro [06]
+            x-e0o38bjiclpn8rpde9imst35dphmirre5lniqqbectp6asrf5lgiqorlcln78o9d60rg:
+              label: RESTO. Rentención o ingreso a cuenta [07]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc1h:
+              label: Tipo de Renta [01]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
+              label: Tipo de Renta [01]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc1h5ko36:
+              label: Tipo de Renta [01]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc1h5ko38:
+              label: Tipo de Renta [01]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc1h5ko3a:
+              label: Tipo de Renta [01]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc1h5ko3c:
+              label: Tipo de Renta [01]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc1h5ko3e:
+              label: Tipo de Renta [01]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc1h5ko3g:
+              label: Tipo de Renta [01]
+            x-e0o38bjkd5o6ubb4ckmn4pbeehgiqc1h5ko3i:
+              label: Tipo de Renta [01]
+            x-e0o38bjkdtq62r1de9imsp39dlkmarjkdtpiqqbeehimesjfecmj0e0:
+              label: Total rendimientos íntegros [08]
+            x-e0o38bjkdtq62r1de9in8pbecdkmurj5ecmmubb9dpjn4pbjdtpiqo9dcdqmarjkc4mj0e8:
+              label: Total retenciones o ingresos a cuenta [09]
+            x-e0o38bjmc5m6usj1cdkmurhd60pg:
+              label: Valoración [03]
+            x-e0o38bjmc5m6usj1cdkmurhd60piqc1i:
+              label: Valoración [03]
+            x-e0o38bjmc5m6usj1cdkmurhd60piqc1j:
+              label: Valoración [03]
+            x-e0o38bjmc5m6usj1cdkmurhd60piqc1k:
+              label: Valoración [03]
+            x-e0o38bjmc5m6usj1cdkmurhd60piqc1l:
+              label: Valoración [03]
+            x-e0o38bjmc5m6usj1cdkmurhd60piqc1m:
+              label: Valoración [03]
+            x-e0o38bjmc5m6usj1cdkmurhd60piqc1n:
+              label: Valoración [03]
+            x-e0o38bjmc5m6usj1cdkmurhd60piqc1o:
+              label: Valoración [03]
+            x-e0o38bjmc5m6usj1cdkmurhd60piqc1p:
+              label: Valoración [03]
+            x-e0o3abj1cdq6itj9chgm8bb3dti6iprf5lsiqt39e1niqp355lgm6t39epkm8ob45koj0:
+              label: 'Actividad: Código y tipo de actividad [10]'
+            x-e0o3abj1cdq6itj9chgm8bb3dti6iprf5lsiqt39e1niqp355lgm6t39epkm8ob45koj0b9g68:
+              label: 'Actividad: Código y tipo de actividad [10]'
+            x-e0o3abj1cdq6itj9chgm8bb3dti6iprf5lsiqt39e1niqp355lgm6t39epkm8ob45koj0b9g6c:
+              label: 'Actividad: Código y tipo de actividad [10]'
+            x-e0o3abj1cdq6itj9chgm8bb3dti6iprf5lsiqt39e1niqp355lgm6t39epkm8ob45koj0b9g6g:
+              label: 'Actividad: Código y tipo de actividad [10]'
+            x-e0o3abj1cdq6itj9chgm8bb3dti6iprf5lsiqt39e1niqp355lgm6t39epkm8ob45koj0b9g6k:
+              label: 'Actividad: Código y tipo de actividad [10]'
+            x-e0o3abj1cdq6itj9chgm8bb7e9qn0rpddsmmas39ctp62pj55lkm2p9d64og:
+              label: 'Actividad: Grupo o epígrafe IAE [11]'
+            x-e0o3abj1cdq6itj9chgm8bb7e9qn0rpddsmmas39ctp62pj55lkm2p9d64oiqc1i:
+              label: 'Actividad: Grupo o epígrafe IAE [11]'
+            x-e0o3abj1cdq6itj9chgm8bb7e9qn0rpddsmmas39ctp62pj55lkm2p9d64oiqc1j:
+              label: 'Actividad: Grupo o epígrafe IAE [11]'
+            x-e0o3abj1cdq6itj9chgm8bb7e9qn0rpddsmmas39ctp62pj55lkm2p9d64oiqc1k:
+              label: 'Actividad: Grupo o epígrafe IAE [11]'
+            x-e0o3abj1cdq6itj9chgm8bb7e9qn0rpddsmmas39ctp62pj55lkm2p9d64oiqc1l:
+              label: 'Actividad: Grupo o epígrafe IAE [11]'
+            x-e0o3abj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9dd5mn0tb5edq6ubbjc5q6ib9h6cmj0cg:
+              label: Datos adicionales (actividad emprendedora. Impuesto satisfecho
+                en el extranjero [13]
+            x-e0o3abj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9dd5mn0tb5edq6ubbjc5q6ib9h6cmj0co:
+              label: Datos adicionales (actividad emprendedora. Impuesto satisfecho
+                en el extranjero [13]
+            x-e0o3abj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9dd5mn0tb5edq6ubbjc5q6ib9h6cmj0d0:
+              label: Datos adicionales (actividad emprendedora. Impuesto satisfecho
+                en el extranjero [13]
+            x-e0o3abj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9dd5mn0tb5edq6ubbjc5q6ib9h6cmj0d8:
+              label: Datos adicionales (actividad emprendedora. Impuesto satisfecho
+                en el extranjero [13]
+            x-e0o3abj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9dd5mn0tb5edq6ubbjc5q6isr6ckmj2co:
+              label: Datos adicionales (actividad emprendedora. Impuesto satisfecho
+                en el extranjero [13]
+            x-e0o3abj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9de9imsp39dlkmarjkdsmmib9h68mj0cg:
+              label: Datos adicionales (actividad emprendedora. Rendimiento íntegro
+                obtenido y gravado en el extranjero [12]
+            x-e0o3abj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9de9imsp39dlkmarjkdsmmib9h68mj0co:
+              label: Datos adicionales (actividad emprendedora. Rendimiento íntegro
+                obtenido y gravado en el extranjero [12]
+            x-e0o3abj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9de9imsp39dlkmarjkdsmmib9h68mj0d0:
+              label: Datos adicionales (actividad emprendedora. Rendimiento íntegro
+                obtenido y gravado en el extranjero [12]
+            x-e0o3abj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9de9imsp39dlkmarjkdsmmib9h68mj0d8:
+              label: Datos adicionales (actividad emprendedora. Rendimiento íntegro
+                obtenido y gravado en el extranjero [12]
+            x-e0o3abj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9de9imsp39dlkmarjkdsmmirjkckmj2cg:
+              label: Datos adicionales (actividad emprendedora. Rendimiento íntegro
+                obtenido y gravado en el extranjero [12]
+            x-e0o3abj7c5pn8rrj5li6abb1e1p6utj9edkmurj1dlkmarjkdsmm8p9ddlgn8pbid5gmopbj5lsiqp355lpnarb9dpkn6b9g6gmj0cg:
+              label: Gastos de aprovisionamiento de materiales y de suministros [04]
+            x-e0o3abj7c5pn8rrj5li6abb1e1p6utj9edkmurj1dlkmarjkdsmm8p9ddlgn8pbid5gmopbj5lsiqp355lpnarb9dpkn6b9g6gmj0co:
+              label: Gastos de aprovisionamiento de materiales y de suministros [04]
+            x-e0o3abj7c5pn8rrj5li6abb1e1p6utj9edkmurj1dlkmarjkdsmm8p9ddlgn8pbid5gmopbj5lsiqp355lpnarb9dpkn6b9g6gmj0d0:
+              label: Gastos de aprovisionamiento de materiales y de suministros [04]
+            x-e0o3abj7c5pn8rrj5li6abb1e1p6utj9edkmurj1dlkmarjkdsmm8p9ddlgn8pbid5gmopbj5lsiqp355lpnarb9dpkn6b9g6gmj0d8:
+              label: Gastos de aprovisionamiento de materiales y de suministros [04]
+            x-e0o3abj7c5pn8rrj5li6abb1e1p6utj9edkmurj1dlkmarjkdsmm8p9ddlgn8pbid5gmopbj5lsiqp355lpnarb9dpkn6t3idsmj0d0:
+              label: Gastos de aprovisionamiento de materiales y de suministros [04]
+            x-e0o3abj7c5pn8rrj5li6abbgclp76rrec5m2qc1j:
+              label: Gastos de personal [03]
+            x-e0o3abj7c5pn8rrj5li6abbgclp76rrec5m2qc1j5ko34:
+              label: Gastos de personal [03]
+            x-e0o3abj7c5pn8rrj5li6abbgclp76rrec5m2qc1j5ko36:
+              label: Gastos de personal [03]
+            x-e0o3abj7c5pn8rrj5li6abbgclp76rrec5m2qc1j5ko38:
+              label: Gastos de personal [03]
+            x-e0o3abj7c5pn8rrj5li6abbgclp76rrec5m2qc1j5ko3a:
+              label: Gastos de personal [03]
+            x-e0o3abj9dpjn4pbjdtpiqqbeehimesjfecmj0cg:
+              label: Ingresos íntegros [02]
+            x-e0o3abj9dpjn4pbjdtpiqqbeehimesjfecmj0chd60p0:
+              label: Ingresos íntegros [02]
+            x-e0o3abj9dpjn4pbjdtpiqqbeehimesjfecmj0chd60pg:
+              label: Ingresos íntegros [02]
+            x-e0o3abj9dpjn4pbjdtpiqqbeehimesjfecmj0chd60q0:
+              label: Ingresos íntegros [02]
+            x-e0o3abj9dpjn4pbjdtpiqqbeehimesjfecmj0chd60qg:
+              label: Ingresos íntegros [02]
+            x-e0o3abjicln68qbdd5imst3f5ln6at3f5ln6apr1ehkncrpd60rg:
+              label: 'Rendimiento neto: negativo [07]'
+            x-e0o3abjicln68qbdd5imst3f5ln6at3f5ln6apr1ehkncrpd60riqc1i:
+              label: 'Rendimiento neto: negativo [07]'
+            x-e0o3abjicln68qbdd5imst3f5ln6at3f5ln6apr1ehkncrpd60riqc1j:
+              label: 'Rendimiento neto: negativo [07]'
+            x-e0o3abjicln68qbdd5imst3f5ln6at3f5ln6apr1ehkncrpd60riqc1k:
+              label: 'Rendimiento neto: negativo [07]'
+            x-e0o3abjicln68qbdd5imst3f5ln6at3f5ln6apr1ehkncrpd60riqc1l:
+              label: 'Rendimiento neto: negativo [07]'
+            x-e0o3abjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qg:
+              label: 'Rendimiento neto: positivo [05]'
+            x-e0o3abjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qiqc1i:
+              label: 'Rendimiento neto: positivo [05]'
+            x-e0o3abjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qiqc1j:
+              label: 'Rendimiento neto: positivo [05]'
+            x-e0o3abjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qiqc1k:
+              label: 'Rendimiento neto: positivo [05]'
+            x-e0o3abjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qiqc1l:
+              label: 'Rendimiento neto: positivo [05]'
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6o:
+              label: Rentención o ingreso a cuenta [06]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6omj0cg:
+              label: Rentención o ingreso a cuenta [06]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6omj0co:
+              label: Rentención o ingreso a cuenta [06]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6omj0d0:
+              label: Rentención o ingreso a cuenta [06]
+            x-e0o3abjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6omj0d8:
+              label: Rentención o ingreso a cuenta [06]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc1h:
+              label: Tipo de Renta [01]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
+              label: Tipo de Renta [01]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc1h5ko36:
+              label: Tipo de Renta [01]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc1h5ko38:
+              label: Tipo de Renta [01]
+            x-e0o3abjkd5o6ubb4ckmn4pbeehgiqc1h5ko3a:
+              label: Tipo de Renta [01]
+            x-e0o3cbj1cdq6itj9chgm8bb3dti6iprf5lsiqt39e1niqp355lgm6t39epkm8ob45koj0:
+              label: 'Actividad: Código y tipo de actividad [10]'
+            x-e0o3cbj1cdq6itj9chgm8bb3dti6iprf5lsiqt39e1niqp355lgm6t39epkm8ob45koj0b9g68:
+              label: 'Actividad: Código y tipo de actividad [10]'
+            x-e0o3cbj1cdq6itj9chgm8bb3dti6iprf5lsiqt39e1niqp355lgm6t39epkm8ob45koj0b9g6c:
+              label: 'Actividad: Código y tipo de actividad [10]'
+            x-e0o3cbj1cdq6itj9chgm8bb3dti6iprf5lsiqt39e1niqp355lgm6t39epkm8ob45koj0b9g6g:
+              label: 'Actividad: Código y tipo de actividad [10]'
+            x-e0o3cbj1cdq6itj9chgm8bb7e9qn0rpddsmmas39ctp62pj55lkm2p9d64og:
+              label: 'Actividad: Grupo o epígrafe IAE [11]'
+            x-e0o3cbj1cdq6itj9chgm8bb7e9qn0rpddsmmas39ctp62pj55lkm2p9d64oiqc1i:
+              label: 'Actividad: Grupo o epígrafe IAE [11]'
+            x-e0o3cbj1cdq6itj9chgm8bb7e9qn0rpddsmmas39ctp62pj55lkm2p9d64oiqc1j:
+              label: 'Actividad: Grupo o epígrafe IAE [11]'
+            x-e0o3cbj1cdq6itj9chgm8bb7e9qn0rpddsmmas39ctp62pj55lkm2p9d64oiqc1k:
+              label: 'Actividad: Grupo o epígrafe IAE [11]'
+            x-e0o3cbj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9dd5mn0tb5edq6ubbjc5q6ib9h6cmj0cg:
+              label: Datos adicionales (actividad emprendedora. Impuesto satisfecho
+                en el extranjero [13]
+            x-e0o3cbj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9dd5mn0tb5edq6ubbjc5q6ib9h6cmj0co:
+              label: Datos adicionales (actividad emprendedora. Impuesto satisfecho
+                en el extranjero [13]
+            x-e0o3cbj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9dd5mn0tb5edq6ubbjc5q6ib9h6cmj0d0:
+              label: Datos adicionales (actividad emprendedora. Impuesto satisfecho
+                en el extranjero [13]
+            x-e0o3cbj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9dd5mn0tb5edq6ubbjc5q6isr6ckmj2co:
+              label: Datos adicionales (actividad emprendedora. Impuesto satisfecho
+                en el extranjero [13]
+            x-e0o3cbj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9de9imsp39dlkmarjkdsmmib9h68mj0cg:
+              label: Datos adicionales (actividad emprendedora. Rendimiento íntegro
+                obtenido y gravado en el extranjero [12]
+            x-e0o3cbj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9de9imsp39dlkmarjkdsmmib9h68mj0co:
+              label: Datos adicionales (actividad emprendedora. Rendimiento íntegro
+                obtenido y gravado en el extranjero [12]
+            x-e0o3cbj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9de9imsp39dlkmarjkdsmmib9h68mj0d0:
+              label: Datos adicionales (actividad emprendedora. Rendimiento íntegro
+                obtenido y gravado en el extranjero [12]
+            x-e0o3cbj4c5q6uspdc5i6ior9dtn62r35ecmm2orkd5r6ip31cgmmarbge9imsp35chnn4o9de9imsp39dlkmarjkdsmmirjkckmj2cg:
+              label: Datos adicionales (actividad emprendedora. Rendimiento íntegro
+                obtenido y gravado en el extranjero [12]
+            x-e0o3cbj7c5pn8rrj5li6abb1e1p6utj9edkmurj1dlkmarjkdsmm8p9ddlgn8pbid5gmopbj5lsiqp355lpnarb9dpkn6b9g6gmj0cg:
+              label: Gastos de aprovisionamiento de materiales y de suministros [04]
+            x-e0o3cbj7c5pn8rrj5li6abb1e1p6utj9edkmurj1dlkmarjkdsmm8p9ddlgn8pbid5gmopbj5lsiqp355lpnarb9dpkn6b9g6gmj0co:
+              label: Gastos de aprovisionamiento de materiales y de suministros [04]
+            x-e0o3cbj7c5pn8rrj5li6abb1e1p6utj9edkmurj1dlkmarjkdsmm8p9ddlgn8pbid5gmopbj5lsiqp355lpnarb9dpkn6b9g6gmj0d0:
+              label: Gastos de aprovisionamiento de materiales y de suministros [04]
+            x-e0o3cbj7c5pn8rrj5li6abb1e1p6utj9edkmurj1dlkmarjkdsmm8p9ddlgn8pbid5gmopbj5lsiqp355lpnarb9dpkn6t3idsmj0d0:
+              label: Gastos de aprovisionamiento de materiales y de suministros [04]
+            x-e0o3cbj7c5pn8rrj5li6abbgclp76rrec5m2qc1j:
+              label: Gastos de personal [03]
+            x-e0o3cbj7c5pn8rrj5li6abbgclp76rrec5m2qc1j5ko34:
+              label: Gastos de personal [03]
+            x-e0o3cbj7c5pn8rrj5li6abbgclp76rrec5m2qc1j5ko36:
+              label: Gastos de personal [03]
+            x-e0o3cbj7c5pn8rrj5li6abbgclp76rrec5m2qc1j5ko38:
+              label: Gastos de personal [03]
+            x-e0o3cbj9dpjn4pbjdtpiqqbeehimesjfecmj0cg:
+              label: Ingresos íntegros [02]
+            x-e0o3cbj9dpjn4pbjdtpiqqbeehimesjfecmj0chd60p0:
+              label: Ingresos íntegros [02]
+            x-e0o3cbj9dpjn4pbjdtpiqqbeehimesjfecmj0chd60pg:
+              label: Ingresos íntegros [02]
+            x-e0o3cbj9dpjn4pbjdtpiqqbeehimesjfecmj0chd60q0:
+              label: Ingresos íntegros [02]
+            x-e0o3cbjicln68qbdd5imst3f5ln6at3f5ln6apr1ehkncrpd60rg:
+              label: 'Rendimiento neto: negativo [07]'
+            x-e0o3cbjicln68qbdd5imst3f5ln6at3f5ln6apr1ehkncrpd60riqc1i:
+              label: 'Rendimiento neto: negativo [07]'
+            x-e0o3cbjicln68qbdd5imst3f5ln6at3f5ln6apr1ehkncrpd60riqc1j:
+              label: 'Rendimiento neto: negativo [07]'
+            x-e0o3cbjicln68qbdd5imst3f5ln6at3f5ln6apr1ehkncrpd60riqc1k:
+              label: 'Rendimiento neto: negativo [07]'
+            x-e0o3cbjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qg:
+              label: 'Rendimiento neto: positivo [05]'
+            x-e0o3cbjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qiqc1i:
+              label: 'Rendimiento neto: positivo [05]'
+            x-e0o3cbjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qiqc1j:
+              label: 'Rendimiento neto: positivo [05]'
+            x-e0o3cbjicln68qbdd5imst3f5ln6at3f5lo6usr9ehkncrpd60qiqc1k:
+              label: 'Rendimiento neto: positivo [05]'
+            x-e0o3cbjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6o:
+              label: Rentención o ingreso a cuenta [06]
+            x-e0o3cbjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6omj0cg:
+              label: Rentención o ingreso a cuenta [06]
+            x-e0o3cbjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6omj0co:
+              label: Rentención o ingreso a cuenta [06]
+            x-e0o3cbjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6omj0d0:
+              label: Rentención o ingreso a cuenta [06]
+            x-e0o3cbjiclpn8rpde9imsp39dlkmarjkdsmmspbkdsmmspb7c5q6itjf5ko3e:
+              label: 'RESTO. Rendimiento neto: negativo [07]'
+            x-e0o3cbjiclpn8rpde9imsp39dlkmarjkdsmmspbkdsmn0rrjd5q6itjf5ko3a:
+              label: 'RESTO. Rendimiento neto: positivo [05]'
+            x-e0o3cbjiclpn8rpde9imst35dphmirre5lniqqbectp6asrf5lgiqorlcln78o9d60r0:
+              label: RESTO. Rentención o ingreso a cuenta [06]
+            x-e0o3cbjkd5o6ubb4ckmn4pbeehgiqc1h:
+              label: Tipo de Renta [01]
+            x-e0o3cbjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
+              label: Tipo de Renta [01]
+            x-e0o3cbjkd5o6ubb4ckmn4pbeehgiqc1h5ko36:
+              label: Tipo de Renta [01]
+            x-e0o3cbjkd5o6ubb4ckmn4pbeehgiqc1h5ko38:
+              label: Tipo de Renta [01]
+            x-e0o3cbjkdtq62r1de9imsp39dlkmarjkdtpiqrj5ehnn6bbgdtpmit39epnn6b9g70:
+              label: Total rendimientos netos positivos [08]
+            x-e0o3cbjkdtq62r1de9in8pbecdkmurj5ecmmubb9dpjn4pbjdtpiqo9dcdqmarjkc4mj0e8:
+              label: Total retenciones o ingresos a cuenta [09]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60p0:
+              label: Ganancia Patrimonial [02]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60p2qc1i:
+              label: Ganancia Patrimonial [02]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60p2qc1j:
+              label: Ganancia Patrimonial [02]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60p2qc1k:
+              label: Ganancia Patrimonial [02]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60p2qc1l:
+              label: Ganancia Patrimonial [02]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60p2qc1m:
+              label: Ganancia Patrimonial [02]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60p2qc1n:
+              label: Ganancia Patrimonial [02]
+            x-e0o3ebj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60p2qc1o:
+              label: Ganancia Patrimonial [02]
+            x-e0o3ebjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9l6c:
+              label: NIF de la sociedad o fondo de inversión [53]
+            x-e0o3ebjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9l6cmj0cg:
+              label: NIF de la sociedad o fondo de inversión [53]
+            x-e0o3ebjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9l6cmj0co:
+              label: NIF de la sociedad o fondo de inversión [53]
+            x-e0o3ebjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9l6cmj0d0:
+              label: NIF de la sociedad o fondo de inversión [53]
+            x-e0o3ebjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9l6cmj0d8:
+              label: NIF de la sociedad o fondo de inversión [53]
+            x-e0o3ebjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9l6cmj0dg:
+              label: NIF de la sociedad o fondo de inversión [53]
+            x-e0o3ebjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9l6cmj0do:
+              label: NIF de la sociedad o fondo de inversión [53]
+            x-e0o3ebjed5j2qp355lm62bbjdthmipb4c5i2qrpdcpnmsp3f5li6abb9dpr6asjjd5nmsb9l6cmj0e0:
+              label: NIF de la sociedad o fondo de inversión [53]
+            x-e0o3ebjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6c:
+              label: Rentención o ingreso a cuenta [03]
+            x-e0o3ebjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6cmj0cg:
+              label: Rentención o ingreso a cuenta [03]
+            x-e0o3ebjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6cmj0co:
+              label: Rentención o ingreso a cuenta [03]
+            x-e0o3ebjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6cmj0d0:
+              label: Rentención o ingreso a cuenta [03]
+            x-e0o3ebjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6cmj0d8:
+              label: Rentención o ingreso a cuenta [03]
+            x-e0o3ebjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6cmj0dg:
+              label: Rentención o ingreso a cuenta [03]
+            x-e0o3ebjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6cmj0do:
+              label: Rentención o ingreso a cuenta [03]
+            x-e0o3ebjicln78pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6cmj0e0:
+              label: Rentención o ingreso a cuenta [03]
+            x-e0o3ebjiclpn8rpdctgmsobecdkm2bbgc5q74qbddtn6iobc5ko34:
+              label: RESTO. Ganancia Patrimonial [02]
+            x-e0o3ebjiclpn8rpde9imst35dphmirre5lniqqbectp6asrf5lgiqorlcln78o9d60pg:
+              label: RESTO. Rentención o ingreso a cuenta [03]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc1h:
+              label: Tipo de Renta [01]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
+              label: Tipo de Renta [01]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc1h5ko36:
+              label: Tipo de Renta [01]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc1h5ko38:
+              label: Tipo de Renta [01]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc1h5ko3a:
+              label: Tipo de Renta [01]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc1h5ko3c:
+              label: Tipo de Renta [01]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc1h5ko3e:
+              label: Tipo de Renta [01]
+            x-e0o3ebjkd5o6ubb4ckmn4pbeehgiqc1h5ko3g:
+              label: Tipo de Renta [01]
+            x-e0o3ebjkdtq62r1dctgmsobecdkm2spde1gn8sj9dlnmsqb1dhin6b9g6g:
+              label: Total ganancias patrimoniales [04]
+            x-e0o3ebjkdtq62r1de9in8pbecdkmurj5ecmmubb9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d8:
+              label: Total retenciones o ingresos a cuenta [05]
+            x-e0o3gbj1chonaqbid5imst355lgn0pbcdhkm8rrj5lsiqrjfdlh74p9ddsmn4obqdtn2qsrfcdkm2r1d6oog:
+              label: Adquiriente. Apellidos y nombre o razón social [61]
+            x-e0o3gbj1chonaqbid5imst355lgn0pbcdhkm8rrj5lsiqrjfdlh74p9ddsmn4obqdtn2qsrfcdkm2r1d6ooiqc1i:
+              label: Adquiriente. Apellidos y nombre o razón social [61]
+            x-e0o3gbj1chonaqbid5imst355lj2qqhd6oo0:
+              label: Adquiriente. F/J [60]
+            x-e0o3gbj1chonaqbid5imst355lj2qqhd6oo2qc1i:
+              label: Adquiriente. F/J [60]
+            x-e0o3gbj1chonaqbid5imst355ln6iphd6ksg:
+              label: Adquiriente. NIF [59]
+            x-e0o3gbj1chonaqbid5imst355ln6iphd6ksiqc1i:
+              label: Adquiriente. NIF [59]
+            x-e0o3gbj2dhnn2tb55kpj2:
+              label: Bloque [31]
+            x-e0o3gbj2dhnn2tb55kpj2b9g68:
+              label: Bloque [31]
+            x-e0o3gbj3c5m6ipj9cdgm8rri5li6abbeelmmasjf5kpj0:
+              label: Calificador de número [30]
+            x-e0o3gbj3c5m6ipj9cdgm8rri5li6abbeelmmasjf5kpj0b9g68:
+              label: Calificador de número [30]
+            x-e0o3gbj3dti6iprf5lo6usrkc5m2qcpo:
+              label: Código postal [38]
+            x-e0o3gbj3dti6iprf5lo6usrkc5m2qcpo5ko34:
+              label: Código postal [38]
+            x-e0o3gbj3elnn8o9dchiiqs31e9q6ior9e1gm6qbfdomjae0:
+              label: Cuota de participación [58]
+            x-e0o3gbj3elnn8o9dchiiqs31e9q6ior9e1gm6qbfdomjae1d60p0:
+              label: Cuota de participación [58]
+            x-e0o3gbj4c5q6uspdcdnmqs3cclmmarjkc5p6irrj5li6abb4dtmmior9dhkmub9j6o:
+              label: Datos complementarios de domicilio [36]
+            x-e0o3gbj4c5q6uspdcdnmqs3cclmmarjkc5p6irrj5li6abb4dtmmior9dhkmub9j6omj0cg:
+              label: Datos complementarios de domicilio [36]
+            x-e0o3gbj4d5j6asj5dphmio9dc5i72tb9edkm6qbfdomj0d0:
+              label: Diferencia (Adquisición) [04]
+            x-e0o3gbj4d5j6asj5dphmio9dc5i72tb9edkm6qbfdomj0d1d60p0:
+              label: Diferencia (Adquisición) [04]
+            x-e0o3gbj4d5j6asj5dphmio9ddlimkrric4mmub9ic4mm2p3helkn6qb3d5nmsb9g70:
+              label: Diferencia (Mejora o 2ª adquisición) [08]
+            x-e0o3gbj4d5j6asj5dphmio9ddlimkrric4mmub9ic4mm2p3helkn6qb3d5nmsb9g70mj0cg:
+              label: Diferencia (Mejora o 2ª adquisición) [08]
+            x-e0o3gbj4dthnarb5dpq6ubbgelh6oqb3dsmmubbge9kncob4dsmjccg:
+              label: Documento publico o privado [62] [63]
+            x-e0o3gbj4dthnarb5dpq6ubbgelh6oqb3dsmmubbge9kncob4dsmjcchd60p0:
+              label: Documento publico o privado [62] [63]
+            x-e0o3gbj5edhm2r35e9giqcpj:
+              label: Escalera [33]
+            x-e0o3gbj5edhm2r35e9giqcpj5ko34:
+              label: Escalera [33]
+            x-e0o3gbj6clhmgo9dchiiqob4e5qmisr9cdkmurhd6kqg:
+              label: Fecha de adquisición [55]
+            x-e0o3gbj6clhmgo9dchiiqob4e5qmisr9cdkmurhd6kqiqc1i:
+              label: Fecha de adquisición [55]
+            x-e0o3gbj6clhmgo9dchiiqrb5d9nn4o9ddsmj4o9dc5i72tb9edkm6qbfdomjadg:
+              label: Fecha de mejora o 2ª adquisición [56]
+            x-e0o3gbj6clhmgo9dchiiqrb5d9nn4o9ddsmj4o9dc5i72tb9edkm6qbfdomjadhd60p0:
+              label: Fecha de mejora o 2ª adquisición [56]
+            x-e0o3gbj6clhmgo9dchiiqt3ic5n76rb9edkmurhd6krg:
+              label: Fecha de transmisión [57]
+            x-e0o3gbj6clhmgo9dchiiqt3ic5n76rb9edkmurhd6kriqc1i:
+              label: Fecha de transmisión [57]
+            x-e0o3gbj7c5n62rj3d5giqrpde1in4p39chgiqob4e5qmisr9cdkmurhd60qg:
+              label: Ganancia o pérdida (Adquisición) [05]
+            x-e0o3gbj7c5n62rj3d5giqrpde1in4p39chgiqob4e5qmisr9cdkmurhd60qiqc1i:
+              label: Ganancia o pérdida (Adquisición) [05]
+            x-e0o3gbj7c5n62rj3d5giqrpde1in4p39chgiqrb5d9nn4o9ddsmj4o9dc5i72tb9edkm6qbfdomj0e8:
+              label: Ganancia o pérdida (Mejora o 2ª adquisición) [09]
+            x-e0o3gbj7c5n62rj3d5giqrpde1in4p39chgiqrb5d9nn4o9ddsmj4o9dc5i72tb9edkm6qbfdomj0e9d60p0:
+              label: Ganancia o pérdida (Mejora o 2ª adquisición) [09]
+            x-e0o3gbjcdthm2r39chgm8bbgdth6oob3d5nmsb9j6s:
+              label: Localidad/Población [37]
+            x-e0o3gbjcdthm2r39chgm8bbgdth6oob3d5nmsb9j6smj0cg:
+              label: Localidad/Población [37]
+            x-e0o3gbjdeln6ior9e1kmub9k60:
+              label: Municipio [40]
+            x-e0o3gbjdeln6ior9e1kmub9k60mj0cg:
+              label: Municipio [40]
+            x-e0o3gbjedtmm4sj55li6abbcc4mncqb15lo7aojcd5hm2b9i6s:
+              label: Nombre de la vía pública [27]
+            x-e0o3gbjedtmm4sj55li6abbcc4mncqb15lo7aojcd5hm2b9i6smj0cg:
+              label: Nombre de la vía pública [27]
+            x-e0o3gbjedtq62sj9dsmmubb6cli6at31e9kmub9m6g:
+              label: Notario o fedetario [64]
+            x-e0o3gbjedtq62sj9dsmmubb6cli6at31e9kmub9m6gmj0cg:
+              label: Notario o fedetario [64]
+            x-e0o3gbjeelmmasjf5li6abb3c5pm2b9i74:
+              label: Número de casa [29]
+            x-e0o3gbjeelmmasjf5li6abb3c5pm2b9i74mj0cg:
+              label: Número de casa [29]
+            x-e0o3gbjeelmmasjf5li6abbge9nn8rr3dtm6ub9m6k:
+              label: Número de protocolo [65]
+            x-e0o3gbjeelmmasjf5li6abbge9nn8rr3dtm6ub9m6kmj0cg:
+              label: Número de protocolo [65]
+            x-e0o3gbjeelmmasjf5ll7asrkd5j6ior1dpq6abb4clm2qrbfchimorpd68oj2b9l6g:
+              label: Número Justificante del modelo 211 [54]
+            x-e0o3gbjeelmmasjf5ll7asrkd5j6ior1dpq6abb4clm2qrbfchimorpd68oj2b9l6gmj0cg:
+              label: Número Justificante del modelo 211 [54]
+            x-e0o3gbjgdhgmst315kpj8:
+              label: Planta [34]
+            x-e0o3gbjgdhgmst315kpj8b9g68:
+              label: Planta [34]
+            x-e0o3gbjgdtp78obc5kpj4:
+              label: Portal [32]
+            x-e0o3gbjgdtp78obc5kpj4b9g68:
+              label: Portal [32]
+            x-e0o3gbjge9nncqbecdkm2b9j74:
+              label: Provincia [39]
+            x-e0o3gbjge9nncqbecdkm2b9j74mj0cg:
+              label: Provincia [39]
+            x-e0o3gbjgelin4t315kpja:
+              label: Puerta [35]
+            x-e0o3gbjgelin4t315kpjab9g68:
+              label: Puerta [35]
+            x-e0o3gbjiclj6asj5dphmio9dcdgn8objehp62r1d6kpg:
+              label: Referencia Catastral [53]
+            x-e0o3gbjiclj6asj5dphmio9dcdgn8objehp62r1d6kpiqc1i:
+              label: Referencia Catastral [53]
+            x-e0o3gbjkd5o6ubb4ckmmstbdclp62or9dtn2qcho:
+              label: Tipo de numeración [28]
+            x-e0o3gbjkd5o6ubb4ckmmstbdclp62or9dtn2qcho5ko34:
+              label: Tipo de numeración [28]
+            x-e0o3gbjkd5o6ubb4ckmn4pbeehgiqc1h:
+              label: Tipo de Renta [01]
+            x-e0o3gbjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
+              label: Tipo de Renta [01]
+            x-e0o3gbjkd5o6ubb4ckmncqb15kp3c:
+              label: Tipo de vía [26]
+            x-e0o3gbjkd5o6ubb4ckmncqb15kp3cb9g68:
+              label: Tipo de vía [26]
+            x-e0o3gbjmc5m6ushdchiiqob4e5qmisr9cdkmurhdc5i72tb9edkm6qbfdomj0co:
+              label: Valor de adquisición (Adquisición) [03]
+            x-e0o3gbjmc5m6ushdchiiqob4e5qmisr9cdkmurhdc5i72tb9edkm6qbfdomj0cpd60p0:
+              label: Valor de adquisición (Adquisición) [03]
+            x-e0o3gbjmc5m6ushdchiiqrb5d9nn4o9ddsmj4o9dc5i72tb9edkm6qbfdommqpbadtp62bbf5kp62bb1chonaqbjd5hmib9g6smj0cg:
+              label: Valor de Mejora o 2ª adquisición (Mejora o 2ª adquisición) [07]
+            x-e0o3gbjmc5m6ushdchiiqrb5d9nn4o9ddsmj4o9dc5i72tb9edkm6qbfdommqpbadtp62bbf5kp62bb1chonaqbjd5hmirre5ko3e:
+              label: Valor de Mejora o 2ª adquisición (Mejora o 2ª adquisición) [07]
+            x-e0o3gbjmc5m6ushdchiiqt3ic5n76rb9edkmurhdc5i72tb9edkm6qbfdomj0cg:
+              label: Valor de transmisión (Adquisición) [02]
+            x-e0o3gbjmc5m6ushdchiiqt3ic5n76rb9edkmurhdc5i72tb9edkm6qbfdomj0chd60p0:
+              label: Valor de transmisión (Adquisición) [02]
+            x-e0o3gbjmc5m6ushdchiiqt3ic5n76rb9edkmurhddlimkrric4mmub9ic4mm2p3helkn6qb3d5nmsb9g6o:
+              label: Valor de transmisión (Mejora o 2ª adquisición) [06]
+            x-e0o3gbjmc5m6ushdchiiqt3ic5n76rb9edkmurhddlimkrric4mmub9ic4mm2p3helkn6qb3d5nmsb9g6omj0cg:
+              label: Valor de transmisión (Mejora o 2ª adquisición) [06]
+            x-e0o3ibj4clpm6sj9e1hmirre5li6abbcc4mmeobec5n66qb15lo62t3id5mmurj9c5m2qdhm:
+              label: Descripción de la ganancia patrimonial [66]
+            x-e0o3ibj4clpm6sj9e1hmirre5li6abbcc4mmeobec5n66qb15lo62t3id5mmurj9c5m2qdhm5ko34:
+              label: Descripción de la ganancia patrimonial [66]
+            x-e0o3ibj4clpm6sj9e1hmirre5li6abbcc4mmeobec5n66qb15lo62t3id5mmurj9c5m2qdhm5ko36:
+              label: Descripción de la ganancia patrimonial [66]
+            x-e0o3ibj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5kr3e:
+              label: Descripción del elemento patrimonial [67]
+            x-e0o3ibj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5kr3eb9g68:
+              label: Descripción del elemento patrimonial [67]
+            x-e0o3ibj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5kr3eb9g6c:
+              label: Descripción del elemento patrimonial [67]
+            x-e0o3ibj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5kr3eb9g6g:
+              label: Descripción del elemento patrimonial [67]
+            x-e0o3ibj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5kr3eb9g6k:
+              label: Descripción del elemento patrimonial [67]
+            x-e0o3ibj4d5j6asj5dphmio9d60q0:
+              label: Diferencia [04]
+            x-e0o3ibj4d5j6asj5dphmio9d60q2qc1i:
+              label: Diferencia [04]
+            x-e0o3ibj4d5j6asj5dphmio9d60q2qc1j:
+              label: Diferencia [04]
+            x-e0o3ibj4d5j6asj5dphmio9d60q2qc1k:
+              label: Diferencia [04]
+            x-e0o3ibj4d5j6asj5dphmio9d60q2qc1l:
+              label: Diferencia [04]
+            x-e0o3ibj6clhmgo9dchiiqob4e5qmisr9cdkmurhd6osg:
+              label: Fecha de adquisición [69]
+            x-e0o3ibj6clhmgo9dchiiqob4e5qmisr9cdkmurhd6osiqc1i:
+              label: Fecha de adquisición [69]
+            x-e0o3ibj6clhmgo9dchiiqob4e5qmisr9cdkmurhd6osiqc1j:
+              label: Fecha de adquisición [69]
+            x-e0o3ibj6clhmgo9dchiiqob4e5qmisr9cdkmurhd6osiqc1k:
+              label: Fecha de adquisición [69]
+            x-e0o3ibj6clhmgo9dchiiqob4e5qmisr9cdkmurhd6osiqc1l:
+              label: Fecha de adquisición [69]
+            x-e0o3ibj6clhmgo9dchiiqt3ic5n76rb9edkmurhd6os0:
+              label: Fecha de transmisión [68]
+            x-e0o3ibj6clhmgo9dchiiqt3ic5n76rb9edkmurhd6os2qc1i:
+              label: Fecha de transmisión [68]
+            x-e0o3ibj6clhmgo9dchiiqt3ic5n76rb9edkmurhd6os2qc1j:
+              label: Fecha de transmisión [68]
+            x-e0o3ibj6clhmgo9dchiiqt3ic5n76rb9edkmurhd6os2qc1k:
+              label: Fecha de transmisión [68]
+            x-e0o3ibj6clhmgo9dchiiqt3ic5n76rb9edkmurhd6os2qc1l:
+              label: Fecha de transmisión [68]
+            x-e0o3ibj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60pg:
+              label: Ganancia patrimonial [03]
+            x-e0o3ibj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60piqc1i:
+              label: Ganancia patrimonial [03]
+            x-e0o3ibj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60piqc1j:
+              label: Ganancia patrimonial [03]
+            x-e0o3ibj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60qiqc1k:
+              label: Ganancia patrimonial [05]
+            x-e0o3ibj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60qiqc1l:
+              label: Ganancia patrimonial [05]
+            x-e0o3ibj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60qiqc1m:
+              label: Ganancia patrimonial [05]
+            x-e0o3ibj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60qiqc1n:
+              label: Ganancia patrimonial [05]
+            x-e0o3ibj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60qiqc1o:
+              label: Ganancia patrimonial [05]
+            x-e0o3ibjec5q7asj1dhinko9d60p0:
+              label: Naturaleza [02]
+            x-e0o3ibjec5q7asj1dhinko9d60p2qc1i:
+              label: Naturaleza [02]
+            x-e0o3ibjec5q7asj1dhinko9d60p2qc1j:
+              label: Naturaleza [02]
+            x-e0o3ibjiclpn8rpdctgmsobecdkm2bbgc5q74qbddtn6iobc5ko36:
+              label: RESTO. Ganancia patrimonial [03]
+            x-e0o3ibjiclpn8rpde9in8pbecdkmurhddsmmirj7e9in6rpdc4mm6tb5dpq62b9g6g:
+              label: RESTO. Retención o ingreso a cuenta [04]
+            x-e0o3ibjiclq6arj3d5nmsbbf5lkmspriclpmubb15lhnapbeehgiqc1k:
+              label: Retención o ingreso a cuenta [04]
+            x-e0o3ibjiclq6arj3d5nmsbbf5lkmspriclpmubb15lhnapbeehgiqc1k5ko34:
+              label: Retención o ingreso a cuenta [04]
+            x-e0o3ibjiclq6arj3d5nmsbbf5lkmspriclpmubb15lhnapbeehgiqc1k5ko36:
+              label: Retención o ingreso a cuenta [04]
+            x-e0o3ibjkd5o6ubb4ckmn4pbeehgiqc1h:
+              label: Tipo de Renta [01]
+            x-e0o3ibjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
+              label: Tipo de Renta [01]
+            x-e0o3ibjkd5o6ubb4ckmn4pbeehgiqc1h5ko36:
+              label: Tipo de Renta [01]
+            x-e0o3ibjkd5o6ubb4ckmn4pbeehgiqc1h5ko38:
+              label: Tipo de Renta [01]
+            x-e0o3ibjkd5o6ubb4ckmn4pbeehgiqc1h5ko3a:
+              label: Tipo de Renta [01]
+            x-e0o3ibjkd5o6ubb4ckmn4pbeehgiqc1h5ko3c:
+              label: Tipo de Renta [01]
+            x-e0o3ibjkd5o6ubb4ckmn4pbeehgiqc1h5ko3e:
+              label: Tipo de Renta [01]
+            x-e0o3ibjkd5o6ubb4ckmn4pbeehgiqc1h5ko3g:
+              label: Tipo de Renta [01]
+            x-e0o3ibjkdtq62r1dctgmsobecdkm2spde1gn8sj9dlnmsqb1dhin6b9g6k:
+              label: Total ganancias patrimoniales [05]
+            x-e0o3ibjkdtq62r1de9in8pbecdkmurhddsmmirj7e9in6rrj5lgiqorlcln78o9d60r0:
+              label: Total retención o ingresos a cuenta [06]
+            x-e0o3ibjmc5m6ushdchiiqob4e5qmisr9cdkmurhd60pg:
+              label: Valor de adquisición [03]
+            x-e0o3ibjmc5m6ushdchiiqob4e5qmisr9cdkmurhd60piqc1i:
+              label: Valor de adquisición [03]
+            x-e0o3ibjmc5m6ushdchiiqob4e5qmisr9cdkmurhd60piqc1j:
+              label: Valor de adquisición [03]
+            x-e0o3ibjmc5m6ushdchiiqob4e5qmisr9cdkmurhd60piqc1k:
+              label: Valor de adquisición [03]
+            x-e0o3ibjmc5m6ushdchiiqob4e5qmisr9cdkmurhd60piqc1l:
+              label: Valor de adquisición [03]
+            x-e0o3ibjmc5m6ushdchiiqt3ic5n76rb9edkmurhd60p0:
+              label: Valor de transmisión [02]
+            x-e0o3ibjmc5m6ushdchiiqt3ic5n76rb9edkmurhd60p2qc1i:
+              label: Valor de transmisión [02]
+            x-e0o3ibjmc5m6ushdchiiqt3ic5n76rb9edkmurhd60p2qc1j:
+              label: Valor de transmisión [02]
+            x-e0o3ibjmc5m6ushdchiiqt3ic5n76rb9edkmurhd60p2qc1k:
+              label: Valor de transmisión [02]
+            x-e0o3ibjmc5m6ushdchiiqt3ic5n76rb9edkmurhd60p2qc1l:
+              label: Valor de transmisión [02]
+            x-e0oj0bj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5kr3e:
+              label: Descripción del elemento patrimonial [67]
+            x-e0oj0bj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5kr3eb9g68:
+              label: Descripción del elemento patrimonial [67]
+            x-e0oj0bj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5kr3eb9g6c:
+              label: Descripción del elemento patrimonial [67]
+            x-e0oj0bj4clpm6sj9e1hmirre5li6ar1dclm6arb5dpq6ubbgc5q74qbddtn6iobc5kr3eb9g6g:
+              label: Descripción del elemento patrimonial [67]
+            x-e0oj0bj4d5j6asj5dphmio9d60q0:
+              label: Diferencia [04]
+            x-e0oj0bj4d5j6asj5dphmio9d60q2qc1i:
+              label: Diferencia [04]
+            x-e0oj0bj4d5j6asj5dphmio9d60q2qc1j:
+              label: Diferencia [04]
+            x-e0oj0bj4d5j6asj5dphmio9d60q2qc1k:
+              label: Diferencia [04]
+            x-e0oj0bj6clhmgo9dchiiqob4e5qmisr9cdkmurhd6osg:
+              label: Fecha de adquisición [69]
+            x-e0oj0bj6clhmgo9dchiiqob4e5qmisr9cdkmurhd6osiqc1i:
+              label: Fecha de adquisición [69]
+            x-e0oj0bj6clhmgo9dchiiqob4e5qmisr9cdkmurhd6osiqc1j:
+              label: Fecha de adquisición [69]
+            x-e0oj0bj6clhmgo9dchiiqob4e5qmisr9cdkmurhd6osiqc1k:
+              label: Fecha de adquisición [69]
+            x-e0oj0bj6clhmgo9dchiiqt3ic5n76rb9edkmurhd6os0:
+              label: Fecha de transmisión [68]
+            x-e0oj0bj6clhmgo9dchiiqt3ic5n76rb9edkmurhd6os2qc1i:
+              label: Fecha de transmisión [68]
+            x-e0oj0bj6clhmgo9dchiiqt3ic5n76rb9edkmurhd6os2qc1j:
+              label: Fecha de transmisión [68]
+            x-e0oj0bj6clhmgo9dchiiqt3ic5n76rb9edkmurhd6os2qc1k:
+              label: Fecha de transmisión [68]
+            x-e0oj0bj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60qg:
+              label: Ganancia patrimonial [05]
+            x-e0oj0bj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60qiqc1i:
+              label: Ganancia patrimonial [05]
+            x-e0oj0bj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60qiqc1j:
+              label: Ganancia patrimonial [05]
+            x-e0oj0bj7c5n62rj3d5giqs31ehp6irbfdpkm2r1d60qiqc1k:
+              label: Ganancia patrimonial [05]
+            x-e0oj0bjiclpn8rpdctgmsobecdkm2bbgc5q74qbddtn6iobc5ko3a:
+              label: RESTO. Ganancia patrimonial [05]
+            x-e0oj0bjkd5o6ubb4ckmn4pbeehgiqc1h:
+              label: Tipo de Renta [01]
+            x-e0oj0bjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
+              label: Tipo de Renta [01]
+            x-e0oj0bjkd5o6ubb4ckmn4pbeehgiqc1h5ko36:
+              label: Tipo de Renta [01]
+            x-e0oj0bjkd5o6ubb4ckmn4pbeehgiqc1h5ko38:
+              label: Tipo de Renta [01]
+            x-e0oj0bjkdtq62r1dctgmsobecdkm2spde1gn8sj9dlnmsqb1dhin6b9g6o:
+              label: Total ganancias patrimoniales [06]
+            x-e0oj0bjmc5m6ushdchiiqob4e5qmisr9cdkmurhd60pg:
+              label: Valor de adquisición [03]
+            x-e0oj0bjmc5m6ushdchiiqob4e5qmisr9cdkmurhd60piqc1i:
+              label: Valor de adquisición [03]
+            x-e0oj0bjmc5m6ushdchiiqob4e5qmisr9cdkmurhd60piqc1j:
+              label: Valor de adquisición [03]
+            x-e0oj0bjmc5m6ushdchiiqob4e5qmisr9cdkmurhd60piqc1k:
+              label: Valor de adquisición [03]
+            x-e0oj0bjmc5m6ushdchiiqt3ic5n76rb9edkmurhd60p0:
+              label: Valor de transmisión [02]
+            x-e0oj0bjmc5m6ushdchiiqt3ic5n76rb9edkmurhd60p2qc1i:
+              label: Valor de transmisión [02]
+            x-e0oj0bjmc5m6ushdchiiqt3ic5n76rb9edkmurhd60p2qc1j:
+              label: Valor de transmisión [02]
+            x-e0oj0bjmc5m6ushdchiiqt3ic5n76rb9edkmurhd60p2qc1k:
+              label: Valor de transmisión [02]
+          field:
+            label: Modelo 151 ejercicios 2025 y siguientes (régimen impatriados; escala
+              general plana 24/47 art. 93.2.e.1º + escala del ahorro art. 93.2.e.2º
+              redacción vigente Ley 7/2024)

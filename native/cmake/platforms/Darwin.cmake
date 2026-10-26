@@ -1,0 +1,7 @@
+if(NOT CMAKE_SYSTEM_NAME STREQUAL "Darwin" OR NOT CMAKE_OSX_ARCHITECTURES STREQUAL "arm64")
+  message(FATAL_ERROR "macOS adapter requires an explicit arm64 target")
+endif()
+if(NOT CMAKE_OSX_DEPLOYMENT_TARGET)
+  message(FATAL_ERROR "Project the canonical deployment floor into CMAKE_OSX_DEPLOYMENT_TARGET")
+endif()
+include("${CMAKE_CURRENT_LIST_DIR}/Posix.cmake")

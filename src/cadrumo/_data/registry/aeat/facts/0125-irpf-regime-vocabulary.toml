@@ -1,0 +1,80 @@
+[fact]
+fact_id = "irpf-regime-vocabulary"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "irpf-regime-vocabulary:2007-01-01"
+date_axis = "filing_period"
+valid_from = 2007-01-01
+legal_refs = [
+    "ley-35-2006:art-1",
+    "ley-35-2006:art-8",
+    "ley-35-2006:art-16",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-31",
+    "ley-35-2006:art-93",
+    "rd-439-2007:art-31",
+    "rd-439-2007:art-113",
+    "rd-439-2007:art-115",
+    "rd-439-2007:art-116",
+    "orden-eha-672-2007:art-1",
+    "orden-eha-672-2007:art-3",
+]
+source_refs = [
+    "boe-lirpf-statutory-facts",
+    "aeat-modelo-130-instructions",
+    "aeat-modelo-131-instructions",
+    "aeat-modelo-151-procedure",
+]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-lirpf-statutory-facts"
+required_text = ["estimación directa", "estimación objetiva"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["estimación directa"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["estimación objetiva"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-151-procedure"
+required_text = ["Modelo 151"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "irpf_estimation_regime.order", value = "directa_normal,directa_simplificada,objetiva" },
+  { key = "irpf_estimation_regime.directa_normal.value", value = "directa_normal" },
+  { key = "irpf_estimation_regime.directa_normal.description", value = "Estimación directa normal; full accounting and quarterly payment on Modelo 130." },
+  { key = "irpf_estimation_regime.directa_normal.tax_regime", value = "irpf" },
+  { key = "irpf_estimation_regime.directa_normal.filing_modelos", value = "130" },
+  { key = "irpf_estimation_regime.directa_normal.legal_refs", value = "ley-35-2006:art-16,ley-35-2006:art-28,rd-439-2007:art-31,orden-eha-672-2007:art-1" },
+  { key = "irpf_estimation_regime.directa_simplificada.value", value = "directa_simplificada" },
+  { key = "irpf_estimation_regime.directa_simplificada.description", value = "Estimación directa simplificada; the simplified net-income method and quarterly payment on Modelo 130." },
+  { key = "irpf_estimation_regime.directa_simplificada.tax_regime", value = "irpf" },
+  { key = "irpf_estimation_regime.directa_simplificada.filing_modelos", value = "130" },
+  { key = "irpf_estimation_regime.directa_simplificada.legal_refs", value = "ley-35-2006:art-16,ley-35-2006:art-28,rd-439-2007:art-31,orden-eha-672-2007:art-1" },
+  { key = "irpf_estimation_regime.objetiva.value", value = "objetiva" },
+  { key = "irpf_estimation_regime.objetiva.description", value = "Estimación objetiva (módulos); net income from signs, indices and modules and quarterly payment on Modelo 131." },
+  { key = "irpf_estimation_regime.objetiva.tax_regime", value = "irpf" },
+  { key = "irpf_estimation_regime.objetiva.filing_modelos", value = "131" },
+  { key = "irpf_estimation_regime.objetiva.legal_refs", value = "ley-35-2006:art-31,rd-439-2007:art-31,orden-eha-672-2007:art-3" },
+  { key = "irpf_special_regime.order", value = "general,impatriado" },
+  { key = "irpf_special_regime.general.value", value = "general" },
+  { key = "irpf_special_regime.general.description", value = "General IRPF regime; the ordinary annual declaration follows Modelo 100." },
+  { key = "irpf_special_regime.general.tax_regime", value = "irpf" },
+  { key = "irpf_special_regime.general.filing_modelos", value = "100" },
+  { key = "irpf_special_regime.general.window_years", value = "" },
+  { key = "irpf_special_regime.general.legal_refs", value = "ley-35-2006:art-1,ley-35-2006:art-8" },
+  { key = "irpf_special_regime.impatriado.value", value = "impatriado" },
+  { key = "irpf_special_regime.impatriado.description", value = "Special regime for workers displaced to Spain; the declaration follows Modelo 151 and the regime spans the acquisition period plus the following five periods." },
+  { key = "irpf_special_regime.impatriado.tax_regime", value = "irnr" },
+  { key = "irpf_special_regime.impatriado.filing_modelos", value = "151" },
+  { key = "irpf_special_regime.impatriado.window_years", value = "6" },
+  { key = "irpf_special_regime.impatriado.legal_refs", value = "ley-35-2006:art-93,rd-439-2007:art-113,rd-439-2007:art-115,rd-439-2007:art-116" },
+]

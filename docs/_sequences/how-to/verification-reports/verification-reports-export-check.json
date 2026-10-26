@@ -1,0 +1,430 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "edit",
+        "docs-sequence-sandbox",
+        "--quiet",
+        "--accept-defaults",
+        "--activity-start-date",
+        "2026-01-01"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "import",
+        "--file",
+        "fixtures/movimientos-2026-1t.csv",
+        "--provider",
+        "csv"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "classify",
+        "71a5db2b",
+        "--classification",
+        "BUSINESS",
+        "--taxable-base",
+        "1000",
+        "--iva-rate",
+        "0.21",
+        "--iva-amount",
+        "210"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "classify",
+        "e3eeac5e",
+        "--classification",
+        "BUSINESS",
+        "--category-id",
+        "material_oficina",
+        "--taxable-base",
+        "500",
+        "--iva-rate",
+        "0.21",
+        "--iva-amount",
+        "105",
+        "--deduction-kind",
+        "domestic_current"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "evidence",
+        "add",
+        "fixtures/factura-material-oficina.pdf",
+        "--supplier",
+        "Papeleria Central SL",
+        "--invoice-number",
+        "C-2026-0087",
+        "--invoice-date",
+        "2026-02-11",
+        "--taxable-base",
+        "500",
+        "--iva-rate",
+        "21",
+        "--iva-amount",
+        "105",
+        "--idempotency-key",
+        "fq-factura"
+      ],
+      "captures": [
+        {
+          "json_path": "result.evidence_id",
+          "name": "evidence_id",
+          "value": "02f887c6ff8a69c5"
+        }
+      ],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "attach",
+        "e3eeac5e",
+        "--purchase-invoice-evidence-id",
+        "02f887c6ff8a69c5"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "create",
+        "--modelo",
+        "303",
+        "--year",
+        "2026",
+        "--period",
+        "1T"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "calculate",
+        "--modelo",
+        "303",
+        "--year",
+        "2026",
+        "--period",
+        "1T",
+        "--no-joint-return-elected"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "verify",
+        "--modelo",
+        "303",
+        "--year",
+        "2026",
+        "--period",
+        "1T"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "status",
+        "--modelo",
+        "303",
+        "--year",
+        "2026",
+        "--period",
+        "1T"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.work.status",
+        "notices": [
+          {
+            "action": {
+              "action": {
+                "action_id": "operator.modelo.work.calculate",
+                "cli_path": [
+                  "app",
+                  "modelo",
+                  "work",
+                  "calculate"
+                ],
+                "target_command_key": "modelo.work.calculate"
+              },
+              "argument_bindings": [
+                {
+                  "argument_name": "work_unit_id",
+                  "source": "operator_action.verdict_context",
+                  "source_evidence_id": null,
+                  "source_key": "work_unit_id",
+                  "status": "resolved",
+                  "value": "ce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53"
+                }
+              ]
+            },
+            "code": "modelo.work.status.next_action",
+            "context": {
+              "continuation_outcome": "action_available",
+              "work_unit_id": "ce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53",
+              "work_unit_state": "borrador"
+            },
+            "message": "This active declaration can be calculated.",
+            "severity": "info"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
+        "result": {
+          "bucket_id": "<bucket-id>",
+          "causante_ccaa": null,
+          "created_at": "2026-04-01T09:00:00+00:00",
+          "current_calculation_revision_id": "2d76dc603da7b944a69337c6fdfc8f05f76b420929d3d93fa54a82b626b12732",
+          "current_filing_record_id": null,
+          "discard_reason": null,
+          "discarded_at": null,
+          "discarded_by": null,
+          "filed_calculation_revision_id": null,
+          "filing_year": 2026,
+          "modelo": "303",
+          "name": "303-2026-1T",
+          "operation": "modelo.work.status",
+          "period": {
+            "code": "1T",
+            "filing_year": 2026
+          },
+          "revision_id": "2026-hasta-01-y-1t",
+          "short_current_calculation_revision_id": "82b626b12732",
+          "short_filed_calculation_revision_id": null,
+          "short_work_unit_id": "b7a7592ccc53",
+          "state": "borrador",
+          "updated_at": "2026-04-01T09:00:00+00:00",
+          "work_unit_id": "ce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53"
+        },
+        "schema_version": "2",
+        "status": "warning"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "export",
+        "--modelo",
+        "303",
+        "--year",
+        "2026",
+        "--period",
+        "1T",
+        "--output",
+        "./modelo-303.boe"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.export",
+        "notices": [
+          {
+            "action": null,
+            "code": "modelo.export.local_export_not_official_evidence",
+            "context": {
+              "evidence_status": "local_export_not_official_aeat_filing_evidence",
+              "filing_year": "2026",
+              "modelo": "303",
+              "period": "1T"
+            },
+            "message": "The exported file is not an AEAT filing receipt.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.export.development_software_identity",
+            "context": {
+              "filing_year": "2026",
+              "modelo": "303",
+              "period": "1T",
+              "software_identity_grade": "development_mock"
+            },
+            "message": "AEAT will not accept this file for filing: it contains Cadrumo's all-zero development software identity. Enter the calculated box values in the AEAT form instead.",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "config.login.session_not_persisted",
+            "context": null,
+            "message": "Profile authentication supplied to this command applies to this process only; supply it again to the next process.",
+            "severity": "warning"
+          }
+        ],
+        "result": {
+          "bucket_event_id": "c45597dd67edafc34159242bb0d25ce38ec54a5b723da57c9f346b3831b66b61",
+          "bucket_id": "<bucket-id>",
+          "byte_size": 2948,
+          "calculation_revision_id": "2d76dc603da7b944a69337c6fdfc8f05f76b420929d3d93fa54a82b626b12732",
+          "file_sha256": "310281eedac7a2d810c82addcf66519d9a522aad42908c40d9739311bf5fb16a",
+          "filing_year": 2026,
+          "format": "fichero-boe",
+          "iva_wallet_decision_provenance": {
+            "authority_source_kinds": [
+              "local_recurrence"
+            ],
+            "authority_source_refs": [
+              "sha256:64bc1cee701fc87c375234c8799bc82399c69968a5cc5e312b265e764a3ed334"
+            ],
+            "decision_ref": "sha256:4c310e680d2cfcf762e02632eb11d35a3e3c1bcd873094cf589fa50bb526a362",
+            "divergence": "first_period_zero",
+            "selected_authority": "local_recurrence",
+            "target_period": {
+              "code": "1T",
+              "filing_year": 2026
+            },
+            "target_year": 2026
+          },
+          "modelo": "303",
+          "operation": "modelo.export",
+          "output_path": "<sandbox-workdir>/modelo-303.boe",
+          "payment_election": "ingreso",
+          "period": {
+            "code": "1T",
+            "filing_year": 2026
+          },
+          "prior_domiciliation_election": {
+            "baseline_evidence_reference_id": null,
+            "baseline_filing_record_id": null,
+            "baseline_result_disposition": null,
+            "baseline_source_header_locator": null,
+            "election": "keep"
+          },
+          "refund_election": null,
+          "resolved_result_disposition": "I",
+          "software_identity_grade": "development_mock",
+          "work_unit_id": "ce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53"
+        },
+        "schema_version": "2",
+        "status": "warning"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 2,
+  "sequence_id": "verification-reports-export-check"
+}

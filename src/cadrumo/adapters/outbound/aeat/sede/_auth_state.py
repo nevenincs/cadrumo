@@ -1,0 +1,28 @@
+"""Helpers for opening Sede browser contexts from encrypted auth sessions."""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from .....application.auth.protocols import session_store
+from .....core.i18n.render import tr
+from .errors import SedeNavigationError
+
+if TYPE_CHECKING:
+    from .....application.auth.session_types import AeatSession
+
+
+def storage_state_for_session(session: AeatSession) -> dict[str, object]:
+    """Return decrypted Playwright storage state for an authenticated session."""
+    if session.storage_state_path is None:
+        raise SedeNavigationError(
+            "AeatSession has no persisted auth session; run `cadrumo-runtime config auth status` first",
+            translated_message=tr("adapters.sede.errors.no_auth_session"),
+        )
+    persisted = session_store().load(session.storage_state_path)
+    if persisted is None:
+        raise SedeNavigationError(
+            "AEAT auth session is not persisted; run `cadrumo-runtime config auth status` first",
+            translated_message=tr("adapters.sede.errors.no_auth_session"),
+        )
+    return dict(persisted.storage_state)

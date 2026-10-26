@@ -1,0 +1,22 @@
+{
+  "section_id": "sec1",
+  "chapter_id": "cap1",
+  "title": "Deducciones de la Comunidad de Madrid",
+  "summary": "Resumen de las deducciones autonómicas aplicables en la Comunidad de Madrid.",
+  "prose": [
+    {
+      "paragraph_id": "p1",
+      "text": "Los contribuyentes con residencia habitual en el territorio de la Comunidad de Madrid podrán aplicar deducciones por nacimiento o adopción, acogimiento de menores, cuidado de familiares, arrendamiento de vivienda, entre otras.",
+      "page": 1
+    }
+  ],
+  "rules": [],
+  "references_sections": [],
+  "references_legal_acts": [],
+  "source": {
+    "manual_url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025-Deducciones-autonomicas/ManualRenta2025Parte2_es_es.pdf",
+    "page": 1
+  },
+  "definition_reviewed_by": "operator",
+  "definition_reviewed_at": "2026-06-08"
+}

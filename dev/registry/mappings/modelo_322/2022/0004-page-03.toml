@@ -1,0 +1,524 @@
+schema_version = 1
+fragment_id = "page-03"
+modelo = "322"
+design_epoch = "2022"
+source_ref = "aeat-dr-322-2022"
+source_sha256 = "be029175f11e632cfefb48b26058766f827612be9e06ad12de7157f15901830f"
+
+[[entries]]
+export_field_id = "m322-2022.page-03.f001"
+kind = "literal"
+literal = "<T32203000>"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2022"]
+[entries.anchor]
+sheet = "DR32203"
+source_row = 6
+source_cell = "A6"
+ordinal = "1"
+record_identity = "DR32203"
+
+[[entries]]
+export_field_id = "m322-2022.page-03.f002"
+kind = "header"
+producer_key = "amendment_evidence.is_complementaria"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2022"]
+[entries.anchor]
+sheet = "DR32203"
+source_row = 7
+source_cell = "A7"
+ordinal = "2"
+record_identity = "DR32203"
+
+[[entries]]
+export_field_id = "m322-2022.page-03.f003"
+kind = "casilla"
+casilla_id = "actividad.principal.codigo"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2022"]
+[entries.anchor]
+sheet = "DR32203"
+source_row = 8
+source_cell = "A8"
+ordinal = "3"
+record_identity = "DR32203"
+
+[[entries]]
+export_field_id = "m322-2022.page-03.f004"
+kind = "casilla"
+casilla_id = "actividad.principal.epigrafe-iae"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2022"]
+[entries.anchor]
+sheet = "DR32203"
+source_row = 9
+source_cell = "A9"
+ordinal = "4"
+record_identity = "DR32203"
+
+[[entries]]
+export_field_id = "m322-2022.page-03.f005"
+kind = "casilla"
+casilla_id = "actividad.otras-1.codigo"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2022"]
+[entries.anchor]
+sheet = "DR32203"
+source_row = 10
+source_cell = "A10"
+ordinal = "5"
+record_identity = "DR32203"
+
+[[entries]]
+export_field_id = "m322-2022.page-03.f006"
+kind = "casilla"
+casilla_id = "actividad.otras-1.epigrafe-iae"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2022"]
+[entries.anchor]
+sheet = "DR32203"
+source_row = 11
+source_cell = "A11"
+ordinal = "6"
+record_identity = "DR32203"
+
+[[entries]]
+export_field_id = "m322-2022.page-03.f007"
+kind = "casilla"
+casilla_id = "actividad.otras-2.codigo"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2022"]
+[entries.anchor]
+sheet = "DR32203"
+source_row = 12
+source_cell = "A12"
+ordinal = "7"
+record_identity = "DR32203"
+
+[[entries]]
+export_field_id = "m322-2022.page-03.f008"
+kind = "casilla"
+casilla_id = "actividad.otras-2.epigrafe-iae"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2022"]
+[entries.anchor]
+sheet = "DR32203"
+source_row = 13
+source_cell = "A13"
+ordinal = "8"
+record_identity = "DR32203"
+
+[[entries]]
+export_field_id = "m322-2022.page-03.f009"
+kind = "casilla"
+casilla_id = "actividad.otras-3.codigo"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2022"]
+[entries.anchor]
+sheet = "DR32203"
+source_row = 14
+source_cell = "A14"
+ordinal = "9"
+record_identity = "DR32203"
+
+[[entries]]
+export_field_id = "m322-2022.page-03.f010"
+kind = "casilla"
+casilla_id = "actividad.otras-3.epigrafe-iae"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2022"]
+[entries.anchor]
+sheet = "DR32203"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+record_identity = "DR32203"
+
+[[entries]]
+export_field_id = "m322-2022.page-03.f011"
+kind = "casilla"
+casilla_id = "actividad.otras-4.codigo"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2022"]
+[entries.anchor]
+sheet = "DR32203"
+source_row = 16
+source_cell = "A16"
+ordinal = "11"
+record_identity = "DR32203"
+
+[[entries]]
+export_field_id = "m322-2022.page-03.f012"
+kind = "casilla"
+casilla_id = "actividad.otras-4.epigrafe-iae"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2022"]
+[entries.anchor]
+sheet = "DR32203"
+source_row = 17
+source_cell = "A17"
+ordinal = "12"
+record_identity = "DR32203"
+
+[[entries]]
+export_field_id = "m322-2022.page-03.f013"
+kind = "casilla"
+casilla_id = "actividad.otras-5.codigo"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2022"]
+[entries.anchor]
+sheet = "DR32203"
+source_row = 18
+source_cell = "A18"
+ordinal = "13"
+record_identity = "DR32203"
+
+[[entries]]
+export_field_id = "m322-2022.page-03.f014"
+kind = "casilla"
+casilla_id = "actividad.otras-5.epigrafe-iae"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2022"]
+[entries.anchor]
+sheet = "DR32203"
+source_row = 19
+source_cell = "A19"
+ordinal = "14"
+record_identity = "DR32203"
+
+[[entries]]
+export_field_id = "m322-2022.page-03.f015"
+kind = "casilla"
+casilla_id = "89"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2022"]
+[entries.anchor]
+sheet = "DR32203"
+source_row = 20
+source_cell = "A20"
+ordinal = "15"
+record_identity = "DR32203"
+
+[[entries]]
+export_field_id = "m322-2022.page-03.f016"
+kind = "casilla"
+casilla_id = "90"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2022"]
+[entries.anchor]
+sheet = "DR32203"
+source_row = 21
+source_cell = "A21"
+ordinal = "16"
+record_identity = "DR32203"
+
+[[entries]]
+export_field_id = "m322-2022.page-03.f017"
+kind = "casilla"
+casilla_id = "91"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2022"]
+[entries.anchor]
+sheet = "DR32203"
+source_row = 22
+source_cell = "A22"
+ordinal = "17"
+record_identity = "DR32203"
+
+[[entries]]
+export_field_id = "m322-2022.page-03.f018"
+kind = "casilla"
+casilla_id = "92"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2022"]
+[entries.anchor]
+sheet = "DR32203"
+source_row = 23
+source_cell = "A23"
+ordinal = "18"
+record_identity = "DR32203"
+
+[[entries]]
+export_field_id = "m322-2022.page-03.f019"
+kind = "casilla"
+casilla_id = "80"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2022"]
+[entries.anchor]
+sheet = "DR32203"
+source_row = 24
+source_cell = "A24"
+ordinal = "19"
+record_identity = "DR32203"
+
+[[entries]]
+export_field_id = "m322-2022.page-03.f020"
+kind = "casilla"
+casilla_id = "81"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2022"]
+[entries.anchor]
+sheet = "DR32203"
+source_row = 25
+source_cell = "A25"
+ordinal = "20"
+record_identity = "DR32203"
+
+[[entries]]
+export_field_id = "m322-2022.page-03.f021"
+kind = "casilla"
+casilla_id = "93"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2022"]
+[entries.anchor]
+sheet = "DR32203"
+source_row = 26
+source_cell = "A26"
+ordinal = "21"
+record_identity = "DR32203"
+
+[[entries]]
+export_field_id = "m322-2022.page-03.f022"
+kind = "casilla"
+casilla_id = "94"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2022"]
+[entries.anchor]
+sheet = "DR32203"
+source_row = 27
+source_cell = "A27"
+ordinal = "22"
+record_identity = "DR32203"
+
+[[entries]]
+export_field_id = "m322-2022.page-03.f023"
+kind = "casilla"
+casilla_id = "83"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2022"]
+[entries.anchor]
+sheet = "DR32203"
+source_row = 28
+source_cell = "A28"
+ordinal = "23"
+record_identity = "DR32203"
+
+[[entries]]
+export_field_id = "m322-2022.page-03.f024"
+kind = "casilla"
+casilla_id = "84"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2022"]
+[entries.anchor]
+sheet = "DR32203"
+source_row = 29
+source_cell = "A29"
+ordinal = "24"
+record_identity = "DR32203"
+
+[[entries]]
+export_field_id = "m322-2022.page-03.f025"
+kind = "filler"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2022"]
+[entries.anchor]
+sheet = "DR32203"
+source_row = 30
+source_cell = "A30"
+ordinal = "25"
+record_identity = "DR32203"
+
+[[entries]]
+export_field_id = "m322-2022.page-03.f026"
+kind = "casilla"
+casilla_id = "86"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2022"]
+[entries.anchor]
+sheet = "DR32203"
+source_row = 31
+source_cell = "A31"
+ordinal = "26"
+record_identity = "DR32203"
+
+[[entries]]
+export_field_id = "m322-2022.page-03.f027"
+kind = "casilla"
+casilla_id = "95"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2022"]
+[entries.anchor]
+sheet = "DR32203"
+source_row = 32
+source_cell = "A32"
+ordinal = "27"
+record_identity = "DR32203"
+
+[[entries]]
+export_field_id = "m322-2022.page-03.f028"
+kind = "casilla"
+casilla_id = "96"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2022"]
+[entries.anchor]
+sheet = "DR32203"
+source_row = 33
+source_cell = "A33"
+ordinal = "28"
+record_identity = "DR32203"
+
+[[entries]]
+export_field_id = "m322-2022.page-03.f029"
+kind = "casilla"
+casilla_id = "97"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2022"]
+[entries.anchor]
+sheet = "DR32203"
+source_row = 34
+source_cell = "A34"
+ordinal = "29"
+record_identity = "DR32203"
+
+[[entries]]
+export_field_id = "m322-2022.page-03.f030"
+kind = "casilla"
+casilla_id = "98"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2022"]
+[entries.anchor]
+sheet = "DR32203"
+source_row = 35
+source_cell = "A35"
+ordinal = "30"
+record_identity = "DR32203"
+
+[[entries]]
+export_field_id = "m322-2022.page-03.f031"
+kind = "casilla"
+casilla_id = "79"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2022"]
+[entries.anchor]
+sheet = "DR32203"
+source_row = 36
+source_cell = "A36"
+ordinal = "31"
+record_identity = "DR32203"
+
+[[entries]]
+export_field_id = "m322-2022.page-03.f032"
+kind = "casilla"
+casilla_id = "99"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2022"]
+[entries.anchor]
+sheet = "DR32203"
+source_row = 37
+source_cell = "A37"
+ordinal = "32"
+record_identity = "DR32203"
+
+[[entries]]
+export_field_id = "m322-2022.page-03.f033"
+kind = "casilla"
+casilla_id = "88"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2022"]
+[entries.anchor]
+sheet = "DR32203"
+source_row = 38
+source_cell = "A38"
+ordinal = "33"
+record_identity = "DR32203"
+
+[[entries]]
+export_field_id = "m322-2022.page-03.f034"
+kind = "casilla"
+casilla_id = "107"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2022"]
+[entries.anchor]
+sheet = "DR32203"
+source_row = 39
+source_cell = "A39"
+ordinal = "34"
+record_identity = "DR32203"
+
+[[entries]]
+export_field_id = "m322-2022.page-03.f035"
+kind = "casilla"
+casilla_id = "125"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2022"]
+[entries.anchor]
+sheet = "DR32203"
+source_row = 40
+source_cell = "A40"
+ordinal = "35"
+record_identity = "DR32203"
+
+[[entries]]
+export_field_id = "m322-2022.page-03.f036"
+kind = "casilla"
+casilla_id = "126"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2022"]
+[entries.anchor]
+sheet = "DR32203"
+source_row = 41
+source_cell = "A41"
+ordinal = "36"
+record_identity = "DR32203"
+
+[[entries]]
+export_field_id = "m322-2022.page-03.f037"
+kind = "casilla"
+casilla_id = "127"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2022"]
+[entries.anchor]
+sheet = "DR32203"
+source_row = 42
+source_cell = "A42"
+ordinal = "37"
+record_identity = "DR32203"
+
+[[entries]]
+export_field_id = "m322-2022.page-03.f038"
+kind = "casilla"
+casilla_id = "128"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2022"]
+[entries.anchor]
+sheet = "DR32203"
+source_row = 43
+source_cell = "A43"
+ordinal = "38"
+record_identity = "DR32203"
+
+[[entries]]
+export_field_id = "m322-2022.page-03.f039"
+kind = "filler"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2022"]
+[entries.anchor]
+sheet = "DR32203"
+source_row = 44
+source_cell = "A44"
+ordinal = "39"
+record_identity = "DR32203"
+
+[[entries]]
+export_field_id = "m322-2022.page-03.f040"
+kind = "literal"
+literal = "</T32203000>"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2022"]
+[entries.anchor]
+sheet = "DR32203"
+source_row = 45
+source_cell = "A45"
+ordinal = "40"
+record_identity = "DR32203"

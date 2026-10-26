@@ -1,0 +1,197 @@
+# The navigation register: every element a `cadrumo://view/{id}` link or a
+# palette can name, for the window (`gui`) and the terminal workbench (`tui`).
+#
+# An element's `id` is also its link path: one to four lowercase segments
+# joined by `/`. A child names its `parent`, which is the id without its last
+# segment; a root has none. `label` is the one locale key every palette shows,
+# `keywords` are extra search words, and `surfaces` lists which interfaces
+# implement the element. How a surface implements an element is that surface's
+# own table, never this file.
+#
+# An element may declare link parameters in `params`, a map from parameter
+# name to value kind, such as `params = { select = "invoice" }` for a link
+# ending `?select={invoice id}`. `prefer` is reserved on every element.
+# Parameters only show, select or focus; none edits or confirms anything.
+# Each `[[kind]]` declares the exact shape of its values: opaque canonical
+# record ids only, never natural keys such as an invoice number or a tax id.
+#
+# `retired` is append-only: an id that stops naming an element moves here and
+# is never declared again, so an old link cannot open something new.
+
+schema = 1
+retired = []
+
+# A bank or manual ledger movement: its content-derived SHA-256 transaction id.
+[[kind]]
+name = "transaction"
+alphabet = "0123456789abcdef"
+length = 64
+
+# An invoice: its content-derived SHA-256 invoice id.
+[[kind]]
+name = "invoice"
+alphabet = "0123456789abcdef"
+length = 64
+
+[[element]]
+id = "home"
+label = "navigation.view.home.label"
+keywords = "overview start summary inicio"
+surfaces = ["tui"]
+
+[[element]]
+id = "ledger"
+label = "navigation.view.ledger.label"
+keywords = "records books bank movements libro registros"
+surfaces = ["gui", "tui"]
+params = { select = "transaction" }
+
+[[element]]
+id = "ledger/movements"
+parent = "ledger"
+label = "navigation.view.ledger.movements.label"
+keywords = "transactions bank statement movimientos"
+surfaces = ["gui"]
+params = { select = "transaction" }
+
+[[element]]
+id = "ledger/invoices"
+parent = "ledger"
+label = "navigation.view.ledger.invoices.label"
+keywords = "invoices bills facturas"
+surfaces = ["gui"]
+params = { select = "invoice" }
+
+[[element]]
+id = "ledger/documents"
+parent = "ledger"
+label = "navigation.view.ledger.documents.label"
+keywords = "documents evidence attachments receipts documentos"
+surfaces = ["gui"]
+
+[[element]]
+id = "ledger/rules"
+parent = "ledger"
+label = "navigation.view.ledger.rules.label"
+keywords = "rules classification categories reglas"
+surfaces = ["gui"]
+
+[[element]]
+id = "ledger/registers"
+parent = "ledger"
+label = "navigation.view.ledger.registers.label"
+keywords = "registers prorrata libros registro"
+surfaces = ["gui"]
+
+[[element]]
+id = "ledger/health"
+parent = "ledger"
+label = "navigation.view.ledger.health.label"
+keywords = "health readiness checks findings estado"
+surfaces = ["gui"]
+
+[[element]]
+id = "withholding"
+label = "navigation.view.withholding.label"
+keywords = "withholding retenciones irpf"
+surfaces = ["tui"]
+
+[[element]]
+id = "declarations"
+label = "navigation.view.declarations.label"
+keywords = "declarations returns modelo filing declaraciones"
+surfaces = ["gui", "tui"]
+
+[[element]]
+id = "aeat-sync"
+label = "navigation.view.aeat_sync.label"
+keywords = "aeat sync capture sede notifications sincronizacion"
+surfaces = ["tui"]
+
+[[element]]
+id = "operations"
+label = "navigation.view.operations.label"
+keywords = "operations runs jobs history operaciones"
+surfaces = ["tui"]
+
+[[element]]
+id = "installation"
+label = "navigation.view.installation.label"
+keywords = "installation runtime version instalacion"
+surfaces = ["tui"]
+
+[[element]]
+id = "setup"
+label = "navigation.view.setup.label"
+keywords = "setup components models dependencies componentes"
+surfaces = ["tui"]
+
+[[element]]
+id = "reference"
+label = "navigation.view.reference.label"
+keywords = "reference law sources corpus referencia"
+surfaces = ["tui"]
+
+[[element]]
+id = "profile"
+label = "navigation.view.profile.label"
+keywords = "profile taxpayer details perfil contribuyente"
+surfaces = ["gui", "tui"]
+
+[[element]]
+id = "profile/aeat-access"
+parent = "profile"
+label = "navigation.view.profile.aeat_access.label"
+keywords = "aeat access sign-in certificate clave acceso"
+surfaces = ["tui"]
+
+[[element]]
+id = "calendar"
+label = "navigation.view.calendar.label"
+keywords = "calendar deadlines obligations plazos calendario"
+surfaces = ["gui"]
+
+[[element]]
+id = "docs"
+label = "navigation.view.docs.label"
+keywords = "docs documentation help guide ayuda"
+surfaces = ["gui"]
+
+[[element]]
+id = "agent"
+label = "navigation.view.agent.label"
+keywords = "agent assistant chat agente"
+surfaces = ["gui"]
+
+[[element]]
+id = "terminal"
+label = "navigation.view.terminal.label"
+keywords = "terminal workspace tui workbench"
+surfaces = ["gui"]
+
+[[element]]
+id = "panel"
+label = "navigation.view.panel.label"
+keywords = "panel bottom panel"
+surfaces = ["gui"]
+
+[[element]]
+id = "panel/console"
+parent = "panel"
+label = "navigation.view.panel.console.label"
+keywords = "console shell command consola"
+surfaces = ["gui"]
+
+[[element]]
+id = "panel/python"
+parent = "panel"
+label = "navigation.view.panel.python.label"
+keywords = "python shell repl"
+surfaces = ["gui"]
+
+[[element]]
+id = "panel/logs"
+parent = "panel"
+label = "navigation.view.panel.logs.label"
+keywords = "logs log diagnostics registros"
+surfaces = ["gui"]

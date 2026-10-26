@@ -1,0 +1,284 @@
+# Authored form structure; automatic generation preserves this declaration.
+# Reconcile source changes explicitly. Authorship does not imply completed review.
+
+[[revisions.2023-2024.form_layouts]]
+id = "form-layout"
+revision_id = "2023-2024"
+seed_source = "authored"
+review = { state = "generated", notes = "Human sections follow the revision-specific electronic record design, not an invented paper form. File offsets are not casilla numbers. Entity income multiplicity, record-condition visibility, code legends and complete visual fidelity remain unreviewed. Earlier incomplete revisions are not promoted by this design." }
+generator_version = 1
+source_state_digest = "e9e56a1dc0221cee9f753e2c978cee607d36e2d239c40dc21ae5548c13fff5e8"
+design_sources = [
+    { source_ref = "aeat-dr-184-2023-2024", sha256 = "c96f23aa7ddf0f48b5388d69a397140135e8a4a8b2cd0568658cafad495f8aee" },
+]
+placements = [
+    { casilla_id = "decl.complementaria-sustitutiva", kind = "on_form" },
+    { casilla_id = "decl.ejercicio", kind = "on_form" },
+    { casilla_id = "decl.entidad-espanola.actividad-principal", kind = "on_form" },
+    { casilla_id = "decl.entidad-espanola.tipo-entidad", kind = "on_form" },
+    { casilla_id = "decl.entidad-extranjera.clave-pais", kind = "on_form" },
+    { casilla_id = "decl.entidad-extranjera.objeto", kind = "on_form" },
+    { casilla_id = "decl.entidad-extranjera.porcentaje-renta-residentes", kind = "on_form" },
+    { casilla_id = "decl.entidad-extranjera.tipo-entidad", kind = "on_form" },
+    { casilla_id = "decl.importe-neto-cifra-negocios", kind = "on_form" },
+    { casilla_id = "decl.numero-justificante", kind = "on_form" },
+    { casilla_id = "decl.persona-relacion", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "decl.representante-nif", kind = "on_form" },
+    { casilla_id = "decl.representante-nombre", kind = "on_form" },
+    { casilla_id = "decl.tipo-declaracion", kind = "working_figure" },
+    { casilla_id = "decl.tipo-soporte", kind = "working_figure", workbook_exclusion = "transport_control", workbook_exclusion_reason = "Official electronic-file control: delivery medium or constant E/S record discriminator, not a taxpayer amount or printed casilla." },
+    { casilla_id = "decl.total-socios", kind = "on_form" },
+    { casilla_id = "decl.tributacion-impuesto-sociedades", kind = "on_form" },
+    { casilla_id = "tipo2.base-deduccion", kind = "on_form" },
+    { casilla_id = "tipo2.cesionario-denominacion", kind = "on_form" },
+    { casilla_id = "tipo2.cesionario-nif", kind = "on_form" },
+    { casilla_id = "tipo2.clave", kind = "on_form" },
+    { casilla_id = "tipo2.clave-pais", kind = "on_form" },
+    { casilla_id = "tipo2.criterio-cobros-pagos", kind = "on_form" },
+    { casilla_id = "tipo2.dias-arrendamiento", kind = "on_form" },
+    { casilla_id = "tipo2.epigrafe-iae", kind = "on_form" },
+    { casilla_id = "tipo2.fecha-adquisicion", kind = "on_form" },
+    { casilla_id = "tipo2.ganancias-perdidas", kind = "on_form" },
+    { casilla_id = "tipo2.gastos", kind = "on_form" },
+    { casilla_id = "tipo2.gastos-actividad.amortizaciones", kind = "on_form" },
+    { casilla_id = "tipo2.gastos-actividad.arrendamientos-canones", kind = "on_form" },
+    { casilla_id = "tipo2.gastos-actividad.consumos-explotacion", kind = "on_form" },
+    { casilla_id = "tipo2.gastos-actividad.gastos-financieros", kind = "on_form" },
+    { casilla_id = "tipo2.gastos-actividad.gastos-personal", kind = "on_form" },
+    { casilla_id = "tipo2.gastos-actividad.otros-gastos-deducibles", kind = "on_form" },
+    { casilla_id = "tipo2.gastos-actividad.provisiones", kind = "on_form" },
+    { casilla_id = "tipo2.gastos-actividad.reparaciones-conservacion", kind = "on_form" },
+    { casilla_id = "tipo2.gastos-actividad.servicios-profesionales", kind = "on_form" },
+    { casilla_id = "tipo2.gastos-actividad.suministros", kind = "on_form" },
+    { casilla_id = "tipo2.gastos-actividad.tributos-deducibles", kind = "on_form" },
+    { casilla_id = "tipo2.gastos-inmobiliario.amortizacion-bienes-muebles", kind = "on_form" },
+    { casilla_id = "tipo2.gastos-inmobiliario.amortizacion-inmueble", kind = "on_form" },
+    { casilla_id = "tipo2.gastos-inmobiliario.cantidades-devengadas-terceros", kind = "on_form" },
+    { casilla_id = "tipo2.gastos-inmobiliario.conservacion-reparacion", kind = "on_form" },
+    { casilla_id = "tipo2.gastos-inmobiliario.intereses-financiacion", kind = "on_form" },
+    { casilla_id = "tipo2.gastos-inmobiliario.intereses-gastos-reparacion", kind = "on_form" },
+    { casilla_id = "tipo2.gastos-inmobiliario.otros-gastos-deducibles", kind = "on_form" },
+    { casilla_id = "tipo2.gastos-inmobiliario.primas-seguros", kind = "on_form" },
+    { casilla_id = "tipo2.gastos-inmobiliario.saldos-dudoso-cobro", kind = "on_form" },
+    { casilla_id = "tipo2.gastos-inmobiliario.tributos-recargos", kind = "on_form" },
+    { casilla_id = "tipo2.ingresos-integros", kind = "on_form" },
+    { casilla_id = "tipo2.porcentaje-reduccion", kind = "on_form" },
+    { casilla_id = "tipo2.referencia-catastral", kind = "on_form" },
+    { casilla_id = "tipo2.regimen-determinacion-rendimientos", kind = "on_form" },
+    { casilla_id = "tipo2.renta-atribuible-con-reduccion", kind = "on_form" },
+    { casilla_id = "tipo2.renta-atribuible-importe", kind = "on_form" },
+    { casilla_id = "tipo2.retenciones", kind = "on_form" },
+    { casilla_id = "tipo2.situacion-inmueble", kind = "on_form" },
+    { casilla_id = "tipo2.subclave", kind = "on_form" },
+    { casilla_id = "tipo2.tipo-actividad", kind = "on_form" },
+    { casilla_id = "tipo2.tipo-hoja", kind = "working_figure", workbook_exclusion = "transport_control", workbook_exclusion_reason = "Official electronic-file control: delivery medium or constant E/S record discriminator, not a taxpayer amount or printed casilla." },
+    { casilla_id = "tipo2.valor-adquisicion", kind = "on_form" },
+    { casilla_id = "tipo2.valor-liquidativo", kind = "on_form" },
+    { casilla_id = "tipo3.clave", kind = "on_form" },
+    { casilla_id = "tipo3.clave-declarado", kind = "on_form" },
+    { casilla_id = "tipo3.clave-pais", kind = "on_form" },
+    { casilla_id = "tipo3.clave-tipo-participe", kind = "on_form" },
+    { casilla_id = "tipo3.codigo-provincia", kind = "on_form" },
+    { casilla_id = "tipo3.dias-arrendamiento", kind = "on_form" },
+    { casilla_id = "tipo3.dias-miembro", kind = "on_form" },
+    { casilla_id = "tipo3.domicilio-fiscal", kind = "on_form" },
+    { casilla_id = "tipo3.importe", kind = "on_form" },
+    { casilla_id = "tipo3.miembro-a-31-diciembre", kind = "on_form" },
+    { casilla_id = "tipo3.miembro-nif", kind = "on_form" },
+    { casilla_id = "tipo3.miembro-nombre", kind = "on_form" },
+    { casilla_id = "tipo3.naturaleza-inmueble", kind = "on_form" },
+    { casilla_id = "tipo3.porcentaje-participacion", kind = "on_form" },
+    { casilla_id = "tipo3.porcentaje-titularidad-inmueble", kind = "on_form" },
+    { casilla_id = "tipo3.provisiones-gastos-dificil-justificacion", kind = "on_form" },
+    { casilla_id = "tipo3.reduccion", kind = "on_form" },
+    { casilla_id = "tipo3.referencia-catastral", kind = "on_form" },
+    { casilla_id = "tipo3.rendimiento-neto-minorado-agricola-eo", kind = "on_form" },
+    { casilla_id = "tipo3.rendimiento-neto-previo-eo", kind = "on_form" },
+    { casilla_id = "tipo3.representante-fiscal-nif", kind = "on_form" },
+    { casilla_id = "tipo3.situacion-inmueble", kind = "on_form" },
+    { casilla_id = "tipo3.subclave", kind = "on_form" },
+    { casilla_id = "tipo3.tipo-hoja", kind = "working_figure", workbook_exclusion = "transport_control", workbook_exclusion_reason = "Official electronic-file control: delivery medium or constant E/S record discriminator, not a taxpayer amount or printed casilla." },
+]
+
+[[revisions.2023-2024.form_layouts.pages]]
+id = "m184-declarante"
+official_ref = "Diseño de registro AEAT de la revisión: declarante, rentas de la entidad y socios"
+heading_key = "modelo.schema.184.form.page.m184-declarante.heading"
+
+[[revisions.2023-2024.form_layouts.pages.sections]]
+id = "identificacion"
+heading_key = "modelo.schema.184.form.section.identificacion.heading"
+official_heading = "Identificación de la entidad"
+blocks = [
+    { kind = "context_field", id = "nif", export_layout_id = "generated-modelo-184-2023-2024-fichero", export_record_id = "m184-declarante", export_field_id = "m184-2023.declarante.f004", heading_key = "modelo.schema.184.form.context.nif.heading", official_heading = "NIF de la entidad" },
+    { kind = "context_field", id = "nombre", export_layout_id = "generated-modelo-184-2023-2024-fichero", export_record_id = "m184-declarante", export_field_id = "m184-2023.declarante.f005", heading_key = "modelo.schema.184.form.context.nombre.heading", official_heading = "Denominación o razón social" },
+    { kind = "context_field", id = "telefono", export_layout_id = "generated-modelo-184-2023-2024-fichero", export_record_id = "m184-declarante", export_field_id = "m184-2023.declarante.f007", heading_key = "modelo.schema.184.form.context.telefono.heading", official_heading = "Teléfono de contacto" },
+    { kind = "context_field", id = "contacto", export_layout_id = "generated-modelo-184-2023-2024-fichero", export_record_id = "m184-declarante", export_field_id = "m184-2023.declarante.f008", heading_key = "modelo.schema.184.form.context.contacto.heading", official_heading = "Persona de contacto" },
+    { kind = "field", id = "field-1", casilla_id = "decl.ejercicio" },
+]
+
+[[revisions.2023-2024.form_layouts.pages.sections]]
+id = "declaracion"
+heading_key = "modelo.schema.184.form.section.declaracion.heading"
+official_heading = "Datos de la declaración"
+blocks = [
+    { kind = "field", id = "field-1", casilla_id = "decl.numero-justificante" },
+    { kind = "field", id = "field-2", casilla_id = "decl.complementaria-sustitutiva" },
+]
+
+[[revisions.2023-2024.form_layouts.pages.sections]]
+id = "entidad-espanola"
+heading_key = "modelo.schema.184.form.section.entidad-espanola.heading"
+official_heading = "Entidad constituida en España"
+blocks = [
+    { kind = "field", id = "field-1", casilla_id = "decl.entidad-espanola.tipo-entidad" },
+    { kind = "field", id = "field-2", casilla_id = "decl.entidad-espanola.actividad-principal" },
+]
+
+[[revisions.2023-2024.form_layouts.pages.sections]]
+id = "entidad-extranjera"
+heading_key = "modelo.schema.184.form.section.entidad-extranjera.heading"
+official_heading = "Entidad constituida en el extranjero"
+blocks = [
+    { kind = "field", id = "field-1", casilla_id = "decl.entidad-extranjera.tipo-entidad" },
+    { kind = "field", id = "field-2", casilla_id = "decl.entidad-extranjera.objeto" },
+    { kind = "field", id = "field-3", casilla_id = "decl.entidad-extranjera.clave-pais" },
+    { kind = "field", id = "field-4", casilla_id = "decl.entidad-extranjera.porcentaje-renta-residentes" },
+]
+
+[[revisions.2023-2024.form_layouts.pages.sections]]
+id = "representante"
+heading_key = "modelo.schema.184.form.section.representante.heading"
+official_heading = "Representante de la entidad"
+blocks = [
+    { kind = "field", id = "field-1", casilla_id = "decl.representante-nif" },
+    { kind = "field", id = "field-2", casilla_id = "decl.representante-nombre" },
+]
+
+[[revisions.2023-2024.form_layouts.pages.sections]]
+id = "resumen"
+heading_key = "modelo.schema.184.form.section.resumen.heading"
+official_heading = "Resumen de la declaración"
+blocks = [
+    { kind = "field", id = "field-1", casilla_id = "decl.tributacion-impuesto-sociedades" },
+    { kind = "field", id = "field-2", casilla_id = "decl.total-socios" },
+    { kind = "field", id = "field-3", casilla_id = "decl.importe-neto-cifra-negocios" },
+]
+
+[[revisions.2023-2024.form_layouts.pages]]
+id = "m184-entidad"
+official_ref = "Diseño de registro AEAT de la revisión: declarante, rentas de la entidad y socios"
+heading_key = "modelo.schema.184.form.page.m184-entidad.heading"
+
+[[revisions.2023-2024.form_layouts.pages.sections]]
+id = "identificacion-renta"
+heading_key = "modelo.schema.184.form.section.identificacion-renta.heading"
+official_heading = "Identificación de la renta"
+blocks = [
+    { kind = "field", id = "field-1", casilla_id = "tipo2.clave" },
+    { kind = "field", id = "field-2", casilla_id = "tipo2.subclave" },
+    { kind = "field", id = "field-3", casilla_id = "tipo2.clave-pais" },
+]
+
+[[revisions.2023-2024.form_layouts.pages.sections]]
+id = "actividad"
+heading_key = "modelo.schema.184.form.section.actividad.heading"
+official_heading = "Actividad económica"
+blocks = [
+    { kind = "field", id = "field-1", casilla_id = "tipo2.regimen-determinacion-rendimientos" },
+    { kind = "field", id = "field-2", casilla_id = "tipo2.tipo-actividad" },
+    { kind = "field", id = "field-3", casilla_id = "tipo2.epigrafe-iae" },
+    { kind = "field", id = "field-4", casilla_id = "tipo2.criterio-cobros-pagos" },
+]
+
+[[revisions.2023-2024.form_layouts.pages.sections]]
+id = "cesionario"
+heading_key = "modelo.schema.184.form.section.cesionario.heading"
+official_heading = "Cesionario"
+blocks = [
+    { kind = "field", id = "field-1", casilla_id = "tipo2.cesionario-nif" },
+    { kind = "field", id = "field-2", casilla_id = "tipo2.cesionario-denominacion" },
+]
+
+[[revisions.2023-2024.form_layouts.pages.sections]]
+id = "inversion"
+heading_key = "modelo.schema.184.form.section.inversion.heading"
+official_heading = "Participación en instituciones de inversión colectiva"
+blocks = [
+    { kind = "field", id = "field-1", casilla_id = "tipo2.fecha-adquisicion" },
+    { kind = "field", id = "field-2", casilla_id = "tipo2.valor-liquidativo" },
+    { kind = "field", id = "field-3", casilla_id = "tipo2.valor-adquisicion" },
+]
+
+[[revisions.2023-2024.form_layouts.pages.sections]]
+id = "renta"
+heading_key = "modelo.schema.184.form.section.renta.heading"
+official_heading = "Importes de la renta"
+blocks = [
+    { kind = "field", id = "field-1", casilla_id = "tipo2.ingresos-integros" },
+    { kind = "field", id = "field-2", casilla_id = "tipo2.gastos" },
+    { kind = "field", id = "field-3", casilla_id = "tipo2.renta-atribuible-importe" },
+    { kind = "field", id = "field-4", casilla_id = "tipo2.porcentaje-reduccion" },
+    { kind = "field", id = "field-5", casilla_id = "tipo2.renta-atribuible-con-reduccion" },
+    { kind = "field", id = "field-6", casilla_id = "tipo2.ganancias-perdidas" },
+    { kind = "field", id = "field-7", casilla_id = "tipo2.base-deduccion" },
+    { kind = "field", id = "field-8", casilla_id = "tipo2.retenciones" },
+]
+
+[[revisions.2023-2024.form_layouts.pages.sections]]
+id = "inmueble"
+heading_key = "modelo.schema.184.form.section.inmueble.heading"
+official_heading = "Inmueble arrendado"
+blocks = [
+    { kind = "field", id = "field-1", casilla_id = "tipo2.situacion-inmueble" },
+    { kind = "field", id = "field-2", casilla_id = "tipo2.referencia-catastral" },
+    { kind = "field", id = "field-3", casilla_id = "tipo2.dias-arrendamiento" },
+]
+
+[[revisions.2023-2024.form_layouts.pages.sections]]
+id = "gastos-actividad"
+heading_key = "modelo.schema.184.form.section.gastos-actividad.heading"
+official_heading = "Gastos de la actividad económica"
+blocks = [
+    { kind = "field", id = "field-1", casilla_id = "tipo2.gastos-actividad.gastos-personal" },
+    { kind = "field", id = "field-2", casilla_id = "tipo2.gastos-actividad.consumos-explotacion" },
+    { kind = "field", id = "field-3", casilla_id = "tipo2.gastos-actividad.tributos-deducibles" },
+    { kind = "field", id = "field-4", casilla_id = "tipo2.gastos-actividad.arrendamientos-canones" },
+    { kind = "field", id = "field-5", casilla_id = "tipo2.gastos-actividad.reparaciones-conservacion" },
+    { kind = "field", id = "field-6", casilla_id = "tipo2.gastos-actividad.servicios-profesionales" },
+    { kind = "field", id = "field-7", casilla_id = "tipo2.gastos-actividad.suministros" },
+    { kind = "field", id = "field-8", casilla_id = "tipo2.gastos-actividad.gastos-financieros" },
+    { kind = "field", id = "field-9", casilla_id = "tipo2.gastos-actividad.amortizaciones" },
+    { kind = "field", id = "field-10", casilla_id = "tipo2.gastos-actividad.provisiones" },
+    { kind = "field", id = "field-11", casilla_id = "tipo2.gastos-actividad.otros-gastos-deducibles" },
+]
+
+[[revisions.2023-2024.form_layouts.pages.sections]]
+id = "gastos-inmueble"
+heading_key = "modelo.schema.184.form.section.gastos-inmueble.heading"
+official_heading = "Gastos del inmueble arrendado"
+blocks = [
+    { kind = "field", id = "field-1", casilla_id = "tipo2.gastos-inmobiliario.intereses-financiacion" },
+    { kind = "field", id = "field-2", casilla_id = "tipo2.gastos-inmobiliario.conservacion-reparacion" },
+    { kind = "field", id = "field-3", casilla_id = "tipo2.gastos-inmobiliario.intereses-gastos-reparacion" },
+    { kind = "field", id = "field-4", casilla_id = "tipo2.gastos-inmobiliario.tributos-recargos" },
+    { kind = "field", id = "field-5", casilla_id = "tipo2.gastos-inmobiliario.saldos-dudoso-cobro" },
+    { kind = "field", id = "field-6", casilla_id = "tipo2.gastos-inmobiliario.cantidades-devengadas-terceros" },
+    { kind = "field", id = "field-7", casilla_id = "tipo2.gastos-inmobiliario.primas-seguros" },
+    { kind = "field", id = "field-8", casilla_id = "tipo2.gastos-inmobiliario.amortizacion-inmueble" },
+    { kind = "field", id = "field-9", casilla_id = "tipo2.gastos-inmobiliario.amortizacion-bienes-muebles" },
+    { kind = "field", id = "field-10", casilla_id = "tipo2.gastos-inmobiliario.otros-gastos-deducibles" },
+]
+
+[[revisions.2023-2024.form_layouts.pages]]
+id = "m184-socio"
+official_ref = "Diseño de registro AEAT de la revisión: declarante, rentas de la entidad y socios"
+heading_key = "modelo.schema.184.form.page.m184-socio.heading"
+
+[[revisions.2023-2024.form_layouts.pages.sections]]
+id = "socios"
+heading_key = "modelo.schema.184.form.section.socios.heading"
+official_heading = "Identificación y rentas atribuidas a cada miembro"
+blocks = [
+    { kind = "repeating", id = "m184-socio", row_source = "export_record", export_record_id = "m184-socio", columns = [{ key = "tipo3-miembro-nif", heading_key = "modelo.schema.184.form.column.tipo3-miembro-nif.heading", casilla_id = "tipo3.miembro-nif" }, { key = "tipo3-representante-fiscal-nif", heading_key = "modelo.schema.184.form.column.tipo3-representante-fiscal-nif.heading", casilla_id = "tipo3.representante-fiscal-nif" }, { key = "tipo3-miembro-nombre", heading_key = "modelo.schema.184.form.column.tipo3-miembro-nombre.heading", casilla_id = "tipo3.miembro-nombre" }, { key = "tipo3-codigo-provincia", heading_key = "modelo.schema.184.form.column.tipo3-codigo-provincia.heading", casilla_id = "tipo3.codigo-provincia" }, { key = "tipo3-domicilio-fiscal", heading_key = "modelo.schema.184.form.column.tipo3-domicilio-fiscal.heading", casilla_id = "tipo3.domicilio-fiscal" }, { key = "tipo3-clave-pais", heading_key = "modelo.schema.184.form.column.tipo3-clave-pais.heading", casilla_id = "tipo3.clave-pais" }, { key = "tipo3-clave-declarado", heading_key = "modelo.schema.184.form.column.tipo3-clave-declarado.heading", casilla_id = "tipo3.clave-declarado" }, { key = "tipo3-miembro-a-31-diciembre", heading_key = "modelo.schema.184.form.column.tipo3-miembro-a-31-diciembre.heading", casilla_id = "tipo3.miembro-a-31-diciembre" }, { key = "tipo3-dias-miembro", heading_key = "modelo.schema.184.form.column.tipo3-dias-miembro.heading", casilla_id = "tipo3.dias-miembro" }, { key = "tipo3-porcentaje-participacion", heading_key = "modelo.schema.184.form.column.tipo3-porcentaje-participacion.heading", casilla_id = "tipo3.porcentaje-participacion" }, { key = "tipo3-clave-tipo-participe", heading_key = "modelo.schema.184.form.column.tipo3-clave-tipo-participe.heading", casilla_id = "tipo3.clave-tipo-participe" }, { key = "tipo3-clave", heading_key = "modelo.schema.184.form.column.tipo3-clave.heading", casilla_id = "tipo3.clave" }, { key = "tipo3-subclave", heading_key = "modelo.schema.184.form.column.tipo3-subclave.heading", casilla_id = "tipo3.subclave" }, { key = "tipo3-importe", heading_key = "modelo.schema.184.form.column.tipo3-importe.heading", casilla_id = "tipo3.importe" }, { key = "tipo3-reduccion", heading_key = "modelo.schema.184.form.column.tipo3-reduccion.heading", casilla_id = "tipo3.reduccion" }, { key = "tipo3-rendimiento-neto-previo-eo", heading_key = "modelo.schema.184.form.column.tipo3-rendimiento-neto-previo-eo.heading", casilla_id = "tipo3.rendimiento-neto-previo-eo" }, { key = "tipo3-rendimiento-neto-minorado-agricola-eo", heading_key = "modelo.schema.184.form.column.tipo3-rendimiento-neto-minorado-agricola-eo.heading", casilla_id = "tipo3.rendimiento-neto-minorado-agricola-eo" }, { key = "tipo3-provisiones-gastos-dificil-justificacion", heading_key = "modelo.schema.184.form.column.tipo3-provisiones-gastos-dificil-justificacion.heading", casilla_id = "tipo3.provisiones-gastos-dificil-justificacion" }, { key = "tipo3-naturaleza-inmueble", heading_key = "modelo.schema.184.form.column.tipo3-naturaleza-inmueble.heading", casilla_id = "tipo3.naturaleza-inmueble" }, { key = "tipo3-situacion-inmueble", heading_key = "modelo.schema.184.form.column.tipo3-situacion-inmueble.heading", casilla_id = "tipo3.situacion-inmueble" }, { key = "tipo3-referencia-catastral", heading_key = "modelo.schema.184.form.column.tipo3-referencia-catastral.heading", casilla_id = "tipo3.referencia-catastral" }, { key = "tipo3-porcentaje-titularidad-inmueble", heading_key = "modelo.schema.184.form.column.tipo3-porcentaje-titularidad-inmueble.heading", casilla_id = "tipo3.porcentaje-titularidad-inmueble" }, { key = "tipo3-dias-arrendamiento", heading_key = "modelo.schema.184.form.column.tipo3-dias-arrendamiento.heading", casilla_id = "tipo3.dias-arrendamiento" }] },
+]

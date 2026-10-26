@@ -1,0 +1,145 @@
+"""The filing-baseline refusal must name flags the CLI actually accepts.
+
+The refusal it feeds tells an operator to add the named flags and re-run. This
+CLI's operator is an autonomous automation that follows that instruction literally,
+so a dotted profile path reaching the message is unrecoverable: it does not
+parse as an option. These gates tie the refusal's vocabulary to the real
+:mod:`cadrumo.application.wizard` option surface.
+"""
+
+from __future__ import annotations
+
+import subprocess
+import sys
+
+import pytest
+
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from ...wizard.commands import SETUP_OPTION_INFOS
+from ..filing_baseline import (
+    _profile_path_flag,
+    missing_filing_baseline_flag_groups,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+#: A natural person who has declared an IVA regime, and so owes the rest of the
+#: IVA block. This is the shape that shipped a dotted path to the operator.
+_IVA_BLOCK_OWED = {
+    "taxpayer_type.entity_type": "natural_person",
+    "identity.name": "Ana",
+    "identity.surnames": "Garcia Lopez",
+    "identity.tax_id": "12345678Z",
+    "iva.regime": "GENERAL",
+}
+
+_PROFILE_PATH_FLAGS = {
+    "taxpayer_type.country_of_fiscal_residence": "country-of-fiscal-residence",
+    "taxpayer_type.representante_fiscal_nif": "representante-fiscal-nif",
+    "iva.redeme_enrolled": "iva-redeme-enrolled",
+    "iva.regime": "iva-regime",
+    "tax_residence.jurisdiction_scope": "tax-residence-jurisdiction-scope",
+    # The live wizard spells these two exactly as the identity branch does,
+    # which is what lets a requirement both authorities name collapse to one.
+    "taxpayer_type.legal_entity_form": "legal-entity-form",
+    "identity.legal_name": "legal-name",
+}
+
+
+def test_public_module_import_needs_no_registry_authority() -> None:
+    """Importing the baseline check must not resolve governed setup facts."""
+    completed = subprocess.run(
+        [sys.executable, "-c", "import cadrumo.application.user_profile.filing_baseline"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert completed.returncode == 0, completed.stderr
+
+
+def test_the_refusal_names_only_flags_the_cli_accepts(operation: PinnedAuthorityOperation) -> None:
+    """Every flag this refusal emits parses as a real wizard option."""
+    with validating_governed_facts(operation):
+        identity, conditional = missing_filing_baseline_flag_groups(
+            _IVA_BLOCK_OWED, profile_path_flags=_PROFILE_PATH_FLAGS
+        )
+    emitted = (*identity, *conditional)
+    assert emitted, "fixture no longer reproduces an incomplete IVA block"
+    unknown = sorted(flag for flag in emitted if flag not in SETUP_OPTION_INFOS)
+    assert not unknown, f"refusal would name flags the CLI does not accept: {unknown}"
+
+
+def test_no_emitted_flag_carries_path_punctuation(operation: PinnedAuthorityOperation) -> None:
+    """A dot or underscore means a raw profile path leaked into operator text."""
+    with validating_governed_facts(operation):
+        identity, conditional = missing_filing_baseline_flag_groups(
+            _IVA_BLOCK_OWED, profile_path_flags=_PROFILE_PATH_FLAGS
+        )
+    emitted = (*identity, *conditional)
+    malformed = sorted(flag for flag in emitted if "." in flag or "_" in flag)
+    assert not malformed, f"profile paths leaked into flag spellings: {malformed}"
+
+
+@pytest.mark.parametrize(
+    ("path", "flag"),
+    [
+        ("taxpayer_type.country_of_fiscal_residence", "country-of-fiscal-residence"),
+        ("taxpayer_type.representante_fiscal_nif", "representante-fiscal-nif"),
+        ("iva.redeme_enrolled", "iva-redeme-enrolled"),
+        ("iva.regime", "iva-regime"),
+        ("tax_residence.jurisdiction_scope", "tax-residence-jurisdiction-scope"),
+    ],
+)
+def test_namespace_handling_is_not_a_textual_rule(path: str, flag: str) -> None:
+    """``taxpayer_type`` drops its namespace where ``iva`` keeps it.
+
+    No textual transform reproduces both, which is why the operation-scoped
+    wizard descriptor is the authority and a string fallback cannot replace it.
+    """
+    assert _profile_path_flag(path, profile_path_flags=_PROFILE_PATH_FLAGS) == flag
+
+
+def test_an_unregistered_path_still_yields_a_well_formed_flag() -> None:
+    """The fallback may name the wrong flag, but never an unparseable one."""
+    derived = _profile_path_flag("nonexistent_namespace.some_field", profile_path_flags=_PROFILE_PATH_FLAGS)
+    assert "." not in derived
+    assert "_" not in derived
+
+
+@pytest.mark.parametrize(
+    ("values", "identity_expected", "conditional_expected"),
+    [
+        # A natural person with complete identity who declared an IVA regime:
+        # only the Modelo 303 block is owed. Reported under the identity key,
+        # this told the operator their name and NIF were missing when both
+        # were set.
+        (_IVA_BLOCK_OWED, (), True),
+        # A legal entity missing its form and legal name. The conditional
+        # resolver ALSO demands those two once the entity type is legal, and
+        # deriving identity by subtracting the conditional set emptied the
+        # identity group, so a missing legal name was reported as a Modelo 303
+        # requirement.
+        (
+            {"taxpayer_type.entity_type": "legal_entity", "identity.tax_id": "B12345674"},
+            ("legal-entity-form", "legal-name"),
+            False,
+        ),
+        # Nothing answered at all: every identity flag is owed.
+        ({}, ("entity-type", "name", "surnames"), False),
+    ],
+)
+def test_identity_and_conditional_groups_partition_the_refusal(
+    operation: PinnedAuthorityOperation,
+    values: dict[str, str],
+    identity_expected: tuple[str, ...],
+    conditional_expected: bool,
+) -> None:
+    """The two groups never overlap, and identity wins overlaps."""
+    with validating_governed_facts(operation):
+        identity, conditional = missing_filing_baseline_flag_groups(values, profile_path_flags=_PROFILE_PATH_FLAGS)
+
+    assert not set(identity) & set(conditional)
+    assert identity == identity_expected
+    assert bool(conditional) is conditional_expected

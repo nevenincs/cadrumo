@@ -1,0 +1,147 @@
+"""Unit tests for LocaleManager operating over domain- and Modelo-sharded catalogues."""
+
+from __future__ import annotations
+
+import tempfile
+from pathlib import Path
+
+import pytest
+
+from ..locale_nodes import LocaleNode
+from ..manager import LocaleManager
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+def _leaf(catalogue: LocaleNode, *path: str) -> str:
+    """Walk a loaded catalogue to one leaf, proving each level on the way.
+
+    ``LocaleNode`` is recursive, so every step down a shard path may land on a
+    mapping, a leaf, or nothing. Asserting the shape here keeps a wrong-shaped
+    catalogue a test failure that names the offending key rather than a
+    ``TypeError`` from an index into a string.
+    """
+    node = catalogue
+    for key in path:
+        assert isinstance(node, dict), f"expected a mapping above {key!r}, found {node!r}"
+        assert key in node, f"missing catalogue key {key!r}"
+        node = node[key]
+    assert isinstance(node, str), f"expected a leaf at {'.'.join(path)!r}, found {node!r}"
+    return node
+
+
+def test_sharded_load_locale_merges_all_shards() -> None:
+    """Verify load_locale deep-merges all shard files in a directory."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp = Path(tmpdir)
+        locales_dir = tmp / "locales"
+        es_dir = locales_dir / "es"
+        (es_dir / "cli").parent.mkdir(parents=True)
+        (es_dir / "cli.yml").write_text("cli:\n  root:\n    help: 'Ayuda CLI'\n", encoding="utf-8")
+
+        schema_dir = es_dir / "modelo" / "schema"
+        schema_dir.mkdir(parents=True)
+        (schema_dir / "303.yml").write_text(
+            "modelo:\n  schema:\n    '303':\n      casilla:\n        '01':\n          label: 'IVA'\n",
+            encoding="utf-8",
+        )
+
+        manager = LocaleManager(src_dir=tmp, locales_dir=locales_dir)
+        loaded = manager.load_locale(es_dir)
+
+        assert "cli" in loaded
+        assert "modelo" in loaded
+        assert _leaf(loaded, "cli", "root", "help") == "Ayuda CLI"
+        assert _leaf(loaded, "modelo", "schema", "303", "casilla", "01", "label") == "IVA"
+
+
+def test_sharded_set_and_remove_locale_value() -> None:
+    """Verify set_locale_value writes to targeted shard and remove_locale_value removes from targeted shard."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp = Path(tmpdir)
+        locales_dir = tmp / "locales"
+        es_dir = locales_dir / "es"
+        es_dir.mkdir(parents=True)
+
+        manager = LocaleManager(src_dir=tmp, locales_dir=locales_dir)
+
+        # Set a CLI key -> routes to cli.yml
+        target1 = manager.set_locale_value("es", "cli.menu.exit", "Salir")
+        assert target1 == es_dir / "cli.yml"
+        assert target1.is_file()
+
+        # Set a Modelo 303 key -> routes to modelo/schema/303.yml
+        target2 = manager.set_locale_value("es", "modelo.schema.303.casilla.05.label", "Cuota")
+        assert target2 == es_dir / "modelo" / "schema" / "303.yml"
+        assert target2.is_file()
+
+        # Check loaded data
+        loaded = manager.load_locale(es_dir)
+        assert _leaf(loaded, "cli", "menu", "exit") == "Salir"
+        assert _leaf(loaded, "modelo", "schema", "303", "casilla", "05", "label") == "Cuota"
+
+        # Remove the CLI key
+        removed_target = manager.remove_locale_value("es", "cli.menu.exit")
+        assert removed_target == es_dir / "cli.yml"
+
+        loaded_after = manager.load_locale(es_dir)
+        assert "cli" not in loaded_after or not bool(loaded_after["cli"])
+
+
+def test_startup_wording_keeps_its_existing_shard(tmp_path: Path) -> None:
+    """The canonical writer updates the startup owner without adding a common copy."""
+    locales_dir = tmp_path / "locales"
+    locale_dir = locales_dir / "es"
+    locale_dir.mkdir(parents=True)
+    startup = locale_dir / "desktop_startup.yml"
+    startup.write_text("desktop:\n  startup:\n    failure: 'Anterior'\n", encoding="utf-8")
+    common = locale_dir / "common.yml"
+    common.write_text("desktop:\n  session:\n    failed: 'Sin sesión'\n", encoding="utf-8")
+    manager = LocaleManager(src_dir=tmp_path, locales_dir=locales_dir)
+
+    manager.set_locale_values("es", {"desktop.startup.failure": "No se ha podido iniciar."})
+
+    loaded = manager.load_locale(locale_dir)
+    assert _leaf(loaded, "desktop", "startup", "failure") == "No se ha podido iniciar."
+    assert common.read_text(encoding="utf-8") == "desktop:\n  session:\n    failed: 'Sin sesión'\n"
+    assert manager.remove_locale_value("es", "desktop.startup.failure") == startup
+    assert manager.load_locale(locale_dir) == {"desktop": {"session": {"failed": "Sin sesión"}}}
+
+
+def test_sharded_scaffold_partitions_keys() -> None:
+    """Verify scaffold partitions codebase keys across domain shards."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp = Path(tmpdir)
+        src_dir = tmp / "src"
+        src_dir.mkdir()
+        (src_dir / "main.py").write_text(
+            "from cadrumo.core.i18n.render import tr\n"
+            'tr("cli.cmd.start")\n'
+            'tr("modelo.schema.303.casilla.01.label")\n'
+            'tr("other.unclassified.key")\n',
+            encoding="utf-8",
+        )
+
+        locales_dir = tmp / "locales"
+        es_dir = locales_dir / "es"
+        es_dir.mkdir(parents=True)
+
+        manager = LocaleManager(src_dir=src_dir, locales_dir=locales_dir)
+        manager._codebase_keys = frozenset(
+            {"cli.cmd.start", "modelo.schema.303.casilla.01.label", "other.unclassified.key"},
+        )
+        # Pre-seed values
+        manager.set_locale_value("es", "cli.cmd.start", "Iniciar")
+        manager.set_locale_value("es", "modelo.schema.303.casilla.01.label", "Base")
+        manager.set_locale_value("es", "other.unclassified.key", "Otro")
+
+        manager.scaffold()
+
+        assert (es_dir / "cli.yml").is_file()
+        assert (es_dir / "modelo" / "schema" / "303.yml").is_file()
+        assert (es_dir / "common.yml").is_file()
+
+        loaded = manager.load_locale(es_dir)
+        assert _leaf(loaded, "cli", "cmd", "start") == "Iniciar"
+        assert _leaf(loaded, "modelo", "schema", "303", "casilla", "01", "label") == "Base"
+        assert _leaf(loaded, "other", "unclassified", "key") == "Otro"

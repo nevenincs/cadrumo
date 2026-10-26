@@ -1,0 +1,40 @@
+schema_version = 1
+fragment_id = "numeric-representation"
+width_17_rules = []
+
+[design_identity]
+modelo = "322"
+design_epoch = "2022"
+source_ref = "aeat-dr-322-2022"
+source_sha256 = "be029175f11e632cfefb48b26058766f827612be9e06ad12de7157f15901830f"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DR32201"
+source_row = 12
+ordinal = "7"
+record_identity = "DR32201"
+source_cell = "A12"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m322-2024-identificacion-ejercicio-year-yyyy"
+decision_statement = "The Identificacion ejercicio renders as the four-digit filing year, unsigned, with no decimal component."
+justification = "The design leaves this field Contenido cell blank while its own Descripcion names it Ejercicio. At four Num positions the only reading available is the four-digit year the export codec already owns; no narrower or wider policy fits the slot."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DR32201"
+source_row = 12
+ordinal = "7"
+record_identity = "DR32201"
+source_cell = "A12"
+

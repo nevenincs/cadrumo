@@ -1,0 +1,35 @@
+schema_version = 1
+fragment_id = "telematic-transport"
+width_17_rules = []
+singleton_rules = []
+
+[design_identity]
+modelo = "180"
+design_epoch = "2023"
+source_ref = "aeat-dr-180-2023"
+source_sha256 = "f4f4a0e9c8150288489e0a3058bedbd9a3b9f58bdba5e58b1599b7c7f5fc6cda"
+
+[[telematic_transport_choice_rules]]
+rule_kind = "telematic_transport_choice"
+selected_literal = "T"
+alternative_literals = ["C"]
+selection_condition = "telematic_transmission"
+expected_source_content = "Se cumplimentará una de las siguientes claves: 'C': Si la información se presenta en cinta magnética. 'T': Transmisión telemática"
+
+[telematic_transport_choice_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 49
+ordinal = "6"
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+
+[telematic_transport_choice_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m180-2023-row-49-telematic-transport"
+decision_statement = "This generated export is transmitted telematically and therefore selects the source-listed T code."
+justification = "The exact enrolled source at row 49, position 58 lists C for magnetic tape and T for telematic transmission."
+
+[telematic_transport_choice_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"
+source_row = 49
+ordinal = "6"
+record_identity = "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos"

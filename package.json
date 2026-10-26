@@ -1,0 +1,11 @@
+{
+  "name": "cadrumo-dev-tooling",
+  "private": true,
+  "description": "Pinned Hunspell dictionary data for Cadrumo development checks.",
+  "devDependencies": {
+    "dictionary-ca": "3.0.0",
+    "dictionary-en-gb": "3.0.0",
+    "dictionary-es": "4.0.0",
+    "dictionary-hu": "3.0.0"
+  }
+}

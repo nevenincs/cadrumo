@@ -1,0 +1,4 @@
+@step Render a command's output in English for this one command.
+@result aeat --language en --format json app modelo describe 303
+@expect result.code == "303"
+@expect exit_code == 0

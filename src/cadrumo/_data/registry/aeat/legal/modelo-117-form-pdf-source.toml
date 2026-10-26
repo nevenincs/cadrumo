@@ -1,0 +1,12 @@
+[sources."boe-2018-17997-modelo-117-form-pdf"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2018-17997-modelo-117.pdf"
+sha256 = "21b1a694164d56fda965b783202d7f380fac3fbe6d9b7979804ab6ecaaed0c68"
+bytes = 471979
+retrieved_at = 2026-10-05
+published_at = 2018-12-29
+applies_from = 2019-01-01
+source_url = "https://www.boe.es/boe/dias/2018/12/29/pdfs/BOE-A-2018-17997.pdf"
+review_status = "pending_review"

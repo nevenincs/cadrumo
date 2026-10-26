@@ -1,0 +1,811 @@
+"""Core aggregation taxonomy shared across registry, application, and adapters.
+
+This module owns closed value sets and tiny pydantic carriers only; it does not
+aggregate ledger rows, calculate casilla values, or perform source resolution.
+The registry schema imports :class:`BindingAggregation` and
+:class:`BindingSourceKind` to validate TOML authoring input. Application resolvers and adapters import the same
+:class:`BindingSourceKind` members so source tokens do not drift through bare
+strings.
+
+Keep the three axes separate:
+
+- :class:`BindingAggregationOp` governs how a
+  ``BindingDefinition.aggregation`` folds selected binding values.
+- :class:`RelationAggregationOp` governs cross-modelo relation fold-ins.
+- :class:`RowSetGroupingKind` is the downstream row-assembly grouping axis, not
+  a binding ``source`` token; use
+  :data:`ROW_SET_GROUPING_FOR_BINDING_SOURCE` only where a detail-record binding
+  source must be projected into the row assembler.
+"""
+
+from __future__ import annotations
+
+import re
+from collections.abc import Mapping
+from enum import StrEnum
+from types import MappingProxyType
+from typing import Final, Literal
+
+from pydantic import BaseModel, GetCoreSchemaHandler, field_validator
+from pydantic_core import CoreSchema, core_schema
+
+from .errors.hierarchy import CoreValidationError, pydantic_validation_boundary
+from .models import STRICT_FROZEN_CONFIG
+from .registry_token import StrictRegistryToken
+
+
+class BindingAggregationOp(StrEnum):
+    """Closed set of aggregation operators a registry binding may declare.
+
+    A binding's ``aggregation.op`` selects how the resolver folds the selected
+    source values into the bound casilla value. The members below are the
+    complete set declared on a ``BindingDefinition.aggregation`` across the
+    registry authoring tree; relation aggregation (``copy``/``sum`` on a
+    ``relation_prefill`` provider) and formula-expression operators are a separate,
+    unrelated axis and are not modelled here.
+
+    Members:
+        SUM: Add the selected source values (default for the scalar-folding
+            families: previous-filing, counterpart, invoice, ledger,
+            withholding).
+        ROWS: Emit one detail row per selected observation rather than folding
+            to a scalar (default for the detail-record families:
+            related-party, foreign-asset, atribución, refund).
+        COPY: Carry a single source value through unchanged; refuses when more
+            than one source value is selected.
+        COUNT_DISTINCT: Count the distinct operators/perceptores behind the
+            selected observations (e.g. Modelo 349 operator counts).
+        PRIOR_PAGOS_FRACCIONADOS: Modelo 130 cumulative pago-fraccionado carry
+            that nets the prior positive declaration against the running total.
+    """
+
+    SUM = "sum"
+    ROWS = "rows"
+    COPY = "copy"
+    COUNT_DISTINCT = "count_distinct"
+    PRIOR_PAGOS_FRACCIONADOS = "prior_pagos_fraccionados"
+
+
+class BindingAggregation(BaseModel):
+    """Typed aggregation rule carried by a registry ``BindingDefinition``.
+
+    Placed in :mod:`core` (cross-layer home) because the domain registry
+    schema declares the field and the application/adapter layers read it; the
+    closed :class:`BindingAggregationOp` set is the only key real binding
+    aggregation mappings carry in the registry authoring tree. The model is
+    strict and frozen, matching the registry schema's
+    :data:`~core.models.STRICT_FROZEN_CONFIG` convention, so an unknown ``op`` or
+    a stray extra key is rejected at registry-build validation rather than
+    silently re-parsed at resolve time.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    op: BindingAggregationOp
+
+    @field_validator("op", mode="before")
+    @classmethod
+    @pydantic_validation_boundary
+    def _coerce_op(cls, value: object) -> object:
+        """Hydrate the registry TOML's raw ``op`` string into its enum member.
+
+        The authoring tree declares ``aggregation.op`` as a plain string
+        (``"sum"``, ``"copy"``, ...). Under the strict model config a
+        ``StrEnum`` field requires the actual member, not its value, so the raw
+        string from ``model_validate`` would be rejected. Coercing the known
+        closed-set string to its :class:`BindingAggregationOp` member at the
+        boundary keeps the TOML plain while preserving strict rejection of an
+        unknown op (``BindingAggregationOp(value)`` raises on an invalid value).
+        """
+        if isinstance(value, str) and not isinstance(value, BindingAggregationOp):
+            return BindingAggregationOp(value)
+        return value
+
+
+class RelationAggregationOp(StrEnum):
+    """Closed set of aggregation operators a cross-filing fold may declare.
+
+    A relation's ``aggregation.op`` selects how a cross-modelo fold-in folds its
+    matched source filings: :attr:`COPY` carries a single source value through
+    unchanged (the default when a relation declares no aggregation), and
+    :attr:`SUM` adds the matched per-period source values (annual summaries). This
+    is a deliberately separate axis from :class:`BindingAggregationOp` (which
+    governs ``BindingDefinition`` folds and carries the binding-only ``rows``
+    / ``count_distinct`` / ``prior_pagos_fraccionados`` members); the two are not
+    interchanged. The complete set declared across the registry relation tree is
+    ``copy`` and ``sum``.
+    """
+
+    COPY = "copy"
+    SUM = "sum"
+
+
+class AggregationCaptureKind(StrEnum):
+    """Which ingestion path wrote a per-perceptor aggregation observation batch.
+
+    CAPTURE PROVENANCE, and a different axis from two neighbours it is easy to
+    confuse with. It is not
+    :class:`~application.calculations.observations_repository.ObservationSourceKind`, which classifies
+    whether a persisted modelo observation is official AEAT filing evidence; and
+    it is not the inner ``source_kind`` on a retención observation, which records
+    whether the underlying row came from a ledger transaction or a payable
+    invoice. All three have worn the name ``source_kind``.
+
+    That distinction was load-bearing before it was enforceable. The two
+    aggregation stores are exempt from the official-evidence displacement guard
+    precisely BECAUSE no evidence-authority value can reach them, and that
+    exemption rested on the field being a free-form ``str`` that happened to
+    carry one token. Nothing refused ``"aeat_sede_justificante"`` into either
+    store, and on the day something wrote it the exemption would have become
+    wrong silently. Typing the axis converts the disjointness from an observation
+    about today's content into a load-time refusal.
+
+    One member is not a defect. The set is closed at what the code actually
+    produces; a second ingestion path adds its own member here, deliberately,
+    rather than arriving as an unreviewed string.
+    """
+
+    AGGREGATE_PULL = "aggregate_pull"
+
+
+class RowSetGroupingKind(StrEnum):
+    """Canonical row-set source-kind discriminators for detail-record assembly.
+
+    Placed in :mod:`core` (cross-layer home) because both the application
+    assembly layer and the domain registry schema reference these values, and
+    domain → application imports are forbidden under the hexagonal contract.
+
+    This is the **row-assembly grouping axis** consumed in the application layer
+    (`_row_set_assembly.py`), a separate concept from the binding ``source``
+    token enumerated by :class:`BindingSourceKind`. Where a detail-record
+    family's grouping member differs from its binding source token, the
+    correspondence is intentional and explicit; see
+    :data:`ROW_SET_GROUPING_FOR_BINDING_SOURCE`:
+
+    - ``BindingSourceKind.WITHHOLDING`` (``"withholding"``) ↔ ``WITHHOLDING``
+    - ``BindingSourceKind.FOREIGN_ASSET`` (``"foreign_asset"``) ↔ ``FOREIGN_ASSET``
+    - ``BindingSourceKind.ATRIBUCION_MEMBER`` (``"atribucion_member"``)
+      ↔ ``ATRIBUCION`` (``"atribucion"``)
+    """
+
+    WITHHOLDING = "withholding"
+    FOREIGN_ASSET = "foreign_asset"
+    ATRIBUCION = "atribucion"
+    GASTO193 = "gasto193"
+    WITHHOLDING296 = "withholding296"
+
+
+class CalculationSourceLineageRole(StrEnum):
+    """A persisted source node's role in one resolver-produced provenance graph."""
+
+    PRIMARY = "primary"
+    """Durable resolved economic object whose resolver owns the binding source."""
+
+    CONTRIBUTOR = "contributor"
+    """Upstream fact linked to, but never substituting for, a primary object."""
+
+
+# The docstring is a pydantic JSON-schema description, published to external client clients
+# with every verb that carries a binding source, so the design rationale lives here.
+#
+# The single canonical closed set of binding/source-mesh tokens.
+#
+# Every :class:`~domain.calculations.registry.schema.BindingDefinition`
+# declares exactly one ``source`` drawn from the registry-declared subset of
+# this enum. The same enum also carries mesh-only source decisions such as
+# :attr:`BORRADOR` and :attr:`IVA_WALLET_DECISION`, which are resolved before a
+# registry binding is constructed and are parity-accounted as non-registry
+# members. Per-family frozensets (invoice, ledger, counterpart) are
+# **derived** from this enum rather than hand-maintained, so a new source token
+# is added in exactly one place.
+#
+# BEHAVIOUR-PRESERVING LIFT: every member's string VALUE equals the source
+# token that was previously a bare string (or a :class:`RowSetGroupingKind`
+# member) in the ``BindingDefinition.source`` Literal. Those tokens live in
+# registry TOML and may be persisted; a :class:`~enum.StrEnum` serialises to its
+# value, so folding the mixed Literal onto this enum changes the static type
+# without changing any stored or compared string (the modelo-enum-hardening
+# precedent). Do NOT rename a stored token.
+#
+# This enum is the single canonical source-kind authority across BOTH the
+# registry binding definitions AND the application resolver mesh: the
+# counterpart subset (:data:`COUNTERPART_SOURCE_KINDS`)
+# is derived from it, and the two grouping members reuse :class:`RowSetGroupingKind`
+# values so the cross-layer aggregation taxonomy stays consistent; see
+# :data:`ROW_SET_GROUPING_FOR_BINDING_SOURCE` for the detail-record
+# source-token ↔ grouping-axis mapping.
+class BindingSourceKind(StrEnum):
+    """The closed set of source kinds a casilla binding or source-mesh decision draws from."""
+
+    # Profile / cross-filing / relation / manual scalar sources.
+    PROFILE = "profile"
+    PREVIOUS_FILING = "previous_filing"
+    RELATION_PREFILL = "relation_prefill"
+    MANUAL_INPUT = "manual_input"
+    # A byte run whose value AEAT fixes in the diseno de registro itself -- the
+    # record-type marker, the modelo number, a sheet discriminator. Distinct from
+    # MANUAL_INPUT because no operator supplies it: routing a constant through the
+    # manual channel makes it answerable-blank, and a blank emits behind a valid
+    # digest. The value rides on the binding selector; see design_constant_bindings.
+    DESIGN_CONSTANT = "design_constant"
+    # Ledger-aggregation sources (all five ledger kinds).
+    LEDGER_OSS_AGGREGATION = "ledger_oss_aggregation"
+    LEDGER_IVA_AGGREGATION = "ledger_iva_aggregation"
+    # Modelo 100 first-slice gastos under estimación directa (LIRPF arts. 28-30),
+    # routed per SpendingCategory across the 14 first-slice casillas over the
+    # annual (period "0A") window. Carries the invoice-evidence, category-profile
+    # deductibility and proportionality machinery the pago-fraccionado sibling
+    # below has no use for.
+    LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION = "ledger_renta_gastos_estimacion_directa_aggregation"
+    LEDGER_RENTA_INCOME_AGGREGATION = "ledger_renta_income_aggregation"
+    # Modelo 130 pago-fraccionado deductible gastos (casilla 02 "Gastos")
+    # cumulative aggregation. The OUTGOING sibling of
+    # ``ledger_renta_income_aggregation``: the same lightweight ledger-projection
+    # mechanism and cumulative year-to-date window, applied to the gastos
+    # dimension.
+    #
+    # Both renta gastos sources carry the AEAT "Gastos" stem
+    # (aeat-naming) and each is qualified by the régimen it serves,
+    # because the M100 first-slice boxes are gastos too (casilla 0203 is "Gastos
+    # financieros"): a bare ``gasto`` would not say which régimen it belongs to.
+    # ``ledger_renta_gastos_estimacion_directa_aggregation`` stays a separate,
+    # constraint-shape-divergent mechanism and is deliberately not reused for
+    # this quarterly cumulative sum.
+    LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION = "ledger_renta_gastos_pago_fraccionado_aggregation"
+    # Modelo 151 régimen especial de impatriados (Ley Beckham, art. 93 LIRPF)
+    # Spanish-source base aggregation. Reads the bucket ledger like the other
+    # ledger-aggregation sources, but its per-row classifier admits INCOMING
+    # income ONLY when source_jurisdiction resolves to ES (art. 93.2: the
+    # impatriado is taxed by IRNR scope rules, not the art. 8 worldwide base),
+    # admits trabajo income (the class the M130 income pipeline excludes), and
+    # segregates every foreign-source or jurisdiction-unresolved row as a typed
+    # BECKHAM_FOREIGN_SOURCE_SEGREGATED issue (never a silent ES coercion). Feeds
+    # impatriado.base-liquidable-general.
+    LEDGER_IMPATRIADO_INCOME_AGGREGATION = "ledger_impatriado_income_aggregation"
+    # Modelo 210 IRNR explicit-income projection. It owns the gross-income
+    # casilla only after a transaction supplies a persisted M210 classification
+    # and the calculation selects the matching official tipo-renta code.
+    LEDGER_IRNR_INCOME_AGGREGATION = "ledger_irnr_income_aggregation"
+    # Per-perceptor retención aggregation: the calc-mesh source that reads the
+    # dedicated per-perceptor retención store (RETENCION_OBSERVATIONS_NAMESPACE,
+    # operator-supplied — NOT the bucket ledger, so deliberately NOT in
+    # LEDGER_BINDING_SOURCE_KINDS and NOT carrying the ``ledger_`` prefix) and
+    # materialises the Modelo 180/193 "número total de perceptores" count via
+    # the validated distinct-NIF primitive (aggregate_retenciones_180.
+    # total_perceptors) — replacing the wrong sum-of-quarterly-M115-counts relation.
+    RETENCIONES_AGGREGATION = "retenciones_aggregation"
+    # Modelo 390 year-end IVA compensation carry partition: reads filed Modelo
+    # 303 compensation states and materialises AEAT boxes 97 / 662 together from
+    # the FIFO carry projection. This is a registry-declared source because the
+    # two annual boxes are not independent relation copy/sum folds.
+    IVA_COMPENSATION_ANNUAL_PARTITION = "iva_compensation_annual_partition"
+    # Modelo 390 annual simplified-regime summary: consumes the one immutable,
+    # filed-current Modelo 303 4T CalculationRevision and its evidence rather
+    # than a scalar observation or relation prefill.  Its 10-box envelope is
+    # keyed by canonical M390 CasillaIds and persisted on the target revision.
+    M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY = "m303_regimen_simplificado_annual_summary"
+    # Capital-goods IVA deduction regularización (LIVA arts. 107-110): the source
+    # that would materialise Modelo 303 casilla 43 / the Modelo 390 regularización
+    # field from the profile-scoped bienes-de-inversión register plus definitive
+    # prorrata percentages. It is registry-declared and source-mesh enrolled for
+    # the governed M303/M390 binding targets; the separate advisory path remains
+    # available for operator review when the definitive prorrata fact is missing
+    # or only a non-blocking proposed value can be shown.
+    BIENES_INVERSION_REGULARIZACION = "bienes_inversion_regularizacion"
+    # Modelo 100 inventory stock valuation. This source consumes the dedicated,
+    # profile-scoped inventory schedule and owns the mutually exclusive 0177 /
+    # 0182 projection from audited opening and closing stock. It is deliberately
+    # distinct from the transaction-ledger aggregation family and from capital-
+    # goods IVA regularisation.
+    INVENTORY = "inventory"
+    # Annual prorrata-general regularización por porcentaje definitivo (LIVA arts.
+    # 104-105): the source that would materialise Modelo 303 casilla 44 / the
+    # Modelo 390 annual regularización field from the provisional percentage
+    # (prior-year definitive, art. 105.Uno) applied across the year and the
+    # current-year definitive percentage (art. 104) over full-year volumes.
+    # Registry-declared live mesh source once the provisional-carry store and Q4
+    # regularisation path are proven end to end.
+    PRORRATA_REGULARIZACION = "prorrata_regularizacion"
+    # Mesh-only sourcing decisions with NO registry binding declaration. Both are
+    # resolved by a pre-mesh gate, not a registry `BindingDefinition.source`:
+    # `borrador` materialises the Modelo 100 borrador prefill
+    # (Modelo100BorradorSourceResolver) and `iva_wallet_decision` carries the M303
+    # IVA-wallet compensación decision (IvaWalletDecisionSourceResolver). They are
+    # first-class members of the canonical union, so the mesh carries
+    # `BindingSourceKind` members rather than bare strings;
+    # because no registry binding declares them, they are accounted for as
+    # mesh-only in the enum↔registry parity gate, not as reserved-undeclared.
+    BORRADOR = "borrador"
+    IVA_WALLET_DECISION = "iva_wallet_decision"
+    # Invoice / counterpart aggregation sources.
+    PAYABLE_INVOICE = "payable_invoice"
+    COLLECTIBLE_INVOICE = "collectible_invoice"
+    # Modelo 347 "operaciones con terceras personas" combined-direction source.
+    # RD 1065/2007 art. 33.1 counts both directions as operations ("tendran la
+    # consideracion de operaciones tanto las entregas de bienes y prestaciones
+    # de servicios como las adquisiciones de los mismos") and reports them in
+    # one type 2 record stream, so a binding that declared one direction
+    # while its resolver read both would be untruthful about what it
+    # consumes. Sharing one stream does NOT merge the directions for the
+    # floor: art. 33.1 also says "se computaran de forma separada las entregas
+    # y las adquisiciones", which the clave threshold buckets apply. It is
+    # invoice-shaped (a member of INVOICE_BINDING_SOURCE_KINDS) and resolved
+    # by the same InvoiceCatalogueSourceResolver as
+    # PAYABLE_INVOICE/COLLECTIBLE_INVOICE; each underlying InvoiceObservation
+    # keeps its own direction as its source_kind.
+    M347_THIRD_PARTY_OPERATION = "m347_third_party_operation"
+    # The Modelo 349 operador and rectificacion records are likewise ONE
+    # population across both invoice directions: record design type 2 pos. 133
+    # admits claves E,M,H,T,S,R,D,C from supplies and A,I,T from acquisitions,
+    # with one record per operator, clave and period (RIVA arts. 79-80). Each
+    # underlying InvoiceObservation keeps its own PAYABLE_INVOICE /
+    # COLLECTIBLE_INVOICE source_kind.
+    M349_INTRACOMMUNITY_OPERATION = "m349_intracommunity_operation"
+    LEDGER_TRANSACTION = "ledger_transaction"
+    PURCHASE_INVOICE_EVIDENCE = "purchase_invoice_evidence"
+    # Detail-record families. WITHHOLDING / FOREIGN_ASSET reuse the
+    # RowSetGroupingKind value; the others carry their own source-token
+    # value (see ROW_SET_GROUPING_FOR_BINDING_SOURCE).
+    WITHHOLDING = RowSetGroupingKind.WITHHOLDING.value
+    FOREIGN_ASSET = RowSetGroupingKind.FOREIGN_ASSET.value
+    ATRIBUCION_MEMBER = "atribucion_member"
+    # Explicit member identity and independent monthly contribution facts (M156).
+    AFILIADO_COTIZACION = "afiliado_cotizacion"
+    # Modelo 193 hoja-anexo gastos relationship rows (NIF del contribuyente
+    # plus the annual gastos de administracion y deposito amount), produced by
+    # the Sheets pull surface in the detail-record row shape.
+    GASTO193_CONTRIBUTOR = "gasto193_contributor"
+    # Modelo 296 perceptor rows (IRNR retenciones): its own clave
+    # vocabulary (numeric renta claves) cannot ride the shared
+    # registry-declared withholding vocabulary, so it declares its own detail-record
+    # source in the same Sheets-pull row shape.
+    WITHHOLDING296 = "withholding296"
+
+
+ROW_SET_GROUPING_FOR_BINDING_SOURCE: Final[Mapping[BindingSourceKind, RowSetGroupingKind]] = MappingProxyType(
+    {
+        BindingSourceKind.WITHHOLDING: RowSetGroupingKind.WITHHOLDING,
+        BindingSourceKind.FOREIGN_ASSET: RowSetGroupingKind.FOREIGN_ASSET,
+        BindingSourceKind.ATRIBUCION_MEMBER: RowSetGroupingKind.ATRIBUCION,
+        BindingSourceKind.GASTO193_CONTRIBUTOR: RowSetGroupingKind.GASTO193,
+        BindingSourceKind.WITHHOLDING296: RowSetGroupingKind.WITHHOLDING296,
+    },
+)
+"""Explicit detail-record binding-source ↔ row-assembly grouping correspondence.
+
+The binding ``source`` token (e.g. ``"atribucion_member"``) and the
+row-assembly :class:`RowSetGroupingKind` value (e.g. ``"atribucion"``) are
+distinct strings where the source token carries a suffix such as ``_member``
+or ``_contributor``; this mapping makes the relationship
+explicit so a reader is not misled into assuming the two axes share a value.
+"""
+
+
+INVOICE_BINDING_SOURCE_KINDS: Final[frozenset[BindingSourceKind]] = frozenset(
+    {
+        BindingSourceKind.COLLECTIBLE_INVOICE,
+        BindingSourceKind.PAYABLE_INVOICE,
+        BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
+        BindingSourceKind.M347_THIRD_PARTY_OPERATION,
+        BindingSourceKind.M349_INTRACOMMUNITY_OPERATION,
+    },
+)
+"""Invoice-shaped binding source kinds, derived from :class:`BindingSourceKind`."""
+
+
+type CounterpartSourceKind = Literal[
+    BindingSourceKind.LEDGER_TRANSACTION,
+    BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
+    BindingSourceKind.PAYABLE_INVOICE,
+    BindingSourceKind.COLLECTIBLE_INVOICE,
+]
+"""Canonical source-kind subset accepted by counterpart aggregation.
+
+A derived subset of :class:`BindingSourceKind`: the counterpart families
+settle against a transaction, a purchase-invoice
+evidence row, or a payable/collectible invoice. Replaces the former
+``AggregationSourceKind``-derived subset, which was deleted in the same change.
+"""
+
+COUNTERPART_SOURCE_KIND_ORDER: Final[tuple[CounterpartSourceKind, ...]] = (
+    BindingSourceKind.LEDGER_TRANSACTION,
+    BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
+    BindingSourceKind.PAYABLE_INVOICE,
+    BindingSourceKind.COLLECTIBLE_INVOICE,
+)
+"""Operator-facing display order for :data:`COUNTERPART_SOURCE_KINDS`.
+
+This is the order the ``--kind`` help text and alias table present to an
+operator (documented in ``docs/how-to/review-queue.md``), so it is
+authoritative and MUST NOT be reordered incidentally.
+:data:`COUNTERPART_SOURCE_KINDS` derives its membership from this tuple so
+the two can never drift apart.
+"""
+
+COUNTERPART_SOURCE_KINDS: Final[frozenset[CounterpartSourceKind]] = frozenset(COUNTERPART_SOURCE_KIND_ORDER)
+
+
+def counterpart_source_kind(value: object) -> CounterpartSourceKind:
+    """Return ``value`` narrowed to the counterpart source-kind subset.
+
+    Args:
+        value: A :class:`BindingSourceKind` member or its stored string value.
+
+    Returns:
+        The same source kind narrowed to :data:`CounterpartSourceKind` for
+        counterpart aggregation inputs.
+
+    Raises:
+        ValueError: When ``value`` is not a known :class:`BindingSourceKind`, or
+            is known but outside the counterpart subset.
+    """
+    try:
+        source_kind = value if isinstance(value, BindingSourceKind) else BindingSourceKind(value)
+    except ValueError as exc:
+        raise ValueError(f"unsupported source_kind {value!r}") from exc
+    if source_kind is BindingSourceKind.LEDGER_TRANSACTION:
+        return BindingSourceKind.LEDGER_TRANSACTION
+    if source_kind is BindingSourceKind.PURCHASE_INVOICE_EVIDENCE:
+        return BindingSourceKind.PURCHASE_INVOICE_EVIDENCE
+    if source_kind is BindingSourceKind.PAYABLE_INVOICE:
+        return BindingSourceKind.PAYABLE_INVOICE
+    if source_kind is BindingSourceKind.COLLECTIBLE_INVOICE:
+        return BindingSourceKind.COLLECTIBLE_INVOICE
+    raise ValueError(
+        "unsupported source_kind; use one of ledger_transaction, "
+        "purchase_invoice_evidence, payable_invoice, collectible_invoice",
+    )
+
+
+LEDGER_BINDING_SOURCE_KINDS: Final[frozenset[BindingSourceKind]] = frozenset(
+    source
+    for source in BindingSourceKind
+    if source.value.startswith("ledger_") and source is not BindingSourceKind.LEDGER_TRANSACTION
+)
+"""Ledger-aggregation binding source kinds (all seven), derived from the enum.
+
+Every binding whose ``source`` is a member reads its values from the
+bucket-scoped ledger (transaction-classified IVA / OSS aggregation, Renta
+first-slice income and estimación directa gastos aggregation, the M130
+pago-fraccionado gastos cumulative aggregation, or the M151 impatriado base
+aggregation, M151 impatriado income, or M210 explicit IRNR income). The
+``ledger_`` namespace derives the set directly from the canonical enum;
+``ledger_transaction`` remains a counterpart source rather than a ledger
+aggregation. Cross-domain consumers route through this frozenset
+so the registry stays the single source of truth for ledger readiness.
+"""
+
+
+OBSERVATION_BACKED_BINDING_SOURCE_KINDS: Final[frozenset[BindingSourceKind]] = frozenset(
+    {
+        BindingSourceKind.PREVIOUS_FILING,
+        BindingSourceKind.RELATION_PREFILL,
+    },
+)
+"""Binding source kinds whose value is read back from a prior-filed observation.
+
+Both name a figure the taxpayer already declared — a direct same-modelo carry,
+or a cross-modelo fold-in materialised into a relation-prefill slot — rather than
+a value this application derives. Consumers that must not treat such a value as
+independent evidence, or that must not compare it against the observation store
+it came from, route through this frozenset.
+
+MEMBERSHIP IS SEMANTIC, NOT LEXICAL, and this is the one per-family collection
+that cannot be derived by construction the way
+:data:`LEDGER_BINDING_SOURCE_KINDS` is from the ``ledger_`` namespace: the two
+members share no naming property, only the behaviour of reading the observation
+store. So adding a source kind here is a judgement, and the question to ask is
+whether its resolver reads a prior-filed observation — not whether its token
+looks like these two. That is stated rather than papered over, because a
+hand-listed set that claims to be derived is worse than one that admits it is
+not.
+
+DO NOT WIDEN THIS TO THE CARRY-FORWARD OVERRIDE TIER. The caller-override
+precedence ladder declares a superset that additionally carries the IVA
+compensación annual partition and the prorrata regularización. That is a
+different concept — which values an operator override may displace — and folding
+it in here silently widens two registry validation guards.
+"""
+
+
+class BindingTypedEnumKind(StrEnum):
+    """The closed set of substrate enum-class names a binding value bridges.
+
+    A :class:`~domain.calculations.registry.schema.BindingDefinition` whose
+    value bridges a closed-membership substrate axis declares ``typed_enum`` =
+    one of these members. Each value is the NAME of the closed enum class a
+    consumer routes the binding value through:
+
+    - ``CENSO_EVENT_KIND`` (``"censo_event_kind"``) — Modelo 036 censo status.
+    - ``CCAA`` (``"CCAA"``) — Modelo 100 autonomic-community tax residence.
+    - ``ESTIMACION_DIRECTA_MODALIDAD`` (``"EstimacionDirectaModalidad"``) —
+      Modelo 100 estimación-directa modality.
+    - ``LEGAL_ENTITY_FORM`` (``"LegalEntityForm"``) — Modelo 200 legal form.
+    - ``RENTAL_REDUCTION_ART_23_2_TIER`` (``"RentalReductionArt232Tier"``) —
+      Modelo 100 reducción por arrendamiento de vivienda tier (LIRPF Art. 23.2).
+
+    BEHAVIOUR-PRESERVING LIFT: every member's string VALUE equals the
+    annotation token that was previously a bare ``str`` in
+    ``BindingDefinition.typed_enum``. Those tokens live in registry TOML and
+    flow through operator-facing surfaces (``bindings list`` table, the
+    :class:`~domain.calculations.registry.query_reports.ModeloBindingQueryRow`
+    projection, the borrador resolver, the Sheets-pull router); a
+    :class:`~enum.StrEnum` serialises to its value, so
+    narrowing the field from ``str | None`` to this enum changes the static type
+    without changing any stored, compared, or emitted string (the
+    modelo-enum-hardening precedent). Do NOT rename a stored token.
+
+    Declared in :mod:`core` as a closed value set per the architecture
+    contract; the loader hydrates the registry TOML's raw token to its member at
+    the schema boundary (see
+    :meth:`~domain.calculations.registry.schema.BindingDefinition._coerce_typed_enum`).
+    It is the closed-set *annotation* on the binding, distinct from the engine
+    ``input_channel`` (how a formula consumes the value); a binding may carry a
+    ``typed_enum`` yet still be a numeric ``decimal`` channel.
+    """
+
+    CENSO_EVENT_KIND = "censo_event_kind"
+    CCAA = "CCAA"
+    ESTIMACION_DIRECTA_MODALIDAD = "EstimacionDirectaModalidad"
+    LEGAL_ENTITY_FORM = "LegalEntityForm"
+    RENTAL_REDUCTION_ART_23_2_TIER = "RentalReductionArt232Tier"
+
+
+class LedgerIncomeGrounding(StrEnum):
+    """Whether a ledger income row's contribution rests on declared invoice substrate.
+
+    An actividad-económica income row reaches a modelo income casilla by one of
+    two structurally different routes, and the difference is a LEGAL one, not a
+    presentation detail:
+
+    - ``SUBSTRATE_DECLARED`` — the row carries an explicit ``taxable_base``
+      (the IVA-exclusive base imponible from its invoice). Every income fact
+      reads a real declared figure.
+    - ``CASH_FALLBACK`` — no base is declared, so the only measure available is
+      the raw bank-credited amount. That figure is net of any retención
+      practicada and may be IVA-inclusive, so it is neither the ingresos
+      íntegros the return asks for nor a base: the ``ingresos_integros_sum``
+      fact folds the cash in (mis-measuring in a direction that depends on the
+      invoice), while ``taxable_base_sum`` contributes nothing for the row.
+
+    Declared in :mod:`core` as a closed value set per the architecture
+    contract, so the domain registry protocol and the application aggregation
+    pipeline key on ONE marker rather than each re-deriving the distinction
+    from ``taxable_base_amount is None``. Consumers must branch on the member,
+    never on field-nullness: the marker is the fact.
+    """
+
+    SUBSTRATE_DECLARED = "substrate_declared"
+    CASH_FALLBACK = "cash_fallback"
+
+
+class InvoiceDevengoRank(StrEnum):
+    """Which source produced the LIVA art. 75 devengo date an invoice files under.
+
+    Period attribution -- which quarter a cuota is declared in, which filing
+    year an annual reconciliation sees -- resolves on the art. 75 devengo date.
+    That date is when the operation occurred, and the invoice date appears
+    nowhere in art. 75.Uno: a B2B invoice may be issued up to the fifteenth of
+    the following month while still belonging to the earlier period, so the
+    issue date is wrong at exactly the month and quarter boundaries where
+    attribution changes.
+
+    A fallback chain therefore cannot hand back a bare date. The two ranks
+    below are not two spellings of one answer: one is a fact the taxpayer
+    recorded, the other is a substitute that is right most of the time and
+    wrong precisely where it matters. Returning them undifferentiated would let
+    a consumer treat the substitute as the fact, which is the mistake the
+    marker exists to prevent.
+
+    Declared in :mod:`core` as a closed value set per the architecture
+    contract, beside :class:`LedgerIncomeGrounding`, which answers the parallel
+    question for the income measure. Consumers must branch on the member, never
+    on ``operation_date is None``: the marker is the fact.
+
+    D10's third named rank -- the bank movement date -- is NOT a member here.
+    An invoice always carries an issue date, so the invoice-side chain
+    terminates at :attr:`ISSUE_DATE_PROXY` and can never reach a movement date;
+    the movement-date substitution belongs to the ledger-transaction side,
+    whose dates have their own owners in
+    :mod:`cadrumo.domain.transactions.dates`. Declaring a member no producer
+    on this axis can emit would be dead capacity wearing the shape of coverage.
+    """
+
+    OPERATION_DATE_DECLARED = "operation_date_declared"
+    """The invoice records its own devengo-relevant date and it was used.
+
+    Covers both art. 75 clauses: the general-regime operation date
+    (art. 75.Uno) and a pago anticipado's collection date (art. 75.Dos). Which
+    clause supplied it is a separate axis, recorded on the invoice's own
+    ``operation_date_role``; this marker answers only whether the date is a
+    declared fact or a substitute.
+    """
+
+    ISSUE_DATE_PROXY = "issue_date_proxy"
+    """No devengo date was recorded, so the issue date stood in for it.
+
+    The attribution is a best available guess, not a legal determination. It
+    agrees with the declared fact for every operation invoiced in its own
+    period and diverges exactly at the boundary cases, so a period whose
+    figures rest on this rank is one an operator should be told about.
+    """
+
+
+class LedgerWithholdingDerivation(StrEnum):
+    """How a ledger income row's retención figure was arrived at.
+
+    A ledger row never *declares* its retención -- no transaction field records
+    one -- so every non-zero figure on this surface is derived, and the reader
+    needs to know from what. Without the marker three structurally different
+    situations are one indistinguishable ``Decimal("0")``: a row that genuinely
+    had nothing withheld, a row whose substrate was too thin to tell, and a row
+    whose arithmetic implied a withholding so large the figure was refused. The
+    last is the dangerous one, because a refused inference and a real zero look
+    identical in the sum.
+
+    Declared in :mod:`core` as a closed value set per the architecture
+    contract, beside :class:`LedgerIncomeGrounding`, which answers the parallel
+    question for the income measure.
+    """
+
+    NOT_APPLICABLE = "not_applicable"
+    """The row is not an actividad-económica receipt, so no retención arises."""
+
+    NO_SUBSTRATE = "no_substrate"
+    """No base is declared, or the cuota is not determinable from what is.
+
+    The withholding is unknown, not zero. The row still contributes its cash to
+    the income measure, so it under-claims the offsetting credit.
+    """
+
+    NONE_WITHHELD = "none_withheld"
+    """Substrate sufficed and the cash covers the invoice: nothing was withheld."""
+
+    DECLARED_ON_LINKED_INVOICE = "declared_on_linked_invoice"
+    """Read from the retención the linked sales invoice itself declares.
+
+    The strongest source available: the figure the document states, not one
+    reconstructed from what reached the bank. Preferred over every inference
+    below it, because a declared figure beats a derived one.
+    """
+
+    INFERRED_FROM_DECLARED_CUOTA = "inferred_from_declared_cuota"
+    """Derived as invoice gross minus cash, with the cuota read from the row."""
+
+    INFERRED_FROM_CATEGORY_ZERO_CUOTA = "inferred_from_category_zero_cuota"
+    """Derived the same way, with the cuota taken as zero because the declared
+    IVA category makes it zero by law.
+
+    This is what lets an IVA-exempt professional service recover its retención:
+    the operation has no cuota to record, so requiring a recorded one excluded
+    precisely the invoices whose withholding matters most.
+    """
+
+    REFUSED_ABOVE_SUPPORTED_RATE = "refused_above_supported_rate"
+    """The inference exceeded the registry maximum supported rate and was dropped.
+
+    An implied withholding above the RIRPF art. 95.1 general rate is evidence
+    that the recorded cash is the base without IVA rather than a net-of-retención
+    payment. Emitting the figure anyway would persist a fabricated withholding;
+    capping it at the bound would invent one at exactly the legal maximum. The
+    figure is therefore zero and this marker says why.
+    """
+
+
+_RETENCION_SCHEME_PATTERN = re.compile(r"^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$")
+
+
+class RetencionScheme(str):
+    """Open wire token for a registry-owned retenciones scheme.
+
+    The published authority owns membership and meaning. This core primitive
+    validates only the stable token shape and exposes ``value`` for existing
+    persistence/sorting call sites; it deliberately does not enumerate scheme
+    values or import the registry authority.
+    """
+
+    __slots__ = ()
+
+    def __new__(cls, value: str) -> RetencionScheme:
+        """Construct a token after validating its stable lexical form."""
+        raw = str(value)
+        if _RETENCION_SCHEME_PATTERN.fullmatch(raw) is None:
+            raise CoreValidationError(f"invalid retencion scheme token: {value!r}")
+        return str.__new__(cls, raw)
+
+    @property
+    def value(self) -> str:
+        """Return the canonical wire token."""
+        return str(self)
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls,
+        source_type: type[object],
+        handler: GetCoreSchemaHandler,
+    ) -> CoreSchema:
+        """Validate and serialize the open registry token as a string."""
+        del source_type, handler
+        return core_schema.no_info_after_validator_function(
+            pydantic_validation_boundary(cls),
+            core_schema.str_schema(pattern=_RETENCION_SCHEME_PATTERN.pattern),
+            serialization=core_schema.to_string_ser_schema(),
+        )
+
+
+class WorkIncomeRetencionTreatment(BaseModel):
+    """Typed result carrier for a registry-resolved withholding treatment."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    scheme: RetencionScheme
+    is_fixed_rate: bool
+
+
+class RetencionClave(StrictRegistryToken):
+    """Opaque Modelo 190/193 clave token projected from registry membership.
+
+    The selected withholding catalogue owns the letter vocabulary and its
+    model applicability. Core carries only the typed token boundary; callers
+    must obtain instances through the registry projection.
+    """
+
+    __slots__ = ()
+
+    _projection_source = "registry"
+
+
+class IntracomOperationType(StrEnum):
+    """Modelo 349 operation-key letters carried by invoice records."""
+
+    E = "E"
+    H = "H"
+    M = "M"
+    S = "S"
+    T = "T"
+    R = "R"
+    A = "A"
+    ADQUISICION_SERVICIOS = "I"
+    D = "D"
+    C = "C"
+
+
+class TravelAgencyMediationType(StrictRegistryToken):
+    """Opaque travel-agency mediation token projected from fact 0133.
+
+    RD 1619/2012 disposición adicional cuarta owns the vocabulary and its
+    Modelo 347 consequences. Core carries only the typed token boundary;
+    callers must receive instances through the facts-registry projection.
+    """
+
+    __slots__ = ()
+
+    _projection_source = "registry"
+
+
+class ThirdPartyDeclarationRole(StrictRegistryToken):
+    """Opaque third-party declaration-role token projected from fact 0134.
+
+    The role vocabulary, legal grounding, and C/D/E role projections belong to
+    the facts registry. Core carries only the validated token boundary; callers
+    must obtain instances through the typed registry projection.
+    """
+
+    __slots__ = ()
+
+
+class ForeignAssetClass(StrEnum):
+    """Modelo 720 asset classes (clave de tipo de bien).
+
+    Source: AEAT Modelo 720 instrucciones. Each clave is declared separately;
+    the declarability gate applies the 50,000 EUR floor to the regulatory
+    obligation block that contains the class after the aggregator runs.
+    Declared in :mod:`core` as a closed value set.
+    """
+
+    ACCOUNT = "cuenta_entidad_financiera"  # Modelo 720 clave C
+    SECURITY = "valor_derecho_extranjero"  # Modelo 720 clave V
+    COLLECTIVE_INVESTMENT = "institucion_inversion_colectiva"  # Modelo 720 clave I
+    INSURANCE = "seguro_renta_temporal_vitalicia"  # Modelo 720 clave S
+    REAL_ESTATE = "inmueble_derecho_real_extranjero"  # Modelo 720 clave B
+    VIRTUAL_CURRENCY = "moneda_virtual"  # Modelo 721 sibling; no Modelo 720 clave

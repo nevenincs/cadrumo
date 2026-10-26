@@ -1,0 +1,15 @@
+[fact]
+fact_id = "madrid-birth-adoption-following-periods"
+family = "scalar"
+
+[[fact.variants]]
+variant_id = "madrid-birth-adoption-following-periods:2023-01-01"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+legal_refs = ["madrid-dl-1-2010:art-4"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[fact.variants.payload]
+kind = "scalar"
+value = 2
+unit = "filing_periods"

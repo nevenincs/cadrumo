@@ -1,0 +1,13 @@
+[modelo]
+id = "296"
+tax_domain = "irnr"
+cadence = "annual"
+jurisdiction = "ES-AEAT"
+legal_refs = ["orden-eha-3290-2008:art-6", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout"]
+
+[modelo.inception.unauthored]
+earliest_authored = 2022
+reason = "Approved by Orden EHA/3290/2008 art. 6 and filed under it since ejercicio 2008, so years before 2022 existed in law; they are below the supported floor and are not authored. Editions cover 2022 (applicability, from the Anexo III redaction HFP/1351/2021 left in force), 2023 and 2024-2025 (filing, from AEAT's own designs) and 2026 onward (applicability, from the Anexo III redaction Orden HAC/623/2026 made, whose AEAT design is unpublished)."
+legal_refs = ["orden-eha-3290-2008:art-6"]
+source_refs = ["boe-modelo-296-2021-2022-layout", "aeat-dr-296-2023"]

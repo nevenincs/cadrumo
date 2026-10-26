@@ -1,0 +1,159 @@
+"""Two operators registering the same label at once cannot both succeed.
+
+A profile label is the name an operator types to select a profile, so two
+committed capsules sharing one label makes selection ambiguous for every later
+command. Every existing duplicate-label test registers one profile after
+another, so the concurrent case -- the one the refusal exists for -- was
+unasserted.
+
+Driven as a real race between spawned processes released from a shared barrier,
+because an in-process test cannot show that separate operators are serialised.
+
+Scoped to the OUTCOME on purpose, and the scope is measured rather than assumed.
+What this test pins is the duplicate-label refusal itself: disabling that one
+comparison in the custody scan makes BOTH processes register, and both
+assertions below fail naming the two winners. What it does NOT pin is the root
+lock -- removing it from ``profile_custody_transaction_lock`` leaves the test
+green across nine races, because the losing process still meets the winner's
+committed capsule when it scans.
+
+So the guarantee held here is the one an operator would notice -- however the
+second attempt is refused, the storage root ends with exactly one capsule
+bearing the label -- and the serialisation that makes the scan reliable under a
+tighter race is asserted by nothing. That is stated rather than implied,
+because a reader would otherwise reasonably assume a concurrency test covers
+the lock.
+
+Stability was checked before committing: six consecutive races each produced
+exactly one registration, so a failure here means a genuine duplicate rather
+than a timing artefact.
+"""
+
+from __future__ import annotations
+
+from multiprocessing import get_context
+from multiprocessing.queues import Queue
+from pathlib import Path
+from typing import TYPE_CHECKING
+
+import pytest
+
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    profile_authority_contexts as _profile_contexts_for_test,
+)
+from cadrumo.tests.process_results import receive_process_result
+
+if TYPE_CHECKING:
+    from multiprocessing.synchronize import Barrier
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+
+_LABEL = "Contended Registration Subject"
+_CREDENTIAL_INPUT = "concurrent-registration-operator-secret"
+
+
+def _register_in_sibling(tmp_path_text: str, barrier: Barrier, results: Queue[tuple[str, str]]) -> None:
+    """Register the shared label from a separate process, reporting the outcome.
+
+    A spawned child inherits no context, so it is a host in its own right and
+    owes this door both obligations: the composed persistence ports, and a
+    leased authority generation. The lease is what scopes governed facts --
+    registration validates the new record against the taxpayer entity-type
+    vocabulary -- and ``profile_authority_contexts`` only returns the leased
+    operation's contexts when that lease is already open, so it is entered
+    first.
+    """
+    from pathlib import Path as _Path
+
+    from cadrumo.adapters.persistence.storage.profile_persistence_composition import (
+        composed_profile_persistence_ports,
+    )
+    from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+    from cadrumo.application.user_profile.registration import register_profile_with_credentials
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+
+    with (
+        isolated_profile_storage_root(tmp_path=_Path(tmp_path_text)),
+        bundled_indexed_authority().operation(),
+        composed_profile_persistence_ports(),
+    ):
+        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+        barrier.wait()
+        try:
+            outcome = register_profile_with_credentials(
+                label=_LABEL,
+                passphrase=_CREDENTIAL_INPUT,
+                profile_create_context=_profile_create_context_for_test,
+                profile_decode_context=_profile_decode_context_for_test,
+            )
+        except Exception as exc:
+            results.put(("refused", type(exc).__name__))
+        else:
+            results.put(("registered", outcome.profile_id))
+
+
+def test_two_processes_registering_one_label_produce_one_capsule(tmp_path: Path) -> None:
+    """DISCRIMINATING: two capsules must never answer to one name.
+
+    Both processes are released together and race the whole registration. The
+    failure this guards against is the operator-visible one -- a label bound to
+    two committed capsules, leaving every later selection ambiguous.
+    """
+    from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+    from cadrumo.application.user_profile.profile_repository import CommittedProfileRepository
+
+    context = get_context("spawn")
+    barrier = context.Barrier(2)
+    results: Queue[tuple[str, str]] = Queue(ctx=context)
+    workers = [context.Process(target=_register_in_sibling, args=(str(tmp_path), barrier, results)) for _ in range(2)]
+    for worker in workers:
+        worker.start()
+    try:
+        outcomes = [receive_process_result(results, owners=workers) for _ in workers]
+        for worker in workers:
+            worker.join(None)
+    finally:
+        for worker in workers:
+            if worker.is_alive():
+                worker.kill()
+            if worker.pid is not None:
+                worker.join(30)
+
+    registered = [outcome for kind, outcome in outcomes if kind == "registered"]
+    assert len(registered) == 1, f"expected exactly one registration to win, got {outcomes}"
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        committed = [view for view in CommittedProfileRepository().list() if view.label == _LABEL]
+
+    assert len(committed) == 1, f"the label is bound to {len(committed)} committed capsules"
+
+
+def test_the_race_actually_reached_the_registration_path(tmp_path: Path) -> None:
+    """ANTI-VACUITY: one winner is also what two crashed workers would report.
+
+    If both processes died before registering, the outcome list would carry no
+    successes and the test above would fail -- but a single success paired with
+    a loser that never reached the scan would pass while proving nothing. This
+    pins that the losing process was turned away by a refusal rather than by
+    failing to start.
+    """
+    context = get_context("spawn")
+    barrier = context.Barrier(2)
+    results: Queue[tuple[str, str]] = Queue(ctx=context)
+    workers = [context.Process(target=_register_in_sibling, args=(str(tmp_path), barrier, results)) for _ in range(2)]
+    for worker in workers:
+        worker.start()
+    try:
+        outcomes = [receive_process_result(results, owners=workers) for _ in workers]
+        for worker in workers:
+            worker.join(None)
+    finally:
+        for worker in workers:
+            if worker.is_alive():
+                worker.kill()
+            if worker.pid is not None:
+                worker.join(30)
+
+    kinds = sorted(kind for kind, _detail in outcomes)
+
+    assert kinds == ["refused", "registered"], f"expected one winner and one refusal, got {outcomes}"

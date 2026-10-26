@@ -1,0 +1,335 @@
+"""Real-behavior tests for AggregationConfigError registry and composition paths.
+
+Covers contract: assert AggregationConfigError is in ERROR_REGISTRY, round-trips
+through build_error_envelope, and is raised by each replaced service-composition
+invariant site.
+"""
+
+from __future__ import annotations
+
+from decimal import Decimal
+
+import pytest
+from pydantic import ValidationError
+
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
+from ....core.aggregation import COUNTERPART_SOURCE_KIND_ORDER, BindingSourceKind, ForeignAssetClass, RetencionScheme
+from ....core.errors.error_codes import build_error_envelope, get_registered_error_code
+from ....core.period import Period
+from ..errors import AggregationConfigError
+from ..service import (
+    PerModeloAggregationContributor,
+    PerModeloAggregationLogFields,
+    PerModeloAggregationResult,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_P_2025_Q1 = Period.from_year_and_code(2025, "1T")
+_P_2025_ANNUAL = Period.from_year_and_code(2025, "0A")
+_P_2024_ANNUAL = Period.from_year_and_code(2024, "0A")
+
+
+# ---------------------------------------------------------------------------
+# Registry and envelope round-trip (contract primary gate)
+# ---------------------------------------------------------------------------
+
+
+def test_aggregation_config_error_registered_code_accessible_from_instance() -> None:
+    exc = AggregationConfigError(translated_message="aggregation.service.errors.result_source_kinds_not_unique")
+    registered = get_registered_error_code(exc)
+    assert registered.code == "ERROR_AGGREGATION_CONFIG"
+
+
+def test_aggregation_config_error_round_trips_through_build_error_envelope() -> None:
+    exc = AggregationConfigError(translated_message="aggregation.service.errors.per_modelo_modelos_not_unique")
+    envelope = build_error_envelope(exc)
+    assert envelope.code == "ERROR_AGGREGATION_CONFIG"
+    assert envelope.category == "ERROR"
+
+
+# ---------------------------------------------------------------------------
+# Composition-invariant raise sites (one test per replaced site)
+# ---------------------------------------------------------------------------
+
+
+def test_site5_command_rejects_cross_family_observations() -> None:
+    """aggregate_per_modelo refuses observations outside the modelo's provider family."""
+    from ....domain.foreign_assets.valuation import M720ValuationEvent
+    from ..foreign_assets import ForeignAssetIngestObservation
+    from ..service import PerModeloAggregationCommand, aggregate_per_modelo
+
+    obs = ForeignAssetIngestObservation(
+        source_kind=BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
+        source_object_id="test-asset-1",
+        asset_ref="m720a_" + "0" * 32,
+        asset_class=ForeignAssetClass.ACCOUNT,
+        asset_external_id="test-account",
+        country="AD",
+        valuation_amount=Decimal("50000.01"),
+        currency_code="EUR",
+        valuation_event=M720ValuationEvent.YEAR_END,
+        acquisition_date="2023-01-15",
+    )
+    command = PerModeloAggregationCommand(
+        modelo="111",
+        period=_P_2025_Q1,
+        foreign_asset_observations=(obs,),
+    )
+    with (
+        _indexed_authority_for_test().operation() as operation,
+        pytest.raises(AggregationConfigError),
+    ):
+        aggregate_per_modelo(command, operation=operation)
+
+
+def test_site6_result_rejects_duplicate_source_kinds() -> None:
+    """PerModeloAggregationResult._source_kinds_are_unique raises AggregationConfigError."""
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        from ..retenciones import RetencionObservation
+        from ..service import PerModeloAggregationCommand, aggregate_per_modelo
+
+        obs = RetencionObservation(
+            source_kind=BindingSourceKind.LEDGER_TRANSACTION,
+            source_object_id="ret-1",
+            perceptor_nif="B00000001",
+            perceptor_name="Proveedor",
+            scheme=RetencionScheme("rendimientos_trabajo"),
+            taxable_base=Decimal("1000.00"),
+            retencion_amount=Decimal("150.00"),
+            accrued_on="2025-03-01",
+        )
+        cmd = PerModeloAggregationCommand(modelo="111", period=_P_2025_Q1, retencion_observations=(obs,))
+        agg = aggregate_per_modelo(cmd, operation=_authority_operation_for_test).aggregation
+        log = PerModeloAggregationLogFields(
+            modelo="111",
+            period=_P_2025_Q1,
+            provider=PerModeloAggregationContributor.RETENCIONES,
+            observation_count=1,
+            source_kind_count=1,
+            result_row_count=1,
+        )
+        with pytest.raises(ValidationError) as exc_info:
+            PerModeloAggregationResult(
+                modelo="111",
+                period=_P_2025_Q1,
+                provider=PerModeloAggregationContributor.RETENCIONES,
+                aggregation=agg,
+                source_kinds=(
+                    BindingSourceKind.LEDGER_TRANSACTION,
+                    BindingSourceKind.LEDGER_TRANSACTION,  # duplicate
+                ),
+                log_fields=log,
+            )
+        causes = [getattr(e.get("ctx", {}).get("error"), "__cause__", None) for e in exc_info.value.errors()]
+        assert any(isinstance(c, AggregationConfigError) for c in causes)
+
+
+def test_site7_result_rejects_modelo_mismatch() -> None:
+    """PerModeloAggregationResult._envelope_matches_payload raises AggregationConfigError for modelo mismatch."""
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        from ..counterpart import CounterpartObservation
+        from ..service import PerModeloAggregationCommand, aggregate_per_modelo
+
+        obs = CounterpartObservation(
+            source_kind=BindingSourceKind.LEDGER_TRANSACTION,
+            source_object_id="ctr-1",
+            counterparty_nif="B00000001",
+            counterparty_name="Cliente",
+            counterparty_country="ES",
+            operation_kind="entregas_y_prestaciones",
+            operation_period="0A",
+            taxable_base=Decimal("2000.00"),
+            invoice_total=Decimal("2000.00"),
+            accrued_on="2025-03-01",
+            groi_verified=True,
+            nif_iva_verified=True,
+        )
+        cmd = PerModeloAggregationCommand(modelo="347", period=_P_2025_ANNUAL, counterpart_observations=(obs,))
+        agg = aggregate_per_modelo(cmd, operation=_authority_operation_for_test).aggregation  # modelo=347
+        log = PerModeloAggregationLogFields(
+            modelo="349",
+            period=_P_2025_ANNUAL,
+            provider=PerModeloAggregationContributor.COUNTERPART,
+            observation_count=1,
+            source_kind_count=1,
+            result_row_count=1,
+        )
+        with pytest.raises(ValidationError) as exc_info:
+            PerModeloAggregationResult(
+                modelo="349",  # mismatch: aggregation says 347
+                period=_P_2025_ANNUAL,
+                provider=PerModeloAggregationContributor.COUNTERPART,
+                aggregation=agg,
+                source_kinds=(BindingSourceKind.LEDGER_TRANSACTION,),
+                log_fields=log,
+            )
+        causes = [getattr(e.get("ctx", {}).get("error"), "__cause__", None) for e in exc_info.value.errors()]
+        assert any(isinstance(c, AggregationConfigError) for c in causes)
+
+
+def test_site8_result_rejects_period_mismatch() -> None:
+    """PerModeloAggregationResult._envelope_matches_payload raises AggregationConfigError for period mismatch."""
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        from ..counterpart import CounterpartObservation
+        from ..service import PerModeloAggregationCommand, aggregate_per_modelo
+
+        obs = CounterpartObservation(
+            source_kind=BindingSourceKind.LEDGER_TRANSACTION,
+            source_object_id="ctr-2",
+            counterparty_nif="B00000002",
+            counterparty_name="Cliente B",
+            counterparty_country="ES",
+            operation_kind="entregas_y_prestaciones",
+            operation_period="0A",
+            taxable_base=Decimal("5000.00"),
+            invoice_total=Decimal("5000.00"),
+            accrued_on="2025-06-01",
+            groi_verified=True,
+            nif_iva_verified=True,
+        )
+        cmd = PerModeloAggregationCommand(modelo="347", period=_P_2025_ANNUAL, counterpart_observations=(obs,))
+        agg = aggregate_per_modelo(cmd, operation=_authority_operation_for_test).aggregation  # period=2025
+        log = PerModeloAggregationLogFields(
+            modelo="347",
+            period=_P_2024_ANNUAL,
+            provider=PerModeloAggregationContributor.COUNTERPART,
+            observation_count=1,
+            source_kind_count=1,
+            result_row_count=1,
+        )
+        with pytest.raises(ValidationError) as exc_info:
+            PerModeloAggregationResult(
+                modelo="347",
+                period=_P_2024_ANNUAL,  # mismatch: aggregation says 2025
+                provider=PerModeloAggregationContributor.COUNTERPART,
+                aggregation=agg,
+                source_kinds=(BindingSourceKind.LEDGER_TRANSACTION,),
+                log_fields=log,
+            )
+        causes = [getattr(e.get("ctx", {}).get("error"), "__cause__", None) for e in exc_info.value.errors()]
+        assert any(isinstance(c, AggregationConfigError) for c in causes)
+
+
+def test_site9_result_rejects_provider_payload_type_mismatch() -> None:
+    """``PerModeloAggregationResult._envelope_matches_payload`` raises ``AggregationConfigError``.
+
+    Triggered by a provider / payload type mismatch.
+    """
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        from ..retenciones import RetencionObservation
+        from ..service import PerModeloAggregationCommand, aggregate_per_modelo
+
+        obs = RetencionObservation(
+            source_kind=BindingSourceKind.LEDGER_TRANSACTION,
+            source_object_id="ret-2",
+            perceptor_nif="B00000001",
+            perceptor_name="Proveedor",
+            scheme=RetencionScheme("rendimientos_trabajo"),
+            taxable_base=Decimal("1000.00"),
+            retencion_amount=Decimal("150.00"),
+            accrued_on="2025-03-01",
+        )
+        cmd = PerModeloAggregationCommand(modelo="111", period=_P_2025_Q1, retencion_observations=(obs,))
+        agg = aggregate_per_modelo(cmd, operation=_authority_operation_for_test).aggregation  # RetencionesAggregation
+        log = PerModeloAggregationLogFields(
+            modelo="111",
+            period=_P_2025_Q1,
+            provider=PerModeloAggregationContributor.COUNTERPART,
+            observation_count=1,
+            source_kind_count=1,
+            result_row_count=1,
+        )
+        with pytest.raises(ValidationError) as exc_info:
+            PerModeloAggregationResult(
+                modelo="111",
+                period=_P_2025_Q1,
+                provider=PerModeloAggregationContributor.COUNTERPART,  # wrong provider for RetencionesAggregation
+                aggregation=agg,
+                source_kinds=(BindingSourceKind.LEDGER_TRANSACTION,),
+                log_fields=log,
+            )
+        causes = [getattr(e.get("ctx", {}).get("error"), "__cause__", None) for e in exc_info.value.errors()]
+        assert any(isinstance(c, AggregationConfigError) for c in causes)
+
+
+# ---------------------------------------------------------------------------
+# contract: StrEnum surface coverage — every source-kind constant uses BindingSourceKind
+# ---------------------------------------------------------------------------
+
+
+def test_accepted_source_kinds_are_enum_members() -> None:
+    """COUNTERPART_SOURCE_KIND_ORDER must be a tuple of BindingSourceKind, not raw strings."""
+    assert len(COUNTERPART_SOURCE_KIND_ORDER) == 4
+    for kind in COUNTERPART_SOURCE_KIND_ORDER:
+        assert isinstance(kind, BindingSourceKind), (
+            f"COUNTERPART_SOURCE_KIND_ORDER entry {kind!r} is {type(kind).__name__}, expected BindingSourceKind"
+        )
+
+
+def test_accepted_source_kinds_covers_all_four_members() -> None:
+    """COUNTERPART_SOURCE_KIND_ORDER must contain exactly the four canonical aggregation kinds.
+
+    The retired bare ``INVOICE`` alias must not participate at this boundary.
+    """
+    expected = frozenset(
+        {
+            BindingSourceKind.PAYABLE_INVOICE,
+            BindingSourceKind.COLLECTIBLE_INVOICE,
+            BindingSourceKind.LEDGER_TRANSACTION,
+            BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
+        },
+    )
+    actual = frozenset(COUNTERPART_SOURCE_KIND_ORDER)
+    assert actual == expected, f"COUNTERPART_SOURCE_KIND_ORDER {actual} != canonical four {expected}"
+
+
+def test_counterpart_canonical_source_kinds_are_enum_members() -> None:
+    """The canonical counterpart source-kind set must contain BindingSourceKind members."""
+    from ....core.aggregation import COUNTERPART_SOURCE_KINDS
+
+    assert len(COUNTERPART_SOURCE_KINDS) == 4
+    for kind in COUNTERPART_SOURCE_KINDS:
+        assert isinstance(kind, BindingSourceKind), f"COUNTERPART_SOURCE_KINDS entry {kind!r} is {type(kind).__name__}"
+
+
+def test_retenciones_canonical_source_kinds_are_enum_members() -> None:
+    """The canonical counterpart source-kind set must contain BindingSourceKind members."""
+    from ....core.aggregation import COUNTERPART_SOURCE_KINDS
+
+    assert len(COUNTERPART_SOURCE_KINDS) == 4
+    for kind in COUNTERPART_SOURCE_KINDS:
+        assert isinstance(kind, BindingSourceKind), f"COUNTERPART_SOURCE_KINDS entry {kind!r} is {type(kind).__name__}"
+
+
+def test_foreign_assets_canonical_source_kinds_are_enum_members() -> None:
+    """_foreign_assets._CANONICAL_SOURCE_KINDS must contain BindingSourceKind members."""
+    from ..foreign_assets import _CANONICAL_SOURCE_KINDS
+
+    assert len(_CANONICAL_SOURCE_KINDS) == 4
+    for kind in _CANONICAL_SOURCE_KINDS:
+        assert isinstance(kind, BindingSourceKind), (
+            f"_foreign_assets._CANONICAL_SOURCE_KINDS entry {kind!r} is {type(kind).__name__}"
+        )
+
+
+def test_operator_public_accepted_kinds_advertise_aggregation_source_values() -> None:
+    """The public operator vocabulary advertises every canonical aggregation source kind."""
+    from ...review.operator import ACCEPTED_KINDS
+
+    aggregation_keys = {
+        BindingSourceKind.LEDGER_TRANSACTION,
+        BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
+        BindingSourceKind.PAYABLE_INVOICE,
+        BindingSourceKind.COLLECTIBLE_INVOICE,
+    }
+    assert {str(key) for key in aggregation_keys} <= set(ACCEPTED_KINDS)
+
+
+def test_aggregation_source_kind_values_are_stable() -> None:
+    """BindingSourceKind string values must remain stable."""
+    assert BindingSourceKind.LEDGER_TRANSACTION == "ledger_transaction"
+    assert BindingSourceKind.PURCHASE_INVOICE_EVIDENCE == "purchase_invoice_evidence"
+    assert BindingSourceKind.PAYABLE_INVOICE == "payable_invoice"
+    assert BindingSourceKind.COLLECTIBLE_INVOICE == "collectible_invoice"

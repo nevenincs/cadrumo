@@ -1,0 +1,69 @@
+schema_version = 1
+fragment_id = "numeric-representation"
+width_17_rules = []
+
+[design_identity]
+modelo = "222"
+design_epoch = "2023"
+source_ref = "aeat-dr-222-2023-2024"
+source_sha256 = "1c7482aba6d81d56d0e6106674690eaf4718dae8c9a8f97d799a034bc4fc8505"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DR22201"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+record_identity = "DR22201"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m222-page-01-103"
+decision_statement = "The four digits of the ejercicio de devengo."
+justification = "Grounded in the bundled diseno aeat-dr-222-2023-2024, which declares this field Num(4) at the anchored row with an empty content cell. Same statement the 2025 epoch of this design family carries for the same field."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DR22201"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+record_identity = "DR22201"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DR22201"
+source_row = 23
+source_cell = "A23"
+ordinal = "18"
+record_identity = "DR22201"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m222-2023-cnae-actividad-principal-identifier-digits"
+decision_statement = "The C.N.A.E. principal-activity code renders as unsigned identifier digits with no decimal component."
+justification = "A CNAE code classifies an activity; it is never summed or scaled, and its leading zeros are significant (0111 is a real division), so it must not pass through a policy that would strip them. Modelo 202's 2023 epoch of this same design family rules the same field the same way; the 2025 epoch of modelo 222 does not, because there the Contenido cell reads 'Nota 16' and the field is outside profile authority."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DR22201"
+source_row = 23
+source_cell = "A23"
+ordinal = "18"
+record_identity = "DR22201"

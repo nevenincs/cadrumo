@@ -1,0 +1,276 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-12 00:32+0200\n"
+"PO-Revision-Date: 2026-07-19 10:00+0200\n"
+"Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
+"Language: hu\n"
+"Language-Team: hu <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../download.md:1
+msgid "Get Cadrumo"
+msgstr "Cadrumo beszerzése"
+
+#: ../../download.md:3
+msgid ""
+"Cadrumo is a command-line application. Install it, then run `aeat`. It "
+"works on Windows, macOS, and Linux."
+msgstr ""
+"A Cadrumo parancssori alkalmazás. Telepítsd, majd futtasd az `aeat` "
+"parancsot. Windows, macOS és Linux rendszeren működik."
+
+#: ../../download.md:6
+msgid "What you need"
+msgstr "Amire szükséged van"
+
+#: ../../download.md:8
+msgid "Python 3.13 or newer."
+msgstr "Python 3.13 vagy újabb."
+
+#: ../../download.md:9
+msgid ""
+"Several hundred megabytes of free disk space for Cadrumo and its "
+"dependencies. The package download alone is about 76 MB."
+msgstr ""
+"Néhány száz megabájt szabad lemezterület a Cadrumónak és a függőségeinek."
+" Maga a csomag letöltése is nagyjából 76 MB."
+
+#: ../../download.md:12
+msgid ""
+"No taxpayer data, AEAT credentials, or online account is involved in the "
+"install. Cadrumo stores your records locally and encrypted. Nothing "
+"leaves your machine unless you use an optional integration, such as "
+"Google Sheets export, cloud evidence upload to an LLM provider, or a live"
+" AEAT read. Google export and cloud evidence upload are per-profile "
+"capabilities you can turn on or off; see [Set up a profile](how-to"
+"/profile-setup.md#choose-your-service-capabilities). A live AEAT read "
+"happens only when you run an `aeat app live` command."
+msgstr ""
+"A telepítéshez nem kellenek adózói adatok, AEAT-hitelesítő adatok vagy "
+"online fiók. A Cadrumo a nyilvántartásaidat helyben, titkosítva tárolja. "
+"Semmi sem hagyja el a gépedet, hacsak nem használsz valamilyen opcionális"
+" integrációt, például a Google Sheets-exportot, a bizonyítékok felhőbe "
+"töltését egy LLM-szolgáltatóhoz, vagy élő AEAT-lekérdezést. A Google-"
+"export és a bizonyítékok felhőbe töltése profilonként be- és "
+"kikapcsolható képesség; lásd: [Profil beállítása](how-to/profile-setup.md"
+"#choose-your-service-capabilities). Élő AEAT-lekérdezés csak akkor "
+"történik, ha `aeat app live` parancsot futtatsz."
+
+#: ../../download.md:20
+msgid "Install"
+msgstr "Telepítés"
+
+#: ../../download.md:22
+msgid ""
+"Pick the channel for your platform from [Install channels](#install-"
+"channels) and run the command it lists. PyPI is the primary channel and "
+"installs the `aeat` command with its bundled legal corpus; `uv tool "
+"install` keeps it in an isolated environment."
+msgstr ""
+"Válaszd ki a platformodhoz tartozó csatornát a [Telepítési csatornák"
+"](#install-channels) közül, és futtasd a felsorolt parancsot. A PyPI az "
+"elsődleges csatorna: az `aeat` parancsot a beépített jogi korpusszal "
+"együtt telepíti; az `uv tool install` elszigetelt környezetben tartja."
+
+#: ../../download.md:27
+msgid ""
+"Homebrew and Scoop packages are not published yet. Until they are, "
+"install from PyPI with `pip` or `uv`, even on macOS and Windows. The "
+"channel table lists every channel Cadrumo is set up to publish to, "
+"including those two."
+msgstr ""
+"A Homebrew- és a Scoop-csomagok még nincsenek közzétéve. Addig telepíts a"
+" PyPI-ról `pip`-pel vagy `uv`-vel, macOS-en és Windowson is. A "
+"csatornatáblázat minden olyan csatornát felsorol, amelyre a Cadrumót "
+"közzétételre előkészítettük, ezt a kettőt is."
+
+#: ../../download.md:31
+msgid "Confirm the install"
+msgstr "A telepítés megerősítése"
+
+#: ../../download.md:37
+msgid ""
+"A version number confirms the install. Then run the full workstation "
+"check and add the optional extras you want (Google export, the live AEAT "
+"browser, OFX/QFX import) by following [Install Cadrumo](workstation-"
+"setup.md), which covers the dependency report, platform checks, and per-"
+"extra install commands."
+msgstr ""
+"A verziószám megerősíti a telepítést. Ezután futtasd a teljes "
+"munkaállomás-ellenőrzést, és add hozzá a kívánt opcionális extrákat "
+"(Google-export, élő AEAT-böngésző, OFX/QFX-import) a [Cadrumo telepítése"
+"](workstation-setup.md) oldal alapján; ez ismerteti a függőségi "
+"jelentést, a platformellenőrzéseket és az egyes extrák telepítési "
+"parancsait."
+
+#: ../../download.md:42
+msgid ""
+"To let an AI assistant such as Claude drive Cadrumo, continue with "
+"[Connect an agent (MCP)](how-to/connect-an-agent.md)."
+msgstr ""
+"Ha azt szeretnéd, hogy egy Claude-hoz hasonló MI-asszisztens vezérelje a "
+"Cadrumót, folytasd az [Ügynök csatlakoztatása (MCP)](how-to/connect-an-"
+"agent.md) oldalon."
+
+#: ../../download.md:45
+msgid "Ways to work"
+msgstr "Munkavégzési módok"
+
+#: ../../download.md:47
+msgid "`aeat` runs as ordinary commands that print their results:"
+msgstr "Az `aeat` szokásos parancsokként fut, és kiírja az eredményeit:"
+
+#: ../../download.md:53
+msgid "Start the full-screen app separately when that suits the task:"
+msgstr ""
+"Indítsd el külön a teljes képernyős alkalmazást, amikor az illik a "
+"feladathoz:"
+
+#: ../../download.md:59
+msgid ""
+"The command starts the independent full-screen app; its navigation and "
+"availability are managed inside that interface. Both entrypoints use the "
+"same local records."
+msgstr ""
+"A parancs elindítja a független, teljes képernyős alkalmazást; a "
+"navigációját és elérhetőségét maga a felület kezeli. Mindkét belépési "
+"pont ugyanazokat a helyi nyilvántartásokat használja."
+
+#: ../../download.md:62
+msgid ""
+"An AI assistant connected through MCP is a third way to work. The command"
+" line, the full-screen app and an assistant can each do the same work "
+"against the same local records. In the full-screen app, **Operations** "
+"lists every one of them, **Installation** covers storage, repair, the "
+"reset and the profiles on this computer without a sign-in, and "
+"**Reference** shows the modelo catalogue, casillas, formulas, categories,"
+" portals and sign-in methods."
+msgstr ""
+"Az MCP-n keresztül csatlakoztatott MI-asszisztens a harmadik munkavégzési"
+" mód. A parancssor, a teljes képernyős alkalmazás és az asszisztens "
+"ugyanazt a munkát végezheti el ugyanazokon a helyi nyilvántartásokon. A "
+"teljes képernyős alkalmazásban a **Műveletek** felsorol minden műveletet,"
+" a **Telepítés** bejelentkezés nélkül lefedi a tárolást, a javítást, az "
+"alaphelyzetbe állítást és a számítógépen lévő profilokat, a **Kézikönyv**"
+" pedig a nyomtatványkatalógust, a rovatokat, a képleteket, a "
+"kategóriákat, a portálokat és a bejelentkezési módokat mutatja."
+
+#: ../../download.md:69
+msgid "Install channels"
+msgstr "Telepítési csatornák"
+
+#: ../../download.md:71
+msgid ""
+"PyPI is the primary channel. Homebrew and Scoop packages, for users "
+"without a Python toolchain, are not published yet. Each release is "
+"install-tested on every platform it claims before it is published."
+msgstr ""
+"A PyPI az elsődleges csatorna. A Homebrew- és Scoop-csomagok, azoknak a "
+"felhasználóknak, akiknek nincs Python-eszközkészletük, még nincsenek "
+"közzétéve. Minden kiadást telepítési teszten viszünk át minden általa "
+"megjelölt platformon, mielőtt közzétesszük."
+
+#: ../../download.md:82
+msgid "Platform"
+msgstr "Platform"
+
+#: ../../download.md:83
+msgid "Channel"
+msgstr "Csatorna"
+
+#: ../../download.md:84
+msgid "Where it comes from"
+msgstr "Honnan származik"
+
+#: ../../download.md:85
+msgid "Any platform with Python 3.13+"
+msgstr "Bármely platform Python 3.13+ verzióval"
+
+#: ../../download.md:86
+msgid "Python package"
+msgstr "Python-csomag"
+
+#: ../../download.md:87
+msgid "PyPI listing"
+msgstr "PyPI-adatlap"
+
+#: ../../download.md:88
+msgid "macOS (Apple silicon), Linux (x86-64 and arm64)"
+msgstr "macOS (Apple silicon), Linux (x86-64 és arm64)"
+
+#: ../../download.md:89
+msgid "Homebrew formula"
+msgstr "Homebrew-formula"
+
+#: ../../download.md:90
+msgid "Homebrew tap"
+msgstr "Homebrew-tároló"
+
+#: ../../download.md:91
+msgid "Windows (x86-64)"
+msgstr "Windows (x86-64) rendszer"
+
+#: ../../download.md:92
+msgid "Scoop package"
+msgstr "Scoop csomag"
+
+#: ../../download.md:93
+msgid "Scoop bucket"
+msgstr "Scoop-tároló"
+
+#: ../../download.md:96
+msgid "Per-channel install paths:"
+msgstr "Telepítési utak csatornánként:"
+
+#: ../../download.md:98
+msgid "**Python package**: Any platform with Python 3.13+"
+msgstr "**Python-csomag**: Bármely platform Python 3.13+ verzióval"
+
+#: ../../download.md:106
+msgid "**Homebrew formula**: macOS (Apple silicon), Linux (x86-64 and arm64)"
+msgstr "**Homebrew-formula**: macOS (Apple silicon), Linux (x86-64 és arm64)"
+
+#: ../../download.md:113
+msgid "**Scoop package**: Windows (x86-64)"
+msgstr "**Scoop csomag**: Windows (x86-64)"
+
+#: ../../download.md:123
+msgid "Each release's notes in [Updates](updates.md) name what changed."
+msgstr ""
+"Az egyes kiadások [Frissítések](updates.md) alatt található jegyzetei "
+"megnevezik a változásokat."
+
+#: ../../download.md:125
+msgid "After you install"
+msgstr "A telepítés után"
+
+#: ../../download.md:131
+msgid "Quickstart"
+msgstr "Gyorsindító"
+
+#: ../../download.md:136
+msgid "Take the shortest path from an empty profile to an exported modelo file."
+msgstr "Tedd meg a legrövidebb utat az üres profiltól az exportált modelofájlig."
+
+#: ../../download.md:139
+msgid "Connect an agent (MCP)"
+msgstr "Ügynök csatlakoztatása (MCP)"
+
+#: ../../download.md:144
+msgid ""
+"Let an AI assistant such as Claude drive Cadrumo with you, on your "
+"machine."
+msgstr ""
+"Lehetővé teszi, hogy egy Claude-hoz hasonló MI-asszisztens veled együtt, "
+"a saját gépeden vezérelje a Cadrumót."

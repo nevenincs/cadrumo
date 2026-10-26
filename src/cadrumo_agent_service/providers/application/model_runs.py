@@ -1,0 +1,298 @@
+"""Which lane answers a tax model run, and the run itself, for one admitted profile.
+
+A tax worker's model run names its role and never a lane. The lane and model
+are the ones the person selected for that role, stored in the profile's
+own model-role selections record. A role with no selection refuses ``no_selection``. Nothing
+stands in for a missing selection: not another lane, not another role's
+choice, not a catalogue default. A selected lane that is turned off, no longer
+reported or not reachable refuses ``lane_unavailable``, and so does a selection
+the lane's current entries no longer serve: its declared entries and, while
+the agent runs, its live ones. The rules a selection was checked against when
+the person made it are applied again: the lane runs background requests, the
+model is listed, and a role that reads images has a lane taking images and an
+entry marked vision. Any lane is eligible,
+API or CLI; whether a lane takes an attachment, and which reply options it
+honours, is what the ready agent's live catalog reports for background
+requests, never inferred from its transport. One lookup, and one run, reads
+the live catalog once: its entries, media and options come from that one
+snapshot, which no later lookup or run reuses. Whether a lane reads off-host is likewise the
+catalogue entry's typed declaration, carried with the lane: a run on such a
+lane needs the consent the tax side bound to it, and a run on a lane that stays
+on this computer needs none. The model's licence, size, vision and context
+window travel with the lane as the entry it was found in states them, live
+while the agent runs and otherwise declared, each ``None`` when it states
+nothing; no lookup substitutes a recommended model.
+
+The run goes to cadrumo-agent as a background request through
+:class:`BackgroundRunGateway`. No secret leaves this service with the answer.
+"""
+
+from __future__ import annotations
+
+from typing import Protocol
+
+from cadrumo.core.model_roles import ModelRole
+from cadrumo_client.contracts.model_runs import (
+    ModelRunBody,
+    ModelRunHeader,
+    ModelRunLane,
+    ModelRunLicence,
+    ModelRunOutput,
+    ModelRunRefusal,
+    ModelRunRefusalCode,
+    ModelRunRoleSelection,
+    ModelRunSelectedModel,
+    model_run_media_kind,
+)
+
+from ..domain.catalog import BackgroundOption, CatalogModelFacts, LaneBackground, ProviderCatalog, ProviderConsumer
+from ..domain.record import ModelRoleSelection
+from .lane_entries import current_lane_entries
+from .model_role_selections import selection_refusal
+from .ports import (
+    AbsentModelRoleSelections,
+    LiveCatalogModels,
+    ModelRoleSelectionsRead,
+    ModelRoleSelectionsStore,
+    ProviderCatalogSource,
+    ProviderCatalogUnavailableError,
+    StoreRefusal,
+    StoreRefusalCode,
+    UnreadableModelRoleSelections,
+)
+from .resolution import (
+    ProviderCredentialResolver,
+    ProviderCredentialUnavailable,
+    ProviderCredentialUnavailableReason,
+)
+
+_SIGNED_OUT: dict[ProviderCredentialUnavailableReason, ModelRunRefusalCode] = {
+    ProviderCredentialUnavailableReason.NOT_SIGNED_IN: ModelRunRefusalCode.NOT_SIGNED_IN,
+    ProviderCredentialUnavailableReason.PROFILE_LOCKED: ModelRunRefusalCode.PROFILE_LOCKED,
+}
+
+_STORE_SIGNED_OUT: dict[StoreRefusalCode, ModelRunRefusalCode] = {
+    StoreRefusalCode.NOT_SIGNED_IN: ModelRunRefusalCode.NOT_SIGNED_IN,
+    StoreRefusalCode.PROFILE_LOCKED: ModelRunRefusalCode.PROFILE_LOCKED,
+}
+
+
+class BackgroundRunGateway(Protocol):
+    """cadrumo-agent's background runs: tool-less, outside the conversation listing, readable by id."""
+
+    def run(
+        self, *, lane: ModelRunLane, body: ModelRunBody, deadline_seconds: int, options: tuple[BackgroundOption, ...]
+    ) -> ModelRunOutput | ModelRunRefusal:
+        """Run ``body`` on ``lane``, sending only the reply ``options`` it honours; refuse with one closed code."""
+        ...
+
+
+class ModelRunService:
+    """Resolve the lane for a role and run requests on it, for one admitted profile."""
+
+    def __init__(
+        self,
+        *,
+        selections: ModelRoleSelectionsStore,
+        resolver: ProviderCredentialResolver,
+        catalog_source: ProviderCatalogSource,
+        live_models: LiveCatalogModels,
+        gateway: BackgroundRunGateway,
+    ) -> None:
+        """Bind the service to the profile's selections, resolver, the agent's catalogs and the run gateway."""
+        self._selections = selections
+        self._resolver = resolver
+        self._catalog_source = catalog_source
+        self._live_models = live_models
+        self._gateway = gateway
+
+    def lookup(self, role: str) -> ModelRunLane | ModelRunRefusal:
+        """Return the lane and model the person selected for ``role``; nothing in the answer is secret."""
+        return self._lookup(role, self._lane_answers())
+
+    def _lookup(self, role: str, lanes: _LaneAnswers) -> ModelRunLane | ModelRunRefusal:
+        try:
+            model_role = ModelRole(role)
+        except ValueError:
+            # Not the person's missing choice: pointing them at the selection would hide the caller's defect.
+            return ModelRunRefusal(code=ModelRunRefusalCode.UNKNOWN_ROLE)
+        read = self._read_selections()
+        if isinstance(read, ModelRunRefusal):
+            return read
+        return self._resolve(model_role, read, lanes)[1]
+
+    def selections(self) -> tuple[ModelRunRoleSelection, ...] | ModelRunRefusal:
+        """Return every role's selection and the lane a run would use or why it would refuse.
+
+        The record is read once, and each lane the roles name is decided once,
+        so every role is reported from the same state and a lane two roles
+        share reads its credential and asks for its media only once.
+        """
+        read = self._read_selections()
+        if isinstance(read, ModelRunRefusal):
+            return read
+        lanes = self._lane_answers()
+        states: list[ModelRunRoleSelection] = []
+        for model_role in ModelRole:
+            selected, answer = self._resolve(model_role, read, lanes)
+            stored = None if selected is None else ModelRunSelectedModel(lane_id=selected.lane, model=selected.model)
+            if isinstance(answer, ModelRunRefusal):
+                states.append(ModelRunRoleSelection(role=model_role.value, selected=stored, refusal=answer.code))
+            else:
+                states.append(ModelRunRoleSelection(role=model_role.value, selected=stored, lane=answer))
+        return tuple(states)
+
+    def _read_selections(self) -> ModelRoleSelectionsRead | ModelRunRefusal:
+        read = self._selections.read()
+        if isinstance(read, StoreRefusal):
+            return ModelRunRefusal(code=_STORE_SIGNED_OUT.get(read.code, ModelRunRefusalCode.LANE_UNAVAILABLE))
+        return read
+
+    def _lane_answers(self) -> _LaneAnswers:
+        return _LaneAnswers(
+            catalog_source=self._catalog_source,
+            live_models=self._live_models,
+            resolver=self._resolver,
+        )
+
+    @staticmethod
+    def _resolve(
+        model_role: ModelRole, read: ModelRoleSelectionsRead, lanes: _LaneAnswers
+    ) -> tuple[ModelRoleSelection | None, ModelRunLane | ModelRunRefusal]:
+        """Return the role's stored selection, if readable, and the lane it resolves to or the refusal."""
+        if isinstance(read, UnreadableModelRoleSelections):
+            # An unreadable record says nothing about any role, so no role reads as unselected.
+            return None, ModelRunRefusal(code=ModelRunRefusalCode.LANE_UNAVAILABLE)
+        selection = None if isinstance(read, AbsentModelRoleSelections) else read.record.selection(model_role)
+        if selection is None:
+            return None, ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
+        return selection, lanes.answer(selection)
+
+    def run(self, header: ModelRunHeader, body: ModelRunBody) -> ModelRunOutput | ModelRunRefusal:
+        """Run one request on the lane its role resolves to now.
+
+        A run on a lane that reads off-host is refused unless it carries
+        consent, and a run carrying consent is refused when that lane is not
+        the one the consent was recorded for. The lane is resolved again here,
+        so a selection changed since the tax side's lookup cannot carry a run
+        recorded as on-host to a lane that leaves this computer. An attachment
+        the lane's catalog entry says it does not take is refused before
+        anything is sent.
+        """
+        lanes = self._lane_answers()
+        lane = self._lookup(header.role, lanes)
+        if isinstance(lane, ModelRunRefusal):
+            return lane
+        if not header.consent_admits(lane):
+            return ModelRunRefusal(code=ModelRunRefusalCode.CONSENT_MISSING)
+        if lane.accepted_media is not None:
+            for attachment in body.attachments:
+                if model_run_media_kind(attachment.media_type) not in lane.accepted_media:
+                    return ModelRunRefusal(code=ModelRunRefusalCode.INPUT_NOT_SUPPORTED)
+        return self._gateway.run(
+            lane=lane, body=body, deadline_seconds=header.deadline_seconds, options=lanes.honoured_options(lane)
+        )
+
+
+type _DecidedLane = tuple[ModelRunLane, LaneBackground, tuple[CatalogModelFacts, ...]]
+"""A lane decided once: its answer without a model, what a background run on it takes, and its current entries."""
+
+
+class _LaneAnswers:
+    """Each lane's availability, accepted media and current entries, decided at most once per read of the selections.
+
+    Every lane is decided from one snapshot of the live catalogue, taken here
+    and read when first needed, which also answers a run's reply options.
+
+    Availability is decided by resolving the lane's credential, because a
+    provider record is only readable whole. The resolution is dropped as soon
+    as it is judged, so no secret outlives the decision or reaches an answer.
+    """
+
+    def __init__(
+        self,
+        *,
+        catalog_source: ProviderCatalogSource,
+        live_models: LiveCatalogModels,
+        resolver: ProviderCredentialResolver,
+    ) -> None:
+        self._catalog_source = catalog_source
+        self._live_models = live_models.snapshot()
+        self._resolver = resolver
+        self._catalog: ProviderCatalog | ModelRunRefusal | None = None
+        self._lanes: dict[str, _DecidedLane | ModelRunRefusal] = {}
+
+    def answer(self, selection: ModelRoleSelection) -> ModelRunLane | ModelRunRefusal:
+        """Return the lane carrying ``selection``'s model, or the refusal its lane or model meets."""
+        decided = self._lanes.get(selection.lane)
+        if decided is None:
+            decided = self._lanes[selection.lane] = self._decide(selection)
+        if isinstance(decided, ModelRunRefusal):
+            return decided
+        lane, background, entries = decided
+        facts = next((entry for entry in entries if entry.id == selection.model), None)
+        refusal = selection_refusal(selection.role, selection.model, background=background, entries=entries)
+        if facts is None or refusal is not None:
+            # A selection the current entries no longer serve, unlisted or no longer vision-capable for a role
+            # that reads images, would be refused by the agent; it reads as an unavailable lane.
+            return ModelRunRefusal(code=ModelRunRefusalCode.LANE_UNAVAILABLE)
+        return _model_lane(lane, facts)
+
+    def _decide(self, selection: ModelRoleSelection) -> _DecidedLane | ModelRunRefusal:
+        catalog = self._read_catalog()
+        if isinstance(catalog, ModelRunRefusal):
+            return catalog
+        entry = catalog.entry(selection.lane)
+        if entry is None:
+            return ModelRunRefusal(code=ModelRunRefusalCode.LANE_UNAVAILABLE)
+        resolution = self._resolver.resolve(entry.id, ProviderConsumer.ASSISTANT)
+        if isinstance(resolution, ProviderCredentialUnavailable):
+            return ModelRunRefusal(code=_SIGNED_OUT.get(resolution.reason, ModelRunRefusalCode.LANE_UNAVAILABLE))
+        del resolution
+        lane = ModelRunLane(
+            provider_id=entry.provider,
+            transport=entry.transport.value,
+            model=selection.model,
+            reads_off_host=entry.reads_off_host,
+            licence=None,
+            size_bytes=None,
+            vision=None,
+            context_length=None,
+        )
+        background = self._live_models.lane_background(entry.provider, entry.transport.value)
+        accepted = lane.model_copy(update={"accepted_media": None if background is None else background.accepted_media})
+        return accepted, entry.background, current_lane_entries(entry, self._live_models)
+
+    def honoured_options(self, lane: ModelRunLane) -> tuple[BackgroundOption, ...]:
+        """Return the reply options ``lane`` honours, from the same snapshot; none when the snapshot does not say."""
+        background = self._live_models.lane_background(lane.provider_id, lane.transport)
+        return () if background is None else background.options
+
+    def _read_catalog(self) -> ProviderCatalog | ModelRunRefusal:
+        if self._catalog is None:
+            try:
+                self._catalog = self._catalog_source.catalog()
+            except ProviderCatalogUnavailableError:
+                self._catalog = ModelRunRefusal(code=ModelRunRefusalCode.LANE_UNAVAILABLE)
+        return self._catalog
+
+
+def _model_lane(lane: ModelRunLane, model: CatalogModelFacts) -> ModelRunLane:
+    """Return ``lane`` carrying ``model`` and the facts its entry states, each ``None`` where it states none."""
+    licence = model.licence
+    return ModelRunLane(
+        provider_id=lane.provider_id,
+        transport=lane.transport,
+        model=model.id,
+        reads_off_host=lane.reads_off_host,
+        licence=None
+        if licence is None
+        else ModelRunLicence(spdx=licence.spdx, name=licence.name, digest=licence.digest),
+        size_bytes=model.size_bytes,
+        vision=model.vision,
+        context_length=model.context_length,
+        accepted_media=lane.accepted_media,
+    )
+
+
+__all__ = ["BackgroundRunGateway", "ModelRunService"]

@@ -1,0 +1,414 @@
+"""Real-artifact tests for the generated Cadrumo Scoop manifest."""
+
+from __future__ import annotations
+
+import configparser
+import json
+import re
+import shutil
+import sys
+import tomllib
+import zipfile
+from dataclasses import dataclass
+from email.parser import Parser
+from pathlib import Path
+
+import pytest
+from dev.packaging.cohort_attestation import add_test_runtime_wheelhouse, add_test_source_archive
+from dev.packaging.command_spec_attestation import attest_command_specs, projection_digest
+from dev.packaging.hashing import sha256_path
+from dev.packaging.lane_verification_core import (
+    build_companion_wheels,
+    build_root_snapshot,
+    build_sdist,
+    build_wheel,
+    run_checked,
+)
+from dev.packaging.uv_constraints import export_runtime_constraints
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
+
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+_GENERATOR = _REPO_ROOT / "packaging" / "scoop" / "generate.py"
+#: The data distributions the command distribution cannot do grounded work without.
+_COMPANIONS = ("cadrumo-data-manuals", "cadrumo-data-official", "cadrumo-data-normatives")
+#: Every quoted requirement naming the command distribution in an install hook.
+_CADRUMO_REQUIREMENT = re.compile(r"'cadrumo[^']*'")
+
+
+@dataclass(frozen=True)
+class BuiltCohort:
+    """One real closed-world cohort shared by Scoop generator tests."""
+
+    directory: Path
+    root: Path
+    manuals: Path
+    official: Path
+    normatives: Path
+    version: str
+
+
+def _generator_command(cohort: BuiltCohort, *, cohort_dir: Path | None = None) -> list[str]:
+    return [
+        sys.executable,
+        str(_GENERATOR),
+        "--cohort-dir",
+        str(cohort.directory if cohort_dir is None else cohort_dir),
+        "--version",
+        cohort.version,
+    ]
+
+
+def _copy_cohort(
+    artifacts: tuple[Path, ...],
+    destination: Path,
+) -> tuple[Path, ...]:
+    destination.mkdir()
+    copied: list[Path] = []
+    for artifact in artifacts:
+        target = destination / artifact.name
+        shutil.copy2(artifact, target)
+        copied.append(target)
+    return tuple(copied)
+
+
+def _wheel_requirements(wheel: Path) -> tuple[str, ...]:
+    """Return the ``Requires-Dist`` values a built wheel declares."""
+    with zipfile.ZipFile(wheel) as archive:
+        metadata_names = tuple(name for name in archive.namelist() if name.endswith(".dist-info/METADATA"))
+        assert len(metadata_names) == 1
+        metadata = Parser().parsestr(archive.read(metadata_names[0]).decode("utf-8"))
+    requirements = metadata.get_all("Requires-Dist")
+    if requirements is None:
+        return ()
+    if not all(isinstance(requirement, str) for requirement in requirements):
+        raise AssertionError("wheel metadata contains a non-string Requires-Dist value")
+    return tuple(requirements)
+
+
+def _declared_console_scripts(wheel: Path) -> tuple[str, ...]:
+    """Return the console scripts a built wheel declares, in declared order.
+
+    Read from the artifact rather than restated, so the manifest is compared
+    against what the distribution actually installs.
+    """
+    with zipfile.ZipFile(wheel) as archive:
+        names = tuple(name for name in archive.namelist() if name.endswith(".dist-info/entry_points.txt"))
+        assert len(names) == 1
+        parser = configparser.ConfigParser()
+        parser.read_string(archive.read(names[0]).decode("utf-8"))
+    assert parser.has_section("console_scripts")
+    return tuple(parser["console_scripts"])
+
+
+def _conditional_companion_pin_wheel(
+    source: Path,
+    destination: Path,
+    *,
+    version: str,
+    companion: str,
+) -> None:
+    with zipfile.ZipFile(source) as source_archive:
+        members = tuple(source_archive.infolist())
+        metadata_members = tuple(member for member in members if member.filename.endswith(".dist-info/METADATA"))
+        assert len(metadata_members) == 1
+        metadata_name = metadata_members[0].filename
+        original = f"Requires-Dist: {companion}=={version}"
+        replacement = f'{original}; sys_platform != "win32"'
+        metadata = source_archive.read(metadata_name).decode("utf-8")
+        assert metadata.count(original) == 1
+        rewritten = metadata.replace(original, replacement)
+        with zipfile.ZipFile(destination, "w") as destination_archive:
+            for member in members:
+                payload = (
+                    rewritten.encode("utf-8")
+                    if member.filename == metadata_name
+                    else source_archive.read(member.filename)
+                )
+                destination_archive.writestr(member, payload)
+
+
+@pytest.fixture(scope="module")
+def built_cohort(tmp_path_factory: pytest.TempPathFactory) -> BuiltCohort:
+    """Build one real command-and-companion wheel cohort."""
+    uv = shutil.which("uv")
+    assert uv is not None
+    root_dir = tmp_path_factory.mktemp("scoop-cohort")
+    build_dir = root_dir / "build"
+    # Build from a snapshot of the enumerated tree, not the live working tree:
+    # a peer's in-flight edit mid-build would otherwise ride into the sdist
+    # partway through, and the formula this test asserts on would describe
+    # bytes that no single state of the tree ever held.
+    # ``build_wheel`` still takes the real repository as well, because its
+    # tracked-data queries need Git and the extract has no ``.git``.
+    build_root = build_root_snapshot(_REPO_ROOT, build_dir)
+    root = build_wheel(_REPO_ROOT, build_dir, uv, build_root=build_root)
+    manuals, official, normatives = build_companion_wheels(build_dir, uv, build_root=build_root)
+    cohort_dir = root_dir / "cohort"
+    copied_root, copied_manuals, copied_official, copied_normatives = _copy_cohort(
+        (root, manuals, official, normatives),
+        cohort_dir,
+    )
+    root_sdist = build_sdist(build_dir, uv, build_root=build_root)
+    companion_sdists = build_dir / "companion-sdists"
+    run_checked(
+        [uv, "build", "--sdist", "--out-dir", str(companion_sdists)],
+        cwd=build_root / "packaging/cadrumo_data_manuals",
+    )
+    run_checked(
+        [uv, "build", "--sdist", "--out-dir", str(companion_sdists)],
+        cwd=build_root / "packaging/cadrumo_data_official",
+    )
+    run_checked(
+        [uv, "build", "--sdist", "--out-dir", str(companion_sdists)],
+        cwd=build_root / "packaging/cadrumo_data_normatives",
+    )
+    copied_sdists = []
+    for artifact in (root_sdist, *sorted(companion_sdists.glob("*.tar.gz"))):
+        target = cohort_dir / artifact.name
+        shutil.copy2(artifact, target)
+        copied_sdists.append(target)
+    with (_REPO_ROOT / "pyproject.toml").open("rb") as handle:
+        version = tomllib.load(handle)["project"]["version"]
+    artifacts = {
+        "cadrumo": copied_root.name,
+        "cadrumo-sdist": copied_sdists[0].name,
+        "cadrumo-data-manuals": copied_manuals.name,
+        "cadrumo-data-manuals-sdist": next(path.name for path in copied_sdists if "manuals" in path.name),
+        "cadrumo-data-official": copied_official.name,
+        "cadrumo-data-official-sdist": next(path.name for path in copied_sdists if "official" in path.name),
+        "cadrumo-data-normatives": copied_normatives.name,
+        "cadrumo-data-normatives-sdist": next(path.name for path in copied_sdists if "normatives" in path.name),
+    }
+    digests = {name: sha256_path(cohort_dir / filename) for name, filename in artifacts.items()}
+    source_archive = add_test_source_archive(cohort_dir, artifacts, digests)
+    add_test_runtime_wheelhouse(cohort_dir, artifacts, digests)
+    (cohort_dir / "python-cohort.json").write_text(
+        json.dumps(
+            {
+                "artifacts": artifacts,
+                "sha256": digests,
+                "source_digest": "a" * 64,
+                "version": version,
+                "command_spec_attestation": attest_command_specs(
+                    site_root=build_root / "src",
+                    root_wheel=copied_root,
+                    root_sdist=copied_sdists[0],
+                    source_archive=source_archive,
+                    source_digest="a" * 64,
+                    work_root=root_dir,
+                ),
+            },
+            sort_keys=True,
+        ),
+        encoding="utf-8",
+    )
+    return BuiltCohort(
+        directory=cohort_dir,
+        root=copied_root,
+        manuals=copied_manuals,
+        official=copied_official,
+        normatives=copied_normatives,
+        version=version,
+    )
+
+
+def test_generated_manifest_binds_exact_cohort_and_the_cli_command(
+    tmp_path: Path,
+    built_cohort: BuiltCohort,
+) -> None:
+    """Require deterministic Scoop material for the exact real cohort."""
+
+    first = tmp_path / "first.json"
+    second = tmp_path / "second.json"
+    command = _generator_command(built_cohort)
+    run_checked([*command, "--output", str(first)], cwd=_REPO_ROOT)
+    run_checked([*command, "--output", str(second)], cwd=_REPO_ROOT)
+    assert first.read_bytes() == second.read_bytes()
+
+    manifest = json.loads(first.read_text(encoding="utf-8"))
+    assert manifest["version"] == built_cohort.version
+    assert "post_install" not in manifest
+    # No download block: the manifest installs what the index serves, by name
+    # and exact version. Only a source distribution has a stable address on the
+    # index ahead of an upload, so a wheel URL here could only be a release
+    # asset -- a surface no workflow populates.
+    assert "architecture" not in manifest
+    install = "\n".join(manifest["pre_install"])
+    assert f"'cadrumo=={built_cohort.version}'" in install
+    assert "releases/download" not in json.dumps(manifest)
+    assert manifest["depends"] == ["python", "uv"]
+    # Every console script the command distribution declares gets a shim: the
+    # manifest is what puts them on PATH, so one left out is installed and
+    # unreachable.
+    scripts = _declared_console_scripts(built_cohort.root)
+    assert "aeat" in scripts
+    assert "cadrumo-mcp" in scripts
+    assert manifest["bin"] == [[f"{script}.cmd", script] for script in scripts]
+    assert manifest["persist"] == ["state"]
+
+    hooks = manifest["pre_install"]
+    assert len(hooks) == 5 + len(scripts)
+    assert "Join-Path $dir 'state'" in hooks[0]
+    assert "uv venv" in hooks[1]
+    # The transitive dependency closure is pinned from the tested uv.lock: a
+    # constraints file is written to the app dir and fed to uv pip install.
+    assert "Set-Content" in hooks[2]
+    assert "constraints.txt" in hooks[2]
+    assert "==" in hooks[2]
+    # Nothing is downloaded, so no cohort filename or digest can appear in the
+    # install hook. What the hook still binds is the exact version, and it must
+    # bind exactly once: a second requirement, a version range, or an extra
+    # would each widen what the install resolves to.
+    assert _CADRUMO_REQUIREMENT.findall(hooks[3]) == [f"'cadrumo=={built_cohort.version}'"]
+    # The retired cadrumo[agent] extra is gone: the command distribution
+    # installs without any extra, and the launcher pin no longer rides it.
+    assert "[agent]" not in hooks[3]
+    # A wheel cached from an earlier resolution must not satisfy the pin.
+    assert "--no-cache" in hooks[3]
+    # uv compiles no bytecode by default; the first launch must not pay for it.
+    assert "--compile-bytecode" in hooks[3]
+    assert "--constraint (Join-Path $dir 'constraints.txt')" in hooks[3]
+    # That single exact pin is what closes over the rest of the cohort. The
+    # constraints file deliberately omits the product rows, so the companions
+    # are bound only through the command distribution's own metadata, which
+    # pins both at the same exact version unconditionally and without extras.
+    requirements = _wheel_requirements(built_cohort.root)
+    for companion in _COMPANIONS:
+        assert f"{companion}=={built_cohort.version}" in requirements
+    assert "uv pip check" in hooks[4]
+    assert sum("$LASTEXITCODE -ne 0" in hook for hook in hooks) == 3
+    for offset, script in enumerate(scripts):
+        hook = hooks[5 + offset]
+        assert 'if not defined CADRUMO_LOCAL_STORAGE_ROOT set `"CADRUMO_LOCAL_STORAGE_ROOT=$state`"' in hook
+        assert f"venv\\Scripts\\{script}.exe" in hook
+        assert "%*" in hook
+        assert f"Join-Path $dir '{script}.cmd'" in hook
+        assert "-NoNewline -Encoding ascii" in hook
+
+
+def test_manifest_pins_transitive_closure_from_lock(
+    tmp_path: Path,
+    built_cohort: BuiltCohort,
+) -> None:
+    """The written constraints closure is the exact tested uv.lock export."""
+    output = tmp_path / "manifest.json"
+    run_checked(
+        [*_generator_command(built_cohort), "--output", str(output)],
+        cwd=_REPO_ROOT,
+    )
+    manifest = json.loads(output.read_text(encoding="utf-8"))
+    write_hook = manifest["pre_install"][2]
+    install_hook = manifest["pre_install"][3]
+
+    expected = export_runtime_constraints(repo_root=_REPO_ROOT)
+    assert expected
+    for line in expected:
+        assert "==" in line
+        assert line in write_hook
+    # The pinned file must actually gate the install, not merely be written.
+    assert "--constraint (Join-Path $dir 'constraints.txt')" in install_hook
+
+
+def test_generator_rejects_missing_and_duplicate_wheels(
+    tmp_path: Path,
+    built_cohort: BuiltCohort,
+) -> None:
+    """Require exactly one artifact for every cohort distribution."""
+    missing_dir = tmp_path / "missing"
+    shutil.copytree(built_cohort.directory, missing_dir)
+    (missing_dir / built_cohort.normatives.name).unlink()
+    with pytest.raises(SystemExit):
+        run_checked(
+            [
+                *_generator_command(built_cohort, cohort_dir=missing_dir),
+                "--output",
+                str(tmp_path / "missing.json"),
+            ],
+            cwd=_REPO_ROOT,
+        )
+
+    duplicate_dir = tmp_path / "duplicate"
+    shutil.copytree(built_cohort.directory, duplicate_dir)
+    shutil.copy2(
+        built_cohort.manuals,
+        duplicate_dir / f"cadrumo_data_manuals-{built_cohort.version}-duplicate.whl",
+    )
+    with pytest.raises(SystemExit):
+        run_checked(
+            [
+                *_generator_command(built_cohort, cohort_dir=duplicate_dir),
+                "--output",
+                str(tmp_path / "duplicate.json"),
+            ],
+            cwd=_REPO_ROOT,
+        )
+
+
+def test_generator_rejects_distribution_and_version_mismatches(
+    tmp_path: Path,
+    built_cohort: BuiltCohort,
+) -> None:
+    """Reject a renamed foreign companion and a requested version mismatch."""
+    foreign_dir = tmp_path / "foreign"
+    shutil.copytree(built_cohort.directory, foreign_dir)
+    shutil.copy2(
+        built_cohort.official,
+        foreign_dir / built_cohort.manuals.name,
+    )
+    manifest = foreign_dir / "python-cohort.json"
+    payload = json.loads(manifest.read_text(encoding="utf-8"))
+    payload["sha256"]["cadrumo-data-manuals"] = sha256_path(built_cohort.official)
+    manifest.write_text(json.dumps(payload), encoding="utf-8")
+    with pytest.raises(SystemExit):
+        run_checked(
+            [
+                *_generator_command(built_cohort, cohort_dir=foreign_dir),
+                "--output",
+                str(tmp_path / "foreign.json"),
+            ],
+            cwd=_REPO_ROOT,
+        )
+
+    command = _generator_command(built_cohort)
+    command[command.index("--version") + 1] = "999.0.0"
+    with pytest.raises(SystemExit):
+        run_checked([*command, "--output", str(tmp_path / "version.json")], cwd=_REPO_ROOT)
+
+
+@pytest.mark.parametrize("companion", _COMPANIONS)
+def test_generator_rejects_conditional_companion_pin(
+    tmp_path: Path,
+    built_cohort: BuiltCohort,
+    companion: str,
+) -> None:
+    """Reject a root artifact that makes a mandatory companion conditional."""
+    conditional_dir = tmp_path / "conditional"
+    shutil.copytree(built_cohort.directory, conditional_dir)
+    _conditional_companion_pin_wheel(
+        built_cohort.root,
+        conditional_dir / built_cohort.root.name,
+        version=built_cohort.version,
+        companion=companion,
+    )
+    manifest = conditional_dir / "python-cohort.json"
+    payload = json.loads(manifest.read_text(encoding="utf-8"))
+    root_digest = sha256_path(conditional_dir / built_cohort.root.name)
+    payload["sha256"]["cadrumo"] = root_digest
+    payload["command_spec_attestation"]["root_wheel_sha256"] = root_digest
+    attestation = payload["command_spec_attestation"]
+    attestation["envelope_sha256"] = projection_digest(
+        {key: value for key, value in attestation.items() if key != "envelope_sha256"}
+    )
+    manifest.write_text(json.dumps(payload), encoding="utf-8")
+    result = run_checked(
+        [
+            *_generator_command(built_cohort, cohort_dir=conditional_dir),
+            "--output",
+            str(tmp_path / "conditional.json"),
+        ],
+        cwd=_REPO_ROOT,
+        expected={1},
+    )
+    assert companion in result.stderr
+    assert "unconditionally and without extras" in result.stderr

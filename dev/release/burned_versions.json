@@ -1,0 +1,14 @@
+{
+  "burned": [
+    {
+      "version": "0.2.0",
+      "burned_on": "2026-07-27",
+      "reason": "Published as a partial source-forge release on 2026-07-04 and downloadable for weeks, then deleted as never-delivered: it reached no package index and no managed channel. The bytes may be held by anyone who fetched them, so the number can never be minted again."
+    },
+    {
+      "version": "0.2.1",
+      "burned_on": "2026-07-27",
+      "reason": "Published as a partial source-forge release on 2026-07-21 carrying eight assets including a 177 MB host-extension bundle, downloadable for weeks, then deleted as never-delivered. A second, different build was later stamped with the same version, which is the collision that prompted the ledger."
+    }
+  ]
+}

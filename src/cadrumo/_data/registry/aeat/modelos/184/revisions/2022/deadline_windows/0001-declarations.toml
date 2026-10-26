@@ -1,0 +1,9 @@
+[[revisions."2022".deadline_windows]]
+id = "modelo-184-2022-0a"
+filing_year = 2022
+period = "2022 0A"
+period_kind = "annual"
+opens_on = 2023-02-01
+closes_on = 2023-02-28
+legal_refs = ["orden-hap-2250-2015:art-4", "ley-58-2003:art-93"]
+source_refs = ["boe-modelo-184-2015-form", "aeat-modelo-184-procedure"]

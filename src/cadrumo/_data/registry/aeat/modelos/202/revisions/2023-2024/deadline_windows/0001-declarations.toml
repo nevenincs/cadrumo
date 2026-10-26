@@ -1,0 +1,65 @@
+[[revisions.2023-2024.deadline_windows]]
+id = "modelo-202-2023-1p"
+filing_year = 2023
+period = "2023 1P"
+period_kind = "quarterly"
+opens_on = 2023-04-01
+closes_on = 2023-04-20
+payment_cutoff_on = 2023-04-15
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-modelo-202-instructions-2023-2024", "aeat-calendario-contribuyente-2023"]
+
+[[revisions.2023-2024.deadline_windows]]
+id = "modelo-202-2023-2p"
+filing_year = 2023
+period = "2023 2P"
+period_kind = "quarterly"
+opens_on = 2023-10-01
+closes_on = 2023-10-20
+payment_cutoff_on = 2023-10-15
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-modelo-202-instructions-2023-2024", "aeat-calendario-contribuyente-2023"]
+
+[[revisions.2023-2024.deadline_windows]]
+id = "modelo-202-2023-3p"
+filing_year = 2023
+period = "2023 3P"
+period_kind = "quarterly"
+opens_on = 2023-12-01
+closes_on = 2023-12-20
+payment_cutoff_on = 2023-12-15
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-modelo-202-instructions-2023-2024", "aeat-calendario-contribuyente-2023"]
+
+[[revisions.2023-2024.deadline_windows]]
+id = "modelo-202-2024-1p"
+filing_year = 2024
+period = "2024 1P"
+period_kind = "quarterly"
+opens_on = 2024-04-01
+closes_on = 2024-04-22
+payment_cutoff_on = 2024-04-17
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-modelo-202-instructions-2023-2024", "aeat-calendario-contribuyente-2024"]
+
+[[revisions.2023-2024.deadline_windows]]
+id = "modelo-202-2024-2p"
+filing_year = 2024
+period = "2024 2P"
+period_kind = "quarterly"
+opens_on = 2024-10-01
+closes_on = 2024-10-21
+payment_cutoff_on = 2024-10-16
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-modelo-202-instructions-2023-2024", "aeat-calendario-contribuyente-2024"]
+
+[[revisions.2023-2024.deadline_windows]]
+id = "modelo-202-2024-3p"
+filing_year = 2024
+period = "2024 3P"
+period_kind = "quarterly"
+opens_on = 2024-12-01
+closes_on = 2024-12-20
+payment_cutoff_on = 2024-12-17
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-modelo-202-instructions-2023-2024", "aeat-calendario-contribuyente-2024"]

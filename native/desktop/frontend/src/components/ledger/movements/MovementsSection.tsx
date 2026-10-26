@@ -1,0 +1,1900 @@
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type Dispatch,
+  type KeyboardEvent,
+  type RefObject,
+  type SetStateAction,
+} from "react";
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import type { DataGridHandle, GridRow } from "@/components/ui/data-grid";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { IconButton } from "@/components/ui/icon-button";
+import { exactly } from "@/components/ui/dataGridModel";
+import { EmptyState } from "@/components/ui/empty";
+import { Icon } from "@/components/ui/icon";
+import { Toast } from "@/components/ui/toast";
+import { ContextMenu, type MenuAnchor } from "../../ContextMenu";
+import type { ContextMenuItem } from "../../../ipc/contract";
+import type { Action } from "../../../shell/actions";
+import type { LedgerView } from "../../../shell/layout";
+import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
+import {
+  CLASSIFICATION_OF,
+  CLASSIFY_KINDS,
+  categoryCells,
+  categorySplit,
+  classifyAvailability,
+  classifyCells,
+  ratioCoverage,
+  type ClassifyBlock,
+  type ClassifyKind,
+  type ClassifyScope,
+  type OpenRuleFromSelection,
+} from "../../../shell/ledgerCommands";
+import { useConfiguredRatios } from "../setup/useConfiguredRatios";
+import { ActionDialog, type ActionRequest } from "../inspector/ActionDialog";
+import {
+  sameInspectorContext,
+  type SectionInspectorContext,
+} from "../inspector/inspectorContext";
+import { parsePercent, type LedgerPeriod } from "../../../shell/ledgerGrammar";
+import {
+  useLedgerMembership,
+  useOwnAccounts,
+  useSearchElsewhere,
+} from "../../../shell/ledgerMovementReads";
+import {
+  effectiveFacts,
+  stagedMovements,
+  type DraftField,
+  type StageEvent,
+  type StageState,
+} from "../../../shell/ledgerStage";
+import {
+  readinessSnapshot,
+  shownRows,
+  windowComplete,
+  type LedgerWindow,
+  type Readiness,
+} from "../../../shell/ledgerWindow";
+import { useStrings, type Translate } from "../../../shell/strings";
+import { dateFormats } from "../../../shared/dateFormats";
+import { draftRow, stageTally } from "../editing/editingModel";
+import { useMovementEditing } from "../editing/MovementEditing";
+import { periodText } from "../ledgerWords";
+import { ClassifyDialog } from "./ClassifyDialog";
+import { MovementsGrid } from "./MovementsGrid";
+import {
+  COLUMN_SPECS,
+  DEFAULT_SORT,
+  NO_FILTERS,
+  REASON_FIX,
+  SERVER_GROUPING,
+  columnLayout,
+  currencySums,
+  groupRows,
+  groupValue,
+  keepsRow,
+  matchesSearch,
+  presetHidden,
+  presetOf,
+  readinessSets,
+  searchTerms,
+  serverFilters,
+  serverSortField,
+  shownColumns,
+  sortRows,
+  stagedClassifyCount,
+  dateWidth,
+  statusMarks,
+  statusWidth,
+  type ColumnId,
+  type CurrencySum,
+  type GroupingId,
+  type MovementFilters,
+  type ReadinessFilter,
+  type SortLabels,
+} from "./movementsModel";
+import { MovementsToolbar } from "./MovementsToolbar";
+import { monthNames } from "../ledgerWords";
+import {
+  accountLabel,
+  amountText,
+  categoryLabel,
+  classificationLabel,
+  classificationText,
+  classifiedByLabel,
+  directionLabel,
+  familyLabel,
+  irpfCategoryLabel,
+  ivaCategoryLabel,
+  lifecycleLabel,
+  reasonDetail,
+  statusLabel,
+  statusWord,
+} from "./movementWords";
+import { ReadinessStrip } from "./ReadinessStrip";
+import { useFocusTarget } from "../../../shell/navigation/hooks";
+import { RowRevealNotice, useRowReveal, type LinkedRow } from "../RowReveal";
+import { movementHiding, withoutHiding } from "./movementReveal";
+import type { MovementsView } from "./useMovementsView";
+import type { ImportedBatches } from "../../../shell/ledgerImports";
+import type { SpendingCategoryFamily } from "../../../shell/ledgerVocabulary";
+
+/** How long a confirmation stays on screen. */
+const TOAST_MS = 4000;
+/** Above this many movements classified otherwise, Personal, which asks
+ * nothing else, asks once before it changes them. */
+const OVERWRITE_ASK = 5;
+
+/** The page's classify chords, by the key they take with Alt. */
+const CHORD_KINDS: Partial<Record<string, ClassifyKind>> = {
+  KeyB: "business",
+  KeyP: "personal",
+  KeyM: "mixed",
+};
+/** Whether `element` takes typed text, so a chord there is its own: a
+ * checkbox or a radio does not. */
+function takesText(element: HTMLElement): boolean {
+  if (element.isContentEditable) return true;
+  if (element instanceof HTMLTextAreaElement) return true;
+  if (element instanceof HTMLSelectElement) return true;
+  if (element instanceof HTMLInputElement)
+    return !["checkbox", "radio", "button", "submit", "reset"].includes(
+      element.type,
+    );
+  return false;
+}
+
+const idOf = (row: LedgerRow) => row.transaction.transaction_id;
+
+/** A classification dialog asked for, and what it would act on. */
+type Asking = {
+  kind: ClassifyKind | "category";
+  /** Of `ids`, how many are classified otherwise now. */
+  overwritten?: number;
+  ids: string[];
+  skipped: number;
+  partial: boolean;
+  error: string | null;
+  /** Of `ids`, those that take a spending category and the income. */
+  split: { expenses: number; income: number };
+  /** A share typed beside the control that asked. */
+  share?: string;
+  /** The rows a cell range covers, where they are not the selection. */
+  range?: string[];
+  /** A new movement's classification, filled in rather than staged. */
+  draft?: string;
+};
+
+/** The chord each classify kind takes. */
+const CHORD_OF: Record<ClassifyKind, string> = {
+  business: "Alt+B",
+  personal: "Alt+P",
+  mixed: "Alt+M",
+};
+
+/** The list read that keeps the movements an import flagged as likely
+ * duplicates. */
+const DUPLICATE_SCOPES = [{ filters: ["issue=duplicate"] }] as const;
+
+/** What staged editing on the section needs from the page. */
+export type SectionEditing = {
+  openReview: () => void;
+  /** A new movement to focus once it is drawn. */
+  focusDraft: string | null;
+  onDraftFocused: () => void;
+  /** Movements a finalized declaration cites, where the page knows. */
+  sealed?: ReadonlySet<string>;
+};
+const NO_SEALED: ReadonlySet<string> = new Set();
+
+function blockText(t: Translate, block: ClassifyBlock): string {
+  switch (block.kind) {
+    case "nothing_selected":
+      return t("desktop.ledger.classify.nothing");
+    case "hidden":
+      return t("desktop.ledger.selection.hidden", {
+        hidden: block.hidden,
+        selected: block.selected,
+      });
+    case "transfers_only":
+      return t("desktop.ledger.classify.transfers_only");
+    case "inactive_only":
+      return t("desktop.ledger.classify.inactive_only");
+  }
+}
+
+function SumLine({ sums, locale }: { sums: CurrencySum[]; locale: string }) {
+  const t = useStrings();
+  return (
+    <span className="flex flex-wrap items-center gap-x-3 tabular-nums">
+      {sums.map((sum) => (
+        <span key={sum.currency} className="flex items-center gap-2">
+          {sum.currency !== "EUR" && (
+            <span className="text-xs">{sum.currency}</span>
+          )}
+          {(
+            [
+              ["incoming", "desktop.ledger.sum.in"],
+              ["outgoing", "desktop.ledger.sum.out"],
+              ["transfer", "desktop.ledger.sum.transfer"],
+            ] as const
+          ).map(([side, key]) =>
+            sum[side] === null ? null : (
+              <span key={side}>
+                {t(key, { amount: amountText(locale, sum[side]) })}
+              </span>
+            ),
+          )}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+/** What a group header's buttons do: set by the section after each render,
+ * read when one is pressed. */
+type GroupCommands = {
+  classify: (kind: ClassifyKind, ids: readonly string[]) => void;
+  category: (ids: string[]) => void;
+  select: (ids: string[]) => void;
+  /** Null where the page has no rule dialog. */
+  makeRule: ((ids: string[]) => void) | null;
+};
+
+/** A group header's quick actions, which act on the group's movements
+ * through the page's one classify command: one Classify menu, and a menu of
+ * the rest. A press on them is theirs, never the header's. */
+function GroupActions({
+  ids,
+  transfers,
+  commands,
+}: {
+  ids: string[];
+  transfers: boolean;
+  commands: RefObject<GroupCommands>;
+}) {
+  const t = useStrings();
+  const own = {
+    onClick: (event: { stopPropagation: () => void }) =>
+      event.stopPropagation(),
+    onDoubleClick: (event: { stopPropagation: () => void }) =>
+      event.stopPropagation(),
+    onPointerDown: (event: { stopPropagation: () => void }) =>
+      event.stopPropagation(),
+  };
+  const transferNote = transfers
+    ? t("desktop.ledger.classify.transfers_only")
+    : undefined;
+  const kinds: [ClassifyKind, string][] = [
+    ["business", t("desktop.ledger.group.business")],
+    ["personal", t("desktop.ledger.group.personal")],
+    ["mixed", t("desktop.ledger.group.mixed")],
+  ];
+  return (
+    <span className="ledger-group-actions flex items-center gap-1" {...own}>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            size="xs"
+            tabIndex={-1}
+            className="ledger-group-classify"
+          >
+            {t("desktop.ledger.group.classify")}
+            <Icon name="chevronDown" size="xs" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          {kinds.map(([kind, label]) => (
+            <DropdownMenuItem
+              key={kind}
+              disabled={kind !== "personal" && transferNote !== undefined}
+              onSelect={() => commands.current.classify(kind, ids)}
+            >
+              {label}
+              {kind !== "personal" && transferNote && (
+                <DropdownMenuShortcut>{transferNote}</DropdownMenuShortcut>
+              )}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <IconButton
+            label={t("desktop.ledger.group.more")}
+            size="xs"
+            variant="outline"
+            tabIndex={-1}
+            className="ledger-group-more"
+          >
+            <Icon name="more" />
+          </IconButton>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onSelect={() => commands.current.category(ids)}>
+            {t("desktop.ledger.group.category")}…
+          </DropdownMenuItem>
+          {commands.current.makeRule && (
+            <DropdownMenuItem onSelect={() => commands.current.makeRule?.(ids)}>
+              {t("desktop.ledger.group.make_rule")}…
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onSelect={() => commands.current.select(ids)}>
+            {t("desktop.ledger.group.select", { count: ids.length })}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </span>
+  );
+}
+
+/** A group's name: the label of what it groups by, or what it lacks. */
+function groupLabelOf(
+  t: Translate,
+  locale: string,
+  by: GroupingId,
+  value: string,
+  first: LedgerRow,
+): string {
+  if (value === "") return t(`desktop.ledger.group.empty.${by}`);
+  switch (by) {
+    case "category":
+      return categoryLabel(t, value);
+    case "category_family":
+      return familyLabel(t, value as SpendingCategoryFamily);
+    case "classification":
+      return classificationLabel(t, value);
+    case "status":
+      return t(`desktop.ledger.review.${value}`);
+    case "direction":
+      return directionLabel(t, value);
+    case "month": {
+      const [year, month] = value.split("-").map(Number);
+      const date = new Date(2000, (month ?? 1) - 1, 1);
+      date.setFullYear(year ?? 2000);
+      return dateFormats(locale).month.format(date);
+    }
+    case "iva_category":
+      return ivaCategoryLabel(t, value);
+    case "counterparty":
+      return first.transaction.counterparty.trim();
+    default:
+      return value;
+  }
+}
+
+/** The account grouping's labels come from the register, read once. */
+function accountGroupLabel(
+  t: Translate,
+  accounts: readonly { id: string; label: string }[] | null,
+  value: string,
+): string {
+  return accountLabel(t, accounts, value === "" ? null : value);
+}
+
+/**
+ * The Movements section: the readiness strip, the toolbar and the grid of
+ * a period's movements, as stored. Filters, search, sort and groups refine
+ * a window read whole; a window read in part is filtered and sorted by the
+ * product, and says how much of it is loaded. Classifying goes through the
+ * page's one classify command and stages changes; nothing here saves.
+ */
+export function MovementsSection({
+  port,
+  reader,
+  period,
+  periodWindow,
+  readAll,
+  readiness,
+  onCheckReadiness,
+  movements,
+  stage,
+  onStage,
+  view,
+  onViewChange,
+  locale,
+  onPeriod,
+  onOpenInspector,
+  onInspector,
+  register,
+  shownImport,
+  onImportCleared,
+  editing: pageEditing,
+  linked,
+  onMakeRule,
+  onOpenRatios,
+}: {
+  port: LedgerPort;
+  reader: string;
+  period: LedgerPeriod | null;
+  periodWindow: LedgerWindow;
+  readAll: () => void;
+  readiness: Readiness;
+  /** Runs the period's readiness check again. */
+  onCheckReadiness?: () => void;
+  movements: MovementsView;
+  stage: StageState;
+  onStage: (event: StageEvent) => void;
+  view: LedgerView;
+  onViewChange: (update: (current: LedgerView) => LedgerView) => void;
+  locale: string;
+  /** Shows another period, as a search's other-period hint does. */
+  onPeriod: (period: LedgerPeriod | null) => void;
+  /** Opens the movement inspector on one of its sections, where the page
+   * has one. */
+  onOpenInspector?: (section: "classify") => void;
+  /** Hands the inspector what the section draws and its commands. */
+  onInspector?: Dispatch<SetStateAction<SectionInspectorContext | null>>;
+  /** Hands the page's palette what the section offers. */
+  register: (actions: (() => Action[]) | null) => void;
+  /** An import's movements, which the grid shows when asked. */
+  shownImport: ImportedBatches | null;
+  /** The person took the import's filter off. */
+  onImportCleared?: () => void;
+  editing: SectionEditing;
+  /** The movement a link selects, held by the page. */
+  linked: LinkedRow;
+  /** Opens the rule dialog prefilled from movements, where the page has
+   * one. */
+  onMakeRule?: OpenRuleFromSelection;
+  /** Opens the business-use ratios, where the page has them. */
+  onOpenRatios?: () => void;
+}) {
+  const t = useStrings();
+  const grid = useRef<DataGridHandle>(null);
+  const numbers = useMemo(() => new Intl.NumberFormat(locale), [locale]);
+  const {
+    filters,
+    setFilters: replaceFilters,
+    search,
+    setSearch,
+    sort,
+    setSort,
+    collapsed,
+    setCollapsed,
+    selection,
+    setSelection,
+    savedView,
+    chooseView,
+    groupBy,
+    setGroupBy,
+  } = movements;
+  // Taking the import's filter off says the import is no longer shown.
+  const setFilters = (next: MovementFilters) => {
+    if (filters.importBatches.length && !next.importBatches.length)
+      onImportCleared?.();
+    replaceFilters(next);
+  };
+
+  const held = shownRows(periodWindow) ?? { rows: [], total: 0 };
+  const rows = held.rows;
+  const partial = rows.length < held.total;
+  const complete = windowComplete(periodWindow) && !partial;
+  const allPeriods = period === null;
+  const byId = useMemo(
+    () => new Map(rows.map((row) => [idOf(row), row])),
+    [rows],
+  );
+  const snapshot = readinessSnapshot(readiness);
+  const sets = useMemo(() => readinessSets(rows, snapshot), [rows, snapshot]);
+
+  // The product's own filters: in the window's read where one read says
+  // them, otherwise as reads of the movements they keep.
+  const scopes = serverFilters(filters);
+  const inWindow = allPeriods && scopes.length === 1;
+  const membership = useLedgerMembership(
+    port,
+    reader,
+    period,
+    inWindow ? [] : scopes,
+    periodWindow.phase === "ready" ? periodWindow.generation : null,
+  );
+  const members = useMemo(
+    () =>
+      membership.kind === "ready"
+        ? membership.ids
+        : membership.kind === "none"
+          ? null
+          : new Set<string>(),
+    [membership],
+  );
+  const [wantAccounts, setWantAccounts] = useState(false);
+  const accountsShown =
+    shownColumns(columnLayout(view.columns)).includes("account") ||
+    groupBy === "account" ||
+    stage.content.drafts.length > 0;
+  const accounts = useOwnAccounts(
+    port,
+    reader,
+    wantAccounts || filters.account !== null || accountsShown,
+  );
+  const elsewhere = useSearchElsewhere(port, reader, period, search);
+  // What an import flagged as a likely duplicate: the product keeps it as an
+  // import diagnostic, which the list reads by its issue filter. A movement
+  // archived since is no longer marked.
+  const flagged = useLedgerMembership(
+    port,
+    reader,
+    period,
+    DUPLICATE_SCOPES,
+    periodWindow.phase === "ready" ? periodWindow.generation : null,
+  );
+  const duplicates = useMemo(() => {
+    if (flagged.kind !== "ready") return new Set<string>();
+    return new Set(
+      rows
+        .filter(
+          (row) =>
+            flagged.ids.has(idOf(row)) &&
+            row.transaction.lifecycle_state === "ACTIVE",
+        )
+        .map(idOf),
+    );
+  }, [flagged, rows]);
+  const currencySlot = useMemo(
+    () => rows.some((row) => row.transaction.currency !== "EUR"),
+    [rows],
+  );
+  const marks = useMemo(
+    () => statusMarks(rows, duplicates),
+    [rows, duplicates],
+  );
+  // The business-use ratios configured for the years of the window's
+  // movements, which the Mixed step stages with its share.
+  const years = useMemo(
+    () => [
+      ...new Set(rows.map((row) => Number(row.transaction.date.slice(0, 4)))),
+    ],
+    [rows],
+  );
+  const { ratios } = useConfiguredRatios(port, reader, years);
+
+  // ---- What is shown ---------------------------------------------------------
+  const labels = useMemo<SortLabels>(
+    () => ({
+      category: (id) => categoryLabel(t, id),
+      ivaCategory: (id) => ivaCategoryLabel(t, id),
+      irpfCategory: (id) => irpfCategoryLabel(t, id),
+      classification: (row) => classificationText(t, row.transaction),
+      direction: (direction) => directionLabel(t, direction),
+      lifecycle: (state) => lifecycleLabel(t, state),
+      classifiedBy: (source) => classifiedByLabel(t, source),
+      account: (id) => accountLabel(t, accounts, id),
+      status: (row) => {
+        const issues = sets.checked
+          ? (sets.issues.get(idOf(row))?.length ?? 0)
+          : null;
+        return statusLabel(t, statusWord(row.review_status, issues), issues);
+      },
+    }),
+    [t, sets, accounts],
+  );
+  const terms = useMemo(() => searchTerms(search), [search]);
+  const months = useMemo(() => {
+    const long = new Intl.DateTimeFormat(locale, { month: "long" });
+    return [
+      Array.from({ length: 12 }, (_, month) =>
+        long.format(new Date(2000, month, 1)),
+      ),
+      monthNames(locale),
+    ];
+  }, [locale]);
+  const filtered = useMemo(
+    () =>
+      rows.filter(
+        (row) =>
+          keepsRow(row, filters, sets, members) &&
+          matchesSearch(row, terms, {
+            months,
+            category: labels.category,
+          }),
+      ),
+    [rows, filters, sets, members, terms, months, labels],
+  );
+  // A window read in part comes in the product's order; only its own axes
+  // sort it.
+  const effectiveSort =
+    complete || serverSortField(sort.key) ? sort : DEFAULT_SORT;
+  const sorted = useMemo(
+    () => (complete ? sortRows(filtered, sort, labels) : filtered),
+    [complete, filtered, sort, labels],
+  );
+  const grouping: GroupingId | null =
+    groupBy && (complete || groupBy === SERVER_GROUPING) ? groupBy : null;
+
+  const groups = useMemo(() => {
+    if (!grouping) return null;
+    const firstOf = new Map<string, LedgerRow>();
+    for (const row of sorted) {
+      const value = groupValue(row, grouping);
+      if (!firstOf.has(value)) firstOf.set(value, row);
+    }
+    return groupRows(sorted, grouping, {
+      label: (value) =>
+        grouping === "account"
+          ? accountGroupLabel(t, accounts, value)
+          : groupLabelOf(t, locale, grouping, value, firstOf.get(value)!),
+      pendingFirst: savedView === "to_classify",
+      descending:
+        effectiveSort.key === "date" && effectiveSort.direction === "desc",
+    });
+  }, [grouping, sorted, savedView, effectiveSort, t, locale, accounts]);
+
+  // The group headers' buttons act on the state of the moment they are
+  // pressed.
+  const groupCommands = useRef<GroupCommands>({
+    classify: () => undefined,
+    category: () => undefined,
+    select: () => undefined,
+    makeRule: null,
+  });
+  const gridRows = useMemo<GridRow<LedgerRow>[]>(() => {
+    if (!groups)
+      return sorted.map((row) => ({ kind: "data", key: idOf(row), data: row }));
+    const out: GridRow<LedgerRow>[] = [];
+    for (const group of groups) {
+      const first = group.rows[0]!;
+      const folded = collapsed.has(group.key);
+      out.push({
+        kind: "section",
+        key: group.key,
+        label:
+          grouping === "account"
+            ? accountGroupLabel(t, accounts, group.value)
+            : groupLabelOf(t, locale, grouping!, group.value, first),
+        hint: t("desktop.ledger.group.count", { count: group.rows.length }),
+        collapsed: folded,
+        summary: complete ? (
+          <span className="flex items-center gap-3">
+            <SumLine sums={currencySums(group.rows)} locale={locale} />
+            <GroupActions
+              ids={group.rows.map(idOf)}
+              transfers={group.rows.every(
+                (row) => row.transaction.direction === "INTERNAL_TRANSFER",
+              )}
+              commands={groupCommands}
+            />
+          </span>
+        ) : undefined,
+      });
+      if (!folded)
+        for (const row of group.rows)
+          out.push({ kind: "data", key: idOf(row), data: row });
+    }
+    return out;
+  }, [groups, grouping, sorted, collapsed, complete, locale, t, accounts]);
+  const visible = useMemo(
+    () => gridRows.flatMap((row) => (row.kind === "data" ? [row.key] : [])),
+    [gridRows],
+  );
+  // New movements sit at the top, outside every group and sort.
+  const drafts = stage.content.drafts;
+  const draftGridRows = useMemo<GridRow<LedgerRow>[]>(
+    () =>
+      drafts.map((draft) => ({
+        kind: "data",
+        key: draft.key,
+        data: draftRow(draft),
+      })),
+    [drafts],
+  );
+  const drawnGridRows = useMemo(
+    () => (draftGridRows.length ? [...draftGridRows, ...gridRows] : gridRows),
+    [draftGridRows, gridRows],
+  );
+  const drawnRows = useMemo(
+    () => [...drafts.map((draft) => draft.key), ...visible],
+    [drafts, visible],
+  );
+  const visibleSet = useMemo(() => new Set(visible), [visible]);
+
+  // ---- A link's row ------------------------------------------------------------
+  // A link that selects a movement reveals it once the grid draws it; one
+  // the person's own view hides is announced with what shows it.
+  const within = useRef<HTMLDivElement>(null);
+  useFocusTarget(
+    "ledger/movements",
+    () =>
+      within.current?.querySelector<HTMLElement>(
+        '[role="grid"] [tabindex="0"]',
+      ) ?? null,
+  );
+  const reveal = useRowReveal(linked, {
+    shown: (id) => visibleSet.has(id),
+    hiding: (id) => {
+      const row = byId.get(id);
+      if (!row || membership.kind === "reading") return null;
+      const hiding = movementHiding(row, {
+        filters,
+        sets,
+        members,
+        terms,
+        search: { months, category: labels.category },
+        grouping,
+        collapsed,
+      });
+      if (!hiding) return null;
+      return () => {
+        if (hiding.filters.length) setFilters(withoutHiding(filters, hiding));
+        if (hiding.search) setSearch("");
+        if (hiding.group !== null)
+          setCollapsed(
+            new Set([...collapsed].filter((key) => key !== hiding.group)),
+          );
+      };
+    },
+    settled: periodWindow.phase === "ready" && membership.kind !== "reading",
+    reveal: (id, focus) => {
+      setSelection(new Set([id]));
+      if (focus) grid.current?.focusCell(id);
+      else grid.current?.scrollToKey(id, "center");
+    },
+    drawn: visible,
+    within,
+  });
+
+  // ---- Selection -------------------------------------------------------------
+  const selected = useMemo(
+    () => new Set([...selection].filter((id) => byId.has(id))),
+    [selection, byId],
+  );
+  const hiddenSelected = [...selected].filter((id) => !visibleSet.has(id));
+  const shownSelected = visible.filter((id) => selected.has(id)).length;
+  const extent: "none" | "some" | "all" =
+    shownSelected === 0
+      ? "none"
+      : shownSelected === visible.length
+        ? "all"
+        : "some";
+
+  // ---- Feedback --------------------------------------------------------------
+  const [toast, setToast] = useState<string | null>(null);
+  useEffect(() => {
+    if (!toast) return;
+    const timer = window.setTimeout(() => setToast(null), TOAST_MS);
+    return () => window.clearTimeout(timer);
+  }, [toast]);
+  const [spoken, setSpoken] = useState("");
+
+  // A filter that leads somewhere selects and focuses its first movement
+  // once the rows it keeps are drawn.
+  const [focusWanted, setFocusWanted] = useState<{
+    column: ColumnId;
+    rows: readonly string[];
+  } | null>(null);
+  useEffect(() => {
+    if (focusWanted === null || focusWanted.rows === visible) return;
+    if (membership.kind === "reading") return;
+    setFocusWanted(null);
+    const first = visible[0];
+    if (!first) return;
+    setSelection(new Set([first]));
+    grid.current?.focusCell(first, focusWanted.column);
+  }, [focusWanted, visible, membership.kind, setSelection]);
+
+  // An import's movements, when the person asks to see them.
+  const [answeredImport, setAnsweredImport] = useState<ImportedBatches | null>(
+    null,
+  );
+  useEffect(() => {
+    if (!shownImport || shownImport === answeredImport) return;
+    setAnsweredImport(shownImport);
+    setFocusWanted({ column: "description", rows: visible });
+    replaceFilters({ ...NO_FILTERS, importBatches: [...shownImport.batches] });
+  }, [shownImport, answeredImport, visible, replaceFilters]);
+
+  // ---- Columns ---------------------------------------------------------------
+  const layout = useMemo(() => columnLayout(view.columns), [view.columns]);
+  const remPx =
+    typeof document === "undefined"
+      ? 16
+      : parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+  const widths = useMemo(() => {
+    const out: Record<string, number> = {};
+    for (const [column, px] of Object.entries(view.columns.widths))
+      out[column] = px / remPx;
+    return out;
+  }, [view.columns.widths, remPx]);
+  // Where the review preset the page starts from does not fit, it gives up
+  // Group before Category, and the columns menu shows Group as hidden, so
+  // showing it there draws it. A layout the person made is drawn as made.
+  const [room, setRoom] = useState<number | null>(null);
+  useEffect(() => {
+    const element = within.current;
+    if (!element) return;
+    const observer = new ResizeObserver(() => setRoom(element.clientWidth));
+    observer.observe(element);
+    setRoom(element.clientWidth);
+    return () => observer.disconnect();
+  }, []);
+  const untouched = view.columns.order.length === 0;
+  const narrow = useMemo(() => {
+    if (room === null || !untouched || presetOf(layout) !== "review")
+      return false;
+    const needed = shownColumns(layout).reduce((sum, column) => {
+      const spec = COLUMN_SPECS[column];
+      const rem =
+        widths[column] ??
+        (column === "status"
+          ? statusWidth(view.density, marks)
+          : column === "date"
+            ? dateWidth(period === null)
+            : Math.max(spec.width, spec.minWidth ?? 0));
+      return sum + rem * remPx;
+    }, 0);
+    return needed > room;
+  }, [layout, untouched, room, widths, view.density, marks, period, remPx]);
+  const drawnLayout = useMemo(
+    () =>
+      narrow
+        ? {
+            ...layout,
+            hidden: new Set<ColumnId>([...layout.hidden, "group_label"]),
+          }
+        : layout,
+    [layout, narrow],
+  );
+  const order = useMemo(() => shownColumns(drawnLayout), [drawnLayout]);
+  const missing = filters.reason
+    ? (() => {
+        const column = REASON_FIX[filters.reason]?.column ?? null;
+        return column ? { column, reason: filters.reason } : null;
+      })()
+    : null;
+  const setLayout = (nextOrder: ColumnId[], hidden: ColumnId[]) =>
+    onViewChange((current) => ({
+      ...current,
+      columns: { ...current.columns, order: nextOrder, hidden },
+    }));
+  const columnContext = {
+    locale,
+    density: view.density,
+    widths,
+    readiness: sets,
+    missing,
+    withYear: period === null,
+    extent,
+    onSelectShown: (how: "replace" | "add" | "remove") => {
+      if (how === "replace") setSelection(new Set(visible));
+      else if (how === "add") setSelection(new Set([...selected, ...visible]));
+      else
+        setSelection(
+          new Set([...selected].filter((id) => !visibleSet.has(id))),
+        );
+    },
+    sortable: (column: ColumnId) =>
+      complete || COLUMN_SPECS[column].server !== undefined,
+    accounts,
+  };
+
+  // ---- Staged editing ---------------------------------------------------------
+  const edit = useMovementEditing({
+    t,
+    locale,
+    grid,
+    byId,
+    stage,
+    onStage,
+    sealed: pageEditing.sealed ?? NO_SEALED,
+    drawnRows,
+    drawnColumns: order,
+    withYear: period === null,
+    accounts,
+    classify: (kind, ids) => classifySelection(kind, { ids }),
+    askDraft: (kind, key) =>
+      setAsking({
+        kind,
+        ids: [],
+        skipped: 0,
+        partial: false,
+        error: null,
+        split: { expenses: 1, income: 0 },
+        draft: key,
+      }),
+    say: (text) => setToast(text),
+    openReview: pageEditing.openReview,
+    focusDraft: pageEditing.focusDraft,
+    onDraftFocused: pageEditing.onDraftFocused,
+  });
+
+  // ---- Commands --------------------------------------------------------------
+  const [asking, setAsking] = useState<Asking | null>(null);
+  const classifyTarget = (scope?: ClassifyScope) =>
+    scope?.ids
+      ? { ids: scope.ids, hidden: 0, partial }
+      : { ids: [...selected], hidden: hiddenSelected.length, partial };
+
+  /** Of `ids`, how many classifying as `kind` would change from another
+   * classification, stored or staged. */
+  const overwrittenBy = (kind: ClassifyKind, ids: readonly string[]) => {
+    const target = CLASSIFICATION_OF[kind];
+    return ids.filter((id) => {
+      const row = byId.get(id);
+      if (!row) return false;
+      const now = effectiveFacts(
+        row,
+        stage.content.rows[id],
+      ).business_classification;
+      return !!now && now !== "NOT_YET_PROCESSED" && now !== target;
+    }).length;
+  };
+
+  function stageClassified(
+    kind: ClassifyKind,
+    ids: readonly string[],
+    answer: { category?: string; share?: string },
+  ): string | null {
+    const overwritten = overwrittenBy(kind, ids);
+    const outcome = classifyCells(
+      { kind, ids, ...answer, ratios, staged: stage.content },
+      byId,
+    );
+    if (outcome.kind === "refused")
+      return t("desktop.ledger.classify.share_refused", {
+        raw: outcome.refusal.raw,
+      });
+    if (outcome.kind === "needs") return null;
+    const classification = classificationLabel(
+      t,
+      kind === "business"
+        ? "BUSINESS"
+        : kind === "mixed"
+          ? "MIXED"
+          : "PERSONAL",
+    );
+    const detail = [
+      answer.share ? `${answer.share.trim().replace(/\s*%$/, "")}%` : "",
+      answer.category && categorySplit(ids, byId, stage.content).expenses > 0
+        ? categoryLabel(t, answer.category)
+        : "",
+    ]
+      .filter(Boolean)
+      .join(" · ");
+    const said = [
+      detail
+        ? t("desktop.ledger.classify.staged_detail", {
+            classification,
+            detail,
+            count: outcome.movements,
+          })
+        : t("desktop.ledger.classify.staged", {
+            classification,
+            count: outcome.movements,
+          }),
+      overwritten > 0
+        ? t("desktop.ledger.classify.overwritten", { count: overwritten })
+        : "",
+    ]
+      .filter(Boolean)
+      .join(" · ");
+    edit.stageChecked(outcome.event, () => setToast(said));
+    return null;
+  }
+
+  /** The page's one classify command: every control calls it. Business
+   * asks for a category only where a movement takes one, so income alone
+   * is staged at once; Mixed asks for its share and, where a movement
+   * takes one, a category a share applies to. */
+  function classifySelection(kind: ClassifyKind, scope?: ClassifyScope) {
+    const availability = classifyAvailability(
+      kind,
+      classifyTarget(scope),
+      byId,
+    );
+    if (availability.kind === "blocked") {
+      setToast(blockText(t, availability.block));
+      return;
+    }
+    if (kind === "personal") {
+      // Personal asks nothing, so over many movements classified otherwise
+      // it asks once before it changes them.
+      const overwritten = overwrittenBy(kind, availability.ids);
+      if (overwritten > OVERWRITE_ASK && !scope?.answer)
+        setAsking({
+          kind,
+          ids: availability.ids,
+          skipped: availability.skipped,
+          partial: availability.partial,
+          split: { expenses: 0, income: 0 },
+          error: null,
+          overwritten,
+        });
+      else stageClassified(kind, availability.ids, {});
+      return;
+    }
+    const answer = scope?.answer ?? {};
+    const split = categorySplit(availability.ids, byId, stage.content);
+    const outcome = classifyCells(
+      { kind, ids: availability.ids, ...answer, ratios, staged: stage.content },
+      byId,
+    );
+    // What the control already asked for is not asked again, and nothing
+    // is asked of income alone.
+    if (outcome.kind === "staged") {
+      stageClassified(kind, availability.ids, answer);
+      return;
+    }
+    // A cell range over other rows than the selection is said, with the
+    // way to act on the range instead.
+    const drawn = scope?.ids ? null : (grid.current?.cellRange() ?? null);
+    const ranged = drawn ? drawn.rows.filter((id) => byId.has(id)) : [];
+    const differs =
+      ranged.length > 1 &&
+      (ranged.length !== selected.size ||
+        ranged.some((id) => !selected.has(id)));
+    setAsking({
+      kind,
+      ids: availability.ids,
+      skipped: availability.skipped,
+      partial: availability.partial,
+      overwritten: overwrittenBy(kind, availability.ids),
+      split,
+      error:
+        outcome.kind === "refused"
+          ? t("desktop.ledger.classify.share_refused", {
+              raw: outcome.refusal.raw,
+            })
+          : null,
+      ...(answer.share ? { share: answer.share } : {}),
+      ...(differs ? { range: ranged } : {}),
+    });
+  }
+  const availabilityOf = (kind: ClassifyKind) =>
+    classifyAvailability(kind, classifyTarget(), byId);
+
+  function askCategory(ids: string[]) {
+    const takes = ids.filter((id) => {
+      const row = byId.get(id);
+      return (
+        row?.transaction.lifecycle_state === "ACTIVE" &&
+        ["BUSINESS", "MIXED"].includes(row.transaction.business_classification)
+      );
+    });
+    if (takes.length === 0) {
+      setToast(t("desktop.ledger.classify.category_needs_classification"));
+      return;
+    }
+    setAsking({
+      kind: "category",
+      ids: takes,
+      skipped: ids.length - takes.length,
+      partial,
+      error: null,
+      split: categorySplit(takes, byId, stage.content),
+    });
+  }
+
+  // ---- Leading to the fix ----------------------------------------------------
+  const leadTo = (next: MovementFilters, column: ColumnId) => {
+    setFocusWanted({ column, rows: visible });
+    setFilters(next);
+    onOpenInspector?.("classify");
+  };
+  const onPill = (filter: ReadinessFilter | null) => {
+    if (filter === null) return setFilters({ ...filters, readiness: null });
+    leadTo(
+      { ...NO_FILTERS, readiness: filter },
+      filter === "no_rate"
+        ? "eur"
+        : filter === "to_classify"
+          ? "classification"
+          : "status",
+    );
+    if (filter === "no_rate") showColumns(["eur"]);
+  };
+  const showColumns = (wanted: ColumnId[]) => {
+    if (wanted.every((column) => !layout.hidden.has(column))) return;
+    setLayout(
+      [...layout.order],
+      [...layout.hidden].filter((column) => !wanted.includes(column)),
+    );
+  };
+  const onReason = (reason: string | null) => {
+    if (reason === null) return setFilters({ ...filters, reason: null });
+    const fix = REASON_FIX[reason];
+    if (fix && fix.column && layout.hidden.has(fix.column))
+      setLayout([...layout.order], presetHidden(fix.preset));
+    leadTo({ ...NO_FILTERS, reason }, fix?.column ?? "status");
+  };
+
+  const stepIssue = (by: 1 | -1) => {
+    const issues = visible.filter((id) => sets.fix.has(id));
+    if (issues.length === 0) {
+      setSpoken(t("desktop.ledger.issue.none"));
+      return;
+    }
+    const at = grid.current?.activeCell()?.key ?? null;
+    const from = at === null ? -1 : visible.indexOf(at);
+    const next =
+      by > 0
+        ? (issues.find((id) => visible.indexOf(id) > from) ?? issues[0]!)
+        : ([...issues].reverse().find((id) => visible.indexOf(id) < from) ??
+          issues.at(-1)!);
+    const reasons = sets.issues.get(next) ?? [];
+    const column = (reasons
+      .map((reason) => REASON_FIX[reason]?.column)
+      .find((entry) => entry && order.includes(entry)) ?? "status") as ColumnId;
+    setSelection(new Set([next]));
+    grid.current?.focusCell(next, column);
+    setSpoken(
+      [
+        byId.get(next)?.transaction.description ?? "",
+        reasons.map((reason) => reasonDetail(t, reason)).join(", "),
+      ]
+        .filter(Boolean)
+        .join(": "),
+    );
+  };
+
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.defaultPrevented || event.nativeEvent.isComposing) return;
+    if (edit.onKeyDown(event)) {
+      event.preventDefault();
+      return;
+    }
+    if (
+      event.key === "F8" &&
+      (exactly(event) || exactly(event, { shift: true }))
+    ) {
+      event.preventDefault();
+      stepIssue(event.shiftKey ? -1 : 1);
+      return;
+    }
+  };
+
+  // Alt+B, Alt+P and Alt+M classify the selection wherever focus is on the
+  // Ledger page, as Alt+I opens the inspector: the header's tabs, period and
+  // buttons, a row checkbox, the toolbar and the inspector beside the grid
+  // included. A text field keeps its keys, and a dialog over the page is not
+  // the page.
+  const chord = useRef<(kind: ClassifyKind) => void>(() => undefined);
+  useEffect(() => {
+    chord.current = (kind) => classifySelection(kind);
+  });
+  useEffect(() => {
+    const onChord = (event: globalThis.KeyboardEvent) => {
+      if (event.defaultPrevented || event.isComposing) return;
+      if (!exactly(event, { alt: true })) return;
+      const kind = CHORD_KINDS[event.code];
+      if (!kind) return;
+      const target = event.target as HTMLElement | null;
+      if (!target?.closest("[data-ledger-root]") || takesText(target)) return;
+      event.preventDefault();
+      chord.current(kind);
+    };
+    document.addEventListener("keydown", onChord);
+    return () => document.removeEventListener("keydown", onChord);
+  }, []);
+
+  // ---- The palette -----------------------------------------------------------
+  const latest = useRef<() => Action[]>(() => []);
+  useEffect(() => {
+    groupCommands.current = {
+      classify: (kind, ids) => classifySelection(kind, { ids }),
+      category: askCategory,
+      select: (ids) => setSelection(new Set(ids)),
+      makeRule: onMakeRule ? (ids) => onMakeRule({ ids }) : null,
+    };
+    latest.current = () => [
+      ...CLASSIFY_KINDS.map((kind): Action => {
+        const availability = availabilityOf(kind);
+        return {
+          id: `ledger.classify.${kind}`,
+          label:
+            availability.kind === "blocked"
+              ? `${t(`desktop.ledger.classify.as_${kind}`)} · ${blockText(t, availability.block)}`
+              : t(`desktop.ledger.classify.as_${kind}`),
+          group: "ledger",
+          icon: "tick",
+          enabled: () => availability.kind === "ready",
+          run: () => classifySelection(kind),
+        };
+      }),
+      {
+        id: "ledger.issue.next",
+        label: t("desktop.ledger.issue.next"),
+        group: "ledger",
+        icon: "alert",
+        enabled: () => sets.fix.size > 0,
+        run: () => stepIssue(1),
+      },
+      {
+        id: "ledger.issue.previous",
+        label: t("desktop.ledger.issue.previous"),
+        group: "ledger",
+        icon: "alert",
+        enabled: () => sets.fix.size > 0,
+        run: () => stepIssue(-1),
+      },
+      {
+        id: "ledger.filters.clear",
+        label: t("desktop.ledger.filters.clear_all"),
+        group: "ledger",
+        icon: "filter",
+        enabled: () => filters !== NO_FILTERS || search !== "",
+        run: () => {
+          setFilters(NO_FILTERS);
+          setSearch("");
+        },
+      },
+    ];
+  });
+  useEffect(() => {
+    register(() => latest.current());
+    return () => register(null);
+  }, [register]);
+
+  // ---- The inspector beside the grid ------------------------------------------
+  const inspectorCommands = useRef({
+    classify: classifySelection,
+    focusActive: () => undefined as void,
+    showHidden: () => undefined as void,
+  });
+  useEffect(() => {
+    inspectorCommands.current = {
+      classify: classifySelection,
+      focusActive: () => {
+        const active = grid.current?.activeCell();
+        const key = active?.key ?? [...selected][0] ?? visible[0];
+        // With no cell active, the movement's description takes the focus,
+        // not the selection box before it.
+        if (key) grid.current?.focusCell(key, active?.column ?? "description");
+      },
+      showHidden: () => {
+        setFilters(NO_FILTERS);
+        setSearch("");
+        setCollapsed(new Set());
+      },
+    };
+  });
+  const inspectorContext = useMemo<SectionInspectorContext>(
+    () => ({
+      visible: visibleSet,
+      partial,
+      checked: sets.checked,
+      issues: sets.issues,
+      accounts,
+      duplicates,
+      classify: (kind, scope) =>
+        inspectorCommands.current.classify(kind, scope),
+      focusActive: () => inspectorCommands.current.focusActive(),
+      showHidden: () => inspectorCommands.current.showHidden(),
+    }),
+    [visibleSet, partial, sets, accounts, duplicates],
+  );
+  // The page hears of a change only: the section draws often.
+  const sentContext = useRef<SectionInspectorContext | null>(null);
+  useEffect(() => {
+    const last = sentContext.current;
+    if (last && sameInspectorContext(last, inspectorContext)) return;
+    sentContext.current = inspectorContext;
+    onInspector?.(inspectorContext);
+  }, [onInspector, inspectorContext]);
+  // Going, the section takes back only what it sent, since a section drawn
+  // in its place may have sent its own already; and it forgets having sent
+  // it, so that one still here sends it again.
+  useEffect(
+    () => () => {
+      const mine = sentContext.current;
+      sentContext.current = null;
+      onInspector?.((current) => (current === mine ? null : current));
+    },
+    [onInspector],
+  );
+
+  // ---- Menus -----------------------------------------------------------------
+  const [acting, setActing] = useState<ActionRequest | null>(null);
+  /** Focus goes back to the grid's active cell as a dialog it opened
+   * closes. */
+  const backToGrid = () => inspectorCommands.current.focusActive();
+  const [menu, setMenu] = useState<{
+    at: MenuAnchor;
+    items: ContextMenuItem[];
+    run: (id: string) => void;
+  } | null>(null);
+  const classifyItems = (ids: string[] | null): ContextMenuItem[] =>
+    CLASSIFY_KINDS.map((kind) => ({
+      id: `classify.${kind}`,
+      label: t(`desktop.ledger.classify.as_${kind}`),
+      enabled:
+        classifyAvailability(
+          kind,
+          ids ? { ids, hidden: 0, partial } : classifyTarget(),
+          byId,
+        ).kind === "ready",
+      shortcut: CHORD_OF[kind],
+    }));
+  const openMenu = (key: string, column: string | null, at: MenuAnchor) => {
+    const group = groups?.find((entry) => entry.key === key);
+    const ids = group ? group.rows.map(idOf) : null;
+    const draft = drafts.some((found) => found.key === key);
+    const staged = draft || stagedMovements(stage.content).has(key);
+    setMenu({
+      at,
+      items: [
+        ...(draft ? [] : classifyItems(ids)),
+        ...(ids
+          ? []
+          : [
+              { separator: true as const },
+              {
+                id: "revert.cell",
+                label: t("desktop.ledger.edit.revert_cell"),
+                enabled: column !== null && edit.cellStaged(key, column),
+                shortcut: "Ctrl+Alt+Z",
+              },
+              {
+                id: "revert.movement",
+                label: draft
+                  ? t("desktop.ledger.draft.remove")
+                  : t("desktop.ledger.edit.revert_movement"),
+                enabled: staged,
+              },
+              {
+                id: "fill",
+                label: t("desktop.ledger.fill.down"),
+                enabled: column !== null,
+                shortcut: "Ctrl+D",
+              },
+              ...(duplicates.has(key)
+                ? [
+                    { separator: true as const },
+                    {
+                      id: "duplicate.archive",
+                      label: `${t("desktop.ledger.duplicate.archive")}…`,
+                      enabled: true,
+                    },
+                  ]
+                : []),
+            ]),
+        ...(ids
+          ? [
+              {
+                id: "category",
+                label: t("desktop.ledger.group.category"),
+                enabled: true,
+              },
+              ...(onMakeRule
+                ? [
+                    {
+                      id: "make_rule",
+                      label: `${t("desktop.ledger.group.make_rule")}…`,
+                      enabled: true,
+                    },
+                  ]
+                : []),
+              {
+                id: "select",
+                label: t("desktop.ledger.group.select", { count: ids.length }),
+                enabled: true,
+              },
+            ]
+          : []),
+      ],
+      run: (chosen) => {
+        if (chosen === "revert.cell" && column)
+          edit.revertCell(key, column as ColumnId);
+        else if (chosen === "revert.movement") edit.revertMovement(key);
+        else if (chosen === "fill" && column)
+          edit.onFill({
+            rows: drawnRows.filter((id) => id === key || selected.has(id)),
+            columns: [column],
+          });
+        else if (chosen.startsWith("classify."))
+          classifySelection(
+            chosen.slice("classify.".length) as ClassifyKind,
+            ids ? { ids } : undefined,
+          );
+        else if (chosen === "category" && ids) askCategory(ids);
+        else if (chosen === "select" && ids) setSelection(new Set(ids));
+        else if (chosen === "make_rule" && ids) onMakeRule?.({ ids });
+        else if (chosen === "duplicate.archive")
+          // The menu hands focus back to the grid as it closes; the dialog
+          // opens after that, or it would take the move as a press outside.
+          window.requestAnimationFrame(() =>
+            setActing({
+              kind: "archive",
+              ids: [key],
+              reason: t("desktop.ledger.import_issue.duplicate"),
+            }),
+          );
+      },
+    });
+  };
+
+  // ---- What the toolbar and banners say --------------------------------------
+  const selectedNote =
+    selected.size > 0
+      ? t("desktop.ledger.selected", { count: numbers.format(selected.size) })
+      : "";
+  const shownNote = partial
+    ? t("desktop.ledger.loaded_of", {
+        loaded: numbers.format(rows.length),
+        total: numbers.format(held.total),
+      })
+    : filtered.length === rows.length
+      ? t("desktop.ledger.movements_count", {
+          count: numbers.format(rows.length),
+        })
+      : t("desktop.ledger.shown_of", {
+          shown: numbers.format(filtered.length),
+          total: numbers.format(rows.length),
+        });
+  const status = [shownNote, selectedNote].filter(Boolean).join(" · ");
+  const unsaved = stageTally(stage.content).units;
+  const stagedClassify = stagedClassifyCount(sets.toClassify, stage.content);
+  const groupLabels = useMemo(
+    () =>
+      [
+        ...new Set(
+          rows.flatMap((row) => (row.group_label ? [row.group_label] : [])),
+        ),
+      ].sort(),
+    [rows],
+  );
+  const hiddenByFilters = rows.length - filtered.length;
+  const shownPeriod = periodText(t, locale, period);
+  const selectionActions =
+    selected.size > 1 ? (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <IconButton
+            label={t("desktop.ledger.selection.actions")}
+            size="sm"
+            className="ledger-selection-actions"
+          >
+            <Icon name="more" />
+          </IconButton>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          {CLASSIFY_KINDS.map((kind) => (
+            <DropdownMenuItem
+              key={kind}
+              disabled={availabilityOf(kind).kind !== "ready"}
+              onSelect={() => classifySelection(kind)}
+            >
+              {t(`desktop.ledger.classify.as_${kind}`)}
+              <DropdownMenuShortcut>{CHORD_OF[kind]}</DropdownMenuShortcut>
+            </DropdownMenuItem>
+          ))}
+          {onMakeRule && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                disabled={hiddenSelected.length > 0}
+                onSelect={() => onMakeRule({ ids: [...selected] })}
+              >
+                {t("desktop.ledger.inspector.selection.make_rule")}…
+              </DropdownMenuItem>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    ) : null;
+
+  return (
+    <div
+      ref={within}
+      className="ledger-movements flex min-h-0 flex-1 flex-col gap-2 p-3"
+      onKeyDown={onKeyDown}
+      onKeyDownCapture={edit.onKeyDownCapture}
+    >
+      <ReadinessStrip
+        readiness={readiness}
+        sets={sets}
+        filters={filters}
+        locale={locale}
+        unsaved={unsaved}
+        stagedClassify={stagedClassify}
+        onCheck={onCheckReadiness}
+        onPill={onPill}
+        onReason={onReason}
+        duplicates={duplicates.size}
+        duplicatesShown={filters.importIssue === "duplicate"}
+        onDuplicates={(show) =>
+          show
+            ? leadTo({ ...NO_FILTERS, importIssue: "duplicate" }, "status")
+            : setFilters({ ...filters, importIssue: null })
+        }
+      />
+      <div>
+        <MovementsToolbar
+          search={search}
+          onSearch={setSearch}
+          onLeaveSearch={() => {
+            const first = visible[0];
+            if (first) grid.current?.focusCell(first);
+          }}
+          filters={filters}
+          onFilters={setFilters}
+          savedView={savedView}
+          onChooseView={chooseView}
+          groupBy={groupBy}
+          onGroupBy={setGroupBy}
+          groupAllowed={(grouping) => complete || grouping === SERVER_GROUPING}
+          onFoldAll={(folded) =>
+            setCollapsed(
+              new Set(folded ? (groups ?? []).map((g) => g.key) : []),
+            )
+          }
+          sort={effectiveSort}
+          onSort={setSort}
+          sortAllowed={(key) => complete || serverSortField(key) !== null}
+          layout={drawnLayout}
+          onLayout={setLayout}
+          density={view.density}
+          onDensity={(density) =>
+            onViewChange((current) => ({ ...current, density }))
+          }
+          accounts={accounts}
+          onWantAccounts={() => setWantAccounts(true)}
+          groupLabels={groupLabels}
+          reasons={sets.reasons.map((entry) => entry.reason)}
+          status={status}
+          selectionActions={selectionActions}
+        />
+      </div>
+      {membership.kind === "reading" && (
+        <p role="status" className="text-sm text-muted-foreground">
+          {t("desktop.ledger.filters.reading")}
+        </p>
+      )}
+      {membership.kind === "failed" && (
+        <Alert tone="warning" role="alert" icon={<Icon name="alert" />}>
+          {t("desktop.ledger.filters.failed")}
+        </Alert>
+      )}
+      {flagged.kind === "failed" && (
+        // Unread is not "none": without this the marks would just vanish.
+        <Alert
+          tone="warning"
+          role="alert"
+          icon={<Icon name="alert" />}
+          className="ledger-duplicates-failed"
+        >
+          {t("desktop.ledger.duplicate.failed")}
+        </Alert>
+      )}
+      <RowRevealNotice
+        {...reveal}
+        hidden={t("desktop.ledger.reveal.movement_hidden")}
+        missing={t("desktop.ledger.reveal.movement_missing")}
+      />
+      {hiddenSelected.length > 0 && (
+        <div
+          role="alert"
+          className="ledger-hidden-selection flex flex-wrap items-center gap-2"
+        >
+          <Alert
+            tone="warning"
+            role="none"
+            icon={<Icon name="alert" />}
+            className="flex-1"
+          >
+            {t("desktop.ledger.selection.hidden", {
+              hidden: hiddenSelected.length,
+              selected: selected.size,
+            })}
+          </Alert>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setFilters(NO_FILTERS);
+              setSearch("");
+              setCollapsed(new Set());
+            }}
+          >
+            {t("desktop.ledger.selection.show")}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() =>
+              setSelection(
+                new Set([...selected].filter((id) => visibleSet.has(id))),
+              )
+            }
+          >
+            {t("desktop.ledger.selection.keep_visible")}
+          </Button>
+        </div>
+      )}
+      {hiddenSelected.length === 0 &&
+        selected.size > 1 &&
+        extent === "all" &&
+        hiddenByFilters > 0 && (
+          <p
+            role="status"
+            className="flex flex-wrap items-center gap-2 text-sm"
+          >
+            {t("desktop.ledger.selection.all_shown", { count: visible.length })}
+            <Button
+              variant="link"
+              size="xs"
+              onClick={() => setSelection(new Set(rows.map(idOf)))}
+            >
+              {t("desktop.ledger.selection.select_all", {
+                count: rows.length,
+                period: shownPeriod,
+              })}
+            </Button>
+          </p>
+        )}
+      {terms.length > 0 && partial && (
+        <p
+          role="status"
+          className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground"
+        >
+          {t("desktop.ledger.search.loaded", {
+            found: filtered.length,
+            loaded: rows.length,
+          })}
+          <Button variant="link" size="xs" onClick={readAll}>
+            {t("desktop.ledger.search.load_all", { total: held.total })}
+          </Button>
+        </p>
+      )}
+      {elsewhere !== null && elsewhere > 0 && (
+        <p
+          role="status"
+          className="ledger-elsewhere flex flex-wrap items-center gap-2 text-sm text-muted-foreground"
+        >
+          {t("desktop.ledger.search.elsewhere", { count: elsewhere })}
+          <Button variant="link" size="xs" onClick={() => onPeriod(null)}>
+            {t("desktop.ledger.search.show")}
+          </Button>
+        </p>
+      )}
+      {partial && !terms.length && (
+        <p
+          role="status"
+          className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground"
+        >
+          {t("desktop.ledger.window.partial")}
+          <Button variant="link" size="xs" onClick={readAll}>
+            {t("desktop.ledger.search.load_all", { total: held.total })}
+          </Button>
+        </p>
+      )}
+      <MovementsGrid
+        gridRef={grid}
+        order={order}
+        context={{
+          ...columnContext,
+          duplicates,
+          currencySlot,
+          statusMarks: marks,
+          editing: edit.editing,
+        }}
+        byId={byId}
+        moreColumnsLabel={(count) =>
+          t("desktop.ledger.columns.more_name", { count })
+        }
+        earlierColumnsLabel={(count) =>
+          t("desktop.ledger.columns.earlier_name", { count })
+        }
+        className="ledger-grid rounded-md"
+        label={t("desktop.ledger.grid", { period: shownPeriod })}
+        rows={drawnGridRows}
+        onCommit={edit.onCommit}
+        onPaste={edit.onPaste}
+        onCopy={edit.onCopy}
+        onFill={edit.onFill}
+        density={view.density}
+        sort={{ column: effectiveSort.key, direction: effectiveSort.direction }}
+        onSort={(column) =>
+          setSort(
+            effectiveSort.key === column
+              ? {
+                  key: column as ColumnId,
+                  direction: effectiveSort.direction === "asc" ? "desc" : "asc",
+                }
+              : { key: column as ColumnId, direction: "asc" },
+          )
+        }
+        selection={selected}
+        onSelectionChange={(next) => setSelection(next)}
+        onToggleSection={(key) => {
+          const next = new Set(collapsed);
+          if (next.has(key)) next.delete(key);
+          else next.add(key);
+          setCollapsed(next);
+        }}
+        onMenu={(key, column, at) => openMenu(key, column, at)}
+        onColumnResize={(column, width) =>
+          onViewChange((current) => ({
+            ...current,
+            columns: {
+              ...current.columns,
+              order: current.columns.order.length
+                ? current.columns.order
+                : [...layout.order],
+              hidden: current.columns.order.length
+                ? current.columns.hidden
+                : [...layout.hidden],
+              widths: {
+                ...current.columns.widths,
+                [column]: Math.round(width * remPx),
+              },
+            },
+          }))
+        }
+        onColumnOrder={(next) => {
+          const shown = next.filter(
+            (column): column is ColumnId => column in COLUMN_SPECS,
+          );
+          const rest = layout.order.filter((column) => !shown.includes(column));
+          setLayout([...shown, ...rest], [...layout.hidden]);
+        }}
+        empty={
+          <EmptyState
+            className="ledger-filtered-empty"
+            icon="search"
+            heading={t("desktop.ledger.empty_filtered")}
+            description={t("desktop.ledger.empty_filtered_detail", {
+              count: hiddenByFilters,
+              period: shownPeriod,
+            })}
+          >
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setFilters(NO_FILTERS);
+                setSearch("");
+              }}
+            >
+              {t("desktop.ledger.filters.clear_all")}
+            </Button>
+          </EmptyState>
+        }
+      />
+      {periodWindow.phase === "reading" && (
+        <p role="status" className="text-xs text-muted-foreground">
+          {t("desktop.ledger.loading")}
+        </p>
+      )}
+      <div aria-live="polite" className="sr-only">
+        {spoken}
+      </div>
+      {asking && (
+        <ClassifyDialog
+          key={asking.ids.join(" ")}
+          kind={asking.kind}
+          ratioOf={
+            asking.kind === "mixed"
+              ? (category) =>
+                  ratioCoverage(
+                    asking.ids,
+                    byId,
+                    category,
+                    ratios,
+                    stage.content,
+                  )
+              : undefined
+          }
+          onOpenRatios={onOpenRatios}
+          movements={asking.draft ? 1 : asking.ids.length}
+          split={asking.split}
+          {...(asking.share ? { initialShare: asking.share } : {})}
+          {...(asking.range
+            ? {
+                range: {
+                  count: asking.range.length,
+                  onSelect: () => {
+                    const ids = asking.range!;
+                    setSelection(new Set(ids));
+                    const kind = asking.kind;
+                    if (kind === "category") askCategory(ids);
+                    else classifySelection(kind, { ids });
+                  },
+                },
+              }
+            : {})}
+          onClosed={asking.draft ? undefined : backToGrid}
+          skipped={asking.skipped}
+          partial={asking.partial}
+          error={asking.error}
+          overwritten={asking.overwritten ?? 0}
+          onCancel={() => setAsking(null)}
+          onStage={(answer) => {
+            if (asking.draft) {
+              // A new movement's classification is filled in, not staged
+              // over a stored one: Business with its category, Mixed with
+              // its share.
+              const key = asking.draft;
+              const share =
+                answer.share === undefined ? null : parsePercent(answer.share);
+              if (share && share.kind !== "value") {
+                setAsking({
+                  ...asking,
+                  error: t("desktop.ledger.classify.share_refused", {
+                    raw: answer.share ?? "",
+                  }),
+                });
+                return;
+              }
+              const edit = (field: DraftField, value: string | null) =>
+                onStage({ type: "edit_draft", key, field, value });
+              edit(
+                "business_classification",
+                asking.kind === "mixed" ? "MIXED" : "BUSINESS",
+              );
+              if (answer.category) edit("category_id", answer.category);
+              edit(
+                "business_pct",
+                share?.kind === "value" ? share.value : null,
+              );
+              setAsking(null);
+              return;
+            }
+            if (asking.kind === "category") {
+              const outcome = categoryCells(
+                asking.ids,
+                answer.category ?? "",
+                byId,
+                stage.content,
+              );
+              if (outcome.kind === "staged") {
+                onStage(outcome.event);
+                setToast(
+                  t("desktop.ledger.classify.staged_category", {
+                    category: categoryLabel(t, answer.category ?? ""),
+                    count: outcome.movements,
+                  }),
+                );
+              }
+              setAsking(null);
+              return;
+            }
+            const error = stageClassified(asking.kind, asking.ids, answer);
+            if (error) setAsking({ ...asking, error });
+            else setAsking(null);
+          }}
+        />
+      )}
+      {menu && (
+        <ContextMenu
+          label={t("desktop.ledger.menu")}
+          items={menu.items}
+          at={menu.at}
+          choose={(id) => {
+            const run = menu.run;
+            setMenu(null);
+            if (id) run(id);
+          }}
+        />
+      )}
+      {acting && (
+        <ActionDialog
+          port={port}
+          request={acting}
+          rows={byId}
+          sealed={pageEditing.sealed ?? NO_SEALED}
+          onStage={onStage}
+          onClose={() => setActing(null)}
+          onClosed={backToGrid}
+          say={setToast}
+        />
+      )}
+      {edit.dialogs}
+      <Toast className="ledger-toast">{toast}</Toast>
+    </div>
+  );
+}

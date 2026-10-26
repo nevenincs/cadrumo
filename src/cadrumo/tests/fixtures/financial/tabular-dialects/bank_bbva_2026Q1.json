@@ -1,0 +1,10 @@
+{
+  "output_sha256": "ba8261633246516982fbc65132978b628887dbe8ea5f8d4df822f406e4b1f199",
+  "output_size_bytes": 1454,
+  "provenance": "synthetic_generated",
+  "role": "dialect_normalization_anchor",
+  "licence": "CC0-1.0",
+  "structural_difficulty": [
+    "BBVA web export"
+  ]
+}

@@ -1,0 +1,157 @@
+from __future__ import annotations
+
+from typing import Final
+
+from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
+from cadrumo_client.commands.shared_contracts import (
+    DeferredTarget,
+    LazyBinding,
+    ParameterConstraint,
+    ParameterDefault,
+    ResultSchemaSpec,
+    SchemaState,
+    TranslationKey,
+    ValueContract,
+)
+from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
+
+from ._modelo_nonwork_command_spec_policies import (
+    _MODEL_READ,
+    _MODEL_WRITE,
+)
+
+M036_DECLARATION_PARAMETERS: Final[tuple[OptionSpec, ...]] = (
+    OptionSpec(
+        name="declared_on",
+        declarations=("--declared-on",),
+        value=ValueContract(DeferredTarget("builtins", "str")),
+        default=ParameterDefault.required(),
+        help_key=TranslationKey("cli.app.modelo.m036.declared_on_help"),
+        multiple=False,
+        is_flag=False,
+        flag_value=None,
+        constraint=ParameterConstraint(),
+    ),
+    OptionSpec(
+        name="sede_justificante",
+        declarations=("--sede-justificante",),
+        value=ValueContract(DeferredTarget("builtins", "str")),
+        default=ParameterDefault.value(None),
+        help_key=TranslationKey("cli.app.modelo.m036.justificante_help"),
+        multiple=False,
+        is_flag=False,
+        flag_value=None,
+        constraint=ParameterConstraint(),
+    ),
+    OptionSpec(
+        name="note",
+        declarations=("--note",),
+        value=ValueContract(DeferredTarget("builtins", "str")),
+        default=ParameterDefault.value(None),
+        help_key=TranslationKey("cli.app.modelo.m036.note_help"),
+        multiple=False,
+        is_flag=False,
+        flag_value=None,
+        constraint=ParameterConstraint(),
+    ),
+)
+
+MODELO_NONWORK_M036_COMMAND_SPECS: tuple[CommandSpec, ...] = (
+    CommandSpec(
+        "app_modelo_m036_alta",
+        "app_modelo_m036",
+        "alta",
+        kind=CommandNodeKind.LEAF,
+        help_key=TranslationKey("cli.app.modelo.m036.alta_help"),
+        short_help_key=None,
+        invocation=InvocationSpec(context_parameter="ctx"),
+        parameters=M036_DECLARATION_PARAMETERS,
+        policy=_MODEL_WRITE,
+        handler=LazyBinding.available(DeferredTarget(".modelo_m036_commands", "m036_alta", __package__)),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            DeferredTarget(".modelo_results_m036", "M036DeclarationRecordResult", __package__),
+            identity="modelo.m036.alta",
+        ),
+    ),
+    CommandSpec(
+        "app_modelo_m036_modificacion",
+        "app_modelo_m036",
+        "modificacion",
+        kind=CommandNodeKind.LEAF,
+        help_key=TranslationKey("cli.app.modelo.m036.modificacion_help"),
+        short_help_key=None,
+        invocation=InvocationSpec(context_parameter="ctx"),
+        parameters=M036_DECLARATION_PARAMETERS,
+        policy=_MODEL_WRITE,
+        handler=LazyBinding.available(DeferredTarget(".modelo_m036_commands", "m036_modificacion", __package__)),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            DeferredTarget(".modelo_results_m036", "M036DeclarationRecordResult", __package__),
+            identity="modelo.m036.modificacion",
+        ),
+    ),
+    CommandSpec(
+        "app_modelo_m036_baja",
+        "app_modelo_m036",
+        "baja",
+        kind=CommandNodeKind.LEAF,
+        help_key=TranslationKey("cli.app.modelo.m036.baja_help"),
+        short_help_key=None,
+        invocation=InvocationSpec(context_parameter="ctx"),
+        parameters=M036_DECLARATION_PARAMETERS,
+        policy=_MODEL_WRITE,
+        handler=LazyBinding.available(DeferredTarget(".modelo_m036_commands", "m036_baja", __package__)),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            DeferredTarget(".modelo_results_m036", "M036DeclarationRecordResult", __package__),
+            identity="modelo.m036.baja",
+        ),
+    ),
+    CommandSpec(
+        "app_modelo_m036_list",
+        "app_modelo_m036",
+        "list",
+        kind=CommandNodeKind.LEAF,
+        help_key=TranslationKey("cli.app.modelo.m036.list_help"),
+        short_help_key=None,
+        invocation=InvocationSpec(context_parameter="ctx"),
+        parameters=(),
+        policy=_MODEL_READ,
+        handler=LazyBinding.available(DeferredTarget(".modelo_m036_commands", "m036_list", __package__)),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            DeferredTarget(".modelo_results_m036", "M036DeclarationListResult", __package__),
+            identity="modelo.m036.list",
+        ),
+    ),
+    CommandSpec(
+        "app_modelo_m036_view",
+        "app_modelo_m036",
+        "view",
+        kind=CommandNodeKind.LEAF,
+        help_key=TranslationKey("cli.app.modelo.m036.view_help"),
+        short_help_key=None,
+        invocation=InvocationSpec(context_parameter="ctx"),
+        parameters=(
+            ArgumentSpec(
+                name="declaration_id",
+                value=ValueContract(DeferredTarget("builtins", "str")),
+                default=ParameterDefault.required(),
+                help_key=TranslationKey("cli.app.modelo.m036.declaration_id_help"),
+            ),
+        ),
+        policy=_MODEL_READ,
+        handler=LazyBinding.available(DeferredTarget(".modelo_m036_commands", "m036_view", __package__)),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            DeferredTarget(".modelo_results_m036", "M036DeclarationShowResult", __package__),
+            identity="modelo.m036.view",
+        ),
+    ),
+)
+
+__all__ = ["MODELO_NONWORK_M036_COMMAND_SPECS"]
+"""Authored CommandSpec declarations for the Modelo non-work m036 family."""
+"""Authored CommandSpec declarations for the Modelo non-work m036 family."""

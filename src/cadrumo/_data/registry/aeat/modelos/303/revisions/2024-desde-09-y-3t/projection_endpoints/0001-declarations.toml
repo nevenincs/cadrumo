@@ -1,0 +1,103 @@
+
+# Revision-owned Modelo 303 projection endpoint authority.
+# Each identity is explicitly grounded in this revision's official record design.
+
+[[revisions."2024-desde-09-y-3t".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-dana-elegible.slot-1"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2024-late", "boe-orden-hfp-1359-2023-iva-authority"]
+[revisions."2024-desde-09-y-3t".projection_endpoints.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 1
+fact = 'dana_elegible'
+
+[[revisions."2024-desde-09-y-3t".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-dana-elegible.slot-2"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2024-late", "boe-orden-hfp-1359-2023-iva-authority"]
+[revisions."2024-desde-09-y-3t".projection_endpoints.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 2
+fact = 'dana_elegible'
+
+[[revisions."2024-desde-09-y-3t".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-agricola.fact-dana-elegible.slot-1"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2024-late", "boe-orden-hfp-1359-2023-iva-authority"]
+[revisions."2024-desde-09-y-3t".projection_endpoints.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'agricola'
+slot = 1
+fact = 'dana_elegible'
+
+[[revisions."2024-desde-09-y-3t".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-agricola.fact-reduccion-dana.slot-1"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2024-late", "boe-orden-hfp-1359-2023-iva-authority"]
+[revisions."2024-desde-09-y-3t".projection_endpoints.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'agricola'
+slot = 1
+fact = 'reduccion_dana'
+
+[[revisions."2024-desde-09-y-3t".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-agricola.fact-dana-elegible.slot-2"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2024-late", "boe-orden-hfp-1359-2023-iva-authority"]
+[revisions."2024-desde-09-y-3t".projection_endpoints.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'agricola'
+slot = 2
+fact = 'dana_elegible'
+
+[[revisions."2024-desde-09-y-3t".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-agricola.fact-reduccion-dana.slot-2"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2024-late", "boe-orden-hfp-1359-2023-iva-authority"]
+[revisions."2024-desde-09-y-3t".projection_endpoints.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'agricola'
+slot = 2
+fact = 'reduccion_dana'
+
+[[revisions."2024-desde-09-y-3t".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-reduccion-lorca.slot-1"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2024-late", "boe-orden-hfp-1359-2023-iva-authority"]
+[revisions."2024-desde-09-y-3t".projection_endpoints.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 1
+fact = 'reduccion_lorca'
+
+[[revisions."2024-desde-09-y-3t".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-reduccion-dana.slot-1"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2024-late", "boe-orden-hfp-1359-2023-iva-authority"]
+[revisions."2024-desde-09-y-3t".projection_endpoints.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 1
+fact = 'reduccion_dana'
+
+[[revisions."2024-desde-09-y-3t".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-reduccion-lorca.slot-2"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2024-late", "boe-orden-hfp-1359-2023-iva-authority"]
+[revisions."2024-desde-09-y-3t".projection_endpoints.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 2
+fact = 'reduccion_lorca'
+
+[[revisions."2024-desde-09-y-3t".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-reduccion-dana.slot-2"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["aeat-dr-303-2024-late", "boe-orden-hfp-1359-2023-iva-authority"]
+[revisions."2024-desde-09-y-3t".projection_endpoints.projection_ref]
+projection_kind = 'm303_regimen_simplificado_fact'
+cohort = 'no_agricola'
+slot = 2
+fact = 'reduccion_dana'

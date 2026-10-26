@@ -1,0 +1,123 @@
+"""Application-owned capabilities for Modelo 190 percepciones observations.
+
+The percepciones source stores one :class:`WithholdingObservation` for every
+``(perceptor, clave, subclave)`` in a ``(modelo, filing_year, period)`` window.
+The application owns the key grammar and the required read/write capability;
+the encrypted persistence implementation is bound by an outer composition
+root. Keeping this module free of storage imports makes the calculate mesh
+usable with an inward fake and prevents persistence details from becoming an
+implicit application dependency.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Protocol
+
+from ...core.errors.hierarchy import CadrumoError
+from ...core.external_constants import UTF_8_ENCODING
+from ...core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
+from ...core.hashing import sha256_hex
+from ...core.i18n.translatable import Translatable as tr
+from ...core.identity.tax_id import tax_id_identity_token
+from ...core.period import Period
+from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
+from .errors import AggregationValidationError
+from .observation_key_component import validate_observation_key_component
+
+
+def _hashed_tax_id_token(tax_id: str) -> str:
+    """Return the stable opaque identity segment for one perceptor NIF."""
+    token = tax_id_identity_token(tax_id)
+    if not token:
+        raise AggregationValidationError(
+            tr("aggregation.retenciones.errors.perceptor_nif_blank"),
+            context={"field": "perceptor_tax_id"},
+        )
+    return sha256_hex(token.encode(UTF_8_ENCODING))
+
+
+def percepcion_observation_key(
+    modelo: str,
+    filing_year: int,
+    period: Period,
+    perceptor_tax_id: str,
+    clave: str,
+    subclave: str,
+    projection_identity: str | None = None,
+) -> str:
+    """Build the opaque per-perceptor-clave observation key.
+
+    The NIF is hashed because object keys are storage metadata. ``clave`` and
+    ``subclave`` remain explicit because they are non-identifying AEAT codes
+    and distinguish the separate registro-tipo-2 observations.
+    """
+    if not FILING_YEAR_MIN <= filing_year <= FILING_YEAR_MAX:
+        raise AggregationValidationError(
+            tr("aggregation.retenciones.errors.filing_year_out_of_range"),
+            context={
+                "filing_year": str(filing_year),
+                "min_year": str(FILING_YEAR_MIN),
+                "max_year": str(FILING_YEAR_MAX),
+            },
+        )
+    validate_observation_key_component(modelo, context="modelo")
+    period_token = period.registry_token
+    validate_observation_key_component(period_token, context="period")
+    validate_observation_key_component(clave, context="clave")
+    subclave_token = subclave or "-"
+    validate_observation_key_component(subclave_token, context="subclave")
+    prefix = f"{modelo}:{filing_year}:{period_token}:{_hashed_tax_id_token(perceptor_tax_id)}:{clave}:{subclave_token}"
+    if projection_identity is None:
+        return prefix
+    validate_observation_key_component(projection_identity, context="projection_identity")
+    return f"{prefix}:{projection_identity}"
+
+
+class PercepcionObservationPersistenceError(CadrumoError):
+    """Translated failure from the perceptor-observation persistence port."""
+
+    def __init__(self, operation: str) -> None:
+        """Carry only the application operation, never storage details."""
+        self.operation = operation
+        super().__init__(f"percepcion observation persistence operation failed: {operation}")
+
+
+class PercepcionObservationRepository(Protocol):
+    """Application-facing read/write capability for percepciones windows."""
+
+    def load_observations(self, modelo: str, period: Period) -> tuple[WithholdingObservation, ...]:
+        """Return observations for one modelo and filing period."""
+        ...
+
+    def load_annual_source_observations(
+        self,
+        source_modelo: str,
+        filing_year: int,
+    ) -> tuple[WithholdingObservation, ...]:
+        """Return all active periodic projections feeding one annual family."""
+        ...
+
+
+@dataclass(frozen=True, slots=True)
+class PercepcionObservationPorts:
+    """Required percepciones capabilities for one profile calculation context."""
+
+    repository: PercepcionObservationRepository
+
+
+class PercepcionObservationPortsFactory(Protocol):
+    """Construct the percepciones capabilities for one profile bucket."""
+
+    def __call__(self, *, bucket_id: str) -> PercepcionObservationPorts:
+        """Return the required application bundle for ``bucket_id``."""
+        ...
+
+
+__all__ = [
+    "PercepcionObservationPersistenceError",
+    "PercepcionObservationPorts",
+    "PercepcionObservationPortsFactory",
+    "PercepcionObservationRepository",
+    "percepcion_observation_key",
+]

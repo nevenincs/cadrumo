@@ -1,0 +1,9 @@
+{
+  "provenance": "synthetic_generated",
+  "kind": "xml_invoice_ubl",
+  "source": "authored in-tree for the under-declaration sweep of the confirm boundary",
+  "licence": "Apache-2.0",
+  "notes": "Hand-authored EN16931 UBL invoice, fictional data. Declared synthetic rather than sourced: no bundled fixture stated a UNTDID 5305 category other than S, so the confirm boundary silently dropping the document's own IVA treatment could not be detected. Shaped as a domestic reverse charge (code AE at 0.00 percent, LIVA art. 84.Uno.2) because that is the case where the loss costs a declaration: reverse charge, exempt and zero-rated all print a base and no cuota, so once the code is gone the record is indistinguishable from an ordinary zero-cuota supply and the recipient's self-assessed output IVA is never assessed. The asserted value is the category the document states, never a figure recomputed from the code under test.",
+  "sha256": "e3632d2bdfe72d6a0de6049fdc87f1bf3f69ba5df7326dd7e5a2f0b8f9a36453",
+  "bytes": 3351
+}

@@ -1,0 +1,1708 @@
+[revisions."2025-y-siguientes"]
+binding_source_refs = ["aeat-dr-190-2025"]
+formula_source_refs = ["aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form"]
+predecessor = "2024"
+casilla_source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+# application_link_source_refs: carried from predecessor edition "2024"; not re-grounded on this edition's own design
+application_link_source_refs = ["boe-modelo-190-2025-form", "aeat-modelo-190-procedure"]
+reviewed_against = "2024"
+# Prepared and reviewed by an agent against the bundled diseño de registros and
+# the ordenes this revision cites; NO human operator has countersigned it, and
+# 'agent_reviewed' plus this reviewer token record that state honestly rather
+# than claiming the operator's own sign-off.
+#
+# What the review established, by measurement:
+#   - every casilla legal_ref and source_ref resolves to the legal catalogue, and
+#     every cited source's corpus file is present on disk;
+#   - every formula targets a casilla of this revision;
+#   - every enrolled schema family resolves;
+#   - every cited source's applicability window overlaps this revision's own life;
+#   - and all 2 fixed-width record(s) of the DERIVED layout were paired to
+#     their design sheet and cover it: no design DATA position is left
+#     unaddressed, and none reaches past its declared record length.
+#
+# The coverage figure is measured on the layout AFTER binding derivation, which
+# is what the renderer and the completeness gate consume; the raw export_layouts
+# collection holds only inline fields and reading it understates coverage badly.
+#
+# This stamp claims no fresh-render reproduction evidence: that belongs to the
+# revisions enrolled in the generated-tree drift gate, and this one is not.
+#
+# What it does NOT establish: that the figures a filing produces are correct
+# against AEAT. That is a tax review against official sources, and it is what an
+# operator re-stamping this to 'operator_reviewed' would be attesting.
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-08-19
+authority_grade = "filing"
+id = "2025-y-siguientes"
+valid_from = 2025-01-01
+period_selector = { year_from = 2025, periods = ["0A"] }
+legal_refs = [
+    "ley-35-2006:art-99",
+    "orden-eha-3127-2009:art-1",
+    "orden-hac-1431-2025:art-2",
+    "rd-439-2007:art-108",
+    "rd-439-2007:art-80",
+    "ley-35-2006:art-101",
+    "rd-439-2007:art-86",
+    "ley-58-2003:art-93",
+]
+orden_aplicabilidad = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2"]
+source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-instructions-2025", "aeat-modelo-190-procedure", "boe-modelo-190-2025-form", "boe-modelo-190-2025-amendment"]
+family_storage_baseline = "2024"
+scoped_families = ["export_layouts", "workbook_parity_refs", "verification_expectations", "completeness_manifest"]
+
+[revisions."2025-y-siguientes".family_dispositions.projection_endpoints]
+reason = """
+A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (modelo-190-fichero-boe) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction rather than unbuilt: authoring a projection row into the layout is what would make this family apply, and that change reaches this declaration through the \
+same revision."""
+legal_refs = [
+    "ley-35-2006:art-99",
+    "orden-eha-3127-2009:art-1",
+    "orden-hac-1431-2025:art-2",
+    "rd-439-2007:art-108",
+    "rd-439-2007:art-80",
+    "ley-35-2006:art-101",
+    "rd-439-2007:art-86",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "aeat-dr-190-2024",
+    "aeat-dr-190-2025",
+    "aeat-modelo-190-instructions-2025",
+    "aeat-modelo-190-procedure",
+    "boe-modelo-190-2025-form",
+    "boe-modelo-190-2025-amendment",
+]
+
+[revisions."2025-y-siguientes".family_dispositions.parameters]
+reason = """
+A parameter holds a regulatory value a formula of this revision applies -- a rate, a threshold, a coefficient. Modelo 190 applies none: both of its formulas are op = 'add', summing the per-perceptor percepciones and retenciones into the declarante totals, and an addition applies nothing to what it sums. The retencion rate reaching these figures was set by the retenedor at payment time under RD 439/2007 arts. 80 to 86 and consumed by the quarterly modelo 111; this annual resumen receives the \
+already-withheld amounts. Contrast modelo 115, which DOES hold one, because its casilla 03 is computed as percent(02, irpf.urban_rental_withholding_rate). Empty by the shape of this modelo's calculation rather than by omission."""
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101"]
+source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "m190-persona-contacto-telefono"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "m190-persona-contacto-nombre"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "m190-numero-identificativo"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "m190-declaracion-complementaria"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "m190-declaracion-sustitutiva"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "m190-numero-identificativo-anterior"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "m190-correo-electronico"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-descendientes-menores-3-total"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-descendientes-menores-3-entero"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-descendientes-resto-total"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-descendientes-resto-entero"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-descendientes-discapacidad-33-65-total"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-descendientes-discapacidad-33-65-entero"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-descendientes-discapacidad-movilidad-total"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-descendientes-discapacidad-movilidad-entero"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-descendientes-discapacidad-65-total"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-descendientes-discapacidad-65-entero"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-ascendientes-menores-75-total"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-59", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-ascendientes-menores-75-entero"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-59", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-ascendientes-75-mas-total"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-59", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-ascendientes-75-mas-entero"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-59", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-ascendientes-discapacidad-33-65-total"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-ascendientes-discapacidad-33-65-entero"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-ascendientes-discapacidad-movilidad-total"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-ascendientes-discapacidad-movilidad-entero"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-ascendientes-discapacidad-65-total"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-ascendientes-discapacidad-65-entero"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-computo-hijo-1"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-computo-hijo-2"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-computo-hijo-3"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-prestamos-vivienda-clave"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-emerging-stock-excess-clave"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-42.3.f", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-incapacidad-dineraria-percepcion"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-incapacidad-dineraria-retenciones"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-incapacidad-especie-valoracion"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-incapacidad-especie-ingresos-a-cuenta"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-incapacidad-especie-repercutidos"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-complemento-ayuda-infancia"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-retenciones-forales-estatal"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-retenciones-forales-navarra"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-retenciones-forales-araba"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-retenciones-forales-gipuzkoa"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-retenciones-forales-bizkaia"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "representante-legal-nif"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "ingresos-a-cuenta-repercutidos"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "devengo-year"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-spouse-or-unit-titular-nif"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-disability-clave"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-contract-relation-clave"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-unit-convivencia-titular-clave"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-geographic-mobility-clave"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-nif"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-name"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-clave-percepcion"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-subclave-percepcion"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "percepcion-integra-dineraria"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "perc-retenciones-practicadas"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "percepcion-valoracion-especie"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "ingresos-a-cuenta-efectuados"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-province"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-birth-year"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-family-situation"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-reducciones-aplicables"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-18", "ley-35-2006:art-32", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-gastos-deducibles"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-pension-compensatoria"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-anualidades-alimentos"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "total-percepciones-count"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "boe-modelo-190-2025-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "total-percepciones-amount"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "boe-modelo-190-2025-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "retenciones-ingresos-a-cuenta"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-190-2025", "boe-modelo-190-2025-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-ceuta-melilla-clave"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93", "ley-35-2006:art-68.4", "real-decreto-ley-13-2025:art-2"]
+source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "decl.total-percepciones" }
+fields = {legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"], source_refs = ["aeat-dr-190-2025", "boe-modelo-190-2025-form"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "decl.percepciones-total" }
+fields = {legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"], source_refs = ["aeat-dr-190-2025", "boe-modelo-190-2025-form"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "decl.retenciones-total" }
+fields = {constraints = {legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"], source_refs = ["aeat-dr-190-2025", "boe-modelo-190-2025-form"]}, legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"], source_refs = ["aeat-dr-190-2025", "boe-modelo-190-2025-form"]}
+removed_fields = ["constraints.additional_source_refs"]
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.ceuta-melilla" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93", "ley-35-2006:art-68.4", "real-decreto-ley-13-2025:art-2"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "constructs"
+selector = {revision = "2024", id = "modelo-190-annual-summary"}
+fields = {dependency_classifications = ["modelo-190-dep-111"]}
+sequence_additions = {bindings = ["modelo-190-111-trabajo-dinerario-importe-anual", "modelo-190-111-trabajo-especie-importe-anual", "modelo-190-111-actividades-dinerario-importe-anual", "modelo-190-111-actividades-especie-importe-anual", "modelo-190-111-premios-dinerario-importe-anual", "modelo-190-111-premios-especie-importe-anual", "modelo-190-111-ganancias-dinerario-importe-anual", "modelo-190-111-ganancias-especie-importe-anual", "modelo-190-111-derechos-imagen-importe-anual", "modelo-190-111-retenciones-anual"], deadline_windows = ["modelo-190-2025-0a"], legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form", "boe-modelo-190-2025-amendment", "aeat-calendario-contribuyente-2026-hasta-2-febrero"]}
+sequence_removals = {bindings = [1, 2, 3, 4, 5, 6, 7, 8], deadline_windows = [0], legal_refs = [3]}
+sequence_order = {bindings = [0, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 1, 2, 3, 4, 5, 6, 7, 8], legal_refs = [0, 1, 2, 8, 3, 4, 5, 6, 7], source_refs = [3, 0, 4, 1, 5, 6, 2, 7]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-percepciones-anual"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_citations = [{required_text = ["Casilla 01. Número total de percepciones", "apuntes o registros de percepción"], source_ref = "aeat-modelo-190-instructions-2025"}], source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1]}
+sequence_order = {legal_refs = [0, 1, 7, 2, 3, 4, 5, 6]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-ano-nacimiento"}
+sequence_additions = {source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-anualidades-alimentos"}
+sequence_additions = {source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-ascendientes-75-mas-entero"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {legal_refs = [1], source_refs = [0]}
+sequence_order = {legal_refs = [0, 5, 1, 2, 3, 4], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-ascendientes-75-mas-total"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {legal_refs = [1], source_refs = [0]}
+sequence_order = {legal_refs = [0, 5, 1, 2, 3, 4], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-ascendientes-disc-33-65-entero"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {legal_refs = [1], source_refs = [0]}
+sequence_order = {legal_refs = [0, 5, 1, 2, 3, 4], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-ascendientes-disc-33-65-total"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {legal_refs = [1], source_refs = [0]}
+sequence_order = {legal_refs = [0, 5, 1, 2, 3, 4], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-ascendientes-disc-65-entero"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {legal_refs = [1], source_refs = [0]}
+sequence_order = {legal_refs = [0, 5, 1, 2, 3, 4], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-ascendientes-disc-65-total"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {legal_refs = [1], source_refs = [0]}
+sequence_order = {legal_refs = [0, 5, 1, 2, 3, 4], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-ascendientes-disc-movilidad-entero"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {legal_refs = [1], source_refs = [0]}
+sequence_order = {legal_refs = [0, 5, 1, 2, 3, 4], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-ascendientes-disc-movilidad-total"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {legal_refs = [1], source_refs = [0]}
+sequence_order = {legal_refs = [0, 5, 1, 2, 3, 4], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-ascendientes-menores-75-entero"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {legal_refs = [1], source_refs = [0]}
+sequence_order = {legal_refs = [0, 5, 1, 2, 3, 4], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-ascendientes-menores-75-total"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {legal_refs = [1], source_refs = [0]}
+sequence_order = {legal_refs = [0, 5, 1, 2, 3, 4], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-clave"}
+sequence_additions = {source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-complemento-ayuda-infancia"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {legal_refs = [1], source_refs = [0]}
+sequence_order = {legal_refs = [0, 4, 1, 2, 3], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-computo-hijo-1"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {legal_refs = [1], source_refs = [0]}
+sequence_order = {legal_refs = [0, 5, 1, 2, 3, 4], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-computo-hijo-2"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {legal_refs = [1], source_refs = [0]}
+sequence_order = {legal_refs = [0, 5, 1, 2, 3, 4], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-computo-hijo-3"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {legal_refs = [1], source_refs = [0]}
+sequence_order = {legal_refs = [0, 5, 1, 2, 3, 4], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-contrato-relacion"}
+sequence_additions = {source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-descendientes-disc-33-65-entero"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {legal_refs = [1], source_refs = [0]}
+sequence_order = {legal_refs = [0, 5, 1, 2, 3, 4], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-descendientes-disc-33-65-total"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {legal_refs = [1], source_refs = [0]}
+sequence_order = {legal_refs = [0, 5, 1, 2, 3, 4], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-descendientes-disc-65-entero"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {legal_refs = [1], source_refs = [0]}
+sequence_order = {legal_refs = [0, 5, 1, 2, 3, 4], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-descendientes-disc-65-total"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {legal_refs = [1], source_refs = [0]}
+sequence_order = {legal_refs = [0, 5, 1, 2, 3, 4], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-descendientes-disc-movilidad-entero"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {legal_refs = [1], source_refs = [0]}
+sequence_order = {legal_refs = [0, 5, 1, 2, 3, 4], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-descendientes-disc-movilidad-total"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {legal_refs = [1], source_refs = [0]}
+sequence_order = {legal_refs = [0, 5, 1, 2, 3, 4], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-descendientes-menores-3-entero"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {legal_refs = [1], source_refs = [0]}
+sequence_order = {legal_refs = [0, 5, 1, 2, 3, 4], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-descendientes-menores-3-total"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {legal_refs = [1], source_refs = [0]}
+sequence_order = {legal_refs = [0, 5, 1, 2, 3, 4], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-descendientes-resto-entero"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {legal_refs = [1], source_refs = [0]}
+sequence_order = {legal_refs = [0, 5, 1, 2, 3, 4], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-descendientes-resto-total"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {legal_refs = [1], source_refs = [0]}
+sequence_order = {legal_refs = [0, 5, 1, 2, 3, 4], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-discapacidad"}
+sequence_additions = {source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-ejercicio-devengo"}
+sequence_additions = {source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-excesos-acciones-emergentes"}
+sequence_additions = {source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-gastos-deducibles"}
+sequence_additions = {source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-incapacidad-dineraria-percepcion"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {legal_refs = [1], source_refs = [0]}
+sequence_order = {legal_refs = [0, 4, 1, 2, 3], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-incapacidad-dineraria-retenciones"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {legal_refs = [1], source_refs = [0]}
+sequence_order = {legal_refs = [0, 4, 1, 2, 3], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-incapacidad-especie-ingresos-a-cuenta"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {legal_refs = [1], source_refs = [0]}
+sequence_order = {legal_refs = [0, 4, 1, 2, 3], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-incapacidad-especie-repercutidos"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {legal_refs = [1], source_refs = [0]}
+sequence_order = {legal_refs = [0, 4, 1, 2, 3], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-incapacidad-especie-valoracion"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {legal_refs = [1], source_refs = [0]}
+sequence_order = {legal_refs = [0, 4, 1, 2, 3], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-ingreso-a-cuenta"}
+sequence_additions = {source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-ingreso-a-cuenta-repercutido"}
+sequence_additions = {source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-movilidad-geografica"}
+sequence_additions = {source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-name"}
+sequence_additions = {source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-nif"}
+sequence_additions = {source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-nif-conyuge-titular"}
+sequence_additions = {source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-nif-representante"}
+sequence_additions = {source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-pension-compensatoria"}
+sequence_additions = {source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-percibido-dinerario"}
+sequence_additions = {source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-percibido-especie"}
+sequence_additions = {source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-prestamos-vivienda"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {legal_refs = [1], source_refs = [0]}
+sequence_order = {legal_refs = [0, 5, 1, 2, 3, 4], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-provincia"}
+sequence_additions = {source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-reducciones"}
+sequence_additions = {source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-retencion-practicada"}
+sequence_additions = {source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-retenciones-forales-araba"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {legal_refs = [1], source_refs = [0]}
+sequence_order = {legal_refs = [0, 4, 1, 2, 3], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-retenciones-forales-bizkaia"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {legal_refs = [1], source_refs = [0]}
+sequence_order = {legal_refs = [0, 4, 1, 2, 3], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-retenciones-forales-estatal"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {legal_refs = [1], source_refs = [0]}
+sequence_order = {legal_refs = [0, 4, 1, 2, 3], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-retenciones-forales-gipuzkoa"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {legal_refs = [1], source_refs = [0]}
+sequence_order = {legal_refs = [0, 4, 1, 2, 3], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-retenciones-forales-navarra"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {legal_refs = [1], source_refs = [0]}
+sequence_order = {legal_refs = [0, 4, 1, 2, 3], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-situacion-familiar"}
+sequence_additions = {source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-subclave"}
+sequence_additions = {source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-territorial-deduccion"}
+sequence_additions = {source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {legal_refs = [5], source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-row-titular-unidad"}
+sequence_additions = {source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "workbook_parity_refs"
+selector = {revision = "2024", id = "modelo-190-dr-pdf"}
+fields = {fixture_id = "modelo-190-2025-record-design-layout", workbook_source = "aeat-dr-190-2025"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-190-2025"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 7, 2, 3, 4, 5, 6]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "completeness_manifest"
+selector = {revision = "2024", id = "aeat-dr-190-2024"}
+replacement_id = "aeat-dr-190-2025"
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-dr-190-2025", "boe-modelo-190-2025-form"]}
+sequence_removals = {legal_refs = [4], source_refs = [0, 1]}
+sequence_order = {legal_refs = [0, 1, 2, 3, 7, 4, 5, 6]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "modelo-190-percepciones-total"}
+sequence_additions = {"expression.args" = [{binding = "modelo-190-111-trabajo-dinerario-importe-anual"}, {binding = "modelo-190-111-trabajo-especie-importe-anual"}, {binding = "modelo-190-111-actividades-dinerario-importe-anual"}, {binding = "modelo-190-111-actividades-especie-importe-anual"}, {binding = "modelo-190-111-premios-dinerario-importe-anual"}, {binding = "modelo-190-111-premios-especie-importe-anual"}, {binding = "modelo-190-111-ganancias-dinerario-importe-anual"}, {binding = "modelo-190-111-ganancias-especie-importe-anual"}, {binding = "modelo-190-111-derechos-imagen-importe-anual"}], legal_refs = ["orden-hac-1431-2025:art-2"], source_citations = [{source_ref = "aeat-modelo-190-instructions-2025", required_text = ["Casilla 02. Total de las percepciones", "Percepción íntegra", "Valoración"]}], source_refs = ["aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form"]}
+sequence_removals = {"expression.args" = [0, 1, 2, 3], source_citations = [0], source_refs = [0, 1]}
+sequence_order = {legal_refs = [0, 1, 7, 2, 3, 4, 5, 6]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "modelo-190-retenciones-total"}
+fields = {expression = {op = "copy"}}
+sequence_additions = {"expression.args" = [{binding = "modelo-190-111-retenciones-anual"}], legal_refs = ["orden-hac-1431-2025:art-2"], source_citations = [{source_ref = "aeat-modelo-190-instructions-2025", required_text = ["Casilla 03. Total retenciones e ingresos a cuenta", "Retenciones practicadas", "Ingresos a cuenta efectuados"]}], source_refs = ["aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form"]}
+sequence_removals = {"expression.args" = [0, 1, 2, 3], source_citations = [0], source_refs = [0, 1]}
+sequence_order = {legal_refs = [0, 1, 7, 2, 3, 4, 5, 6]}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-rows-percepcion-dineraria-total"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-rows-percepcion-especie-total"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-rows-incapacidad-dineraria-total"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-rows-incapacidad-especie-total"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-rows-retencion-practicada-total"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-rows-ingreso-a-cuenta-total"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-rows-incapacidad-retencion-total"}
+
+[[revisions."2025-y-siguientes".family_removals]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-190-perceptor-rows-incapacidad-ingreso-a-cuenta-total"}
+
+[[revisions."2025-y-siguientes".family_positions]]
+family = "bindings"
+id = "modelo-190-111-trabajo-dinerario-importe-anual"
+position = 0
+
+[[revisions."2025-y-siguientes".family_positions]]
+family = "bindings"
+id = "modelo-190-111-trabajo-especie-importe-anual"
+position = 1
+
+[[revisions."2025-y-siguientes".family_positions]]
+family = "bindings"
+id = "modelo-190-111-actividades-dinerario-importe-anual"
+position = 2
+
+[[revisions."2025-y-siguientes".family_positions]]
+family = "bindings"
+id = "modelo-190-111-actividades-especie-importe-anual"
+position = 3
+
+[[revisions."2025-y-siguientes".family_positions]]
+family = "bindings"
+id = "modelo-190-111-premios-dinerario-importe-anual"
+position = 4
+
+[[revisions."2025-y-siguientes".family_positions]]
+family = "bindings"
+id = "modelo-190-111-premios-especie-importe-anual"
+position = 5
+
+[[revisions."2025-y-siguientes".family_positions]]
+family = "bindings"
+id = "modelo-190-111-ganancias-dinerario-importe-anual"
+position = 6
+
+[[revisions."2025-y-siguientes".family_positions]]
+family = "bindings"
+id = "modelo-190-111-ganancias-especie-importe-anual"
+position = 7
+
+[[revisions."2025-y-siguientes".family_positions]]
+family = "bindings"
+id = "modelo-190-111-derechos-imagen-importe-anual"
+position = 8
+
+[[revisions."2025-y-siguientes".family_positions]]
+family = "bindings"
+id = "modelo-190-111-retenciones-anual"
+position = 9
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2024", id = "modelo-190-filing"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"]}
+sequence_removals = {legal_refs = [2]}
+sequence_order = {legal_refs = [0, 1, 7, 2, 3, 4, 5, 6]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2024", id = "modelo-190-deadline"}
+sequence_additions = {source_refs = ["boe-modelo-190-2025-form"]}
+sequence_removals = {source_refs = [1]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2024", id = "modelo-190-calculation"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form"]}
+sequence_removals = {legal_refs = [2], source_refs = [0, 1]}
+sequence_order = {legal_refs = [0, 1, 7, 2, 3, 4, 5, 6]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2024", id = "modelo-190-export"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"]}
+sequence_removals = {legal_refs = [2]}
+sequence_order = {legal_refs = [0, 1, 7, 2, 3, 4, 5, 6]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2024", id = "modelo-190-portal"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"]}
+sequence_removals = {legal_refs = [2]}
+sequence_order = {legal_refs = [0, 1, 7, 2, 3, 4, 5, 6]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2024", id = "modelo-190-review"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["boe-modelo-190-2025-form"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 7, 2, 3, 4, 5, 6], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2024", id = "modelo-190-approval"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["boe-modelo-190-2025-form"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 7, 2, 3, 4, 5, 6], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2024", id = "modelo-190-reconciliation"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form"]}
+sequence_removals = {legal_refs = [2], source_refs = [0, 1]}
+sequence_order = {legal_refs = [0, 1, 7, 2, 3, 4, 5, 6]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2024", id = "modelo-190-workflow"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["boe-modelo-190-2025-form"]}
+sequence_removals = {legal_refs = [2], source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 7, 2, 3, 4, 5, 6], source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2024", id = "modelo-190-extractor"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"]}
+sequence_removals = {legal_refs = [2]}
+sequence_order = {legal_refs = [0, 1, 7, 2, 3, 4, 5, 6]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "extraction_profiles"
+selector = {revision = "2024", id = "modelo-190-declaracion-pdf"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["boe-modelo-190-2025-form"]}
+sequence_removals = {legal_refs = [2], source_refs = [1]}
+sequence_order = {legal_refs = [0, 1, 7, 2, 3, 4, 5, 6]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "filing_schedules"
+selector = {revision = "2024", id = "modelo-190-anual"}
+sequence_additions = {source_refs = ["boe-modelo-190-2025-form"]}
+sequence_removals = {source_refs = [1]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "live_cross_references"
+selector = {revision = "2024", id = "modelo-190-filed-declarations-read"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"]}
+sequence_removals = {legal_refs = [2]}
+sequence_order = {legal_refs = [0, 1, 7, 2, 3, 4, 5, 6]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "verification_expectations"
+selector = {revision = "2024", id = "modelo-190-annual-summary-verification"}
+sequence_additions = {legal_refs = ["orden-hac-1431-2025:art-2"], source_refs = ["aeat-modelo-190-instructions-2025", "boe-modelo-190-2025-form"]}
+sequence_removals = {legal_refs = [2], source_refs = [0, 1]}
+sequence_order = {legal_refs = [0, 1, 7, 2, 3, 4, 5, 6]}
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "decl.persona-contacto-telefono" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "decl.persona-contacto-nombre" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "decl.numero-identificativo" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "decl.complementaria" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "decl.sustitutiva" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "decl.numero-identificativo-anterior" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "decl.correo-electronico" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.descendientes-menores-3-total" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.descendientes-menores-3-entero" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.descendientes-resto-total" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.descendientes-resto-entero" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.descendientes-discapacidad-33-65-total" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.descendientes-discapacidad-33-65-entero" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.descendientes-discapacidad-movilidad-total" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.descendientes-discapacidad-movilidad-entero" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.descendientes-discapacidad-65-total" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.descendientes-discapacidad-65-entero" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.ascendientes-menores-75-total" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-59", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.ascendientes-menores-75-entero" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-59", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.ascendientes-75-mas-total" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-59", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.ascendientes-75-mas-entero" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-59", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.ascendientes-discapacidad-33-65-total" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.ascendientes-discapacidad-33-65-entero" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.ascendientes-discapacidad-movilidad-total" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.ascendientes-discapacidad-movilidad-entero" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.ascendientes-discapacidad-65-total" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.ascendientes-discapacidad-65-entero" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.computo-hijo-1" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.computo-hijo-2" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.computo-hijo-3" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.prestamos-vivienda-clave" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "rd-439-2007:art-86", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.incapacidad-dineraria-percepcion" }
+fields = {constraints = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}, legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.incapacidad-dineraria-retenciones" }
+fields = {constraints = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}, legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.incapacidad-especie-valoracion" }
+fields = {constraints = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}, legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.incapacidad-especie-ingresos-a-cuenta" }
+fields = {constraints = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}, legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.incapacidad-especie-repercutidos" }
+fields = {constraints = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}, legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.complemento-ayuda-infancia" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.retenciones-forales-estatal" }
+fields = {constraints = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}, legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.retenciones-forales-navarra" }
+fields = {constraints = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}, legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.retenciones-forales-araba" }
+fields = {constraints = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}, legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.retenciones-forales-gipuzkoa" }
+fields = {constraints = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}, legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.retenciones-forales-bizkaia" }
+fields = {constraints = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}, legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.nif-representante-legal" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.ingresos-a-cuenta-repercutidos" }
+fields = {constraints = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}, legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.ejercicio-devengo" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.nif-conyuge-titular-unidad" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.discapacidad" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.contrato-relacion" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.titular-unidad-convivencia" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.movilidad-geografica" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-19", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.nif" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.nombre" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.clave" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.subclave" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.percepcion-dineraria" }
+fields = {constraints = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}, legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.retenciones-practicadas" }
+fields = {constraints = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}, legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.percepcion-especie" }
+fields = {constraints = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}, legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.ingresos-a-cuenta" }
+fields = {constraints = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}, legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.provincia" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.ano-nacimiento" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.situacion-familiar" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.reducciones-aplicables" }
+fields = {constraints = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-18", "ley-35-2006:art-32", "ley-58-2003:art-93"]}, legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-18", "ley-35-2006:art-32", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.gastos-deducibles" }
+fields = {constraints = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-19", "ley-58-2003:art-93"]}, legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-19", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.pension-compensatoria" }
+fields = {constraints = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}, legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.anualidades-alimentos" }
+fields = {constraints = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}, legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]}
+removed_fields = []
+
+[[revisions."2025-y-siguientes".casilla_overrides]]
+selector = { revision = "2024", id = "perc.excesos-acciones-emergentes" }
+fields = {legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-42.3.f", "ley-58-2003:art-93"]}
+removed_fields = []

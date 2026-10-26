@@ -1,0 +1,1015 @@
+"""Lifecycle services for bucket-scoped manual ledger transactions.
+
+Archive, stash, restore, remove, and reset operations mutate a loaded
+:class:`TransactionCatalogue`, append bucket events, and return typed
+application reports. Removal and reset paths can also update an
+:class:`InvoiceCatalogue` through an
+:class:`~cadrumo.domain.invoices.protocols.InvoiceCatalogueRepositoryProtocol` when
+purchase-invoice evidence must be detached.
+
+The public services return
+:class:`~cadrumo.application.ledger.models.ManualLedgerTransactionResult`,
+:class:`~cadrumo.application.ledger.models.LedgerTransactionRemovalReport`, or
+:class:`~cadrumo.application.ledger.models.LedgerCatalogueResetReport`.
+"""
+
+from __future__ import annotations
+
+from datetime import datetime
+
+from ...core.decimal.formatting import format_decimal
+from ...core.external_constants import CLASSIFIED_BY_MANUAL
+from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
+from ...domain.invoices.models import InvoiceCatalogue
+from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
+from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+from ...domain.transactions.classification_origin import with_classification_origin, written_classification_origin
+from ...domain.transactions.enums import BusinessClassification, SplitRole, TransactionLifecycleState
+from ...domain.transactions.errors import TransactionValidationError
+from ...domain.transactions.lineage_models import TransactionLifecycleLineageEntry
+from ...domain.transactions.models import Transaction, TransactionCatalogue
+from ..operations.execution_actor import actor_label_is_automation
+from .action_ports import LedgerActionPorts
+from .actions_common import (
+    blocking_modelo_references,
+    build_ledger_bucket_event,
+    build_manual_ledger_result,
+    catalogue_modelo_source_ids,
+    draft_revision_advisories,
+    normalise_timestamp,
+    raise_finalized_modelo_blocked,
+    remove_transaction,
+    replace_transaction,
+    require_actor,
+    require_source_command,
+    require_transaction,
+    resolve_bucket_event_repository,
+    resolve_invoice_repository,
+    resolve_transaction_repository,
+    save_transaction_catalogue_and_events,
+    save_transaction_catalogue_invoices_and_events,
+    transaction_catalogue_object_id,
+    transaction_modelo_source_ids,
+)
+from .models import (
+    LedgerCatalogueResetReport,
+    LedgerRemovalBlocker,
+    LedgerTransactionRemovalReport,
+    ManualLedgerTransactionResult,
+)
+from .protocols import (
+    BucketEventHistoryCoCommitWriterProtocol,
+    InvoiceCatalogueCoCommitWriterProtocol,
+    TransactionCatalogueCoCommitWriterProtocol,
+)
+
+
+def archive_manual_transaction(
+    *,
+    bucket_id: str,
+    transaction_id: str,
+    actor: str,
+    reason: str = "",
+    source_command: str = "aeat app ledger archive",
+    ports: LedgerActionPorts,
+    occurred_at: datetime | None = None,
+) -> ManualLedgerTransactionResult:
+    """Mark one bucket-scoped ledger transaction as archived.
+
+    Returns a :class:`~cadrumo.application.ledger.models.ManualLedgerTransactionResult`
+    reflecting the archived transaction state.
+    """
+    return _transition_manual_transaction_lifecycle(
+        bucket_id=bucket_id,
+        transaction_id=transaction_id,
+        state=TransactionLifecycleState.ARCHIVED,
+        event_type=BucketEventType.LEDGER_TRANSACTION_ARCHIVED,
+        actor=actor,
+        reason=reason,
+        source_command=source_command,
+        ports=ports,
+        occurred_at=occurred_at,
+    )
+
+
+def stash_manual_transaction(
+    *,
+    bucket_id: str,
+    transaction_id: str,
+    actor: str,
+    reason: str = "",
+    source_command: str = "aeat app ledger stash",
+    ports: LedgerActionPorts,
+    occurred_at: datetime | None = None,
+) -> ManualLedgerTransactionResult:
+    """Mark one active bucket-scoped ledger transaction as stashed.
+
+    Returns a :class:`~cadrumo.application.ledger.models.ManualLedgerTransactionResult`
+    reflecting the stashed transaction state.
+    """
+    return _transition_manual_transaction_lifecycle(
+        bucket_id=bucket_id,
+        transaction_id=transaction_id,
+        state=TransactionLifecycleState.STASHED,
+        event_type=BucketEventType.LEDGER_TRANSACTION_STASHED,
+        actor=actor,
+        reason=reason,
+        source_command=source_command,
+        ports=ports,
+        occurred_at=occurred_at,
+    )
+
+
+def restore_manual_transaction(
+    *,
+    bucket_id: str,
+    transaction_id: str,
+    actor: str,
+    reason: str = "",
+    source_command: str = "aeat app ledger restore",
+    ports: LedgerActionPorts,
+    occurred_at: datetime | None = None,
+) -> ManualLedgerTransactionResult:
+    """Restore one stashed or archived ledger transaction to active.
+
+    The clean inverse of
+    :func:`~cadrumo.application.ledger.actions_lifecycle.archive_manual_transaction` and
+    :func:`~cadrumo.application.ledger.actions_lifecycle.stash_manual_transaction`. Moves ``STASHED -> ACTIVE`` and
+    ``ARCHIVED -> ACTIVE`` through the single-writer
+    :func:`_transition_manual_transaction_lifecycle` primitive, so it
+    inherits that primitive's atomic catalogue-plus-event persistence, its
+    lifecycle-lineage append, and the finalized-modelo guard: a row cited by a
+    sealed (``VERIFICADO_COMPLETO`` / ``PRESENTADO`` /
+    ``PRESENTADO_SUPERSEDIDO``) calculation revision is refused so a restore
+    cannot silently change the input basis of an already-filed period. Split
+    and merged lineage stays out of scope - only
+    :func:`~cadrumo.application.ledger.actions_split_merge.split_transaction` /
+    :func:`~cadrumo.application.ledger.actions_split_merge.merge_transactions` move those rows.
+
+    A merge archives the split parent and every child and records one merged
+    row that restates the parent's money. Restoring any of those originals
+    beside an active merged row would count the same money twice, so it is
+    refused and the refusal names the merged row. Once the merged row is
+    archived or removed, the originals can be restored, and the merged row
+    cannot be restored while any original is active.
+
+    Returns a :class:`~cadrumo.application.ledger.models.ManualLedgerTransactionResult`
+    reflecting the restored, now-active transaction state.
+
+    Raises:
+        TransactionValidationError: when the row is already active (with an
+            instructive message), when the row is part of split lineage, when
+            restoring it would count a merge's money twice, or when a
+            finalized-modelo reference blocks the restore.
+        TransactionNotFoundError: when no transaction matches ``transaction_id``.
+    """
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
+    catalogue = repository.load()
+    current = require_transaction(catalogue, transaction_id)
+    if current.lifecycle_state is TransactionLifecycleState.ACTIVE:
+        raise TransactionValidationError(
+            "ledger transaction is already active; restore applies only to a stashed or archived row",
+            context={
+                "bucket_id": bucket_id,
+                "transaction_id": transaction_id,
+                "state": current.lifecycle_state.value,
+            },
+        )
+    if current.lifecycle_state is TransactionLifecycleState.SPLIT:
+        raise TransactionValidationError(
+            "split-parent ledger transactions cannot be restored; re-merge the split children instead",
+            context={
+                "bucket_id": bucket_id,
+                "transaction_id": transaction_id,
+                "state": current.lifecycle_state.value,
+            },
+        )
+    _require_no_double_count_with_merge(catalogue, current, bucket_id=bucket_id)
+    return _transition_manual_transaction_lifecycle(
+        bucket_id=bucket_id,
+        transaction_id=transaction_id,
+        state=TransactionLifecycleState.ACTIVE,
+        event_type=BucketEventType.LEDGER_TRANSACTION_RESTORED,
+        actor=actor,
+        reason=reason,
+        source_command=source_command,
+        ports=ports,
+        occurred_at=occurred_at,
+    )
+
+
+def mark_transaction_reviewed_excluded(
+    *,
+    bucket_id: str,
+    transaction_id: str,
+    actor: str,
+    reason: str = "",
+    source_command: str = "aeat app ledger exclude",
+    transaction_repository: TransactionCatalogueCoCommitWriterProtocol | None = None,
+    bucket_event_repository: BucketEventHistoryCoCommitWriterProtocol | None = None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    occurred_at: datetime | None = None,
+) -> ManualLedgerTransactionResult:
+    """Mark one active ledger transaction as reviewed and excluded from filing.
+
+    Sets the transaction's ``business_classification`` to
+    :attr:`~cadrumo.domain.transactions.enums.BusinessClassification.REVIEWED_EXCLUDED` —
+    the operator's assertion "I reviewed this, it is not filing-relevant, stop
+    surfacing it." The row stays ``ACTIVE`` and visible in the ledger with review
+    status ``excluded``, drops out of the review queue, and is omitted from every
+    tax aggregation. The operator re-includes it by re-classifying the row
+    (``aeat app ledger classify``).
+
+    The finalized-modelo guard refuses the exclusion when the row is cited by a
+    sealed (``VERIFICADO_COMPLETO`` / ``PRESENTADO`` / ``PRESENTADO_SUPERSEDIDO``)
+    calculation revision, so an exclusion cannot silently change the input basis
+    of an already-filed period.
+
+    Returns a :class:`~cadrumo.application.ledger.models.ManualLedgerTransactionResult`
+    carrying the uniform mutation quintet.
+
+    Raises:
+        TransactionValidationError: when the row is not ``ACTIVE``, when it is
+            already ``REVIEWED_EXCLUDED``, or when a finalized-modelo reference
+            blocks the exclusion.
+        TransactionNotFoundError: when no transaction matches ``transaction_id``.
+    """
+    now = normalise_timestamp(occurred_at)
+    trimmed_actor = require_actor(actor, operation="ledger review exclusion")
+    trimmed_source_command = require_source_command(source_command, operation="ledger review exclusion")
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    event_repository = resolve_bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
+    catalogue = repository.load()
+    current = require_transaction(catalogue, transaction_id)
+    if current.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+        raise TransactionValidationError(
+            "only active ledger transactions can be reviewed-excluded; archived, stashed, "
+            "and split-parent rows are already out of filing scope",
+            context={
+                "bucket_id": bucket_id,
+                "transaction_id": transaction_id,
+                "lifecycle_state": current.lifecycle_state.value,
+            },
+        )
+    if current.business_classification is BusinessClassification.REVIEWED_EXCLUDED:
+        raise TransactionValidationError(
+            "ledger transaction is already reviewed-excluded",
+            context={"bucket_id": bucket_id, "transaction_id": transaction_id},
+        )
+    blockers = blocking_modelo_references(
+        bucket_id=bucket_id,
+        transaction_ids=transaction_modelo_source_ids(current),
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+    )
+    if blockers:
+        raise_finalized_modelo_blocked(
+            operation="ledger transaction review exclusion",
+            transaction_ids=transaction_modelo_source_ids(current),
+            blockers=blockers,
+        )
+    event = build_ledger_bucket_event(
+        bucket_id=bucket_id,
+        event_type=BucketEventType.LEDGER_TRANSACTION_REVIEWED_EXCLUDED,
+        occurred_at=now,
+        actor=trimmed_actor,
+        object_id=current.transaction_id,
+        payload={
+            "source_command": trimmed_source_command,
+            "previous_classification": current.business_classification.value,
+            # The exclusion clears the proportion on the row, so this event is
+            # the one place a mixed row's replaced share stays stored.
+            "previous_business_pct": format_decimal(current.business_pct, none_value=""),
+            "business_classification": BusinessClassification.REVIEWED_EXCLUDED.value,
+            "reason": reason.strip(),
+        },
+    )
+    replacement = with_classification_origin(
+        current.model_copy(
+            update={
+                "business_classification": BusinessClassification.REVIEWED_EXCLUDED,
+                # business_pct is coupled to MIXED; a reviewed-excluded row carries no
+                # proportion, so clear it or the persisted row fails validation on load.
+                "business_pct": None,
+                "classified_by": CLASSIFIED_BY_MANUAL,
+                "modified_at": now,
+            },
+        ),
+        replaces=current,
+        written=written_classification_origin(
+            by_automation=actor_label_is_automation(trimmed_actor), classified_by=CLASSIFIED_BY_MANUAL
+        ),
+        decided=True,
+    )
+    updated = replace_transaction(catalogue, old_transaction_id=current.transaction_id, replacement=replacement)
+    save_transaction_catalogue_and_events(
+        transaction_repository=repository,
+        event_repository=event_repository,
+        catalogue=updated,
+        events=(event,),
+    )
+    return build_manual_ledger_result(bucket_id, replacement, (event.event_id,))
+
+
+def remove_manual_transaction(
+    *,
+    bucket_id: str,
+    transaction_id: str,
+    actor: str,
+    reason: str = "",
+    dry_run: bool = False,
+    source_command: str = "aeat app ledger remove",
+    transaction_repository: TransactionCatalogueCoCommitWriterProtocol | None = None,
+    bucket_event_repository: BucketEventHistoryCoCommitWriterProtocol | None = None,
+    invoice_repository: InvoiceCatalogueCoCommitWriterProtocol | None = None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    occurred_at: datetime | None = None,
+) -> LedgerTransactionRemovalReport:
+    """Remove one bucket-scoped ledger transaction after finalized-modelo checks.
+
+    Returns a :class:`~cadrumo.application.ledger.models.LedgerTransactionRemovalReport`
+    indicating whether the transaction was removed or blocked by a
+    finalized-modelo reference.
+    """
+    now = normalise_timestamp(occurred_at)
+    trimmed_actor = require_actor(actor, operation="ledger removal")
+    trimmed_source_command = require_source_command(source_command, operation="ledger removal")
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    event_repository = resolve_bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
+    catalogue = repository.load()
+    current = require_transaction(catalogue, transaction_id)
+    guard_ids = transaction_modelo_source_ids(current)
+    blockers = blocking_modelo_references(
+        bucket_id=bucket_id,
+        transaction_ids=guard_ids,
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+    )
+    draft_advisories = draft_revision_advisories(
+        bucket_id=bucket_id,
+        transaction_ids=guard_ids,
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+    )
+    invoices = None
+    purchase_evidence_ids: tuple[str, ...] = ()
+    updated_invoice_catalogue: InvoiceCatalogue | None = None
+    if invoice_repository is not None or current.purchase_invoice_evidence_id is not None:
+        invoices = resolve_invoice_repository(bucket_id=bucket_id, repository=invoice_repository)
+        purchase_evidence_ids, updated_invoice_catalogue = _detach_transaction_from_purchase_evidence(
+            invoices.load(),
+            bucket_id=bucket_id,
+            transaction_id=current.transaction_id,
+        )
+    attachment_ids = tuple(sorted(current.attachment_ids))
+    if blockers:
+        if not dry_run:
+            raise_finalized_modelo_blocked(
+                operation="ledger transaction removal",
+                transaction_ids=transaction_modelo_source_ids(current),
+                blockers=blockers,
+            )
+        return LedgerTransactionRemovalReport(
+            bucket_id=bucket_id,
+            transaction_id=current.transaction_id,
+            dry_run=dry_run,
+            actor=trimmed_actor,
+            reason=reason.strip(),
+            cascaded_purchase_invoice_evidence_ids=purchase_evidence_ids,
+            cascaded_attachment_ids=attachment_ids,
+            blocking_modelo_references=blockers,
+            stale_draft_revision_references=draft_advisories,
+        )
+    if dry_run:
+        return LedgerTransactionRemovalReport(
+            bucket_id=bucket_id,
+            transaction_id=current.transaction_id,
+            dry_run=True,
+            actor=trimmed_actor,
+            reason=reason.strip(),
+            cascaded_purchase_invoice_evidence_ids=purchase_evidence_ids,
+            cascaded_attachment_ids=attachment_ids,
+            stale_draft_revision_references=draft_advisories,
+        )
+
+    events = _removal_events(
+        bucket_id=bucket_id,
+        transaction=current,
+        actor=trimmed_actor,
+        reason=reason.strip(),
+        source_command=trimmed_source_command,
+        purchase_evidence_ids=purchase_evidence_ids,
+        attachment_ids=attachment_ids,
+        occurred_at=now,
+    )
+    updated_transaction_catalogue = remove_transaction(catalogue, transaction_id=current.transaction_id)
+    if invoices is None or updated_invoice_catalogue is None:
+        save_transaction_catalogue_and_events(
+            transaction_repository=repository,
+            event_repository=event_repository,
+            catalogue=updated_transaction_catalogue,
+            events=events,
+        )
+    else:
+        save_transaction_catalogue_invoices_and_events(
+            transaction_repository=repository,
+            invoice_repository=invoices,
+            event_repository=event_repository,
+            transaction_catalogue=updated_transaction_catalogue,
+            invoice_catalogue=updated_invoice_catalogue,
+            events=events,
+        )
+    return LedgerTransactionRemovalReport(
+        bucket_id=bucket_id,
+        transaction_id=current.transaction_id,
+        removed=True,
+        actor=trimmed_actor,
+        reason=reason.strip(),
+        cascaded_purchase_invoice_evidence_ids=purchase_evidence_ids,
+        cascaded_attachment_ids=attachment_ids,
+        stale_draft_revision_references=draft_advisories,
+        bucket_event_ids=tuple(event.event_id for event in events),
+    )
+
+
+def _reset_invoice_context(
+    *,
+    bucket_id: str,
+    catalogue: TransactionCatalogue,
+    removed_ids: tuple[str, ...],
+    invoice_repository: InvoiceCatalogueCoCommitWriterProtocol | None,
+) -> tuple[
+    InvoiceCatalogueCoCommitWriterProtocol | None,
+    InvoiceCatalogue,
+    tuple[str, ...],
+    InvoiceCatalogue | None,
+]:
+    """Resolve and inspect invoice evidence needed by a catalogue reset."""
+    invoices: InvoiceCatalogueCoCommitWriterProtocol | None = None
+    invoice_catalogue = InvoiceCatalogue()
+    purchase_evidence_ids: tuple[str, ...] = ()
+    updated_invoice_catalogue: InvoiceCatalogue | None = None
+    if invoice_repository is not None or any(
+        transaction.purchase_invoice_evidence_id is not None for transaction in catalogue.values()
+    ):
+        invoices = resolve_invoice_repository(bucket_id=bucket_id, repository=invoice_repository)
+        invoice_catalogue = invoices.load()
+        purchase_evidence_ids, updated_invoice_catalogue = _detach_transactions_from_purchase_evidence(
+            invoice_catalogue,
+            bucket_id=bucket_id,
+            transaction_ids=removed_ids,
+        )
+    return invoices, invoice_catalogue, purchase_evidence_ids, updated_invoice_catalogue
+
+
+def _reset_attachment_ids(catalogue: TransactionCatalogue) -> tuple[str, ...]:
+    """Collect every attachment id that a reset removes, in stable order."""
+    return tuple(
+        sorted({attachment_id for transaction in catalogue.values() for attachment_id in transaction.attachment_ids}),
+    )
+
+
+def _reset_removal_events(
+    catalogue: TransactionCatalogue,
+    invoice_catalogue: InvoiceCatalogue,
+    *,
+    bucket_id: str,
+    actor: str,
+    reason: str,
+    source_command: str,
+    occurred_at: datetime,
+) -> tuple[BucketEvent, ...]:
+    """Build deterministic cascade and row-removal events for every transaction."""
+    events: list[BucketEvent] = []
+    for transaction in sorted(catalogue.values(), key=lambda item: item.transaction_id):
+        purchase_evidence_ids = tuple(
+            invoice_id
+            for invoice_id, invoice in invoice_catalogue.invoices.items()
+            if invoice.bucket_id == bucket_id and transaction.transaction_id in invoice.linked_transaction_ids
+        )
+        events.extend(
+            _removal_events(
+                bucket_id=bucket_id,
+                transaction=transaction,
+                actor=actor,
+                reason=reason,
+                source_command=source_command,
+                purchase_evidence_ids=purchase_evidence_ids,
+                attachment_ids=tuple(sorted(transaction.attachment_ids)),
+                occurred_at=occurred_at,
+            ),
+        )
+    return tuple(events)
+
+
+def _build_catalogue_reset_event(
+    *,
+    bucket_id: str,
+    actor: str,
+    reason: str,
+    source_command: str,
+    removed_count: int,
+    occurred_at: datetime,
+) -> BucketEvent:
+    """Build the summary event emitted after all row-removal events."""
+    return build_ledger_bucket_event(
+        bucket_id=bucket_id,
+        event_type=BucketEventType.LEDGER_CATALOGUE_RESET,
+        occurred_at=occurred_at,
+        actor=actor,
+        object_type=BucketEventObjectType.LEDGER_CATALOGUE,
+        object_id=transaction_catalogue_object_id(bucket_id),
+        payload={
+            "source_command": source_command,
+            "reason": reason,
+            "removed_transaction_count": str(removed_count),
+        },
+    )
+
+
+def _persist_catalogue_reset(
+    *,
+    repository: TransactionCatalogueCoCommitWriterProtocol,
+    event_repository: BucketEventHistoryCoCommitWriterProtocol,
+    invoices: InvoiceCatalogueCoCommitWriterProtocol | None,
+    updated_invoice_catalogue: InvoiceCatalogue | None,
+    events: tuple[BucketEvent, ...],
+) -> None:
+    """Persist the reset through the matching atomic catalogue writer."""
+    if invoices is None or updated_invoice_catalogue is None:
+        save_transaction_catalogue_and_events(
+            transaction_repository=repository,
+            event_repository=event_repository,
+            catalogue=TransactionCatalogue(),
+            events=events,
+        )
+    else:
+        save_transaction_catalogue_invoices_and_events(
+            transaction_repository=repository,
+            invoice_repository=invoices,
+            event_repository=event_repository,
+            transaction_catalogue=TransactionCatalogue(),
+            invoice_catalogue=updated_invoice_catalogue,
+            events=events,
+        )
+
+
+def _catalogue_reset_report(
+    *,
+    bucket_id: str,
+    removed_ids: tuple[str, ...],
+    dry_run: bool,
+    actor: str,
+    reason: str,
+    purchase_evidence_ids: tuple[str, ...],
+    attachment_ids: tuple[str, ...],
+    blockers: tuple[LedgerRemovalBlocker, ...] = (),
+    draft_advisories: tuple[LedgerRemovalBlocker, ...] = (),
+    reset: bool = False,
+    event_ids: tuple[str, ...] = (),
+) -> LedgerCatalogueResetReport:
+    """Project one reset disposition without duplicating report field wiring."""
+    return LedgerCatalogueResetReport(
+        bucket_id=bucket_id,
+        removed_transaction_ids=removed_ids,
+        reset=reset,
+        dry_run=dry_run,
+        actor=actor,
+        reason=reason,
+        cascaded_purchase_invoice_evidence_ids=purchase_evidence_ids,
+        cascaded_attachment_ids=attachment_ids,
+        blocking_modelo_references=blockers,
+        stale_draft_revision_references=draft_advisories,
+        bucket_event_ids=event_ids,
+    )
+
+
+def _catalogue_reset_preview(
+    *,
+    bucket_id: str,
+    removed_ids: tuple[str, ...],
+    dry_run: bool,
+    actor: str,
+    reason: str,
+    purchase_evidence_ids: tuple[str, ...],
+    attachment_ids: tuple[str, ...],
+    blockers: tuple[LedgerRemovalBlocker, ...],
+    draft_advisories: tuple[LedgerRemovalBlocker, ...],
+    guard_ids: tuple[str, ...],
+) -> LedgerCatalogueResetReport | None:
+    """Resolve finalized-reference refusal and dry-run report before any writes."""
+    if blockers and not dry_run:
+        raise_finalized_modelo_blocked(
+            operation="ledger catalogue reset",
+            transaction_ids=guard_ids,
+            blockers=blockers,
+        )
+    if not dry_run:
+        return None
+    return _catalogue_reset_report(
+        bucket_id=bucket_id,
+        removed_ids=removed_ids,
+        dry_run=True,
+        actor=actor,
+        reason=reason,
+        purchase_evidence_ids=purchase_evidence_ids,
+        attachment_ids=attachment_ids,
+        blockers=blockers,
+        draft_advisories=draft_advisories,
+    )
+
+
+def reset_ledger_catalogue(
+    *,
+    bucket_id: str,
+    actor: str,
+    reason: str = "",
+    dry_run: bool = False,
+    source_command: str = "aeat app ledger reset",
+    transaction_repository: TransactionCatalogueCoCommitWriterProtocol | None = None,
+    bucket_event_repository: BucketEventHistoryCoCommitWriterProtocol | None = None,
+    invoice_repository: InvoiceCatalogueCoCommitWriterProtocol | None = None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    occurred_at: datetime | None = None,
+    max_receipt_items: int | None = None,
+) -> LedgerCatalogueResetReport:
+    """Reset one bucket's ledger catalogue after finalized-modelo checks.
+
+    Returns a :class:`~cadrumo.application.ledger.models.LedgerCatalogueResetReport`.
+    """
+    if max_receipt_items is not None and max_receipt_items < 1:
+        raise ValueError("max_receipt_items must be positive when provided")
+    now = normalise_timestamp(occurred_at)
+    trimmed_actor = require_actor(actor, operation="ledger reset")
+    trimmed_source_command = require_source_command(source_command, operation="ledger reset")
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    event_repository = resolve_bucket_event_repository(bucket_id=bucket_id, repository=bucket_event_repository)
+    catalogue = repository.load()
+    removed_ids = tuple(sorted(catalogue.transactions))
+    guard_ids = catalogue_modelo_source_ids(catalogue)
+    blockers = blocking_modelo_references(
+        bucket_id=bucket_id,
+        transaction_ids=guard_ids,
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+    )
+    draft_advisories = draft_revision_advisories(
+        bucket_id=bucket_id,
+        transaction_ids=guard_ids,
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+    )
+    invoices, invoice_catalogue, purchase_evidence_ids, updated_invoice_catalogue = _reset_invoice_context(
+        bucket_id=bucket_id,
+        catalogue=catalogue,
+        removed_ids=removed_ids,
+        invoice_repository=invoice_repository,
+    )
+    attachment_ids = _reset_attachment_ids(catalogue)
+    preview = _catalogue_reset_preview(
+        bucket_id=bucket_id,
+        removed_ids=removed_ids,
+        dry_run=dry_run,
+        actor=trimmed_actor,
+        reason=reason.strip(),
+        purchase_evidence_ids=purchase_evidence_ids,
+        attachment_ids=attachment_ids,
+        blockers=blockers,
+        draft_advisories=draft_advisories,
+        guard_ids=guard_ids,
+    )
+    if preview is not None:
+        return preview
+    removal_events = _reset_removal_events(
+        catalogue,
+        invoice_catalogue,
+        bucket_id=bucket_id,
+        actor=trimmed_actor,
+        reason=reason.strip(),
+        source_command=trimmed_source_command,
+        occurred_at=now,
+    )
+    reset_event = _build_catalogue_reset_event(
+        bucket_id=bucket_id,
+        actor=trimmed_actor,
+        reason=reason.strip(),
+        source_command=trimmed_source_command,
+        removed_count=len(removed_ids),
+        occurred_at=now,
+    )
+    events = (*removal_events, reset_event)
+    if max_receipt_items is not None:
+        receipt_counts = {
+            "removed_transaction_ids": len(removed_ids),
+            "cascaded_purchase_invoice_evidence_ids": len(purchase_evidence_ids),
+            "cascaded_attachment_ids": len(attachment_ids),
+            "stale_draft_revision_references": len(draft_advisories),
+            "bucket_event_ids": len(events),
+        }
+        over_limit = {name: count for name, count in receipt_counts.items() if count > max_receipt_items}
+        if over_limit:
+            raise TransactionValidationError(
+                "ledger catalogue reset refused because its result exceeds the registered receipt limit",
+                context={
+                    "max_receipt_items": str(max_receipt_items),
+                    "over_limit_collections": ",".join(sorted(over_limit)),
+                    "over_limit_counts": ",".join(f"{name}:{over_limit[name]}" for name in sorted(over_limit)),
+                },
+            )
+    _persist_catalogue_reset(
+        repository=repository,
+        event_repository=event_repository,
+        invoices=invoices,
+        updated_invoice_catalogue=updated_invoice_catalogue,
+        events=events,
+    )
+    return _catalogue_reset_report(
+        bucket_id=bucket_id,
+        removed_ids=removed_ids,
+        dry_run=False,
+        actor=trimmed_actor,
+        reason=reason.strip(),
+        purchase_evidence_ids=purchase_evidence_ids,
+        attachment_ids=attachment_ids,
+        draft_advisories=draft_advisories,
+        reset=True,
+        event_ids=tuple(event.event_id for event in events),
+    )
+
+
+def _require_no_double_count_with_merge(
+    catalogue: TransactionCatalogue,
+    current: Transaction,
+    *,
+    bucket_id: str,
+) -> None:
+    """Refuse a restore that would leave a merge's original and merged rows both active.
+
+    A merge records its cohort on the merged row (split group, role ``MERGED``
+    and the child ids as siblings); the archived children and parent carry the
+    same split group. That lineage, not the archive event, is what ties an
+    archived row to the merge, so an ordinarily archived child of a group that
+    was never merged is not affected.
+    """
+    lineage = current.split_lineage
+    if lineage is None:
+        return
+    if lineage.role is SplitRole.MERGED:
+        active_originals = tuple(
+            sorted(
+                other.transaction_id
+                for other in catalogue.values()
+                if other.lifecycle_state is TransactionLifecycleState.ACTIVE
+                and other.split_lineage is not None
+                and other.split_lineage.split_group_id == lineage.split_group_id
+                and (
+                    other.split_lineage.role is SplitRole.PARENT
+                    or other.transaction_id in lineage.sibling_transaction_ids
+                )
+            ),
+        )
+        if active_originals:
+            raise TransactionValidationError(
+                "this merged ledger transaction replaced rows that are active again; restoring it would count "
+                "the same money twice. Archive the active originals "
+                f"({', '.join(active_originals)}) first",
+                context={
+                    "bucket_id": bucket_id,
+                    "transaction_id": current.transaction_id,
+                    "transaction_ids": ",".join(active_originals),
+                },
+            )
+        return
+    active_merged = tuple(
+        sorted(
+            other.transaction_id
+            for other in catalogue.values()
+            if other.lifecycle_state is TransactionLifecycleState.ACTIVE
+            and other.split_lineage is not None
+            and other.split_lineage.role is SplitRole.MERGED
+            and other.split_lineage.split_group_id == lineage.split_group_id
+            and (
+                lineage.role is SplitRole.PARENT
+                or current.transaction_id in other.split_lineage.sibling_transaction_ids
+            )
+        ),
+    )
+    if active_merged:
+        raise TransactionValidationError(
+            f"ledger transaction was archived by a merge and merged row {active_merged[0]} is still active; "
+            "restoring it would count the same money twice. Archive the merged row first",
+            context={
+                "bucket_id": bucket_id,
+                "transaction_id": current.transaction_id,
+                "transaction_ids": ",".join(active_merged),
+            },
+        )
+
+
+def _transition_manual_transaction_lifecycle(
+    *,
+    bucket_id: str,
+    transaction_id: str,
+    state: TransactionLifecycleState,
+    event_type: BucketEventType,
+    actor: str,
+    reason: str,
+    source_command: str,
+    ports: LedgerActionPorts,
+    occurred_at: datetime | None,
+) -> ManualLedgerTransactionResult:
+    now = normalise_timestamp(occurred_at)
+    trimmed_actor = require_actor(actor, operation="ledger lifecycle")
+    trimmed_source_command = require_source_command(source_command, operation="ledger lifecycle")
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
+    event_repository = resolve_bucket_event_repository(bucket_id=bucket_id, repository=ports.bucket_event_repository)
+    catalogue = repository.load()
+    current = require_transaction(catalogue, transaction_id)
+    if current.lifecycle_state is state:
+        raise TransactionValidationError(
+            f"ledger transaction is already {state.value.lower()}",
+            context={"bucket_id": bucket_id, "transaction_id": transaction_id, "state": state.value},
+        )
+    if current.lifecycle_state is TransactionLifecycleState.ARCHIVED and state is TransactionLifecycleState.STASHED:
+        raise TransactionValidationError(
+            "archived ledger transactions cannot be stashed",
+            context={"bucket_id": bucket_id, "transaction_id": transaction_id},
+        )
+    if current.lifecycle_state is TransactionLifecycleState.SPLIT or state is TransactionLifecycleState.SPLIT:
+        raise TransactionValidationError(
+            "split-lineage transitions are only available through split_transaction / merge_transactions",
+            context={
+                "bucket_id": bucket_id,
+                "transaction_id": transaction_id,
+                "current_state": current.lifecycle_state.value,
+                "requested_state": state.value,
+            },
+        )
+    blockers = blocking_modelo_references(
+        bucket_id=bucket_id,
+        transaction_ids=transaction_modelo_source_ids(current),
+        work_unit_repository=ports.work_unit_repository,
+        calculation_repository=ports.calculation_repository,
+    )
+    if blockers:
+        raise_finalized_modelo_blocked(
+            operation="ledger transaction lifecycle transition",
+            transaction_ids=transaction_modelo_source_ids(current),
+            blockers=blockers,
+        )
+    event = build_ledger_bucket_event(
+        bucket_id=bucket_id,
+        event_type=event_type,
+        occurred_at=now,
+        actor=trimmed_actor,
+        object_id=current.transaction_id,
+        payload={
+            "source_command": trimmed_source_command,
+            "previous_lifecycle_state": current.lifecycle_state.value,
+            "lifecycle_state": state.value,
+            "reason": reason.strip(),
+        },
+    )
+    lifecycle_entry = TransactionLifecycleLineageEntry(
+        previous_state=current.lifecycle_state,
+        state=state,
+        actor=trimmed_actor,
+        source_command=trimmed_source_command,
+        changed_at=now,
+        reason=reason,
+        bucket_event_id=event.event_id,
+    )
+    replacement = current.model_copy(
+        update={
+            "lifecycle_state": state,
+            "lifecycle_lineage": (*current.lifecycle_lineage, lifecycle_entry),
+            # D6: a lifecycle transition is a mutating edit; re-stamp modified_at.
+            "modified_at": now,
+        },
+    )
+    updated = replace_transaction(catalogue, old_transaction_id=current.transaction_id, replacement=replacement)
+    save_transaction_catalogue_and_events(
+        transaction_repository=repository,
+        event_repository=event_repository,
+        catalogue=updated,
+        events=(event,),
+    )
+    return build_manual_ledger_result(bucket_id, replacement, (event.event_id,))
+
+
+def _detach_transaction_from_purchase_evidence(
+    catalogue: InvoiceCatalogue,
+    *,
+    bucket_id: str,
+    transaction_id: str,
+) -> tuple[tuple[str, ...], InvoiceCatalogue]:
+    return _detach_transactions_from_purchase_evidence(
+        catalogue,
+        bucket_id=bucket_id,
+        transaction_ids=(transaction_id,),
+    )
+
+
+def _detach_transactions_from_purchase_evidence(
+    catalogue: InvoiceCatalogue,
+    *,
+    bucket_id: str,
+    transaction_ids: tuple[str, ...],
+) -> tuple[tuple[str, ...], InvoiceCatalogue]:
+    detached_ids: list[str] = []
+    wanted = set(transaction_ids)
+    updated_invoices = dict(catalogue.invoices)
+    for invoice_id, invoice in catalogue.invoices.items():
+        if invoice.bucket_id != bucket_id or not wanted.intersection(invoice.linked_transaction_ids):
+            continue
+        remaining_links = tuple(item for item in invoice.linked_transaction_ids if item not in wanted)
+        updated_invoices[invoice_id] = invoice.model_copy(update={"linked_transaction_ids": remaining_links})
+        detached_ids.append(invoice_id)
+    return tuple(sorted(detached_ids)), InvoiceCatalogue.model_validate({"invoices": updated_invoices})
+
+
+def _removal_events(
+    *,
+    bucket_id: str,
+    transaction: Transaction,
+    actor: str,
+    reason: str,
+    source_command: str,
+    purchase_evidence_ids: tuple[str, ...],
+    attachment_ids: tuple[str, ...],
+    occurred_at: datetime,
+) -> tuple[BucketEvent, ...]:
+    events: list[BucketEvent] = []
+    for evidence_id in purchase_evidence_ids:
+        events.append(
+            build_ledger_bucket_event(
+                bucket_id=bucket_id,
+                event_type=BucketEventType.PURCHASE_INVOICE_EVIDENCE_DETACHED,
+                occurred_at=occurred_at,
+                actor=actor,
+                object_type=BucketEventObjectType.PURCHASE_INVOICE_EVIDENCE,
+                object_id=evidence_id,
+                payload={
+                    "source_command": source_command,
+                    "transaction_id": transaction.transaction_id,
+                    "reason": reason,
+                    "mutation_kind": "ledger_transaction_removed",
+                },
+            ),
+        )
+    for attachment_id in attachment_ids:
+        events.append(
+            build_ledger_bucket_event(
+                bucket_id=bucket_id,
+                event_type=BucketEventType.ATTACHMENT_REMOVED,
+                occurred_at=occurred_at,
+                actor=actor,
+                object_type=BucketEventObjectType.ATTACHMENT,
+                object_id=attachment_id,
+                payload={
+                    "source_command": source_command,
+                    "transaction_id": transaction.transaction_id,
+                    "reason": reason,
+                    "mutation_kind": "ledger_transaction_removed",
+                },
+            ),
+        )
+    events.append(
+        build_ledger_bucket_event(
+            bucket_id=bucket_id,
+            event_type=BucketEventType.LEDGER_TRANSACTION_REMOVED,
+            occurred_at=occurred_at,
+            actor=actor,
+            object_type=BucketEventObjectType.LEDGER_TRANSACTION,
+            object_id=transaction.transaction_id,
+            payload={
+                "source_command": source_command,
+                "reason": reason,
+                # Counts, never the joined id lists. A payload value is capped at
+                # 500 characters, and attachment ids are hex-64, so eight of them
+                # joined on commas is 519 and the row could not construct the event
+                # recording its own removal. Nothing is lost: each cascaded id is
+                # already carried as the object_id of its own event in this same
+                # batch, emitted above. Both counts are kept rather than only their
+                # sum so the cascade stays decomposable by kind; a count cannot
+                # outgrow the cap.
+                "purchase_invoice_evidence_count": str(len(purchase_evidence_ids)),
+                "attachment_count": str(len(attachment_ids)),
+                "cascade_count": str(len(purchase_evidence_ids) + len(attachment_ids)),
+            },
+        ),
+    )
+    return tuple(events)
+
+
+__all__ = [
+    "archive_manual_transaction",
+    "mark_transaction_reviewed_excluded",
+    "remove_manual_transaction",
+    "reset_ledger_catalogue",
+    "restore_manual_transaction",
+    "stash_manual_transaction",
+]

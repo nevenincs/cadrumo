@@ -1,0 +1,11 @@
+# DR32202 in aeat-dr-322-2022 prints [73] at campo 15, positions
+# 205-221, limited to 30 June. In aeat-dr-322-2023 campo 15 is [74];
+# the complete successor design no longer declares the combined [73] concept.
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "retired-operaciones-no-sujetas-o-inversion-con-derecho-deduccion"
+continuidad_id = "m322-operaciones-no-sujetas-o-inversion-con-derecho-deduccion"
+from_revision = "2008-2022"
+to_revision = "2023"
+evolution_kind = "retired"
+legal_refs = ["orden-eha-3434-2007:art-1"]
+source_refs = ["aeat-dr-322-2022", "aeat-dr-322-2023"]

@@ -1,0 +1,277 @@
+"""The mapping lane is enrolled strictly after the exact fixed-layout providers.
+
+An exact layout match is a deterministic read of a known structure; the mapping
+lane's read depends on a column-role mapping decided per file. So the ordering
+is the control, not the lane's capability — and the test that matters proves the
+lane *would* have taken a known bank export had it been offered it first.
+"""
+
+from __future__ import annotations
+
+from decimal import Decimal
+from pathlib import Path
+
+import pytest
+
+from ......core.field_role import FieldRole
+from ......core.tabular import NormalizedTable
+from ......domain.transactions.enums import TransactionDirection
+from ......tests.inventory import FIXTURES_DIR
+from .._mapped_tabular import MappedTabularProvider, default_tabular_mapping_resolver
+from .._tabular_projection import ColumnRoleMapping
+from ..base import InvalidFinancialSourceError
+from ..csv import CsvProvider
+from ..detection import _ordered_candidates, detect_provider
+from .tabular_export_support import write_unknown_header_export
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+
+_FIXTURES = FIXTURES_DIR / "financial"
+
+#: A known bank export the exact CSV provider parses today.
+_KNOWN_BANK_FIXTURE = _FIXTURES / "bbva-sample.csv"
+
+#: The role of each column of the unknown-format export, in column order. This
+#: is the data a mapping step supplies; the lane consumes it, it does not
+#: derive it.
+_NEOBANK_ROLES = (
+    FieldRole.INVOICE_DATE,
+    FieldRole.UNMAPPED,
+    FieldRole.COUNTERPARTY_NAME,
+    FieldRole.NOTES,
+    FieldRole.UNMAPPED,
+    FieldRole.GRAND_TOTAL,
+    FieldRole.CURRENCY,
+    FieldRole.UNMAPPED,
+)
+
+#: The same for the known bank export, so the shadowing test can prove the lane
+#: is capable of taking that file and is held back only by the ordering.
+_KNOWN_BANK_ROLES = (
+    FieldRole.INVOICE_DATE,
+    FieldRole.UNMAPPED,
+    FieldRole.NOTES,
+    FieldRole.GRAND_TOTAL,
+    FieldRole.UNMAPPED,
+    FieldRole.CURRENCY,
+)
+
+
+@pytest.fixture
+def unknown_export(tmp_path: Path) -> Path:
+    """An export of no layout the vocabulary names: dot decimals, ISO dates and an exchange-rate column."""
+    return write_unknown_header_export(tmp_path)
+
+
+def _resolver(roles: tuple[FieldRole, ...]):
+    """Return a resolver supplying ``roles`` for whatever table it is handed."""
+
+    def resolve(table: NormalizedTable) -> ColumnRoleMapping | None:
+        if len(table.headers) != len(roles):
+            return None
+        return ColumnRoleMapping(roles=roles)
+
+    return resolve
+
+
+def test_mapping_lane_is_last_for_every_source_shape(unknown_export: Path) -> None:
+    """The fallback trails every exact provider, whatever the file looks like."""
+    shapes = (
+        Path("statement.csv"),
+        Path("statement.xlsx"),
+        Path("statement.ofx"),
+        Path("statement.pdf"),
+        unknown_export,
+        _KNOWN_BANK_FIXTURE,
+    )
+    for path in shapes:
+        candidates = _ordered_candidates(path)
+        assert isinstance(candidates[-1], MappedTabularProvider), path.name
+        mapped_positions = [
+            index for index, provider in enumerate(candidates) if isinstance(provider, MappedTabularProvider)
+        ]
+        assert mapped_positions == [len(candidates) - 1], path.name
+
+
+def test_known_bank_fixture_still_takes_the_exact_provider() -> None:
+    """A recognised bank export parses deterministically, end to end.
+
+    An OUTCOME check: it pins which provider answers and the values it yields.
+    It does **not** on its own establish that the ordering is what produced that
+    outcome — under test the production resolver cannot act, so this stays green
+    even with the lane ordered first. The shadowing guarantee lives in
+    :func:`test_the_known_bank_export_matches_before_the_mapping_lane_is_reached`.
+    """
+    provider = detect_provider(_KNOWN_BANK_FIXTURE)
+    assert isinstance(provider, CsvProvider)
+    rows = list(provider.ingest(_KNOWN_BANK_FIXTURE))
+    assert rows
+    assert rows[0].direction is TransactionDirection.INCOMING
+    assert rows[0].raw.amount == Decimal("1500.25")
+
+
+def test_the_known_bank_export_matches_before_the_mapping_lane_is_reached() -> None:
+    """The exact provider matches at a position AHEAD of the mapping lane.
+
+    This is the gate against shadowing, and it is deliberately structural
+    rather than an assertion about which provider won. The outcome test above
+    cannot do this job on its own: under test the production resolver reaches a
+    model and a profile-bound cache that are not available, so the lane declines
+    every file **wherever it sits in the order**. A known export would keep
+    taking its exact parser even with the lane ordered first — green because the
+    fallback cannot act, not because the ordering protects anything.
+
+    Comparing positions removes that dependency entirely. If the lane were
+    ordered ahead of the exact providers, the matching index would fall after
+    the lane's and this reddens, whether or not the lane's resolver could have
+    answered.
+    """
+    candidates = _ordered_candidates(_KNOWN_BANK_FIXTURE)
+    lane_index = next(index for index, provider in enumerate(candidates) if isinstance(provider, MappedTabularProvider))
+    matched_index = next(
+        (index for index, provider in enumerate(candidates) if provider.validate_source(_KNOWN_BANK_FIXTURE).is_valid),
+        None,
+    )
+
+    assert matched_index is not None, "no provider claimed the known bank export"
+    assert isinstance(candidates[matched_index], CsvProvider)
+    assert matched_index < lane_index, (
+        f"the mapping lane sits at {lane_index}, ahead of the exact provider that matched at {matched_index}"
+    )
+
+
+def test_the_mapping_lane_can_read_the_known_bank_fixture_when_it_can_map() -> None:
+    """The lane is held back by the ordering, not by an inability to read the file.
+
+    Stated as capability only. It uses a supplied mapping rather than the
+    production resolver, so it proves the lane *can* act on this export — which
+    is what makes ordering it last meaningful — while the shadowing guarantee
+    itself rests on the position comparison above.
+    """
+    lane = MappedTabularProvider(mapping_resolver=_resolver(_KNOWN_BANK_ROLES))
+    validation = lane.validate_source(_KNOWN_BANK_FIXTURE)
+    assert validation.is_valid, validation.warnings
+    assert list(lane.ingest(_KNOWN_BANK_FIXTURE))
+
+
+def test_unknown_format_fixture_is_refused_by_every_exact_provider(unknown_export: Path) -> None:
+    """No exact provider claims the unknown export — the precondition for reaching the lane."""
+    for provider in _ordered_candidates(unknown_export)[:-1]:
+        assert not provider.validate_source(unknown_export).is_valid, provider.name
+
+
+def test_unknown_format_fixture_reaches_the_mapping_lane(unknown_export: Path) -> None:
+    """Detection consults the lane for the unknown export, and it imports under a mapping."""
+    candidates = _ordered_candidates(unknown_export)
+    assert isinstance(candidates[-1], MappedTabularProvider)
+
+    lane = MappedTabularProvider(mapping_resolver=_resolver(_NEOBANK_ROLES))
+    validation = lane.validate_source(unknown_export)
+    assert validation.is_valid, validation.warnings
+
+    rows = list(lane.ingest(unknown_export))
+    assert len(rows) == 12
+    assert rows[0].direction is TransactionDirection.OUTGOING
+    assert rows[0].raw.amount == Decimal("469.52")
+    assert rows[0].raw.currency == "EUR"
+    assert rows[1].direction is TransactionDirection.INCOMING
+    assert rows[1].raw.amount == Decimal("4596.00")
+
+
+def test_unmapped_columns_are_reported_rather_than_refusing_the_file(unknown_export: Path) -> None:
+    """Three columns carry no role; the export still imports and says which."""
+    lane = MappedTabularProvider(mapping_resolver=_resolver(_NEOBANK_ROLES))
+    validation = lane.validate_source(unknown_export)
+    assert validation.is_valid
+    unmapped = [warning for warning in validation.warnings if "not mapped to a role" in warning]
+    assert len(unmapped) == 3
+    assert any("exchange_rate" in warning for warning in unmapped)
+
+
+def test_lane_reports_when_roles_cannot_be_established(unknown_export: Path) -> None:
+    """A host that cannot map declines and says why; it never invents roles.
+
+    "No mapping" is what a model that answered and established nothing returns.
+    The lane must report that and refuse, rather than fall back to guessing
+    column meanings. A reader that could not be asked at all is a different
+    outcome, and is reported rather than declined.
+    """
+    lane = MappedTabularProvider(mapping_resolver=lambda table: None)
+    validation = lane.validate_source(unknown_export)
+    assert not validation.is_valid
+    assert any("column roles could not be established" in warning for warning in validation.warnings)
+    with pytest.raises(InvalidFinancialSourceError, match="column roles could not be established"):
+        list(lane.ingest(unknown_export))
+
+
+def test_lane_with_no_resolver_at_all_reports_rather_than_guesses(unknown_export: Path) -> None:
+    """The unwired case is distinct from the unmappable one and names itself."""
+    lane = MappedTabularProvider()
+    lane.mapping_resolver = None
+    validation = lane.validate_source(unknown_export)
+    assert not validation.is_valid
+    assert any("no column-role mapping resolver" in warning for warning in validation.warnings)
+    with pytest.raises(InvalidFinancialSourceError, match="no column-role mapping resolver"):
+        list(lane.ingest(unknown_export))
+
+
+def test_the_wiring_point_is_the_lanes_only_production_mapping_source() -> None:
+    """Whatever supplies roles in production arrives through the one wiring point.
+
+    Asserted as identity against that function rather than against a particular
+    resolver, so binding or unbinding the semantic mapper does not make this
+    test fail for saying nothing. What must not happen is a second mapping
+    source appearing beside it.
+    """
+    assert MappedTabularProvider().mapping_resolver == default_tabular_mapping_resolver()
+
+
+def test_a_mapping_missing_a_required_role_is_refused_with_the_role_named(unknown_export: Path) -> None:
+    """A mapping with no amount column cannot produce movements, and says so."""
+    roles = tuple(FieldRole.UNMAPPED if role is FieldRole.GRAND_TOTAL else role for role in _NEOBANK_ROLES)
+    lane = MappedTabularProvider(mapping_resolver=_resolver(roles))
+    validation = lane.validate_source(unknown_export)
+    assert not validation.is_valid
+    assert any("movement_amount" in warning for warning in validation.warnings)
+
+
+def test_the_statement_roles_are_read_as_a_movement_date_and_amount(unknown_export: Path) -> None:
+    """A mapping naming the bank-statement roles imports, as one naming the invoice roles does."""
+    statement_roles = tuple(
+        {FieldRole.INVOICE_DATE: FieldRole.BOOKED_DATE, FieldRole.GRAND_TOTAL: FieldRole.MOVEMENT_AMOUNT}.get(
+            role, role
+        )
+        for role in _NEOBANK_ROLES
+    )
+    by_statement_roles = MappedTabularProvider(mapping_resolver=_resolver(statement_roles))
+    by_invoice_roles = MappedTabularProvider(mapping_resolver=_resolver(_NEOBANK_ROLES))
+
+    validation = by_statement_roles.validate_source(unknown_export)
+    statement_rows = list(by_statement_roles.ingest(unknown_export))
+    invoice_rows = list(by_invoice_roles.ingest(unknown_export))
+
+    assert validation.is_valid, validation.warnings
+    assert statement_rows
+    assert [(row.raw.booked_date, row.raw.amount, row.direction) for row in statement_rows] == [
+        (row.raw.booked_date, row.raw.amount, row.direction) for row in invoice_rows
+    ]
+
+
+def test_one_unparseable_row_does_not_refuse_the_whole_file(tmp_path: Path) -> None:
+    """A bad row is reported and skipped; every other row still imports."""
+    source = (
+        "fecha;concepto;importe\n"
+        "01/02/2026;Compra uno;-10,00\n"
+        "no-es-fecha;Compra dos;-20,00\n"
+        "03/02/2026;Compra tres;-30,00\n"
+    )
+    path = tmp_path / "unknown_export.csv"
+    path.write_bytes(source.encode("utf-8"))
+    lane = MappedTabularProvider(
+        mapping_resolver=_resolver((FieldRole.INVOICE_DATE, FieldRole.NOTES, FieldRole.GRAND_TOTAL)),
+    )
+    validation = lane.validate_source(path)
+    assert validation.is_valid
+    assert any("line 3 cannot be imported" in warning for warning in validation.warnings)
+    rows = list(lane.ingest(path))
+    assert [row.raw.amount for row in rows] == [Decimal("10.00"), Decimal("30.00")]

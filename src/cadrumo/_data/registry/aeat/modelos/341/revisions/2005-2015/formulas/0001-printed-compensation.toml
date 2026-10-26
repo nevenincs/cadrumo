@@ -1,0 +1,39 @@
+# Annex II, printed pages 44305 and 44308. Rates remain explicit inputs.
+[[revisions."2005-2015".formulas]]
+id = "modelo-341-compensacion-07"
+target_casilla_id = "07"
+expression = {op = "divide", args = [{op = "multiply", args = [{casilla_id = "01"}, {casilla_id = "04"}]}, {literal = "100"}]}
+rounding = "money-2"
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-37-1992:art-130", "ley-37-1992:art-131"]
+source_refs = ["boe-modelo-341-2000-form-pdf", "boe-modelo-341-2000-instructions-pdf"]
+source_citations = [{source_ref = "boe-modelo-341-2000-instructions-pdf", required_text = ["resultado de aplicar al valor resenado en las casillas 01-03"]}]
+
+# Annex II, printed pages 44305 and 44308. Rates remain explicit inputs.
+[[revisions."2005-2015".formulas]]
+id = "modelo-341-compensacion-08"
+target_casilla_id = "08"
+expression = {op = "divide", args = [{op = "multiply", args = [{casilla_id = "02"}, {casilla_id = "05"}]}, {literal = "100"}]}
+rounding = "money-2"
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-37-1992:art-130", "ley-37-1992:art-131"]
+source_refs = ["boe-modelo-341-2000-form-pdf", "boe-modelo-341-2000-instructions-pdf"]
+source_citations = [{source_ref = "boe-modelo-341-2000-instructions-pdf", required_text = ["resultado de aplicar al valor resenado en las casillas 01-03"]}]
+
+# Annex II, printed pages 44305 and 44308. Rates remain explicit inputs.
+[[revisions."2005-2015".formulas]]
+id = "modelo-341-compensacion-09"
+target_casilla_id = "09"
+expression = {op = "divide", args = [{op = "multiply", args = [{casilla_id = "03"}, {casilla_id = "06"}]}, {literal = "100"}]}
+rounding = "money-2"
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-37-1992:art-130", "ley-37-1992:art-131"]
+source_refs = ["boe-modelo-341-2000-form-pdf", "boe-modelo-341-2000-instructions-pdf"]
+source_citations = [{source_ref = "boe-modelo-341-2000-instructions-pdf", required_text = ["resultado de aplicar al valor resenado en las casillas 01-03"]}]
+
+# Annex II, printed pages 44305 and 44308. Rates remain explicit inputs.
+[[revisions."2005-2015".formulas]]
+id = "modelo-341-compensacion-total"
+target_casilla_id = "10"
+expression = {op = "add", args = [{casilla_id = "07"}, {casilla_id = "08"}, {casilla_id = "09"}]}
+rounding = "money-2"
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-37-1992:art-130", "ley-37-1992:art-131"]
+source_refs = ["boe-modelo-341-2000-form-pdf", "boe-modelo-341-2000-instructions-pdf"]
+source_citations = [{source_ref = "boe-modelo-341-2000-instructions-pdf", required_text = ["importe total"]}]

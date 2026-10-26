@@ -1,0 +1,17 @@
+# Advisories this repository cannot fix, read by dev/audit/dependency_audit.py. Every entry
+# needs an id, a reason and an expiry; an expired entry fails the audit, so each is re-triaged
+# rather than forgotten. native/deny.toml carries the same two ignores for cargo-deny.
+
+# Both advisories come from tauri's Linux gtk3 stack: cadrumo-desktop -> tauri, tauri-runtime-wry,
+# wry, tao, muda -> gtk 0.18 -> glib 0.18. No Windows build compiles it, and the gtk 0.18
+# bindings cannot take the fixed glib. Drop both entries when tauri leaves gtk3.
+
+[[suppression]]
+id = "RUSTSEC-2024-0429"
+reason = "glib 0.18.5 VariantStrIter unsoundness (GHSA-wrw7-89jp-8q8g): patched only in glib 0.20, which the gtk 0.18 bindings pinned by tauri's Linux stack cannot use; Linux-only and cadrumo calls no glib API"
+expires = 2027-01-21
+
+[[suppression]]
+id = "RUSTSEC-2024-0370"
+reason = "proc-macro-error 1.0.4 is unmaintained and has no patched release: a compile-time dependency of glib-macros and gtk3-macros in the same Linux-only gtk3 stack"
+expires = 2027-01-21

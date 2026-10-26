@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<response>
+  <status>
+    <code>200</code>
+    <text>ok</text>
+  </status>
+  <data>
+    <bloque id="a1" tipo="precepto" titulo="Artículo 1">
+      <version id_norma="BOE-A-2021-5780" fecha_publicacion="20210413" fecha_vigencia="20210414">
+        <p class="articulo">Artículo 1. Aprobación del modelo 234 de Declaración de información de determinados mecanismos transfronterizos de planificación fiscal.</p>
+        <p class="parrafo">Se aprueba el modelo 234 de «Declaración de información de determinados mecanismos transfronterizos de planificación fiscal» cuyo contenido figura en el anexo I de la presente orden.</p>
+      </version>
+    </bloque>
+  </data>
+</response>

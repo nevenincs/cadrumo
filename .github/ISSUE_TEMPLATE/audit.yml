@@ -1,0 +1,47 @@
+name: Audit (recurring)
+description: Scheduled monthly or quarterly audit instance
+title: "AUDIT (monthly|quarterly): {scope} — {YYYY-MM}"
+labels: ["type:chore", "charter"]
+body:
+  - type: dropdown
+    id: cadence
+    attributes:
+      label: Cadence
+      options:
+        - "audit:monthly"
+        - "audit:quarterly"
+    validations:
+      required: true
+
+  - type: input
+    id: umbrella
+    attributes:
+      label: Umbrella tracking issue
+      description: Reference the parent audit umbrella issue
+      placeholder: "#241"
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: What does this audit cover this instance?
+    validations:
+      required: true
+
+  - type: textarea
+    id: deliverable
+    attributes:
+      label: Deliverable
+      description: What artifact (vault doc + PRs) must land?
+      placeholder: |
+        - `.vault/audit/YYYY-MM-DD-{scope}.md`
+        - 0-3 follow-up PRs / issues
+    validations:
+      required: true
+
+  - type: textarea
+    id: findings
+    attributes:
+      label: Findings (fill in at audit completion)

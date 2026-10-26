@@ -1,0 +1,785 @@
+# Authored form structure; automatic generation preserves this declaration.
+# Reconcile source changes explicitly. Authorship does not imply completed review.
+
+[[revisions.2026.form_layouts]]
+id = "form-layout"
+revision_id = "2026"
+seed_source = "authored"
+review = { state = "generated", notes = "Partial authored layout after visual inspection of all nine BOE-A-2026-1761 Annex IV form pages, printed12135-12143. Authored page6 settlement, page8 three differentiated-deduction grids and totals; page2bis quota36/600/602 restored to exact rate rows. Other pages retain generated predecessor geometry. Still missing page1 identity/statistics/representatives, page5 simplified activity detail, page7 prorrata; remaining rate grids and full printed calculation coverage need reconciliation. No filing layout, native Sheet or operator visual review claimed. Page7 specific operations now form one section in printed order (230,109,231,232,111,113,523; cash-accounting pairs654/655 and656/657). Prorrata detail remains missing. Page3 now keeps each six-rate deduction breakdown and its subtotal together in one grid, preserving all98 casilla owners and printed sequence; seven redundant headings removed. Page4 keeps each intra-community rate breakdown with its subtotal; compensation and adjustment pairs share one ordered base/deductible-quota grid. All40 owners retained." }
+generator_version = 1
+source_state_digest = "e21a4606ec64a9f36e1f2b045b87fd3fd987562a791c5e3bd683efd9c1a1b2ad"
+design_sources = [
+    { source_ref = "aeat-dr-390-2025", sha256 = "f8d08b418662b3ac482669ed1ffdd498a07906b96fff6217bb8a4abc9ae7ce12" },
+    { source_ref = "boe-modelo-390-2026-form", sha256 = "0552f1b8b0e30b22a63e0cc4be29f5ba8ab050609dcb04ed16549b8eb5030694" },
+]
+placements = [
+    { casilla_id = "decl.ejercicio", kind = "working_figure" },
+    { casilla_id = "decl.tipo-declaracion", kind = "working_figure" },
+    { casilla_id = "iva.anual.aic.bienes.general.base", kind = "working_figure" },
+    { casilla_id = "iva.anual.aic.bienes.reduced.base", kind = "working_figure" },
+    { casilla_id = "iva.anual.aic.bienes.super_reduced.base", kind = "working_figure" },
+    { casilla_id = "iva.anual.aic.bienes.tipo-0.base", kind = "on_form", box_number = "716" },
+    { casilla_id = "iva.anual.aic.bienes.tipo-0.cuota", kind = "on_form", box_number = "717" },
+    { casilla_id = "iva.anual.aic.bienes.tipo-10.base", kind = "on_form", box_number = "23" },
+    { casilla_id = "iva.anual.aic.bienes.tipo-10.cuota", kind = "on_form", box_number = "24" },
+    { casilla_id = "iva.anual.aic.bienes.tipo-2.base", kind = "on_form", box_number = "683" },
+    { casilla_id = "iva.anual.aic.bienes.tipo-2.cuota", kind = "on_form", box_number = "684" },
+    { casilla_id = "iva.anual.aic.bienes.tipo-21.base", kind = "on_form", box_number = "25" },
+    { casilla_id = "iva.anual.aic.bienes.tipo-21.cuota", kind = "on_form", box_number = "26" },
+    { casilla_id = "iva.anual.aic.bienes.tipo-4.base", kind = "on_form", box_number = "21" },
+    { casilla_id = "iva.anual.aic.bienes.tipo-4.cuota", kind = "on_form", box_number = "22" },
+    { casilla_id = "iva.anual.aic.bienes.tipo-5.base", kind = "on_form", box_number = "718" },
+    { casilla_id = "iva.anual.aic.bienes.tipo-5.cuota", kind = "on_form", box_number = "719" },
+    { casilla_id = "iva.anual.aic.bienes.tipo-7-5.base", kind = "on_form", box_number = "685" },
+    { casilla_id = "iva.anual.aic.bienes.tipo-7-5.cuota", kind = "on_form", box_number = "686" },
+    { casilla_id = "iva.anual.aic.bienes.zero.base", kind = "working_figure" },
+    { casilla_id = "iva.anual.aic.servicios.general.base", kind = "working_figure" },
+    { casilla_id = "iva.anual.aic.servicios.reduced.base", kind = "working_figure" },
+    { casilla_id = "iva.anual.aic.servicios.super_reduced.base", kind = "working_figure" },
+    { casilla_id = "iva.anual.aic.servicios.tipo-0.base", kind = "on_form", box_number = "720" },
+    { casilla_id = "iva.anual.aic.servicios.tipo-0.cuota", kind = "on_form", box_number = "721" },
+    { casilla_id = "iva.anual.aic.servicios.tipo-10.base", kind = "on_form", box_number = "547" },
+    { casilla_id = "iva.anual.aic.servicios.tipo-10.cuota", kind = "on_form", box_number = "548" },
+    { casilla_id = "iva.anual.aic.servicios.tipo-2.base", kind = "on_form", box_number = "687" },
+    { casilla_id = "iva.anual.aic.servicios.tipo-2.cuota", kind = "on_form", box_number = "688" },
+    { casilla_id = "iva.anual.aic.servicios.tipo-21.base", kind = "on_form", box_number = "551" },
+    { casilla_id = "iva.anual.aic.servicios.tipo-21.cuota", kind = "on_form", box_number = "552" },
+    { casilla_id = "iva.anual.aic.servicios.tipo-4.base", kind = "on_form", box_number = "545" },
+    { casilla_id = "iva.anual.aic.servicios.tipo-4.cuota", kind = "on_form", box_number = "546" },
+    { casilla_id = "iva.anual.aic.servicios.tipo-5.base", kind = "on_form", box_number = "722" },
+    { casilla_id = "iva.anual.aic.servicios.tipo-5.cuota", kind = "on_form", box_number = "723" },
+    { casilla_id = "iva.anual.aic.servicios.tipo-7-5.base", kind = "on_form", box_number = "689" },
+    { casilla_id = "iva.anual.aic.servicios.tipo-7-5.cuota", kind = "on_form", box_number = "690" },
+    { casilla_id = "iva.anual.aic.servicios.zero.base", kind = "working_figure" },
+    { casilla_id = "iva.anual.autorepercutido.interior.base", kind = "on_form", box_number = "27" },
+    { casilla_id = "iva.anual.autorepercutido.interior.cuota", kind = "on_form", box_number = "28" },
+    { casilla_id = "iva.anual.autorepercutido.interior.deducible.base", kind = "working_figure" },
+    { casilla_id = "iva.anual.autorepercutido.interior.deducible.cuota", kind = "working_figure" },
+    { casilla_id = "iva.anual.autorepercutido.interior.deducible.inversion.base", kind = "working_figure" },
+    { casilla_id = "iva.anual.autorepercutido.interior.deducible.inversion.cuota", kind = "working_figure" },
+    { casilla_id = "iva.anual.autorepercutido.intracomunitaria", kind = "working_figure" },
+    { casilla_id = "iva.anual.compensacion-cuotas-ejercicio-anterior", kind = "on_form", box_number = "85" },
+    { casilla_id = "iva.anual.compensacion-generada-ejercicio-no-97", kind = "on_form", box_number = "662" },
+    { casilla_id = "iva.anual.compensacion-ultimo-periodo-97", kind = "on_form", box_number = "97" },
+    { casilla_id = "iva.anual.cuota-deducible-total", kind = "on_form", box_number = "64" },
+    { casilla_id = "iva.anual.cuota-devengada-total", kind = "on_form", box_number = "47" },
+    { casilla_id = "iva.anual.deducible.aic-corrientes.tipo-10.base", kind = "on_form", box_number = "627" },
+    { casilla_id = "iva.anual.deducible.aic-corrientes.tipo-10.cuota", kind = "on_form", box_number = "628" },
+    { casilla_id = "iva.anual.deducible.aic-corrientes.tipo-2.base", kind = "on_form", box_number = "765" },
+    { casilla_id = "iva.anual.deducible.aic-corrientes.tipo-2.cuota", kind = "on_form", box_number = "766" },
+    { casilla_id = "iva.anual.deducible.aic-corrientes.tipo-21.base", kind = "on_form", box_number = "629" },
+    { casilla_id = "iva.anual.deducible.aic-corrientes.tipo-21.cuota", kind = "on_form", box_number = "630" },
+    { casilla_id = "iva.anual.deducible.aic-corrientes.tipo-4.base", kind = "on_form", box_number = "214" },
+    { casilla_id = "iva.anual.deducible.aic-corrientes.tipo-4.cuota", kind = "on_form", box_number = "215" },
+    { casilla_id = "iva.anual.deducible.aic-corrientes.tipo-5.base", kind = "on_form", box_number = "736" },
+    { casilla_id = "iva.anual.deducible.aic-corrientes.tipo-5.cuota", kind = "on_form", box_number = "737" },
+    { casilla_id = "iva.anual.deducible.aic-corrientes.tipo-7-5.base", kind = "on_form", box_number = "767" },
+    { casilla_id = "iva.anual.deducible.aic-corrientes.tipo-7-5.cuota", kind = "on_form", box_number = "768" },
+    { casilla_id = "iva.anual.deducible.aic-corrientes.todos-tipos.base", kind = "working_figure" },
+    { casilla_id = "iva.anual.deducible.aic-corrientes.todos-tipos.cuota", kind = "working_figure" },
+    { casilla_id = "iva.anual.deducible.aic-corrientes.total.base", kind = "on_form", box_number = "56" },
+    { casilla_id = "iva.anual.deducible.aic-corrientes.total.cuota", kind = "on_form", box_number = "57" },
+    { casilla_id = "iva.anual.deducible.aic-inversion.tipo-10.base", kind = "on_form", box_number = "631" },
+    { casilla_id = "iva.anual.deducible.aic-inversion.tipo-10.cuota", kind = "on_form", box_number = "632" },
+    { casilla_id = "iva.anual.deducible.aic-inversion.tipo-2.base", kind = "on_form", box_number = "769" },
+    { casilla_id = "iva.anual.deducible.aic-inversion.tipo-2.cuota", kind = "on_form", box_number = "770" },
+    { casilla_id = "iva.anual.deducible.aic-inversion.tipo-21.base", kind = "on_form", box_number = "633" },
+    { casilla_id = "iva.anual.deducible.aic-inversion.tipo-21.cuota", kind = "on_form", box_number = "634" },
+    { casilla_id = "iva.anual.deducible.aic-inversion.tipo-4.base", kind = "on_form", box_number = "220" },
+    { casilla_id = "iva.anual.deducible.aic-inversion.tipo-4.cuota", kind = "on_form", box_number = "221" },
+    { casilla_id = "iva.anual.deducible.aic-inversion.tipo-5.base", kind = "on_form", box_number = "738" },
+    { casilla_id = "iva.anual.deducible.aic-inversion.tipo-5.cuota", kind = "on_form", box_number = "739" },
+    { casilla_id = "iva.anual.deducible.aic-inversion.tipo-7-5.base", kind = "on_form", box_number = "771" },
+    { casilla_id = "iva.anual.deducible.aic-inversion.tipo-7-5.cuota", kind = "on_form", box_number = "772" },
+    { casilla_id = "iva.anual.deducible.aic-inversion.todos-tipos.base", kind = "working_figure" },
+    { casilla_id = "iva.anual.deducible.aic-inversion.todos-tipos.cuota", kind = "working_figure" },
+    { casilla_id = "iva.anual.deducible.aic-inversion.total.base", kind = "on_form", box_number = "58" },
+    { casilla_id = "iva.anual.deducible.aic-inversion.total.cuota", kind = "on_form", box_number = "59" },
+    { casilla_id = "iva.anual.deducible.aic-servicios.tipo-10.base", kind = "on_form", box_number = "635" },
+    { casilla_id = "iva.anual.deducible.aic-servicios.tipo-10.cuota", kind = "on_form", box_number = "636" },
+    { casilla_id = "iva.anual.deducible.aic-servicios.tipo-2.base", kind = "on_form", box_number = "773" },
+    { casilla_id = "iva.anual.deducible.aic-servicios.tipo-2.cuota", kind = "on_form", box_number = "774" },
+    { casilla_id = "iva.anual.deducible.aic-servicios.tipo-21.base", kind = "on_form", box_number = "637" },
+    { casilla_id = "iva.anual.deducible.aic-servicios.tipo-21.cuota", kind = "on_form", box_number = "638" },
+    { casilla_id = "iva.anual.deducible.aic-servicios.tipo-4.base", kind = "on_form", box_number = "587" },
+    { casilla_id = "iva.anual.deducible.aic-servicios.tipo-4.cuota", kind = "on_form", box_number = "588" },
+    { casilla_id = "iva.anual.deducible.aic-servicios.tipo-5.base", kind = "on_form", box_number = "740" },
+    { casilla_id = "iva.anual.deducible.aic-servicios.tipo-5.cuota", kind = "on_form", box_number = "741" },
+    { casilla_id = "iva.anual.deducible.aic-servicios.tipo-7-5.base", kind = "on_form", box_number = "775" },
+    { casilla_id = "iva.anual.deducible.aic-servicios.tipo-7-5.cuota", kind = "on_form", box_number = "776" },
+    { casilla_id = "iva.anual.deducible.aic-servicios.todos-tipos.base", kind = "working_figure" },
+    { casilla_id = "iva.anual.deducible.aic-servicios.todos-tipos.cuota", kind = "working_figure" },
+    { casilla_id = "iva.anual.deducible.aic-servicios.total.base", kind = "on_form", box_number = "597" },
+    { casilla_id = "iva.anual.deducible.aic-servicios.total.cuota", kind = "on_form", box_number = "598" },
+    { casilla_id = "iva.anual.deducible.compensaciones-reagp.base", kind = "on_form", box_number = "60" },
+    { casilla_id = "iva.anual.deducible.compensaciones-reagp.cuota", kind = "on_form", box_number = "61" },
+    { casilla_id = "iva.anual.deducible.importaciones-corrientes.tipo-10.base", kind = "on_form", box_number = "619" },
+    { casilla_id = "iva.anual.deducible.importaciones-corrientes.tipo-10.cuota", kind = "on_form", box_number = "620" },
+    { casilla_id = "iva.anual.deducible.importaciones-corrientes.tipo-2.base", kind = "on_form", box_number = "757" },
+    { casilla_id = "iva.anual.deducible.importaciones-corrientes.tipo-2.cuota", kind = "on_form", box_number = "758" },
+    { casilla_id = "iva.anual.deducible.importaciones-corrientes.tipo-21.base", kind = "on_form", box_number = "621" },
+    { casilla_id = "iva.anual.deducible.importaciones-corrientes.tipo-21.cuota", kind = "on_form", box_number = "622" },
+    { casilla_id = "iva.anual.deducible.importaciones-corrientes.tipo-4.base", kind = "on_form", box_number = "202" },
+    { casilla_id = "iva.anual.deducible.importaciones-corrientes.tipo-4.cuota", kind = "on_form", box_number = "203" },
+    { casilla_id = "iva.anual.deducible.importaciones-corrientes.tipo-5.base", kind = "on_form", box_number = "732" },
+    { casilla_id = "iva.anual.deducible.importaciones-corrientes.tipo-5.cuota", kind = "on_form", box_number = "733" },
+    { casilla_id = "iva.anual.deducible.importaciones-corrientes.tipo-7-5.base", kind = "on_form", box_number = "759" },
+    { casilla_id = "iva.anual.deducible.importaciones-corrientes.tipo-7-5.cuota", kind = "on_form", box_number = "760" },
+    { casilla_id = "iva.anual.deducible.importaciones-corrientes.total.base", kind = "on_form", box_number = "52" },
+    { casilla_id = "iva.anual.deducible.importaciones-inversion.tipo-10.base", kind = "on_form", box_number = "623" },
+    { casilla_id = "iva.anual.deducible.importaciones-inversion.tipo-10.cuota", kind = "on_form", box_number = "624" },
+    { casilla_id = "iva.anual.deducible.importaciones-inversion.tipo-2.base", kind = "on_form", box_number = "761" },
+    { casilla_id = "iva.anual.deducible.importaciones-inversion.tipo-2.cuota", kind = "on_form", box_number = "762" },
+    { casilla_id = "iva.anual.deducible.importaciones-inversion.tipo-21.base", kind = "on_form", box_number = "625" },
+    { casilla_id = "iva.anual.deducible.importaciones-inversion.tipo-21.cuota", kind = "on_form", box_number = "626" },
+    { casilla_id = "iva.anual.deducible.importaciones-inversion.tipo-4.base", kind = "on_form", box_number = "208" },
+    { casilla_id = "iva.anual.deducible.importaciones-inversion.tipo-4.cuota", kind = "on_form", box_number = "209" },
+    { casilla_id = "iva.anual.deducible.importaciones-inversion.tipo-5.base", kind = "on_form", box_number = "734" },
+    { casilla_id = "iva.anual.deducible.importaciones-inversion.tipo-5.cuota", kind = "on_form", box_number = "735" },
+    { casilla_id = "iva.anual.deducible.importaciones-inversion.tipo-7-5.base", kind = "on_form", box_number = "763" },
+    { casilla_id = "iva.anual.deducible.importaciones-inversion.tipo-7-5.cuota", kind = "on_form", box_number = "764" },
+    { casilla_id = "iva.anual.deducible.importaciones-inversion.total.base", kind = "on_form", box_number = "54" },
+    { casilla_id = "iva.anual.deducible.importaciones-inversion.total.cuota", kind = "on_form", box_number = "55" },
+    { casilla_id = "iva.anual.deducible.interiores-corrientes.soportado.base", kind = "working_figure" },
+    { casilla_id = "iva.anual.deducible.interiores-corrientes.soportado.cuota", kind = "working_figure" },
+    { casilla_id = "iva.anual.deducible.interiores-corrientes.tipo-10.base", kind = "on_form", box_number = "603" },
+    { casilla_id = "iva.anual.deducible.interiores-corrientes.tipo-10.cuota", kind = "on_form", box_number = "604" },
+    { casilla_id = "iva.anual.deducible.interiores-corrientes.tipo-2.base", kind = "on_form", box_number = "695" },
+    { casilla_id = "iva.anual.deducible.interiores-corrientes.tipo-2.cuota", kind = "on_form", box_number = "696" },
+    { casilla_id = "iva.anual.deducible.interiores-corrientes.tipo-21.base", kind = "on_form", box_number = "605" },
+    { casilla_id = "iva.anual.deducible.interiores-corrientes.tipo-21.cuota", kind = "on_form", box_number = "606" },
+    { casilla_id = "iva.anual.deducible.interiores-corrientes.tipo-4.base", kind = "on_form", box_number = "190" },
+    { casilla_id = "iva.anual.deducible.interiores-corrientes.tipo-4.cuota", kind = "on_form", box_number = "191" },
+    { casilla_id = "iva.anual.deducible.interiores-corrientes.tipo-5.base", kind = "on_form", box_number = "724" },
+    { casilla_id = "iva.anual.deducible.interiores-corrientes.tipo-5.cuota", kind = "on_form", box_number = "725" },
+    { casilla_id = "iva.anual.deducible.interiores-corrientes.tipo-7-5.base", kind = "on_form", box_number = "697" },
+    { casilla_id = "iva.anual.deducible.interiores-corrientes.tipo-7-5.cuota", kind = "on_form", box_number = "698" },
+    { casilla_id = "iva.anual.deducible.interiores-inversion.soportado.base", kind = "working_figure" },
+    { casilla_id = "iva.anual.deducible.interiores-inversion.soportado.cuota", kind = "working_figure" },
+    { casilla_id = "iva.anual.deducible.interiores-inversion.tipo-10.base", kind = "on_form", box_number = "611" },
+    { casilla_id = "iva.anual.deducible.interiores-inversion.tipo-10.cuota", kind = "on_form", box_number = "612" },
+    { casilla_id = "iva.anual.deducible.interiores-inversion.tipo-2.base", kind = "on_form", box_number = "749" },
+    { casilla_id = "iva.anual.deducible.interiores-inversion.tipo-2.cuota", kind = "on_form", box_number = "750" },
+    { casilla_id = "iva.anual.deducible.interiores-inversion.tipo-21.base", kind = "on_form", box_number = "613" },
+    { casilla_id = "iva.anual.deducible.interiores-inversion.tipo-21.cuota", kind = "on_form", box_number = "614" },
+    { casilla_id = "iva.anual.deducible.interiores-inversion.tipo-4.base", kind = "on_form", box_number = "196" },
+    { casilla_id = "iva.anual.deducible.interiores-inversion.tipo-4.cuota", kind = "on_form", box_number = "197" },
+    { casilla_id = "iva.anual.deducible.interiores-inversion.tipo-5.base", kind = "on_form", box_number = "728" },
+    { casilla_id = "iva.anual.deducible.interiores-inversion.tipo-5.cuota", kind = "on_form", box_number = "729" },
+    { casilla_id = "iva.anual.deducible.interiores-inversion.tipo-7-5.base", kind = "on_form", box_number = "751" },
+    { casilla_id = "iva.anual.deducible.interiores-inversion.tipo-7-5.cuota", kind = "on_form", box_number = "752" },
+    { casilla_id = "iva.anual.deducible.interiores-inversion.total.base", kind = "on_form", box_number = "50" },
+    { casilla_id = "iva.anual.deducible.interiores-inversion.total.cuota", kind = "on_form", box_number = "51" },
+    { casilla_id = "iva.anual.deducible.intragrupo-corrientes.tipo-10.base", kind = "on_form", box_number = "607" },
+    { casilla_id = "iva.anual.deducible.intragrupo-corrientes.tipo-10.cuota", kind = "on_form", box_number = "608" },
+    { casilla_id = "iva.anual.deducible.intragrupo-corrientes.tipo-2.base", kind = "on_form", box_number = "745" },
+    { casilla_id = "iva.anual.deducible.intragrupo-corrientes.tipo-2.cuota", kind = "on_form", box_number = "746" },
+    { casilla_id = "iva.anual.deducible.intragrupo-corrientes.tipo-21.base", kind = "on_form", box_number = "609" },
+    { casilla_id = "iva.anual.deducible.intragrupo-corrientes.tipo-21.cuota", kind = "on_form", box_number = "610" },
+    { casilla_id = "iva.anual.deducible.intragrupo-corrientes.tipo-4.base", kind = "on_form", box_number = "506" },
+    { casilla_id = "iva.anual.deducible.intragrupo-corrientes.tipo-4.cuota", kind = "on_form", box_number = "507" },
+    { casilla_id = "iva.anual.deducible.intragrupo-corrientes.tipo-5.base", kind = "on_form", box_number = "726" },
+    { casilla_id = "iva.anual.deducible.intragrupo-corrientes.tipo-5.cuota", kind = "on_form", box_number = "727" },
+    { casilla_id = "iva.anual.deducible.intragrupo-corrientes.tipo-7-5.base", kind = "on_form", box_number = "747" },
+    { casilla_id = "iva.anual.deducible.intragrupo-corrientes.tipo-7-5.cuota", kind = "on_form", box_number = "748" },
+    { casilla_id = "iva.anual.deducible.intragrupo-corrientes.total.base", kind = "on_form", box_number = "512" },
+    { casilla_id = "iva.anual.deducible.intragrupo-corrientes.total.cuota", kind = "on_form", box_number = "513" },
+    { casilla_id = "iva.anual.deducible.intragrupo-inversion.tipo-10.base", kind = "on_form", box_number = "615" },
+    { casilla_id = "iva.anual.deducible.intragrupo-inversion.tipo-10.cuota", kind = "on_form", box_number = "616" },
+    { casilla_id = "iva.anual.deducible.intragrupo-inversion.tipo-2.base", kind = "on_form", box_number = "753" },
+    { casilla_id = "iva.anual.deducible.intragrupo-inversion.tipo-2.cuota", kind = "on_form", box_number = "754" },
+    { casilla_id = "iva.anual.deducible.intragrupo-inversion.tipo-21.base", kind = "on_form", box_number = "617" },
+    { casilla_id = "iva.anual.deducible.intragrupo-inversion.tipo-21.cuota", kind = "on_form", box_number = "618" },
+    { casilla_id = "iva.anual.deducible.intragrupo-inversion.tipo-4.base", kind = "on_form", box_number = "514" },
+    { casilla_id = "iva.anual.deducible.intragrupo-inversion.tipo-4.cuota", kind = "on_form", box_number = "515" },
+    { casilla_id = "iva.anual.deducible.intragrupo-inversion.tipo-5.base", kind = "on_form", box_number = "730" },
+    { casilla_id = "iva.anual.deducible.intragrupo-inversion.tipo-5.cuota", kind = "on_form", box_number = "731" },
+    { casilla_id = "iva.anual.deducible.intragrupo-inversion.tipo-7-5.base", kind = "on_form", box_number = "755" },
+    { casilla_id = "iva.anual.deducible.intragrupo-inversion.tipo-7-5.cuota", kind = "on_form", box_number = "756" },
+    { casilla_id = "iva.anual.deducible.intragrupo-inversion.total.base", kind = "on_form", box_number = "520" },
+    { casilla_id = "iva.anual.deducible.intragrupo-inversion.total.cuota", kind = "on_form", box_number = "521" },
+    { casilla_id = "iva.anual.deducible.rectificacion-intragrupo.base", kind = "on_form", box_number = "651" },
+    { casilla_id = "iva.anual.deducible.rectificacion-intragrupo.cuota", kind = "on_form", box_number = "652" },
+    { casilla_id = "iva.anual.deducible.rectificacion.base", kind = "on_form", box_number = "639" },
+    { casilla_id = "iva.anual.deducible.rectificacion.cuota", kind = "on_form", box_number = "62" },
+    { casilla_id = "iva.anual.deducible.rectificacion.importaciones.base", kind = "working_figure" },
+    { casilla_id = "iva.anual.deducible.rectificacion.importaciones.cuota", kind = "working_figure" },
+    { casilla_id = "iva.anual.deducible.rectificacion.interiores.base", kind = "working_figure" },
+    { casilla_id = "iva.anual.deducible.rectificacion.interiores.cuota", kind = "working_figure" },
+    { casilla_id = "iva.anual.deducible.rectificacion.inversion-sujeto-pasivo.base", kind = "working_figure" },
+    { casilla_id = "iva.anual.deducible.rectificacion.inversion-sujeto-pasivo.cuota", kind = "working_figure" },
+    { casilla_id = "iva.anual.deducible.resolucion-firme-tipos-no-vigentes.base", kind = "on_form", box_number = "660" },
+    { casilla_id = "iva.anual.deducible.resolucion-firme-tipos-no-vigentes.cuota", kind = "on_form", box_number = "661" },
+    { casilla_id = "iva.anual.especificas.adquisiciones-interiores-exentas", kind = "on_form", box_number = "230" },
+    { casilla_id = "iva.anual.especificas.adquisiciones-intracomunitarias-exentas", kind = "on_form", box_number = "109" },
+    { casilla_id = "iva.anual.especificas.base-iva-soportado-no-deducible", kind = "on_form", box_number = "232" },
+    { casilla_id = "iva.anual.especificas.criterio-caja-adquisiciones.base", kind = "on_form", box_number = "656" },
+    { casilla_id = "iva.anual.especificas.criterio-caja-adquisiciones.cuota", kind = "on_form", box_number = "657" },
+    { casilla_id = "iva.anual.especificas.criterio-caja-entregas.base", kind = "on_form", box_number = "654" },
+    { casilla_id = "iva.anual.especificas.criterio-caja-entregas.cuota", kind = "on_form", box_number = "655" },
+    { casilla_id = "iva.anual.especificas.entrega-interior-inversion-triangular", kind = "on_form", box_number = "113" },
+    { casilla_id = "iva.anual.especificas.importaciones-exentas", kind = "on_form", box_number = "231" },
+    { casilla_id = "iva.anual.especificas.operaciones-derecho-devolucion-mensual", kind = "on_form", box_number = "111" },
+    { casilla_id = "iva.anual.especificas.servicios-tai-inversion-sujeto-pasivo", kind = "on_form", box_number = "523" },
+    { casilla_id = "iva.anual.iva-importacion-diferimiento", kind = "on_form", box_number = "659", aliases = [{ page_id = "pag-6", section_id = "8-tributacion-razon-de-territorio", official_ref = "Pág. 6" }] },
+    { casilla_id = "iva.anual.liquidaciones.total-a-ingresar", kind = "on_form", box_number = "95" },
+    { casilla_id = "iva.anual.liquidaciones.total-devoluciones-elementos-transporte", kind = "on_form", box_number = "524" },
+    { casilla_id = "iva.anual.liquidaciones.total-devoluciones-mensuales", kind = "on_form", box_number = "96" },
+    { casilla_id = "iva.anual.liquidaciones.total-resultados-negativos-m322", kind = "on_form", box_number = "526" },
+    { casilla_id = "iva.anual.liquidaciones.total-resultados-positivos-m322", kind = "on_form", box_number = "525" },
+    { casilla_id = "iva.anual.liquidaciones.ultimo-periodo-a-devolver", kind = "on_form", box_number = "98" },
+    { casilla_id = "iva.anual.modificacion.bases-cuotas-intragrupo.base", kind = "on_form", box_number = "649" },
+    { casilla_id = "iva.anual.modificacion.bases-cuotas-intragrupo.cuota", kind = "on_form", box_number = "650" },
+    { casilla_id = "iva.anual.modificacion.bases-cuotas.base", kind = "on_form", box_number = "29" },
+    { casilla_id = "iva.anual.modificacion.bases-cuotas.cuota", kind = "on_form", box_number = "30" },
+    { casilla_id = "iva.anual.modificacion.concurso-acreedores.base", kind = "on_form", box_number = "31" },
+    { casilla_id = "iva.anual.modificacion.concurso-acreedores.cuota", kind = "on_form", box_number = "32" },
+    { casilla_id = "iva.anual.modificacion.recargo-concurso.base", kind = "on_form", box_number = "45" },
+    { casilla_id = "iva.anual.modificacion.recargo-concurso.cuota", kind = "on_form", box_number = "46" },
+    { casilla_id = "iva.anual.modificacion.recargo.base", kind = "on_form", box_number = "43" },
+    { casilla_id = "iva.anual.modificacion.recargo.cuota", kind = "on_form", box_number = "44" },
+    { casilla_id = "iva.anual.pago-cuenta-carburantes-deposito-fiscal", kind = "on_form", box_number = "112", aliases = [{ page_id = "pag-6", section_id = "8-tributacion-razon-de-territorio", official_ref = "BOE-A-2026-1761 p12141" }] },
+    { casilla_id = "iva.anual.reconciliacion.deducible-303", kind = "working_figure" },
+    { casilla_id = "iva.anual.reconciliacion.devengada-303", kind = "working_figure" },
+    { casilla_id = "iva.anual.reconciliacion.devengada-simplificado-303", kind = "on_form", box_number = "79" },
+    { casilla_id = "iva.anual.reconciliacion.resultado-303", kind = "working_figure" },
+    { casilla_id = "iva.anual.reconciliacion.resultados-liquidaciones", kind = "working_figure" },
+    { casilla_id = "iva.anual.regimen-simplificado.aic-bienes-cuota-devengada", kind = "on_form", box_number = "76" },
+    { casilla_id = "iva.anual.regimen-simplificado.cuota-resultante-agricola", kind = "on_form", box_number = "75" },
+    { casilla_id = "iva.anual.regimen-simplificado.cuota-resultante-no-agricola", kind = "on_form", box_number = "74" },
+    { casilla_id = "iva.anual.regimen-simplificado.entrega-activos-fijos", kind = "on_form", box_number = "78" },
+    { casilla_id = "iva.anual.regimen-simplificado.inversion-sujeto-pasivo", kind = "on_form", box_number = "77" },
+    { casilla_id = "iva.anual.regimen-simplificado.iva-soportado-activos-fijos", kind = "on_form", box_number = "80" },
+    { casilla_id = "iva.anual.regimen-simplificado.regularizacion-bienes-inversion", kind = "on_form", box_number = "81" },
+    { casilla_id = "iva.anual.regimen-simplificado.resultado", kind = "on_form", box_number = "83" },
+    { casilla_id = "iva.anual.regimen-simplificado.suma-deducciones", kind = "on_form", box_number = "82" },
+    { casilla_id = "iva.anual.regularizacion-bienes-inversion", kind = "on_form", box_number = "63" },
+    { casilla_id = "iva.anual.regularizacion-cuotas-art-80-cinco-5", kind = "on_form", box_number = "658", aliases = [{ page_id = "pag-6", section_id = "8-tributacion-razon-de-territorio", official_ref = "Pág. 6" }] },
+    { casilla_id = "iva.anual.regularizacion-prorrata-definitiva", kind = "on_form", box_number = "522" },
+    { casilla_id = "iva.anual.repercutido.agencias-viajes.tipo-21.base", kind = "on_form", box_number = "13" },
+    { casilla_id = "iva.anual.repercutido.agencias-viajes.tipo-21.cuota", kind = "on_form", box_number = "14" },
+    { casilla_id = "iva.anual.repercutido.bienes-usados.tipo-0.base", kind = "on_form", box_number = "712" },
+    { casilla_id = "iva.anual.repercutido.bienes-usados.tipo-0.cuota", kind = "on_form", box_number = "713" },
+    { casilla_id = "iva.anual.repercutido.bienes-usados.tipo-10.base", kind = "on_form", box_number = "09" },
+    { casilla_id = "iva.anual.repercutido.bienes-usados.tipo-10.cuota", kind = "on_form", box_number = "10" },
+    { casilla_id = "iva.anual.repercutido.bienes-usados.tipo-2.base", kind = "on_form", box_number = "679" },
+    { casilla_id = "iva.anual.repercutido.bienes-usados.tipo-2.cuota", kind = "on_form", box_number = "680" },
+    { casilla_id = "iva.anual.repercutido.bienes-usados.tipo-21.base", kind = "on_form", box_number = "11" },
+    { casilla_id = "iva.anual.repercutido.bienes-usados.tipo-21.cuota", kind = "on_form", box_number = "12" },
+    { casilla_id = "iva.anual.repercutido.bienes-usados.tipo-4.base", kind = "on_form", box_number = "07" },
+    { casilla_id = "iva.anual.repercutido.bienes-usados.tipo-4.cuota", kind = "on_form", box_number = "08" },
+    { casilla_id = "iva.anual.repercutido.bienes-usados.tipo-5.base", kind = "on_form", box_number = "714" },
+    { casilla_id = "iva.anual.repercutido.bienes-usados.tipo-5.cuota", kind = "on_form", box_number = "715" },
+    { casilla_id = "iva.anual.repercutido.bienes-usados.tipo-7-5.base", kind = "on_form", box_number = "681" },
+    { casilla_id = "iva.anual.repercutido.bienes-usados.tipo-7-5.cuota", kind = "on_form", box_number = "682" },
+    { casilla_id = "iva.anual.repercutido.criterio-caja.tipo-0.base", kind = "on_form", box_number = "708" },
+    { casilla_id = "iva.anual.repercutido.criterio-caja.tipo-0.cuota", kind = "on_form", box_number = "709" },
+    { casilla_id = "iva.anual.repercutido.criterio-caja.tipo-10.base", kind = "on_form", box_number = "645" },
+    { casilla_id = "iva.anual.repercutido.criterio-caja.tipo-10.cuota", kind = "on_form", box_number = "646" },
+    { casilla_id = "iva.anual.repercutido.criterio-caja.tipo-2.base", kind = "on_form", box_number = "675" },
+    { casilla_id = "iva.anual.repercutido.criterio-caja.tipo-2.cuota", kind = "on_form", box_number = "676" },
+    { casilla_id = "iva.anual.repercutido.criterio-caja.tipo-21.base", kind = "on_form", box_number = "647" },
+    { casilla_id = "iva.anual.repercutido.criterio-caja.tipo-21.cuota", kind = "on_form", box_number = "648" },
+    { casilla_id = "iva.anual.repercutido.criterio-caja.tipo-4.base", kind = "on_form", box_number = "643" },
+    { casilla_id = "iva.anual.repercutido.criterio-caja.tipo-4.cuota", kind = "on_form", box_number = "644" },
+    { casilla_id = "iva.anual.repercutido.criterio-caja.tipo-5.base", kind = "on_form", box_number = "710" },
+    { casilla_id = "iva.anual.repercutido.criterio-caja.tipo-5.cuota", kind = "on_form", box_number = "711" },
+    { casilla_id = "iva.anual.repercutido.criterio-caja.tipo-7-5.base", kind = "on_form", box_number = "677" },
+    { casilla_id = "iva.anual.repercutido.criterio-caja.tipo-7-5.cuota", kind = "on_form", box_number = "678" },
+    { casilla_id = "iva.anual.repercutido.general", kind = "working_figure" },
+    { casilla_id = "iva.anual.repercutido.general.base", kind = "working_figure" },
+    { casilla_id = "iva.anual.repercutido.intragrupo.tipo-0.base", kind = "on_form", box_number = "704" },
+    { casilla_id = "iva.anual.repercutido.intragrupo.tipo-0.cuota", kind = "on_form", box_number = "705" },
+    { casilla_id = "iva.anual.repercutido.intragrupo.tipo-10.base", kind = "on_form", box_number = "502" },
+    { casilla_id = "iva.anual.repercutido.intragrupo.tipo-10.cuota", kind = "on_form", box_number = "503" },
+    { casilla_id = "iva.anual.repercutido.intragrupo.tipo-2.base", kind = "on_form", box_number = "671" },
+    { casilla_id = "iva.anual.repercutido.intragrupo.tipo-2.cuota", kind = "on_form", box_number = "672" },
+    { casilla_id = "iva.anual.repercutido.intragrupo.tipo-21.base", kind = "on_form", box_number = "504" },
+    { casilla_id = "iva.anual.repercutido.intragrupo.tipo-21.cuota", kind = "on_form", box_number = "505" },
+    { casilla_id = "iva.anual.repercutido.intragrupo.tipo-4.base", kind = "on_form", box_number = "500" },
+    { casilla_id = "iva.anual.repercutido.intragrupo.tipo-4.cuota", kind = "on_form", box_number = "501" },
+    { casilla_id = "iva.anual.repercutido.intragrupo.tipo-5.base", kind = "on_form", box_number = "706" },
+    { casilla_id = "iva.anual.repercutido.intragrupo.tipo-5.cuota", kind = "on_form", box_number = "707" },
+    { casilla_id = "iva.anual.repercutido.intragrupo.tipo-7-5.base", kind = "on_form", box_number = "673" },
+    { casilla_id = "iva.anual.repercutido.intragrupo.tipo-7-5.cuota", kind = "on_form", box_number = "674" },
+    { casilla_id = "iva.anual.repercutido.recargo.general", kind = "working_figure" },
+    { casilla_id = "iva.anual.repercutido.recargo.reducido", kind = "working_figure" },
+    { casilla_id = "iva.anual.repercutido.recargo.super-reducido", kind = "working_figure" },
+    { casilla_id = "iva.anual.repercutido.recargo.tipo-0-26.base", kind = "on_form", box_number = "691" },
+    { casilla_id = "iva.anual.repercutido.recargo.tipo-0-26.cuota", kind = "on_form", box_number = "692" },
+    { casilla_id = "iva.anual.repercutido.recargo.tipo-0-5.base", kind = "on_form", box_number = "35" },
+    { casilla_id = "iva.anual.repercutido.recargo.tipo-0-5.cuota", kind = "on_form", box_number = "36" },
+    { casilla_id = "iva.anual.repercutido.recargo.tipo-0-62.base", kind = "on_form", box_number = "665" },
+    { casilla_id = "iva.anual.repercutido.recargo.tipo-0-62.cuota", kind = "on_form", box_number = "666" },
+    { casilla_id = "iva.anual.repercutido.recargo.tipo-0.base", kind = "on_form", box_number = "663" },
+    { casilla_id = "iva.anual.repercutido.recargo.tipo-0.cuota", kind = "on_form", box_number = "664" },
+    { casilla_id = "iva.anual.repercutido.recargo.tipo-1-4.base", kind = "on_form", box_number = "599" },
+    { casilla_id = "iva.anual.repercutido.recargo.tipo-1-4.cuota", kind = "on_form", box_number = "600" },
+    { casilla_id = "iva.anual.repercutido.recargo.tipo-1-75.base", kind = "on_form", box_number = "41" },
+    { casilla_id = "iva.anual.repercutido.recargo.tipo-1-75.cuota", kind = "on_form", box_number = "42" },
+    { casilla_id = "iva.anual.repercutido.recargo.tipo-1.base", kind = "on_form", box_number = "693" },
+    { casilla_id = "iva.anual.repercutido.recargo.tipo-1.cuota", kind = "on_form", box_number = "694" },
+    { casilla_id = "iva.anual.repercutido.recargo.tipo-5-2.base", kind = "on_form", box_number = "601" },
+    { casilla_id = "iva.anual.repercutido.recargo.tipo-5-2.cuota", kind = "on_form", box_number = "602" },
+    { casilla_id = "iva.anual.repercutido.reducido", kind = "working_figure" },
+    { casilla_id = "iva.anual.repercutido.reducido.base", kind = "working_figure" },
+    { casilla_id = "iva.anual.repercutido.super-reducido", kind = "working_figure" },
+    { casilla_id = "iva.anual.repercutido.super-reducido.base", kind = "working_figure" },
+    { casilla_id = "iva.anual.repercutido.tipo-0.base", kind = "on_form", box_number = "700" },
+    { casilla_id = "iva.anual.repercutido.tipo-0.cuota", kind = "on_form", box_number = "701" },
+    { casilla_id = "iva.anual.repercutido.tipo-10.base", kind = "on_form", box_number = "03" },
+    { casilla_id = "iva.anual.repercutido.tipo-10.cuota", kind = "on_form", box_number = "04" },
+    { casilla_id = "iva.anual.repercutido.tipo-2.base", kind = "on_form", box_number = "667" },
+    { casilla_id = "iva.anual.repercutido.tipo-2.cuota", kind = "on_form", box_number = "668" },
+    { casilla_id = "iva.anual.repercutido.tipo-21.base", kind = "on_form", box_number = "05" },
+    { casilla_id = "iva.anual.repercutido.tipo-21.cuota", kind = "on_form", box_number = "06" },
+    { casilla_id = "iva.anual.repercutido.tipo-4.base", kind = "on_form", box_number = "01" },
+    { casilla_id = "iva.anual.repercutido.tipo-4.cuota", kind = "on_form", box_number = "02" },
+    { casilla_id = "iva.anual.repercutido.tipo-5.base", kind = "on_form", box_number = "702" },
+    { casilla_id = "iva.anual.repercutido.tipo-5.cuota", kind = "on_form", box_number = "703" },
+    { casilla_id = "iva.anual.repercutido.tipo-7-5.base", kind = "on_form", box_number = "669" },
+    { casilla_id = "iva.anual.repercutido.tipo-7-5.cuota", kind = "on_form", box_number = "670" },
+    { casilla_id = "iva.anual.repercutido.zero.base", kind = "working_figure" },
+    { casilla_id = "iva.anual.resultado-liquidacion", kind = "on_form", box_number = "86" },
+    { casilla_id = "iva.anual.resultado-regimen-general", kind = "on_form", box_number = "65" },
+    { casilla_id = "iva.anual.sector-diferenciado-1.aic-corrientes.base", kind = "on_form", box_number = "147" },
+    { casilla_id = "iva.anual.sector-diferenciado-1.aic-corrientes.cuota", kind = "on_form", box_number = "148" },
+    { casilla_id = "iva.anual.sector-diferenciado-1.aic-inversion.base", kind = "on_form", box_number = "149" },
+    { casilla_id = "iva.anual.sector-diferenciado-1.aic-inversion.cuota", kind = "on_form", box_number = "150" },
+    { casilla_id = "iva.anual.sector-diferenciado-1.compensaciones-reagp.base", kind = "on_form", box_number = "151" },
+    { casilla_id = "iva.anual.sector-diferenciado-1.compensaciones-reagp.cuota", kind = "on_form", box_number = "152" },
+    { casilla_id = "iva.anual.sector-diferenciado-1.importaciones-corrientes.base", kind = "on_form", box_number = "143" },
+    { casilla_id = "iva.anual.sector-diferenciado-1.importaciones-corrientes.cuota", kind = "on_form", box_number = "144" },
+    { casilla_id = "iva.anual.sector-diferenciado-1.importaciones-inversion.base", kind = "on_form", box_number = "145" },
+    { casilla_id = "iva.anual.sector-diferenciado-1.importaciones-inversion.cuota", kind = "on_form", box_number = "146" },
+    { casilla_id = "iva.anual.sector-diferenciado-1.interiores-corrientes.base", kind = "on_form", box_number = "139" },
+    { casilla_id = "iva.anual.sector-diferenciado-1.interiores-corrientes.cuota", kind = "on_form", box_number = "140" },
+    { casilla_id = "iva.anual.sector-diferenciado-1.interiores-inversion.base", kind = "on_form", box_number = "141" },
+    { casilla_id = "iva.anual.sector-diferenciado-1.interiores-inversion.cuota", kind = "on_form", box_number = "142" },
+    { casilla_id = "iva.anual.sector-diferenciado-1.rectificacion.base", kind = "on_form", box_number = "640" },
+    { casilla_id = "iva.anual.sector-diferenciado-1.rectificacion.cuota", kind = "on_form", box_number = "153" },
+    { casilla_id = "iva.anual.sector-diferenciado-1.regularizacion-inversiones", kind = "on_form", box_number = "154" },
+    { casilla_id = "iva.anual.sector-diferenciado-1.suma-deducciones", kind = "on_form", box_number = "155" },
+    { casilla_id = "iva.anual.sector-diferenciado-2.aic-corrientes.base", kind = "on_form", box_number = "164" },
+    { casilla_id = "iva.anual.sector-diferenciado-2.aic-corrientes.cuota", kind = "on_form", box_number = "165" },
+    { casilla_id = "iva.anual.sector-diferenciado-2.aic-inversion.base", kind = "on_form", box_number = "166" },
+    { casilla_id = "iva.anual.sector-diferenciado-2.aic-inversion.cuota", kind = "on_form", box_number = "167" },
+    { casilla_id = "iva.anual.sector-diferenciado-2.compensaciones-reagp.base", kind = "on_form", box_number = "168" },
+    { casilla_id = "iva.anual.sector-diferenciado-2.compensaciones-reagp.cuota", kind = "on_form", box_number = "169" },
+    { casilla_id = "iva.anual.sector-diferenciado-2.importaciones-corrientes.base", kind = "on_form", box_number = "160" },
+    { casilla_id = "iva.anual.sector-diferenciado-2.importaciones-corrientes.cuota", kind = "on_form", box_number = "161" },
+    { casilla_id = "iva.anual.sector-diferenciado-2.importaciones-inversion.base", kind = "on_form", box_number = "162" },
+    { casilla_id = "iva.anual.sector-diferenciado-2.importaciones-inversion.cuota", kind = "on_form", box_number = "163" },
+    { casilla_id = "iva.anual.sector-diferenciado-2.interiores-corrientes.base", kind = "on_form", box_number = "156" },
+    { casilla_id = "iva.anual.sector-diferenciado-2.interiores-corrientes.cuota", kind = "on_form", box_number = "157" },
+    { casilla_id = "iva.anual.sector-diferenciado-2.interiores-inversion.base", kind = "on_form", box_number = "158" },
+    { casilla_id = "iva.anual.sector-diferenciado-2.interiores-inversion.cuota", kind = "on_form", box_number = "159" },
+    { casilla_id = "iva.anual.sector-diferenciado-2.rectificacion.base", kind = "on_form", box_number = "641" },
+    { casilla_id = "iva.anual.sector-diferenciado-2.rectificacion.cuota", kind = "on_form", box_number = "170" },
+    { casilla_id = "iva.anual.sector-diferenciado-2.regularizacion-inversiones", kind = "on_form", box_number = "171" },
+    { casilla_id = "iva.anual.sector-diferenciado-2.suma-deducciones", kind = "on_form", box_number = "172" },
+    { casilla_id = "iva.anual.sector-diferenciado-3.aic-corrientes.base", kind = "on_form", box_number = "181" },
+    { casilla_id = "iva.anual.sector-diferenciado-3.aic-corrientes.cuota", kind = "on_form", box_number = "182" },
+    { casilla_id = "iva.anual.sector-diferenciado-3.aic-inversion.base", kind = "on_form", box_number = "183" },
+    { casilla_id = "iva.anual.sector-diferenciado-3.aic-inversion.cuota", kind = "on_form", box_number = "184" },
+    { casilla_id = "iva.anual.sector-diferenciado-3.compensaciones-reagp.base", kind = "on_form", box_number = "185" },
+    { casilla_id = "iva.anual.sector-diferenciado-3.compensaciones-reagp.cuota", kind = "on_form", box_number = "186" },
+    { casilla_id = "iva.anual.sector-diferenciado-3.importaciones-corrientes.base", kind = "on_form", box_number = "177" },
+    { casilla_id = "iva.anual.sector-diferenciado-3.importaciones-corrientes.cuota", kind = "on_form", box_number = "178" },
+    { casilla_id = "iva.anual.sector-diferenciado-3.importaciones-inversion.base", kind = "on_form", box_number = "179" },
+    { casilla_id = "iva.anual.sector-diferenciado-3.importaciones-inversion.cuota", kind = "on_form", box_number = "180" },
+    { casilla_id = "iva.anual.sector-diferenciado-3.interiores-corrientes.base", kind = "on_form", box_number = "173" },
+    { casilla_id = "iva.anual.sector-diferenciado-3.interiores-corrientes.cuota", kind = "on_form", box_number = "174" },
+    { casilla_id = "iva.anual.sector-diferenciado-3.interiores-inversion.base", kind = "on_form", box_number = "175" },
+    { casilla_id = "iva.anual.sector-diferenciado-3.interiores-inversion.cuota", kind = "on_form", box_number = "176" },
+    { casilla_id = "iva.anual.sector-diferenciado-3.rectificacion.base", kind = "on_form", box_number = "642" },
+    { casilla_id = "iva.anual.sector-diferenciado-3.rectificacion.cuota", kind = "on_form", box_number = "187" },
+    { casilla_id = "iva.anual.sector-diferenciado-3.regularizacion-inversiones", kind = "on_form", box_number = "188" },
+    { casilla_id = "iva.anual.sector-diferenciado-3.suma-deducciones", kind = "on_form", box_number = "189" },
+    { casilla_id = "iva.anual.soportado.importaciones", kind = "on_form", box_number = "53" },
+    { casilla_id = "iva.anual.soportado.interiores", kind = "on_form", box_number = "49" },
+    { casilla_id = "iva.anual.soportado.interiores.base", kind = "on_form", box_number = "48" },
+    { casilla_id = "iva.anual.suma-resultados", kind = "on_form", box_number = "84", aliases = [{ page_id = "pag-6", section_id = "8-tributacion-razon-de-territorio", official_ref = "Pág. 6" }] },
+    { casilla_id = "iva.anual.territorio.alava.porcentaje", kind = "on_form", box_number = "88" },
+    { casilla_id = "iva.anual.territorio.compensacion-atribuible-comun", kind = "on_form", box_number = "93" },
+    { casilla_id = "iva.anual.territorio.comun.porcentaje", kind = "on_form", box_number = "87" },
+    { casilla_id = "iva.anual.territorio.guipuzcoa.porcentaje", kind = "on_form", box_number = "89" },
+    { casilla_id = "iva.anual.territorio.navarra.porcentaje", kind = "on_form", box_number = "91" },
+    { casilla_id = "iva.anual.territorio.resultado-anual-atribuible-comun", kind = "on_form", box_number = "94" },
+    { casilla_id = "iva.anual.territorio.resultado-atribuible-comun", kind = "on_form", box_number = "92" },
+    { casilla_id = "iva.anual.territorio.vizcaya.porcentaje", kind = "on_form", box_number = "90" },
+    { casilla_id = "iva.anual.total-bases-cuotas-iva", kind = "on_form", box_number = "34" },
+    { casilla_id = "iva.anual.total-bases-iva", kind = "on_form", box_number = "33" },
+    { casilla_id = "iva.anual.volumen.agencias-viajes", kind = "on_form", box_number = "228" },
+    { casilla_id = "iva.anual.volumen.bienes-de-inversion", kind = "on_form", box_number = "107" },
+    { casilla_id = "iva.anual.volumen.bienes-usados", kind = "on_form", box_number = "227" },
+    { casilla_id = "iva.anual.volumen.criterio-caja", kind = "on_form", box_number = "653" },
+    { casilla_id = "iva.anual.volumen.entregas-intracomunitarias", kind = "on_form", box_number = "103" },
+    { casilla_id = "iva.anual.volumen.exentas-sin-derecho-deduccion", kind = "on_form", box_number = "105" },
+    { casilla_id = "iva.anual.volumen.exportaciones-exentas", kind = "on_form", box_number = "104" },
+    { casilla_id = "iva.anual.volumen.inmuebles-financieras-no-habituales", kind = "on_form", box_number = "106" },
+    { casilla_id = "iva.anual.volumen.intragrupo-arts-78-79", kind = "on_form", box_number = "128" },
+    { casilla_id = "iva.anual.volumen.inversion-sujeto-pasivo", kind = "on_form", box_number = "125" },
+    { casilla_id = "iva.anual.volumen.no-sujetas-reglas-localizacion", kind = "on_form", box_number = "110" },
+    { casilla_id = "iva.anual.volumen.oss-no-sujetas-localizacion", kind = "on_form", box_number = "126" },
+    { casilla_id = "iva.anual.volumen.oss-sujetas", kind = "on_form", box_number = "127" },
+    { casilla_id = "iva.anual.volumen.reagp", kind = "on_form", box_number = "101" },
+    { casilla_id = "iva.anual.volumen.recargo-equivalencia", kind = "on_form", box_number = "102" },
+    { casilla_id = "iva.anual.volumen.regimen-general", kind = "on_form", box_number = "99" },
+    { casilla_id = "iva.anual.volumen.regimen-simplificado", kind = "on_form", box_number = "100" },
+    { casilla_id = "iva.anual.volumen.total", kind = "on_form", box_number = "108" },
+]
+
+[[revisions.2026.form_layouts.pages]]
+id = "pag-2"
+official_ref = "BOE-A-2026-1761 Annex IV, page 2, printed 12136"
+heading_key = "modelo.schema.390.form.page.pag-2.heading"
+
+[[revisions.2026.form_layouts.pages.sections]]
+id = "5-operaciones-reg-gral-base-imponible-y-c-f2cdb2"
+heading_key = "modelo.schema.390.form.section.5-operaciones-reg-gral-base-imponible-y-c-f2cdb2.heading"
+official_heading = "5. Operaciones Reg. Gral - Base Imponible y cuota - Reg. ordin"
+blocks = [
+    { kind = "grid", id = "grid", columns = [{ key = "base_imponible", heading_key = "modelo.form.column.base_imponible", official_heading = "Base imponible" }, { key = "cuota", heading_key = "modelo.form.column.cuota", official_heading = "Cuota" }], rows = [{ key = "tipo-0-pct", heading_key = "modelo.schema.390.form.row.tipo-0-pct.heading", official_heading = "Tipo 0%", cells = [{ kind = "casilla", casilla_id = "iva.anual.repercutido.tipo-0.base" }, { kind = "casilla", casilla_id = "iva.anual.repercutido.tipo-0.cuota" }] }, { key = "tipo-2-pct", heading_key = "modelo.schema.390.form.row.tipo-2-pct.heading", official_heading = "Tipo 2%", cells = [{ kind = "casilla", casilla_id = "iva.anual.repercutido.tipo-2.base" }, { kind = "casilla", casilla_id = "iva.anual.repercutido.tipo-2.cuota" }] }, { key = "tipo-4-pct", heading_key = "modelo.schema.390.form.row.tipo-4-pct.heading", official_heading = "Tipo 4%", cells = [{ kind = "casilla", casilla_id = "iva.anual.repercutido.tipo-4.base" }, { kind = "casilla", casilla_id = "iva.anual.repercutido.tipo-4.cuota" }] }, { key = "tipo-5-pct", heading_key = "modelo.schema.390.form.row.tipo-5-pct.heading", official_heading = "Tipo 5%", cells = [{ kind = "casilla", casilla_id = "iva.anual.repercutido.tipo-5.base" }, { kind = "casilla", casilla_id = "iva.anual.repercutido.tipo-5.cuota" }] }, { key = "tipo-7-5-pct", heading_key = "modelo.schema.390.form.row.tipo-7-5-pct.heading", official_heading = "Tipo 7,5%", cells = [{ kind = "casilla", casilla_id = "iva.anual.repercutido.tipo-7-5.base" }, { kind = "casilla", casilla_id = "iva.anual.repercutido.tipo-7-5.cuota" }] }, { key = "tipo-10-pct", heading_key = "modelo.schema.390.form.row.tipo-10-pct.heading", official_heading = "Tipo 10%", cells = [{ kind = "casilla", casilla_id = "iva.anual.repercutido.tipo-10.base" }, { kind = "casilla", casilla_id = "iva.anual.repercutido.tipo-10.cuota" }] }, { key = "tipo-21-pct", heading_key = "modelo.schema.390.form.row.tipo-21-pct.heading", official_heading = "Tipo 21%", cells = [{ kind = "casilla", casilla_id = "iva.anual.repercutido.tipo-21.base" }, { kind = "casilla", casilla_id = "iva.anual.repercutido.tipo-21.cuota" }] }] },
+]
+
+[[revisions.2026.form_layouts.pages.sections]]
+id = "5-operaciones-reg-gral-base-imponible-y-c-a46fd9"
+heading_key = "modelo.schema.390.form.section.5-operaciones-reg-gral-base-imponible-y-c-a46fd9.heading"
+official_heading = "5. Operaciones Reg. Gral - Base imponible y cuota - operaciones intragrupo"
+blocks = [
+    { kind = "grid", id = "grid", columns = [{ key = "base_imponible", heading_key = "modelo.form.column.base_imponible", official_heading = "Base imponible" }, { key = "cuota", heading_key = "modelo.form.column.cuota", official_heading = "Cuota" }], rows = [{ key = "tipo-0-pct", heading_key = "modelo.schema.390.form.row.tipo-0-pct.heading", official_heading = "Tipo 0%", cells = [{ kind = "casilla", casilla_id = "iva.anual.repercutido.intragrupo.tipo-0.base" }, { kind = "casilla", casilla_id = "iva.anual.repercutido.intragrupo.tipo-0.cuota" }] }, { key = "tipo-2-pct", heading_key = "modelo.schema.390.form.row.tipo-2-pct.heading", official_heading = "Tipo 2%", cells = [{ kind = "casilla", casilla_id = "iva.anual.repercutido.intragrupo.tipo-2.base" }, { kind = "casilla", casilla_id = "iva.anual.repercutido.intragrupo.tipo-2.cuota" }] }, { key = "tipo-4-pct", heading_key = "modelo.schema.390.form.row.tipo-4-pct.heading", official_heading = "Tipo 4%", cells = [{ kind = "casilla", casilla_id = "iva.anual.repercutido.intragrupo.tipo-4.base" }, { kind = "casilla", casilla_id = "iva.anual.repercutido.intragrupo.tipo-4.cuota" }] }, { key = "tipo-5-pct", heading_key = "modelo.schema.390.form.row.tipo-5-pct.heading", official_heading = "Tipo 5%", cells = [{ kind = "casilla", casilla_id = "iva.anual.repercutido.intragrupo.tipo-5.base" }, { kind = "casilla", casilla_id = "iva.anual.repercutido.intragrupo.tipo-5.cuota" }] }, { key = "tipo-7-5-pct", heading_key = "modelo.schema.390.form.row.tipo-7-5-pct.heading", official_heading = "Tipo 7,5%", cells = [{ kind = "casilla", casilla_id = "iva.anual.repercutido.intragrupo.tipo-7-5.base" }, { kind = "casilla", casilla_id = "iva.anual.repercutido.intragrupo.tipo-7-5.cuota" }] }, { key = "tipo-10-pct", heading_key = "modelo.schema.390.form.row.tipo-10-pct.heading", official_heading = "Tipo 10%", cells = [{ kind = "casilla", casilla_id = "iva.anual.repercutido.intragrupo.tipo-10.base" }, { kind = "casilla", casilla_id = "iva.anual.repercutido.intragrupo.tipo-10.cuota" }] }, { key = "tipo-21-pct", heading_key = "modelo.schema.390.form.row.tipo-21-pct.heading", official_heading = "Tipo 21%", cells = [{ kind = "casilla", casilla_id = "iva.anual.repercutido.intragrupo.tipo-21.base" }, { kind = "casilla", casilla_id = "iva.anual.repercutido.intragrupo.tipo-21.cuota" }] }] },
+]
+
+[[revisions.2026.form_layouts.pages.sections]]
+id = "5-operaciones-reg-gral-base-imponible-y-c-5505bd"
+heading_key = "modelo.schema.390.form.section.5-operaciones-reg-gral-base-imponible-y-c-5505bd.heading"
+official_heading = "5. Operaciones Reg. Gral - Base imponible y cuota - regimen especial criterio caja"
+blocks = [
+    { kind = "grid", id = "grid", columns = [{ key = "base_imponible", heading_key = "modelo.form.column.base_imponible", official_heading = "Base imponible" }, { key = "cuota", heading_key = "modelo.form.column.cuota", official_heading = "Cuota" }], rows = [{ key = "tipo-0-pct", heading_key = "modelo.schema.390.form.row.tipo-0-pct.heading", official_heading = "Tipo 0%", cells = [{ kind = "casilla", casilla_id = "iva.anual.repercutido.criterio-caja.tipo-0.base" }, { kind = "casilla", casilla_id = "iva.anual.repercutido.criterio-caja.tipo-0.cuota" }] }, { key = "tipo-2-pct", heading_key = "modelo.schema.390.form.row.tipo-2-pct.heading", official_heading = "Tipo 2%", cells = [{ kind = "casilla", casilla_id = "iva.anual.repercutido.criterio-caja.tipo-2.base" }, { kind = "casilla", casilla_id = "iva.anual.repercutido.criterio-caja.tipo-2.cuota" }] }, { key = "tipo-4-pct", heading_key = "modelo.schema.390.form.row.tipo-4-pct.heading", official_heading = "Tipo 4%", cells = [{ kind = "casilla", casilla_id = "iva.anual.repercutido.criterio-caja.tipo-4.base" }, { kind = "casilla", casilla_id = "iva.anual.repercutido.criterio-caja.tipo-4.cuota" }] }, { key = "tipo-5-pct", heading_key = "modelo.schema.390.form.row.tipo-5-pct.heading", official_heading = "Tipo 5%", cells = [{ kind = "casilla", casilla_id = "iva.anual.repercutido.criterio-caja.tipo-5.base" }, { kind = "casilla", casilla_id = "iva.anual.repercutido.criterio-caja.tipo-5.cuota" }] }, { key = "tipo-7-5-pct", heading_key = "modelo.schema.390.form.row.tipo-7-5-pct.heading", official_heading = "Tipo 7,5%", cells = [{ kind = "casilla", casilla_id = "iva.anual.repercutido.criterio-caja.tipo-7-5.base" }, { kind = "casilla", casilla_id = "iva.anual.repercutido.criterio-caja.tipo-7-5.cuota" }] }, { key = "tipo-10-pct", heading_key = "modelo.schema.390.form.row.tipo-10-pct.heading", official_heading = "Tipo 10%", cells = [{ kind = "casilla", casilla_id = "iva.anual.repercutido.criterio-caja.tipo-10.base" }, { kind = "casilla", casilla_id = "iva.anual.repercutido.criterio-caja.tipo-10.cuota" }] }, { key = "tipo-21-pct", heading_key = "modelo.schema.390.form.row.tipo-21-pct.heading", official_heading = "Tipo 21%", cells = [{ kind = "casilla", casilla_id = "iva.anual.repercutido.criterio-caja.tipo-21.base" }, { kind = "casilla", casilla_id = "iva.anual.repercutido.criterio-caja.tipo-21.cuota" }] }] },
+]
+
+[[revisions.2026.form_layouts.pages.sections]]
+id = "5-operaciones-reg-gral-base-imponible-y-c-93d4a1"
+heading_key = "modelo.schema.390.form.section.5-operaciones-reg-gral-base-imponible-y-c-93d4a1.heading"
+official_heading = "5. Operaciones Reg. Gral - Base Imponible y cuota - Reg. espec. bienes usados"
+blocks = [
+    { kind = "grid", id = "grid", columns = [{ key = "base_imponible", heading_key = "modelo.form.column.base_imponible", official_heading = "Base imponible" }, { key = "cuota", heading_key = "modelo.form.column.cuota", official_heading = "Cuota" }], rows = [{ key = "tipo-0-pct", heading_key = "modelo.schema.390.form.row.tipo-0-pct.heading", official_heading = "Tipo 0%", cells = [{ kind = "casilla", casilla_id = "iva.anual.repercutido.bienes-usados.tipo-0.base" }, { kind = "casilla", casilla_id = "iva.anual.repercutido.bienes-usados.tipo-0.cuota" }] }, { key = "tipo-2-pct", heading_key = "modelo.schema.390.form.row.tipo-2-pct.heading", official_heading = "Tipo 2%", cells = [{ kind = "casilla", casilla_id = "iva.anual.repercutido.bienes-usados.tipo-2.base" }, { kind = "casilla", casilla_id = "iva.anual.repercutido.bienes-usados.tipo-2.cuota" }] }, { key = "tipo-4-pct", heading_key = "modelo.schema.390.form.row.tipo-4-pct.heading", official_heading = "Tipo 4%", cells = [{ kind = "casilla", casilla_id = "iva.anual.repercutido.bienes-usados.tipo-4.base" }, { kind = "casilla", casilla_id = "iva.anual.repercutido.bienes-usados.tipo-4.cuota" }] }, { key = "tipo-5-pct", heading_key = "modelo.schema.390.form.row.tipo-5-pct.heading", official_heading = "Tipo 5%", cells = [{ kind = "casilla", casilla_id = "iva.anual.repercutido.bienes-usados.tipo-5.base" }, { kind = "casilla", casilla_id = "iva.anual.repercutido.bienes-usados.tipo-5.cuota" }] }, { key = "tipo-7-5-pct", heading_key = "modelo.schema.390.form.row.tipo-7-5-pct.heading", official_heading = "Tipo 7,5%", cells = [{ kind = "casilla", casilla_id = "iva.anual.repercutido.bienes-usados.tipo-7-5.base" }, { kind = "casilla", casilla_id = "iva.anual.repercutido.bienes-usados.tipo-7-5.cuota" }] }, { key = "tipo-10-pct", heading_key = "modelo.schema.390.form.row.tipo-10-pct.heading", official_heading = "Tipo 10%", cells = [{ kind = "casilla", casilla_id = "iva.anual.repercutido.bienes-usados.tipo-10.base" }, { kind = "casilla", casilla_id = "iva.anual.repercutido.bienes-usados.tipo-10.cuota" }] }, { key = "tipo-21-pct", heading_key = "modelo.schema.390.form.row.tipo-21-pct.heading", official_heading = "Tipo 21%", cells = [{ kind = "casilla", casilla_id = "iva.anual.repercutido.bienes-usados.tipo-21.base" }, { kind = "casilla", casilla_id = "iva.anual.repercutido.bienes-usados.tipo-21.cuota" }] }] },
+]
+
+[[revisions.2026.form_layouts.pages.sections]]
+id = "5-operaciones-reg-gral-base-imponible-y-c-0050f7"
+heading_key = "modelo.schema.390.form.section.5-operaciones-reg-gral-base-imponible-y-c-0050f7.heading"
+official_heading = "5. Operaciones Reg. Gral - Base Imponible y cuota - Reg. espec. agencias viajes"
+blocks = [
+    { kind = "grid", id = "grid", columns = [{ key = "base_imponible", heading_key = "modelo.form.column.base_imponible", official_heading = "Base imponible" }, { key = "cuota", heading_key = "modelo.form.column.cuota", official_heading = "Cuota" }], rows = [{ key = "tipo-21-pct", heading_key = "modelo.schema.390.form.row.tipo-21-pct.heading", official_heading = "Tipo 21%", cells = [{ kind = "casilla", casilla_id = "iva.anual.repercutido.agencias-viajes.tipo-21.base" }, { kind = "casilla", casilla_id = "iva.anual.repercutido.agencias-viajes.tipo-21.cuota" }] }] },
+]
+
+[[revisions.2026.form_layouts.pages.sections]]
+id = "5-operaciones-reg-gral-base-imponible-y-c-9faf8e"
+heading_key = "modelo.schema.390.form.section.5-operaciones-reg-gral-base-imponible-y-c-9faf8e.heading"
+official_heading = "5. Operaciones Reg. Gral - Base Imponible y cuota - Adquis. intracomunit. bienes"
+blocks = [
+    { kind = "grid", id = "grid", columns = [{ key = "base_imponible", heading_key = "modelo.form.column.base_imponible", official_heading = "Base imponible" }, { key = "cuota", heading_key = "modelo.form.column.cuota", official_heading = "Cuota" }], rows = [{ key = "tipo-0-pct", heading_key = "modelo.schema.390.form.row.tipo-0-pct.heading", official_heading = "Tipo 0%", cells = [{ kind = "casilla", casilla_id = "iva.anual.aic.bienes.tipo-0.base" }, { kind = "casilla", casilla_id = "iva.anual.aic.bienes.tipo-0.cuota" }] }, { key = "tipo-2-pct", heading_key = "modelo.schema.390.form.row.tipo-2-pct.heading", official_heading = "Tipo 2%", cells = [{ kind = "casilla", casilla_id = "iva.anual.aic.bienes.tipo-2.base" }, { kind = "casilla", casilla_id = "iva.anual.aic.bienes.tipo-2.cuota" }] }, { key = "tipo-4-pct", heading_key = "modelo.schema.390.form.row.tipo-4-pct.heading", official_heading = "Tipo 4%", cells = [{ kind = "casilla", casilla_id = "iva.anual.aic.bienes.tipo-4.base" }, { kind = "casilla", casilla_id = "iva.anual.aic.bienes.tipo-4.cuota" }] }, { key = "tipo-5-pct", heading_key = "modelo.schema.390.form.row.tipo-5-pct.heading", official_heading = "Tipo 5%", cells = [{ kind = "casilla", casilla_id = "iva.anual.aic.bienes.tipo-5.base" }, { kind = "casilla", casilla_id = "iva.anual.aic.bienes.tipo-5.cuota" }] }, { key = "tipo-7-5-pct", heading_key = "modelo.schema.390.form.row.tipo-7-5-pct.heading", official_heading = "Tipo 7,5%", cells = [{ kind = "casilla", casilla_id = "iva.anual.aic.bienes.tipo-7-5.base" }, { kind = "casilla", casilla_id = "iva.anual.aic.bienes.tipo-7-5.cuota" }] }, { key = "tipo-10-pct", heading_key = "modelo.schema.390.form.row.tipo-10-pct.heading", official_heading = "Tipo 10%", cells = [{ kind = "casilla", casilla_id = "iva.anual.aic.bienes.tipo-10.base" }, { kind = "casilla", casilla_id = "iva.anual.aic.bienes.tipo-10.cuota" }] }, { key = "tipo-21-pct", heading_key = "modelo.schema.390.form.row.tipo-21-pct.heading", official_heading = "Tipo 21%", cells = [{ kind = "casilla", casilla_id = "iva.anual.aic.bienes.tipo-21.base" }, { kind = "casilla", casilla_id = "iva.anual.aic.bienes.tipo-21.cuota" }] }] },
+]
+
+[[revisions.2026.form_layouts.pages.sections]]
+id = "5-operaciones-reg-gral-base-imponible-y-c-542bb5"
+heading_key = "modelo.schema.390.form.section.5-operaciones-reg-gral-base-imponible-y-c-542bb5.heading"
+official_heading = "5. Operaciones Reg. Gral - Base Imponible y cuota - Adquis. intracomunit. servicios"
+blocks = [
+    { kind = "grid", id = "grid", columns = [{ key = "base_imponible", heading_key = "modelo.form.column.base_imponible", official_heading = "Base Imponible" }, { key = "cuota", heading_key = "modelo.form.column.cuota", official_heading = "Cuota" }], rows = [{ key = "tipo-0-pct", heading_key = "modelo.schema.390.form.row.tipo-0-pct.heading", official_heading = "Tipo 0%", cells = [{ kind = "casilla", casilla_id = "iva.anual.aic.servicios.tipo-0.base" }, { kind = "casilla", casilla_id = "iva.anual.aic.servicios.tipo-0.cuota" }] }, { key = "tipo-2-pct", heading_key = "modelo.schema.390.form.row.tipo-2-pct.heading", official_heading = "Tipo 2%", cells = [{ kind = "casilla", casilla_id = "iva.anual.aic.servicios.tipo-2.base" }, { kind = "casilla", casilla_id = "iva.anual.aic.servicios.tipo-2.cuota" }] }, { key = "tipo-4-pct", heading_key = "modelo.schema.390.form.row.tipo-4-pct.heading", official_heading = "Tipo 4%", cells = [{ kind = "casilla", casilla_id = "iva.anual.aic.servicios.tipo-4.base" }, { kind = "casilla", casilla_id = "iva.anual.aic.servicios.tipo-4.cuota" }] }, { key = "tipo-5-pct", heading_key = "modelo.schema.390.form.row.tipo-5-pct.heading", official_heading = "Tipo 5%", cells = [{ kind = "casilla", casilla_id = "iva.anual.aic.servicios.tipo-5.base" }, { kind = "casilla", casilla_id = "iva.anual.aic.servicios.tipo-5.cuota" }] }, { key = "tipo-7-5-pct", heading_key = "modelo.schema.390.form.row.tipo-7-5-pct.heading", official_heading = "Tipo 7,5%", cells = [{ kind = "casilla", casilla_id = "iva.anual.aic.servicios.tipo-7-5.base" }, { kind = "casilla", casilla_id = "iva.anual.aic.servicios.tipo-7-5.cuota" }] }, { key = "tipo-10-pct", heading_key = "modelo.schema.390.form.row.tipo-10-pct.heading", official_heading = "Tipo 10%", cells = [{ kind = "casilla", casilla_id = "iva.anual.aic.servicios.tipo-10.base" }, { kind = "casilla", casilla_id = "iva.anual.aic.servicios.tipo-10.cuota" }] }, { key = "tipo-21-pct", heading_key = "modelo.schema.390.form.row.tipo-21-pct.heading", official_heading = "Tipo 21%", cells = [{ kind = "casilla", casilla_id = "iva.anual.aic.servicios.tipo-21.base" }, { kind = "casilla", casilla_id = "iva.anual.aic.servicios.tipo-21.cuota" }] }] },
+]
+
+[[revisions.2026.form_layouts.pages.sections]]
+id = "5-operaciones-reg-gral-base-imponible-y-cuota"
+heading_key = "modelo.schema.390.form.section.5-operaciones-reg-gral-base-imponible-y-cuota.heading"
+official_heading = "5. Operaciones Reg. Gral - Base Imponible y cuota"
+blocks = [
+    { kind = "grid", id = "grid", columns = [{ key = "base_imponible", heading_key = "modelo.form.column.base_imponible", official_heading = "Base imponible" }, { key = "cuota", heading_key = "modelo.form.column.cuota", official_heading = "Cuota" }], rows = [{ key = "iva-deveng-invers-sujeto-pasivo", heading_key = "modelo.schema.390.form.row.iva-deveng-invers-sujeto-pasivo.heading", official_heading = "IVA deveng. invers. sujeto pasivo", cells = [{ kind = "casilla", casilla_id = "iva.anual.autorepercutido.interior.base" }, { kind = "casilla", casilla_id = "iva.anual.autorepercutido.interior.cuota" }] }, { key = "modificac-bases-y-cuotas", heading_key = "modelo.schema.390.form.row.modificac-bases-y-cuotas.heading", official_heading = "Modificac. bases y cuotas", cells = [{ kind = "casilla", casilla_id = "iva.anual.modificacion.bases-cuotas.base" }, { kind = "casilla", casilla_id = "iva.anual.modificacion.bases-cuotas.cuota" }] }, { key = "modificac-bases-y-cuotas-intragrupo", heading_key = "modelo.schema.390.form.row.modificac-bases-y-cuotas-intragrupo.heading", official_heading = "Modificac. bases y cuotas intragrupo", cells = [{ kind = "casilla", casilla_id = "iva.anual.modificacion.bases-cuotas-intragrupo.base" }, { kind = "casilla", casilla_id = "iva.anual.modificacion.bases-cuotas-intragrupo.cuota" }] }, { key = "modificac-bases-cuotas-concurso-acreedores", heading_key = "modelo.schema.390.form.row.modificac-bases-cuotas-concurso-acreedores.heading", official_heading = "Modificac. bases/cuotas concurso acreedores", cells = [{ kind = "casilla", casilla_id = "iva.anual.modificacion.concurso-acreedores.base" }, { kind = "casilla", casilla_id = "iva.anual.modificacion.concurso-acreedores.cuota" }] }, { key = "total-bases-y-cuotas-iva", heading_key = "modelo.schema.390.form.row.total-bases-y-cuotas-iva.heading", official_heading = "Total bases y cuotas IVA", cells = [{ kind = "casilla", casilla_id = "iva.anual.total-bases-iva" }, { kind = "casilla", casilla_id = "iva.anual.total-bases-cuotas-iva" }] }] },
+]
+
+[[revisions.2026.form_layouts.pages]]
+id = "pag-2-bis"
+official_ref = "BOE-A-2026-1761 Annex IV, page 2 bis, printed 12137"
+heading_key = "modelo.schema.390.form.page.pag-2-bis.heading"
+
+[[revisions.2026.form_layouts.pages.sections]]
+id = "5-operaciones-reg-gral-base-imponible-y-c-fef341"
+heading_key = "modelo.schema.390.form.section.5-operaciones-reg-gral-base-imponible-y-c-fef341.heading"
+official_heading = "5. Operaciones Reg. Gral - Base Imponible y cuota - Recargo de equivalencia"
+blocks = [
+    { kind = "grid", id = "grid", columns = [{ key = "base_imponible", heading_key = "modelo.form.column.base_imponible", official_heading = "Base imponible" }, { key = "cuota", heading_key = "modelo.form.column.cuota", official_heading = "Cuota" }], rows = [{ key = "tipo-0-pct", heading_key = "modelo.schema.390.form.row.tipo-0-pct.heading", official_heading = "Tipo 0%", cells = [{ kind = "casilla", casilla_id = "iva.anual.repercutido.recargo.tipo-0.base" }, { kind = "casilla", casilla_id = "iva.anual.repercutido.recargo.tipo-0.cuota" }] }, { key = "tipo-0-26-pct", heading_key = "modelo.schema.390.form.row.tipo-0-26-pct.heading", official_heading = "Tipo 0,26%", cells = [{ kind = "casilla", casilla_id = "iva.anual.repercutido.recargo.tipo-0-26.base" }, { kind = "casilla", casilla_id = "iva.anual.repercutido.recargo.tipo-0-26.cuota" }] }, { key = "tipo-0-5-pct", heading_key = "modelo.schema.390.form.row.tipo-0-5-pct.heading", official_heading = "Tipo 0,5%", cells = [{ kind = "casilla", casilla_id = "iva.anual.repercutido.recargo.tipo-0-5.base" }, { kind = "casilla", casilla_id = "iva.anual.repercutido.recargo.tipo-0-5.cuota" }] }, { key = "tipo-0-62-pct", heading_key = "modelo.schema.390.form.row.tipo-0-62-pct.heading", official_heading = "Tipo 0,62%", cells = [{ kind = "casilla", casilla_id = "iva.anual.repercutido.recargo.tipo-0-62.base" }, { kind = "casilla", casilla_id = "iva.anual.repercutido.recargo.tipo-0-62.cuota" }] }, { key = "tipo-1-pct", heading_key = "modelo.schema.390.form.row.tipo-1-pct.heading", official_heading = "Tipo 1%", cells = [{ kind = "casilla", casilla_id = "iva.anual.repercutido.recargo.tipo-1.base" }, { kind = "casilla", casilla_id = "iva.anual.repercutido.recargo.tipo-1.cuota" }] }, { key = "tipo-1-4-pct", heading_key = "modelo.schema.390.form.row.tipo-1-4-pct.heading", official_heading = "Tipo 1,4%", cells = [{ kind = "casilla", casilla_id = "iva.anual.repercutido.recargo.tipo-1-4.base" }, { kind = "casilla", casilla_id = "iva.anual.repercutido.recargo.tipo-1-4.cuota" }] }, { key = "tipo-5-2-pct", heading_key = "modelo.schema.390.form.row.tipo-5-2-pct.heading", official_heading = "Tipo 5,2%", cells = [{ kind = "casilla", casilla_id = "iva.anual.repercutido.recargo.tipo-5-2.base" }, { kind = "casilla", casilla_id = "iva.anual.repercutido.recargo.tipo-5-2.cuota" }] }, { key = "tipo-1-75-pct", heading_key = "modelo.schema.390.form.row.tipo-1-75-pct.heading", official_heading = "Tipo 1,75%", cells = [{ kind = "casilla", casilla_id = "iva.anual.repercutido.recargo.tipo-1-75.base" }, { kind = "casilla", casilla_id = "iva.anual.repercutido.recargo.tipo-1-75.cuota" }] }] },
+]
+
+[[revisions.2026.form_layouts.pages.sections]]
+id = "5-operaciones-reg-gral-base-imponible-y-cuota"
+heading_key = "modelo.schema.390.form.section.5-operaciones-reg-gral-base-imponible-y-cuota.heading"
+official_heading = "5. Operaciones Reg. Gral - Base Imponible y cuota"
+blocks = [
+    { kind = "grid", id = "grid", columns = [{ key = "base_imponible", heading_key = "modelo.form.column.base_imponible", official_heading = "Base imponible" }, { key = "cuota", heading_key = "modelo.form.column.cuota", official_heading = "Cuota" }], rows = [{ key = "modific-recargo-equivalencia", heading_key = "modelo.schema.390.form.row.modific-recargo-equivalencia.heading", official_heading = "Modific. recargo equivalencia", cells = [{ kind = "casilla", casilla_id = "iva.anual.modificacion.recargo.base" }, { kind = "casilla", casilla_id = "iva.anual.modificacion.recargo.cuota" }] }, { key = "modific-recargo-equiv-concurso-acreedores", heading_key = "modelo.schema.390.form.row.modific-recargo-equiv-concurso-acreedores.heading", official_heading = "Modific. recargo equiv. Concurso acreedores", cells = [{ kind = "casilla", casilla_id = "iva.anual.modificacion.recargo-concurso.base" }, { kind = "casilla", casilla_id = "iva.anual.modificacion.recargo-concurso.cuota" }] }] },
+]
+
+[[revisions.2026.form_layouts.pages.sections]]
+id = "5-operaciones-reg-gral"
+heading_key = "modelo.schema.390.form.section.5-operaciones-reg-gral.heading"
+official_heading = "5. Operaciones Reg. Gral"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "iva.anual.cuota-devengada-total" },
+]
+
+[[revisions.2026.form_layouts.pages]]
+id = "pag-3"
+official_ref = "BOE-A-2026-1761 Annex IV, page 3, printed 12138"
+heading_key = "modelo.schema.390.form.page.pag-3.heading"
+
+[[revisions.2026.form_layouts.pages.sections]]
+id = "5-operaciones-reg-gral-iva-deducible-oper-6cb02a"
+heading_key = "modelo.schema.390.form.section.5-operaciones-reg-gral-iva-deducible-oper-6cb02a.heading"
+official_heading = "5. Operaciones Reg. Gral - IVA deducible - Oper. inter. corrientes bienes y servic"
+blocks = [
+    { kind = "grid", id = "grid", columns = [{ key = "base_imponible", heading_key = "modelo.form.column.base_imponible", official_heading = "Base imponible" }, { key = "cuota", heading_key = "modelo.form.column.cuota", official_heading = "Cuota" }], rows = [{ key = "tipo-2-pct", heading_key = "modelo.schema.390.form.row.tipo-2-pct.heading", official_heading = "Tipo 2%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.interiores-corrientes.tipo-2.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.interiores-corrientes.tipo-2.cuota" }] }, { key = "tipo-4-pct", heading_key = "modelo.schema.390.form.row.tipo-4-pct.heading", official_heading = "Tipo 4%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.interiores-corrientes.tipo-4.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.interiores-corrientes.tipo-4.cuota" }] }, { key = "tipo-5-pct", heading_key = "modelo.schema.390.form.row.tipo-5-pct.heading", official_heading = "Tipo 5%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.interiores-corrientes.tipo-5.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.interiores-corrientes.tipo-5.cuota" }] }, { key = "tipo-7-5-pct", heading_key = "modelo.schema.390.form.row.tipo-7-5-pct.heading", official_heading = "Tipo 7,5%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.interiores-corrientes.tipo-7-5.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.interiores-corrientes.tipo-7-5.cuota" }] }, { key = "tipo-10-pct", heading_key = "modelo.schema.390.form.row.tipo-10-pct.heading", official_heading = "Tipo 10%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.interiores-corrientes.tipo-10.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.interiores-corrientes.tipo-10.cuota" }] }, { key = "tipo-21-pct", heading_key = "modelo.schema.390.form.row.tipo-21-pct.heading", official_heading = "Tipo 21%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.interiores-corrientes.tipo-21.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.interiores-corrientes.tipo-21.cuota" }] }, { key = "total-oper-inter-corrientes-bienes-y-servic", heading_key = "modelo.schema.390.form.row.total-oper-inter-corrientes-bienes-y-servic.heading", official_heading = "Total oper. inter. corrientes bienes y servic", cells = [{ kind = "casilla", casilla_id = "iva.anual.soportado.interiores.base" }, { kind = "casilla", casilla_id = "iva.anual.soportado.interiores" }] }] },
+]
+
+[[revisions.2026.form_layouts.pages.sections]]
+id = "5-operaciones-reg-gral-iva-deducible-oper-0e46cf"
+heading_key = "modelo.schema.390.form.section.5-operaciones-reg-gral-iva-deducible-oper-0e46cf.heading"
+official_heading = "5. Operaciones Reg. Gral - IVA deducible - Oper. intragrupo corrientes"
+blocks = [
+    { kind = "grid", id = "grid", columns = [{ key = "base_imponible", heading_key = "modelo.form.column.base_imponible", official_heading = "Base imponible" }, { key = "cuota", heading_key = "modelo.form.column.cuota", official_heading = "Cuota" }], rows = [{ key = "tipo-2-pct", heading_key = "modelo.schema.390.form.row.tipo-2-pct.heading", official_heading = "Tipo 2%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.intragrupo-corrientes.tipo-2.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.intragrupo-corrientes.tipo-2.cuota" }] }, { key = "tipo-4-pct", heading_key = "modelo.schema.390.form.row.tipo-4-pct.heading", official_heading = "Tipo 4%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.intragrupo-corrientes.tipo-4.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.intragrupo-corrientes.tipo-4.cuota" }] }, { key = "tipo-5-pct", heading_key = "modelo.schema.390.form.row.tipo-5-pct.heading", official_heading = "Tipo 5%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.intragrupo-corrientes.tipo-5.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.intragrupo-corrientes.tipo-5.cuota" }] }, { key = "tipo-7-5-pct", heading_key = "modelo.schema.390.form.row.tipo-7-5-pct.heading", official_heading = "Tipo 7,5%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.intragrupo-corrientes.tipo-7-5.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.intragrupo-corrientes.tipo-7-5.cuota" }] }, { key = "tipo-10-pct", heading_key = "modelo.schema.390.form.row.tipo-10-pct.heading", official_heading = "Tipo 10%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.intragrupo-corrientes.tipo-10.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.intragrupo-corrientes.tipo-10.cuota" }] }, { key = "tipo-21-pct", heading_key = "modelo.schema.390.form.row.tipo-21-pct.heading", official_heading = "Tipo 21%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.intragrupo-corrientes.tipo-21.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.intragrupo-corrientes.tipo-21.cuota" }] }, { key = "total-oper-intragrupo-corrientes", heading_key = "modelo.schema.390.form.row.total-oper-intragrupo-corrientes.heading", official_heading = "Total oper. intragrupo corrientes", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.intragrupo-corrientes.total.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.intragrupo-corrientes.total.cuota" }] }] },
+]
+
+[[revisions.2026.form_layouts.pages.sections]]
+id = "5-operaciones-reg-gral-iva-deducible-oper-5198bd"
+heading_key = "modelo.schema.390.form.section.5-operaciones-reg-gral-iva-deducible-oper-5198bd.heading"
+official_heading = "5. Operaciones Reg. Gral - IVA deducible - Oper. inter. bienes de inversion"
+blocks = [
+    { kind = "grid", id = "grid", columns = [{ key = "base_imponible", heading_key = "modelo.form.column.base_imponible", official_heading = "Base imponible" }, { key = "cuota", heading_key = "modelo.form.column.cuota", official_heading = "Cuota" }], rows = [{ key = "tipo-2-pct", heading_key = "modelo.schema.390.form.row.tipo-2-pct.heading", official_heading = "Tipo 2%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.interiores-inversion.tipo-2.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.interiores-inversion.tipo-2.cuota" }] }, { key = "tipo-4-pct", heading_key = "modelo.schema.390.form.row.tipo-4-pct.heading", official_heading = "Tipo 4%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.interiores-inversion.tipo-4.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.interiores-inversion.tipo-4.cuota" }] }, { key = "tipo-5-pct", heading_key = "modelo.schema.390.form.row.tipo-5-pct.heading", official_heading = "Tipo 5%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.interiores-inversion.tipo-5.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.interiores-inversion.tipo-5.cuota" }] }, { key = "tipo-7-5-pct", heading_key = "modelo.schema.390.form.row.tipo-7-5-pct.heading", official_heading = "Tipo 7,5%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.interiores-inversion.tipo-7-5.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.interiores-inversion.tipo-7-5.cuota" }] }, { key = "tipo-10-pct", heading_key = "modelo.schema.390.form.row.tipo-10-pct.heading", official_heading = "Tipo 10%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.interiores-inversion.tipo-10.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.interiores-inversion.tipo-10.cuota" }] }, { key = "tipo-21-pct", heading_key = "modelo.schema.390.form.row.tipo-21-pct.heading", official_heading = "Tipo 21%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.interiores-inversion.tipo-21.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.interiores-inversion.tipo-21.cuota" }] }, { key = "total-oper-inter-bienes-de-inversion", heading_key = "modelo.schema.390.form.row.total-oper-inter-bienes-de-inversion.heading", official_heading = "Total oper. inter. bienes de inversion", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.interiores-inversion.total.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.interiores-inversion.total.cuota" }] }] },
+]
+
+[[revisions.2026.form_layouts.pages.sections]]
+id = "5-operaciones-reg-gral-iva-deducible-oper-3192c1"
+heading_key = "modelo.schema.390.form.section.5-operaciones-reg-gral-iva-deducible-oper-3192c1.heading"
+official_heading = "5. Operaciones Reg. Gral - IVA deducible - Oper. intra. bienes de inversion"
+blocks = [
+    { kind = "grid", id = "grid", columns = [{ key = "base_imponible", heading_key = "modelo.form.column.base_imponible", official_heading = "Base imponible" }, { key = "cuota", heading_key = "modelo.form.column.cuota", official_heading = "Cuota" }], rows = [{ key = "tipo-2-pct", heading_key = "modelo.schema.390.form.row.tipo-2-pct.heading", official_heading = "Tipo 2%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.intragrupo-inversion.tipo-2.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.intragrupo-inversion.tipo-2.cuota" }] }, { key = "tipo-4-pct", heading_key = "modelo.schema.390.form.row.tipo-4-pct.heading", official_heading = "Tipo 4%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.intragrupo-inversion.tipo-4.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.intragrupo-inversion.tipo-4.cuota" }] }, { key = "tipo-5-pct", heading_key = "modelo.schema.390.form.row.tipo-5-pct.heading", official_heading = "Tipo 5%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.intragrupo-inversion.tipo-5.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.intragrupo-inversion.tipo-5.cuota" }] }, { key = "tipo-7-5-pct", heading_key = "modelo.schema.390.form.row.tipo-7-5-pct.heading", official_heading = "Tipo 7,5%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.intragrupo-inversion.tipo-7-5.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.intragrupo-inversion.tipo-7-5.cuota" }] }, { key = "tipo-10-pct", heading_key = "modelo.schema.390.form.row.tipo-10-pct.heading", official_heading = "Tipo 10%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.intragrupo-inversion.tipo-10.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.intragrupo-inversion.tipo-10.cuota" }] }, { key = "tipo-21-pct", heading_key = "modelo.schema.390.form.row.tipo-21-pct.heading", official_heading = "Tipo 21%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.intragrupo-inversion.tipo-21.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.intragrupo-inversion.tipo-21.cuota" }] }, { key = "total-oper-intra-bienes-de-inversion", heading_key = "modelo.schema.390.form.row.total-oper-intra-bienes-de-inversion.heading", official_heading = "Total oper. intra. bienes de inversion", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.intragrupo-inversion.total.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.intragrupo-inversion.total.cuota" }] }] },
+]
+
+[[revisions.2026.form_layouts.pages.sections]]
+id = "5-operaciones-reg-gral-iva-deducible-impo-f31793"
+heading_key = "modelo.schema.390.form.section.5-operaciones-reg-gral-iva-deducible-impo-f31793.heading"
+official_heading = "5. Operaciones Reg. Gral - IVA deducible - Import. bienes corrientes"
+blocks = [
+    { kind = "grid", id = "grid", columns = [{ key = "base_imponible", heading_key = "modelo.form.column.base_imponible", official_heading = "Base imponible" }, { key = "cuota", heading_key = "modelo.form.column.cuota", official_heading = "Cuota" }], rows = [{ key = "tipo-2-pct", heading_key = "modelo.schema.390.form.row.tipo-2-pct.heading", official_heading = "Tipo 2%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.importaciones-corrientes.tipo-2.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.importaciones-corrientes.tipo-2.cuota" }] }, { key = "tipo-4-pct", heading_key = "modelo.schema.390.form.row.tipo-4-pct.heading", official_heading = "Tipo 4%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.importaciones-corrientes.tipo-4.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.importaciones-corrientes.tipo-4.cuota" }] }, { key = "tipo-5-pct", heading_key = "modelo.schema.390.form.row.tipo-5-pct.heading", official_heading = "Tipo 5%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.importaciones-corrientes.tipo-5.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.importaciones-corrientes.tipo-5.cuota" }] }, { key = "tipo-7-5-pct", heading_key = "modelo.schema.390.form.row.tipo-7-5-pct.heading", official_heading = "Tipo 7,5%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.importaciones-corrientes.tipo-7-5.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.importaciones-corrientes.tipo-7-5.cuota" }] }, { key = "tipo-10-pct", heading_key = "modelo.schema.390.form.row.tipo-10-pct.heading", official_heading = "Tipo 10%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.importaciones-corrientes.tipo-10.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.importaciones-corrientes.tipo-10.cuota" }] }, { key = "tipo-21-pct", heading_key = "modelo.schema.390.form.row.tipo-21-pct.heading", official_heading = "Tipo 21%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.importaciones-corrientes.tipo-21.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.importaciones-corrientes.tipo-21.cuota" }] }, { key = "total-import-bienes-corrientes", heading_key = "modelo.schema.390.form.row.total-import-bienes-corrientes.heading", official_heading = "Total import. bienes corrientes", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.importaciones-corrientes.total.base" }, { kind = "casilla", casilla_id = "iva.anual.soportado.importaciones" }] }] },
+]
+
+[[revisions.2026.form_layouts.pages.sections]]
+id = "5-operaciones-reg-gral-iva-deducible-impo-56be24"
+heading_key = "modelo.schema.390.form.section.5-operaciones-reg-gral-iva-deducible-impo-56be24.heading"
+official_heading = "5. Operaciones Reg. Gral - IVA deducible - Importacion bienes inversion"
+blocks = [
+    { kind = "grid", id = "grid", columns = [{ key = "base_imponible", heading_key = "modelo.form.column.base_imponible", official_heading = "Base imponible" }, { key = "cuota", heading_key = "modelo.form.column.cuota", official_heading = "Cuota" }], rows = [{ key = "tipo-2-pct", heading_key = "modelo.schema.390.form.row.tipo-2-pct.heading", official_heading = "Tipo 2%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.importaciones-inversion.tipo-2.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.importaciones-inversion.tipo-2.cuota" }] }, { key = "tipo-4-pct", heading_key = "modelo.schema.390.form.row.tipo-4-pct.heading", official_heading = "Tipo 4%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.importaciones-inversion.tipo-4.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.importaciones-inversion.tipo-4.cuota" }] }, { key = "tipo-5-pct", heading_key = "modelo.schema.390.form.row.tipo-5-pct.heading", official_heading = "Tipo 5%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.importaciones-inversion.tipo-5.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.importaciones-inversion.tipo-5.cuota" }] }, { key = "tipo-7-5-pct", heading_key = "modelo.schema.390.form.row.tipo-7-5-pct.heading", official_heading = "Tipo 7,5%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.importaciones-inversion.tipo-7-5.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.importaciones-inversion.tipo-7-5.cuota" }] }, { key = "tipo-10-pct", heading_key = "modelo.schema.390.form.row.tipo-10-pct.heading", official_heading = "Tipo 10%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.importaciones-inversion.tipo-10.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.importaciones-inversion.tipo-10.cuota" }] }, { key = "tipo-21-pct", heading_key = "modelo.schema.390.form.row.tipo-21-pct.heading", official_heading = "Tipo 21%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.importaciones-inversion.tipo-21.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.importaciones-inversion.tipo-21.cuota" }] }, { key = "total-importacion-bienes-inversion", heading_key = "modelo.schema.390.form.row.total-importacion-bienes-inversion.heading", official_heading = "Total importacion bienes inversion", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.importaciones-inversion.total.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.importaciones-inversion.total.cuota" }] }] },
+]
+
+[[revisions.2026.form_layouts.pages.sections]]
+id = "5-operaciones-reg-gral-iva-deducible-adqu-84c649"
+heading_key = "modelo.schema.390.form.section.5-operaciones-reg-gral-iva-deducible-adqu-84c649.heading"
+official_heading = "5. Operaciones Reg. Gral - IVA deducible - Adqui. intra. bienes corrientes"
+blocks = [
+    { kind = "grid", id = "grid", columns = [{ key = "base_imponible", heading_key = "modelo.form.column.base_imponible", official_heading = "Base imponible" }, { key = "cuota", heading_key = "modelo.form.column.cuota", official_heading = "Cuota" }], rows = [{ key = "tipo-2-pct", heading_key = "modelo.schema.390.form.row.tipo-2-pct.heading", official_heading = "Tipo 2%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.aic-corrientes.tipo-2.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.aic-corrientes.tipo-2.cuota" }] }, { key = "tipo-4-pct", heading_key = "modelo.schema.390.form.row.tipo-4-pct.heading", official_heading = "Tipo 4%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.aic-corrientes.tipo-4.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.aic-corrientes.tipo-4.cuota" }] }, { key = "tipo-5-pct", heading_key = "modelo.schema.390.form.row.tipo-5-pct.heading", official_heading = "Tipo 5%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.aic-corrientes.tipo-5.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.aic-corrientes.tipo-5.cuota" }] }, { key = "tipo-7-5-pct", heading_key = "modelo.schema.390.form.row.tipo-7-5-pct.heading", official_heading = "Tipo 7,5%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.aic-corrientes.tipo-7-5.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.aic-corrientes.tipo-7-5.cuota" }] }, { key = "tipo-10-pct", heading_key = "modelo.schema.390.form.row.tipo-10-pct.heading", official_heading = "Tipo 10%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.aic-corrientes.tipo-10.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.aic-corrientes.tipo-10.cuota" }] }, { key = "tipo-21-pct", heading_key = "modelo.schema.390.form.row.tipo-21-pct.heading", official_heading = "Tipo 21%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.aic-corrientes.tipo-21.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.aic-corrientes.tipo-21.cuota" }] }, { key = "total-adqui-intra-bienes-corrientes", heading_key = "modelo.schema.390.form.row.total-adqui-intra-bienes-corrientes.heading", official_heading = "Total adqui. intra. bienes corrientes", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.aic-corrientes.total.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.aic-corrientes.total.cuota" }] }] },
+]
+
+[[revisions.2026.form_layouts.pages]]
+id = "pag-4"
+official_ref = "BOE-A-2026-1761 Annex IV, page 4, printed 12139"
+heading_key = "modelo.schema.390.form.page.pag-4.heading"
+
+[[revisions.2026.form_layouts.pages.sections]]
+id = "5-operaciones-reg-gral-iva-deducible-adqu-812147"
+heading_key = "modelo.schema.390.form.section.5-operaciones-reg-gral-iva-deducible-adqu-812147.heading"
+official_heading = "5. Operaciones Reg. Gral - IVA deducible - Adqui. intra. bienes inversion"
+blocks = [
+    { kind = "grid", id = "grid", columns = [{ key = "base_imponible", heading_key = "modelo.form.column.base_imponible", official_heading = "Base imponible" }, { key = "cuota", heading_key = "modelo.form.column.cuota", official_heading = "Cuota" }], rows = [{ key = "tipo-2-pct", heading_key = "modelo.schema.390.form.row.tipo-2-pct.heading", official_heading = "Tipo 2%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.aic-inversion.tipo-2.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.aic-inversion.tipo-2.cuota" }] }, { key = "tipo-4-pct", heading_key = "modelo.schema.390.form.row.tipo-4-pct.heading", official_heading = "Tipo 4%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.aic-inversion.tipo-4.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.aic-inversion.tipo-4.cuota" }] }, { key = "tipo-5-pct", heading_key = "modelo.schema.390.form.row.tipo-5-pct.heading", official_heading = "Tipo 5%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.aic-inversion.tipo-5.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.aic-inversion.tipo-5.cuota" }] }, { key = "tipo-7-5-pct", heading_key = "modelo.schema.390.form.row.tipo-7-5-pct.heading", official_heading = "Tipo 7,5%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.aic-inversion.tipo-7-5.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.aic-inversion.tipo-7-5.cuota" }] }, { key = "tipo-10-pct", heading_key = "modelo.schema.390.form.row.tipo-10-pct.heading", official_heading = "Tipo 10%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.aic-inversion.tipo-10.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.aic-inversion.tipo-10.cuota" }] }, { key = "tipo-21-pct", heading_key = "modelo.schema.390.form.row.tipo-21-pct.heading", official_heading = "Tipo 21%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.aic-inversion.tipo-21.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.aic-inversion.tipo-21.cuota" }] }, { key = "total-adqui-intra-bienes-inversion", heading_key = "modelo.schema.390.form.row.total-adqui-intra-bienes-inversion.heading", official_heading = "Total adqui. intra. bienes inversion", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.aic-inversion.total.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.aic-inversion.total.cuota" }] }] },
+]
+
+[[revisions.2026.form_layouts.pages.sections]]
+id = "5-operaciones-reg-gral-iva-deducible-adqu-315b09"
+heading_key = "modelo.schema.390.form.section.5-operaciones-reg-gral-iva-deducible-adqu-315b09.heading"
+official_heading = "5. Operaciones Reg. Gral - IVA deducible - Adqui. intra. servicios"
+blocks = [
+    { kind = "grid", id = "grid", columns = [{ key = "base_imponible", heading_key = "modelo.form.column.base_imponible", official_heading = "Base imponible" }, { key = "cuota", heading_key = "modelo.form.column.cuota", official_heading = "Cuota" }], rows = [{ key = "tipo-2-pct", heading_key = "modelo.schema.390.form.row.tipo-2-pct.heading", official_heading = "Tipo 2%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.aic-servicios.tipo-2.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.aic-servicios.tipo-2.cuota" }] }, { key = "tipo-4-pct", heading_key = "modelo.schema.390.form.row.tipo-4-pct.heading", official_heading = "Tipo 4%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.aic-servicios.tipo-4.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.aic-servicios.tipo-4.cuota" }] }, { key = "tipo-5-pct", heading_key = "modelo.schema.390.form.row.tipo-5-pct.heading", official_heading = "Tipo 5%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.aic-servicios.tipo-5.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.aic-servicios.tipo-5.cuota" }] }, { key = "tipo-7-5-pct", heading_key = "modelo.schema.390.form.row.tipo-7-5-pct.heading", official_heading = "Tipo 7,5%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.aic-servicios.tipo-7-5.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.aic-servicios.tipo-7-5.cuota" }] }, { key = "tipo-10-pct", heading_key = "modelo.schema.390.form.row.tipo-10-pct.heading", official_heading = "Tipo 10%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.aic-servicios.tipo-10.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.aic-servicios.tipo-10.cuota" }] }, { key = "tipo-21-pct", heading_key = "modelo.schema.390.form.row.tipo-21-pct.heading", official_heading = "Tipo 21%", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.aic-servicios.tipo-21.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.aic-servicios.tipo-21.cuota" }] }, { key = "total-adqui-intra-servicios", heading_key = "modelo.schema.390.form.row.total-adqui-intra-servicios.heading", official_heading = "Total adqui. intra. servicios", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.aic-servicios.total.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.aic-servicios.total.cuota" }] }] },
+]
+
+[[revisions.2026.form_layouts.pages.sections]]
+id = "5-operaciones-reg-gral-iva-deducible-2"
+heading_key = "modelo.schema.390.form.section.5-operaciones-reg-gral-iva-deducible.heading"
+official_heading = "5. Operaciones Reg. Gral - IVA deducible"
+blocks = [
+    { kind = "grid", id = "grid-2", columns = [{ key = "base_imponible", heading_key = "modelo.form.column.base_imponible", official_heading = "Base imponible" }, { key = "cuota_deducible", heading_key = "modelo.form.column.cuota_deducible", official_heading = "Cuota deducible" }], rows = [{ key = "compensac-reg-especial-agric-ganad-pesca", heading_key = "modelo.schema.390.form.row.compensac-reg-especial-agric-ganad-pesca.heading", official_heading = "Compensac. rég. especial agric./ganad./pesca", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.compensaciones-reagp.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.compensaciones-reagp.cuota" }] }, { key = "cuotas-deducibles-en-virtud-de-resolucion-aa4c5d", heading_key = "modelo.schema.390.form.row.cuotas-deducibles-en-virtud-de-resolucion-aa4c5d.heading", official_heading = "Cuotas deducibles en virtud de resolución administrativa o sentencia firmes con tipos no vigentes", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.resolucion-firme-tipos-no-vigentes.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.resolucion-firme-tipos-no-vigentes.cuota" }] }, { key = "rectificacion-de-deducciones", heading_key = "modelo.schema.390.form.row.rectificacion-de-deducciones.heading", official_heading = "Rectificación de deducciones", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.rectificacion.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.rectificacion.cuota" }] }, { key = "rectificacion-de-deducciones-intragrupo", heading_key = "modelo.schema.390.form.row.rectificacion-de-deducciones-intragrupo.heading", official_heading = "Rectificación de deducciones intragrupo", cells = [{ kind = "casilla", casilla_id = "iva.anual.deducible.rectificacion-intragrupo.base" }, { kind = "casilla", casilla_id = "iva.anual.deducible.rectificacion-intragrupo.cuota" }] }] },
+]
+
+[[revisions.2026.form_layouts.pages.sections]]
+id = "5-operaciones-reg-gral"
+heading_key = "modelo.schema.390.form.section.5-operaciones-reg-gral.heading"
+official_heading = "5. Operaciones Reg. Gral"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "iva.anual.regularizacion-bienes-inversion" },
+    { kind = "field", id = "field-2", casilla_id = "iva.anual.regularizacion-prorrata-definitiva" },
+    { kind = "field", id = "field-3", casilla_id = "iva.anual.cuota-deducible-total" },
+    { kind = "field", id = "field-4", casilla_id = "iva.anual.resultado-regimen-general" },
+]
+
+[[revisions.2026.form_layouts.pages]]
+id = "pag-5"
+official_ref = "Pág. 5"
+heading_key = "modelo.schema.390.form.page.pag-5.heading"
+
+[[revisions.2026.form_layouts.pages.sections]]
+id = "6-operaciones-reg-simplificado-4"
+heading_key = "modelo.schema.390.form.section.6-operaciones-reg-simplificado.heading"
+official_heading = "6. Operaciones Reg. Simplificado"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "iva.anual.regimen-simplificado.cuota-resultante-no-agricola" },
+    { kind = "field", id = "field-3", casilla_id = "iva.anual.regimen-simplificado.cuota-resultante-agricola" },
+    { kind = "field", id = "field-5", casilla_id = "iva.anual.regimen-simplificado.aic-bienes-cuota-devengada" },
+    { kind = "field", id = "field-7", casilla_id = "iva.anual.regimen-simplificado.inversion-sujeto-pasivo" },
+    { kind = "field", id = "field-9", casilla_id = "iva.anual.regimen-simplificado.entrega-activos-fijos" },
+    { kind = "field", id = "field-11", casilla_id = "iva.anual.reconciliacion.devengada-simplificado-303" },
+    { kind = "field", id = "field-12", casilla_id = "iva.anual.regimen-simplificado.iva-soportado-activos-fijos" },
+    { kind = "field", id = "field-14", casilla_id = "iva.anual.regimen-simplificado.regularizacion-bienes-inversion" },
+    { kind = "field", id = "field-16", casilla_id = "iva.anual.regimen-simplificado.suma-deducciones" },
+    { kind = "field", id = "field-18", casilla_id = "iva.anual.regimen-simplificado.resultado" },
+]
+
+[[revisions.2026.form_layouts.pages]]
+id = "pag-6"
+official_ref = "BOE-A-2026-1761 Annex IV, page 6, printed 12141"
+heading_key = "modelo.schema.390.form.page.pag-6.heading"
+
+[[revisions.2026.form_layouts.pages.sections]]
+id = "7-resultado-liquidacion-anual"
+heading_key = "modelo.schema.390.form.authored.common-settlement.heading"
+official_heading = "7. Resultado liquidación anual · territorio común"
+blocks = [
+    { kind = "field", id = "box-658", casilla_id = "iva.anual.regularizacion-cuotas-art-80-cinco-5" },
+    { kind = "field", id = "box-84", casilla_id = "iva.anual.suma-resultados" },
+    { kind = "field", id = "box-659", casilla_id = "iva.anual.iva-importacion-diferimiento" },
+    { kind = "field", id = "box-85", casilla_id = "iva.anual.compensacion-cuotas-ejercicio-anterior" },
+    { kind = "field", id = "box-112", casilla_id = "iva.anual.pago-cuenta-carburantes-deposito-fiscal" },
+    { kind = "field", id = "box-86", casilla_id = "iva.anual.resultado-liquidacion" },
+]
+
+[[revisions.2026.form_layouts.pages.sections]]
+id = "8-tributacion-razon-de-territorio"
+heading_key = "modelo.schema.390.form.authored.territorial-settlement.heading"
+official_heading = "8. Tributación por razón de territorio"
+blocks = [
+    { kind = "field", id = "box-87", casilla_id = "iva.anual.territorio.comun.porcentaje" },
+    { kind = "field", id = "box-88", casilla_id = "iva.anual.territorio.alava.porcentaje" },
+    { kind = "field", id = "box-89", casilla_id = "iva.anual.territorio.guipuzcoa.porcentaje" },
+    { kind = "field", id = "box-90", casilla_id = "iva.anual.territorio.vizcaya.porcentaje" },
+    { kind = "field", id = "box-91", casilla_id = "iva.anual.territorio.navarra.porcentaje" },
+    { kind = "field", id = "box-658", casilla_id = "iva.anual.regularizacion-cuotas-art-80-cinco-5" },
+    { kind = "field", id = "box-84", casilla_id = "iva.anual.suma-resultados" },
+    { kind = "field", id = "box-92", casilla_id = "iva.anual.territorio.resultado-atribuible-comun" },
+    { kind = "field", id = "box-659", casilla_id = "iva.anual.iva-importacion-diferimiento" },
+    { kind = "field", id = "box-93", casilla_id = "iva.anual.territorio.compensacion-atribuible-comun" },
+    { kind = "field", id = "box-112", casilla_id = "iva.anual.pago-cuenta-carburantes-deposito-fiscal" },
+    { kind = "field", id = "box-94", casilla_id = "iva.anual.territorio.resultado-anual-atribuible-comun" },
+]
+
+[[revisions.2026.form_layouts.pages.sections]]
+id = "ordinary-periods"
+heading_key = "modelo.schema.390.form.authored.ordinary-periods.heading"
+official_heading = "9.1. Períodos fuera del régimen especial del grupo de entidades"
+blocks = [
+    { kind = "field", id = "box-95", casilla_id = "iva.anual.liquidaciones.total-a-ingresar" },
+    { kind = "field", id = "box-96", casilla_id = "iva.anual.liquidaciones.total-devoluciones-mensuales" },
+    { kind = "field", id = "box-524", casilla_id = "iva.anual.liquidaciones.total-devoluciones-elementos-transporte" },
+    { kind = "field", id = "box-97", casilla_id = "iva.anual.compensacion-ultimo-periodo-97" },
+    { kind = "field", id = "box-98", casilla_id = "iva.anual.liquidaciones.ultimo-periodo-a-devolver" },
+    { kind = "field", id = "box-662", casilla_id = "iva.anual.compensacion-generada-ejercicio-no-97" },
+]
+
+[[revisions.2026.form_layouts.pages.sections]]
+id = "group-periods"
+heading_key = "modelo.schema.390.form.authored.group-periods.heading"
+official_heading = "9.2. Períodos en régimen especial del grupo de entidades"
+blocks = [
+    { kind = "field", id = "box-525", casilla_id = "iva.anual.liquidaciones.total-resultados-positivos-m322" },
+    { kind = "field", id = "box-526", casilla_id = "iva.anual.liquidaciones.total-resultados-negativos-m322" },
+]
+
+[[revisions.2026.form_layouts.pages.sections]]
+id = "10-volumen-de-operaciones"
+heading_key = "modelo.schema.390.form.section.10-volumen-de-operaciones.heading"
+official_heading = "10. Volumen de operaciones"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "iva.anual.volumen.regimen-general" },
+    { kind = "field", id = "field-2", casilla_id = "iva.anual.volumen.criterio-caja" },
+    { kind = "field", id = "field-3", casilla_id = "iva.anual.volumen.entregas-intracomunitarias" },
+    { kind = "field", id = "field-4", casilla_id = "iva.anual.volumen.exportaciones-exentas" },
+    { kind = "field", id = "field-5", casilla_id = "iva.anual.volumen.exentas-sin-derecho-deduccion" },
+    { kind = "field", id = "field-6", casilla_id = "iva.anual.volumen.no-sujetas-reglas-localizacion" },
+    { kind = "field", id = "field-7", casilla_id = "iva.anual.volumen.inversion-sujeto-pasivo" },
+    { kind = "field", id = "field-8", casilla_id = "iva.anual.volumen.oss-no-sujetas-localizacion" },
+    { kind = "field", id = "field-9", casilla_id = "iva.anual.volumen.oss-sujetas" },
+    { kind = "field", id = "field-10", casilla_id = "iva.anual.volumen.intragrupo-arts-78-79" },
+    { kind = "field", id = "field-11", casilla_id = "iva.anual.volumen.regimen-simplificado" },
+    { kind = "field", id = "field-12", casilla_id = "iva.anual.volumen.reagp" },
+    { kind = "field", id = "field-13", casilla_id = "iva.anual.volumen.recargo-equivalencia" },
+    { kind = "field", id = "field-14", casilla_id = "iva.anual.volumen.bienes-usados" },
+    { kind = "field", id = "field-15", casilla_id = "iva.anual.volumen.agencias-viajes" },
+    { kind = "field", id = "field-16", casilla_id = "iva.anual.volumen.inmuebles-financieras-no-habituales" },
+    { kind = "field", id = "field-17", casilla_id = "iva.anual.volumen.bienes-de-inversion" },
+    { kind = "field", id = "field-18", casilla_id = "iva.anual.volumen.total" },
+]
+
+[[revisions.2026.form_layouts.pages]]
+id = "pag-7"
+official_ref = "BOE-A-2026-1761 Annex IV, page 7, printed 12142"
+heading_key = "modelo.schema.390.form.page.pag-7.heading"
+
+[[revisions.2026.form_layouts.pages.sections]]
+id = "11-oper-especificas"
+heading_key = "modelo.schema.390.form.authored.specific-operations.heading"
+official_heading = "11. Operaciones específicas"
+blocks = [
+    { kind = "field", id = "specific-operation-1", casilla_id = "iva.anual.especificas.adquisiciones-interiores-exentas" },
+    { kind = "field", id = "specific-operation-2", casilla_id = "iva.anual.especificas.adquisiciones-intracomunitarias-exentas" },
+    { kind = "field", id = "specific-operation-3", casilla_id = "iva.anual.especificas.importaciones-exentas" },
+    { kind = "field", id = "specific-operation-4", casilla_id = "iva.anual.especificas.base-iva-soportado-no-deducible" },
+    { kind = "field", id = "specific-operation-5", casilla_id = "iva.anual.especificas.operaciones-derecho-devolucion-mensual" },
+    { kind = "field", id = "specific-operation-6", casilla_id = "iva.anual.especificas.entrega-interior-inversion-triangular" },
+    { kind = "field", id = "specific-operation-7", casilla_id = "iva.anual.especificas.servicios-tai-inversion-sujeto-pasivo" },
+    { kind = "grid", id = "specific-operation-8", columns = [{ key = "base_imponible", heading_key = "modelo.form.column.base_imponible", official_heading = "Base imponible" }, { key = "cuota", heading_key = "modelo.form.column.cuota", official_heading = "Cuota" }], rows = [{ key = "importes-de-las-entregas-de-bienes-regime-fa8564", heading_key = "modelo.schema.390.form.row.importes-de-las-entregas-de-bienes-regime-fa8564.heading", official_heading = "Importes de las entregas de bienes regimen especial criterio caja", cells = [{ kind = "casilla", casilla_id = "iva.anual.especificas.criterio-caja-entregas.base" }, { kind = "casilla", casilla_id = "iva.anual.especificas.criterio-caja-entregas.cuota" }] }, { key = "importes-de-las-adquisiciones-de-bienes-r-d3ef1e", heading_key = "modelo.schema.390.form.row.importes-de-las-adquisiciones-de-bienes-r-d3ef1e.heading", official_heading = "Importes de las adquisiciones de bienes regimen especial criterio caja", cells = [{ kind = "casilla", casilla_id = "iva.anual.especificas.criterio-caja-adquisiciones.base" }, { kind = "casilla", casilla_id = "iva.anual.especificas.criterio-caja-adquisiciones.cuota" }] }] },
+]
+
+[[revisions.2026.form_layouts.pages]]
+id = "pag-8"
+official_ref = "BOE-A-2026-1761 Annex IV, page 8, printed 12143"
+heading_key = "modelo.schema.390.form.page.pag-8.heading"
+
+[[revisions.2026.form_layouts.pages.sections]]
+id = "deduction-group-1"
+heading_key = "modelo.schema.390.form.authored.deduction-group-1.heading"
+official_heading = "13. IVA deducible: Grupo 1"
+blocks = [
+    { kind = "grid", id = "deductions", columns = [{ key = "base_imponible", heading_key = "modelo.form.column.base_imponible", official_heading = "Base imponible" }, { key = "cuota_deducible", heading_key = "modelo.form.column.cuota_deducible", official_heading = "Cuota deducible" }], rows = [{ key = "domestic-current", heading_key = "modelo.schema.390.form.authored.domestic-current.heading", cells = [{ kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-1.interiores-corrientes.base" }, { kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-1.interiores-corrientes.cuota" }] }, { key = "domestic-investment", heading_key = "modelo.schema.390.form.authored.domestic-investment.heading", cells = [{ kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-1.interiores-inversion.base" }, { kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-1.interiores-inversion.cuota" }] }, { key = "imports-current", heading_key = "modelo.schema.390.form.authored.imports-current.heading", cells = [{ kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-1.importaciones-corrientes.base" }, { kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-1.importaciones-corrientes.cuota" }] }, { key = "imports-investment", heading_key = "modelo.schema.390.form.authored.imports-investment.heading", cells = [{ kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-1.importaciones-inversion.base" }, { kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-1.importaciones-inversion.cuota" }] }, { key = "intra-current", heading_key = "modelo.schema.390.form.authored.intra-current.heading", cells = [{ kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-1.aic-corrientes.base" }, { kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-1.aic-corrientes.cuota" }] }, { key = "intra-investment", heading_key = "modelo.schema.390.form.authored.intra-investment.heading", cells = [{ kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-1.aic-inversion.base" }, { kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-1.aic-inversion.cuota" }] }, { key = "agriculture-compensation", heading_key = "modelo.schema.390.form.authored.agriculture-compensation.heading", cells = [{ kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-1.compensaciones-reagp.base" }, { kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-1.compensaciones-reagp.cuota" }] }, { key = "deduction-adjustment", heading_key = "modelo.schema.390.form.authored.deduction-adjustment.heading", cells = [{ kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-1.rectificacion.base" }, { kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-1.rectificacion.cuota" }] }, { key = "investment-adjustment", heading_key = "modelo.schema.390.form.authored.investment-adjustment.heading", cells = [{ kind = "blank" }, { kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-1.regularizacion-inversiones" }] }, { key = "deduction-total", heading_key = "modelo.schema.390.form.authored.deduction-total.heading", cells = [{ kind = "blank" }, { kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-1.suma-deducciones" }] }] },
+]
+
+[[revisions.2026.form_layouts.pages.sections]]
+id = "deduction-group-2"
+heading_key = "modelo.schema.390.form.authored.deduction-group-2.heading"
+official_heading = "13. IVA deducible: Grupo 2"
+blocks = [
+    { kind = "grid", id = "deductions", columns = [{ key = "base_imponible", heading_key = "modelo.form.column.base_imponible", official_heading = "Base imponible" }, { key = "cuota_deducible", heading_key = "modelo.form.column.cuota_deducible", official_heading = "Cuota deducible" }], rows = [{ key = "domestic-current", heading_key = "modelo.schema.390.form.authored.domestic-current.heading", cells = [{ kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-2.interiores-corrientes.base" }, { kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-2.interiores-corrientes.cuota" }] }, { key = "domestic-investment", heading_key = "modelo.schema.390.form.authored.domestic-investment.heading", cells = [{ kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-2.interiores-inversion.base" }, { kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-2.interiores-inversion.cuota" }] }, { key = "imports-current", heading_key = "modelo.schema.390.form.authored.imports-current.heading", cells = [{ kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-2.importaciones-corrientes.base" }, { kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-2.importaciones-corrientes.cuota" }] }, { key = "imports-investment", heading_key = "modelo.schema.390.form.authored.imports-investment.heading", cells = [{ kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-2.importaciones-inversion.base" }, { kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-2.importaciones-inversion.cuota" }] }, { key = "intra-current", heading_key = "modelo.schema.390.form.authored.intra-current.heading", cells = [{ kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-2.aic-corrientes.base" }, { kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-2.aic-corrientes.cuota" }] }, { key = "intra-investment", heading_key = "modelo.schema.390.form.authored.intra-investment.heading", cells = [{ kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-2.aic-inversion.base" }, { kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-2.aic-inversion.cuota" }] }, { key = "agriculture-compensation", heading_key = "modelo.schema.390.form.authored.agriculture-compensation.heading", cells = [{ kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-2.compensaciones-reagp.base" }, { kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-2.compensaciones-reagp.cuota" }] }, { key = "deduction-adjustment", heading_key = "modelo.schema.390.form.authored.deduction-adjustment.heading", cells = [{ kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-2.rectificacion.base" }, { kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-2.rectificacion.cuota" }] }, { key = "investment-adjustment", heading_key = "modelo.schema.390.form.authored.investment-adjustment.heading", cells = [{ kind = "blank" }, { kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-2.regularizacion-inversiones" }] }, { key = "deduction-total", heading_key = "modelo.schema.390.form.authored.deduction-total.heading", cells = [{ kind = "blank" }, { kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-2.suma-deducciones" }] }] },
+]
+
+[[revisions.2026.form_layouts.pages.sections]]
+id = "deduction-group-3"
+heading_key = "modelo.schema.390.form.authored.deduction-group-3.heading"
+official_heading = "13. IVA deducible: Grupo 3"
+blocks = [
+    { kind = "grid", id = "deductions", columns = [{ key = "base_imponible", heading_key = "modelo.form.column.base_imponible", official_heading = "Base imponible" }, { key = "cuota_deducible", heading_key = "modelo.form.column.cuota_deducible", official_heading = "Cuota deducible" }], rows = [{ key = "domestic-current", heading_key = "modelo.schema.390.form.authored.domestic-current.heading", cells = [{ kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-3.interiores-corrientes.base" }, { kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-3.interiores-corrientes.cuota" }] }, { key = "domestic-investment", heading_key = "modelo.schema.390.form.authored.domestic-investment.heading", cells = [{ kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-3.interiores-inversion.base" }, { kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-3.interiores-inversion.cuota" }] }, { key = "imports-current", heading_key = "modelo.schema.390.form.authored.imports-current.heading", cells = [{ kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-3.importaciones-corrientes.base" }, { kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-3.importaciones-corrientes.cuota" }] }, { key = "imports-investment", heading_key = "modelo.schema.390.form.authored.imports-investment.heading", cells = [{ kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-3.importaciones-inversion.base" }, { kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-3.importaciones-inversion.cuota" }] }, { key = "intra-current", heading_key = "modelo.schema.390.form.authored.intra-current.heading", cells = [{ kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-3.aic-corrientes.base" }, { kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-3.aic-corrientes.cuota" }] }, { key = "intra-investment", heading_key = "modelo.schema.390.form.authored.intra-investment.heading", cells = [{ kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-3.aic-inversion.base" }, { kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-3.aic-inversion.cuota" }] }, { key = "agriculture-compensation", heading_key = "modelo.schema.390.form.authored.agriculture-compensation.heading", cells = [{ kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-3.compensaciones-reagp.base" }, { kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-3.compensaciones-reagp.cuota" }] }, { key = "deduction-adjustment", heading_key = "modelo.schema.390.form.authored.deduction-adjustment.heading", cells = [{ kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-3.rectificacion.base" }, { kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-3.rectificacion.cuota" }] }, { key = "investment-adjustment", heading_key = "modelo.schema.390.form.authored.investment-adjustment.heading", cells = [{ kind = "blank" }, { kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-3.regularizacion-inversiones" }] }, { key = "deduction-total", heading_key = "modelo.schema.390.form.authored.deduction-total.heading", cells = [{ kind = "blank" }, { kind = "casilla", casilla_id = "iva.anual.sector-diferenciado-3.suma-deducciones" }] }] },
+]

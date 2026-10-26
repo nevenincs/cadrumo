@@ -1,0 +1,229 @@
+---
+tags:
+  - '#exec'
+  - '#type-check-fixes'
+date: '2026-10-15'
+modified: '2026-10-15'
+body_schema: 'body-v2'
+body_hash: 'sha256:fccad5d75ce40b60eaa5977761c514f05de13779b0305c61167fc45b3c669537'
+related:
+  - "[[2026-10-15-type-check-fixes-plan]]"
+---
+
+# `type-check-fixes` ledger
+
+## Changes
+
+- `S04` `M` `conftest.py`
+- `S04` `M` `src/cadrumo/core/config.py`
+- `S04` `M` `src/cadrumo/domain/transactions/classification_origin.py`
+- `S04` `verify:` `uv run --no-sync ty check --python .venv/Scripts/python.exe --python-platform linux --output-format concise --color never conftest.py src/cadrumo/core/config.py src/cadrumo/domain/transactions/classification_origin.py` -> `pass`
+- `S04` `verify:` `uv run --no-sync ruff check conftest.py src/cadrumo/core/config.py src/cadrumo/domain/transactions/classification_origin.py` -> `pass`
+- `S04` `verify:` `uv run --no-sync ruff format --check conftest.py src/cadrumo/core/config.py src/cadrumo/domain/transactions/classification_origin.py` -> `pass`
+- `S03` `M` `dev/agent_eval/tests/_real_cli_support.py`
+- `S03` `M` `dev/agent_eval/tests/test_under_declaration_golden.py`
+- `S03` `M` `dev/docs/sequences/tokeniser.py`
+- `S03` `M` `dev/operation_contract_manifest/tests/test_command_operation_join.py`
+- `S03` `M` `dev/operation_contract_manifest/tests/test_command_runtime_requests.py`
+- `S03` `M` `dev/packaging/native/tests/test_transport_contract.py`
+- `S03` `M` `dev/runtime_lifecycle/tests/test_installed_ledger_llm_diagnostics_stdio.py`
+- `S03` `M` `dev/runtime_lifecycle/tests/test_installed_mcp_tui_grant_parity.py`
+- `S03` `M` `dev/runtime_lifecycle/tests/test_modelo_query_reads_mcp_runtime.py`
+- `S03` `M` `dev/runtime_lifecycle/tests/test_reference_reads_runtime_boundary.py`
+- `S03` `M` `dev/runtime_lifecycle/tests/test_runtime_automation_grant_lock_parity.py`
+- `S03` `M` `dev/runtime_lifecycle/tests/test_tui_operations_destination_native.py`
+- `S03` `M` `dev/runtime_lifecycle/tests/test_mcp_sign_in_adapter.py`
+- `S03` `M` `src/cadrumo/domain/modelos/calculation_revision_rendering.py`
+- `S03` `M` `dev/runtime_lifecycle/proof_support.py`
+- `S03` `M` `dev/runtime_lifecycle/agent_live.py`
+- `S03` `M` `dev/runtime_lifecycle/reviewed_operation.py`
+- `S03` `M` `dev/runtime_lifecycle/mcp_proof_support.py`
+- `S03` `M` `dev/runtime_lifecycle/tests/test_agent_live.py`
+- `S03` `M` `dev/packaging/native/update_images.py`
+- `S03` `verify:` `focused ty dev and calculation rendering linux win32 darwin` -> `pass`
+- `S03` `verify:` `focused pyrefly calculation rendering` -> `pass`
+- `S03` `verify:` `focused basedpyright calculation rendering` -> `pass`
+- `S03` `verify:` `Ruff check and format touched S03 files` -> `pass`
+- `S03` `M` `dev/agent_eval/tests/test_suggestion_command_conformance.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/tests/live_command_validation.py`
+- `S03` `verify:` `focused concrete command type repair ty linux win32 darwin` -> `pass`
+- `S03` `verify:` `Ruff concrete command type repair files` -> `pass`
+- `S01` `M` `src/cadrumo_agent_service/adapters/provider_catalog_metadata.py`
+- `S01` `M` `src/cadrumo_agent_service/main.py`
+- `S01` `M` `src/cadrumo_client/commands/custody.py`
+- `S01` `M` `src/cadrumo_client/commands/errors.py`
+- `S01` `M` `src/cadrumo_client/commands/profile_admission.py`
+- `S01` `M` `src/cadrumo_client/commands/recovery_handover.py`
+- `S01` `M` `src/cadrumo_client/commands/suggestions.py`
+- `S01` `M` `src/cadrumo_client/transport/profile_transport.py`
+- `S01` `M` `src/cadrumo_client/transport/service_client.py`
+- `S01` `M` `src/cadrumo_runtime/adapters/tests/process_support.py`
+- `S01` `M` `src/cadrumo_runtime/adapters/tests/test_macos_worker_process.py`
+- `S01` `M` `src/cadrumo_runtime/adapters/tests/test_posix_login_capture.py`
+- `S01` `M` `src/cadrumo_runtime/adapters/tests/test_posix_peer_liveness.py`
+- `S01` `M` `src/cadrumo_runtime/adapters/tests/test_posix.py`
+- `S01` `M` `src/cadrumo_runtime/adapters/tests/test_windows_channel_cleanup.py`
+- `S01` `M` `src/cadrumo_runtime/adapters/tests/test_worker_service_boundary.py`
+- `S01` `M` `src/cadrumo_runtime/application/development_root.py`
+- `S01` `M` `src/cadrumo_runtime/commands/presentation.py`
+- `S01` `M` `src/cadrumo_runtime/commands/profile_admission.py`
+- `S01` `M` `src/cadrumo_runtime/commands/profile_language.py`
+- `S01` `M` `src/cadrumo_runtime/commands/tests/config/runtime_cli.py`
+- `S01` `M` `src/cadrumo_runtime/commands/tests/config/test_auth_diagnostics_report_native.py`
+- `S01` `M` `src/cadrumo_runtime/commands/tests/config/test_profile_recovery_cli.py`
+- `S01` `M` `src/cadrumo_runtime/commands/tests/config/test_runtime_auth_configure_native.py`
+- `S01` `M` `src/cadrumo_runtime/commands/tests/config/test_runtime_automation_change_native.py`
+- `S01` `M` `src/cadrumo_runtime/commands/tests/runtime_profile_cli_fixture.py`
+- `S01` `M` `src/cadrumo_runtime/host/profile_connection_attendance.py`
+- `S01` `M` `src/cadrumo_runtime/host/session_hold.py`
+- `S01` `M` `src/cadrumo_runtime/host/tests/frontend/tui/entrypoints/tui/operations/tests/test_runtime_controller.py`
+- `S01` `M` `src/cadrumo_runtime/host/tests/frontend/tui/entrypoints/tui/tests/test_runtime_workbench_native.py`
+- `S01` `M` `src/cadrumo_runtime/host/tests/test_provider_administration_exclusion.py`
+- `S01` `M` `src/cadrumo_runtime/host/tests/test_service_records.py`
+- `S01` `M` `src/cadrumo_runtime/host/worker_extension_records.py`
+- `S01` `verify:` `focused S01 production ty and development_root strict checkers` -> `pass`
+- `S01` `verify:` `focused runtime test ty linux win32 darwin` -> `pass`
+- `S01` `verify:` `Ruff check and format S01 authored files` -> `pass`
+- `S02` `M` `conftest.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/_isolated_profile_storage_fixtures.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/_ledger_validation_support.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/cli_runner.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/config/tests/test_installation_profiles.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/config/tests/test_profile_readiness_surfaces.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/config/tests/test_runtime_descendant_door.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/config/tests/test_tax_auth_command_ownership.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/conftest.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/portable_api_cli_runtime.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/portable_human_cli_runtime.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/profile_password_cli.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/runtime_profile_backend.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_catalogue_invoice_lifecycle.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_config_capabilities.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_destructive_verbs_require_yes.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_help_without_secrets.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_interrupted_verification_outcome.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_iva_wallet_seed_cli.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_json_error_contract.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_corpus_batch_transform.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_corpus_classification.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_corpus_import_export.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_corpus_import_live.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_corpus_import.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_corpus_journeys.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_corpus_review.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_fx_import.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_identification_operator_input.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_invoice_validation_preconditions.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_link_check_verbs.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_lucia_persona_feedback.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_persona_asesor_review.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_persona_autonoma_close.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_persona_multicurrency.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_persona_yearend_m100.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_preflight_verb.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_ratios_verbs.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_validation_paths.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_live_read_subgroups.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_export_verb.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_history_verb.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_period_tokens.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_review_package_verb.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_typed_observations.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_work_report_verb.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_work_review_envelope.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_work_ux.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_output_language_parity.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_profile_guard_action_recovery.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_profile_lifecycle_navigation.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_profile_lifecycle_verbs.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_profile_session_root_resume.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_reconciliation_export_verb.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_root_grammar_invariants.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_root_help_shape.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_installation.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/frontend/cli/world_provider.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/_profile_authentication_gate.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/common.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/config/reset_cli.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/config/tests/test_censal_certificate_file_operation.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/config/tests/test_google_error_localisation.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/main.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/_cli_surface_profile_fixture.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/_ledger_validation_fixtures.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/cli_fixture_worlds.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/cli_runner.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/conftest.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/ledger_cli.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/profile_world_fixtures.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/review_envelope_support.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/scenario_support.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_active_profile_env_override_name.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_cli_runner.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_cli_surface.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_command_governed_fact_declaration_probe.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_json_error_contract.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_fx_import.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_invoice_validation_projection.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_lineage_handle.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_persona_asesor_review.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_persona_autonoma_close.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_persona_multicurrency.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_persona_yearend_m100.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_preflight_verb.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_ratios_verbs.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_restore_journey.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_split_classification_advisory.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_update_loads_catalogue_once.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_live_read_rendering.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_history_verb.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_period_parsing.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_typed_observation_parsing.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_work_review_envelope.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_operation_ledger_evidence_mutation.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_operation_modelo_maritime_preview.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_operation_modelo_spreadsheet.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_overview.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_api_key_admission.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_authentication_gate.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_rename_maintenance_events.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_setup_incomplete_surface.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_ratios_verbs.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_retired_custody_member_refusal.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_root_grammar_invariants.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_wallet_amount_parser.py`
+- `S02` `M` `src/cadrumo/tests/cli_fixture_ports.py`
+- `S02` `R` `src/cadrumo/entrypoints/cli/tests/test_modelo.py` -> `src/cadrumo_runtime/host/tests/frontend/cli/test_modelo.py`
+- `S02` `R` `src/cadrumo/entrypoints/cli/tests/test_modelo_202_required_binding_gate.py` -> `src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_202_required_binding_gate.py`
+- `S02` `R` `src/cadrumo/entrypoints/cli/tests/test_modelo_action_recovery.py` -> `src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_action_recovery.py`
+- `S02` `R` `src/cadrumo/entrypoints/cli/tests/test_modelo_work_natural_key.py` -> `src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_work_natural_key.py`
+- `S02` `R` `src/cadrumo/entrypoints/cli/tests/test_profile_create_taxpayer_type_paths.py` -> `src/cadrumo_runtime/host/tests/frontend/cli/test_profile_create_taxpayer_type_paths.py`
+- `S02` `R` `src/cadrumo/entrypoints/cli/tests/test_profile_incn_new_entity_paths.py` -> `src/cadrumo_runtime/host/tests/frontend/cli/test_profile_incn_new_entity_paths.py`
+- `S02` `R` `src/cadrumo/entrypoints/cli/tests/test_profile_output_language.py` -> `src/cadrumo_runtime/host/tests/frontend/cli/test_profile_output_language.py`
+- `S02` `R` `src/cadrumo/entrypoints/cli/config/tests/test_live_export_acceptance_payloads.py` -> `src/cadrumo_runtime/host/tests/frontend/cli/config/tests/test_live_export_acceptance_payloads.py`
+- `S02` `R` `src/cadrumo/entrypoints/cli/config/tests/test_login_session_not_persisted_notice.py` -> `src/cadrumo_client/commands/tests/test_login_session_not_persisted_notice.py`
+- `S02` `R` `src/cadrumo/entrypoints/cli/tests/_modelo_review_package_support.py` -> `src/cadrumo/entrypoints/cli/tests/modelo_review_package_support.py`
+- `S02` `R` `src/cadrumo/entrypoints/cli/tests/_profile_lifecycle_support.py` -> `src/cadrumo/entrypoints/cli/tests/profile_lifecycle_support.py`
+- `S02` `R` `src/cadrumo/entrypoints/cli/tests/_profile_storage_fixtures.py` -> `src/cadrumo/entrypoints/cli/tests/profile_storage_fixtures.py`
+- `S02` `R` `src/cadrumo/entrypoints/cli/tests/_modelo_empty_profile_fixture.py` -> `src/cadrumo/entrypoints/cli/tests/modelo_empty_profile_fixture.py`
+- `S02` `verify:` `focused CLI invocation and fixture ty linux win32 darwin` -> `pass`
+- `S02` `verify:` `Ruff check and format current S02 manifest` -> `pass`
+- `S03` `M` `dev/docs/sequences/tests/test_authentication_input.py`
+- `S03` `M` `dev/docs/sequences/tests/test_runner.py`
+- `S03` `M` `dev/runtime_lifecycle/tests/test_service_provider_admin_ingress.py`
+- `S03` `M` `src/cadrumo_agent_service/admin.py`
+- `S03` `verify:` `focused docs program and service AdminTarget ty linux win32 darwin` -> `pass`
+- `S03` `verify:` `Ruff docs service and nominal command followups` -> `pass`
+- `S04` `verify:` `just check-types` -> `pass`
+- `S04` `verify:` `project ty linux win32 darwin after concurrent changes` -> `pass`
+- `S04` `verify:` `attendance freshness ty linux win32 darwin` -> `pass`
+- `S03` `verify:` `typed JSON ingress ty linux win32 darwin and Ruff` -> `pass`
+
+## Notes
+
+- `S03` Verification checkpoint only; shared pre-existing and concurrent refactor edits prevent an isolated commit without staging another writer changes. Evidence .tmp/dev-type-fixes-evidence.json.
+- `S03` Reopened S03 for independent review correction of the concurrently added nominal command cast; current files now use actual Typer command types. Updated evidence .tmp/dev-type-fixes-evidence.json.
+- `S01` Worker manifests preserve touched paths at edit time; concurrent external TUI relocations remain intact. Focused evidence: .tmp/runtime-type-fixes-summary.md and .tmp/runtime-test-type-fixes-evidence.json. No test suite run. Verification checkpoint only: shared edits cannot be isolated into a commit.
+- `S02` Evidence .tmp/cli-type-fixes-evidence.json and .tmp/cli-type-fixes-moves.json. Application fixture definitions moved from `cli_fixture_ports` to `cli_fixture_worlds` while core invocation schemas remain. Touched paths reflect edit-time ownership; later external refactors preserved. No test suite or isolated commit in shared tree.
+- `S03` Latest exact source contracts and verification in .tmp/dev-type-fixes-evidence.json; actual Typer command classes, explicit docs program owners and narrow AdminTarget preserve existing callers and refusals. No test suite run.
+- `S04` Full gate .logs/check-types-clean-20261015.log exit 0. Latest complete project ty `.logs/type-gate-project-*.log` passed; only changed attendance input rechecked with stable hash. Strict production scopes and gate configuration unchanged since full gate. No test suite run. Shared refactor retained uncommitted.
+- `S03` Independent review required real JSON frame validation after fresh ingress test edits. Actual TypeAdapter boundary and nested JsonValue shape guards now checked; latest evidence .tmp/dev-type-fixes-evidence.json. Final hash b9c743211ac6b4cf6c5daf7a73072bfe40ad6193fb9d5ca0a9c8ae01c430e39e. Review PASS, no unresolved high or critical findings.

@@ -1,0 +1,814 @@
+profile:
+  errors:
+    foral_regime: 'Residents in {tax_region} file with the corresponding Hacienda
+      Foral, not with the AEAT: the Basque territories under the Concierto Económico
+      (Ley 12/2002) and Navarra under the Convenio Económico (Ley 28/1990). This CLI
+      does not model foral declarations. See sede.bizkaia.eus (Bizkaia), gipuzkoa.eus/ogasuna
+      (Gipuzkoa), araba.eus/ogasun (Álava), or hacienda.navarra.es (Navarra) depending
+      on your territory.'
+    not_configured: No tax-residence profile is configured for RENTA. Run `aeat config
+      profile edit NAME --tax-residence-ccaa <ccaa>` to configure it.
+  journey:
+    source:
+      censal_review:
+        action: Review census
+        description: Read the taxpayer's own censal record and review any proposed
+          changes before adopting them.
+        title: AEAT census
+      credential_requirement:
+        held: AEAT credential on file
+        missing: Requires AEAT authentication (not configured)
+      filed_history:
+        action: Pull filed history
+        description: Pull the taxpayer's filed-history record from AEAT to carry forward
+          previously declared facts.
+        title: Previous filings
+  keys:
+    activities:
+      description: Business activity (plain text is fine; use the IAE heading if you
+        know it)
+    capabilities:
+      google_export: Enable Google Sheets export?
+      llm_vision: Enable on-host LLM vision for reading invoices?
+    censo:
+      activity_start_date: From what date do you have filing obligations / when did
+        you register? (YYYY-MM-DD, optional)
+      large_company: Large-company condition
+      public_administration_budget_gt_6000000: Public-administration budget over 6,000,000
+        EUR
+    contact:
+      postcode: Tax address postcode
+    description: Profile configuration keys and their descriptions
+    identity:
+      legal_name: Legal or company name for export headers
+      name: Display name shown in local reviews
+      notes: Notes for your own records (optional)
+      surnames: Surnames or company name for export headers
+      tax_id: Tax identifier (NIF/CIF/DNI/NIE) for the active profile
+    irpf:
+      art109_activity_income_withholding_ge_70pct: Art. 109 70% activity-income coverage
+        exception applies
+      estimation_regime: IRPF estimation regime
+      objective_estimation_modulos_iae_epigraph: IAE epigraph for objective-estimation
+        modules
+      objective_estimation_modulos_module_1_units: Annual module 1 units
+      objective_estimation_modulos_module_2_units: Annual module 2 units
+      objective_estimation_modulos_module_3_units: Annual module 3 units
+      objective_estimation_modulos_module_4_units: Annual module 4 units
+      objective_estimation_modulos_module_5_units: Annual module 5 units
+      objective_estimation_modulos_module_6_units: Annual module 6 units
+      objective_estimation_modulos_module_7_units: Annual module 7 units
+      special_regime: IRPF special regime (Beckham Law / Art. 93 LIRPF)
+      special_regime_start_date: Special regime election date (YYYY-MM-DD)
+    iva:
+      cash_accounting_regime_enrolled: Are you enrolled in the special IVA cash-accounting
+        regime?
+      does_intracomunitario: Conducts intra-community operations
+      group_dominant_entity_enrolled: Enrolled as the dominant entity of an IVA group
+      group_member_enrolled: Enrolled as a member entity of an IVA group
+      hydrocarbon_deposit_advance_payment_deduction_entitled: Are you entitled to
+        deduct advance payments under the hydrocarbon tax-deposit regime?
+      intracommunity_operations_exceed_50000_eur: Intra-community operations exceed
+        50,000 EUR
+      m303_regime_composition: Which Modelo 303 regime composition applies?
+      oss_enrolled: Enrolled in OSS
+      redeme_enrolled: Registered in REDEME (monthly IVA refund register)
+      regime: Which IVA regime applies?
+      roi_enrolled: Enrolled in ROI
+      sii_enrolled: Enrolled in the SII (immediate information supply)
+      voluntary_sii_enrolled: Are you voluntarily enrolled in SII?
+    obligations:
+      bienes_extranjero_above_threshold: Foreign-held assets exceed the Modelo 720
+        threshold
+      monedas_virtuales_extranjero_above_threshold: Virtual currencies held abroad
+        above Modelo 721 threshold
+      premio_loteria_gravamen_especial_sin_retencion: Lottery or betting prize subject
+        to the gravamen especial obtained without retención or ingreso a cuenta (Modelo
+        136)
+      premio_loteria_gravamen_especial_trimestres: Quarters in which such a lottery
+        or betting prize was cashed (Modelo 136), as YYYY-nT tokens separated by |
+      third_party_transactions_above_347_threshold: In the calendar year the Modelo
+        347 covers, did your operations with any one person or entity exceed EUR 3,005.06
+        (EUR 300.51 for amounts you collect on behalf of third parties), counting
+        sales and purchases separately?
+    preferences:
+      output_language: CLI output language for this profile
+    renta_family:
+      descendants_eu_eea_deduction: EU/EEA descendants in family-unit deduction
+      minor_children_in_unit: Minor children in family unit
+      situacion_familiar: Family situation (Art. 82 LIRPF)
+    renta_filing:
+      declaration_type: Taxation type code
+    renta_spouse:
+      birth_date: Spouse birth date
+      disability_grade: Spouse disability grade (if applicable)
+      eu_eea_country: Spouse EU/EEA country
+      eu_eea_resident: Spouse is EU/EEA resident
+      name: Spouse given name
+      non_resident_irpf: Spouse is non-resident (not an IRPF taxpayer)
+      sex: Spouse sex code
+      surnames: Spouse surnames
+      tax_id: Spouse NIF/NIE
+    renta_taxpayer:
+      birth_date: First taxpayer birth date
+      death_date: First taxpayer death date
+      disability_grade: First taxpayer disability code
+      marital_status: First taxpayer marital status
+      marriage_date: Marriage start date (YYYY-MM-DD)
+      sex: First taxpayer sex code
+    tax:
+      id: Tax identifier (NIF/CIF/DNI/NIE)
+    tax_residence:
+      ccaa: Tax-residence autonomous community
+      jurisdiction_scope: Which tax territory applies to this Modelo 303?
+    taxpayer_type:
+      country_of_fiscal_residence: Country of fiscal residence (ISO 3166-1 alpha-2
+        code, e.g. GB, DE, FR)
+      declaration_roles: Does the declaring entity hold any of these institutional
+        roles for Modelo 347 (third-party operations) purposes?
+      entity_type: Entity type
+      fiscal_residency: Fiscal residency category
+      incn_prior_12_months: What was your net turnover over the past 12 months? (in
+        euros, optional)
+      irpf_income_categories: IRPF income categories
+      legal_entity_form: Legal form
+      ley_49_2002_special_regime_option_date: Date declared for the Ley 49/2002 special-regime
+        option
+      ley_49_2002_special_regime_option_declared: Has the entity filed the Modelo
+        036 option for the Title II Ley 49/2002 special fiscal regime?
+      ley_49_2002_special_regime_renunciation_date: Date declared for the Ley 49/2002
+        special-regime renunciation
+      ley_49_2002_special_regime_renunciation_declared: Has the entity filed a Modelo
+        036 renunciation of the Title II Ley 49/2002 special fiscal regime?
+      new_entity_first_two_profit_periods: Is this a newly-created legal entity in
+        one of its first two profit-making tax periods?
+      representante_fiscal_nif: NIF/NIE of fiscal representative in Spain (required
+        outside EU/EEA)
+      representante_fiscal_nombre: Name of fiscal representative in Spain
+    withholding:
+      has_employees: Has employees and pays salaries subject to withholding
+      modelo_111_no_retenciones_periods: Modelo 111 periods with no withholding
+      modelo_115_no_relevant_payment_periods: Modelo 115 periods with no relevant
+        payment
+      pays_capital_income_with_retencion: Pays capital income with withholding
+      pays_professionals_with_retencion: Pays professionals with withholding
+      pays_rent_with_retencion: Pays local rent with withholding
+  schema:
+    field:
+      activities:
+        cnae:
+          label: CNAE code
+        description:
+          label: Activity description
+        iae_epigraph:
+          label: IAE epigraph
+      attribution_entity:
+        legal_form:
+          choices:
+            comunidad_bienes: Joint ownership (comunidad de bienes)
+            herencia_yacente: Undivided estate (herencia yacente)
+            other: Other
+            sociedad_civil: Civil partnership (sociedad civil)
+          label: Attribution entity legal form
+      attribution_entity_socios:
+        base_imponible_assigned:
+          label: Assigned taxable base
+        clave:
+          label: Income line clave (Modelo 184)
+        clave_declarado:
+          label: Property ownership key
+        codigo_provincia:
+          label: Province code
+        country_of_residence:
+          label: Country of residence (non-resident without permanent establishment
+            only)
+        dias_arrendamiento:
+          label: Days the property was leased
+        dias_miembro:
+          label: Number of days as member
+        domicilio_fiscal:
+          label: Member's tax domicile
+        miembro_a_31_diciembre:
+          label: Member at 31 December
+        name:
+          label: Member name
+        naturaleza_inmueble:
+          label: Property nature
+        nif:
+          label: Member NIF
+        participe_clave:
+          label: Type of member (Modelo 184 clave)
+        porcentaje_titularidad_inmueble:
+          label: Property ownership percentage
+        reduccion:
+          label: Reduction applicable to the income
+        referencia_catastral:
+          label: Cadastral reference
+        rendimiento_neto_minorado_agricola_eo:
+          label: Reduced agricultural net yield (estimación objetiva)
+        rendimiento_neto_previo_eo:
+          label: Prior net yield (estimación objetiva)
+        role:
+          choices:
+            comunero: Co-owner
+            participe: Participant
+            socio: Partner
+          label: Member role
+        share_pct:
+          label: Participation percentage
+        situacion_inmueble:
+          label: Property location status
+        subclave:
+          label: Subcode of the income line (Modelo 184)
+      attribution_received:
+        base_imponible_attributed:
+          label: Attributed taxable base
+        entity_name:
+          label: Attributing entity name
+        entity_nif:
+          label: Attributing entity NIF
+        filing_year:
+          label: Attribution filing year
+        share_pct:
+          label: Attributed participation percentage
+      auth:
+        clave_movil_route:
+          label: Cl@ve Móvil route
+        dni_nie:
+          label: DNI or NIE for Cl@ve
+        fecha_validez:
+          label: Validity date
+        numero_soporte:
+          label: Support number
+        provider:
+          label: Authentication method
+      capabilities:
+        cloud_evidence_upload:
+          label: Off-host document reading
+        google_export:
+          label: Google export
+        llm_vision:
+          label: On-host image reading
+      censo:
+        activity_end_date:
+          label: Activity end date
+        activity_start_date:
+          label: Activity start date
+        divergencia:
+          label: Censo divergence rows
+        elected_withholding_pct:
+          label: Elected withholding rate
+        establecimiento_type:
+          choices:
+            arrendado: Rented
+            cedido_gratuitamente: Provided free of charge
+            propio: Owned
+          label: Establishment type
+        large_company:
+          label: Large-company condition
+        public_administration_budget_gt_6000000:
+          label: Public-administration budget over 6.000.000 EUR
+        status:
+          choices:
+            alta: Registered
+            baja: Deregistered
+            modificacion: Details changed
+          label: Censo status
+      contact:
+        contact_person_name:
+          label: Contact person surnames and given name
+        contact_person_phone:
+          label: Contact person telephone
+        fiscal_address:
+          label: Fiscal address
+        fiscal_address_cadastral_reference:
+          label: Cadastral reference of the fiscal address
+        fiscal_address_is_habitual_vivienda:
+          label: Fiscal address is the habitual residence
+        postcode:
+          label: Postcode
+      identity:
+        email:
+          label: Contact email
+        legal_name:
+          label: Legal or company name
+        name:
+          label: Given name
+        notes:
+          label: Notes
+        surnames:
+          label: Surnames
+        tax_id:
+          help:
+            what: 'Your tax identification number: the NIF of your DNI, your NIE if
+              you are a foreign national, or the NIF of an entity.'
+            where: On your DNI or NIE card, or on the NIF card issued by the AEAT.
+              It also appears on any past declaration or AEAT letter.
+            why: Every declaration is filed under this number; it is how the AEAT
+              identifies you.
+          label: Tax ID (NIF/NIE/CIF)
+      irpf:
+        activity_kind:
+          choices:
+            profesional: Professional activity
+            sectorial: Sector activity (art. 95 RIRPF sector rates)
+          label: Activity type
+        art109_activity_income_withholding_ge_70pct:
+          label: Meets Art. 109 RIRPF 70% exception
+        estimation_regime:
+          choices:
+            directa_normal: Direct assessment, normal
+            directa_simplificada: Direct assessment, simplified
+            objetiva: Objective assessment (módulos)
+          label: Estimation regime
+        objective_estimation_modulos_iae_epigraph:
+          label: IAE epigraph (modules)
+        objective_estimation_modulos_module_1_units:
+          label: Module 1 units
+        objective_estimation_modulos_module_2_units:
+          label: Module 2 units
+        objective_estimation_modulos_module_3_units:
+          label: Module 3 units
+        objective_estimation_modulos_module_4_units:
+          label: Module 4 units
+        objective_estimation_modulos_module_5_units:
+          label: Module 5 units
+        objective_estimation_modulos_module_6_units:
+          label: Module 6 units
+        objective_estimation_modulos_module_7_units:
+          label: Module 7 units
+        objective_estimation_prior_year_agri_livestock_forest_gross_eur:
+          label: Prior-year agricultural, livestock and forestry income
+        objective_estimation_prior_year_gross_income_eur:
+          label: Prior-year gross income (modules)
+        objective_estimation_prior_year_invoice_gross_income_eur:
+          label: Prior-year invoiced income (modules)
+        objective_estimation_prior_year_purchases_eur:
+          label: Prior-year purchases (modules)
+        pagadores_count:
+          label: Number of payers
+        pagadores_secondary_income:
+          label: Income from secondary payers
+        pagadores_total_work_income:
+          label: Total work income
+        plantilla_media:
+          label: Average workforce by calendar year
+        professional_income_withholding_ge_70pct:
+          label: Professional withholding reaches 70%
+        special_regime:
+          choices:
+            general: General regime
+            impatriado: Inbound expatriate regime (art. 93 LIRPF)
+          label: Special regime
+        special_regime_start_date:
+          label: Special regime start date
+      iva:
+        autoconsumo_promotor_base:
+          label: Self-supply taxable base (developer)
+        cash_accounting_regime_enrolled:
+          help:
+            what: Whether you opted into the special cash-accounting IVA regime (criterio
+              de caja).
+            where: It is chosen on modelo 036 and shows in your census details. If
+              you did not opt in, the answer is No.
+            why: Under it, IVA is due when invoices are paid rather than when they
+              are issued, which changes each period's figures.
+          label: Cash-accounting regime enrolment
+        does_intracomunitario:
+          label: Intracommunity operations
+        group_dominant_entity_enrolled:
+          label: IVA group dominant entity (Modelo 353)
+        group_member_enrolled:
+          label: IVA group member (Modelo 322)
+        hydrocarbon_deposit_advance_payment_deduction_entitled:
+          help:
+            what: Whether you may deduct IVA advance payments made when taking hydrocarbons
+              out of a tax-deposit regime.
+            where: It only concerns businesses that take fuel out of a tax warehouse
+              (depósito fiscal). Most taxpayers answer No.
+            why: Those advance payments are deducted in the IVA declaration, so the
+              entitlement changes the amount due.
+          label: Hydrocarbon tax-deposit advance-payment deduction entitlement
+        intracommunity_operations_exceed_50000_eur:
+          label: Intracommunity operations over 50,000 EUR
+        m303_regime_composition:
+          choices:
+            general: General regime only
+            mixed: General and simplified together
+            simplified: Simplified regime only
+          help:
+            what: 'Which IVA regimes your modelo 303 combines: general only, simplified
+              only, or both.'
+            where: It follows from the IVA regime of each of your activities in your
+              census registration.
+            why: Modelo 303 has a separate part for each regime; this decides which
+              parts are filled in.
+          label: Modelo 303 regime composition
+        oss_enrolled:
+          label: OSS/IOSS enrolment
+        redeme_enrolled:
+          help:
+            what: Whether you are registered in REDEME, the register for monthly IVA
+              refunds.
+            where: It is requested on modelo 036 and shows in your census details.
+              If you never requested it, the answer is No.
+            why: Registration makes your IVA declaration monthly instead of quarterly
+              and makes SII mandatory.
+          label: REDEME enrolment
+        regime:
+          choices:
+            EXENTO: Exempt
+            GENERAL: General
+            REAGP: Agriculture, livestock and fishing special regime (REAGP)
+            RECARGO_EQUIVALENCIA: Equivalence surcharge
+            SIMPLIFICADO: Simplified
+          help:
+            what: The IVA (VAT) regime your activity is registered under.
+            where: On your census registration (modelo 036 or 037), or in your census
+              details at the AEAT electronic office.
+            why: It decides which IVA declarations you file and how IVA is calculated
+              on your sales and purchases.
+          label: IVA regime
+        roi_enrolled:
+          label: ROI/VIES enrolment
+        sii_enrolled:
+          label: SII enrolment
+        voluntary_sii_enrolled:
+          help:
+            what: Whether you voluntarily joined SII, the immediate electronic supply
+              of your IVA record books to the AEAT.
+            where: Voluntary membership is requested on modelo 036 and shows in your
+              census details. If you never requested it, the answer is No.
+            why: SII members keep their IVA books online with the AEAT, which changes
+              some obligations and deadlines.
+          label: Voluntary SII enrolment
+      maritime_worker:
+        annual_salary:
+          label: Annual salary
+        exemption_path_rebeca:
+          label: REBECA exemption route
+        gross_navigation_income:
+          label: Gross navigation income
+        pending_eu_clearance:
+          label: Pending EU state-aid clearance
+        qualifying_days:
+          label: Qualifying days
+        retmar_registered:
+          label: RETMAR registration
+        tuna_fleet:
+          label: Tuna fleet
+        vessel_flag:
+          choices:
+            ES: Spanish flag
+            foreign: Foreign flag
+          label: Vessel flag state
+        vessel_registry:
+          choices:
+            REBECA: Canary Islands Special Register (REBECA)
+            other: Other
+            rebeca_eu_eea: REBECA company, vessel in another EU/EEA register
+            scheduled_canary_route: Scheduled Canary Islands - mainland route
+          label: Vessel registry
+        waters_type:
+          choices:
+            international: International waters
+            national: National waters
+          label: Waters type
+        worker_class:
+          choices:
+            trabajador_del_mar: Seafarer
+          label: Maritime worker classification
+      obligations:
+        bienes_extranjero_above_threshold:
+          label: Modelo 720 threshold exceeded
+        monedas_virtuales_extranjero_above_threshold:
+          label: Modelo 721 threshold exceeded
+        premio_loteria_gravamen_especial_sin_retencion:
+          label: Lottery prize without retención (Modelo 136)
+        premio_loteria_gravamen_especial_trimestres:
+          label: Prize quarters (Modelo 136)
+        third_party_transactions_above_347_threshold:
+          label: 'Modelo 347 threshold exceeded: EUR 3,005.06 per person or entity
+            in the calendar year (EUR 300.51 for collections on behalf of third parties)'
+      preferences:
+        output_language:
+          label: Output language
+      properties:
+        cadastral_reference:
+          label: Cadastral reference
+        use_type:
+          choices:
+            habitual: Main home
+            imputed_income: Imputed income (not rented out)
+            mixed: Mixed use
+            other: Other
+            rental: Rented out
+          label: Property use
+      provenance:
+        source:
+          choices:
+            aeat_censo_read: Read from the AEAT census
+            censo_artefact_g313: Read from a census certificate you provided
+            manual_cli: Entered by hand
+            modelo_036_import: Imported from modelo 036
+            registry_inference: Derived from registry rules
+            setup_wizard: Setup wizard
+          label: Data source
+        valid_from:
+          label: Valid from
+        valid_to:
+          label: Valid to
+      renta_family:
+        anualidades_alimentos_euros:
+          label: Court-ordered child maintenance annuities paid
+        ascendants:
+          label: Ascendants
+        cotizaciones_ss_madre_2024:
+          label: Mother's Social Security contributions (2024)
+        descendants:
+          label: Descendants
+        descendants_eu_eea_deduction:
+          label: EU/EEA descendant deduction
+        descendiente:
+          label: Descendant
+        descendientes_count:
+          label: Descendant count
+        madrid_nacimiento_adopcion_eligible_count:
+          label: Madrid birth/adoption deduction count
+        minor_children_in_unit:
+          label: Minor children in the household
+        situacion_familiar:
+          choices:
+            casado: Married
+            pareja_hecho_no_registrada: Unregistered domestic partnership
+            pareja_hecho_registrada: Registered domestic partnership
+            separado_divorciado: Separated or divorced
+            soltero: Single
+          label: Family situation
+        unidad_familiar_otros_miembros_base:
+          label: Other household members' taxable base (Madrid)
+      renta_filing:
+        declaration_type:
+          label: Declaration type
+      renta_rental:
+        reduccion_art_23_2_tier_2024:
+          choices:
+            tier-50: 50 % reduction
+            tier-60: 60 % reduction
+            tier-70: 70 % reduction
+            tier-90: 90 % reduction
+          label: Rental reduction tier (art. 23.2)
+      renta_spouse:
+        birth_date:
+          label: Spouse birth date
+        disability_grade:
+          label: Spouse disability grade
+        eu_eea_country:
+          label: Spouse EU/EEA country
+        eu_eea_resident:
+          label: Spouse EU/EEA resident
+        name:
+          label: Spouse given name
+        non_resident_irpf:
+          label: Spouse non-resident (not IRPF taxpayer)
+        sex:
+          choices:
+            H: Man
+            M: Woman
+          label: Spouse sex
+        surnames:
+          label: Spouse surnames
+        tax_id:
+          label: Spouse tax ID (NIF/NIE)
+      renta_taxpayer:
+        birth_date:
+          label: Birth date
+        death_date:
+          label: Death date
+        disability_grade:
+          label: Disability grade
+        marital_status:
+          label: Marital status
+        marriage_date:
+          label: Marriage start date
+        marriage_full_year:
+          label: Married full year (derived)
+        marriage_month_end:
+          label: Marriage end month (derived)
+        marriage_month_start:
+          label: Marriage start month (derived)
+        sex:
+          choices:
+            H: Man
+            M: Woman
+          label: Sex
+      tax_residence:
+        ccaa:
+          choices:
+            andalucia: Andalusia
+            aragon: Aragon
+            asturias: Asturias
+            baleares: Balearic Islands
+            canarias: Canary Islands
+            cantabria: Cantabria
+            castilla_la_mancha: Castilla-La Mancha
+            castilla_y_leon: Castilla y León
+            cataluna: Catalonia
+            comunidad_valenciana: Valencian Community
+            extremadura: Extremadura
+            galicia: Galicia
+            la_rioja: La Rioja
+            madrid: Madrid
+            murcia: Murcia
+          label: Autonomous community of residence (CCAA)
+        jurisdiction_scope:
+          choices:
+            common_regime: Common territory
+            foral_unsupported: Foral territory (Basque Country or Navarre) - not supported
+              yet
+          help:
+            what: Whether your taxes follow the common territory or a foral territory
+              (Basque Country or Navarre).
+            where: 'It follows from your fiscal address: an address in Álava, Bizkaia,
+              Gipuzkoa or Navarre is foral; elsewhere in Spain it is common territory.'
+            why: It decides which tax administration and rules apply. Foral territories
+              file with their own tax office, which is not supported yet.
+          label: Territorial regime
+      taxpayer_type:
+        country_of_fiscal_residence:
+          label: Country of fiscal residence
+        declaration_roles:
+          label: Third-party declaring roles (Modelo 347)
+        entity_type:
+          choices:
+            attribution_entity: Entity under income attribution
+            legal_entity: Legal entity (company)
+            natural_person: Individual
+          label: Entity type
+        fiscal_residency:
+          choices:
+            non_resident_irnr: Non-resident (IRNR)
+            resident_irpf: Resident in Spain (IRPF)
+          label: Fiscal residency
+        incn_prior_12_months:
+          label: Net turnover of the prior 12 months
+        irpf_income_categories:
+          label: IRPF income categories
+        legal_entity_form:
+          choices:
+            cooperativa: Cooperative
+            other: Other
+            sa: Public limited company (S.A.)
+            sal: Employee-owned public company (S.A.L.)
+            sin_fines_lucrativos: Non-profit entity
+            sl: Limited company (S.L.)
+            sll: Employee-owned limited company (S.L.L.)
+            sociedad_civil_mercantil: Civil partnership with a commercial purpose
+          label: Legal form
+        ley_49_2002_special_regime_option_date:
+          label: Ley 49/2002 option date
+        ley_49_2002_special_regime_option_declared:
+          label: Ley 49/2002 regime opted for
+        ley_49_2002_special_regime_renunciation_date:
+          label: Ley 49/2002 renunciation date
+        ley_49_2002_special_regime_renunciation_declared:
+          label: Ley 49/2002 regime renounced
+        new_entity_first_two_profit_periods:
+          label: In one of the first two profit periods
+        representante_fiscal_nif:
+          label: Fiscal representative NIF
+        representante_fiscal_nombre:
+          label: Fiscal representative name
+        sal_capital_social:
+          label: Share capital
+        sal_reserva_especial_dotada:
+          label: Special reserve already provisioned
+        sal_socios_trabajadores_count:
+          label: Worker-shareholder count
+        tributacion_estado_porcentaje:
+          label: State taxation percentage
+      usage_ratios:
+        business_ratio:
+          label: Business-use ratio
+        category_id:
+          label: Category
+      vivienda_office:
+        office_m2:
+          label: Office floor area (m2)
+        total_m2:
+          label: Total floor area (m2)
+      withholding:
+        colegio_concertado:
+          label: Is a colegio concertado
+        has_employees:
+          label: Has employees
+        modelo_111_no_retenciones_periods:
+          label: Modelo 111 no-withholding periods
+        modelo_115_no_relevant_payment_periods:
+          label: Modelo 115 no-relevant-payment periods
+        pays_capital_income_with_retencion:
+          label: Pays capital income with withholding
+        pays_professionals_with_retencion:
+          label: Pays professionals with withholding
+        pays_rent_with_retencion:
+          label: Pays rent with withholding
+    section:
+      activities:
+        summary: The economic activities you carry out, one row per activity.
+        title: Business activities
+      attribution_entity:
+        summary: The legal form of an entity under income attribution (comunidad de
+          bienes, sociedad civil) that you run.
+        title: Attribution entity legal shape
+      attribution_entity_socios:
+        summary: The partners of that entity and the share of income attributed to
+          each.
+        title: Attribution entity socios
+      attribution_received:
+        summary: Income attributed to you by entities in which you are a partner.
+        title: Attribution received from entities
+      auth:
+        summary: 'How you identify yourself to the AEAT: certificate, Cl@ve Móvil
+          or Cl@ve PIN.'
+        title: AEAT authentication
+      capabilities:
+        summary: Which optional services this profile may use, such as reading scanned
+          documents on this machine.
+        title: Service capabilities
+      censo:
+        summary: Your registration in the AEAT census (modelo 036/037) and its dates.
+        title: Censo and enrollment
+      contact:
+        summary: Where the AEAT can reach you and your fiscal address.
+        title: Contact and fiscal address
+      identity:
+        summary: 'Your name and NIF: who the declarations are prepared for.'
+        title: Identity
+      irpf:
+        summary: How your personal income tax is calculated and how much tax is withheld
+          from your income.
+        title: IRPF and withholding
+      iva:
+        summary: Your IVA (VAT) regime and how often you file it.
+        title: IVA profile
+      maritime_worker:
+        summary: 'Only for seafarers: the classification that decides special deductions.'
+        title: Maritime worker classification
+      obligations:
+        summary: Thresholds that decide whether you must file certain declarations.
+        title: Filing obligation thresholds
+      preferences:
+        summary: How the application talks to you, such as the language of every screen.
+        title: Operator preferences
+      properties:
+        summary: Properties you own or rent out, one row per property.
+        title: Properties and rental
+      provenance:
+        summary: Where the profile data came from and from when it applies.
+        title: Provenance and effective dating
+      renta_family:
+        summary: Children and other relatives who can give you family allowances.
+        title: Family (Renta)
+      renta_filing:
+        summary: How you file your annual income tax return (Renta).
+        title: Filing context (Renta)
+      renta_rental:
+        summary: Context for rental income in your annual return.
+        title: Rental context (Renta)
+      renta_spouse:
+        summary: Your spouse's details, needed for a joint return.
+        title: Spouse (Renta)
+      renta_taxpayer:
+        summary: Personal circumstances of the taxpayer used in the annual return.
+        title: Taxpayer (Renta)
+      tax_residence:
+        summary: Where you are tax resident, which decides the rules and territory
+          that apply.
+        title: Tax residence and jurisdiction
+      taxpayer_type:
+        summary: What kind of taxpayer you are and which types of income you receive.
+        title: Taxpayer entity type and income categories
+      usage_ratios:
+        summary: The business-use share of shared assets such as a car or a phone.
+        title: Usage ratios and deductibility
+      vivienda_office:
+        summary: Whether part of your main home is used as an office for your activity.
+        title: Home-office use of the habitual residence
+      withholding:
+        summary: Tax you must withhold when you pay others, such as employees or landlords.
+        title: Withholding payer obligations
+  validation:
+    boolean_field_invalid: Boolean field is invalid
+    conditional_required_field_missing: Conditionally required field is missing
+    conditionally_forbidden_field: Conditionally forbidden field
+    derived_field_not_editable: Derived field is not editable
+    effective_window_end_not_enforced: Effective-window end is not enforced
+    effective_window_unused: Effective window is unused
+    indexed_instance_invalid: Indexed instance is invalid
+    invalid_date_value: Invalid date value
+    invalid_email_value: Invalid email value
+    invalid_enum_value: Invalid enum value
+    modelo_work_profile_baseline_missing: Modelo work profile baseline is missing
+    numeric_field_invalid: Numeric field is invalid
+    required_field_missing: Required profile field missing.
+    unknown_field: Unknown field

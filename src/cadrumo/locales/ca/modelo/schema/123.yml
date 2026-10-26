@@ -1,0 +1,101 @@
+modelo:
+  schema:
+    '123':
+      casilla:
+        continuidad:
+          base-rentas-dividendos:
+            label: Base dividends i participacions
+          base-rentas-resto:
+            label: Base resta de rendes
+          cuota-a-ingresar:
+            label: Resultat a ingressar
+          ingresos-ejercicios-anteriores:
+            label: Ingressos d'exercicis anteriors
+          numero-rentas-dividendos:
+            label: Nombre de rendes dividends i participacions
+          numero-rentas-resto:
+            label: Nombre de la resta de rendes
+          numero-rentas-total:
+            label: Nombre total de rendes
+          perceptor-count:
+            label: Nombre de perceptors
+          regularizacion:
+            label: Regularització
+          resultado-anteriores-autoliquidaciones:
+            label: Resultat d'autoliquidacions anteriors
+          retenciones-rentas-dividendos:
+            label: Retencions dividends i participacions
+          retenciones-rentas-resto:
+            label: Retencions resta de rendes
+          suma-retenciones-regularizacion:
+            label: Suma de retencions i regularització
+      field:
+        official_name: Retencions i ingressos a compte de l'IRPF, l'Impost sobre Societats
+          i l'IRNR d'establiments permanents. Determinats rendiments del capital mobiliari
+          o determinades rendes.
+        title: Retencions sobre capital mobiliari
+      form:
+        column:
+          base: Base de retencions i ingressos a compte
+          dividendos: Dividends i altres rendes de participació en fons propis d’entitats
+          ingresos-anteriores: Ingressos d’exercicis anteriors
+          numero-perceptores: Nombre de perceptors
+          otras-rentas: Resta de rendes
+          regularizacion: Regularització
+          retenciones: Retencions i ingressos a compte
+          totales: Totals
+        context:
+          apellidos: Cognoms o raó social
+          declaracion-complementaria: Autoliquidació complementària
+          ejercicio: Exercici
+          iban: Codi IBAN
+          justificante-anterior: Núm. de justificant de l’autoliquidació anterior
+          nif: NIF
+          nombre: Nom
+          nombre-completo: Cognoms i nom o raó social
+          periodo: Període
+        page:
+          dr-12301:
+            heading: Retencions sobre rendiments del capital mobiliari i determinades
+              rendes
+        row:
+          base: Base de retencions i ingressos a compte
+          numero-rentas: Nombre de rendes
+          periodificacion: Periodificació
+          retenciones: Retencions i ingressos a compte
+        section:
+          complementaria:
+            heading: Complementària (6)
+          devengo:
+            heading: Meritació (2)
+          identificacion:
+            heading: Identificació (1)
+          ingreso:
+            heading: Ingrés (4)
+          liquidacion:
+            heading: Liquidació (3)
+      revision:
+        2019-2023:
+          casilla:
+            '02':
+              label: Base de retencions i ingressos a compte
+            '03':
+              label: Retencions i ingressos a compte
+          construct:
+            modelo-123-capital-withholding:
+              field:
+                title: 'Model 123: retencions sobre rendiments del capital mobiliari
+                  (exercicis 2019 a 2023)'
+          field:
+            label: Ordre EHA/3435/2007, exercicis 2019 a 2023
+        2024-y-siguientes:
+          casilla:
+            09:
+              label: Retencions total
+          construct:
+            modelo-123-capital-withholding:
+              field:
+                title: Model 123 retencions i ingressos a compte sobre rendiments
+                  del capital mobiliari
+          field:
+            label: Ordre HAC/56/2024, exercicis 2024 i següents

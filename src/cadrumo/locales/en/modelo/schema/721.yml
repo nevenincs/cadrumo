@@ -1,0 +1,37 @@
+modelo:
+  schema:
+    '721':
+      casilla:
+        continuidad:
+          custodio-nombre:
+            label: Name or company name of the foreign virtual currency custodian
+          custodio-pais:
+            label: Custodian's country code (ISO 3166-1 alpha-2)
+          filing-year:
+            label: Tax year the foreign virtual currency return refers to
+          moneda-virtual-clave-token:
+            label: Virtual currency identifier (ticker / token ID, e.g. BTC, ETH)
+          moneda-virtual-saldo-31-diciembre:
+            label: Balance or value of the virtual currency at 31 December, expressed
+              in euros
+          moneda-virtual-saldo-inicio:
+            label: Balance or value of the virtual currency at the start of the period
+              (for significant variations)
+          tipo-declaracion:
+            label: Type of return (original / supplementary / replacement)
+      construct:
+        modelo-721-informative:
+          field:
+            title: 'Modelo 721: informative return of virtual currencies held abroad
+              through a custodian'
+      field:
+        official_name: Modelo 721. Informative return on virtual currencies located
+          abroad.
+        title: Virtual currencies located abroad (annual informative return)
+      revision:
+        '2023':
+          field:
+            label: Modelo 721, tax year 2023 (Order HFP/886/2023)
+        '2024':
+          field:
+            label: Modelo 721, tax year 2024 (annex replaced by Order HAC/1504/2024)

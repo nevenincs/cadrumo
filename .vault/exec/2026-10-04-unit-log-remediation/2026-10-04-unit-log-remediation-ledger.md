@@ -1,0 +1,402 @@
+---
+tags:
+  - '#exec'
+  - '#unit-log-remediation'
+date: '2026-10-04'
+modified: '2026-10-05'
+body_schema: 'body-v2'
+body_hash: 'sha256:bc34e89f9ccd814b1b8c999b7486eca5318889d4865a4cc61a9ff9eb1b750d02'
+related:
+  - "[[2026-10-04-unit-log-remediation-plan]]"
+---
+
+# `unit-log-remediation` ledger
+
+## Changes
+
+- `S03` `M` `src/cadrumo/application/modelo/calculation_summary_presentation.py`
+- `S03` `M` `src/cadrumo/application/modelo/export.py`
+- `S03` `M` `src/cadrumo/application/modelo/tests/test_calculation_summary_presentation.py`
+- `S03` `M` `src/cadrumo/locales/en/application.yml`
+- `S03` `M` `src/cadrumo/locales/es/application.yml`
+- `S03` `M` `src/cadrumo/locales/ca/application.yml`
+- `S03` `M` `src/cadrumo/locales/hu/application.yml`
+- `S03` `verify:` `scoped Ruff check on lead-owned files` -> `pass`
+- `S03` `verify:` `scoped Ruff format --check on lead-owned files` -> `pass`
+- `S03` `verify:` `scoped ty check with explicit Python 3.13 interpreter on lead-owned files` -> `pass`
+- `S03` `verify:` `scoped git diff --check on lead-owned files` -> `pass`
+- `S06` `M` `src/cadrumo/application/modelo/iva_wallet_gate.py`
+- `S06` `M` `src/cadrumo/application/modelo/_calculation_preparation.py`
+- `S06` `M` `src/cadrumo/application/modelo/calculation_actions.py`
+- `S06` `M` `src/cadrumo/application/modelo/verification_actions.py`
+- `S06` `M` `src/cadrumo/application/modelo/verification_gate_findings.py`
+- `S06` `M` `src/cadrumo/application/modelo/filing_actions.py`
+- `S06` `M` `src/cadrumo/adapters/persistence/profile/tests/filed_capture_history_support.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_iva_wallet_engine_integration.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_declaration_period_binding.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_303_official_box_under_declaration.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_bucket_aggregation_flow.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_export_output_paths.py`
+- `S06` `verify:` `scoped Ruff check on lead-owned files` -> `pass`
+- `S06` `verify:` `scoped Ruff format --check on lead-owned files` -> `pass`
+- `S06` `verify:` `scoped ty check with explicit Python 3.13 interpreter on lead-owned files` -> `pass`
+- `S06` `verify:` `scoped git diff --check on lead-owned files` -> `pass`
+- `S05` `M` `conftest.py`
+- `S05` `A` `src/cadrumo/adapters/outbound/aeat/conftest.py`
+- `S05` `M` `src/cadrumo/adapters/outbound/aeat/tests/process_support.py`
+- `S05` `A` `src/cadrumo/adapters/outbound/aeat/tests/test_task_readiness.py`
+- `S05` `M` `src/cadrumo/adapters/outbound/aeat/browser/tests/test_working_data.py`
+- `S05` `M` `src/cadrumo/adapters/outbound/aeat/browser/tests/test_factory.py`
+- `S05` `M` `src/cadrumo/adapters/outbound/aeat/browser/tests/test_startup_cancellation.py`
+- `S05` `M` `src/cadrumo/adapters/outbound/aeat/auth/tests/test_authenticator_real_boundary.py`
+- `S05` `M` `src/cadrumo/adapters/outbound/aeat/auth/tests/test_auth_provider_real_lifecycle.py`
+- `S05` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_supervision.py`
+- `S05` `verify:` `browser worker scoped Ruff lint/format` -> `pass`
+- `S05` `verify:` `browser worker AST parsing of assigned-area 205 Python files` -> `pass`
+- `S05` `verify:` `browser worker scoped git diff --check` -> `pass`
+- `S04` `M` `src/cadrumo/adapters/persistence/profile/tests/test_every_composing_write_is_declared.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/sql/tests/test_engine.py`
+- `S04` `M` `src/cadrumo/application/ledger/import_operation.py`
+- `S04` `M` `src/cadrumo/core/observability/models.py`
+- `S04` `M` `src/cadrumo/core/observability/store.py`
+- `S04` `M` `src/cadrumo/core/observability/errors.py`
+- `S04` `verify:` `scoped Ruff check on lead-owned files` -> `pass`
+- `S04` `verify:` `scoped Ruff format --check on lead-owned files` -> `pass`
+- `S04` `verify:` `scoped ty check with explicit Python 3.13 interpreter on lead-owned files` -> `pass`
+- `S04` `verify:` `scoped git diff --check on lead-owned files` -> `pass`
+- `S01` `M` `src/cadrumo/adapters/outbound/aeat/auth/session_store.py`
+- `S01` `M` `src/cadrumo/adapters/outbound/aeat/browser/factory.py`
+- `S01` `M` `src/cadrumo/adapters/outbound/aeat/browser/session.py`
+- `S01` `M` `src/cadrumo/adapters/persistence/storage/custody/automation_secret_store.py`
+- `S01` `A` `src/cadrumo/adapters/persistence/storage/custody/tests/test_windows_credential_error_contracts.py`
+- `S01` `M` `src/cadrumo/application/bienes_inversion/registered_executor.py`
+- `S01` `M` `src/cadrumo/application/invoices/catalogue_add_operation.py`
+- `S01` `M` `src/cadrumo/application/ledger/commit_fence.py`
+- `S01` `M` `src/cadrumo/application/ledger/invoice_evidence_consent_custody.py`
+- `S01` `M` `src/cadrumo/application/ledger/tests/test_invoice_evidence_consent_custody.py`
+- `S01` `M` `src/cadrumo/application/ledger/ledger_add_command.py`
+- `S01` `M` `src/cadrumo/application/ledger/add_operation.py`
+- `S01` `M` `src/cadrumo/application/ledger/evidence.py`
+- `S01` `A` `src/cadrumo/application/ledger/tests/test_ledger_error_contracts.py`
+- `S01` `M` `src/cadrumo/application/live/session.py`
+- `S01` `M` `src/cadrumo/application/modelo/m145_communication_execution.py`
+- `S01` `M` `src/cadrumo/application/prorrata_register/mutation_steps.py`
+- `S01` `A` `src/cadrumo/application/prorrata_register/tests/test_preflight_error_contract.py`
+- `S01` `M` `src/cadrumo/entrypoints/cli/_ledger.py`
+- `S01` `M` `src/cadrumo/entrypoints/cli/_ledger_inventory_cli.py`
+- `S01` `M` `src/cadrumo/entrypoints/cli/main.py`
+- `S01` `M` `src/cadrumo/entrypoints/cli/runtime_ledger_bienes_inversion.py`
+- `S01` `M` `src/cadrumo/entrypoints/cli/runtime_ledger_inventory.py`
+- `S01` `M` `src/cadrumo/entrypoints/cli/runtime_ledger_invoice_evidence.py`
+- `S01` `M` `src/cadrumo/entrypoints/cli/runtime_ledger_prorrata_register.py`
+- `S01` `M` `src/cadrumo/core/errors/registry/_application_part3a2.py`
+- `S01` `M` `src/cadrumo/core/errors/registry/_application_part3b.py`
+- `S01` `M` `src/cadrumo/core/errors/registry/_adapters_part3.py`
+- `S01` `M` `src/cadrumo/core/logging.py`
+- `S01` `A` `src/cadrumo/core/tests/test_logging_format_safety.py`
+- `S01` `M` `src/cadrumo/tests/test_storage_provenance_gate.py`
+- `S01` `M` `src/cadrumo/locales/en/errors.yml`
+- `S01` `M` `src/cadrumo/locales/es/errors.yml`
+- `S01` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S01` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S01` `verify:` `logging worker scoped Ruff lint/format` -> `pass`
+- `S01` `verify:` `logging worker scoped ty with explicit interpreter` -> `pass`
+- `S01` `verify:` `logging worker AST and registry/translation static inspection` -> `pass`
+- `S01` `verify:` `logging worker scoped git diff --check` -> `pass`
+- `S02` `M` `src/cadrumo/adapters/outbound/storage/mirror_push.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/profile/catalogue_reads.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/profile/foreign_assets.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/profile/justificante_capture_snapshots.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/profile/modelo_360_solicitud.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/profile/own_accounts.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/profile/state_projection.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/profile/tests/test_reviewed_invoice_draft_terminal.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/profile/transaction_date_projection.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/profile/transactions.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/profile/workflow_gate.py`
+- `S02` `M` `src/cadrumo/application/aggregation/modelo_bindings_retenciones.py`
+- `S02` `M` `src/cadrumo/application/aggregation/withholding_source.py`
+- `S02` `M` `src/cadrumo/application/auth/preferences.py`
+- `S02` `M` `src/cadrumo/application/invoices/catalogue_read_operation.py`
+- `S02` `M` `src/cadrumo/application/invoices/source_resolver.py`
+- `S02` `M` `src/cadrumo/application/ledger/classify_operation.py`
+- `S02` `M` `src/cadrumo/application/ledger/classify_patch.py`
+- `S02` `M` `src/cadrumo/application/ledger/commit_fence.py`
+- `S02` `M` `src/cadrumo/application/ledger/ledger_add_command.py`
+- `S02` `M` `src/cadrumo/application/ledger/lifecycle_mutation_operation.py`
+- `S02` `M` `src/cadrumo/application/ledger/pinned_transaction_repository.py`
+- `S02` `M` `src/cadrumo/application/ledger/protocols.py`
+- `S02` `M` `src/cadrumo/application/ledger/update_operation.py`
+- `S02` `M` `src/cadrumo/application/live/filed_data_ports.py`
+- `S02` `M` `src/cadrumo/application/live/filed_read_operation.py`
+- `S02` `M` `src/cadrumo/application/modelo/_attribution_received_advisory.py`
+- `S02` `M` `src/cadrumo/application/modelo/_autonomic_deduccion_advisory.py`
+- `S02` `M` `src/cadrumo/application/modelo/_m210_convenio_lob_advisory.py`
+- `S02` `M` `src/cadrumo/application/modelo/_objective_estimation_advisory.py`
+- `S02` `M` `src/cadrumo/application/modelo/aggregate_ports.py`
+- `S02` `M` `src/cadrumo/application/modelo/amendment_context_operation.py`
+- `S02` `M` `src/cadrumo/application/modelo/calculation_projection.py`
+- `S02` `M` `src/cadrumo/application/modelo/calculation_publication.py`
+- `S02` `M` `src/cadrumo/application/modelo/casilla_help_formula.py`
+- `S02` `M` `src/cadrumo/application/modelo/casilla_help_reach.py`
+- `S02` `M` `src/cadrumo/application/modelo/declaration_summary.py`
+- `S02` `M` `src/cadrumo/application/modelo/declarations_workspace.py`
+- `S02` `M` `src/cadrumo/application/modelo/declarations_workspace_joins.py`
+- `S02` `M` `src/cadrumo/application/modelo/dependency_read_ports.py`
+- `S02` `M` `src/cadrumo/application/modelo/edit_admission.py`
+- `S02` `M` `src/cadrumo/application/modelo/filing_projection.py`
+- `S02` `M` `src/cadrumo/application/modelo/filing_record_list_contracts.py`
+- `S02` `M` `src/cadrumo/application/modelo/filing_record_list_operation.py`
+- `S02` `M` `src/cadrumo/application/modelo/filing_record_ownership.py`
+- `S02` `M` `src/cadrumo/application/modelo/invoice_withholding_capture_contracts.py`
+- `S02` `M` `src/cadrumo/application/modelo/lifecycle_advisories.py`
+- `S02` `M` `src/cadrumo/application/modelo/mcp_binding_validation.py`
+- `S02` `M` `src/cadrumo/application/modelo/modelo_spreadsheet_access.py`
+- `S02` `M` `src/cadrumo/application/modelo/modelo_spreadsheet_executor.py`
+- `S02` `M` `src/cadrumo/application/modelo/operation_definitions.py`
+- `S02` `M` `src/cadrumo/application/modelo/quickfile_operation_ports.py`
+- `S02` `M` `src/cadrumo/application/modelo/review_package_operation.py`
+- `S02` `M` `src/cadrumo/application/modelo/revision_operation_access.py`
+- `S02` `M` `src/cadrumo/application/modelo/revision_selection_operation.py`
+- `S02` `M` `src/cadrumo/application/modelo/tests/test_m349_calculation_display_export.py`
+- `S02` `M` `src/cadrumo/application/modelo/tests/test_reconciliation_list_operation.py`
+- `S02` `M` `src/cadrumo/application/modelo/verification_iva_evidence.py`
+- `S02` `M` `src/cadrumo/application/modelo/verification_model_findings.py`
+- `S02` `M` `src/cadrumo/application/modelo/verification_oss_evidence.py`
+- `S02` `M` `src/cadrumo/application/modelo/verification_required_fields.py`
+- `S02` `M` `src/cadrumo/application/modelo/verification_revision_findings.py`
+- `S02` `M` `src/cadrumo/application/modelo/work_form_context.py`
+- `S02` `M` `src/cadrumo/application/modelo/work_form_inspection.py`
+- `S02` `M` `src/cadrumo/application/modelo/work_form_notes.py`
+- `S02` `M` `src/cadrumo/application/overview/applicability_evidence.py`
+- `S02` `M` `src/cadrumo/application/overview/pipeline_operation.py`
+- `S02` `M` `src/cadrumo/application/user_profile/censal_preview_operation.py`
+- `S02` `M` `src/cadrumo/application/user_profile/descendant_rows.py`
+- `S02` `M` `src/cadrumo/application/user_profile/view_reader.py`
+- `S02` `M` `src/cadrumo/application/wizard/patch_edit.py`
+- `S02` `M` `src/cadrumo/application/wizard/status.py`
+- `S02` `M` `src/cadrumo/application/workbench_generation_calendar.py`
+- `S02` `M` `src/cadrumo/application/workflow/profile_health.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/applicability.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/applicability_payer_facts.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/authority_component_codec.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/binding_targets.py`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/casilla_structural_succession.py`
+- `S02` `M` `src/cadrumo/domain/transactions/m210_income_classification.py`
+- `S02` `M` `src/cadrumo/entrypoints/adapter_composition.py`
+- `S02` `M` `src/cadrumo/entrypoints/calculation_revision_composition.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/_ledger_account_payloads.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/_modelo_amend_wizard_cli.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/_modelo_m360_payloads.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/config/runtime_access_management_payloads.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/runtime_ledger_attachment.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/runtime_ledger_lifecycle.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/runtime_modelo_calculation.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_derive_refusals_are_localised.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_nonwork_command_specs.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_reconcile_verb.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_authentication_contract.py`
+- `S02` `M` `src/cadrumo/entrypoints/ledger_action_composition.py`
+- `S02` `M` `src/cadrumo/entrypoints/modelo_spreadsheet_operation_composition.py`
+- `S02` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S02` `M` `src/cadrumo/entrypoints/overview_read_composition.py`
+- `S02` `M` `src/cadrumo/entrypoints/quickfile_operation_composition.py`
+- `S02` `M` `src/cadrumo/entrypoints/runtime/operation_host.py`
+- `S02` `M` `src/cadrumo/entrypoints/tests/test_operation_catalogue.py`
+- `S02` `M` `src/cadrumo/entrypoints/tui/components/theme.py`
+- `S02` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/test_grid_tables_real.py`
+- `S02` `M` `src/cadrumo/entrypoints/tui/profile/overview_contracts.py`
+- `S02` `M` `src/cadrumo/entrypoints/tui/runtime_session.py`
+- `S02` `M` `src/cadrumo/entrypoints/tui/tests/test_runtime_session.py`
+- `S02` `M` `src/cadrumo/entrypoints/tui/tests/test_theme.py`
+- `S02` `M` `src/cadrumo/tests/test_advisory_message_constructibility.py`
+- `S02` `M` `src/cadrumo/_data/corpus/aeat_official/instructions/modelo_131/PROVENANCE.md`
+- `S02` `M` `src/cadrumo/adapters/outbound/aeat/sede/filed_data_capture_port.py`
+- `S02` `M` `src/cadrumo/application/modelo/revision_persistence.py`
+- `S02` `M` `src/cadrumo/application/modelo/verification_gate_findings.py`
+- `S02` `verify:` `interface worker scoped Ruff check across 107 Python files` -> `pass`
+- `S02` `verify:` `interface worker scoped Ruff format --check across 107 Python files` -> `pass`
+- `S02` `verify:` `interface worker AST parse and docstring-only AST comparison` -> `pass`
+- `S02` `verify:` `interface worker scoped git diff --check` -> `pass`
+- `S02` `verify:` `lead Ruff lint/format of three handed-off docstring repairs` -> `pass`
+- `S03` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_dormant_m369_oss_resolver_live.py`
+- `S03` `verify:` `post-review scoped Ruff check for export, filing fixture and M369 regression` -> `pass`
+- `S03` `verify:` `post-review scoped Ruff format --check` -> `pass`
+- `S03` `verify:` `post-review scoped ty check with explicit Python3.13` -> `pass`
+- `S03` `verify:` `post-review scoped git diff --check` -> `pass`
+- `S06` `verify:` `post-review scoped Ruff check for export, filing fixture and M369 regression` -> `pass`
+- `S06` `verify:` `post-review scoped Ruff format --check` -> `pass`
+- `S06` `verify:` `post-review scoped ty check with explicit Python3.13` -> `pass`
+- `S06` `verify:` `post-review scoped git diff --check` -> `pass`
+- `S04` `M` `dev/registry/pipeline/render_profile_authority.py`
+- `S04` `M` `dev/registry/pipeline/tests/test_signed_composite_render_profile.py`
+- `S04` `M` `dev/registry/render_profiles/modelo_190/2020/0001-numeric-representation.toml`
+- `S04` `M` `dev/registry/render_profiles/modelo_190/2023/0001-numeric-representation.toml`
+- `S04` `M` `dev/registry/render_profiles/modelo_190/2024/0001-numeric-representation.toml`
+- `S04` `M` `dev/registry/render_profiles/modelo_190/2025/0001-numeric-representation.toml`
+- `S04` `M` `src/cadrumo/application/filing/record_renderer.py`
+- `S04` `M` `src/cadrumo/application/modelo/tests/test_revision_replay_inputs.py`
+- `S04` `M` `src/cadrumo/application/modelo/m145_communication_records.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/profile/tests/test_m145_communication_validate.py`
+- `S04` `verify:` `scoped Ruff lint format AST ty for M145 and M180` -> `pass`
+- `S04` `verify:` `scoped M190 source grammar Ruff lint format ty and TOML syntax` -> `pass`
+- `S04` `verify:` `canonical republish-target 190 2022 aeat-dr-190-2020` -> `pass`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2022/export/0001-record-modelo-190-declarante.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2023/export/0001-record-modelo-190-declarante.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2024/export/0001-record-modelo-190-declarante.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/190/revisions/2025-y-siguientes/export/0001-record-modelo-190-declarante.toml`
+- `S04` `verify:` `canonical digest-bound republish-target M190 four epochs` -> `pass`
+- `S04` `verify:` `static coverage inventory exactly 270 unique failed nodes` -> `pass`
+- `S01` `M` `src/cadrumo/tests/inventory.py`
+- `S01` `M` `src/cadrumo/conftest.py`
+- `S01` `M` `src/cadrumo/core/tests/test_settings_lifecycle_gate.py`
+- `S01` `A` `src/cadrumo/tests/test_source_inventory_lifetime.py`
+- `S01` `verify:` `worker scoped Ruff formatting ty AST and diff checks` -> `pass`
+- `S01` `verify:` `270-node coverage source hashes and anchors` -> `pass`
+- `S06` `verify:` `clock-before-wallet correction scoped Ruff and ty` -> `pass`
+- `S05` `M` `src/cadrumo/adapters/outbound/aeat/browser/tests/real_http_boundary.py`
+- `S05` `verify:` `startup cancellation ownership scoped Ruff format ty AST and diff` -> `pass`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_iva_wallet_engine_lifecycle_gate.py`
+- `S06` `verify:` `calculate verify file clock-regression scoped Ruff format ty AST diff` -> `pass`
+- `S04` `verify:` `first canonical publish-authority attempt` -> `fail`
+- `S04` `verify:` `instrumented canonical authority publication` -> `fail`
+- `S04` `verify:` `four M190 generated target field and provenance receipts` -> `pass`
+- `S04` `verify:` `complete 270-node static failure coverage` -> `pass`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/modelo_303_export_support.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_filed_capture_calculation_history.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_pull_path_calculate_path_casilla_parity.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_e2e_ledger_m303_recargo_cross_period.py`
+- `S06` `verify:` `pytest -n0 export_output_paths export_iva_wallet refusal_keys` -> `pass`
+- `S06` `verify:` `pytest -n0 capture_history pull_calculate_parity recargo_cross_period` -> `pass`
+- `S06` `verify:` `scoped Ruff format/check ty Python3.13 diff checks` -> `pass`
+- `S01` `M` `src/cadrumo/application/ledger/update_contracts.py`
+- `S01` `M` `src/cadrumo/domain/transactions/own_accounts.py`
+- `S01` `M` `src/cadrumo/application/filing/producer_snapshot_m360.py`
+- `S01` `M` `src/cadrumo/adapters/local_runtime/macos_worker_process.py`
+- `S01` `verify:` `scoped structural pytest -n0` -> `pass`
+- `S01` `verify:` `structural Ruff format ty diff checks` -> `pass`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_work_review_envelope.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/profile_persistence/_justificante_reconcile_support.py`
+- `S02` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_actions_create_usage_ratio.py`
+- `S02` `verify:` `scoped interface pytest -n0` -> `pass`
+- `S02` `verify:` `interface Ruff format ty diff checks` -> `pass`
+- `S05` `M` `src/cadrumo/adapters/local_runtime/profile_worker.py`
+- `S05` `M` `src/cadrumo/adapters/local_runtime/tests/test_profile_worker_cleanup.py`
+- `S05` `M` `src/cadrumo/entrypoints/runtime/tests/test_login_lifecycle.py`
+- `S05` `verify:` `runtime pytest -n0 cleanup startup transport native ownership` -> `pass`
+- `S05` `verify:` `runtime Ruff format ty diff checks` -> `pass`
+- `S04` `M` `dev/registry/mappings/modelo_347/2025/0001-records.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/export/0002-record-m347-declarado.toml`
+- `S04` `M` `src/cadrumo/application/filing/record_field_renderer.py`
+- `S04` `M` `src/cadrumo/domain/calculations/registry/export_parse.py`
+- `S04` `verify:` `M347 digest-bound canonical republish-target` -> `pass`
+- `S04` `verify:` `canonical publish-authority final iteration` -> `pass`
+- `S04` `verify:` `pytest -n0 test_revision_replay_inputs` -> `pass`
+- `S04` `verify:` `M347 four-document semantic wire-preservation comparison` -> `pass`
+- `S03` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_calculation_report_export.py`
+- `S03` `verify:` `pytest -n0 test_calculation_report_export` -> `pass`
+- `S01` `M` `src/cadrumo/application/tests/test_provisioning.py`
+- `S01` `verify:` `uv run --no-sync python -m pytest -n 0 -q --tb=short src/cadrumo/application/tests/test_provisioning.py` -> `pass`
+- `S04` `M` `src/cadrumo/application/storage_management/service.py`
+- `S04` `M` `src/cadrumo/application/storage_management/tests/test_inventory_and_tree.py`
+- `S04` `M` `dev/quality/metadata/import_load_targets.json`
+- `S04` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S04` `verify:` `storage_management/tests/test_inventory_and_tree.py` -> `pass`
+- `S04` `verify:` `scoped storage import Ruff format and ty` -> `pass`
+- `S04` `verify:` `python -m dev.quality.import_load_probe --compile-targets` -> `pass`
+- `S04` `M` `src/cadrumo/core/tests/test_ensure_storage_tree.py`
+- `S04` `M` `src/cadrumo/application/prorrata_register/tests/provisional_override.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/prorrata_operation_test_support.py`
+- `S04` `verify:` `core storage and application prorrata and registered prorrata semantics focused tests` -> `pass`
+- `S04` `verify:` `scoped final import consumers Ruff format and ty` -> `pass`
+- `S01` `A` `src/cadrumo/core/tests/redaction_span_recovery.py`
+- `S01` `A` `src/cadrumo/core/tests/test_redaction_span_recovery.py`
+- `S01` `M` `src/cadrumo/core/tests/test_redaction_recorded_sequence_output.py`
+- `S01` `verify:` `redaction recovery oracle 12 cases` -> `pass`
+- `S01` `verify:` `scoped redaction recovery Ruff format ty` -> `pass`
+- `S01` `verify:` `just test-unit integrated rerun` -> `fail`
+- `S01` `verify:` `consolidated six failed paths and redaction regressions 87 tests` -> `pass`
+- `S04` `verify:` `serial recovery of unreported and current new nodes` -> `pass`
+- `S04` `verify:` `relocated native storage vectors` -> `pass`
+- `S04` `verify:` `just check-import-boundaries final source snapshot certification` -> `fail`
+- `S04` `A` `src/cadrumo/domain/censo/tests/certificado_builder.py`
+- `S04` `M` `src/cadrumo/domain/censo/tests/test_certificado.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/config/tests/test_censo_import_fact_payload.py`
+- `S04` `verify:` `censo domain and CLI fixture tests 12 cases` -> `pass`
+- `S04` `verify:` `censo fixture scoped Ruff format ty AST equivalence` -> `pass`
+- `S04` `verify:` `uv run --no-sync python -m dev.quality.import_load_probe --compile-targets` -> `pass`
+- `S04` `M` `dev/quality/metadata/import_load_targets.dev.json`
+- `S04` `verify:` `canonical captured import gate .logs/remediation-snapshot-20261005/gate.log` -> `fail`
+- `S04` `M` `src/cadrumo/core/errors/registry/_application_part3b.py`
+- `S04` `M` `src/cadrumo/core/errors/tests/test_recorded_registered_error.py`
+- `S04` `M` `src/cadrumo/locales/en/errors.yml`
+- `S04` `M` `src/cadrumo/locales/es/errors.yml`
+- `S04` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S04` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S04` `M` `dev/registry/tests/test_modelo_720_registry.py`
+- `S04` `verify:` `replay unsigned-component export-policy 310 tests` -> `pass`
+- `S04` `verify:` `financial operand recorded envelopes 14 tests` -> `pass`
+- `S04` `verify:` `financial operand fresh import and 11 reasons in four locales` -> `pass`
+- `S04` `verify:` `financial operand scoped ty` -> `pass`
+- `S04` `verify:` `M720 registry manual-caso numeric-profile 35 tests` -> `pass`
+- `S04` `verify:` `M720 canonical target-current` -> `pass`
+- `S04` `verify:` `M720 exact five-field source migration comparison` -> `pass`
+- `S04` `verify:` `captured import attempt 0003` -> `fail`
+- `S04` `A` `src/cadrumo/application/operations/tests/financial_operand_models.py`
+- `S04` `M` `src/cadrumo/application/operations/tests/test_typed_financial_operand_contract.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/operations/tests/test_typed_financial_operand_custody.py`
+- `S04` `verify:` `financial custody and contract 9 unit tests` -> `pass`
+- `S04` `verify:` `financial fixture scoped Ruff format ty whitespace` -> `pass`
+- `S04` `verify:` `fresh original failure reconciliation 116 passing and 4 retired` -> `pass`
+- `S04` `verify:` `captured import attempt 0004` -> `fail`
+- `S04` `verify:` `current retained Drive reference and owned-entry 42 tests` -> `pass`
+- `S04` `verify:` `retained evidence batch native CLI and supervisor 19 tests` -> `pass`
+- `S04` `verify:` `retained evidence consumers scoped Ruff format ty AST` -> `pass`
+- `S04` `verify:` `canonical captured import gate attempt 0005` -> `pass`
+- `S04` `verify:` `attempt 0005 complete input hashes before and after` -> `pass`
+- `S04` `verify:` `attempt 0005 16 latest repair files match` -> `pass`
+- `S04` `verify:` `integrated scoped remediation review` -> `pass`
+
+## Notes
+
+- `S03` No tests run by user instruction; Step remains open. PDF presentation reconstructs the persisted identity grade without unbound registry access. Export supplies identity only when the envelope declares an input slot.
+- `S06` No tests run; Step remains open. One operation instant now governs wallet freshness and persisted effects. Fixtures include captured wallet authority sources and actual calculation revisions. Added unrun 31/32-day freshness boundary coverage.
+- `S05` Worker report and lead source review reused; no tests or browsers launched. Installed Chromium1243 completion markers were inspected, not executed. Bounded readiness preserves child exceptions and callers cancel/join owners. Windows probe remains conservative for unreadable processes.
+- `S04` Registry source repairs remain with existing active registry-health owners; no authority publication performed. Remaining adjudications: M303 2022 recargo source binding, M190 signed total representation, M180 split totals/property requiredness, M145 explicit ordinary-page blank, M130/M111 source-pinned transport CRLF. Do not weaken validators or strip bytes to silence these failures.
+- `S04` Composing-write inventory removes three now-guarded declarations and records four repository decorators without claiming revision protection. SQL URL expectation now follows canonical project-root anchoring without opening a checkout database. Ledger import now admits its existing TUI door while excluding MCP. Runtime verification remains pending.
+- `S01` No tests run. Lead reviewed formatting and exception integration; numeric redaction retains privacy and safe conversions. Five former bare exception types now have distinct registered classifications. Source-jurisdiction semantic code moved to `jurisdiction_code` without changing public refusal projection. Source inventory missing-file races require a stable tree, not exclusions.
+- `S02` No tests run. Runtime TUI clearing/fencing semantics retained; click readiness now awaits layout and asserts real activation at two widths. Operation inventory resolves declaration origins and module-qualified aliases. Lead addressed all four ownership handoffs (ledger TUI authorization and three doc files) plus retired core observability references. Runtime verification remains pending.
+- `S03` Independent review correction: identity-grade reporting now uses declared envelope identity capability consistently with rendering. Added M369 no-identity assertion; not executed.
+- `S06` Independent review correction: initial WorkUnit is persisted before the CalculationRevision, then final filing pointers are saved. PRESENTADO metadata and content-derived ids remain coherent. No tests run.
+- `S04` No test runs per user instruction. Remaining M190 epochs and final authority publication are in progress; this checkpoint does not claim runtime verification.
+- `S04` Four temporary source-pinned drift dispositions retired after successful canonical regeneration. Coverage now has 269 source-addressed/runtime-pending nodes and one untraced worker crash; no tests run. Final authority refresh serialized behind another session's M714 target publication.
+- `S01` No tests run. Strict missing-source refusal preserved; candidate discovery and parsed-source caches now share a module lifetime.
+- `S06` Independent review's wallet-write-before-clock-refusal finding corrected; regression authoring continues without execution.
+- `S05` Static review found and fixed an acquired Playwright startup cancellation leak in real-boundary support. No test run or browser process launch. No parent-worker kill is established; the recorded gw4 process loss still has no causal traceback.
+- `S06` Three unexecuted regression branches assert backdated-clock refusal preserves wallet decision and audit history; independent static review confirms all three guards precede refresh paths.
+- `S04` Publication refused changed input receipt after validation; prior active authority preserved. Fresh guarded retry in progress after concurrent M714 source change.
+- `S04` Third publication diagnostic: content identity unchanged; walked registry receipt changed by concurrent M714/2024 lock creation and root directory mtime. Active descriptor unchanged. No guard weakened. All 270 nodes now source-addressed after archived gw4 log identified browser refusal before unbounded readiness; precise timeout exit remains inferred. No tests run.
+- `S06` 64 passed in .logs/iteration-120-export-wallet.log; 48 passed in .logs/interface-iteration-03.log. Aligned M303 prior carry to explicit wallet evidence; matched provenance includes wallet, recurrence and filed observation. Repeated same-CSV incomparable receipts preserve history and remain unverifiable. Wallet fixtures carry timestamped authority sources. Full suite and integrated final review pending; no commits.
+- `S01` 131 distinct passing structural tests, plus 14 M347 row/naming/locale tests `(.logs/structural-iteration-*.log).` Canonical annotation adoption preserves domain refusal constraints; currency errors translate through Pydantic boundary. Independent review found no high/critical issue. Full unit rerun pending.
+- `S02` 34 unique passing tests in .logs/interface-iteration-01.log and -02.log. Restored profile/calculate evidence and real admitted runtime fixtures; updated canonical projections/inventories. Full unit rerun pending.
+- `S05` 135 passed across runtime-iteration-repaired and ownership-regressions logs; 15 excluded by existing markers. Both channels require native identity and scope membership before transfer. Fault fixtures no longer send synthetic PID to real Windows OpenProcess. Independent review found no high/critical issue.
+- `S04` Final authority be79d7dfce199013af9b628143a6628b3fa060dd6fb3f59715b71e02077e944a adopted; .logs/iteration-120-final-authority.log. Replay29 pass .logs/iteration-120-replay-final.log. M347 only row-field identifier changed; temporary disposition retired. Four M369 end-to-end tests exposed later envelope-period assertions and remain under source-backed adjudication. Full unit run not yet started.
+- `S03` All calculation-report tests passed within .logs/iteration-120-published-authority.log (66 passed overall, one independent M190 assertion subsequently fixed). M369 end-to-end now passes software identity capability assertion and exports bytes, then fails its envelope-period assertion; worker adjudicates official grammar.
+- `S03` Ledger clarification: `test_calculation_report_export.py` was a verification scope, not a file modified in this iteration. The preceding M row for that path must not be interpreted as a source edit. Report remediation is in shared production/fixture paths already recorded.
+- `S01` Full rerun exposed a stale cache-path assertion after concurrent desktop webview taxonomy enrollment. Assert exact taxonomy-declared cache directories plus required parents, preserving refusal of any state directory. All 16 module tests passed (.logs/iteration-120-provisioning.log).
+- `S04` Third import gate found two alias imports after concurrent storage policy changes and stale load-target metadata after new modules. Consumers now use `STORAGE_ROOT.posix_directory_mode` from its core owner. Ten tests passed; canonical load-target regeneration completed. Closure gate running; earlier changed-tree and alias-failure evidence retained.
+- `S04` Concurrent prorrata refactor moved fixture provenance helpers to `registry/tests/provisional_catalogue.py;` three remaining imports now point to that defining owner. Root permission test uses canonical `STORAGE_ROOT` policy. Focused closure: 41 passed, 2 existing POSIX-only Windows skips, .logs/iteration-120-import-closure-tests.log. A fifth full-run failure mixed old imported error registry with moved InventoryLedgerError and InventoryValidationError source; all five registry-enforcement tests passed fresh process without edits (.logs/iteration-120-registry-enforcement.log).
+- `S01` Full rerun six failures including worker crash; incomplete with133 missing outcomes. Corpus now passes after output-aligned hash recovery and one real pinned authority lease. Consolidated failed-path verification and unreported-node recovery active; do not claim clean full run.
+- `S01` .logs/iteration-120-final-failures-green.log: 87 passed in189.98s, exit0; all six full-run failures covered in one fresh process, including formerly crashing recorded corpus. No timeouts increased or failed cases skipped.
+- `S04` 145 passed and1existingPOSIXskip; all146selected outcomes recovered. Additional42storage-vector tests pass with1existingplatformskip. Final import scan has0violations,15contracts kept,4406modules loaded; source changed externally during run, so exit7 and S04 remains open only for stable-source certification. No known test failure remains.
+- `S04` Resumed live gate exposed private cross-package fixture import. Autonomous high worker extracted one public defining test builder, preserving all six certificate axes and typed overrides. Lead reviewed new owner and consumers; no actionable issue. Isolated snapshot import certification remains in progress.
+- `S04` Canonical regeneration removed five stale production module entries following concurrent source deletions; full certification remains pending. Evidence: .logs/remediation-import-targets-20261005.log.
+- `S04` Snapshot hashes remained unchanged. Five obsolete production target entries and one missing dev.corpus.text entry were repaired through canonical live regeneration; new corpus-test architecture dependencies are assigned for repair.
+- `S04` M720 canonical target/form publication and disposition retirement were performed by another workstream; lead replacement refused safely on old-manifest mismatch. These entries record verification and scoped assertion repairs, not ownership of concurrent production edits.
+- `S04` The original-node fresh selection had 148 passing and three stale M180/M190 assertions; the three are covered by the subsequent 310-test passing run. Captured import attempt 0003 remains pending.
+- `S04` Attempt 0003 has unchanged captured hashes, 4407/4407 loaded modules, 15/15 kept contracts and zero architectural debt. Two private cross-package fixture imports remain in financial-custody tests; autonomous scoped repair is active. Snapshot/resource/hash evidence is retained under .logs/remediation-snapshot-20261005/attempts/0003.
+- `S04` Fixture extraction preserves the concurrent schema-identity API migration. Attempt 0004 captures the integrated current source; certification pending.
+- `S04` Attempt 0004 captured an intermediate state of accepted Google app-identity S02: 32 stale test imports after intentional API removal. All 32 obsolete spellings were gone in live source before attempt 0005. No Google/core source edits by lead; preserving active owning workstream.
+- `S04` Another workstream completed the accepted Google evidence-acquisition retirement. Lead and assigned worker made no consumer edits; verification preserved all seven assigned source paths. Final captured gate attempt 0005 pending.
+- `S04` Final capture: 15 contracts kept, 10296 files in both graph censuses, 4407 modules loaded, zero hard findings/debt/pending retirement. Certificate excludes four later live changes listed in verification.json.
+- `S04` Original fresh coverage is 116 current/replacement passing cases plus four justified retired assertions. Incomplete full suite and successful recovery remain distinct; no single uninterrupted green full-suite claim. No commits.

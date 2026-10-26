@@ -1,0 +1,822 @@
+"""Authenticated current-profile records in the capsule-local secure-object DB.
+
+The profile record is one encrypted ``USER_PROFILE_VALUE_NAMESPACE`` row in
+the capsule's normal SQLite substrate.  It is never a sidecar JSON document.
+Every create or replacement co-writes the row and the canonical bucket-event
+history through one ``SecureObjectRepository.apply_batch`` transaction.
+"""
+
+from __future__ import annotations
+
+import json
+from collections.abc import Generator, Mapping
+from contextlib import contextmanager
+from dataclasses import dataclass, replace
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import TYPE_CHECKING
+from uuid import UUID
+
+from pydantic import BaseModel, ConfigDict, Field
+
+from ...core.external_constants import UTF_8_ENCODING
+from ...core.hashing import canonical_json_bytes, sha256_hex
+from ...core.paths import effective_storage_root
+from ...core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID, SecureObjectWrite
+from ...core.storage_taxonomy import StorageCategory
+from ...core.storage_taxonomy_locations import storage_location
+from ...core.type_guards import is_object_dict
+from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
+from ...domain.buckets.event_repository import append_bucket_event, build_bucket_event
+from ...domain.user_profile.errors import UserProfileError
+from ...domain.user_profile.schema_migration import (
+    LEGACY_PROFILE_SCHEMA_VERSION,
+    MIGRATED_PROFILE_SCHEMA_VERSION,
+    ProfileSchemaMigration,
+    legacy_profile_schema,
+    migrate_profile_facts,
+)
+from ...domain.user_profile.values import ProfileSetupState, UserProfileRecord
+from .custody_ports import (
+    ProfileCustodySecureObjectNamespace,
+    ProfileCustodySecureObjectRawRowPort,
+    ProfileCustodySecureObjectRecordPort,
+    ProfileCustodySecureObjectRepositoryPort,
+    default_profile_bucket_event_history_repository,
+    profile_custody_secure_object_namespace,
+    profile_custody_secure_object_repository,
+)
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority_artifact import ProfileCreateContext, ProfileDecodeContext
+    from .custody_ports import ProfileCustodyEnvelopePort
+
+
+_RECORD_NAMESPACE = "cadrumo.application.user_profile.value"
+_RECORD_OBJECT_KEY_PREFIX = "user-profile:"
+_RECORD_WRITE_PROVENANCE_PREFIX = "cadrumo.profile-record.v2"
+_RECORD_ACTOR = "profile-capsule-lifecycle"
+_REQUIRED_EVENT_FIELDS = frozenset(
+    {
+        "content_digest",
+        "dek_epoch",
+        "envelope_digest",
+        "password_generation",
+        "previous_record_digest",
+        "record_revision",
+    }
+)
+_RECORD_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+
+class ProfileRecordConflictError(UserProfileError):
+    """The authenticated record changed before its CAS command committed.
+
+    Joins the :class:`~domain.user_profile.errors.UserProfileError` family so the
+    refusal binds to the error registry and one clause still catches the whole
+    user-profile surface. :exc:`ValueError` is retained deliberately: it is
+    load-bearing ancestry here, not decoration -- see
+    :class:`ProfileRecordIntegrityError`.
+    """
+
+
+class ProfileRecordIntegrityError(UserProfileError):
+    """A current-record row or its event witness is malformed or mis-bound.
+
+    Joins the :class:`~domain.user_profile.errors.UserProfileError` family so the
+    refusal binds to the error registry. :exc:`ValueError` is retained
+    because the lifecycle restore path converts a failed authenticated
+    validation into its own refusal through a ``ValueError`` arm; dropping the
+    builtin ancestry would let the inner refusal escape that conversion and
+    reach the operator naming a stage it never reached.
+    """
+
+
+class ProfileRecordMigrationRequiredError(ProfileRecordIntegrityError):
+    """The stored record was written under an earlier, migratable profile schema.
+
+    Raised by the strict read so no caller can mistake the stored shape for the
+    current one. The record repository catches it, migrates the row forward
+    under the custody lock and reads again; every other door keeps refusing.
+    """
+
+    def __init__(self, stored_version: int, current_version: int) -> None:
+        """Name the stored and the current schema version in the refusal."""
+        super().__init__(
+            f"profile record was written under profile schema {stored_version}; this build reads schema "
+            f"{current_version} and migrates the record when the profile is opened",
+        )
+        self.stored_version = stored_version
+        self.current_version = current_version
+
+
+class ProfileRecordCommandEvent(BaseModel):
+    """Non-secret command witness co-written into canonical bucket history."""
+
+    model_config = _RECORD_CONFIG
+
+    event_type: BucketEventType
+    occurred_at: str = Field(min_length=20, max_length=64)
+    payload: Mapping[str, str] = Field(default_factory=dict)
+
+
+@dataclass(frozen=True, slots=True)
+class LoadedProfileRecord:
+    """One verified current record together with its secure-object CAS token."""
+
+    record: UserProfileRecord
+    row_revision_id: str
+    previous_row_revision_id: str | None
+    event_id: str
+
+
+@dataclass(slots=True)
+class ProfileRecordSession:
+    """Short-lived authority bound to one unlocked custody envelope and DEK."""
+
+    profile_id: UUID
+    envelope_digest: str
+    password_generation: int
+    dek_epoch: str
+    _dek: bytearray
+    profile_decode_context: ProfileDecodeContext
+
+    @classmethod
+    def from_envelope(
+        cls,
+        *,
+        envelope: ProfileCustodyEnvelopePort,
+        dek: bytes,
+        profile_decode_context: ProfileDecodeContext,
+    ) -> ProfileRecordSession:
+        """Create a record authority from an unlocked envelope and its DEK."""
+        if len(dek) != 32:
+            raise ProfileRecordIntegrityError("profile record session requires a 32-byte DEK")
+        return cls(
+            profile_id=envelope.profile_id,
+            envelope_digest=envelope.self_digest,
+            password_generation=envelope.password_generation,
+            dek_epoch=envelope.dek_epoch,
+            _dek=bytearray(dek),
+            profile_decode_context=profile_decode_context,
+        )
+
+    def close(self) -> None:
+        """Zeroise the DEK in place, retiring this authority without discarding it."""
+        self._dek[:] = b"\0" * len(self._dek)
+
+    @property
+    def closed(self) -> bool:
+        """Whether the DEK has been zeroised, so this authority can no longer decrypt.
+
+        Retirement is destructive but not observable from the outside: ``close``
+        zeroises the key in place and leaves the object, its UUID and its
+        envelope binding intact, so a holder cannot tell a retired authority
+        from a live one by looking at it. Anything deciding whether to REUSE a
+        session has to ask, and before this predicate existed the only way to
+        find out was to ask for the key and catch the refusal -- an integrity
+        error raised at the point of use, far from the reuse decision that
+        caused it.
+
+        Read as the absence of key material rather than as a separate flag, so
+        there is one definition of retired rather than a boolean a future
+        ``close`` variant could forget to set.
+        """
+        return not self._dek or not any(self._dek)
+
+    def encryption_key(self) -> bytes:
+        """Return the DEK only to the local secure-object session bridge."""
+        if self.closed:
+            raise ProfileRecordIntegrityError("profile record session is closed")
+        return bytes(self._dek)
+
+    def create_context(self) -> ProfileCreateContext:
+        """Reuse this session's pinned generation for a replacement write."""
+        context = self.profile_decode_context
+        from ...domain.calculations.registry.authority_artifact import ProfileCreateContext
+
+        return ProfileCreateContext(schema=context.schema, generation=context.generation)
+
+    def assert_initial_record(self, record: UserProfileRecord) -> None:
+        """Validate that a record is the first authenticated revision for this session.
+
+        Core types:
+        :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+        """
+        if UUID(record.profile_id) != self.profile_id:
+            raise ProfileRecordIntegrityError("initial profile record UUID differs from its custody session")
+        if record.record_revision != 1 or record.previous_record_digest is not None:
+            raise ProfileRecordIntegrityError(
+                "initial profile record must be exactly revision one without a predecessor"
+            )
+
+    def assert_replacement(self, current: UserProfileRecord, replacement: UserProfileRecord) -> None:
+        """Validate that a replacement advances the authenticated current record.
+
+        Core types:
+        :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+        """
+        if UUID(replacement.profile_id) != self.profile_id:
+            raise ProfileRecordIntegrityError("replacement profile record UUID differs from its custody session")
+        if (
+            replacement.record_revision != current.record_revision + 1
+            or replacement.previous_record_digest != current.content_digest
+        ):
+            raise ProfileRecordIntegrityError("replacement record does not carry the authenticated predecessor")
+
+    def write_provenance(self, record: UserProfileRecord) -> str:
+        """Return the strict row header cross-bound to the encrypted payload.
+
+        Core types:
+        :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+        """
+        binding = {
+            "content_digest": record.content_digest,
+            "dek_epoch": self.dek_epoch,
+            "envelope_digest": self.envelope_digest,
+            "password_generation": self.password_generation,
+            "previous_record_digest": record.previous_record_digest,
+            "profile_id": str(self.profile_id),
+            "record_revision": record.record_revision,
+        }
+        canonical = canonical_json_bytes(binding)
+        return f"{_RECORD_WRITE_PROVENANCE_PREFIX}:{sha256_hex(canonical)}"
+
+    def assert_row_binding(self, raw: ProfileCustodySecureObjectRawRowPort, record: UserProfileRecord) -> None:
+        """Authenticate the row header against the unlocked envelope and record.
+
+        Core types:
+        :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+        """
+        _assert_record_profile_binding(self.profile_id, record)
+        _assert_record_provenance(self, raw, record)
+        if record.record_revision == 1:
+            _assert_initial_row_lineage(raw, record)
+        else:
+            _assert_replacement_row_lineage(raw, record)
+        _assert_row_revision_metadata(raw)
+
+
+def _assert_record_profile_binding(
+    profile_id: UUID,
+    record: UserProfileRecord,
+) -> None:
+    """Require the decrypted record UUID to match its live session."""
+    if UUID(record.profile_id) != profile_id:
+        raise ProfileRecordIntegrityError("profile record UUID differs from the unlocked custody session")
+
+
+def _assert_record_provenance(
+    session: ProfileRecordSession,
+    raw: ProfileCustodySecureObjectRawRowPort,
+    record: UserProfileRecord,
+) -> None:
+    """Require the row header to carry the session-bound lineage witness."""
+    if raw.write_provenance != session.write_provenance(record):
+        raise ProfileRecordIntegrityError("profile record row provenance differs from authenticated lineage")
+
+
+def _assert_initial_row_lineage(
+    raw: ProfileCustodySecureObjectRawRowPort,
+    record: UserProfileRecord,
+) -> None:
+    """Refuse a revision-one row that names an earlier record."""
+    if raw.previous_revision_id is not None or record.previous_record_digest is not None:
+        raise ProfileRecordIntegrityError("initial profile record row carries a predecessor")
+
+
+def _assert_replacement_row_lineage(
+    raw: ProfileCustodySecureObjectRawRowPort,
+    record: UserProfileRecord,
+) -> None:
+    """Require later rows to carry both predecessor witnesses."""
+    if raw.previous_revision_id is None or record.previous_record_digest is None:
+        raise ProfileRecordIntegrityError("later profile record row lacks its predecessor")
+
+
+def _assert_row_revision_metadata(raw: ProfileCustodySecureObjectRawRowPort) -> None:
+    """Require the secure-object repository's revision metadata to be present."""
+    if raw.revision_id is None or raw.payload_hash is None or raw.ciphertext_hash is None:
+        raise ProfileRecordIntegrityError("profile record row lacks secure-object lineage metadata")
+
+
+def profile_record_object_key(profile_id: UUID) -> str:
+    """Return the registered natural key for the one current profile record."""
+    return f"{_RECORD_OBJECT_KEY_PREFIX}{profile_id}"
+
+
+@contextmanager
+def _secure_objects_for_record(
+    session: ProfileRecordSession,
+    *,
+    root: Path,
+    database_file: Path | None = None,
+) -> Generator[ProfileCustodySecureObjectRepositoryPort]:
+    """Open the canonical profile-local secure-object repository for this session."""
+    with profile_custody_secure_object_repository(
+        profile_id=session.profile_id,
+        dek=session.encryption_key(),
+        root=root,
+        database_file=database_file,
+    ) as objects:
+        yield objects
+
+
+class ProfileRecordStore:
+    """Strict current-record storage over the capsule's canonical secure DB."""
+
+    def __init__(self, *, session: ProfileRecordSession, root: Path | None = None) -> None:
+        """Initialize storage for a session at the effective capsule root."""
+        self.session = session
+        self._root = effective_storage_root(root)
+
+    def load(self) -> LoadedProfileRecord:
+        """Return the one authenticated current row and its secure CAS lineage."""
+        with _secure_objects_for_record(self.session, root=self._root) as objects:
+            return self._load_from_objects(objects)
+
+    def history(self) -> tuple[BucketEvent, ...]:
+        """Return the append-only authenticated history for this profile record."""
+        with _secure_objects_for_record(self.session, root=self._root) as objects:
+            return (
+                default_profile_bucket_event_history_repository(objects=objects)
+                .load()
+                .for_object(
+                    object_type=BucketEventObjectType.PROFILE,
+                    object_id=str(self.session.profile_id),
+                )
+            )
+
+    def create_initial(self, record: UserProfileRecord, *, stage_path: Path) -> None:
+        """Write revision one and its creation event before the stage commit marker.
+
+        Core types:
+        :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+        """
+        self.session.assert_initial_record(record)
+        database_file = stage_path / storage_location(StorageCategory.BUCKET_DATABASE_FILE).relative_path()
+        (stage_path / "blobs").mkdir(mode=0o700, exist_ok=False)
+        with _secure_objects_for_record(self.session, root=self._root, database_file=database_file) as objects:
+            self._write_with_event(
+                objects,
+                record=record,
+                expected_row_revision_id=ABSENT_SECURE_OBJECT_REVISION_ID,
+                expected_event_revision_id=ABSENT_SECURE_OBJECT_REVISION_ID,
+                event=ProfileRecordCommandEvent(
+                    event_type=BucketEventType.PROFILE_BUCKET_CREATED,
+                    occurred_at=record.updated_at.isoformat(),
+                ),
+            )
+            self._load_from_objects(objects)
+
+    def validate_staged_database(self, *, stage_path: Path) -> LoadedProfileRecord:
+        """Refuse a restore stage unless its exact current record is authenticated.
+
+        A stage written under the one migratable earlier schema is authenticated
+        against that schema instead; it is restored as stored and carried
+        forward on the first open, like any other record of that age.
+        """
+        database_file = stage_path / storage_location(StorageCategory.BUCKET_DATABASE_FILE).relative_path()
+        if not database_file.is_file() or database_file.is_symlink():
+            raise ProfileRecordIntegrityError("restore stage does not contain a regular profile database")
+        with _secure_objects_for_record(self.session, root=self._root, database_file=database_file) as objects:
+            try:
+                return self._load_from_objects(objects)
+            except ProfileRecordMigrationRequiredError:
+                return self._load_from_objects(objects, legacy=True)
+
+    def schema_migrations(self) -> tuple[ProfileSchemaMigration, ...]:
+        """Return every schema migration recorded in this profile's history, oldest first."""
+        return tuple(
+            ProfileSchemaMigration.from_event_payload(event.payload)
+            for event in self.history()
+            if event.event_type is BucketEventType.PROFILE_SCHEMA_MIGRATED
+        )
+
+    def migrate_legacy_schema(self, *, now: datetime) -> ProfileSchemaMigration | None:
+        """Carry a stored earlier-schema record forward; ``None`` when already current.
+
+        The caller holds the custody transaction lock. The legacy row is
+        authenticated against its own schema and lineage exactly as a current
+        row is, then replaced by the next revision under the current schema in
+        one batch with a ``PROFILE_SCHEMA_MIGRATED`` event whose payload names
+        the cleared facts. A second call finds a current record and writes
+        nothing.
+        """
+        with _secure_objects_for_record(self.session, root=self._root) as objects:
+            try:
+                self._load_from_objects(objects)
+            except ProfileRecordMigrationRequiredError:
+                pass
+            else:
+                return None
+            current = self._load_from_objects(objects, legacy=True)
+            kept_facts, migration = migrate_profile_facts(current.record.facts)
+            instant = now.astimezone(UTC)
+            from ...domain.user_profile.values import create_user_profile_record
+
+            replacement = create_user_profile_record(
+                context=self.session.create_context(),
+                profile_id=current.record.profile_id,
+                facts=kept_facts,
+                setup_state=current.record.setup_state,
+                record_revision=current.record.record_revision + 1,
+                previous_record_digest=current.record.content_digest,
+                created_at=current.record.created_at,
+                updated_at=max(instant, current.record.updated_at),
+            )
+            self.session.assert_replacement(current.record, replacement)
+            self._write_with_event(
+                objects,
+                record=replacement,
+                expected_row_revision_id=current.row_revision_id,
+                expected_event_revision_id=_event_history_revision(objects),
+                event=ProfileRecordCommandEvent(
+                    event_type=BucketEventType.PROFILE_SCHEMA_MIGRATED,
+                    occurred_at=replacement.updated_at.isoformat(),
+                    payload=migration.to_event_payload(),
+                ),
+            )
+            persisted = self._load_from_objects(objects)
+            if persisted.record != replacement:
+                raise ProfileRecordIntegrityError("migrated profile record did not persist its authenticated value")
+            return migration
+
+    def replace(
+        self,
+        *,
+        replacement: UserProfileRecord,
+        event: ProfileRecordCommandEvent,
+        expected_revision: int,
+        expected_content_digest: str,
+    ) -> UserProfileRecord:
+        """CAS-replace the sole current row and append its event in one transaction.
+
+        Core types:
+        :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+        """
+        with _secure_objects_for_record(self.session, root=self._root) as objects:
+            current = self._load_from_objects(objects)
+            if (
+                current.record.record_revision != expected_revision
+                or current.record.content_digest != expected_content_digest
+            ):
+                raise ProfileRecordConflictError("profile record revision compare-and-swap failed")
+            self.session.assert_replacement(current.record, replacement)
+            event_revision = _event_history_revision(objects)
+            self._write_with_event(
+                objects,
+                record=replacement,
+                expected_row_revision_id=current.row_revision_id,
+                expected_event_revision_id=event_revision,
+                event=event,
+            )
+            persisted = self._load_from_objects(objects)
+            if persisted.record != replacement:
+                raise ProfileRecordIntegrityError("profile record replacement did not persist its authenticated value")
+            return persisted.record
+
+    def rehead_under_rotated_envelope(
+        self,
+        *,
+        rotated: ProfileRecordSession,
+        event: ProfileRecordCommandEvent,
+    ) -> UserProfileRecord:
+        """Re-publish the current row's witness under a re-wrapped envelope.
+
+        A passphrase rotation re-mints the password envelope over the SAME
+        data key. The row's ``write_provenance`` folds the envelope digest and
+        the password generation, so after the swap the stored witness names a
+        wrapper that no longer exists and every read refuses. Nothing about
+        the RECORD changed, but its custody witness must.
+
+        Read and write use different sessions on purpose, and that asymmetry
+        is the whole method: the stored row can only be authenticated by the
+        session that wrote it, while the replacement can only be authenticated
+        afterwards by the rotated one. Both address the same profile and hold
+        the same key -- rotation does not re-key -- so the secure-object
+        repository is indifferent to which one opens it.
+
+        The revision advances rather than being rewritten in place. A row
+        rewritten under its own revision would leave a revision-one record
+        carrying a predecessor row, which the initial-lineage assertion
+        refuses outright; and the rotation is a real lifecycle fact that ought
+        to appear in the profile's history rather than mutate its past
+        silently. Content is preserved exactly, so the advance records the
+        custody change and nothing else.
+        """
+        if rotated.profile_id != self.session.profile_id:
+            raise ProfileRecordIntegrityError("rotated record session does not serve this profile")
+        if rotated.dek_epoch != self.session.dek_epoch:
+            raise ProfileRecordIntegrityError("rotated record session names a different DEK epoch")
+        if rotated.envelope_digest == self.session.envelope_digest:
+            raise ProfileRecordIntegrityError("rotated record session carries the same envelope as the current one")
+        with _secure_objects_for_record(self.session, root=self._root) as objects:
+            current = self._load_from_objects(objects)
+            replacement = _replacement_record(
+                current.record,
+                context=rotated.create_context(),
+                setup_state=current.record.setup_state,
+                record_revision=current.record.record_revision + 1,
+                previous_record_digest=current.record.content_digest,
+                created_at=current.record.created_at,
+                updated_at=datetime.fromisoformat(event.occurred_at).astimezone(UTC),
+            )
+            rotated.assert_replacement(current.record, replacement)
+            self._write_with_event(
+                objects,
+                record=replacement,
+                expected_row_revision_id=current.row_revision_id,
+                expected_event_revision_id=_event_history_revision(objects),
+                event=event,
+                writing_session=rotated,
+            )
+            persisted = ProfileRecordStore(session=rotated, root=self._root)._load_from_objects(objects)
+            if persisted.record != replacement:
+                raise ProfileRecordIntegrityError("re-headed profile record did not persist its authenticated value")
+            return persisted.record
+
+    def _load_from_objects(
+        self,
+        objects: ProfileCustodySecureObjectRepositoryPort,
+        *,
+        legacy: bool = False,
+    ) -> LoadedProfileRecord:
+        namespace = profile_custody_secure_object_namespace()
+        raw, loaded = _load_profile_record_row(objects, self.session.profile_id, namespace)
+        context = self.session.profile_decode_context
+        if legacy:
+            context = replace(context, schema=legacy_profile_schema(context.schema))
+        record = _decode_profile_record(loaded, context=context)
+        self.session.assert_row_binding(raw, record)
+        event_id, event = _load_profile_record_event(objects, raw)
+        _assert_event_binding(self.session, record, event_id, event)
+        if raw.revision_id is None:
+            raise ProfileRecordIntegrityError("the stored profile record row carries no revision id")
+        return LoadedProfileRecord(
+            record=record,
+            row_revision_id=raw.revision_id,
+            previous_row_revision_id=raw.previous_revision_id,
+            event_id=event_id,
+        )
+
+    def _write_with_event(
+        self,
+        objects: ProfileCustodySecureObjectRepositoryPort,
+        *,
+        record: UserProfileRecord,
+        expected_row_revision_id: str,
+        expected_event_revision_id: str,
+        event: ProfileRecordCommandEvent,
+        writing_session: ProfileRecordSession | None = None,
+    ) -> None:
+        # Defaults to the store's own session; a rotation supplies the
+        # re-wrapped one so the witness it stamps is the one every later read
+        # will recompute. Keeping this the single writer is the point --
+        # a rotation that assembled its own SecureObjectWrite would be a
+        # second write path into the one row this class exists to own.
+        writer = writing_session or self.session
+        event_value = _build_record_event(writer, record, event)
+        events = default_profile_bucket_event_history_repository(objects=objects)
+        history, observed_event_revision = events.load_revisioned()
+        if observed_event_revision != expected_event_revision_id:
+            raise ProfileRecordConflictError("bucket event history changed before the profile record command committed")
+        next_history = append_bucket_event(history, event_value)
+        record_write = SecureObjectWrite(
+            namespace=profile_custody_secure_object_namespace().namespace,
+            object_key=profile_record_object_key(writer.profile_id),
+            classification=profile_custody_secure_object_namespace().sensitivity,
+            schema_version=profile_custody_secure_object_namespace().schema_version,
+            written_at=record.updated_at,
+            payload=record.model_dump_json().encode(UTF_8_ENCODING),
+            write_provenance=writer.write_provenance(record),
+            source_event_id=event_value.event_id,
+            expected_revision_id=expected_row_revision_id,
+        )
+        event_write = events.to_secure_object_write(next_history, expected_revision_id=expected_event_revision_id)
+        objects.apply_batch((record_write, event_write))
+
+
+def _load_profile_record_row(
+    objects: ProfileCustodySecureObjectRepositoryPort,
+    profile_id: UUID,
+    namespace: ProfileCustodySecureObjectNamespace,
+) -> tuple[ProfileCustodySecureObjectRawRowPort, ProfileCustodySecureObjectRecordPort]:
+    """Load the one exact current-record row and its decrypted payload.
+
+    The admission test is two independent conditions -- how many rows the
+    namespace holds, and whether the single row is addressed to this profile --
+    and they are reported separately because they send a reader to different
+    places. A row count of one with a divergent key is a row that is PRESENT,
+    so a message naming the count sends whoever reads it looking for a missing
+    or duplicated row that does not exist.
+    """
+    object_key = profile_record_object_key(profile_id)
+    expected_key = objects.object_key_digest(object_key)
+    rows = tuple(objects.iter_all_records_raw(namespace=_RECORD_NAMESPACE))
+    if len(rows) != 1:
+        raise ProfileRecordIntegrityError(
+            f"profile capsule must contain exactly one current record row; it holds {len(rows)}"
+        )
+    raw = rows[0]
+    if raw.object_key != expected_key:
+        # The stored key is HMAC(subkey(data key), "user-profile:<uuid>"), so a
+        # divergence names one of exactly two causes and the refusal states both
+        # rather than asserting whichever one the reader happens to expect.
+        raise ProfileRecordIntegrityError(
+            "profile capsule holds one current record row addressed to a different object key than "
+            "this profile derives: the row was written for another profile UUID or under other key material"
+        )
+    loaded = objects.load(
+        namespace.namespace,
+        object_key,
+        expected_class=namespace.sensitivity,
+        max_supported_version=namespace.schema_version,
+    )
+    if loaded is None or loaded.revision_id != raw.revision_id:
+        raise ProfileRecordIntegrityError("profile record row disappeared during authenticated read")
+    return raw, loaded
+
+
+def _decode_profile_record(
+    loaded: ProfileCustodySecureObjectRecordPort,
+    *,
+    context: ProfileDecodeContext,
+) -> UserProfileRecord:
+    """Decode the strict current profile record payload.
+
+    A payload stamped with the one migratable earlier schema version is refused
+    with :class:`ProfileRecordMigrationRequiredError`, so it is never read as the
+    current schema and the record repository can carry it forward.
+    """
+    try:
+        from ...domain.user_profile.values import decode_user_profile_record
+
+        return decode_user_profile_record(loaded.payload, context=context)
+    except ValueError as exc:
+        stored_version = _stored_schema_version(loaded.payload)
+        if (
+            stored_version == LEGACY_PROFILE_SCHEMA_VERSION
+            and context.schema.version == MIGRATED_PROFILE_SCHEMA_VERSION
+        ):
+            raise ProfileRecordMigrationRequiredError(LEGACY_PROFILE_SCHEMA_VERSION, context.schema.version) from exc
+        raise ProfileRecordIntegrityError("profile record row is not the current strict record shape") from exc
+
+
+def _stored_schema_version(payload: bytes | str) -> int | None:
+    """Read only the schema version a stored payload claims, or ``None``."""
+    try:
+        decoded: object = json.loads(payload)
+    except ValueError:
+        return None
+    if not is_object_dict(decoded):
+        return None
+    version = decoded.get("schema_version")
+    return version if isinstance(version, int) and not isinstance(version, bool) else None
+
+
+def _replacement_record(
+    current: UserProfileRecord,
+    *,
+    context: ProfileCreateContext,
+    setup_state: ProfileSetupState,
+    record_revision: int,
+    previous_record_digest: str | None,
+    created_at: datetime,
+    updated_at: datetime,
+) -> UserProfileRecord:
+    """Build a replacement through the context-required profile factory."""
+    from ...domain.user_profile.values import create_user_profile_record
+
+    return create_user_profile_record(
+        context=context,
+        profile_id=current.profile_id,
+        facts=current.facts,
+        setup_state=setup_state,
+        record_revision=record_revision,
+        previous_record_digest=previous_record_digest,
+        content_digest="",
+        created_at=created_at,
+        updated_at=updated_at,
+    )
+
+
+def _load_profile_record_event(
+    objects: ProfileCustodySecureObjectRepositoryPort,
+    raw: ProfileCustodySecureObjectRawRowPort,
+) -> tuple[str, BucketEvent]:
+    """Load the durable event witness named by a current-record row."""
+    event_id = raw.source_event_id
+    if event_id is None:
+        raise ProfileRecordIntegrityError("profile record row lacks its bucket event witness")
+    history = default_profile_bucket_event_history_repository(objects=objects).load()
+    event = history.get(event_id)
+    if event is None:
+        raise ProfileRecordIntegrityError("profile record row names no durable bucket event")
+    return event_id, event
+
+
+def stage_initial_profile_record_database(
+    *,
+    stage_path: Path,
+    root: Path,
+    session: ProfileRecordSession,
+    record: UserProfileRecord,
+) -> None:
+    """Materialise the canonical encrypted DB before the custody commit marker exists.
+
+    Core types:
+    :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+    """
+    ProfileRecordStore(session=session, root=root).create_initial(record, stage_path=stage_path)
+
+
+def validate_staged_profile_record_database(
+    *,
+    stage_path: Path,
+    root: Path,
+    session: ProfileRecordSession,
+) -> LoadedProfileRecord:
+    """Authenticate the exact staged record before restore publication can continue."""
+    return ProfileRecordStore(session=session, root=root).validate_staged_database(stage_path=stage_path)
+
+
+def _event_history_revision(objects: ProfileCustodySecureObjectRepositoryPort) -> str:
+    _history, revision = default_profile_bucket_event_history_repository(objects=objects).load_revisioned()
+    return revision
+
+
+def _build_record_event(
+    session: ProfileRecordSession,
+    record: UserProfileRecord,
+    command: ProfileRecordCommandEvent,
+):
+    try:
+        occurred_at = datetime.fromisoformat(command.occurred_at).astimezone(UTC)
+    except ValueError as exc:
+        raise ProfileRecordIntegrityError("profile record command event instant is not a parsable timestamp") from exc
+    if occurred_at != record.updated_at:
+        raise ProfileRecordIntegrityError("profile record event instant differs from its replacement record")
+    if _REQUIRED_EVENT_FIELDS.intersection(command.payload):
+        raise ProfileRecordIntegrityError("profile record event attempts to override its lineage witness")
+    payload = {
+        "content_digest": record.content_digest,
+        "dek_epoch": session.dek_epoch,
+        "envelope_digest": session.envelope_digest,
+        "password_generation": str(session.password_generation),
+        "previous_record_digest": record.previous_record_digest or "-",
+        "record_revision": str(record.record_revision),
+        **dict(command.payload),
+    }
+    return build_bucket_event(
+        bucket_id=str(session.profile_id),
+        event_type=command.event_type,
+        occurred_at=occurred_at,
+        actor=_RECORD_ACTOR,
+        object_type=BucketEventObjectType.PROFILE,
+        object_id=str(session.profile_id),
+        payload=payload,
+        payload_version=1,
+    )
+
+
+def _assert_event_binding(
+    session: ProfileRecordSession,
+    record: UserProfileRecord,
+    event_id: str,
+    event: object,
+) -> None:
+    from ...domain.buckets.event import BucketEvent
+
+    if not isinstance(event, BucketEvent):
+        raise ProfileRecordIntegrityError("profile record event history returned an invalid event")
+    expected = {
+        "content_digest": record.content_digest,
+        "dek_epoch": session.dek_epoch,
+        "envelope_digest": session.envelope_digest,
+        "password_generation": str(session.password_generation),
+        "previous_record_digest": record.previous_record_digest or "-",
+        "record_revision": str(record.record_revision),
+    }
+    if (
+        event.event_id != event_id
+        or event.bucket_id != str(session.profile_id)
+        or event.object_type is not BucketEventObjectType.PROFILE
+        or event.object_id != str(session.profile_id)
+        or any(event.payload.get(key) != value for key, value in expected.items())
+    ):
+        raise ProfileRecordIntegrityError("profile record event does not authenticate the current lineage")
+
+
+__all__ = [
+    "LoadedProfileRecord",
+    "ProfileRecordCommandEvent",
+    "ProfileRecordConflictError",
+    "ProfileRecordIntegrityError",
+    "ProfileRecordMigrationRequiredError",
+    "ProfileRecordSession",
+    "ProfileRecordStore",
+    "profile_record_object_key",
+    "stage_initial_profile_record_database",
+    "validate_staged_profile_record_database",
+]

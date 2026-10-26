@@ -1,0 +1,775 @@
+"""Supervised Argon2id work for current-format profile custody."""
+
+from __future__ import annotations
+
+import atexit
+import base64
+import contextvars
+import math
+import os
+import sys
+import threading
+import time
+from collections.abc import Callable, Generator, Mapping
+from contextlib import ExitStack, contextmanager
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Final, Literal, cast
+from uuid import UUID
+
+from .....core.config import load_settings
+from .....core.errors.hierarchy import CadrumoError
+from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
+from .....core.storage_taxonomy import StorageCategory
+from .....core.storage_taxonomy_locations import storage_path
+from ..crypto.aes_gcm import KEY_SIZE
+from ._kdf_codec import (
+    canonical_frame_bytes as _canonical_frame_bytes,
+)
+from ._kdf_codec import (
+    canonical_frame_digest as _canonical_frame_digest,
+)
+from ._kdf_codec import (
+    close_fd as _close_fd,
+)
+from ._kdf_codec import (
+    windows_available_memory_bytes as _windows_available_memory_bytes,
+)
+from ._kdf_records import (
+    PROFILE_CUSTODY_KDF_ITERATIONS,
+    PROFILE_CUSTODY_KDF_MEMORY_MIB,
+    PROFILE_CUSTODY_KDF_PARALLELISM,
+)
+from ._kdf_refusals import resource_refusal as _resource_refusal
+from ._kdf_refusals import supervision_refusal as _supervision_refusal
+from ._kdf_worker_limits import PROFILE_CUSTODY_KDF_WORKER_MEMORY_BYTES
+from ._kdf_worker_supervision import _SupervisedKdfWorker, kdf_worker_never_attested
+from ._profile_password_codec import encode_profile_password
+from ._recovery_secret_codec import encode_recovery_secret
+from .errors import (
+    ProfileCustodyPasswordError,
+    ProfileCustodyRecordError,
+    ProfileCustodyRecoverySecretError,
+    ProfileCustodyRefusal,
+    ProfileCustodyRefusedError,
+)
+from .kdf_calibration_search import search_profile_kdf_grid
+from .records import (
+    ProfileCustodyEnvelope,
+    ProfileCustodyKdfParameters,
+    ProfileCustodyWrappedDek,
+)
+from .sentinel_contract import ProfileCustodySentinelRecord, verify_profile_custody_sentinel
+
+if TYPE_CHECKING:
+    from .....core.config import Settings
+
+PROFILE_CUSTODY_KDF_CALIBRATION_VERSION: Final = 1
+PROFILE_CUSTODY_KDF_SAMPLE_COUNT: Final = 5
+PROFILE_CUSTODY_KDF_SAMPLE_DEADLINE_SECONDS: Final = 2.0
+PROFILE_CUSTODY_KDF_TOTAL_DEADLINE_SECONDS: Final = 15.0
+#: Wall-clock bound on one wrap or unwrap. Includes waiting for the installation's single
+#: KDF permit, attesting a fresh child, then the derivation; the operating system's
+#: uncancellable process-creation call is not charged, because no child exists to
+#: stall while it blocks. The derivation's own cost is bounded by the child's
+#: operating-system CPU-time and memory ceilings; this bound only guarantees a
+#: stalled child is abandoned. The child starts the base interpreter without
+#: ``site`` and imports only its allow-listed leaves, so its start-up is a fraction
+#: of this even on a saturated host; a slow start is fixed there, never by widening
+#: this bound.
+PROFILE_CUSTODY_KDF_OPERATION_DEADLINE_SECONDS: Final = 15.0
+PROFILE_CUSTODY_KDF_TARGET_MIN_SECONDS: Final = 0.250
+PROFILE_CUSTODY_KDF_TARGET_MAX_SECONDS: Final = 0.500
+_MEBIBYTE: Final = 1024 * 1024
+_KDF_LEASE_FILENAME: Final = "profile-kdf.v1.lock"
+_KDF_THREAD_LEASE: Final = threading.BoundedSemaphore(value=1)
+_KDF_PREWARM: Final = contextvars.ContextVar["ProfileKdfPrewarm | None"]("cadrumo_profile_kdf_prewarm", default=None)
+
+
+@dataclass(frozen=True, slots=True)
+class ProfileCustodyKdfResources:
+    """Explicit local resources used to decide whether one grid point is safe."""
+
+    available_memory_bytes: int
+    cpu_count: int
+
+    def __post_init__(self) -> None:
+        """Refuse a resource reading of zero or negative memory or CPUs.
+
+        A zero or negative reading here would silently make every grid point
+        look unsafe (or, worse, divide-by-zero somewhere downstream) instead
+        of surfacing that the resource probe itself failed — this is the
+        boundary that turns a bad probe into a loud refusal.
+        """
+        if self.available_memory_bytes < 1 or self.cpu_count < 1:
+            raise ValueError("profile KDF resources must be positive")
+
+
+@dataclass(frozen=True, slots=True)
+class ProfileCustodyKdfCalibration:
+    """Versioned result of deterministic finite-grid enrollment calibration."""
+
+    version: Literal[1]
+    parameters: ProfileCustodyKdfParameters
+    source: Literal["measured", "fallback"]
+    median_seconds: float | None
+
+
+@dataclass(frozen=True, slots=True)
+class ProfileCustodyUnlock:
+    """A DEK accepted only after a parent-owned sentinel proof."""
+
+    profile_id: UUID
+    envelope_digest: str
+    kdf: ProfileCustodyKdfParameters
+    dek: bytes
+
+
+class _CalibrationDeadlineElapsedError(CadrumoError):
+    """Signal that a calibration grid cannot continue within its total deadline."""
+
+
+def profile_password_wrap_aad(
+    *,
+    profile_id: UUID,
+    password_generation: int,
+    dek_epoch: str,
+    kdf: ProfileCustodyKdfParameters,
+) -> bytes:
+    """Build the canonical password-wrap AAD for one current custody envelope."""
+    payload = {
+        "dek_epoch": dek_epoch,
+        "kdf_digest": _canonical_frame_digest(kdf.model_dump(mode="json")),
+        "key_schedule": "profile-password-dek-wrap/v1",
+        "password_encoding": _UTF_8_ENCODING,
+        "password_generation": password_generation,
+        "product": "cadrumo",
+        "profile_id": str(profile_id),
+        "purpose": "profile-password-dek-wrap/v1",
+        "schema_version": 1,
+    }
+    return _canonical_frame_bytes(payload)
+
+
+def profile_kdf_grid(*, salt: bytes) -> tuple[ProfileCustodyKdfParameters, ...]:
+    """Return the complete deterministic Argon2id v1 grid, strongest first."""
+    if len(salt) != 16:
+        raise ValueError("profile KDF calibration salt must contain exactly 16 bytes")
+    encoded_salt = base64.b64encode(salt).decode("ascii")
+    return tuple(
+        ProfileCustodyKdfParameters(
+            algorithm="argon2id",
+            version=19,
+            memory_mib=cast("Literal[19, 32, 64, 128, 256]", memory_mib),
+            iterations=cast("Literal[2, 3, 4, 6, 8, 10]", iterations),
+            parallelism=cast("Literal[1, 2, 4]", parallelism),
+            salt_b64=encoded_salt,
+            output_bytes=32,
+        )
+        for memory_mib in sorted(PROFILE_CUSTODY_KDF_MEMORY_MIB, reverse=True)
+        for iterations in sorted(PROFILE_CUSTODY_KDF_ITERATIONS, reverse=True)
+        for parallelism in sorted(PROFILE_CUSTODY_KDF_PARALLELISM, reverse=True)
+    )
+
+
+def fixed_profile_kdf_fallback(*, salt: bytes) -> ProfileCustodyKdfParameters:
+    """Return the sole eligible fallback point without weakening its parameters."""
+    return ProfileCustodyKdfParameters(
+        algorithm="argon2id",
+        version=19,
+        memory_mib=64,
+        iterations=3,
+        parallelism=1,
+        salt_b64=base64.b64encode(salt).decode("ascii"),
+        output_bytes=32,
+    )
+
+
+def _posix_memory_bytes() -> int:
+    """Return a POSIX memory bound for the eligibility gate, or 0 if unknowable.
+
+    ``SC_AVPHYS_PAGES`` is the currently-free page count and is the figure to
+    prefer, but it is NOT portable: macOS omits it from ``os.sysconf_names``
+    entirely, so asking for it by name raises ``ValueError`` rather than
+    answering. The sibling probe in ``application/provisioning.py`` already
+    guards on membership for exactly this reason and calls the constant "the
+    more commonly absent of the three".
+
+    Reading it unguarded here made every macOS host refuse profile custody
+    outright: the ``ValueError`` was caught beside genuine probe failures and
+    turned into ``KDF_RESOURCE_LIMIT``, so `config profile create` could not
+    succeed on any Mac at any memory pressure -- while the refusal told the
+    operator to retry when the machine was less loaded, a state that could
+    never arrive. Measured on macOS 26.5.1: ``SC_AVPHYS_PAGES`` absent,
+    ``SC_PHYS_PAGES`` present and reporting 8 GiB, ~1.6 GiB genuinely
+    reclaimable.
+
+    Where the free count is unavailable, total physical memory is used
+    instead. That is deliberately a weaker bound -- it cannot see load -- and
+    it is the honest one, because the alternative on such a platform is to
+    refuse work the host can plainly do. The allocation is not left unguarded:
+    the derivation runs in a supervised child under ``RLIMIT_AS`` with a
+    deadline, so a host that genuinely cannot supply the memory still fails
+    there, loudly, instead of being predicted here.
+    """
+    # Reached through ``getattr`` rather than named directly: neither attribute
+    # is declared on Windows, where this branch never runs, so naming them
+    # outright is an unresolved attribute to a type checker reading the
+    # Windows surface. The names are also the only portable way to ask what
+    # this host actually answers.
+    names = getattr(os, "sysconf_names", None)
+    sysconf = getattr(os, "sysconf", None)
+    # Narrowed by test rather than by annotation. Annotating the ``getattr``
+    # results would assert their shape instead of establishing it, and these
+    # are exactly the attributes whose presence and type this function exists
+    # to be unsure about.
+    if not isinstance(names, Mapping) or not callable(sysconf):
+        return 0
+    if "SC_PAGE_SIZE" not in names:
+        return 0
+    sysconf_reader = cast("Callable[[str], int]", sysconf)
+    page_size = int(sysconf_reader("SC_PAGE_SIZE"))
+    for pages_name in ("SC_AVPHYS_PAGES", "SC_PHYS_PAGES"):
+        if pages_name in names:
+            return page_size * int(sysconf_reader(pages_name))
+    return 0
+
+
+def profile_kdf_resources() -> ProfileCustodyKdfResources:
+    """Read the portable resources that bound a local KDF worker."""
+    cpu_count = os.cpu_count()
+    if cpu_count is None or cpu_count < 1:
+        raise _resource_refusal()
+    try:
+        if sys.platform == "win32":
+            available_memory = _windows_available_memory_bytes()
+        else:
+            available_memory = _posix_memory_bytes()
+    except (AttributeError, OSError, ValueError):
+        raise _resource_refusal() from None
+    if available_memory < 1:
+        raise _resource_refusal()
+    return ProfileCustodyKdfResources(available_memory_bytes=available_memory, cpu_count=cpu_count)
+
+
+def profile_kdf_is_eligible(
+    parameters: ProfileCustodyKdfParameters,
+    *,
+    resources: ProfileCustodyKdfResources,
+) -> bool:
+    """Return whether one finite-grid point fits the explicit local envelope."""
+    required_memory = parameters.memory_mib * _MEBIBYTE
+    return (
+        parameters.parallelism <= resources.cpu_count
+        and required_memory <= PROFILE_CUSTODY_KDF_WORKER_MEMORY_BYTES
+        and required_memory + _MEBIBYTE * 64 <= resources.available_memory_bytes
+    )
+
+
+def _fallback_profile_kdf_calibration(
+    parameters: ProfileCustodyKdfParameters,
+) -> ProfileCustodyKdfCalibration:
+    return ProfileCustodyKdfCalibration(
+        version=PROFILE_CUSTODY_KDF_CALIBRATION_VERSION,
+        parameters=parameters,
+        source="fallback",
+        median_seconds=None,
+    )
+
+
+def profile_kdf_meets_fallback_floor(parameters: ProfileCustodyKdfParameters) -> bool:
+    """Return whether a grid point is at least as strong as the fixed fallback.
+
+    Calibration never selects below this floor, so measuring a host can only
+    ever strengthen an enrollment relative to not measuring it.
+    """
+    floor = fixed_profile_kdf_fallback(salt=bytes(16))
+    return (
+        parameters.memory_mib >= floor.memory_mib
+        and parameters.memory_mib * parameters.iterations >= floor.memory_mib * floor.iterations
+    )
+
+
+def calibrate_profile_kdf(*, salt: bytes, settings: Settings | None = None) -> ProfileCustodyKdfCalibration:
+    """Calibrate a fresh profile KDF with bounded real child-process samples."""
+    resources = profile_kdf_resources()
+    fallback = fixed_profile_kdf_fallback(salt=salt)
+    if not profile_kdf_is_eligible(fallback, resources=resources):
+        raise _resource_refusal()
+
+    # Measuring the grid costs one supervised child per probe and per sample,
+    # which is the right price for an operator's one-off enrolment and the
+    # wrong one for a host that enrols constantly. Declining to measure adopts
+    # the SAME fixed point this function already returns when no point can be
+    # confirmed before its deadline, so nothing about the wrap weakens; only
+    # the host measurement is skipped.
+    if not (settings or load_settings()).cadrumo_profile_kdf_measure_calibration:
+        return _fallback_profile_kdf_calibration(fallback)
+
+    deadline = time.monotonic() + PROFILE_CUSTODY_KDF_TOTAL_DEADLINE_SECONDS
+    candidates = tuple(
+        parameters
+        for parameters in profile_kdf_grid(salt=salt)
+        if profile_kdf_is_eligible(parameters, resources=resources) and profile_kdf_meets_fallback_floor(parameters)
+    )
+
+    def probe(parameters: ProfileCustodyKdfParameters) -> float:
+        try:
+            return _measure_profile_kdf(parameters, deadline=deadline, settings=settings)
+        except TimeoutError as exc:
+            if time.monotonic() >= deadline:
+                raise _CalibrationDeadlineElapsedError from exc
+            return math.inf
+        except ProfileCustodyRefusedError as exc:
+            if exc.refusal is ProfileCustodyRefusal.KDF_RESOURCE_LIMIT:
+                return math.inf
+            raise
+
+    try:
+        choice = search_profile_kdf_grid(
+            candidates,
+            probe=probe,
+            target_min_seconds=PROFILE_CUSTODY_KDF_TARGET_MIN_SECONDS,
+            target_max_seconds=PROFILE_CUSTODY_KDF_TARGET_MAX_SECONDS,
+            confirmation_samples=PROFILE_CUSTODY_KDF_SAMPLE_COUNT,
+        )
+    except _CalibrationDeadlineElapsedError:
+        choice = None
+    if choice is None:
+        return _fallback_profile_kdf_calibration(fallback)
+    return ProfileCustodyKdfCalibration(
+        version=PROFILE_CUSTODY_KDF_CALIBRATION_VERSION,
+        parameters=choice.parameters,
+        source="measured",
+        median_seconds=choice.median_seconds,
+    )
+
+
+def unlock_profile_custody(
+    envelope: ProfileCustodyEnvelope,
+    password: str,
+    *,
+    sentinel: ProfileCustodySentinelRecord,
+    settings: Settings | None = None,
+    timeout_seconds: float = PROFILE_CUSTODY_KDF_OPERATION_DEADLINE_SECONDS,
+) -> ProfileCustodyUnlock:
+    """Return a DEK only after supervised unwrap and parent sentinel proof."""
+    dek = unlock_profile_custody_password_material(
+        profile_id=envelope.profile_id,
+        dek_epoch=envelope.dek_epoch,
+        kdf=envelope.kdf,
+        wrapped_dek=envelope.wrapped_dek,
+        secret=password,
+        associated_data=profile_password_wrap_aad(
+            profile_id=envelope.profile_id,
+            password_generation=envelope.password_generation,
+            dek_epoch=envelope.dek_epoch,
+            kdf=envelope.kdf,
+        ),
+        sentinel=sentinel,
+        settings=settings,
+        timeout_seconds=timeout_seconds,
+    )
+    return ProfileCustodyUnlock(
+        profile_id=envelope.profile_id,
+        envelope_digest=envelope.self_digest,
+        kdf=envelope.kdf,
+        dek=dek,
+    )
+
+
+def unlock_profile_custody_password_material(
+    *,
+    profile_id: UUID,
+    dek_epoch: str,
+    kdf: ProfileCustodyKdfParameters,
+    wrapped_dek: ProfileCustodyWrappedDek,
+    secret: str,
+    associated_data: bytes,
+    sentinel: ProfileCustodySentinelRecord,
+    settings: Settings | None = None,
+    timeout_seconds: float = PROFILE_CUSTODY_KDF_OPERATION_DEADLINE_SECONDS,
+) -> bytes:
+    """Supervise one current-format wrapper unwrap and prove its immutable DEK.
+
+    The caller owns one closed wrapper AAD domain.  This adapter owns password
+    representation, process supervision, and the non-optional capsule proof.
+    It never returns an unproved key.
+    """
+    if timeout_seconds <= 0:
+        raise ValueError("profile KDF timeout must be positive")
+    password_bytes = encode_profile_password(secret)
+    deadline = time.monotonic() + timeout_seconds
+    try:
+        with (
+            profile_kdf_lease(settings=settings, deadline=deadline),
+            _supervised_kdf_worker(deadline=deadline, settings=settings) as worker,
+        ):
+            dek = worker.unwrap(
+                password=password_bytes,
+                kdf=kdf,
+                wrapped_dek=wrapped_dek,
+                associated_data=associated_data,
+            )
+    except TimeoutError as error:
+        raise _timeout_refusal(error) from None
+    if dek is None:
+        raise ProfileCustodyPasswordError("profile password did not authenticate the custody envelope")
+    verify_profile_custody_sentinel(
+        dek=dek,
+        profile_id=profile_id,
+        dek_epoch=dek_epoch,
+        sentinel=sentinel,
+    )
+    return dek
+
+
+def wrap_profile_custody_password_material(
+    *,
+    secret: str,
+    dek: bytes,
+    kdf: ProfileCustodyKdfParameters,
+    associated_data: bytes,
+    settings: Settings | None = None,
+    timeout_seconds: float = PROFILE_CUSTODY_KDF_OPERATION_DEADLINE_SECONDS,
+) -> ProfileCustodyWrappedDek:
+    """Build one wrapper only inside the existing supervised KDF boundary."""
+    if timeout_seconds <= 0:
+        raise ValueError("profile KDF timeout must be positive")
+    if len(dek) != KEY_SIZE:
+        raise ProfileCustodyRecordError("profile custody DEK must contain exactly 32 bytes")
+    secret_bytes = encode_profile_password(secret)
+    deadline = time.monotonic() + timeout_seconds
+    try:
+        with (
+            profile_kdf_lease(settings=settings, deadline=deadline),
+            _supervised_kdf_worker(deadline=deadline, settings=settings) as worker,
+        ):
+            wrapped_dek = worker.wrap(
+                secret=secret_bytes,
+                dek=dek,
+                kdf=kdf,
+                associated_data=associated_data,
+            )
+    except TimeoutError as error:
+        raise _timeout_refusal(error) from None
+    if wrapped_dek is None:
+        raise ProfileCustodyRecordError("supervised profile custody wrapper creation failed")
+    return wrapped_dek
+
+
+def unlock_profile_custody_recovery_material(
+    *,
+    profile_id: UUID,
+    dek_epoch: str,
+    kdf: ProfileCustodyKdfParameters,
+    wrapped_dek: ProfileCustodyWrappedDek,
+    secret: str,
+    associated_data: bytes,
+    sentinel: ProfileCustodySentinelRecord,
+    settings: Settings | None = None,
+    timeout_seconds: float = PROFILE_CUSTODY_KDF_OPERATION_DEADLINE_SECONDS,
+) -> bytes:
+    """Unlock the DEK using the recovery secret, inside the same supervised KDF boundary.
+
+    The recovery-path sibling of the password unlock above it: same
+    supervised worker and lease, but authenticated against the recovery
+    secret rather than the login password, so a wrong recovery secret raises
+    :class:`ProfileCustodyRecoverySecretError` rather than the password
+    error a caller further up must distinguish.
+    """
+    if timeout_seconds <= 0:
+        raise ValueError("profile KDF timeout must be positive")
+    secret_bytes = encode_recovery_secret(secret)
+    deadline = time.monotonic() + timeout_seconds
+    try:
+        with (
+            profile_kdf_lease(settings=settings, deadline=deadline),
+            _supervised_kdf_worker(deadline=deadline, settings=settings) as worker,
+        ):
+            dek = worker.unwrap(
+                password=secret_bytes,
+                kdf=kdf,
+                wrapped_dek=wrapped_dek,
+                associated_data=associated_data,
+                recovery=True,
+            )
+    except TimeoutError as error:
+        raise _timeout_refusal(error) from None
+    if dek is None:
+        raise ProfileCustodyRecoverySecretError("profile recovery secret did not authenticate the custody envelope")
+    verify_profile_custody_sentinel(dek=dek, profile_id=profile_id, dek_epoch=dek_epoch, sentinel=sentinel)
+    return dek
+
+
+def wrap_profile_custody_recovery_material(
+    *,
+    secret: str,
+    dek: bytes,
+    kdf: ProfileCustodyKdfParameters,
+    associated_data: bytes,
+    settings: Settings | None = None,
+    timeout_seconds: float = PROFILE_CUSTODY_KDF_OPERATION_DEADLINE_SECONDS,
+) -> ProfileCustodyWrappedDek:
+    """Wrap the DEK under the recovery secret, inside the same supervised KDF boundary.
+
+    The recovery-path sibling of the password wrap above it — same
+    supervised worker and lease, but the resulting wrapper is unlocked later
+    by :func:`unlock_profile_custody_recovery_material` with the recovery
+    secret, never the login password.
+    """
+    if timeout_seconds <= 0:
+        raise ValueError("profile KDF timeout must be positive")
+    if len(dek) != KEY_SIZE:
+        raise ProfileCustodyRecordError("profile custody DEK must contain exactly 32 bytes")
+    secret_bytes = encode_recovery_secret(secret)
+    deadline = time.monotonic() + timeout_seconds
+    try:
+        with (
+            profile_kdf_lease(settings=settings, deadline=deadline),
+            _supervised_kdf_worker(deadline=deadline, settings=settings) as worker,
+        ):
+            wrapped = worker.wrap(secret=secret_bytes, dek=dek, kdf=kdf, associated_data=associated_data, recovery=True)
+    except TimeoutError as error:
+        raise _timeout_refusal(error) from None
+    if wrapped is None:
+        raise ProfileCustodyRecordError("supervised profile recovery wrapper creation failed")
+    return wrapped
+
+
+class ProfileKdfPrewarm:
+    """Keep one attested, idle KDF child ready for its owner's next wrap or unwrap.
+
+    Every Argon2 operation still runs in its own freshly launched, contained
+    child that performs exactly one derivation and exits; no secret reaches a
+    child before its ready attestation is verified. This only moves that
+    launch and attestation, an interpreter start-up that costs far more than
+    the derivation itself, off the caller's critical path. A spare is used
+    only inside :meth:`bound`, so nothing outside the owner adopts it, and a
+    spare that died while idle is discarded for a fresh launch.
+    """
+
+    def __init__(self, *, settings: Settings | None = None) -> None:
+        """Bind the owner's settings now: a spare launches on another thread, outside its context."""
+        self._settings = settings or load_settings()
+        self._lock = threading.Lock()
+        self._spare: _SupervisedKdfWorker | None = None
+        self._launching = False
+        self._closed = False
+        atexit.register(self.close)
+
+    def refill(self) -> None:
+        """Start launching a spare unless one is ready, launching, or the owner closed."""
+        with self._lock:
+            if self._closed or self._spare is not None or self._launching:
+                return
+            self._launching = True
+        context = contextvars.copy_context()
+        threading.Thread(target=context.run, args=(self._launch,), name="profile-kdf-prewarm", daemon=True).start()
+
+    def _launch(self) -> None:
+        spare: _SupervisedKdfWorker | None = None
+        try:
+            spare = _SupervisedKdfWorker(
+                deadline=time.monotonic() + PROFILE_CUSTODY_KDF_OPERATION_DEADLINE_SECONDS,
+                settings=self._settings,
+            ).__enter__()
+        except (ProfileCustodyRefusedError, TimeoutError, OSError, ValueError):
+            # A failed spare already released itself and logged its lifecycle;
+            # the next operation launches its own child instead.
+            spare = None
+        finally:
+            with self._lock:
+                self._launching = False
+                if spare is not None and not self._closed and self._spare is None:
+                    self._spare, spare = spare, None
+            if spare is not None:
+                spare.__exit__(None, None, None)
+
+    def take(self, *, deadline: float) -> _SupervisedKdfWorker | None:
+        """Hand the ready spare to one operation, or ``None`` when a fresh launch is needed."""
+        with self._lock:
+            spare, self._spare = self._spare, None
+        if spare is None:
+            return None
+        if not spare.adopt(deadline=deadline):
+            spare.__exit__(None, None, None)
+            return None
+        return spare
+
+    @contextmanager
+    def bound(self) -> Generator[None]:
+        """Let supervised KDF work in this context use the spare, then prepare the next one."""
+        token = _KDF_PREWARM.set(self)
+        try:
+            yield
+        finally:
+            _KDF_PREWARM.reset(token)
+            self.refill()
+
+    def close(self) -> None:
+        """Stop launching spares and contain the idle one."""
+        with self._lock:
+            self._closed = True
+            spare, self._spare = self._spare, None
+        atexit.unregister(self.close)
+        if spare is not None:
+            spare.__exit__(None, None, None)
+
+
+@contextmanager
+def _supervised_kdf_worker(*, deadline: float, settings: Settings | None) -> Generator[_SupervisedKdfWorker]:
+    """Run one operation in the bound prewarmed child when one is ready, else in a fresh one."""
+    prewarm = _KDF_PREWARM.get()
+    spare = prewarm.take(deadline=deadline) if prewarm is not None else None
+    if spare is None:
+        with _SupervisedKdfWorker(deadline=deadline, settings=settings) as worker:
+            yield worker
+        return
+    with ExitStack() as owned:
+        owned.push(spare)
+        yield spare
+
+
+def _timeout_refusal(error: TimeoutError) -> ProfileCustodyRefusedError:
+    """Name a child that never attested as supervision; a late permit or derivation as the busy host's limit."""
+    return _supervision_refusal() if kdf_worker_never_attested(error) else _resource_refusal()
+
+
+def _measure_profile_kdf(
+    parameters: ProfileCustodyKdfParameters,
+    *,
+    deadline: float,
+    settings: Settings | None,
+) -> float:
+    """Return the worker-timed derivation seconds of one supervised sample.
+
+    The worker times only the Argon2 call, so the band measures derivation
+    cost rather than interpreter start-up; the wall clock still bounds the
+    whole sample, and a duration longer than the sample itself took is a lie
+    the parent refuses.
+    """
+    remaining = min(PROFILE_CUSTODY_KDF_SAMPLE_DEADLINE_SECONDS, deadline - time.monotonic())
+    if remaining <= 0:
+        raise TimeoutError("profile KDF calibration total deadline elapsed")
+    started = time.monotonic()
+    with (
+        profile_kdf_lease(settings=settings, deadline=deadline),
+        _SupervisedKdfWorker(
+            deadline=time.monotonic() + remaining,
+            settings=settings,
+        ) as worker,
+    ):
+        derivation_seconds = worker.calibrate(parameters)
+    elapsed = time.monotonic() - started
+    if elapsed > PROFILE_CUSTODY_KDF_SAMPLE_DEADLINE_SECONDS:
+        raise TimeoutError("profile KDF calibration sample deadline elapsed")
+    if derivation_seconds > elapsed:
+        raise _supervision_refusal()
+    return derivation_seconds
+
+
+@contextmanager
+def profile_kdf_lease(*, deadline: float, settings: Settings | None = None) -> Generator[None]:
+    """Acquire the one OS-released KDF permit for a canonical installation root.
+
+    The descriptor stays open for the operation, so an abnormal owner death
+    releases its permit at the operating-system boundary instead of leaving a
+    process-local or persistent ownership record behind.
+    """
+    remaining = deadline - time.monotonic()
+    if remaining <= 0 or not _KDF_THREAD_LEASE.acquire(timeout=remaining):
+        raise _resource_refusal()
+    try:
+        try:
+            root = storage_path(StorageCategory.BUCKETS, settings=settings).parent
+            # The first credential enrollment occurs before a capsule exists,
+            # so the storage root has no prior lifecycle owner to materialise
+            # it.  The KDF lease owns this one non-capsule coordination file;
+            # create only its configured parent before resolving it.
+            root.mkdir(parents=True, exist_ok=True)
+            root = root.resolve(strict=True)
+            if not root.is_dir():
+                raise NotADirectoryError(root)
+            lock_path = root / _KDF_LEASE_FILENAME
+            descriptor = os.open(
+                lock_path,
+                os.O_RDWR | os.O_CREAT | getattr(os, "O_BINARY", 0),
+                0o600,
+            )
+        except OSError:
+            raise _supervision_refusal() from None
+        try:
+            if os.fstat(descriptor).st_size == 0:
+                os.write(descriptor, b"\x00")
+            _acquire_kdf_file_lease(descriptor, deadline=deadline)
+            try:
+                yield
+            finally:
+                _release_kdf_file_lease(descriptor)
+        finally:
+            _close_fd(descriptor)
+    finally:
+        _KDF_THREAD_LEASE.release()
+
+
+def _acquire_kdf_file_lease(descriptor: int, *, deadline: float) -> None:
+    while True:
+        try:
+            if sys.platform == "win32":
+                import msvcrt
+
+                os.lseek(descriptor, 0, os.SEEK_SET)
+                msvcrt.locking(descriptor, msvcrt.LK_NBLCK, 1)
+            else:
+                import fcntl
+
+                fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            return
+        except OSError:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise _resource_refusal() from None
+            time.sleep(min(0.02, remaining))
+
+
+def _release_kdf_file_lease(descriptor: int) -> None:
+    try:
+        if sys.platform == "win32":
+            import msvcrt
+
+            os.lseek(descriptor, 0, os.SEEK_SET)
+            msvcrt.locking(descriptor, msvcrt.LK_UNLCK, 1)
+        else:
+            import fcntl
+
+            fcntl.flock(descriptor, fcntl.LOCK_UN)
+    except OSError:
+        raise _supervision_refusal() from None
+
+
+__all__ = [
+    "PROFILE_CUSTODY_KDF_CALIBRATION_VERSION",
+    "PROFILE_CUSTODY_KDF_OPERATION_DEADLINE_SECONDS",
+    "PROFILE_CUSTODY_KDF_SAMPLE_COUNT",
+    "PROFILE_CUSTODY_KDF_SAMPLE_DEADLINE_SECONDS",
+    "PROFILE_CUSTODY_KDF_TARGET_MAX_SECONDS",
+    "PROFILE_CUSTODY_KDF_TARGET_MIN_SECONDS",
+    "PROFILE_CUSTODY_KDF_TOTAL_DEADLINE_SECONDS",
+    "ProfileCustodyKdfCalibration",
+    "ProfileCustodyKdfResources",
+    "ProfileCustodyUnlock",
+    "ProfileKdfPrewarm",
+    "calibrate_profile_kdf",
+    "fixed_profile_kdf_fallback",
+    "profile_kdf_grid",
+    "profile_kdf_is_eligible",
+    "profile_kdf_lease",
+    "profile_kdf_meets_fallback_floor",
+    "profile_kdf_resources",
+    "profile_password_wrap_aad",
+    "unlock_profile_custody",
+    "unlock_profile_custody_password_material",
+    "unlock_profile_custody_recovery_material",
+    "wrap_profile_custody_password_material",
+    "wrap_profile_custody_recovery_material",
+]

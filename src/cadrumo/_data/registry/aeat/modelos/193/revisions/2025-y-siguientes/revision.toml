@@ -1,0 +1,960 @@
+[revisions."2025-y-siguientes"]
+binding_source_refs = ["aeat-dr-193-2025"]
+formula_source_refs = ["aeat-dr-193-2025", "aeat-modelo-193-296-note-2025", "boe-modelo-193-2011-form"]
+predecessor = "2024"
+casilla_source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+application_link_source_refs = ["aeat-dr-193-2025"]
+reviewed_against = "2024"
+# Prepared and reviewed by an agent against the bundled diseño de registros and
+# the ordenes this revision cites; NO human operator has countersigned it, and
+# 'agent_reviewed' plus this reviewer token record that state honestly rather
+# than claiming the operator's own sign-off.
+#
+# What the review established, by measurement: every casilla legal_ref and
+# source_ref resolves to the legal catalogue; every cited source's corpus file is
+# present; every formula targets a casilla of this revision; every enrolled
+# schema family resolves; every layout record's emitted extent now equals the
+# 500 positions its diseño declares; and NO design DATA position is left
+# unaddressed by the layout -- the uncovered runs are the reserved/blank ones the
+# design itself declares, which space-fill at the correct total length.
+#
+# This revision's layout is HAND-AUTHORED rather than generated, so it carries no
+# fresh-render reproduction evidence, and this stamp deliberately does not claim
+# any. That is the difference between it and the generated-tree revisions.
+#
+# What it does NOT establish: that the figures a filing produces are correct
+# against AEAT. That is a tax review against official sources, and it is what an
+# operator re-stamping this to 'operator_reviewed' would be attesting.
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-08-19
+authority_grade = "filing"
+id = "2025-y-siguientes"
+valid_from = 2025-01-01
+period_selector = { year_from = 2025, periods = ["0A"] }
+legal_refs = [
+    "ley-35-2006:art-25",
+    "ley-35-2006:art-99",
+    "orden-eha-3377-2011:art-1",
+    "rd-439-2007:art-108",
+    "rd-439-2007:art-90",
+    "ley-35-2006:art-101",
+    "ley-58-2003:art-93",
+]
+orden_aplicabilidad = [
+    "orden-eha-3377-2011:art-1",
+]
+source_refs = ["aeat-dr-193-2025", "aeat-modelo-193-296-note-2025", "aeat-modelo-193-procedure", "boe-modelo-193-2011-form"]
+family_storage_baseline = "2024"
+scoped_families = ["export_layouts", "workbook_parity_refs", "verification_expectations", "completeness_manifest"]
+
+[revisions."2025-y-siguientes".family_dispositions.parameters]
+reason = """
+A parameter holds a regulatory value a formula of this revision applies -- a rate, a threshold, a coefficient. Modelo 193 applies none: both of its formulas are op = 'copy', carrying the sums of the type-2 perceptor records' base and retenciones into the resumen casillas, and a copy applies nothing to what it copies. The retention rates reaching these figures were set by the retenedor at payment time under RD 439/2007 art. 90 and recorded on each perceptor record; this annual resumen receives the \
+already-withheld amounts. Empty by the shape of this modelo's calculation rather than by omission."""
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-90"]
+source_refs = ["aeat-modelo-193-procedure"]
+
+[revisions."2025-y-siguientes".family_dispositions.projection_endpoints]
+reason = "A projection endpoint admits one typed filing endpoint that an export record REPEATS. Modelo 193's record design declares three fixed records -- declarante, perceptor and the gastos relationship, none of which repeats a projection -- and no field of kind 'projection' exists in any authored surface. The family has no repeated endpoint to admit and nothing an entry here could name; authoring a repeated projection row into the layout is what would make this family apply."
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1"]
+source_refs = ["aeat-dr-193-2024", "aeat-dr-193-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "declarante-contacto-telefono"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "declarante-contacto-nombre"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "declaracion-numero-identificativo"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "declaracion-complementaria"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "declaracion-sustitutiva"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "declaracion-anterior-numero"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "retenciones-ingresadas-total"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "gastos-total-declarante"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "declarante-naturaleza"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "total-perceptores-count"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "base-retenciones-ingresos-a-cuenta"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "retenciones-ingresos-a-cuenta"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "gasto-contributor-nif"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "gasto-contributor-nombre"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "representante-legal-nif"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "gasto-importe-anual"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-nif"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "perc-nif-representante"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-name"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-mediador-flag"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-province"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-clave-codigo"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-codigo-emisor"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-clave-percepcion"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-naturaleza-percepcion"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-pago"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-tipo-codigo"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-codigo-cuenta"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-pendiente-flag"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "devengo-year"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-tipo-percepcion"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-percepciones-193"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-reducciones-193"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-base-retenciones-193"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-porcentaje-retencion"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-retenciones-193"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-penalizaciones"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-naturaleza-declarante"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-fecha-inicio-prestamo"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-fecha-vencimiento-prestamo"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-compensaciones"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-garantias"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-retenciones-forales-estatal"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-retenciones-forales-navarra"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-retenciones-forales-araba"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-retenciones-forales-gipuzkoa"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-retenciones-forales-bizkaia"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-ceuta-melilla-clave"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-numero-orden-193"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-nif-pagador-anterior"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-fecha-devengo"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-clave-mercado"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "extraction_profiles"
+selector = {revision = "2024", id = "modelo-193-declaracion-pdf"}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "dependency_classifications"
+selector = {revision = "2024", id = "modelo-193-dep-123"}
+# The declarant totals are summed from the type-2 perceptor records (design
+# pp. 5-6, positions 136-174), so the quarterly modelo 123 figures no longer
+# enter the arithmetic. They stay declared as a cross-check: pending
+# carry-out and prior-accrual settlement carry-in mean the two need not match.
+fields = {treatment = "factual_evidence"}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [2]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "constructs"
+selector = {revision = "2024", id = "modelo-193-annual-summary"}
+sequence_additions = {bindings = ["modelo-193-perceptor-rows-base-total", "modelo-193-perceptor-rows-retenciones-total"], deadline_windows = ["modelo-193-2025-0a"], source_refs = ["aeat-dr-193-2025", "aeat-calendario-contribuyente-2026-hasta-2-febrero"]}
+sequence_removals = {deadline_windows = [0], source_refs = [3]}
+sequence_order = {source_refs = [0, 4, 1, 2, 3, 5]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2024", id = "modelo-193-export"}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2024", id = "modelo-193-extractor"}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2024", id = "modelo-193-filing"}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-123-base-anual"}
+# A reconciliation cross-check against the quarterly modelo 123, no longer the
+# source of decl.base-total.
+fields = {provider = {relation_kind = "cross_model_output", dependency_role = "factual_evidence"}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-perceptores-anual"}
+# Design p. 5, positions 136-144: the number of type-2 records, counted over
+# the same grouping the 2025 type-2 records are emitted from.
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-123-retenciones-anual"}
+# A reconciliation cross-check against the quarterly modelo 123, no longer the
+# source of decl.retenciones-total.
+fields = {provider = {relation_kind = "cross_model_output", dependency_role = "factual_evidence"}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-gasto-row-importe"}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-gasto-row-nif"}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-gasto-row-nif-representante"}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-gasto-row-nombre"}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-perceptor-row-base"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-perceptor-row-ceuta"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-perceptor-row-clave"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-perceptor-row-clave-codigo"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-perceptor-row-clave-mercado"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-perceptor-row-codigo-cuenta"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-perceptor-row-codigo-emisor"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-perceptor-row-compensaciones"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-perceptor-row-ejercicio-devengo"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-perceptor-row-fecha-devengo"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-perceptor-row-fecha-inicio"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-perceptor-row-fecha-vencimiento"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-perceptor-row-foral-araba"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-perceptor-row-foral-bizkaia"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-perceptor-row-foral-estatal"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-perceptor-row-foral-gipuzkoa"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-perceptor-row-foral-navarra"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-perceptor-row-garantias"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-perceptor-row-mediador"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-perceptor-row-name"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-perceptor-row-naturaleza"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-perceptor-row-naturaleza-declarante"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-perceptor-row-nif"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-perceptor-row-nif-pagador-anterior"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-perceptor-row-nif-representante"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-perceptor-row-numero-orden"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-perceptor-row-pago"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-perceptor-row-penalizaciones"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-perceptor-row-pendiente"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-perceptor-row-percibido"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-perceptor-row-porcentaje"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-perceptor-row-provincia"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-perceptor-row-reducciones"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-perceptor-row-retencion"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-perceptor-row-tipo-codigo"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-perceptor-row-tipo-percepcion"}
+fields = {provider = {grouping = "per_perceptor_clave_devengo"}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "bindings"
+selector = {revision = "2024", id = "modelo-193-retenciones-ingresadas"}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "modelo-193-base-total"}
+# Design pp. 5-6, positions 145-159: the sum of the perceptor records' 152-164.
+fields = {expression = {args = [{binding = "modelo-193-perceptor-rows-base-total"}]}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "formulas"
+selector = {revision = "2024", id = "modelo-193-retenciones-total"}
+# Design p. 6, positions 160-174: the sum of the perceptor records' 169-181.
+fields = {expression = {args = [{binding = "modelo-193-perceptor-rows-retenciones-total"}]}}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "workbook_parity_refs"
+selector = {revision = "2024", id = "modelo-193-dr-pdf"}
+fields = {workbook_source = "aeat-dr-193-2025"}
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2025-y-siguientes".family_overrides]]
+family = "completeness_manifest"
+selector = {revision = "2024", id = "aeat-dr-193-2024"}
+replacement_id = "aeat-dr-193-2025"
+sequence_additions = {source_refs = ["aeat-dr-193-2025"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}

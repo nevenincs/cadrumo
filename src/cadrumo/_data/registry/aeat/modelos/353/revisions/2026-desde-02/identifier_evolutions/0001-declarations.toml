@@ -1,0 +1,63 @@
+[[revisions."2026-desde-02".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-353-iva-repercutido-general-cuota"
+to_revision = "2026-desde-02"
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-2"]
+source_refs = ["aeat-dr-353-2021-2025", "aeat-dr-353-2026"]
+
+[[revisions."2026-desde-02".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-353-iva-repercutido-reducido-cuota"
+to_revision = "2026-desde-02"
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-2"]
+source_refs = ["aeat-dr-353-2021-2025", "aeat-dr-353-2026"]
+
+[[revisions."2026-desde-02".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-353-iva-repercutido-super-reducido-cuota"
+to_revision = "2026-desde-02"
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-2"]
+source_refs = ["aeat-dr-353-2021-2025", "aeat-dr-353-2026"]
+
+[[revisions."2026-desde-02".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-353-iva-soportado-interiores-cuota"
+to_revision = "2026-desde-02"
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-2"]
+source_refs = ["aeat-dr-353-2021-2025", "aeat-dr-353-2026"]
+
+[[revisions."2026-desde-02".identifier_evolutions]]
+kind = "retired"
+family = "bindings"
+identifier = "modelo-353-iva-autorepercutido-intracomunitaria-cuota"
+to_revision = "2026-desde-02"
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-2"]
+source_refs = ["aeat-dr-353-2021-2025", "aeat-dr-353-2026"]
+
+[[revisions."2026-desde-02".identifier_evolutions]]
+kind = "retired"
+family = "formulas"
+identifier = "modelo-353-iva-cuota-devengada-total"
+to_revision = "2026-desde-02"
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-2"]
+source_refs = ["aeat-dr-353-2021-2025", "aeat-dr-353-2026"]
+
+[[revisions."2026-desde-02".identifier_evolutions]]
+kind = "retired"
+family = "formulas"
+identifier = "modelo-353-iva-cuota-deducible-total"
+to_revision = "2026-desde-02"
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-2"]
+source_refs = ["aeat-dr-353-2021-2025", "aeat-dr-353-2026"]
+
+[[revisions."2026-desde-02".identifier_evolutions]]
+kind = "retired"
+family = "formulas"
+identifier = "modelo-353-iva-resultado-regimen-general"
+to_revision = "2026-desde-02"
+legal_refs = ["ley-37-1992:art-163-sexies", "orden-eha-3434-2007:art-2"]
+source_refs = ["aeat-dr-353-2021-2025", "aeat-dr-353-2026"]

@@ -1,0 +1,380 @@
+# Modelo 604 monthly deadline windows for the 2021-2023 era.
+#
+# Two provisions govern this span, not one. The general rule is
+# orden-hac-510-2021 art 3: the modelo "deberá presentarse e ingresarse ...
+# entre los días diez y veinte del mes siguiente al correspondiente periodo de
+# liquidación mensual", the period being the mes natural (Ley 5/2020 art 8.3).
+#
+# But the orden was published 27 May 2021, AFTER the first four liquidation
+# periods of the tax had already closed, so art 3 cannot have governed them.
+# Its disposición transitoria única supplies the rule that did: "la presentación
+# de las autoliquidaciones correspondientes a los meses de enero, febrero, marzo
+# y abril de 2021 ... se efectuará en el plazo para la presentación e ingreso de
+# la autoliquidación correspondiente al mes de mayo de 2021". The plazo for the
+# mayo-2021 autoliquidación is, by art 3, the 10th to the 20th of the following
+# month. Periods 2021-01 through 2021-05 therefore share ONE window, 10-20 June
+# 2021, and only 2021-06 onward follows the plain monthly cadence.
+#
+# Generating twelve ordinary windows for 2021 would have fabricated five
+# deadlines AEAT never set. Every date below is NOMINAL per the storage rule;
+# shift_deadline applies any weekend or holiday movement at read time.
+
+[[revisions."2021-2023".deadline_windows]]
+id = "modelo-604-2021-01"
+filing_year = 2021
+period = "2021 01"
+period_kind = "monthly"
+opens_on = 2021-06-10
+closes_on = 2021-06-20
+legal_refs = ["orden-hac-510-2021:art-3", "orden-hac-510-2021:dt-unica", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-604-procedure"]
+
+[[revisions."2021-2023".deadline_windows]]
+id = "modelo-604-2021-02"
+filing_year = 2021
+period = "2021 02"
+period_kind = "monthly"
+opens_on = 2021-06-10
+closes_on = 2021-06-20
+legal_refs = ["orden-hac-510-2021:art-3", "orden-hac-510-2021:dt-unica", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-604-procedure"]
+
+[[revisions."2021-2023".deadline_windows]]
+id = "modelo-604-2021-03"
+filing_year = 2021
+period = "2021 03"
+period_kind = "monthly"
+opens_on = 2021-06-10
+closes_on = 2021-06-20
+legal_refs = ["orden-hac-510-2021:art-3", "orden-hac-510-2021:dt-unica", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-604-procedure"]
+
+[[revisions."2021-2023".deadline_windows]]
+id = "modelo-604-2021-04"
+filing_year = 2021
+period = "2021 04"
+period_kind = "monthly"
+opens_on = 2021-06-10
+closes_on = 2021-06-20
+legal_refs = ["orden-hac-510-2021:art-3", "orden-hac-510-2021:dt-unica", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-604-procedure"]
+
+[[revisions."2021-2023".deadline_windows]]
+id = "modelo-604-2021-05"
+filing_year = 2021
+period = "2021 05"
+period_kind = "monthly"
+opens_on = 2021-06-10
+closes_on = 2021-06-20
+legal_refs = ["orden-hac-510-2021:art-3", "orden-hac-510-2021:dt-unica", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-604-procedure"]
+
+[[revisions."2021-2023".deadline_windows]]
+id = "modelo-604-2021-06"
+filing_year = 2021
+period = "2021 06"
+period_kind = "monthly"
+opens_on = 2021-07-10
+closes_on = 2021-07-20
+legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-604-procedure"]
+
+[[revisions."2021-2023".deadline_windows]]
+id = "modelo-604-2021-07"
+filing_year = 2021
+period = "2021 07"
+period_kind = "monthly"
+opens_on = 2021-08-10
+closes_on = 2021-08-20
+legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-604-procedure"]
+
+[[revisions."2021-2023".deadline_windows]]
+id = "modelo-604-2021-08"
+filing_year = 2021
+period = "2021 08"
+period_kind = "monthly"
+opens_on = 2021-09-10
+closes_on = 2021-09-20
+legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-604-procedure"]
+
+[[revisions."2021-2023".deadline_windows]]
+id = "modelo-604-2021-09"
+filing_year = 2021
+period = "2021 09"
+period_kind = "monthly"
+opens_on = 2021-10-10
+closes_on = 2021-10-20
+legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-604-procedure"]
+
+[[revisions."2021-2023".deadline_windows]]
+id = "modelo-604-2021-10"
+filing_year = 2021
+period = "2021 10"
+period_kind = "monthly"
+opens_on = 2021-11-10
+closes_on = 2021-11-20
+legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-604-procedure"]
+
+[[revisions."2021-2023".deadline_windows]]
+id = "modelo-604-2021-11"
+filing_year = 2021
+period = "2021 11"
+period_kind = "monthly"
+opens_on = 2021-12-10
+closes_on = 2021-12-20
+legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-604-procedure"]
+
+[[revisions."2021-2023".deadline_windows]]
+id = "modelo-604-2021-12"
+filing_year = 2021
+period = "2021 12"
+period_kind = "monthly"
+opens_on = 2022-01-10
+closes_on = 2022-01-20
+legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-604-procedure"]
+
+[[revisions."2021-2023".deadline_windows]]
+id = "modelo-604-2022-01"
+filing_year = 2022
+period = "2022 01"
+period_kind = "monthly"
+opens_on = 2022-02-10
+closes_on = 2022-02-20
+legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-604-procedure"]
+
+[[revisions."2021-2023".deadline_windows]]
+id = "modelo-604-2022-02"
+filing_year = 2022
+period = "2022 02"
+period_kind = "monthly"
+opens_on = 2022-03-10
+closes_on = 2022-03-20
+legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-604-procedure"]
+
+[[revisions."2021-2023".deadline_windows]]
+id = "modelo-604-2022-03"
+filing_year = 2022
+period = "2022 03"
+period_kind = "monthly"
+opens_on = 2022-04-10
+closes_on = 2022-04-20
+legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-604-procedure"]
+
+[[revisions."2021-2023".deadline_windows]]
+id = "modelo-604-2022-04"
+filing_year = 2022
+period = "2022 04"
+period_kind = "monthly"
+opens_on = 2022-05-10
+closes_on = 2022-05-20
+legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-604-procedure"]
+
+[[revisions."2021-2023".deadline_windows]]
+id = "modelo-604-2022-05"
+filing_year = 2022
+period = "2022 05"
+period_kind = "monthly"
+opens_on = 2022-06-10
+closes_on = 2022-06-20
+legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-604-procedure"]
+
+[[revisions."2021-2023".deadline_windows]]
+id = "modelo-604-2022-06"
+filing_year = 2022
+period = "2022 06"
+period_kind = "monthly"
+opens_on = 2022-07-10
+closes_on = 2022-07-20
+legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-604-procedure"]
+
+[[revisions."2021-2023".deadline_windows]]
+id = "modelo-604-2022-07"
+filing_year = 2022
+period = "2022 07"
+period_kind = "monthly"
+opens_on = 2022-08-10
+closes_on = 2022-08-20
+legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-604-procedure"]
+
+[[revisions."2021-2023".deadline_windows]]
+id = "modelo-604-2022-08"
+filing_year = 2022
+period = "2022 08"
+period_kind = "monthly"
+opens_on = 2022-09-10
+closes_on = 2022-09-20
+legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-604-procedure"]
+
+[[revisions."2021-2023".deadline_windows]]
+id = "modelo-604-2022-09"
+filing_year = 2022
+period = "2022 09"
+period_kind = "monthly"
+opens_on = 2022-10-10
+closes_on = 2022-10-20
+legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-604-procedure"]
+
+[[revisions."2021-2023".deadline_windows]]
+id = "modelo-604-2022-10"
+filing_year = 2022
+period = "2022 10"
+period_kind = "monthly"
+opens_on = 2022-11-10
+closes_on = 2022-11-20
+legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-604-procedure"]
+
+[[revisions."2021-2023".deadline_windows]]
+id = "modelo-604-2022-11"
+filing_year = 2022
+period = "2022 11"
+period_kind = "monthly"
+opens_on = 2022-12-10
+closes_on = 2022-12-20
+legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-604-procedure"]
+
+[[revisions."2021-2023".deadline_windows]]
+id = "modelo-604-2022-12"
+filing_year = 2022
+period = "2022 12"
+period_kind = "monthly"
+opens_on = 2023-01-10
+closes_on = 2023-01-20
+legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-604-procedure"]
+
+[[revisions."2021-2023".deadline_windows]]
+id = "modelo-604-2023-01"
+filing_year = 2023
+period = "2023 01"
+period_kind = "monthly"
+opens_on = 2023-02-10
+closes_on = 2023-02-20
+legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-604-procedure"]
+
+[[revisions."2021-2023".deadline_windows]]
+id = "modelo-604-2023-02"
+filing_year = 2023
+period = "2023 02"
+period_kind = "monthly"
+opens_on = 2023-03-10
+closes_on = 2023-03-20
+legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-604-procedure"]
+
+[[revisions."2021-2023".deadline_windows]]
+id = "modelo-604-2023-03"
+filing_year = 2023
+period = "2023 03"
+period_kind = "monthly"
+opens_on = 2023-04-10
+closes_on = 2023-04-20
+legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-604-procedure"]
+
+[[revisions."2021-2023".deadline_windows]]
+id = "modelo-604-2023-04"
+filing_year = 2023
+period = "2023 04"
+period_kind = "monthly"
+opens_on = 2023-05-10
+closes_on = 2023-05-20
+legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-604-procedure"]
+
+[[revisions."2021-2023".deadline_windows]]
+id = "modelo-604-2023-05"
+filing_year = 2023
+period = "2023 05"
+period_kind = "monthly"
+opens_on = 2023-06-10
+closes_on = 2023-06-20
+legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-604-procedure"]
+
+[[revisions."2021-2023".deadline_windows]]
+id = "modelo-604-2023-06"
+filing_year = 2023
+period = "2023 06"
+period_kind = "monthly"
+opens_on = 2023-07-10
+closes_on = 2023-07-20
+legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-604-procedure"]
+
+[[revisions."2021-2023".deadline_windows]]
+id = "modelo-604-2023-07"
+filing_year = 2023
+period = "2023 07"
+period_kind = "monthly"
+opens_on = 2023-08-10
+closes_on = 2023-08-20
+legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-604-procedure"]
+
+[[revisions."2021-2023".deadline_windows]]
+id = "modelo-604-2023-08"
+filing_year = 2023
+period = "2023 08"
+period_kind = "monthly"
+opens_on = 2023-09-10
+closes_on = 2023-09-20
+legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-604-procedure"]
+
+[[revisions."2021-2023".deadline_windows]]
+id = "modelo-604-2023-09"
+filing_year = 2023
+period = "2023 09"
+period_kind = "monthly"
+opens_on = 2023-10-10
+closes_on = 2023-10-20
+legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-604-procedure"]
+
+[[revisions."2021-2023".deadline_windows]]
+id = "modelo-604-2023-10"
+filing_year = 2023
+period = "2023 10"
+period_kind = "monthly"
+opens_on = 2023-11-10
+closes_on = 2023-11-20
+legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-604-procedure"]
+
+[[revisions."2021-2023".deadline_windows]]
+id = "modelo-604-2023-11"
+filing_year = 2023
+period = "2023 11"
+period_kind = "monthly"
+opens_on = 2023-12-10
+closes_on = 2023-12-20
+legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-604-procedure"]
+
+[[revisions."2021-2023".deadline_windows]]
+id = "modelo-604-2023-12"
+filing_year = 2023
+period = "2023 12"
+period_kind = "monthly"
+opens_on = 2024-01-10
+closes_on = 2024-01-20
+legal_refs = ["orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-604-procedure"]

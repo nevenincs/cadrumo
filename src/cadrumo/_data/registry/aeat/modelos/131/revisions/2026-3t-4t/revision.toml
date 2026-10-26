@@ -1,0 +1,102 @@
+[revisions."2026-3t-4t"]
+# September's law and AEAT design govern 3T/4T. This edition reuses the 2026
+# storage payload without claiming legal predecessor continuity. Its August
+# review stamp cannot cover the new September source.
+casilla_storage_baseline = "2026"
+family_storage_baseline = "2026"
+valid_from = 2026-07-01
+valid_to = 2026-12-31
+period_selector = { years = [2026], periods = ["3T", "4T"] }
+authority_grade = "filing"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4", "ley-35-2006:art-68.4", "rd-439-2007:art-95", "real-decreto-ley-23-2026:art-1"]
+source_refs = ["aeat-dr-131-2026-late", "aeat-modelo-131-procedure", "aeat-modelo-131-instructions-2026-late", "aeat-modelo-131-formulario-presentacion", "aeat-modelo-131-recuperacion-declaraciones", "boe-modelo-131-2007-form"]
+casilla_source_refs = ["aeat-modelo-131-instructions"]
+parameter_source_refs = ["aeat-modelo-131-instructions"]
+binding_source_refs = ["aeat-dr-131-2026"]
+formula_source_refs = ["aeat-modelo-131-instructions"]
+orden_aplicabilidad = ["orden-eha-672-2007:art-3", "orden-hac-1425-2025:art-4"]
+scoped_families = ["export_layouts", "workbook_parity_refs", "verification_expectations", "completeness_manifest"]
+review_status = "agent_reviewed"
+reviewed_by = "agent:codex"
+reviewed_at = 2026-10-03
+
+[revisions."2026-3t-4t".family_dispositions.projection_endpoints]
+reason = "FilingProjectionRef is a closed union of seven m303-only projection kinds; no modelo 131 casilla can be named by ProjectionEndpointDeclaration. This edition's source-pinned export layout resolves its repeating values through an ExportRecordDefinition with repeat = 'binding_rows'."
+legal_refs = ["rd-439-2007:art-110", "real-decreto-ley-23-2026:art-1"]
+source_refs = ["aeat-dr-131-2026-late", "aeat-modelo-131-instructions-2026-late"]
+
+[[revisions."2026-3t-4t".family_overrides]]
+family = "filing_schedules"
+selector = { revision = "2026", id = "modelo-131-trimestral" }
+sequence_additions = { periods = ["3T", "4T"] }
+sequence_removals = { periods = [0, 1] }
+
+[[revisions."2026-3t-4t".family_overrides]]
+family = "export_layouts"
+selector = { revision = "2026", id = "modelo-131-fichero-boe" }
+sequence_additions = { source_refs = ["aeat-dr-131-2026-late"] }
+sequence_removals = { source_refs = [0] }
+
+[[revisions."2026-3t-4t".family_overrides]]
+family = "workbook_parity_refs"
+selector = { revision = "2026", id = "modelo-131-dr-xlsx" }
+fields = { workbook_source = "aeat-dr-131-2026-late" }
+sequence_additions = { source_refs = ["aeat-dr-131-2026-late"] }
+sequence_removals = { source_refs = [0] }
+
+[[revisions."2026-3t-4t".family_overrides]]
+family = "completeness_manifest"
+selector = { revision = "2026", id = "aeat-dr-131-2026" }
+replacement_id = "aeat-dr-131-2026-late"
+sequence_additions = { source_refs = ["aeat-dr-131-2026-late"] }
+sequence_removals = { source_refs = [0] }
+
+[[revisions."2026-3t-4t".family_overrides]]
+family = "verification_expectations"
+selector = { revision = "2026", id = "modelo-131-calculation-verification" }
+sequence_additions = { source_refs = ["aeat-dr-131-2026-late"] }
+sequence_removals = { source_refs = [1] }
+
+[[revisions."2026-3t-4t".family_overrides]]
+family = "verification_expectations"
+selector = { revision = "2026", id = "modelo-131-reconcile-when-present" }
+sequence_additions = { source_refs = ["aeat-dr-131-2026-late"] }
+sequence_removals = { source_refs = [1] }
+
+[[revisions."2026-3t-4t".family_overrides]]
+family = "constructs"
+selector = { revision = "2026", id = "modelo-131-objective-estimation-instalment" }
+sequence_additions = { deadline_windows = ["modelo-131-2026-3t", "modelo-131-2026-4t"], legal_refs = ["real-decreto-ley-23-2026:art-1"], source_refs = ["aeat-dr-131-2026-late", "aeat-modelo-131-instructions-2026-late"] }
+sequence_removals = { deadline_windows = [0, 1] }
+
+[[revisions."2026-3t-4t".family_overrides]]
+family = "bindings"
+selector = { revision = "2026", id = "modelo-131.page1.sin-datos-base-ceuta-melilla" }
+replacement_id = "modelo-131.page1.sin-datos-base-ceuta-melilla-la-palma"
+fields = { provider = { field = "sin-datos-base-ceuta-melilla-la-palma" } }
+sequence_additions = { legal_refs = ["real-decreto-ley-23-2026:art-1"], source_refs = ["aeat-dr-131-2026-late", "aeat-modelo-131-instructions-2026-late"] }
+sequence_removals = { source_refs = [0] }
+
+[[revisions."2026-3t-4t".family_overrides]]
+family = "bindings"
+selector = { revision = "2026", id = "modelo-131.page1.agraria-ingresos-ordinarias-ceuta-melilla" }
+replacement_id = "modelo-131.page1.agraria-ingresos-ordinarias-ceuta-melilla-la-palma"
+fields = { provider = { field = "agraria-ingresos-ordinarias-ceuta-melilla-la-palma" } }
+sequence_additions = { legal_refs = ["real-decreto-ley-23-2026:art-1"], source_refs = ["aeat-dr-131-2026-late", "aeat-modelo-131-instructions-2026-late"] }
+sequence_removals = { source_refs = [0] }
+
+[[revisions."2026-3t-4t".family_overrides]]
+family = "bindings"
+selector = { revision = "2026", id = "modelo-131.page1.agraria-ingresos-prioritarias-ceuta-melilla" }
+replacement_id = "modelo-131.page1.agraria-ingresos-prioritarias-ceuta-melilla-la-palma"
+fields = { provider = { field = "agraria-ingresos-prioritarias-ceuta-melilla-la-palma" } }
+sequence_additions = { legal_refs = ["real-decreto-ley-23-2026:art-1"], source_refs = ["aeat-dr-131-2026-late", "aeat-modelo-131-instructions-2026-late"] }
+sequence_removals = { source_refs = [0] }
+
+[[revisions."2026-3t-4t".family_overrides]]
+family = "bindings"
+selector = { revision = "2026", id = "modelo-131.dpa.deduccion-ceuta-melilla" }
+replacement_id = "modelo-131.dpa.deduccion-ceuta-melilla-la-palma"
+fields = { provider = { field = "deduccion-ceuta-melilla-la-palma" } }
+sequence_additions = { legal_refs = ["real-decreto-ley-23-2026:art-1"], source_refs = ["aeat-dr-131-2026-late", "aeat-modelo-131-instructions-2026-late"] }
+sequence_removals = { source_refs = [0] }

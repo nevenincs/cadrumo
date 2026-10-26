@@ -1,0 +1,80 @@
+[fact]
+fact_id = "irpf-income-category-vocabulary"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "irpf-income-category-vocabulary:2007-01-01"
+date_axis = "filing_period"
+valid_from = 2007-01-01
+legal_refs = [
+    "ley-35-2006:art-17",
+    "ley-35-2006:art-20",
+    "ley-35-2006:art-22",
+    "ley-35-2006:art-24",
+    "ley-35-2006:art-25",
+    "ley-35-2006:art-26",
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-32",
+    "ley-35-2006:art-33",
+    "ley-35-2006:art-39",
+    "ley-35-2006:art-99",
+    "rd-439-2007:art-31",
+    "rd-439-2007:art-110",
+]
+source_refs = [
+    "boe-lirpf-statutory-facts",
+    "aeat-modelo-100-procedure",
+    "aeat-modelo-130-instructions",
+    "aeat-modelo-131-instructions",
+]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-lirpf-statutory-facts"
+required_text = ["rendimientos del trabajo", "rendimientos del capital"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-100-procedure"
+required_text = ["Modelo 100"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["Modelo 130"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Modelo 131"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+    { key = "irpf_income_category.order", value = "actividad_economica,trabajo,capital_inmobiliario,capital_mobiliario,ganancias_patrimoniales,pension" },
+    { key = "irpf_income_category.activity_token", value = "actividad_economica" },
+    { key = "irpf_income_category.actividad_economica.value", value = "actividad_economica" },
+    { key = "irpf_income_category.actividad_economica.description", value = "Rendimientos de actividades económicas (autónomo, empresario o profesional)." },
+    { key = "irpf_income_category.actividad_economica.tax_regime", value = "irpf" },
+    { key = "irpf_income_category.actividad_economica.activity_gate_modelos", value = "303,390" },
+    { key = "irpf_income_category.actividad_economica.payment_modelos", value = "130,131" },
+    { key = "irpf_income_category.actividad_economica.legal_refs", value = "ley-35-2006:art-27,ley-35-2006:art-32,ley-35-2006:art-99,rd-439-2007:art-110" },
+    { key = "irpf_income_category.trabajo.value", value = "trabajo" },
+    { key = "irpf_income_category.trabajo.description", value = "Rendimientos del trabajo (empleo y pensiones no modeladas como categoría separada)." },
+    { key = "irpf_income_category.trabajo.tax_regime", value = "irpf" },
+    { key = "irpf_income_category.trabajo.legal_refs", value = "ley-35-2006:art-17,ley-35-2006:art-20" },
+    { key = "irpf_income_category.capital_inmobiliario.value", value = "capital_inmobiliario" },
+    { key = "irpf_income_category.capital_inmobiliario.description", value = "Rendimientos del capital inmobiliario (inmuebles y alquileres)." },
+    { key = "irpf_income_category.capital_inmobiliario.tax_regime", value = "irpf" },
+    { key = "irpf_income_category.capital_inmobiliario.legal_refs", value = "ley-35-2006:art-22,ley-35-2006:art-24" },
+    { key = "irpf_income_category.capital_mobiliario.value", value = "capital_mobiliario" },
+    { key = "irpf_income_category.capital_mobiliario.description", value = "Rendimientos del capital mobiliario (dividendos, intereses y otros rendimientos)." },
+    { key = "irpf_income_category.capital_mobiliario.tax_regime", value = "irpf" },
+    { key = "irpf_income_category.capital_mobiliario.legal_refs", value = "ley-35-2006:art-25,ley-35-2006:art-26" },
+    { key = "irpf_income_category.ganancias_patrimoniales.value", value = "ganancias_patrimoniales" },
+    { key = "irpf_income_category.ganancias_patrimoniales.description", value = "Ganancias y pérdidas patrimoniales." },
+    { key = "irpf_income_category.ganancias_patrimoniales.tax_regime", value = "irpf" },
+    { key = "irpf_income_category.ganancias_patrimoniales.legal_refs", value = "ley-35-2006:art-33,ley-35-2006:art-39" },
+    { key = "irpf_income_category.pension.value", value = "pension" },
+    { key = "irpf_income_category.pension.description", value = "Pensión, tratada como rendimiento del trabajo a efectos del IRPF." },
+    { key = "irpf_income_category.pension.tax_regime", value = "irpf" },
+    { key = "irpf_income_category.pension.legal_refs", value = "ley-35-2006:art-17" },
+]

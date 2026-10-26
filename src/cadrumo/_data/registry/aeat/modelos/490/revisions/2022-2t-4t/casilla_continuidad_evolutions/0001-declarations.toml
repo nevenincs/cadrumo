@@ -1,0 +1,1570 @@
+# The original and replacement official annexes retain the four exercise tables
+# and their quarter columns. Row letters and printed numbers change after the
+# declared-base and territorial rows are inserted. Tables three and four move
+# from page 2 to page 3. Their legal and arithmetic roles remain unchanged.
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-1-q1-positive-base-label"
+continuidad_id = "regularization-exercise-1-q1-positive-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-1-q2-positive-base-label"
+continuidad_id = "regularization-exercise-1-q2-positive-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-1-q3-positive-base-label"
+continuidad_id = "regularization-exercise-1-q3-positive-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-1-q4-positive-base-label"
+continuidad_id = "regularization-exercise-1-q4-positive-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-1-q1-negative-base-label"
+continuidad_id = "regularization-exercise-1-q1-negative-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-1-q2-negative-base-label"
+continuidad_id = "regularization-exercise-1-q2-negative-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-1-q3-negative-base-label"
+continuidad_id = "regularization-exercise-1-q3-negative-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-1-q4-negative-base-label"
+continuidad_id = "regularization-exercise-1-q4-negative-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-1-q1-total-base-label"
+continuidad_id = "regularization-exercise-1-q1-total-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-1-q2-total-base-label"
+continuidad_id = "regularization-exercise-1-q2-total-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-1-q3-total-base-label"
+continuidad_id = "regularization-exercise-1-q3-total-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-1-q4-total-base-label"
+continuidad_id = "regularization-exercise-1-q4-total-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-1-q1-tax-rate-label"
+continuidad_id = "regularization-exercise-1-q1-tax-rate"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-1-q2-tax-rate-label"
+continuidad_id = "regularization-exercise-1-q2-tax-rate"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-1-q3-tax-rate-label"
+continuidad_id = "regularization-exercise-1-q3-tax-rate"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-1-q4-tax-rate-label"
+continuidad_id = "regularization-exercise-1-q4-tax-rate"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-1-q1-positive-quota-label"
+continuidad_id = "regularization-exercise-1-q1-positive-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-1-q2-positive-quota-label"
+continuidad_id = "regularization-exercise-1-q2-positive-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-1-q3-positive-quota-label"
+continuidad_id = "regularization-exercise-1-q3-positive-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-1-q4-positive-quota-label"
+continuidad_id = "regularization-exercise-1-q4-positive-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-1-q1-negative-quota-label"
+continuidad_id = "regularization-exercise-1-q1-negative-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-1-q2-negative-quota-label"
+continuidad_id = "regularization-exercise-1-q2-negative-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-1-q3-negative-quota-label"
+continuidad_id = "regularization-exercise-1-q3-negative-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-1-q4-negative-quota-label"
+continuidad_id = "regularization-exercise-1-q4-negative-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-1-q1-total-quota-label"
+continuidad_id = "regularization-exercise-1-q1-total-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-1-q2-total-quota-label"
+continuidad_id = "regularization-exercise-1-q2-total-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-1-q3-total-quota-label"
+continuidad_id = "regularization-exercise-1-q3-total-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-1-q4-total-quota-label"
+continuidad_id = "regularization-exercise-1-q4-total-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-2-q1-positive-base-label"
+continuidad_id = "regularization-exercise-2-q1-positive-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-2-q2-positive-base-label"
+continuidad_id = "regularization-exercise-2-q2-positive-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-2-q3-positive-base-label"
+continuidad_id = "regularization-exercise-2-q3-positive-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-2-q4-positive-base-label"
+continuidad_id = "regularization-exercise-2-q4-positive-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-2-q1-negative-base-label"
+continuidad_id = "regularization-exercise-2-q1-negative-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-2-q2-negative-base-label"
+continuidad_id = "regularization-exercise-2-q2-negative-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-2-q3-negative-base-label"
+continuidad_id = "regularization-exercise-2-q3-negative-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-2-q4-negative-base-label"
+continuidad_id = "regularization-exercise-2-q4-negative-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-2-q1-total-base-label"
+continuidad_id = "regularization-exercise-2-q1-total-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-2-q2-total-base-label"
+continuidad_id = "regularization-exercise-2-q2-total-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-2-q3-total-base-label"
+continuidad_id = "regularization-exercise-2-q3-total-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-2-q4-total-base-label"
+continuidad_id = "regularization-exercise-2-q4-total-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-2-q1-tax-rate-label"
+continuidad_id = "regularization-exercise-2-q1-tax-rate"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-2-q2-tax-rate-label"
+continuidad_id = "regularization-exercise-2-q2-tax-rate"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-2-q3-tax-rate-label"
+continuidad_id = "regularization-exercise-2-q3-tax-rate"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-2-q4-tax-rate-label"
+continuidad_id = "regularization-exercise-2-q4-tax-rate"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-2-q1-positive-quota-label"
+continuidad_id = "regularization-exercise-2-q1-positive-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-2-q2-positive-quota-label"
+continuidad_id = "regularization-exercise-2-q2-positive-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-2-q3-positive-quota-label"
+continuidad_id = "regularization-exercise-2-q3-positive-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-2-q4-positive-quota-label"
+continuidad_id = "regularization-exercise-2-q4-positive-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-2-q1-negative-quota-label"
+continuidad_id = "regularization-exercise-2-q1-negative-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-2-q2-negative-quota-label"
+continuidad_id = "regularization-exercise-2-q2-negative-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-2-q3-negative-quota-label"
+continuidad_id = "regularization-exercise-2-q3-negative-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-2-q4-negative-quota-label"
+continuidad_id = "regularization-exercise-2-q4-negative-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-2-q1-total-quota-label"
+continuidad_id = "regularization-exercise-2-q1-total-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-2-q2-total-quota-label"
+continuidad_id = "regularization-exercise-2-q2-total-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-2-q3-total-quota-label"
+continuidad_id = "regularization-exercise-2-q3-total-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-2-q4-total-quota-label"
+continuidad_id = "regularization-exercise-2-q4-total-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q1-positive-base-label"
+continuidad_id = "regularization-exercise-3-q1-positive-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q1-positive-base-section"
+continuidad_id = "regularization-exercise-3-q1-positive-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q2-positive-base-label"
+continuidad_id = "regularization-exercise-3-q2-positive-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q2-positive-base-section"
+continuidad_id = "regularization-exercise-3-q2-positive-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q3-positive-base-label"
+continuidad_id = "regularization-exercise-3-q3-positive-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q3-positive-base-section"
+continuidad_id = "regularization-exercise-3-q3-positive-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q4-positive-base-label"
+continuidad_id = "regularization-exercise-3-q4-positive-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q4-positive-base-section"
+continuidad_id = "regularization-exercise-3-q4-positive-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q1-negative-base-label"
+continuidad_id = "regularization-exercise-3-q1-negative-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q1-negative-base-section"
+continuidad_id = "regularization-exercise-3-q1-negative-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q2-negative-base-label"
+continuidad_id = "regularization-exercise-3-q2-negative-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q2-negative-base-section"
+continuidad_id = "regularization-exercise-3-q2-negative-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q3-negative-base-label"
+continuidad_id = "regularization-exercise-3-q3-negative-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q3-negative-base-section"
+continuidad_id = "regularization-exercise-3-q3-negative-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q4-negative-base-label"
+continuidad_id = "regularization-exercise-3-q4-negative-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q4-negative-base-section"
+continuidad_id = "regularization-exercise-3-q4-negative-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q1-total-base-label"
+continuidad_id = "regularization-exercise-3-q1-total-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q1-total-base-section"
+continuidad_id = "regularization-exercise-3-q1-total-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q2-total-base-label"
+continuidad_id = "regularization-exercise-3-q2-total-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q2-total-base-section"
+continuidad_id = "regularization-exercise-3-q2-total-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q3-total-base-label"
+continuidad_id = "regularization-exercise-3-q3-total-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q3-total-base-section"
+continuidad_id = "regularization-exercise-3-q3-total-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q4-total-base-label"
+continuidad_id = "regularization-exercise-3-q4-total-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q4-total-base-section"
+continuidad_id = "regularization-exercise-3-q4-total-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q1-tax-rate-label"
+continuidad_id = "regularization-exercise-3-q1-tax-rate"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q1-tax-rate-section"
+continuidad_id = "regularization-exercise-3-q1-tax-rate"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q2-tax-rate-label"
+continuidad_id = "regularization-exercise-3-q2-tax-rate"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q2-tax-rate-section"
+continuidad_id = "regularization-exercise-3-q2-tax-rate"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q3-tax-rate-label"
+continuidad_id = "regularization-exercise-3-q3-tax-rate"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q3-tax-rate-section"
+continuidad_id = "regularization-exercise-3-q3-tax-rate"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q4-tax-rate-label"
+continuidad_id = "regularization-exercise-3-q4-tax-rate"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q4-tax-rate-section"
+continuidad_id = "regularization-exercise-3-q4-tax-rate"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q1-positive-quota-label"
+continuidad_id = "regularization-exercise-3-q1-positive-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q1-positive-quota-section"
+continuidad_id = "regularization-exercise-3-q1-positive-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q2-positive-quota-label"
+continuidad_id = "regularization-exercise-3-q2-positive-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q2-positive-quota-section"
+continuidad_id = "regularization-exercise-3-q2-positive-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q3-positive-quota-label"
+continuidad_id = "regularization-exercise-3-q3-positive-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q3-positive-quota-section"
+continuidad_id = "regularization-exercise-3-q3-positive-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q4-positive-quota-label"
+continuidad_id = "regularization-exercise-3-q4-positive-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q4-positive-quota-section"
+continuidad_id = "regularization-exercise-3-q4-positive-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q1-negative-quota-label"
+continuidad_id = "regularization-exercise-3-q1-negative-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q1-negative-quota-section"
+continuidad_id = "regularization-exercise-3-q1-negative-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q2-negative-quota-label"
+continuidad_id = "regularization-exercise-3-q2-negative-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q2-negative-quota-section"
+continuidad_id = "regularization-exercise-3-q2-negative-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q3-negative-quota-label"
+continuidad_id = "regularization-exercise-3-q3-negative-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q3-negative-quota-section"
+continuidad_id = "regularization-exercise-3-q3-negative-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q4-negative-quota-label"
+continuidad_id = "regularization-exercise-3-q4-negative-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q4-negative-quota-section"
+continuidad_id = "regularization-exercise-3-q4-negative-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q1-total-quota-label"
+continuidad_id = "regularization-exercise-3-q1-total-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q1-total-quota-section"
+continuidad_id = "regularization-exercise-3-q1-total-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q2-total-quota-label"
+continuidad_id = "regularization-exercise-3-q2-total-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q2-total-quota-section"
+continuidad_id = "regularization-exercise-3-q2-total-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q3-total-quota-label"
+continuidad_id = "regularization-exercise-3-q3-total-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q3-total-quota-section"
+continuidad_id = "regularization-exercise-3-q3-total-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q4-total-quota-label"
+continuidad_id = "regularization-exercise-3-q4-total-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-q4-total-quota-section"
+continuidad_id = "regularization-exercise-3-q4-total-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q1-positive-base-label"
+continuidad_id = "regularization-exercise-4-q1-positive-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q1-positive-base-section"
+continuidad_id = "regularization-exercise-4-q1-positive-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q2-positive-base-label"
+continuidad_id = "regularization-exercise-4-q2-positive-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q2-positive-base-section"
+continuidad_id = "regularization-exercise-4-q2-positive-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q3-positive-base-label"
+continuidad_id = "regularization-exercise-4-q3-positive-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q3-positive-base-section"
+continuidad_id = "regularization-exercise-4-q3-positive-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q4-positive-base-label"
+continuidad_id = "regularization-exercise-4-q4-positive-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q4-positive-base-section"
+continuidad_id = "regularization-exercise-4-q4-positive-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q1-negative-base-label"
+continuidad_id = "regularization-exercise-4-q1-negative-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q1-negative-base-section"
+continuidad_id = "regularization-exercise-4-q1-negative-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q2-negative-base-label"
+continuidad_id = "regularization-exercise-4-q2-negative-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q2-negative-base-section"
+continuidad_id = "regularization-exercise-4-q2-negative-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q3-negative-base-label"
+continuidad_id = "regularization-exercise-4-q3-negative-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q3-negative-base-section"
+continuidad_id = "regularization-exercise-4-q3-negative-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q4-negative-base-label"
+continuidad_id = "regularization-exercise-4-q4-negative-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q4-negative-base-section"
+continuidad_id = "regularization-exercise-4-q4-negative-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q1-total-base-label"
+continuidad_id = "regularization-exercise-4-q1-total-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q1-total-base-section"
+continuidad_id = "regularization-exercise-4-q1-total-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q2-total-base-label"
+continuidad_id = "regularization-exercise-4-q2-total-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q2-total-base-section"
+continuidad_id = "regularization-exercise-4-q2-total-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q3-total-base-label"
+continuidad_id = "regularization-exercise-4-q3-total-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q3-total-base-section"
+continuidad_id = "regularization-exercise-4-q3-total-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q4-total-base-label"
+continuidad_id = "regularization-exercise-4-q4-total-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q4-total-base-section"
+continuidad_id = "regularization-exercise-4-q4-total-base"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q1-tax-rate-label"
+continuidad_id = "regularization-exercise-4-q1-tax-rate"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q1-tax-rate-section"
+continuidad_id = "regularization-exercise-4-q1-tax-rate"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q2-tax-rate-label"
+continuidad_id = "regularization-exercise-4-q2-tax-rate"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q2-tax-rate-section"
+continuidad_id = "regularization-exercise-4-q2-tax-rate"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q3-tax-rate-label"
+continuidad_id = "regularization-exercise-4-q3-tax-rate"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q3-tax-rate-section"
+continuidad_id = "regularization-exercise-4-q3-tax-rate"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q4-tax-rate-label"
+continuidad_id = "regularization-exercise-4-q4-tax-rate"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q4-tax-rate-section"
+continuidad_id = "regularization-exercise-4-q4-tax-rate"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q1-positive-quota-label"
+continuidad_id = "regularization-exercise-4-q1-positive-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q1-positive-quota-section"
+continuidad_id = "regularization-exercise-4-q1-positive-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q2-positive-quota-label"
+continuidad_id = "regularization-exercise-4-q2-positive-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q2-positive-quota-section"
+continuidad_id = "regularization-exercise-4-q2-positive-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q3-positive-quota-label"
+continuidad_id = "regularization-exercise-4-q3-positive-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q3-positive-quota-section"
+continuidad_id = "regularization-exercise-4-q3-positive-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q4-positive-quota-label"
+continuidad_id = "regularization-exercise-4-q4-positive-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q4-positive-quota-section"
+continuidad_id = "regularization-exercise-4-q4-positive-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q1-negative-quota-label"
+continuidad_id = "regularization-exercise-4-q1-negative-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q1-negative-quota-section"
+continuidad_id = "regularization-exercise-4-q1-negative-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q2-negative-quota-label"
+continuidad_id = "regularization-exercise-4-q2-negative-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q2-negative-quota-section"
+continuidad_id = "regularization-exercise-4-q2-negative-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q3-negative-quota-label"
+continuidad_id = "regularization-exercise-4-q3-negative-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q3-negative-quota-section"
+continuidad_id = "regularization-exercise-4-q3-negative-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q4-negative-quota-label"
+continuidad_id = "regularization-exercise-4-q4-negative-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q4-negative-quota-section"
+continuidad_id = "regularization-exercise-4-q4-negative-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q1-total-quota-label"
+continuidad_id = "regularization-exercise-4-q1-total-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q1-total-quota-section"
+continuidad_id = "regularization-exercise-4-q1-total-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q2-total-quota-label"
+continuidad_id = "regularization-exercise-4-q2-total-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q2-total-quota-section"
+continuidad_id = "regularization-exercise-4-q2-total-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q3-total-quota-label"
+continuidad_id = "regularization-exercise-4-q3-total-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q3-total-quota-section"
+continuidad_id = "regularization-exercise-4-q3-total-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q4-total-quota-label"
+continuidad_id = "regularization-exercise-4-q4-total-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-q4-total-quota-section"
+continuidad_id = "regularization-exercise-4-q4-total-quota"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-2-year-label"
+continuidad_id = "regularization-exercise-2-year"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-year-label"
+continuidad_id = "regularization-exercise-3-year"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-3-year-section"
+continuidad_id = "regularization-exercise-3-year"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-year-label"
+continuidad_id = "regularization-exercise-4-year"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-exercise-4-year-section"
+continuidad_id = "regularization-exercise-4-year"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "section_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]
+
+[[revisions."2022-2t-4t".casilla_continuidad_evolutions]]
+id = "regularization-total-quota-adjustment-label"
+continuidad_id = "regularization-total-quota-adjustment"
+from_revision = "2022-1t"
+to_revision = "2022-2t-4t"
+evolution_kind = "label_evolved"
+legal_refs = ["orden-hac-590-2021:art-1"]
+source_refs = ["aeat-dr-490-2021", "aeat-dr-490-2022-2t"]

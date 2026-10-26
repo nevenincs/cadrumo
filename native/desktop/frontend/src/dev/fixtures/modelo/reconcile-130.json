@@ -1,0 +1,38 @@
+{
+  "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
+  "calculation_revision_id": "f609c1d27d695e223567a8fc1c903421cdffe6ab6590d4d0b5376a39ac0b9312",
+  "bucket_id": "13000000-0000-4000-8000-000000000730",
+  "source_kind": "justificante",
+  "source_path": "modelo_130_2026Q1.pdf",
+  "source_pdf_sha256": "4d3a3045c77e0e1b446a1c1d95dd530582c8bb78cc60033a238dc024ab494e1e",
+  "registry_snapshot_ref": {
+    "modelo": "130",
+    "revision_id": "2019-y-siguientes",
+    "modelo_year": 2026,
+    "period": "1T"
+  },
+  "verdict": "mismatches",
+  "diffs": [
+    {
+      "field_name": "tax_id",
+      "work_unit_value": "X1234567L",
+      "evidence_value": "00000000T",
+      "kind": "tax_id_mismatch",
+      "diff_kind": "header_field",
+      "legal_refs": [],
+      "source_refs": []
+    }
+  ],
+  "advisories": [
+    {
+      "code": "totals_not_reconciled",
+      "message": "filed totals were not reconciled against the computed result for modelo 130 (map_not_declared); verdict reflects receipt identity only",
+      "context": [
+        ["modelo", "130"],
+        ["reason", "map_not_declared"]
+      ]
+    }
+  ],
+  "reconciled_at": "2026-10-24T23:22:18.826240Z",
+  "narrative": "reconciled modelo 130 for ejercicio 2026 against work unit 66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3; verdict=mismatches; diffs=1; advisories=1"
+}

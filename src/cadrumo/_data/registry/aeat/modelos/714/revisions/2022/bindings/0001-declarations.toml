@@ -1,0 +1,253 @@
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-codigo-pais-1"
+provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-codigo-pais-1", offset = 927, length = 3, data_type = "text", signed = false }
+value = { data_type = "text", channel = "text" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-codigo-pais-2"
+provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-codigo-pais-2", offset = 1065, length = 3, data_type = "text", signed = false }
+value = { data_type = "text", channel = "text" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-codigo-pais-3"
+provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-codigo-pais-3", offset = 1203, length = 3, data_type = "text", signed = false }
+value = { data_type = "text", channel = "text" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-codigo-pais-4"
+provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-codigo-pais-4", offset = 1341, length = 3, data_type = "text", signed = false }
+value = { data_type = "text", channel = "text" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-codigo-pais-5"
+provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-codigo-pais-5", offset = 1479, length = 3, data_type = "text", signed = false }
+value = { data_type = "text", channel = "text" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-codigo-pais-6"
+provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-codigo-pais-6", offset = 1617, length = 3, data_type = "text", signed = false }
+value = { data_type = "text", channel = "text" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-codigo-pais-7"
+provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-codigo-pais-7", offset = 1755, length = 3, data_type = "text", signed = false }
+value = { data_type = "text", channel = "text" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-codigo-pais-8"
+provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-codigo-pais-8", offset = 1893, length = 3, data_type = "text", signed = false }
+value = { data_type = "text", channel = "text" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-codigo-pais-9"
+provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-codigo-pais-9", offset = 2031, length = 3, data_type = "text", signed = false }
+value = { data_type = "text", channel = "text" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-codigo-pais-10"
+provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-codigo-pais-10", offset = 2169, length = 3, data_type = "text", signed = false }
+value = { data_type = "text", channel = "text" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-codigo-pais-1"
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-74", offset = 74, length = 3, data_type = "text", signed = false }
+value = { data_type = "text", channel = "text" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-codigo-pais-2"
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-212", offset = 212, length = 3, data_type = "text", signed = false }
+value = { data_type = "text", channel = "text" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-codigo-pais-3"
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-350", offset = 350, length = 3, data_type = "text", signed = false }
+value = { data_type = "text", channel = "text" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-codigo-pais-4"
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-488", offset = 488, length = 3, data_type = "text", signed = false }
+value = { data_type = "text", channel = "text" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-codigo-pais-5"
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-626", offset = 626, length = 3, data_type = "text", signed = false }
+value = { data_type = "text", channel = "text" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-codigo-pais-6"
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-764", offset = 764, length = 3, data_type = "text", signed = false }
+value = { data_type = "text", channel = "text" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-codigo-pais-7"
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-902", offset = 902, length = 3, data_type = "text", signed = false }
+value = { data_type = "text", channel = "text" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-nif-otro-pais-1"
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1052", offset = 1052, length = 1, data_type = "text", signed = false }
+value = { data_type = "text", channel = "text" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-codigo-pais-1"
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1053", offset = 1053, length = 3, data_type = "text", signed = false }
+value = { data_type = "text", channel = "text" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-nif-otro-pais-2"
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1190", offset = 1190, length = 1, data_type = "text", signed = false }
+value = { data_type = "text", channel = "text" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-codigo-pais-2"
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1191", offset = 1191, length = 3, data_type = "text", signed = false }
+value = { data_type = "text", channel = "text" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-nif-otro-pais-3"
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1328", offset = 1328, length = 1, data_type = "text", signed = false }
+value = { data_type = "text", channel = "text" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-codigo-pais-3"
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1329", offset = 1329, length = 3, data_type = "text", signed = false }
+value = { data_type = "text", channel = "text" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-nif-otro-pais-4"
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1466", offset = 1466, length = 1, data_type = "text", signed = false }
+value = { data_type = "text", channel = "text" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-codigo-pais-4"
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1467", offset = 1467, length = 3, data_type = "text", signed = false }
+value = { data_type = "text", channel = "text" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-nif-otro-pais-5"
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1604", offset = 1604, length = 1, data_type = "text", signed = false }
+value = { data_type = "text", channel = "text" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-codigo-pais-5"
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1605", offset = 1605, length = 3, data_type = "text", signed = false }
+value = { data_type = "text", channel = "text" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-nif-otro-pais-6"
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1742", offset = 1742, length = 1, data_type = "text", signed = false }
+value = { data_type = "text", channel = "text" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-codigo-pais-6"
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1743", offset = 1743, length = 3, data_type = "text", signed = false }
+value = { data_type = "text", channel = "text" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-nif-otro-pais-7"
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1880", offset = 1880, length = 1, data_type = "text", signed = false }
+value = { data_type = "text", channel = "text" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-codigo-pais-7"
+provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1881", offset = 1881, length = 3, data_type = "text", signed = false }
+value = { data_type = "text", channel = "text" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-codigo-pais-1"
+provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-70", offset = 70, length = 3, data_type = "text", signed = false }
+value = { data_type = "text", channel = "text" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-15"
+provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-140", offset = 140, length = 5, data_type = "integer", signed = false }
+value = { data_type = "integer", channel = "integer" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-codigo-pais-2"
+provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-214", offset = 214, length = 3, data_type = "text", signed = false }
+value = { data_type = "text", channel = "text" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-24"
+provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-279", offset = 279, length = 5, data_type = "integer", signed = false }
+value = { data_type = "integer", channel = "integer" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-25"
+provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-284", offset = 284, length = 5, data_type = "integer", signed = false }
+value = { data_type = "integer", channel = "integer" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-codigo-pais-3"
+provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-358", offset = 358, length = 3, data_type = "text", signed = false }
+value = { data_type = "text", channel = "text" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-34"
+provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-423", offset = 423, length = 5, data_type = "integer", signed = false }
+value = { data_type = "integer", channel = "integer" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-fila-35"
+provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-428", offset = 428, length = 5, data_type = "integer", signed = false }
+value = { data_type = "integer", channel = "integer" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-fila-43"
+provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-557", offset = 557, length = 5, data_type = "integer", signed = false }
+value = { data_type = "integer", channel = "integer" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-fila-51"
+provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-678", offset = 678, length = 5, data_type = "integer", signed = false }
+value = { data_type = "integer", channel = "integer" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+
+[[revisions."2022".bindings]]
+id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-fila-59"
+provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-799", offset = 799, length = 5, data_type = "integer", signed = false }
+value = { data_type = "integer", channel = "integer" }
+legal_refs = ["orden-hfp-310-2023:art-4"]
+

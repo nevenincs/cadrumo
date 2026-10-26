@@ -1,0 +1,100 @@
+modelo:
+  schema:
+    '180':
+      binding:
+        modelo-180-115-base-anual:
+          label: Éves adólevonási és adóelőleg-alap · 115-ös nyomtatvány, 02. mező
+        modelo-180-115-retenciones-anual:
+          label: Éves adólevonások és adóelőlegek · 115-ös nyomtatvány, 03. mező
+      casilla:
+        continuidad:
+          base-retenciones-ingresos-a-cuenta:
+            label: A forrásadó és előlegfizetés teljes alapja
+          declaracion-complementaria-sustitutiva:
+            label: Kiegészítő vagy helyettesítő bevallás
+          devengo-year:
+            label: Az adóztatandó esemény adóéve
+          numero-identificativo-declaracion:
+            label: A bevallás azonosító száma
+          numero-identificativo-declaracion-anterior:
+            label: Az előző bevallás azonosító száma
+          payee-inmueble-bloque:
+            label: A bérbe adott ingatlan tömbje
+          payee-inmueble-calificador-numero:
+            label: A bérbe adott ingatlan házszám-minősítője
+          payee-inmueble-codigo-municipio:
+            label: A bérbe adott ingatlan település kódja
+          payee-inmueble-codigo-postal:
+            label: A bérbe adott ingatlan irányítószáma
+          payee-inmueble-complemento:
+            label: A bérbe adott ingatlan cím kiegészítése
+          payee-inmueble-escalera:
+            label: A bérbe adott ingatlan lépcsőháza
+          payee-inmueble-localidad:
+            label: A bérbe adott ingatlan helysége
+          payee-inmueble-municipio:
+            label: A bérbe adott ingatlan települése
+          payee-inmueble-nombre-via:
+            label: A bérbe adott ingatlan közterületének neve
+          payee-inmueble-numero-casa:
+            label: A bérbe adott ingatlan házszáma
+          payee-inmueble-planta:
+            label: A bérbe adott ingatlan emelete
+          payee-inmueble-portal:
+            label: A bérbe adott ingatlan bejárata
+          payee-inmueble-provincia:
+            label: A bérbe adott ingatlan tartományának kódja
+          payee-inmueble-puerta:
+            label: A bérbe adott ingatlan ajtaja
+          payee-inmueble-referencia-catastral:
+            label: A bérbe adott ingatlan kataszteri hivatkozása
+          payee-inmueble-situacion:
+            label: Az ingatlan helyzete
+          payee-inmueble-tipo-numeracion:
+            label: A bérbe adott ingatlan számozásának típusa
+          payee-inmueble-tipo-via:
+            label: A bérbe adott ingatlan közterületének típusa
+          payee-modalidad-renta:
+            label: Jövedelem vagy hozam típusa
+          payee-name:
+            label: A kedvezményezett családi és utóneve, cégneve vagy megnevezése
+          payee-nif:
+            label: A jövedelemszerző NIF-azonosítója
+          payee-province:
+            label: A kedvezményezett lakóhelye szerinti tartomány kódja
+          payee-representative-nif:
+            label: A kedvezményezett törvényes képviselőjének adóazonosító száma (NIF)
+          perc-base:
+            label: A kedvezményezett forrásadó- és előlegfizetés-alapja
+          perc-retenciones:
+            label: A kedvezményezett forrásadója és előlegfizetése
+          porcentaje-retencion:
+            label: Az alkalmazott forrásadó százaléka
+          retenciones-ingresos-a-cuenta:
+            label: Forrásadó és előlegfizetés összesen
+          total-perceptores-count:
+            label: Kedvezményezettek teljes száma
+      construct:
+        modelo-180-annual-summary:
+          field:
+            title: A Modelo 180 nyomtatvány éves összesítője a 115-ös nyomtatvány
+              negyedéves bevallásai alapján
+      field:
+        official_name: Modelo 180. Adatszolgáltatási bevallás. Adóelőleg-levonások
+          és -befizetések. Városi ingatlanok bérbeadásából származó jövedelmek. Éves
+          összesítő.
+        title: Városi ingatlanok bérbeadására vonatkozó adóelőleg-levonások éves összesítője
+      form:
+        context:
+          ejercicio:
+            heading: Adóév
+        section:
+          ejercicio:
+            heading: Adóév
+      revision:
+        2019-2022:
+          field:
+            label: HAP/1732/2014 rendelet, 2019-2022. adóévek
+        2023-y-siguientes:
+          field:
+            label: HAP/1732/2014 rendelet a HFP/1284/2023 rendelettel módosítva

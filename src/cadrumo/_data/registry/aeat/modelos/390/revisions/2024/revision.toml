@@ -1,0 +1,685 @@
+[revisions."2024"]
+predecessor = "2023"
+casilla_source_refs = ["aeat-dr-390-2024"]
+# live_cross_reference_source_refs: carried from predecessor edition "2022"; not re-grounded on this edition's own design
+live_cross_reference_source_refs = ["aeat-modelo-390-procedure"]
+application_link_source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+binding_source_refs = ["aeat-dr-390-2024"]
+formula_source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+reviewed_against = "2023"
+# Prepared and reviewed by an agent against the bundled diseño de registros and
+# the ordenes this revision cites; NO human operator has countersigned it, and
+# 'agent_reviewed' plus this reviewer token record that state honestly rather
+# than claiming the operator's own sign-off.
+#
+# What the review established, by measurement:
+#   - every casilla legal_ref and source_ref resolves to the legal catalogue, and
+#     every cited source's corpus file is present on disk;
+#   - every formula targets a casilla of this revision;
+#   - every enrolled schema family resolves;
+#   - every cited source's applicability window overlaps this revision's own life;
+#   - and all 9 fixed-width record(s) of the DERIVED layout were paired to
+#     their design sheet and cover it: no design DATA position is left
+#     unaddressed, and none reaches past its declared record length.
+#
+# The coverage figure is measured on the layout AFTER binding derivation, which
+# is what the renderer and the completeness gate consume; the raw export_layouts
+# collection holds only inline fields and reading it understates coverage badly.
+#
+# This stamp claims no fresh-render reproduction evidence: that belongs to the
+# revisions enrolled in the generated-tree drift gate, and this one is not.
+#
+# What it does NOT establish: that the figures a filing produces are correct
+# against AEAT. That is a tax review against official sources, and it is what an
+# operator re-stamping this to 'operator_reviewed' would be attesting.
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-08-19
+authority_grade = "filing"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+period_selector = { years = [2024], periods = ["0A"] }
+legal_refs = [
+    "rd-1624-1992:art-71",
+    "orden-eha-3111-2009:art-1",
+    "orden-eha-3111-2009:art-8",
+]
+orden_aplicabilidad = [
+    "orden-eha-3111-2009:art-1",
+]
+source_refs = [
+    "aeat-dr-390-2024",
+    "aeat-modelo-390-procedure",
+    "boe-modelo-390-2009-form",
+]
+family_storage_baseline = "2023"
+scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest"]
+
+[revisions."2024".family_dispositions.projection_endpoints]
+reason = """
+A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (modelo-390-2024-fichero-boe) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction rather than unbuilt: authoring a projection row into the layout is what would make this family apply, and that change reaches this declaration through \
+the same revision."""
+legal_refs = [
+    "rd-1624-1992:art-71",
+    "orden-eha-3111-2009:art-1",
+    "orden-eha-3111-2009:art-8",
+]
+source_refs = [
+    "aeat-dr-390-2024",
+    "aeat-modelo-390-procedure",
+    "boe-modelo-390-2009-form",
+]
+
+[revisions."2024".family_dispositions.parameters]
+reason = """
+A parameter holds a regulatory value a formula of this revision applies -- a rate, a threshold, a coefficient. Modelo 390 applies none, and this was verified on THIS revision rather than argued from the modelo: it declares zero parameters and its four formulas aggregate the already-computed period figures into the annual summary. The IVA rates that produced those figures were applied on the periodic modelo 303 autoliquidaciones the year is made of; the resumen anual restates their outcome and \
+applies nothing of its own. Empty by the shape of this revision's calculation rather than by omission."""
+legal_refs = ["ley-37-1992:art-164", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+source_refs = ["aeat-modelo-390-procedure"]
+
+# Original bindings modelo-390-iva-soportado-importaciones-cuota commentary: # Annual IVA soportado deducible en importaciones — mirrors the M303
+# Original bindings modelo-390-iva-soportado-importaciones-cuota commentary: # import-deducible cuota onto the annual resumen so the deducible total includes
+# Original bindings modelo-390-iva-soportado-importaciones-cuota commentary: # imports. Selects import_third_country soportado lines across the rate tiers.
+# Original bindings modelo-390-iva-autorepercutido-intracomunitaria-cuota commentary: # The annual devengada must carry the SAME intracomunitaria cuota the four
+# Original bindings modelo-390-iva-autorepercutido-intracomunitaria-cuota commentary: # M303 quarters carry, or the M390<->M303 reconciliation diverges. Both the
+# Original bindings modelo-390-iva-autorepercutido-intracomunitaria-cuota commentary: # goods leg (LIVA arts. 13/15) and the services leg (art. 69.Uno.1, read
+# Original bindings modelo-390-iva-autorepercutido-intracomunitaria-cuota commentary: # subject to art. 70) self-assess under art. 84.Uno.2.a), and the quarterly
+# Original bindings modelo-390-iva-autorepercutido-intracomunitaria-cuota commentary: # line combines them because the official M303 boxes 10/11 and 36/37 are
+# Original bindings modelo-390-iva-autorepercutido-intracomunitaria-cuota commentary: # titled "de bienes y servicios"; the annual aggregate therefore selects both
+# Original bindings modelo-390-iva-autorepercutido-intracomunitaria-cuota commentary: # categories too.
+# Original bindings modelo-390-iva-recargo-equivalencia-general-cuota commentary: # Recargo de equivalencia cuota devengada — annual, mirrors the M303
+# Original bindings modelo-390-iva-recargo-equivalencia-general-cuota commentary: # casillas 21/24/158 (LIVA art. 161) so the ledger-derived annual devengada
+# Original bindings modelo-390-iva-recargo-equivalencia-general-cuota commentary: # total includes the recargo cuota a supplier charges a recargo-de-equivalencia
+# Original bindings modelo-390-iva-recargo-equivalencia-general-cuota commentary: # retailer. Without these, iva.anual.cuota-devengada-total silently excludes
+# Original bindings modelo-390-iva-recargo-equivalencia-general-cuota commentary: # recargo (grounded against the AEAT Manual practico IVA 2024 Cap. 9 annual
+# Original bindings modelo-390-iva-recargo-equivalencia-general-cuota commentary: # worked example — see the formula's comment for the cross-quarter figures).
+# Original bindings modelo-390-iva-recargo-equivalencia-general-cuota commentary: # The super-reduced 1.0pct tier (M303 casilla 18) has no ledger binding on
+# Original bindings modelo-390-iva-recargo-equivalencia-general-cuota commentary: # M303 either (manual input there); it stays out of scope of this fix. The
+# Original bindings modelo-390-iva-recargo-equivalencia-general-cuota commentary: # super-reducido 0.5pct recargo tier (M303 casilla 158, domestic_super_reduced
+# Original bindings modelo-390-iva-recargo-equivalencia-general-cuota commentary: # / rate_kind "super_reduced") mirrors the general/reducido tiers above and
+# Original bindings modelo-390-iva-recargo-equivalencia-general-cuota commentary: # closes the residual gap left after the general/reducido wiring: without it,
+# Original bindings modelo-390-iva-recargo-equivalencia-general-cuota commentary: # any recargo-de-equivalencia filer whose supplier charges the 4pct
+# Original bindings modelo-390-iva-recargo-equivalencia-general-cuota commentary: # super-reducido rate (and therefore the 0.5pct recargo, LIVA art. 161) had
+# Original bindings modelo-390-iva-recargo-equivalencia-general-cuota commentary: # that tier's annual cuota silently excluded from
+# Original bindings modelo-390-iva-recargo-equivalencia-general-cuota commentary: # iva.anual.cuota-devengada-total, symmetrically breaking the
+# Original bindings modelo-390-iva-recargo-equivalencia-general-cuota commentary: # modelo-390-cuota-devengada-total-equals-reconciliacion-303 BLOCKING_RULE for
+# Original bindings modelo-390-iva-recargo-equivalencia-general-cuota commentary: # that filer (the reconciled-against figure sums the four filed Modelo 303
+# Original bindings modelo-390-iva-recargo-equivalencia-general-cuota commentary: # quarters' casilla 27, which includes recargo casilla 158 per the M303
+# Original bindings modelo-390-iva-recargo-equivalencia-general-cuota commentary: # 2023-y-siguientes and 2009-y-siguientes fixes).
+# Original bindings modelo-390-iva-recargo-equivalencia-super-reducido-cuota commentary: # -----------------------------------------------------------------------------
+# Original bindings modelo-390-iva-recargo-equivalencia-super-reducido-cuota commentary: # Cross-modelo previous_filing bindings — aggregate the four 303 quarterly
+# Original bindings modelo-390-iva-recargo-equivalencia-super-reducido-cuota commentary: # autoliquidaciones into the annual resumen totals. Implements the canonical
+# Original bindings modelo-390-iva-recargo-equivalencia-super-reducido-cuota commentary: # 390 <- 303 dependency where the resumen anual reconciles against the four
+# Original bindings modelo-390-iva-recargo-equivalencia-super-reducido-cuota commentary: # trimestrales filed during the ejercicio.
+# Original bindings modelo-390-iva-recargo-equivalencia-super-reducido-cuota commentary: # -----------------------------------------------------------------------------
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # -----------------------------------------------------------------------------
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # Bound casillas surfacing the 5 ledger_iva_aggregation bindings + the 3
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # previous_filing bindings as casilla values. Annual resumen mirrors the 303
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # result-casilla shape (devengada / deducible / resultado) plus reconciliation
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # casillas pulling each total from the four 303 quarters.
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # -----------------------------------------------------------------------------
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # Annual régimen-general base-imponible aggregation bindings. The resumen anual
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # already aggregated the CUOTA of these rows (the sibling *-cuota bindings,
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # fact = iva_amount_sum) but drew no base imponible at all: every IVA observation
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # carries a base_amount that reached no binding on the annual return, while the
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # quarterly Modelo 303 draws its base through the matching
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # modelo-303-iva-*-base bindings. The AEAT Diseño de Registros pairs a "Base
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # imponible" box with every "Cuota" box of the Reg. ordinario block (2024 design,
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # apartado 5: 21% base [05] / cuota [06], 10% base [03] / cuota [04], 4% base
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # [01] / cuota [02]) and pairs the deducible total likewise ("Total oper. inter.
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # corrientes bienes y servic." base [48] / cuota [49]), so the annual form does
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # ask for these amounts — the omission was ours, not the form's.
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: #
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # Each selector mirrors its sibling cuota binding EXACTLY (same categories, same
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # rate_kinds, same flow_direction) and differs only in fact = base_amount_sum, so
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # the base and the cuota of one tier are drawn from the same observation set and
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # cannot select divergent rows.
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: #
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # These bindings feed casillas that participate in NO formula: the annual
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # devengada/deducible totals sum cuotas, never bases. Adding them therefore
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # cannot move iva.anual.resultado-regimen-general — the base boxes are declared
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # alongside the cuota boxes on the official form, not summed into it.
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: #
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # legal_refs are kept a subset of each target casilla's sibling cuota refs (and
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # therefore of the enclosing construct's refs) so the bound-casilla coverage
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # check holds without authoring a new legal-catalogue entry; LIVA art. 78 (base
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # imponible, regla general) is not currently in the bundled catalogue and
+# Original bindings modelo-390-prev-303-compensacion-generada-ejercicio-no-97 commentary: # fabricating an entry for it would breach the bundled-corpus grounding rule.
+# Original bindings modelo-390-iva-repercutido-zero-base commentary: # The rate-blind total for the zero tier. Its three sibling tiers each carry
+# Original bindings modelo-390-iva-repercutido-zero-base commentary: # one, so a row whose applied_rate was never recorded still reaches that tier's
+# Original bindings modelo-390-iva-repercutido-zero-base commentary: # total and only the RATE box goes unclaimed. The zero tier had no blind layer
+# Original bindings modelo-390-iva-repercutido-zero-base commentary: # at all: its only two bindings both pin applied_rates = 0.00, so a zero-rated
+# Original bindings modelo-390-iva-repercutido-zero-base commentary: # row with no recorded rate reached NOTHING and its base imponible left the
+# Original bindings modelo-390-iva-repercutido-zero-base commentary: # return silently. No cuota is lost -- a zero-rated supply's cuota is zero --
+# Original bindings modelo-390-iva-repercutido-zero-base commentary: # but the base is a declared figure AEAT reconciles.
+# Original bindings modelo-390-iva-repercutido-zero-base commentary: #
+# Original bindings modelo-390-iva-repercutido-zero-base commentary: # Declares no export_refs, exactly like its three siblings: this is the internal
+# Original bindings modelo-390-iva-repercutido-zero-base commentary: # total layer, and box [700] is the rate layer that writes to the record. That
+# Original bindings modelo-390-iva-repercutido-zero-base commentary: # split is what lets the rate-box coverage gate read a shortfall here, which is
+# Original bindings modelo-390-iva-repercutido-zero-base commentary: # the whole point of adding it.
+# Original bindings modelo-390-iva-soportado-interiores-base commentary: # Rate-specific box-layer bindings for the Reg. ordinario block of the annual
+# Original bindings modelo-390-iva-soportado-interiores-base commentary: # resumen. Each admits exactly ONE applied_rate, so it draws only from rows whose
+# Original bindings modelo-390-iva-soportado-interiores-base commentary: # rate the ledger actually recorded, and a row whose rate is unknown reaches none
+# Original bindings modelo-390-iva-soportado-interiores-base commentary: # of them. That is the deliberate behaviour documented on the applied_rates
+# Original bindings modelo-390-iva-soportado-interiores-base commentary: # selector: an unmeasured line must not land in a box asserting a specific rate.
+# Original bindings modelo-390-iva-soportado-interiores-base commentary: #
+# Original bindings modelo-390-iva-soportado-interiores-base commentary: # These COMPLEMENT the rate-blind tier bindings rather than replacing them. The
+# Original bindings modelo-390-iva-soportado-interiores-base commentary: # tier bindings keep feeding the annual devengada total and therefore keep every
+# Original bindings modelo-390-iva-soportado-interiores-base commentary: # row, including rate-unrecorded ones; these feed the per-rate boxes. Narrowing
+# Original bindings modelo-390-iva-soportado-interiores-base commentary: # a tier binding instead of adding these would delete the rate-unrecorded rows
+# Original bindings modelo-390-iva-soportado-interiores-base commentary: # from the total outright.
+# Original bindings modelo-390-iva-soportado-interiores-base commentary: #
+# Original bindings modelo-390-iva-soportado-interiores-base commentary: # All seven rates resolve inside an annual (0A) aggregation for 2024, though
+# Original bindings modelo-390-iva-soportado-interiores-base commentary: # three of them only inside part of the year: 5 % applies 1 Jul - 30 Sep and
+# Original bindings modelo-390-iva-soportado-interiores-base commentary: # 7,5 % and 2 % from 1 Oct (RDL 4/2024 art. 1), each coexisting with its tier's
+# Original bindings modelo-390-iva-soportado-interiores-base commentary: # ordinary rate. An annual return spans all of those windows, which is why a
+# Original bindings modelo-390-iva-soportado-interiores-base commentary: # per-rate box is needed at all -- the tier alone cannot separate them.
+# Original bindings modelo-390-iva-repercutido-tipo-10-cuota commentary: # Rate-specific box-layer bindings for the Reg. ordinario block of the annual
+# Original bindings modelo-390-iva-repercutido-tipo-10-cuota commentary: # resumen. Each admits exactly ONE applied_rate, so it draws only from rows whose
+# Original bindings modelo-390-iva-repercutido-tipo-10-cuota commentary: # rate the ledger actually recorded, and a row whose rate is unknown reaches none
+# Original bindings modelo-390-iva-repercutido-tipo-10-cuota commentary: # of them. That is the deliberate behaviour documented on the applied_rates
+# Original bindings modelo-390-iva-repercutido-tipo-10-cuota commentary: # selector: an unmeasured line must not land in a box asserting a specific rate.
+# Original bindings modelo-390-iva-repercutido-tipo-10-cuota commentary: #
+# Original bindings modelo-390-iva-repercutido-tipo-10-cuota commentary: # These COMPLEMENT the rate-blind tier bindings rather than replacing them. The
+# Original bindings modelo-390-iva-repercutido-tipo-10-cuota commentary: # tier bindings keep feeding the annual devengada total and therefore keep every
+# Original bindings modelo-390-iva-repercutido-tipo-10-cuota commentary: # row, including rate-unrecorded ones; these feed the per-rate boxes. Narrowing
+# Original bindings modelo-390-iva-repercutido-tipo-10-cuota commentary: # a tier binding instead of adding these would delete the rate-unrecorded rows
+# Original bindings modelo-390-iva-repercutido-tipo-10-cuota commentary: # from the total outright.
+# Original bindings modelo-390-iva-repercutido-tipo-10-cuota commentary: #
+# Original bindings modelo-390-iva-repercutido-tipo-10-cuota commentary: # All seven rates resolve inside an annual (0A) aggregation for 2024, though
+# Original bindings modelo-390-iva-repercutido-tipo-10-cuota commentary: # three of them only inside part of the year: 5 % applies 1 Jul - 30 Sep and
+# Original bindings modelo-390-iva-repercutido-tipo-10-cuota commentary: # 7,5 % and 2 % from 1 Oct (RDL 4/2024 art. 1), each coexisting with its tier's
+# Original bindings modelo-390-iva-repercutido-tipo-10-cuota commentary: # ordinary rate. An annual return spans all of those windows, which is why a
+# Original bindings modelo-390-iva-repercutido-tipo-10-cuota commentary: # per-rate box is needed at all -- the tier alone cannot separate them.
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # Rate-specific box-layer bindings for the Recargo de equivalencia block of the
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # annual resumen, the recargo counterpart of the Reg. ordinario layer beside it.
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: #
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # The three rate-blind recargo bindings in 0001 select recargo_amount_sum routed
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # by the line's IVA rate TIER, and the official design keys its recargo boxes by
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # the recargo RATE. Those are not the same axis: one reducido tier carries the
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # 1,4 %, 1 % and 0,62 % recargo rates, so all three merged into box [600] and
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # [694] and [666] stayed empty. Each binding here admits exactly one IVA rate and
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # therefore exactly one recargo rate, so each official box draws only its own.
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: #
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # These COMPLEMENT the rate-blind tier bindings rather than replacing them. The
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # tier bindings keep feeding modelo-390-iva-anual-cuota-devengada-total and
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # therefore keep every row, including one whose IVA rate the ledger never
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # recorded; these feed the per-rate boxes and admit no such row. Narrowing a tier
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # binding instead of adding these would delete the rate-unrecorded recargo from
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # the declared annual total outright.
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: #
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # The recargo rate is not chosen here -- it follows the IVA rate by statute:
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: #
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: #   IVA 21 %  -> recargo 5,2 %   LIVA art. 161.1
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: #   IVA 10 %  -> recargo 1,4 %   LIVA art. 161.2 (via art. 91.uno)
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: #   IVA  4 %  -> recargo 0,5 %   LIVA art. 161.3 (via art. 91.dos)
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: #   IVA 7,5 % -> recargo 1 %     RDL 4/2024 art. 1.Dos, 1 Oct - 31 Dec 2024
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: #   IVA  5 %  -> recargo 0,62 %  RDL 4/2024 art. 1.Uno, 1 Jul - 30 Sep 2024
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: #   IVA  2 %  -> recargo 0,26 %  RDL 4/2024 art. 1.Dos, 1 Oct - 31 Dec 2024
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: #
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # The tabaco rung (recargo 1,75 %, LIVA art. 161.4, boxes [41]/[42]) is absent
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # because the IVA category it depends on is not modelled at all; that is a
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # separate omission from this merge and is not repaired by adding a rung here.
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: #
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # The 0 % rung (boxes [663]/[664]) is likewise absent, and for a different
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # reason: the recargo block has no rate-blind ZERO tier binding, so adding a
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # rate-specific 0 % recargo box would create the one shape that loses money
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # silently -- a rate-specific rung with no total layer behind it. Giving it one
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # means adding a term to the annual devengada total formula, which is a change
+# Original bindings modelo-390-iva-repercutido-tipo-0-cuota commentary: # to a money-bearing total and a decision of its own.
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # Rate-specific box-layer bindings for the Recargo de equivalencia block of the
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # annual resumen, the recargo counterpart of the Reg. ordinario layer beside it.
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: #
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # The three rate-blind recargo bindings in 0001 select recargo_amount_sum routed
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # by the line's IVA rate TIER, and the official design keys its recargo boxes by
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # the recargo RATE. Those are not the same axis: one reducido tier carries the
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # 1,4 %, 1 % and 0,62 % recargo rates, so all three merged into box [600] and
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # [694] and [666] stayed empty. Each binding here admits exactly one IVA rate and
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # therefore exactly one recargo rate, so each official box draws only its own.
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: #
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # These COMPLEMENT the rate-blind tier bindings rather than replacing them. The
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # tier bindings keep feeding modelo-390-iva-anual-cuota-devengada-total and
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # therefore keep every row, including one whose IVA rate the ledger never
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # recorded; these feed the per-rate boxes and admit no such row. Narrowing a tier
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # binding instead of adding these would delete the rate-unrecorded recargo from
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # the declared annual total outright.
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: #
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # The recargo rate is not chosen here -- it follows the IVA rate by statute:
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: #
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: #   IVA 21 %  -> recargo 5,2 %   LIVA art. 161.1
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: #   IVA 10 %  -> recargo 1,4 %   LIVA art. 161.2 (via art. 91.uno)
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: #   IVA  4 %  -> recargo 0,5 %   LIVA art. 161.3 (via art. 91.dos)
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: #   IVA 7,5 % -> recargo 1 %     RDL 4/2024 art. 1.Dos, 1 Oct - 31 Dec 2024
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: #   IVA  5 %  -> recargo 0,62 %  RDL 4/2024 art. 1.Uno, 1 Jul - 30 Sep 2024
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: #   IVA  2 %  -> recargo 0,26 %  RDL 4/2024 art. 1.Dos, 1 Oct - 31 Dec 2024
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: #
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # The tabaco rung (recargo 1,75 %, LIVA art. 161.4, boxes [41]/[42]) is absent
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # because the IVA category it depends on is not modelled at all; that is a
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # separate omission from this merge and is not repaired by adding a rung here.
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: #
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # The 0 % rung (boxes [663]/[664]) is likewise absent, and for a different
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # reason: the recargo block has no rate-blind ZERO tier binding, so adding a
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # rate-specific 0 % recargo box would create the one shape that loses money
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # silently -- a rate-specific rung with no total layer behind it. Giving it one
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # means adding a term to the annual devengada total formula, which is a change
+# Original bindings modelo-390-iva-recargo-equivalencia-tipo-1-4-cuota commentary: # to a money-bearing total and a decision of its own.
+# Original bindings modelo-390-volumen-exportaciones-exentas-base commentary: # Rate-specific bindings for the adquisiciones intracomunitarias (AIC) box
+# Original bindings modelo-390-volumen-exportaciones-exentas-base commentary: # layer. See the sibling casillas file
+# Original bindings modelo-390-volumen-exportaciones-exentas-base commentary: # (civa.anual.aic.bienes.tipo-0.base__civa.anual.aic.servicios.tipo-21.cuota.toml)
+# Original bindings modelo-390-volumen-exportaciones-exentas-base commentary: # for the full account of the defect this closes and the epoch scoping.
+# Original bindings modelo-390-volumen-exportaciones-exentas-base commentary: # Selector rate_kind convention matches the M390 recargo rate-box layer and
+# Original bindings modelo-390-volumen-exportaciones-exentas-base commentary: # the M303 transitional-rate rungs already in this tree: 21% -> general;
+# Original bindings modelo-390-volumen-exportaciones-exentas-base commentary: # 5%/7,5%/10% -> reduced; 2%/4% -> super_reduced; 0% -> zero.
+# Original bindings modelo-390-iva-aic-servicios-tipo-21-cuota commentary: # Domestic reverse-charge (inversion del sujeto pasivo, LIVA art. 84.Uno.2)
+# Original bindings modelo-390-iva-aic-servicios-tipo-21-cuota commentary: # bindings feeding boxes [27]/[28]. Rate-blind by design -- see the casillas
+# Original bindings modelo-390-iva-aic-servicios-tipo-21-cuota commentary: # file header -- mirroring Modelo 303's own domestic_reverse_charge binding,
+# Original bindings modelo-390-iva-aic-servicios-tipo-21-cuota commentary: # which likewise sums general/reduced/super_reduced together.
+# Original bindings modelo-390-iva-autorepercutido-interior-cuota commentary: # Per-tier rate-blind AIC bindings backing the casillas above. Fact scoped to
+# Original bindings modelo-390-iva-autorepercutido-interior-cuota commentary: # base_amount_sum only, matching the established precedent
+# Original bindings modelo-390-iva-autorepercutido-interior-cuota commentary: # (test_every_rate_split_base_tier_carries_exactly_one_rate_blind_binding);
+# Original bindings modelo-390-iva-autorepercutido-interior-cuota commentary: # the cuota counterpart is a separate, deliberately deferred decision (see
+# Original bindings modelo-390-iva-autorepercutido-interior-cuota commentary: # that domestic gate's own zero-tier docstring).
+# Original bindings modelo-390-m303-simplificado-74-cuota-resultante-no-agricola commentary: # Modelo 390 2022, página 1, casillas 74--83.  One source family consumes the
+# Original bindings modelo-390-m303-simplificado-74-cuota-resultante-no-agricola commentary: # immutable filed/current Modelo 303 4T calculation revision; endpoint bindings
+# Original bindings modelo-390-m303-simplificado-74-cuota-resultante-no-agricola commentary: # merely name arrival slots and never replay a scalar relation or observation.
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "iva-anual-repercutido-recargo-tipo-0-62-base"
+from_revision = "2023"
+to_revision = "2024"
+origin = "grounded"
+evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md:211 (sha256 179c02eddc8b) box [665] (82 1305 17 N 5. Operaciones Reg. Gral. - Base Imponible y cuota - R...) continues as corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:258 (sha256 8be79bacc860) box [665] (12 115 17 N 5. Operaciones Reg. Gral. - Base Imponible y cuota - Re...)."
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "iva-anual-repercutido-recargo-tipo-0-base"
+from_revision = "2023"
+to_revision = "2024"
+origin = "grounded"
+evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md:207 (sha256 179c02eddc8b) box [663] (78 1237 17 N 5. Operaciones Reg. Gral. - Base Imponible y cuota - R...) continues as corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:252 (sha256 8be79bacc860) box [663] (6 13 17 N 5. Operaciones Reg. Gral. - Base Imponible y cuota - Reca...)."
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+
+[[revisions."2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "iva-anual-repercutido-recargo-tipo-0-cuota"
+from_revision = "2023"
+to_revision = "2024"
+origin = "grounded"
+evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md:208 (sha256 179c02eddc8b) box [664] (79 1254 17 N 5. Operaciones Reg. Gral. - Base Imponible y cuota - R...) continues as corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:253 (sha256 8be79bacc860) box [664] (7 30 17 N 5. Operaciones Reg. Gral. - Base Imponible y cuota - Reca...)."
+legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-390-2024"]
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "iva.anual.repercutido.recargo.tipo-0-62.cuota" }
+fields = { legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "iva.anual.repercutido.tipo-5.base" }
+fields = { legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"] }
+removed_fields = []
+
+[[revisions."2024".casilla_overrides]]
+selector = { revision = "2023", id = "iva.anual.repercutido.tipo-5.cuota" }
+fields = { legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"] }
+removed_fields = []
+
+[[revisions."2024".family_overrides]]
+family = "extraction_profiles"
+selector = {revision = "2023", id = "modelo-390-declaracion-pdf"}
+sequence_additions = {source_refs = ["aeat-dr-390-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [2, 0, 1]}
+
+[[revisions."2024".family_overrides]]
+family = "dependency_classifications"
+selector = {revision = "2023", id = "modelo-390-dep-303"}
+sequence_additions = {source_refs = ["aeat-dr-390-2024"]}
+sequence_removals = {source_refs = [1]}
+sequence_order = {source_refs = [0, 3, 1, 2]}
+
+[[revisions."2024".family_overrides]]
+family = "constructs"
+selector = {revision = "2023", id = "modelo-390-iva-resumen-anual"}
+sequence_additions = { bindings = ["modelo-390-iva-aic-bienes-tipo-2-base", "modelo-390-iva-aic-bienes-tipo-2-cuota", "modelo-390-iva-aic-bienes-tipo-7-5-base", "modelo-390-iva-aic-bienes-tipo-7-5-cuota", "modelo-390-iva-aic-servicios-tipo-2-base", "modelo-390-iva-aic-servicios-tipo-2-cuota", "modelo-390-iva-aic-servicios-tipo-7-5-base", "modelo-390-iva-aic-servicios-tipo-7-5-cuota", "modelo-390-iva-repercutido-tipo-2-base", "modelo-390-iva-repercutido-tipo-2-cuota", "modelo-390-iva-repercutido-tipo-7-5-base", "modelo-390-iva-repercutido-tipo-7-5-cuota"], casilla_ids = ["iva.anual.repercutido.tipo-7-5.base", "iva.anual.repercutido.tipo-7-5.cuota", "iva.anual.repercutido.tipo-2.base", "iva.anual.repercutido.tipo-2.cuota", "iva.anual.repercutido.recargo.tipo-1.cuota", "iva.anual.repercutido.recargo.tipo-0-26.cuota", "iva.anual.aic.bienes.tipo-2.base", "iva.anual.aic.bienes.tipo-2.cuota", "iva.anual.aic.bienes.tipo-7-5.base", "iva.anual.aic.bienes.tipo-7-5.cuota", "iva.anual.aic.servicios.tipo-2.base", "iva.anual.aic.servicios.tipo-2.cuota", "iva.anual.aic.servicios.tipo-7-5.base", "iva.anual.aic.servicios.tipo-7-5.cuota"], deadline_windows = ["modelo-390-2024-0a"], export_layouts = ["generated-modelo-390-2024-fichero"], legal_refs = ["real-decreto-ley-4-2024:art-1"], source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-2024-printed-calculations"] }
+sequence_removals = { deadline_windows = [0], export_layouts = [0], legal_refs = [61], source_refs = [4, 5] }
+sequence_order = { casilla_ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 81, 82, 11, 12, 13, 14, 83, 84, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 85, 28, 29, 86, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 87, 88, 53, 54, 55, 56, 89, 90, 57, 58, 59, 60, 61, 62, 91, 92, 63, 64, 65, 66, 93, 94, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80], legal_refs = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 61, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60], source_refs = [0, 1, 4, 2, 3, 5] }
+[[revisions."2024".family_overrides]]
+family = "deadline_windows"
+selector = {revision = "2023", id = "modelo-390-2023-0a"}
+replacement_id = "modelo-390-2024-0a"
+fields = {closes_on = 2025-01-30, filing_year = 2024, opens_on = 2025-01-01, period = "2024 0A"}
+
+[[revisions."2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2023", id = "modelo-390-iva-recargo-equivalencia-tipo-0-62-cuota"}
+sequence_additions = {legal_refs = ["real-decreto-ley-4-2024:art-1"], source_refs = ["aeat-dr-390-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 4, 2, 3], source_refs = [2, 0, 1]}
+
+[[revisions."2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2023", id = "modelo-390-iva-repercutido-tipo-5-base"}
+sequence_additions = {legal_refs = ["real-decreto-ley-4-2024:art-1"], source_refs = ["aeat-dr-390-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 2, 5, 3, 4], source_refs = [2, 0, 1]}
+
+[[revisions."2024".family_overrides]]
+family = "bindings"
+selector = {revision = "2023", id = "modelo-390-iva-repercutido-tipo-5-cuota"}
+sequence_additions = {legal_refs = ["real-decreto-ley-4-2024:art-1"], source_refs = ["aeat-dr-390-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {legal_refs = [0, 1, 2, 5, 3, 4], source_refs = [2, 0, 1]}
+
+[[revisions."2024".family_overrides]]
+family = "workbook_parity_refs"
+selector = {revision = "2023", id = "modelo-390-dr"}
+fields = {fixture_id = "modelo-390-2024-record-design-layout", workbook_source = "aeat-dr-390-2024"}
+sequence_additions = {source_refs = ["aeat-dr-390-2024"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2024".family_overrides]]
+family = "verification_expectations"
+selector = {revision = "2023", id = "modelo-390-iva-annual-chain-verification"}
+fields = {externally_grounded_casilla_ids = ["iva.anual.cuota-devengada-total", "iva.anual.cuota-deducible-total", "iva.anual.resultado-regimen-general"]}
+sequence_additions = {source_refs = ["aeat-dr-390-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2024".family_overrides]]
+family = "verification_expectations"
+selector = {revision = "2023", id = "modelo-390-reconcile-when-present"}
+sequence_additions = {source_refs = ["aeat-dr-390-2024"]}
+sequence_removals = {source_refs = [0]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2024".family_overrides]]
+family = "completeness_manifest"
+selector = {revision = "2023", id = "aeat-dr-390-2023"}
+replacement_id = "aeat-dr-390-2024"
+sequence_additions = { casillas = [{ casilla_id = "iva.anual.repercutido.recargo.tipo-1.cuota", number = "694" }, { casilla_id = "iva.anual.repercutido.recargo.tipo-0-26.cuota", number = "692" }, { casilla_id = "iva.anual.repercutido.tipo-7-5.base", number = "669" }, { casilla_id = "iva.anual.repercutido.tipo-7-5.cuota", number = "670" }, { casilla_id = "iva.anual.repercutido.tipo-2.base", number = "667" }, { casilla_id = "iva.anual.repercutido.tipo-2.cuota", number = "668" }, { casilla_id = "iva.anual.aic.bienes.tipo-2.base", number = "683" }, { casilla_id = "iva.anual.aic.bienes.tipo-2.cuota", number = "684" }, { casilla_id = "iva.anual.aic.bienes.tipo-7-5.base", number = "685" }, { casilla_id = "iva.anual.aic.bienes.tipo-7-5.cuota", number = "686" }, { casilla_id = "iva.anual.aic.servicios.tipo-2.base", number = "687" }, { casilla_id = "iva.anual.aic.servicios.tipo-2.cuota", number = "688" }, { casilla_id = "iva.anual.aic.servicios.tipo-7-5.base", number = "689" }, { casilla_id = "iva.anual.aic.servicios.tipo-7-5.cuota", number = "690" }, { casilla_id = "iva.anual.deducible.aic-corrientes.tipo-2.base", number = "765" }, { casilla_id = "iva.anual.deducible.aic-corrientes.tipo-2.cuota", number = "766" }, { casilla_id = "iva.anual.deducible.aic-corrientes.tipo-7-5.base", number = "767" }, { casilla_id = "iva.anual.deducible.aic-corrientes.tipo-7-5.cuota", number = "768" }, { casilla_id = "iva.anual.deducible.aic-inversion.tipo-2.base", number = "769" }, { casilla_id = "iva.anual.deducible.aic-inversion.tipo-2.cuota", number = "770" }, { casilla_id = "iva.anual.deducible.aic-inversion.tipo-7-5.base", number = "771" }, { casilla_id = "iva.anual.deducible.aic-inversion.tipo-7-5.cuota", number = "772" }, { casilla_id = "iva.anual.deducible.aic-servicios.tipo-2.base", number = "773" }, { casilla_id = "iva.anual.deducible.aic-servicios.tipo-2.cuota", number = "774" }, { casilla_id = "iva.anual.deducible.aic-servicios.tipo-7-5.base", number = "775" }, { casilla_id = "iva.anual.deducible.aic-servicios.tipo-7-5.cuota", number = "776" }, { casilla_id = "iva.anual.repercutido.intragrupo.tipo-2.base", number = "671" }, { casilla_id = "iva.anual.repercutido.intragrupo.tipo-7-5.base", number = "673" }, { casilla_id = "iva.anual.repercutido.criterio-caja.tipo-2.base", number = "675" }, { casilla_id = "iva.anual.repercutido.criterio-caja.tipo-7-5.base", number = "677" }, { casilla_id = "iva.anual.repercutido.bienes-usados.tipo-2.base", number = "679" }, { casilla_id = "iva.anual.repercutido.bienes-usados.tipo-7-5.base", number = "681" }, { casilla_id = "iva.anual.repercutido.intragrupo.tipo-2.cuota", number = "672" }, { casilla_id = "iva.anual.repercutido.intragrupo.tipo-7-5.cuota", number = "674" }, { casilla_id = "iva.anual.repercutido.criterio-caja.tipo-2.cuota", number = "676" }, { casilla_id = "iva.anual.repercutido.criterio-caja.tipo-7-5.cuota", number = "678" }, { casilla_id = "iva.anual.repercutido.bienes-usados.tipo-2.cuota", number = "680" }, { casilla_id = "iva.anual.repercutido.bienes-usados.tipo-7-5.cuota", number = "682" }], legal_refs = ["real-decreto-ley-4-2024:art-1"], source_refs = ["aeat-dr-390-2024"] }
+sequence_removals = { source_refs = [0] }
+sequence_order = { casillas = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 243, 33, 34, 244, 35, 36, 37, 38, 39, 40, 41, 42, 245, 246, 43, 44, 45, 46, 247, 248, 47, 48, 49, 50, 51, 52, 249, 250, 53, 54, 55, 56, 251, 252, 57, 58, 59, 60, 61, 62, 253, 254, 63, 64, 65, 66, 255, 256, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 197, 198, 195, 196, 192, 193, 194, 199, 200, 201, 207, 208, 205, 206, 202, 203, 204, 209, 210, 211, 217, 218, 215, 216, 212, 213, 214, 219, 220, 221, 223, 225, 222, 224, 240, 230, 231, 235, 234, 236, 237, 233, 241, 238, 239, 229, 227, 232, 228, 242, 171, 172, 154, 153, 146, 147, 149, 148, 187, 269, 190, 191, 270, 188, 189, 182, 271, 185, 186, 272, 183, 184, 177, 273, 180, 181, 274, 178, 179, 176, 174, 173, 175, 166, 275, 169, 170, 276, 167, 168, 161, 277, 164, 165, 278, 162, 163, 156, 279, 159, 160, 280, 157, 158, 155, 151, 150, 152, 226], legal_refs = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 32, 28, 29, 30, 31], source_refs = [2, 0, 1] }
+[[revisions."2024".family_overrides]]
+family = "formulas"
+
+[revisions."2024".family_overrides.selector]
+revision = "2023"
+id = "modelo-390-iva-anual-cuota-devengada-total"
+
+[revisions."2024".family_overrides.fields]
+source_refs = ["aeat-modelo-390-2024-printed-calculations"]
+
+[revisions."2024".family_overrides.fields.expression]
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.total-bases-cuotas-iva"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.recargo.tipo-0.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.recargo.tipo-0-26.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.recargo.tipo-0-5.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.recargo.tipo-0-62.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.recargo.tipo-1.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.recargo.tipo-1-4.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.recargo.tipo-5-2.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.recargo.tipo-1-75.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.modificacion.recargo.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.modificacion.recargo-concurso.cuota"
+
+[[revisions."2024".family_overrides.fields.source_citations]]
+source_ref = "aeat-modelo-390-2024-printed-calculations"
+required_text = ["34 + 664 + 692 + 36 + 666 + 694 + 600 + 602 + 42 + 44 + 46"]
+[[revisions."2024".family_overrides]]
+family = "formulas"
+
+[revisions."2024".family_overrides.selector]
+revision = "2023"
+id = "modelo-390-iva-anual-cuota-deducible-total"
+
+[revisions."2024".family_overrides.fields]
+source_refs = ["aeat-modelo-390-2024-printed-calculations"]
+
+[[revisions."2024".family_overrides.fields.source_citations]]
+source_ref = "aeat-modelo-390-2024-printed-calculations"
+required_text = ["49 + 513 + 51 + 521 + 53 + 55 + 57 + 59 + 598 + 61 + 661 + 62 + 652 + 63 + 522"]
+[[revisions."2024".family_overrides]]
+family = "formulas"
+
+[revisions."2024".family_overrides.selector]
+revision = "2023"
+id = "modelo-390-iva-anual-total-bases-cuotas-iva"
+
+[revisions."2024".family_overrides.fields]
+source_refs = ["aeat-modelo-390-2024-printed-calculations"]
+
+[revisions."2024".family_overrides.fields.expression]
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.tipo-0.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.tipo-2.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.tipo-4.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.tipo-5.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.tipo-7-5.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.tipo-10.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.tipo-21.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.intragrupo.tipo-0.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.intragrupo.tipo-2.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.intragrupo.tipo-4.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.intragrupo.tipo-5.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.intragrupo.tipo-7-5.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.intragrupo.tipo-10.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.intragrupo.tipo-21.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.criterio-caja.tipo-0.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.criterio-caja.tipo-2.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.criterio-caja.tipo-4.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.criterio-caja.tipo-5.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.criterio-caja.tipo-7-5.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.criterio-caja.tipo-10.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.criterio-caja.tipo-21.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.bienes-usados.tipo-0.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.bienes-usados.tipo-2.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.bienes-usados.tipo-4.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.bienes-usados.tipo-5.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.bienes-usados.tipo-7-5.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.bienes-usados.tipo-10.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.bienes-usados.tipo-21.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.repercutido.agencias-viajes.tipo-21.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.aic.bienes.tipo-0.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.aic.bienes.tipo-2.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.aic.bienes.tipo-4.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.aic.bienes.tipo-5.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.aic.bienes.tipo-7-5.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.aic.bienes.tipo-10.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.aic.bienes.tipo-21.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.aic.servicios.tipo-0.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.aic.servicios.tipo-2.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.aic.servicios.tipo-4.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.aic.servicios.tipo-5.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.aic.servicios.tipo-7-5.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.aic.servicios.tipo-10.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.aic.servicios.tipo-21.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.autorepercutido.interior.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.modificacion.bases-cuotas.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.modificacion.bases-cuotas-intragrupo.cuota"
+
+[[revisions."2024".family_overrides.fields.expression.args]]
+casilla_id = "iva.anual.modificacion.concurso-acreedores.cuota"
+
+[[revisions."2024".family_overrides.fields.source_citations]]
+source_ref = "aeat-modelo-390-2024-printed-calculations"
+required_text = ["Total bases y cuotas IVA"]
+[[revisions."2024".family_overrides]]
+family = "formulas"
+sequence_additions = { source_citations = [{ source_ref = "aeat-modelo-390-2024-printed-calculations", required_text = ["Suma de deducciones", "140 + 142"] }], source_refs = ["aeat-modelo-390-2024-printed-calculations"] }
+sequence_removals = { source_citations = [0], source_refs = [0] }
+[revisions."2024".family_overrides.selector]
+revision = "2023"
+id = "modelo-390-deduction-group-1"
+[[revisions."2024".family_overrides]]
+family = "formulas"
+sequence_additions = { source_citations = [{ source_ref = "aeat-modelo-390-2024-printed-calculations", required_text = ["Suma de deducciones", "157 + 159"] }], source_refs = ["aeat-modelo-390-2024-printed-calculations"] }
+sequence_removals = { source_citations = [0], source_refs = [0] }
+[revisions."2024".family_overrides.selector]
+revision = "2023"
+id = "modelo-390-deduction-group-2"
+[[revisions."2024".family_overrides]]
+family = "formulas"
+sequence_additions = { source_citations = [{ source_ref = "aeat-modelo-390-2024-printed-calculations", required_text = ["Suma de deducciones", "174 + 176"] }], source_refs = ["aeat-modelo-390-2024-printed-calculations"] }
+sequence_removals = { source_citations = [0], source_refs = [0] }
+[revisions."2024".family_overrides.selector]
+revision = "2023"
+id = "modelo-390-deduction-group-3"
+[[revisions."2024".family_overrides]]
+family = "formulas"
+sequence_additions = { source_citations = [{ source_ref = "aeat-modelo-390-2024-printed-calculations", required_text = ["Resultado atribuible a territorio"] }], source_refs = ["aeat-modelo-390-2024-printed-calculations"] }
+sequence_removals = { source_citations = [0], source_refs = [0] }
+[revisions."2024".family_overrides.selector]
+revision = "2023"
+id = "modelo-390-territorial-allocation"
+[[revisions."2024".family_overrides]]
+family = "formulas"
+sequence_additions = { source_citations = [{ source_ref = "aeat-modelo-390-2024-printed-calculations", required_text = ["92 + 659 - 93"] }], source_refs = ["aeat-modelo-390-2024-printed-calculations"] }
+sequence_removals = { source_citations = [0], source_refs = [0] }
+[revisions."2024".family_overrides.selector]
+revision = "2023"
+id = "modelo-390-territorial-settlement"
+[[revisions."2024".family_overrides]]
+family = "formulas"
+sequence_additions = { source_citations = [{ source_ref = "aeat-modelo-390-2024-printed-calculations", required_text = ["Total volumen de operaciones"] }], source_refs = ["aeat-modelo-390-2024-printed-calculations"] }
+sequence_removals = { source_citations = [0], source_refs = [0] }
+[revisions."2024".family_overrides.selector]
+revision = "2023"
+id = "modelo-390-annual-volume"
+[[revisions."2024".family_overrides]]
+family = "formulas"
+sequence_additions = {  source_citations = [{ source_ref = "aeat-modelo-390-2024-printed-calculations", required_text = ["Total bases y cuotas IVA"] }], source_refs = ["aeat-modelo-390-2024-printed-calculations"], "expression.args" = [{casilla_id = "iva.anual.repercutido.tipo-2.base"}, {casilla_id = "iva.anual.repercutido.tipo-7-5.base"}, {casilla_id = "iva.anual.repercutido.intragrupo.tipo-2.base"}, {casilla_id = "iva.anual.repercutido.intragrupo.tipo-7-5.base"}, {casilla_id = "iva.anual.repercutido.criterio-caja.tipo-2.base"}, {casilla_id = "iva.anual.repercutido.criterio-caja.tipo-7-5.base"}, {casilla_id = "iva.anual.repercutido.bienes-usados.tipo-2.base"}, {casilla_id = "iva.anual.repercutido.bienes-usados.tipo-7-5.base"}, {casilla_id = "iva.anual.aic.bienes.tipo-2.base"}, {casilla_id = "iva.anual.aic.bienes.tipo-7-5.base"}, {casilla_id = "iva.anual.aic.servicios.tipo-2.base"}, {casilla_id = "iva.anual.aic.servicios.tipo-7-5.base"}]}
+sequence_removals = { source_citations = [0], source_refs = [0] }
+sequence_order = {  "expression.args" = [0, 35, 1, 2, 36, 3, 4, 5, 37, 6, 7, 38, 8, 9, 10, 39, 11, 12, 40, 13, 14, 15, 41, 16, 17, 42, 18, 19, 20, 21, 43, 22, 23, 44, 24, 25, 26, 45, 27, 28, 46, 29, 30, 31, 32, 33, 34]}
+[revisions."2024".family_overrides.selector]
+revision = "2023"
+id = "modelo-390-iva-anual-total-bases-iva"
+[[revisions."2024".family_removals]]
+family = "bindings"
+selector = {revision = "2023", id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-lorca"}
+
+[[revisions."2024".family_removals]]
+family = "bindings"
+selector = {revision = "2023", id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-lorca"}
+
+# Replace the earlier source-scoped disclosure owner.
+[[revisions."2024".family_removals]]
+family = "constructs"
+selector = {revision = "2023", id = "modelo-390-printed-disclosure-arithmetic-2023"}

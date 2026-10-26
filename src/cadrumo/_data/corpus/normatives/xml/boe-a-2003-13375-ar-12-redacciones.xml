@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<response>
+  <status>
+    <code>200</code>
+    <text>ok</text>
+  </status>
+  <data>
+    <bloque id="ar-12" tipo="precepto" titulo="Artículo 12">
+      <version id_norma="BOE-A-2003-13375" fecha_publicacion="20030704" fecha_vigencia="20030625">
+        <p class="articulo">Artículo 12. Cánones.</p>
+        <p class="parrafo">1. Los cánones procedentes de un Estado contratante y pagados a un residente del otro Estado contratante pueden someterse a imposición en ese otro Estado.</p>
+        <p class="parrafo">2. Sin embargo, dichos cánones pueden también someterse a imposición en el Estado contratante del que procedan y conforme a la legislación de ese Estado, pero si el beneficiario efectivo de los cánones es un residente del otro Estado contratante, el impuesto así exigido no podrá exceder del 5 por 100 del importe bruto de los cánones.</p>
+        <p class="parrafo">3. El término «cánones» empleado en el presente artículo significa las cantidades de cualquier clase pagadas por el uso o la concesión de uso de derechos de autor sobre obras literarias, artísticas o científicas, incluidas las películas cinematográficas y las películas o cintas grabadas para radio y televisión, de patentes, marcas de fábrica o de comercio, dibujos o modelos, planos, fórmulas o procedimientos secretos, así como por el uso o la concesión de uso de equipos industriales, comerciales o científicos, y por el suministro de informaciones relativas a experiencias industriales, comerciales o científicas.</p>
+        <p class="parrafo">4. Las disposiciones de los apartados 1 y 2 no se aplican si el beneficiario efectivo de los cánones, residente de un Estado contratante, realiza en el otro Estado contratante del que proceden los cánones, una actividad industrial o comercial por medio de un establecimiento permanente situado en ese otro Estado o presta servicios personales independientes por medio de una base fija situada en ese otro Estado, y el derecho o bien por el que se pagan los cánones está vinculado efectivamente a dicho establecimiento permanente o base fija. En tales casos se aplicarán las disposiciones del artículo 7 o del artículo 14, según proceda.</p>
+        <p class="parrafo">5. Los cánones se considerarán procedentes de un Estado contratante cuando el deudor es el propio Estado o una de sus subdivisiones políticas o entidades locales, o un residente de ese Estado. Sin embargo, cuando el deudor de los cánones, sea o no residente de un Estado contratante, tenga en uno de los Estados contratantes un establecimiento permanente o una base fija en relación con los cuales se haya contraído la obligación de pago de los cánones y soporten la carga de los mismos, los cánones se considerarán procedentes del Estado donde estén situados el establecimiento permanente o la base fija.</p>
+        <p class="parrafo">6. Cuando, por razón de las relaciones especiales existentes entre el deudor y el beneficiario efectivo de los cánones o de las que uno y otro mantengan con terceros, el importe de los cánones, habida cuenta de la prestación por la que se pagan, exceda del que habrían convenido el deudor y el beneficiario efectivo en ausencia de tales relaciones, las disposiciones de este artículo no se aplican más que a este último importe. En tal caso, el exceso podrá someterse a imposición de acuerdo con la legislación del Estado contratante del que procedan los cánones.</p>
+      </version>
+    </bloque>
+  </data>
+</response>

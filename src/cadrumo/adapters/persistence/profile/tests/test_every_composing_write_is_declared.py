@@ -1,0 +1,404 @@
+"""Every composing write is enumerated, so a new one cannot appear unnoticed.
+
+This gate exists because the pattern-matching approach failed four times.
+
+A singleton catalogue composed into a batch must carry the revision it was read
+at, or the batch rewrites the whole row over whatever another caller committed
+in between. Four successive detectors tried to FIND that mistake by its shape,
+and each went green over live instances of it:
+
+* a line-oriented ``grep`` missed calls spanning several lines;
+* matching ``save(append_bucket_event(...))`` missed appends bound to a
+  variable first;
+* tracking ``ast.Assign`` missed ``catalogue: T = repo.load()``;
+* tracking direct binding missed taint reaching the write through an
+  intermediate (``updated = upsert(index, entry)``).
+
+Each fix looked complete and was not, because a detector that hunts a shape can
+only ever cover the shapes already imagined. So this gate ENUMERATES every
+composing write in the application and domain layers and requires each to be
+either self-evidently guarded -- it passes ``expected_revision_id`` -- or
+listed below. A site in neither fails.
+
+That enumeration is itself shape-based, and saying otherwise was this file's
+own overstatement. Probing it found two evasions an ordinary refactor
+produces: binding the method to a local first, and reaching it through
+``getattr``. Both are recognised now, and each has a discriminating case, so
+the claim the docstring makes is the claim the tests check. The honest
+statement of the limit is that this covers the three spellings a composing
+write is written in here -- not every spelling that could exist.
+
+WHAT THE LIST IS, AND IS NOT. It is an inventory, not a clearance. Being listed
+records that a site writes a document without asserting a revision; it does not
+certify the site is safe. Three genuinely different situations are in here and
+only the first is closed:
+
+* the document was never read, so there is no revision to assert;
+* the document arrives as a PARAMETER, so the revision belongs to whichever
+  caller read it and closing the site means threading it down;
+* the document is per-record rather than a singleton catalogue, which narrows
+  the exposure to two writers touching the SAME record instead of any two
+  writers at all.
+
+Entries state which. Where a site has not been judged, it says so rather than
+borrowing a neighbour's reason -- an inventory that quietly implies every line
+was reviewed is worse than one that admits what it has not looked at.
+
+Repository modules are excluded structurally: a repository's own ``save`` and
+``to_secure_object_write`` write the document handed to them, which is the API
+these call sites consume rather than an instance of the defect.
+
+ONE LIMIT THIS GATE CANNOT CLOSE. It rejects a literal
+``expected_revision_id=None``, because that satisfies a keyword check while
+guarding nothing and is the cheapest way to thread a revision into a function
+with many existing callers. It cannot judge a NAME that is None at runtime -- an
+optional parameter forwarded through -- so a site threading a revision must make
+its parameter REQUIRED. A defaulted one buys a permanent green from this gate
+and no protection at all.
+"""
+
+from __future__ import annotations
+
+import ast
+from collections.abc import Mapping
+from functools import cache
+from pathlib import Path
+
+import pytest
+
+from .....tests.inventory import non_test_package_python_files, repo_relative
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+_COMPOSING_WRITES = frozenset({"to_secure_object_write", "save_with_secure_object_writes"})
+
+#: Path fragments whose modules DEFINE these writes rather than compose them.
+_REPOSITORY_LAYERS = ("/adapters/persistence/profile/", "/adapters/persistence/storage/")
+
+#: Every ``(module, function)`` performing a composing write that asserts no
+#: revision, with what is known about it. Keyed by function, never by line, so
+#: an edit above it does not silently retarget the entry.
+_WRITES_WITHOUT_A_REVISION: dict[tuple[str, str], str] = {
+    (
+        "src/cadrumo/application/modelo/_edit_execution.py",
+        "_capture_edit_receipt",
+    ): "the receipt is CONSTRUCTED here, never read, so there is no revision to assert. Its id is a "
+    "content hash over the operation, baseline, calculation revision and bucket event, so it is a "
+    "per-record document rather than a singleton catalogue and two writers can only collide by writing "
+    "the identical receipt. Closed, not merely unclassified",
+    (
+        "src/cadrumo/application/workflow/persistence.py",
+        "save",
+    ): "a repository-shaped save over its own parameter; the guarded path beside it composes with load_revisioned",
+    (
+        "src/cadrumo/application/modelo/verification_actions.py",
+        "_build_participation_writes",
+    ): "per-TRANSACTION participation rows, not a singleton catalogue, so the exposure narrows to two writers "
+    "touching the same transaction; unclassified beyond that",
+    (
+        "src/cadrumo/application/modelo/revision_persistence.py",
+        "_build_filed_participation_writes",
+    ): "per-transaction participation rows, as above; unclassified beyond that",
+    (
+        "src/cadrumo/application/modelo/filed_revision_observation.py",
+        "filed_revision_observation_writes",
+    ): "the observation row and the IVA history row are each PER COORDINATE rather than one singleton "
+    "document, so the exposure is two writers touching the same period; neither row is read here",
+    (
+        "src/cadrumo/application/modelo/filing_chain_reconciliation.py",
+        "_aeat_content_writes",
+    ): "the work-unit catalogue arrives as a parameter, so its revision belongs to the caller that read it; "
+    "the calculation catalogue beside it IS guarded and the observation row is per coordinate",
+    (
+        "src/cadrumo/application/modelo/local_observation_actions.py",
+        "record_operator_local_observation",
+    ): "the observation row is PER COORDINATE; its layers are read just before the write, but that read's "
+    "revision is not asserted -- not yet judged",
+    (
+        "src/cadrumo/application/ledger/actions_common.py",
+        "save_transaction_catalogue_and_events",
+    ): "the transaction catalogue arrives as a parameter; its EVENT side is guarded by _commit_with_guarded_events",
+    (
+        "src/cadrumo/application/ledger/actions_common.py",
+        "save_transaction_catalogue_invoices_and_events",
+    ): "transaction and invoice catalogues arrive as parameters; the event side is guarded",
+    (
+        "src/cadrumo/application/ledger/commit_fence.py",
+        "save_with_secure_object_writes",
+    ): "repository decorator forwarding a caller-supplied transaction catalogue through the commit fence; "
+    "it performs no read. The fence authorizes the write but does not supply a revision guard",
+    (
+        "src/cadrumo/application/ledger/lifecycle_mutation_operation.py",
+        "save_with_secure_object_writes",
+    ): "repository decorator forwarding a caller-supplied transaction catalogue while recording write entry; "
+    "it performs no read and recording entry does not supply a revision guard",
+    (
+        "src/cadrumo/application/modelo/m036_operation.py",
+        "save_with_secure_object_writes",
+    ): "repository decorator forwarding the caller's per-declaration record after profile and commit checks; "
+    "the checks authorize the write rather than asserting a prior record revision",
+    (
+        "src/cadrumo/application/modelo/m145_communication_execution.py",
+        "save_with_secure_object_writes",
+    ): "repository decorator forwarding the caller's per-communication record through the commit gate; "
+    "the gate authorizes the write rather than asserting a prior record revision",
+    (
+        "src/cadrumo/application/modelo/m036_lifecycle.py",
+        "record_m036_declaration",
+    ): "the declaration result is freshly constructed rather than derived from a read, so no revision "
+    "exists to assert; its event side goes through the guarded composer",
+    (
+        "src/cadrumo/application/modelo/m145_communication_records.py",
+        "_save_m145_record_with_event",
+    ): "the communication record arrives as a parameter and is a per-record row rather than a catalogue; "
+    "its event side goes through the guarded composer",
+    (
+        "src/cadrumo/application/calculations/iva_compensation_history.py",
+        "persist_observation_envelope_and_iva_history",
+    ): "the envelope arrives as a parameter and the history state is projected fresh from it, so neither "
+    "write derives from a read this function performed",
+    (
+        "src/cadrumo/domain/buckets/event_repository.py",
+        "bucket_event_history_write",
+    ): "the narrow-port fallback: the domain protocol promises only exists/load/save, so an injected "
+    "alternative may offer no revisioned read",
+}
+
+
+def _asserts_a_revision(node: ast.Call) -> bool:
+    """Whether ``node`` passes a revision that could actually guard the write.
+
+    The keyword alone is not enough. ``expected_revision_id=None`` satisfies a
+    keyword check while guarding nothing, and that is a reachable shape rather
+    than a hypothetical: threading a revision into a function with many existing
+    callers is cheapest to do with an optional parameter defaulting to None, and
+    the call site then LOOKS guarded to a keyword matcher forever after.
+
+    A literal ``None`` is therefore rejected here. What cannot be judged
+    statically is a NAME that happens to be None at runtime -- an optional
+    parameter forwarded through -- so a site threading a revision must make the
+    parameter required rather than defaulted, and this gate cannot prove that it
+    did. That limit is stated in the module docstring rather than papered over.
+    """
+    for keyword in node.keywords:
+        if keyword.arg != "expected_revision_id":
+            continue
+        return not (isinstance(keyword.value, ast.Constant) and keyword.value.value is None)
+    return False
+
+
+@cache
+def _bare_composing_sites() -> frozenset[tuple[str, str]]:
+    """Return every ``(module, function)`` composing a write with no revision.
+
+    Cached because both gates below need the same scan and the tree does not
+    change within a run: one asks which sites are undeclared, the other which
+    declarations no longer name a site. Uncached, the package was walked and
+    parsed twice per process. Returned frozen because the memo hands both
+    callers the same object.
+    """
+    found: set[tuple[str, str]] = set()
+    for path in non_test_package_python_files():
+        relative = repo_relative(path)
+        if any(layer in relative for layer in _REPOSITORY_LAYERS):
+            continue
+        try:
+            tree = ast.parse(Path(path).read_text(encoding="utf-8"))
+        except (SyntaxError, UnicodeDecodeError):  # pragma: no cover - unparsable file is its own failure
+            continue
+        for scope in ast.walk(tree):
+            if not isinstance(scope, ast.FunctionDef | ast.AsyncFunctionDef):
+                continue
+            if _has_bare_composing_call(scope):
+                found.add((relative, scope.name))
+    return frozenset(found)
+
+
+def _composing_call_name(node: ast.Call, aliases: Mapping[str, str]) -> str | None:
+    """Return the composing write ``node`` invokes, however it was spelled.
+
+    Three spellings, because the first alone is what a refactor walks out of:
+
+    * ``repo.save_with_secure_object_writes(...)`` -- the attribute call;
+    * ``writer = repo.save_with_secure_object_writes`` then ``writer(...)`` --
+      the method bound to a local first, which is ordinary extraction;
+    * ``getattr(repo, "save_with_secure_object_writes")(...)`` -- the dynamic
+      spelling, which a dispatch loop reaches for.
+
+    The last two were MISSED by this gate until they were probed for. That is
+    the same weakness as the four detectors this file's docstring describes
+    replacing: a matcher that recognises one shape enumerates only the sites
+    written in it.
+    """
+    func = node.func
+    if isinstance(func, ast.Attribute) and func.attr in _COMPOSING_WRITES:
+        return func.attr
+    if isinstance(func, ast.Name) and func.id in aliases:
+        return aliases[func.id]
+    if (
+        isinstance(func, ast.Call)
+        and isinstance(func.func, ast.Name)
+        and func.func.id == "getattr"
+        and len(func.args) >= 2
+        and isinstance(func.args[1], ast.Constant)
+        and func.args[1].value in _COMPOSING_WRITES
+    ):
+        return str(func.args[1].value)
+    return None
+
+
+def _composing_aliases(scope: ast.FunctionDef | ast.AsyncFunctionDef) -> dict[str, str]:
+    """Return local names bound to a composing write, e.g. ``w = repo.save_...``."""
+    aliases: dict[str, str] = {}
+    for node in ast.walk(scope):
+        if not isinstance(node, ast.Assign) or not isinstance(node.value, ast.Attribute):
+            continue
+        if node.value.attr not in _COMPOSING_WRITES:
+            continue
+        for target in node.targets:
+            if isinstance(target, ast.Name):
+                aliases[target.id] = node.value.attr
+    return aliases
+
+
+def _has_bare_composing_call(scope: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
+    """Whether ``scope`` composes a write without asserting a revision."""
+    aliases = _composing_aliases(scope)
+    return any(
+        isinstance(node, ast.Call) and _composing_call_name(node, aliases) is not None and not _asserts_a_revision(node)
+        for node in ast.walk(scope)
+    )
+
+
+def test_a_literal_none_revision_does_not_count_as_guarded() -> None:
+    """DISCRIMINATING: the cheapest wrong way to thread a revision.
+
+    ``expected_revision_id=None`` passes a keyword check and guards nothing.
+    Without this, a site could be made permanently green by adding the keyword
+    and never a value.
+    """
+    source = (
+        "def persist(repository, entry):\n"
+        "    catalogue = repository.load()\n"
+        "    repository.save_with_secure_object_writes(\n"
+        "        upsert(catalogue, entry), (), expected_revision_id=None\n"
+        "    )\n"
+    )
+    tree = ast.parse(source)
+    calls = [n for n in ast.walk(tree) if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)]
+    composing = [n for n in calls if isinstance(n.func, ast.Attribute) and n.func.attr in _COMPOSING_WRITES]
+
+    assert composing, "fixture did not produce a composing write"
+    assert not _asserts_a_revision(composing[0])
+
+
+def test_a_real_revision_counts_as_guarded() -> None:
+    """ANTI-TAUTOLOGY: the check is not rejecting every revision."""
+    source = (
+        "def persist(repository, entry, revision):\n"
+        "    repository.save_with_secure_object_writes(entry, (), expected_revision_id=revision)\n"
+    )
+    tree = ast.parse(source)
+    call = next(
+        n
+        for n in ast.walk(tree)
+        if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute) and n.func.attr in _COMPOSING_WRITES
+    )
+
+    assert _asserts_a_revision(call)
+
+
+def test_every_composing_write_carries_a_revision_or_is_declared() -> None:
+    """A new unguarded composition cannot appear without someone recording it."""
+    undeclared = sorted(_bare_composing_sites() - set(_WRITES_WITHOUT_A_REVISION))
+
+    assert not undeclared, (
+        f"these functions compose a secure-object write without asserting a revision and are not "
+        f"declared: {undeclared}. Pass expected_revision_id from load_revisioned() if the document "
+        "was derived from a read, or add an entry saying why there is no revision to assert."
+    )
+
+
+def test_no_declaration_outlives_its_site() -> None:
+    """The half that rots: an entry for a site that is now guarded, or gone.
+
+    A stale entry reads as a known exposure that no longer exists, which
+    inflates the inventory and hides real progress.
+    """
+    stale = sorted(set(_WRITES_WITHOUT_A_REVISION) - _bare_composing_sites())
+
+    assert not stale, (
+        f"these declarations no longer match an unguarded composing write: {stale}. Remove them; an "
+        "entry that outlives its site claims an exposure that is not there."
+    )
+
+
+def test_every_declaration_states_something() -> None:
+    """An entry with no reason is a silent exemption.
+
+    ``unclassified`` is an acceptable reason and several entries use it. What is
+    not acceptable is an empty one, which reads as reviewed while recording
+    nothing.
+    """
+    empty = sorted(site for site, reason in _WRITES_WITHOUT_A_REVISION.items() if not reason.strip())
+
+    assert not empty, f"declarations with no stated reason: {empty}"
+
+
+def _only_scope(*lines: str) -> ast.FunctionDef:
+    """Parse a snippet holding exactly one function and return it."""
+    tree = ast.parse("\n".join(lines) + "\n")
+    scopes = [node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)]
+    assert len(scopes) == 1, "fixture must hold exactly one function"
+    return scopes[0]
+
+
+def test_a_write_bound_to_a_local_first_is_still_seen() -> None:
+    """DISCRIMINATING: the evasion an ordinary extraction produces.
+
+    Binding the method to a local and calling it is a refactor nobody would
+    think of as changing anything. Before this case the detector saw no
+    attribute call and reported the function clean -- the fifth detector
+    failing the same way as the four this module's docstring describes
+    replacing.
+    """
+    scope = _only_scope(
+        "def persist(repository, entry):",
+        "    catalogue = repository.load()",
+        "    writer = repository.save_with_secure_object_writes",
+        "    writer(upsert(catalogue, entry), ())",
+    )
+
+    assert _has_bare_composing_call(scope)
+
+
+def test_a_write_reached_through_getattr_is_still_seen() -> None:
+    """DISCRIMINATING: the dynamic spelling a dispatch loop reaches for."""
+    scope = _only_scope(
+        "def persist(repository, entry):",
+        "    catalogue = repository.load()",
+        '    getattr(repository, "save_with_secure_object_writes")(upsert(catalogue, entry), ())',
+    )
+
+    assert _has_bare_composing_call(scope)
+
+
+def test_the_widened_detector_still_accepts_a_guarded_write() -> None:
+    """ANTI-TAUTOLOGY: widening must not make every call a violation.
+
+    Each spelling above is now recognised as a composing write; a revision
+    passed through any of them must still clear the site, or the gate would
+    flag the guarded code it exists to encourage.
+    """
+    attribute = _only_scope(
+        "def persist(repository, entry, revision):",
+        "    repository.save_with_secure_object_writes(entry, (), expected_revision_id=revision)",
+    )
+    aliased = _only_scope(
+        "def persist(repository, entry, revision):",
+        "    writer = repository.save_with_secure_object_writes",
+        "    writer(entry, (), expected_revision_id=revision)",
+    )
+
+    assert not _has_bare_composing_call(attribute)
+    assert not _has_bare_composing_call(aliased)

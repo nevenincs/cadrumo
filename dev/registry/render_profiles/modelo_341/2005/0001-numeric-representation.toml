@@ -1,0 +1,397 @@
+schema_version = 1
+fragment_id = 'numeric-representation'
+width_17_rules = []
+signed_composite_rules = []
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'enumeration'
+value_policy = 'enumerated-digits'
+integer_digits = 3
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = ['341']
+
+[singleton_rules.anchor]
+sheet = 'PDF record design'
+source_row = 4
+record_identity = 'PDF record design'
+ordinal = '1'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm341-2005-model-enumeration-341'
+decision_statement = 'The numeric model constant has the single allowed value 341.'
+justification = 'AEAT labels the three-position field as the constant 341; the numeric design view therefore admits only that exact value.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'PDF record design'
+source_row = 4
+record_identity = 'PDF record design'
+ordinal = '1'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'year_yyyy'
+value_policy = 'four-digit-year'
+integer_digits = 4
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'PDF record design'
+source_row = 9
+record_identity = 'PDF record design'
+ordinal = '5'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm341-2005-exercise-year-yyyy'
+decision_statement = 'The four-position Ejercicio is the unsigned four-digit filing year.'
+justification = 'AEAT labels this four-position numeric field Ejercicio; the filing-year contract retains all four digits.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'PDF record design'
+source_row = 9
+record_identity = 'PDF record design'
+ordinal = '5'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'decimal'
+value_policy = 'implied-decimal'
+integer_digits = 11
+decimal_digits = 2
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'PDF record design'
+source_row = 11
+record_identity = 'PDF record design'
+ordinal = '7'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm341-2005-offset-24-amount-11-2'
+decision_statement = 'This 13-position amount has eleven integer digits and two decimal digits.'
+justification = 'The official field content at offset 24 explicitly states “11 enteros y 2 decimales”; the profile carries that scale as an unsigned implied-decimal amount.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'PDF record design'
+source_row = 11
+record_identity = 'PDF record design'
+ordinal = '7'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'decimal'
+value_policy = 'implied-decimal'
+integer_digits = 11
+decimal_digits = 2
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'PDF record design'
+source_row = 12
+record_identity = 'PDF record design'
+ordinal = '8'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm341-2005-offset-37-amount-11-2'
+decision_statement = 'This 13-position amount has eleven integer digits and two decimal digits.'
+justification = 'The official field content at offset 37 explicitly states “11 enteros y 2 decimales”; the profile carries that scale as an unsigned implied-decimal amount.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'PDF record design'
+source_row = 12
+record_identity = 'PDF record design'
+ordinal = '8'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'decimal'
+value_policy = 'implied-decimal'
+integer_digits = 11
+decimal_digits = 2
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'PDF record design'
+source_row = 13
+record_identity = 'PDF record design'
+ordinal = '9'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm341-2005-offset-50-amount-11-2'
+decision_statement = 'This 13-position amount has eleven integer digits and two decimal digits.'
+justification = 'The official field content at offset 50 explicitly states “11 enteros y 2 decimales”; the profile carries that scale as an unsigned implied-decimal amount.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'PDF record design'
+source_row = 13
+record_identity = 'PDF record design'
+ordinal = '9'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'percentage_decimal'
+value_policy = 'implied-decimal'
+integer_digits = 3
+decimal_digits = 2
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'PDF record design'
+source_row = 14
+record_identity = 'PDF record design'
+ordinal = '10'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm341-2005-offset-63-percentage-3-2'
+decision_statement = 'This five-position percentage has three integer digits and two decimal digits.'
+justification = 'The official field content at offset 63 explicitly states “3 enteros y 2 decimales”; the profile carries the printed percent scale.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'PDF record design'
+source_row = 14
+record_identity = 'PDF record design'
+ordinal = '10'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'percentage_decimal'
+value_policy = 'implied-decimal'
+integer_digits = 3
+decimal_digits = 2
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'PDF record design'
+source_row = 15
+record_identity = 'PDF record design'
+ordinal = '11'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm341-2005-offset-68-percentage-3-2'
+decision_statement = 'This five-position percentage has three integer digits and two decimal digits.'
+justification = 'The official field content at offset 68 explicitly states “3 enteros y 2 decimales”; the profile carries the printed percent scale.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'PDF record design'
+source_row = 15
+record_identity = 'PDF record design'
+ordinal = '11'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'percentage_decimal'
+value_policy = 'implied-decimal'
+integer_digits = 3
+decimal_digits = 2
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'PDF record design'
+source_row = 16
+record_identity = 'PDF record design'
+ordinal = '12'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm341-2005-offset-73-percentage-3-2'
+decision_statement = 'This five-position percentage has three integer digits and two decimal digits.'
+justification = 'The official field content at offset 73 explicitly states “3 enteros y 2 decimales”; the profile carries the printed percent scale.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'PDF record design'
+source_row = 16
+record_identity = 'PDF record design'
+ordinal = '12'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'decimal'
+value_policy = 'implied-decimal'
+integer_digits = 11
+decimal_digits = 2
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'PDF record design'
+source_row = 17
+record_identity = 'PDF record design'
+ordinal = '13'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm341-2005-offset-78-amount-11-2'
+decision_statement = 'This 13-position amount has eleven integer digits and two decimal digits.'
+justification = 'The official field content at offset 78 explicitly states “11 enteros y 2 decimales”; the profile carries that scale as an unsigned implied-decimal amount.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'PDF record design'
+source_row = 17
+record_identity = 'PDF record design'
+ordinal = '13'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'decimal'
+value_policy = 'implied-decimal'
+integer_digits = 11
+decimal_digits = 2
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'PDF record design'
+source_row = 18
+record_identity = 'PDF record design'
+ordinal = '14'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm341-2005-offset-91-amount-11-2'
+decision_statement = 'This 13-position amount has eleven integer digits and two decimal digits.'
+justification = 'The official field content at offset 91 explicitly states “11 enteros y 2 decimales”; the profile carries that scale as an unsigned implied-decimal amount.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'PDF record design'
+source_row = 18
+record_identity = 'PDF record design'
+ordinal = '14'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'decimal'
+value_policy = 'implied-decimal'
+integer_digits = 11
+decimal_digits = 2
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'PDF record design'
+source_row = 19
+record_identity = 'PDF record design'
+ordinal = '15'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm341-2005-offset-104-amount-11-2'
+decision_statement = 'This 13-position amount has eleven integer digits and two decimal digits.'
+justification = 'The official field content at offset 104 explicitly states “11 enteros y 2 decimales”; the profile carries that scale as an unsigned implied-decimal amount.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'PDF record design'
+source_row = 19
+record_identity = 'PDF record design'
+ordinal = '15'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'decimal'
+value_policy = 'implied-decimal'
+integer_digits = 11
+decimal_digits = 2
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'PDF record design'
+source_row = 20
+record_identity = 'PDF record design'
+ordinal = '16'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm341-2005-offset-117-amount-11-2'
+decision_statement = 'This 13-position amount has eleven integer digits and two decimal digits.'
+justification = 'The official field content at offset 117 explicitly states “11 enteros y 2 decimales”; the profile carries that scale as an unsigned implied-decimal amount.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'PDF record design'
+source_row = 20
+record_identity = 'PDF record design'
+ordinal = '16'
+
+[[singleton_rules]]
+rule_kind = 'singleton_numeric'
+aeat_type = 'Num'
+semantic_kind = 'digit_string'
+value_policy = 'digit-string'
+integer_digits = 20
+decimal_digits = 0
+sign_policy = 'unsigned'
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = 'PDF record design'
+source_row = 21
+record_identity = 'PDF record design'
+ordinal = '17'
+
+[singleton_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm341-2005-ccc-digit-string-20'
+decision_statement = 'The 20-position Código Cuenta Cliente is an unsigned, zero-preserving digit string.'
+justification = 'AEAT names this field as a Código Cuenta Cliente and gives it 20 numeric positions. It is a bank-account identifier, not a quantity, so its digits and leading zeros must remain intact.'
+
+[singleton_rules.evidence.governed_anchor]
+sheet = 'PDF record design'
+source_row = 21
+record_identity = 'PDF record design'
+ordinal = '17'
+
+[[literal_numeric_rules]]
+rule_kind = 'literal_numeric'
+literal = '341'
+decimal_digits = 0
+
+[literal_numeric_rules.anchor]
+sheet = 'PDF record design'
+source_row = 4
+record_identity = 'PDF record design'
+ordinal = '1'
+
+[literal_numeric_rules.evidence]
+authority_kind = 'reviewed_policy'
+decision_id = 'm341-2005-model-literal-341'
+decision_statement = 'The numeric model constant is emitted literally as 341 with no decimal scale.'
+justification = 'AEAT prints the model field as the constant 341; its bytes remain literal rather than an arithmetic quantity.'
+
+[literal_numeric_rules.evidence.governed_anchor]
+sheet = 'PDF record design'
+source_row = 4
+record_identity = 'PDF record design'
+ordinal = '1'
+
+[design_identity]
+modelo = '341'
+design_epoch = '2005'
+source_ref = 'aeat-dr-341-2005-2015'
+source_sha256 = 'c1c59a317be87dbb4898c017ace8f6327e9df340648808fb6d1831a0c7295c3d'

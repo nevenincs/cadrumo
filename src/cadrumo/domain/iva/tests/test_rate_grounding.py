@@ -1,0 +1,298 @@
+"""Real-corpus grounding checks for the shipped EU IVA rate table."""
+
+from __future__ import annotations
+
+import re
+from datetime import date
+from decimal import Decimal
+from html.parser import HTMLParser
+from pathlib import Path
+from typing import override
+
+import pypdfium2 as pdfium
+import pytest
+
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
+from ....core.resources.bundled_data import bundled_path
+from ....core.text_fold import normalise_corpus_text
+from ...calculations.registry.eu_member_state_catalogue import require_eu_member_state
+from ..errors import IvaRateNotFoundError
+from ..lookup import lookup_rate
+from ..rates import load_iva_rate_table
+from ..schema import EUMemberState, IvaRateKind
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_EPRS_SOURCE = "eu-eprs-iva-rates-2025-07-01"
+_YOUR_EUROPE_SOURCE = "eu-your-europe-iva-rates-2026-07-13"
+_RETIRED_IDENTITY_STEM = re.compile(r"(^|[._:/-])vat([._:/-]|$)", re.IGNORECASE)
+_YOUR_EUROPE_CODES = {EUMemberState.from_registry("gr"): "EL"}
+_COUNTRY_NAMES = {
+    EUMemberState.from_registry("at"): "austria",
+    EUMemberState.from_registry("be"): "belgium",
+    EUMemberState.from_registry("bg"): "bulgaria",
+    EUMemberState.from_registry("cy"): "cyprus",
+    EUMemberState.from_registry("cz"): "czech republic",
+    EUMemberState.from_registry("de"): "germany",
+    EUMemberState.from_registry("dk"): "denmark",
+    EUMemberState.from_registry("ee"): "estonia",
+    EUMemberState.from_registry("fi"): "finland",
+    EUMemberState.from_registry("fr"): "france",
+    EUMemberState.from_registry("gr"): "greece",
+    EUMemberState.from_registry("hr"): "croatia",
+    EUMemberState.from_registry("hu"): "hungary",
+    EUMemberState.from_registry("ie"): "ireland",
+    EUMemberState.from_registry("it"): "italy",
+    EUMemberState.from_registry("lt"): "lithuania",
+    EUMemberState.from_registry("lu"): "luxembourg",
+    EUMemberState.from_registry("lv"): "latvia",
+    EUMemberState.from_registry("mt"): "malta",
+    EUMemberState.from_registry("nl"): "netherlands",
+    EUMemberState.from_registry("pl"): "poland",
+    EUMemberState.from_registry("pt"): "portugal",
+    EUMemberState.from_registry("ro"): "romania",
+    EUMemberState.from_registry("se"): "sweden",
+    EUMemberState.from_registry("si"): "slovenia",
+    EUMemberState.from_registry("sk"): "slovakia",
+}
+
+
+class _VisibleText(HTMLParser):
+    """Collect visible text from a bundled official HTML response."""
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.parts: list[str] = []
+
+    @override
+    def handle_data(self, data: str) -> None:
+        self.parts.append(data)
+
+
+def _html_text(path: Path) -> str:
+    parser = _VisibleText()
+    parser.feed(path.read_text(encoding="utf-8"))
+    return normalise_corpus_text(" ".join(parser.parts))
+
+
+def _pdf_text(path: Path) -> str:
+    document = pdfium.PdfDocument(str(path))
+    pages: list[str] = []
+    try:
+        for index in range(len(document)):
+            page = document[index]
+            try:
+                text_page = page.get_textpage()
+                try:
+                    pages.append(text_page.get_text_range())
+                finally:
+                    text_page.close()
+            finally:
+                page.close()
+    finally:
+        document.close()
+    return normalise_corpus_text("\n".join(pages))
+
+
+def _your_europe_rate_cells(path: Path, country_code: str) -> tuple[str, ...]:
+    markup = path.read_text(encoding="utf-8")
+    row = re.search(rf"<td>\s*{country_code}\s*</td>(.*?)</tr>", markup, flags=re.DOTALL | re.IGNORECASE)
+    assert row is not None, f"official Your Europe table has no {country_code} row"
+    cells = re.findall(r"<td>\s*(.*?)\s*</td>", row.group(1), flags=re.DOTALL | re.IGNORECASE)
+    return tuple(normalise_corpus_text(re.sub(r"<[^>]+>", " ", cell)) for cell in cells)
+
+
+def test_every_shipped_rate_resolves_registry_legal_and_source_evidence() -> None:
+    """Loading the real table verifies every referenced catalogue row and corpus hash."""
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        table = load_iva_rate_table(operation=_authority_operation_for_test)
+        rates = tuple(rate for member_rates in table.values() for rate in member_rates)
+
+        # Gated on the PROPERTY, never on a tally. A hardcoded count encodes one
+        # moment, trains every author to bump the constant, and then detects
+        # nothing: it cannot tell a deliberately retired record from a lost one.
+        # What the count was standing in for is that the table is non-empty and
+        # every record it ships is grounded and resolvable -- asserted directly
+        # below, and unaffected by a record being legitimately added or withdrawn.
+        assert rates, "the shipped rate table must not be empty"
+        assert all(rate.legal_refs for rate in rates if rate.member_state == require_eu_member_state("ES"))
+        assert all(not rate.legal_refs for rate in rates if rate.member_state != require_eu_member_state("ES"))
+        assert all(rate.source_refs for rate in rates if rate.member_state != require_eu_member_state("ES"))
+
+
+def test_rate_source_registry_identities_use_the_canonical_iva_stem() -> None:
+    """The registry and bundled corpus paths must not revive the English tax stem."""
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        table = load_iva_rate_table(operation=_authority_operation_for_test)
+        referenced_source_ids = {
+            source_id for member_rates in table.values() for rate in member_rates for source_id in rate.source_refs
+        }
+        violations = [
+            identity
+            for source_id in sorted(referenced_source_ids)
+            for identity in (source_id, _authority_operation_for_test.source_reference(source_id).corpus_path)
+            if _RETIRED_IDENTITY_STEM.search(identity)
+        ]
+        assert violations == []
+
+
+def test_every_foreign_numerical_rate_occurs_in_its_official_source() -> None:
+    """Each foreign percentage is present in its reviewed official source artifact."""
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        table = load_iva_rate_table(operation=_authority_operation_for_test)
+        foreign_rates = tuple(
+            rate
+            for member_state, member_rates in table.items()
+            if member_state != require_eu_member_state("ES")
+            for rate in member_rates
+        )
+        corpus = bundled_path("corpus", "eu_official", "iva")
+        eprs_text = _pdf_text(corpus / "eprs-iva-rates-eu-2025-07-01.pdf")
+        eprs_table = eprs_text.split("table 3", maxsplit=1)[1].split(
+            "data source: taxes in europe database",
+            maxsplit=1,
+        )[0]
+        your_europe = corpus / "your-europe-iva-rates-2026-07-13.html"
+        estonia_text = _html_text(corpus / "estonia-iva-rate-change-2025.html")
+        finland_text = _html_text(corpus / "finland-iva-rate-change-2026.html")
+        lithuania_text = _html_text(corpus / "lithuania-iva-rate-change-2026.html")
+        romania_text = _pdf_text(corpus / "romania-iva-rate-change-2025.pdf")
+
+        proven: set[tuple[EUMemberState, IvaRateKind, date]] = set()
+        for rate in foreign_rates:
+            key = (rate.member_state, rate.kind, rate.effective_from)
+            pct = str(rate.pct)
+            initial_source_proven = False
+            if _EPRS_SOURCE in rate.source_refs:
+                country = _COUNTRY_NAMES[rate.member_state]
+                evidence = re.search(
+                    rf"\b{re.escape(country)}\s+(?P<standard>\d+(?:\.\d+)?)\s+(?P<reduced>[\d./]+)",
+                    eprs_table,
+                )
+                assert evidence is not None, f"EPRS table has no parsed row for {country}"
+                if rate.kind == IvaRateKind("general"):
+                    assert pct == evidence.group("standard")
+                else:
+                    assert pct in evidence.group("reduced").split("/")
+                initial_source_proven = True
+            if "ee-emta-iva-rate-change-2025" in rate.source_refs:
+                assert "from 1 july 2025, the standard rate of vat in estonia is 24% instead of 22%" in estonia_text
+                assert pct in {"22", "24"}
+                initial_source_proven = True
+            if "fi-vero-iva-rate-change-2026" in rate.source_refs:
+                assert "up to 31 december 2025, the reduced rate was 14%" in finland_text
+                assert "reduced vat rate 13,5%" in finland_text
+                assert pct in {"14", "13.5"}
+                initial_source_proven = True
+            if "lt-vmi-iva-rate-change-2026" in rate.source_refs:
+                assert "iki 2025-12-31 lengvatinis 9 proc." in lithuania_text
+                assert "nuo 2026-01-01 lengvatinis 12 proc." in lithuania_text
+                assert pct in {"9", "12"}
+                initial_source_proven = True
+            if "ro-anaf-iva-rate-change-2025" in rate.source_refs:
+                assert "01 august 2025 19% la 21%, iar cota redusa de tva este 11%" in romania_text
+                assert "de la 9% la 11%" in romania_text
+                assert pct in {"19", "21", "9", "11"}
+                initial_source_proven = True
+
+            if rate.effective_until is None:
+                assert _YOUR_EUROPE_SOURCE in rate.source_refs
+                country_code = _YOUR_EUROPE_CODES.get(rate.member_state, rate.member_state.value.upper())
+                cells = _your_europe_rate_cells(your_europe, country_code)
+                column = {
+                    IvaRateKind("general"): 1,
+                    IvaRateKind("reduced"): 2,
+                    IvaRateKind("super_reduced"): 3,
+                }[rate.kind]
+                assert pct in cells[column].split(" / ")
+                if rate.effective_from >= date(2026, 7, 13):
+                    initial_source_proven = True
+
+            assert initial_source_proven, f"no official source proves {key} at its effective start"
+            proven.add(key)
+
+        expected = {(rate.member_state, rate.kind, rate.effective_from) for rate in foreign_rates}
+        assert proven == expected
+
+
+def test_rate_lookup_crosses_each_grounded_change_boundary() -> None:
+    """Date lookup switches exactly where the bundled national sources say it does."""
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        assert lookup_rate(
+            require_eu_member_state("EE"),
+            IvaRateKind("general"),
+            date(2025, 6, 30),
+            operation=_authority_operation_for_test,
+        ).pct == Decimal("22")
+        assert lookup_rate(
+            require_eu_member_state("EE"),
+            IvaRateKind("general"),
+            date(2025, 7, 1),
+            operation=_authority_operation_for_test,
+        ).pct == Decimal("24")
+        assert lookup_rate(
+            require_eu_member_state("RO"),
+            IvaRateKind("general"),
+            date(2025, 7, 31),
+            operation=_authority_operation_for_test,
+        ).pct == Decimal("19")
+        assert lookup_rate(
+            require_eu_member_state("RO"),
+            IvaRateKind("general"),
+            date(2025, 8, 1),
+            operation=_authority_operation_for_test,
+        ).pct == Decimal("21")
+        assert lookup_rate(
+            require_eu_member_state("RO"),
+            IvaRateKind("reduced"),
+            date(2025, 7, 31),
+            operation=_authority_operation_for_test,
+        ).pct == Decimal("9")
+        assert lookup_rate(
+            require_eu_member_state("RO"),
+            IvaRateKind("reduced"),
+            date(2025, 8, 1),
+            operation=_authority_operation_for_test,
+        ).pct == Decimal("11")
+        assert lookup_rate(
+            require_eu_member_state("FI"),
+            IvaRateKind("reduced"),
+            date(2025, 12, 31),
+            operation=_authority_operation_for_test,
+        ).pct == Decimal("14")
+        assert lookup_rate(
+            require_eu_member_state("FI"),
+            IvaRateKind("reduced"),
+            date(2026, 1, 1),
+            operation=_authority_operation_for_test,
+        ).pct == Decimal("13.5")
+        assert lookup_rate(
+            require_eu_member_state("LT"),
+            IvaRateKind("reduced"),
+            date(2025, 12, 31),
+            operation=_authority_operation_for_test,
+        ).pct == Decimal("9")
+        assert lookup_rate(
+            require_eu_member_state("LT"),
+            IvaRateKind("reduced"),
+            date(2026, 1, 1),
+            operation=_authority_operation_for_test,
+        ).pct == Decimal("12")
+        with pytest.raises(IvaRateNotFoundError):
+            lookup_rate(
+                require_eu_member_state("DE"),
+                IvaRateKind("general"),
+                date(2025, 6, 30),
+                operation=_authority_operation_for_test,
+            )
+        for member_state in (
+            require_eu_member_state("DE"),
+            require_eu_member_state("FR"),
+            require_eu_member_state("IT"),
+            require_eu_member_state("NL"),
+        ):
+            with pytest.raises(IvaRateNotFoundError):
+                lookup_rate(
+                    member_state, IvaRateKind("zero"), date(2026, 7, 13), operation=_authority_operation_for_test
+                )

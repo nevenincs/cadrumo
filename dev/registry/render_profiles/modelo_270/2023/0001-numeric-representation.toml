@@ -1,0 +1,769 @@
+# Every numeric rule is tied to one exact PDF row and its source-stated meaning.
+# The two text contact rows with absent naturaleza are governed as header text, not numeric.
+schema_version = 1
+fragment_id = "numeric-representation"
+width_17_rules = []
+signed_composite_rules = []
+literal_numeric_rules = []
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 87
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2023-row-87-contact-phone"
+decision_statement = "Render the source's nine-digit contact telephone as a digit string."
+justification = "The source description says TELÉFONO: Campo numérico de 9 posiciones; the value is a telephone identity, not an amount."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 87
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["1"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 49
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2023-row-49-1"
+decision_statement = "Render source row 49 @1+1 as enumeration."
+justification = "The source labels this one-byte numeric record type as constant 1."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 49
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["270"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 51
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2023-row-51-2"
+decision_statement = "Render source row 51 @2+3 as enumeration."
+justification = "The source labels the three-byte numeric model constant 270."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 51
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 53
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "3"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2023-row-53-5"
+decision_statement = "Render source row 53 @5+4 as year_yyyy."
+justification = "The source identifies four exercise-year digits."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 53
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "3"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 94
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "8"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2023-row-94-108"
+decision_statement = "Render source row 94 @108+13 as identifier_digits."
+justification = "The source states a thirteen-digit declaration identifier; leading zeroes are significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 94
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "8"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 144
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "10"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2023-row-144-123"
+decision_statement = "Render source row 144 @123+13 as identifier_digits."
+justification = "The source states a thirteen-digit declaration identifier; leading zeroes are significant."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 144
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "10"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 171
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "12"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2023-row-171-138"
+decision_statement = "Render source row 171 @138+9 as integer."
+justification = "The source counts the total number of perceptor detail records."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 171
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal = "12"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 15
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 190
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2023-row-190-147"
+decision_statement = "Render source row 190 @147+15 as amount_integer_part."
+justification = "The official row explicitly names the integer part of the adjacent two-field euro amount."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 190
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 192
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2023-row-192-162"
+decision_statement = "Render source row 192 @162+2 as amount_fractional_digits."
+justification = "The official row explicitly names the decimal part of the adjacent two-field euro amount."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 192
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 15
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 211
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2023-row-211-164"
+decision_statement = "Render source row 211 @164+15 as amount_integer_part."
+justification = "The official row explicitly names the integer part of the adjacent two-field euro amount."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 211
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 213
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2023-row-213-179"
+decision_statement = "Render source row 213 @179+2 as amount_fractional_digits."
+justification = "The official row explicitly names the decimal part of the adjacent two-field euro amount."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 213
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 15
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 227
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2023-row-227-181"
+decision_statement = "Render source row 227 @181+15 as amount_integer_part."
+justification = "The official row explicitly names the integer part of the adjacent two-field euro amount."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 227
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 229
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2023-row-229-196"
+decision_statement = "Render source row 229 @196+2 as amount_fractional_digits."
+justification = "The official row explicitly names the decimal part of the adjacent two-field euro amount."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 229
+record_identity = "Tipo 1 - Registro De Declarante"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["2"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 256
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2023-row-256-1"
+decision_statement = "Render source row 256 @1+1 as enumeration."
+justification = "The source labels this one-byte numeric record type as constant 2."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 256
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["270"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 258
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2023-row-258-2"
+decision_statement = "Render source row 258 @2+3 as enumeration."
+justification = "The source labels the three-byte numeric model constant 270."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 258
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 260
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "3"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2023-row-260-5"
+decision_statement = "Render source row 260 @5+4 as year_yyyy."
+justification = "The source identifies four exercise-year digits."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 260
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "3"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["1", "2", "3", "4", "5"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 346
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "9"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2023-row-346-116"
+decision_statement = "Render source row 346 @116+1 as enumeration."
+justification = "The source enumerates perceptor keys 1 through 5 in this one-byte field."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 346
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "9"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 378
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "11"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2023-row-378-118"
+decision_statement = "Render source row 378 @118+2 as identifier_digits."
+justification = "The source gives a two-digit province code, including leading zeroes."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 378
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "11"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_yyyymmdd"
+value_policy = "yyyymmdd"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 435
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "12"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2023-row-435-120"
+decision_statement = "Render source row 435 @120+8 as date_yyyymmdd."
+justification = "The source states the AAAAMMDD date order for this eight-byte field."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 435
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "12"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_yyyymmdd"
+value_policy = "yyyymmdd"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 448
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "13"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2023-row-448-128"
+decision_statement = "Render source row 448 @128+8 as date_yyyymmdd."
+justification = "The source states the AAAAMMDD date order for this eight-byte field."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 448
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "13"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 470
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2023-row-470-136"
+decision_statement = "Render source row 470 @136+13 as amount_integer_part."
+justification = "The official row explicitly names the integer part of the adjacent two-field euro amount."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 470
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 475
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2023-row-475-149"
+decision_statement = "Render source row 475 @149+2 as amount_fractional_digits."
+justification = "The official row explicitly names the decimal part of the adjacent two-field euro amount."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 475
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 508
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2023-row-508-151"
+decision_statement = "Render source row 508 @151+13 as amount_integer_part."
+justification = "The official row explicitly names the integer part of the adjacent two-field euro amount."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 508
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 510
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2023-row-510-164"
+decision_statement = "Render source row 510 @164+2 as amount_fractional_digits."
+justification = "The official row explicitly names the decimal part of the adjacent two-field euro amount."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 510
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 533
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2023-row-533-166"
+decision_statement = "Render source row 533 @166+13 as amount_integer_part."
+justification = "The official row explicitly names the integer part of the adjacent two-field euro amount."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 533
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 535
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2023-row-535-179"
+decision_statement = "Render source row 535 @179+2 as amount_fractional_digits."
+justification = "The official row explicitly names the decimal part of the adjacent two-field euro amount."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 535
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "date_yyyymmdd"
+value_policy = "yyyymmdd"
+integer_digits = 8
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 573
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "20"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m270-2023-row-573-453"
+decision_statement = "Render source row 573 @453+8 as date_yyyymmdd."
+justification = "The source states the AAAAMMDD date order for this eight-byte field."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 573
+record_identity = "Tipo 2 - Registro De Perceptor"
+ordinal = "20"
+
+[design_identity]
+modelo = "270"
+design_epoch = "2023"
+source_ref = "aeat-dr-270-2023"
+source_sha256 = "d845cc47e3b60d01128d27dddcc3cffd2cf64bd6dfb24e0cd0d0467d66f95a92"

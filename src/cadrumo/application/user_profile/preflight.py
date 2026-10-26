@@ -1,0 +1,444 @@
+"""Preflight service: which schema fields a given modelo/revision needs.
+
+:class:`ProfilePreflightService` inspects the schema's ``model_selectors``
+against a :class:`UserProfileRecord` and returns a
+:class:`ProfilePreflightReport` listing every required field that the
+record does not yet carry.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Iterable, Iterator, Mapping
+from typing import TYPE_CHECKING, cast, overload, override
+
+from ...core.period import Period
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.ids import RevisionId
+from ...domain.calculations.registry.profile_grounding import (
+    ProfileKeyGrounding,
+    build_profile_grounding_index,
+)
+from ...domain.user_profile.errors import UserProfileNotFoundError
+from ...domain.user_profile.labels import profile_field_label
+from ...domain.user_profile.schema import ProfileSchemaDefinition
+from ...domain.user_profile.values import UserProfileRecord, section_field_key
+from .commands import (
+    ProfilePreflightReport,
+    ProfilePreflightRequirement,
+)
+from .completeness import conditional_profile_missing_required
+from .projections import record_to_path_values
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.schema import ModeloRevision
+
+
+class _DeferredProfileGrounding(Mapping[str, ProfileKeyGrounding]):
+    """Read public grounding once, only if this invocation needs an explanation."""
+
+    def __init__(self, operation: PinnedAuthorityOperation) -> None:
+        self._operation = operation
+        self._index: Mapping[str, ProfileKeyGrounding] | None = None
+
+    def _loaded(self) -> Mapping[str, ProfileKeyGrounding]:
+        if self._index is None:
+            self._index = build_profile_grounding_index(self._operation)
+        return self._index
+
+    @override
+    def __getitem__(self, key: str) -> ProfileKeyGrounding:
+        return self._loaded()[key]
+
+    @overload
+    def get(self, key: object, /, default: None = None) -> ProfileKeyGrounding | None: ...
+
+    @overload
+    def get(self, key: object, /, default: ProfileKeyGrounding) -> ProfileKeyGrounding: ...
+
+    @overload
+    def get[T](self, key: object, /, default: T) -> ProfileKeyGrounding | T: ...
+
+    @override
+    def get[T](self, key: object, /, default: T | None = None) -> ProfileKeyGrounding | T | None:
+        # Mapping.get would also catch a loader's KeyError, turning unavailable
+        # grounding into an apparently absent key. Only the loaded index owns
+        # missing-key semantics; errors while obtaining it must propagate.
+        # Lookup accepts arbitrary keys without widening the stored key type.
+        index = cast(Mapping[object, ProfileKeyGrounding], cast(object, self._loaded()))
+        return index.get(key, default)
+
+    @override
+    def __iter__(self) -> Iterator[str]:
+        return iter(self._loaded())
+
+    @override
+    def __len__(self) -> int:
+        return len(self._loaded())
+
+
+def deferred_profile_grounding_index(operation: PinnedAuthorityOperation) -> Mapping[str, ProfileKeyGrounding]:
+    """Keep a ready profile from loading every revision just to explain no missing fields.
+
+    The returned mapping belongs to this synchronous invocation. Its first
+    lookup uses the existing complete, generation-pinned grounding owner;
+    subsequent lookups reuse that same public index, including an empty one.
+    """
+    return _DeferredProfileGrounding(operation)
+
+
+def _profile_requirement_address(path: str) -> tuple[str, str, str]:
+    """Return the reduced path and its canonical section/field coordinates."""
+    reduced = section_field_key(path) if "." in path else path
+    section_key, _, field_key = reduced.partition(".")
+    if not field_key:
+        section_key, field_key = "profile", section_key
+    return reduced, section_key, field_key
+
+
+def _profile_requirement_schema_projection(
+    reduced: str,
+    *,
+    section_key: str,
+    schema: ProfileSchemaDefinition,
+    fallback_label: str,
+) -> tuple[str, tuple[str, ...]]:
+    """Resolve the operator label and schema legal references for a reduced path."""
+    if "." not in reduced:
+        return fallback_label, ()
+    try:
+        field = schema.field(reduced)
+    except UserProfileNotFoundError:
+        return fallback_label, ()
+    return profile_field_label(section_key, field), field.legal_refs
+
+
+def _profile_requirement_grounding_projection(
+    reduced: str,
+    *,
+    legal_refs: tuple[str, ...],
+    grounding_index: Mapping[str, ProfileKeyGrounding] | None,
+) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """Union registry grounding into legal references and return grounded modelos."""
+    grounding = grounding_index.get(reduced) if grounding_index is not None else None
+    if grounding is None:
+        return legal_refs, ()
+    grounded_refs = tuple(sorted({*legal_refs, *grounding.legal_refs}))
+    modelos = tuple(sorted({model.value for model in grounding.modelos}))
+    return grounded_refs, modelos
+
+
+def build_profile_preflight_requirement(
+    path: str,
+    *,
+    schema: ProfileSchemaDefinition,
+    selector: str | None = None,
+    grounding_index: Mapping[str, ProfileKeyGrounding] | None = None,
+) -> ProfilePreflightRequirement:
+    """Build one requirement row for a profile path, enriched with a label and grounding.
+
+    The shared builder behind every ``ProfilePreflightRequirement`` this
+    package or :mod:`application.modelo`'s profile readiness gate
+    constructs - the schema-required walk in :meth:`ProfilePreflightService.report`,
+    its export-identity and conditional-requirement branches, and the
+    modelo-work baseline/validation checks in ``_profile_readiness_gate.py``
+    all route through this one function rather than maintaining parallel
+    implementations.
+
+    ``path`` is reduced to its declared ``section.field`` form via
+    :func:`~domain.user_profile.values.section_field_key` before lookup, so a
+    repeatable-row path (``activities.0.iae_epigraph``) and a bare
+    non-dotted validation code both resolve correctly. The label is the
+    locale-catalogue operator label (falling back to the field's declared
+    ``description``, never a raw dotted path) when the reduced path names a
+    real schema field; otherwise it falls back to ``selector`` or ``path``
+    itself. The schema-declared ``legal_refs`` come from the field
+    definition; the registry-binding-derived ``legal_refs`` and ``modelos``
+    come from ``grounding_index`` when the reduced path is a known
+    ``source = "profile"`` binding key. A path absent from either source
+    contributes nothing to that source - never a fabricated value.
+    ``modelos`` is always the grounded registry union, never the modelo the
+    caller happens to be checking - the two are different facts and must
+    not be conflated under one field.
+    """
+    reduced, section_key, field_key = _profile_requirement_address(path)
+    label, legal_refs = _profile_requirement_schema_projection(
+        reduced,
+        section_key=section_key,
+        schema=schema,
+        fallback_label=selector or path,
+    )
+    legal_refs, modelos = _profile_requirement_grounding_projection(
+        reduced,
+        legal_refs=legal_refs,
+        grounding_index=grounding_index,
+    )
+    return ProfilePreflightRequirement(
+        selector=selector or path,
+        section_key=section_key,
+        field_key=field_key,
+        label=label,
+        legal_refs=legal_refs,
+        modelos=modelos,
+    )
+
+
+def format_profile_preflight_requirement(requirement: ProfilePreflightRequirement) -> str:
+    """Render one requirement row as ``label (legal_ref, legal_ref)``.
+
+    The single operator-facing rendering of a missing profile requirement,
+    shared by every surface that names one: the modelo work readiness gate's
+    refusal, the overview calendar/agenda/backlog refusals, and the data
+    inventory checklist's unresolved-coefficient warning.
+
+    Falls back to the bare label when the field carries no legal grounding -
+    never a raw dotted path once a label is available, and never an invented
+    citation when none is declared.
+    """
+    if requirement.legal_refs:
+        return f"{requirement.label} ({', '.join(requirement.legal_refs)})"
+    return requirement.label
+
+
+def format_profile_selector_requirements(
+    selectors: Iterable[str],
+    *,
+    schema: ProfileSchemaDefinition,
+    grounding_index: Mapping[str, ProfileKeyGrounding] | None = None,
+) -> tuple[str, ...]:
+    """Render declared selector tokens as grounded requirement text, in order.
+
+    Bridges the surfaces that hold a ``model_selectors`` TOKEN - a
+    deadline-engine gating key, a registry binding's consumed profile key -
+    rather than a ``section.field`` path, which is what
+    :func:`build_profile_preflight_requirement` resolves.
+
+    A token the schema resolves to exactly one field is rendered as that
+    field's operator label with its legal grounding. A token the schema does
+    not resolve - because it names no field, because two fields declare it, or
+    because it belongs to another namespace entirely, such as a warning code
+    that is not a profile field at all - is passed through unchanged. Callers
+    mix both kinds in one stream, and a token rendered verbatim is the
+    behaviour that surface already has, whereas a guessed label would be
+    confidently wrong.
+    """
+    rendered: list[str] = []
+    for selector in selectors:
+        path = schema.path_for_model_selector(selector)
+        if path is None:
+            rendered.append(selector)
+            continue
+        rendered.append(
+            format_profile_preflight_requirement(
+                build_profile_preflight_requirement(
+                    path,
+                    schema=schema,
+                    selector=selector,
+                    grounding_index=grounding_index,
+                ),
+            ),
+        )
+    return tuple(rendered)
+
+
+def format_profile_path_requirements(
+    paths: Iterable[str],
+    *,
+    schema: ProfileSchemaDefinition,
+    grounding_index: Mapping[str, ProfileKeyGrounding] | None = None,
+) -> tuple[str, ...]:
+    """Render profile PATHS as grounded requirement text, in order.
+
+    The path-shaped sibling of :func:`format_profile_selector_requirements`.
+    The distinction is not cosmetic and the two are not interchangeable: a
+    registry binding names the profile fact it consumes by its
+    ``section.field`` PATH, whereas the deadline engine's completeness gate
+    names its fields by their declared ``model_selectors`` TOKEN. Routing
+    binding keys through the selector lookup resolves nothing, so every key
+    passes through unchanged and the rendering is silently a no-op.
+
+    :func:`build_profile_preflight_requirement` already reduces a path to its
+    declared form, so a row-indexed path resolves here too. A path naming no
+    schema field - a derived-selector pattern expanded for a filing year, for
+    instance - keeps its own text, since there is no label to show for it.
+    """
+    return tuple(
+        format_profile_preflight_requirement(
+            build_profile_preflight_requirement(
+                path,
+                schema=schema,
+                grounding_index=grounding_index,
+            ),
+        )
+        for path in paths
+    )
+
+
+class ProfilePreflightService:
+    """Resolve required profile selectors for a given ``(modelo, revision, year, period)``.
+
+    The service inspects the loaded schema's ``model_selectors`` and
+    ``schedule_predicates`` declarations. Today every required field whose
+    ``model_selectors`` reference the target modelo is considered required;
+    revision-specific filtering will land alongside the registry-time
+    selector inventory work.
+    """
+
+    def __init__(self, *, schema: ProfileSchemaDefinition) -> None:
+        """Bind the reporter to a loaded profile schema definition."""
+        self._schema = schema
+
+    def report(
+        self,
+        *,
+        record: UserProfileRecord,
+        modelo: str,
+        revision_id: RevisionId,
+        period: Period,
+        revision: ModeloRevision | None = None,
+        operation: PinnedAuthorityOperation | None = None,
+    ) -> ProfilePreflightReport:
+        """Compute missing required profile fields for the given filing context.
+
+        Walks every section and field in the schema.  A field is considered
+        required for this filing when ``field.required`` is true and at
+        least one of its ``model_selectors`` has the prefix
+        ``modelo_<modelo>``.  Facts already present on ``record`` are
+        excluded from the missing list.
+
+        Args:
+            record: The caller's current :class:`UserProfileRecord`.
+            modelo: Numeric modelo identifier (e.g. ``"303"``).
+            revision_id: Revision tag from the registry (e.g. ``"2024-0A"``).
+            period: Typed filing period.
+            revision: Optional :class:`ModeloRevision` whose export layouts
+                contribute filing-grade declarant identity requirements.
+            operation: Optional pinned authority operation used to
+                union each missing field's grounding with every consuming
+                ``source = "profile"`` registry binding's ``legal_refs`` and
+                modelos, via :func:`build_profile_grounding_index`. When
+                omitted, grounding falls back to the schema field's own
+                ``legal_refs`` only - nothing is invented.
+
+        Returns:
+            A :class:`ProfilePreflightReport` with ``ready=True`` when all
+            required fields are present, or ``ready=False`` with the
+            ``missing`` list populated.
+
+            ``per_operation_requirements_assessed`` reports whether the
+            per-modelo walk described above selected any field at all. The
+            shipped schema declares grounded ``modelo_`` selectors only for
+            Modelo 036, 100 and 303, and among those only ``identity.tax_id``
+            (Modelo 100) is also schema-``required`` - every other tokenised
+            field is optional, so it is never selected by this walk. The flag
+            is therefore true for Modelo 100 and false for every other modelo,
+            including 036 and 303, where ``ready`` reflects only the
+            export-identity and conditional checks. A false value means
+            nothing schema-required was examined for that modelo; it MUST NOT
+            be rendered as a clean bill of health.
+        """
+        values = record_to_path_values(record)
+        grounding_index: Mapping[str, ProfileKeyGrounding] = (
+            deferred_profile_grounding_index(operation) if operation is not None else dict[str, ProfileKeyGrounding]()
+        )
+        missing: list[ProfilePreflightRequirement] = []
+        target = self._selector_prefix(modelo)
+        # Counts fields the per-operation axis SELECTED, not fields found missing.
+        # A modelo whose selected fields are all present is assessed and ready; a
+        # modelo that selected nothing was never assessed at all, and the two must
+        # not both surface as ``ready=True`` with an empty ``missing``.
+        per_operation_selected = 0
+        for section in self._schema.sections:
+            for field in section.fields:
+                # A field reaches this walk either because it is required of
+                # every profile AND its selectors name this modelo, or because
+                # it declares this modelo in ``required_for_modelos`` -- the
+                # modelo-scoped axis, which completeness and presentation
+                # deliberately ignore so a per-modelo fact is never demanded of
+                # a taxpayer with no such obligation.
+                required_here = field.required and self._selectors_match_modelo(field.model_selectors, target)
+                if not required_here and modelo.strip() not in {item.value for item in field.required_for_modelos}:
+                    continue
+                per_operation_selected += 1
+                candidate_path = f"{section.key}.{field.key}"
+                if self._has_value(values, candidate_path):
+                    continue
+                missing.append(
+                    build_profile_preflight_requirement(
+                        candidate_path,
+                        schema=self._schema,
+                        selector=field.model_selectors[0] if field.model_selectors else candidate_path,
+                        grounding_index=grounding_index,
+                    ),
+                )
+        missing.extend(self._missing_conditional_profile_requirements(values, missing, grounding_index))
+        return ProfilePreflightReport(
+            profile_id=record.profile_id,
+            modelo=modelo,
+            revision_id=revision_id,
+            filing_year=period.filing_year,
+            period=period,
+            missing=tuple(missing),
+            ready=not missing,
+            per_operation_requirements_assessed=per_operation_selected > 0,
+        )
+
+    @staticmethod
+    def _selector_prefix(modelo: str) -> str:
+        return f"modelo_{modelo.strip()}"
+
+    @staticmethod
+    def _selectors_match_modelo(selectors: tuple[str, ...], target_prefix: str) -> bool:
+        if not selectors:
+            return False
+        return any(selector.startswith(target_prefix) for selector in selectors)
+
+    @staticmethod
+    def _has_value(values: dict[str, str], path: str) -> bool:
+        return bool((values.get(path) or "").strip())
+
+    def _missing_conditional_profile_requirements(
+        self,
+        values: dict[str, str],
+        existing: list[ProfilePreflightRequirement],
+        grounding_index: Mapping[str, ProfileKeyGrounding],
+    ) -> list[ProfilePreflightRequirement]:
+        already_missing = {(item.section_key, item.field_key) for item in existing}
+        missing: list[ProfilePreflightRequirement] = []
+        for path in conditional_profile_missing_required(values):
+            section_key, field_key = self._split_path(path)
+            if (section_key, field_key) in already_missing:
+                continue
+            missing.append(
+                build_profile_preflight_requirement(
+                    f"{section_key}.{field_key}",
+                    schema=self._schema,
+                    selector=self._selector_for_path(path),
+                    grounding_index=grounding_index,
+                ),
+            )
+        return missing
+
+    def _selector_for_path(self, path: str) -> str:
+        section_key, field_key = self._split_path(path)
+        for section in self._schema.sections:
+            if section.key != section_key:
+                continue
+            for field in section.fields:
+                if field.key == field_key:
+                    return field.model_selectors[0] if field.model_selectors else path
+        return path
+
+    @staticmethod
+    def _split_path(path: str) -> tuple[str, str]:
+        section_key, _, field_key = section_field_key(path).partition(".")
+        return section_key, field_key
+
+
+__all__ = [
+    "ProfilePreflightService",
+    "build_profile_preflight_requirement",
+    "deferred_profile_grounding_index",
+    "format_profile_path_requirements",
+    "format_profile_preflight_requirement",
+    "format_profile_selector_requirements",
+]

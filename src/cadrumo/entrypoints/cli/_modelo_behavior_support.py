@@ -1,0 +1,202 @@
+"""Public behavior support shared by deferred Modelo command handlers.
+
+Core types:
+:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
+"""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+import typer
+
+from ...application.modelo.registry_discovery import declared_modelo_period_tokens
+from ...application.modelo.work_addressing import (
+    ModeloWorkAddress,
+    ModeloWorkPeriodTokenError,
+    modelo_work_address_from_operator_target,
+)
+from ...core.bucket_pointer import resolve_active_bucket_id
+from ...core.errors.hierarchy import CadrumoError
+from ...core.i18n.render import tr
+from ...core.logging import get_logger
+from ...core.period import Period, PeriodError
+from ._modelo_cli_support import (
+    bad_parameter_from_localized_context,
+    unsupported_local_work_period_refusal,
+    validate_work_unit_selector,
+)
+from .common import no_active_profile_refusal
+
+_log = get_logger(__name__)
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+
+
+def work_address_for_cli(
+    *,
+    work_unit_id: str | None,
+    modelo: str | None,
+    year: int | None,
+    period: str | None,
+    revision: str | None,
+    bucket_id: str | None = None,
+) -> ModeloWorkAddress:
+    exact_id = validate_work_unit_selector(work_unit_id) if work_unit_id is not None else None
+    typed_period = resolve_optional_cli_period(year=year, period=period, modelo=modelo)
+    try:
+        return modelo_work_address_from_operator_target(
+            work_unit_id=exact_id,
+            modelo=modelo,
+            year=year,
+            period=typed_period,
+            registry_revision_id=revision,
+            bucket_id=bucket_id,
+        )
+    except ModeloWorkPeriodTokenError as exc:
+        raise bad_parameter_from_localized_context(exc) from exc
+
+
+def require_active_profile() -> None:
+    """Refuse cold-start work commands with the clean no-active-profile message.
+
+    Work commands open the active profile's encrypted bucket database.
+    Without an active profile that path raises a raw ``StorageError``
+    (``cadrumo_database_url is empty``) or a low-level ``no active bucket
+    session`` message — both leak internal plumbing. This guard fires
+    first so every cold-start work command produces the same clean,
+    translated ``profile create`` guidance that the ledger surface
+    already gives.
+    """
+    if resolve_active_bucket_id() is None:
+        raise no_active_profile_refusal()
+
+
+def _declared_period_tokens(
+    modelo: str | None, *, operation: PinnedAuthorityOperation | None = None
+) -> tuple[str, ...]:
+    """Return the registry-declared period tokens for one modelo.
+
+    Pulls ``period_selector.declared_periods`` from every revision of the modelo
+    so the CLI period-validation error can enumerate exactly the tokens
+    AEAT accepts for that form (``0A`` for an annual modelo, ``1T``..``4T``
+    for a quarterly one, etc.). Returns an empty tuple when the modelo is
+    unknown or unspecified — the caller falls back to the generic shape
+    hint.
+    """
+    if not (modelo is not None and modelo) or not modelo.strip():
+        return ()
+    try:
+        if operation is not None:
+            return declared_modelo_period_tokens(modelo, operation=operation)
+        from ...domain.calculations.registry.authority import bundled_indexed_authority
+
+        with bundled_indexed_authority().operation() as operation:
+            return declared_modelo_period_tokens(modelo, operation=operation)
+    except CadrumoError:
+        return ()
+    except Exception:
+        _log.debug(
+            "_declared_period_tokens: unexpected non-CadrumoError suppressed for modelo=%r",
+            modelo,
+            exc_info=True,
+        )
+        return ()
+
+
+def resolve_year_period(year: int, period: str, *, modelo: str | None = None) -> Period:
+    """Normalise CLI ``--year/--period`` into a typed :class:`Period`.
+
+    Operators pass AEAT registry tokens (``1T``, ``0A``, ``01``); the
+    backend expects one typed filing period. Registry-only callers should
+    project the returned value with ``period.filing_year`` and
+    ``period.registry_token`` at the registry boundary.
+
+    ``--year`` and ``--period`` are composed internally; a token that is
+    itself a four-digit year (the common ``--period 2024`` confusion)
+    would compose to ``2024-2024`` and fail with an opaque message. When
+    ``modelo`` is supplied the error instead explains the composition
+    and enumerates the registry-declared period tokens for that modelo.
+    """
+    try:
+        return Period.from_year_and_code(year, period.strip())
+    except PeriodError as exc:
+        if refusal := unsupported_local_work_period_refusal(modelo=modelo, token=period):
+            raise refusal from exc
+        raise typer.BadParameter(_period_token_error(year, period, modelo, fallback=str(exc))) from exc
+
+
+def resolve_optional_cli_period(*, year: int | None, period: str | None, modelo: str | None) -> Period | None:
+    """Resolve a raw CLI period string when enough year context was supplied."""
+    if period is None:
+        return None
+    if year is None:
+        raise typer.BadParameter(tr("cli.common.errors.period_missing_year", token=period))
+    return resolve_year_period(year, period, modelo=modelo)
+
+
+def _period_token_error(
+    year: int,
+    token: str,
+    modelo: str | None,
+    *,
+    fallback: str | None = None,
+) -> str:
+    """Build an operator-facing period-token error.
+
+    Explains that ``--year`` and ``--period`` are composed and lists the
+    registry-declared period tokens for the modelo when known. Falls
+    back to ``fallback`` (the raw registry message) only when no
+    modelo-specific token set is available.
+    """
+    declared = _declared_period_tokens(modelo)
+    if declared:
+        return tr(
+            "cli.app.modelo.work.period_token_invalid",
+            token=token,
+            modelo=modelo or "",
+            year=year,
+            tokens=", ".join(declared),
+        )
+    if fallback is not None:
+        return fallback
+    return tr(
+        "cli.app.modelo.work.period_token_unrecognised",
+        token=token,
+        year=year,
+    )
+
+
+def bare_period_error(
+    modelo: str,
+    period: str,
+    *,
+    fallback: str = "",
+    operation: PinnedAuthorityOperation | None = None,
+) -> str:
+    """Build an operator-facing error for an invalid bare ``--period`` token.
+
+    Used by surfaces (``describe``, ``casillas``) that take a bare
+    period rather than a composed ``--year/--period`` pair. When the
+    modelo's declared period tokens are known the error enumerates them;
+    otherwise it falls back to the raw registry shape hint.
+    """
+    declared = _declared_period_tokens(modelo, operation=operation)
+    if not declared:
+        return fallback
+    return tr(
+        "cli.app.modelo.describe.period_token_invalid",
+        period=period,
+        modelo=modelo,
+        tokens=", ".join(declared),
+    )
+
+
+__all__ = [
+    "bare_period_error",
+    "require_active_profile",
+    "resolve_optional_cli_period",
+    "resolve_year_period",
+    "work_address_for_cli",
+]

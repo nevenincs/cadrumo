@@ -1,0 +1,253 @@
+"""Developer CLI for the Modelo 100 anexo-A AEIP continuity family."""
+
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Annotated, Protocol
+
+import typer
+
+from dev._paths import REPO_ROOT
+
+from .adjudications import DEFAULT_ADJUDICATIONS_FILENAME, AdjudicationSet, load_adjudications
+from .apply_execution import apply_prepared_plan
+from .apply_preparation import prepare_apply
+from .inventory import build_inventory, extract_occurrences
+from .planning import plan_chains, render_evolution_record
+from .stale_adjudications import detect_stale_adjudications
+from .types import AeipApplyPlan, AeipInventory, ChainPlan
+
+app = typer.Typer(
+    name="aeip",
+    help="Inventory and plan the Modelo 100 anexo-A AEIP event-keyed continuity chains.",
+    no_args_is_help=True,
+)
+
+
+def _repo_root() -> Path:
+    return REPO_ROOT
+
+
+def _modelos_root() -> Path:
+    return _repo_root() / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos"
+
+
+def _load(modelo_id: str, adjudications_path: Path | None) -> tuple[AeipInventory, ChainPlan, AdjudicationSet]:
+    path = adjudications_path or Path(__file__).resolve().parent / DEFAULT_ADJUDICATIONS_FILENAME
+    adjudications = load_adjudications(path)
+    occurrences, category_counts = extract_occurrences(_modelos_root(), modelo_id=modelo_id)
+    inventory = build_inventory(
+        occurrences,
+        adjudications=adjudications,
+        category_row_counts=category_counts,
+    )
+    return inventory, plan_chains(inventory, adjudications=adjudications), adjudications
+
+
+_MODELO_OPTION = typer.Option("--modelo", help="AEAT modelo identifier carrying the anexo-A family.")
+_ADJUDICATIONS_OPTION = typer.Option(
+    "--adjudications",
+    help="Path to the adjudications file; defaults to the one shipped beside this CLI.",
+)
+
+
+class _CasillaOccurrence(Protocol):
+    """The minimal per-occurrence shape `casilla_claims` reads."""
+
+    @property
+    def revision_id(self) -> str: ...
+
+    @property
+    def casilla_id(self) -> str: ...
+
+
+class _CasillaEvent(Protocol):
+    """The minimal per-programme shape `casilla_claims` reads."""
+
+    @property
+    def slug(self) -> str: ...
+
+    @property
+    def occurrences(self) -> tuple[_CasillaOccurrence, ...]: ...
+
+
+class _CasillaInventory(Protocol):
+    """The minimal inventory shape `casilla_claims` reads."""
+
+    @property
+    def events(self) -> tuple[_CasillaEvent, ...]: ...
+
+
+def casilla_claims(
+    inventory: _CasillaInventory,
+) -> tuple[dict[tuple[str, str], set[str]], dict[str, set[str]]]:
+    """Return which programmes claim each casilla, per revision and pooled.
+
+    Two different questions were being answered by one number. Pooling every
+    revision under a bare casilla id counts a programme that INHERITED an id
+    in a later year as colliding with the programme that held it earlier,
+    which is ordinary AEAT reassignment and not an identity defect.
+
+    The finding that matters is two programmes claiming one casilla WITHIN a
+    single revision, because only there is the id ambiguous. Measured on the
+    live modelo 100 family, the pooled number reported thirty and the
+    same-revision number was zero - so every reported collision was expected
+    behaviour, and a real one appearing would have moved thirty to thirty-one
+    with nothing to distinguish it.
+    """
+    within_revision: dict[tuple[str, str], set[str]] = {}
+    pooled: dict[str, set[str]] = {}
+    for event in inventory.events:
+        for occurrence in event.occurrences:
+            within_revision.setdefault((occurrence.revision_id, occurrence.casilla_id), set()).add(event.slug)
+            pooled.setdefault(occurrence.casilla_id, set()).add(event.slug)
+    return within_revision, pooled
+
+
+@app.command("inventory")
+def inventory_command(
+    modelo: Annotated[str, _MODELO_OPTION] = "100",
+    adjudications: Annotated[Path | None, _ADJUDICATIONS_OPTION] = None,
+) -> None:
+    """Report the event matrix: programmes, spans, and id-reuse collisions."""
+    inventory, _, _ = _load(modelo, adjudications)
+    multi = [event for event in inventory.events if event.spans_multiple_revisions]
+    _report_inventory_header(modelo, inventory, len(multi))
+    _report_revision_counts(inventory)
+    _report_claim_collisions(inventory)
+
+
+def _report_inventory_header(modelo: str, inventory: AeipInventory, multi_count: int) -> None:
+    typer.echo(f"Modelo {modelo} anexo-A AEIP family across revisions {', '.join(inventory.revisions)}")
+    typer.echo(f"  event-row occurrences : {len(inventory.occurrences)}")
+    typer.echo(f"  distinct programmes   : {len(inventory.events)}")
+    typer.echo(f"    spanning >1 revision: {multi_count}")
+    typer.echo(f"    single-revision     : {len(inventory.events) - multi_count}")
+
+
+def _report_revision_counts(inventory: AeipInventory) -> None:
+    for revision in inventory.revisions:
+        events = _revision_event_count(inventory, revision)
+        categories = inventory.category_row_counts.get(revision, 0)
+        typer.echo(f"  {revision}: {events:>3} event rows, {categories:>3} category rows")
+
+
+def _revision_event_count(inventory: AeipInventory, revision: str) -> int:
+    return sum(
+        1 for event in inventory.events for occurrence in event.occurrences if occurrence.revision_id == revision
+    )
+
+
+def _report_claim_collisions(inventory: AeipInventory) -> None:
+    within_revision, pooled = casilla_claims(inventory)
+    collisions = sorted(key for key, slugs in within_revision.items() if len(slugs) > 1)
+    reassigned = sorted(casilla for casilla, slugs in pooled.items() if len(slugs) > 1)
+    typer.echo(f"  distinct casilla ids  : {len(pooled)}")
+    typer.echo(f"    same-revision collisions   : {len(collisions)}")
+    for revision, casilla in collisions:
+        claimants = ", ".join(sorted(within_revision[(revision, casilla)]))
+        typer.echo(f"      {revision}:{casilla} claimed by {claimants}")
+    typer.echo(f"    reassigned across revisions: {len(reassigned)} (expected; not a collision)")
+
+
+@app.command("check")
+def check_command(
+    modelo: Annotated[str, _MODELO_OPTION] = "100",
+    adjudications: Annotated[Path | None, _ADJUDICATIONS_OPTION] = None,
+) -> None:
+    """Report every unadjudicated ambiguity and every stale adjudication; exit non-zero while any remain."""
+    inventory, plan, adjudications_set = _load(modelo, adjudications)
+    stale = detect_stale_adjudications(inventory, adjudications_set)
+    if plan.complete and not stale:
+        typer.echo(f"AEIP family fully adjudicated: {len(plan.entries)} chains planned.")
+        return
+    if not plan.complete:
+        typer.echo(f"{len(plan.ambiguities)} unadjudicated ambiguit(y/ies):")
+        for ambiguity in plan.ambiguities:
+            typer.echo(f"  [{ambiguity.kind}] {', '.join(ambiguity.slugs)}")
+            typer.echo(f"      {ambiguity.detail}")
+    if stale:
+        typer.echo(f"{len(stale)} stale adjudication(s), naming a corpus the tree no longer carries:")
+        for entry in stale:
+            typer.echo(f"  [{entry.kind}] {entry.detail}")
+    raise typer.Exit(code=1)
+
+
+@app.command("plan")
+def plan_command(
+    modelo: Annotated[str, _MODELO_OPTION] = "100",
+    adjudications: Annotated[Path | None, _ADJUDICATIONS_OPTION] = None,
+    show_records: Annotated[
+        bool,
+        typer.Option("--show-records", help="Print the evolution-record fragments for review."),
+    ] = False,
+) -> None:
+    """Plan the chain stamps and evolution records. Writes nothing."""
+    _, plan, _ = _load(modelo, adjudications)
+    typer.echo(f"planned chains        : {len(plan.entries)}")
+    typer.echo(f"occurrences to stamp  : {plan.stamp_count}")
+    typer.echo(f"evolution records     : {plan.record_count}")
+    typer.echo(f"single-revision events: {len(plan.single_revision_events)} (no chain)")
+    typer.echo(f"blocked by ambiguity  : {len(plan.ambiguities)}")
+    for entry in plan.entries:
+        stamps = ", ".join(f"{occ.revision_id}:{occ.casilla_id}" for occ in entry.occurrences)
+        typer.echo(f"\n  {entry.chain_id}")
+        typer.echo(f"    {entry.title}")
+        typer.echo(f"    stamp: {stamps}")
+        for pair in entry.pairs:
+            typer.echo(f"    pair : {pair.from_revision} -> {pair.to_revision} [{pair.evolution_kind}]")
+            if show_records:
+                record = render_evolution_record(pair, casilla_id=entry.occurrences[-1].casilla_id)
+                typer.echo("".join(f"\n      {line}" for line in record.splitlines()))
+
+
+def _report_apply_plan(plan: AeipApplyPlan, planned: ChainPlan) -> None:
+    """Print the complete dry-run accounting in stable, reviewable form."""
+    typer.echo(f"planned chains          : {len(planned.entries)}")
+    typer.echo(f"planned stamp rows      : {planned.stamp_count}")
+    typer.echo(f"already stamped rows    : {plan.existing_stamps}")
+    typer.echo(f"stamp rows to write     : {len(plan.stamp_writes)}")
+    typer.echo(f"planned evolution recs  : {planned.record_count}")
+    typer.echo(f"existing evolution recs : {plan.existing_evolutions}")
+    typer.echo(f"extra evolution recs    : {plan.unexpected_evolutions}")
+    typer.echo(f"evolution recs to write : {len(plan.evolution_writes)}")
+    typer.echo(f"refusals                : {len(plan.refusals)}")
+    for refusal in plan.refusals:
+        typer.echo(f"  REFUSAL {refusal}")
+    if plan.stamp_writes:
+        typer.echo("stamp targets:")
+        for write in plan.stamp_writes:
+            typer.echo(f"  {write.revision_id}/{write.casilla_id} -> {write.path}")
+    if plan.evolution_writes:
+        typer.echo("evolution targets:")
+        for write in plan.evolution_writes:
+            typer.echo(f"  {write.path}")
+
+
+@app.command("apply")
+def apply_command(
+    modelo: Annotated[str, _MODELO_OPTION] = "100",
+    adjudications: Annotated[Path | None, _ADJUDICATIONS_OPTION] = None,
+    write: Annotated[
+        bool,
+        typer.Option("--write", help="Apply the reviewed plan; without this flag the command is dry-run only."),
+    ] = False,
+) -> None:
+    """Preflight the adjudicated AEIP plan; write only with explicit ``--write``."""
+    inventory, planned, adjudications_set = _load(modelo, adjudications)
+    prepared = prepare_apply(
+        _modelos_root(),
+        inventory,
+        planned,
+        adjudications_set,
+        modelo_id=modelo,
+    )
+    _report_apply_plan(prepared, planned)
+    if prepared.refusals:
+        raise typer.Exit(code=1)
+    if not write:
+        typer.echo("dry-run only; pass --write after review")
+        return
+    stamp_rows, evolution_records = apply_prepared_plan(prepared)
+    typer.echo(f"applied stamp rows      : {stamp_rows}")
+    typer.echo(f"applied evolution recs  : {evolution_records}")

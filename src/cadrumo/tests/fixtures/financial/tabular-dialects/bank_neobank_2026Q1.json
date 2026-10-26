@@ -1,0 +1,10 @@
+{
+  "output_sha256": "5302aee0cc6698c477c4ddf70cfd7801f8d278aba3bc7291219f902e5e0d9b0c",
+  "output_size_bytes": 1578,
+  "provenance": "synthetic_generated",
+  "role": "dialect_normalization_anchor",
+  "licence": "CC0-1.0",
+  "structural_difficulty": [
+    "Neobank CSV export"
+  ]
+}

@@ -1,0 +1,880 @@
+"""Adversarial contract tests for the AEAT Sync workspace projection.
+
+"Safe" is deliberately not the word any more. What these tests defend is not
+the operator against their own data -- that policy is retired -- but the
+projection contract: scope coordinates stay out of published rows, capabilities
+appear only where something admitted them, a comparison carries the values it
+compares, and a subclass cannot smuggle a field past the projector.
+
+The distinction matters when reading a failure here. A row exposing more of the
+operator's own figures is not a defect; a row exposing the bucket it was scoped
+by, or claiming an action nothing granted, is.
+"""
+
+from __future__ import annotations
+
+import ast
+import pickle
+from datetime import UTC, date, datetime
+from pathlib import Path
+from typing import Any, TypedDict, Unpack, cast
+
+import pytest
+from pydantic import ValidationError
+
+from ....core.hashing import content_hash_hex
+from ....core.period import Period
+from ....domain.modelos.codes import ModeloCode
+from ...auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
+from ...live.tests.unopened_live_ports import unopened_browser_session_factory, unopened_censal_fetch
+from ...operations.registry import OperationPublicContractSetV1
+from ...operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalogue, ActionCatalogueEntry
+from ...operator_actions.models import ActionReference
+from ...user_profile.censal_operation import (
+    build_censal_operation_definition,
+    build_censal_operation_registration,
+)
+from .. import workspace as workspace_module
+from ..workspace import (
+    AeatSyncAeatObservationState,
+    AeatSyncCensusCategory,
+    AeatSyncCensusStatus,
+    AeatSyncDiscrepancyKind,
+    AeatSyncDocumentCustodyState,
+    AeatSyncJustificanteState,
+    AeatSyncLocalFilingState,
+    AeatSyncNotificationCategory,
+    AeatSyncNotificationReadState,
+    AeatSyncOverviewArea,
+    AeatSyncReconciliationState,
+    AeatSyncSourceState,
+    AeatSyncWorkspaceAvailability,
+    AeatSyncWorkspaceCensusRowV1,
+    AeatSyncWorkspaceEvidenceComparisonRowV1,
+    AeatSyncWorkspaceFactV1,
+    AeatSyncWorkspaceFiledDeclarationRowV1,
+    AeatSyncWorkspaceNotificationRowV1,
+    AeatSyncWorkspaceOverviewRowV1,
+    AeatSyncWorkspaceProjectionError,
+    AeatSyncWorkspaceProjectionV1,
+    AeatSyncWorkspaceReconciliationRowV1,
+    AeatSyncWorkspaceSource,
+    AeatSyncWorkspaceSourceObservationV1,
+    AeatSyncWorkspaceZone,
+    AeatSyncWorkspaceZoneObservationV1,
+    aeat_sync_workspace_sources,
+    project_aeat_sync_workspace,
+)
+from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+
+_OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+BUCKET = "11111111-1111-4111-8111-111111111111"
+OTHER = "22222222-2222-4222-8222-222222222222"
+SUBJECT = "private-subject"
+T1 = datetime(2026, 1, 3, 10, tzinfo=UTC)
+T2 = datetime(2026, 1, 4, 11, tzinfo=UTC)
+SECRET_VALUES = (
+    BUCKET,
+    SUBJECT,
+    "12345678Z",
+    "certificate-private",
+    "notification-private",
+)
+_CERTIFICATE_SECRET_BACKEND_FACTORY = InMemoryCertificateSecretBackendFactory()
+"""Sentinels for the byte scan below, which is belt-and-braces, NOT the guard.
+
+Stated plainly because the shape of this test invites the opposite reading:
+`AeatSyncWorkspaceProjectionV1` declares only `contract_version`, `zones` and
+six tuples of typed rows. It has no `bucket_id`, no `subject_key` and no
+identity field of any kind -- those live on `AeatSyncWorkspaceFactV1`, which is
+an INPUT the projector consumes and never emits. So no value in this tuple can
+reach the output while the types stay as they are, and the scan cannot fail.
+
+Four sentinels were removed for a sharper reason: `Protected Name`,
+`https://private.invalid/evidence` and `document prose` appeared nowhere in
+this file except the tuple itself. Nothing introduced them at all, so their
+absence was doubly meaningless. Supplying one of them was tried and reverted --
+feeding a fact changes nothing, because facts are not part of the output.
+
+The protection is the TYPE, and the structural assertion below is the honest
+expression of it: it fails the moment a row gains a free-text field, which is
+the only way any of this could start leaking.
+"""
+
+
+def _censal_operation_definition():
+    return build_censal_operation_definition(
+        certificate_secret_backend_factory=_CERTIFICATE_SECRET_BACKEND_FACTORY,
+        browser_session_factory=unopened_browser_session_factory,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        censal_fetch_port=unopened_censal_fetch,
+        provider_preflight=lambda _profile_id, _operation: None,
+    )
+
+
+def _period(modelo: str = "130") -> Period:
+    return Period.from_year_and_code(2026, "1T" if modelo != "303" else "2T")
+
+
+def _source(
+    source: AeatSyncWorkspaceSource,
+    availability: AeatSyncWorkspaceAvailability = AeatSyncWorkspaceAvailability.AVAILABLE,
+    *,
+    count: int = 1,
+) -> AeatSyncWorkspaceSourceObservationV1:
+    observable = availability in {AeatSyncWorkspaceAvailability.AVAILABLE, AeatSyncWorkspaceAvailability.STALE}
+    return AeatSyncWorkspaceSourceObservationV1(
+        source=source,
+        availability=availability,
+        observed_at=T2 if observable else None,
+        refusal=None if availability is AeatSyncWorkspaceAvailability.AVAILABLE else "aeat.sync.source.refused",
+        item_count=count if observable else None,
+    )
+
+
+def _observations(
+    *,
+    overrides: dict[tuple[AeatSyncWorkspaceZone, AeatSyncWorkspaceSource], AeatSyncWorkspaceAvailability] | None = None,
+) -> tuple[AeatSyncWorkspaceZoneObservationV1, ...]:
+    overrides = overrides or {}
+    return tuple(
+        AeatSyncWorkspaceZoneObservationV1(
+            zone=zone,
+            sources=tuple(
+                _source(source, overrides.get((zone, source), AeatSyncWorkspaceAvailability.AVAILABLE))
+                for source in aeat_sync_workspace_sources(zone)
+            ),
+        )
+        for zone in AeatSyncWorkspaceZone
+    )
+
+
+def _action(action_id: str) -> ActionReference:
+    return ActionReference(action_id=action_id)
+
+
+def _fact(row, *, bucket: str = BUCKET, subject: str = SUBJECT, private_identity: str | None = None):
+    return AeatSyncWorkspaceFactV1(bucket_id=bucket, subject_key=subject, row=row, private_identity=private_identity)
+
+
+def _overview(
+    area: AeatSyncOverviewArea = AeatSyncOverviewArea.CENSUS, actions: tuple[ActionReference, ...] = ()
+) -> AeatSyncWorkspaceOverviewRowV1:
+    return AeatSyncWorkspaceOverviewRowV1(
+        area=area,
+        local_state=AeatSyncSourceState.PRESENT,
+        aeat_state=AeatSyncSourceState.PRESENT,
+        local_observed_at=T1,
+        aeat_observed_at=T2,
+        discrepancy_kind=AeatSyncDiscrepancyKind.NONE,
+        supported_actions=actions,
+    )
+
+
+def _census(
+    path: str = "address", category: AeatSyncCensusCategory = AeatSyncCensusCategory.ADDRESS
+) -> AeatSyncWorkspaceCensusRowV1:
+    # A CONFLICT carries both sides: the row asserts the two disagree, and the
+    # model now refuses to make that claim while withholding either value.
+    return AeatSyncWorkspaceCensusRowV1(
+        path=path,
+        category=category,
+        status=AeatSyncCensusStatus.CONFLICT,
+        local_value="Calle Local 1",
+        aeat_value="Calle AEAT 2",
+    )
+
+
+def _filed(
+    modelo: str = "130",
+    *,
+    local: AeatSyncLocalFilingState = AeatSyncLocalFilingState.FILED,
+    aeat: AeatSyncAeatObservationState = AeatSyncAeatObservationState.ACCEPTED,
+) -> AeatSyncWorkspaceFiledDeclarationRowV1:
+    return AeatSyncWorkspaceFiledDeclarationRowV1(
+        modelo=ModeloCode(modelo),
+        filing_year=2026,
+        period=_period(modelo),
+        local_filing_state=local,
+        local_filed_at=T1 if local is AeatSyncLocalFilingState.FILED else None,
+        aeat_observation_state=aeat,
+        aeat_observed_at=T2 if aeat is not AeatSyncAeatObservationState.NOT_OBSERVED else None,
+        justificante_state=AeatSyncJustificanteState.VERIFIED
+        if aeat is AeatSyncAeatObservationState.ACCEPTED
+        else AeatSyncJustificanteState.NOT_OBSERVED,
+        justificante_observed_at=T2 if aeat is AeatSyncAeatObservationState.ACCEPTED else None,
+    )
+
+
+def _notification() -> AeatSyncWorkspaceNotificationRowV1:
+    return AeatSyncWorkspaceNotificationRowV1(
+        issued_on=date(2026, 1, 2),
+        read_on=date(2026, 1, 3),
+        read_state=AeatSyncNotificationReadState.READ,
+        category=AeatSyncNotificationCategory.FORMAL,
+        document_custody_state=AeatSyncDocumentCustodyState.HELD,
+        document_custody_observed_at=T2,
+    )
+
+
+def _comparison(modelo: str = "130") -> AeatSyncWorkspaceEvidenceComparisonRowV1:
+    return AeatSyncWorkspaceEvidenceComparisonRowV1(
+        modelo=ModeloCode(modelo),
+        filing_year=2026,
+        period=_period(modelo),
+        local_state=AeatSyncSourceState.PRESENT,
+        aeat_state=AeatSyncSourceState.ABSENT,
+        local_observed_at=T1,
+        aeat_observed_at=T2,
+        discrepancy_kind=AeatSyncDiscrepancyKind.LOCAL_ONLY,
+        supported_actions=(_action("operator.overview.explain"),),
+    )
+
+
+def _reconciliation(*, no_action: bool = False) -> AeatSyncWorkspaceReconciliationRowV1:
+    return AeatSyncWorkspaceReconciliationRowV1(
+        modelo=ModeloCode("130"),
+        filing_year=2026,
+        period=_period(),
+        local_state=AeatSyncSourceState.PRESENT,
+        aeat_state=AeatSyncSourceState.PRESENT if no_action else AeatSyncSourceState.ABSENT,
+        local_observed_at=T1,
+        aeat_observed_at=T2,
+        discrepancy_kind=AeatSyncDiscrepancyKind.NONE if no_action else AeatSyncDiscrepancyKind.LOCAL_ONLY,
+        reconciliation_state=AeatSyncReconciliationState.NO_ACTION
+        if no_action
+        else AeatSyncReconciliationState.KEEP_LOCAL,
+        supported_actions=() if no_action else (_action("operator.overview.explain"),),
+    )
+
+
+def _projection(**updates):
+    arguments = dict(
+        bucket_id=BUCKET,
+        subject_key=SUBJECT,
+        zone_observations=_observations(),
+        action_catalogue=OPERATOR_ACTION_CATALOGUE,
+        operation_contracts=OperationPublicContractSetV1.build(
+            (build_censal_operation_registration(_censal_operation_definition()).contract,)
+        ),
+        overview=(_fact(_overview()),),
+        census=(_fact(_census()),),
+        filed_declarations=(_fact(_filed()),),
+        notifications=(_fact(_notification(), private_identity="notification-private"),),
+        evidence_comparison=(_fact(_comparison()),),
+        reconciliation=(_fact(_reconciliation()),),
+    )
+    arguments.update(updates)
+    return cast(Any, project_aeat_sync_workspace)(**arguments)
+
+
+def test_exact_six_zones_and_deterministic_safe_projection() -> None:
+    first = _projection(census=(_fact(_census("z")), _fact(_census("a"))))
+    second = _projection(census=(_fact(_census("a")), _fact(_census("z"))))
+    assert tuple(zone.zone for zone in first.zones) == tuple(AeatSyncWorkspaceZone)
+    assert tuple(row.path for row in first.census) == ("a", "z")
+    assert first == second
+    assert first.model_dump_json() == second.model_dump_json()
+
+
+def test_notification_selection_identity_is_stable_opaque_and_order_independent() -> None:
+    first = _projection(
+        notifications=(
+            _fact(_notification(), private_identity="notification-alpha"),
+            _fact(_notification(), private_identity="notification-beta"),
+        )
+    )
+    second = _projection(
+        notifications=(
+            _fact(_notification(), private_identity="notification-beta"),
+            _fact(_notification(), private_identity="notification-alpha"),
+        )
+    )
+    assert first == second
+    keys = tuple(row.selection_key for row in first.notifications)
+    assert all(key is not None for key in keys)
+    assert len(set(keys)) == 2
+    assert all(key.startswith("aeat_sync.notification.") and len(key) <= 160 for key in keys if key is not None)
+    single = _projection(notifications=(_fact(_notification(), private_identity="notification-alpha"),))
+    single_key = single.notifications[0].selection_key
+    assert single_key is not None
+    raw_digest = content_hash_hex(
+        {
+            "namespace": "aeat_sync.notification.selection.v1",
+            "private_identity": "notification-alpha",
+        }
+    )
+    assert single_key.removeprefix("aeat_sync.notification.") != raw_digest
+    encoded = first.model_dump_json() + repr(first)
+    assert "notification-alpha" not in encoded
+    assert "notification-beta" not in encoded
+    assert b"notification-alpha" not in pickle.dumps(first)
+    assert b"notification-beta" not in pickle.dumps(first)
+
+    invalid = first.model_dump(mode="python")
+    invalid["notifications"] = ({**invalid["notifications"][0], "selection_key": None},)
+    with pytest.raises(ValidationError, match="selection keys"):
+        AeatSyncWorkspaceProjectionV1.model_validate(invalid)
+    duplicate = first.model_dump(mode="python")
+    duplicate_row = first.notifications[0].model_dump(mode="python")
+    duplicate["notifications"] = (duplicate_row, duplicate_row)
+    with pytest.raises(ValidationError, match="selection keys must be unique"):
+        AeatSyncWorkspaceProjectionV1.model_validate(duplicate)
+
+
+def test_notification_selection_identity_collision_fails_closed(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        workspace_module,
+        "notification_selection_key",
+        lambda _: "aeat_sync.notification.collision",
+    )
+    with pytest.raises(AeatSyncWorkspaceProjectionError, match="selection identities"):
+        _projection(
+            notifications=(
+                _fact(_notification(), private_identity="notification-alpha"),
+                _fact(_notification(), private_identity="notification-beta"),
+            )
+        )
+
+
+@pytest.mark.parametrize(
+    "bad_key",
+    (
+        "aeat_sync.other." + "a" * 64,
+        "aeat_sync.notification." + "a" * 63,
+        "aeat_sync.notification." + "A" * 64,
+        "aeat_sync.notification." + "g" * 64,
+    ),
+)
+def test_notification_selection_key_shape_is_closed(bad_key: str) -> None:
+    row_values = _notification().model_dump(mode="python")
+    row_values["selection_key"] = bad_key
+    with pytest.raises(ValidationError):
+        AeatSyncWorkspaceNotificationRowV1.model_validate(row_values)
+
+    projection = _projection()
+    projection_values = projection.model_dump(mode="python")
+    projection_values["notifications"] = ({**projection_values["notifications"][0], "selection_key": bad_key},)
+    with pytest.raises(ValidationError):
+        AeatSyncWorkspaceProjectionV1.model_validate(projection_values)
+
+
+def test_output_physically_omits_protected_scope_payload_and_identity() -> None:
+    projection = _projection()
+    encoded = pickle.dumps(projection) + projection.model_dump_json().encode() + repr(projection).encode()
+    for secret in SECRET_VALUES:
+        assert secret.encode() not in encoded
+    forbidden = {
+        "bucket_id",
+        "subject_key",
+        "private_identity",
+        "semantic_identity",
+        "name",
+        "nif",
+        "source_url",
+        "document_text",
+        "raw_evidence",
+        "secret",
+        "certificado_id",
+        "concepto",
+    }
+    # The three sentinels removed above are excluded BY CONSTRUCTION, and this
+    # is what that claim looks like as an assertion: every field a row exposes
+    # is a closed enum, a typed address component, an observation state or a
+    # bounded identifier, so there is nowhere for a name, a URL or document
+    # prose to be carried even by a careless producer.
+    # The exemptions are the census comparison values, which the visibility
+    # decision requires the row to carry: a comparison that hides what differs
+    # is not a comparison. Everything else stays a closed enum, a typed address
+    # component, a state or a bounded identifier.
+    #
+    # Because those two fields exist, the byte scan above is no longer
+    # unfailable -- a producer could put protected prose in `local_value`, and
+    # that scan is now the check which catches it. Bounded at 256 characters so
+    # the exemption is a field, not an open channel.
+    carried_values = {"path", "local_value", "aeat_value"}
+    for row_type in (AeatSyncWorkspaceCensusRowV1, AeatSyncWorkspaceFiledDeclarationRowV1):
+        for name, field in row_type.model_fields.items():
+            annotation = str(field.annotation)
+            assert "str" not in annotation or name in carried_values, (
+                f"{row_type.__name__}.{name} is free text ({annotation}), so protected prose "
+                f"could be carried there without the byte scan above having a sentinel for it"
+            )
+
+    for value in (
+        projection,
+        *projection.overview,
+        *projection.census,
+        *projection.filed_declarations,
+        *projection.notifications,
+        *projection.evidence_comparison,
+        *projection.reconciliation,
+    ):
+        assert forbidden.isdisjoint(vars(value))
+        for name in forbidden:
+            assert not hasattr(value, name)
+    with pytest.raises(ValidationError):
+        projection.contract_version = 2  # type: ignore[misc]
+
+
+def test_scope_is_mandatory_and_projected_away() -> None:
+    with pytest.raises((TypeError, ValueError)):
+        AeatSyncWorkspaceFactV1(bucket_id=BUCKET, subject_key="", row=_census())
+    with pytest.raises(AeatSyncWorkspaceProjectionError, match="foreign bucket"):
+        _projection(census=(_fact(_census(), bucket=OTHER),))
+    with pytest.raises(AeatSyncWorkspaceProjectionError, match="mixed subjects"):
+        _projection(census=(_fact(_census(), subject="other"),))
+    with pytest.raises(TypeError):
+        cast(Any, AeatSyncWorkspaceFactV1)(row=_census())
+    with pytest.raises((TypeError, ValueError)):
+        cast(Any, AeatSyncWorkspaceFactV1)(bucket_id=None, subject_key=SUBJECT, row=_census())
+    with pytest.raises((TypeError, ValueError)):
+        cast(Any, project_aeat_sync_workspace)(
+            bucket_id=None,
+            subject_key=SUBJECT,
+            zone_observations=_observations(),
+            action_catalogue=OPERATOR_ACTION_CATALOGUE,
+            operation_contracts=OperationPublicContractSetV1.build(
+                (build_censal_operation_registration(_censal_operation_definition()).contract,)
+            ),
+        )
+
+
+def test_logical_duplicates_refuse_disagreement() -> None:
+    with pytest.raises(AeatSyncWorkspaceProjectionError, match="overview areas"):
+        _projection(overview=(_fact(_overview()), _fact(_overview())))
+    with pytest.raises(AeatSyncWorkspaceProjectionError, match="census paths"):
+        _projection(census=(_fact(_census("Address")), _fact(_census("address", AeatSyncCensusCategory.OTHER))))
+    with pytest.raises(AeatSyncWorkspaceProjectionError, match="census paths"):
+        _projection(census=(_fact(_census("tax   address")), _fact(_census(" Tax Address "))))
+    with pytest.raises(AeatSyncWorkspaceProjectionError, match="notification identities"):
+        _projection(
+            notifications=(
+                _fact(_notification(), private_identity="same"),
+                _fact(_notification(), private_identity="same"),
+            )
+        )
+
+
+def test_actions_require_catalogue_admission_and_area_state_closure() -> None:
+    canonical = OPERATOR_ACTION_CATALOGUE.lookup("operator.profile.edit")
+    forged = ActionCatalogueEntry(action_id=canonical.action_id, target_command_key="forged.command")
+    with pytest.raises(AeatSyncWorkspaceProjectionError, match="differs from canonical"):
+        _projection(action_catalogue=ActionCatalogue(entries=(forged,)))
+    with pytest.raises(AeatSyncWorkspaceProjectionError, match="not allowed"):
+        _projection(overview=(_fact(_overview(actions=(_action("operator.live.notifications.list"),))),))
+    with pytest.raises(ValidationError, match="NO_ACTION"):
+        row = _reconciliation(no_action=True)
+        AeatSyncWorkspaceReconciliationRowV1.model_validate(
+            {**row.model_dump(), "supported_actions": (_action("operator.overview.explain"),)}
+        )
+    admitted_operation = _overview().model_copy(update={"supported_operations": ("user-profile.censo-review",)})
+    assert _projection(overview=(_fact(admitted_operation),)).overview[0].supported_operations == (
+        "user-profile.censo-review",
+    )
+    for row in (_overview(), _census(), _filed(), _comparison(), _reconciliation()):
+        assert row.supported_actions == () or row.supported_actions
+        assert row.supported_operations == ()
+        assert "supported_actions" in row.model_dump()
+        assert "supported_operations" in row.model_dump()
+
+
+def test_notification_rows_carry_exactly_their_declared_fields_and_no_capabilities() -> None:
+    """The field set is a CONTRACT, not a redaction, and the row offers no actions.
+
+    Freezing the field set catches a producer quietly widening the row, which
+    matters because consumers key off exactly these names. It is not a claim
+    that the operator may not see more than this; what a notification row ought
+    to carry is a question about the AEAT metadata a pull returns, not about
+    what is safe to show someone their own notifications.
+
+    The capability half is the sharper property. A notification row declares no
+    supported actions or operations, so the projector must not grow them onto
+    it: an action offered on a row nothing admitted is an action with no
+    authority behind it.
+    """
+    assert set(AeatSyncWorkspaceNotificationRowV1.model_fields) == {
+        "issued_on",
+        "read_on",
+        "read_state",
+        "category",
+        "document_custody_state",
+        "document_custody_observed_at",
+        "selection_key",
+    }
+    projected = _projection().notifications[0]
+    assert not hasattr(projected, "supported_actions")
+    assert not hasattr(projected, "supported_operations")
+    assert "supported_actions" not in projected.model_dump()
+    assert "supported_operations" not in projected.model_dump()
+
+
+def test_row_subclass_protected_fields_are_reconstructed_away() -> None:
+    class UnsafeCensusRow(AeatSyncWorkspaceCensusRowV1):
+        nif: str
+
+    unsafe = UnsafeCensusRow(
+        path="address",
+        category=AeatSyncCensusCategory.ADDRESS,
+        status=AeatSyncCensusStatus.CONFLICT,
+        local_value="Calle Local 1",
+        aeat_value="Calle AEAT 2",
+        nif="12345678Z",
+    )
+    projection = _projection(census=(_fact(unsafe),))
+    assert type(projection.census[0]) is AeatSyncWorkspaceCensusRowV1
+    assert "12345678Z" not in repr(projection)
+    assert b"12345678Z" not in pickle.dumps(projection)
+    assert "nif" not in projection.census[0].__dict__
+
+
+def test_a_zone_whose_aeat_side_was_never_pulled_is_never_captured_not_stale() -> None:
+    """STALE claims a capture that aged; a never-synced AEAT side has none.
+
+    The local side is still measured, so the zone keeps that count while
+    saying the comparison partner was never captured.
+    """
+    key = (AeatSyncWorkspaceZone.FILED_DECLARATIONS, AeatSyncWorkspaceSource.AEAT_FILED_DECLARATIONS)
+    observations = _observations(overrides={key: AeatSyncWorkspaceAvailability.NEVER_CAPTURED})
+    local_only = _filed(aeat=AeatSyncAeatObservationState.NOT_OBSERVED)
+    projection = _projection(zone_observations=observations, filed_declarations=(_fact(local_only),))
+    state = projection.zones[2]
+    assert state.availability is AeatSyncWorkspaceAvailability.NEVER_CAPTURED
+    assert state.item_count == 1
+
+
+def test_independent_source_axes_keep_known_empty_and_unknown_distinct() -> None:
+    key = (AeatSyncWorkspaceZone.FILED_DECLARATIONS, AeatSyncWorkspaceSource.AEAT_FILED_DECLARATIONS)
+    observations = _observations(overrides={key: AeatSyncWorkspaceAvailability.LOCKED})
+    local_only = _filed(aeat=AeatSyncAeatObservationState.NOT_OBSERVED)
+    projection = _projection(zone_observations=observations, filed_declarations=(_fact(local_only),))
+    state = projection.zones[2]
+    assert state.availability is AeatSyncWorkspaceAvailability.STALE
+    assert state.item_count == 1
+    assert state.sources[0].item_count == 1
+    assert state.sources[1].availability is AeatSyncWorkspaceAvailability.LOCKED
+    assert state.sources[1].item_count is None
+    with pytest.raises(AeatSyncWorkspaceProjectionError, match="AEAT filing"):
+        _projection(zone_observations=observations, filed_declarations=(_fact(_filed()),))
+    empty = _projection(filed_declarations=())
+    assert empty.zones[2].item_count == 0
+
+
+def test_unrelated_observable_sources_cannot_back_area_or_census_claims() -> None:
+    locked = {
+        (AeatSyncWorkspaceZone.OVERVIEW, AeatSyncWorkspaceSource.LOCAL_PROFILE): (AeatSyncWorkspaceAvailability.LOCKED),
+        (AeatSyncWorkspaceZone.OVERVIEW, AeatSyncWorkspaceSource.AEAT_CENSUS): (AeatSyncWorkspaceAvailability.LOCKED),
+        (AeatSyncWorkspaceZone.CENSUS, AeatSyncWorkspaceSource.LOCAL_PROFILE): (AeatSyncWorkspaceAvailability.LOCKED),
+        (AeatSyncWorkspaceZone.CENSUS, AeatSyncWorkspaceSource.AEAT_CENSUS): (AeatSyncWorkspaceAvailability.LOCKED),
+    }
+    observations = _observations(overrides=locked)
+    with pytest.raises(AeatSyncWorkspaceProjectionError, match="local"):
+        _projection(zone_observations=observations, overview=(_fact(_overview()),))
+    with pytest.raises(AeatSyncWorkspaceProjectionError, match=r"unobservable|local census"):
+        _projection(zone_observations=observations, overview=(), census=(_fact(_census()),))
+
+
+def test_unavailable_sources_cannot_carry_confident_rows() -> None:
+    overrides = {
+        (AeatSyncWorkspaceZone.CENSUS, source): AeatSyncWorkspaceAvailability.UNAVAILABLE
+        for source in (AeatSyncWorkspaceSource.LOCAL_PROFILE, AeatSyncWorkspaceSource.AEAT_CENSUS)
+    }
+    with pytest.raises(AeatSyncWorkspaceProjectionError, match="unobservable zone"):
+        _projection(zone_observations=_observations(overrides=overrides), census=(_fact(_census()),))
+
+
+def test_zero_count_source_rejects_confident_rows() -> None:
+    observations = list(_observations())
+    census = observations[1]
+    observations[1] = census.model_copy(
+        update={
+            "sources": (
+                census.sources[0],
+                census.sources[1].model_copy(update={"item_count": 0}),
+            )
+        }
+    )
+    with pytest.raises(AeatSyncWorkspaceProjectionError, match="AEAT census"):
+        _projection(zone_observations=tuple(observations), census=(_fact(_census()),))
+
+
+def test_no_adapter_entrypoint_io_imports_and_initializer_is_inert() -> None:
+    module = Path(__file__).parents[1] / "workspace.py"
+    tree = ast.parse(module.read_text(encoding="utf-8"))
+    imports = {node.module or "" for node in ast.walk(tree) if isinstance(node, ast.ImportFrom)} | {
+        alias.name for node in ast.walk(tree) if isinstance(node, ast.Import) for alias in node.names
+    }
+    assert not any(
+        token in item
+        for item in imports
+        for token in ("adapters", "entrypoints", "pathlib", "requests", "httpx", "socket", "tui")
+    )
+    calls = {node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)}
+    assert calls.isdisjoint({"open", "print", "input"})
+    initializer = ast.parse((module.parent / "__init__.py").read_text(encoding="utf-8"))
+    assert not any(isinstance(node, (ast.Import, ast.ImportFrom)) for node in ast.walk(initializer))
+
+
+def test_a_comparison_zone_reports_no_count_until_both_sides_are_observed() -> None:
+    """A comparison whose AEAT half was never pulled has no count, not zero.
+
+    The local half being readable is not enough: the rows of these zones are
+    discrepancies BETWEEN sources, so reporting the local side's zero as the
+    zone count tells the operator "no discrepancies found" when the truth is
+    "no comparison has been made". `no-silent-under-declaration` keeps those
+    two states apart, and this is where they were being collapsed.
+
+    A LIST zone is contrasted deliberately: its count is of what one source
+    holds, so one readable source is enough and a zero there is a real zero.
+    """
+    from datetime import UTC, datetime
+
+    from ..workspace_reader import read_local_aeat_sync_workspace_projection
+
+    projection = read_local_aeat_sync_workspace_projection(
+        bucket_id="bucket",
+        subject_key="subject",
+        observed_at=datetime(2026, 9, 4, tzinfo=UTC),
+        filings=(),
+        operation_contracts=OperationPublicContractSetV1.build(
+            (build_censal_operation_registration(_censal_operation_definition()).contract,)
+        ),
+    )
+    by_zone = {state.zone: state for state in projection.zones}
+
+    for zone in (AeatSyncWorkspaceZone.EVIDENCE_COMPARISON, AeatSyncWorkspaceZone.RECONCILIATION):
+        assert by_zone[zone].item_count is None, (
+            f"{zone.value} reports {by_zone[zone].item_count!r} comparisons while its AEAT "
+            f"side was never pulled; a never-made comparison must not read as a proven zero"
+        )
+
+    census = by_zone[AeatSyncWorkspaceZone.CENSUS]
+    assert census.item_count == 0, (
+        "the census zone reads one local authority that is present and empty, so its zero is "
+        f"an observed zero and must survive; got {census.item_count!r}"
+    )
+
+
+def test_a_refused_local_source_names_whether_the_reader_is_missing_or_uncomposed() -> None:
+    """Two refusals that look alike point at opposite work.
+
+    LOCAL_RECONCILIATION has no authority anywhere: nothing records local
+    reconciliation decisions, so `local_row_reader_unavailable` is exactly
+    right and the work is to write one.
+
+    LOCAL_NOTIFICATION_CUSTODY is different.
+    `NotificationDocumentService.list_documents` reads local custody today and
+    answers before any pull -- with an empty tuple when custody is empty, which
+    is a proven zero rather than an absence. Calling that a missing reader
+    sends the next person to write something already written; the gap is that
+    this session does not compose it.
+
+    Asserted because the two states are indistinguishable on screen -- both
+    render as a refused source -- so nothing but the reason code carries the
+    difference, and nothing but a gate keeps them from collapsing back into one
+    convenient constant.
+    """
+    from datetime import UTC, datetime
+
+    from ..workspace_reader import read_local_aeat_sync_workspace_projection
+
+    projection = read_local_aeat_sync_workspace_projection(
+        bucket_id="bucket",
+        subject_key="subject",
+        observed_at=datetime(2026, 9, 4, tzinfo=UTC),
+        filings=(),
+        operation_contracts=OperationPublicContractSetV1.build(
+            (build_censal_operation_registration(_censal_operation_definition()).contract,)
+        ),
+    )
+    refusals = {
+        observation.source: observation.refusal
+        for state in projection.zones
+        for observation in state.sources
+        if observation.refusal is not None
+    }
+
+    assert refusals[AeatSyncWorkspaceSource.LOCAL_RECONCILIATION] == (
+        "workbench.aeat_sync.local_reader_not_composed"
+    ), "persisted reconciliation exists; an unbound reader is a composition gap"
+    assert refusals[AeatSyncWorkspaceSource.LOCAL_NOTIFICATION_CUSTODY] == (
+        "workbench.aeat_sync.local_reader_not_composed"
+    ), (
+        "notification custody IS readable today, so calling its refusal a missing reader "
+        "sends the next person to write a reader that already exists"
+    )
+
+
+@pytest.mark.parametrize(
+    ("custody_count", "expected_refusal", "expected_count"),
+    [
+        (None, "workbench.aeat_sync.local_reader_not_composed", None),
+        (0, None, 0),
+        (3, None, 3),
+    ],
+)
+def test_notification_custody_separates_an_unread_store_from_an_empty_one(
+    custody_count: int | None,
+    expected_refusal: str | None,
+    expected_count: int | None,
+) -> None:
+    """Nothing-in-custody and nobody-looked are different answers.
+
+    Before this reader existed the source was refused outright, and the refusal
+    said no local reader existed -- which was false, since the CLI has read
+    this store all along. Now a bound reader answering ZERO is a proven zero
+    the operator can act on ("no documents are held"), while an unbound one is
+    still a composition gap ("this session did not look"). Collapsing them
+    would tell an operator their custody is empty on the strength of nobody
+    having asked.
+    """
+    from datetime import UTC, datetime
+
+    from ..workspace_reader import read_local_aeat_sync_workspace_projection
+
+    projection = read_local_aeat_sync_workspace_projection(
+        bucket_id="bucket",
+        subject_key="subject",
+        observed_at=datetime(2026, 9, 5, tzinfo=UTC),
+        filings=(),
+        operation_contracts=OperationPublicContractSetV1.build(
+            (build_censal_operation_registration(_censal_operation_definition()).contract,)
+        ),
+        custody_count=custody_count,
+    )
+    observation = next(
+        item
+        for state in projection.zones
+        for item in state.sources
+        if item.source is AeatSyncWorkspaceSource.LOCAL_NOTIFICATION_CUSTODY
+    )
+
+    assert observation.refusal == expected_refusal
+    assert observation.item_count == expected_count
+
+
+class _ComparedValues(TypedDict, total=False):
+    """The local/AEAT value pair a comparison row carries.
+
+    Typed rather than a bare dict because both sites below build the pair
+    dynamically and unpack it; a plain dict widens the keys to one union and
+    the row's own `str | None` fields can no longer be checked.
+    """
+
+    local_value: str | None
+    aeat_value: str | None
+
+
+def test_a_census_conflict_must_carry_both_values_it_compares() -> None:
+    """Asserting a difference while hiding one side asks for blind agreement.
+
+    CONFLICT is a claim ABOUT two values. A row making it without carrying them
+    puts the operator in the position of accepting a difference they cannot
+    see, which is the defect the invoice/entry suggestions had before they
+    showed the amounts they compared.
+
+    The non-conflict statuses are deliberately unconstrained: UNSET and
+    UNCHANGED are meaningful before either side has been read, and requiring
+    values there would force a producer to invent them.
+    """
+    missing_cases: tuple[_ComparedValues, ...] = (
+        {"aeat_value": None},
+        {"local_value": None},
+        {"local_value": None, "aeat_value": None},
+    )
+    for missing in missing_cases:
+        with pytest.raises(ValidationError, match="must carry both the local and the AEAT value"):
+            AeatSyncWorkspaceCensusRowV1(
+                path="address",
+                category=AeatSyncCensusCategory.ADDRESS,
+                status=AeatSyncCensusStatus.CONFLICT,
+                **{"local_value": "here", "aeat_value": "there", **missing},
+            )
+
+    unset = AeatSyncWorkspaceCensusRowV1(
+        path="address",
+        category=AeatSyncCensusCategory.ADDRESS,
+        status=AeatSyncCensusStatus.UNSET,
+    )
+    assert unset.local_value is None
+    assert unset.aeat_value is None
+
+
+def test_an_unobserved_census_value_is_not_an_empty_field() -> None:
+    """`None` means nobody looked; the empty string means the field is blank.
+
+    A censo entry the taxpayer genuinely left empty is a fact an operator can
+    act on. Collapsing it into "unobserved" -- or the reverse -- would tell
+    them AEAT holds nothing where in truth nobody has checked, on a comparison
+    whose whole purpose is showing what differs.
+    """
+    blank = AeatSyncWorkspaceCensusRowV1(
+        path="address",
+        category=AeatSyncCensusCategory.ADDRESS,
+        status=AeatSyncCensusStatus.CONFLICT,
+        local_value="Calle Local 1",
+        aeat_value="",
+    )
+    assert blank.aeat_value == ""
+    assert blank.aeat_value is not None
+
+
+def test_a_two_sided_discrepancy_must_carry_the_values_it_compares() -> None:
+    """Only the kinds that assert BOTH sides differ are required to show both.
+
+    STATE_MISMATCH and CONTRADICTORY_SOURCE claim two observed sides disagree,
+    so a row making either claim while hiding a side asks the operator to
+    accept a difference they cannot inspect.
+
+    The one-sided kinds are exempt on purpose, and the exemption is asserted
+    rather than assumed: LOCAL_ONLY says the AEAT side is ABSENT, so there is
+    no second value to carry, and requiring one would force a producer to
+    invent a figure for something that is not there.
+    """
+    from ..workspace import AeatSyncWorkspaceEvidenceComparisonRowV1
+
+    def _row(
+        local: AeatSyncSourceState,
+        aeat: AeatSyncSourceState,
+        kind: AeatSyncDiscrepancyKind,
+        **values: Unpack[_ComparedValues],
+    ) -> AeatSyncWorkspaceEvidenceComparisonRowV1:
+        return AeatSyncWorkspaceEvidenceComparisonRowV1(
+            modelo="303",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "3T"),
+            local_state=local,
+            aeat_state=aeat,
+            local_observed_at=T1,
+            aeat_observed_at=T2,
+            discrepancy_kind=kind,
+            **values,
+        )
+
+    with pytest.raises(ValidationError, match="must carry both the local and the AEAT value"):
+        _row(
+            AeatSyncSourceState.PRESENT,
+            AeatSyncSourceState.CONFLICT,
+            AeatSyncDiscrepancyKind.CONTRADICTORY_SOURCE,
+            local_value="120.00",
+        )
+
+    carried = _row(
+        AeatSyncSourceState.PRESENT,
+        AeatSyncSourceState.CONFLICT,
+        AeatSyncDiscrepancyKind.CONTRADICTORY_SOURCE,
+        local_value="120.00",
+        aeat_value="130.00",
+    )
+    assert (carried.local_value, carried.aeat_value) == ("120.00", "130.00")
+
+    one_sided = _row(
+        AeatSyncSourceState.PRESENT,
+        AeatSyncSourceState.ABSENT,
+        AeatSyncDiscrepancyKind.LOCAL_ONLY,
+        local_value="120.00",
+    )
+    assert one_sided.aeat_value is None, "an absent side has no value to compare"

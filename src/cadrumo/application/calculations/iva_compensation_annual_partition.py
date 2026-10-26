@@ -1,0 +1,457 @@
+"""Modelo 390 IVA compensation annual partition source resolver.
+
+The resolver reads a :class:`~domain.calculations.registry.schema.RegistrySnapshot`
+for the annual Modelo 390 revision, inspects its
+:class:`~domain.calculations.registry.schema.ModeloRevision` bindings owned by
+:attr:`~core.aggregation.BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION`, and
+derives the annual compensation partition amounts from filed Modelo 303
+:class:`~application.calculations.observations_repository.ObservationEnvelopePayload` records.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from decimal import Decimal
+from typing import ClassVar, Final
+
+from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from ...core.casilla_id import CasillaId
+from ...core.decimal.constants import ZERO
+from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
+from ...core.logging import get_logger
+from ...core.modelo import Modelo
+from ...core.period import Period
+from ...core.time.clock import now
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
+from ...domain.calculations.registry.bindings import (
+    IvaCompensationAnnualPartitionRequirement,
+    RegistryModeloObservation,
+    iva_compensation_annual_partition_requirement,
+)
+from ...domain.calculations.registry.casilla_membership import undeclared_casilla_ids
+from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.ids import BindingId
+from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M303_COMPENSATION_APLICADA_CASILLA as M303_COMPENSACION_APLICADA_CASILLA,
+)
+from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M303_COMPENSATION_AVAILABLE_CASILLA as M303_DISPONIBLE_CASILLA,
+)
+from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M303_COMPENSATION_GENERADA_CASILLA as M303_GENERADA_CASILLA,
+)
+from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M303_COMPENSATION_POSTERIOR_CASILLA as M303_POSTERIOR_CASILLA,
+)
+from ...domain.calculations.registry.schema import (
+    ModeloRevision,
+    RegistrySnapshot,
+)
+from ...domain.iva_compensation.carry_forward import (
+    IvaCompensationPeriodState,
+    build_iva_compensation_carry_forward_report,
+    derive_iva_compensation_year_end_carry_partition,
+    iva_compensation_year_opening_balance,
+)
+from ..aggregation.source_mesh import (
+    CalculationSourceContext,
+    CalculationSourceDiagnostic,
+    CalculationSourceProvenance,
+    CalculationSourceResolution,
+)
+from ..aggregation.source_resolution_operations import storage_degradation_resolution
+from ..persistence_errors import PersistenceDegradationError
+from .m303_carry_ingress import M303CarryIngressError, validate_normalized_m303_carry_observation_envelope
+from .observations_repository import CalculationObservationRepositoryProtocol, ObservationEnvelopePayload
+from .revision_carry_gate import revision_carry_outcome
+
+_log = get_logger(__name__)
+
+_SOURCE_KIND: Final = BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION
+_303_GENERADA_ID: Final[CasillaId] = M303_GENERADA_CASILLA
+_303_APLICADA_ID: Final[CasillaId] = M303_COMPENSACION_APLICADA_CASILLA
+_303_DISPONIBLE_ID: Final[CasillaId] = M303_DISPONIBLE_CASILLA
+_303_POSTERIOR_ID: Final[CasillaId] = M303_POSTERIOR_CASILLA
+
+
+def _observed_value(values: Mapping[CasillaId, Decimal], casilla_id: CasillaId) -> Decimal | None:
+    return values.get(casilla_id)
+
+
+def _validate_303_observation_casilla_ids(
+    observation: RegistryModeloObservation,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    revision = operation.revision_for_context(
+        observation.modelo,
+        filing_year=observation.filing_year,
+        period=observation.period,
+    )
+    invalid = undeclared_casilla_ids(revision, observation.casilla_values)
+    if invalid:
+        raise RegistryValidationError(
+            translated_message=(
+                "application.calculations.iva_compensation.errors.annual_partition_casilla_ids_noncanonical"
+            ),
+            context={
+                "modelo": observation.modelo,
+                "revision_id": revision.id,
+                "casilla_ids": invalid,
+            },
+        )
+
+
+def period_state_from_303_envelope(
+    envelope: ObservationEnvelopePayload,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> IvaCompensationPeriodState:
+    """Build one FIFO state from a validated filed Modelo 303 envelope."""
+    validated = validate_normalized_m303_carry_observation_envelope(envelope, operation=operation)
+    observation = validated.observation
+    _validate_303_observation_casilla_ids(observation, operation=operation)
+    values = observation.casilla_values
+    generated = _observed_value(values, _303_GENERADA_ID)
+    if generated is None:
+        raise M303CarryIngressError(
+            translated_message="application.calculations.m303_carry.errors.generated_compensation_amount_missing",
+            context={"casilla_id": _303_GENERADA_ID},
+        )
+    applied = _observed_value(values, _303_APLICADA_ID) or ZERO
+    posterior = _observed_value(values, _303_POSTERIOR_ID)
+    available = _observed_value(values, _303_DISPONIBLE_ID)
+    if available is None:
+        raise M303CarryIngressError(
+            translated_message="application.calculations.m303_carry.errors.available_compensation_amount_missing",
+            context={"casilla_id": _303_DISPONIBLE_ID},
+        )
+    period = Period.from_year_and_code(observation.filing_year, observation.period)
+    return IvaCompensationPeriodState(
+        # A casilla observation records no taxpayer, and these states are
+        # computational scaffold for the FIFO partition below - never
+        # persisted, never shown. Declaring no subject is honest; a synthetic
+        # label in the identity field reads downstream as if it named one.
+        taxpayer_nif=None,
+        provenance=IvaCompensationStateProvenance.CASILLA_RECONSTRUCTION,
+        filing_year=observation.filing_year,
+        period=period,
+        registry_snapshot_ref=validated.registry_snapshot_ref,
+        presented_at=now(),
+        prior_pending_amount=None,
+        applied_amount=applied,
+        pending_for_later_amount=posterior,
+        period_result_amount=None,
+        final_result_amount=None,
+        generated_amount=generated,
+        available_end_amount=available,
+        source_observation_key=f"303:{observation.filing_year}:{observation.period}:iva-annual-partition",
+    )
+
+
+def resolve_iva_compensation_annual_partition_binding_values(
+    revision: ModeloRevision,
+    envelopes: tuple[ObservationEnvelopePayload, ...],
+    *,
+    filing_year: int,
+    operation: PinnedAuthorityOperation,
+) -> dict[BindingId, Decimal]:
+    """Resolve Modelo 390 annual compensation bindings from filed M303 states.
+
+    Args:
+        revision: The annual Modelo 390 :class:`~domain.calculations.registry.schema.ModeloRevision`
+            whose partition bindings declare the target output slots.
+        envelopes: Filed, already-normalized Modelo 303
+            :class:`~application.calculations.observations_repository.ObservationEnvelopePayload`
+            records used to reconstruct the compensation FIFO state.
+        filing_year: Annual filing year used to select same-year Modelo 303
+            observations.
+        operation: Caller-owned generation-pinned authority operation used to
+            validate the source revisions.
+    """
+    requirement = iva_compensation_annual_partition_requirement(revision)
+    if requirement is None:
+        return {}
+    states = tuple(
+        period_state_from_303_envelope(envelope, operation=operation)
+        for envelope in envelopes
+        if envelope.observation.modelo == Modelo("303").value and envelope.observation.filing_year == filing_year
+    )
+    if not states:
+        return {}
+    # The credit of earlier ejercicios is the oldest in the FIFO, so it is
+    # consumed before any credit the year generates. It is the one figure the
+    # four states do not state directly; an unknown opening leaves box 85
+    # unresolved rather than read as zero.
+    opening_balance = iva_compensation_year_opening_balance(states, filing_year=filing_year)
+    report = build_iva_compensation_carry_forward_report(
+        states,
+        as_of_year=filing_year,
+        operation=operation,
+        opening_balance=opening_balance,
+    )
+    partition = derive_iva_compensation_year_end_carry_partition(report, states, filing_year=filing_year)
+    values: dict[BindingId, Decimal] = {}
+    last_period_binding = requirement.last_period_amount_binding_id
+    if last_period_binding is not None:
+        values[last_period_binding] = partition.last_period_amount
+    generated_not_in_last_binding = requirement.generated_not_in_last_amount_binding_id
+    if generated_not_in_last_binding is not None:
+        values[generated_not_in_last_binding] = partition.generated_not_in_last_amount
+    prior_year_applied_binding = requirement.prior_year_applied_amount_binding_id
+    if prior_year_applied_binding is not None and opening_balance is not None:
+        values[prior_year_applied_binding] = report.opening_applied_amount
+    return values
+
+
+def _load_303_observations_for_partition(
+    revision: ModeloRevision,
+    *,
+    filing_year: int,
+    repository: CalculationObservationRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
+) -> tuple[ObservationEnvelopePayload, ...]:
+    requirement = iva_compensation_annual_partition_requirement(revision)
+    if requirement is None:
+        return ()
+    envelopes: list[ObservationEnvelopePayload] = []
+    for period_code in requirement.source_periods:
+        payload = repository.load_observation(
+            Modelo("303").value,
+            Period.from_year_and_code(filing_year, period_code),
+        )
+        if payload is None:
+            continue
+        observation = payload.observation
+        refused = revision_carry_outcome(payload.registry_snapshot_ref, operation=operation).refused
+        if refused:
+            _log.debug(
+                "dropping unreconfirmable m303 observation from iva annual partition stamped_revision_id=%s period=%s",
+                payload.stamped_revision_id,
+                observation.period,
+            )
+            continue
+        # Revalidate after decrypting persisted evidence. Legacy, incomplete, or
+        # internally contradictory envelopes are readable records but never FIFO
+        # input; the period state repeats this check before partitioning.
+        validate_normalized_m303_carry_observation_envelope(payload, operation=operation)
+        envelopes.append(payload)
+    return tuple(envelopes)
+
+
+def _unresolved_diagnostics(
+    *,
+    binding_ids: tuple[BindingId, ...],
+    source_periods: tuple[str, ...],
+    resolver_id: str,
+    opening_unknown_binding_id: BindingId | None = None,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    periods = ",".join(source_periods) if source_periods else "(none)"
+    return tuple(
+        CalculationSourceDiagnostic(
+            reason="source_issue",
+            source_kind=_SOURCE_KIND.value,
+            resolver_id=resolver_id,
+            binding_id=binding_id,
+            message=(
+                f"binding {binding_id!r} needs the credit pending from earlier ejercicios when the "
+                "year opened, read from the first period's Modelo 303 box 110 or from its boxes 87 "
+                "and 78; the filed first period states neither, so the amount is unknown, not zero"
+                if binding_id == opening_unknown_binding_id
+                else f"binding {binding_id!r} requires filed Modelo 303 compensation states "
+                f"for periods {periods}; the source filing history is missing or incomplete"
+            ),
+        )
+        for binding_id in binding_ids
+    )
+
+
+def _annual_source_evidence_diagnostics(
+    *,
+    binding_ids: tuple[BindingId, ...],
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Project incomplete required 303 annual evidence as a typed durable condition."""
+    return tuple(
+        CalculationSourceDiagnostic(
+            reason="iva_compensation_annual_source_evidence_failure",
+            source_kind=_SOURCE_KIND.value,
+            resolver_id=resolver_id,
+            binding_id=binding_id,
+            message="required Modelo 303 annual partition evidence is unresolved",
+        )
+        for binding_id in binding_ids
+    )
+
+
+def _select_partition_revision(
+    registry_snapshot: RegistrySnapshot | None,
+    context: CalculationSourceContext,
+) -> ModeloRevision:
+    """Use the bound snapshot or the caller's selected indexed revision."""
+    revision = registry_snapshot.revision if registry_snapshot is not None else None
+    if revision is not None:
+        return revision
+    # The source-mesh context already carries the exact selected revision.
+    # Avoid a second temporal selection when no snapshot was supplied.
+    return context.revision
+
+
+def _partition_repository(
+    repository: CalculationObservationRepositoryProtocol | None,
+) -> CalculationObservationRepositoryProtocol:
+    """Require the observation repository composed by the caller."""
+    if repository is not None:
+        return repository
+    raise TypeError("iva compensation annual partition requires an observation repository")
+
+
+def _load_partition_envelopes_or_degrade(
+    revision: ModeloRevision,
+    *,
+    filing_year: int,
+    repository: CalculationObservationRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
+    resolver_id: str,
+    owned_sources: tuple[BindingSourceKind, ...],
+) -> tuple[ObservationEnvelopePayload, ...] | CalculationSourceResolution:
+    """Load source envelopes, projecting storage failures as degraded resolution."""
+    try:
+        return _load_303_observations_for_partition(
+            revision,
+            filing_year=filing_year,
+            repository=repository,
+            operation=operation,
+        )
+    except PersistenceDegradationError as exc:
+        return storage_degradation_resolution(
+            resolver_id=resolver_id,
+            owned_sources=owned_sources,
+            source_kinds=owned_sources,
+            error=exc,
+        )
+
+
+def _unresolved_partition_bindings(
+    binding_ids: tuple[BindingId, ...],
+    binding_values: Mapping[BindingId, Decimal],
+) -> tuple[BindingId, ...]:
+    """Return declared annual bindings for which no source value was resolved."""
+    return tuple(binding_id for binding_id in binding_ids if binding_id not in binding_values)
+
+
+def _partition_provenance(
+    envelopes: tuple[ObservationEnvelopePayload, ...],
+    requirement: IvaCompensationAnnualPartitionRequirement,
+    *,
+    resolver_id: str,
+) -> tuple[CalculationSourceProvenance, ...]:
+    """Project each contributing M303 envelope into the source lineage."""
+    return tuple(
+        CalculationSourceProvenance(
+            resolver_id=resolver_id,
+            resolved_binding_source=_SOURCE_KIND,
+            contributor_source_kind=_SOURCE_KIND.value,
+            contributor_binding_source=_SOURCE_KIND,
+            lineage_role=CalculationSourceLineageRole.PRIMARY,
+            source_ref=(
+                "303:"
+                f"{envelope.observation.filing_year}:{envelope.observation.period}:"
+                "iva-compensation-annual-partition"
+            ),
+            parent_source_ref=None,
+            terminal_origin=TerminalOriginClass.FILED_MODELO_CASILLA,
+            source_modelo=requirement.source_modelo,
+            source_filing_year=envelope.observation.filing_year,
+            source_periods=requirement.source_periods,
+            source_casilla_ids=requirement.source_casilla_ids,
+            legal_refs=requirement.legal_refs,
+            source_refs=requirement.source_refs,
+            dependency_treatment=requirement.dependency_treatment,
+        )
+        for envelope in envelopes
+    )
+
+
+class IvaCompensationAnnualPartitionSourceResolver:
+    """Resolve Modelo 390 boxes 85 / 97 / 662 from the IVA compensation FIFO partition."""
+
+    resolver_id: ClassVar[str] = _SOURCE_KIND.value
+    owned_sources: ClassVar[tuple[BindingSourceKind, ...]] = (_SOURCE_KIND,)
+
+    def __init__(
+        self,
+        *,
+        operation: PinnedAuthorityOperation,
+        repository: CalculationObservationRepositoryProtocol,
+        registry_snapshot: RegistrySnapshot | None = None,
+    ) -> None:
+        """Initialize the resolver with its composed observation repository and registry snapshot."""
+        self._repository = repository
+        self._operation = operation
+        self._registry_snapshot = registry_snapshot
+
+    def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
+        """Resolve the Modelo 390 boxes 85 / 97 / 662 IVA compensation FIFO partition for ``context``.
+
+        Returns:
+            An empty resolution when the revision declares no such
+            requirement, a degraded resolution on repository failure, or the
+            resolved :class:`~.source_mesh.CalculationSourceResolution`.
+        """
+        revision = _select_partition_revision(self._registry_snapshot, context)
+        requirement = iva_compensation_annual_partition_requirement(revision)
+        if requirement is None:
+            return CalculationSourceResolution(resolver_id=self.resolver_id, owned_sources=self.owned_sources)
+        repo = _partition_repository(self._repository)
+        loaded = _load_partition_envelopes_or_degrade(
+            revision,
+            filing_year=context.filing_year,
+            repository=repo,
+            operation=self._operation,
+            resolver_id=self.resolver_id,
+            owned_sources=self.owned_sources,
+        )
+        if isinstance(loaded, CalculationSourceResolution):
+            return loaded
+        envelopes = loaded
+        observed_periods = {envelope.observation.period for envelope in envelopes}
+        periods_complete = observed_periods == set(requirement.source_periods)
+        binding_values = (
+            resolve_iva_compensation_annual_partition_binding_values(
+                revision,
+                envelopes,
+                filing_year=context.filing_year,
+                operation=self._operation,
+            )
+            if periods_complete
+            else {}
+        )
+        unresolved = _unresolved_partition_bindings(requirement.binding_ids, binding_values)
+        return CalculationSourceResolution(
+            resolver_id=self.resolver_id,
+            owned_sources=self.owned_sources,
+            binding_values=binding_values,
+            unresolved_binding_ids=unresolved,
+            diagnostics=_unresolved_diagnostics(
+                binding_ids=unresolved,
+                source_periods=requirement.source_periods,
+                resolver_id=self.resolver_id,
+                opening_unknown_binding_id=(
+                    requirement.prior_year_applied_amount_binding_id if periods_complete else None
+                ),
+            )
+            + _annual_source_evidence_diagnostics(
+                binding_ids=unresolved,
+                resolver_id=self.resolver_id,
+            ),
+            provenance=_partition_provenance(envelopes, requirement, resolver_id=self.resolver_id),
+        )
+
+
+__all__ = [
+    "IvaCompensationAnnualPartitionSourceResolver",
+    "period_state_from_303_envelope",
+    "resolve_iva_compensation_annual_partition_binding_values",
+]

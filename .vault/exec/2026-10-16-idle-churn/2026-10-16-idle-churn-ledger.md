@@ -1,0 +1,340 @@
+---
+tags:
+  - '#exec'
+  - '#idle-churn'
+date: '2026-10-16'
+modified: '2026-10-17'
+body_schema: 'body-v2'
+body_hash: 'sha256:a02ce5098c412b87ab38cec9b56556c6809143766b1643b597641042976d0a17'
+related:
+  - "[[2026-10-16-idle-churn-plan]]"
+---
+
+# `idle-churn` ledger
+
+## Changes
+
+- `S01` `M` `src/cadrumo_client/contracts/service_access.py`
+- `S01` `M` `src/cadrumo/core/path_confinement.py`
+- `S01` `M` `src/cadrumo_runtime/adapters/service_verification.py`
+- `S01` `M` `src/cadrumo_runtime/host/profile_connection_extension_records.py`
+- `S01` `M` `src/cadrumo_runtime/host/profile_connection_services.py`
+- `S01` `M` `src/cadrumo_runtime/host/tests/test_service_records.py`
+- `S01` `A` `src/cadrumo_runtime/adapters/tests/test_service_verification.py`
+- `S01` `verify:` `pytest -n0 -m '' test_service_verification.py test_service_records.py` -> `pass`
+- `S01` `verify:` `ruff check + ruff format --check + ty check on touched files` -> `pass`
+- `S02` `M` `src/cadrumo_runtime/host/worker_service.py`
+- `S02` `M` `src/cadrumo_runtime/host/worker_operation_requests.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/storage/master_key/profile_worker_custody.py`
+- `S02` `M` `src/cadrumo_runtime/host/profile_login.py`
+- `S02` `M` `src/cadrumo_runtime/host/worker_submission_staging.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/test_worker_exit_cleanup.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/test_worker_submission_staging.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/test_human_login_receipt.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/storage/master_key/tests/test_profile_worker_custody_lease_window.py`
+- `S02` `verify:` `pytest -n0 worker exit cleanup, submission staging, custody lease window` -> `pass`
+- `S02` `verify:` `pytest -n0 test_human_login_receipt.py` -> `fail`
+- `S02` `verify:` `ruff check, ruff format --check, ty check on touched files` -> `pass`
+- `S03` `M` `src/cadrumo_client/contracts/session_events.py`
+- `S03` `M` `src/cadrumo_client/contracts/sign_in.py`
+- `S03` `M` `src/cadrumo_client/transport/verified_transport.py`
+- `S03` `M` `src/cadrumo_client/transport/frontend_client.py`
+- `S03` `M` `src/cadrumo_runtime/host/session_events.py`
+- `S03` `M` `src/cadrumo_runtime/host/profile_connections.py`
+- `S03` `M` `src/cadrumo_runtime/host/profile_connection_sessions.py`
+- `S03` `M` `src/cadrumo_runtime/host/profile_connection_services.py`
+- `S03` `M` `src/cadrumo_runtime/host/profile_connection_attendance.py`
+- `S03` `M` `src/cadrumo_runtime/host/profile_connection_operations.py`
+- `S03` `M` `src/cadrumo_runtime/host/tests/test_profile_language_events.py`
+- `S03` `A` `src/cadrumo_runtime/host/tests/test_connection_cues.py`
+- `S03` `A` `src/cadrumo_runtime/host/tests/test_sign_in_watch.py`
+- `S03` `A` `src/cadrumo_client/transport/tests/test_invalidation_cues.py`
+- `S03` `verify:` `pytest -n0 connection cues, sign-in watch, attendance, lifecycle notices, session events, sign-in status, service records, client cue and language tests` -> `pass`
+- `S03` `verify:` `ruff check, ruff format --check, ty check on touched files` -> `pass`
+- `S04` `M` `src/cadrumo_agent_service/main.py`
+- `S04` `M` `src/cadrumo_agent_service/service.py`
+- `S04` `M` `src/cadrumo_agent_service/providers/persistence/store.py`
+- `S04` `M` `src/cadrumo_client/transport/service_client.py`
+- `S04` `M` `src/cadrumo_agent_service/host/tests/test_service_stdin_lifetime.py`
+- `S04` `A` `src/cadrumo_agent_service/providers/persistence/tests/test_store_generations.py`
+- `S04` `verify:` `pytest -n0 service stdin lifetime, store generations, hosted certification, admin authority` -> `pass`
+- `S04` `verify:` `ruff check, ruff format --check, ty check on touched files` -> `pass`
+- `S05` `M` `src/cadrumo_runtime/host/session_hold.py`
+- `S05` `M` `src/cadrumo_runtime/host/tests/test_session_hold_stdin_lifetime.py`
+- `S05` `verify:` `pytest -n0 test_session_hold_stdin_lifetime.py test_session_hold_frontend.py` -> `pass`
+- `S05` `verify:` `ruff check, ruff format --check, ty check on touched files` -> `pass`
+- `S06` `A` `src/cadrumo_runtime/host/session_watch.py`
+- `S06` `A` `src/cadrumo_runtime/host/tests/test_session_watch.py`
+- `S06` `M` `src/cadrumo_runtime/host/bootstrap.py`
+- `S06` `M` `src/cadrumo_runtime/host/arguments.py`
+- `S06` `M` `src/cadrumo_client/transport/frontend_client.py`
+- `S06` `M` `dev/quality/metadata/import_load_targets.cadrumo_runtime.json`
+- `S06` `M` `dev/quality/metadata/import_load_targets.json`
+- `S06` `verify:` `pytest -n0 test_session_watch.py test_invalidation_cues.py` -> `pass`
+- `S06` `verify:` `ruff check, ruff format --check, ty check on touched files` -> `pass`
+- `S07` `A` `native/desktop/src-tauri/src/shell/sign_in/watch.rs`
+- `S07` `D` `native/desktop/src-tauri/src/shell/sign_in/reads.rs`
+- `S07` `M` `native/desktop/src-tauri/src/shell/sign_in/mod.rs`
+- `S07` `M` `native/desktop/src-tauri/src/shell/sign_in/observation.rs`
+- `S07` `M` `native/desktop/src-tauri/src/shell/sign_in/wire.rs`
+- `S07` `M` `native/desktop/src-tauri/src/shell/sign_in/wire_contract_tests.rs`
+- `S07` `M` `native/desktop/src-tauri/src/shell/agent_access/wire.rs`
+- `S07` `M` `native/desktop/src-tauri/src/shell/provider_settings/wire.rs`
+- `S07` `M` `native/desktop/src-tauri/src/shell/language.rs`
+- `S07` `M` `native/desktop/src-tauri/src/agent/person.rs`
+- `S07` `M` `native/desktop/src-tauri/src/agent/mod.rs`
+- `S07` `M` `native/desktop/src-tauri/src/agent/supervisor.rs`
+- `S07` `M` `native/desktop/frontend/src/components/AttendanceRequests.tsx`
+- `S07` `M` `native/desktop/frontend/src/shell/host.ts`
+- `S07` `M` `native/desktop/frontend/src/shell/tauriHost.ts`
+- `S07` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S07` `M` `src/cadrumo_runtime/host/session_watch.py`
+- `S07` `M` `src/cadrumo_runtime/host/tests/test_session_watch.py`
+- `S07` `verify:` `cmake --build build/windows-x64 --target desktop-host-unit-clippy` -> `pass`
+- `S07` `verify:` `cmake --build build/windows-x64 --target desktop-host-unit-test` -> `pass`
+- `S07` `verify:` `pnpm tsc eslint prettier` -> `pass`
+- `S07` `verify:` `pytest src/cadrumo_runtime/host/tests/test_session_watch.py` -> `pass`
+- `S08` `A` `src/cadrumo_client/transport/native_wake.py`
+- `S08` `M` `src/cadrumo_client/contracts/contracts.py`
+- `S08` `M` `src/cadrumo_client/transport/windows_channel.py`
+- `S08` `M` `src/cadrumo_client/transport/posix_channel.py`
+- `S08` `M` `src/cadrumo_client/transport/verified_transport.py`
+- `S08` `M` `src/cadrumo_runtime/host/session_events.py`
+- `S08` `M` `src/cadrumo_runtime/contracts/profile_host.py`
+- `S08` `M` `src/cadrumo_runtime/host/profile_connections.py`
+- `S08` `M` `src/cadrumo_runtime/adapters/server_connection_handling.py`
+- `S08` `M` `src/cadrumo_runtime/adapters/server.py`
+- `S08` `M` `src/cadrumo_runtime/host/worker_operation_requests.py`
+- `S08` `M` `src/cadrumo_runtime/adapters/worker_authorization.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_operation_registered_operation.py`
+- `S08` `M` `src/cadrumo_client/transport/tests/test_launch_door_cleanup.py`
+- `S08` `M` `src/cadrumo_client/transport/tests/test_runtime_client.py`
+- `S08` `M` `src/cadrumo_runtime/adapters/tests/test_access_management_framing.py`
+- `S08` `M` `src/cadrumo_runtime/adapters/tests/test_connection_serialization.py`
+- `S08` `M` `src/cadrumo_runtime/adapters/tests/test_enrollment_framing.py`
+- `S08` `M` `src/cadrumo_runtime/adapters/tests/test_framing.py`
+- `S08` `M` `src/cadrumo_runtime/adapters/tests/test_frontend_access_management.py`
+- `S08` `M` `src/cadrumo_runtime/adapters/tests/test_launch_door.py`
+- `S08` `M` `src/cadrumo_runtime/adapters/tests/test_profile_worker_cleanup.py`
+- `S08` `M` `src/cadrumo_runtime/adapters/tests/test_projection_page_client.py`
+- `S08` `M` `src/cadrumo_runtime/adapters/tests/test_server_cleanup.py`
+- `S08` `M` `src/cadrumo_runtime/adapters/tests/test_worker_lease_transfer.py`
+- `S08` `M` `src/cadrumo_runtime/host/tests/frontend/cli/portable_human_cli_runtime.py`
+- `S08` `M` `src/cadrumo_runtime/host/tests/operation_transport_support.py`
+- `S08` `M` `src/cadrumo_runtime/host/tests/test_installation_door.py`
+- `S08` `M` `src/cadrumo_runtime/host/tests/test_worker_construction_cleanup.py`
+- `S08` `M` `src/cadrumo_runtime/host/tests/test_worker_exit_cleanup.py`
+- `S08` `A` `src/cadrumo_client/transport/tests/test_channel_readiness_wait.py`
+- `S08` `A` `src/cadrumo_runtime/adapters/tests/test_server_idle_wait.py`
+- `S08` `A` `src/cadrumo_runtime/host/tests/test_worker_request_wait.py`
+- `S08` `M` `src/cadrumo_runtime/host/tests/test_session_events.py`
+- `S08` `verify:` `pytest src/cadrumo_client/transport/tests src/cadrumo_runtime/adapters/tests` -> `fail`
+- `S08` `verify:` `pytest serial runtime host server-backed files` -> `fail`
+- `S08` `verify:` `pytest test_channel_readiness_wait test_server_idle_wait test_worker_request_wait test_session_events` -> `pass`
+- `S08` `verify:` `ruff ty basedpyright pyrefly lint-imports on touched files` -> `pass`
+- `S11` `M` `src/cadrumo_agent_service/adapters/agent_diagnostics.py`
+- `S11` `M` `src/cadrumo_agent_service/adapters/agent_process.py`
+- `S11` `M` `src/cadrumo_agent_service/adapters/tests/test_agent_diagnostics.py`
+- `S11` `M` `src/cadrumo_agent_service/adapters/tests/agent_host_fixture.py`
+- `S11` `M` `src/cadrumo_agent_service/adapters/tests/test_agent_process_native.py`
+- `S11` `M` `.vault/plan/2026-10-16-idle-churn-plan.md`
+- `S11` `verify:` `pytest src/cadrumo_agent_service/adapters/tests` -> `pass`
+- `S11` `verify:` `ruff ty on touched files` -> `pass`
+- `S09` `M` `dev/quality/metadata/import_load_targets.cadrumo_client.json`
+- `S09` `M` `dev/quality/metadata/import_load_targets.cadrumo_runtime.json`
+- `S09` `M` `dev/quality/metadata/import_load_targets.json`
+- `S09` `M` `src/cadrumo_client/transport/posix_endpoint.py`
+- `S09` `M` `src/cadrumo_client/transport/tests/test_channel_readiness_wait.py`
+- `S09` `M` `src/cadrumo_client/transport/windows.py`
+- `S09` `M` `src/cadrumo_client/transport/windows_native_io.py`
+- `S09` `M` `src/cadrumo_runtime/adapters/server.py`
+- `S09` `M` `src/cadrumo_runtime/adapters/server_connection_handling.py`
+- `S09` `M` `src/cadrumo_runtime/adapters/tests/test_server_cleanup.py`
+- `S09` `M` `src/cadrumo_runtime/adapters/tests/test_server_diagnostics.py`
+- `S09` `M` `src/cadrumo_runtime/adapters/tests/test_server_idle_wait.py`
+- `S09` `A` `src/cadrumo_runtime/adapters/tests/test_windows_session_notifications.py`
+- `S09` `A` `src/cadrumo_runtime/adapters/windows_session_notifications.py`
+- `S09` `M` `src/cadrumo_runtime/adapters/worker_authorization.py`
+- `S09` `M` `src/cadrumo_runtime/application/approval_sessions.py`
+- `S09` `M` `src/cadrumo_runtime/application/session_authority_lifecycle.py`
+- `S09` `M` `src/cadrumo_runtime/application/tests/test_session_authority.py`
+- `S09` `M` `src/cadrumo_runtime/contracts/profile_host.py`
+- `S09` `M` `src/cadrumo_runtime/host/enrollment_connections.py`
+- `S09` `M` `src/cadrumo_runtime/host/enrollment_offer.py`
+- `S09` `M` `src/cadrumo_runtime/host/main.py`
+- `S09` `M` `src/cadrumo_runtime/host/profile_connections.py`
+- `S09` `M` `src/cadrumo_runtime/host/profile_host.py`
+- `S09` `M` `src/cadrumo_runtime/host/shutdown.py`
+- `S09` `M` `src/cadrumo_runtime/host/tests/frontend/cli/portable_human_cli_runtime.py`
+- `S09` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_fixture_cleanup.py`
+- `S09` `M` `src/cadrumo_runtime/host/tests/operation_transport_support.py`
+- `S09` `M` `src/cadrumo_runtime/host/tests/test_approval_sessions.py`
+- `S09` `A` `src/cadrumo_runtime/host/tests/test_lifecycle_wake.py`
+- `S09` `M` `.vault/audit/2026-10-16-idle-churn-audit.md`
+- `S09` `verify:` `pytest serial server-backed host suite (55 files)` -> `pass`
+- `S09` `verify:` `pytest transport, server, worker, shutdown, cue and authority suites` -> `pass`
+- `S09` `verify:` `ruff ty basedpyright pyrefly lint-imports on touched files` -> `pass`
+- `S09` `M` `src/cadrumo_runtime/host/tests/test_lifecycle_wake.py`
+- `S09` `verify:` `pytest -n0 src/cadrumo_runtime/host/tests/test_lifecycle_wake.py` -> `pass`
+- `S09` `verify:` `pytest -n0 src/cadrumo_runtime/host/tests/test_bootstrap_reset.py src/cadrumo_runtime/host/tests/test_grant_change.py` -> `pass`
+- `S09` `verify:` `ruff check, ruff format --check, ty check` -> `pass`
+- `S10` `M` `.vault/audit/2026-10-16-idle-churn-audit.md`
+- `S10` `verify:` `signed-in idle Release, 120 s, no spawn, no input (psutil CPU-time diff of the stage tree)` -> `pass`
+- `S12` `M` `native/desktop/src-tauri/src/shell/sign_in/mod.rs`
+- `S12` `M` `native/desktop/src-tauri/src/shell/sign_in/wire.rs`
+- `S12` `M` `native/desktop/src-tauri/src/shell/sign_in/wire_contract_tests.rs`
+- `S12` `M` `native/desktop/src-tauri/src/agent/person.rs`
+- `S12` `M` `.vault/plan/2026-10-16-idle-churn-plan.md`
+- `S12` `M` `.vault/audit/2026-10-16-idle-churn-audit.md`
+- `S12` `verify:` `cmake --build --preset debug --target desktop-host-unit-test (run by CADRUMO-BUILD-DEBUG, 337 passed)` -> `pass`
+- `S12` `verify:` `rustfmt --edition 2024 --check on the edited files` -> `pass`
+- `S09` `verify:` `pytest -n0 test_lifecycle_wake.py test_server_idle_wait.py test_bootstrap_reset.py test_grant_change.py test_windows_session_notifications.py test_server_cleanup.py test_server_diagnostics.py (59, three combined runs)` -> `pass`
+- `S09` `verify:` `ruff check, ruff format --check, ty check` -> `pass`
+- `S12` `M` `src/cadrumo_runtime/host/session_hold.py`
+- `S12` `A` `src/cadrumo_runtime/host/tests/test_session_hold_activity.py`
+- `S12` `verify:` `cmake --build --preset debug --target desktop-host-unit-test (run by CADRUMO-BUILD-DEBUG, 339 passed) and desktop-host-unit-clippy` -> `pass`
+- `S12` `verify:` `pytest -n0 test_session_hold_activity.py test_session_hold_stdin_lifetime.py` -> `pass`
+- `S12` `verify:` `ruff check, ruff format --check, ty check, rustfmt --check` -> `pass`
+- `S09` `verify:` `pytest -n0 test_server_idle_wait.py test_server_cleanup.py test_server_diagnostics.py test_lifecycle_wake.py (52)` -> `pass`
+- `S09` `verify:` `ruff check, ruff format --check, ty check` -> `pass`
+- `S13` `M` `src/cadrumo_runtime/host/worker_service.py`
+- `S13` `M` `src/cadrumo_runtime/host/tests/test_worker_exit_cleanup.py`
+- `S13` `M` `.vault/plan/2026-10-16-idle-churn-plan.md`
+- `S13` `verify:` `pytest -n0 -m '' src/cadrumo_runtime/host/tests/test_worker_exit_cleanup.py` -> `pass`
+- `S13` `verify:` `ruff check, ruff format --check, ty check on both files` -> `pass`
+- `S14` `M` `native/desktop/frontend/src/components/TerminalPane.tsx`
+- `S14` `M` `native/desktop/frontend/tests/terminal-rendering.spec.ts`
+- `S14` `M` `.vault/plan/2026-10-16-idle-churn-plan.md`
+- `S14` `verify:` `npm run test -- tests/terminal-rendering.spec.ts -g 'nothing to draw' --project product (managed desktop-frontend-test env, by CADRUMO-BUILD-DEBUG)` -> `pass`
+- `S14` `verify:` `tsc --noEmit, eslint and prettier --check on both files` -> `pass`
+- `S15` `A` `native/platform/src/file_changes.rs`
+- `S15` `M` `native/platform/src/lib.rs`
+- `S15` `M` `native/application/src/diagnostics/mod.rs`
+- `S15` `M` `native/desktop/src-tauri/src/logs/mod.rs`
+- `S15` `M` `native/desktop/src-tauri/src/logs/tail.rs`
+- `S15` `M` `native/desktop/src-tauri/src/logs/record.rs`
+- `S15` `M` `native/desktop/src-tauri/src/logs/tests.rs`
+- `S15` `A` `src/cadrumo/core/log_file_handler.py`
+- `S15` `A` `src/cadrumo/core/tests/test_log_file_handler.py`
+- `S15` `M` `src/cadrumo/core/logging.py`
+- `S15` `M` `.vault/audit/2026-10-16-idle-churn-audit.md`
+- `S15` `M` `.vault/plan/2026-10-16-idle-churn-plan.md`
+- `S15` `verify:` `platform.resolver (64 passed), application.rust, desktop-host-unit-test (341 passed), desktop-host-unit-clippy (by CADRUMO-BUILD-DEBUG)` -> `pass`
+- `S15` `verify:` `pytest core logging modules and test_log_file_handler (73 passed), ruff, pyrefly, basedpyright, lint-imports` -> `pass`
+- `S16` `M` `src/cadrumo/entrypoints/tui/components/status.py`
+- `S16` `A` `src/cadrumo/entrypoints/tui/components/quiet_app.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/components/tests/test_feedback.py`
+- `S16` `A` `src/cadrumo/entrypoints/tui/components/tests/test_quiet_app.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/profile/overview.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/profile/overview_setup.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/tests/test_manager_onboarding.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/app.py`
+- `S16` `M` `src/cadrumo_runtime/host/frontend/tui/runtime_admission.py`
+- `S16` `M` `src/cadrumo_runtime/host/frontend/tui/runtime_session.py`
+- `S16` `verify:` `pytest components/tests, test_manager_onboarding, test_theme (34 and 42 passed)` -> `pass`
+- `S16` `verify:` `pytest TUI suites src/cadrumo/entrypoints/tui, host/frontend/tui, host/tests/frontend/tui: 2406 passed, 7 native runtime tests failed under concurrent load; the four not on the known list each pass alone` -> `pass`
+- `S16` `verify:` `ruff, ruff format, ty on changed files` -> `pass`
+- `S17` `A` `src/cadrumo/entrypoints/tui/windows_input.py`
+- `S17` `M` `src/cadrumo/entrypoints/tui/components/quiet_app.py`
+- `S17` `A` `src/cadrumo/entrypoints/tui/tests/test_windows_input.py`
+- `S17` `A` `src/cadrumo/entrypoints/tui/tests/windows_input_apps.py`
+- `S17` `verify:` `pytest src/cadrumo/entrypoints/tui/tests/test_windows_input.py (2 passed)` -> `pass`
+- `S17` `verify:` `ruff, ruff format, ty on changed files` -> `pass`
+- `S17` `verify:` `TUI from source on an isolated runtime, idle 60 s in a console of its own: 0.000% CPU, no thread began or ended in 30 s (before: 0.078% at 143.7 switches a second)` -> `pass`
+- `S18` `M` `src/cadrumo/entrypoints/tui/secret/registration.py`
+- `S18` `M` `src/cadrumo/entrypoints/tui/tests/test_registration_screen.py`
+- `S18` `M` `src/cadrumo_runtime/host/frontend/tui/runtime_session.py`
+- `S18` `M` `src/cadrumo_runtime/host/frontend/tui/bound_session.py`
+- `S18` `M` `src/cadrumo_runtime/host/frontend/tui/secret/automation_decision.py`
+- `S18` `M` `src/cadrumo_runtime/host/frontend/tui/profile/automation_inventory.py`
+- `S18` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_session.py`
+- `S18` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_bound_session.py`
+- `S18` `M` `src/cadrumo_runtime/host/tests/frontend/tui/profile/test_automation_inventory.py`
+- `S18` `M` `src/cadrumo_runtime/host/tests/frontend/tui/secret/test_automation_requester.py`
+- `S18` `M` `.vault/audit/2026-10-16-idle-churn-audit.md`
+- `S18` `verify:` `pytest test_registration_screen (recovery cases), test_runtime_session (18), test_bound_session (10), automation inventory, decision and requester (34)` -> `pass`
+- `S18` `verify:` `ruff, ruff format, ty on changed files` -> `pass`
+- `S19` `M` `src/cadrumo_runtime/contracts/profile_worker.py`
+- `S19` `M` `src/cadrumo_runtime/host/worker_service.py`
+- `S19` `M` `src/cadrumo_runtime/adapters/profile_worker_transport.py`
+- `S19` `M` `src/cadrumo_runtime/host/session_owner.py`
+- `S19` `M` `src/cadrumo_runtime/host/tests/test_worker_exit_cleanup.py`
+- `S19` `M` `.vault/plan/2026-10-16-idle-churn-plan.md`
+- `S19` `verify:` `pytest test_worker_exit_cleanup, test_profile_worker_operations (real workers through the heartbeat count), test_profile_worker_transport, test_supervised_channel (70 passed)` -> `pass`
+- `S19` `verify:` `ruff, ruff format, ty, pyrefly and basedpyright on the contract` -> `pass`
+- `S16` `M` `src/cadrumo/entrypoints/tui/components/host.py`
+- `S16` `M` `src/cadrumo/entrypoints/tui/components/tests/test_quiet_app.py`
+- `S16` `M` `.vault/audit/2026-10-16-idle-churn-audit.md`
+- `S16` `M` `.vault/plan/2026-10-16-idle-churn-plan.md`
+- `S16` `verify:` `pytest components/tests, test_registration_screen, test_theme and the affected TUI and core suites (134 passed); registration, installation and secret screens (56 passed)` -> `pass`
+- `S16` `verify:` `ruff, ruff format, ty, lint-imports (25 kept)` -> `pass`
+- `S17` `M` `src/cadrumo/entrypoints/tui/windows_input.py`
+- `S17` `M` `src/cadrumo/entrypoints/tui/tests/windows_input_apps.py`
+- `S17` `M` `src/cadrumo/entrypoints/tui/tests/test_windows_input.py`
+- `S17` `M` `.vault/plan/2026-10-16-idle-churn-plan.md`
+- `S17` `verify:` `pytest src/cadrumo/entrypoints/tui/tests/test_windows_input.py (3 passed, idle started and resumed, lone Escape)` -> `pass`
+- `S17` `verify:` `ruff, ruff format, ty` -> `pass`
+- `S18` `verify:` `pytest test_bound_session, test_runtime_session, automation inventory (in the 134 passed)` -> `pass`
+- `S18` `verify:` `ruff, ruff format, ty` -> `pass`
+- `S15` `M` `native/platform/src/desktop.rs`
+- `S15` `M` `native/platform/src/file_changes.rs`
+- `S15` `M` `src/cadrumo/core/log_file_handler.py`
+- `S15` `M` `src/cadrumo/core/tests/test_log_file_handler.py`
+- `S15` `verify:` `platform.resolver (66 passed), desktop-host-unit-test (342 passed), desktop-host-unit-clippy, by CADRUMO-BUILD-DEBUG` -> `pass`
+- `S15` `verify:` `pytest test_log_file_handler (4 passed), ruff, ty, pyrefly, basedpyright` -> `pass`
+- `S15` `verify:` `pytest test_log_file_handler and test_logging_rotation (7 passed), ruff, ty, pyrefly, basedpyright` -> `pass`
+- `S17` `verify:` `pytest test_windows_input (3 passed)` -> `pass`
+- `S20` `M` `native/manager/src/supervision/supervisor.rs`
+- `S20` `M` `native/manager/tests/supervision.rs`
+- `S20` `M` `native/manager/tests/fixture/runtime.rs`
+- `S20` `M` `.vault/adr/2026-10-04-runtime-manager-architecture-supervisor-contract-adr.md`
+- `S20` `M` `.vault/plan/2026-10-16-idle-churn-plan.md`
+- `S20` `M` `.vault/audit/2026-10-16-idle-churn-audit.md`
+- `S20` `verify:` `rustfmt --edition 2024 (stdin) supervisor.rs supervision.rs fixture/runtime.rs` -> `pass`
+- `S20` `verify:` `check_manager_lifecycle (clippy -D warnings, build/windows-x64 Debug, by CADRUMO-BUILD-DEBUG)` -> `pass`
+- `S20` `verify:` `ctest manager.rust (build/windows-x64 Debug, by CADRUMO-BUILD-DEBUG)` -> `pass`
+- `S20` `verify:` `ctest manager.supervision incl. both new idle heartbeat tests (build/windows-x64 Debug, by CADRUMO-BUILD-DEBUG)` -> `pass`
+- `S20` `verify:` `rustfmt --edition 2024 (stdin) supervisor.rs supervision.rs fixture/runtime.rs after review fixes` -> `pass`
+- `S20` `verify:` `check_manager_lifecycle on e03c12849b (clippy -D warnings, build/windows-x64 Debug, by CADRUMO-BUILD-DEBUG)` -> `pass`
+- `S20` `verify:` `ctest manager.rust on e03c12849b (by CADRUMO-BUILD-DEBUG)` -> `pass`
+- `S20` `verify:` `ctest manager.supervision on e03c12849b incl. late idle reply, cadence and idle hang tests (by CADRUMO-BUILD-DEBUG)` -> `pass`
+- `S15` `verify:` `pytest -n0 -m '' test_log_file_handler.py incl. the real and squatted event` -> `pass`
+- `S15` `verify:` `ruff check, ruff format --check` -> `pass`
+- `S15` `verify:` `dev.quality.types diagnostics in log_file_handler.py (none)` -> `pass`
+- `S17` `verify:` `pytest -n0 -m '' test_windows_input.py` -> `pass`
+- `S17` `verify:` `ruff check, ruff format --check` -> `pass`
+- `S17` `verify:` `dev.quality.types diagnostics in windows_input.py (none)` -> `pass`
+
+## Notes
+
+- `S01` `profile_connection_services.py` interleaves with another session's uncommitted lease-guard and refusal-check hunks; its claim and admission recheck stays uncommitted until those land, while HEAD's full verification there still works with the new verifier.
+- `S02` `test_worker_human_login_receipt_lifecycle[success]` fails on CADRUMO-RUNTIME-DEBUG's uncommitted `_ended` change in `profile_worker_custody.retire` (retired sessions now refuse with `authentication_required);` the other seven modes pass and the failure was reported to that session.
+- `S03` Four files carry other sessions' uncommitted hunks; this Step's edits were staged as a HEAD-relative patch with git apply --cached, leaving theirs in the working tree. The S01 claim and admission recheck rides in the same patch.
+- `S04` AgentDiagnosticFiles still tails the hosted agent's log files every 0.2 s while an agent runs; directory change notifications fire only when a writer closes its handle (measured: at exit), so moving it to them needs a decision on worker diagnostics with the cadrumo-agent owner.
+- `S05` `session_hold.py` carries another session's `_report_failure` and `OS_SESSION_UNAVAILABLE` hunks; this Step was staged as a HEAD-relative patch. Pushed lines are opt-in through `observe_events,` so a desktop built before S07 keeps its strict request-reply bridge.
+- `S06` End-to-end use against the packaged runtime is verified with the desktop in S10; the runtime cue path itself is covered by `test_sign_in_watch.py` from S03.
+- `S07` Commit carries CADRUMO-FIX1's shared-person hunks by agreement; CADRUMO-BUILD-DEBUG's diagnostics and `with_reason` calls stay uncommitted pending its ApplicationError reason API; the committed tree was not compiled separately from the working tree
+- `S08` Adapter and transport suites: 913 passed, 1 failed `(test_posix_login_capture,` an unowned uncommitted pidfd option rename in `posix_channel.py).` Host suite: 211 passed, 5 failed, all from other sessions' uncommitted changes: the receipt handover in `profile_connection_sessions.py` and the `AUTHENTICATION_REQUIRED` session mismatch in `profile_connection_operations.py.` The stop-wake gate was shown to fail with the wake removed.
+- `S11` Depends on cadrumo-agent 09bfc8b relaying worker diagnostics on the agent's standard error, proved end to end on the rebuilt stage by CADRUMO-AGENT-SESSION1; the native fixture now models that relay.
+- `S09` Host suite 221 passed, 2 skipped. A first run caught an accept loop that took each profile's admission guard while computing its wait `(test_grant_change[rotate],` `test_bootstrap_reset[reset-and-replay]).` Profile deadlines are now cached during the pass, and request-driven passes coalesce to one interval later. Without WTS notifications, or with a non-desktop or unknown-state login, logins are still observed every 0.5 s, as the ADR allows.
+- `S09` Reopened: signed in, each lifecycle pass owed the next one through the rate-limited sign-in sweep (audit lifecycle-sweep-reowe); the new test fails against the previous code
+- `S09` Reopened by the plan-close review: tick age while parked past its deadline, sweep state outside the guard, WTS callback on the guard; each new test fails against the previous code. `test_bootstrap_reset[reset-and-replay]` failed once in nine runs under load (audit bootstrap-reset-replay-timing)
+- `S12` Reopened by the plan-close review (activity-refusal-ends-the-person-hold, high): the hold keeps holding on `OS_SESSION_UNAVAILABLE` and the bridge keeps a correlated refusal in step; the hold test fails against the previous code
+- `S09` Re-review: the tick is refreshed at the park's end so a heartbeat right after a long rest reads no age; the new test fails against the previous code
+- `S13` The new status test fails against the previous code. The source runtime with a held synthetic profile measured 0.000% CPU over 60 s, so the stage runtime and worker costs are requests from other processes: every 5 s the manager ping reaches the worker as a status read
+- `S14` With cursorBlink true the test fails: 6 animation frames requested over 2 s, expected 0 (run by CADRUMO-BUILD-DEBUG, file restored byte for byte)
+- `S15` With Poller::run sleeping 100 ms instead of waiting, `a_subscribed_poller_reads_nothing_until_a_log_file_changes` fails; without the handler's announce, the Python signal test fails. Linux and macOS still observe the log files every 100 ms: no notification source is used there yet
+- `S16` Each new test fails against the previous behaviour: an always-refreshing spinner, a blinking cursor, and a progress line on a 1 s interval
+- `S17` With Textual's own driver the idle test reads 14 switches in 1.5 s and fails; with the post-input escape wait removed, the lone-Escape test fails
+- `S18` Each new test fails against the previous behaviour: an enrolment wait with both release paths removed hangs, a lapse timer never armed leaves the shell open, and a watch on an interval checks before anything ended. A Windows timer can wake a few milliseconds early, so the expiry timer runs past the deadline and re-arms when woken before it
+- `S19` The new test fails when the activity read wakes custody expiry. The heartbeat's 5 s cadence is unchanged pending the operator's ruling on idle-heartbeat; this step only stops each ping revalidating custody from disk
+- `S16` Reopened by the plan-close review (tui-quiet-app-coverage, high): ScreenHostApp ran the registration, credential and installation screens on a plain Textual App. The new test fails with the plain base
+- `S17` Reopened by the plan-close review (quiet-driver-lost-after-suspend): a suspend closed the stop event for good. Without the reopen the resumed app measured 112 switches in 1.5 s
+- `S18` Plan-close review, low findings: the API-key shell's lapse timer now shares BoundSession's early-wake margin, and BoundSession.watch refuses a second watch instead of replacing the first
+- `S15` Reopened by the plan-close review (log-append-signal-squatting, medium; tail-observe-failure-schedules-no-retry and append-signal-name-normalisation-asymmetry, low). Without the failing count on the listing error the retry test fails; without the pywin32 refusal the squat test raises
+- `S15` Re-review passed; its low points fixed: Python normalises with ntpath.abspath inside `append_signal_name,` the announce path swallows any exception, and a stray doc comment on a desktop.rs test is removed (comment only)
+- `S17` The resumed case now also asserts the resumed input loop still waits on its stop event; without the reopen it fails
+- `S20` The manager's Rust tests and clippy run through CADRUMO-BUILD-DEBUG's managed targets after this commit; S20 closes on their result.
+- `S20` Reopened for the plan-close review's medium finding (late idle reply left a busy runtime unpinged) and its lows; closes again on the managed Rust run of the fix commit.
+- `S15` Post-close correction: the type runner was not run at S15; the append signal moved from pywin32 to typed ctypes.
+- `S17` Post-close correction: the type runner was not run at S17.

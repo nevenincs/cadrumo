@@ -1,0 +1,147 @@
+# Authored form structure; automatic generation preserves this declaration.
+# Reconcile source changes explicitly. Authorship does not imply completed review.
+
+[[revisions.2012-01-31-y-siguientes.form_layouts]]
+id = "form-layout"
+revision_id = "2012-01-31-y-siguientes"
+seed_source = "authored"
+review = { state = "generated", notes = "Draft of the 2012 DR145 v2.0 structure, not a verified current payer communication. The current AEAT facsimile replaces prolongacion de actividad laboral with irregular-income history; that current field has no casilla in this revision. Historical housing wording, current semantics, checkbox display, signatures and additional copies remain unresolved. Family grids preserve the four descendant and two ascendant slots of the record design." }
+generator_version = 1
+source_state_digest = "cd637428dba88444277e13ff2676699f29d72eb4dc3cfb53197c112bd4aedb53"
+design_sources = [
+    { source_ref = "aeat-dr-145-v20", sha256 = "fe29e8df4db859b41c66aaaf96c1bd27bc2af9063d98a61e62f21832c091765c" },
+]
+placements = [
+    { casilla_id = "acuse-recibo.empresa-entidad", kind = "on_form" },
+    { casilla_id = "acuse-recibo.fecha-anio", kind = "on_form" },
+    { casilla_id = "acuse-recibo.fecha-dia", kind = "on_form" },
+    { casilla_id = "acuse-recibo.fecha-mes", kind = "on_form" },
+    { casilla_id = "acuse-recibo.lugar", kind = "on_form" },
+    { casilla_id = "acuse-recibo.tipo-firma", kind = "on_form" },
+    { casilla_id = "anualidades-alimentos.importe-anual", kind = "on_form" },
+    { casilla_id = "ascendiente-1.anio-nacimiento", kind = "on_form" },
+    { casilla_id = "ascendiente-1.ayuda-movilidad", kind = "on_form" },
+    { casilla_id = "ascendiente-1.convivencia-otros", kind = "on_form" },
+    { casilla_id = "ascendiente-1.discapacidad-grado", kind = "on_form" },
+    { casilla_id = "ascendiente-2.anio-nacimiento", kind = "on_form" },
+    { casilla_id = "ascendiente-2.ayuda-movilidad", kind = "on_form" },
+    { casilla_id = "ascendiente-2.convivencia-otros", kind = "on_form" },
+    { casilla_id = "ascendiente-2.discapacidad-grado", kind = "on_form" },
+    { casilla_id = "comunicacion.firma-fecha-anio", kind = "on_form" },
+    { casilla_id = "comunicacion.firma-fecha-dia", kind = "on_form" },
+    { casilla_id = "comunicacion.firma-fecha-mes", kind = "on_form" },
+    { casilla_id = "comunicacion.firma-lugar", kind = "on_form" },
+    { casilla_id = "comunicacion.firma-tipo", kind = "on_form" },
+    { casilla_id = "comunicacion.pagina-complementaria", kind = "working_figure", workbook_exclusion = "transport_control", workbook_exclusion_reason = "DR145 v2.0 row 2, byte 10: blank or C marks the electronic record as a supplementary copy; it is not a printed casilla or a family circumstance." },
+    { casilla_id = "descendiente-1.anio-adopcion", kind = "on_form" },
+    { casilla_id = "descendiente-1.anio-nacimiento", kind = "on_form" },
+    { casilla_id = "descendiente-1.ayuda-movilidad", kind = "on_form" },
+    { casilla_id = "descendiente-1.computo-entero", kind = "on_form" },
+    { casilla_id = "descendiente-1.discapacidad-grado", kind = "on_form" },
+    { casilla_id = "descendiente-2.anio-adopcion", kind = "on_form" },
+    { casilla_id = "descendiente-2.anio-nacimiento", kind = "on_form" },
+    { casilla_id = "descendiente-2.ayuda-movilidad", kind = "on_form" },
+    { casilla_id = "descendiente-2.computo-entero", kind = "on_form" },
+    { casilla_id = "descendiente-2.discapacidad-grado", kind = "on_form" },
+    { casilla_id = "descendiente-3.anio-adopcion", kind = "on_form" },
+    { casilla_id = "descendiente-3.anio-nacimiento", kind = "on_form" },
+    { casilla_id = "descendiente-3.ayuda-movilidad", kind = "on_form" },
+    { casilla_id = "descendiente-3.computo-entero", kind = "on_form" },
+    { casilla_id = "descendiente-3.discapacidad-grado", kind = "on_form" },
+    { casilla_id = "descendiente-4.anio-adopcion", kind = "on_form" },
+    { casilla_id = "descendiente-4.anio-nacimiento", kind = "on_form" },
+    { casilla_id = "descendiente-4.ayuda-movilidad", kind = "on_form" },
+    { casilla_id = "descendiente-4.computo-entero", kind = "on_form" },
+    { casilla_id = "descendiente-4.discapacidad-grado", kind = "on_form" },
+    { casilla_id = "pension-compensatoria.importe-anual", kind = "on_form" },
+    { casilla_id = "perceptor.anio-nacimiento", kind = "on_form" },
+    { casilla_id = "perceptor.conyuge-nif", kind = "on_form" },
+    { casilla_id = "perceptor.discapacidad-ayuda", kind = "on_form" },
+    { casilla_id = "perceptor.discapacidad-grado", kind = "on_form" },
+    { casilla_id = "perceptor.movilidad-geografica-fecha-anio", kind = "on_form" },
+    { casilla_id = "perceptor.movilidad-geografica-fecha-dia", kind = "on_form" },
+    { casilla_id = "perceptor.movilidad-geografica-fecha-mes", kind = "on_form" },
+    { casilla_id = "perceptor.nif", kind = "on_form" },
+    { casilla_id = "perceptor.nombre", kind = "on_form" },
+    { casilla_id = "perceptor.primer-apellido", kind = "on_form" },
+    { casilla_id = "perceptor.prolongacion-actividad-laboral", kind = "on_form" },
+    { casilla_id = "perceptor.segundo-apellido", kind = "on_form" },
+    { casilla_id = "perceptor.situacion-familiar", kind = "on_form" },
+    { casilla_id = "vivienda-habitual.financiacion-ajena", kind = "on_form" },
+]
+
+[[revisions.2012-01-31-y-siguientes.form_layouts.pages]]
+id = "comunicacion-2012"
+official_ref = "DR145 v2.0, 31/01/2012, apartados 1–7"
+heading_key = "modelo.schema.145.form.authored2012.page.heading"
+
+[[revisions.2012-01-31-y-siguientes.form_layouts.pages.sections]]
+id = "perceptor"
+heading_key = "modelo.schema.145.form.authored2012.section.perceptor.heading"
+blocks = [
+    { kind = "field", id = "field-1", casilla_id = "perceptor.nif" },
+    { kind = "field", id = "field-2", casilla_id = "perceptor.primer-apellido" },
+    { kind = "field", id = "field-3", casilla_id = "perceptor.segundo-apellido" },
+    { kind = "field", id = "field-4", casilla_id = "perceptor.nombre" },
+    { kind = "field", id = "field-5", casilla_id = "perceptor.anio-nacimiento" },
+    { kind = "field", id = "field-6", casilla_id = "perceptor.situacion-familiar" },
+    { kind = "field", id = "field-7", casilla_id = "perceptor.conyuge-nif" },
+    { kind = "field", id = "field-8", casilla_id = "perceptor.discapacidad-grado" },
+    { kind = "field", id = "field-9", casilla_id = "perceptor.discapacidad-ayuda" },
+    { kind = "field", id = "field-10", casilla_id = "perceptor.movilidad-geografica-fecha-dia" },
+    { kind = "field", id = "field-11", casilla_id = "perceptor.movilidad-geografica-fecha-mes" },
+    { kind = "field", id = "field-12", casilla_id = "perceptor.movilidad-geografica-fecha-anio" },
+    { kind = "field", id = "field-13", casilla_id = "perceptor.prolongacion-actividad-laboral" },
+]
+
+[[revisions.2012-01-31-y-siguientes.form_layouts.pages.sections]]
+id = "descendientes"
+heading_key = "modelo.schema.145.form.authored2012.section.descendientes.heading"
+blocks = [
+    { kind = "grid", id = "descendientes", columns = [{ key = "anio-nacimiento", heading_key = "modelo.schema.145.form.authored2012.column.anio-nacimiento.heading" }, { key = "anio-adopcion", heading_key = "modelo.schema.145.form.authored2012.column.anio-adopcion.heading" }, { key = "discapacidad-grado", heading_key = "modelo.schema.145.form.authored2012.column.discapacidad-grado.heading" }, { key = "ayuda-movilidad", heading_key = "modelo.schema.145.form.authored2012.column.ayuda-movilidad.heading" }, { key = "computo-entero", heading_key = "modelo.schema.145.form.authored2012.column.computo-entero.heading" }], rows = [{ key = "descendiente-1", heading_key = "modelo.schema.145.form.authored2012.row.descendiente-1.heading", cells = [{ kind = "casilla", casilla_id = "descendiente-1.anio-nacimiento" }, { kind = "casilla", casilla_id = "descendiente-1.anio-adopcion" }, { kind = "casilla", casilla_id = "descendiente-1.discapacidad-grado" }, { kind = "casilla", casilla_id = "descendiente-1.ayuda-movilidad" }, { kind = "casilla", casilla_id = "descendiente-1.computo-entero" }] }, { key = "descendiente-2", heading_key = "modelo.schema.145.form.authored2012.row.descendiente-2.heading", cells = [{ kind = "casilla", casilla_id = "descendiente-2.anio-nacimiento" }, { kind = "casilla", casilla_id = "descendiente-2.anio-adopcion" }, { kind = "casilla", casilla_id = "descendiente-2.discapacidad-grado" }, { kind = "casilla", casilla_id = "descendiente-2.ayuda-movilidad" }, { kind = "casilla", casilla_id = "descendiente-2.computo-entero" }] }, { key = "descendiente-3", heading_key = "modelo.schema.145.form.authored2012.row.descendiente-3.heading", cells = [{ kind = "casilla", casilla_id = "descendiente-3.anio-nacimiento" }, { kind = "casilla", casilla_id = "descendiente-3.anio-adopcion" }, { kind = "casilla", casilla_id = "descendiente-3.discapacidad-grado" }, { kind = "casilla", casilla_id = "descendiente-3.ayuda-movilidad" }, { kind = "casilla", casilla_id = "descendiente-3.computo-entero" }] }, { key = "descendiente-4", heading_key = "modelo.schema.145.form.authored2012.row.descendiente-4.heading", cells = [{ kind = "casilla", casilla_id = "descendiente-4.anio-nacimiento" }, { kind = "casilla", casilla_id = "descendiente-4.anio-adopcion" }, { kind = "casilla", casilla_id = "descendiente-4.discapacidad-grado" }, { kind = "casilla", casilla_id = "descendiente-4.ayuda-movilidad" }, { kind = "casilla", casilla_id = "descendiente-4.computo-entero" }] }] },
+]
+
+[[revisions.2012-01-31-y-siguientes.form_layouts.pages.sections]]
+id = "ascendientes"
+heading_key = "modelo.schema.145.form.authored2012.section.ascendientes.heading"
+blocks = [
+    { kind = "grid", id = "ascendientes", columns = [{ key = "anio-nacimiento", heading_key = "modelo.schema.145.form.authored2012.column.anio-nacimiento.heading" }, { key = "discapacidad-grado", heading_key = "modelo.schema.145.form.authored2012.column.discapacidad-grado.heading" }, { key = "ayuda-movilidad", heading_key = "modelo.schema.145.form.authored2012.column.ayuda-movilidad.heading" }, { key = "convivencia-otros", heading_key = "modelo.schema.145.form.authored2012.column.convivencia-otros.heading" }], rows = [{ key = "ascendiente-1", heading_key = "modelo.schema.145.form.authored2012.row.ascendiente-1.heading", cells = [{ kind = "casilla", casilla_id = "ascendiente-1.anio-nacimiento" }, { kind = "casilla", casilla_id = "ascendiente-1.discapacidad-grado" }, { kind = "casilla", casilla_id = "ascendiente-1.ayuda-movilidad" }, { kind = "casilla", casilla_id = "ascendiente-1.convivencia-otros" }] }, { key = "ascendiente-2", heading_key = "modelo.schema.145.form.authored2012.row.ascendiente-2.heading", cells = [{ kind = "casilla", casilla_id = "ascendiente-2.anio-nacimiento" }, { kind = "casilla", casilla_id = "ascendiente-2.discapacidad-grado" }, { kind = "casilla", casilla_id = "ascendiente-2.ayuda-movilidad" }, { kind = "casilla", casilla_id = "ascendiente-2.convivencia-otros" }] }] },
+]
+
+[[revisions.2012-01-31-y-siguientes.form_layouts.pages.sections]]
+id = "pensiones"
+heading_key = "modelo.schema.145.form.authored2012.section.pensiones.heading"
+blocks = [
+    { kind = "field", id = "field-1", casilla_id = "pension-compensatoria.importe-anual" },
+    { kind = "field", id = "field-2", casilla_id = "anualidades-alimentos.importe-anual" },
+]
+
+[[revisions.2012-01-31-y-siguientes.form_layouts.pages.sections]]
+id = "vivienda"
+heading_key = "modelo.schema.145.form.authored2012.section.vivienda.heading"
+blocks = [
+    { kind = "field", id = "field-1", casilla_id = "vivienda-habitual.financiacion-ajena" },
+]
+
+[[revisions.2012-01-31-y-siguientes.form_layouts.pages.sections]]
+id = "firma"
+heading_key = "modelo.schema.145.form.authored2012.section.firma.heading"
+blocks = [
+    { kind = "field", id = "field-1", casilla_id = "comunicacion.firma-lugar" },
+    { kind = "field", id = "field-2", casilla_id = "comunicacion.firma-fecha-dia" },
+    { kind = "field", id = "field-3", casilla_id = "comunicacion.firma-fecha-mes" },
+    { kind = "field", id = "field-4", casilla_id = "comunicacion.firma-fecha-anio" },
+    { kind = "field", id = "field-5", casilla_id = "comunicacion.firma-tipo" },
+]
+
+[[revisions.2012-01-31-y-siguientes.form_layouts.pages.sections]]
+id = "acuse"
+heading_key = "modelo.schema.145.form.authored2012.section.acuse.heading"
+blocks = [
+    { kind = "field", id = "field-1", casilla_id = "acuse-recibo.empresa-entidad" },
+    { kind = "field", id = "field-2", casilla_id = "acuse-recibo.lugar" },
+    { kind = "field", id = "field-3", casilla_id = "acuse-recibo.fecha-dia" },
+    { kind = "field", id = "field-4", casilla_id = "acuse-recibo.fecha-mes" },
+    { kind = "field", id = "field-5", casilla_id = "acuse-recibo.fecha-anio" },
+    { kind = "field", id = "field-6", casilla_id = "acuse-recibo.tipo-firma" },
+]

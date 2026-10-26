@@ -1,0 +1,37 @@
+schema_version = 1
+fragment_id = "records"
+modelo = "296"
+design_epoch = "2023"
+source_ref = "aeat-dr-296-2023"
+source_sha256 = "858152af847e23e3165ba38295696466dfdf96f1ec55503f606cf982a4ae778f"
+
+[[records]]
+sheet = "PDF record design"
+record_identity = "PDF record design"
+export_record_id = "m296-declarante"
+record_type = "declarante"
+
+[[records]]
+sheet = "Tipo 2 - Registro De Perceptor"
+record_identity = "Tipo 2 - Registro De Perceptor"
+export_record_id = "m296-perceptor"
+record_type = "perceptor"
+# One record is one perceptor. Without this the layout holds exactly one payee and a
+# 296 with two cannot be expressed at all.
+repeat = "projection_rows"
+# The 2023 design calls position 500 "BLANCO MODELO 296" on this primary Tipo-2
+# sheet, while its only sibling sheet mandates a TIPO DE HOJA literal there. The
+# design's own AVISO names that sibling "Anexo de desglose de retenciones e
+# ingresos a cuenta ... (Tipo de hoja 'F')", so blankness is a runtime shape
+# signal rather than an optional taxpayer datum. Source: aeat-dr-296-2023, Tipo 2
+# - Registro De Perceptor, source row 860 / position 500.
+discriminator = { offset = 500, length = 1, requires = "blank" }
+
+[[records]]
+sheet = "Tipo 2 - Anexo De Desglose De Retenciones E Ingresos A Cuenta Posic  Naturaleza Descripción De Los Campos"
+record_identity = "Tipo 2 - Anexo De Desglose De Retenciones E Ingresos A Cuenta Posic  Naturaleza Descripción De Los Campos"
+export_record_id = "m296-anexo-desglose"
+record_type = "anexo-desglose"
+# AEAT emits one anexo row per perceptor whose retenciones are split between the
+# Estado and the Haciendas Forales. Without this the layout holds exactly one.
+repeat = "projection_rows"

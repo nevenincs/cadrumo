@@ -1,0 +1,177 @@
+---
+tags:
+  - '#exec'
+  - '#user-docs-weight'
+date: '2026-10-06'
+modified: '2026-10-07'
+body_schema: 'body-v2'
+body_hash: 'sha256:0d889be36cca522e99bd5e189eca59952c65d4b7618dce724152ee83cfec6641'
+related:
+  - "[[2026-10-06-user-docs-weight-plan]]"
+---
+
+# `user-docs-weight` ledger
+
+## Changes
+
+- `S01` `A` `dev/docs/shared_structure.py`
+- `S01` `A` `dev/docs/tests/test_shared_structure.py`
+- `S01` `verify:` `pytest dev/docs/tests/test_shared_structure.py` -> `pass`
+- `S01` `verify:` `ruff check and format on both files` -> `pass`
+- `S01` `verify:` `ty check on both files` -> `pass`
+- `S01` `verify:` `factor and compose the four desktop roots built 2026-10-06 (561 pages, 2244 comparisons, 0 mismatches)` -> `pass`
+- `S02` `A` `dev/docs/language_roots.py`
+- `S02` `A` `dev/docs/tests/test_language_roots.py`
+- `S02` `verify:` `pytest dev/docs/tests/test_language_roots.py dev/docs/tests/test_shared_structure.py (23 tests)` -> `pass`
+- `S02` `verify:` `ruff check and format on both files` -> `pass`
+- `S02` `verify:` `ty check on both files` -> `pass`
+- `S02` `verify:` `store the four desktop roots built 2026-10-06 (382.1 MB, 62720 files) as 156.0 MB and compare every file composed back (0 differences)` -> `pass`
+- `S09` `M` `dev/docs/pagefind_index.py`
+- `S09` `M` `dev/docs/pagefind_inject.py`
+- `S09` `M` `dev/docs/build.py`
+- `S09` `M` `dev/docs/build_paths.py`
+- `S09` `M` `dev/packaging/native/docs_build.py`
+- `S09` `M` `docs/_static/cadrumo-docs.js`
+- `S09` `M` `docs/_templates/base.html`
+- `S09` `M` `docs/_templates/search.html`
+- `S09` `M` `docs/conf.py`
+- `S09` `D` `docs/pagefind.yml`
+- `S09` `A` `dev/docs/tests/test_shared_search_index.py`
+- `S09` `M` `dev/docs/tests/test_pagefind_index.py`
+- `S09` `M` `dev/docs/tests/test_pagefind_config.py`
+- `S09` `M` `dev/docs/tests/test_pagefind_inject_site.py`
+- `S09` `M` `dev/docs/tests/test_deployment_search_parity.py`
+- `S09` `M` `dev/docs/tests/test_docs_desktop_flavor.py`
+- `S09` `M` `dev/packaging/native/tests/test_docs_build_environment.py`
+- `S09` `verify:` `pytest test_shared_search_index test_pagefind_config test_pagefind_index test_pagefind_inject_site test_pagefind_index_write_target test_docs_desktop_flavor (58 tests)` -> `pass`
+- `S09` `verify:` `one index over the four built desktop roots: 31.9 MB in 16,824 files against 62.7 MB in 60,261` -> `pass`
+- `S09` `verify:` `ruff and ty on the touched Python` -> `pass`
+- `S09` `by:` `vaultspec-high-executor`
+- `S03` `M` `dev/packaging/native/docs_stage.py`
+- `S03` `M` `dev/packaging/tests/test_native_docs_staging.py`
+- `S03` `M` `dev/packaging/tests/test_native_docs_references.py`
+- `S03` `M` `dev/docs/tests/test_shared_structure.py`
+- `S03` `verify:` `pytest dev/packaging/tests/test_native_docs_staging.py dev/packaging/tests/test_native_docs_references.py` -> `pass`
+- `S03` `verify:` `stage the four desktop roots built 2026-10-06 with the real stage_roots: 107.2 MB in 15,706 files, every built file composed back and compared` -> `pass`
+- `S04` `A` `native/desktop/src-tauri/src/docs/compose.rs`
+- `S04` `M` `native/desktop/src-tauri/src/docs/site.rs`
+- `S04` `M` `native/desktop/src-tauri/src/docs/request.rs`
+- `S04` `M` `native/desktop/src-tauri/src/docs/mod.rs`
+- `S04` `M` `native/desktop/src-tauri/src/docs/tests.rs`
+- `S04` `M` `native/desktop/tests/packaged.test.mjs`
+- `S04` `M` `native/CONTRACT.md`
+- `S04` `verify:` `cargo test --locked (desktop host crate, 144 tests)` -> `pass`
+- `S04` `verify:` `cargo clippy --locked --all-targets -- -D warnings` -> `pass`
+- `S04` `verify:` `rustfmt --check src/docs` -> `pass`
+- `S04` `by:` `vaultspec-high-executor`
+- `S05` `M` `dev/deploy/docs_site_build.py`
+- `S05` `M` `dev/deploy/docs_site_languages.py`
+- `S05` `M` `dev/deploy/docs_site_preflight.py`
+- `S05` `M` `dev/deploy/docs_delivery_contracts.py`
+- `S05` `M` `dev/deploy/docs_asset_manifest.py`
+- `S05` `M` `dev/deploy/docs_delivery_probe.py`
+- `S05` `M` `dev/deploy/docs_health.py`
+- `S05` `M` `dev/deploy/tests/test_docs_static_site.py`
+- `S05` `M` `dev/deploy/tests/test_docs_asset_delivery.py`
+- `S05` `M` `dev/deploy/tests/test_publish_preflight_search_records.py`
+- `S05` `M` `dev/deploy/tests/test_published_delivery_content.py`
+- `S05` `M` `dev/docs/tests/test_deployment_search_parity.py`
+- `S05` `verify:` `pytest dev/deploy (122 tests)` -> `pass`
+- `S05` `verify:` `pytest dev/docs/tests/test_deployment_search_parity.py (26 tests)` -> `pass`
+- `S05` `verify:` `compose the published layout over the four roots built 2026-10-06: one apex index, 25.5 MB in 16,713 files, preflight accepted` -> `pass`
+- `S05` `verify:` `ruff and ty on dev/deploy` -> `pass`
+- `S05` `by:` `vaultspec-high-executor`
+- `S10` `M` `justfile`
+- `S10` `M` `dev/tests/test_lane_reachability.py`
+- `S10` `verify:` `pytest dev/tests/test_lane_reachability.py` -> `pass`
+- `S10` `verify:` `pytest dev/ci/tests/test_machine_aware_load.py dev/ci/tests/test_ci_workflow.py` -> `pass`
+- `S12` `M` `dev/packaging/native/action_cache.py`
+- `S12` `M` `dev/packaging/native/docs_build.py`
+- `S12` `A` `dev/packaging/native/tests/test_docs_shared_site.py`
+- `S12` `M` `native/CONTRACT.md`
+- `S12` `M` `native/cmake/Docs.cmake`
+- `S12` `verify:` `pytest dev/packaging/native/tests -k docs` -> `pass`
+- `S11` `M` `dev/packaging/native/docs_build.py`
+- `S06` `M` `dev/docs/_locale_chrome.py`
+- `S06` `M` `dev/docs/cli_reference.py`
+- `S06` `M` `dev/docs/glossary_reference.py`
+- `S06` `M` `dev/docs/legal_page_rendering.py`
+- `S06` `M` `dev/docs/casilla_page_rendering.py`
+- `S06` `M` `dev/docs/casilla_schema_compilation.py`
+- `S06` `M` `dev/docs/casilla_reference_models.py`
+- `S06` `M` `dev/docs/casilla_markup.py`
+- `S06` `A` `dev/docs/section_anchors.py`
+- `S06` `verify:` `python -m dev.docs.compile_once --out --oracle (desktop flavour, every file of four roots)` -> `pass`
+- `S07` `M` `dev/docs/site_chrome.py`
+- `S07` `A` `dev/docs/language_switcher.py`
+- `S07` `A` `dev/docs/sphinx_messages.py`
+- `S07` `A` `dev/docs/translations_js.py`
+- `S07` `A` `dev/docs/page_descriptions.py`
+- `S07` `M` `dev/docs/shared_page_assets.py`
+- `S07` `M` `docs/_templates/base.html`
+- `S07` `M` `docs/_templates/cadrumo-language-switcher.html`
+- `S07` `verify:` `python -m dev.docs.compile_once --out --oracle --flavor web --base-url (every file of four roots)` -> `pass`
+- `S08` `A` `dev/docs/compile_slots.py`
+- `S08` `A` `dev/docs/compile_once.py`
+- `S08` `A` `dev/docs/message_marks.py`
+- `S08` `A` `dev/docs/untranslated_typesetting.py`
+- `S08` `M` `dev/docs/language_roots.py`
+- `S08` `M` `docs/conf.py`
+- `S08` `M` `dev/packaging/native/docs_build.py`
+- `S08` `A` `dev/docs/tests/test_docs_build_localized_compile.py`
+- `S08` `D` `dev/docs/tests/test_docs_build_localized_es.py`
+- `S08` `D` `dev/docs/tests/test_docs_build_localized_ca.py`
+- `S08` `D` `dev/docs/tests/test_docs_build_localized_hu.py`
+- `S08` `D` `dev/docs/tests/_localized_build_support.py`
+- `S08` `verify:` `pytest dev/docs/tests/test_docs_build_localized_compile.py` -> `pass`
+- `S13` `M` `dev/docs/language_roots.py`
+- `S13` `M` `dev/docs/_locale_chrome.py`
+- `S13` `M` `dev/docs/translations_js.py`
+- `S13` `verify:` `pytest dev/docs/tests/test_language_roots.py` -> `pass`
+- `S10` `M` `dev/docs/serve.py`
+- `S10` `M` `dev/docs/serve_languages.py`
+- `S10` `M` `dev/docs/tests/test_docs_serve.py`
+- `S10` `M` `dev/docs/tests/test_docs_build_localized.py`
+- `S10` `M` `dev/deploy/docs_site_build.py`
+- `S10` `M` `dev/deploy/docs_site_languages.py`
+- `S10` `M` `dev/deploy/tests/test_docs_static_site.py`
+- `S10` `M` `dev/deploy/tests/test_publish_authority.py`
+- `S10` `M` `dev/docs/tests/test_deployment_search_parity.py`
+- `S10` `verify:` `pytest dev/deploy/tests dev/docs/tests/test_docs_serve.py dev/docs/tests/test_docs_build_localized.py` -> `pass`
+- `S08` `M` `dev/docs/compile_once.py`
+- `S08` `M` `dev/docs/tests/test_compile_once.py`
+- `S08` `M` `dev/docs/tests/test_compiled_root_store.py`
+- `S08` `M` `dev/docs/tests/test_docs_build_localized_compile.py`
+- `S08` `M` `dev/packaging/native/tests/test_docs_build_environment.py`
+- `S08` `verify:` `python -m dev.docs.compile_once --out --oracle (desktop; no differing stretch, no missing or extra file)` -> `pass`
+- `S07` `M` `dev/docs/language_switcher.py`
+- `S07` `M` `dev/docs/build_paths.py`
+- `S07` `M` `docs/conf.py`
+- `S07` `M` `dev/docs/tests/test_docs_language_switcher.py`
+- `S07` `M` `dev/docs/tests/test_docs_build.py`
+- `S07` `verify:` `python -m dev.docs.compile_once --out --oracle --flavor web --base-url (no differing stretch, no missing or extra file)` -> `pass`
+- `S08` `M` `dev/docs/compile_slots.py`
+- `S08` `M` `dev/docs/language_switcher.py`
+- `S08` `M` `dev/docs/build_paths.py`
+- `S08` `A` `dev/docs/tests/test_renderer_writers.py`
+- `S08` `D` `dev/docs/tests/test_docs_build_user_scope.py`
+- `S08` `verify:` `pytest dev/docs/tests/test_docs_build_localized_compile.py (Windows, compile beside the Catalan witness)` -> `pass`
+- `S08` `verify:` `pytest witness lane and new unit checks (Linux, 172 tests)` -> `pass`
+
+## Notes
+
+- `S09` The published web site keeps one index per language: its delivery checks are per-language and move with S05.
+- `S09` docs/pagefind.yml was never read by the index pass; its selectors now live in `dev/docs/pagefind_index.py` and take effect, so navigation, header, footer and recorded JSON leave page records.
+- `S09` One stemmer serves every language, so plurals of languages other than Spanish no longer fold; exact and prefix matching is unaffected.
+- `S03` native/package-layout.json needed no change: its entry and search keys now name addresses.
+- `S04` The packaged end-to-end test and the live-package test were not run: both need an assembled package in the new form.
+- `S05` The publisher takes its pages from one producer function and still compiles each language there; composing them from the one compile is that function's change once S06 to S08 are proven.
+- `S05` No real web-flavour build and no network delivery were run; the English full-scope root under en/ is covered by a test over real built pages.
+- `S05` A release published before this change is refused by manual rollback and activate until the next successful publish; automatic recovery inside a publish is unaffected. Supporting both release shapes is left to the operator.
+- `S11` No further change needed. The command tree is written once because the languages now come from one compile. The per-language command walk the search records make was measured on Linux at 0.3 to 0.7 s per language (1.2 s for four languages, 323 commands and 1,335 options), so it stays one small subprocess per language.
+- `S08` Measured on Windows: the one compile with its comparison 232 to 236 s for four languages; each language's own build 164 to 249 s. On Linux with four reading workers: 145 s. The package documentation target itself (CMake) was not run after the switch.
+- `S13` Pages are stored with a line feed and composed with the composing platform's terminator. A Windows and a Linux compile of the same tree stored 387 of 400 files as the same bytes, every page structure and every language's text among them. The 13 that differ are non-page stylesheets and scripts written with the platform terminator; they are left as built because the desktop host serves a non-page file exactly as stored.
+- `S10` The release workflow file needed no change: its documentation job runs the publisher, which now runs two builds whatever the number of languages, and its proof jobs reach the documentation tests through the recipes changed here. The publisher's path was run on Linux through its own code with the goldens gate skipped; the English root's strict build failed there on API reference warnings that predate this plan, so a real publish stays refused until those are cleared.
+- `S08` Reopened by the final review: the comparison's verdict ignored missing and extra files, declarations matched by substring, pages were decoded with replacement, a lone delimiter in a shared file was not refused, and the unread stored form stayed beneath the build root. All fixed; each has a test that fails without its fix.
+- `S07` Reopened by the final review: the switcher assumed the desktop layout and wrote wrong links on the published site, a defect older than this plan. The links now come from the layout authority; the web oracle was rebuilt and the desktop oracle was not.
+- `S08` The standing proof is now one witness language built beside the one compile, with refusals inside the compile and renderer checks against the real writers, as the decision's D9 records. The comparison against every language's own build is retired; an operator names a witness to compare any one language.

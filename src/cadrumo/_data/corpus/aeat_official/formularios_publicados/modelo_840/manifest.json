@@ -1,0 +1,27 @@
+{
+  "source": "Agencia Tributaria Sede Electronica - Formularios publicados",
+  "modelo": "840",
+  "retrieved_at": "2026-05-06",
+  "source_pages": [
+    "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G323.shtml",
+    "https://sede.agenciatributaria.gob.es/Sede/censos-nif-domicilio-fiscal/censos/iae-declaracion-ocios-efectos-iae-aeat_/descarga-modelo.html"
+  ],
+  "artefact_count": 1,
+  "artefacts": [
+    {
+      "modelo": "840",
+      "title": "840 - Modelo Declaracion IAE: alta, variacion, baja (formulario publicado, PDF)",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/censos-nif-domicilio-fiscal/censos/iae-declaracion-ocios-efectos-iae-aeat_/descarga-modelo.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Procedimiento_ayuda/G323/mod840e_es_es.pdf",
+      "stored_path": "files/01-840-modelo-declaracion-iae-alta-variacion-baja-pdf.pdf",
+      "original_filename": "mod840e_es_es.pdf",
+      "content_type": "application/pdf",
+      "bytes": 555817,
+      "sha256": "cf3cd1a77f92d38d2668d30b378a8eca922d6a262fe82ba86f5008074001ece0",
+      "retrieved_at": "2026-05-06",
+      "locale": "es-ES",
+      "url_provenance": "reconstructed",
+      "url_provenance_note": "The capture commit (d437d184c6) recorded no URL. The procedure code G323 is established by the committed corpus page instructions/modelo_840/files/modelo-840-procedure.html, which carries data-proc=\"G323\" and links 'Descarga del modelo'. The static_files path under that procedure code was recovered from the AEAT listing. Document identity was confirmed by content correspondence (casilla labels '14 Ejercicio:' / '15 Declaracion de:', 'Espacio reservado para la etiqueta identificativa', 'Local afecto indirectamente'), NOT by a byte-level re-fetch: the recorded sha256 and bytes are those of the COMMITTED artefact. Re-verify against the live URL on the next corpus refresh."
+    }
+  ]
+}

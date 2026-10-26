@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "target_sets": {
+    "docs": {
+      "kind": "python-module-names",
+      "source": {
+        "exclude_test_module_prefixes": [
+          "test_",
+          "_test_",
+          "conftest"
+        ],
+        "exclude_test_packages": true,
+        "package": "docs",
+        "source_root": "docs",
+        "subpackages": []
+      },
+      "targets": [
+        "docs",
+        "docs.conf"
+      ]
+    }
+  }
+}

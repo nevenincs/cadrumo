@@ -1,0 +1,204 @@
+"""Shared baseline and intent checks for the Modelo Edit Contract V1.
+
+This module owns the comparisons admission, preflight and execution all make:
+the work-unit-scoped concurrency digests, the baseline recheck, the lookup of
+admitted surface entries, intent admissibility and the detail-row natural
+key. Admission lives in :mod:`.edit_admission`, parsing in
+:mod:`.edit_parsing` and preflight in :mod:`.edit_preflight`. It never writes
+-- persistence and the guarded compare-and-swap commit belong to
+:mod:`.revision_persistence` and :mod:`._edit_execution`.
+
+A :class:`~.workspace_models.ModeloWorkspaceBaselineV1` read-consistency token
+is never accepted here as mutation authority: every coordinate below is
+independently re-resolved from the target and the current catalogues, never
+copied from a Workspace read.
+
+See Also:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`
+        The stored calculation head carrying values, provenance and lifecycle facts.
+"""
+
+from __future__ import annotations
+
+from ...core.hashing import content_hash_hex
+from ...core.time.clock import now as clock_now
+from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionCatalogue
+from ...domain.modelos.row_models import ModeloDetailRow
+from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
+from .edit_models import (
+    ModeloEditAddressV1,
+    ModeloEditBaselineV1,
+    ModeloEditBindingAddressV1,
+    ModeloEditBindingIntentKind,
+    ModeloEditDomainRefusalV1,
+    ModeloEditRefusalCode,
+    ModeloEditRefusalV1,
+    ModeloEditScalarAddressV1,
+    ModeloEditScalarIntentKind,
+    ModeloEditStaleBaselineRefusalV1,
+    ModeloEditWritableBindingOverrideSurfaceEntryV1,
+    ModeloEditWritableScalarSurfaceEntryV1,
+)
+
+RESPONSIBLE_OWNER = "modelo.edit"
+"""The owner recorded on every refusal and advisory the modelo edit surface raises."""
+
+
+def reconfirm_modelo_edit_baseline(
+    baseline: ModeloEditBaselineV1,
+    *,
+    work_catalogue: WorkUnitCatalogue,
+    calculation_catalogue: CalculationRevisionCatalogue,
+) -> ModeloEditRefusalV1 | None:
+    """Recheck every baseline coordinate against the current catalogues.
+
+    Returns ``None`` when nothing has drifted, or the exact typed
+    compare-and-swap refusal naming every coordinate that disagreed. Shared by
+    preflight and the guarded commit point so both recheck through one
+    comparison. The coordinates are the edited work unit's own record and its
+    calculation head: a change to any other declaration does not stale it.
+    """
+    mismatches: list[str] = []
+    work_unit = work_catalogue.work_units.get(baseline.work_unit_id)
+    if work_unit is None or work_unit_record_digest(work_unit) != baseline.work_unit_record_digest:
+        mismatches.append("work_unit_record_digest")
+    head_id = work_unit.current_calculation_revision_id if work_unit is not None else None
+    head = calculation_catalogue.get(head_id) if head_id is not None else None
+    if calculation_head_digest(head) != baseline.calculation_head_digest:
+        mismatches.append("calculation_head_digest")
+    if work_unit is None or work_unit.current_calculation_revision_id != baseline.current_calculation_revision_id:
+        mismatches.append("current_calculation_revision_id")
+    if clock_now() >= baseline.expires_at:
+        mismatches.append("baseline_expiry")
+    if not mismatches:
+        return None
+    return ModeloEditStaleBaselineRefusalV1(
+        baseline_id=baseline.baseline_id,
+        mismatching_coordinates=tuple(mismatches),
+        responsible_owner=RESPONSIBLE_OWNER,
+        reconsideration_condition="admit a fresh baseline and resubmit",
+    )
+
+
+def work_unit_record_digest(work_unit: WorkUnit) -> str:
+    """The concurrency digest of one work unit's own catalogue record."""
+    return content_hash_hex(work_unit.model_dump(mode="json"))
+
+
+def calculation_head_digest(head: CalculationRevision | None) -> str:
+    """The concurrency digest of one calculation head, or of its absence.
+
+    A verify or a filing changes the head's lifecycle fields, and so this
+    digest, even though its id stays the same.
+
+    See Also:
+        :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`
+            The stored calculation head carrying values, provenance and lifecycle facts.
+    """
+    return content_hash_hex({"calculation_head": None if head is None else head.model_dump(mode="json")})
+
+
+def writable_scalar_entry(
+    baseline: ModeloEditBaselineV1, casilla_id: str
+) -> ModeloEditWritableScalarSurfaceEntryV1 | None:
+    """Return the baseline's writable-scalar surface entry for ``casilla_id``, or ``None``."""
+    for entry in baseline.permitted_surface:
+        if isinstance(entry, ModeloEditWritableScalarSurfaceEntryV1) and entry.casilla_id == casilla_id:
+            return entry
+    return None
+
+
+def writable_binding_entry(
+    baseline: ModeloEditBaselineV1, binding_id: str
+) -> ModeloEditWritableBindingOverrideSurfaceEntryV1 | None:
+    """Return the admitted binding-override surface entry, when writable."""
+    for entry in baseline.permitted_surface:
+        if isinstance(entry, ModeloEditWritableBindingOverrideSurfaceEntryV1) and entry.binding_id == binding_id:
+            return entry
+    return None
+
+
+DETAIL_ROW_NATURAL_KEY_SEPARATOR = "|"
+"""The one separator a compound detail-row natural key is joined on.
+
+Declared once because both the key derivation here and the operation wire
+form that carries the key's components must agree on it exactly; two
+literals would be free to drift into addressing different rows.
+"""
+
+_DETAIL_ROW_NATURAL_KEY_FIELDS: dict[str, tuple[str, ...]] = {
+    "afiliado": ("nif", "numero_afiliacion"),
+    "miembro": ("nif", "clave", "subclave"),
+    "vinculada": ("nif",),
+    "operador": ("nif_comunitario", "clave_operacion"),
+    "rectificacion": ("nif_comunitario", "clave_operacion"),
+    "agrupacion_renta": ("source_id",),
+}
+
+
+def detail_row_identity_components(row: ModeloDetailRow) -> tuple[str, ...]:
+    """Return the row's declared identity fields, unjoined and in declared order.
+
+    The components and the joined key are the SAME facts read from the same
+    declaration, which is why they live together: a caller that needs the
+    parts must never obtain them by splitting the key. Splitting cannot be
+    made correct -- a component containing the separator is indistinguishable
+    from a boundary once joined -- so the only safe direction is components
+    first, key derived.
+    """
+    fields = _DETAIL_ROW_NATURAL_KEY_FIELDS[row.row_type]
+    return tuple(str(getattr(row, field)) for field in fields)
+
+
+def detail_row_natural_key(row: ModeloDetailRow) -> str:
+    """Return the row's own already-declared business key, joined for compound keys.
+
+    Never a minted or positional identity -- see :class:`ModeloEditDetailRowAddressV1`.
+    """
+    return DETAIL_ROW_NATURAL_KEY_SEPARATOR.join(detail_row_identity_components(row))
+
+
+def _disallowed_intent_refusal(address: ModeloEditAddressV1) -> ModeloEditRefusalV1:
+    return ModeloEditDomainRefusalV1(
+        code=ModeloEditRefusalCode.DISALLOWED_INTENT,
+        address=address,
+        responsible_owner=RESPONSIBLE_OWNER,
+        reconsideration_condition=(
+            "address only a casilla, binding override, detail row, or row group the baseline's permitted surface admits"
+        ),
+    )
+
+
+def validate_scalar_intent(
+    baseline: ModeloEditBaselineV1, address: ModeloEditScalarAddressV1, kind: ModeloEditScalarIntentKind
+) -> ModeloEditRefusalV1 | None:
+    """Return a refusal when ``kind`` is not a permitted intent for the addressed casilla, else ``None``."""
+    entry = writable_scalar_entry(baseline, address.casilla_id)
+    if entry is None or kind not in entry.allowed_intents:
+        return _disallowed_intent_refusal(address)
+    return None
+
+
+def validate_binding_intent(
+    baseline: ModeloEditBaselineV1,
+    address: ModeloEditBindingAddressV1,
+    kind: ModeloEditBindingIntentKind,
+) -> ModeloEditRefusalV1 | None:
+    """Return a refusal unless the admitted surface allows this binding intent."""
+    entry = writable_binding_entry(baseline, address.binding_id)
+    if entry is None or kind not in entry.allowed_intents:
+        return _disallowed_intent_refusal(address)
+    return None
+
+
+__all__ = [
+    "calculation_head_digest",
+    "detail_row_identity_components",
+    "detail_row_natural_key",
+    "reconfirm_modelo_edit_baseline",
+    "validate_binding_intent",
+    "validate_scalar_intent",
+    "work_unit_record_digest",
+    "writable_binding_entry",
+    "writable_scalar_entry",
+]

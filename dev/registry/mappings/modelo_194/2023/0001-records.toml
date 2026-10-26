@@ -1,0 +1,646 @@
+schema_version = 1
+fragment_id = "records"
+modelo = "194"
+design_epoch = "2023"
+source_ref = "aeat-dr-194-2023"
+source_sha256 = "83cd9a332e0016607e87332bea8c3e5d33f0b0f8373ec56f820d82414ca76a7b"
+variable_envelopes = []
+
+[[records]]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+export_record_id = "modelo-194-declarante"
+record_type = "declarante"
+required = true
+row_field_casilla_ids = []
+
+[[records]]
+sheet = "Tipo 2 - Registro De Perceptor"
+record_identity = "Tipo 2 - Registro De Perceptor"
+export_record_id = "modelo-194-perceptor"
+record_type = "perceptor"
+required = false
+repeat = "binding_rows"
+binding_record = "perceptor"
+row_field_casilla_ids = [["perceptor_tax_id", "perc.nif"], ["representative_tax_id", "perc.nif-representante"], ["perceptor_legal_name", "perc.nombre"], ["province_code", "perc.provincia"], ["financial_asset_origin", "perc.origen"], ["clave_codigo", "perc.clave-codigo"], ["codigo_emisor", "perc.codigo-emisor"], ["tipo_codigo", "perc.tipo-codigo"], ["codigo_cuenta", "perc.codigo-cuenta"], ["pendiente_flag", "perc.pendiente"], ["accrual_year", "perc.ejercicio-devengo"], ["financial_asset_acquisition_value", "perc.valor-adquisicion"], ["financial_asset_disposal_value", "perc.valor-transmision"], ["base_retenciones", "perc.base"], ["porcentaje_retencion", "perc.porcentaje"], ["retencion_practicada", "perc.retenciones"], ["financial_asset_related_entity", "perc.vinculacion"], ["territorial_deduction_clave", "perc.ceuta-melilla"]]
+
+[[entries]]
+export_field_id = "modelo-194-decl-record-type"
+kind = "literal"
+literal = "1"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 28
+ordinal = "1"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "modelo-194-decl-modelo"
+kind = "literal"
+literal = "194"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 30
+ordinal = "2"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "modelo-194-decl-year"
+kind = "draft"
+draft_attribute = "filing_year"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 32
+ordinal = "3"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "modelo-194-decl-nif"
+kind = "header"
+producer_key = "taxpayer.tax_id"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 35
+ordinal = "4"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "modelo-194-decl-nombre"
+kind = "header"
+producer_key = "taxpayer.full_name"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 54
+ordinal = "5"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "modelo-194-decl-soporte"
+kind = "literal"
+literal = "T"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 64
+ordinal = "6"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "modelo-194-decl-persona-contacto-nombre"
+kind = "casilla"
+casilla_id = "decl.persona-contacto-nombre"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 73
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-194-decl-persona-contacto-telefono"
+kind = "casilla"
+casilla_id = "decl.persona-contacto-telefono"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 71
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-194-decl-num-identificativo"
+kind = "casilla"
+casilla_id = "decl.num-identificativo"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 78
+ordinal = "8"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "modelo-194-decl-complementaria"
+kind = "casilla"
+casilla_id = "decl.complementaria"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 95
+ordinal = "9"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[entries.part]
+offset = 121
+length = 1
+aeat_type = "Alfabético"
+statement = "En el caso excepcional de segunda o posterior presentación de declaraciones, deberá cumplimentarse obligatoriamente uno de los siguientes campos: 121 DECLARACIÓN COMPLEMENTARIA: Se consignará una «C» si la presentación de esta declaración tiene por objeto incluir percepciones que, debiendo haber figurado en otra declaración del mismo ejercicio presentada anteriormente, hubieran sido completamente omitidas en la misma. 122 DECLARACIÓN SUSTITUTIVA: Se consignará una «S» si la presentación tiene como objeto anular y sustituir completamente a otra declaración anterior, del mismo ejercicio. Una declaración sustitutiva sólo puede anular la única declaración anterior."
+
+[[entries]]
+export_field_id = "modelo-194-decl-sustitutiva"
+kind = "casilla"
+casilla_id = "decl.sustitutiva"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 95
+ordinal = "9"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[entries.part]
+offset = 122
+length = 1
+aeat_type = "Alfabético"
+statement = "En el caso excepcional de segunda o posterior presentación de declaraciones, deberá cumplimentarse obligatoriamente uno de los siguientes campos: 121 DECLARACIÓN COMPLEMENTARIA: Se consignará una «C» si la presentación de esta declaración tiene por objeto incluir percepciones que, debiendo haber figurado en otra declaración del mismo ejercicio presentada anteriormente, hubieran sido completamente omitidas en la misma. 122 DECLARACIÓN SUSTITUTIVA: Se consignará una «S» si la presentación tiene como objeto anular y sustituir completamente a otra declaración anterior, del mismo ejercicio. Una declaración sustitutiva sólo puede anular la única declaración anterior."
+
+[[entries]]
+export_field_id = "modelo-194-decl-num-identificativo-anterior"
+kind = "casilla"
+casilla_id = "decl.num-identificativo-anterior"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 116
+ordinal = "10"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "modelo-194-decl-resumen-01"
+kind = "casilla"
+casilla_id = "01"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 132
+ordinal = "11"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "modelo-194-decl-resumen-02"
+kind = "casilla"
+casilla_id = "02"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 141
+ordinal = "12"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "modelo-194-decl-resumen-03"
+kind = "casilla"
+casilla_id = "03"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 168
+ordinal = "13"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "modelo-194-decl-resumen-04"
+kind = "casilla"
+casilla_id = "04"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 187
+ordinal = "14"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "modelo-194-decl-resumen-05"
+kind = "casilla"
+casilla_id = "05"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 204
+ordinal = "15"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "modelo-194-decl-reservado-199"
+kind = "filler"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 223
+ordinal = "16"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "modelo-194-decl-reservado-238"
+kind = "filler"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+source_row = 224
+ordinal = "17"
+ordinal_absent = false
+record_identity = "Tipo 1 - Registro De Declarante"
+
+[[entries]]
+export_field_id = "modelo-194-perc-record-type"
+kind = "literal"
+literal = "2"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 257
+ordinal = "1"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-194-perc-modelo"
+kind = "literal"
+literal = "194"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 259
+ordinal = "2"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-194-perc-year"
+kind = "draft"
+draft_attribute = "filing_year"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 261
+ordinal = "3"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-194-perc-declarante-nif"
+kind = "header"
+producer_key = "taxpayer.tax_id"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 264
+ordinal = "4"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-194-perc-nif"
+kind = "binding"
+binding = "modelo-194-perceptor-row-nif"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 267
+ordinal = "5"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-194-perc-nif-representante"
+kind = "binding"
+binding = "modelo-194-perceptor-row-nif-representante"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 298
+ordinal = "6"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-194-perc-nombre"
+kind = "binding"
+binding = "modelo-194-perceptor-row-nombre"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 307
+ordinal = "7"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-194-perc-provincia"
+kind = "binding"
+binding = "modelo-194-perceptor-row-provincia"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 327
+ordinal = "8"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-194-perc-origen"
+kind = "binding"
+binding = "modelo-194-perceptor-row-origen"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 363
+ordinal = "9"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-194-perc-clave-codigo"
+kind = "binding"
+binding = "modelo-194-perceptor-row-clave-codigo"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 383
+ordinal = "10"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-194-perc-codigo-emisor"
+kind = "binding"
+binding = "modelo-194-perceptor-row-codigo-emisor"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 391
+ordinal = "11"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-194-perc-tipo-codigo"
+kind = "binding"
+binding = "modelo-194-perceptor-row-tipo-codigo"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 427
+ordinal = "12"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-194-perc-codigo-cuenta"
+kind = "binding"
+binding = "modelo-194-perceptor-row-codigo-cuenta"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 434
+ordinal = "13"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-194-perc-pendiente"
+kind = "binding"
+binding = "modelo-194-perceptor-row-pendiente"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 457
+ordinal = "14"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-194-perc-ejercicio-devengo"
+kind = "binding"
+binding = "modelo-194-perceptor-row-ejercicio-devengo"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 514
+ordinal = "15"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-194-perc-valor-adquisicion"
+kind = "binding"
+binding = "modelo-194-perceptor-row-valor-adquisicion"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 531
+ordinal = "16"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-194-perc-valor-transmision"
+kind = "binding"
+binding = "modelo-194-perceptor-row-valor-transmision"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 577
+ordinal = "17"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-194-perc-ceros"
+kind = "literal"
+literal = "0000000000000"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 603
+ordinal = "18"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-194-perc-base"
+kind = "binding"
+binding = "modelo-194-perceptor-row-base"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 604
+ordinal = "19"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-194-perc-porcentaje-src-170"
+kind = "binding"
+binding = "modelo-194-perceptor-row-porcentaje"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+record_identity = "Tipo 2 - Registro De Perceptor"
+source_row = 657
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-194-perc-porcentaje-src-172"
+kind = "binding"
+binding = "modelo-194-perceptor-row-porcentaje"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+record_identity = "Tipo 2 - Registro De Perceptor"
+source_row = 660
+ordinal_absent = true
+
+[[entries]]
+export_field_id = "modelo-194-perc-retenciones"
+kind = "binding"
+binding = "modelo-194-perceptor-row-retenciones"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 663
+ordinal = "21"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-194-perc-vinculacion"
+kind = "binding"
+binding = "modelo-194-perceptor-row-vinculacion"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 692
+ordinal = "22"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-194-perc-reservado-189"
+kind = "filler"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+source_row = 729
+ordinal = "24"
+ordinal_absent = false
+record_identity = "Tipo 2 - Registro De Perceptor"
+
+[[entries]]
+export_field_id = "modelo-194-perc-ceuta-melilla"
+kind = "binding"
+binding = "modelo-194-perceptor-row-ceuta-melilla"
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]
+
+[entries.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+record_identity = "Tipo 2 - Registro De Perceptor"
+source_row = 698
+ordinal = "23"
+ordinal_absent = false

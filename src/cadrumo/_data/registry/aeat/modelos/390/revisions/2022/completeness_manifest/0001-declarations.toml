@@ -1,0 +1,999 @@
+[revisions."2022".completeness_manifest]
+source_ref = "aeat-dr-390-2022"
+legal_refs = [
+    "ley-37-1992:art-115",
+    "ley-37-1992:art-116",
+    "ley-37-1992:art-13",
+    "ley-37-1992:art-17",
+    "ley-37-1992:art-21",
+    "ley-37-1992:art-22",
+    "ley-37-1992:art-25",
+    "ley-37-1992:art-69",
+    "ley-37-1992:art-70",
+    "ley-37-1992:art-84",
+    "ley-37-1992:art-85",
+    "ley-37-1992:art-88",
+    "ley-37-1992:art-90",
+    "ley-37-1992:art-91",
+    "ley-37-1992:art-92",
+    "ley-37-1992:art-94",
+    "ley-37-1992:art-95",
+    "ley-37-1992:art-99",
+    "ley-37-1992:art-104",
+    "ley-37-1992:art-105",
+    "ley-37-1992:art-107",
+    "ley-37-1992:art-108",
+    "ley-37-1992:art-109",
+    "ley-37-1992:art-110",
+    "ley-37-1992:art-121",
+    "ley-37-1992:art-122",
+    "ley-37-1992:art-123",
+    "ley-37-1992:art-161",
+    "orden-eha-3111-2009:art-1",
+    "rd-1624-1992:art-29",
+    "rd-1624-1992:art-30",
+    "rd-1624-1992:art-71",
+]
+source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.regimen-simplificado.cuota-resultante-no-agricola"
+number = "74"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.regimen-simplificado.cuota-resultante-agricola"
+number = "75"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.regimen-simplificado.aic-bienes-cuota-devengada"
+number = "76"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.regimen-simplificado.inversion-sujeto-pasivo"
+number = "77"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.regimen-simplificado.entrega-activos-fijos"
+number = "78"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.compensacion-generada-ejercicio-no-97"
+number = "662"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.compensacion-ultimo-periodo-97"
+number = "97"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.autorepercutido.intracomunitaria"
+number = "iva.anual.autorepercutido.intracomunitaria"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.cuota-deducible-total"
+number = "iva.anual.cuota-deducible-total"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.total-bases-cuotas-iva"
+number = "34"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.cuota-devengada-total"
+number = "iva.anual.cuota-devengada-total"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.reconciliacion.deducible-303"
+number = "iva.anual.reconciliacion.deducible-303"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.reconciliacion.devengada-303"
+number = "iva.anual.reconciliacion.devengada-303"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.reconciliacion.resultado-303"
+number = "iva.anual.reconciliacion.resultado-303"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.regularizacion-prorrata-definitiva"
+number = "522"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.regularizacion-bienes-inversion"
+number = "63"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.reconciliacion.devengada-simplificado-303"
+number = "79"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.regimen-simplificado.iva-soportado-activos-fijos"
+number = "80"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.regimen-simplificado.regularizacion-bienes-inversion"
+number = "81"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.regimen-simplificado.suma-deducciones"
+number = "82"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.regimen-simplificado.resultado"
+number = "83"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.general"
+number = "iva.anual.repercutido.general"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.reducido"
+number = "iva.anual.repercutido.reducido"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.super-reducido"
+number = "iva.anual.repercutido.super-reducido"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.general.base"
+number = "iva.anual.repercutido.general.base"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.reducido.base"
+number = "iva.anual.repercutido.reducido.base"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.super-reducido.base"
+number = "iva.anual.repercutido.super-reducido.base"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.zero.base"
+number = "iva.anual.repercutido.zero.base"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.recargo.general"
+number = "iva.anual.repercutido.recargo.general"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.recargo.reducido"
+number = "iva.anual.repercutido.recargo.reducido"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.recargo.super-reducido"
+number = "iva.anual.repercutido.recargo.super-reducido"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.recargo.tipo-5-2.cuota"
+number = "602"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.recargo.tipo-1-4.cuota"
+number = "600"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.recargo.tipo-0-5.cuota"
+number = "36"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.resultado-regimen-general"
+number = "iva.anual.resultado-regimen-general"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.soportado.interiores"
+number = "iva.anual.soportado.interiores"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.soportado.interiores.base"
+number = "48"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.soportado.importaciones"
+number = "iva.anual.soportado.importaciones"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.tipo-21.base"
+number = "05"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.tipo-21.cuota"
+number = "06"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.tipo-10.base"
+number = "03"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.tipo-10.cuota"
+number = "04"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.tipo-5.base"
+number = "702"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.tipo-5.cuota"
+number = "703"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.tipo-4.base"
+number = "01"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.tipo-4.cuota"
+number = "02"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.tipo-0.base"
+number = "700"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.tipo-0.cuota"
+number = "701"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.volumen.entregas-intracomunitarias"
+number = "103"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.volumen.exportaciones-exentas"
+number = "104"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.bienes.tipo-0.base"
+number = "716"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.bienes.tipo-0.cuota"
+number = "717"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.bienes.tipo-4.base"
+number = "21"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.bienes.tipo-4.cuota"
+number = "22"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.bienes.tipo-5.base"
+number = "718"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.bienes.tipo-5.cuota"
+number = "719"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.bienes.tipo-10.base"
+number = "23"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.bienes.tipo-10.cuota"
+number = "24"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.bienes.tipo-21.base"
+number = "25"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.bienes.tipo-21.cuota"
+number = "26"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.servicios.tipo-0.base"
+number = "720"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.servicios.tipo-0.cuota"
+number = "721"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.servicios.tipo-4.base"
+number = "545"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.servicios.tipo-4.cuota"
+number = "546"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.servicios.tipo-5.base"
+number = "722"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.servicios.tipo-5.cuota"
+number = "723"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.servicios.tipo-10.base"
+number = "547"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.servicios.tipo-10.cuota"
+number = "548"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.servicios.tipo-21.base"
+number = "551"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.servicios.tipo-21.cuota"
+number = "552"
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.autorepercutido.interior.base"
+number = "27"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.autorepercutido.interior.cuota"
+number = "28"
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.bienes.zero.base"
+number = "iva.anual.aic.bienes.zero.base"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.bienes.super_reduced.base"
+number = "iva.anual.aic.bienes.super_reduced.base"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.bienes.reduced.base"
+number = "iva.anual.aic.bienes.reduced.base"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.bienes.general.base"
+number = "iva.anual.aic.bienes.general.base"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.servicios.zero.base"
+number = "iva.anual.aic.servicios.zero.base"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.servicios.super_reduced.base"
+number = "iva.anual.aic.servicios.super_reduced.base"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.servicios.reduced.base"
+number = "iva.anual.aic.servicios.reduced.base"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.aic.servicios.general.base"
+number = "iva.anual.aic.servicios.general.base"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.interiores-inversion.total.base"
+number = "50"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.interiores-inversion.total.cuota"
+number = "51"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.importaciones-inversion.total.base"
+number = "54"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.importaciones-inversion.total.cuota"
+number = "55"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.regularizacion-cuotas-art-80-cinco-5"
+number = "658"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.suma-resultados"
+number = "84"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.iva-importacion-diferimiento"
+number = "659"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.compensacion-cuotas-ejercicio-anterior"
+number = "85"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.resultado-liquidacion"
+number = "86"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.liquidaciones.total-a-ingresar"
+number = "95"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.liquidaciones.ultimo-periodo-a-devolver"
+number = "98"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.interiores-corrientes.soportado.base"
+number = "iva.anual.deducible.interiores-corrientes.soportado.base"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.interiores-corrientes.soportado.cuota"
+number = "iva.anual.deducible.interiores-corrientes.soportado.cuota"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.autorepercutido.interior.deducible.base"
+number = "iva.anual.autorepercutido.interior.deducible.base"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.autorepercutido.interior.deducible.cuota"
+number = "iva.anual.autorepercutido.interior.deducible.cuota"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.interiores-inversion.soportado.base"
+number = "iva.anual.deducible.interiores-inversion.soportado.base"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.interiores-inversion.soportado.cuota"
+number = "iva.anual.deducible.interiores-inversion.soportado.cuota"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.autorepercutido.interior.deducible.inversion.base"
+number = "iva.anual.autorepercutido.interior.deducible.inversion.base"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.autorepercutido.interior.deducible.inversion.cuota"
+number = "iva.anual.autorepercutido.interior.deducible.inversion.cuota"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.importaciones-corrientes.total.base"
+number = "52"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-corrientes.tipo-4.base"
+number = "214"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-corrientes.tipo-4.cuota"
+number = "215"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-corrientes.tipo-5.base"
+number = "736"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-corrientes.tipo-5.cuota"
+number = "737"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-corrientes.tipo-10.base"
+number = "627"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-corrientes.tipo-10.cuota"
+number = "628"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-corrientes.tipo-21.base"
+number = "629"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-corrientes.tipo-21.cuota"
+number = "630"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-corrientes.todos-tipos.base"
+number = "iva.anual.deducible.aic-corrientes.todos-tipos.base"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-corrientes.todos-tipos.cuota"
+number = "iva.anual.deducible.aic-corrientes.todos-tipos.cuota"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-corrientes.total.base"
+number = "56"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-corrientes.total.cuota"
+number = "57"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-inversion.tipo-4.base"
+number = "220"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-inversion.tipo-4.cuota"
+number = "221"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-inversion.tipo-5.base"
+number = "738"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-inversion.tipo-5.cuota"
+number = "739"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-inversion.tipo-10.base"
+number = "631"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-inversion.tipo-10.cuota"
+number = "632"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-inversion.tipo-21.base"
+number = "633"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-inversion.tipo-21.cuota"
+number = "634"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-inversion.todos-tipos.base"
+number = "iva.anual.deducible.aic-inversion.todos-tipos.base"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-inversion.todos-tipos.cuota"
+number = "iva.anual.deducible.aic-inversion.todos-tipos.cuota"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-inversion.total.base"
+number = "58"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-inversion.total.cuota"
+number = "59"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-servicios.tipo-4.base"
+number = "587"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-servicios.tipo-4.cuota"
+number = "588"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-servicios.tipo-5.base"
+number = "740"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-servicios.tipo-5.cuota"
+number = "741"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-servicios.tipo-10.base"
+number = "635"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-servicios.tipo-10.cuota"
+number = "636"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-servicios.tipo-21.base"
+number = "637"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-servicios.tipo-21.cuota"
+number = "638"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-servicios.todos-tipos.base"
+number = "iva.anual.deducible.aic-servicios.todos-tipos.base"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-servicios.todos-tipos.cuota"
+number = "iva.anual.deducible.aic-servicios.todos-tipos.cuota"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-servicios.total.base"
+number = "597"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.aic-servicios.total.cuota"
+number = "598"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.compensaciones-reagp.cuota"
+number = "61"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.rectificacion.base"
+number = "639"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.rectificacion.cuota"
+number = "62"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.rectificacion.interiores.base"
+number = "iva.anual.deducible.rectificacion.interiores.base"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.rectificacion.interiores.cuota"
+number = "iva.anual.deducible.rectificacion.interiores.cuota"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.rectificacion.importaciones.base"
+number = "iva.anual.deducible.rectificacion.importaciones.base"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.rectificacion.importaciones.cuota"
+number = "iva.anual.deducible.rectificacion.importaciones.cuota"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.rectificacion.inversion-sujeto-pasivo.base"
+number = "iva.anual.deducible.rectificacion.inversion-sujeto-pasivo.base"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.rectificacion.inversion-sujeto-pasivo.cuota"
+number = "iva.anual.deducible.rectificacion.inversion-sujeto-pasivo.cuota"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.intragrupo-corrientes.total.cuota"
+number = "513"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.intragrupo-inversion.total.cuota"
+number = "521"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.rectificacion-intragrupo.cuota"
+number = "652"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.deducible.resolucion-firme-tipos-no-vigentes.cuota"
+number = "661"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.modificacion.bases-cuotas-intragrupo.cuota"
+number = "650"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.modificacion.bases-cuotas.cuota"
+number = "30"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.modificacion.concurso-acreedores.cuota"
+number = "32"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.modificacion.recargo-concurso.cuota"
+number = "46"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.modificacion.recargo.cuota"
+number = "44"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.agencias-viajes.tipo-21.cuota"
+number = "14"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.bienes-usados.tipo-0.cuota"
+number = "713"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.bienes-usados.tipo-10.cuota"
+number = "10"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.bienes-usados.tipo-21.cuota"
+number = "12"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.bienes-usados.tipo-4.cuota"
+number = "08"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.bienes-usados.tipo-5.cuota"
+number = "715"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.criterio-caja.tipo-0.cuota"
+number = "709"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.criterio-caja.tipo-10.cuota"
+number = "646"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.criterio-caja.tipo-21.cuota"
+number = "648"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.criterio-caja.tipo-4.cuota"
+number = "644"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.criterio-caja.tipo-5.cuota"
+number = "711"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.intragrupo.tipo-0.cuota"
+number = "705"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.intragrupo.tipo-10.cuota"
+number = "503"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.intragrupo.tipo-21.cuota"
+number = "505"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.intragrupo.tipo-4.cuota"
+number = "501"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.intragrupo.tipo-5.cuota"
+number = "707"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.recargo.tipo-1-75.cuota"
+number = "42"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.modificacion.bases-cuotas-intragrupo.base"
+number = "649"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.modificacion.bases-cuotas.base"
+number = "29"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.modificacion.concurso-acreedores.base"
+number = "31"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.agencias-viajes.tipo-21.base"
+number = "13"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.bienes-usados.tipo-0.base"
+number = "712"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.bienes-usados.tipo-10.base"
+number = "09"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.bienes-usados.tipo-21.base"
+number = "11"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.bienes-usados.tipo-4.base"
+number = "07"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.bienes-usados.tipo-5.base"
+number = "714"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.criterio-caja.tipo-0.base"
+number = "708"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.criterio-caja.tipo-10.base"
+number = "645"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.criterio-caja.tipo-21.base"
+number = "647"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.criterio-caja.tipo-4.base"
+number = "643"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.criterio-caja.tipo-5.base"
+number = "710"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.intragrupo.tipo-0.base"
+number = "704"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.intragrupo.tipo-10.base"
+number = "502"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.intragrupo.tipo-21.base"
+number = "504"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.intragrupo.tipo-4.base"
+number = "500"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.repercutido.intragrupo.tipo-5.base"
+number = "706"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.sector-diferenciado-1.aic-corrientes.cuota"
+number = "148"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.sector-diferenciado-1.aic-inversion.cuota"
+number = "150"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.sector-diferenciado-1.compensaciones-reagp.cuota"
+number = "152"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.sector-diferenciado-1.importaciones-corrientes.cuota"
+number = "144"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.sector-diferenciado-1.importaciones-inversion.cuota"
+number = "146"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.sector-diferenciado-1.interiores-corrientes.cuota"
+number = "140"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.sector-diferenciado-1.interiores-inversion.cuota"
+number = "142"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.sector-diferenciado-1.rectificacion.cuota"
+number = "153"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.sector-diferenciado-1.regularizacion-inversiones"
+number = "154"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.sector-diferenciado-1.suma-deducciones"
+number = "155"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.sector-diferenciado-2.aic-corrientes.cuota"
+number = "165"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.sector-diferenciado-2.aic-inversion.cuota"
+number = "167"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.sector-diferenciado-2.compensaciones-reagp.cuota"
+number = "169"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.sector-diferenciado-2.importaciones-corrientes.cuota"
+number = "161"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.sector-diferenciado-2.importaciones-inversion.cuota"
+number = "163"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.sector-diferenciado-2.interiores-corrientes.cuota"
+number = "157"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.sector-diferenciado-2.interiores-inversion.cuota"
+number = "159"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.sector-diferenciado-2.rectificacion.cuota"
+number = "170"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.sector-diferenciado-2.regularizacion-inversiones"
+number = "171"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.sector-diferenciado-2.suma-deducciones"
+number = "172"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.sector-diferenciado-3.aic-corrientes.cuota"
+number = "182"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.sector-diferenciado-3.aic-inversion.cuota"
+number = "184"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.sector-diferenciado-3.compensaciones-reagp.cuota"
+number = "186"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.sector-diferenciado-3.importaciones-corrientes.cuota"
+number = "178"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.sector-diferenciado-3.importaciones-inversion.cuota"
+number = "180"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.sector-diferenciado-3.interiores-corrientes.cuota"
+number = "174"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.sector-diferenciado-3.interiores-inversion.cuota"
+number = "176"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.sector-diferenciado-3.rectificacion.cuota"
+number = "187"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.sector-diferenciado-3.regularizacion-inversiones"
+number = "188"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.sector-diferenciado-3.suma-deducciones"
+number = "189"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.territorio.compensacion-atribuible-comun"
+number = "93"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.territorio.comun.porcentaje"
+number = "87"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.territorio.resultado-anual-atribuible-comun"
+number = "94"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.territorio.resultado-atribuible-comun"
+number = "92"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.total-bases-iva"
+number = "33"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.volumen.agencias-viajes"
+number = "228"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.volumen.bienes-de-inversion"
+number = "107"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.volumen.bienes-usados"
+number = "227"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.volumen.criterio-caja"
+number = "653"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.volumen.exentas-sin-derecho-deduccion"
+number = "105"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.volumen.inmuebles-financieras-no-habituales"
+number = "106"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.volumen.intragrupo-arts-78-79"
+number = "128"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.volumen.inversion-sujeto-pasivo"
+number = "125"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.volumen.no-sujetas-reglas-localizacion"
+number = "110"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.volumen.oss-no-sujetas-localizacion"
+number = "126"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.volumen.oss-sujetas"
+number = "127"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.volumen.reagp"
+number = "101"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.volumen.recargo-equivalencia"
+number = "102"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.volumen.regimen-general"
+number = "99"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.volumen.regimen-simplificado"
+number = "100"
+
+[[revisions."2022".completeness_manifest.casillas]]
+casilla_id = "iva.anual.volumen.total"
+number = "108"

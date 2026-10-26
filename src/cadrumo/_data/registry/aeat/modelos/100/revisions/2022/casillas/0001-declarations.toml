@@ -1,0 +1,1687 @@
+[[revisions."2022".casillas]]
+id = "0024"
+continuidad_id = "irpf-rendimiento-trabajo-aportacion-empresa-decision-trabajador"
+number = "0024"
+section = ["toma_datos_ampliada", "rdto_trabajo"]
+semantic_role = "irpf_rendimiento_trabajo_aportacion_empresa_decision_trabajador"
+legal_refs = ["ley-35-2006:art-17"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "0159"
+number = "0159"
+section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
+semantic_role = "irpf_eo_agr_reduccion_fertilizantes"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "0160"
+number = "0160"
+section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
+semantic_role = "irpf_eo_agr_reduccion_la_palma"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "0323"
+number = "0323"
+section = ["toma_datos_ampliada", "gp_premios", "otras"]
+semantic_role = "irpf_ganancia_premios_bono_cultural_joven"
+continuidad_id = "irpf-ganancia-premios-bono-cultural-joven"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "0356"
+number = "0356"
+section = ["toma_datos_ampliada", "gp_premios", "otras"]
+semantic_role = "irpf_ganancia_premios_ayuda_200_euros"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "0397"
+number = "0397"
+section = ["toma_datos_ampliada", "red_base_imponible", "red_prevision_social"]
+data_type = "nif"
+semantic_role = "irpf_pension_plan_empleo_nif"
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2022"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "0438"
+number = "0438"
+section = ["toma_datos_ampliada", "red_base_imponible", "red_prevision_social"]
+semantic_role = "irpf_red_prevision_social_aportaciones_empresa_decision_trabajador"
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2022"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "0499"
+number = "0499"
+section = ["toma_datos_ampliada", "red_base_imponible", "red_prevision_social"]
+semantic_role = "irpf_red_prevision_social_aportaciones_autonomos_empresarios"
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2022"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "0544"
+number = "0544"
+section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
+semantic_role = "irpf_deduccion_la_palma_estatal"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66-2021", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "0568"
+continuidad_id = "irpf-incremento-perdida-incentivo-fiscal-estatal"
+number = "0568"
+section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
+semantic_role = "irpf_incremento_perdida_incentivo_fiscal_estatal"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-67", "ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "0569"
+continuidad_id = "irpf-incremento-perdida-incentivo-fiscal-autonomico"
+number = "0569"
+section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
+semantic_role = "irpf_incremento_perdida_incentivo_fiscal_autonomico"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-62", "ley-35-2006:art-66-2021", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "0582"
+number = "0582"
+section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
+semantic_role = "irpf_intereses_demora_regularizacion_estatal"
+continuidad_id = "irpf-intereses-demora-regularizacion-estatal"
+legal_refs = ["ley-35-2006:art-67", "ley-35-2006:art-77", "ley-58-2003:art-26"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "0583"
+# Grounding: aeat-dr-100-2022-dictionary:874, INT33A; intereses de demora autonómicos por pérdida del incentivo fiscal del art. 33.3.c LIRPF.
+continuidad_id = "irpf-intereses-demora-regularizacion-autonomico"
+number = "0583"
+section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
+semantic_role = "irpf_intereses_demora_regularizacion_autonomico"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66-2021", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-58-2003:art-26"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "0584"
+number = "0584"
+section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
+semantic_role = "irpf_deduccion_la_palma_autonomica"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66-2021", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "0700"
+continuidad_id = "irpf-aeip-viii-centenario-de-la-catedral-de-burgos-2021-aplicado"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2021-dictionary:1132 y aeat-dr-100-2022-dictionary:1202: campo M21CCBA; columna Aplicado en esta declaración del programa VIII Centenario de la Catedral de Burgos 2021 en Anexo A. Misma designación y función fiscal."
+number = "0700"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "0706"
+# Grounding: aeat-dr-100-2022-dictionary:1241, M21AVAA; importe aplicado del programa Andalucía Valderrama Masters 2022/2024 (Anexo A).
+continuidad_id = "irpf-aeip-andalucia-valderrama-masters-2022-2024-aplicado"
+number = "0706"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "0707"
+# Grounding: aeat-dr-100-2022-dictionary:1316, M21BPNA; importe aplicado del programa Bicentenario de la Policia Nacional (Anexo A).
+continuidad_id = "irpf-aeip-bicentenario-de-la-policia-nacional-aplicado"
+number = "0707"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "0760"
+# Grounding: aeat-dr-100-2022-dictionary:1319, M21FAFA; importe aplicado del programa Centenario Federación Aragonesa de Fútbol (Anexo A).
+continuidad_id = "irpf-aeip-centenario-federacion-aragonesa-de-futbol-aplicado"
+number = "0760"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "0761"
+# Grounding: aeat-dr-100-2022-dictionary:1322, M21ADBA; importe aplicado del programa Plan 2030 de Apoyo al Deporte de Base (Anexo A).
+continuidad_id = "irpf-aeip-plan-2030-de-apoyo-al-deporte-de-base-aplicado"
+number = "0761"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "0762"
+# Grounding: aeat-dr-100-2022-dictionary:1325, M21UNIA; importe aplicado del programa Universo Mujer III (Anexo A).
+continuidad_id = "irpf-aeip-universo-mujer-iii-aplicado"
+number = "0762"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "0768"
+# Grounding: aeat-dr-100-2022-dictionary:1331, M21FJSA; importe aplicado del programa 100 años del fallecimiento de Joaquín Sorolla (Anexo A).
+continuidad_id = "irpf-aeip-100-anos-del-fallecimiento-de-joaquin-sorolla-aplicado"
+number = "0768"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "0769"
+number = "0769"
+section = ["resultados", "deduccion_autonomica_res", "i_baleares_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado_flag"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "0770"
+number = "0770"
+section = ["resultados", "deduccion_autonomica_res", "i_baleares_res"]
+semantic_role = "irpf_deduccion_baleares_acogida_ucrania"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "0773"
+# Grounding: aeat-dr-100-2022-dictionary:1334, M21APSA; importe aplicado del programa 20 Aniversario de Primavera Sound (Anexo A).
+continuidad_id = "irpf-aeip-20-aniversario-de-primavera-sound-aplicado"
+number = "0773"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "0779"
+# Grounding: aeat-dr-100-2022-dictionary:1337, M21VANA; importe aplicado del programa Centenario del nacimiento de Victoria de los Ángeles (Anexo A).
+continuidad_id = "irpf-aeip-centenario-del-nacimiento-de-victoria-de-los-angeles-aplicado"
+number = "0779"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "0781"
+# Grounding: aeat-dr-100-2022-dictionary:1340, M21MPPA; importe aplicado del programa Conmemoración del 50 aniversario de la muerte del artista español Pablo Picasso (Anexo A).
+continuidad_id = "irpf-aeip-conmemoracion-del-50-aniversario-de-la-muerte-del-artista-espanol-pablo-picasso-aplicado"
+number = "0781"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "0782"
+# Grounding: aeat-dr-100-2022-dictionary:1343, M21TCCA; importe aplicado del programa Todos contra el cáncer (Anexo A).
+continuidad_id = "irpf-aeip-todos-contra-el-cancer-aplicado"
+number = "0782"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "0785"
+# Grounding: aeat-dr-100-2022-dictionary:1352, M21PVEA; importe aplicado del programa Mundo Voluntario 2030/35º Aniversario Plataforma del Voluntariado de España (Anexo A).
+continuidad_id = "irpf-aeip-mundo-voluntario-2030-35o-aniversario-plataforma-del-voluntariado-de-espana-aplicado"
+number = "0785"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "0786"
+# Grounding: aeat-dr-100-2022-dictionary:1355, M21CTEA; importe aplicado del programa 7ª Conferencia Mundial sobre Turismo Enológico de la OMT 2023 (Anexo A).
+continuidad_id = "irpf-aeip-7a-conferencia-mundial-sobre-turismo-enologico-de-la-omt-2023-aplicado"
+number = "0786"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "0787"
+# Grounding: aeat-dr-100-2022-dictionary:1358, M21CAJA; importe aplicado del programa Caravaca de la Cruz 2024. Año Jubilar (Anexo A).
+continuidad_id = "irpf-aeip-caravaca-de-la-cruz-2024-ano-jubilar-aplicado"
+number = "0787"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "0805"
+continuidad_id = "irpf-deduccion-c-valenciana-financiacion-ajena-incremento"
+number = "0805"
+section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
+semantic_role = "irpf_deduccion_c_valenciana_financiacion_ajena_incremento"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "0806"
+continuidad_id = "irpf-deduccion-c-valenciana-tratamientos-fertilidad"
+number = "0806"
+section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
+semantic_role = "irpf_deduccion_c_valenciana_tratamientos_fertilidad"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "0807"
+number = "0807"
+section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
+semantic_role = "irpf_deduccion_c_valenciana_acciones_participaciones_generado_pendiente_1"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "0811"
+continuidad_id = "irpf-deduccion-asturias-vehiculo-importe"
+number = "0811"
+section = ["resultados", "deduccion_autonomica_res", "asturias_res"]
+semantic_role = "irpf_deduccion_asturias_vehiculo_importe"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "0814"
+number = "0814"
+section = ["resultados", "deduccion_autonomica_res", "asturias_res"]
+semantic_role = "irpf_deduccion_asturias_vivienda_protegida_generado"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "0849"
+continuidad_id = "irpf-deduccion-andalucia-gastos-educativos"
+number = "0849"
+section = ["resultados", "deduccion_autonomica_res", "andalucia_res"]
+semantic_role = "irpf_deduccion_andalucia_gastos_educativos"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "0991"
+number = "0991"
+section = ["resultados", "deduccion_autonomica_res", "murcia_res"]
+semantic_role = "irpf_deduccion_murcia_arrendamiento_vivienda"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1105"
+continuidad_id = "irpf-deduccion-extremadura-residencia-municipios-pequenos"
+number = "1105"
+section = ["resultados", "deduccion_autonomica_res", "extremadura_res"]
+semantic_role = "irpf_deduccion_extremadura_residencia_municipios_pequenos"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1171"
+continuidad_id = "irpf-deduccion-murcia-mujeres-trabajadoras"
+number = "1171"
+section = ["resultados", "deduccion_autonomica_res", "murcia_res"]
+semantic_role = "irpf_deduccion_murcia_mujeres_trabajadoras"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1210"
+number = "1210"
+section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
+semantic_role = "irpf_deduccion_c_valenciana_acciones_participaciones_pendiente_1"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1299"
+number = "1299"
+section = ["resultados", "anexo_c_res", "excesos_sistemas_prevision_social_rt_res"]
+semantic_role = "irpf_anexo_c_exceso_sps_rt_generado"
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2022"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1392"
+number = "1392"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_inst_auto"]
+semantic_role = "irpf_anexo_b_carry_forward_pending"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1623"
+# Grounding: aeat-dr-100-2022-dictionary:1376, M21HOSA; importe aplicado del programa HOSTELCO 2022 (Anexo A).
+continuidad_id = "irpf-aeip-hostelco-2022-aplicado"
+number = "1623"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1696"
+number = "1696"
+section = ["resultados", "anexo_a_res", "reserva_inversiones_canarias_res"]
+semantic_role = "irpf_anexo_a_ric_inversion_tipo_cd"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1777"
+number = "1777"
+section = ["resultados", "anexo_a_res", "deduccion_mejoras_energeticas_viv_res"]
+semantic_role = "irpf_anexo_a_mejora_energia_base_aplicada_prev"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1778"
+number = "1778"
+section = ["resultados", "anexo_a_res", "deduccion_mejoras_energeticas_viv_res"]
+semantic_role = "irpf_anexo_a_mejora_energia_exceso_pendiente"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1779"
+continuidad_id = "irpf-anexo-a-mejora-energia-base-deduccion-pagoedif"
+number = "1779"
+section = ["resultados", "anexo_a_res", "deduccion_mejoras_energeticas_viv_res"]
+semantic_role = "irpf_anexo_a_mejora_energia_base_deduccion"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1800"
+# aeat-dr-100-2022-dictionary:593: G2DCRIT, titular de las monedas virtuales transmitidas.
+continuidad_id = "irpf-monedas-virtuales-transmision-contribuyente-titular"
+number = "1800"
+section = ["toma_datos_ampliada"]
+data_type = "text"
+semantic_role = "irpf_toma_datos_declarante_selector"
+legal_refs = ["ley-35-2006:art-11"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1801"
+number = "1801"
+section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
+data_type = "boolean"
+semantic_role = "irpf_ganancia_cripto_imputacion_plazos"
+continuidad_id = "irpf-ganancia-cripto-imputacion-plazos"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1802"
+number = "1802"
+section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
+data_type = "text"
+semantic_role = "irpf_ganancia_cripto_denominacion"
+continuidad_id = "irpf-ganancia-cripto-denominacion"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1803"
+number = "1803"
+section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
+data_type = "text"
+semantic_role = "irpf_ganancia_cripto_tipo_contraprestacion_clave"
+continuidad_id = "irpf-ganancia-cripto-tipo-contraprestacion-clave"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1804"
+number = "1804"
+section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
+semantic_role = "irpf_ganancia_cripto_valor_transmision"
+continuidad_id = "irpf-ganancia-cripto-valor-transmision"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1805"
+number = "1805"
+section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
+semantic_role = "irpf_ganancia_cripto_valor_transmision_renta_vitalicia"
+continuidad_id = "irpf-ganancia-cripto-valor-transmision-renta-vitalicia"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1806"
+number = "1806"
+section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
+semantic_role = "irpf_ganancia_cripto_valor_adquisicion"
+continuidad_id = "irpf-ganancia-cripto-valor-adquisicion"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1807"
+continuidad_id = "irpf-perdida-cripto-obtenida"
+number = "1807"
+section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
+semantic_role = "irpf_perdida_cripto_obtenida"
+input_kind = "computed"
+formula = "renta-criptomonedas-perdida-negativa"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1808"
+number = "1808"
+section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
+semantic_role = "irpf_perdida_cripto_imputable_ejercicio"
+continuidad_id = "irpf-perdida-cripto-imputable-ejercicio"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1809"
+continuidad_id = "irpf-ganancia-cripto-obtenida"
+number = "1809"
+section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
+semantic_role = "irpf_ganancia_cripto_obtenida"
+input_kind = "computed"
+formula = "renta-criptomonedas-ganancia-positiva"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1810"
+number = "1810"
+section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
+semantic_role = "irpf_ganancia_cripto_exenta_renta_vitalicia"
+continuidad_id = "irpf-ganancia-cripto-exenta-renta-vitalicia"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1811"
+continuidad_id = "irpf-ganancia-cripto-no-exenta"
+number = "1811"
+section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
+semantic_role = "irpf_ganancia_cripto_no_exenta"
+input_kind = "computed"
+formula = "renta-criptomonedas-ganancia-no-exenta"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1812"
+continuidad_id = "irpf-ganancia-cripto-no-exenta-imputable"
+number = "1812"
+section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
+semantic_role = "irpf_ganancia_cripto_no_exenta_imputable"
+input_kind = "computed"
+formula = "renta-ganancia-cripto-imputable"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1813"
+continuidad_id = "irpf-gyp-cripto-suma-perdidas"
+number = "1813"
+section = ["resultados", "gp_otros_criptomonedas_res"]
+semantic_role = "irpf_gyp_cripto_suma_perdidas"
+input_kind = "computed"
+formula = "renta-criptomonedas-perdidas-suma"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1814"
+continuidad_id = "irpf-gyp-subtotales-ganancias-patrimoniales-g2crit4"
+number = "1814"
+section = ["resultados", "gp_otros_criptomonedas_res"]
+semantic_role = "irpf_gyp_subtotales_ganancias_patrimoniales"
+input_kind = "computed"
+formula = "renta-criptomonedas-ganancias-suma"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1815"
+# aeat-dr-100-2022-dictionary:608: G2DINMT, titular de los inmuebles o derechos reales transmitidos.
+continuidad_id = "irpf-inmuebles-transmision-contribuyente-titular"
+number = "1815"
+section = ["toma_datos_ampliada"]
+data_type = "text"
+semantic_role = "irpf_toma_datos_declarante_selector"
+legal_refs = ["ley-35-2006:art-11"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1816"
+number = "1816"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+data_type = "boolean"
+semantic_role = "irpf_ganancia_inmueble_imputacion_plazos"
+continuidad_id = "irpf-ganancia-inmueble-imputacion-plazos"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1817"
+number = "1817"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+data_type = "text"
+semantic_role = "irpf_ganancia_inmueble_tipo_elemento_clave"
+continuidad_id = "irpf-ganancia-inmueble-tipo-elemento-clave"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1818"
+number = "1818"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+data_type = "text"
+semantic_role = "irpf_ganancia_inmueble_situacion_clave"
+continuidad_id = "irpf-ganancia-inmueble-situacion-clave"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1819"
+number = "1819"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+data_type = "text"
+semantic_role = "irpf_ganancia_inmueble_referencia_catastral_1"
+continuidad_id = "irpf-ganancia-inmueble-referencia-catastral-1"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1820"
+number = "1820"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+data_type = "text"
+semantic_role = "irpf_ganancia_inmueble_referencia_catastral_2"
+continuidad_id = "irpf-ganancia-inmueble-referencia-catastral-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1821"
+number = "1821"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+data_type = "text"
+semantic_role = "irpf_ganancia_inmueble_referencia_catastral_3"
+continuidad_id = "irpf-ganancia-inmueble-referencia-catastral-3"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1822"
+number = "1822"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+data_type = "boolean"
+semantic_role = "irpf_ganancia_inmueble_transmision_onerosa"
+continuidad_id = "irpf-ganancia-inmueble-transmision-onerosa"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1823"
+number = "1823"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+data_type = "boolean"
+semantic_role = "irpf_ganancia_inmueble_transmision_gratuita"
+continuidad_id = "irpf-ganancia-inmueble-transmision-gratuita"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1824"
+number = "1824"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+data_type = "text"
+semantic_role = "irpf_ganancia_inmueble_fecha_transmision"
+continuidad_id = "irpf-ganancia-inmueble-fecha-transmision"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1825"
+number = "1825"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+data_type = "text"
+semantic_role = "irpf_ganancia_inmueble_fecha_adquisicion"
+continuidad_id = "irpf-ganancia-inmueble-fecha-adquisicion"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1826"
+number = "1826"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+semantic_role = "irpf_ganancia_inmueble_valor_transmision"
+input_kind = "computed"
+formula = "renta-inmuebles-valor-transmision"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1827"
+number = "1827"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+semantic_role = "irpf_ganancia_inmueble_valor_transmision_renta_vitalicia"
+continuidad_id = "irpf-ganancia-inmueble-valor-transmision-renta-vitalicia"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1828"
+number = "1828"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+semantic_role = "irpf_ganancia_inmueble_valor_transmision_susceptible_vh"
+continuidad_id = "irpf-ganancia-inmueble-valor-transmision-susceptible-vh"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1829"
+continuidad_id = "irpf-ganancia-inmueble-valor-transmision-susceptible-dt9"
+number = "1829"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+semantic_role = "irpf_ganancia_inmueble_valor_transmision_susceptible_dt9"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1830"
+number = "1830"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+semantic_role = "irpf_ganancia_inmueble_valor_adquisicion"
+input_kind = "computed"
+formula = "renta-inmuebles-valor-adquisicion"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1831"
+continuidad_id = "irpf-perdida-inmueble-obtenida"
+number = "1831"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+semantic_role = "irpf_perdida_inmueble_obtenida"
+input_kind = "computed"
+formula = "renta-inmuebles-perdida-no-exenta-base-general"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1832"
+number = "1832"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+semantic_role = "irpf_perdida_inmueble_imputable_ejercicio"
+continuidad_id = "irpf-perdida-inmueble-imputable-ejercicio"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1833"
+continuidad_id = "irpf-ganancia-inmueble-obtenida"
+number = "1833"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+semantic_role = "irpf_ganancia_inmueble_obtenida"
+input_kind = "computed"
+formula = "renta-inmuebles-ganancia-no-exenta-base-general"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1834"
+number = "1834"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+semantic_role = "irpf_ganancia_inmueble_exenta_renta_vitalicia"
+continuidad_id = "irpf-ganancia-inmueble-exenta-renta-vitalicia"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1835"
+number = "1835"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+semantic_role = "irpf_ganancia_inmueble_exenta_reinversion_vivienda"
+continuidad_id = "irpf-ganancia-inmueble-exenta-reinversion-vivienda"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1836"
+number = "1836"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+semantic_role = "irpf_ganancia_inmueble_no_exenta"
+input_kind = "computed"
+formula = "renta-inmuebles-ganancia-no-exenta-reducida"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1837"
+continuidad_id = "irpf-ganancia-inmueble-susceptible-reduccion-dt9"
+number = "1837"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+semantic_role = "irpf_ganancia_inmueble_susceptible_reduccion_dt9"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1838"
+number = "1838"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+data_type = "text"
+semantic_role = "irpf_ganancia_inmueble_anios_permanencia_1994"
+continuidad_id = "irpf-ganancia-inmueble-anios-permanencia-1994"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1839"
+continuidad_id = "irpf-ganancia-inmueble-reduccion-dt9"
+number = "1839"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+semantic_role = "irpf_ganancia_inmueble_reduccion_dt9"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1840"
+continuidad_id = "irpf-ganancia-inmueble-reducida-no-exenta-dt9"
+number = "1840"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+semantic_role = "irpf_ganancia_inmueble_reducida_no_exenta_dt9"
+input_kind = "computed"
+formula = "renta-inmuebles-ganancia-reducida-no-exenta"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1841"
+number = "1841"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+semantic_role = "irpf_ganancia_inmueble_reducida_no_exenta_imputable"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1842"
+number = "1842"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+semantic_role = "irpf_ganancia_inmueble_no_exenta_sin_reduccion"
+continuidad_id = "irpf-ganancia-inmueble-no-exenta-sin-reduccion"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1843"
+number = "1843"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+semantic_role = "irpf_ganancia_inmueble_no_exenta_imputable"
+continuidad_id = "irpf-ganancia-inmueble-no-exenta-imputable"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1844"
+continuidad_id = "irpf-gyp-inmueble-suma-perdidas"
+number = "1844"
+section = ["resultados", "gp_otros_inmuebles_res"]
+semantic_role = "irpf_gyp_inmueble_suma_perdidas"
+input_kind = "computed"
+formula = "renta-inmuebles-perdidas-transmision-suma"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1845"
+number = "1845"
+section = ["resultados", "gp_otros_inmuebles_res"]
+semantic_role = "irpf_gyp_subtotales_ganancias_patrimoniales"
+input_kind = "computed"
+formula = "renta-inmuebles-ganancias-no-afectos-suma"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1846"
+number = "1846"
+section = ["resultados", "gp_otros_inmuebles_res"]
+semantic_role = "irpf_gyp_actividades_economicas_suma_ganancias"
+input_kind = "computed"
+formula = "renta-inmuebles-ganancias-afectos-suma"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32-2015"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1847"
+number = "1847"
+section = ["resultados", "anexo_a_res", "deduccion_la_palma_res"]
+semantic_role = "irpf_anexo_a_la_palma_deduccion_importe"
+continuidad_id = "irpf-anexo-a-la-palma-deduccion-importe"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1848"
+number = "1848"
+section = ["resultados", "deduccion_autonomica_res", "asturias_res"]
+semantic_role = "irpf_deduccion_asturias_cuidado_descendientes"
+continuidad_id = "irpf-deduccion-asturias-cuidado-descendientes"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1849"
+number = "1849"
+section = ["resultados", "deduccion_autonomica_res", "asturias_res"]
+semantic_role = "irpf_deduccion_asturias_emancipacion_jovenes"
+continuidad_id = "irpf-deduccion-asturias-emancipacion-jovenes"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1851"
+number = "1851"
+section = ["resultados", "deduccion_autonomica_res", "aragon_res"]
+semantic_role = "irpf_deduccion_aragon_ayuda_humanitaria_ucrania"
+continuidad_id = "irpf-deduccion-aragon-ayuda-humanitaria-ucrania"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1852"
+number = "1852"
+section = ["resultados", "deduccion_autonomica_res", "aragon_res"]
+semantic_role = "irpf_deduccion_aragon_acogimiento_ucrania"
+continuidad_id = "irpf-deduccion-aragon-acogimiento-ucrania"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1853"
+number = "1853"
+section = ["resultados", "anexo_c_res", "excesos_eficiencia_energetica_res"]
+data_type = "text"
+semantic_role = "irpf_anexo_c_contribuyente_con_derecho_deduccion"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1854"
+continuidad_id = "irpf-anexo-c-exceso-eficiencia-energetica-pendiente-inicio-c3efepem1"
+number = "1854"
+section = ["resultados", "anexo_c_res", "excesos_eficiencia_energetica_res"]
+semantic_role = "irpf_anexo_c_exceso_eficiencia_energetica_pendiente_inicio"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1855"
+continuidad_id = "irpf-anexo-c-exceso-eficiencia-energetica-aplicado-c3efeaem1"
+number = "1855"
+section = ["resultados", "anexo_c_res", "excesos_eficiencia_energetica_res"]
+semantic_role = "irpf_anexo_c_exceso_eficiencia_energetica_aplicado"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1856"
+continuidad_id = "irpf-anexo-c-exceso-eficiencia-energetica-pendiente-fin-c3efepfem1"
+number = "1856"
+section = ["resultados", "anexo_c_res", "excesos_eficiencia_energetica_res"]
+semantic_role = "irpf_anexo_c_exceso_eficiencia_energetica_pendiente_fin"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1857"
+number = "1857"
+section = ["resultados", "anexo_c_res", "excesos_eficiencia_energetica_res"]
+semantic_role = "irpf_anexo_c_exceso_eficiencia_energetica_generado"
+continuidad_id = "irpf-anexo-c-exceso-eficiencia-energetica-generado"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1858"
+number = "1858"
+section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
+data_type = "text"
+semantic_role = "irpf_ganancia_cripto_titular"
+continuidad_id = "irpf-ganancia-cripto-titular"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1859"
+number = "1859"
+section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
+data_type = "integer"
+semantic_role = "irpf_ganancia_cripto_anios_cobro_total"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1860"
+number = "1860"
+section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
+data_type = "text"
+semantic_role = "irpf_ganancia_cripto_ultimo_anio_cobro"
+continuidad_id = "irpf-ganancia-cripto-ultimo-anio-cobro"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1861"
+number = "1861"
+section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
+data_type = "year"
+semantic_role = "irpf_ganancia_cripto_anio_imputacion_1"
+continuidad_id = "irpf-ganancia-cripto-anio-imputacion-1"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1862"
+number = "1862"
+section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
+semantic_role = "irpf_ganancia_cripto_importe_percibir_1"
+continuidad_id = "irpf-ganancia-cripto-importe-percibir-1"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1863"
+number = "1863"
+section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
+semantic_role = "irpf_ganancia_cripto_ganancia_pendiente_1"
+continuidad_id = "irpf-ganancia-cripto-ganancia-pendiente-1"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1864"
+number = "1864"
+section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
+semantic_role = "irpf_perdida_cripto_pendiente_1"
+continuidad_id = "irpf-perdida-cripto-pendiente-1"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1865"
+number = "1865"
+section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
+data_type = "year"
+semantic_role = "irpf_ganancia_cripto_anio_imputacion_2"
+continuidad_id = "irpf-ganancia-cripto-anio-imputacion-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1866"
+number = "1866"
+section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
+semantic_role = "irpf_ganancia_cripto_importe_percibir_2"
+continuidad_id = "irpf-ganancia-cripto-importe-percibir-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1867"
+number = "1867"
+section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
+semantic_role = "irpf_ganancia_cripto_ganancia_pendiente_2"
+continuidad_id = "irpf-ganancia-cripto-ganancia-pendiente-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1868"
+number = "1868"
+section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
+semantic_role = "irpf_perdida_cripto_pendiente_2"
+continuidad_id = "irpf-perdida-cripto-pendiente-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1869"
+number = "1869"
+section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
+data_type = "year"
+semantic_role = "irpf_ganancia_cripto_anio_imputacion_3"
+continuidad_id = "irpf-ganancia-cripto-anio-imputacion-3"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1870"
+number = "1870"
+section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
+semantic_role = "irpf_ganancia_cripto_importe_percibir_3"
+continuidad_id = "irpf-ganancia-cripto-importe-percibir-3"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1871"
+number = "1871"
+section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
+semantic_role = "irpf_ganancia_cripto_ganancia_pendiente_imputacion"
+continuidad_id = "irpf-ganancia-cripto-ganancia-pendiente-imputacion"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1872"
+number = "1872"
+section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
+semantic_role = "irpf_perdida_cripto_pendiente_3"
+continuidad_id = "irpf-perdida-cripto-pendiente-3"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1873"
+number = "1873"
+section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
+data_type = "year"
+semantic_role = "irpf_ganancia_cripto_anio_imputacion_4"
+continuidad_id = "irpf-ganancia-cripto-anio-imputacion-4"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1874"
+number = "1874"
+section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
+semantic_role = "irpf_ganancia_cripto_importe_percibir_4"
+continuidad_id = "irpf-ganancia-cripto-importe-percibir-4"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1875"
+number = "1875"
+section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
+semantic_role = "irpf_ganancia_cripto_ganancia_pendiente_4"
+continuidad_id = "irpf-ganancia-cripto-ganancia-pendiente-4"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1876"
+number = "1876"
+section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
+semantic_role = "irpf_perdida_cripto_pendiente_4"
+continuidad_id = "irpf-perdida-cripto-pendiente-4"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1877"
+number = "1877"
+section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
+semantic_role = "irpf_ganancia_cripto_importe_percibir_resto"
+continuidad_id = "irpf-ganancia-cripto-importe-percibir-resto"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1878"
+number = "1878"
+section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
+semantic_role = "irpf_ganancia_cripto_ganancia_pendiente_resto"
+continuidad_id = "irpf-ganancia-cripto-ganancia-pendiente-resto"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1879"
+number = "1879"
+section = ["toma_datos_ampliada", "gp_otros_criptomonedas", "elemento_criptomoneda"]
+semantic_role = "irpf_perdida_cripto_pendiente_resto"
+continuidad_id = "irpf-perdida-cripto-pendiente-resto"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1880"
+number = "1880"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+data_type = "text"
+semantic_role = "irpf_ganancia_inmueble_titular_b"
+continuidad_id = "irpf-ganancia-inmueble-titular-b"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1881"
+number = "1881"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+data_type = "integer"
+semantic_role = "irpf_ganancia_inmueble_anios_cobro_pendiente"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1882"
+number = "1882"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+data_type = "text"
+semantic_role = "irpf_ganancia_inmueble_ultimo_anio_cobro"
+continuidad_id = "irpf-ganancia-inmueble-ultimo-anio-cobro"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1883"
+number = "1883"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+data_type = "text"
+semantic_role = "irpf_ganancia_inmueble_anexo_c1_referencia_catastral_1"
+continuidad_id = "irpf-ganancia-inmueble-anexo-c1-referencia-catastral-1"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1884"
+number = "1884"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+data_type = "text"
+semantic_role = "irpf_ganancia_inmueble_anexo_c1_referencia_catastral_2"
+continuidad_id = "irpf-ganancia-inmueble-anexo-c1-referencia-catastral-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1885"
+number = "1885"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+data_type = "text"
+semantic_role = "irpf_ganancia_inmueble_anexo_c1_referencia_catastral_3"
+continuidad_id = "irpf-ganancia-inmueble-anexo-c1-referencia-catastral-3"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1886"
+number = "1886"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+data_type = "year"
+semantic_role = "irpf_ganancia_inmueble_anio_imputacion_1"
+continuidad_id = "irpf-ganancia-inmueble-anio-imputacion-1"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1887"
+number = "1887"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+semantic_role = "irpf_ganancia_inmueble_importe_percibir_1"
+continuidad_id = "irpf-ganancia-inmueble-importe-percibir-1"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1888"
+number = "1888"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+semantic_role = "irpf_ganancia_inmueble_ganancia_pendiente_1"
+continuidad_id = "irpf-ganancia-inmueble-ganancia-pendiente-1"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1889"
+number = "1889"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+semantic_role = "irpf_perdida_inmueble_pendiente_1"
+continuidad_id = "irpf-perdida-inmueble-pendiente-1"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1890"
+number = "1890"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+data_type = "year"
+semantic_role = "irpf_ganancia_inmueble_anio_imputacion_2"
+continuidad_id = "irpf-ganancia-inmueble-anio-imputacion-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1891"
+number = "1891"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+semantic_role = "irpf_ganancia_inmueble_importe_percibir_2"
+continuidad_id = "irpf-ganancia-inmueble-importe-percibir-2"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1892"
+number = "1892"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+semantic_role = "irpf_ganancia_inmueble_ganancia_pendiente_imputacion"
+continuidad_id = "irpf-ganancia-inmueble-ganancia-pendiente-imputacion"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1893"
+number = "1893"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+semantic_role = "irpf_perdida_inmueble_pendiente_imputacion"
+continuidad_id = "irpf-perdida-inmueble-pendiente-imputacion"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1894"
+number = "1894"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+data_type = "year"
+semantic_role = "irpf_ganancia_inmueble_anio_imputacion_3"
+continuidad_id = "irpf-ganancia-inmueble-anio-imputacion-3"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1895"
+number = "1895"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+semantic_role = "irpf_ganancia_inmueble_importe_percibir_3"
+continuidad_id = "irpf-ganancia-inmueble-importe-percibir-3"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1896"
+number = "1896"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+semantic_role = "irpf_ganancia_inmueble_ganancia_pendiente_3"
+continuidad_id = "irpf-ganancia-inmueble-ganancia-pendiente-3"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1897"
+number = "1897"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+semantic_role = "irpf_perdida_inmueble_pendiente_3"
+continuidad_id = "irpf-perdida-inmueble-pendiente-3"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1898"
+number = "1898"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+data_type = "year"
+semantic_role = "irpf_ganancia_inmueble_anio_imputacion_4"
+continuidad_id = "irpf-ganancia-inmueble-anio-imputacion-4"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1899"
+number = "1899"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+semantic_role = "irpf_ganancia_inmueble_importe_percibir_4"
+continuidad_id = "irpf-ganancia-inmueble-importe-percibir-4"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1900"
+number = "1900"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+semantic_role = "irpf_ganancia_inmueble_ganancia_pendiente"
+continuidad_id = "irpf-ganancia-inmueble-ganancia-pendiente"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1901"
+number = "1901"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+semantic_role = "irpf_perdida_inmueble_pendiente"
+continuidad_id = "irpf-perdida-inmueble-pendiente"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1902"
+number = "1902"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+semantic_role = "irpf_ganancia_inmueble_importe_percibir_resto"
+continuidad_id = "irpf-ganancia-inmueble-importe-percibir-resto"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1903"
+number = "1903"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+semantic_role = "irpf_ganancia_inmueble_ganancia_pendiente_resto"
+continuidad_id = "irpf-ganancia-inmueble-ganancia-pendiente-resto"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1904"
+number = "1904"
+section = ["toma_datos_ampliada", "gp_otros_inmuebles", "elemento_inmueble"]
+semantic_role = "irpf_perdida_inmueble_pendiente_resto"
+continuidad_id = "irpf-perdida-inmueble-pendiente-resto"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1905"
+number = "1905"
+section = ["resultados", "deduccion_autonomica_res", "i_baleares_res"]
+semantic_role = "irpf_deduccion_baleares_prestamo_hipotecario_incremento"
+continuidad_id = "irpf-deduccion-baleares-prestamo-hipotecario-incremento"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1906"
+number = "1906"
+section = ["resultados", "deduccion_autonomica_res", "castilla_la_mancha_res"]
+semantic_role = "irpf_deduccion_castilla_la_mancha_intereses_vivienda"
+continuidad_id = "irpf-deduccion-castilla-la-mancha-intereses-vivienda"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1907"
+number = "1907"
+section = ["resultados", "deduccion_autonomica_res", "castilla_la_mancha_res"]
+semantic_role = "irpf_deduccion_castilla_la_mancha_compensacion_inflacion"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1908"
+number = "1908"
+section = ["resultados", "deduccion_autonomica_res", "castilla_la_mancha_res"]
+semantic_role = "irpf_deduccion_castilla_la_mancha_acciones_participaciones"
+continuidad_id = "irpf-deduccion-castilla-la-mancha-acciones-participaciones"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1909"
+number = "1909"
+section = ["resultados", "deduccion_autonomica_res", "castilla_la_mancha_res"]
+semantic_role = "irpf_deduccion_castilla_la_mancha_economia_social"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1910"
+number = "1910"
+section = ["resultados", "deduccion_autonomica_res", "extremadura_res"]
+semantic_role = "irpf_deduccion_extremadura_intereses_vivienda"
+continuidad_id = "irpf-deduccion-extremadura-intereses-vivienda"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1911"
+number = "1911"
+section = ["resultados", "calculo_impuesto_res", "ampliacion_deduc_mater_res"]
+data_type = "integer"
+semantic_role = "irpf_num_hijos_maternidad_2020"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "2022-only maternity-deduction expansion catch-up row for the 2020 children count; ids 1911-1915 are reused for real-estate gains from 2023."
+legal_refs = ["ley-35-2006:art-81"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1912"
+number = "1912"
+section = ["resultados", "calculo_impuesto_res", "ampliacion_deduc_mater_res"]
+semantic_role = "irpf_incremento_maternidad_no_aplicado_2020"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "2022-only maternity-deduction expansion catch-up row for unapplied 2020 amounts; ids 1911-1915 are reused for real-estate gains from 2023."
+legal_refs = ["ley-35-2006:art-81"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1913"
+number = "1913"
+section = ["resultados", "calculo_impuesto_res", "ampliacion_deduc_mater_res"]
+semantic_role = "irpf_incremento_maternidad_guarderia_no_aplicado_ejercicio"
+legal_refs = ["ley-35-2006:art-81"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1914"
+number = "1914"
+section = ["resultados", "calculo_impuesto_res", "ampliacion_deduc_mater_res"]
+data_type = "integer"
+semantic_role = "irpf_num_hijos_maternidad_2021"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "2022-only maternity-deduction expansion catch-up row for the 2021 children count; ids 1911-1915 are reused for real-estate gains from 2023."
+legal_refs = ["ley-35-2006:art-81"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1915"
+number = "1915"
+section = ["resultados", "calculo_impuesto_res", "ampliacion_deduc_mater_res"]
+semantic_role = "irpf_incremento_maternidad_no_aplicado_2021"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "2022-only maternity-deduction expansion catch-up row for unapplied 2021 amounts; ids 1911-1915 are reused for real-estate gains from 2023."
+legal_refs = ["ley-35-2006:art-81"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "1916"
+number = "1916"
+section = ["resultados", "calculo_impuesto_res", "ampliacion_deduc_mater_res"]
+semantic_role = "irpf_incremento_maternidad_guarderia_no_aplicado_2021"
+legal_refs = ["ley-35-2006:art-81"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"]
+[[revisions."2022".casillas]]
+id = "ANOASDLG"
+number = "*92"
+section = ["datos_identificativos", "ascendientes", "ascendiente"]
+data_type = "text"
+semantic_role = "irpf_ascendiente_fecha_nacimiento"
+input_kind = "bound"
+binding = "renta-family-ascendant-birth-date"
+legal_refs = ["ley-35-2006:art-59", "orden-hfp-310-2023:art-3"]
+additional_source_refs = ["aeat-dr-100-2022-xsd", "boe-modelo-100-2022-form"]
+[[revisions."2022".casillas]]
+id = "APENOMDLG"
+number = "*76"
+section = ["datos_identificativos", "hijos", "hijo"]
+data_type = "text"
+semantic_role = "irpf_descendiente_apellidos_nombre"
+input_kind = "bound"
+binding = "renta-family-descendant-display-name"
+legal_refs = ["ley-35-2006:art-58", "orden-hfp-310-2023:art-3"]
+additional_source_refs = ["aeat-dr-100-2022-xsd", "boe-modelo-100-2022-form"]
+[[revisions."2022".casillas]]
+id = "APENOMDLG_ASC"
+number = "*91"
+section = ["datos_identificativos", "ascendientes", "ascendiente"]
+data_type = "text"
+semantic_role = "irpf_ascendiente_apellidos_nombre"
+input_kind = "bound"
+binding = "renta-family-ascendant-display-name"
+legal_refs = ["ley-35-2006:art-59", "orden-hfp-310-2023:art-3"]
+additional_source_refs = ["aeat-dr-100-2022-xsd", "boe-modelo-100-2022-form"]
+[[revisions."2022".casillas]]
+id = "CONVASDLG"
+number = "*94"
+section = ["datos_identificativos", "ascendientes", "ascendiente"]
+data_type = "integer"
+semantic_role = "irpf_ascendiente_convivencia_descendientes"
+input_kind = "bound"
+binding = "renta-family-ascendant-cohabiting-descendant-count"
+legal_refs = ["ley-35-2006:art-59", "orden-hfp-310-2023:art-3"]
+additional_source_refs = ["aeat-dr-100-2022-xsd", "boe-modelo-100-2022-form"]
+[[revisions."2022".casillas]]
+id = "DECFAL"
+number = "*21"
+section = ["datos_identificativos", "declarante"]
+data_type = "text"
+semantic_role = "irpf_declarante_fecha_fallecimiento"
+input_kind = "bound"
+binding = "renta-profile-taxpayer-death-date"
+additional_source_refs = ["aeat-dr-100-2022-xsd", "boe-modelo-100-2022-form"]
+[[revisions."2022".casillas]]
+id = "DNIASDLG"
+number = "*90"
+section = ["datos_identificativos", "ascendientes", "ascendiente"]
+data_type = "nif"
+semantic_role = "irpf_ascendiente_nif"
+input_kind = "bound"
+binding = "renta-family-ascendant-tax-id"
+legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-310-2023:art-3"]
+additional_source_refs = ["aeat-dr-100-2022-xsd", "boe-modelo-100-2022-form"]
+[[revisions."2022".casillas]]
+id = "DPFNAC_C"
+number = "*15"
+section = ["datos_identificativos", "conyuge"]
+data_type = "text"
+semantic_role = "spouse_birth_date"
+input_kind = "bound"
+binding = "renta-profile-spouse-birth-date"
+legal_refs = ["ley-35-2006:art-57", "orden-hfp-310-2023:art-3"]
+additional_source_refs = ["aeat-dr-100-2022-xsd", "boe-modelo-100-2022-form"]
+[[revisions."2022".casillas]]
+id = "DPFNAC_D"
+number = "*10"
+section = ["datos_identificativos", "declarante"]
+data_type = "text"
+semantic_role = "irpf_declarante_fecha_nacimiento"
+required = true
+input_kind = "bound"
+binding = "renta-profile-taxpayer-birth-date"
+legal_refs = ["ley-35-2006:art-57", "orden-hfp-310-2023:art-3"]
+additional_source_refs = ["aeat-dr-100-2022-xsd", "boe-modelo-100-2022-form"]
+[[revisions."2022".casillas]]
+id = "DPGMIN_C"
+number = "*22"
+section = ["datos_identificativos", "conyuge"]
+data_type = "text"
+semantic_role = "spouse_disability_grade"
+input_kind = "bound"
+binding = "renta-profile-spouse-disability-grade"
+legal_refs = ["ley-35-2006:art-57", "orden-hfp-310-2023:art-3"]
+additional_source_refs = ["aeat-dr-100-2022-xsd", "boe-modelo-100-2022-form"]
+[[revisions."2022".casillas]]
+id = "DPGMIN_D"
+number = "*20"
+section = ["datos_identificativos", "declarante"]
+data_type = "text"
+semantic_role = "irpf_declarante_discapacidad_grado"
+input_kind = "bound"
+binding = "renta-profile-taxpayer-disability-grade"
+legal_refs = ["ley-35-2006:art-57", "orden-hfp-310-2023:art-3"]
+additional_source_refs = ["aeat-dr-100-2022-xsd", "boe-modelo-100-2022-form"]
+[[revisions."2022".casillas]]
+id = "DPNIF_C"
+number = "*13"
+section = ["datos_identificativos", "conyuge"]
+data_type = "nif"
+semantic_role = "spouse_nif"
+input_kind = "bound"
+binding = "renta-profile-spouse-tax-id"
+additional_source_refs = ["aeat-dr-100-2022-xsd", "boe-modelo-100-2022-form"]
+[[revisions."2022".casillas]]
+id = "DPNIF_D"
+number = "*01"
+section = ["datos_identificativos", "declarante"]
+data_type = "nif"
+semantic_role = "irpf_declarante_nif"
+required = true
+input_kind = "bound"
+binding = "renta-profile-tax-id"
+additional_source_refs = ["aeat-dr-100-2022-xsd", "boe-modelo-100-2022-form"]
+[[revisions."2022".casillas]]
+id = "DP_APENOM_C"
+number = "*14"
+section = ["datos_identificativos", "conyuge"]
+data_type = "text"
+semantic_role = "spouse_name"
+input_kind = "bound"
+binding = "renta-profile-spouse-display-name"
+additional_source_refs = ["aeat-dr-100-2022-xsd", "boe-modelo-100-2022-form"]
+[[revisions."2022".casillas]]
+id = "DP_APENOM_D"
+number = "*02"
+section = ["datos_identificativos", "declarante"]
+data_type = "text"
+semantic_role = "irpf_declarante_nombre"
+required = true
+input_kind = "bound"
+binding = "renta-profile-display-name"
+additional_source_refs = ["aeat-dr-100-2022-xsd", "boe-modelo-100-2022-form"]
+[[revisions."2022".casillas]]
+id = "ECIVIL"
+number = "*09"
+section = ["datos_identificativos", "declarante"]
+data_type = "text"
+semantic_role = "irpf_declarante_estado_civil"
+input_kind = "bound"
+binding = "renta-profile-marital-status"
+additional_source_refs = ["aeat-dr-100-2022-xsd", "boe-modelo-100-2022-form"]
+[[revisions."2022".casillas]]
+id = "FALLASDLG"
+number = "*95"
+section = ["datos_identificativos", "ascendientes", "ascendiente"]
+data_type = "text"
+semantic_role = "irpf_ascendiente_fecha_fallecimiento"
+input_kind = "bound"
+binding = "renta-family-ascendant-death-date"
+legal_refs = ["ley-35-2006:art-59", "orden-hfp-310-2023:art-3"]
+additional_source_refs = ["aeat-dr-100-2022-xsd", "boe-modelo-100-2022-form"]
+[[revisions."2022".casillas]]
+id = "FALLDLG"
+number = "*79"
+section = ["datos_identificativos", "hijos", "hijo"]
+data_type = "text"
+semantic_role = "irpf_descendiente_fecha_fallecimiento"
+input_kind = "bound"
+binding = "renta-family-descendant-death-date"
+legal_refs = ["ley-35-2006:art-58", "orden-hfp-310-2023:art-3"]
+additional_source_refs = ["aeat-dr-100-2022-xsd", "boe-modelo-100-2022-form"]
+[[revisions."2022".casillas]]
+id = "FNACDLG"
+number = "*77"
+section = ["datos_identificativos", "hijos", "hijo"]
+data_type = "text"
+semantic_role = "irpf_descendiente_fecha_nacimiento"
+input_kind = "bound"
+binding = "renta-family-descendant-birth-date"
+legal_refs = ["ley-35-2006:art-58", "orden-hfp-310-2023:art-3"]
+additional_source_refs = ["aeat-dr-100-2022-xsd", "boe-modelo-100-2022-form"]
+[[revisions."2022".casillas]]
+id = "HIJOSUE"
+number = "*88"
+section = ["datos_identificativos", "hijos"]
+data_type = "boolean"
+semantic_role = "irpf_hijos_residentes_ue_eee_flag"
+input_kind = "bound"
+binding = "renta-profile-family-descendants-eu-eea-deduction"
+additional_source_refs = ["aeat-dr-100-2022-xsd", "boe-modelo-100-2022-form"]
+[[revisions."2022".casillas]]
+id = "MINUSDLG"
+number = "*78"
+section = ["datos_identificativos", "hijos", "hijo"]
+data_type = "text"
+semantic_role = "irpf_descendiente_clave_discapacidad"
+input_kind = "bound"
+binding = "renta-family-descendant-disability-grade"
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-60", "orden-hfp-310-2023:art-3"]
+additional_source_refs = ["aeat-dr-100-2022-xsd", "boe-modelo-100-2022-form"]
+[[revisions."2022".casillas]]
+id = "NIFDLG"
+number = "*75"
+section = ["datos_identificativos", "hijos", "hijo"]
+data_type = "nif"
+semantic_role = "irpf_descendiente_nif"
+input_kind = "bound"
+binding = "renta-family-descendant-tax-id"
+legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015", "ley-35-2006:art-81-bis", "orden-hfp-310-2023:art-3"]
+additional_source_refs = ["aeat-dr-100-2022-xsd", "boe-modelo-100-2022-form"]
+[[revisions."2022".casillas]]
+id = "NORESIDENTE"
+number = "*25"
+section = ["datos_identificativos", "conyuge"]
+data_type = "boolean"
+semantic_role = "spouse_non_resident_irpf"
+input_kind = "bound"
+binding = "renta-profile-spouse-non-resident-irpf"
+additional_source_refs = ["aeat-dr-100-2022-xsd", "boe-modelo-100-2022-form"]
+[[revisions."2022".casillas]]
+id = "PCTMINASDLG"
+number = "*93"
+section = ["datos_identificativos", "ascendientes", "ascendiente"]
+data_type = "text"
+semantic_role = "irpf_ascendiente_clave_discapacidad"
+input_kind = "bound"
+binding = "renta-family-ascendant-disability-grade"
+legal_refs = ["ley-35-2006:art-59", "ley-35-2006:art-60", "orden-hfp-310-2023:art-3"]
+additional_source_refs = ["aeat-dr-100-2022-xsd", "boe-modelo-100-2022-form"]
+[[revisions."2022".casillas]]
+id = "PH18"
+number = "*74"
+section = ["datos_identificativos", "hijos"]
+data_type = "boolean"
+semantic_role = "irpf_hijos_menores_unidad_familiar_flag"
+input_kind = "bound"
+binding = "renta-profile-family-minor-children-in-unit"
+legal_refs = ["ley-35-2006:art-82", "ley-35-2006:art-83", "orden-hfp-310-2023:art-3"]
+additional_source_refs = ["aeat-dr-100-2022-xsd", "boe-modelo-100-2022-form"]
+[[revisions."2022".casillas]]
+id = "RESIDENTEUE"
+number = "*26"
+section = ["datos_identificativos", "conyuge"]
+data_type = "boolean"
+semantic_role = "spouse_resident_ue_eee"
+input_kind = "bound"
+binding = "renta-profile-spouse-eu-eea-resident"
+additional_source_refs = ["aeat-dr-100-2022-xsd", "boe-modelo-100-2022-form"]
+[[revisions."2022".casillas]]
+id = "SEXO_C"
+number = "*16"
+section = ["datos_identificativos", "conyuge"]
+data_type = "text"
+semantic_role = "spouse_sex"
+input_kind = "bound"
+binding = "renta-profile-spouse-sex"
+additional_source_refs = ["aeat-dr-100-2022-xsd", "boe-modelo-100-2022-form"]
+[[revisions."2022".casillas]]
+id = "SEXO_D"
+number = "*07"
+section = ["datos_identificativos", "declarante"]
+data_type = "text"
+semantic_role = "irpf_declarante_sexo"
+input_kind = "bound"
+binding = "renta-profile-taxpayer-sex"
+additional_source_refs = ["aeat-dr-100-2022-xsd", "boe-modelo-100-2022-form"]
+[[revisions."2022".casillas]]
+id = "TIPOTRIBUTACION"
+number = "*04"
+section = ["datos_identificativos", "declarante"]
+data_type = "text"
+semantic_role = "irpf_tipo_tributacion"
+required = true
+input_kind = "bound"
+binding = "renta-profile-declaration-type"
+legal_refs = ["ley-35-2006:art-82", "ley-35-2006:art-83", "orden-hfp-310-2023:art-3"]
+additional_source_refs = ["aeat-dr-100-2022-xsd", "boe-modelo-100-2022-form"]
+[[revisions."2022".casillas]]
+id = "ZCCAD"
+number = "*03"
+section = ["datos_identificativos", "declarante"]
+data_type = "text"
+semantic_role = "irpf_comunidad_autonoma_residencia"
+required = true
+input_kind = "bound"
+binding = "renta-profile-tax-residence-ccaa"
+legal_refs = ["ley-35-2006:art-74", "orden-hfp-310-2023:art-3"]
+additional_source_refs = ["aeat-dr-100-2022-xsd", "boe-modelo-100-2022-form"]
+[[revisions."2022".casillas]]
+id = "ZRUE2"
+number = "*27"
+section = ["datos_identificativos", "conyuge"]
+data_type = "text"
+semantic_role = "spouse_resident_ue_eee_country"
+input_kind = "bound"
+binding = "renta-profile-spouse-eu-eea-country"
+additional_source_refs = ["aeat-dr-100-2022-xsd", "boe-modelo-100-2022-form"]
+
+# Toma-de-datos-only eligibility flag for the reduccion agricultores jovenes
+# (LIRPF DA 6a; instruccion 3 of each year's Anexo I). Every input dictionary
+# from 2022 declares it (campo AJ, .../ActividadAgr/InformacionAdicionalAgr/AJ,
+# tipo S_N) without a printed casilla numero, so the asterisk numero
+# convention applies. The eligibility itself is an operator-declared fact;
+# blank or No never applies the reduction.
+[[revisions."2022".casillas]]
+id = "AJ"
+number = "*98"
+section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
+data_type = "boolean"
+semantic_role = "irpf_eo_agr_reduccion_jovenes_flag"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "EO-agraria agricultores-jovenes eligibility flag (AEAT DR field AJ); no other casilla carries this Fase 4a gate."
+legal_refs = ["ley-35-2006:da-6", "orden-hfp-1335-2021:anexo-i-instruccion-3"]
+additional_source_refs = ["aeat-dr-100-2022-input-dictionary", "aeat-renta-2022-manual-parte1"]
+# Fase 5a support casilla (art. 32.1 LIRPF): the record design declares
+# casilla 1554 as a single amount with no sub-field for the irregular base the
+# 30 por 100 applies to, and which part of the rendimiento is irregular is a
+# preparer fact no other casilla carries. The base is declared here so 1554 is
+# computed; a blank base yields no reduction.
+[[revisions."2022".casillas]]
+id = "eo-agraria-reduccion-irregularidad-base"
+number = "eo-agraria-reduccion-irregularidad-base"
+section = ["toma_datos_ampliada", "reg_estima_obj_agricola", "actividad_agr"]
+semantic_role = "irpf_eo_agr_reduccion_irregulares_base"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "EO-agraria art. 32.1 irregularidad reducción base support casilla (no AEAT DR sub-field exists for this component); no other casilla carries this Fase 5a base input."
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-32-2015"], source_refs = ["aeat-renta-2022-manual-parte1"] }
+legal_refs = ["ley-35-2006:art-32-2015"]
+source_refs = ["aeat-renta-2022-manual-parte1"]

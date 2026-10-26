@@ -1,0 +1,230 @@
+[revisions."2023"]
+formula_source_refs = ["aeat-modelo-222-instructions-2023-2024"]
+casilla_source_refs = ["aeat-dr-222-2023-2024"]
+application_link_source_refs = ["boe-modelo-202-base-order"]
+# Calculation-grade edition for modelo 222, filing year 2023, stored as its
+# differences from the 2022 edition (see the storage note below).
+#
+# WHICH DESIGN AND WHICH INSTRUCTIONS. aeat-dr-222-2023-2024 declares
+# applies_from 2023-01-01 and applies_to 2024-12-31, so it is the design in
+# force for this filing year; aeat-modelo-222-instructions-2023-2024 is AEAT's
+# page "Instrucciones para periodos impositivos iniciados en 2023 y 2024", from
+# which every formula citation below is quoted. aeat-dr-222-2025 opens
+# 2025-01-01 and is not cited here.
+#
+# WHAT THIS EDITION CHANGES AGAINST 2022, measured against that design:
+#   - boxes [59] and [60], "Ajustes para la determinacion de la base imponible
+#     del grupo (DA 19a LIS)", are new on this design and are added into [10],
+#     which becomes clave [04] + clave [38] - clave [39] + clave [59] - clave [60];
+#   - page 1 gains the flag at position 226, which lives in this edition's
+#     generated export layout;
+#   - every formula, the 18% modalidad 40.2 rate, the reconciled claves and the
+#     review, approval and reconciliation links cite this era's instructions,
+#     and the calculation and export links, the completeness manifest and the
+#     workbook pin cite this era's design.
+#
+# Every legal_ref cited is in force across the whole filing year:
+# orden-hfp-227-2017:art-2 and art-5 from 2017-03-16, ley-27-2014:art-40 from
+# 2015-01-01, all open-ended.
+authority_grade = "calculation"
+id = "2023"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+period_selector = { year_from = 2023, year_to = 2023, periods = ["1P", "2P", "3P"] }
+orden_aplicabilidad = ["orden-hfp-227-2017:art-2"]
+legal_refs = [
+    "orden-hfp-227-2017:art-2",
+    "orden-hfp-227-2017:art-5",
+    "ley-27-2014:art-40",
+]
+source_refs = ["aeat-dr-222-2023-2024", "boe-modelo-202-base-order"]
+review_status = "agent_reviewed"
+reviewed_by = """\
+agent: authored from the bundled hash-pinned aeat-dr-222-2023-2024 diseño de registro, \
+whose declared window (2023-01-01..2024-12-31) covers this filing year exactly. VERIFIED -- \
+EVERY CITED REF COVERS THE YEAR: orden-hfp-227-2017 art-2 and art-5 effective_from \
+2017-03-16 open-ended, ley-27-2014:art-40 effective_from 2015-01-01 open-ended, \
+boe-modelo-202-base-order applies_from 2017-03-16 open-ended, aeat-dr-222-2023-2024 \
+2023-01-01..2024-12-31. NOT ONE ref or source cited here opens after 2023-01-01 or closes \
+before 2023-12-31. VERIFIED -- 56 OWN-BOX DECLARATIONS, ZERO DUPLICATES, counted with the \
+rule the 2025 edition establishes (a field's own box is the LAST bracket in its \
+description; earlier brackets are formula inputs). 24 on DR22201, 32 on DR22202. The 2025 \
+edition's own review independently reports 56 for this file, which is why the count is an \
+external check rather than a self-report. VERIFIED -- THE EPOCH DELTA IS ADDITIVE ONLY: \
+2025 adds [67] on DR22201 and [61]-[66] on DR22202 and withdraws nothing; all 56 boxes here \
+survive into 2025. VERIFIED -- POSITIONS WERE NOT COPIED ACROSS EPOCHS. 39 of the shared \
+boxes sit at different offsets in the two designs, so every position-bearing value in this \
+edition was read off THIS design: the eleven unnumbered Información adicional slots are \
+declared at 555-571 through 725-741, against 633-649 through 803-819 in 2025, a uniform +78 \
+that matches the space the six added B.2 boxes take. Copying the 2025 ranges would have put \
+all eleven fields 78 bytes into the wrong slot. VERIFIED -- BOTH RECORDS END IDENTICALLY TO \
+2025: 900 positions, fin de registro at 889 length 12. NOT CLAIMED -- calculation or filing \
+grade: no instrucciones source in the catalogue opens before 2025-01-01, so all 56 boxes are \
+input_kind = "manual" and no formula, parameter, export layout or completeness manifest is \
+declared. NOT CLAIMED -- locale labels. The es/en/ca/hu schema catalogues carry a casilla \
+block for 2025-y-siguientes only; this edition adds none, which is the same state the \
+back-year editions of modelos 190 and 193 are in. NOT CLAIMED -- independent_check_coverage \
+is n/a: NO CLAIM, not zero. No human operator has countersigned this edition."""
+reviewed_at = 2026-09-12
+# Storage reuse only, not legal continuity: this edition's payload is stored as
+# its differences from the 2022 edition, the modelo's storage baseline.
+casilla_storage_baseline = "2022"
+family_storage_baseline = "2022"
+scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest"]
+
+[[revisions."2023".casilla_positions]]
+id = "59"
+position = 11
+
+[[revisions."2023".casilla_positions]]
+id = "60"
+position = 12
+
+[[revisions."2023".family_overrides]]
+family = "formulas"
+selector = {revision = "2022", id = "modelo-222-base-a-tipo-2-b2"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-222-instructions-2023-2024", required_text = ["La clave [ 23 ] ser", "= clave [19] - clave [20]"]}], source_refs = ["aeat-modelo-222-instructions-2023-2024"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "formulas"
+selector = {revision = "2022", id = "modelo-222-base-imponible-previa"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-222-instructions-2023-2024", required_text = ["CLAVE [13]. BASE IMPONIBLE PREVIA", "] = clave [10] + clave [11] - clave [12]"]}], source_refs = ["aeat-modelo-222-instructions-2023-2024"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "formulas"
+selector = {revision = "2022", id = "modelo-222-base-pago-fraccionado-b1"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-222-instructions-2023-2024", required_text = ["La clave [ 16 ] ser", "= clave [13] + clave [44] + clave [45] – clave [46] – clave [14] – clave [15] + clave [47] – clave [48], sin poder ser negativa"]}], source_refs = ["aeat-modelo-222-instructions-2023-2024"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "formulas"
+selector = {revision = "2022", id = "modelo-222-base-pago-fraccionado-b2"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-222-instructions-2023-2024", required_text = ["La clave [ 19 ] ser", "= clave [13] + clave [44] + clave [45] - clave [46] - clave [14] - clave [15] + clave [47] - clave [48], sin poder ser negativa"]}], source_refs = ["aeat-modelo-222-instructions-2023-2024"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "formulas"
+selector = {revision = "2022", id = "modelo-222-cantidad-a-ingresar"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-222-instructions-2023-2024", required_text = ["CLAVE [34]. CANTIDAD A INGRESAR", "La mayor de las claves [32] o [33]"]}], source_refs = ["aeat-modelo-222-instructions-2023-2024"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "formulas"
+selector = {revision = "2022", id = "modelo-222-importe-pago-fraccionado-b2-tipo-1"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-222-instructions-2023-2024", required_text = ["La clave [ 22 ] ser", "= (clave [20] x clave [21]) / 100"]}], source_refs = ["aeat-modelo-222-instructions-2023-2024"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "formulas"
+selector = {revision = "2022", id = "modelo-222-importe-pago-fraccionado-b2-tipo-2"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-222-instructions-2023-2024", required_text = ["clave [ 25 ] = (clave [23] x clave [24]) /100"]}], source_refs = ["aeat-modelo-222-instructions-2023-2024"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "formulas"
+selector = {revision = "2022", id = "modelo-222-modalidad-40-2-a-ingresar"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-222-instructions-2023-2024", required_text = ["CLAVE [03]. A INGRESAR", "porcentaje del 18%", "base del pago fraccionado"]}], source_refs = ["aeat-modelo-222-instructions-2023-2024"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "formulas"
+selector = {revision = "2022", id = "modelo-222-modalidad-40-3-resultado"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-222-instructions-2023-2024", required_text = ["CLAVE [32]. RESULTADO", "clave [29]/100] - clave [30] - clave [31]"]}], source_refs = ["aeat-modelo-222-instructions-2023-2024"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "formulas"
+selector = {revision = "2022", id = "modelo-222-resultado-previo-b1"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-222-instructions-2023-2024", required_text = ["La clave [ 18 ] ser", "= clave [16] x clave [17] /100 + clave [49] + clave [50] - clave [51]"]}], source_refs = ["aeat-modelo-222-instructions-2023-2024"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "formulas"
+selector = {revision = "2022", id = "modelo-222-resultado-previo-b2"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-222-instructions-2023-2024", required_text = ["clave [26] = clave [22] + clave [25] + clave [54] + clave [57]", "Su importe no puede ser negativo"]}], source_refs = ["aeat-modelo-222-instructions-2023-2024"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "formulas"
+selector = {revision = "2022", id = "modelo-222-suma-bases-imponibles-individuales"}
+sequence_additions = {"expression.args" = [{op = "add", args = [{op = "subtract", args = [{op = "add", args = [{casilla_id = "04"}, {casilla_id = "38"}]}, {casilla_id = "39"}]}, {casilla_id = "59"}]}, {casilla_id = "60"}], source_citations = [{source_ref = "aeat-modelo-222-instructions-2023-2024", required_text = ["Es un importe calculado", "] = clave [04] + clave [38] - clave [39] + clave [59] - clave [60]"]}], source_refs = ["aeat-modelo-222-instructions-2023-2024"]}
+sequence_removals = {"expression.args" = [0, 1], source_citations = [0], source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "formulas"
+selector = {revision = "2022", id = "modelo-222-total-correcciones-aumentos"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-222-instructions-2023-2024", required_text = ["] = clave [05] + clave [07]"]}], source_refs = ["aeat-modelo-222-instructions-2023-2024"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "formulas"
+selector = {revision = "2022", id = "modelo-222-total-correcciones-disminuciones"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-222-instructions-2023-2024", required_text = ["] = clave [06] + clave [37] + clave [08]"]}], source_refs = ["aeat-modelo-222-instructions-2023-2024"]}
+sequence_removals = {source_citations = [0], source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "constructs"
+selector = {revision = "2022", id = "modelo-222-declaration-construct"}
+sequence_additions = {deadline_windows = ["modelo-222-2023-1p", "modelo-222-2023-2p", "modelo-222-2023-3p"], source_refs = ["aeat-dr-222-2023-2024", "aeat-modelo-222-instructions-2023-2024"]}
+sequence_removals = {deadline_windows = [0, 1, 2], source_refs = [2, 3]}
+sequence_order = {source_refs = [2, 0, 1, 3]}
+
+[[revisions."2023".family_overrides]]
+family = "application_links"
+selector = {revision = "2022", id = "modelo-222-approval"}
+sequence_additions = {source_refs = ["aeat-modelo-222-instructions-2023-2024"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "application_links"
+selector = {revision = "2022", id = "modelo-222-calculation"}
+sequence_additions = {source_refs = ["aeat-dr-222-2023-2024"]}
+sequence_removals = {source_refs = [1]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2023".family_overrides]]
+family = "application_links"
+selector = {revision = "2022", id = "modelo-222-export"}
+sequence_additions = {source_refs = ["aeat-dr-222-2023-2024"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "application_links"
+selector = {revision = "2022", id = "modelo-222-reconciliation"}
+sequence_additions = {source_refs = ["aeat-modelo-222-instructions-2023-2024"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "application_links"
+selector = {revision = "2022", id = "modelo-222-review"}
+sequence_additions = {source_refs = ["aeat-modelo-222-instructions-2023-2024"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2023".family_overrides]]
+family = "parameters"
+selector = {revision = "2022", id = "is.modalidad_cuota.percentage"}
+sequence_additions = {source_citations = [{source_ref = "aeat-modelo-222-instructions-2023-2024", required_text = ["CLAVE [03]. A INGRESAR", "porcentaje del 18%", "base del pago fraccionado"]}], source_refs = ["aeat-dr-222-2023-2024", "aeat-modelo-222-instructions-2023-2024"]}
+sequence_removals = {source_citations = [0], source_refs = [0, 1]}
+
+[[revisions."2023".family_overrides]]
+family = "workbook_parity_refs"
+selector = {revision = "2022", id = "modelo-222-record-design"}
+fields = {fixture_id = "modelo-222-2023-2024-record-design-layout", workbook_source = "aeat-dr-222-2023-2024"}
+sequence_additions = {source_refs = ["aeat-dr-222-2023-2024"]}
+sequence_removals = {source_refs = [1]}
+sequence_order = {source_refs = [1, 0]}
+
+[[revisions."2023".family_overrides]]
+family = "verification_expectations"
+selector = {revision = "2022", id = "modelo-222-reconcile-when-present"}
+sequence_additions = {source_refs = ["aeat-modelo-222-instructions-2023-2024", "aeat-dr-222-2023-2024"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions."2023".family_overrides]]
+family = "completeness_manifest"
+selector = {revision = "2022", id = "aeat-dr-222-2019-2022"}
+replacement_id = "aeat-dr-222-2023-2024"
+sequence_additions = {casillas = [{casilla_id = "59", number = "59"}, {casilla_id = "60", number = "60"}], source_refs = ["aeat-dr-222-2023-2024", "aeat-modelo-222-instructions-2023-2024"]}
+sequence_removals = {source_refs = [0, 1]}

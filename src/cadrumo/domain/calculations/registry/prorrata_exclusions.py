@@ -1,0 +1,164 @@
+"""Typed projection of the registry-owned LIVA art. 104.Tres vocabulary."""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from dataclasses import dataclass
+from datetime import date
+from typing import Final
+
+from ....core.prorrata_exclusions import Art104TresExclusion
+from .errors import RegistryValidationError
+from .facts.resolution import required_mapping_entry, unique_mapping_tokens
+from .facts.string_mapping import (
+    MappingValueWhitespace,
+    StringMappingFact,
+    StringMappingPolicy,
+)
+from .governed_fact_scope import GovernedFactSource
+from .schema_base import DateAxis
+
+_ENTRY_SUBJECT: Final = "art. 104.Tres mapping"
+_UNIQUE_TOKENS_REQUIREMENT: Final = "must declare unique non-empty tokens"
+
+_FACT_ID = "renta-iva-deduction-ratio-policy"
+_ORDER_KEY = "art104_tres.exclusion_order"
+_OPERATOR_KEY = "art104_tres.operator_declared"
+_AUTO_KEY = "art104_tres.auto_derived"
+
+
+@dataclass(frozen=True, slots=True)
+class Art104TresExclusionDefinition:
+    """One registry-projected exclusion token and its legal metadata."""
+
+    token: Art104TresExclusion
+    article: str
+    legal_ref: str
+    description: str
+    kind: str
+
+
+@dataclass(frozen=True, slots=True)
+class Art104TresExclusionCatalogue:
+    """Typed projection of the dated art. 104.Tres mapping fact."""
+
+    definitions: tuple[Art104TresExclusionDefinition, ...]
+
+    @property
+    def all_exclusions(self) -> frozenset[Art104TresExclusion]:
+        """Return every registry-declared exclusion token."""
+        return frozenset(definition.token for definition in self.definitions)
+
+    @property
+    def operator_declared(self) -> frozenset[Art104TresExclusion]:
+        """Return tokens the registry permits an operator to declare."""
+        return frozenset(definition.token for definition in self.definitions if definition.kind == "operator_declared")
+
+    @property
+    def auto_derived(self) -> frozenset[Art104TresExclusion]:
+        """Return tokens the registry marks as structurally derived."""
+        return frozenset(definition.token for definition in self.definitions if definition.kind == "auto_derived")
+
+    def require(self, value: object) -> Art104TresExclusion:
+        """Validate one opaque token against this projection, failing closed."""
+        if isinstance(value, Art104TresExclusion):
+            token = value
+        elif isinstance(value, str):
+            token = Art104TresExclusion(value.strip())
+        else:
+            raise RegistryValidationError("art. 104.Tres exclusion must be a string token")
+        if not str(token):
+            raise RegistryValidationError("art. 104.Tres exclusion token must not be blank")
+        if token not in self.all_exclusions:
+            raise RegistryValidationError(
+                f"art. 104.Tres exclusion {str(token)!r} is not declared by the facts registry",
+            )
+        return token
+
+
+_ENTRIES_POLICY = StringMappingPolicy(subject=_ENTRY_SUBJECT, value_whitespace=MappingValueWhitespace.PRESERVE)
+
+_ENTRIES_FACT = StringMappingFact(fact_id=_FACT_ID, date_axis=DateAxis.FILING_PERIOD, policy=_ENTRIES_POLICY)
+
+
+def resolve_art104_tres_exclusion_catalogue(
+    *,
+    effective_date: date | None = None,
+    authority: GovernedFactSource | None = None,
+) -> Art104TresExclusionCatalogue:
+    """Resolve the complete art. 104.Tres catalogue through facts authority."""
+    entries = _ENTRIES_FACT.resolve_scoped_entries(effective_date=effective_date, authority=authority)
+    ordered, operator = _art104_exclusion_partitions(entries)
+    definitions = _art104_exclusion_definitions(entries, ordered, operator)
+    return Art104TresExclusionCatalogue(definitions=definitions)
+
+
+def _art104_exclusion_partitions(
+    entries: Mapping[str, str],
+) -> tuple[tuple[Art104TresExclusion, ...], frozenset[Art104TresExclusion]]:
+    ordered_tokens = unique_mapping_tokens(
+        entries, _ORDER_KEY, subject=_ENTRY_SUBJECT, requirement=_UNIQUE_TOKENS_REQUIREMENT
+    )
+    operator_tokens = unique_mapping_tokens(
+        entries, _OPERATOR_KEY, subject=_ENTRY_SUBJECT, requirement=_UNIQUE_TOKENS_REQUIREMENT
+    )
+    auto_tokens = unique_mapping_tokens(
+        entries, _AUTO_KEY, subject=_ENTRY_SUBJECT, requirement=_UNIQUE_TOKENS_REQUIREMENT
+    )
+    ordered = tuple(Art104TresExclusion(token) for token in ordered_tokens)
+    operator = frozenset(Art104TresExclusion(token) for token in operator_tokens)
+    auto = frozenset(Art104TresExclusion(token) for token in auto_tokens)
+    all_tokens = frozenset(ordered)
+    if operator & auto or operator | auto != all_tokens:
+        raise RegistryValidationError(
+            "art. 104.Tres operator and auto-derived partitions must be disjoint and cover the exclusion order",
+        )
+    return ordered, operator
+
+
+def _art104_exclusion_definitions(
+    entries: Mapping[str, str],
+    ordered: tuple[Art104TresExclusion, ...],
+    operator: frozenset[Art104TresExclusion],
+) -> tuple[Art104TresExclusionDefinition, ...]:
+    definitions: list[Art104TresExclusionDefinition] = []
+    for token in ordered:
+        prefix = f"art104_tres.exclusion.{token}"
+        kind = required_mapping_entry(entries, f"{prefix}.kind", subject=_ENTRY_SUBJECT)
+        expected_kind = "operator_declared" if token in operator else "auto_derived"
+        if kind != expected_kind:
+            raise RegistryValidationError(
+                f"art. 104.Tres token {str(token)!r} has kind {kind!r}, expected {expected_kind!r}",
+            )
+        definitions.append(
+            Art104TresExclusionDefinition(
+                token=token,
+                article=required_mapping_entry(entries, f"{prefix}.article", subject=_ENTRY_SUBJECT),
+                legal_ref=required_mapping_entry(entries, f"{prefix}.legal_ref", subject=_ENTRY_SUBJECT),
+                description=required_mapping_entry(entries, f"{prefix}.description", subject=_ENTRY_SUBJECT),
+                kind=kind,
+            ),
+        )
+    return tuple(definitions)
+
+
+def require_art104_tres_exclusion(
+    value: object,
+    *,
+    effective_date: date | None = None,
+    authority: GovernedFactSource | None = None,
+) -> Art104TresExclusion:
+    """Return one registry-declared opaque token or refuse it."""
+    catalogue = resolve_art104_tres_exclusion_catalogue(
+        effective_date=effective_date,
+        authority=authority,
+    )
+    return catalogue.require(value)
+
+
+__all__ = [
+    "Art104TresExclusionCatalogue",
+    "Art104TresExclusionDefinition",
+    "require_art104_tres_exclusion",
+    "resolve_art104_tres_exclusion_catalogue",
+]

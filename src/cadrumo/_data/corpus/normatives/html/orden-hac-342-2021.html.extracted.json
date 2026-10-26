@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-hac-342-2021.html",
+  "source_sha256": "6378831ddf4b6867175d62d6a89e81a3c5bbf57b47778d1572bc741c6a9395b2",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.4",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Se aprueba el modelo 234 de «Declaración de información de determinados mecanismos transfronterizos de planificación fiscal».",
+      "title": "Articulo 1. Aprobacion del modelo 234.",
+      "section": "Articulo 1. Aprobacion del modelo 234.",
+      "anchor": "#a1"
+    },
+    {
+      "text": "La presentación del modelo 234 deberá realizarse en el plazo de los treinta días naturales siguientes al nacimiento de la obligación definido en el apartado 3 del artículo 46 del Reglamento General aprobado por el Real Decreto 1065/2007, de 27 de julio.",
+      "title": "Articulo 4. Plazo de presentacion.",
+      "section": "Articulo 4. Plazo de presentacion.",
+      "anchor": "#a4"
+    }
+  ]
+}

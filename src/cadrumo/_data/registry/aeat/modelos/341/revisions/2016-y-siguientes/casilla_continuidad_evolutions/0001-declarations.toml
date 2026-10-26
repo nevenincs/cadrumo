@@ -1,0 +1,36 @@
+# Campos of the 2005-2015 record design that the 2016 record design no longer
+# carries. The predecessor design (aeat-dr-341-2005-2015, sha256 c1c59a317be8)
+# prints campo 4 "Letras etiqueta (Persona fisica)" at position 14, campo 17
+# "Reintegro: Codigo Cuenta Cliente (C.C.C.)" at position 130 and campo 20
+# "Observaciones" at position 270. The 2016 design (aeat-dr-341-2016, sha256
+# 7bb06cb80b86) prints none of the three: its reintegro account is an IBAN at
+# position 243, and it has no etiqueta or observaciones campo. Each lineage
+# therefore ends with the 2005-2015 edition. The IBAN is a different campo, not
+# a continuation of the C.C.C., and no identity is asserted across the boundary.
+
+[[revisions."2016-y-siguientes".casilla_continuidad_evolutions]]
+id = "m341-letras-etiqueta-persona-fisica-2005-2015-2016-y-siguientes-retired"
+continuidad_id = "letras-etiqueta-persona-fisica"
+from_revision = "2005-2015"
+to_revision = "2016-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-min-2000-12-15-m341:art-1"]
+source_refs = ["aeat-dr-341-2005-2015", "aeat-dr-341-2016"]
+
+[[revisions."2016-y-siguientes".casilla_continuidad_evolutions]]
+id = "m341-codigo-cuenta-cliente-2005-2015-2016-y-siguientes-retired"
+continuidad_id = "codigo-cuenta-cliente"
+from_revision = "2005-2015"
+to_revision = "2016-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-min-2000-12-15-m341:art-1"]
+source_refs = ["aeat-dr-341-2005-2015", "aeat-dr-341-2016"]
+
+[[revisions."2016-y-siguientes".casilla_continuidad_evolutions]]
+id = "m341-observaciones-presentacion-2005-2015-2016-y-siguientes-retired"
+continuidad_id = "observaciones-presentacion"
+from_revision = "2005-2015"
+to_revision = "2016-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-min-2000-12-15-m341:art-1"]
+source_refs = ["aeat-dr-341-2005-2015", "aeat-dr-341-2016"]

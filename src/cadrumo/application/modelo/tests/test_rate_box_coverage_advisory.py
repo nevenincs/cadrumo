@@ -1,0 +1,186 @@
+"""Calculate keeps succeeding, and says what the rate boxes did not account for.
+
+The decision splits this condition across two gates: an advisory here, a refusal
+at export. The advisory carries the whole load of making that split fair -- the
+repair is a ledger edit, and an operator who first learns of the problem when
+the export refuses has been told at the one moment they can do nothing about it.
+
+So two properties are pinned here, in the order they can break silently:
+the advisory names the amount and the tier the repair needs; and the coordinator
+actually CALLS the collector and RETURNS rather than raising, so calculate still
+succeeds while the advisory fires. The last hop -- diagnostic to typed envelope
+notice -- is pinned in the CLI package that owns it, in
+``entrypoints/cli/tests/test_source_advisory_notice_channel.py``.
+
+These focused cases construct a partition to test diagnostic content and
+coordinator behavior. Committed Modelo 390 coverage and real ledger aggregation
+are exercised in the domain registry rate-box tests.
+"""
+
+from __future__ import annotations
+
+from datetime import date
+from decimal import Decimal
+
+import pytest
+
+from ....core.aggregation import BindingAggregation, BindingAggregationOp
+from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.modelo import Modelo
+from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
+from ....domain.calculations.registry.schema_references import PeriodSelector
+from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
+from ....domain.iva.flow import IvaFlowDirection
+from ....domain.iva.schema import (
+    IvaCashAccountingTreatment,
+    IvaCategory,
+    IvaLedgerObservationRole,
+    IvaRateKind,
+)
+from ...aggregation.source_mesh import CalculationSourceDiagnostic
+from .._rate_box_advisory import collect_rate_box_coverage_diagnostics
+from ..calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
+from .advisory_diagnostic_repositories import advisory_diagnostic_repositories
+
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_application,
+    # The fixture bindings validate their IVA categories, rate kinds, flows and
+    # cash-accounting treatments against governed facts, which only a leased
+    # generation puts in scope.
+    pytest.mark.usefixtures("authority_operation"),
+]
+
+_BUCKET_ID = "6b6b6b6b-6b6b-4b6b-8b6b-6b6b6b6b6b6b"
+_FILING_YEAR = 2025
+_ANNUAL_PERIOD = "0A"
+_REASON = "rate_boxes_underaccount_total"
+
+_LEGAL = ("ley-37-1992:art-91",)
+_SOURCE = ("aeat-dr-390-2025",)
+
+_TOTAL_CASILLA: CasillaId = validated_casilla_id(
+    "iva.anual.repercutido.super-reducido",
+    surface="test.rate_box.total",
+)
+_BOX_4PCT: CasillaId = validated_casilla_id("02", surface="test.rate_box.box")
+
+
+def _binding(binding_id: str, *, applied_rates: tuple[Decimal, ...] | None) -> BindingDefinition:
+    selector: dict[str, object] = {
+        "categories": (IvaCategory("domestic_super_reduced"),),
+        "rate_kinds": (IvaRateKind("super_reduced"),),
+        "flow_direction": IvaFlowDirection.from_registry("repercutido"),
+        "fact": "iva_amount_sum",
+        "observation_roles": (IvaLedgerObservationRole.SETTLEMENT,),
+        "cash_accounting_treatments": (
+            IvaCashAccountingTreatment("none"),
+            IvaCashAccountingTreatment("supplier_regime"),
+        ),
+    }
+    if applied_rates is not None:
+        selector["applied_rates"] = applied_rates
+    return BindingDefinition(
+        id=binding_id,
+        provider={"kind": "ledger_iva_aggregation", **selector},
+        value={"data_type": "money", "channel": "decimal"},
+        aggregation=BindingAggregation(op=BindingAggregationOp.SUM),
+        legal_refs=_LEGAL,
+        source_refs=_SOURCE,
+    )
+
+
+def _casilla(casilla_id: CasillaId, *, number: str, binding: str, exports: bool) -> CasillaDefinition:
+    return CasillaDefinition(
+        id=casilla_id,
+        number=number,
+        localization_keys=(f"test.schema.casilla.{number}.label",),
+        section=("iva", "anual"),
+        input_kind="bound",
+        binding=binding,
+        export_refs=("modelo-390-page-02.field",) if exports else (),
+        legal_refs=_LEGAL,
+        source_refs=_SOURCE,
+    )
+
+
+def _split_revision() -> ModeloRevision:
+    """A tier split into a rate-blind total layer and one rate-specific box."""
+    return ModeloRevision(
+        id="2010-y-siguientes",
+        localization_key="test.schema.revision.2010-y-siguientes.label",
+        valid_from=date(2024, 1, 1),
+        period_selector=PeriodSelector(year_from=2024, periods=(_ANNUAL_PERIOD,)),
+        legal_refs=_LEGAL,
+        source_refs=_SOURCE,
+        bindings=(
+            _binding("m390-super-reducido-total", applied_rates=None),
+            _binding("m390-super-reducido-4pct", applied_rates=(Decimal("0.04"),)),
+        ),
+        casillas=(
+            _casilla(_TOTAL_CASILLA, number="9001", binding="m390-super-reducido-total", exports=False),
+            _casilla(_BOX_4PCT, number="02", binding="m390-super-reducido-4pct", exports=True),
+        ),
+    )
+
+
+def _coordinator_diagnostics(values: dict[CasillaId, Decimal]) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Every advisory the COORDINATOR raises, not the collector called directly."""
+    repositories = advisory_diagnostic_repositories(bucket_id=_BUCKET_ID)
+    return collect_bucket_aggregation_advisory_diagnostics(
+        _split_revision(),
+        values,
+        modelo=Modelo("390").value,
+        period_token=_ANNUAL_PERIOD,
+        filing_year=_FILING_YEAR,
+        bucket_id=_BUCKET_ID,
+        observation_repository=repositories.observation,
+        prorrata_register_repository=repositories.prorrata_register,
+        bienes_inversion_repository=repositories.bienes_inversion,
+        transaction_repository=repositories.transactions,
+    )
+
+
+def test_the_advisory_names_the_unaccounted_amount_and_its_tier() -> None:
+    """420.00 declared, 300.00 in the 4 % box: 120.00 carries no rate.
+
+    The operator's repair is to record the rate on those ledger rows, so the
+    amount and the tier are the two things the message must carry -- without
+    them the advisory says only that something is wrong.
+    """
+    diagnostics = collect_rate_box_coverage_diagnostics(
+        _split_revision(),
+        {_TOTAL_CASILLA: Decimal("420.00"), _BOX_4PCT: Decimal("300.00")},
+    )
+
+    assert len(diagnostics) == 1
+    diagnostic = diagnostics[0]
+    assert diagnostic.reason == _REASON
+    assert "120.00" in diagnostic.message
+    assert IvaRateKind("super_reduced").value in diagnostic.message
+    assert diagnostic.remedy is not None
+
+
+def test_a_breakdown_reaching_its_total_raises_nothing() -> None:
+    """The negative control: an advisory that always fires teaches nothing."""
+    diagnostics = collect_rate_box_coverage_diagnostics(
+        _split_revision(),
+        {_TOTAL_CASILLA: Decimal("420.00"), _BOX_4PCT: Decimal("420.00")},
+    )
+
+    assert diagnostics == ()
+
+
+def test_the_coordinator_raises_the_advisory_and_returns() -> None:
+    """The wiring and the non-blocking property, which break together.
+
+    A collector that returns the right rows and is never called protects nobody,
+    so nothing here calls the collector -- remove its line from the coordinator
+    and this test goes red. And the coordinator RETURNING rather than raising is
+    the whole basis of the split: refusing here would withhold the number the
+    ledger repair depends on, and would make the export refusal unreachable,
+    since nothing would get that far.
+    """
+    diagnostics = _coordinator_diagnostics({_TOTAL_CASILLA: Decimal("420.00"), _BOX_4PCT: Decimal("300.00")})
+
+    assert _REASON in {diagnostic.reason for diagnostic in diagnostics}

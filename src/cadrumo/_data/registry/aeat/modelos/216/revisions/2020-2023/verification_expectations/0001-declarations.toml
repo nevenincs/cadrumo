@@ -1,0 +1,10 @@
+[[revisions."2020-2023".verification_expectations]]
+id = "modelo-216-reconcile-when-present"
+computed_casilla_ids = []
+reconcile_when_present_casilla_ids = ["7"]
+tolerance = "0.00"
+rounding = "money-2"
+min_coverage = "0"
+discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"]
+legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-dr-216-2020-2023", "boe-2008-18497-modelo-216-calculation-guidance"]

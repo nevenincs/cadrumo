@@ -1,0 +1,298 @@
+from __future__ import annotations
+
+from typing import Final
+
+from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
+from cadrumo_client.commands.shared_contracts import (
+    DeferredTarget,
+    LazyBinding,
+    ParameterConstraint,
+    ParameterDefault,
+    ResultSchemaSpec,
+    SchemaState,
+    TranslationKey,
+    ValueContract,
+)
+from cadrumo_client.commands.spec import CommandSpec, InvocationSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
+
+from ._modelo_nonwork_command_spec_policies import (
+    _REGISTRY_MODEL_READ,
+    _REGISTRY_READ,
+)
+
+_REGISTRY_YEAR_OPTION: Final[OptionSpec] = OptionSpec(
+    name="year",
+    declarations=("--year",),
+    value=ValueContract(DeferredTarget("builtins", "int")),
+    default=ParameterDefault.value(None),
+    help_key=TranslationKey("cli.app.modelo.list.year_help"),
+    multiple=False,
+    is_flag=False,
+    flag_value=None,
+    constraint=ParameterConstraint(),
+)
+
+CASILLA_LOOKUP_SCOPE: Final[tuple[ArgumentSpec | OptionSpec, ...]] = (
+    ArgumentSpec(
+        name="modelo",
+        value=ValueContract(DeferredTarget("builtins", "str")),
+        default=ParameterDefault.required(),
+        help_key=TranslationKey("cli.app.modelo.casillas.modelo_help"),
+    ),
+    _REGISTRY_YEAR_OPTION,
+    OptionSpec(
+        name="period",
+        declarations=("--period",),
+        value=ValueContract(DeferredTarget("builtins", "str")),
+        default=ParameterDefault.value(None),
+        help_key=TranslationKey("cli.app.modelo.casillas.period_help"),
+        multiple=False,
+        is_flag=False,
+        flag_value=None,
+        constraint=ParameterConstraint(),
+    ),
+    OptionSpec(
+        name="as_of",
+        declarations=("--as-of",),
+        value=ValueContract(DeferredTarget("builtins", "str")),
+        default=ParameterDefault.value(None),
+        help_key=TranslationKey("cli.app.modelo.casillas.as_of_help"),
+        multiple=False,
+        is_flag=False,
+        flag_value=None,
+        constraint=ParameterConstraint(),
+    ),
+)
+
+MODELO_NONWORK_DISCOVERY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
+    CommandSpec(
+        "app_modelo_list",
+        "app_modelo",
+        "list",
+        kind=CommandNodeKind.LEAF,
+        help_key=TranslationKey("cli.app.modelo.list.help"),
+        short_help_key=None,
+        invocation=InvocationSpec(context_parameter="ctx"),
+        parameters=(
+            _REGISTRY_YEAR_OPTION,
+            OptionSpec(
+                name="domain",
+                declarations=("--domain",),
+                value=ValueContract(DeferredTarget("...core.tax_domain", "TaxDomain", __package__)),
+                default=ParameterDefault.value(None),
+                help_key=TranslationKey("cli.app.modelo.list.domain_help"),
+                multiple=False,
+                is_flag=False,
+                flag_value=None,
+                constraint=ParameterConstraint(),
+            ),
+        ),
+        policy=_REGISTRY_READ,
+        handler=LazyBinding.available(DeferredTarget(".modelo_discovery_commands", "list_modelos", __package__)),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            DeferredTarget("...application.reference_catalogue_contracts", "ModeloListResult", __package__),
+            identity="modelo.list",
+        ),
+    ),
+    CommandSpec(
+        "app_modelo_describe",
+        "app_modelo",
+        "describe",
+        kind=CommandNodeKind.LEAF,
+        help_key=TranslationKey("cli.app.modelo.describe.help"),
+        short_help_key=None,
+        invocation=InvocationSpec(context_parameter="ctx"),
+        parameters=(
+            ArgumentSpec(
+                name="modelo",
+                value=ValueContract(DeferredTarget("builtins", "str")),
+                default=ParameterDefault.required(),
+                help_key=TranslationKey("cli.app.modelo.describe.modelo_help"),
+            ),
+            _REGISTRY_YEAR_OPTION,
+            OptionSpec(
+                name="period",
+                declarations=("--period",),
+                value=ValueContract(DeferredTarget("builtins", "str")),
+                default=ParameterDefault.value(None),
+                help_key=TranslationKey("cli.app.modelo.describe.period_help"),
+                multiple=False,
+                is_flag=False,
+                flag_value=None,
+                constraint=ParameterConstraint(),
+            ),
+            OptionSpec(
+                name="as_of",
+                declarations=("--as-of",),
+                value=ValueContract(DeferredTarget("builtins", "str")),
+                default=ParameterDefault.value(None),
+                help_key=TranslationKey("cli.app.modelo.describe.as_of_help"),
+                multiple=False,
+                is_flag=False,
+                flag_value=None,
+                constraint=ParameterConstraint(),
+            ),
+        ),
+        policy=_REGISTRY_READ,
+        handler=LazyBinding.available(DeferredTarget(".modelo_discovery_commands", "describe_modelo", __package__)),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            DeferredTarget("...application.reference_catalogue_contracts", "ModeloDescribeResult", __package__),
+            identity="modelo.describe",
+        ),
+    ),
+    CommandSpec(
+        "app_modelo_casillas",
+        "app_modelo",
+        "casillas",
+        kind=CommandNodeKind.LEAF,
+        help_key=TranslationKey("cli.app.modelo.casillas.help"),
+        short_help_key=None,
+        invocation=InvocationSpec(context_parameter="ctx"),
+        parameters=(
+            *CASILLA_LOOKUP_SCOPE,
+            OptionSpec(
+                name="input_kind",
+                declarations=("--input-kind",),
+                value=ValueContract(
+                    DeferredTarget("...domain.calculations.registry.schema_input_kind", "InputKind", __package__)
+                ),
+                default=ParameterDefault.value(None),
+                help_key=TranslationKey("cli.app.modelo.casillas.input_kind_help"),
+                multiple=False,
+                is_flag=False,
+                flag_value=None,
+                constraint=ParameterConstraint(),
+            ),
+            OptionSpec(
+                name="required",
+                declarations=("--required",),
+                value=ValueContract(DeferredTarget("builtins", "bool")),
+                default=ParameterDefault.value(False),
+                help_key=TranslationKey("cli.app.modelo.casillas.required_help"),
+                multiple=False,
+                is_flag=False,
+                flag_value=None,
+                constraint=ParameterConstraint(),
+            ),
+            OptionSpec(
+                name="form_number",
+                declarations=("--form-number",),
+                value=ValueContract(DeferredTarget("builtins", "str")),
+                default=ParameterDefault.value(None),
+                help_key=TranslationKey("cli.app.modelo.casillas.form_number_help"),
+                multiple=False,
+                is_flag=False,
+                flag_value=None,
+                constraint=ParameterConstraint(),
+            ),
+            OptionSpec(
+                name="casilla_number",
+                declarations=("--number",),
+                value=ValueContract(DeferredTarget("builtins", "str")),
+                default=ParameterDefault.value(None),
+                help_key=TranslationKey("cli.app.modelo.casillas.number_help"),
+                multiple=False,
+                is_flag=False,
+                flag_value=None,
+                constraint=ParameterConstraint(),
+            ),
+            OptionSpec(
+                name="explain",
+                declarations=("--explain",),
+                value=ValueContract(DeferredTarget("builtins", "bool")),
+                default=ParameterDefault.value(False),
+                help_key=TranslationKey("cli.app.modelo.casillas.explain_help"),
+                multiple=False,
+                is_flag=False,
+                flag_value=None,
+                constraint=ParameterConstraint(),
+            ),
+        ),
+        policy=_REGISTRY_READ,
+        handler=LazyBinding.available(DeferredTarget(".modelo_discovery_commands", "casillas", __package__)),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            DeferredTarget("...application.reference_catalogue_contracts", "ModeloCasillasResult", __package__),
+            identity="modelo.casillas",
+        ),
+    ),
+    CommandSpec(
+        "app_modelo_casilla",
+        "app_modelo",
+        "casilla",
+        kind=CommandNodeKind.LEAF,
+        help_key=TranslationKey("cli.app.modelo.casilla.help"),
+        short_help_key=None,
+        invocation=InvocationSpec(context_parameter="ctx"),
+        parameters=(
+            CASILLA_LOOKUP_SCOPE[0],
+            ArgumentSpec(
+                name="casilla_id",
+                value=ValueContract(DeferredTarget("builtins", "str")),
+                default=ParameterDefault.required(),
+                help_key=TranslationKey("cli.app.modelo.casilla.casilla_help"),
+            ),
+            *CASILLA_LOOKUP_SCOPE[1:],
+        ),
+        policy=_REGISTRY_READ,
+        handler=LazyBinding.available(DeferredTarget(".modelo_discovery_commands", "casilla", __package__)),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            DeferredTarget("...application.reference_catalogue_contracts", "ModeloCasillaResult", __package__),
+            identity="modelo.casilla",
+        ),
+    ),
+    CommandSpec(
+        "app_modelo_requires",
+        "app_modelo",
+        "requires",
+        kind=CommandNodeKind.LEAF,
+        help_key=TranslationKey("cli.app.modelo.requires.help"),
+        short_help_key=None,
+        invocation=InvocationSpec(context_parameter="ctx"),
+        parameters=(
+            ArgumentSpec(
+                name="modelo",
+                value=ValueContract(DeferredTarget("builtins", "str")),
+                default=ParameterDefault.required(),
+                help_key=TranslationKey("cli.app.modelo.requires.modelo_help"),
+            ),
+            OptionSpec(
+                name="year",
+                declarations=("--year",),
+                value=ValueContract(DeferredTarget("builtins", "int")),
+                default=ParameterDefault.required(),
+                help_key=TranslationKey("cli.app.modelo.list.year_help"),
+                multiple=False,
+                is_flag=False,
+                flag_value=None,
+                constraint=ParameterConstraint(),
+            ),
+            OptionSpec(
+                name="period",
+                declarations=("--period",),
+                value=ValueContract(DeferredTarget("builtins", "str")),
+                default=ParameterDefault.required(),
+                help_key=TranslationKey("cli.app.modelo.requires.period_help"),
+                multiple=False,
+                is_flag=False,
+                flag_value=None,
+                constraint=ParameterConstraint(),
+            ),
+        ),
+        policy=_REGISTRY_MODEL_READ,
+        handler=LazyBinding.available(DeferredTarget(".modelo_discovery_commands", "requires", __package__)),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            DeferredTarget(".modelo_results", "ModeloRequiresResult", __package__),
+            identity="modelo.requires",
+        ),
+    ),
+)
+
+__all__ = ["MODELO_NONWORK_DISCOVERY_COMMAND_SPECS"]
+"""Authored CommandSpec declarations for the Modelo non-work discovery family."""
+"""Authored CommandSpec declarations for the Modelo non-work discovery family."""

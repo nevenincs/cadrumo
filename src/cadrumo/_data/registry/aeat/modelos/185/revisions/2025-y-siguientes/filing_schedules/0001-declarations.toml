@@ -1,0 +1,9 @@
+# Orden HAC/1197/2025 art 4: modelo 185 "tendra caracter mensual", filed within
+# the ten natural days after the month it declares.
+
+[[revisions."2025-y-siguientes".filing_schedules]]
+id = "modelo-185-mensual"
+period_kind = "monthly"
+periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
+legal_refs = ["orden-hac-1197-2025:art-4"]
+source_refs = ["enrolled-modelo-185-procedure"]

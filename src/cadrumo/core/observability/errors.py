@@ -1,0 +1,93 @@
+"""Concrete observability errors layered over :class:`CadrumoObservabilityError`.
+
+The base class :class:`cadrumo.core.errors.hierarchy.CadrumoObservabilityError` lives in
+:mod:`cadrumo.core.errors` so other subpackages can catch it without
+importing observability internals. This module declares the leaf error types
+used by context-bound recording and :func:`cadrumo.core.observability.store.load_trace`.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+from ..errors.hierarchy import CadrumoObservabilityError
+
+
+class RunContextMissingError(CadrumoObservabilityError):
+    """Raised when event recording runs outside an active run context.
+
+    Caused by calling the recorder from a thread that did not propagate
+    the run context variable,
+    or by calling it from CLI bootstrap code that runs before the run
+    context enters.
+    """
+
+
+class RunTraceValidationError(CadrumoObservabilityError):
+    """Raised when persisted ``trace.json`` or ``events.jsonl`` fails strict validation.
+
+    Surfaces both shape-level rejections (bad ``run_id``, malformed
+    JSON line) and strict validation failures for :class:`RunTrace` or
+    :class:`RunEvent` records.
+    """
+
+
+class RunTracePersistenceError(CadrumoObservabilityError):
+    """Raised when run-trace files cannot be created, read, or written."""
+
+    def __init__(self, *, operation: str, path: Path) -> None:
+        """Build a registered persistence error with structured context.
+
+        Args:
+            operation: Stable operation label, e.g. ``"save_trace"``.
+            path: Filesystem path whose access failed.
+        """
+        super().__init__(
+            context={"operation": operation, "path": str(path)},
+            translated_message="errors.fail.fail_observability_run_trace_persistence",
+        )
+        self.operation = operation
+        self.path = path
+
+
+class GoldenCaptureError(CadrumoObservabilityError):
+    """Raised when a captured envelope document cannot be typed / re-validated.
+
+    Surfaces an emitted-envelope document whose ``command`` is not in the
+    JSON-contract schema registry, or whose payload fails strict
+    validation against the registered schema. The deterministic-output
+    substrate refuses to compare an untyped document, keeping the
+    captured payload from degrading to a ``dict[str, Any]`` bag.
+    """
+
+
+class GoldenReplayMismatchError(CadrumoObservabilityError):
+    """Raised when compared envelopes diverge after the declared mask.
+
+    Carries the differing JSON paths (after the declared narrow mask is
+    applied) so the caller can render an actionable diff. The operator golden
+    gate raises this through the shared compare primitive.
+
+    Attributes:
+        differing_paths: Sorted tuple of dotted JSON paths that differ
+            after masking.
+    """
+
+    def __init__(self, *, differing_paths: tuple[str, ...], detail: str) -> None:
+        """Build the mismatch error and its diagnostic message.
+
+        Args:
+            differing_paths: Dotted JSON paths that differ after masking.
+            detail: Rendered human-readable diff summary.
+        """
+        super().__init__(detail)
+        self.differing_paths: tuple[str, ...] = differing_paths
+
+
+__all__ = [
+    "GoldenCaptureError",
+    "GoldenReplayMismatchError",
+    "RunContextMissingError",
+    "RunTracePersistenceError",
+    "RunTraceValidationError",
+]

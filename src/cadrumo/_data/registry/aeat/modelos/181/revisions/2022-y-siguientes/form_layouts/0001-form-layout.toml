@@ -1,0 +1,226 @@
+# Authored form structure; automatic generation preserves this declaration.
+# Reconcile source changes explicitly. Authorship does not imply completed review.
+
+[[revisions.2022-y-siguientes.form_layouts]]
+id = "form-layout"
+revision_id = "2022-y-siguientes"
+seed_source = "authored"
+review = { state = "generated", notes = "Summary follows BOE-A-2009-21165 Annex I PDF page 9, boxes 01-05. Operation/property pages are a human adaptation of AEAT 2022 electronic record design, not invented numbered paper boxes. Preserve all 62 casillas. Signature, administrative spaces, record multiplicity and conditional controls remain pending. This design is grounded for 2022-2025 only: Orden HAC/747/2025 replaces the format for ejercicio 2026, whose new revision is not yet enrolled." }
+generator_version = 1
+source_state_digest = "6c48e5efaae40f90d9e47cb34cee9be564835baba5e6381e8914f1adec05d588"
+design_sources = [
+    { source_ref = "boe-2009-21165-modelo-181-form", sha256 = "6cfd6fde1f8381826e9ffed51ae93c8a4f8209cbc47457e9162bbafb94c8789d" },
+    { source_ref = "aeat-dr-181-2022", sha256 = "4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b" },
+]
+placements = [
+    { casilla_id = "cantidades-minorar-principal", kind = "on_form" },
+    { casilla_id = "clave-intervencion", kind = "on_form" },
+    { casilla_id = "clave-tipo-identificacion", kind = "on_form" },
+    { casilla_id = "codigo-provincia", kind = "on_form" },
+    { casilla_id = "decl.complementaria", kind = "on_form" },
+    { casilla_id = "decl.ejercicio", kind = "on_form" },
+    { casilla_id = "decl.sustitutiva", kind = "on_form" },
+    { casilla_id = "decl.tipo-declaracion", kind = "working_figure" },
+    { casilla_id = "declaracion-complementaria-sustitutiva", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "declarado-nif", kind = "on_form" },
+    { casilla_id = "declarado-nombre", kind = "on_form" },
+    { casilla_id = "declarante-razon-social", kind = "on_form" },
+    { casilla_id = "direccion-inmueble", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "duracion-operacion", kind = "on_form" },
+    { casilla_id = "fecha-operacion", kind = "on_form" },
+    { casilla_id = "iban-codigo-pais", kind = "on_form" },
+    { casilla_id = "iban-digitos-control", kind = "on_form" },
+    { casilla_id = "identificacion-operacion", kind = "on_form" },
+    { casilla_id = "importe-amortizacion-capital", kind = "on_form" },
+    { casilla_id = "importe-gastos-financiacion", kind = "on_form" },
+    { casilla_id = "importe-intereses", kind = "on_form" },
+    { casilla_id = "importe-operacion", kind = "on_form" },
+    { casilla_id = "importe-reintegro-intereses", kind = "on_form" },
+    { casilla_id = "importe-total-capital-amortizado", kind = "on_form", box_number = "02" },
+    { casilla_id = "importe-total-gastos-financiacion", kind = "on_form", box_number = "04" },
+    { casilla_id = "importe-total-intereses", kind = "on_form", box_number = "03" },
+    { casilla_id = "importe-total-saldos-pendientes", kind = "on_form", box_number = "05" },
+    { casilla_id = "inmueble-bloque", kind = "on_form" },
+    { casilla_id = "inmueble-calificador-numero", kind = "on_form" },
+    { casilla_id = "inmueble-codigo-municipio", kind = "on_form" },
+    { casilla_id = "inmueble-codigo-postal", kind = "on_form" },
+    { casilla_id = "inmueble-codigo-provincia", kind = "on_form" },
+    { casilla_id = "inmueble-complemento", kind = "on_form" },
+    { casilla_id = "inmueble-escalera", kind = "on_form" },
+    { casilla_id = "inmueble-localidad", kind = "on_form" },
+    { casilla_id = "inmueble-municipio", kind = "on_form" },
+    { casilla_id = "inmueble-nombre-via", kind = "on_form" },
+    { casilla_id = "inmueble-numero-casa", kind = "on_form" },
+    { casilla_id = "inmueble-planta", kind = "on_form" },
+    { casilla_id = "inmueble-portal", kind = "on_form" },
+    { casilla_id = "inmueble-puerta", kind = "on_form" },
+    { casilla_id = "inmueble-tipo-numeracion", kind = "on_form" },
+    { casilla_id = "inmueble-tipo-via", kind = "on_form" },
+    { casilla_id = "intereses-indemnizatorios", kind = "on_form" },
+    { casilla_id = "numero-identificativo-anterior", kind = "on_form" },
+    { casilla_id = "numero-identificativo-declaracion", kind = "on_form" },
+    { casilla_id = "numero-total-declarados", kind = "on_form", box_number = "01" },
+    { casilla_id = "origen-operacion", kind = "on_form" },
+    { casilla_id = "otras-cantidades-indemnizatorias", kind = "on_form" },
+    { casilla_id = "persona-relacion", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "porcentaje-financiacion-vivienda-habitual", kind = "on_form" },
+    { casilla_id = "porcentaje-participacion", kind = "on_form" },
+    { casilla_id = "prefijo-codigo-iban", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+    { casilla_id = "prestamista-nif", kind = "on_form" },
+    { casilla_id = "prestamista-nombre", kind = "on_form" },
+    { casilla_id = "referencia-catastral", kind = "on_form" },
+    { casilla_id = "representante-legal-nif", kind = "on_form" },
+    { casilla_id = "saldo-pendiente", kind = "on_form" },
+    { casilla_id = "situacion-inmueble", kind = "on_form" },
+    { casilla_id = "subclave-operacion", kind = "on_form" },
+    { casilla_id = "tipo-operacion", kind = "on_form" },
+    { casilla_id = "valor-tasacion-inmueble", kind = "on_form" },
+]
+
+[[revisions.2022-y-siguientes.form_layouts.pages]]
+id = "resumen"
+official_ref = "BOE-A-2009-21165, anexo I; AEAT diseño 2022, registros de declarante y declarado"
+heading_key = "modelo.schema.181.form.page.resumen.heading"
+official_heading = "Hoja resumen"
+
+[[revisions.2022-y-siguientes.form_layouts.pages.sections]]
+id = "identificacion"
+heading_key = "modelo.schema.181.form.section.identificacion.heading"
+official_heading = "Declarante y ejercicio"
+blocks = [
+    { kind = "context_field", id = "nif", export_layout_id = "modelo-181-fichero", export_record_id = "modelo-181-declarante", export_field_id = "modelo-181-t1-nif-declarante", heading_key = "modelo.schema.181.form.context.nif.heading", official_heading = "NIF del declarante" },
+    { kind = "field", id = "declarante-razon-social", casilla_id = "declarante-razon-social" },
+    { kind = "field", id = "decl-ejercicio", casilla_id = "decl.ejercicio" },
+    { kind = "context_field", id = "telefono", export_layout_id = "modelo-181-fichero", export_record_id = "modelo-181-declarante", export_field_id = "modelo-181-t1-contact-phone", heading_key = "modelo.schema.181.form.context.telefono.heading", official_heading = "Teléfono de contacto" },
+    { kind = "context_field", id = "contacto", export_layout_id = "modelo-181-fichero", export_record_id = "modelo-181-declarante", export_field_id = "modelo-181-t1-contact-name", heading_key = "modelo.schema.181.form.context.contacto.heading", official_heading = "Persona de contacto" },
+]
+
+[[revisions.2022-y-siguientes.form_layouts.pages.sections]]
+id = "declaracion"
+heading_key = "modelo.schema.181.form.section.declaracion.heading"
+official_heading = "Declaración complementaria o sustitutiva"
+blocks = [
+    { kind = "field", id = "numero-identificativo-declaracion", casilla_id = "numero-identificativo-declaracion" },
+    { kind = "field", id = "decl-complementaria", casilla_id = "decl.complementaria" },
+    { kind = "field", id = "decl-sustitutiva", casilla_id = "decl.sustitutiva" },
+    { kind = "field", id = "numero-identificativo-anterior", casilla_id = "numero-identificativo-anterior" },
+]
+
+[[revisions.2022-y-siguientes.form_layouts.pages.sections]]
+id = "totales"
+heading_key = "modelo.schema.181.form.section.totales.heading"
+official_heading = "Resumen de los datos incluidos en la declaración"
+blocks = [
+    { kind = "field", id = "numero-total-declarados", casilla_id = "numero-total-declarados" },
+    { kind = "field", id = "importe-total-capital-amortizado", casilla_id = "importe-total-capital-amortizado" },
+    { kind = "field", id = "importe-total-intereses", casilla_id = "importe-total-intereses" },
+    { kind = "field", id = "importe-total-gastos-financiacion", casilla_id = "importe-total-gastos-financiacion" },
+    { kind = "field", id = "importe-total-saldos-pendientes", casilla_id = "importe-total-saldos-pendientes" },
+]
+
+[[revisions.2022-y-siguientes.form_layouts.pages]]
+id = "operacion"
+official_ref = "BOE-A-2009-21165, anexo I; AEAT diseño 2022, registros de declarante y declarado"
+heading_key = "modelo.schema.181.form.page.operacion.heading"
+official_heading = "Persona declarada y operación financiera"
+
+[[revisions.2022-y-siguientes.form_layouts.pages.sections]]
+id = "declarado"
+heading_key = "modelo.schema.181.form.section.declarado.heading"
+official_heading = "Identificación de la persona declarada"
+blocks = [
+    { kind = "field", id = "declarado-nif", casilla_id = "declarado-nif" },
+    { kind = "field", id = "representante-legal-nif", casilla_id = "representante-legal-nif" },
+    { kind = "field", id = "declarado-nombre", casilla_id = "declarado-nombre" },
+    { kind = "field", id = "codigo-provincia", casilla_id = "codigo-provincia" },
+    { kind = "field", id = "porcentaje-participacion", casilla_id = "porcentaje-participacion" },
+]
+
+[[revisions.2022-y-siguientes.form_layouts.pages.sections]]
+id = "prestamo"
+heading_key = "modelo.schema.181.form.section.prestamo.heading"
+official_heading = "Identificación del préstamo, crédito u otra operación"
+blocks = [
+    { kind = "field", id = "clave-tipo-identificacion", casilla_id = "clave-tipo-identificacion" },
+    { kind = "field", id = "iban-codigo-pais", casilla_id = "iban-codigo-pais" },
+    { kind = "field", id = "iban-digitos-control", casilla_id = "iban-digitos-control" },
+    { kind = "field", id = "identificacion-operacion", casilla_id = "identificacion-operacion" },
+    { kind = "field", id = "fecha-operacion", casilla_id = "fecha-operacion" },
+    { kind = "field", id = "duracion-operacion", casilla_id = "duracion-operacion" },
+    { kind = "field", id = "origen-operacion", casilla_id = "origen-operacion" },
+    { kind = "field", id = "tipo-operacion", casilla_id = "tipo-operacion" },
+    { kind = "field", id = "subclave-operacion", casilla_id = "subclave-operacion" },
+]
+
+[[revisions.2022-y-siguientes.form_layouts.pages.sections]]
+id = "importes"
+heading_key = "modelo.schema.181.form.section.importes.heading"
+official_heading = "Importes de la operación y del ejercicio"
+blocks = [
+    { kind = "field", id = "importe-operacion", casilla_id = "importe-operacion" },
+    { kind = "field", id = "importe-amortizacion-capital", casilla_id = "importe-amortizacion-capital" },
+    { kind = "field", id = "importe-intereses", casilla_id = "importe-intereses" },
+    { kind = "field", id = "importe-gastos-financiacion", casilla_id = "importe-gastos-financiacion" },
+    { kind = "field", id = "saldo-pendiente", casilla_id = "saldo-pendiente" },
+]
+
+[[revisions.2022-y-siguientes.form_layouts.pages.sections]]
+id = "prestamista"
+heading_key = "modelo.schema.181.form.section.prestamista.heading"
+official_heading = "Intervención y datos del prestamista"
+blocks = [
+    { kind = "field", id = "clave-intervencion", casilla_id = "clave-intervencion" },
+    { kind = "field", id = "prestamista-nif", casilla_id = "prestamista-nif" },
+    { kind = "field", id = "prestamista-nombre", casilla_id = "prestamista-nombre" },
+]
+
+[[revisions.2022-y-siguientes.form_layouts.pages]]
+id = "inmueble"
+official_ref = "BOE-A-2009-21165, anexo I; AEAT diseño 2022, registros de declarante y declarado"
+heading_key = "modelo.schema.181.form.page.inmueble.heading"
+official_heading = "Inmueble y devolución de intereses"
+
+[[revisions.2022-y-siguientes.form_layouts.pages.sections]]
+id = "garantia"
+heading_key = "modelo.schema.181.form.section.garantia.heading"
+official_heading = "Datos del inmueble y financiación"
+blocks = [
+    { kind = "field", id = "situacion-inmueble", casilla_id = "situacion-inmueble" },
+    { kind = "field", id = "referencia-catastral", casilla_id = "referencia-catastral" },
+    { kind = "field", id = "valor-tasacion-inmueble", casilla_id = "valor-tasacion-inmueble" },
+    { kind = "field", id = "porcentaje-financiacion-vivienda-habitual", casilla_id = "porcentaje-financiacion-vivienda-habitual" },
+]
+
+[[revisions.2022-y-siguientes.form_layouts.pages.sections]]
+id = "direccion"
+heading_key = "modelo.schema.181.form.section.direccion.heading"
+official_heading = "Dirección del inmueble"
+blocks = [
+    { kind = "field", id = "inmueble-tipo-via", casilla_id = "inmueble-tipo-via" },
+    { kind = "field", id = "inmueble-nombre-via", casilla_id = "inmueble-nombre-via" },
+    { kind = "field", id = "inmueble-tipo-numeracion", casilla_id = "inmueble-tipo-numeracion" },
+    { kind = "field", id = "inmueble-numero-casa", casilla_id = "inmueble-numero-casa" },
+    { kind = "field", id = "inmueble-calificador-numero", casilla_id = "inmueble-calificador-numero" },
+    { kind = "field", id = "inmueble-bloque", casilla_id = "inmueble-bloque" },
+    { kind = "field", id = "inmueble-portal", casilla_id = "inmueble-portal" },
+    { kind = "field", id = "inmueble-escalera", casilla_id = "inmueble-escalera" },
+    { kind = "field", id = "inmueble-planta", casilla_id = "inmueble-planta" },
+    { kind = "field", id = "inmueble-puerta", casilla_id = "inmueble-puerta" },
+    { kind = "field", id = "inmueble-complemento", casilla_id = "inmueble-complemento" },
+    { kind = "field", id = "inmueble-localidad", casilla_id = "inmueble-localidad" },
+    { kind = "field", id = "inmueble-municipio", casilla_id = "inmueble-municipio" },
+    { kind = "field", id = "inmueble-codigo-municipio", casilla_id = "inmueble-codigo-municipio" },
+    { kind = "field", id = "inmueble-codigo-provincia", casilla_id = "inmueble-codigo-provincia" },
+    { kind = "field", id = "inmueble-codigo-postal", casilla_id = "inmueble-codigo-postal" },
+]
+
+[[revisions.2022-y-siguientes.form_layouts.pages.sections]]
+id = "reintegro"
+heading_key = "modelo.schema.181.form.section.reintegro.heading"
+official_heading = "Reintegro de intereses y otras cantidades"
+blocks = [
+    { kind = "field", id = "importe-reintegro-intereses", casilla_id = "importe-reintegro-intereses" },
+    { kind = "field", id = "intereses-indemnizatorios", casilla_id = "intereses-indemnizatorios" },
+    { kind = "field", id = "otras-cantidades-indemnizatorias", casilla_id = "otras-cantidades-indemnizatorias" },
+    { kind = "field", id = "cantidades-minorar-principal", casilla_id = "cantidades-minorar-principal" },
+]

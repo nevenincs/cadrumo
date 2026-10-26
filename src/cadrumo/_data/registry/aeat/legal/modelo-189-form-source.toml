@@ -1,0 +1,12 @@
+[sources.boe-2008-19523-modelo-189-form-pdf]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2008-19523.pdf"
+sha256 = "33383cb3eecc8d31d9e9d8596740ae7962d950ce805ab1900ce37f848ae29090"
+bytes = 538814
+retrieved_at = 2026-10-06
+published_at = 2008-12-04
+applies_from = 2008-12-05
+source_url = "https://www.boe.es/boe/dias/2008/12/04/pdfs/A48384-48405.pdf"
+review_status = "pending_review"

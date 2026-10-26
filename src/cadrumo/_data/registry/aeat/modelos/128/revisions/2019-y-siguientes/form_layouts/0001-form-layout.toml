@@ -1,0 +1,74 @@
+# Authored form structure; automatic generation preserves this declaration.
+# Reconcile source changes explicitly. Authorship does not imply completed review.
+
+[[revisions.2019-y-siguientes.form_layouts]]
+id = "form-layout"
+revision_id = "2019-y-siguientes"
+seed_source = "authored"
+review = { state = "generated" }
+generator_version = 1
+source_state_digest = "6f50e16b6c0a791f435b9c1f85476b56f242717f49b062b9aa92f67349184c74"
+design_sources = [
+    { source_ref = "boe-2007-20485-modelo-123-form-pdf", sha256 = "52d6d39a947111363f598668ed926e94ae24ac3471969ba81ed82395608317d4" },
+]
+placements = [
+    { casilla_id = "01", kind = "on_form", box_number = "01" },
+    { casilla_id = "02", kind = "on_form", box_number = "02" },
+    { casilla_id = "03", kind = "on_form", box_number = "03" },
+    { casilla_id = "04", kind = "on_form", box_number = "04" },
+    { casilla_id = "05", kind = "on_form", box_number = "05" },
+    { casilla_id = "06", kind = "on_form", box_number = "06" },
+    { casilla_id = "07", kind = "on_form", box_number = "07" },
+]
+
+[[revisions.2019-y-siguientes.form_layouts.pages]]
+id = "modelo-128-page-01"
+official_ref = "BOE 2007, anexo V, pág. 14"
+heading_key = "modelo.schema.128.form.page.modelo-128-page-01.heading"
+official_heading = "Retenciones sobre operaciones de capitalización y seguros de vida o invalidez"
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections]]
+id = "identificacion"
+heading_key = "modelo.schema.128.form.section.identificacion.heading"
+official_heading = "Identificación (1)"
+blocks = [
+    { kind = "context_field", id = "nif", export_layout_id = "generated-modelo-128-2019-y-siguientes-fichero", export_record_id = "modelo-128-page-01", export_field_id = "modelo-128-page-01-nif", heading_key = "modelo.schema.128.form.context.nif", official_heading = "NIF" },
+    { kind = "context_field", id = "apellidos", export_layout_id = "generated-modelo-128-2019-y-siguientes-fichero", export_record_id = "modelo-128-page-01", export_field_id = "modelo-128-page-01-apellidos", heading_key = "modelo.schema.128.form.context.apellidos", official_heading = "Apellidos o razón social" },
+    { kind = "context_field", id = "nombre", export_layout_id = "generated-modelo-128-2019-y-siguientes-fichero", export_record_id = "modelo-128-page-01", export_field_id = "modelo-128-page-01-nombre", heading_key = "modelo.schema.128.form.context.nombre", official_heading = "Nombre" },
+]
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections]]
+id = "devengo"
+heading_key = "modelo.schema.128.form.section.devengo.heading"
+official_heading = "Devengo (2)"
+blocks = [
+    { kind = "context_field", id = "ejercicio", export_layout_id = "generated-modelo-128-2019-y-siguientes-fichero", export_record_id = "modelo-128-page-01", export_field_id = "modelo-128-page-01-ejercicio", heading_key = "modelo.schema.128.form.context.ejercicio", official_heading = "Ejercicio" },
+    { kind = "context_field", id = "periodo", export_layout_id = "generated-modelo-128-2019-y-siguientes-fichero", export_record_id = "modelo-128-page-01", export_field_id = "modelo-128-page-01-periodo", heading_key = "modelo.schema.128.form.context.periodo", official_heading = "Período" },
+]
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections]]
+id = "liquidacion"
+heading_key = "modelo.schema.128.form.section.liquidacion.heading"
+official_heading = "Liquidación (3)"
+blocks = [
+    { kind = "grid", id = "retenciones", columns = [{ key = "ordinario", heading_key = "modelo.schema.128.form.column.ordinario" }, { key = "adicional", heading_key = "modelo.schema.128.form.column.adicional" }], rows = [{ key = "perceptores", heading_key = "modelo.schema.128.form.row.perceptores", official_heading = "Número de perceptores", cells = [{ kind = "casilla", casilla_id = "01" }, { kind = "casilla", casilla_id = "04" }] }, { key = "base", heading_key = "modelo.schema.128.form.row.base", official_heading = "Base de retenciones e ingresos a cuenta", cells = [{ kind = "casilla", casilla_id = "02" }, { kind = "casilla", casilla_id = "05" }] }, { key = "retenciones", heading_key = "modelo.schema.128.form.row.retenciones", official_heading = "Retenciones e ingresos a cuenta", cells = [{ kind = "casilla", casilla_id = "03" }, { kind = "blank" }] }] },
+    { kind = "field", id = "casilla-06", casilla_id = "06" },
+    { kind = "field", id = "casilla-07", casilla_id = "07" },
+]
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections]]
+id = "ingreso"
+heading_key = "modelo.schema.128.form.section.ingreso.heading"
+official_heading = "Ingreso (4)"
+blocks = [
+    { kind = "context_field", id = "iban", export_layout_id = "generated-modelo-128-2019-y-siguientes-fichero", export_record_id = "modelo-128-page-01", export_field_id = "modelo-128-page-01-iban", heading_key = "modelo.schema.128.form.context.iban", official_heading = "Código IBAN" },
+]
+
+[[revisions.2019-y-siguientes.form_layouts.pages.sections]]
+id = "complementaria"
+heading_key = "modelo.schema.128.form.section.complementaria.heading"
+official_heading = "Complementaria (6)"
+blocks = [
+    { kind = "context_field", id = "declaracion-complementaria", export_layout_id = "generated-modelo-128-2019-y-siguientes-fichero", export_record_id = "modelo-128-page-01", export_field_id = "modelo-128-page-01-declaracion-complementaria", heading_key = "modelo.schema.128.form.context.declaracion-complementaria", official_heading = "Autoliquidación complementaria" },
+    { kind = "context_field", id = "justificante-anterior", export_layout_id = "generated-modelo-128-2019-y-siguientes-fichero", export_record_id = "modelo-128-page-01", export_field_id = "modelo-128-page-01-justificante-anterior", heading_key = "modelo.schema.128.form.context.justificante-anterior", official_heading = "N.º de justificante de la autoliquidación anterior" },
+]

@@ -1,0 +1,36 @@
+[fact]
+fact_id = "renta-fiscal-residency-vocabulary"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "renta-fiscal-residency-vocabulary:2007-01-01"
+date_axis = "filing_period"
+valid_from = 2007-01-01
+legal_refs = ["ley-35-2006:art-9", "trlirnr-rdleg-5-2004:art-2"]
+source_refs = ["boe-lirpf-statutory-facts", "aeat-modelo-210-procedure"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-lirpf-statutory-facts"
+required_text = ["residencia habitual"]
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-210-procedure"
+required_text = ["residentes en otro Estado miembro de la Unión Europea"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "fiscal_residency.order", value = "resident_irpf,non_resident_irnr" },
+  { key = "fiscal_residency.default_token", value = "resident_irpf" },
+  { key = "fiscal_residency.resident_irpf.value", value = "resident_irpf" },
+  { key = "fiscal_residency.resident_irpf.description", value = "Habitual residence in Spain; the taxpayer follows the IRPF regime." },
+  { key = "fiscal_residency.resident_irpf.tax_regime", value = "irpf" },
+  { key = "fiscal_residency.resident_irpf.requires_country", value = "false" },
+  { key = "fiscal_residency.resident_irpf.default", value = "true" },
+  { key = "fiscal_residency.non_resident_irnr.value", value = "non_resident_irnr" },
+  { key = "fiscal_residency.non_resident_irnr.description", value = "No habitual residence in Spain; the taxpayer follows the IRNR regime." },
+  { key = "fiscal_residency.non_resident_irnr.tax_regime", value = "irnr" },
+  { key = "fiscal_residency.non_resident_irnr.requires_country", value = "true" },
+  { key = "fiscal_residency.non_resident_irnr.default", value = "false" },
+]

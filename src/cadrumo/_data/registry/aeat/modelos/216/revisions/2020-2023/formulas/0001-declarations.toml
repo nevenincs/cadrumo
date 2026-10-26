@@ -1,0 +1,14 @@
+# BOE-A-2008-18497, annex I, PDF page 11 (BOE page 45593).
+# The withholding amount is supplied by the operator; this formula only
+# subtracts prior declarations for the same concept, year and period.
+[[revisions."2020-2023".formulas]]
+id = "modelo-216-resultado"
+target_casilla_id = "7"
+expression = { op = "subtract", args = [{ casilla_id = "3" }, { casilla_id = "6" }] }
+rounding = "money-2"
+legal_refs = ["orden-eha-3290-2008:art-1"]
+source_refs = ["boe-2008-18497-modelo-216-calculation-guidance"]
+
+[[revisions."2020-2023".formulas.source_citations]]
+source_ref = "boe-2008-18497-modelo-216-calculation-guidance"
+required_text = ["Resultado a ingresar ( 03 - 06 )"]

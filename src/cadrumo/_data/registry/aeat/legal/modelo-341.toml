@@ -1,0 +1,130 @@
+# Annex II's euro form and instructions are retained separately from the
+# abbreviated HTML excerpt below. Later record designs own electronic fields
+# such as IBAN; this source does not backdate those fields or freeze tax rates.
+[sources."boe-modelo-341-2000-form-pdf"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2000-22794-modelo-341.pdf"
+sha256 = "b833029bab3840d8ff99d8b8858a81506de140059a2619b6a0b8019e108a523b"
+bytes = 2092750
+retrieved_at = 2026-10-06
+published_at = 2000-12-18
+applies_from = 2001-01-01
+source_url = "https://www.boe.es/boe/dias/2000/12/18/pdfs/A44299-44309.pdf"
+review_status = "pending_review"
+
+[sources."boe-modelo-341-2000-instructions-pdf"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/pdf/boe-a-2000-22794-modelo-341.pdf"
+sha256 = "b833029bab3840d8ff99d8b8858a81506de140059a2619b6a0b8019e108a523b"
+bytes = 2092750
+retrieved_at = 2026-10-06
+published_at = 2000-12-18
+applies_from = 2001-01-01
+source_url = "https://www.boe.es/boe/dias/2000/12/18/pdfs/A44299-44309.pdf"
+review_status = "pending_review"
+
+[legal."orden-min-2000-12-15-m341:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-min-2000-12-15-m341.html#a1"
+document_id = "BOE-A-2000-22794"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2000-22794#a1"
+published_at = 2000-12-15
+effective_from = 2000-12-16
+review_status = "agent_reviewed"
+reviewed_at = 2026-07-04
+reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2000-22794 art 1; pending operator re-stamp)"
+notes = "Orden de 15 de diciembre de 2000 art 1: aprueba el modelo 341, solicitud de reintegro de compensaciones en el régimen especial de la agricultura, ganadería y pesca del IVA. Orden habilitante del modelo 341."
+required_text = [
+    "Se aprueban los modelos 341",
+    "Solicitud de reintegro de compensaciones en el régimen especial de la agricultura, ganadería y pesca",
+]
+
+[legal."orden-min-2000-12-15-m341:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-min-2000-12-15-m341.html#a2"
+document_id = "BOE-A-2000-22794"
+article = "2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2000-22794#a2"
+published_at = 2000-12-15
+effective_from = 2000-12-16
+review_status = "agent_reviewed"
+reviewed_at = 2026-07-04
+reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2000-22794 art 2; pending operator re-stamp)"
+notes = "Orden de 15 de diciembre de 2000 art 2: plazo de presentación del modelo 341. Durante los veinte primeros días naturales posteriores a cada trimestre natural; la solicitud del último trimestre puede presentarse durante los treinta primeros días naturales del mes de enero inmediatamente posterior."
+required_text = [
+    "durante los veinte primeros días naturales posteriores a cada trimestre natural",
+    "durante los treinta primeros días naturales del mes de enero",
+]
+
+[sources."enrolled-modelo-341-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-min-2000-12-15-m341.html"
+sha256 = "c9ad6a1966b333a2b147423299df8acd4f3595c57cc3be94f33f1302cceb01f8"
+bytes = 1203
+retrieved_at = 2026-07-04
+published_at = 2000-12-15
+applies_from = 2000-12-16
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2000-22794"
+review_status = "pending_review"
+
+# Retiered 2026-08-15: this 1203-byte orden excerpt carries no annex section
+# and no record-layout vocabulary, so it was never layout authority -- the
+# real Diseño de Registro is aeat-dr-341-2016 below. The excerpt remains a
+# genuine official_source_guidance citation (the orden that approves the
+# form), just not the layout's home.
+[sources."enrolled-modelo-341-layout"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-min-2000-12-15-m341.html"
+sha256 = "c9ad6a1966b333a2b147423299df8acd4f3595c57cc3be94f33f1302cceb01f8"
+bytes = 1203
+retrieved_at = 2026-07-04
+published_at = 2000-12-15
+applies_from = 2000-12-16
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2000-22794"
+review_status = "pending_review"
+
+[sources."aeat-dr-341-2016"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2016"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_341/files/01-341-ejercicio-2016-y-siguientes.xls"
+sha256 = "7bb06cb80b865993fa60fe6ecceae8d28da1126fae5174b56cbe2cf13b534600"
+bytes = 175616
+retrieved_at = 2026-07-21
+applies_from = 2016-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos/dr341_2016.xls"
+review_status = "pending_review"
+
+# The historical AEAT index publishes this parser-readable design as the 2004
+# Orden's layout for exercises through 2015. BOE-A-2004-17306's final provision
+# makes its electronic presentation available from the first period after
+# 2005-02-01. Its complete twenty-field, 619-position geometry is attached only
+# to the bounded 2005-2015 revision. Pre-2005 filing coordinates remain
+# unselected because no positional design has been acquired for that era.
+[sources."aeat-dr-341-2005-2015"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+record_design_epoch = "2005"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_341/files/02-341-orden-eha-3212-2004-ejercicios-hasta-2015.pdf"
+sha256 = "c1c59a317be87dbb4898c017ace8f6327e9df340648808fb6d1831a0c7295c3d"
+bytes = 44020
+retrieved_at = 2026-08-26
+applies_from = 2005-02-01
+applies_to = 2015-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/dr341_2005.pdf"
+review_status = "pending_review"

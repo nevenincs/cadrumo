@@ -1,0 +1,63 @@
+{
+  "result_version": 1,
+  "profile_id": "13000000-0000-4000-8000-000000000730",
+  "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
+  "card": {
+    "casilla_id": "03",
+    "formula": {
+      "text": "[03] = [01] − [02]",
+      "complete": true,
+      "values_text": "[01] 0,00 € − [02] 0,00 € = 0,00 €"
+    },
+    "quotes": [
+      {
+        "fragments": ["Rendimiento neto", "Casilla 03"],
+        "source": "Instrucciones del modelo de la AEAT",
+        "source_url": "https://sede.agenciatributaria.gob.es/Sede/impuestos-tasas/impuesto-sobre-renta-personas-fisicas/modelo-130-irpf______esionales-estimacion-directa-fraccionado_/instrucciones.html",
+        "retrieved_at": "2026-05-04"
+      }
+    ],
+    "legal_basis": [
+      {
+        "text": "Real Decreto 439/2007, art. 110",
+        "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a110"
+      },
+      {
+        "text": "Orden EHA/672/2007, art. 1",
+        "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6032"
+      },
+      {
+        "text": "Ley 35/2006, art. 99",
+        "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a99"
+      },
+      {
+        "text": "Real Decreto 439/2007, art. 95",
+        "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a95"
+      },
+      {
+        "text": "Ley 35/2006, art. 28",
+        "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a28"
+      },
+      {
+        "text": "Ley 35/2006, art. 30",
+        "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a30"
+      }
+    ],
+    "constraints": [],
+    "origins": [],
+    "feeds": ["[04]"],
+    "reach": {
+      "path": [
+        { "casilla_id": "04", "box": "[04]" },
+        { "casilla_id": "07", "box": "[07]" },
+        { "casilla_id": "12", "box": "[12]" },
+        { "casilla_id": "14", "box": "[14]" },
+        { "casilla_id": "17", "box": "[17]" },
+        { "casilla_id": "19", "box": "[19]" }
+      ],
+      "others": [{ "casilla_id": "15", "box": "[15]" }]
+    },
+    "is_result": false,
+    "outside_figures": []
+  }
+}

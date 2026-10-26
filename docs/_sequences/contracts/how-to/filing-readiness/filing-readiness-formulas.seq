@@ -1,0 +1,4 @@
+@step Show the formulas for the modelo and period, with their legal references.
+@result aeat --format json app modelo formulas 303 --period 1T --explain
+@expect result.code == "303"
+@expect exit_code == 0

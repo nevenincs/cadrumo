@@ -1,0 +1,13 @@
+@step Split a payment so there are parts to merge back.
+@setup aeat --format json app ledger add --date 2026-03-15 --amount 121.00 --direction OUTGOING --description "Split to undo" --idempotency-key correct-merge
+@capture transaction_id result.transaction_id
+@setup aeat --format json app ledger split {transaction_id} --child-amount 100.00 --child-description "part one" --child-amount 21.00 --child-description "part two" --reason "mixed receipt" --yes
+@capture first_child result.child_transactions[0].full_id
+@capture second_child result.child_transactions[1].full_id
+@step Merge the two parts back into one transaction, naming every sibling.
+aeat --format json app ledger merge --child-id {first_child} --child-id {second_child} --reason "undo split" --yes
+@capture merged result.merged_transaction_id
+@step Confirm the merged transaction is active and carries the full amount.
+@result aeat --format json app ledger view {merged}
+@expect result.transaction.amount == "121"
+@expect result.transaction.lifecycle_state == "ACTIVE"

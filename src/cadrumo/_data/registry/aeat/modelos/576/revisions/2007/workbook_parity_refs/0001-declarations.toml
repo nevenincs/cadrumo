@@ -1,0 +1,11 @@
+# The official BOE form is visual evidence only. This mandatory revision
+# coverage record deliberately has no runner and is not an export layout.
+[[revisions."2007".workbook_parity_refs]]
+id = "modelo-576-2005-graphical-form"
+workbook_source = "boe-modelo-576-2005-form"
+fixture_id = "modelo-576-orden-eha-1981-2005-graphical-form"
+formula_coverage = "static_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["orden-eha-1981-2005:df-unica", "ley-58-2003:art-93"]
+source_refs = ["boe-modelo-576-2005-form"]

@@ -1,0 +1,46 @@
+"""Deletion-path validation for the bucket-maintenance service.
+
+Used by: :class:`~application.bucket_maintenance.service.BucketMaintenanceService`
+to resolve the deletion paths of a real, non-link bucket root before any
+manifest read or destructive assessment.
+
+The check runs before manifest reads so a symlink or Windows junction
+cannot redirect assessment into storage outside the configured bucket
+directory.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+from ...core.link_safety import is_link_like
+from ..user_profile.custody_ports import ProfileBucketStoragePathsPort, ProfileBucketStoragePort
+
+
+def validated_bucket_deletion_paths(
+    *,
+    root: Path,
+    bucket_id: str,
+    storage: ProfileBucketStoragePort,
+) -> ProfileBucketStoragePathsPort:
+    """Return deletion paths only beneath real, non-link bucket directories."""
+    try:
+        paths = storage.resolve(root, bucket_id)
+    except ValueError as exc:
+        # Persistence owns the layout validator and its concrete exception
+        # hierarchy.  The maintenance policy only exposes a neutral refusal at
+        # this boundary, so callers cannot depend on adapter error types or
+        # messages.
+        raise ValueError(f"bucket deletion path resolution refused for bucket {bucket_id!r}") from exc
+    if is_link_like(paths.bucket_dir.parent):
+        raise ValueError(f"bucket deletion refuses linked bucket container: {paths.bucket_dir.parent}")
+    if is_link_like(paths.bucket_dir):
+        raise ValueError(f"bucket deletion refuses linked bucket root: {paths.bucket_dir}")
+    if not paths.bucket_dir.is_dir():
+        raise FileNotFoundError(paths.bucket_dir)
+    return paths
+
+
+__all__ = [
+    "validated_bucket_deletion_paths",
+]

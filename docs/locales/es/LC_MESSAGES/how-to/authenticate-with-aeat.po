@@ -1,0 +1,616 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-15 22:33+0200\n"
+"PO-Revision-Date: 2026-07-18 13:10+0200\n"
+"Last-Translator: Cadrumo localization team <docs@cadrumo>\n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../how-to/authenticate-with-aeat.md:1
+msgid "Authenticate Cadrumo with AEAT"
+msgstr "Autenticar Cadrumo ante la AEAT"
+
+#: ../../how-to/authenticate-with-aeat.md:3
+msgid ""
+"Authenticate Cadrumo with Spain's Tax Agency, the Agencia Estatal de "
+"Administración Tributaria (AEAT), to let Cadrumo's `aeat` command read "
+"information your AEAT identity authorizes. Authentication provides read-"
+"only access only. It never files a declaration, makes a payment, "
+"acknowledges a notification, or performs representative-write actions."
+msgstr ""
+"Autentica Cadrumo ante la Agencia Estatal de Administración Tributaria "
+"(AEAT) para que el comando `aeat` de Cadrumo pueda leer la información "
+"que tu identidad ante la AEAT autorice. La autenticación concede solo "
+"acceso de lectura. Nunca presenta una declaración, realiza un pago, acusa"
+" recibo de una notificación ni ejecuta acciones de escritura en "
+"representación de nadie."
+
+#: ../../how-to/authenticate-with-aeat.md:9
+msgid ""
+"Run `aeat --help` before continuing. If it fails, stop before configuring"
+" authentication and follow the [CLI troubleshooting "
+"guide](troubleshooting.md). If that does not restore the command, report "
+"the failure with the Cadrumo version and redacted output."
+msgstr ""
+"Ejecuta `aeat --help` antes de continuar. Si falla, detente antes de "
+"configurar la autenticación y sigue la [guía de resolución de problemas "
+"de la CLI](troubleshooting.md). Si eso no restablece el comando, informa "
+"del fallo indicando la versión de Cadrumo y la salida con los datos "
+"sensibles ocultos."
+
+#: ../../how-to/authenticate-with-aeat.md:14
+msgid ""
+"When available to your identity, the command-line interface (CLI) can "
+"read filed declarations, expedientes, notifications, and AEAT receipts. "
+"To pull your census address into your profile, use the [census facts "
+"guide](censo-update.md)."
+msgstr ""
+"Cuando tu identidad lo permita, la interfaz de línea de comandos (CLI) "
+"puede leer declaraciones presentadas, expedientes, notificaciones y "
+"justificantes de la AEAT. Para incorporar a tu perfil la dirección de tu "
+"censo, usa la [guía de datos del censo](censo-update.md)."
+
+#: ../../how-to/authenticate-with-aeat.md:16
+msgid "Before you start"
+msgstr "Antes de empezar"
+
+#: ../../how-to/authenticate-with-aeat.md:18
+msgid "You need:"
+msgstr "Necesitas:"
+
+#: ../../how-to/authenticate-with-aeat.md:20
+msgid ""
+"an [active profile](profile-setup.md#what-the-active-profile-means). "
+"Create one with the interactive wizard (it asks for your NIF or NIE; for "
+"a Spanish citizen, the NIF is the DNI number plus letter). It prompts for"
+" the profile passphrase and offers an optional recovery code once the "
+"profile exists:"
+msgstr ""
+"un [perfil activo](profile-setup.md#what-the-active-profile-means). Crea "
+"uno con el asistente interactivo (te pide el NIF o NIE; para un ciudadano"
+" español, el NIF es el número del DNI más la letra). Te pide la frase de "
+"contraseña del perfil y ofrece un código de recuperación opcional una vez"
+" creado el perfil:"
+
+#: ../../how-to/authenticate-with-aeat.md:30
+msgid "the passphrase that protects your local store; the tool prompts for it."
+msgstr ""
+"la frase de contraseña que protege tu almacén local; la herramienta te la"
+" pedirá."
+
+#: ../../how-to/authenticate-with-aeat.md:31
+msgid ""
+"the `browser` extra, because `cadrumo-runtime config auth login` and "
+"every live read drive a browser. Install it with `pip install "
+"\"cadrumo[browser]\"`, or follow [Install Cadrumo](../workstation-"
+"setup.md)."
+msgstr ""
+"el extra `browser`, porque `cadrumo-runtime config auth login` y todas "
+"las lecturas en directo controlan un navegador. Instálalo con `pip "
+"install \"cadrumo[browser]\"` o sigue [Instalar Cadrumo](../workstation-"
+"setup.md)."
+
+#: ../../how-to/authenticate-with-aeat.md:35
+msgid ""
+"The examples in this documentation are recorded in English. `aeat` prints"
+" its messages in Spanish unless you [choose another language](profile-"
+"setup.md#choose-the-output-language)."
+msgstr ""
+"Los ejemplos de esta documentación están grabados en inglés. `aeat` "
+"muestra sus mensajes en español, salvo que [elijas otro idioma](profile-"
+"setup.md#choose-the-output-language)."
+
+#: ../../how-to/authenticate-with-aeat.md:39
+msgid "See supported providers"
+msgstr "Consultar los proveedores admitidos"
+
+#: ../../how-to/authenticate-with-aeat.md:41
+msgid "List providers:"
+msgstr "Enumera los proveedores:"
+
+#: ../../how-to/authenticate-with-aeat.md:47
+msgid "Cadrumo supports three providers:"
+msgstr "Cadrumo admite tres proveedores:"
+
+#: ../../how-to/authenticate-with-aeat.md:49
+msgid "`certificate`: your digital certificate file (certificado digital)."
+msgstr "`certificate`: tu fichero de certificado digital (certificado digital)."
+
+#: ../../how-to/authenticate-with-aeat.md:50
+msgid "`clave_movil`: mobile-based Cl@ve, confirmed on your phone."
+msgstr "`clave_movil`: Cl@ve móvil, confirmada en tu teléfono."
+
+#: ../../how-to/authenticate-with-aeat.md:51
+msgid "`clave_permanente`: Cl@ve Permanente, a DNI/NIE and password login."
+msgstr "`clave_permanente`: Cl@ve Permanente, un acceso con DNI/NIE y contraseña."
+
+#: ../../how-to/authenticate-with-aeat.md:53
+msgid ""
+"Pass the identifier to `--provider`. Cl@ve PIN and the electronic "
+"national ID card (DNI electrónico) are not supported."
+msgstr ""
+"Pasa el identificador a `--provider`. Cl@ve PIN y el documento nacional "
+"de identidad electrónico (DNI electrónico) no se admiten."
+
+#: ../../how-to/authenticate-with-aeat.md:56
+msgid "Configure a provider"
+msgstr "Configurar un proveedor"
+
+#: ../../how-to/authenticate-with-aeat.md:58
+msgid "Configure the provider you use:"
+msgstr "Configura el proveedor que utilices:"
+
+#: ../../how-to/authenticate-with-aeat.md:63
+msgid ""
+"Use `--file` for providers that need a file, such as your digital "
+"certificate. Keep credential files private and do not share them."
+msgstr ""
+"Usa `--file` para los proveedores que necesitan un fichero, como tu "
+"certificado digital. Mantén privados los ficheros de credenciales y no "
+"los compartas."
+
+#: ../../how-to/authenticate-with-aeat.md:66
+msgid ""
+"The command stores the provider choice and the certificate path, never a "
+"secret. Supply the secrets separately:"
+msgstr ""
+"El comando guarda el proveedor elegido y la ruta del certificado, nunca "
+"un secreto. Aporta los secretos por separado:"
+
+#: ../../how-to/authenticate-with-aeat.md:69
+msgid ""
+"`certificate`: bind the passphrase to a registered certificate source "
+"with `cadrumo-runtime config auth certificate secret set`, or set the "
+"`CADRUMO_CERTIFICATE_PASSWORD_SECRET` environment variable."
+msgstr ""
+"`certificate`: asocia la frase de contraseña a una fuente de certificado "
+"registrada con `cadrumo-runtime config auth certificate secret set`, o "
+"define la variable de entorno `CADRUMO_CERTIFICATE_PASSWORD_SECRET`."
+
+#: ../../how-to/authenticate-with-aeat.md:72
+msgid ""
+"`clave_permanente`: set `CADRUMO_CLAVE_PERMANENTE_DNI_NIE` and "
+"`CADRUMO_CLAVE_PERMANENTE_PASSWORD`."
+msgstr ""
+"`clave_permanente`: define `CADRUMO_CLAVE_PERMANENTE_DNI_NIE` y "
+"`CADRUMO_CLAVE_PERMANENTE_PASSWORD`."
+
+#: ../../how-to/authenticate-with-aeat.md:74
+msgid "`clave_movil`: set `CADRUMO_CLAVE_MOVIL_DNI_NIE`."
+msgstr "`clave_movil`: define `CADRUMO_CLAVE_MOVIL_DNI_NIE`."
+
+#: ../../how-to/authenticate-with-aeat.md:76
+msgid ""
+"The [environment overrides reference](../reference/environment-"
+"overrides.md) describes these variables."
+msgstr ""
+"La [referencia de anulaciones por variables de entorno](../reference"
+"/environment-overrides.md) describe estas variables."
+
+#: ../../how-to/authenticate-with-aeat.md:79
+msgid "Check local readiness"
+msgstr "Comprobar la preparación local"
+
+#: ../../how-to/authenticate-with-aeat.md:81
+msgid "Check what is configured:"
+msgstr "Comprueba qué está configurado:"
+
+#: ../../how-to/authenticate-with-aeat.md:87
+msgid ""
+"If you want to inspect a specific provider, use `--provider` with either "
+"command."
+msgstr ""
+"Si quieres examinar un proveedor concreto, usa `--provider` con "
+"cualquiera de los dos comandos."
+
+#: ../../how-to/authenticate-with-aeat.md:91
+msgid "Renew your certificate before it expires"
+msgstr "Renovar el certificado antes de que caduque"
+
+#: ../../how-to/authenticate-with-aeat.md:93
+msgid ""
+"A digital certificate has an expiry date. The tool reads that date from "
+"the certificate file and warns you as it approaches. This helps you avoid"
+" a failed live read caused by an expired certificate."
+msgstr ""
+"Un certificado digital tiene una fecha de caducidad. La herramienta lee "
+"esa fecha del fichero del certificado y te avisa a medida que se acerca. "
+"Así evitas que una lectura en directo falle por un certificado caducado."
+
+#: ../../how-to/authenticate-with-aeat.md:97
+msgid "Check the remaining validity:"
+msgstr "Comprueba la validez restante:"
+
+#: ../../how-to/authenticate-with-aeat.md:103
+msgid "The report tells you how the certificate stands:"
+msgstr "El informe te indica en qué situación está el certificado:"
+
+#: ../../how-to/authenticate-with-aeat.md:105
+msgid ""
+"More than 60 days left: the certificate is valid and reports the days "
+"remaining."
+msgstr ""
+"Más de 60 días restantes: el certificado es válido e informa de los días "
+"que quedan."
+
+#: ../../how-to/authenticate-with-aeat.md:107
+msgid ""
+"60 days or fewer left: a warning appears: `The certificate expires in N "
+"days. Plan the renewal.` Start the renewal now."
+msgstr ""
+"60 días o menos restantes: aparece un aviso: `The certificate expires in "
+"N days. Plan the renewal.` Inicia la renovación ahora."
+
+#: ../../how-to/authenticate-with-aeat.md:109
+msgid ""
+"14 days or fewer left: the warning is critical. Renew before your next "
+"live read."
+msgstr ""
+"14 días o menos restantes: el aviso es crítico. Renueva antes de tu "
+"próxima lectura en directo."
+
+#: ../../how-to/authenticate-with-aeat.md:111
+msgid ""
+"Already expired: `The certificate expired N days ago. Renew it before "
+"authenticating.` A live read is refused until you replace it."
+msgstr ""
+"Ya caducado: `The certificate expired N days ago. Renew it before "
+"authenticating.` Se rechaza cualquier lectura en directo hasta que lo "
+"reemplaces."
+
+#: ../../how-to/authenticate-with-aeat.md:114
+msgid ""
+"Renew the certificate with the body that issued it, such as the Fábrica "
+"Nacional de Moneda y Timbre (FNMT) or AEAT. This happens outside the "
+"tool. Download the renewed certificate file (`.p12` or `.pfx`) to your "
+"machine."
+msgstr ""
+"Renueva el certificado ante el organismo que lo emitió, como la Fábrica "
+"Nacional de Moneda y Timbre (FNMT) o la AEAT. Esto ocurre fuera de la "
+"herramienta. Descarga a tu equipo el fichero del certificado renovado "
+"(`.p12` o `.pfx`)."
+
+#: ../../how-to/authenticate-with-aeat.md:118
+msgid "Point the tool at the renewed file:"
+msgstr "Apunta la herramienta al fichero renovado:"
+
+#: ../../how-to/authenticate-with-aeat.md:123
+#, python-brace-format
+msgid ""
+"If the renewed file uses a new password, register it as a [named "
+"certificate source](#manage-several-certificates) if it is not one yet, "
+"then rotate the stored passphrase for that source. `secret set` refuses a"
+" name that is not registered. It prompts without echo, or reads "
+"`{\"certificate_passphrase\": \"...\"}` from `--secrets-stdin` or "
+"`--secrets-fd`:"
+msgstr ""
+"Si el fichero renovado usa una contraseña nueva, regístralo como [fuente "
+"de certificado con nombre](#manage-several-certificates) si aún no lo es "
+"y, después, rota la frase de contraseña guardada de esa fuente. `secret "
+"set` rechaza un nombre que no esté registrado. Pide la frase sin "
+"mostrarla en pantalla, o lee `{\"certificate_passphrase\": \"...\"}` de "
+"`--secrets-stdin` o `--secrets-fd`:"
+
+#: ../../how-to/authenticate-with-aeat.md:133
+msgid "Confirm the new expiry:"
+msgstr "Confirma la nueva caducidad:"
+
+#: ../../how-to/authenticate-with-aeat.md:139
+msgid "The report now shows the renewed certificate's later expiry date."
+msgstr ""
+"El informe muestra ahora la fecha de caducidad posterior del certificado "
+"renovado."
+
+#: ../../how-to/authenticate-with-aeat.md:141
+msgid "Manage several certificates"
+msgstr "Gestionar varios certificados"
+
+#: ../../how-to/authenticate-with-aeat.md:143
+msgid ""
+"If you act for several entities, register one certificate per entity. Do "
+"not reconfigure `cadrumo-runtime config auth configure --file` every time"
+" you switch."
+msgstr ""
+"Si actúas por cuenta de varias entidades, registra un certificado por "
+"entidad. No vuelvas a configurar `cadrumo-runtime config auth configure "
+"--file` cada vez que cambies."
+
+#: ../../how-to/authenticate-with-aeat.md:146
+msgid "Register each certificate under a name:"
+msgstr "Registra cada certificado con un nombre:"
+
+#: ../../how-to/authenticate-with-aeat.md:151
+msgid "List every registered certificate:"
+msgstr "Enumera todos los certificados registrados:"
+
+#: ../../how-to/authenticate-with-aeat.md:157
+msgid "Select the one you want active:"
+msgstr "Selecciona el que quieras tener activo:"
+
+#: ../../how-to/authenticate-with-aeat.md:162
+msgid "Remove a registered certificate you no longer need:"
+msgstr "Elimina un certificado registrado que ya no necesites:"
+
+#: ../../how-to/authenticate-with-aeat.md:168
+msgid "Check every registered certificate's expiry"
+msgstr "Comprobar la caducidad de todos los certificados registrados"
+
+#: ../../how-to/authenticate-with-aeat.md:170
+msgid ""
+"Each registered certificate has its own expiry date. Check all registered"
+" certificates in one pass, not only the active one:"
+msgstr ""
+"Cada certificado registrado tiene su propia fecha de caducidad. Comprueba"
+" todos los certificados registrados de una sola pasada, no solo el "
+"activo:"
+
+#: ../../how-to/authenticate-with-aeat.md:177
+msgid "The report lists each registered certificate with its status:"
+msgstr "El informe enumera cada certificado registrado con su estado:"
+
+#: ../../how-to/authenticate-with-aeat.md:179
+msgid "`ok`: valid, with the days remaining."
+msgstr "`ok`: válido, con los días que quedan."
+
+#: ../../how-to/authenticate-with-aeat.md:180
+msgid ""
+"`expiring`: within the renewal window (60 days or fewer by default, or 14"
+" days or fewer for the critical window). A warning names the certificate."
+msgstr ""
+"`expiring`: dentro de la ventana de renovación (60 días o menos de forma "
+"predeterminada, o 14 días o menos para la ventana crítica). Un aviso "
+"nombra el certificado."
+
+#: ../../how-to/authenticate-with-aeat.md:182
+msgid "`expired`: already expired. A warning names the certificate."
+msgstr "`expired`: ya caducado. Un aviso nombra el certificado."
+
+#: ../../how-to/authenticate-with-aeat.md:183
+msgid ""
+"`file_missing`, `unreadable`, or `corrupt`: Cadrumo cannot read the file,"
+" or cannot open it with the stored passphrase."
+msgstr ""
+"`file_missing`, `unreadable` o `corrupt`: Cadrumo no puede leer el "
+"fichero o no puede abrirlo con la frase de contraseña guardada."
+
+#: ../../how-to/authenticate-with-aeat.md:186
+msgid ""
+"Renew an expiring or expired certificate with the body that issued it, "
+"then re-register it under its existing name:"
+msgstr ""
+"Renueva un certificado que esté por caducar o ya caducado ante el "
+"organismo que lo emitió y vuelve a registrarlo con su nombre existente:"
+
+#: ../../how-to/authenticate-with-aeat.md:192
+msgid ""
+"Re-run `cadrumo-runtime config auth certificate check` to confirm the new"
+" expiry date."
+msgstr ""
+"Vuelve a ejecutar `cadrumo-runtime config auth certificate check` para "
+"confirmar la nueva fecha de caducidad."
+
+#: ../../how-to/authenticate-with-aeat.md:195
+msgid "Start or check a live session"
+msgstr "Iniciar o comprobar una sesión en directo"
+
+#: ../../how-to/authenticate-with-aeat.md:197
+msgid "When you are ready to use a live-read command:"
+msgstr "Cuando estés listo para usar un comando de lectura en directo:"
+
+#: ../../how-to/authenticate-with-aeat.md:202
+msgid "If you need to intentionally reauthenticate, force a fresh authentication:"
+msgstr ""
+"Si necesitas volver a autenticarte a propósito, fuerza una autenticación "
+"nueva:"
+
+#: ../../how-to/authenticate-with-aeat.md:207
+msgid ""
+"If a previous login was interrupted and left the authentication step "
+"stuck, use `--reset-lock`. Run it when `login` reports another login is "
+"in progress but it is not."
+msgstr ""
+"Si un inicio de sesión anterior se interrumpió y dejó bloqueado el paso "
+"de autenticación, usa `--reset-lock`. Ejecútalo cuando `login` indique "
+"que hay otro inicio de sesión en curso y no sea cierto."
+
+#: ../../how-to/authenticate-with-aeat.md:211
+msgid "End sessions or reset authentication"
+msgstr "Finalizar sesiones o restablecer la autenticación"
+
+#: ../../how-to/authenticate-with-aeat.md:213
+msgid ""
+"To end the local certificate-provider session without removing its "
+"configuration:"
+msgstr ""
+"Para finalizar la sesión local del proveedor de certificado sin eliminar "
+"su configuración:"
+
+#: ../../how-to/authenticate-with-aeat.md:220
+msgid ""
+"To remove one provider's local configuration, sessions, sign-in lock, "
+"registered certificates, and stored certificate secrets:"
+msgstr ""
+"Para eliminar la configuración local, las sesiones, el bloqueo de inicio "
+"de sesión, los certificados registrados y los secretos de certificado "
+"almacenados de un proveedor:"
+
+#: ../../how-to/authenticate-with-aeat.md:227
+msgid "To remove local authentication state for every configured provider:"
+msgstr ""
+"Para eliminar el estado de autenticación local de todos los proveedores "
+"configurados:"
+
+#: ../../how-to/authenticate-with-aeat.md:233
+msgid "Act for someone else (apoderado)"
+msgstr "Actuar por cuenta de otra persona (apoderado)"
+
+#: ../../how-to/authenticate-with-aeat.md:235
+msgid ""
+"If you act as an authorized tax representative for another taxpayer, "
+"record locally who you represent and the relevant AEAT apoderamiento "
+"scopes. An apoderado is an authorized representative, such as a gestor or"
+" asesor."
+msgstr ""
+"Si actúas como representante fiscal autorizado de otro contribuyente, "
+"registra localmente a quién representas y los ámbitos de apoderamiento "
+"pertinentes ante la AEAT. Un apoderado es un representante autorizado, "
+"como un gestor o un asesor."
+
+#: ../../how-to/authenticate-with-aeat.md:239
+msgid ""
+"The apoderamiento itself is granted at AEAT. The represented party "
+"authorizes you through AEAT's own apoderamiento procedures. The commands "
+"in this section record that grant in your local profile so read commands "
+"know whose data they read. They never register, extend, revoke, or "
+"renounce an apoderamiento at AEAT. No command writes representation state"
+" to AEAT."
+msgstr ""
+"El apoderamiento en sí se concede en la AEAT. La parte representada te "
+"autoriza mediante los procedimientos de apoderamiento de la propia AEAT. "
+"Los comandos de esta sección registran esa concesión en tu perfil local "
+"para que los comandos de lectura sepan de quién son los datos que leen. "
+"Nunca registran, amplían, revocan ni renuncian a un apoderamiento en la "
+"AEAT. Ningún comando escribe el estado de representación en la AEAT."
+
+#: ../../how-to/authenticate-with-aeat.md:245
+msgid "See the accepted scopes"
+msgstr "Consultar los ámbitos admitidos"
+
+#: ../../how-to/authenticate-with-aeat.md:247
+msgid "List the scope codes the tool accepts:"
+msgstr "Enumera los códigos de ámbito que la herramienta admite:"
+
+#: ../../how-to/authenticate-with-aeat.md:253
+msgid "Each scope is an AEAT apoderamiento area. Examples include:"
+msgstr "Cada ámbito es un área de apoderamiento de la AEAT. Algunos ejemplos:"
+
+#: ../../how-to/authenticate-with-aeat.md:255
+msgid "`RENT` for Modelos 100 and 714."
+msgstr "`RENT` para los modelos 100 y 714."
+
+#: ../../how-to/authenticate-with-aeat.md:256
+msgid "`IVA` for Modelos 303 and 390."
+msgstr "`IVA` para los modelos 303 y 390."
+
+#: ../../how-to/authenticate-with-aeat.md:257
+msgid "`PAGOSF` for Modelos 130 and 131."
+msgstr "`PAGOSF` para los modelos 130 y 131."
+
+#: ../../how-to/authenticate-with-aeat.md:258
+msgid "`RETEN` for withholding modelos."
+msgstr "`RETEN` para los modelos de retenciones."
+
+#: ../../how-to/authenticate-with-aeat.md:259
+msgid ""
+"`GENERALNT`, `CENSO`, `INFORM`, `NOTIFIC`, and `EXPED` for their "
+"respective authority areas."
+msgstr ""
+"`GENERALNT`, `CENSO`, `INFORM`, `NOTIFIC` y `EXPED` para sus respectivas "
+"áreas de la autoridad."
+
+#: ../../how-to/authenticate-with-aeat.md:262
+msgid "Record who you represent"
+msgstr "Registrar a quién representas"
+
+#: ../../how-to/authenticate-with-aeat.md:264
+msgid ""
+"Set the represented party's tax identifier (a NIF or NIE) and the scopes "
+"that match the grant at AEAT:"
+msgstr ""
+"Indica el identificador fiscal de la parte representada (un NIF o NIE) y "
+"los ámbitos que coincidan con la concesión en la AEAT:"
+
+#: ../../how-to/authenticate-with-aeat.md:271
+msgid ""
+"Repeat `--scope` for each code. The CLI rejects a comma-separated list. "
+"Scope codes are uppercase. Use `--scope ALL` to record every catalogue "
+"scope at once. The CLI rejects unknown codes. Without any `--scope`, it "
+"refuses with a message that lists the accepted codes."
+msgstr ""
+"Repite `--scope` para cada código. La CLI rechaza una lista separada por "
+"comas. Los códigos de ámbito van en mayúsculas. Usa `--scope ALL` para "
+"registrar de una vez todos los ámbitos del catálogo. La CLI rechaza los "
+"códigos desconocidos. Si no indicas ningún `--scope`, se niega con un "
+"mensaje que enumera los códigos admitidos."
+
+#: ../../how-to/authenticate-with-aeat.md:276
+msgid ""
+"The active profile holds at most one apoderado configuration; configuring"
+" again replaces it. The represented identifier is stored encrypted."
+msgstr ""
+"El perfil activo tiene como máximo una configuración de apoderado; volver"
+" a configurarla la reemplaza. El identificador representado se almacena "
+"cifrado."
+
+#: ../../how-to/authenticate-with-aeat.md:279
+msgid "Review or retire the configuration"
+msgstr "Revisar o retirar la configuración"
+
+#: ../../how-to/authenticate-with-aeat.md:281
+msgid "Show what is recorded for the active profile:"
+msgstr "Muestra lo que hay registrado para el perfil activo:"
+
+#: ../../how-to/authenticate-with-aeat.md:287
+msgid ""
+"`cadrumo-runtime config auth apoderado check` is the command for the live"
+" check, but the live check is not available. It refuses with `The live "
+"check of representatives is unavailable, or contact with the AEAT "
+"failed.` Use `cadrumo-runtime config auth apoderado status` for the "
+"offline configuration read."
+msgstr ""
+"`cadrumo-runtime config auth apoderado check` es el comando de la "
+"comprobación en directo, pero esa comprobación en directo no está "
+"disponible. Se niega con `The live check of representatives is "
+"unavailable, or contact with the AEAT failed.` Usa `cadrumo-runtime "
+"config auth apoderado status` para leer la configuración sin conexión."
+
+#: ../../how-to/authenticate-with-aeat.md:289
+msgid "Remove the configuration when the representation ends:"
+msgstr "Elimina la configuración cuando termine la representación:"
+
+#: ../../how-to/authenticate-with-aeat.md:295
+msgid ""
+"Clearing removes only the local record. The apoderamiento at AEAT is "
+"unaffected. Revoke it through AEAT's own procedures."
+msgstr ""
+"Borrarla elimina solo el registro local. El apoderamiento en la AEAT no "
+"se ve afectado. Revócalo mediante los procedimientos de la propia AEAT."
+
+#: ../../how-to/authenticate-with-aeat.md:298
+msgid "Next steps"
+msgstr "Próximos pasos"
+
+#: ../../how-to/authenticate-with-aeat.md:300
+msgid "[Maintain Modelo 036 census facts in your profile](censo-update.md)"
+msgstr "[Mantener los datos censales del Modelo 036 en tu perfil](censo-update.md)"
+
+#: ../../how-to/authenticate-with-aeat.md:301
+msgid "[Set up your taxpayer profile](profile-setup.md)"
+msgstr "[Configurar tu perfil de contribuyente](profile-setup.md)"
+
+#: ../../how-to/authenticate-with-aeat.md:302
+msgid "[Diagnose and repair your local setup](troubleshooting.md)"
+msgstr "[Diagnosticar y reparar tu configuración local](troubleshooting.md)"
+
+#: ../../how-to/authenticate-with-aeat.md:304
+msgid ""
+"Run `cadrumo-runtime config auth test` before each live-read task. Follow"
+" [Renew your certificate before it expires](#renew-your-certificate-"
+"before-it-expires) when the command reports an expiry warning."
+msgstr ""
+"Ejecuta `cadrumo-runtime config auth test` antes de cada tarea de lectura"
+" en directo. Sigue [Renovar el certificado antes de que caduque](#renew-"
+"your-certificate-before-it-expires) cuando el comando informe de un aviso"
+" de caducidad."

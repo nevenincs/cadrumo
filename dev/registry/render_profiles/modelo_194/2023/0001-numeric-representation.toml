@@ -1,0 +1,729 @@
+schema_version = 1
+fragment_id = "numeric-representation"
+width_17_rules = []
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["1"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 28
+ordinal = "1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m194-2023-record-1-offset-1"
+decision_statement = "Represent the source field TIPO DE REGISTRO. using its declared width and euro scale."
+justification = "aeat-dr-194-2023, positions 1-1; exact source description and contents reviewed."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 28
+ordinal = "1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["194"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 30
+ordinal = "2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m194-2023-record-1-offset-2"
+decision_statement = "Represent the source field MODELO DECLARACIÓN. using its declared width and euro scale."
+justification = "aeat-dr-194-2023, positions 2-4; exact source description and contents reviewed."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 30
+ordinal = "2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 32
+ordinal = "3"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m194-2023-record-1-offset-5"
+decision_statement = "Represent the source field EJERCICIO. using its declared width and euro scale."
+justification = "aeat-dr-194-2023, positions 5-8; exact source description and contents reviewed."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 32
+ordinal = "3"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 71
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m194-2023-record-1-offset-59"
+decision_statement = "The printed59-67telephone subfield is a nine-digit identifier, preserving leading zeros."
+justification = "aeat-dr-194-2023, positions 59-107; exact source description and contents reviewed."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 71
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 78
+ordinal = "8"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m194-2023-record-1-offset-108"
+decision_statement = "Represent the source field NÚMERO DE JUSTIFICANTE DE LA DECLARACIÓN. using its declared width and euro scale."
+justification = "aeat-dr-194-2023, positions 108-120; exact source description and contents reviewed."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 78
+ordinal = "8"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 13
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 116
+ordinal = "10"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m194-2023-record-1-offset-123"
+decision_statement = "Represent the source field NÚMERO DE JUSTIFICANTE DE LA DECLARACIÓN ANTERIOR. using its declared width and euro scale."
+justification = "aeat-dr-194-2023, positions 123-135; exact source description and contents reviewed."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 116
+ordinal = "10"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 132
+ordinal = "11"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m194-2023-record-1-offset-136"
+decision_statement = "Represent the source field NÚMERO TOTAL DE PERCEPTORES. using its declared width and euro scale."
+justification = "aeat-dr-194-2023, positions 136-144; exact source description and contents reviewed."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 132
+ordinal = "11"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 13
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 141
+ordinal = "12"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m194-2023-record-1-offset-145"
+decision_statement = "Represent the source field BASE RETENCIONES E INGRESOS A CUENTA. using its declared width and euro scale."
+justification = "aeat-dr-194-2023, positions 145-159; exact source description and contents reviewed."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 141
+ordinal = "12"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 13
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 168
+ordinal = "13"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m194-2023-record-1-offset-160"
+decision_statement = "Represent the source field RETENCIONES E INGRESOS A CUENTA. using its declared width and euro scale."
+justification = "aeat-dr-194-2023, positions 160-174; exact source description and contents reviewed."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 168
+ordinal = "13"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "integer"
+value_policy = "unsigned-integer"
+integer_digits = 9
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 187
+ordinal = "14"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m194-2023-record-1-offset-175"
+decision_statement = "Represent the source field NÚMERO TOTAL DE PERCEPTORES. using its declared width and euro scale."
+justification = "aeat-dr-194-2023, positions 175-183; exact source description and contents reviewed."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 187
+ordinal = "14"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 13
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 204
+ordinal = "15"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m194-2023-record-1-offset-184"
+decision_statement = "Represent the source field BASE RETENCIONES E INGRESOS A CUENTA. using its declared width and euro scale."
+justification = "aeat-dr-194-2023, positions 184-198; exact source description and contents reviewed."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 204
+ordinal = "15"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["2"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+record_identity = "Tipo 2 - Registro De Perceptor"
+source_row = 257
+ordinal = "1"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m194-2023-record-2-offset-1"
+decision_statement = "Represent the source field TIPO DE REGISTRO. using its declared width and euro scale."
+justification = "aeat-dr-194-2023, positions 1-1; exact source description and contents reviewed."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+record_identity = "Tipo 2 - Registro De Perceptor"
+source_row = 257
+ordinal = "1"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 3
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["194"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+record_identity = "Tipo 2 - Registro De Perceptor"
+source_row = 259
+ordinal = "2"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m194-2023-record-2-offset-2"
+decision_statement = "Represent the source field MODELO DECLARACIÓN. using its declared width and euro scale."
+justification = "aeat-dr-194-2023, positions 2-4; exact source description and contents reviewed."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+record_identity = "Tipo 2 - Registro De Perceptor"
+source_row = 259
+ordinal = "2"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+record_identity = "Tipo 2 - Registro De Perceptor"
+source_row = 261
+ordinal = "3"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m194-2023-record-2-offset-5"
+decision_statement = "Represent the source field EJERCICIO. using its declared width and euro scale."
+justification = "aeat-dr-194-2023, positions 5-8; exact source description and contents reviewed."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+record_identity = "Tipo 2 - Registro De Perceptor"
+source_row = 261
+ordinal = "3"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "digit_string"
+value_policy = "digit-string"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+record_identity = "Tipo 2 - Registro De Perceptor"
+source_row = 327
+ordinal = "8"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m194-2023-record-2-offset-76"
+decision_statement = "Represent the source field CÓDIGO PROVINCIA. using its declared width and euro scale."
+justification = "aeat-dr-194-2023, positions 76-77; exact source description and contents reviewed."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+record_identity = "Tipo 2 - Registro De Perceptor"
+source_row = 327
+ordinal = "8"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["1", "2", "3"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+record_identity = "Tipo 2 - Registro De Perceptor"
+source_row = 383
+ordinal = "10"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m194-2023-record-2-offset-79"
+decision_statement = "Represent the source field CLAVE CÓDIGO. using its declared width and euro scale."
+justification = "aeat-dr-194-2023, positions 79-79; exact source description and contents reviewed."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+record_identity = "Tipo 2 - Registro De Perceptor"
+source_row = 383
+ordinal = "10"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+record_identity = "Tipo 2 - Registro De Perceptor"
+source_row = 514
+ordinal = "15"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m194-2023-record-2-offset-114"
+decision_statement = "Represent the source field EJERCICIO DEVENGO. using its declared width and euro scale."
+justification = "aeat-dr-194-2023, positions 114-117; exact source description and contents reviewed."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+record_identity = "Tipo 2 - Registro De Perceptor"
+source_row = 514
+ordinal = "15"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+record_identity = "Tipo 2 - Registro De Perceptor"
+source_row = 531
+ordinal = "16"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m194-2023-record-2-offset-118"
+decision_statement = "Represent the source field VALOR ADQUISICIÓN O SUSCRIPCIÓN. using its declared width and euro scale."
+justification = "aeat-dr-194-2023, positions 118-130; exact source description and contents reviewed."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+record_identity = "Tipo 2 - Registro De Perceptor"
+source_row = 531
+ordinal = "16"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+record_identity = "Tipo 2 - Registro De Perceptor"
+source_row = 577
+ordinal = "17"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m194-2023-record-2-offset-131"
+decision_statement = "Represent the source field VALOR TRANSMISIÓN, AMORTIZACIÓN, REEMBOLSO, CANJE O CONVERSIÓN. using its declared width and euro scale."
+justification = "aeat-dr-194-2023, positions 131-143; exact source description and contents reviewed."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+record_identity = "Tipo 2 - Registro De Perceptor"
+source_row = 577
+ordinal = "17"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_integer_part"
+value_policy = "integer-part"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+record_identity = "Tipo 2 - Registro De Perceptor"
+source_row = 657
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m194-2023-percentage-part-170"
+decision_statement = "The official percentage is split into two integer digits and two fractional digits; both parts project the same supplied percentage."
+justification = "AEAT Modelo 194 type 2 positions 170-171: ENTERO : Numérico. Parte entera:"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+record_identity = "Tipo 2 - Registro De Perceptor"
+source_row = 657
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "amount_fractional_digits"
+value_policy = "fractional-digits"
+integer_digits = 0
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+record_identity = "Tipo 2 - Registro De Perceptor"
+source_row = 660
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m194-2023-percentage-part-172"
+decision_statement = "The official percentage is split into two integer digits and two fractional digits; both parts project the same supplied percentage."
+justification = "AEAT Modelo 194 type 2 positions 172-173: DECIMAL : Numérico. Parte decimal:"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+record_identity = "Tipo 2 - Registro De Perceptor"
+source_row = 660
+ordinal_absent = true
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+record_identity = "Tipo 2 - Registro De Perceptor"
+source_row = 663
+ordinal = "21"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m194-2023-record-2-offset-174"
+decision_statement = "Represent the source field RETENCIONES E INGRESOS A CUENTA. using its declared width and euro scale."
+justification = "aeat-dr-194-2023, positions 174-186; exact source description and contents reviewed."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+record_identity = "Tipo 2 - Registro De Perceptor"
+source_row = 663
+ordinal = "21"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "enumeration"
+value_policy = "enumerated-digits"
+integer_digits = 1
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = ["0", "1", "2"]
+
+[singleton_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+record_identity = "Tipo 2 - Registro De Perceptor"
+source_row = 698
+ordinal = "23"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m194-2023-territorial-indicator"
+decision_statement = "The official territorial indicator accepts0,1or2."
+justification = "aeat-dr-194-2023position188 explicitly lists0(other),1(Ceuta/Melilla),2(LaPalma)."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+record_identity = "Tipo 2 - Registro De Perceptor"
+source_row = 698
+ordinal = "23"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "mistyped_alphanumeric_text"
+value_policy = "mistyped-alphanumeric-text"
+integer_digits = 0
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 73
+ordinal_absent = true
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m194-2023-contact-name-text"
+decision_statement = "The child has no printed numeric naturaleza; its parent is alphanumeric and the official description requires surnames and full name."
+justification = "AEAT Modelo 194 type 1 positions 68-107, source row 73: APELLIDOS Y NOMBRE. Preserve the name as text, not digits."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 73
+ordinal_absent = true
+
+[[signed_composite_rules]]
+rule_kind = "signed_monetary_composite"
+integer_digits = 10
+decimal_digits = 2
+sign_policy = "blank-or-n-leading"
+
+[signed_composite_rules.anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+record_identity = "Tipo 2 - Registro De Perceptor"
+source_row = 604
+ordinal = "19"
+
+[signed_composite_rules.evidence]
+authority_kind = "official_parser_anchor"
+decision_statement = "Position157 is blank or N; positions158-169 are twelve digits representing euro cents."
+justification = "aeat-dr-194-2023: source explicitly subdivides SIGNO at157 and IMPORTE at158-169 and requires cents."
+
+[signed_composite_rules.evidence.governed_anchor]
+sheet = "Tipo 2 - Registro De Perceptor"
+record_identity = "Tipo 2 - Registro De Perceptor"
+source_row = 604
+ordinal = "19"
+
+[[telematic_transport_choice_rules]]
+rule_kind = "telematic_transport_choice"
+selected_literal = "T"
+selection_condition = "telematic_transmission"
+expected_source_content = "Se cumplimentará una de las siguientes claves: 'C': Si la información se presenta en soporte. 'T': Si es presentación telemática."
+alternative_literals = ["C"]
+
+[telematic_transport_choice_rules.anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 64
+ordinal = "6"
+
+[telematic_transport_choice_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m194-2023-record-1-offset-58"
+decision_statement = "Select the official T transport code for this telematic export."
+justification = "aeat-dr-194-2023, positions 58-58; exact source description and contents reviewed."
+
+[telematic_transport_choice_rules.evidence.governed_anchor]
+sheet = "Tipo 1 - Registro De Declarante"
+record_identity = "Tipo 1 - Registro De Declarante"
+source_row = 64
+ordinal = "6"
+
+[design_identity]
+modelo = "194"
+design_epoch = "2023"
+source_ref = "aeat-dr-194-2023"
+source_sha256 = "83cd9a332e0016607e87332bea8c3e5d33f0b0f8373ec56f820d82414ca76a7b"

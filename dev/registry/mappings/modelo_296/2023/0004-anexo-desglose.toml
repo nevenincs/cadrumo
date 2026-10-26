@@ -1,0 +1,149 @@
+schema_version = 1
+fragment_id = "anexo-desglose"
+modelo = "296"
+design_epoch = "2023"
+source_ref = "aeat-dr-296-2023"
+source_sha256 = "858152af847e23e3165ba38295696466dfdf96f1ec55503f606cf982a4ae778f"
+
+[[entries]]
+export_field_id = "m296-2023.anexo-desglose.f001"
+kind = "literal"
+literal = "2"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Anexo De Desglose De Retenciones E Ingresos A Cuenta Posic  Naturaleza Descripción De Los Campos"
+source_row = 890
+ordinal = "1"
+record_identity = "Tipo 2 - Anexo De Desglose De Retenciones E Ingresos A Cuenta Posic  Naturaleza Descripción De Los Campos"
+
+[[entries]]
+export_field_id = "m296-2023.anexo-desglose.f002"
+kind = "literal"
+literal = "296"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Anexo De Desglose De Retenciones E Ingresos A Cuenta Posic  Naturaleza Descripción De Los Campos"
+source_row = 892
+ordinal = "2"
+record_identity = "Tipo 2 - Anexo De Desglose De Retenciones E Ingresos A Cuenta Posic  Naturaleza Descripción De Los Campos"
+
+[[entries]]
+export_field_id = "m296-2023.anexo-desglose.f003"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor_intereses", field = "ejercicio" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Anexo De Desglose De Retenciones E Ingresos A Cuenta Posic  Naturaleza Descripción De Los Campos"
+source_row = 895
+ordinal = "3"
+record_identity = "Tipo 2 - Anexo De Desglose De Retenciones E Ingresos A Cuenta Posic  Naturaleza Descripción De Los Campos"
+
+[[entries]]
+export_field_id = "m296-2023.anexo-desglose.f004"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor_intereses", field = "nif_del_declarante" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Anexo De Desglose De Retenciones E Ingresos A Cuenta Posic  Naturaleza Descripción De Los Campos"
+source_row = 898
+ordinal = "4"
+record_identity = "Tipo 2 - Anexo De Desglose De Retenciones E Ingresos A Cuenta Posic  Naturaleza Descripción De Los Campos"
+
+[[entries]]
+export_field_id = "m296-2023.anexo-desglose.f005"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor_intereses", field = "nif_del_perceptor" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Anexo De Desglose De Retenciones E Ingresos A Cuenta Posic  Naturaleza Descripción De Los Campos"
+source_row = 901
+ordinal = "5"
+record_identity = "Tipo 2 - Anexo De Desglose De Retenciones E Ingresos A Cuenta Posic  Naturaleza Descripción De Los Campos"
+
+[[entries]]
+export_field_id = "m296-2023.anexo-desglose.f006"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor_intereses", field = "nif_del_representante_legal" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Anexo De Desglose De Retenciones E Ingresos A Cuenta Posic  Naturaleza Descripción De Los Campos"
+source_row = 908
+ordinal = "6"
+record_identity = "Tipo 2 - Anexo De Desglose De Retenciones E Ingresos A Cuenta Posic  Naturaleza Descripción De Los Campos"
+
+[[entries]]
+export_field_id = "m296-2023.anexo-desglose.f007"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor_intereses", field = "f_j" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Anexo De Desglose De Retenciones E Ingresos A Cuenta Posic  Naturaleza Descripción De Los Campos"
+source_row = 916
+ordinal = "7"
+record_identity = "Tipo 2 - Anexo De Desglose De Retenciones E Ingresos A Cuenta Posic  Naturaleza Descripción De Los Campos"
+
+[[entries]]
+export_field_id = "m296-2023.anexo-desglose.f008"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor_intereses", field = "apellidos_y_nombre_razon_social_o_deno" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Anexo De Desglose De Retenciones E Ingresos A Cuenta Posic  Naturaleza Descripción De Los Campos"
+source_row = 923
+ordinal = "8"
+record_identity = "Tipo 2 - Anexo De Desglose De Retenciones E Ingresos A Cuenta Posic  Naturaleza Descripción De Los Campos"
+
+[[entries]]
+export_field_id = "m296-2023.anexo-desglose.f009"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor_intereses", field = "identificador_de_registro_o_numero_de" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Anexo De Desglose De Retenciones E Ingresos A Cuenta Posic  Naturaleza Descripción De Los Campos"
+source_row = 933
+ordinal = "9"
+record_identity = "Tipo 2 - Anexo De Desglose De Retenciones E Ingresos A Cuenta Posic  Naturaleza Descripción De Los Campos"
+
+[[entries]]
+export_field_id = "m296-2023.anexo-desglose.f010"
+kind = "projection"
+projection_ref = { projection_kind = "m296_perceptor_intereses", field = "retenciones_e_ingresos_a_cuenta_ingres" }
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Anexo De Desglose De Retenciones E Ingresos A Cuenta Posic  Naturaleza Descripción De Los Campos"
+source_row = 942
+ordinal = "10"
+record_identity = "Tipo 2 - Anexo De Desglose De Retenciones E Ingresos A Cuenta Posic  Naturaleza Descripción De Los Campos"
+
+[[entries]]
+export_field_id = "m296-2023.anexo-desglose.f011"
+kind = "filler"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Anexo De Desglose De Retenciones E Ingresos A Cuenta Posic  Naturaleza Descripción De Los Campos"
+source_row = 1070
+ordinal = "11"
+record_identity = "Tipo 2 - Anexo De Desglose De Retenciones E Ingresos A Cuenta Posic  Naturaleza Descripción De Los Campos"
+
+[[entries]]
+export_field_id = "m296-2023.anexo-desglose.f012"
+kind = "literal"
+literal = "F"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]
+[entries.anchor]
+sheet = "Tipo 2 - Anexo De Desglose De Retenciones E Ingresos A Cuenta Posic  Naturaleza Descripción De Los Campos"
+source_row = 1071
+ordinal = "12"
+record_identity = "Tipo 2 - Anexo De Desglose De Retenciones E Ingresos A Cuenta Posic  Naturaleza Descripción De Los Campos"

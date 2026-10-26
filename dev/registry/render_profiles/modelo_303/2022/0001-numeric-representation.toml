@@ -1,0 +1,99 @@
+schema_version = 1
+fragment_id = "numeric-representation"
+width_17_rules = []
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DP30301"
+source_row = 14
+source_cell = "A14"
+ordinal = 9
+record_identity = "DP30301"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m303-2022-devengo-ejercicio-year-yyyy"
+decision_statement = "The Devengo ejercicio field is rendered as the four-digit filing year, unsigned, with no decimal component."
+justification = "The 2022 official design leaves this field's Contenido cell blank, so no source statement fixes its representation. Its four-character extent and its Devengo ejercicio meaning admit only the four-digit year policy, which the export codec already owns; no narrower or wider reading is available at four digits."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DP30301"
+source_row = 14
+source_cell = "A14"
+ordinal = 9
+record_identity = "DP30301"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DP30302"
+source_row = 11
+source_cell = "A11"
+ordinal = 6
+record_identity = "DP30302"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m303-2022-rs-agricola-actividad-1-codigo-identifier-digits"
+decision_statement = "The agricultural simplified-regime activity code in slot 1 is rendered as a two-digit identifier, unsigned, with no decimal component and no closed value domain asserted."
+justification = "The 2022 official design leaves this field's Contenido cell blank and states no validation, so no source statement fixes its representation. It is an activity code rather than a quantity, so an integer or decimal reading would assert arithmetic the field does not carry. An enumeration reading is deliberately refused because it would require canonical allowed values, and the annual Orden publishes its activity identities as slugs rather than in this two-digit form, so any enumerated domain would have to be invented here."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DP30302"
+source_row = 11
+source_cell = "A11"
+ordinal = 6
+record_identity = "DP30302"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "identifier_digits"
+value_policy = "identifier-digits"
+integer_digits = 2
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DP30302"
+source_row = 19
+source_cell = "A19"
+ordinal = 14
+record_identity = "DP30302"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m303-2022-rs-agricola-actividad-2-codigo-identifier-digits"
+decision_statement = "The agricultural simplified-regime activity code in slot 2 is rendered as a two-digit identifier, unsigned, with no decimal component and no closed value domain asserted."
+justification = "The 2022 official design leaves this field's Contenido cell blank and states no validation, so no source statement fixes its representation. It is an activity code rather than a quantity, so an integer or decimal reading would assert arithmetic the field does not carry. An enumeration reading is deliberately refused because it would require canonical allowed values, and the annual Orden publishes its activity identities as slugs rather than in this two-digit form, so any enumerated domain would have to be invented here."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DP30302"
+source_row = 19
+source_cell = "A19"
+ordinal = 14
+record_identity = "DP30302"
+
+[design_identity]
+modelo = "303"
+design_epoch = "2022"
+source_ref = "aeat-dr-303-2022"
+source_sha256 = "6648f6b319579e49cd5bfdaae69e7451db75767e7f19da0b90383b25b79b3f60"

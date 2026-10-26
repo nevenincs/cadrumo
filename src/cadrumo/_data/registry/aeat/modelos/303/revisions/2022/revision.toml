@@ -1,0 +1,56 @@
+[revisions.2022]
+binding_source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+formula_source_refs = ["aeat-dr-303-2022"]
+casilla_source_refs = ["aeat-dr-303-2022"]
+live_cross_reference_source_refs = ["aeat-modelo-303-procedure"]
+# Prepared and reviewed by an agent against the bundled diseño de registros and
+# the ordenes this revision cites; NO human operator has countersigned it, and
+# 'agent_reviewed' plus this reviewer token record that state honestly rather
+# than claiming the operator's own sign-off.
+#
+# What the review established, by measurement:
+#   - every casilla legal_ref and source_ref resolves to the legal catalogue, and
+#     every cited source's corpus file is present on disk;
+#   - every formula targets a casilla of this revision;
+#   - every enrolled schema family resolves;
+#   - every cited source's applicability window overlaps this revision's own life;
+#   - and all 5 fixed-width record(s) of the DERIVED layout were paired to
+#     their design sheet and cover it: no design DATA position is left
+#     unaddressed, and none reaches past its declared record length.
+#
+# The coverage figure is measured on the layout AFTER binding derivation, which
+# is what the renderer and the completeness gate consume; the raw export_layouts
+# collection holds only inline fields and reading it understates coverage badly.
+#
+# This stamp claims no fresh-render reproduction evidence: that belongs to the
+# revisions enrolled in the generated-tree drift gate, and this one is not.
+#
+# What it does NOT establish: that the figures a filing produces are correct
+# against AEAT. That is a tax review against official sources, and it is what an
+# operator re-stamping this to 'operator_reviewed' would be attesting.
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-08-19
+authority_grade = "filing"
+valid_from = 2022-01-01
+# Declared explicitly, matching this revision's own period_selector year_to
+# and every sibling revision. It was absent -- left over from the rename of
+# the 2009-2022 revision to 2022 when the pre-window span was retired -- so
+# the revision defaulted to an OPEN-ENDED valid_to while its selector stops
+# at 2022. That gap is not cosmetic: the revision-scoped source and legal
+# window checks intersect against valid_to, so with it unset a source or
+# provision opening after 2022 could never be flagged for this revision.
+valid_to = 2022-12-31
+orden_aplicabilidad = ["orden-eha-3786-2008:art-1"]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1", "orden-eha-3786-2008:art-7"]
+source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-orden-hfp-1335-2021-iva-authority", "boe-modelo-303-2008-form"]
+
+[revisions.2022.period_selector]
+year_from = 2022
+year_to = 2022
+periods = ["1T", "2T", "3T", "4T", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
+
+[revisions."2022".family_dispositions.applicability]
+reason = "Modelo 303 applicability is defined by filing_schedules and orden_aplicabilidad. Revision '2022' declares both: orden_aplicabilidad cites orden-eha-3786-2008:art-1, and the revision carries its own filing_schedules fragment, so the applicability family holds no separate member for this modelo."
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2022"]

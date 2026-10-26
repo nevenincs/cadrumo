@@ -1,0 +1,35 @@
+modelo:
+  schema:
+    '187':
+      construct:
+        modelo-187-calculation-construct:
+          field:
+            title: 'Modelo 187 nyomtatvány: az önadózás számítása'
+      field:
+        official_name: Modelo 187. A kollektív befektetési formák jegyzett tőkéjét
+          vagy vagyonát megtestesítő részvények és befektetési jegyek adatszolgáltatási
+          bevallása, valamint az elért jövedelmekre és vagyoni nyereségekre vonatkozó
+          IRPF-, IS- és IRNR-adóelőleg-levonások és -befizetések éves összesítője.
+        title: Kollektív befektetési formák részvényei és befektetési jegyei - éves
+          összesítő
+      revision:
+        2022-y-siguientes:
+          casilla:
+            '01':
+              help: A bevallott műveletek teljes száma, amely megegyezik a rekordterv
+                2-es típusú rekordjainak számával.
+              label: Műveletek teljes száma
+            '02':
+              help: A részvények és részesedések megszerzésére vagy jegyzésére irányuló
+                ügyletek összegeinek összege.
+              label: A beszerzések teljes összege
+            '03':
+              help: A részvények és részesedések elidegenítésére vagy visszaváltására
+                irányuló ügyletek összegeinek összege.
+              label: Az elidegenítések teljes összege
+            '04':
+              help: A bevallott ügyletekre alkalmazott levonások és előlegfizetések
+                összege.
+              label: A levonások és előlegfizetések teljes összege
+          field:
+            label: HAP/1608/2014 rendelet, 2022. adóévtől

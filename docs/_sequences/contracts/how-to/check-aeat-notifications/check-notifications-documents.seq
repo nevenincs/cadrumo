@@ -1,0 +1,9 @@
+@step Pull one already-opened notification document into encrypted custody.
+@static aeat app live notifications document pull <certificado-id>
+@blocked live-aeat This step reads the operator's authenticated AEAT sede session.
+@step View one notification document already held in encrypted custody.
+@static aeat app live notifications document view <certificado-id>
+@blocked credential-store This local read requires an unlocked encrypted profile and a stored document.
+@step List the reported figures from stored notification documents.
+@static aeat app live notifications document history
+@blocked credential-store This local read requires an unlocked encrypted profile with document custody.

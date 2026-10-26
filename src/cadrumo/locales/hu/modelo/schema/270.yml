@@ -1,0 +1,155 @@
+modelo:
+  schema:
+    '270':
+      casilla:
+        continuidad:
+          base-retenciones-ingresos-a-cuenta:
+            help: A kedvezményezetti rekordokban szereplő forrásadó- vagy adóelőleg-alapok
+              összege euróban.
+            label: A forrásadó vagy adóelőleg alapjának teljes összege
+          filing-year:
+            label: Az adóbevallás vonatkozási éve
+          m270-clave-personalidad:
+            help: 'Csak akkor kell kitölteni, ha a kedvezményezett típusa 5-ös kód:
+              F természetes személy, J jogi személy vagy szervezet esetén.'
+            label: A külföldi illetőségű kedvezményezett jogi személyiségének kódja
+          m270-declaracion-complementaria:
+            help: C jelölés, ha a bevallás olyan rekordokat tartalmaz, amelyek egy
+              korábbi, azonos évi bevallásból teljesen kimaradtak.
+            label: Kiegészítő bevallás
+          m270-declaracion-sustitutiva:
+            help: S jelölés, ha a benyújtás egyetlen korábbi, azonos évi bevallást
+              teljes egészében érvénytelenít és helyettesít.
+            label: Helyettesítő bevallás
+          m270-fecha-nacimiento:
+            help: Csak akkor kell kitölteni, ha a kedvezményezett típusa 5-ös kód
+              és a jogi személyiség kódja F.
+            label: A külföldi illetőségű kedvezményezett születési ideje
+          m270-fecha-pago-premio:
+            help: Az a nap, amelyen a megnyert nyereményt a kedvezményezett részére
+              kifizették vagy jóváírták.
+            label: A nyeremény kifizetésének időpontja
+          m270-fecha-sorteo:
+            help: A sorsolás megtartásának napja, illetve annak az eseménynek a napja,
+              amelyre a nyereményt eredményező fogadást megkötötték.
+            label: A sorsolás vagy fogadás időpontja
+          m270-gestor-cobro:
+            help: Csak akkor kell X-szel jelölni, ha a korábban részjegyekre osztott
+              nyereményt veszik fel, így a nyereményt felvevő nem annak végső jogosultja.
+            label: A nyeremény beszedési megbízottja
+          m270-importe-premio:
+            help: A pénzbeli nyeremény bruttó összegének, illetve a természetbeni
+              nyeremény értékének a kedvezményezettre egyedileg jutó része. Ha egy
+              sorsoláson több nyereményt is nyert, ezek összege.
+            label: A nyeremény bruttó összege vagy a természetbeni nyeremény egyedi
+              értéke
+          m270-lugar-nacimiento:
+            help: Csak akkor, ha a kedvezményezett típusa 5-ös kód és a jogi személyiség
+              kódja F. A születési hely települése és adott esetben tartománya, régiója
+              vagy megyéje, majd az EHA/3496/2011. sz. rendelet II. melléklete szerinti
+              ország- vagy területkód.
+            label: A külföldi illetőségű kedvezményezett születési helye
+          m270-nif-pais-residencia:
+            help: 'Csak akkor, ha a kedvezményezett típusa 5-ös kód és nincs spanyol
+              adóazonosítója: természetes személynél az útlevélszám vagy ennek hiányában
+              a származási országban érvényes személyazonosító okmány száma, szervezetnél
+              a származási ország adóhatósága által kiadott azonosító.'
+            label: Adóazonosító szám az adóügyi illetőség szerinti országban
+          m270-numero-identificativo:
+            help: Tizenhárom pozíciós sorszám, amelynek első három számjegye a 270-es
+              kód.
+            label: A bevallás azonosító száma
+          m270-numero-identificativo-anterior:
+            help: Annak a bevallásnak az azonosító száma, amelyet ez kiegészít vagy
+              helyettesít. Minden más esetben nullákkal kell kitölteni.
+            label: A korábbi bevallás azonosító száma
+          m270-pais-residencia:
+            help: 'Csak akkor, ha a kedvezményezett típusa 5-ös kód: a kedvezményezett
+              illetősége szerinti ország vagy terület két betűs kódja az EHA/3496/2011.
+              sz. rendelet II. melléklete szerint. Minden más esetben üres.'
+            label: A kedvezményezett adóügyi illetőségének országa vagy területe
+          m270-persona-contacto-nombre:
+            help: Első vezetéknév, szóköz, második vezetéknév, szóköz és teljes utónév,
+              kötelezően ebben a sorrendben.
+            label: A kapcsolattartó vezeték- és utóneve
+          m270-persona-contacto-telefono:
+            help: Kilenc pozíciós numerikus mező a bevalló kapcsolattartási telefonszámával.
+            label: A kapcsolattartó telefonszáma
+          m270-representante-nombre:
+            help: A képviselő vezeték- és utóneve természetes személy esetén, vagy
+              a teljes cégnév, illetve elnevezés jogi személy vagy szervezet esetén.
+              Minden más esetben üres.
+            label: A kedvezményezett képviselőjének vezeték- és utóneve, cégneve vagy
+              elnevezése
+          m270-tipo-perceptor:
+            help: '1-es kód: a személyi jövedelemadó alanyát képező természetes személy;
+              2: Spanyolországban illetőséggel bíró jövedelem-hozzárendelési szervezet;
+              3: társasági adó alanyát képező jogi személy vagy belföldi szervezet;
+              4: spanyolországi állandó telephely; 5: állandó telephely nélkül működő
+              külföldi illetőségű személy vagy szervezet.'
+            label: A kedvezményezett típusa
+          m270-total-importe-premios:
+            help: A kedvezményezetti rekordokban szereplő bruttó nyereményösszegek
+              összege euróban, előjel és tizedesjel nélkül.
+            label: A nyeremények teljes összege vagy értéke
+          payee-name:
+            help: Természetes személynél az első vezetéknév, szóköz, a második vezetéknév,
+              szóköz és a teljes utónév ebben a sorrendben. Jogi személynél vagy szervezetnél
+              a teljes cégnév vagy elnevezés, logó nélkül.
+            label: A kedvezményezett vezeték- és utóneve, cégneve vagy elnevezése
+          payee-nif:
+            help: A nyeremény kedvezményezettjének adóazonosító száma. Csak akkor
+              marad üresen, ha a kedvezményezett típusa 5-ös kód és nincs spanyol
+              adóazonosítója; ilyenkor az illetőség szerinti ország adóazonosítója
+              kötelező.
+            label: A jövedelemszerző NIF-azonosítója
+          payee-province:
+            help: A kedvezményezett lakcíme szerinti tartomány vagy autonóm város
+              kétjegyű kódja. A külföldön szokásos tartózkodási hellyel bíró jövedelemadó-alanyoknál
+              98, az 5-ös kedvezményezetti típusnál 99 a kód.
+            label: A kedvezményezett lakcíme szerinti tartomány kódja
+          payee-representative-nif:
+            help: A kedvezményezett képviselőjeként eljáró személy vagy szervezet
+              adóazonosító száma, ha van ilyen. Minden más esetben üres.
+            label: A kedvezményezett törvényes képviselőjének adóazonosító száma
+          perc-base-retencion:
+            help: A személyi jövedelemadóról szóló 35/2006. sz. törvény harmincharmadik
+              kiegészítő rendelkezésének 3. és 6. bekezdése szerint megállapított
+              forrásadó- vagy adóelőleg-alap.
+            label: A forrásadó vagy adóelőleg alapja
+          perc-retencion:
+            help: A nyereményt kifizető szervezet által ténylegesen levont forrásadó
+              vagy adóelőleg összege.
+            label: A forrásadó vagy adóelőleg összege
+          retenciones-ingresos-a-cuenta:
+            help: A kedvezményezetti rekordokban szereplő forrásadók vagy adóelőlegek
+              összege euróban.
+            label: A forrásadó vagy adóelőleg teljes összege
+          tipo-declaracion:
+            label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
+          total-perceptores-count:
+            help: A 2-es típusú tételes rekordokban felsorolt kedvezményezettek teljes
+              száma. A több rekordban szereplő kedvezményezettet minden előfordulásnál
+              külön kell számolni.
+            label: A bevallott kedvezményezetti rekordok teljes száma
+      construct:
+        modelo-270-informative:
+          field:
+            title: 'Modelo 270 nyomtatvány: tájékoztató jellegű adatszolgáltatás'
+      field:
+        official_name: Modelo 270. Az adóelőleg-levonások és -befizetések éves összesítője.
+          Egyes lottó- és fogadási nyeremények különadója.
+        title: A lottónyeremények különadójára vonatkozó adóelőleg-levonások éves
+          összesítője
+      revision:
+        2013-2022:
+          casilla:
+            x-e1in4opecdknap31cgmmsob3d5mmipbeehng:
+              label: Születési város
+            x-e1in4opecdnm8qb7dsmn0ob9ecmmsob3d5mmipbeehng:
+              label: Születési országkód
+          field:
+            label: 270-es modelo (HAP/2368/2013 rendelet), 2013-2022. adóévek
+        2023-y-siguientes:
+          field:
+            label: 270-es modelo (HAP/2368/2013 rendelet), 2023-2024. adóévek

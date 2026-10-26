@@ -1,0 +1,431 @@
+# Row and resumen bindings for the modelo 193 ejercicio-2022 fichero BOE.
+#
+# One binding per type-2 perceptor row field and per Relacion de Gastos row
+# field the export layout emits, plus the three declarante resumen values the
+# aeat-dr-193-2019 design defines as sums over those records. Geometry is grounded on
+# that design and the filing route on the AEAT modelo 193 procedure, which
+# applies from 2020-01-01 and so covers this exercise.
+#
+# The modelo 123 relation prefills the 2024 edition routes its resumen through
+# are deliberately NOT here: they are grounded by aeat-modelo-193-296-note-2025,
+# which opens in 2024 and cannot be cited by this exercise. This edition totals
+# its own records instead, which is what the design's Contenido text states for
+# positions 145-159, 160-174 and 175-189.
+
+[[revisions."2022".bindings]]
+id = "modelo-193-perceptor-row-nif"
+provider = { kind = "withholding", fact = "row_field", row_field = "perceptor_tax_id", grouping = "per_perceptor_clave", record = "perceptor", data_type = "text" }
+value = { data_type = "text", channel = "row_set", row_grouping = "withholding" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019", "aeat-modelo-193-procedure"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["modelo 193"]
+
+[[revisions."2022".bindings]]
+id = "modelo-193-perceptor-row-nif-representante"
+provider = { kind = "withholding", fact = "row_field", row_field = "representative_tax_id", grouping = "per_perceptor_clave", record = "perceptor", data_type = "text" }
+value = { data_type = "text", channel = "row_set", row_grouping = "withholding" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019", "aeat-modelo-193-procedure"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["modelo 193"]
+
+[[revisions."2022".bindings]]
+id = "modelo-193-perceptor-row-name"
+provider = { kind = "withholding", fact = "row_field", row_field = "perceptor_legal_name", grouping = "per_perceptor_clave", record = "perceptor", data_type = "text" }
+value = { data_type = "text", channel = "row_set", row_grouping = "withholding" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019", "aeat-modelo-193-procedure"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["modelo 193"]
+
+[[revisions."2022".bindings]]
+id = "modelo-193-perceptor-row-mediador"
+provider = { kind = "withholding", fact = "row_field", row_field = "perceptor_mediador_flag", grouping = "per_perceptor_clave", record = "perceptor", data_type = "text" }
+value = { data_type = "text", channel = "row_set", row_grouping = "withholding" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019", "aeat-modelo-193-procedure"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["modelo 193"]
+
+[[revisions."2022".bindings]]
+id = "modelo-193-perceptor-row-provincia"
+provider = { kind = "withholding", fact = "row_field", row_field = "province_code", grouping = "per_perceptor_clave", record = "perceptor", data_type = "text" }
+value = { data_type = "text", channel = "row_set", row_grouping = "withholding" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019", "aeat-modelo-193-procedure"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["modelo 193"]
+
+[[revisions."2022".bindings]]
+id = "modelo-193-perceptor-row-clave-codigo"
+provider = { kind = "withholding", fact = "row_field", row_field = "clave_codigo", grouping = "per_perceptor_clave", record = "perceptor", data_type = "integer" }
+value = { data_type = "integer", channel = "row_set", row_grouping = "withholding" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019", "aeat-modelo-193-procedure"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["modelo 193"]
+
+[[revisions."2022".bindings]]
+id = "modelo-193-perceptor-row-codigo-emisor"
+provider = { kind = "withholding", fact = "row_field", row_field = "codigo_emisor", grouping = "per_perceptor_clave", record = "perceptor", data_type = "text" }
+value = { data_type = "text", channel = "row_set", row_grouping = "withholding" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019", "aeat-modelo-193-procedure"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["modelo 193"]
+
+[[revisions."2022".bindings]]
+id = "modelo-193-perceptor-row-clave"
+provider = { kind = "withholding", fact = "row_field", row_field = "clave", grouping = "per_perceptor_clave", record = "perceptor", data_type = "text" }
+value = { data_type = "text", channel = "row_set", row_grouping = "withholding" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019", "aeat-modelo-193-procedure"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["modelo 193"]
+
+[[revisions."2022".bindings]]
+id = "modelo-193-perceptor-row-naturaleza"
+provider = { kind = "withholding", fact = "row_field", row_field = "naturaleza", grouping = "per_perceptor_clave", record = "perceptor", data_type = "text" }
+value = { data_type = "text", channel = "row_set", row_grouping = "withholding" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019", "aeat-modelo-193-procedure"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["modelo 193"]
+
+[[revisions."2022".bindings]]
+id = "modelo-193-perceptor-row-pago"
+provider = { kind = "withholding", fact = "row_field", row_field = "pago", grouping = "per_perceptor_clave", record = "perceptor", data_type = "integer" }
+value = { data_type = "integer", channel = "row_set", row_grouping = "withholding" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019", "aeat-modelo-193-procedure"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["modelo 193"]
+
+[[revisions."2022".bindings]]
+id = "modelo-193-perceptor-row-tipo-codigo"
+provider = { kind = "withholding", fact = "row_field", row_field = "tipo_codigo", grouping = "per_perceptor_clave", record = "perceptor", data_type = "text" }
+value = { data_type = "text", channel = "row_set", row_grouping = "withholding" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019", "aeat-modelo-193-procedure"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["modelo 193"]
+
+[[revisions."2022".bindings]]
+id = "modelo-193-perceptor-row-codigo-cuenta"
+provider = { kind = "withholding", fact = "row_field", row_field = "codigo_cuenta", grouping = "per_perceptor_clave", record = "perceptor", data_type = "text" }
+value = { data_type = "text", channel = "row_set", row_grouping = "withholding" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019", "aeat-modelo-193-procedure"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["modelo 193"]
+
+[[revisions."2022".bindings]]
+id = "modelo-193-perceptor-row-pendiente"
+provider = { kind = "withholding", fact = "row_field", row_field = "pendiente_flag", grouping = "per_perceptor_clave", record = "perceptor", data_type = "text" }
+value = { data_type = "text", channel = "row_set", row_grouping = "withholding" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019", "aeat-modelo-193-procedure"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["modelo 193"]
+
+[[revisions."2022".bindings]]
+id = "modelo-193-perceptor-row-ejercicio-devengo"
+provider = { kind = "withholding", fact = "row_field", row_field = "accrual_year", grouping = "per_perceptor_clave", record = "perceptor", data_type = "text" }
+value = { data_type = "text", channel = "row_set", row_grouping = "withholding" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019", "aeat-modelo-193-procedure"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["modelo 193"]
+
+[[revisions."2022".bindings]]
+id = "modelo-193-perceptor-row-tipo-percepcion"
+provider = { kind = "withholding", fact = "row_field", row_field = "tipo_percepcion", grouping = "per_perceptor_clave", record = "perceptor", data_type = "integer" }
+value = { data_type = "integer", channel = "row_set", row_grouping = "withholding" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019", "aeat-modelo-193-procedure"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["modelo 193"]
+
+[[revisions."2022".bindings]]
+id = "modelo-193-perceptor-row-percibido"
+provider = { kind = "withholding", fact = "row_field", row_field = "percibido_dinerario", grouping = "per_perceptor_clave", record = "perceptor", data_type = "money" }
+value = { data_type = "money", channel = "row_set", row_grouping = "withholding" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019", "aeat-modelo-193-procedure"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["modelo 193"]
+
+[[revisions."2022".bindings]]
+id = "modelo-193-perceptor-row-reducciones"
+provider = { kind = "withholding", fact = "row_field", row_field = "reducciones", grouping = "per_perceptor_clave", record = "perceptor", data_type = "money" }
+value = { data_type = "money", channel = "row_set", row_grouping = "withholding" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019", "aeat-modelo-193-procedure"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["modelo 193"]
+
+[[revisions."2022".bindings]]
+id = "modelo-193-perceptor-row-base"
+provider = { kind = "withholding", fact = "row_field", row_field = "base_retenciones", grouping = "per_perceptor_clave", record = "perceptor", data_type = "money" }
+value = { data_type = "money", channel = "row_set", row_grouping = "withholding" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019", "aeat-modelo-193-procedure"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["modelo 193"]
+
+[[revisions."2022".bindings]]
+id = "modelo-193-perceptor-row-porcentaje"
+provider = { kind = "withholding", fact = "row_field", row_field = "porcentaje_retencion", grouping = "per_perceptor_clave", record = "perceptor", data_type = "decimal" }
+value = { data_type = "money", channel = "row_set", row_grouping = "withholding" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019", "aeat-modelo-193-procedure"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["modelo 193"]
+
+[[revisions."2022".bindings]]
+id = "modelo-193-perceptor-row-retencion"
+provider = { kind = "withholding", fact = "row_field", row_field = "retencion_practicada", grouping = "per_perceptor_clave", record = "perceptor", data_type = "money" }
+value = { data_type = "money", channel = "row_set", row_grouping = "withholding" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019", "aeat-modelo-193-procedure"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["modelo 193"]
+
+[[revisions."2022".bindings]]
+id = "modelo-193-perceptor-row-penalizaciones"
+provider = { kind = "withholding", fact = "row_field", row_field = "penalizaciones", grouping = "per_perceptor_clave", record = "perceptor", data_type = "money" }
+value = { data_type = "money", channel = "row_set", row_grouping = "withholding" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019", "aeat-modelo-193-procedure"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["modelo 193"]
+
+[[revisions."2022".bindings]]
+id = "modelo-193-perceptor-row-naturaleza-declarante"
+provider = { kind = "withholding", fact = "row_field", row_field = "naturaleza_declarante", grouping = "per_perceptor_clave", record = "perceptor", data_type = "text" }
+value = { data_type = "text", channel = "row_set", row_grouping = "withholding" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019", "aeat-modelo-193-procedure"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["modelo 193"]
+
+[[revisions."2022".bindings]]
+id = "modelo-193-perceptor-row-fecha-inicio"
+provider = { kind = "withholding", fact = "row_field", row_field = "fecha_inicio_prestamo", grouping = "per_perceptor_clave", record = "perceptor", data_type = "date" }
+value = { data_type = "date", channel = "row_set", row_grouping = "withholding" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019", "aeat-modelo-193-procedure"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["modelo 193"]
+
+[[revisions."2022".bindings]]
+id = "modelo-193-perceptor-row-fecha-vencimiento"
+provider = { kind = "withholding", fact = "row_field", row_field = "fecha_vencimiento_prestamo", grouping = "per_perceptor_clave", record = "perceptor", data_type = "date" }
+value = { data_type = "date", channel = "row_set", row_grouping = "withholding" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019", "aeat-modelo-193-procedure"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["modelo 193"]
+
+[[revisions."2022".bindings]]
+id = "modelo-193-perceptor-row-compensaciones"
+provider = { kind = "withholding", fact = "row_field", row_field = "compensaciones", grouping = "per_perceptor_clave", record = "perceptor", data_type = "money" }
+value = { data_type = "money", channel = "row_set", row_grouping = "withholding" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019", "aeat-modelo-193-procedure"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["modelo 193"]
+
+[[revisions."2022".bindings]]
+id = "modelo-193-perceptor-row-garantias"
+provider = { kind = "withholding", fact = "row_field", row_field = "garantias", grouping = "per_perceptor_clave", record = "perceptor", data_type = "money" }
+value = { data_type = "money", channel = "row_set", row_grouping = "withholding" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019", "aeat-modelo-193-procedure"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["modelo 193"]
+
+[[revisions."2022".bindings]]
+id = "modelo-193-gasto-row-nif"
+provider = { kind = "gasto193_contributor", fact = "row_field", row_field = "contributor_tax_id", grouping = "per_gasto193_contribuyente", record = "gastos", data_type = "text" }
+value = { data_type = "text", channel = "row_set", row_grouping = "gasto193" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019", "aeat-modelo-193-procedure"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["modelo 193"]
+
+[[revisions."2022".bindings]]
+id = "modelo-193-gasto-row-nif-representante"
+provider = { kind = "gasto193_contributor", fact = "row_field", row_field = "representative_tax_id", grouping = "per_gasto193_contribuyente", record = "gastos", data_type = "text" }
+value = { data_type = "text", channel = "row_set", row_grouping = "gasto193" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019", "aeat-modelo-193-procedure"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["modelo 193"]
+
+[[revisions."2022".bindings]]
+id = "modelo-193-gasto-row-nombre"
+provider = { kind = "gasto193_contributor", fact = "row_field", row_field = "contributor_legal_name", grouping = "per_gasto193_contribuyente", record = "gastos", data_type = "text" }
+value = { data_type = "text", channel = "row_set", row_grouping = "gasto193" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019", "aeat-modelo-193-procedure"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["modelo 193"]
+
+[[revisions."2022".bindings]]
+id = "modelo-193-gasto-row-importe"
+provider = { kind = "gasto193_contributor", fact = "row_field", row_field = "importe_gastos", grouping = "per_gasto193_contribuyente", record = "gastos", data_type = "money" }
+value = { data_type = "money", channel = "row_set", row_grouping = "gasto193" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019", "aeat-modelo-193-procedure"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["modelo 193"]
+
+[[revisions."2022".bindings]]
+id = "modelo-193-retenciones-ingresadas"
+provider = { kind = "withholding", fact = "retenciones_ingresadas_sum" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019", "aeat-modelo-193-procedure"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["modelo 193"]
+
+[[revisions."2022".bindings]]
+id = "modelo-193-perceptores-anual"
+# Design positions 136-144: "el numero total de perceptores declarados en el
+# soporte para este declarante. Si un mismo perceptor figura en varios
+# registros, se computara tantas veces como figure relacionado (numero de
+# registros de tipo 2)."
+provider = { kind = "withholding", fact = "grouped_row_count", grouping = "per_perceptor_clave" }
+value = { data_type = "integer", channel = "integer" }
+aggregation = { op = "count_distinct" }
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019", "aeat-modelo-193-procedure"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["modelo 193"]
+
+[[revisions."2022".bindings]]
+id = "modelo-193-perceptor-rows-base-total"
+# Design positions 145-159: "la suma total de las cantidades reflejadas en el
+# campo ... BASE DE RETENCIONES E INGRESOS A CUENTA (posiciones 152 a 164),
+# correspondientes a los registros de perceptor."
+provider = { kind = "withholding", fact = "grouped_row_sum", grouping = "per_perceptor_clave", row_field = "base_retenciones" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019", "aeat-modelo-193-procedure"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["modelo 193"]
+
+[[revisions."2022".bindings]]
+id = "modelo-193-perceptor-rows-retenciones-total"
+# Design positions 160-174: "la suma total de las cantidades reflejadas en los
+# campos RETENCIONES E INGRESOS A CUENTA (posiciones 169 a 181) correspondientes
+# a los registros de perceptor."
+provider = { kind = "withholding", fact = "grouped_row_sum", grouping = "per_perceptor_clave", row_field = "retencion_practicada" }
+value = { data_type = "money", channel = "decimal" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2019", "aeat-modelo-193-procedure"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["modelo 193"]

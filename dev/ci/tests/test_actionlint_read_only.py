@@ -1,0 +1,40 @@
+"""The workflow actionlint check must not provision its executable."""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import pytest
+
+from dev import actionlint
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+def test_check_path_reports_remediation_without_calling_installer(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A missing check executable is a read-only failure, not an implicit install."""
+    installer_called = False
+
+    def fail_if_called() -> Path:
+        nonlocal installer_called
+        installer_called = True
+        raise AssertionError("workflow checks must not provision actionlint")
+
+    monkeypatch.setattr(actionlint, "find", lambda: None)
+    monkeypatch.setattr(actionlint, "ensure", fail_if_called)
+
+    assert actionlint.main([]) == actionlint.TOOL_MISSING
+    assert installer_called is False
+    assert "python -m dev.actionlint --install" in capsys.readouterr().err
+
+
+def test_actionlint_cache_uses_cadrumo_storage_override(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    storage = tmp_path / "storage"
+    monkeypatch.delenv("CADRUMO_LOCAL_STORAGE_ROOT", raising=False)
+    monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(storage))
+    monkeypatch.setenv("CADRUMO_ACTIONLINT_DIR", "tools/actionlint")
+    monkeypatch.setenv("RUNNER_TOOL_CACHE", str(tmp_path / "runner-tool-cache"))
+
+    assert actionlint._cache_root() == storage / "tools" / "actionlint" / actionlint.VERSION

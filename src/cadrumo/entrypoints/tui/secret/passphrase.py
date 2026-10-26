@@ -1,0 +1,343 @@
+"""Passphrase change: re-wrap one profile's key under a new password.
+
+This screen collects the current passphrase (proof), the replacement, and
+its confirmation, then hands all three to the injected rotation door. The
+installed account composition submits the registered rotation through
+:func:`~cadrumo_client.transport.profile_password_rotation.run_profile_password_rotation`.
+Password acceptability and confirmation are re-checked by the canonical
+application service regardless of the screen's local validation.
+
+See Also:
+    :func:`~cadrumo.application.user_profile.passphrase_rotation.rotate_profile_passphrase`
+        The application policy enforced by the registered rotation executor.
+    :class:`~cadrumo.entrypoints.tui.secret.registration.RegistrationScreen`
+        The sibling credential surface this one borrows its live strength
+        feedback and attempt shape from.
+"""
+
+from __future__ import annotations
+
+import asyncio
+from contextlib import suppress
+from contextvars import copy_context
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, override
+
+from textual.app import ComposeResult
+from textual.containers import Horizontal, Vertical
+from textual.widgets import Button, Footer, Input, Label, Static
+from textual.worker import Worker
+
+from ....core.async_cleanup import await_cancellation_complete
+from ....core.external_constants import UTF_8_ENCODING
+from ....core.i18n.render import tr
+from ..components.language import localized, refresh_localized_widgets
+from ..components.status import PinnedStatusBar
+from ..components.theme import BASE_CSS, install_cadrumo_themes, tokenised
+from .credentials import (
+    CREDENTIAL_PANEL_CSS,
+    CredentialAttempt,
+    CredentialScreen,
+    assessment_copy,
+)
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from ....application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
+    from ....core.credentials import ProfilePasswordAssessment
+
+__all__ = [
+    "PassphraseChangeAttempt",
+    "PassphraseChangeRefusal",
+    "PassphraseScreen",
+]
+
+
+@dataclass(frozen=True, slots=True)
+class PassphraseChangeRefusal:
+    """Secret-free localized refusal retained as data until rendering."""
+
+    message_key: str
+    context: tuple[tuple[str, object], ...] = ()
+
+    def render(self, *, locale: str | None = None) -> str:
+        """Resolve the refusal under the screen's active language."""
+        return tr(self.message_key, locale=locale, **dict(self.context))
+
+
+@dataclass(frozen=True, slots=True)
+class PassphraseChangeAttempt:
+    """The outcome of asking the application to rotate a profile's passphrase.
+
+    Same shape as :class:`~cadrumo.entrypoints.tui.secret.registration
+    .RegistrationAttempt`: a refusal arrives as text the screen displays,
+    not as an exception it has to recognise, keeping refusal classification
+    with the layer that owns the rotation rules.
+    """
+
+    outcome: ProfilePassphraseRotationOutcome | None = None
+    expected_refusal: PassphraseChangeRefusal | None = None
+
+    @property
+    def refusal(self) -> str | None:
+        """Render expected refusal data only at the presentation boundary."""
+        return self.expected_refusal.render() if self.expected_refusal is not None else None
+
+
+class PassphraseScreen(CredentialScreen["ProfilePassphraseRotationOutcome"]):
+    """Full-screen credential entry that re-wraps one profile's password."""
+
+    SCOPED_CSS = False
+    DEFAULT_CSS = tokenised(
+        BASE_CSS
+        + CREDENTIAL_PANEL_CSS
+        + """
+    #passphrase-intro { margin: $cadrumo-space-0; }
+    #passphrase-actions Button { margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0 $cadrumo-control-gap; }
+    #strength-line { margin: $cadrumo-space-0; }
+    .strength-refused { color: $error; }
+    .strength-weak { color: $warning; }
+    .strength-fair { color: $accent; }
+    .strength-strong { color: $success; }
+    """
+    )
+
+    ATTEMPT_NAME = "profile-passphrase-change"
+
+    def __init__(
+        self,
+        *,
+        assess: Callable[[str], ProfilePasswordAssessment],
+        rotate: Callable[[str, str, str], PassphraseChangeAttempt],
+    ) -> None:
+        """Bind the password assessment and rotation presentation callbacks."""
+        super().__init__()
+        self._assess_profile_password = assess
+        self._rotate_passphrase = rotate
+        self._rotation_task: asyncio.Task[CredentialAttempt[ProfilePassphraseRotationOutcome]] | None = None
+        self._live = True
+        """Applies the typed current/new/confirmation triple and returns the
+        presentation-ready attempt. Injected rather than imported, exactly
+        like registration's ``register`` door: the profile identity is
+        already closed over by whatever composed this screen."""
+
+    @override
+    def start_attempt(self, work: Callable[[], CredentialAttempt[ProfilePassphraseRotationOutcome]]) -> None:
+        """Own the blocking mutation until it settles, including during unmount."""
+        if self.attempt_in_flight:
+            return
+        self.error = None
+        self.set_busy(busy=True)
+        for field in self.query(Input):
+            field.value = ""
+        task = asyncio.create_task(asyncio.to_thread(work), name=self.ATTEMPT_NAME)
+        self._rotation_task = task
+        self._attempt = self.run_worker(
+            await_cancellation_complete(task, task_name=self.ATTEMPT_NAME),
+            name=self.ATTEMPT_NAME,
+            group=self.ATTEMPT_NAME,
+            exit_on_error=False,
+            exclusive=True,
+        )
+
+    @override
+    def on_worker_state_changed(self, event: Worker.StateChanged) -> None:
+        """Discard presentation after unmount while retaining execution ownership."""
+        if not self._live:
+            return
+        super().on_worker_state_changed(event)
+        if not self.attempt_in_flight:
+            self._rotation_task = None
+
+    async def settle_rotation(self) -> ProfilePassphraseRotationOutcome | None:
+        """Read the submitted attempt's result without restoring expired authority."""
+        task = self._rotation_task
+        if task is not None:
+            try:
+                attempt = await await_cancellation_complete(task, task_name="passphrase-result-settlement")
+            except (asyncio.CancelledError, Exception):
+                return None
+            return attempt.outcome
+        return self.outcome
+
+    async def on_unmount(self) -> None:
+        """Do not release the borrowed runtime client while rotation still uses it."""
+        self._live = False
+        for field in self.query(Input):
+            field.value = ""
+        if self._attempt is not None:
+            self._attempt.cancel()
+        task = self._rotation_task
+        if task is not None:
+            with suppress(asyncio.CancelledError, Exception):
+                await await_cancellation_complete(task, task_name="passphrase-unmount-settlement")
+        self._rotation_task = None
+
+    @override
+    def compose(self) -> ComposeResult:
+        """Yield the banner, the three credential fields, and the footer."""
+        yield Static(id="passphrase-banner", classes="cadrumo-banner")
+        yield PinnedStatusBar(id="credential-status")
+        with self.credential_panel(panel_id="passphrase-body"):
+            yield Static(id="passphrase-intro")
+
+            yield Label(id="label-current", classes="field-label")
+            yield Input(id="field-current", password=True)
+
+            yield Label(id="label-new", classes="field-label")
+            yield Static(id="hint-new", classes="field-hint")
+            yield Input(id="field-new", password=True)
+            yield Static(id="strength-line")
+
+            yield Label(id="label-confirm", classes="field-label")
+            yield Input(id="field-confirm", password=True)
+
+            with Horizontal(id="passphrase-actions", classes="credential-actions"):
+                yield localized(
+                    Button(tr("flows.passphrase.cancel_button"), id="btn-cancel"), "flows.passphrase.cancel_button"
+                )
+                yield localized(
+                    Button(tr("flows.passphrase.change_button"), id="btn-change", classes="-primary"),
+                    "flows.passphrase.change_button",
+                )
+        yield Footer()
+
+    def on_mount(self) -> None:
+        """Install the theme, render copy, and focus the current-password field."""
+        install_cadrumo_themes(self.app)
+        self._render_localised_copy()
+        self.query_one("#field-current", Input).focus()
+
+    def _render_localised_copy(self, *, assess_strength: bool = True) -> None:
+        """Resolve every operator-facing string on the page."""
+        title = tr("flows.passphrase.title")
+        self.title = title
+        self.sub_title = tr("flows.passphrase.section")
+        self.query_one("#passphrase-banner", Static).update(title)
+        self.query_one("#passphrase-intro", Static).update(tr("flows.passphrase.intro"))
+        self.query_one("#passphrase-body", Vertical).border_title = tr("flows.passphrase.section")
+        self.query_one("#label-current", Label).update(tr("flows.passphrase.current_label"))
+        self.query_one("#label-new", Label).update(tr("flows.passphrase.new_label"))
+        self.query_one("#hint-new", Static).update(tr("flows.passphrase.new_hint"))
+        self.query_one("#label-confirm", Label).update(tr("flows.passphrase.confirm_label"))
+        if assess_strength:
+            self._render_strength(self.query_one("#field-new", Input).value, assess=self._assess_profile_password)
+
+    @override
+    async def refresh_language(self) -> None:
+        """Reword the password screen without reading or replacing a secret input."""
+        await super().refresh_language()
+        refresh_localized_widgets(self)
+        self._render_localised_copy(assess_strength=False)
+        if self._last_strength_assessment is not None:
+            self.query_one("#strength-line", Static).update(assessment_copy(self._last_strength_assessment))
+
+    def on_input_changed(self, event: Input.Changed) -> None:
+        """Re-render the advisory strength line as the new password is typed."""
+        if self._live and event.input.id == "field-new":
+            self._render_strength(event.value, assess=self._assess_profile_password)
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Route a change or cancellation button intent."""
+        if event.button.id == "btn-change":
+            self.action_change()
+        elif event.button.id == "btn-cancel":
+            self.action_abandon()
+
+    def on_input_submitted(self, event: Input.Submitted) -> None:
+        """Enter advances to the next field, and submits from the last one."""
+        order = ("field-current", "field-new", "field-confirm")
+        current = event.input.id
+        if current == order[-1]:
+            self.action_change()
+            return
+        if current in order:
+            self.query_one(f"#{order[order.index(current) + 1]}", Input).focus()
+
+    def action_change(self) -> None:
+        """Validate the form locally, then rotate the passphrase and exit.
+
+        Local checks only catch what the screen can see -- a blank current
+        password, an unacceptable new one, a mismatched confirmation.
+        Everything else (a wrong current passphrase, a storage refusal) is
+        the application door's decision, surfaced here as its translated
+        message rather than re-derived.
+        """
+        if self.attempt_in_flight:
+            return
+
+        current_passphrase = self.query_one("#field-current", Input).value
+        new_passphrase = self.query_one("#field-new", Input).value
+        confirm = self.query_one("#field-confirm", Input).value
+
+        if not current_passphrase:
+            self.refuse(tr("flows.passphrase.refusal.current_required"))
+            self.query_one("#field-current", Input).focus()
+            return
+        assessment = self._assess_profile_password(new_passphrase)
+        if not assessment.accepted:
+            self.refuse(assessment_copy(assessment))
+            self.query_one("#field-new", Input).focus()
+            return
+        if new_passphrase != confirm:
+            self.refuse(tr("flows.passphrase.refusal.confirmation_mismatch"))
+            self.query_one("#field-confirm", Input).focus()
+            return
+
+        change_context = copy_context()
+        current_buffer = bytearray(current_passphrase, UTF_8_ENCODING)
+        new_buffer = bytearray(new_passphrase, UTF_8_ENCODING)
+        confirm_buffer = bytearray(confirm, UTF_8_ENCODING)
+
+        def _rotate() -> CredentialAttempt[ProfilePassphraseRotationOutcome]:
+            try:
+                return change_context.run(
+                    self._rotate_passphrase,
+                    current_buffer.decode(UTF_8_ENCODING),
+                    new_buffer.decode(UTF_8_ENCODING),
+                    confirm_buffer.decode(UTF_8_ENCODING),
+                )
+            finally:
+                current_buffer[:] = b"\x00" * len(current_buffer)
+                new_buffer[:] = b"\x00" * len(new_buffer)
+                confirm_buffer[:] = b"\x00" * len(confirm_buffer)
+
+        self.start_attempt(_rotate)
+
+    @override
+    def resolve_attempt_refusal(self, attempt: CredentialAttempt[ProfilePassphraseRotationOutcome]) -> str | None:
+        """Render structured rotation refusals under this screen's locale."""
+        if isinstance(attempt, PassphraseChangeAttempt) and attempt.expected_refusal is not None:
+            return attempt.expected_refusal.render()
+        return attempt.refusal
+
+    @override
+    def default_refusal(self) -> str:
+        return tr("flows.passphrase.refusal.change_failed")
+
+    @override
+    def progress_message(self) -> str:
+        return tr("flows.passphrase.change_button")
+
+    @override
+    def refuse(self, message: str) -> None:
+        """Show refusal and return the keyboard to the form.
+
+        The rotation door refuses while the fields are disabled, so re-enabling
+        them leaves nothing focused. The local checks focus the field they name
+        immediately after calling this; the current-password field is the
+        landing place for a refusal that named none, which in practice is the
+        door rejecting the current password.
+        """
+        super().refuse(message)
+        self.query_one("#field-current", Input).focus()
+
+    @override
+    def set_busy(self, *, busy: bool) -> None:
+        """Render change progress and freeze inputs while storage mutates."""
+        super().set_busy(busy=busy)
+        for field_id in ("field-current", "field-new", "field-confirm"):
+            self.query_one(f"#{field_id}", Input).disabled = busy
+        self.query_one("#btn-change", Button).disabled = busy
+        self.query_one("#btn-cancel", Button).disabled = busy

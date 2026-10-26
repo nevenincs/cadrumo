@@ -1,0 +1,31 @@
+# The gravamen especial rate applied to the base imponible of casilla 04 to
+# produce the cuota of casilla 05.
+#
+# Stated by this edition rather than inherited: parameters is an inheritable
+# family, but inheritance runs predecessor -> successor only and this edition
+# declares no predecessor, so it must carry the parameter itself.
+#
+# GROUNDING: LIRPF disposicion adicional 33, apartado 4, states it verbatim in
+# the bundled consolidated text -- "La cuota integra del gravamen especial sera
+# la resultante de aplicar a la base imponible prevista en el apartado 3 anterior
+# el tipo del 20 por ciento" -- read from
+# corpus/normatives/html/ley-35-2006.html#datrigesimatercera. The catalogue
+# entry for that source declares effective_from 2020-01-01, so the 20 per cent
+# tipo is in force across the whole of this edition's 2022-2025 span, and the
+# anexo III form corroborates it in its own caption for casilla 05.
+
+[[revisions."2022-2025".parameters]]
+id = "irpf.lottery_prize_special_levy_rate"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-35-2006:da-33"]
+source_refs = ["boe-lirpf-lottery-prize-special-levy"]
+
+[[revisions."2022-2025".parameters.values]]
+value = "20"
+date_axis = "filing_period"
+valid_from = 2013-01-01
+
+[[revisions."2022-2025".parameters.source_citations]]
+source_ref = "boe-lirpf-lottery-prize-special-levy"
+required_text = ["tipo del 20 por ciento"]

@@ -1,0 +1,31 @@
+{
+  "result_version": 1,
+  "profile_id": "13000000-0000-4000-8000-000000000730",
+  "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
+  "outcome": {
+    "outcome": "evaluated",
+    "baseline_id": "f6a4c7a0a7cea135a02146aae28dae55e2920b03bf2a07d0dcc48093b2c46e69",
+    "findings": []
+  },
+  "parsed": [
+    {
+      "address": { "kind": "correction", "casilla_id": "06" },
+      "value": null,
+      "normalisations": [],
+      "refusal": {
+        "kind": "parse",
+        "edit_contract_version": 1,
+        "address": { "kind": "correction", "casilla_id": "06" },
+        "reason": "not_a_number",
+        "message_arguments": []
+      },
+      "value_text": null,
+      "refusal_words": "Enter a number, for example 1,234.56.",
+      "comparable_value": null
+    }
+  ],
+  "findings": [],
+  "operator_entries_unknown": false,
+  "refusal_words": null,
+  "rebase": []
+}

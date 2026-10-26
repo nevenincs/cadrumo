@@ -1,0 +1,172 @@
+"""Canonical codecs and framed transport for the supervised profile KDF."""
+
+from __future__ import annotations
+
+import json
+import os
+import queue
+import struct
+import sys
+from contextlib import suppress
+from typing import Final, cast
+
+from .....core.base64_codec import b64_decode_canonical
+from .....core.descriptor_write import write_all
+from .....core.hashing import bounded_canonical_json_bytes, canonical_json_digest
+
+KDF_TRANSPORT_ENCODING: Final = "utf-8"
+"""Text encoding of every string crossing the supervised-KDF boundary.
+
+Declared here rather than taken from ``core.external_constants``: the worker
+is started for every wrap and unwrap, and that module's import graph is
+several times the cost of the hash itself.
+"""
+KDF_FRAME_MAGIC: Final = b"CKDF"
+KDF_FRAME_VERSION: Final = 1
+KDF_FRAME_CONTROL: Final = 1
+KDF_FRAME_DEK: Final = 2
+KDF_FRAME_HEADER: Final = struct.Struct("!4sBBHI")
+_FRAME_MAX_BYTES: Final = 8 * 1024
+KDF_CALIBRATION_PROTOCOL: Final = "profile-kdf-calibrated/v2"
+KDF_FAILED_FRAME: Final = b"cadrumo-profile-kdf-failed-v1"
+
+
+def canonical_frame_bytes(payload: object) -> bytes:
+    """Encode one supervised-KDF frame body under the canonical encoding."""
+    return bounded_canonical_json_bytes(payload, maximum_bytes=_FRAME_MAX_BYTES, subject="profile KDF frame")
+
+
+def calibration_frame_bytes(*, derivation_ns: int) -> bytes:
+    """Encode the worker's own timing of one calibration derivation.
+
+    Whole nanoseconds keep the canonical encoding exact; a float would make
+    the refusal of a non-canonical frame depend on its decimal rendering.
+    """
+    return canonical_frame_bytes({"derivation_ns": derivation_ns, "protocol": KDF_CALIBRATION_PROTOCOL})
+
+
+def parse_calibration_frame(value: bytes) -> int:
+    """Return the derivation nanoseconds a calibrated frame carries, refusing any other shape."""
+    parsed = json.loads(value.decode(KDF_TRANSPORT_ENCODING, errors="strict"))
+    if not isinstance(parsed, dict) or set(parsed) != {"derivation_ns", "protocol"}:
+        raise ValueError("profile KDF calibration fields are invalid")
+    record = cast("dict[str, object]", parsed)
+    derivation_ns = record["derivation_ns"]
+    if record["protocol"] != KDF_CALIBRATION_PROTOCOL or type(derivation_ns) is not int or derivation_ns < 0:
+        raise ValueError("profile KDF calibration frame is invalid")
+    if calibration_frame_bytes(derivation_ns=derivation_ns) != value:
+        raise ValueError("profile KDF calibration frame is not canonical")
+    return derivation_ns
+
+
+def canonical_frame_digest(payload: object) -> str:
+    """Digest one supervised-KDF frame body under the canonical encoding."""
+    return canonical_json_digest(payload, maximum_bytes=_FRAME_MAX_BYTES, subject="profile KDF frame")
+
+
+def decode_canonical_b64(value: str, *, field_name: str, expected_bytes: int | None) -> bytes:
+    try:
+        decoded = b64_decode_canonical(value)
+    except ValueError as exc:
+        raise ValueError(f"{field_name} must be canonical base64") from exc
+    if expected_bytes is not None and len(decoded) != expected_bytes:
+        raise ValueError(f"{field_name} has an invalid byte length")
+    if expected_bytes is None and not decoded:
+        raise ValueError(f"{field_name} must not be empty")
+    return decoded
+
+
+def read_kdf_frame_to_queue(fd: int, result_queue: queue.Queue[tuple[int, bytes] | BaseException]) -> None:
+    try:
+        result_queue.put(read_kdf_frame(fd))
+    except BaseException as exc:
+        result_queue.put(exc)
+
+
+def read_kdf_frame(fd: int) -> tuple[int, bytes]:
+    header = _read_exact(fd, KDF_FRAME_HEADER.size)
+    magic, version, kind, flags, length = KDF_FRAME_HEADER.unpack(header)
+    if magic != KDF_FRAME_MAGIC or version != KDF_FRAME_VERSION or flags != 0:
+        raise ValueError("profile KDF frame header is invalid")
+    if kind not in {KDF_FRAME_CONTROL, KDF_FRAME_DEK}:
+        raise ValueError("profile KDF frame kind is invalid")
+    if length > _FRAME_MAX_BYTES:
+        raise ValueError("profile KDF frame exceeds its bounded transport")
+    return cast(int, kind), _read_exact(fd, length)
+
+
+def write_kdf_frame(fd: int, value: bytes, *, kind: int) -> None:
+    if len(value) > _FRAME_MAX_BYTES:
+        raise ValueError("profile KDF frame exceeds its bounded transport")
+    if kind not in {KDF_FRAME_CONTROL, KDF_FRAME_DEK}:
+        raise ValueError("profile KDF frame kind is invalid")
+    write_all(fd, KDF_FRAME_HEADER.pack(KDF_FRAME_MAGIC, KDF_FRAME_VERSION, kind, 0, len(value)) + value)
+
+
+def _read_exact(fd: int, length: int) -> bytes:
+    chunks: list[bytes] = []
+    remaining = length
+    while remaining:
+        chunk = os.read(fd, remaining)
+        if not chunk:
+            raise EOFError("profile KDF worker closed its pipe")
+        chunks.append(chunk)
+        remaining -= len(chunk)
+    return b"".join(chunks)
+
+
+def close_fd(fd: int | None) -> None:
+    if fd is None:
+        return
+    with suppress(OSError):
+        os.close(fd)
+
+
+def windows_available_memory_bytes() -> int:
+    """Return available physical bytes from ``GlobalMemoryStatusEx``.
+
+    The ``sys.platform == "win32"`` block, rather than a guard at the call
+    site or an early return, is what establishes the platform for the Windows
+    API below: it is the only guard shape every checker this project runs
+    narrows on, so those references resolve when the tree is analysed for a
+    platform that does not ship them.
+    """
+    if sys.platform == "win32":
+        import ctypes
+
+        class _MemoryStatus(ctypes.Structure):
+            _fields_ = [
+                ("dwLength", ctypes.c_ulong),
+                ("dwMemoryLoad", ctypes.c_ulong),
+                ("ullTotalPhys", ctypes.c_ulonglong),
+                ("ullAvailPhys", ctypes.c_ulonglong),
+                ("ullTotalPageFile", ctypes.c_ulonglong),
+                ("ullAvailPageFile", ctypes.c_ulonglong),
+                ("ullTotalVirtual", ctypes.c_ulonglong),
+                ("ullAvailVirtual", ctypes.c_ulonglong),
+                ("ullAvailExtendedVirtual", ctypes.c_ulonglong),
+            ]
+
+        status = _MemoryStatus()
+        status.dwLength = ctypes.sizeof(status)
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        if not kernel32.GlobalMemoryStatusEx(ctypes.byref(status)):
+            raise OSError(ctypes.get_last_error(), "GlobalMemoryStatusEx failed")
+        return int(status.ullAvailPhys)
+    raise OSError("GlobalMemoryStatusEx is not available on this platform")
+
+
+__all__ = [
+    "KDF_CALIBRATION_PROTOCOL",
+    "KDF_FAILED_FRAME",
+    "KDF_FRAME_CONTROL",
+    "KDF_FRAME_DEK",
+    "KDF_FRAME_HEADER",
+    "KDF_FRAME_MAGIC",
+    "KDF_FRAME_VERSION",
+    "KDF_TRANSPORT_ENCODING",
+    "calibration_frame_bytes",
+    "parse_calibration_frame",
+    "read_kdf_frame",
+    "write_kdf_frame",
+]

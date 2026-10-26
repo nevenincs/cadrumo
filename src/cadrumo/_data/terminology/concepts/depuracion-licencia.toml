@@ -1,0 +1,53 @@
+# Terminology Handbook concept fragment.
+# Compiled by the strict loader in `dev.docs.terminology_handbook` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `dev.docs.terminology_handbook` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
+
+[concept]
+concept_id = "depuracion-licencia"
+domain = "concepto"
+lifecycle = "deprecated"
+broader = ["manual-terminologia"]
+related = ["mapa-relevancia"]
+created_at = 2026-06-12
+updated_at = 2026-07-22
+
+[language.es]
+short_description = "La frontera que permite shippear solo identificadores y rankings limpios de datos de embedding."
+definition = "Regla de transformacion que elimina de los artefactos de busqueda cualquier dato model-derived no permitido, como vectores, pesos sparse, scores crudos, rutas o snippets, y conserva solo identificadores, destinos, superficies y pesos normalizados. Bajo la restriccion de licencias de las fuentes, esta depuracion mantiene limpio el backend shipped aunque el oraculo dev use recuperacion hibrida."
+scope_note = "No cambia la fuente legal de un resultado; solo define que informacion derivada puede cruzar al artefacto shipped."
+
+[[language.es.term]]
+label = "depuracion de licencia"
+term_status = "preferred"
+part_of_speech = "noun"
+
+[[language.es.term]]
+label = "laundering"
+term_status = "admitted"
+part_of_speech = "noun"
+
+[language.en]
+short_description = "The boundary that ships only clean identifiers and rankings, never embedding internals."
+definition = "A transformation rule that removes any disallowed model-derived data from search artifacts, such as vectors, sparse weights, raw scores, paths, or snippets, and keeps only identifiers, targets, surfaces, and normalized weights. Under the sources' licence constraints, this cleanup keeps the shipped backend clean even when the development oracle uses hybrid retrieval."
+scope_note = "It does not change a result's legal source; it only defines which derived information may cross into the shipped artifact."
+
+
+[[language.en.term]]
+label = "licence laundering"
+term_status = "preferred"
+part_of_speech = "noun"
+
+[language.ca]
+short_description = "La frontera que envia nomes identificadors i rankings nets, mai dades internes d'embedding."
+definition = "Regla de transformació que elimina dels artefactes de cerca qualsevol dada derivada del model que no estigui permesa, com ara vectors, pesos dispersos, puntuacions en brut, rutes o fragments, i conserva només identificadors, destinacions, superfícies i pesos normalitzats. Sota la restricció de llicències de les fonts, aquesta depuració manté net el backend distribuït encara que l'oracle de desenvolupament utilitzi recuperació híbrida."
+scope_note = "No canvia la font legal d'un resultat; només defineix quina informació derivada pot passar a l'artefacte distribuït."
+
+
+[language.hu]
+short_description = "A határ, amely csak tiszta azonosítókat és rangsorokat szállít, embedding-belső adatokat nem."
+definition = "Átalakítási szabály, amely eltávolítja a keresési artefaktumokból a nem engedélyezett, modellből származtatott adatokat, például a vektorokat, ritka súlyokat, nyers pontszámokat, útvonalakat vagy részleteket, és csak azonosítókat, célpontokat, felületeket és normalizált súlyokat őriz meg. A források licencfeltételei mellett ez a tisztítás tisztán tartja a kiadott hátteret akkor is, ha a fejlesztési orákulum hibrid visszakeresést használ."
+scope_note = "Nem módosítja a találat jogi forrását, csak meghatározza, hogy mely származtatott információ kerülhet a kiadott artefaktumba."
+

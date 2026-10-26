@@ -1,0 +1,6 @@
+[[revisions.2022.filing_schedules]]
+id = "modelo-296-anual"
+period_kind = "annual"
+periods = ["0A"]
+legal_refs = ["orden-eha-3290-2008:art-6", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout", "boe-modelo-296-2021-2022-layout"]

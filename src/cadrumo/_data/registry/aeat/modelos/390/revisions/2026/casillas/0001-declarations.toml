@@ -1,0 +1,19 @@
+# Box [112] -- "Pago a cuenta atribuible a la Administracion del Estado deducido
+# en el ejercicio por entregas de gasolinas, gasoleos y biocarburantes". New on
+# the form Orden HAC/27/2026 approves as anexo IV for ejercicio 2026, printed
+# under one number in apartado 7 (Resultado liquidacion anual) and apartado 8
+# (Tributacion por razon de territorio), and subtracted from [86] and [94].
+# Manual: no binding reads the modelo 319 pago a cuenta it restates, and this
+# edition claims applicability only.
+[[revisions."2026".casillas]]
+id = "iva.anual.pago-cuenta-carburantes-deposito-fiscal"
+number = "112"
+section = ["iva", "anual", "resultado"]
+semantic_role = "iva_pago_cuenta_carburantes_deposito_fiscal"
+continuidad_id = "iva-pago-cuenta-carburantes-deposito-fiscal"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/normatives/pdf/boe-a-2026-1761-modelo-390-form.pdf page 24 (sha256 0552f1b8b0e3) prints box 112 in apartados 7 and 8 of the anexo IV form; corpus/aeat_official/disenos_registro/modelo_390/files/01-390-ejercicio-2025-actualizado-05-12-2025-544-kb-xlsx.xlsx.extracted.md (sha256 6d33d8a42459) prints no box [112] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One official AEAT box, printed under one number in both the liquidation and the territorial apartado."
+input_kind = "manual"
+legal_refs = ["orden-hac-27-2026:art-tercero", "rd-1624-1992:art-71"]

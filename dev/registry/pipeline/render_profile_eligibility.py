@@ -1,0 +1,627 @@
+"""The one question the renderer and its screens must ask about a pinned design.
+
+Which fields of a parser-read record design are eligible for a reviewed render
+profile is not a fact of the profile loader; it is a shared contract. The
+generator asks it before emitting, the profile validator asks it to check
+exhaustive coverage, and the pointer-only screen asks it to decide whether a
+content cell is still outstanding work. Those callers sit in different packages,
+so the contract has a public defining module of its own rather than living
+inside the profile loader.
+
+That placement is not bookkeeping. While this function was private to the
+profile loader, the screen reached past it into the bare projection and
+passed none of the design's declarations, so it answered a different question
+from the renderer and reported a cell whose note had been read, recorded and
+acted on as a reference nobody had opened. A screen that disagrees with the
+thing it screens is worse than no screen, because its rows read as work.
+
+The pin is VALIDATED here, not merely read: a declaration naming this source but
+carrying another digest ends the call rather than being silently ignored. A
+caller that classifies that refusal as "this revision declares nothing I can
+read" has collapsed two different states, and the refusal is the one that means
+somebody's reviewed reading has stopped covering the file in hand.
+
+The projection itself and the predicates that decide a single field live here
+too, with the resolver, rather than in the profile loader. Splitting them left
+the loader calling back into this module while this module read the loader's
+projection, and the only thing holding that cycle open was an import deferred to
+call time. The seam is between "which fields are eligible" and "what a reviewed
+profile says about them", so the whole eligibility question sits on this side of
+it and the dependency runs one way: the profile loader reads this module, and
+this module reads nothing of the loader's.
+"""
+
+from __future__ import annotations
+
+import unicodedata
+from collections.abc import Iterable
+from hashlib import sha256
+from typing import Final
+
+from pydantic import BaseModel, ConfigDict
+
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+
+from ..compiler.record_design_pdf_rows import ABSENT_NATURALEZA_TYPE_CODE
+from .record_design_intermediate import (
+    RecordDesignIntermediateField,
+    RecordDesignIntermediateSource,
+)
+from .source_defects import (
+    NoteStatedApplicabilityDeclaration,
+    note_stated_applicability_for,
+    note_states_only_applicability,
+    validate_note_stated_applicability_declarations,
+)
+from .source_stated_composites import source_stated_composite_anchor_keys_for
+from .year_constraints import BoundedYearDeclaration, year_constraints_for
+
+__all__ = [
+    "RenderProfileEligibility",
+    "normalise_aeat_type",
+    "project_render_profile_eligibility",
+    "resolve_render_profile_eligibility",
+]
+
+_RESERVED_DESCRIPTION_MARKER: Final[str] = "reservado"
+
+# These PDF rows have no printed naturaleza, but name a person rather than a
+# numeric wire value. The adjacent telephone rows remain eligible. Each
+# exclusion is confined to the exact parser-read source and printed row.
+_CONTACT_NAME_ROWS: Final[dict[str, tuple[str, str, int, str, str]]] = {
+    "aeat-dr-165-2016-2022": (
+        "2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5",
+        "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos",
+        73,
+        "APELLIDOS Y NOMBRE: Se consignará",
+        "b103c5edc7843633fadf6f547782c7b8b35d5db84510db1872b9ce07884c8f2a",
+    ),
+    "aeat-dr-165-2026": (
+        "bcc94b07d695703cfa66a3d8cbbb176841906ebf8cef57e2acd3e3fee452a263",
+        "Tipo 1 - Registro De Declarante Posic  Naturaleza Descripción De Los Campos",
+        69,
+        "APELLIDOS Y NOMBRE: Se consignará",
+        "b103c5edc7843633fadf6f547782c7b8b35d5db84510db1872b9ce07884c8f2a",
+    ),
+    "aeat-dr-280-2022": (
+        "45cab8f0880dfc4094d6cc8905ae37efba0c10a568d49e8648e1c9a20b2a5701",
+        "Tipo 1 - Registro De Declarante",
+        83,
+        "APELLIDOS Y NOMBRE: Se",
+        "fabaac0e30eff1ca0b091804bcd640d65c93557652c0d06019cb048acad778cc",
+    ),
+    "aeat-dr-270-2023": (
+        "d845cc47e3b60d01128d27dddcc3cffd2cf64bd6dfb24e0cd0d0467d66f95a92",
+        "Tipo 1 - Registro De Declarante",
+        89,
+        "APELLIDOS Y NOMBRE: Se",
+        "fabaac0e30eff1ca0b091804bcd640d65c93557652c0d06019cb048acad778cc",
+    ),
+    "boe-dr-270-2013-2022": (
+        "97dfc0a9640f2bdd32c97b89702427ba708c858fe173ab31a68d179f247c3b69",
+        "Tipo 1 - Registro De Declarante",
+        429,
+        "APELLIDOS Y NOMBRE: Se consignará el",
+        "99a0e52c425eb7a6f2fb96635d2aac3b5e104af7eb36a449523c0b0bb81e0095",
+    ),
+}
+
+_M270_BIRTH_PLACE_TEXT_ROWS: Final = {
+    "boe-dr-270-2013-2022": (
+        "97dfc0a9640f2bdd32c97b89702427ba708c858fe173ab31a68d179f247c3b69",
+        (
+            (
+                882,
+                461,
+                35,
+                "CIUDAD : 35 posiciones. Se consignará el",
+                "cf187628004340ea605421b53079de1b20c59510d16d8b87e0f7e929c5181861",
+            ),
+            (
+                886,
+                496,
+                2,
+                "CÓDIGO PAÍS: Campo alfabético de 2",
+                "b88832b6dbd87c7d3f61542ed980c13a69b38ea59ac2059b9b29cd7af1cdfe67",
+            ),
+        ),
+    ),
+    "aeat-dr-270-2023": (
+        "d845cc47e3b60d01128d27dddcc3cffd2cf64bd6dfb24e0cd0d0467d66f95a92",
+        (
+            (
+                601,
+                461,
+                35,
+                "CIUDAD : 35 posiciones. Se",
+                "c3731950a1df985a68257d8efc24994f76294b0529c2533ad6d17324358b1a41",
+            ),
+            (
+                605,
+                496,
+                2,
+                "CÓDIGO PAÍS: Campo alfabético de",
+                "9d5158c20e1739dcbed079897c18dad1963f1def43f4e242bb8cb8ca3cc7ae57",
+            ),
+        ),
+    ),
+}
+
+
+def source_m270_birth_place_text_field(
+    field: RecordDesignIntermediateField, *, source_ref: str, source_sha256: str
+) -> bool:
+    """Classify only the two source-stated birth-place components as text."""
+    pin = _M270_BIRTH_PLACE_TEXT_ROWS.get(source_ref)
+    if pin is None:
+        return False
+    expected_sha, rows = pin
+    if source_sha256 != expected_sha:
+        raise RegistryValidationError("M270 birth-place source identity is unreviewed or stale")
+    if field.sheet != "Tipo 2 - Registro De Perceptor":
+        return False
+    row_pin = next((item for item in rows if item[0] == field.source_row), None)
+    if row_pin is None:
+        return False
+    row, offset, length, description, digest = row_pin
+    return _reviewed_source_text_field_matches(
+        field,
+        sheet="Tipo 2 - Registro De Perceptor",
+        row=row,
+        offset=offset,
+        length=length,
+        description=description,
+        digest=digest,
+        error_message="M270 birth-place source text or geometry differs from reviewed evidence",
+    )
+
+
+def _source_m270_birth_place_exclusions(
+    fields: tuple[RecordDesignIntermediateField, ...], source: RecordDesignIntermediateSource
+) -> frozenset[tuple[str, int, int]]:
+    pin = _M270_BIRTH_PLACE_TEXT_ROWS.get(str(source.source_ref))
+    if pin is None:
+        return frozenset[tuple[str, int, int]]()
+    expected_sha, rows = pin
+    if source.source_sha256 != expected_sha:
+        raise RegistryValidationError("M270 birth-place source identity is unreviewed or stale")
+    return _validated_m270_birth_place_exclusions(fields, source, rows)
+
+
+def _validated_m270_birth_place_exclusions(
+    fields: tuple[RecordDesignIntermediateField, ...],
+    source: RecordDesignIntermediateSource,
+    rows: tuple[tuple[int, int, int, str, str], ...],
+) -> frozenset[tuple[str, int, int]]:
+    sheet = "Tipo 2 - Registro De Perceptor"
+    selected_rows = {row[0] for row in rows}
+    selected = tuple(field for field in fields if field.sheet == sheet and field.source_row in selected_rows)
+    if len(selected) != len(rows) or any(
+        not source_m270_birth_place_text_field(
+            field,
+            source_ref=str(source.source_ref),
+            source_sha256=source.source_sha256,
+        )
+        for field in selected
+    ):
+        raise RegistryValidationError("M270 birth-place source rows are missing or ambiguous")
+    return frozenset((sheet, row, offset) for row, offset, _length, _description, _digest in rows)
+
+
+_M181_IBAN_COUNTRY_ROW: Final[tuple[str, str, str, int, str, str]] = (
+    "aeat-dr-181-2022",
+    "4b1e2d236132447d745205a713ccc1eb44a69379965bad58f0d543d39043a92b",
+    "Tipo 2 - Registro Del Declarado",
+    302,
+    "CÓDIGO PAIS ISO: campo alfabético.",
+    "9e2984adc3df218a98c1cbb585bc09eb336e0b19af380d51a1c17383c5d31b76",
+)
+
+
+def source_iban_country_text_field(
+    field: RecordDesignIntermediateField, *, source_ref: str, source_sha256: str
+) -> bool:
+    """Recognize the exact source-stated alphabetic IBAN country component."""
+    expected_ref, expected_sha, sheet, row, description, digest = _M181_IBAN_COUNTRY_ROW
+    if source_ref != expected_ref:
+        return False
+    if source_sha256 != expected_sha:
+        raise RegistryValidationError("IBAN country source identity is unreviewed or stale")
+    if field.sheet != sheet or field.source_row != row:
+        return False
+    return _reviewed_source_text_field_matches(
+        field,
+        sheet=sheet,
+        row=row,
+        offset=79,
+        length=2,
+        description=description,
+        digest=digest,
+        error_message="IBAN country source text or geometry differs from reviewed evidence",
+    )
+
+
+def _source_iban_country_exclusion(
+    fields: tuple[RecordDesignIntermediateField, ...], source: RecordDesignIntermediateSource
+) -> frozenset[tuple[str, int, int]]:
+    expected_ref, _, sheet, row, _, _ = _M181_IBAN_COUNTRY_ROW
+    if str(source.source_ref) != expected_ref:
+        return frozenset[tuple[str, int, int]]()
+    matches = tuple(field for field in fields if field.sheet == sheet and field.source_row == row)
+    if len(matches) != 1:
+        raise RegistryValidationError("IBAN country source row is missing or ambiguous")
+    if not source_iban_country_text_field(matches[0], source_ref=expected_ref, source_sha256=source.source_sha256):
+        raise RegistryValidationError("IBAN country source row differs from reviewed evidence")
+    return frozenset({(sheet, row, 79)})
+
+
+def _source_contact_name_exclusions(
+    fields: tuple[RecordDesignIntermediateField, ...], source: RecordDesignIntermediateSource
+) -> frozenset[tuple[str, int, int]]:
+    pin = _CONTACT_NAME_ROWS.get(str(source.source_ref))
+    if pin is None:
+        return frozenset[tuple[str, int, int]]()
+    expected_sha, sheet, row, _, _ = pin
+    if source.source_sha256 != expected_sha:
+        raise RegistryValidationError("contact-name source identity is unreviewed or stale")
+    matches = tuple(field for field in fields if field.sheet == sheet and field.source_row == row)
+    if len(matches) != 1:
+        raise RegistryValidationError("contact-name source row is missing or ambiguous")
+    field = matches[0]
+    if not source_contact_name_field(field, source_ref=str(source.source_ref), source_sha256=source.source_sha256):
+        raise RegistryValidationError("contact-name source row differs from reviewed evidence")
+    return frozenset({(sheet, row, 68)})
+
+
+def source_contact_name_field(field: RecordDesignIntermediateField, *, source_ref: str, source_sha256: str) -> bool:
+    """Classify only the exact source-printed contact-name row as text."""
+    pin = _CONTACT_NAME_ROWS.get(source_ref)
+    if pin is None:
+        return False
+    expected_sha, sheet, row, description, digest = pin
+    if source_sha256 != expected_sha:
+        raise RegistryValidationError("contact-name source identity is unreviewed or stale")
+    if field.sheet != sheet or field.source_row != row:
+        return False
+    return _reviewed_source_text_field_matches(
+        field,
+        sheet=sheet,
+        row=row,
+        offset=68,
+        length=40,
+        description=description,
+        digest=digest,
+        error_message="contact-name source text or geometry differs from reviewed evidence",
+    )
+
+
+def _reviewed_source_text_field_matches(
+    field: RecordDesignIntermediateField,
+    *,
+    sheet: str,
+    row: int,
+    offset: int,
+    length: int,
+    description: str,
+    digest: str,
+    error_message: str,
+) -> bool:
+    if field.record_identity != sheet or field.source_cell is not None or field.ordinal is not None:
+        raise RegistryValidationError(error_message)
+    if (field.source_row, field.offset, field.length) != (
+        row,
+        offset,
+        length,
+    ) or field.normalized_description != description:
+        raise RegistryValidationError(error_message)
+    material = "\x1f".join((field.normalized_description, field.content or "", field.aeat_type))
+    if sha256(material.encode()).hexdigest() != digest:
+        raise RegistryValidationError(error_message)
+    if not _has_absent_naturaleza(field):
+        raise RegistryValidationError(error_message)
+    return True
+
+
+class _StrictModel(BaseModel):
+    """Frozen development-tool boundary model with no untyped extras."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
+
+
+class RenderProfileEligibility(_StrictModel):
+    """Production-owned partition of otherwise-unrenderable fixed numeric fields."""
+
+    all_fields: tuple[RecordDesignIntermediateField, ...]
+    width_17_fields: tuple[RecordDesignIntermediateField, ...]
+    smaller_fields: tuple[RecordDesignIntermediateField, ...]
+    signed_composite_fields: tuple[RecordDesignIntermediateField, ...] = ()
+    fixed_fields: tuple[RecordDesignIntermediateField, ...] = ()
+
+
+def _is_source_reserved_field(field: RecordDesignIntermediateField) -> bool:
+    """Report whether the official description marks this slot reserved.
+
+    Reservation is read from the DESCRIPTION and never from the type column,
+    because the type column is unreliable for exactly these slots.  When AEAT
+    retires a numeric field it rewrites the description to mark the slot
+    reserved and leaves the original numeric type in place, so a retired
+    quantity keeps announcing itself as ``Num`` forever.  Modelo 303 shows both
+    states of that edit within one modelo: its 2023 design types every reserved
+    slot ``An``, while its 2025 design types five of thirteen ``Num``, and four
+    of those five sit exactly where live employee-count quantities stood before
+    they were retired.  The surviving ``Num`` is therefore a residue of the
+    slot's former life, not a claim that a reserved run carries a number.
+
+    The match is case-insensitive because official designs disagree on casing
+    for the same marker.
+    """
+    return _RESERVED_DESCRIPTION_MARKER in field.normalized_description.casefold()
+
+
+def _has_absent_naturaleza(field: RecordDesignIntermediateField) -> bool:
+    """Whether AEAT printed this row's naturaleza cell EMPTY.
+
+    The strongest case for a reviewed rule there is, and it was excluded. A
+    numeric field at least tells the renderer it is numeric; a row AEAT printed
+    with no naturaleza at all states nothing about its wire representation, and
+    the shipped parser records exactly that by stamping the absent-naturaleza
+    marker rather than guessing a type. Modelo 184's ``151-155 PORCENTAJE DE
+    RENTA ATRIBUIBLE A MIEMBROS RESIDENTES`` is the worked case: its own prose
+    says "campo numerico" and subdivides it into ENTERO and DECIMAL, so the wire
+    fact is knowable and reviewable -- but it lives in the description, which is
+    exactly the evidence a render profile exists to carry.
+
+    Excluding these did not make the renderer safe: it made the field invisible
+    to the profile's exhaustive-coverage check and then crashed the renderer on
+    an unsupported type, so the gap surfaced as a late refusal instead of as the
+    reviewable rule it should have demanded.
+    """
+    return field.aeat_type.strip() == ABSENT_NATURALEZA_TYPE_CODE
+
+
+def normalise_aeat_type(aeat_type: str) -> str:
+    """Return the one accent-insensitive AEAT naturaleza vocabulary."""
+    return unicodedata.normalize("NFKD", aeat_type.strip(" .")).encode("ascii", "ignore").decode("ascii").lower()
+
+
+def _is_numeric_aeat_type(aeat_type: str) -> bool:
+    """Whether ``aeat_type`` names a numeric naturaleza, however AEAT spelled it.
+
+    A workbook prints the abbreviation (``Num``, and ``N`` for the signed form);
+    a PDF design prints the word, which the shipped parser canonicalises to
+    ``Numerico``. Selecting on the abbreviations alone made every PDF design's
+    numeric fields ineligible, so no reviewed rule was ever demanded for them and
+    an empty profile satisfied exhaustive coverage completely.
+
+    Matched on an accent-stripped stem for the same reason
+    ``naturaleza_or_none`` is: AEAT does not spell consistently, and every
+    unmatched spelling is a field that silently escapes review.
+    """
+    normalised = normalise_aeat_type(aeat_type)
+    return normalised in {"num", "n"} or normalised.startswith("numeric")
+
+
+#: A Contenido cell that instructs the FILER and states nothing about the wire.
+#: Modelo 200 prints "No cumplimentar" in six art. 11.12 LIS grid positions: the
+#: slot is a 17-character amount like every sibling in its grid, and the note
+#: withholds the VALUE rather than describing the representation.
+#:
+#: This is a third case the workbook branch above did not have. Its reasoning --
+#: a non-blank Contenido is the design stating the fact -- holds for a cell that
+#: DESCRIBES the slot and not for one that gives the filer an instruction. Read
+#: as a wire fact the phrase is unparseable, and the renderer refused on it; read
+#: as blank it becomes eligible for the reviewed rule the design's own note
+#: already governs.
+#:
+#: Deliberately an exact phrase set, not a keyword search: "no" and
+#: "cumplimentar" both appear inside legitimate descriptions of what a slot
+#: carries, and a loose rule would make real wire facts invisible to review.
+_FILING_INSTRUCTION_ONLY_CONTENTS: Final[frozenset[str]] = frozenset({"no cumplimentar"})
+
+
+def _is_filing_instruction_only(content: str) -> bool:
+    """Whether the Contenido cell instructs the filer instead of stating a wire fact."""
+    return content.strip().rstrip(".").casefold() in _FILING_INSTRUCTION_ONLY_CONTENTS
+
+
+def _states_no_wire_fact(
+    field: RecordDesignIntermediateField,
+    *,
+    applicability_notes: tuple[NoteStatedApplicabilityDeclaration, ...] = (),
+    year_constraints: tuple[BoundedYearDeclaration, ...] = (),
+) -> bool:
+    """Whether the design left this field's wire fact unstated at its anchor.
+
+    A WORKBOOK field has a Contenido cell, so a non-blank one is the design
+    stating the fact and the field needs no reviewed rule. A PDF design has no
+    such column: the parser fills ``content`` with the field's DESCRIPTIVE PROSE,
+    which states the fact sometimes, partially, or not at all. Modelo 347 carries
+    all of those side by side -- one field giving sign and decimals in full, one
+    giving only a width, a bare cross-reference, and a purely semantic
+    description -- so no rule over the text can separate them and every numeric
+    PDF anchor is put to a reviewed rule instead.
+
+    The source shape is read off the field rather than threaded in: a workbook
+    anchor carries a ``source_cell`` and a PDF anchor does not, which is the
+    distinction :class:`RecordDesignIntermediateField` already documents.
+
+    Where the prose DOES state a fact the reviewed rule must agree with it, which
+    keeps the official design's veto intact; that agreement is checked where the
+    rule's own evidence is validated, not here.
+
+    ``applicability_notes`` is the third case, and it is the narrowest: a cell
+    whose whole content is a pointer to a note SOMEBODY HAS READ and recorded as
+    stating applicability rather than representation. AEAT's own vocabulary makes
+    that cell equivalent to a blank one -- ``Contenido`` holds "aclaraciones
+    relativas al formato del campo" and a ``Nota`` holds "aclaraciones al
+    contenido", so a note about which periods a slot applies to states no format
+    -- and the field goes where a blank cell goes. Read as a wire fact instead it
+    is unparseable, and the numeric derivation falls through to an unscaled
+    integer nobody reviewed.
+
+    The gate is the DECLARATION and not the shape of the text, deliberately. A
+    pointer-shaped cell whose note nobody has opened may still state the wire
+    fact outright; admitting all of them on shape would make roughly 183 fields
+    newly eligible at once, each owing a reviewed rule that does not exist, and
+    would silently swallow the runs an adjudicated
+    :class:`~dev.registry.pipeline.source_defects.NoteGovernedAmountDeclaration`
+    already covers. So an unread pointer keeps the reading it has today and stays
+    visible as outstanding work.
+    """
+    if field.source_cell is None:
+        return True
+    if field.content is None or not field.content.strip():
+        return True
+    if _is_filing_instruction_only(field.content):
+        return True
+    # A pinned lower bound governs admissible years, leaving their wire
+    # representation to an explicit reviewed four-digit-year rule.
+    if any(
+        (field.sheet, field.source_cell, field.content)
+        == (constraint.sheet, constraint.source_cell, constraint.published_statement)
+        for constraint in year_constraints
+    ):
+        return True
+    return note_states_only_applicability(
+        applicability_notes,
+        sheet=field.sheet,
+        published_content=" ".join(field.content.split()),
+    )
+
+
+def _numeric_field_is_render_profile_eligible(
+    field: RecordDesignIntermediateField,
+    *,
+    applicability_notes: tuple[NoteStatedApplicabilityDeclaration, ...],
+    year_constraints: tuple[BoundedYearDeclaration, ...],
+    excluded_absent_naturaleza_rows: frozenset[tuple[str, int, int]],
+) -> bool:
+    return (
+        (_is_numeric_aeat_type(field.aeat_type) or _has_absent_naturaleza(field))
+        and _states_no_wire_fact(field, applicability_notes=applicability_notes, year_constraints=year_constraints)
+        and not _is_source_reserved_field(field)
+        and (field.sheet, field.source_row, field.offset) not in excluded_absent_naturaleza_rows
+    )
+
+
+def _eligible_numeric_fields(
+    fields: tuple[RecordDesignIntermediateField, ...],
+    *,
+    applicability_notes: tuple[NoteStatedApplicabilityDeclaration, ...],
+    year_constraints: tuple[BoundedYearDeclaration, ...],
+    excluded_absent_naturaleza_rows: frozenset[tuple[str, int, int]],
+) -> tuple[RecordDesignIntermediateField, ...]:
+    return tuple(
+        field
+        for field in fields
+        if _numeric_field_is_render_profile_eligible(
+            field,
+            applicability_notes=applicability_notes,
+            year_constraints=year_constraints,
+            excluded_absent_naturaleza_rows=excluded_absent_naturaleza_rows,
+        )
+    )
+
+
+def _signed_composite_fields(
+    fields: tuple[RecordDesignIntermediateField, ...],
+    anchor_keys: frozenset[tuple[str, int, str | None, str | None, str, int | None]],
+) -> tuple[RecordDesignIntermediateField, ...]:
+    return tuple(
+        field
+        for field in fields
+        if (
+            field.sheet,
+            field.source_row,
+            field.source_cell,
+            field.ordinal,
+            field.record_identity,
+            field.semantic_part_offset,
+        )
+        in anchor_keys
+    )
+
+
+def project_render_profile_eligibility(
+    fixed_fields: Iterable[RecordDesignIntermediateField],
+    *,
+    applicability_notes: tuple[NoteStatedApplicabilityDeclaration, ...] = (),
+    year_constraints: tuple[BoundedYearDeclaration, ...] = (),
+    signed_composite_anchor_keys: frozenset[tuple[str, int, str | None, str | None, str, int | None]] = frozenset(),
+    excluded_absent_naturaleza_rows: frozenset[tuple[str, int, int]] = frozenset(),
+) -> RenderProfileEligibility:
+    """Partition fixed joined fields eligible for reviewed absent-wire authority.
+
+    A source-reserved slot is never eligible.  A render profile exists to state
+    a wire fact the official design left unstated, and a reserved run has no
+    wire fact beyond being filler, so admitting one would force an author to
+    model numeric meaning onto a slot that carries none.
+
+    ``applicability_notes`` reaches :func:`_states_no_wire_fact` unchanged.  It
+    is threaded rather than resolved here so that this projection stays a pure
+    function of the fields it is given, and so that eligibility and the
+    renderer's own routing ask ONE predicate with ONE input set.
+
+    A caller holding a parser-read source wants
+    :func:`resolve_render_profile_eligibility` instead, which resolves and
+    validates that source's declarations before projecting.  Calling this
+    directly with a hand-assembled argument is how a consumer comes to answer a
+    different question from the renderer.
+    """
+    fields = tuple(fixed_fields)
+    numeric = _eligible_numeric_fields(
+        fields,
+        applicability_notes=applicability_notes,
+        year_constraints=year_constraints,
+        excluded_absent_naturaleza_rows=excluded_absent_naturaleza_rows,
+    )
+    signed_composites = _signed_composite_fields(fields, signed_composite_anchor_keys)
+    return RenderProfileEligibility(
+        all_fields=(*numeric, *signed_composites),
+        width_17_fields=tuple(field for field in numeric if field.length == 17),
+        smaller_fields=tuple(field for field in numeric if field.length != 17),
+        signed_composite_fields=signed_composites,
+        fixed_fields=fields,
+    )
+
+
+def resolve_render_profile_eligibility(
+    fixed_fields: Iterable[RecordDesignIntermediateField],
+    source: RecordDesignIntermediateSource,
+    *,
+    signed_composite_anchor_keys: frozenset[tuple[str, int, str | None, str | None, str, int | None]] = frozenset(),
+) -> RenderProfileEligibility:
+    """Partition fields of one PARSER-READ design, resolving its declarations here.
+
+    The declaration set is resolved from the source the parser read rather than
+    accepted from the caller, for the same reason ``render_complete_export_tree``
+    resolves the note-governed amounts there: every consumer -- the generator,
+    the drift check, a screen, a test -- must read ONE declaration set for one
+    pinned design and cannot disagree about which cells have been read.
+
+    This exists as a named function because a caller that assembles the argument
+    itself is a caller that can forget to. Routing through one function removes
+    the argument a caller could get wrong rather than correcting the callers that
+    got it wrong.
+
+    Raises:
+        RegistryValidationError: when a declaration names this source but is
+            pinned to another digest. That is a refusal, distinct from a design
+            this eligibility question does not apply to, and a caller must keep
+            the two apart.
+    """
+    fields = tuple(fixed_fields)
+    applicability_notes = note_stated_applicability_for(source.source_ref)
+    validate_note_stated_applicability_declarations(applicability_notes, source)
+    year_constraints = year_constraints_for(source)
+    return project_render_profile_eligibility(
+        fields,
+        applicability_notes=applicability_notes,
+        year_constraints=year_constraints,
+        signed_composite_anchor_keys=signed_composite_anchor_keys | source_stated_composite_anchor_keys_for(source),
+        excluded_absent_naturaleza_rows=(
+            _source_contact_name_exclusions(fields, source)
+            | _source_iban_country_exclusion(fields, source)
+            | _source_m270_birth_place_exclusions(fields, source)
+        ),
+    )

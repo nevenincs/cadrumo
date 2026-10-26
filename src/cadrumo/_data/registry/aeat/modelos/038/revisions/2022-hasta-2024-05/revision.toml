@@ -1,0 +1,35 @@
+[revisions."2022-hasta-2024-05"]
+casilla_source_refs = ["enrolled-modelo-038-procedure"]
+application_link_source_refs = ["enrolled-modelo-038-procedure"]
+authority_grade = "applicability"
+# Modelo 038 as filed on AEAT's 2012 design, from the support floor to May 2024,
+# and the modelo's storage baseline: the June 2024 edition stores only its
+# differences against it.
+#
+# WHICH DESIGN. aeat-dr-038-2012 is AEAT's "Orden HAC/66/2002 (actualizado a
+# 18/01/2012)". Orden HAC/646/2024 article 1 is the only later change to the
+# record: it adds the IRUS field at positions 153-165 of the tipo 2 record and
+# moves Blancos to 166-250, and its disposicion final unica applies that first to
+# the June 2024 declaration. Every declaration before it, including January to
+# May 2024, is therefore filed on the 2012 design, which prints every field of
+# the 2024 design except IRUS.
+#
+# WHAT IT CLAIMS. The same applicability grade as the June 2024 edition: the two
+# declaration-header casillas, the monthly deadline under Orden HAC/66/2002
+# art. 6, and no export layout.
+valid_from = 2022-01-01
+valid_to = 2024-05-31
+period_selector = { year_from = 2022, year_to = 2024, periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"], period_overrides = [{ year = 2024, periods = ["01", "02", "03", "04", "05"] }] }
+orden_aplicabilidad = ["orden-hac-66-2002:art-1"]
+legal_refs = [
+    "orden-hac-66-2002:art-1",
+    "orden-hac-66-2002:art-6",
+    "orden-hac-646-2024:art-1",
+    "orden-hac-646-2024:df-unica",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "enrolled-modelo-038-procedure",
+    "aeat-dr-038-2012",
+]
+review_status = "pending_review"

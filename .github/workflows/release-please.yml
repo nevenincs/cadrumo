@@ -1,0 +1,137 @@
+name: Cadrumo Release Please
+
+on:
+  push:
+    branches:
+      - main
+  # Dispatchable as well as push-driven. release-please keeps its state in the
+  # release PR's labels, and a release published by hand leaves that state
+  # stale: the run then reports SUCCESS while aborting with "there are
+  # untagged, merged release PRs outstanding", and opens no release PR. That
+  # sat undetected for three days and 121 releasable commits, because the only
+  # way to re-run the automation after repairing the label was to push
+  # something. Recovery should not require a commit.
+  workflow_dispatch:
+
+permissions:
+  # The default token cuts tags and GitHub releases (contents), moves the
+  # merged release pull request's labels (pull-requests, issues), and
+  # dispatches release.yml (actions). It never writes the release pull
+  # request or its branch.
+  contents: write
+  pull-requests: write
+  issues: write
+  actions: write
+
+concurrency:
+  group: release-please-${{ github.ref }}${{ github.ref == 'refs/heads/main' && format('-{0}', github.sha) || '' }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  release-please:
+    timeout-minutes: 150
+    name: "Build: Release proposal (Linux)"
+    runs-on: [self-hosted, Linux, X64]
+    steps:
+      # Tags and releases stay on the default token: GitHub raises no workflow
+      # events for refs and releases that token creates, so nothing keyed on a
+      # tag or a release starts a second time.
+      - name: Cut the release of a merged release pull request
+        id: release
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          skip-github-pull-request: true
+
+      - name: Mint the release App token
+        id: app-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
+      # Written by the release App, the release pull request and every push to
+      # its branch raise ordinary pull_request events, so the merge gate runs on
+      # it like on any trusted pull request. The version bump and the uv.lock
+      # versions land in release-please's own commit, so the branch has one head.
+      - name: Open or update the release pull request
+        id: release-pr
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          skip-github-release: true
+
+      - name: Check out the release branch
+        if: steps.release-pr.outputs.pr
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ steps.release-pr.outputs.pr && fromJSON(steps.release-pr.outputs.pr).headBranchName || '' }}
+          persist-credentials: false
+
+      - name: Dispatch release proof for the release pull request
+        if: steps.release-pr.outputs.pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Guarded, because a step's `env` is prepared before its `if` is
+          # weighed: on a run that opens no release pull request `pr` is empty,
+          # and a bare `fromJSON('')` fails the step the condition was about to
+          # skip, which then skips every later step.
+          HEAD_BRANCH: ${{ steps.release-pr.outputs.pr && fromJSON(steps.release-pr.outputs.pr).headBranchName || '' }}
+        run: |
+          version="$(jq -r '."."' .release-please-manifest.json)"
+          if [ -z "${version}" ] || [ "${version}" = "null" ]; then
+            echo "::error::could not read the proposed version from the release branch manifest"
+            exit 1
+          fi
+          gh workflow run release.yml --repo "$GITHUB_REPOSITORY" --ref "${HEAD_BRANCH}" \
+            -f phase=prove -f "ref=${HEAD_BRANCH}" -f "version=${version}"
+          echo "Dispatched release proof for ${version} on ${HEAD_BRANCH}" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Dispatch release publication
+        if: steps.release.outputs.release_created == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.release.outputs.tag_name }}
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          if [ -z "${TAG}" ] || [ -z "${VERSION}" ]; then
+            echo "::error::release_created is true but the tag or version is empty"
+            exit 1
+          fi
+          gh workflow run release.yml --repo "$GITHUB_REPOSITORY" --ref "${TAG}" \
+            -f phase=publish -f "ref=${TAG}" -f "version=${VERSION}"
+          echo "Dispatched release publication for ${VERSION} at ${TAG}" >> "$GITHUB_STEP_SUMMARY"
+
+      # A release-please run that finds a merged, untagged release PR aborts
+      # and exits ZERO. That green abort is why this repository went six months
+      # without completing a release: nothing was ever red, so nothing was ever
+      # investigated, while the automation reported success and created
+      # nothing. The abort is only visible by reading a job log on a passing
+      # run, which nobody does.
+      #
+      # Asserted at the END of the run, which is what makes it a discriminator
+      # rather than a race: by this point a healthy run has tagged the release
+      # and advanced its pull request to `autorelease: tagged`, so a merged one
+      # still carrying `autorelease: pending` means this run aborted. Every
+      # later run will abort the same way until a human intervenes, so failing
+      # here is the difference between a deadlock that surfaces in minutes and
+      # one that survives for months.
+      - name: Refuse a deadlocked release state
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          stuck="$(gh pr list --repo "${GITHUB_REPOSITORY}" --state merged \
+            --label 'autorelease: pending' --limit 20 --json number,title \
+            --jq '.[] | "#\(.number) \(.title)"')"
+          if [ -n "${stuck}" ]; then
+            echo "::error::release-please left a merged release pull request untagged; every later run aborts in green until this is repaired"
+            printf '%s\n' "${stuck}"
+            exit 1
+          fi
+          echo "no merged release pull request is waiting for a tag"

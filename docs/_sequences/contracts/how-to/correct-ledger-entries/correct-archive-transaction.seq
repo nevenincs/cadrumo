@@ -1,0 +1,8 @@
+@step Record a duplicate row you want to keep a trace of.
+aeat --format json app ledger add --date 2026-03-15 --amount 80.00 --direction OUTGOING --description "Duplicate import" --idempotency-key correct-archive
+@capture transaction_id result.transaction_id
+@step Archive it out of ordinary work.
+aeat app ledger archive {transaction_id} --reason "duplicate imported row" --yes
+@step Confirm the lifecycle state now reads ARCHIVED.
+@result aeat --format json app ledger view {transaction_id}
+@expect result.transaction.lifecycle_state == "ARCHIVED"

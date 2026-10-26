@@ -1,0 +1,99 @@
+modelo:
+  schema:
+    '180':
+      binding:
+        modelo-180-115-base-anual:
+          label: Base anual de retencions i ingressos a compte · Model 115, casella
+            02
+        modelo-180-115-retenciones-anual:
+          label: Retencions i ingressos a compte de l’any · Model 115, casella 03
+      casilla:
+        continuidad:
+          base-retenciones-ingresos-a-cuenta:
+            label: Base total de retencions i ingressos a compte
+          declaracion-complementaria-sustitutiva:
+            label: Declaració complementària o substitutiva
+          devengo-year:
+            label: Exercici de meritació
+          numero-identificativo-declaracion:
+            label: Número identificatiu de la declaració
+          numero-identificativo-declaracion-anterior:
+            label: Número identificatiu de la declaració anterior
+          payee-inmueble-bloque:
+            label: Bloc de l'immoble arrendat
+          payee-inmueble-calificador-numero:
+            label: Qualificador del número de l'immoble arrendat
+          payee-inmueble-codigo-municipio:
+            label: Codi de municipi de l'immoble arrendat
+          payee-inmueble-codigo-postal:
+            label: Codi postal de l'immoble arrendat
+          payee-inmueble-complemento:
+            label: Complement de domicili de l'immoble arrendat
+          payee-inmueble-escalera:
+            label: Escala de l'immoble arrendat
+          payee-inmueble-localidad:
+            label: Localitat de l'immoble arrendat
+          payee-inmueble-municipio:
+            label: Municipi de l'immoble arrendat
+          payee-inmueble-nombre-via:
+            label: Nom de la via pública de l'immoble arrendat
+          payee-inmueble-numero-casa:
+            label: Número de casa de l'immoble arrendat
+          payee-inmueble-planta:
+            label: Planta de l'immoble arrendat
+          payee-inmueble-portal:
+            label: Portal de l'immoble arrendat
+          payee-inmueble-provincia:
+            label: Codi de província de l'immoble arrendat
+          payee-inmueble-puerta:
+            label: Porta de l'immoble arrendat
+          payee-inmueble-referencia-catastral:
+            label: Referència cadastral de l'immoble arrendat
+          payee-inmueble-situacion:
+            label: Situació de l'immoble
+          payee-inmueble-tipo-numeracion:
+            label: Tipus de numeració de l'immoble arrendat
+          payee-inmueble-tipo-via:
+            label: Tipus de via de l'immoble arrendat
+          payee-modalidad-renta:
+            label: Modalitat de renda o rendiment
+          payee-name:
+            label: Cognoms i nom, raó social o denominació del perceptor
+          payee-province:
+            label: Codi de província del domicili del perceptor
+          payee-representative-nif:
+            label: NIF del representant legal del perceptor
+          perc-base:
+            label: Base de retencions i ingressos a compte del perceptor
+          perc-retenciones:
+            label: Retencions i ingressos a compte del perceptor
+          porcentaje-retencion:
+            label: Percentatge de retenció aplicat
+          retenciones-ingresos-a-cuenta:
+            label: Retencions i ingressos a compte totals
+          total-perceptores-count:
+            label: Nombre total de perceptors
+      construct:
+        modelo-180-annual-summary:
+          field:
+            title: Resum anual del Model 180 a partir de les declaracions trimestrals
+              del Model 115
+      field:
+        official_name: Modelo 180. Declaració informativa. Retencions i ingressos
+          a compte. Rendiments procedents de l'arrendament d'immobles urbans. Resum
+          anual.
+        title: Resum anual de retencions sobre arrendaments urbans
+      form:
+        context:
+          ejercicio:
+            heading: Exercici
+        section:
+          ejercicio:
+            heading: Exercici
+      revision:
+        2019-2022:
+          field:
+            label: Ordre HAP/1732/2014, exercicis 2019 a 2022
+        2023-y-siguientes:
+          field:
+            label: Ordre HAP/1732/2014 actualitzada per l'Ordre HFP/1284/2023

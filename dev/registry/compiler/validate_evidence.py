@@ -1,0 +1,631 @@
+"""Legal/source evidence and source-citation validation helpers."""
+
+from __future__ import annotations
+
+import json
+import logging
+import os
+import warnings
+from collections.abc import Callable, Iterable, Mapping
+from datetime import date
+from functools import lru_cache
+from pathlib import Path
+from typing import TYPE_CHECKING
+from zipfile import BadZipFile
+
+from pydantic import ValidationError
+
+from cadrumo.core.atomic_write import atomic_write_best_effort_text
+from cadrumo.core.hashing import sha256_hex
+from cadrumo.core.storage_environment import configured_storage_root, resolve_storage_path
+from cadrumo.core.text_fold import normalise_corpus_text
+from cadrumo.domain.calculations.registry.schema_base import RegistrySourceKind, SourceCitation
+from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
+from dev._paths import REPO_ROOT
+from dev.cache_root import dev_cache_dir
+from dev.corpus.manual_corpus_sidecar import (
+    MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX,
+    MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX,
+    ManualCorpusTextSidecar,
+)
+from dev.registry.compiler.corpus_source_location import CorpusPathEscapeError, locate_corpus_file
+
+if TYPE_CHECKING:
+    import pypdfium2
+    from openpyxl.workbook import Workbook
+
+type WorkbookOpener = Callable[[str], Workbook]
+"""Opens one XLSX source for read-only cell extraction."""
+
+type PdfDocumentOpener = Callable[[str], pypdfium2.PdfDocument]
+"""Opens one PDF source for page-text extraction."""
+
+_SourceTextCacheKey = tuple[str, str, str, str, int, int]
+_NORMALISED_SOURCE_TEXT_CACHE: dict[_SourceTextCacheKey, str] = {}
+_LOGGER = logging.getLogger(__name__)
+
+CORPUS_TEXT_CACHE_DIR_ENV = "CADRUMO_CORPUS_TEXT_CACHE_DIR"
+"""Environment variable that relocates the corpus-text validation cache."""
+
+
+# Shipped sidecar constants (written by the corpus extraction tooling).
+# Sidecars live at _data/manual_corpus_text/<path-relative-to-corpus>.corpus_text.json
+# where the path is source.corpus_path with the leading "corpus/" prefix stripped.
+# The payload shape itself is the shared ManualCorpusTextSidecar contract in core.
+_MANUAL_CORPUS_TEXT_DIR = "manual_corpus_text"
+_MAX_XLSX_CITATION_CELLS = 1_000_000
+_MAX_XLSX_CITATION_TEXT_CHARS = 16 * 1024 * 1024
+
+
+def _validated_sidecar_text(raw: str, corpus_path: str, actual_sha256: str) -> str | None:
+    """Return the sidecar's text when it satisfies the shared contract, else ``None``.
+
+    The whole admission decision for a manual-PDF sidecar lives here: the
+    payload must validate against :class:`ManualCorpusTextSidecar` (pinned
+    schema version, prefixed corpus path, hex-64 content key, stamped
+    extraction platform, non-empty text), must claim the very
+    ``corpus_path`` it was addressed under, and must carry the content key of
+    the deployed PDF bytes. Any refusal is logged and returns ``None``, which
+    the caller answers by re-extracting from the real bytes -- so a tampered,
+    truncated, foreign, or older-schema sidecar costs a slow path, never a
+    wrong ``required_text`` verdict.
+
+    Args:
+        raw: The sidecar file's decoded JSON text.
+        corpus_path: The :attr:`SourceReference.corpus_path` the sidecar was
+            addressed under.
+        actual_sha256: Hex SHA-256 of the deployed source PDF's bytes.
+    """
+    try:
+        sidecar = ManualCorpusTextSidecar.model_validate_json(raw)
+    except ValidationError:
+        _LOGGER.warning(
+            "Manual PDF sidecar for %s does not satisfy the sidecar contract; falling back to on-demand extraction",
+            corpus_path,
+            exc_info=True,
+        )
+        return None
+    if not sidecar.addresses(corpus_path):
+        _LOGGER.warning(
+            "Manual PDF sidecar for %s claims corpus_path %r; falling back to on-demand extraction",
+            corpus_path,
+            sidecar.corpus_path,
+        )
+        return None
+    if sidecar.source_sha256 != actual_sha256:
+        _LOGGER.warning(
+            "Manual PDF sidecar sha256 mismatch for %s; falling back to on-demand extraction",
+            corpus_path,
+        )
+        return None
+    return sidecar.normalised_text
+
+
+def _manual_sidecar_path(corpus_path: str, source_root: Path) -> Path:
+    relative = corpus_path.removeprefix(MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX)
+    return source_root / _MANUAL_CORPUS_TEXT_DIR / (relative + MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX)
+
+
+def _read_manual_pdf_sidecar(
+    corpus_path: str,
+    source_path: Path,
+    *,
+    source_root: Path | None = None,
+) -> str | None:
+    """Return the shipped normalised text for a manual-PDF source, or ``None``.
+
+    Locates the content-keyed sidecar committed under
+    ``_data/manual_corpus_text/`` that was built by
+    the corpus extraction tooling, then hands the payload to
+    :func:`_validated_sidecar_text`, which owns the whole admission decision
+    against the shared :class:`ManualCorpusTextSidecar` contract the extractor
+    writes through.
+
+    Returns ``None`` when the sidecar is absent (not yet generated or path
+    unexpected), unreadable, or refused by that contract. The caller falls
+    back to on-demand pypdfium2 extraction on ``None``. End-user machines
+    should never reach that path: the shipped sidecar covers every
+    ``manual_pdf`` source the registry declares.
+
+    Args:
+        corpus_path: The source's :attr:`SourceReference.corpus_path`,
+            e.g. ``"corpus/manuals/renta/2020/part1/source.pdf"``.
+        source_path: Resolved on-disk path to the source PDF bytes.
+        source_root: Candidate evidence root; inferred from corpus_path when omitted.
+    """
+    if not corpus_path.startswith(MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX):
+        return None
+    if source_root is None:
+        source_root = source_path.parents[len(Path(corpus_path).parts) - 1]
+    try:
+        raw = _manual_sidecar_path(corpus_path, source_root).read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return None
+    return _validated_sidecar_text(raw, corpus_path, sha256_hex(source_path.read_bytes()))
+
+
+@lru_cache(maxsize=4096)
+def _normalise_required_text(text: str) -> str:
+    return normalise_corpus_text(text)
+
+
+def _resolve_source_path(source: SourceReference, source_root: Path) -> Path:
+    """Resolve a cited source to the file that holds its bytes."""
+    try:
+        located = locate_corpus_file(source_root, source.corpus_path)
+    except CorpusPathEscapeError as exc:
+        raise OSError(f"source {source.id!r} escapes source root") from exc
+    if located is None:
+        raise FileNotFoundError(f"source {source.id!r} missing corpus file {source.corpus_path!r}")
+    return located
+
+
+def _read_source_text(source: SourceReference, source_path: Path, *, source_root: Path | None = None) -> str:
+    """Read and normalise a source, using the shipped PDF text when present."""
+    if source.kind is RegistrySourceKind.MANUAL_PDF:
+        # Try the shipped content-keyed sidecar first; verify sha256 before
+        # using it so a modified source PDF never serves stale text.  The
+        # sidecar is generated once at build time by the corpus extraction
+        # tooling and shipped with the cadrumo wheel — end-user machines
+        # should never reach the fallback.
+        sidecar_text = _read_manual_pdf_sidecar(source.corpus_path, source_path, source_root=source_root)
+        if sidecar_text is not None:
+            return sidecar_text
+        return normalise_corpus_text(_extract_pdf_text_impl(str(source_path)))
+    if source_path.suffix.casefold() == ".xlsx":
+        return normalise_corpus_text(_extract_xlsx_text_impl(str(source_path)))
+    if source_path.suffix.casefold() == ".pdf":
+        # A record-design PDF is compressed; its citations are against the text
+        # it renders, never against the raw bytes.
+        return normalise_corpus_text(_extract_pdf_text_impl(str(source_path)))
+    return normalise_corpus_text(source_path.read_text(encoding="utf-8", errors="replace"))
+
+
+def _xlsx_workbook_text(workbook: Workbook, path: str) -> str:
+    cells: list[str] = []
+    text_chars = 0
+    for worksheet in workbook.worksheets:
+        for row in worksheet.iter_rows(values_only=True):
+            for value in row:
+                if value is None:
+                    continue
+                if len(cells) >= _MAX_XLSX_CITATION_CELLS:
+                    raise OSError(
+                        f"XLSX source {path} exceeds the citation extraction cell limit ({_MAX_XLSX_CITATION_CELLS})"
+                    )
+                rendered = str(value)
+                text_chars += len(rendered) + 1
+                if text_chars > _MAX_XLSX_CITATION_TEXT_CHARS:
+                    raise OSError(
+                        f"XLSX source {path} exceeds the citation extraction text limit "
+                        f"({_MAX_XLSX_CITATION_TEXT_CHARS} characters)"
+                    )
+                cells.append(rendered)
+    return "\n".join(cells)
+
+
+def _extract_xlsx_text_impl(path: str, *, open_workbook: WorkbookOpener | None = None) -> str:
+    """Return cell text from an enrolled XLSX record-design authority.
+
+    Only a workbook the reader itself rejects is relabelled as an unreadable
+    XLSX source. The extraction limits below raise ``OSError`` deliberately and
+    keep their own message, and every other exception keeps its own subject.
+
+    Args:
+        path: Filesystem path of the XLSX source to read.
+        open_workbook: Reader override used by the tests to exercise the
+            refusal paths; defaults to openpyxl's read-only loader.
+    """
+    try:
+        from openpyxl import load_workbook
+        from openpyxl.utils.exceptions import InvalidFileException
+    except ImportError as exc:  # pragma: no cover - dependency is required by pyproject.
+        raise OSError("openpyxl is required to validate XLSX source citations") from exc
+
+    def default_opener(source: str) -> Workbook:
+        return load_workbook(source, read_only=True, data_only=False)
+
+    opener = open_workbook or default_opener
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", UserWarning)
+            workbook = opener(path)
+            try:
+                return _xlsx_workbook_text(workbook, path)
+            finally:
+                workbook.close()
+    except (InvalidFileException, BadZipFile, KeyError, TypeError, ValueError) as exc:
+        raise OSError(f"could not extract text from XLSX source {path}: {exc}") from exc
+
+
+#: Entries observed or computed in this process, pending a write. One file per
+#: entry is written on flush; nothing reads the whole cache.
+_pending_entries: dict[str, str] = {}
+
+
+def corpus_text_cache_dir() -> Path:
+    """Resolve the runner-local corpus-text validation cache directory.
+
+    Follows the development cache convention: an explicit
+    ``CADRUMO_CORPUS_TEXT_CACHE_DIR`` wins, otherwise the checkout's own
+    ``.cache/corpus-text`` holds it. The cache lives outside the application's
+    storage root, so validating evidence never changes the application state
+    that root fingerprints, and it stays scoped to the checkout that minted it
+    rather than shared through an OS temp directory.
+
+    Returns:
+        The directory holding the corpus-text cache file.
+    """
+    override = os.environ.get(CORPUS_TEXT_CACHE_DIR_ENV)
+    if (override is not None and override) and override.strip():
+        return resolve_storage_path(override, root=configured_storage_root(repository_root=REPO_ROOT))
+    return dev_cache_dir("corpus-text")
+
+
+def _corpus_text_entry_path(cache_key: str) -> Path:
+    """Where one normalised extraction is kept, keyed by its own cache key.
+
+    ONE FILE PER ENTRY, following the record-design extraction cache. The
+    predecessor kept every entry in a single JSON that reached tens of
+    megabytes, and reading it cost about twenty seconds -- paid by every
+    process, so once per xdist worker per batch, to answer lookups that each
+    need one value. The key already embeds the source's size and mtime, so a
+    stale entry cannot match a changed file and per-entry files need no merge.
+    """
+    return corpus_text_cache_dir() / f"corpus_text_{sha256_hex(cache_key.encode())}.txt"
+
+
+def flush_corpus_text_cache() -> None:
+    """Persist the entries this process computed, one file each.
+
+    A miss only records its entry in memory; the validation entry points flush
+    once when they finish, so a run that recomputes many extractions writes
+    them together rather than during the walk that found them. A failed write
+    only costs the next process the same extraction.
+    """
+    while _pending_entries:
+        cache_key, text = _pending_entries.popitem()
+        location = _corpus_text_entry_path(cache_key)
+        try:
+            location.parent.mkdir(parents=True, exist_ok=True)
+            atomic_write_best_effort_text(location, text, encoding="utf-8")
+        except Exception:
+            _LOGGER.warning("Could not write corpus text cache entry at %s", location, exc_info=True)
+
+
+def _persisted_corpus_text(cache_key: str) -> str | None:
+    """Return the persisted extraction for ``cache_key``, or ``None`` to recompute."""
+    location = _corpus_text_entry_path(cache_key)
+    try:
+        return location.read_text(encoding="utf-8")
+    except OSError:
+        return None
+    except UnicodeDecodeError:
+        _LOGGER.warning("Ignoring undecodable corpus text cache entry at %s; recomputing", location, exc_info=True)
+        return None
+
+
+def _source_text_cache_key(
+    source: SourceReference,
+    source_path: Path,
+    source_root: Path,
+    source_stat: os.stat_result,
+) -> _SourceTextCacheKey:
+    suffix = source_path.suffix.casefold()
+    extraction_contract = (
+        f"{source.kind}:xlsx-text-v1"
+        if suffix == ".xlsx"
+        else f"{source.kind}:pdf-text-v1"
+        if suffix == ".pdf" and source.kind is not RegistrySourceKind.MANUAL_PDF
+        else source.kind
+    )
+    sidecar_digest = ""
+    if source.kind is RegistrySourceKind.MANUAL_PDF:
+        sidecar = _manual_sidecar_path(source.corpus_path, source_root)
+        if sidecar.is_file():
+            sidecar_digest = sha256_hex(sidecar.read_bytes())
+    return (
+        extraction_contract,
+        str(source_path),
+        str(source.sha256),
+        sidecar_digest,
+        source_stat.st_size,
+        source_stat.st_mtime_ns,
+    )
+
+
+def _lookup_normalised_source_text(
+    source_id: str,
+    source_key: _SourceTextCacheKey,
+    source_text_cache: dict[str, str],
+) -> tuple[bool, str, str]:
+    global_cached = _NORMALISED_SOURCE_TEXT_CACHE.get(source_key)
+    if global_cached is not None:
+        source_text_cache[source_id] = global_cached
+        return True, global_cached, ""
+    cache_key_str = json.dumps(source_key)
+    persisted = _pending_entries.get(cache_key_str) or _persisted_corpus_text(cache_key_str)
+    if persisted is None:
+        return False, "", cache_key_str
+    _NORMALISED_SOURCE_TEXT_CACHE[source_key] = persisted
+    source_text_cache[source_id] = persisted
+    return True, persisted, cache_key_str
+
+
+def _remember_normalised_source_text(
+    source_id: str,
+    source_key: _SourceTextCacheKey,
+    source_text_cache: dict[str, str],
+    cache_key: str,
+    normalised: str,
+) -> None:
+    _NORMALISED_SOURCE_TEXT_CACHE[source_key] = normalised
+    source_text_cache[source_id] = normalised
+    _pending_entries[cache_key] = normalised
+
+
+def _extract_pdf_text_impl(path: str, *, open_document: PdfDocumentOpener | None = None) -> str:
+    """Return page text from an enrolled manual PDF authority.
+
+    Only a document pdfium itself rejects, or a filesystem failure reading it,
+    is relabelled as an unreadable PDF source; every other exception keeps its
+    own subject.
+
+    Args:
+        path: Filesystem path of the PDF source to read.
+        open_document: Reader override used by the tests to exercise the
+            refusal paths; defaults to pdfium's document constructor.
+    """
+    try:
+        import pypdfium2 as pdfium
+    except ImportError as exc:  # pragma: no cover - dependency is required by pyproject.
+        raise OSError("pypdfium2 is required to validate manual PDF citations") from exc
+    opener = open_document or pdfium.PdfDocument
+    try:
+        pdf = opener(path)
+        pages: list[str] = []
+        try:
+            for index in range(len(pdf)):
+                page = pdf[index]
+                try:
+                    text_page = page.get_textpage()
+                    try:
+                        pages.append(text_page.get_text_range())
+                    finally:
+                        text_page.close()
+                finally:
+                    page.close()
+        finally:
+            pdf.close()
+        return "\n".join(pages)
+    except (pdfium.PdfiumError, OSError, ValueError) as exc:
+        raise OSError(f"could not extract text from manual PDF {path}: {exc}") from exc
+
+
+def _procedural_form_source(
+    source: SourceReference | None,
+    valid_from: date,
+    valid_to: date | None,
+) -> SourceReference | None:
+    if source is None or source.authority != "boe" or source.kind != "form_spec":
+        return None
+    if source.applies_from is None or source.applies_from > valid_from:
+        return None
+    if source.applies_to is not None and (valid_to is None or source.applies_to < valid_to):
+        return None
+    return source
+
+
+def _legal_clause_covers_source(
+    legal: LegalReference,
+    source: SourceReference,
+    valid_from: date,
+    valid_to: date | None,
+) -> bool:
+    if legal.authority != "boe" or not (legal.article is not None and legal.article):
+        return False
+    if legal.corpus_ref.partition("#")[0] != source.corpus_path:
+        return False
+    governed_from = legal.governs_periods_from or legal.effective_from
+    governed_to = legal.governs_periods_to if legal.governs_periods_from else legal.effective_to
+    if governed_from > valid_from:
+        return False
+    return governed_to is None or (valid_to is not None and governed_to >= valid_to)
+
+
+def _matching_boe_legal_clauses(
+    source: SourceReference,
+    legal_refs: tuple[str, ...],
+    legal_catalogue: Mapping[str, LegalReference],
+    valid_from: date,
+    valid_to: date | None,
+) -> Iterable[LegalReference]:
+    for legal_id in legal_refs:
+        legal = legal_catalogue.get(legal_id)
+        if legal is not None and _legal_clause_covers_source(legal, source, valid_from, valid_to):
+            yield legal
+
+
+class EvidenceValidator:
+    """Validate legal authority, source tiers, and source-citation text evidence."""
+
+    def __init__(
+        self,
+        *,
+        legal_refs: Mapping[str, LegalReference],
+        source_refs: Mapping[str, SourceReference],
+        source_root: Path | None,
+    ) -> None:
+        """Bind the candidate catalogues and its evidence root."""
+        self._legal = legal_refs
+        self._sources = source_refs
+        self._source_root = source_root
+        self._source_text_cache: dict[str, str] = {}
+
+    def require_source_tier(
+        self,
+        scope: str,
+        owner: str,
+        refs: Iterable[str],
+        required_tier: str,
+    ) -> list[str]:
+        """Require a cited source to carry the requested tier."""
+        if any(
+            (source := self._sources.get(ref)) is not None and source.evidence_tier == required_tier for ref in refs
+        ):
+            return []
+        return [f"{scope}: {owner} requires {required_tier} source evidence"]
+
+    def require_any_source_tier(
+        self,
+        scope: str,
+        owner: str,
+        refs: Iterable[str],
+        allowed_tiers: Iterable[str],
+    ) -> list[str]:
+        """Require at least one source in the permitted tiers."""
+        allowed = tuple(allowed_tiers)
+        if any((source := self._sources.get(ref)) is not None and source.evidence_tier in allowed for ref in refs):
+            return []
+        if len(allowed) == 1:
+            requirement = f"{allowed[0]} source evidence"
+        else:
+            requirement = f"one of {', '.join(allowed)} source evidence"
+        return [f"{scope}: {owner} requires {requirement}"]
+
+    def require_procedural_evidence(
+        self,
+        scope: str,
+        owner: str,
+        refs: Iterable[str],
+        legal_refs: Iterable[str],
+        *,
+        valid_from: date,
+        valid_to: date | None,
+    ) -> list[str]:
+        """Accept guidance or a cited, in-window BOE clause in the same source.
+
+        Full compilation separately verifies source hashes and the legal clause's
+        required text. A layout source alone cannot establish procedural authority:
+        the declaration must cite the actual legal clause in that document.
+        """
+        refs = tuple(refs)
+        failures = self.require_source_tier(scope, owner, refs, "official_source_guidance")
+        if not failures:
+            return []
+        if self.procedural_legal_clauses(refs, legal_refs, valid_from=valid_from, valid_to=valid_to):
+            return []
+        return failures
+
+    def procedural_legal_clauses(
+        self,
+        refs: Iterable[str],
+        legal_refs: Iterable[str],
+        *,
+        valid_from: date,
+        valid_to: date | None,
+    ) -> tuple[LegalReference, ...]:
+        """Return cited BOE clauses whose document and governed span match."""
+        legal_refs = tuple(legal_refs)
+        matched: dict[str, LegalReference] = {}
+        for ref in refs:
+            source = _procedural_form_source(self._sources.get(ref), valid_from, valid_to)
+            if source is None:
+                continue
+            matched.update(
+                (legal.id, legal)
+                for legal in _matching_boe_legal_clauses(source, legal_refs, self._legal, valid_from, valid_to)
+            )
+        return tuple(matched.values())
+
+    def validate_source_citations(
+        self,
+        scope: str,
+        owner: str,
+        refs: Iterable[str],
+        citations: Iterable[SourceCitation],
+        required_tier: str,
+    ) -> list[str]:
+        """Verify citation membership, tier, and quoted source text."""
+        failures: list[str] = []
+        refs_set = set(refs)
+        citations_tuple = tuple(citations)
+        if not citations_tuple:
+            return [f"{scope}: {owner} requires source citations"]
+        for citation in citations_tuple:
+            failures.extend(self._validate_source_citation(scope, owner, refs_set, citation, required_tier))
+        return failures
+
+    def _validate_source_citation(
+        self,
+        scope: str,
+        owner: str,
+        refs: set[str],
+        citation: SourceCitation,
+        required_tier: str,
+    ) -> list[str]:
+        """Validate one citation while retaining the gate's refusal order."""
+        if citation.source_ref not in refs:
+            return [
+                f"{scope}: {owner} source citation {citation.source_ref!r} is not listed in source_refs",
+            ]
+        source = self._sources.get(citation.source_ref)
+        if source is None:
+            return []
+        if source.evidence_tier != required_tier:
+            return [
+                f"{scope}: {owner} source citation {citation.source_ref!r} is not {required_tier} evidence",
+            ]
+        if self._source_root is None:
+            return []
+        try:
+            source_text = self._source_text(source)
+        except FileNotFoundError as exc:
+            return [f"{scope}: {owner} source citation {citation.source_ref!r} cannot be read: {exc}"]
+        except OSError as exc:
+            return [f"{scope}: {owner} source citation {citation.source_ref!r} cannot be read: {exc}"]
+        return [
+            f"{scope}: {owner} source citation {citation.source_ref!r} missing text {required!r}"
+            for required in citation.required_text
+            if _normalise_required_text(required) not in source_text
+        ]
+
+    def source_text(self, source: SourceReference) -> str | None:
+        """Return ``source``'s normalised bundled text, or ``None`` when unreachable.
+
+        Public wrapper around :meth:`_source_text` for content-shape checks that
+        need the same PDF-sidecar-aware, disk-cached text resolution this class
+        already owns -- e.g. a vocabulary probe over a deadline window's
+        ``official_source_guidance`` sources -- without duplicating the manual-PDF
+        sidecar lookup, the on-disk cache, or the companion-binary fallback path.
+        Swallows the read failures :meth:`validate_source_citations` reports as
+        failures itself; a caller with no per-citation failure slot to put that in
+        treats an unreadable source the same way :func:`validate_layout_authority_content`
+        does -- skipped rather than silently accepted.
+        """
+        if self._source_root is None:
+            return None
+        try:
+            return self._source_text(source)
+        except OSError:
+            return None
+
+    def _source_text(self, source: SourceReference) -> str:
+        cached = self._source_text_cache.get(source.id)
+        if cached is not None:
+            return cached
+        source_root = self._source_root
+        if source_root is None:
+            return ""
+        source_path = _resolve_source_path(source, source_root)
+        source_key = _source_text_cache_key(source, source_path, source_root, source_path.stat())
+        cache_hit, cached_text, cache_key = _lookup_normalised_source_text(
+            source.id, source_key, self._source_text_cache
+        )
+        if cache_hit:
+            return cached_text
+        normalised = _read_source_text(source, source_path, source_root=source_root)
+        if not cache_key:
+            cache_key = json.dumps(source_key)
+        _remember_normalised_source_text(source.id, source_key, self._source_text_cache, cache_key, normalised)
+        return normalised

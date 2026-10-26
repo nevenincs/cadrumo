@@ -1,0 +1,63 @@
+modelo:
+  schema:
+    '165':
+      casilla:
+        continuidad:
+          filing-year:
+            label: Ejercicio al que se refiere la declaración
+          m165-declaracion-complementaria-sustitutiva:
+            label: Declaración complementaria o sustitutiva
+          m165-declarante-razon-social:
+            label: Denominación o razón social del declarante
+          m165-empresa-emergente:
+            label: Empresa emergente
+          m165-fecha-adquisicion:
+            label: Fecha de adquisición de las acciones o participaciones
+          m165-fecha-constitucion:
+            label: Fecha de constitución
+          m165-importe-fondos-propios:
+            label: Importe de los fondos propios
+          m165-importe-suscripcion:
+            label: Importe de la suscripción o adquisición
+          m165-importe-total-suscripciones:
+            label: Importe total de las suscripciones o adquisiciones
+          m165-numero-identificativo-anterior:
+            label: Número identificativo de la declaración anterior
+          m165-numero-identificativo-declaracion:
+            label: Número identificativo de la declaración
+          m165-numero-total-declarados:
+            label: Número total de declarados
+          m165-persona-relacion:
+            label: Persona con quien relacionarse
+          m165-porcentaje-participacion:
+            label: Porcentaje de participación
+          m165-representante-legal-nif:
+            label: NIF del representante legal
+          m165-socio-nif:
+            label: NIF del socio o participe
+          m165-socio-nombre:
+            label: Apellidos y nombre del socio o participe
+          tipo-declaracion:
+            label: Tipo de declaración (originaria / sustitutiva / complementaria)
+      construct:
+        modelo-165-informative:
+          field:
+            title: Modelo 165 declaración informativa
+      field:
+        official_name: Modelo 165. Declaración informativa de certificaciones individuales
+          emitidas a los socios o partícipes de entidades de nueva o reciente creación.
+        title: Certificaciones a socios de entidades de nueva o reciente creación
+          (informativa anual)
+      revision:
+        2013-2015:
+          field:
+            label: Modelo 165, ejercicios 2013 a 2015
+        2016-2022:
+          field:
+            label: Modelo 165, ejercicios 2016 a 2022
+        2023-2025:
+          field:
+            label: Modelo 165, ejercicios 2023 a 2025
+        2026-y-siguientes:
+          field:
+            label: Modelo 165, ejercicios 2026 y siguientes

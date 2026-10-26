@@ -1,0 +1,141 @@
+modelo:
+  schema:
+    '181':
+      construct:
+        modelo-181-informative:
+          field:
+            title: 'Modelo 181 nyomtatvány: tájékoztató jellegű adatszolgáltatás'
+      field:
+        official_name: Modelo 181. Hitelek és kölcsönök, valamint ingatlanokhoz kapcsolódó
+          pénzügyi ügyletek adatszolgáltatási bevallása.
+        title: Ingatlanokhoz kapcsolódó hitelek, kölcsönök és pénzügyi ügyletek (éves
+          adatszolgáltatás)
+      revision:
+        2022-y-siguientes:
+          casilla:
+            cantidades-minorar-principal:
+              label: A kölcsön tőketartozásának csökkentésére fordított összegek
+            clave-intervencion:
+              label: Az ügyletben betöltött szerep kódja
+            clave-tipo-identificacion:
+              label: Az azonosítás típuskódja
+            codigo-provincia:
+              label: Tartománykód
+            declaracion-complementaria-sustitutiva:
+              label: Kiegészítő vagy helyettesítő bevallás
+            declarado-nif:
+              label: A bejelentett személy adószáma
+            declarado-nombre:
+              label: A bejelentett személy neve vagy cégneve
+            declarante-razon-social:
+              label: A bejelentő cégneve
+            direccion-inmueble:
+              label: Az ingatlan címe
+            duracion-operacion:
+              label: Az ügylet futamideje hónapban
+            fecha-operacion:
+              label: Az ügylet dátuma
+            iban-codigo-pais:
+              label: Az ügylet IBAN-országkódja
+            iban-digitos-control:
+              label: Az ügylet IBAN-ellenőrző számjegyei
+            identificacion-operacion:
+              label: A kölcsön, hitel vagy egyéb pénzügyi ügylet azonosítója
+            importe-amortizacion-capital:
+              label: Az év során tőketörlesztés címén kifizetett összeg
+            importe-gastos-financiacion:
+              label: Az év során külső finanszírozási költség címén kifizetett összeg
+            importe-intereses:
+              label: Az év során kamat címén kifizetett összeg
+            importe-operacion:
+              label: A kölcsön, hitel vagy egyéb pénzügyi ügylet összege
+            importe-reintegro-intereses:
+              label: Az év során visszatérített kamat címén elszámolt összeg
+            importe-total-capital-amortizado:
+              label: A törlesztett tőke teljes összege
+            importe-total-gastos-financiacion:
+              label: A külső finanszírozásból eredő költségek összege
+            importe-total-intereses:
+              label: Az év során kifizetett kamat teljes összege
+            importe-total-saldos-pendientes:
+              label: A december 31-én fennálló egyenlegek összege
+            inmueble-bloque:
+              label: Az ingatlan épülettömbje
+            inmueble-calificador-numero:
+              label: Az ingatlan házszámának jelzője
+            inmueble-codigo-municipio:
+              label: Az ingatlan településkódja
+            inmueble-codigo-postal:
+              label: Az ingatlan irányítószáma
+            inmueble-codigo-provincia:
+              label: Az ingatlan tartománykódja
+            inmueble-complemento:
+              label: Az ingatlan címének kiegészítése
+            inmueble-escalera:
+              label: Az ingatlan lépcsőháza
+            inmueble-localidad:
+              label: Az ingatlan településrésze
+            inmueble-municipio:
+              label: Az ingatlan települése
+            inmueble-nombre-via:
+              label: Az ingatlan közterületének neve
+            inmueble-numero-casa:
+              label: Az ingatlan házszáma
+            inmueble-planta:
+              label: Az ingatlan emelete
+            inmueble-portal:
+              label: Az ingatlan bejárata
+            inmueble-puerta:
+              label: Az ingatlan ajtaja
+            inmueble-tipo-numeracion:
+              label: Az ingatlan házszámozásának típusa
+            inmueble-tipo-via:
+              label: Az ingatlan közterületének típusa
+            intereses-indemnizatorios:
+              label: Kártalanítási kamat
+            numero-identificativo-anterior:
+              label: A korábbi bevallás azonosító száma
+            numero-identificativo-declaracion:
+              label: A bevallás azonosító száma
+            numero-total-declarados:
+              label: A bejelentett rekordok száma összesen
+            origen-operacion:
+              label: Az ügylet eredete
+            otras-cantidades-indemnizatorias:
+              label: Egyéb kártalanítási összegek
+            persona-relacion:
+              label: Kapcsolattartó személy
+            porcentaje-financiacion-vivienda-habitual:
+              label: A finanszírozás állandó lakóingatlanra fordított százaléka
+            porcentaje-participacion:
+              label: A részesedés százaléka
+            prefijo-codigo-iban:
+              label: Az IBAN-kód előtagja
+            prestamista-nif:
+              label: A hitelező adószáma
+            prestamista-nombre:
+              label: A hitelező neve vagy cégneve
+            referencia-catastral:
+              label: Ingatlan-nyilvántartási hivatkozás
+            representante-legal-nif:
+              label: A törvényes képviselő NIF-azonosítója
+            saldo-pendiente:
+              label: A december 31-én fennálló egyenleg
+            situacion-inmueble:
+              label: Az ingatlan elhelyezkedése
+            subclave-operacion:
+              label: Az ügylet alkódja
+            tipo-operacion:
+              label: Az ügylet típusa
+            valor-tasacion-inmueble:
+              label: A biztosítékul adott ingatlan értékbecslés szerinti értéke
+            x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
+              label: Kiegészítő bevallás
+            x-chim6r1ecll6asj3d5hmiro:
+              label: Az adóbevallás vonatkozási éve
+            x-chim6r1eedqn6t39ehqn8qbmc4:
+              label: Helyettesítő bevallás
+            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
+              label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
+          field:
+            label: 181-es modelo (EHA/3514/2009 rendelet), 2009. adóévtől

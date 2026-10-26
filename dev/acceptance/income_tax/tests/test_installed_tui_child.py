@@ -1,0 +1,541 @@
+"""Focused checks for the installed-TUI child origin guard."""
+
+from __future__ import annotations
+
+import asyncio
+import json
+import secrets
+from collections.abc import Callable
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
+from types import SimpleNamespace
+from typing import override
+from uuid import UUID, uuid4
+
+import pytest
+from textual.app import App, ComposeResult
+from textual.widgets import OptionList, Static
+
+from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.application.user_profile.login_interaction import ProfileLoginChoice
+from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
+from cadrumo_client.contracts.access_vocabulary import AccessScope, Availability, EffectiveScopeSummary
+from cadrumo_client.contracts.profile_access import ProfileStatus
+from cadrumo_client.contracts.session_events import LifecycleNotice
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+from cadrumo_runtime.host.frontend.tui.runtime_admission import runtime_login_session
+
+from .. import installed_tui_child as installed_child_module
+from ..installed_tui_child import (
+    InstalledTuiChildError,
+    admitted_session_autopilot,
+    is_installed_product_origin,
+    open_profile_manager_field,
+    public_surface_diagnostic,
+    run_installed_tui_child_process,
+    select_public_data_table_row,
+    set_profile_manager_field,
+    wait_for_public_selector,
+    write_installed_tui_failure_receipt,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+_ADMISSION_SECRET = secrets.token_urlsafe(32)
+
+
+class _AdmissionClient(FrontendClient):
+    """Explicit UI transport seam; this does not prove native runtime admission."""
+
+    def __init__(self, profile_id: UUID) -> None:
+        self._profile_id = profile_id
+        self._frontend = OperationFrontendProjection.TUI
+        self._session_id = None
+        self.proof: bytearray | None = None
+        self.password_calls = 0
+        self.closed = False
+        self.refuse = False
+
+    @override
+    def subscribe_lifecycle_notices(self, receive: Callable[[LifecycleNotice], None]) -> Callable[[], None]:
+        # The screen subscribes before it sends the proof; this port has no runtime to send notices.
+        return lambda: None
+
+    @override
+    def login_password(self, secret: bytearray, *, timeout: float = 20, persist_receipt: bool = False) -> ProfileStatus:
+        assert not persist_receipt
+        assert secret == _ADMISSION_SECRET.encode()
+        self.proof = secret
+        self.password_calls += 1
+        if self.refuse:
+            raise FrontendRefusedError("credential_rejected")
+        self._session_id = uuid4()
+        return ProfileStatus(
+            request_id=uuid4(),
+            runtime_boot_id=uuid4(),
+            connection_id=uuid4(),
+            status=ProfileAccessStatus(
+                connected=True,
+                credential_authenticated=True,
+                profile_id=self.profile_id,
+                session_id=self.session_id,
+                session_expires_at=datetime.now(UTC) + timedelta(minutes=5),
+                grant_state=None,
+                grant_expires_at=None,
+                grant_valid=False,
+                profile_bound=True,
+                storage=Availability.AVAILABLE,
+                automation_custody=Availability.UNSUPPORTED,
+                published_authority=Availability.AVAILABLE,
+                provider=Availability.NOT_REQUIRED,
+                effective_scope=EffectiveScopeSummary.summarize(
+                    AccessScope(
+                        operations=frozenset(),
+                        actions=frozenset(),
+                        disclosures=frozenset(),
+                        periods=None,
+                        allow_period_independent=True,
+                        allow_delegation=False,
+                    )
+                ),
+                denial=None,
+            ),
+        )
+
+    @override
+    def close(self) -> None:
+        self.closed = True
+
+    @override
+    def resume_receipt(self, *, timeout: float = 20, hand_over: bool = False) -> ProfileStatus:
+        raise FrontendRefusedError("profile_session_absent")
+
+
+class _AdmittedRoot(App[None]):
+    """A public Home marker for the separate root callback contract."""
+
+    @override
+    def compose(self) -> ComposeResult:
+        yield Static("Home", id="home-agenda")
+
+
+@pytest.mark.asyncio
+async def test_admission_autopilot_transfers_exact_login_before_running_separate_root() -> None:
+    first, selected = uuid4(), uuid4()
+    client = _AdmissionClient(selected)
+    receipt_probe = _AdmissionClient(selected)
+    openings = 0
+    workflows: list[object] = []
+
+    async def open_client(profile_id: UUID) -> FrontendClient:
+        nonlocal openings
+        assert profile_id == selected
+        openings += 1
+        return receipt_probe if openings == 1 else client
+
+    async def workflow(pilot) -> None:
+        assert isinstance(pilot.app, _AdmittedRoot)
+        assert client.password_calls == 1
+        assert not client.closed
+        assert client.proof is not None and not any(client.proof)
+        workflows.append(pilot.app)
+        pilot.app.exit()
+
+    autopilot = admitted_session_autopilot(passphrase=_ADMISSION_SECRET, drive_after_home=workflow)
+    async with asyncio.timeout(5):
+        async with runtime_login_session(
+            choices=(
+                ProfileLoginChoice(profile_id=str(first), label="First"),
+                ProfileLoginChoice(profile_id=str(selected), label="Selected"),
+            ),
+            preselected=str(selected),
+            open_client=open_client,
+            headless=True,
+            auto_pilot=autopilot,
+        ) as handoff:
+            assert handoff is not None and handoff.profile_id == selected
+            assert workflows == []
+            root = _AdmittedRoot()
+            await root.run_async(headless=True, auto_pilot=autopilot)
+            assert workflows == [root]
+            assert not client.closed
+    assert client.closed
+    assert receipt_probe.closed
+
+
+@pytest.mark.asyncio
+async def test_admission_autopilot_refusal_never_runs_workflow_and_closes_login_client() -> None:
+    selected = uuid4()
+    client = _AdmissionClient(selected)
+    client.refuse = True
+
+    async def open_client(profile_id: UUID) -> FrontendClient:
+        assert profile_id == selected
+        return client
+
+    async def workflow(_pilot) -> None:
+        pytest.fail("a refused login must never run the private workflow")
+
+    async with asyncio.timeout(5):
+        with pytest.raises(InstalledTuiChildError, match="admission did not settle"):
+            async with runtime_login_session(
+                choices=(ProfileLoginChoice(profile_id=str(selected), label="Selected"),),
+                open_client=open_client,
+                headless=True,
+                auto_pilot=admitted_session_autopilot(
+                    passphrase=_ADMISSION_SECRET, drive_after_home=workflow, polls=30
+                ),
+            ):
+                pytest.fail("a refused login must never transfer ownership")
+    assert client.password_calls == 1
+    assert client.closed
+    assert client.proof is not None and not any(client.proof)
+
+
+def test_installed_origin_guard_refuses_checkout_source_and_accepts_site_packages(tmp_path: Path) -> None:
+    workspace = tmp_path / "checkout"
+    source_init = workspace / "src" / "cadrumo" / "__init__.py"
+    source_init.parent.mkdir(parents=True)
+    source_init.write_text("", encoding="utf-8")
+    installed_init = tmp_path / "venv" / "Lib" / "site-packages" / "cadrumo" / "__init__.py"
+    installed_init.parent.mkdir(parents=True)
+    installed_init.write_text("", encoding="utf-8")
+
+    assert is_installed_product_origin(product_init=source_init, workspace_root=workspace) is False
+    assert is_installed_product_origin(product_init=installed_init, workspace_root=workspace) is True
+
+
+class _Widget:
+    def __init__(self, widget_id: str | None) -> None:
+        self.id = widget_id
+
+
+class _Screen:
+    id = "root-shell"
+
+    def query(self, selector: str) -> tuple[_Widget, ...]:
+        assert selector == "*"
+        return ()
+
+
+class _App:
+    def __init__(self) -> None:
+        self.screen = _Screen()
+        self.queries: list[str] = []
+
+    def query_one(self, selector: str) -> object:
+        self.queries.append(selector)
+        return object()
+
+    def query(self, selector: str) -> tuple[_Widget, ...]:
+        assert selector == "*"
+        return (_Widget("home-agenda"), _Widget(None), _Widget("field-passphrase"))
+
+
+class _Pilot:
+    def __init__(self, app: _App) -> None:
+        self.app = app
+
+    async def pause(self) -> None:
+        raise AssertionError("the selector should be found through the app root")
+
+
+def test_child_uses_app_root_selectors_and_reports_value_free_surface_ids() -> None:
+    app = _App()
+    pilot = _Pilot(app)
+
+    asyncio.run(wait_for_public_selector(pilot, "#home-agenda", polls=1))
+
+    assert app.queries == ["#home-agenda"]
+    assert public_surface_diagnostic(pilot) == {
+        "current_screen_class": "_Screen",
+        "current_screen_id": "root-shell",
+        "mounted_widget_ids": ["field-passphrase", "home-agenda"],
+    }
+
+
+def test_shared_failure_writer_drops_non_public_diagnostic_values(tmp_path: Path) -> None:
+    receipt = tmp_path / "receipt.json"
+    write_installed_tui_failure_receipt(
+        path=receipt,
+        schema_version="income-01-installed-tui-financial-v1",
+        error=InstalledTuiChildError(
+            "installed TUI did not expose #ledger-flow-status",
+            diagnostic={
+                "current_screen_class": "LedgerImportScreen",
+                "current_screen_id": "ledger.import",
+                "mounted_widget_ids": ["ledger-flow-status", "ledger-flow-status"],
+                "rendered_text": "synthetic private invoice fact",
+            },
+        ),
+    )
+
+    assert json.loads(receipt.read_text(encoding="utf-8")) == {
+        "diagnostic": {
+            "current_screen_class": "LedgerImportScreen",
+            "current_screen_id": "ledger.import",
+            "mounted_widget_ids": ["ledger-flow-status"],
+        },
+        "error": "installed TUI did not expose #ledger-flow-status",
+        "schema_version": "income-01-installed-tui-financial-v1",
+        "status": "failed",
+    }
+
+
+@pytest.mark.parametrize("refusal_code", (None, "workbench.home.refresh_unavailable", "private-profile-value"))
+@pytest.mark.asyncio
+async def test_public_root_diagnostic_distinguishes_pending_and_refused_home_without_values(
+    refusal_code: str | None, tmp_path: Path
+) -> None:
+    """Actual public controls retain finite codes and flags while their other content is discarded."""
+    from cadrumo.application.overview.home import HomeAccountSession, HomeSessionPosture
+    from cadrumo.core.i18n.render import tr
+
+    class RootApp(App[None]):
+        home_refresh_refusal_code = refusal_code
+        workbench_search_refusal_code = None
+        account_session = HomeAccountSession(
+            posture=HomeSessionPosture.ACTIVE,
+            profile_label="private-profile-value",
+            expires_at=datetime.now(UTC) + timedelta(minutes=5),
+        )
+
+        @override
+        def compose(self) -> ComposeResult:
+            yield Static("updating", id="root-updating")
+            yield Static(tr("tui.root.account.unavailable"), id="root-account-refusal", markup=False)
+            yield Static("private-profile-value", id="root-navigation-refusal", markup=False)
+
+    async with RootApp().run_test() as pilot:
+        await pilot.pause()
+        diagnostic = public_surface_diagnostic(pilot)
+        assert diagnostic["root_updating_visible"] is True
+        assert diagnostic["root_account_refusal_shown"] is True
+        assert diagnostic["root_navigation_refusal_shown"] is False
+        assert diagnostic["account_session_posture"] == "active"
+        assert diagnostic["account_session_present"] is True
+        assert diagnostic["account_session_has_expiry"] is True
+        assert diagnostic["account_session_expired"] is False
+        if refusal_code == "private-profile-value":
+            assert "home_refresh_refusal_code" not in diagnostic
+        else:
+            assert diagnostic["home_refresh_refusal_code"] == refusal_code
+        receipt = tmp_path / "root-failure.json"
+        write_installed_tui_failure_receipt(
+            path=receipt,
+            schema_version="root-diagnostic-test",
+            error=InstalledTuiChildError("installed Home did not settle", diagnostic=diagnostic),
+        )
+        observed = json.loads(receipt.read_text())["diagnostic"]
+        assert observed == diagnostic
+        assert "private-profile-value" not in receipt.read_text()
+
+
+def test_profile_manager_field_opens_the_visible_canonical_row_without_field_selector() -> None:
+    class Table:
+        rows = (SimpleNamespace(value="identity.tax_id"), SimpleNamespace(value="activities.description"))
+
+        def __init__(self) -> None:
+            self.focused = False
+            self.cursor_row: int | None = None
+
+        def focus(self) -> None:
+            self.focused = True
+
+        def get_row_index(self, row_key: object) -> int:
+            return self.rows.index(row_key)
+
+        def move_cursor(self, *, row: int) -> None:
+            self.cursor_row = row
+
+    class ManagerScreen:
+        def __init__(self, table: Table) -> None:
+            self.table = table
+
+        def query(self, expected_type: object) -> tuple[Table, ...]:
+            return (self.table,)
+
+    class ManagerPilot:
+        def __init__(self, table: Table) -> None:
+            self.app = SimpleNamespace(screen=ManagerScreen(table))
+            self.keys: list[str] = []
+
+        async def press(self, key: str) -> None:
+            self.keys.append(key)
+
+    table = Table()
+    pilot = ManagerPilot(table)
+    asyncio.run(open_profile_manager_field(pilot=pilot, path="activities.description"))
+
+    assert table.focused is True
+    assert table.cursor_row == 1
+    assert pilot.keys == ["enter"]
+
+
+def test_child_process_runner_uses_stdin_credentials_and_hash_only_artifacts(tmp_path: Path, monkeypatch) -> None:
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    executable = tmp_path / "venv" / "Scripts" / "python.exe"
+    executable.parent.mkdir(parents=True)
+    executable.write_text("", encoding="utf-8")
+    receipt = tmp_path / "artifacts" / "financial.json"
+    credential = f"{tmp_path.name}-test-credential"
+    runtime_socket_dir = tmp_path / "private-runtime"
+    runtime_socket_dir.mkdir(mode=0o700)
+    observed: dict[str, object] = {}
+
+    def fake_run(argv, **kwargs):
+        observed["argv"] = argv
+        observed["environment"] = kwargs["env"]
+        observed["input"] = kwargs["input"]
+        receipt.parent.mkdir(parents=True)
+        receipt.write_text('{"status":"proven","private":"not retained by outer evidence"}', encoding="utf-8")
+        return SimpleNamespace(returncode=0, stdout="child output", stderr="child diagnostic")
+
+    monkeypatch.setenv("PYTHONPATH", "should-not-cross-to-child")
+    monkeypatch.setenv("CADRUMO_UNRELATED", "should-not-cross-to-child")
+    monkeypatch.setattr(installed_child_module.subprocess, "run", fake_run)
+
+    evidence = run_installed_tui_child_process(
+        python_executable=executable,
+        workspace_root=workspace,
+        child_module="dev.acceptance.income_tax.installed_tui_financial_child",
+        child_args=("--receipt", str(receipt)),
+        storage_root=tmp_path / "store",
+        receipt_path=receipt,
+        passphrase=credential,
+        runtime_socket_dir=runtime_socket_dir,
+    )
+
+    environment = observed["environment"]
+    assert isinstance(environment, dict)
+    assert "PYTHONPATH" not in environment
+    assert "CADRUMO_UNRELATED" not in environment
+    assert environment["CADRUMO_LOCAL_STORAGE_ROOT"] == str((tmp_path / "store").resolve())
+    assert environment["CADRUMO_STORAGE_ROOT"] == str((tmp_path / "store").resolve())
+    assert environment["CADRUMO_RUNTIME_SOCKET_DIR"] == str(runtime_socket_dir.resolve())
+    assert "CADRUMO_DEV_RUNTIME_SESSION_OVERRIDE" not in environment
+    assert json.loads(str(observed["input"])) == {"profile_passphrase": credential}
+    assert evidence.returncode == 0
+    assert evidence.receipt_status == "proven"
+    assert "private" not in evidence.to_dict()
+    assert evidence.receipt_sha256 != ""
+
+
+def test_public_table_row_selection_uses_semantic_key_not_position() -> None:
+    class Table:
+        rows = (SimpleNamespace(value="ledger.overview"), SimpleNamespace(value="ledger.import"))
+
+        def __init__(self) -> None:
+            self.focused = False
+            self.cursor_row: int | None = None
+
+        def focus(self) -> None:
+            self.focused = True
+
+        def get_row_index(self, row_key: object) -> int:
+            return self.rows.index(row_key)
+
+        def move_cursor(self, *, row: int) -> None:
+            self.cursor_row = row
+
+    class Screen:
+        def query(self, selector: str) -> tuple[object, ...]:
+            raise AssertionError(f"screen fallback should not be used for {selector}")
+
+    class App:
+        def __init__(self, table: Table) -> None:
+            self.table = table
+            self.screen = Screen()
+
+        @property
+        def focused(self) -> Table | None:
+            return self.table if self.table.focused else None
+
+        def query_one(self, selector: str, expected_type: object | None = None) -> object:
+            assert selector == "#ledger-navigation"
+            return self.table
+
+    class Pilot:
+        def __init__(self, table: Table) -> None:
+            self.app = App(table)
+            self.keys: list[str] = []
+            self.pauses = 0
+
+        async def press(self, key: str) -> None:
+            self.keys.append(key)
+
+        async def pause(self) -> None:
+            assert self.app.focused is self.app.table
+            assert self.app.table.cursor_row == 1
+            self.pauses += 1
+
+    table = Table()
+    pilot = Pilot(table)
+    asyncio.run(
+        select_public_data_table_row(
+            pilot=pilot,
+            table_selector="#ledger-navigation",
+            row_key="ledger.import",
+        )
+    )
+
+    assert table.focused is True
+    assert table.cursor_row == 1
+    assert pilot.keys == ["enter"]
+    assert pilot.pauses == 1
+
+
+def test_profile_manager_choice_uses_visible_option_list_highlight_and_save(monkeypatch) -> None:
+    class Options:
+        option_count = 3
+
+        def __init__(self) -> None:
+            self.highlighted: int | None = None
+
+    class Workers:
+        async def wait_for_complete(self) -> None:
+            return None
+
+    class Pilot:
+        app = SimpleNamespace(workers=Workers())
+
+        def __init__(self) -> None:
+            self.clicks: list[str] = []
+
+        async def click(self, selector: str) -> None:
+            self.clicks.append(selector)
+
+    async def open_field(*, pilot: object, path: str) -> None:
+        assert path == "tax_residence.ccaa"
+
+    async def wait_for_any(pilot: object, selectors: tuple[str, ...], *, polls: int = 80) -> str:
+        assert selectors == ("#edit-input", "#edit-options")
+        return "#edit-options"
+
+    async def wait_for_selector(pilot: object, selector: str, *, polls: int = 80) -> None:
+        assert selector == "#manager-status"
+
+    options = Options()
+
+    def query(pilot: object, selector: str, expected_type: type[object] | None = None) -> object:
+        assert selector == "#edit-options"
+        assert expected_type is OptionList
+        return options
+
+    monkeypatch.setattr(installed_child_module, "open_profile_manager_field", open_field)
+    monkeypatch.setattr(installed_child_module, "wait_for_any_public_selector", wait_for_any)
+    monkeypatch.setattr(installed_child_module, "wait_for_public_selector", wait_for_selector)
+    monkeypatch.setattr(installed_child_module, "query_public_selector", query)
+
+    pilot = Pilot()
+    asyncio.run(
+        set_profile_manager_field(
+            pilot=pilot,
+            path="tax_residence.ccaa",
+            option_index=1,
+        )
+    )
+
+    assert options.highlighted == 1
+    assert pilot.clicks == ["#btn-edit-save"]

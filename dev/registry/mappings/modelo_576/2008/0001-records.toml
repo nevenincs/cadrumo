@@ -1,0 +1,842 @@
+# Exact AEAT source fields, including all eight parser-owned 19.1-19.8 components; selected revision supplies semantic IDs.
+schema_version = 1
+fragment_id = "records"
+modelo = "576"
+design_epoch = "2008"
+source_ref = "aeat-dr-576-2008"
+source_sha256 = "d1964b0c5b2c360b1a06e510ae3f7fce632cd3f7882be0365a8fdb3c26e0dbc7"
+
+[[records]]
+sheet = "Pág 1"
+record_identity = "Pág 1"
+export_record_id = "modelo-576-autoliquidacion-record"
+record_type = "576-01"
+required = true
+
+[[entries]]
+export_field_id = "modelo-576-lit-1"
+kind = "literal"
+literal = "<T57601>"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 6
+source_cell = "A6"
+record_identity = "Pág 1"
+ordinal = "1"
+
+[[entries]]
+export_field_id = "modelo-576-lit-2"
+kind = "literal"
+literal = "576"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 7
+source_cell = "A7"
+record_identity = "Pág 1"
+ordinal = "2"
+
+[[entries]]
+export_field_id = "modelo-576-decl-tipo-declaracion"
+kind = "casilla"
+casilla_id = "decl.tipo-declaracion"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 8
+source_cell = "A8"
+record_identity = "Pág 1"
+ordinal = "3"
+
+[[entries]]
+export_field_id = "modelo-576-reservado-4"
+kind = "filler"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 9
+source_cell = "A9"
+record_identity = "Pág 1"
+ordinal = "4"
+
+[[entries]]
+export_field_id = "modelo-576-draft-filing-year"
+kind = "draft"
+draft_attribute = "filing_year"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 10
+source_cell = "A10"
+record_identity = "Pág 1"
+ordinal = "5"
+
+[[entries]]
+export_field_id = "modelo-576-reservado-6"
+kind = "filler"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 11
+source_cell = "A11"
+record_identity = "Pág 1"
+ordinal = "6"
+
+[[entries]]
+export_field_id = "modelo-576-lit-7"
+kind = "literal"
+literal = "0A"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 12
+source_cell = "A12"
+record_identity = "Pág 1"
+ordinal = "7"
+
+[[entries]]
+export_field_id = "modelo-576-decl-tipo-transporte"
+kind = "casilla"
+casilla_id = "decl.tipo-transporte"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 13
+source_cell = "A13"
+record_identity = "Pág 1"
+ordinal = "8"
+
+[[entries]]
+export_field_id = "modelo-576-taxpayer-tax-id"
+kind = "header"
+producer_key = "taxpayer.tax_id"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 14
+source_cell = "A14"
+record_identity = "Pág 1"
+ordinal = "9"
+
+[[entries]]
+export_field_id = "modelo-576-taxpayer-full-name"
+kind = "header"
+producer_key = "taxpayer.full_name"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 15
+source_cell = "A15"
+record_identity = "Pág 1"
+ordinal = "10"
+
+[[entries]]
+export_field_id = "modelo-576-reservado-11"
+kind = "filler"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 16
+source_cell = "A16"
+record_identity = "Pág 1"
+ordinal = "11"
+
+[[entries]]
+export_field_id = "modelo-576-cmt-nuevo-usado"
+kind = "casilla"
+casilla_id = "cmt.nuevo-usado"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 17
+source_cell = "A17"
+record_identity = "Pág 1"
+ordinal = "12"
+
+[[entries]]
+export_field_id = "modelo-576-cmt-lugar-adquisicion"
+kind = "casilla"
+casilla_id = "cmt.lugar-adquisicion"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 18
+source_cell = "A18"
+record_identity = "Pág 1"
+ordinal = "13"
+
+[[entries]]
+export_field_id = "modelo-576-reservado-14"
+kind = "filler"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 19
+source_cell = "A19"
+record_identity = "Pág 1"
+ordinal = "14"
+
+[[entries]]
+export_field_id = "modelo-576-cmt-fecha-primera-matriculacion"
+kind = "casilla"
+casilla_id = "cmt.fecha-primera-matriculacion"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 20
+source_cell = "A20"
+record_identity = "Pág 1"
+ordinal = "15"
+
+[[entries]]
+export_field_id = "modelo-576-cmt-vehiculo-marca"
+kind = "casilla"
+casilla_id = "cmt.vehiculo-marca"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 21
+source_cell = "A21"
+record_identity = "Pág 1"
+ordinal = "16"
+
+[[entries]]
+export_field_id = "modelo-576-cmt-vehiculo-modelo-tipo"
+kind = "casilla"
+casilla_id = "cmt.vehiculo-modelo-tipo"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 22
+source_cell = "A22"
+record_identity = "Pág 1"
+ordinal = "17"
+
+[[entries]]
+export_field_id = "modelo-576-cmt-vehiculo-bastidor"
+kind = "casilla"
+casilla_id = "cmt.vehiculo-bastidor"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 23
+source_cell = "A23"
+record_identity = "Pág 1"
+ordinal = "18"
+
+[[entries]]
+export_field_id = "modelo-576-cmt-vehiculo-clasificacion"
+kind = "casilla"
+casilla_id = "cmt.vehiculo-clasificacion"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 25
+source_cell = "A25"
+record_identity = "Pág 1"
+ordinal = "19.1"
+
+[[entries]]
+export_field_id = "modelo-576-cmt-vehiculo-categoria-ce"
+kind = "casilla"
+casilla_id = "cmt.vehiculo-categoria-ce"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 26
+source_cell = "A26"
+record_identity = "Pág 1"
+ordinal = "19.2"
+
+[[entries]]
+export_field_id = "modelo-576-reservado-19-3"
+kind = "filler"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 27
+source_cell = "A27"
+record_identity = "Pág 1"
+ordinal = "19.3"
+
+[[entries]]
+export_field_id = "modelo-576-cmt-vehiculo-emisiones-co2"
+kind = "casilla"
+casilla_id = "cmt.vehiculo-emisiones-co2"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 28
+source_cell = "A28"
+record_identity = "Pág 1"
+ordinal = "19.4"
+
+[[entries]]
+export_field_id = "modelo-576-cmt-vehiculo-epigrafe"
+kind = "casilla"
+casilla_id = "cmt.vehiculo-epigrafe"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 29
+source_cell = "A29"
+record_identity = "Pág 1"
+ordinal = "19.5"
+
+[[entries]]
+export_field_id = "modelo-576-cmt-kilometros-horas-uso"
+kind = "casilla"
+casilla_id = "cmt.kilometros-horas-uso"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 30
+source_cell = "A30"
+record_identity = "Pág 1"
+ordinal = "19.6"
+
+[[entries]]
+export_field_id = "modelo-576-cmt-vehiculo-itv-serie"
+kind = "casilla"
+casilla_id = "cmt.vehiculo-itv-serie"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 31
+source_cell = "A31"
+record_identity = "Pág 1"
+ordinal = "19.7"
+
+[[entries]]
+export_field_id = "modelo-576-cmt-vehiculo-itv-tipo-tarjeta"
+kind = "casilla"
+casilla_id = "cmt.vehiculo-itv-tipo-tarjeta"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 32
+source_cell = "A32"
+record_identity = "Pág 1"
+ordinal = "19.8"
+
+[[entries]]
+export_field_id = "modelo-576-cmt-vehiculo-motor"
+kind = "casilla"
+casilla_id = "cmt.vehiculo-motor"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 33
+source_cell = "A33"
+record_identity = "Pág 1"
+ordinal = "20"
+
+[[entries]]
+export_field_id = "modelo-576-cmt-vehiculo-cilindrada"
+kind = "casilla"
+casilla_id = "cmt.vehiculo-cilindrada"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 34
+source_cell = "A34"
+record_identity = "Pág 1"
+ordinal = "21"
+
+[[entries]]
+export_field_id = "modelo-576-cmt-embarcacion-fabricante"
+kind = "casilla"
+casilla_id = "cmt.embarcacion-fabricante"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 35
+source_cell = "A35"
+record_identity = "Pág 1"
+ordinal = "22"
+
+[[entries]]
+export_field_id = "modelo-576-cmt-embarcacion-modelo"
+kind = "casilla"
+casilla_id = "cmt.embarcacion-modelo"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 36
+source_cell = "A36"
+record_identity = "Pág 1"
+ordinal = "23"
+
+[[entries]]
+export_field_id = "modelo-576-cmt-embarcacion-identificacion"
+kind = "casilla"
+casilla_id = "cmt.embarcacion-identificacion"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 37
+source_cell = "A37"
+record_identity = "Pág 1"
+ordinal = "24"
+
+[[entries]]
+export_field_id = "modelo-576-cmt-embarcacion-eslora"
+kind = "casilla"
+casilla_id = "cmt.embarcacion-eslora"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 38
+source_cell = "A38"
+record_identity = "Pág 1"
+ordinal = "25"
+
+[[entries]]
+export_field_id = "modelo-576-cmt-aeronave-fabricante"
+kind = "casilla"
+casilla_id = "cmt.aeronave-fabricante"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 39
+source_cell = "A39"
+record_identity = "Pág 1"
+ordinal = "26"
+
+[[entries]]
+export_field_id = "modelo-576-cmt-aeronave-modelo"
+kind = "casilla"
+casilla_id = "cmt.aeronave-modelo"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 40
+source_cell = "A40"
+record_identity = "Pág 1"
+ordinal = "27"
+
+[[entries]]
+export_field_id = "modelo-576-cmt-aeronave-serie"
+kind = "casilla"
+casilla_id = "cmt.aeronave-serie"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 41
+source_cell = "A41"
+record_identity = "Pág 1"
+ordinal = "28"
+
+[[entries]]
+export_field_id = "modelo-576-cmt-aeronave-ano-fabricacion"
+kind = "casilla"
+casilla_id = "cmt.aeronave-ano-fabricacion"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 42
+source_cell = "A42"
+record_identity = "Pág 1"
+ordinal = "29"
+
+[[entries]]
+export_field_id = "modelo-576-cmt-aeronave-peso-maximo-despegue"
+kind = "casilla"
+casilla_id = "cmt.aeronave-peso-maximo-despegue"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 43
+source_cell = "A43"
+record_identity = "Pág 1"
+ordinal = "30"
+
+[[entries]]
+export_field_id = "modelo-576-cmt-vehiculo-codigo-itv"
+kind = "casilla"
+casilla_id = "cmt.vehiculo-codigo-itv"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 44
+source_cell = "A44"
+record_identity = "Pág 1"
+ordinal = "31"
+
+[[entries]]
+export_field_id = "modelo-576-reservado-32"
+kind = "filler"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 45
+source_cell = "A45"
+record_identity = "Pág 1"
+ordinal = "32"
+
+[[entries]]
+export_field_id = "modelo-576-liq-base-imponible"
+kind = "casilla"
+casilla_id = "liq.base-imponible"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 46
+source_cell = "A46"
+record_identity = "Pág 1"
+ordinal = "33"
+
+[[entries]]
+export_field_id = "modelo-576-liq-base-imponible-reducida"
+kind = "casilla"
+casilla_id = "liq.base-imponible-reducida"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 47
+source_cell = "A47"
+record_identity = "Pág 1"
+ordinal = "34"
+
+[[entries]]
+export_field_id = "modelo-576-liq-tipo"
+kind = "casilla"
+casilla_id = "liq.tipo"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 48
+source_cell = "A48"
+record_identity = "Pág 1"
+ordinal = "35"
+
+[[entries]]
+export_field_id = "modelo-576-liq-cuota"
+kind = "casilla"
+casilla_id = "liq.cuota"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 49
+source_cell = "A49"
+record_identity = "Pág 1"
+ordinal = "36"
+
+[[entries]]
+export_field_id = "modelo-576-liq-deduccion-lineal"
+kind = "casilla"
+casilla_id = "liq.deduccion-lineal"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 50
+source_cell = "A50"
+record_identity = "Pág 1"
+ordinal = "37"
+
+[[entries]]
+export_field_id = "modelo-576-liq-cuota-a-ingresar"
+kind = "casilla"
+casilla_id = "liq.cuota-a-ingresar"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 51
+source_cell = "A51"
+record_identity = "Pág 1"
+ordinal = "38"
+
+[[entries]]
+export_field_id = "modelo-576-liq-a-deducir"
+kind = "casilla"
+casilla_id = "liq.a-deducir"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 52
+source_cell = "A52"
+record_identity = "Pág 1"
+ordinal = "39"
+
+[[entries]]
+export_field_id = "modelo-576-liq-resultado"
+kind = "casilla"
+casilla_id = "liq.resultado"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 53
+source_cell = "A53"
+record_identity = "Pág 1"
+ordinal = "40"
+
+[[entries]]
+export_field_id = "modelo-576-decl-justificante-anterior"
+kind = "casilla"
+casilla_id = "decl.justificante-anterior"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 54
+source_cell = "A54"
+record_identity = "Pág 1"
+ordinal = "41"
+
+[[entries]]
+export_field_id = "modelo-576-reservado-42"
+kind = "filler"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 55
+source_cell = "A55"
+record_identity = "Pág 1"
+ordinal = "42"
+
+[[entries]]
+export_field_id = "modelo-576-reservado-43"
+kind = "filler"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 56
+source_cell = "A56"
+record_identity = "Pág 1"
+ordinal = "43"
+
+[[entries]]
+export_field_id = "modelo-576-reservado-44"
+kind = "filler"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 57
+source_cell = "A57"
+record_identity = "Pág 1"
+ordinal = "44"
+
+[[entries]]
+export_field_id = "modelo-576-decl-causa-hecho-imponible"
+kind = "casilla"
+casilla_id = "decl.causa-hecho-imponible"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 58
+source_cell = "A58"
+record_identity = "Pág 1"
+ordinal = "45"
+
+[[entries]]
+export_field_id = "modelo-576-reservado-46"
+kind = "filler"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 59
+source_cell = "A59"
+record_identity = "Pág 1"
+ordinal = "46"
+
+[[entries]]
+export_field_id = "modelo-576-introductor-nif"
+kind = "casilla"
+casilla_id = "introductor.nif"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 60
+source_cell = "A60"
+record_identity = "Pág 1"
+ordinal = "47"
+
+[[entries]]
+export_field_id = "modelo-576-introductor-nombre"
+kind = "casilla"
+casilla_id = "introductor.nombre"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 61
+source_cell = "A61"
+record_identity = "Pág 1"
+ordinal = "48"
+
+[[entries]]
+export_field_id = "modelo-576-reservado-49"
+kind = "filler"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 62
+source_cell = "A62"
+record_identity = "Pág 1"
+ordinal = "49"
+
+[[entries]]
+export_field_id = "modelo-576-cmt-vehiculo-observaciones"
+kind = "casilla"
+casilla_id = "cmt.vehiculo-observaciones"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 63
+source_cell = "A63"
+record_identity = "Pág 1"
+ordinal = "50"
+
+[[entries]]
+export_field_id = "modelo-576-cmt-embarcacion-observaciones"
+kind = "casilla"
+casilla_id = "cmt.embarcacion-observaciones"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 64
+source_cell = "A64"
+record_identity = "Pág 1"
+ordinal = "51"
+
+[[entries]]
+export_field_id = "modelo-576-reservado-52"
+kind = "filler"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 65
+source_cell = "A65"
+record_identity = "Pág 1"
+ordinal = "52"
+
+[[entries]]
+export_field_id = "modelo-576-lit-53"
+kind = "literal"
+literal = "</T57601>"
+legal_refs = ["orden-eha-3851-2007:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-576-2008"]
+
+[entries.anchor]
+sheet = "Pág 1"
+source_row = 66
+source_cell = "A66"
+record_identity = "Pág 1"
+ordinal = "53"

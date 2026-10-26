@@ -1,0 +1,344 @@
+flows:
+  compare_select:
+    candidate: '{label} (forrás: {provenance})'
+    defer_label: Eldöntöm később
+  confirm:
+    'no': Nem
+    'yes': Igen
+  errors:
+    blank_required: Ez a mező kötelező - adj meg egy értéket.
+    checkbox_required: Válassz legalább egy lehetőséget.
+    checkbox_unknown: 'Ismeretlen lehetőség - elfogadott értékek: %{choices}.'
+    checkpoint_store_missing: A(z) {flow_id} folyamat a(z) {mode} módban felkínálja
+      a mentés és kilépés lehetőségét, de nincs bekötve ellenőrzőpont-tároló, ezért
+      a futás elutasításra került, hogy a válaszaid ne vesszenek el.
+    invalid_confirm: Válaszolj igennel vagy nemmel.
+    invalid_date: Add meg a dátumot ÉÉÉÉ-HH-NN formátumban (például 2026-05-14).
+    invalid_decimal: Add meg az összeget tizedesponttal (például 1234.56).
+    invalid_integer: Adj meg egy egész számot.
+    select_unknown: 'Válassz az elfogadott értékek közül: %{choices}.'
+    unsupported_console: Ez a konzol nem tud interaktív kérdéseket megjeleníteni.
+      Indítsd a folyamatot valódi terminálból, vagy vezéreld szkriptelt válaszfájllal.
+  manager:
+    action:
+      auth_clave_movil_route_app_request: Kérés az alkalmazásban
+      auth_clave_movil_route_qr: QR-kód
+    censal_review:
+      apply: A pontos javaslat alkalmazása
+    choice_unavailable: Nem elérhető választási lehetőség
+    column:
+      field: Mező
+      state: Állapot
+      value: Érték
+    complete_setup:
+      button: Beállítás befejezése ({key})
+      completed: A beállítás kész. Az ehhez kötött bevallások most már elérhetők.
+      failed: A beállítást nem sikerült befejezni.
+      incomplete: 'A beállítás még nem fejezhető be. Hiányzik: {fields}.'
+      incomplete_unnamed: 'A beállítás még nem fejezhető be: kötelező válaszok hiányoznak
+        vagy nem egyeznek.'
+      running: A profil ellenőrzése és a beállítás befejezése…
+    edit:
+      cancel: Mégse
+      choose_one: Válassz egy lehetőséget, vagy a mégse gombbal hagyd változatlanul
+        az értéket.
+      clear: Törlés
+      completed_refresh_unavailable: A művelet befejeződött, de a frissített nézet
+        nem érhető el. Térj vissza a kezdőlapra a frissítéshez.
+      conflict: A profil szerkesztés közben megváltozott. A módosításodat nem mentettük.
+        Ellenőrizd az aktuális profilt, és nyisd meg újra a mezőt; az újratöltéshez
+        nyomd meg az F5 billentyűt.
+      masked_kept: Ez az érték rejtett, ezért a mező üresen indul. Hagyd üresen a
+        megőrzéshez, vagy írj be egy újat a cseréhez.
+      no_change: Nem volt szükség módosításra.
+      refresh_failed: Az aktuális profilt nem sikerült betölteni. Szerkesztés előtt
+        nyomd meg az F5 billentyűt az újrapróbálkozáshoz.
+      required_blank: A(z) {field} kötelező, ezért nem maradhat üresen. Adj meg egy
+        értéket, vagy a mégse gombbal hagyd változatlanul.
+      save: Mentés
+      saved: Mentve.
+      shape:
+        date: 'Formátum: ÉÉÉÉ-HH-NN - például 1978-03-15.'
+        decimal: Szám, tizedesponttal - például 1234.56.
+        email: Egy e-mail-cím - például nev@pelda.hu.
+        integer: Egész szám, ezreselválasztó nélkül.
+        money: Összeg euróban, tizedesponttal - például 1234.56.
+      stale_result: A mentés befejeződött, de már egy újabb profilverzió látható.
+        A régebbi eredmény nem jelent meg.
+      write_failed: A mezőt nem sikerült menteni. Próbáld újra.
+      write_in_flight: Az előző mező mentése folyamatban. Várd meg, amíg befejeződik,
+        majd próbáld újra.
+    field_unavailable: Nem elérhető profilmező
+    help:
+      about: 'Erről a beállításról:'
+      what: 'Mi ez:'
+      where: 'Hol találod:'
+      why: 'Miért kell:'
+    language:
+      unavailable: Ez a profil nem kínál nyelvi beállítást.
+    namespace_detail: '{number}. részlet'
+    onboarding:
+      continue: Tovább
+      finish: Beállítás befejezése
+      heading: Profil beállítása
+      progress: '{answered} / {total} kötelező válasz'
+      question: '{number}. kérdés / {total} · {section}'
+      required_only: Csak kötelezők
+      search_empty: 'Egyetlen beállítás sem egyezik ezzel: „{query}”.'
+      search_placeholder: Beállítások keresése
+      section_done: ✓ {title} - {present}/{total}
+      section_pending: '! {title} - hiányzó kötelező adatok: {missing}'
+      sources_summary: Töltsd ki a profilt az AEAT nyilvántartásaiból vagy saját dokumentumaidból
+        gépelés helyett.
+      sources_title: Adatok importálása (opcionális)
+      to_workbench: Tovább a Kezdőlapra
+    plantilla_media:
+      average_workforce: Átlagos állományi létszám
+      list_failed: A bejelentett éveket nem sikerült beolvasni. Próbáld újra.
+      none_declared: Még nincs bejelentett év.
+      remove: Az év törlése
+      state: Állapot
+      state_committed: Vállalt (az év még nyitott)
+      state_observed: Megfigyelt (az év lezárult)
+      state_required: Válaszd ki, hogy az adat megfigyelt vagy vállalt.
+      workforce_not_number: Az átlagos állományi létszámot számként add meg, tizedesponttal
+        - például 12.50.
+      year: Naptári év
+      year_not_whole: A naptári évet egész számként add meg - például 2025.
+    profile_missing_fields: 'A profilból %{count} kötelező mező hiányzik: %{fields}'
+    required_field_unavailable: Kötelező profilmező
+    rows:
+      add: Sor hozzáadása
+      remove: Sor eltávolítása
+      remove_confirm: Eltávolítja a(z) %{row} sort a(z) %{section} szakaszból?
+    section_title: '{title} - {present}/{total}'
+    setup:
+      achievement: '✓ Biztonságos profil létrehozva
+
+        ✓ Kötelező adatok mentve
+
+        ✓ Beállítás megerősítve'
+      answer_required: Adatok megadása
+      edit_intro: Nyiss ki egy szakaszt, majd válassz mezőt a szerkesztéshez. * Kötelező
+        · A többi opcionális. Minden módosítás azonnal mentésre kerül.
+      get_data_copy: Opcionális. Importáld az elérhető adatokat, vagy hagyd ki ezt
+        a lépést, és add meg a kötelező adatokat kézzel. A beállítás befejezéséhez
+        nincs szükség AEAT-hozzáférésre.
+      get_data_title: Adatok
+      nav_get_data: Import
+      nav_overview: Kezdés
+      nav_ready: Kész
+      nav_required: Kötelező
+      nav_review: Átnézés
+      overview_checklist: '✓ Biztonságos profil létrehozva
+
+        ○ Adatok importálása vagy a lépés kihagyása
+
+        ○ Kötelező adatok megadása
+
+        ○ Ellenőrzés és befejezés'
+      overview_copy: 'Biztonságos profilod létrejött. Csak a beállításhoz szükséges
+        adatokat kérjük, majd befejezés előtt ellenőrizheted őket. Kiléphetsz és visszatérhetsz:
+        minden válasz azonnal mentésre kerül.'
+      overview_title: Áttekintés
+      previous: Előző
+      ready_copy: Szép munka! Profilod beállítása kész, válaszaid el vannak mentve.
+        Folytasd a Kezdőlapon egy bevallás előkészítésével. Profilodat bármikor szerkesztheted.
+      ready_title: Kész
+      required_complete: Kötelező adatok kitöltve
+      required_copy: Még {missing} kötelező válasz hiányzik. A Folytatás végigvezet
+        rajtuk. A * jelű mezők kötelezők; az opcionális adatok később is megadhatók.
+      required_title: Kötelező
+      review_copy: Ellenőrizd a mentett adatokat. Nyiss ki egy szakaszt a szerkesztéshez.
+        Az opcionális mezők üresen maradhatnak. A befejezés a profil beállítását erősíti
+        meg; minden bevallás külön ellenőrzést igényel.
+      review_missing: Még {missing} kötelező válasz hiányzik. A Folytatás ezekhez
+        vezet.
+      review_saved: ✓ Minden kötelező válasz mentve. Az opcionális adatok nem akadályozzák
+        a befejezést.
+      review_title: Ellenőrzés
+      skip_import: Import kihagyása
+      start: Kezdés
+      step: '{step}/{steps}. lépés · Még {remaining} van hátra'
+    title: 'Profil: {profile}'
+  modelo_review:
+    filter:
+      option:
+        binding_source:
+          afiliado_cotizacion: Tagi befizetések
+          atribucion_member: Jövedelem-hozzárendelési tag
+          bienes_inversion_regularizacion: Beruházási javak kiigazítása
+          borrador: AEAT-tervezet
+          collectible_invoice: Kimenő számlák
+          design_constant: Tervezeti állandó
+          foreign_asset: Külföldi eszköz
+          gasto193_contributor: Adózónkénti költségek (Modelo 193)
+          inventory: Készlet
+          iva_compensation_annual_partition: Éves áfakompenzáció
+          iva_wallet_decision: Áfaegyenleg-döntés
+          ledger_impatriado_income_aggregation: Bevándorló jövedelmek összesítése
+          ledger_irnr_income_aggregation: Nem rezidens jövedelmek összesítése
+          ledger_iva_aggregation: Áfanyilvántartás
+          ledger_oss_aggregation: OSS-értékesítési nyilvántartás
+          ledger_renta_gastos_estimacion_directa_aggregation: Kiadási nyilvántartás
+            (közvetlen becslés)
+          ledger_renta_gastos_pago_fraccionado_aggregation: Kiadási nyilvántartás
+          ledger_renta_income_aggregation: Bevételi nyilvántartás
+          ledger_transaction: Nyilvántartási tétel
+          m303_regimen_simplificado_annual_summary: Modelo 303 egyszerűsített rendszer
+            összesítő
+          m347_third_party_operation: Harmadik féllel folytatott ügylet
+          m349_intracommunity_operation: Közösségen belüli ügylet
+          manual_input: Kézi adatbevitel
+          payable_invoice: Bejövő számla
+          previous_filing: Előző bevallás
+          profile: Profil
+          prorrata_regularizacion: Arányosítás kiigazítása
+          purchase_invoice_evidence: Beszerzési számla bizonylata
+          relation_prefill: Kapcsolódó bevallás
+          retenciones_aggregation: Levonások összesítése
+          withholding: Levonási nyilvántartás
+          withholding296: Levonási kedvezményezett (Modelo 296)
+        estado_casilla_oficial:
+          addressed: Közvetlenül megjelenített
+          represented_via_binding: Kötésen keresztül megjelenített
+          undefined: Meghatározatlan
+        finding_kind:
+          advisory: Tájékoztatás
+          blocking_rule: Blokkoló szabály
+          cross_period_dependency_unclean: Előző időszaki függőség rendezetlen
+          missing_required_casilla: Kötelező mező hiányzik
+          reconciliation_mismatch: Egyeztetési eltérés
+          stale_calculation: Elavult számítás
+        finding_severity:
+          blocking: Blokkoló
+          warning: Figyelmeztetés
+        input_kind:
+          bound: Kötött
+          computed: Számított
+          informational: Tájékoztató
+          manual: Kézi
+          projection_only: Csak előrevetítés
+        operator_action:
+          capture_external_evidence: Külső bizonyíték rögzítése
+          complete_document_evidence: Dokumentumbizonyíték kiegészítése
+          confirm_group_membership: Csoporttagság megerősítése
+          file_prior_period: Előző időszak benyújtása
+          import_ledger_data: Nyilvántartási adatok importálása
+          re_verify: Újraellenőrzés
+          resolve_identity: Azonosság feloldása
+          resolve_revision_mismatch: Verzióeltérés feloldása
+          resolve_value_divergence: Értékkülönbség feloldása
+          review_advisory: Tájékoztatás áttekintése
+          set_profile_fact: Profiladat megadása
+          supply_manual_input: Kézi adat megadása
+        origin_anomaly:
+          broken_calculation_chain: Megszakadt számítási lánc
+          operator_override: Kezelői felülírás
+        realised_kind:
+          COMPUTED: Számított
+          DEFAULT: Alapértelmezett
+          EMPTY: Üres
+          INHERITED: Örökölt
+          LITERAL: Közvetlen érték
+        relation_channel:
+          alternate_binding: Alternatív kötés
+          formula_binding: Képletkötés
+          primary_binding: Elsődleges kötés
+  modelo_workspace_overview:
+    column:
+      field: Mező
+      value: Érték
+  passphrase:
+    cancel_button: Mégse
+    change_button: Jelszó módosítása
+    confirm_label: Új jelszó megerősítése
+    current_label: Jelenlegi jelszó
+    intro: Ez lecseréli a profilodat védő jelszót. Az általa védett adatok nem kerülnek
+      újratitkosításra, csak újracsomagolásra.
+    new_hint: Legalább 12 karakter, betűk, számok vagy szimbólumok keverékével.
+    new_label: Új jelszó
+    refusal:
+      change_failed: A jelszót nem sikerült módosítani.
+      confirmation_mismatch: A megerősítés nem egyezik az új jelszóval.
+      current_required: Add meg a jelenlegi jelszavadat.
+    section: Jelszó
+    title: Jelszó módosítása
+  progress:
+    current_answer: 'Jelenlegi válasz: {value}'
+    current_answer_secret: 'Jelenlegi válasz: (rejtett)'
+    failure_mode: 'Figyelem: {text}'
+    format_hint: 'Formátum: {hint}'
+    legal_ref: 'Jogalap: %{ref} - %{label}'
+    optional: Nem kötelező
+    page_header: '{position}. kérdés a(z) {total} közül - {section} szakasz'
+    required: Kötelező
+  registration:
+    confirm_label: Ismételd meg a jelszót
+    create_button: Profil létrehozása
+    intro: Válassz nevet és jelszót a biztonságos profil létrehozásához. Az adatait
+      később is megadhatod.
+    password_help: Jelszavas védelem és helyreállítás
+    password_hint: Legalább {minimum_length} karakter. Néhány hétköznapi szó egymás
+      után könnyebben megjegyezhető és nehezebben kitalálható, mint egy rövid, bonyolult
+      szó.
+    password_label: Jelszó
+    progress: 1 · Biztonságos profil létrehozása    2 · Adatok beállítása
+    recovery:
+      cancel_button: Mégse
+      confirm_button: Felírtam
+      offer_consequence: 'Nélküle az elfelejtett jelszó azt jelenti, hogy az adatok
+        nem állíthatók vissza. Később is beállíthatod: cadrumo-runtime config profile
+        recovery enable'
+      offer_explanation: A helyreállítási kóddal új jelszót állíthatsz be, ha elfelejtenéd.
+        Egyszer jelenik meg; írd fel, és ettől a géptől külön őrizd.
+      offer_heading: Beállítasz helyreállítási kódot?
+      progress: Helyreállítás beállítása folyamatban
+      setup_button: Helyreállítás beállítása
+      skip_button: Kihagyás most
+    refusal:
+      confirmation_mismatch: A két jelszó nem egyezik.
+      profile_already_exists: Már létezik '%{profile}' nevű profil. Válassz másik
+        nevet, vagy lépj ki erről a képernyőről, és jelentkezz be abba a profilba.
+      username_required: Adj meg egy nevet ennek a profilnak.
+    requirements: A név és mindkét jelszómező kötelező. A nyelvet később is megváltoztathatod.
+    section: Név és jelszó
+    strength:
+      fair: Megfelelő.
+      strong: Erős.
+      weak: Elfogadva, de gyenge. A hosszabbítás többet segít, mint a szimbólumok
+        hozzáadása.
+    title: Profil létrehozása
+    username_hint: Így jelenik meg a profil a listákban. Később megváltoztathatod.
+    username_label: Profil neve
+    why_password: Az adóadataid ezen a gépen maradnak, és soha nem kerülnek elküldésre
+      sehová. A jelszó titkosítja őket a lemezen, így nélküled nem olvashatók. Ha
+      elveszíted, az adatok visszaállíthatatlanok, hacsak nem állítasz be helyreállítási
+      kódot, amit a következő lépésben ajánlunk fel.
+  review:
+    action_edit: Válasz szerkesztése
+    action_prompt: Mit szeretnél tenni?
+    action_restart: Újrakezdés
+    action_save_exit: Mentés és kilépés
+    action_submit: Beküldés
+    edit_not_editable: A(z) {page_key} kérdés már nem szerkeszthető.
+    edit_unknown: Nincs {number} sorszámú kérdés.
+    edit_which: 'Melyik sorszámú kérdést szeretnéd szerkeszteni? '
+    header: Áttekintés - {answered} megválaszolt kérdés.
+    page_deferred: A %{page_key} kérdés elhalasztva - döntés szükséges a beküldés
+      előtt.
+    page_invalid: A %{page_key} kérdés válasza érvénytelen.
+    page_stale: Nézd át a %{page_key} kérdést - egy korábbi válasz megváltozott.
+    required_unanswered: A kötelező %{page_key} kérdés megválaszolatlan.
+    reset_stale_confirm: A(z) {page_key} kérdést már nem tesszük fel. Törlöd a hozzá
+      tárolt választ?
+    reset_stale_done: A(z) {page_key} tárolt válasza törölve.
+    restart_confirm: Újrakezded, és eldobod az összes választ?
+    row: '{number}. {page_key} - állapot: {status}'
+    save_unavailable: A mentés és kilépés nem érhető el {mode} módban; fejezd be a
+      folyamatot egy ülésben.
+  status:
+    profiles:
+      status:
+        complete: kész
+        incomplete: hiányos

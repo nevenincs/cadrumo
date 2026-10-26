@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<response>
+  <status>
+    <code>200</code>
+    <text>ok</text>
+  </status>
+  <data>
+    <bloque id="a90" tipo="precepto" titulo="Artículo 90">
+      <version id_norma="BOE-A-1992-28740" fecha_publicacion="19921229" fecha_vigencia="19930101">
+        <p class="articulo">Artículo 90. Tipo impositivo general.</p>
+        <p class="parrafo">Uno. El impuesto se exigirá al tipo del 15 por 100, salvo lo dispuesto en el artículo siguiente.</p>
+        <p class="parrafo">Dos. El tipo impositivo aplicable a cada operación será el vigente en el momento del devengo.</p>
+        <p class="parrafo">Tres. En las reimportaciones de bienes que hayan sido exportados temporalmente fuera de la Comunidad y que se reimporten después de haber sido objeto en un país tercero de trabajos de reparación, transformación, adaptación, ejecuciones de obra o incorporación de otros bienes, se aplicará el tipo impositivo que hubiera correspondido a las operaciones indicadas si se hubiesen realizado en el territorio de aplicación del impuesto.</p>
+      </version>
+      <version id_norma="BOE-A-1994-28967" fecha_publicacion="19941231" fecha_vigencia="19950120">
+        <p class="articulo">Artículo 90. Tipo impositivo general.</p>
+        <p class="parrafo">Uno. El Impuesto se exigirá al tipo del 16 por 100, salvo lo dispuesto en el artículo siguiente.</p>
+        <p class="parrafo">Dos. El tipo impositivo aplicable a cada operación será el vigente en el momento del devengo.</p>
+        <p class="parrafo">Tres. En las reimportaciones de bienes que hayan sido exportados temporalmente fuera de la Comunidad y que se reimporten después de haber sido objeto en un país tercero de trabajos de reparación, transformación, adaptación, ejecuciones de obra o incorporación de otros bienes, se aplicará el tipo impositivo que hubiera correspondido a las operaciones indicadas si se hubiesen realizado en el territorio de aplicación del impuesto.</p>
+        <blockquote>
+          <p class="nota_pie">Se modifica el apartado 1, con efectos desde el 1 de enero de 1995, por el art. 78.1 de la Ley 41/1994, de 30 de diciembre. <a class="refPost">Ref. BOE-A-1994-28967</a></p>
+        </blockquote>
+      </version>
+      <version id_norma="BOE-A-1995-27964" fecha_publicacion="19951230" fecha_vigencia="19960101">
+        <p class="articulo">Artículo 90. Tipo impositivo general.</p>
+        <p class="parrafo">Uno. El Impuesto se exigirá al tipo del 16 por 100, salvo lo dispuesto en el artículo siguiente.</p>
+        <p class="parrafo">Dos. El tipo impositivo aplicable a cada operación será el vigente en el momento del devengo.</p>
+        <p class="parrafo">Tres. En las reimportaciones de bienes que hayan sido exportados temporalmente fuera de la Comunidad y que se efectúen después de haber sido objeto en un país tercero de trabajos de reparación, transformación, adaptación, ejecuciones de obra o incorporación de otros bienes, se aplicará el tipo impositivo que hubiera correspondido a las operaciones indicadas si se hubiesen realizado en el territorio de aplicación del Impuesto.</p>
+        <p class="parrafo">En las operaciones asimiladas a las importaciones de bienes que hayan sido exclusivamente objeto de servicios exentos mientras han permanecido vinculados a los regímenes o situaciones a que se refieren los artículos 23 y 24 de esta Ley, se aplicará el tipo impositivo que hubiera correspondido a los citados servicios si no hubiesen estado exentos.</p>
+        <blockquote>
+          <p class="nota_pie">Se modifica el apartado 3 por el art. 28.13 del Real Decreto-Ley 12/1995, de 28 de diciembre. <a class="refPost">Ref. BOE-A-1995-27964</a></p>
+          <p class="nota_pie">Se modifica el apartado 1, con efectos desde el 1 de enero de 1995, por el art. 78.1 de la Ley 41/1994, de 30 de diciembre. <a class="refPost">Ref. BOE-A-1994-28967</a></p>
+        </blockquote>
+      </version>
+      <version id_norma="BOE-A-2009-20765" fecha_publicacion="20091224" fecha_vigencia="20100701">
+        <p class="articulo">Artículo 90. Tipo impositivo general.</p>
+        <p class="parrafo">Uno. El Impuesto se exigirá al tipo del 18 por ciento, salvo lo dispuesto en el artículo siguiente.</p>
+        <p class="parrafo">Dos. El tipo impositivo aplicable a cada operación será el vigente en el momento del devengo.</p>
+        <p class="parrafo">Tres. En las reimportaciones de bienes que hayan sido exportados temporalmente fuera de la Comunidad y que se efectúen después de haber sido objeto en un país tercero de trabajos de reparación, transformación, adaptación, ejecuciones de obra o incorporación de otros bienes, se aplicará el tipo impositivo que hubiera correspondido a las operaciones indicadas si se hubiesen realizado en el territorio de aplicación del Impuesto.</p>
+        <p class="parrafo">En las operaciones asimiladas a las importaciones de bienes que hayan sido exclusivamente objeto de servicios exentos mientras han permanecido vinculados a los regímenes o situaciones a que se refieren los artículos 23 y 24 de esta Ley, se aplicará el tipo impositivo que hubiera correspondido a los citados servicios si no hubiesen estado exentos.</p>
+        <blockquote>
+          <p class="nota_pie">Se modifica el apartado 1 por el art. 79 .1 de la Ley 26/2009, de 23 de diciembre. <a class="refPost">Ref. BOE-A-2009-20765</a>.</p>
+          <p class="nota_pie">Se modifica el apartado 3 por el art. 28.13 del Real Decreto-Ley 12/1995, de 28 de diciembre. <a class="refPost">Ref. BOE-A-1995-27964</a></p>
+          <p class="nota_pie">Se modifica el apartado 1, con efectos desde el 1 de enero de 1995, por el art. 78.1 de la Ley 41/1994, de 30 de diciembre. <a class="refPost">Ref. BOE-A-1994-28967</a></p>
+        </blockquote>
+      </version>
+      <version id_norma="BOE-A-2012-9364" fecha_publicacion="20120714" fecha_vigencia="20120715">
+        <p class="articulo">Artículo 90. Tipo impositivo general.</p>
+        <p class="parrafo">Uno. El Impuesto se exigirá al tipo del 21 por ciento, salvo lo dispuesto en el artículo siguiente.</p>
+        <blockquote class="noDesde20120901">
+          <p class="parrafo"><strong>Atención: </strong>esta última actualización del apartado 1 surte efectos desde el 1 de septiembre de 2012.</p>
+        </blockquote>
+        <p class="parrafo">Dos. El tipo impositivo aplicable a cada operación será el vigente en el momento del devengo.</p>
+        <p class="parrafo">Tres. En las reimportaciones de bienes que hayan sido exportados temporalmente fuera de la Comunidad y que se efectúen después de haber sido objeto en un país tercero de trabajos de reparación, transformación, adaptación, ejecuciones de obra o incorporación de otros bienes, se aplicará el tipo impositivo que hubiera correspondido a las operaciones indicadas si se hubiesen realizado en el territorio de aplicación del Impuesto.</p>
+        <p class="parrafo">En las operaciones asimiladas a las importaciones de bienes que hayan sido exclusivamente objeto de servicios exentos mientras han permanecido vinculados a los regímenes o situaciones a que se refieren los artículos 23 y 24 de esta Ley, se aplicará el tipo impositivo que hubiera correspondido a los citados servicios si no hubiesen estado exentos.</p>
+        <blockquote>
+          <p class="nota_pie">Se modifica el apartado 1, con efectos desde el 1 de septiembre de 2012, por el art. 23.2 del Real Decreto-ley 20/2012, de 13 de julio. <a class="refPost">Ref. BOE-A-2012-9364</a>.</p>
+          <p class="nota_pie">Se modifica el apartado 1 por el art. 79 .1 de la Ley 26/2009, de 23 de diciembre. <a class="refPost">Ref. BOE-A-2009-20765</a>.</p>
+          <p class="nota_pie">Se modifica el apartado 3 por el art. 28.13 del Real Decreto-Ley 12/1995, de 28 de diciembre. <a class="refPost">Ref. BOE-A-1995-27964</a></p>
+          <p class="nota_pie">Se modifica el apartado 1, con efectos desde el 1 de enero de 1995, por el art. 78.1 de la Ley 41/1994, de 30 de diciembre. <a class="refPost">Ref. BOE-A-1994-28967</a></p>
+        </blockquote>
+      </version>
+    </bloque>
+  </data>
+</response>

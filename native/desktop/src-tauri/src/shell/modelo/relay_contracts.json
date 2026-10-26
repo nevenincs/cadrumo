@@ -1,0 +1,1022 @@
+{
+  "operations": {
+    "modelo.036.query": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.036.read": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.036.record": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": true,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.aggregate": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": true,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.aggregate.capture_received_invoice_retencion": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": true,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.audit.export": {
+      "bucket_field": false,
+      "file_fields": {
+        "output": "one"
+      },
+      "financial": false,
+      "may_write": true,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.audit.query": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.audit.read": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.bindings.list": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.bindings.resolve": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.bindings.resolve.typed": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.compare": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": true,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.declarations.list": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.edit.apply": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": true,
+      "may_write": true,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "payload_field",
+        "path": [
+          "work_unit_id"
+        ]
+      }
+    },
+    "modelo.edit.apply_prerequisite": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "payload_field",
+        "path": [
+          "work_unit_id"
+        ]
+      }
+    },
+    "modelo.edit.preflight": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": true,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "payload_field",
+        "path": [
+          "work_unit_id"
+        ]
+      }
+    },
+    "modelo.edit.renew": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "payload_field",
+        "path": [
+          "baseline",
+          "work_unit_id"
+        ]
+      }
+    },
+    "modelo.export": {
+      "bucket_field": false,
+      "file_fields": {
+        "output_path": "one"
+      },
+      "financial": false,
+      "may_write": true,
+      "profile_field": false,
+      "review": false,
+      "subject": {
+        "kind": "stored_work_unit",
+        "path": [
+          "calculation_revision_id"
+        ]
+      }
+    },
+    "modelo.filing_record.import": {
+      "bucket_field": false,
+      "file_fields": {
+        "source_path": "optional"
+      },
+      "financial": false,
+      "may_write": true,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.filing_record.list": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.filing_record.view": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.history": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.history.timeline": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.iva-wallet.balance": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.iva-wallet.correct": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": true,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.iva-wallet.override": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": true,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.iva-wallet.seed": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": true,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.m145.create": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": true,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.m145.export": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": true,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.m145.mark_delivered_to_payer": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": true,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.m145.mark_locally_completed": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": true,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.m145.validate": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.m360_solicitud": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": true,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.observation.local": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": true,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.project": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": true,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.quickfile": {
+      "bucket_field": true,
+      "file_fields": {
+        "output_path": "one"
+      },
+      "financial": false,
+      "may_write": true,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.readiness": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.readiness.summary": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.reconcile.export-xlsx": {
+      "bucket_field": false,
+      "file_fields": {
+        "output_path": "one"
+      },
+      "financial": false,
+      "may_write": true,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.reconcile.import": {
+      "bucket_field": true,
+      "file_fields": {
+        "source_path": "one"
+      },
+      "financial": false,
+      "may_write": true,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.reconcile.list": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.reconcile.pull": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": true,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.requires": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.review_package.build": {
+      "bucket_field": false,
+      "file_fields": {
+        "output_path": "one"
+      },
+      "financial": false,
+      "may_write": true,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "stored_work_unit",
+        "path": [
+          "calculation_revision_id"
+        ]
+      }
+    },
+    "modelo.review_package.counter_sign": {
+      "bucket_field": false,
+      "file_fields": {
+        "output": "one",
+        "package": "one",
+        "signature": "one"
+      },
+      "financial": false,
+      "may_write": true,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.review_package.decrypt": {
+      "bucket_field": false,
+      "file_fields": {
+        "envelope_path": "one",
+        "output": "one"
+      },
+      "financial": false,
+      "may_write": true,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.review_package.encrypt_feedback": {
+      "bucket_field": false,
+      "file_fields": {
+        "output": "one",
+        "receipt": "optional"
+      },
+      "financial": false,
+      "may_write": true,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.review_package.encrypt_for_recipient": {
+      "bucket_field": false,
+      "file_fields": {
+        "output": "one",
+        "package": "one"
+      },
+      "financial": false,
+      "may_write": true,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.review_package.import_feedback": {
+      "bucket_field": false,
+      "file_fields": {
+        "envelope_path": "one",
+        "package": "one"
+      },
+      "financial": false,
+      "may_write": true,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.review_package.sign": {
+      "bucket_field": false,
+      "file_fields": {
+        "output": "one",
+        "package": "one"
+      },
+      "financial": false,
+      "may_write": true,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.spreadsheet.export": {
+      "bucket_field": false,
+      "file_fields": {
+        "output_path": "one"
+      },
+      "financial": false,
+      "may_write": true,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.verification_report.list": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.verification_report.view": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.work.amend": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": true,
+      "profile_field": false,
+      "review": false,
+      "subject": {
+        "kind": "stored_work_unit",
+        "path": [
+          "baseline",
+          "from_filing_record_id"
+        ]
+      }
+    },
+    "modelo.work.amendment_context": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.work.calculate": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": true,
+      "profile_field": false,
+      "review": false,
+      "subject": {
+        "kind": "payload_field",
+        "path": [
+          "work_unit_id"
+        ]
+      }
+    },
+    "modelo.work.casilla_help": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "payload_field",
+        "path": [
+          "work_unit_id"
+        ]
+      }
+    },
+    "modelo.work.compare_taxation": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.work.create": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": true,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.work.dependencies": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.work.discard": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": true,
+      "profile_field": false,
+      "review": false,
+      "subject": {
+        "kind": "payload_field",
+        "path": [
+          "baseline",
+          "work_unit_id"
+        ]
+      }
+    },
+    "modelo.work.file": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": true,
+      "profile_field": false,
+      "review": false,
+      "subject": {
+        "kind": "stored_work_unit",
+        "path": [
+          "approval",
+          "calculation_revision_id"
+        ]
+      }
+    },
+    "modelo.work.filing_record": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.work.form": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "payload_field",
+        "path": [
+          "work_unit_id"
+        ]
+      }
+    },
+    "modelo.work.history": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "payload_field",
+        "path": [
+          "work_unit_id"
+        ]
+      }
+    },
+    "modelo.work.list": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.work.m303_attestation": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": true,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "payload_field_or_profile",
+        "path": [
+          "work_unit_id"
+        ]
+      }
+    },
+    "modelo.work.metadata": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.work.preview_maritime_exemption": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.work.rename": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": true,
+      "profile_field": false,
+      "review": false,
+      "subject": {
+        "kind": "payload_field",
+        "path": [
+          "work_unit_id"
+        ]
+      }
+    },
+    "modelo.work.report_verify": {
+      "bucket_field": false,
+      "file_fields": {
+        "source_path": "one"
+      },
+      "financial": false,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.work.review": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "payload_field",
+        "path": [
+          "work_unit_id"
+        ]
+      }
+    },
+    "modelo.work.revision": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.work.revision_snapshot": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "stored_work_unit",
+        "path": [
+          "calculation_revision_id"
+        ]
+      }
+    },
+    "modelo.work.revisions": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "modelo.work.verify": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": true,
+      "profile_field": false,
+      "review": false,
+      "subject": {
+        "kind": "stored_work_unit",
+        "path": [
+          "calculation_revision_id"
+        ]
+      }
+    },
+    "modelo.work.wizard_attempt": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": true,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "payload_field",
+        "path": [
+          "calculation",
+          "work_unit_id"
+        ]
+      }
+    },
+    "modelo.work.wizard_context": {
+      "bucket_field": false,
+      "file_fields": {},
+      "financial": false,
+      "may_write": false,
+      "profile_field": true,
+      "review": false,
+      "subject": {
+        "kind": "payload_field",
+        "path": [
+          "work_unit_id"
+        ]
+      }
+    }
+  }
+}

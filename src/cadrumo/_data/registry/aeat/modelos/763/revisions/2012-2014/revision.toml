@@ -1,0 +1,52 @@
+[revisions."2012-2014"]
+casilla_source_refs = ["enrolled-modelo-763-procedure"]
+authority_grade = "applicability"
+# ONE EDITION OVER THE DESIGN'S OWN WINDOW. This revision replaces the former
+# 2012-2t-3t and 2013-2014 pair, which were not two editions: they declared the
+# same authority_grade, the same orden_aplicabilidad, byte-identical legal_refs,
+# source_refs and casilla_source_refs, and byte-identical casillas. Their only
+# substantive differences were the validity window itself and the per-quarter
+# deadline windows each happened to carry. Both rested on aeat-dr-763-2012,
+# whose declared window is 2012-04-01 to 2014-12-31 continuous, so the split at
+# 2012-09-30 had nothing behind it.
+#
+# THE SPLIT LEFT A REAL FILING PERIOD SERVED BY NOTHING. 2012-2t-3t closed
+# 2012-09-30 and 2013-2014 opened 2013-01-01, so the fourth trimestre of 2012 --
+# October to December, presentable during January 2013 -- was authored by
+# neither edition. That was not a gap in the source. Orden EHA/1881/2011 art. 1
+# approved the modelo in force from 2011-07-07, and art. 4 fixes the plazo as la
+# presentacion sera trimestral y se efectuara durante el mes siguiente a la
+# finalizacion de cada trimestre natural del ano -- unconditional, every
+# trimestre, no terminal date. The bundled design's own Periodo de
+# autoliquidacion field admits the values 1T a 4T with no restriction. The
+# coordinate existed in law and was filable; only the edition boundary hid it.
+# Merging the pair closes it by construction rather than by extending a
+# misnamed edition, and the coverage disposition that named the debt is retired
+# in the same change.
+#
+# THE CORPUS FILENAME NAMES THE FIRST APPLICABLE TRIMESTRES, NOT AN EXCLUSION.
+# aeat-dr-763-2012 is bundled as "...ejercicios-2t-3t-2012-2013-y-2014.pdf",
+# which reads like AEAT excluding 4T 2012 and does not: the same artefact
+# declares one continuous applies_from/applies_to and prints a periodo field
+# accepting all four trimestres. This note exists so the filename does not
+# re-create the split.
+#
+# 2012 SERVES ONLY THREE TRIMESTRES, AND THE SELECTOR SAYS SO RATHER THAN
+# ROUNDING UP. The design opens 2012-04-01, so the first trimestre of 2012 is
+# not served and never was; period_overrides states that year's surface
+# explicitly instead of letting a flat tuple claim a 1T this edition cannot
+# file. 2013 and 2014 serve all four.
+id = "2012-2014"
+valid_from = 2012-04-01
+valid_to = 2014-12-31
+period_selector = { year_from = 2012, year_to = 2014, periods = ["1T", "2T", "3T", "4T"], period_overrides = [{ year = 2012, periods = ["2T", "3T", "4T"] }] }
+orden_aplicabilidad = ["orden-eha-1881-2011:art-1"]
+legal_refs = [
+    "orden-eha-1881-2011:art-1",
+    "orden-eha-1881-2011:art-4",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "enrolled-modelo-763-procedure",
+    "aeat-dr-763-2012",
+]

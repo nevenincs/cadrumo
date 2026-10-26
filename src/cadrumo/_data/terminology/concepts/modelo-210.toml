@@ -1,0 +1,56 @@
+# Terminology Handbook concept fragment.
+# Compiled by the strict loader in `dev.docs.terminology_handbook` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `dev.docs.terminology_handbook` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
+
+[concept]
+concept_id = "modelo-210"
+domain = "modelo"
+lifecycle = "approved"
+domain_refs = ["modelo:210"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-2", "trlirnr-rdleg-5-2004:art-10"]
+related = ["declaracion", "autoliquidacion", "nif"]
+created_at = 2026-06-10
+updated_at = 2026-07-22
+
+[language.es]
+short_description = "Autoliquidacion del IRNR sin establecimiento permanente."
+definition = "Autoliquidacion del Impuesto sobre la Renta de no Residentes para rentas obtenidas en Espana sin establecimiento permanente."
+
+[language.es.source]
+citation = "Texto refundido de la Ley del IRNR (RDLeg 5/2004)."
+authority = "boe"
+
+[[language.es.term]]
+label = "modelo 210"
+term_status = "preferred"
+
+[[language.es.term]]
+label = "impuesto de no residentes"
+term_status = "admitted"
+
+[language.en]
+short_description = "Non-resident income tax return (no permanent establishment)."
+definition = "Self-assessment of Non-Resident Income Tax for income obtained in Spain without a permanent establishment."
+
+[language.en.source]
+citation = "Texto refundido de la Ley del IRNR (RDLeg 5/2004)."
+authority = "boe"
+
+[language.ca]
+short_description = "Autoliquidació de l'IRNR sense establiment permanent."
+definition = "Autoliquidació de l'Impost sobre la Renda de no Residents per a rendes obtingudes a Espanya sense establiment permanent."
+
+[language.ca.source]
+citation = "Texto refundido de la Ley del IRNR (RDLeg 5/2004)."
+authority = "boe"
+
+[language.hu]
+short_description = "Külföldi illetőségűek jövedelemadó-bevallása telephely nélkül."
+definition = "A nem rezidensek jövedelemadójának (IRNR) önbevallása a Spanyolországban állandó telephely nélkül szerzett jövedelmekre."
+
+[language.hu.source]
+citation = "Az IRNR-törvény egységes szerkezetbe foglalt szövege (5/2004. törvényerejű rendelet)."
+authority = "boe"

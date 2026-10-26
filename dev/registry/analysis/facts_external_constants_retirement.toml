@@ -1,0 +1,33 @@
+schema_version = 2
+source_path = "src/cadrumo/core/external_constants.py"
+declaration_count = 0
+consumer_count = 0
+
+# Negative census for the legal values retired after authoritative fact enrollment.
+retired_statutory_symbols = [
+  "M347_THRESHOLD_EUR", "M347_CLAVE_C_THRESHOLD_EUR", "IVA_BIEN_ESCASO_VALOR_UMBRAL_EUR",
+  "MODELO_840_IAE_CIFRA_NEGOCIOS_EXEMPTION_THRESHOLD_EUR", "ART_7P_EXEMPTION_CAP_EUR",
+  "MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR", "WORK_INCOME_GENERAL_DECLARATION_LIMIT_EUR",
+  "WORK_INCOME_MULTIPLE_PAGADORES_REDUCED_LIMIT_EUR_BY_YEAR", "MODELO_202_ART_40_3_INCN_THRESHOLD_EUR",
+  "MODELO_100_ART_20_TRABAJO_REDUCCION_RNT_CEILING_EUR", "MODELO_100_ART_52_INDIVIDUAL_SUBLIMIT_EUR",
+  "DEFAULT_IVA_GENERAL_RATE_PCT", "REBECA_MARITIME_EXEMPTION_FRACTION", "DEDUCCION_MATERNIDAD_MENSUAL_EUR",
+  "DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR", "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_INCREMENTO_EUR",
+  "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_FIRST_FILING_YEAR", "DEDUCCION_MATERNIDAD_COTIZACIONES_CEILING_RETIRED_FILING_YEAR",
+  "MINIMO_DESCENDIENTE_MAX_AGE", "MINIMO_MENOR_TRES_MAX_AGE", "CUSTODIA_COMPARTIDA_PRORRATA_FACTOR",
+  "ART_81_1_ENTRY_WINDOW_YEARS", "NACIMIENTO_ADOPCION_APPLICABILITY_FOLLOWING_PERIODS", "DT12_RESCATE_REDUCCION_RATE",
+  "DT12_GENERAL_WINDOW_FOLLOWING_YEARS", "DT12_TRANSITIONAL_CONTINGENCIA_FIRST_YEAR", "DT12_TRANSITIONAL_CONTINGENCIA_LAST_YEAR",
+  "DT12_TRANSITIONAL_WINDOW_FOLLOWING_YEARS", "DT12_CLIFF_LAST_YEAR", "SAL_RESERVA_DOTACION_RATE",
+  "SAL_RESERVA_CAPITAL_MULTIPLE", "DEHU_RECHAZO_TACITO_DIAS_NATURALES", "COUNTERPART_MODELOS", "FOREIGN_ASSET_MODELOS",
+]
+
+# Model-routing classifications retired in S33. They were technical coverage
+# metadata, not legal facts: each consumer now asks its owning service.
+retired_routing_symbols = ["RETENCIONES_MODELOS", "IVA_REGIME_MODELOS"]
+
+[preservation_boundary]
+technical_configuration_source = "src/cadrumo/core/external_constants.py"
+technical_configuration_data = "src/cadrumo/core/external_constants.toml"
+technical_configuration_disposition = "exclude_from_facts_and_retain"
+technical_constants = ["DEFAULT_CURRENCY", "BINARY_MIME_TYPE", "JSON_MIME_TYPE", "CSV_MIME_TYPE", "JSONL_MIME_TYPE", "XLSX_MIME_TYPE", "GOOGLE_DRIVE_FOLDER_MIME_TYPE", "CLASSIFIED_BY_MANUAL", "CLASSIFIED_BY_AUTO", "PDF_MIME_TYPE", "PDF_EXTENSION", "XML_MIME_TYPE", "XLS_EXTENSION", "XLSX_EXTENSION", "XLSM_EXTENSION", "LATIN_1_ENCODING", "UTF_8_ENCODING", "CSV_ENCODING_FALLBACK_CHAIN", "PROVENANCE_SOURCE_MANUAL_CLI", "PROVENANCE_SOURCE_CENSO_ARTEFACT", "SANDBOX_LABEL_PREFIX", "OUTPUT_LANGUAGE_ENV_VAR", "DEFAULT_OUTPUT_LANGUAGE", "SUPPORTED_OUTPUT_LANGUAGES"]
+technical_types = ["_Frozen", "AeatDomainSection", "AeatSedePathSection", "AeatClaveMovilSurface", "AeatClavePermanenteSurface", "AeatPre303Surface", "AeatHelpPageSection", "AeatNotificationsQuery", "AeatOracleSection", "AeatLiveSafety", "AeatPortalPathSection", "AeatSection", "GoogleOAuthScopeSection", "GoogleServiceSection", "OnlineServicesSection", "DependencyHostsSection", "ExternalConstants", "OutputLanguage"]
+technical_functions = ["load_external_constants"]

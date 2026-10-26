@@ -1,0 +1,729 @@
+"""Fragment-directory behavior for the modelo loader."""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import pytest
+
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError
+
+from ..compiler.export_fragment_grammar import (
+    EXPORT_FRAGMENT_PROVENANCE_FILENAME,
+    GENERATED_EXPORT_DIRECTORY_NAME,
+    revision_section_for_directory,
+)
+from ..compiler.loader import load_modelo_directory
+from ..compiler.loader_grammar import REVISION_SECTION_FIELDS, revision_section_fragment_paths
+from ..conformance.loader_directory_mode_support import (
+    COMPLETENESS_CASILLA_0001 as _COMPLETENESS_CASILLA_0001,
+)
+from ..conformance.loader_directory_mode_support import (
+    COMPLETENESS_CASILLA_0002 as _COMPLETENESS_CASILLA_0002,
+)
+from ..conformance.loader_directory_mode_support import (
+    TOML_CASILLA_ID_KEY as _TOML_CASILLA_ID_KEY,
+)
+from ..conformance.loader_directory_mode_support import (
+    minimal_fragment_revision_layout as _minimal_fragment_revision_layout,
+)
+from ..conformance.loader_directory_mode_support import (
+    standard_manifest_text as _standard_manifest_text,
+)
+from ..conformance.loader_directory_mode_support import (
+    standard_revision_preamble_text as _standard_revision_preamble_text,
+)
+from ..conformance.loader_directory_mode_support import (
+    write_fragmented_modelo_from_text as _write_fragmented_modelo_from_text,
+)
+from ..conformance.loader_directory_mode_support import (
+    write_standard_manifest as _write_standard_manifest,
+)
+from ..conformance.loader_directory_mode_support import (
+    write_standard_revision_preamble as _write_standard_revision_preamble,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.mark.parametrize("slot_literal", ['"1"', "1.0", "true"])
+def test_registry_loader_refuses_projection_slot_coercion(tmp_path: Path, slot_literal: str) -> None:
+    baseline_text = (
+        _standard_manifest_text("Projection compiler proof")
+        + "\n"
+        + _standard_revision_preamble_text()
+        + f"""
+
+[[revisions."2025".export_layouts]]
+id = "modelo-999-layout"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[[revisions."2025".export_layouts.records]]
+id = "modelo-999-record"
+record_type = "1"
+order = 0
+encoding = "iso-8859-1"
+line_ending = "crlf"
+required = true
+
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-999-projection"
+offset = 1
+length = 3
+kind = "projection"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[revisions."2025".export_layouts.records.fields.projection_ref]
+projection_kind = "m303_prorrata_activity"
+slot = {slot_literal}
+field = "cnae"
+casilla_id = "500"
+""".lstrip()
+    )
+
+    with pytest.raises(RegistryLoadError, match="exact integer"):
+        load_modelo_directory(_write_fragmented_modelo_from_text(tmp_path / "999", baseline_text))
+
+
+def test_directory_mode_loads_fragmented_revision_layout(tmp_path: Path) -> None:
+    """A ``revisions/<id>/`` fragment tree compiles to the same object shape."""
+
+    baseline_text = (
+        _standard_manifest_text("Fragment test")
+        + "\n"
+        + _standard_revision_preamble_text()
+        + """
+
+[[revisions."2025".casillas]]
+id = "0001"
+number = "1"
+section = ["liquidacion"]
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "continuidad-base-2025"
+continuidad_id = "base"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "unchanged"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "continuidad-cuota-2025"
+continuidad_id = "cuota"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[[revisions."2025".export_layouts]]
+id = "modelo-999-layout"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[[revisions."2025".export_layouts.records]]
+id = "modelo-999-record"
+record_type = "1"
+order = 0
+encoding = "iso-8859-1"
+line_ending = "crlf"
+required = true
+""".lstrip()
+    )
+    expected = load_modelo_directory(
+        _write_fragmented_modelo_from_text(tmp_path / "baseline-999", baseline_text),
+    )
+
+    target = tmp_path / "999"
+    (target / "revisions" / "2025" / "casillas").mkdir(parents=True)
+    (target / "revisions" / "2025" / "casilla_continuidad_evolutions").mkdir()
+    (target / "revisions" / "2025" / "export_layouts").mkdir()
+    _write_standard_manifest(target, "Fragment test")
+    _write_standard_revision_preamble(target / "revisions" / "2025" / "revision.toml")
+    (target / "revisions" / "2025" / "casillas" / "liquidacion.toml").write_text(
+        """
+[[revisions."2025".casillas]]
+id = "0001"
+number = "1"
+section = ["liquidacion"]
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (target / "revisions" / "2025" / "casilla_continuidad_evolutions" / "base.toml").write_text(
+        """
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "continuidad-base-2025"
+continuidad_id = "base"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "unchanged"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (target / "revisions" / "2025" / "casilla_continuidad_evolutions" / "cuota.toml").write_text(
+        """
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "continuidad-cuota-2025"
+continuidad_id = "cuota"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (target / "revisions" / "2025" / "export_layouts" / "0001-manifest.toml").write_text(
+        """
+[[revisions."2025".export_layouts]]
+id = "modelo-999-layout"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (target / "revisions" / "2025" / "export_layouts" / "0002-record-001.toml").write_text(
+        """
+[[revisions."2025".export_layouts]]
+id = "modelo-999-layout"
+
+[[revisions."2025".export_layouts.records]]
+id = "modelo-999-record"
+record_type = "1"
+order = 0
+encoding = "iso-8859-1"
+line_ending = "crlf"
+required = true
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+    actual = load_modelo_directory(target)
+    assert actual == expected
+
+
+def test_directory_mode_merges_completeness_manifest_casilla_fragments(tmp_path: Path) -> None:
+    """Large calculation-completeness manifests can split their casilla list."""
+
+    baseline_text = (
+        _standard_manifest_text("Fragment test")
+        + "\n"
+        + _standard_revision_preamble_text()
+        + """
+
+[revisions."2025".completeness_manifest]
+source_ref = "aeat-manual"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[[revisions."2025".completeness_manifest.casillas]]
+"""
+        + f'{_TOML_CASILLA_ID_KEY} = "{_COMPLETENESS_CASILLA_0001}"\n'
+        + """
+number = "0001"
+
+[[revisions."2025".completeness_manifest.casillas]]
+"""
+        + f'{_TOML_CASILLA_ID_KEY} = "{_COMPLETENESS_CASILLA_0002}"\n'
+        + """
+number = "0002"
+"""
+    ).lstrip()
+    expected = load_modelo_directory(
+        _write_fragmented_modelo_from_text(tmp_path / "baseline-999", baseline_text),
+    )
+
+    target = tmp_path / "999"
+    (target / "revisions" / "2025" / "completeness_manifest").mkdir(parents=True)
+    _write_standard_manifest(target, "Fragment test")
+    _write_standard_revision_preamble(target / "revisions" / "2025" / "revision.toml")
+    (target / "revisions" / "2025" / "completeness_manifest" / "0001-manifest.toml").write_text(
+        """
+[revisions."2025".completeness_manifest]
+source_ref = "aeat-manual"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (target / "revisions" / "2025" / "completeness_manifest" / "0002-casillas-0001.toml").write_text(
+        (
+            """
+[[revisions."2025".completeness_manifest.casillas]]
+"""
+            + f'{_TOML_CASILLA_ID_KEY} = "{_COMPLETENESS_CASILLA_0001}"\n'
+            + """
+number = "0001"
+"""
+        ).lstrip(),
+        encoding="utf-8",
+    )
+    (target / "revisions" / "2025" / "completeness_manifest" / "0003-casillas-0002.toml").write_text(
+        (
+            """
+[[revisions."2025".completeness_manifest.casillas]]
+"""
+            + f'{_TOML_CASILLA_ID_KEY} = "{_COMPLETENESS_CASILLA_0002}"\n'
+            + """
+number = "0002"
+"""
+        ).lstrip(),
+        encoding="utf-8",
+    )
+
+    actual = load_modelo_directory(target)
+    assert actual == expected
+
+
+def test_directory_mode_merges_export_record_field_fragments_by_record_id(tmp_path: Path) -> None:
+    """Large fixed-width records can be split across multiple field fragments."""
+
+    baseline_text = (
+        _standard_manifest_text("Fragment test")
+        + "\n"
+        + _standard_revision_preamble_text()
+        + """
+
+[[revisions."2025".export_layouts]]
+id = "modelo-999-layout"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[[revisions."2025".export_layouts.records]]
+id = "modelo-999-record"
+record_type = "1"
+order = 0
+encoding = "iso-8859-1"
+line_ending = "crlf"
+required = true
+
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-999-field-a"
+offset = 1
+length = 1
+kind = "literal"
+literal = "A"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-999-field-b"
+offset = 2
+length = 1
+kind = "literal"
+literal = "B"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip()
+    )
+    expected = load_modelo_directory(
+        _write_fragmented_modelo_from_text(tmp_path / "baseline-999", baseline_text),
+    )
+
+    target = tmp_path / "999"
+    (target / "revisions" / "2025" / "export_layouts").mkdir(parents=True)
+    _write_standard_manifest(target, "Fragment test")
+    _write_standard_revision_preamble(target / "revisions" / "2025" / "revision.toml")
+    (target / "revisions" / "2025" / "export_layouts" / "0001-record-a.toml").write_text(
+        """
+[[revisions."2025".export_layouts]]
+id = "modelo-999-layout"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[[revisions."2025".export_layouts.records]]
+id = "modelo-999-record"
+record_type = "1"
+order = 0
+encoding = "iso-8859-1"
+line_ending = "crlf"
+required = true
+
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-999-field-a"
+offset = 1
+length = 1
+kind = "literal"
+literal = "A"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (target / "revisions" / "2025" / "export_layouts" / "0002-record-b.toml").write_text(
+        """
+[[revisions."2025".export_layouts]]
+id = "modelo-999-layout"
+
+[[revisions."2025".export_layouts.records]]
+id = "modelo-999-record"
+
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-999-field-b"
+offset = 2
+length = 1
+kind = "literal"
+literal = "B"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+    actual = load_modelo_directory(target)
+    assert actual == expected
+
+
+def test_directory_mode_merges_construct_member_fragments_by_construct_id(tmp_path: Path) -> None:
+    """Large construct membership lists can be split without redeclaring the construct."""
+
+    baseline_text = (
+        _standard_manifest_text("Fragment test")
+        + "\n"
+        + _standard_revision_preamble_text()
+        + """
+
+[[revisions."2025".constructs]]
+id = "modelo-999-workflow"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+casilla_ids = ["0001"]
+formulas = ["formula-1"]
+""".lstrip()
+    )
+    expected = load_modelo_directory(
+        _write_fragmented_modelo_from_text(tmp_path / "baseline-999", baseline_text),
+    )
+
+    target = tmp_path / "999"
+    (target / "revisions" / "2025" / "constructs").mkdir(parents=True)
+    _write_standard_manifest(target, "Fragment test")
+    _write_standard_revision_preamble(target / "revisions" / "2025" / "revision.toml")
+    (target / "revisions" / "2025" / "constructs" / "0001-casillas.toml").write_text(
+        """
+[[revisions."2025".constructs]]
+id = "modelo-999-workflow"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+casilla_ids = ["0001"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (target / "revisions" / "2025" / "constructs" / "0002-formulas.toml").write_text(
+        """
+[[revisions."2025".constructs]]
+id = "modelo-999-workflow"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+formulas = ["formula-1"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+    actual = load_modelo_directory(target)
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    ("fragment_dir", "fragment_files", "error_match"),
+    (
+        pytest.param(
+            "export_layouts",
+            (
+                (
+                    "0001-record-a.toml",
+                    """
+[[revisions."2025".export_layouts]]
+id = "layout"
+
+[[revisions."2025".export_layouts.records]]
+id = "record"
+record_type = "1"
+""".lstrip(),
+                ),
+                (
+                    "0002-record-b.toml",
+                    """
+[[revisions."2025".export_layouts]]
+id = "layout"
+
+[[revisions."2025".export_layouts.records]]
+id = "record"
+record_type = "2"
+""".lstrip(),
+                ),
+            ),
+            "field 'record_type' conflicts",
+            id="export-record-metadata",
+        ),
+        pytest.param(
+            "constructs",
+            (
+                (
+                    "0001-one.toml",
+                    """
+[[revisions."2025".constructs]]
+id = "workflow"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+casilla_ids = ["0001"]
+""".lstrip(),
+                ),
+                (
+                    "0002-two.toml",
+                    """
+[[revisions."2025".constructs]]
+id = "workflow"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["other-source"]
+formulas = ["formula-1"]
+""".lstrip(),
+                ),
+            ),
+            "field 'source_refs' conflicts",
+            id="construct-metadata",
+        ),
+    ),
+)
+def test_directory_mode_rejects_fragment_scalar_conflicts(
+    tmp_path: Path,
+    fragment_dir: str,
+    fragment_files: tuple[tuple[str, str], ...],
+    error_match: str,
+) -> None:
+    """Same-id fragments must not silently override scalar metadata."""
+
+    target = tmp_path / "999"
+    revision_dir = _minimal_fragment_revision_layout(target, fragment_dirs=(fragment_dir,))
+    for filename, fragment_text in fragment_files:
+        (revision_dir / fragment_dir / filename).write_text(fragment_text, encoding="utf-8")
+
+    with pytest.raises(RegistryLoadError, match=error_match):
+        load_modelo_directory(target)
+
+
+def test_directory_mode_rejects_duplicate_export_field_ids_after_record_merge(tmp_path: Path) -> None:
+    """Same-id record fragments must not create ambiguous nested field ids."""
+
+    target = tmp_path / "999"
+    export_dir = _minimal_fragment_revision_layout(target, fragment_dirs=("export_layouts",)) / "export_layouts"
+    duplicate_field_fragment = """
+[[revisions."2025".export_layouts]]
+id = "modelo-999-layout"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[[revisions."2025".export_layouts.records]]
+id = "modelo-999-record"
+record_type = "1"
+order = 0
+encoding = "iso-8859-1"
+line_ending = "none"
+required = true
+
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-999-field"
+offset = 1
+length = 1
+kind = "literal"
+literal = "A"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip()
+    (export_dir / "0001-record-a.toml").write_text(
+        duplicate_field_fragment,
+        encoding="utf-8",
+    )
+    (export_dir / "0002-record-b.toml").write_text(
+        duplicate_field_fragment,
+        encoding="utf-8",
+    )
+
+    with pytest.raises(RegistryLoadError, match="appends duplicate ids"):
+        load_modelo_directory(target)
+
+
+def test_a_section_holding_only_a_nested_fragment_is_refused_as_empty(tmp_path: Path) -> None:
+    """ "Is this section populated" is answered by the files it actually contributes.
+
+    The emptiness refusal and the fragment collection are one listing in
+    ``_revision_section_fragment_paths``, so a section cannot be called
+    "populated" by one and read as empty by the other. This exercises the
+    collector directly, bypassing ``_validate_section_fragment_names``'s
+    categorical refusal of ANY nested section subdirectory in
+    ``loader_cache.py`` (which makes this scenario unreachable through the
+    full ``load_modelo_directory`` pipeline), to prove the one-level reading
+    holds standalone: a section directory holding ONLY a nested fragment
+    contributes nothing and is refused, rather than passing as populated on
+    a file the merge would never read.
+    """
+    section_dir = tmp_path / "casillas"
+    section_dir.mkdir()
+    nested = section_dir / "nested"
+    nested.mkdir()
+    (nested / "extra.toml").write_text('[[revisions."2025".casillas]]\nid = "0001"\n', encoding="utf-8")
+
+    with pytest.raises(RegistryLoadError, match="contains no TOML fragments"):
+        revision_section_fragment_paths((section_dir,))
+
+
+def test_directory_mode_rejects_fragment_revision_id_mismatch(tmp_path: Path) -> None:
+    """Fragments under ``revisions/<id>/`` must declare the same revision id."""
+
+    target = tmp_path / "999"
+    _minimal_fragment_revision_layout(
+        target,
+        revision_text='[revisions."2024"]\nvalid_from = 2024-01-01\n',
+    )
+
+    with pytest.raises(RegistryLoadError, match="expected '2025'"):
+        load_modelo_directory(target)
+
+
+def test_directory_mode_rejects_fragment_scalar_redeclaration(tmp_path: Path) -> None:
+    """A fragmented revision has one owner for each scalar revision field."""
+
+    target = tmp_path / "999"
+    revision_dir = _minimal_fragment_revision_layout(
+        target,
+        revision_text='[revisions."2025"]\nvalid_from = 2025-01-01\n',
+    )
+    (revision_dir / "extra.toml").write_text(
+        '[revisions."2025"]\nvalid_from = 2025-02-01\n',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(RegistryLoadError, match="must live in its owned section subdirectory"):
+        load_modelo_directory(target)
+
+
+def _bundled_revision_directories() -> tuple[Path, ...]:
+    """Every authored revision directory in the bundled registry source tree."""
+    modelos = bundled_path("registry", "aeat", "modelos")
+    return tuple(
+        revision_dir
+        for modelo_dir in sorted(modelos.iterdir())
+        if modelo_dir.is_dir()
+        for revision_dir in sorted((modelo_dir / "revisions").iterdir())
+        if revision_dir.is_dir()
+    )
+
+
+def _section_directories(revision_dir: Path) -> tuple[Path, ...]:
+    return tuple(child for child in sorted(revision_dir.iterdir()) if child.is_dir() and child.name != "locales")
+
+
+def test_only_the_export_tree_is_spelled_differently_from_its_section() -> None:
+    """``revision_section_for_directory`` is identity except for the one declared alias.
+
+    Read against the live section fields, so a second alias -- or a section
+    renamed without its directory -- shows up here rather than as fragments
+    merging into a section nobody meant.
+    """
+    aliased = {
+        field: revision_section_for_directory(field)
+        for field in REVISION_SECTION_FIELDS
+        if revision_section_for_directory(field) != field
+    }
+
+    assert aliased == {}, f"section field(s) {sorted(aliased)!r} do not resolve to themselves"
+    assert revision_section_for_directory(GENERATED_EXPORT_DIRECTORY_NAME) == "export_layouts"
+    assert "export_layouts" in REVISION_SECTION_FIELDS
+
+
+def test_every_authored_section_directory_names_a_real_section() -> None:
+    """A directory the grammar does not recognise would merge under its own name and fail late.
+
+    The loader walks every subdirectory of a revision except ``locales``, so a
+    typo'd or stray directory becomes a section the schema has never heard of.
+    """
+    unrecognised = sorted(
+        {
+            f"{section_dir.parent.parent.parent.name}/{section_dir.parent.name}/{section_dir.name}"
+            for revision_dir in _bundled_revision_directories()
+            for section_dir in _section_directories(revision_dir)
+            if revision_section_for_directory(section_dir.name) not in REVISION_SECTION_FIELDS
+        },
+    )
+
+    assert unrecognised == [], f"revision section directories naming no section: {unrecognised!r}"
+
+
+def test_the_generated_export_tree_is_exactly_the_one_carrying_generation_provenance() -> None:
+    """The two export spellings are not interchangeable, and nothing else enforced it.
+
+    ``export/`` is the generator-owned tree: hand-editing it is editing
+    generated output. ``export_layouts/`` is authored by hand and has no
+    generation to attest. The loader merges both into one section and accepts
+    the provenance manifest only under ``export/``, but nothing required an
+    ``export/`` tree to actually carry one -- so a hand-authored tree could sit
+    in the generator's directory and read as generated. Measured over whatever
+    the tree holds rather than a recorded count, in both directions.
+    """
+    missing_provenance: list[str] = []
+    unexpected_provenance: list[str] = []
+    both_spellings: list[str] = []
+    for revision_dir in _bundled_revision_directories():
+        generated = revision_dir / GENERATED_EXPORT_DIRECTORY_NAME
+        authored = revision_dir / "export_layouts"
+        label = f"{revision_dir.parent.parent.name}/{revision_dir.name}"
+        if generated.is_dir() and authored.is_dir():
+            both_spellings.append(label)
+        if generated.is_dir() and not (generated / EXPORT_FRAGMENT_PROVENANCE_FILENAME).is_file():
+            missing_provenance.append(label)
+        if authored.is_dir() and (authored / EXPORT_FRAGMENT_PROVENANCE_FILENAME).is_file():
+            unexpected_provenance.append(label)
+
+    assert both_spellings == [], (
+        f"revision(s) {both_spellings!r} author the export section under both spellings; the two merge into "
+        "one section, so which members survive depends on directory scan order"
+    )
+    assert missing_provenance == [], (
+        f"revision(s) {missing_provenance!r} carry a generator-owned 'export/' tree with no "
+        f"{EXPORT_FRAGMENT_PROVENANCE_FILENAME}; either it was hand-authored in the generator's directory "
+        "or the generation manifest was dropped"
+    )
+    assert unexpected_provenance == [], (
+        f"revision(s) {unexpected_provenance!r} carry a generation manifest in the hand-authored "
+        "'export_layouts/' tree, which the loader will refuse as an unrecognized fragment file"
+    )

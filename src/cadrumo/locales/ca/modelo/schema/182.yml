@@ -1,0 +1,45 @@
+modelo:
+  schema:
+    '182':
+      casilla:
+        continuidad:
+          donante-nif:
+            label: NIF del donant (persona física, jurídica o entitat sense finalitats
+              lucratives donatària de referència)
+          donante-nombre:
+            label: Cognoms i nom, o raó social, del donant
+          donativo-recurrente:
+            label: Indicador de donatiu recurrent (donatiu plurianual a la mateixa
+              entitat donatària, dos o més exercicis consecutius)
+          filing-year:
+            label: Exercici a què es refereix la declaració
+          importe-donativo:
+            label: Import del donatiu, donació o aportació rebuda en l'exercici (sense
+              signe, en euros)
+          porcentaje-deduccion:
+            label: Percentatge de deducció aplicable al donatiu (règim fiscal del
+              donant, art. 68.3 LIRPF / règim especial Llei 49/2002)
+          tipo-declaracion:
+            label: Tipus de declaració (originària / substitutiva / complementària)
+      construct:
+        modelo-182-informative:
+          field:
+            title: 'Model 182: declaració informativa de donatius, donacions i aportacions
+              rebudes'
+      field:
+        official_name: Modelo 182. Impost sobre la Renda de les Persones Físiques,
+          Impost sobre la Renda de no Residents i Impost sobre Societats. Declaració
+          informativa de donatius, donacions i aportacions rebudes i disposicions
+          realitzades.
+        title: Donatius, donacions i aportacions rebudes i disposicions realitzades
+          (informativa anual)
+      revision:
+        2022-2023:
+          field:
+            label: Model 182, exercicis 2022 i 2023
+        '2024':
+          field:
+            label: Model 182, exercici 2024
+        '2025':
+          field:
+            label: Model 182, exercici 2025 (Ordre HAC/1430/2025)

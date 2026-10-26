@@ -1,0 +1,159 @@
+schema_version = 1
+fragment_id = "numeric-representation"
+width_17_rules = []
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DR49001"
+source_row = 14
+record_identity = "DR49001"
+source_cell = "A14"
+ordinal = "9"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m490-2023-dr49001-row-14-year-yyyy"
+decision_statement = "This four-position Ejercicio slot carries an unsigned four-digit year."
+justification = "The exact AEAT field is named 'Ejercicio', has naturaleza Num, and occupies four positions at DR49001 A14; the source leaves Contenido empty, so the reviewed year representation supplies the missing wire format without assigning a constant year."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DR49001"
+source_row = 14
+record_identity = "DR49001"
+source_cell = "A14"
+ordinal = "9"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DR49002"
+source_row = 11
+record_identity = "DR49002"
+source_cell = "A11"
+ordinal = "6"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m490-2023-dr49002-row-11-year-yyyy"
+decision_statement = "This four-position Ejercicio slot carries an unsigned four-digit year."
+justification = "The exact AEAT field is named 'Regularización (art. 10.3 Ley 4/2020).Ejercicio', has naturaleza Num, and occupies four positions at DR49002 A11; the source leaves Contenido empty, so the reviewed year representation supplies the missing wire format without assigning a constant year."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DR49002"
+source_row = 11
+record_identity = "DR49002"
+source_cell = "A11"
+ordinal = "6"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DR49002"
+source_row = 96
+record_identity = "DR49002"
+source_cell = "A96"
+ordinal = "91"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m490-2023-dr49002-row-96-year-yyyy"
+decision_statement = "This four-position Ejercicio slot carries an unsigned four-digit year."
+justification = "The exact AEAT field is named 'Regularización (art. 10.3 Ley 4/2020).Ejercicio', has naturaleza Num, and occupies four positions at DR49002 A96; the source leaves Contenido empty, so the reviewed year representation supplies the missing wire format without assigning a constant year."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DR49002"
+source_row = 96
+record_identity = "DR49002"
+source_cell = "A96"
+ordinal = "91"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DR49003"
+source_row = 11
+record_identity = "DR49003"
+source_cell = "A11"
+ordinal = "6"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m490-2023-dr49003-row-11-year-yyyy"
+decision_statement = "This four-position Ejercicio slot carries an unsigned four-digit year."
+justification = "The exact AEAT field is named 'Regularización (art. 10.3 Ley 4/2020).Ejercicio', has naturaleza Num, and occupies four positions at DR49003 A11; the source leaves Contenido empty, so the reviewed year representation supplies the missing wire format without assigning a constant year."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DR49003"
+source_row = 11
+record_identity = "DR49003"
+source_cell = "A11"
+ordinal = "6"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "DR49003"
+source_row = 96
+record_identity = "DR49003"
+source_cell = "A96"
+ordinal = "91"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m490-2023-dr49003-row-96-year-yyyy"
+decision_statement = "This four-position Ejercicio slot carries an unsigned four-digit year."
+justification = "The exact AEAT field is named 'Regularización (art. 10.3 Ley 4/2020).Ejercicio', has naturaleza Num, and occupies four positions at DR49003 A96; the source leaves Contenido empty, so the reviewed year representation supplies the missing wire format without assigning a constant year."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "DR49003"
+source_row = 96
+record_identity = "DR49003"
+source_cell = "A96"
+ordinal = "91"
+
+[design_identity]
+modelo = "490"
+design_epoch = "2023"
+source_ref = "aeat-dr-490-2023"
+source_sha256 = "f55ecbfff8fb552de76f4e788ff7663269c96b6255b209b5289bf0869de89cb8"

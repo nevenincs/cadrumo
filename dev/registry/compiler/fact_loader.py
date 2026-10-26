@@ -1,0 +1,98 @@
+"""Strict TOML parsing for one-file-per-concept governed facts.
+
+This module deliberately knows nothing about ``ModeloDefinition`` or revision
+validation.  A facts publication can therefore parse and validate its source
+tree before any unrelated Modelo compiler is involved.
+"""
+
+from __future__ import annotations
+
+import re
+from collections.abc import Mapping
+from pathlib import Path
+
+from pydantic import ValidationError
+
+from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
+from cadrumo.core.toml import freeze_toml, read_toml
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError
+from cadrumo.domain.calculations.registry.facts.schema import GovernedFact
+from cadrumo.domain.calculations.registry.facts.variants import FactOwnership
+
+__all__ = ["is_governed_fact_filename", "load_governed_fact_file", "load_governed_facts"]
+
+
+_FACT_FILENAME = re.compile(r"^[0-9]{4}-[a-z0-9]+(?:-[a-z0-9]+)*\.toml$")
+
+
+def is_governed_fact_filename(filename: str) -> bool:
+    """Return whether ``filename`` carries the governed-fact fragment grammar."""
+    return _FACT_FILENAME.fullmatch(filename) is not None
+
+
+def load_governed_fact_file(path: Path) -> GovernedFact:
+    """Parse one numbered TOML fragment containing exactly one ``[fact]`` table.
+
+    The numeric filename prefix is validated as review ordering metadata only;
+    the parsed ``fact_id`` remains the sole semantic identity.
+
+    Raises:
+        RegistryLoadError: If the filename, TOML document, or governed-fact
+            schema is invalid.
+    """
+    source_path = path.resolve()
+    if not is_governed_fact_filename(source_path.name):
+        raise RegistryLoadError(
+            f"{source_path}: governed fact filename must match NNNN-<stable-slug>.toml",
+        )
+    data = freeze_toml(read_toml(source_path, error_factory=RegistryLoadError))
+    if set(data) != {"fact"}:
+        raise RegistryLoadError(f"{source_path}: governed fact file must declare exactly one [fact] table")
+    table = data["fact"]
+    if not isinstance(table, Mapping):
+        raise RegistryLoadError(f"{source_path}: [fact] must be a table")
+    if "provider_id" in table:
+        raise RegistryLoadError(
+            f"{source_path}: governed fact provider_id is compiler-owned provenance and cannot be authored",
+        )
+    try:
+        fact = GovernedFact.model_validate(table)
+    except ValidationError as exc:
+        raise RegistryLoadError(f"{source_path}: invalid governed fact: {exc}") from exc
+    generated = tuple(variant.variant_id for variant in fact.variants if variant.ownership is FactOwnership.GENERATED)
+    if generated:
+        raise RegistryLoadError(
+            f"{source_path}: authored fact files cannot declare generated variants {generated!r}",
+        )
+    return fact
+
+
+def load_governed_facts(facts_dir: Path) -> tuple[GovernedFact, ...]:
+    """Parse a facts directory in deterministic filename order.
+
+    Duplicate semantic identities are refused even when their numbered
+    filenames differ. An absent directory yields an empty tuple; directory
+    ownership and provider enrollment are enforced by the authority layer.
+
+    Raises:
+        RegistryLoadError: If a fragment is invalid or repeats a ``fact_id``.
+    """
+    resolved = facts_dir.resolve()
+    if not resolved.is_dir():
+        return ()
+    facts: list[GovernedFact] = []
+    source_by_fact_id: dict[str, Path] = {}
+    paths = sorted(
+        scan_directory(resolved, pattern="*.toml", recursive=True, select=DirectoryEntryKind.FILES),
+        key=lambda path: path.relative_to(resolved).as_posix(),
+    )
+    for path in paths:
+        fact = load_governed_fact_file(path)
+        previous = source_by_fact_id.get(fact.fact_id)
+        if previous is not None:
+            raise RegistryLoadError(
+                f"{path}: governed fact {fact.fact_id!r} is already declared by {previous}",
+            )
+        source_by_fact_id[fact.fact_id] = path
+        facts.append(fact)
+    return tuple(facts)

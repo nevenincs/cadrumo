@@ -1,0 +1,161 @@
+"""Core shared-catalogue verification tests."""
+
+from __future__ import annotations
+
+import pytest
+
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.tests.inventory import REPO_ROOT
+
+from ..compiler.corpus_catalogue import verify_source_catalogue
+from ..compiler.legal_grounding import verify_legal_catalogue_grounding
+from ..conformance.registry_schema_support import committed_registry_tree
+from .catalogue_verification_support import registry_tree
+from .profile_schema_support import committed_registry_validator
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
+
+
+def test_committed_registry_tree_has_coherent_shared_catalogues() -> None:
+    modelos, catalogues = registry_tree()
+
+    assert len(modelos) >= 5, "committed registry must declare several modelos"
+    assert len(catalogues.legal) > 0, "shared legal catalogue must be non-empty"
+    assert len(catalogues.sources) > 0, "shared sources catalogue must be non-empty"
+    verify_legal_catalogue_grounding(catalogues.legal, source_root=bundled_path())
+    verify_source_catalogue(REPO_ROOT, catalogues.sources)
+    validator = committed_registry_validator(catalogues)
+    validator.validate_registry(modelos)
+
+
+#: The deliberately year-vintaged excerpts a corpus forbidden-text clause must
+#: never treat as a defect: each carries at least one phrase unique to its own
+#: historical redaction, which is what pins its intended vintage. See the
+#: grounding reference's "vintaged excerpts behave CORRECTLY" finding.
+_DELIBERATELY_VINTAGED_EXCERPT_IDS = (
+    "ley-35-2006:art-23-2021",
+    "ley-35-2006:art-52-2015",
+    "ley-35-2006:art-52-2021",
+    "ley-35-2006:art-66-2021",
+    "ley-35-2006:art-68-2018",
+)
+
+_PRE_BLOCKLIST_HISTORICAL_REFERENCE_IDS = (
+    "ley-19-1991:art-28",
+    "ley-19-1991:art-30",
+    "ley-19-1991:art-31",
+    "ley-19-1991:art-4-9",
+    "rdleg-1175-1990:art-unico",
+)
+
+
+def test_historical_references_remain_grounded_before_filing_review_fact_coverage() -> None:
+    """Corpus integrity applies to historical law outside the filing-review fact horizon.
+
+    Read from the AUTHORED catalogue rather than the published view. The view
+    carries only the references published modelos cite - 555 of the committed
+    1404 - and these are historical law no current modelo cites, which is the
+    very reason their grounding needs its own check. Asking the view for them
+    raised KeyError instead.
+    """
+    _modelos, catalogues = committed_registry_tree()
+    historical = {ref_id: catalogues.legal[ref_id] for ref_id in _PRE_BLOCKLIST_HISTORICAL_REFERENCE_IDS}
+
+    verify_legal_catalogue_grounding(historical, source_root=bundled_path())
+
+    reference = historical["ley-19-1991:art-28"]
+    corrupted = reference.model_copy(
+        update={"required_text": (*reference.required_text, "absent historical quotation")},
+    )
+    with pytest.raises(RegistryValidationError, match="corpus text missing required text"):
+        verify_legal_catalogue_grounding({corrupted.id: corrupted}, source_root=bundled_path())
+
+
+def test_forbidden_text_clause_is_additive_over_the_full_committed_legal_catalogue() -> None:
+    """The new optional forbidden-text clause must not disturb any existing entry.
+
+    A refusal firing on a synthetic fixture proves the clause CAN catch a
+    repealed phrase; it proves nothing about whether the clause over-reaches on
+    the real catalogue. This is the control that decides closure: every entry
+    in the committed catalogue still loads and validates unchanged now that the
+    schema carries the new clause. The deliberately year-vintaged excerpts are
+    named explicitly because they legitimately contain text current law does
+    not, and none of them is given a forbidden_text clause by this change.
+    """
+    _modelos, catalogues = registry_tree()
+
+    assert len(catalogues.legal) > 0, "control is meaningless against an empty catalogue"
+    for vintaged_id in _DELIBERATELY_VINTAGED_EXCERPT_IDS:
+        assert vintaged_id in catalogues.legal, f"{vintaged_id!r} must remain in the committed legal catalogue"
+        assert catalogues.legal[vintaged_id].forbidden_text == (), (
+            f"{vintaged_id!r} is a deliberately historical excerpt; this control authors no forbidden_text for it"
+        )
+
+    verify_legal_catalogue_grounding(catalogues.legal, source_root=bundled_path())
+
+
+def test_no_legal_reference_grounds_a_normatives_citation_in_a_derived_artefact() -> None:
+    """A ``corpus_ref`` under ``corpus/normatives/`` must name the source, not a build product.
+
+    ``7cdae88dc1`` reverted 22 refs that pointed ``corpus_ref`` at a
+    ``*.html.extracted.md`` sidecar -- a workaround for the anchor-resolution
+    regression ``daa9876ed3`` fixed properly -- back onto their source
+    ``*.html`` documents, because no code path resolves or expects a
+    ``corpus_ref`` naming ``.extracted.md``: the resolver always derives its
+    own ``<corpus_ref path>.extracted.json`` sidecar from the named ``.html``
+    source. This gate keeps that reversion from silently drifting back.
+
+    ``corpus/manuals/**/*.pdf.extracted.md`` refs are the deliberate
+    exception, carved out by name rather than caught by this pattern: a PDF
+    manual excerpt has no ``.html`` counterpart to point at, so its
+    ``corpus_ref`` legitimately names the extracted markdown directly (see
+    ``irpf-autonomica-madrid.toml``, 3 refs, committed long before the 22-ref
+    regression this gate targets). A naive "no path ends in ``.extracted.md``"
+    rule would red on those three legitimate refs; this one matches only the
+    ``normatives``-rooted, ``.html.extracted.md``-suffixed shape the
+    regression actually took.
+    """
+    _modelos, catalogues = registry_tree()
+
+    offending = sorted(
+        f"{ref_id} -> {reference.corpus_ref!r}"
+        for ref_id, reference in catalogues.legal.items()
+        if reference.corpus_ref.partition("#")[0].startswith("corpus/normatives/")
+        and reference.corpus_ref.partition("#")[0].endswith(".html.extracted.md")
+    )
+
+    assert offending == [], (
+        "legal reference(s) ground a citation in a derived .extracted.md artefact "
+        f"instead of the .html source it was built from: {offending}"
+    )
+
+
+def test_the_derived_artefact_gate_still_admits_the_pdf_manual_exception() -> None:
+    """The gate above must not have been satisfied by accidentally excluding the exception too.
+
+    Proves the negative test isn't vacuous: the three legitimate
+    ``corpus/manuals/**/*.pdf.extracted.md`` refs still exist in the committed
+    catalogue and are exactly the ones the gate's ``corpus/normatives/`` scope
+    exempts, not references that happen not to exist at all.
+
+    The COMMITTED catalogue, so read from the authored tree: the published view
+    lists only what published modelos cite, and these autonomic-deduction
+    manuals are cited by declarations outside it.
+    """
+    _modelos, catalogues = committed_registry_tree()
+
+    # The manual refs now name the PDF itself; the extracted markdown is
+    # resolved from it rather than cited. Matching the old
+    # ``.pdf.extracted.md`` spelling found nothing, which made this
+    # anti-vacuity proof vacuous in its own right.
+    manual_refs = [
+        ref_id
+        for ref_id, reference in catalogues.legal.items()
+        if reference.corpus_ref.partition("#")[0].startswith("corpus/manuals/")
+        and reference.corpus_ref.partition("#")[0].endswith(".pdf")
+    ]
+
+    assert len(manual_refs) >= 3, (
+        f"expected the committed autonomic-deduction manual refs to still be present, found {manual_refs}"
+    )

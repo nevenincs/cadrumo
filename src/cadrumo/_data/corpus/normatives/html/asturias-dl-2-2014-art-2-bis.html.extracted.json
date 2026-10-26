@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/asturias-dl-2-2014-art-2-bis.html",
+  "source_sha256": "4c262930352c9cc24fd8daf37094c34057baa7e7474a550a96beef1b04d64ee0",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.4",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. El mínimo del contribuyente será, con carácter general, de 6.105 euros anuales.\n2. Cuando el contribuyente tenga una edad superior a 65 años, el mínimo se aumentará en 1.265 euros anuales. Si la edad es superior a 75 años, el mínimo se aumentará adicionalmente en 1.540 euros anuales.\nSe añade por el art. único.2 de la Ley 3/2025, de 19 de noviembre. Ref. BOE-A-2025-25707\nTexto añadido, publicado el 02/12/2025, en vigor a partir del 03/12/2025.",
+      "title": "Artículo 2 bis. Mínimo del contribuyente.",
+      "section": "Artículo 2 bis. Mínimo del contribuyente.",
+      "anchor": "#a2-2"
+    }
+  ]
+}

@@ -1,0 +1,107 @@
+from __future__ import annotations
+
+from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
+from cadrumo_client.commands.shared_contracts import (
+    DeferredTarget,
+    LazyBinding,
+    ParameterConstraint,
+    ParameterDefault,
+    ResultSchemaSpec,
+    SchemaState,
+    ValueContract,
+)
+from cadrumo_client.commands.shared_contracts import translation_key as _key
+from cadrumo_client.commands.spec import CommandSpec
+from cadrumo_client.contracts.command_ports import CommandNodeKind
+
+from ._app_live_command_spec_support import (
+    _LEAF_INVOCATION,
+    _METADATA_GROUP_INVOCATION,
+    _METADATA_POLICY,
+    NO_RESULT_SCHEMA,
+)
+
+LIVE_PORTALS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
+    CommandSpec(
+        "app_live_portals",
+        "app_live",
+        "portals",
+        kind=CommandNodeKind.GROUP,
+        help_key=_key("cli.app.live.portals.app_help"),
+        short_help_key=None,
+        invocation=_METADATA_GROUP_INVOCATION,
+        parameters=(),
+        policy=_METADATA_POLICY,
+        handler=None,
+        result_schema=NO_RESULT_SCHEMA,
+    ),
+    CommandSpec(
+        "app_live_portals_list",
+        "app_live_portals",
+        "list",
+        kind=CommandNodeKind.LEAF,
+        help_key=_key("cli.app.live.portals.list_help"),
+        short_help_key=None,
+        invocation=_LEAF_INVOCATION,
+        parameters=(
+            OptionSpec(
+                name="category",
+                declarations=("--category",),
+                value=ValueContract(DeferredTarget("...domain.portals.categories", "PortalCategory", __package__)),
+                default=ParameterDefault.value(None),
+                help_key=_key("cli.app.live.portals.category_help"),
+                multiple=False,
+                is_flag=False,
+                flag_value=None,
+                constraint=ParameterConstraint(minimum=None, maximum=None),
+            ),
+            OptionSpec(
+                name="modelo",
+                declarations=("--modelo",),
+                value=ValueContract(DeferredTarget("...core.modelo", "Modelo", __package__)),
+                default=ParameterDefault.value(None),
+                help_key=_key("cli.app.live.portals.modelo_help"),
+                multiple=False,
+                is_flag=False,
+                flag_value=None,
+                constraint=ParameterConstraint(minimum=None, maximum=None),
+            ),
+        ),
+        policy=_METADATA_POLICY,
+        handler=LazyBinding.available(DeferredTarget(".app_live_portals_commands", "portals_list", __package__)),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            target=DeferredTarget("...application.reference_catalogue_contracts", "PortalsListResult", __package__),
+            identity="app.live.portals.list",
+        ),
+    ),
+    CommandSpec(
+        "app_live_portals_view",
+        "app_live_portals",
+        "view",
+        kind=CommandNodeKind.LEAF,
+        help_key=_key("cli.app.live.portals.view_help"),
+        short_help_key=None,
+        invocation=_LEAF_INVOCATION,
+        parameters=(
+            ArgumentSpec(
+                name="portal_id",
+                value=ValueContract(DeferredTarget("builtins", "str")),
+                default=ParameterDefault.required(),
+                help_key=_key("cli.app.live.portals.portal_id_help"),
+                constraint=ParameterConstraint(minimum=None, maximum=None),
+            ),
+        ),
+        policy=_METADATA_POLICY,
+        handler=LazyBinding.available(DeferredTarget(".app_live_portals_commands", "portals_show", __package__)),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            target=DeferredTarget("...application.reference_catalogue_contracts", "PortalsViewResult", __package__),
+            identity="app.live.portals.view",
+        ),
+    ),
+)
+
+__all__ = ["LIVE_PORTALS_COMMAND_SPECS"]
+"""Authored CommandSpec declarations for the live portals service."""
+"""Authored CommandSpec declarations for the live portals service."""

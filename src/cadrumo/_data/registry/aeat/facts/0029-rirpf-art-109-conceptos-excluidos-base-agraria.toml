@@ -1,0 +1,18 @@
+[fact]
+fact_id = "rd-439-2007-art-109:conceptos-ingreso-excluidos-base-agraria"
+family = "entity_set"
+
+[[fact.variants]]
+variant_id = "rd-439-2007-art-109:conceptos-ingreso-excluidos-base-agraria:2007-04-01"
+date_axis = "filing_period"
+valid_from = 2007-04-01
+legal_refs = ["rd-439-2007:art-109"]
+source_refs = ["boe-rirpf-art-109-2007-04-01"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-rirpf-art-109-2007-04-01"
+required_text = ["con excepción de las subvenciones corrientes y de capital y de las indemnizaciones"]
+[fact.variants.payload]
+kind = "entity_set"
+entities = ["subvencion_corriente", "subvencion_capital", "indemnizacion"]

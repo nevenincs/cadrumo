@@ -1,0 +1,27 @@
+modelo:
+  schema:
+    038:
+      casilla:
+        continuidad:
+          filing-year:
+            label: Exercici a què es refereix la declaració
+          tipo-declaracion:
+            label: Tipus de declaració (originària / substitutiva / complementària)
+      construct:
+        modelo-038-informative:
+          field:
+            title: Modelo 038 declaració informativa
+      field:
+        official_name: Modelo 038. Relació d'operacions realitzades per entitats inscrites
+          en registres públics. Declaració informativa.
+        title: Operacions d'entitats inscrites en registres públics (informativa mensual)
+      revision:
+        2022-hasta-2024-05:
+          field:
+            label: Model 038, de 2022 a maig de 2024
+        2024-desde-06:
+          field:
+            label: Model 038, des de juny de 2024
+        2025-y-siguientes:
+          field:
+            label: Model 038, exercicis 2025 i següents

@@ -1,0 +1,237 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-15 06:16+0200\n"
+"PO-Revision-Date: 2026-07-18 13:10+0000\n"
+"Last-Translator: Cadrumo translation team <docs@cadrumo.example>\n"
+"Language: ca\n"
+"Language-Team: ca <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../how-to/connect-an-agent.md:1
+msgid "Connect an agent (MCP)"
+msgstr "Connectar un agent (MCP)"
+
+#: ../../how-to/connect-an-agent.md:3
+msgid ""
+"`cadrumo-mcp` connects an MCP client to the local Cadrumo runtime over "
+"standard input and output. The runtime must already be running. Starting "
+"the MCP server does not install or start Cadrumo, sign in to a profile, "
+"or submit a filing to AEAT."
+msgstr ""
+"`cadrumo-mcp` connecta un client MCP amb l'entorn local de Cadrumo "
+"mitjançant l'entrada i la sortida estàndard. L'entorn d'execució ja ha "
+"d'estar en marxa. Iniciar el servidor MCP no instal·la ni inicia Cadrumo,"
+" no inicia sessió en un perfil ni presenta cap declaració a l'AEAT."
+
+#: ../../how-to/connect-an-agent.md:8
+msgid ""
+"Before connecting, [set up a profile](profile-setup.md), start Cadrumo, "
+"and select the profile the agent should use. Keep credentials out of the "
+"MCP client configuration and the agent conversation."
+msgstr ""
+"Abans de connectar-te, [configura un perfil](profile-setup.md), inicia "
+"Cadrumo i selecciona el perfil que ha d'utilitzar l'agent. No incloguis "
+"credencials a la configuració del client MCP ni a la conversa amb "
+"l'agent."
+
+#: ../../how-to/connect-an-agent.md:12
+msgid "Check the installation"
+msgstr "Comprovar la instal·lació"
+
+#: ../../how-to/connect-an-agent.md:18
+msgid ""
+"If `cadrumo-mcp` is unavailable, install Cadrumo first; see [Get "
+"Cadrumo](../download.md)."
+msgstr ""
+"Si `cadrumo-mcp` no està disponible, instal·la primer Cadrumo; consulta "
+"[Baixa Cadrumo](../download.md)."
+
+#: ../../how-to/connect-an-agent.md:20
+msgid "Register the server"
+msgstr "Registrar el servidor"
+
+#: ../../how-to/connect-an-agent.md:22
+msgid ""
+"Register `cadrumo-mcp` as a stdio server in your MCP client. For a client"
+" that accepts a JSON server definition:"
+msgstr ""
+"Registra `cadrumo-mcp` com a servidor stdio al teu client MCP. En un "
+"client que accepti una definició de servidor JSON:"
+
+#: ../../how-to/connect-an-agent.md:36
+msgid ""
+"Use a separate server entry for each profile. The profile must be "
+"selected in Cadrumo when the server requests access. `--profile-id` is "
+"required when you configure an enrolled key. The default surface is "
+"`full`; choose `read-only-local` when the connection should only read "
+"local data. The runtime enforces that surface when each operation is "
+"submitted."
+msgstr ""
+"Fes servir una entrada de servidor diferent per a cada perfil. El perfil "
+"ha d'estar seleccionat a Cadrumo quan el servidor sol·liciti accés. Cal "
+"indicar `--profile-id` si configures una clau registrada. La superfície "
+"predeterminada és `full`; tria `read-only-local` si la connexió només ha "
+"de llegir dades locals. L'entorn d'execució aplica aquesta superfície "
+"quan s'envia cada operació."
+
+#: ../../how-to/connect-an-agent.md:42
+msgid "Connect with a human session"
+msgstr "Connectar-se amb una sessió humana"
+
+#: ../../how-to/connect-an-agent.md:44
+msgid ""
+"Without `--credential-reference`, the server starts without a profile "
+"session. When a tool needs profile access, it asks the runtime for "
+"attendance from the currently selected profile. It does not use a stored "
+"sign-in receipt or follow your sign-in automatically."
+msgstr ""
+"Sense `--credential-reference`, el servidor s'inicia sense una sessió de "
+"perfil. Quan una eina necessita accés al perfil, demana a l'entorn "
+"d'execució l'assistència del perfil seleccionat. No utilitza cap "
+"justificant d'inici de sessió desat ni segueix automàticament el teu "
+"inici de sessió."
+
+#: ../../how-to/connect-an-agent.md:49
+msgid ""
+"Review the exact request in Cadrumo before approving it. The request "
+"identifies the client process and the operations, actions, periods, and "
+"data categories it would receive. Approve only a request you started and "
+"whose scope you accept. Until approval, the agent can read its tool list "
+"and `status`; other tools are refused. The approval is tied to that "
+"connection and your live human session. Signing out, locking the profile,"
+" changing the selected profile, or ending the session ends its access."
+msgstr ""
+"Revisa la sol·licitud concreta a Cadrumo abans d'aprovar-la. La "
+"sol·licitud identifica el procés client i les operacions, accions, "
+"períodes i categories de dades que rebria. Aprova només una sol·licitud "
+"que hagis iniciat i l'abast de la qual acceptis. Fins que l'aprovis, "
+"l'agent pot consultar la llista d'eines i `status`; la resta d'eines es "
+"rebutgen. L'aprovació queda vinculada a aquesta connexió i a la teva "
+"sessió humana activa. Tancar la sessió, bloquejar el perfil, canviar el "
+"perfil seleccionat o acabar la sessió posa fi a l'accés."
+
+#: ../../how-to/connect-an-agent.md:57
+msgid "Connect with an enrolled key"
+msgstr "Connectar-se amb una clau registrada"
+
+#: ../../how-to/connect-an-agent.md:59
+msgid ""
+"An enrolled key gives access without a live human session. Create a "
+"finite automation request in the profile's access controls, choosing only"
+" the operations and data categories the agent needs. The terminal command"
+" accepts a complete proposal only through its protected input channel:"
+msgstr ""
+"Una clau registrada permet accedir-hi sense una sessió humana activa. "
+"Crea una sol·licitud d'automatització de durada limitada als controls "
+"d'accés del perfil i tria només les operacions i categories de dades que "
+"l'agent necessiti. L'ordre del terminal només accepta una proposta "
+"completa pel seu canal d'entrada protegit:"
+
+#: ../../how-to/connect-an-agent.md:68
+msgid ""
+"The request does not issue a key by itself. Inspect the exact request and"
+" approve its current review digest in a separate human-authorized "
+"session:"
+msgstr ""
+"La sol·licitud no emet cap clau per si sola. Inspecciona la sol·licitud "
+"concreta i aprova'n el resum de revisió vigent des d'una altra sessió "
+"autoritzada per una persona:"
+
+#: ../../how-to/connect-an-agent.md:77
+msgid ""
+"When protected delivery completes, configure the returned credential "
+"reference with both `--profile-id` and `--credential-reference`. Keep the"
+" reference in protected local configuration. Never put a password, raw "
+"key, or secret value in command arguments, environment variables, chat, "
+"or an MCP tool call."
+msgstr ""
+"Quan es completi el lliurament protegit, configura la referència de "
+"credencial rebuda amb `--profile-id` i `--credential-reference`. Desa la "
+"referència en una configuració local protegida. No posis mai una "
+"contrasenya, una clau sense protegir ni cap valor secret als arguments de"
+" les ordres, les variables d'entorn, les converses o les crides a eines "
+"MCP."
+
+#: ../../how-to/connect-an-agent.md:82
+msgid ""
+"For a keyed server entry, set these arguments in the MCP client "
+"configuration:"
+msgstr ""
+"Per a una entrada de servidor amb clau, configura aquests arguments a la "
+"configuració del client MCP:"
+
+#: ../../how-to/connect-an-agent.md:96
+msgid "Work through the connection"
+msgstr "Treballa a través de la connexió"
+
+#: ../../how-to/connect-an-agent.md:98
+msgid ""
+"Start with the MCP `status` tool. It reports whether the connection has "
+"an attended session, an enrolled key, or no access, and which surface it "
+"serves. Use `search` to find available operations, `describe` to read an "
+"operation's input contract, `execute` to submit it, and `observe` and "
+"`result` to follow it. The connection can use only the operations allowed"
+" by its session, key grant, and surface."
+msgstr ""
+"Comença amb l'eina MCP `status`. Indica si la connexió té una sessió amb "
+"assistència, una clau registrada o no té accés, i quina superfície "
+"ofereix. Fes servir `search` per trobar les operacions disponibles, "
+"`describe` per llegir el contracte d'entrada d'una operació, `execute` "
+"per enviar-la i `observe` i `result` per seguir-ne l'estat i el resultat."
+" La connexió només pot utilitzar les operacions que permeten la sessió, "
+"la concessió de la clau i la superfície."
+
+#: ../../how-to/connect-an-agent.md:105
+msgid ""
+"If an operation has an unknown outcome, do not submit it again. Retain "
+"its operation ID and reconcile the result after reconnecting. Cadrumo "
+"calculates deterministically from its published authority; connecting an "
+"agent does not authorize it to submit a return to AEAT. Review and file "
+"returns yourself as described in the [filing guide](file-at-aeat.md)."
+msgstr ""
+"Si es desconeix el resultat d'una operació, no la tornis a enviar. "
+"Conserva'n l'ID i reconcilia el resultat quan et tornis a connectar. "
+"Cadrumo calcula de manera determinista a partir de la seva autoritat "
+"publicada; connectar-hi un agent no l'autoritza a presentar una "
+"declaració a l'AEAT. Revisa i presenta les declaracions tu mateix, tal "
+"com s'explica a la [guia per presentar declaracions](file-at-aeat.md)."
+
+#: ../../how-to/connect-an-agent.md:111
+msgid "Review and revoke access"
+msgstr "Revisar i revocar l'accés"
+
+#: ../../how-to/connect-an-agent.md:113
+msgid ""
+"Use the profile's human-authorized access controls to inspect requests, "
+"grants, and keys. The terminal command group is `cadrumo-runtime config "
+"profile automation`. To revoke one key, one grant, or all automation for "
+"the profile, use the corresponding `deny` command or the following "
+"reviewed sequence:"
+msgstr ""
+"Utilitza els controls d'accés del perfil, amb autorització humana, per "
+"inspeccionar les sol·licituds, les concessions i les claus. El grup "
+"d'ordres del terminal és `cadrumo-runtime config profile automation`. Per"
+" revocar una clau, una concessió o tota l'automatització del perfil, "
+"utilitza l'ordre `deny` corresponent o segueix aquesta seqüència "
+"revisada:"
+
+#: ../../how-to/connect-an-agent.md:122
+msgid ""
+"Locking the current session ends its access. A profile-wide lock also "
+"suspends automation; resuming the profile does not reactivate grants "
+"unless you select them explicitly:"
+msgstr ""
+"Bloquejar la sessió actual posa fi al seu accés. Bloquejar tot el perfil "
+"també suspèn l'automatització; en reprendre el perfil no es reactiven les"
+" concessions si no les selecciones expressament:"

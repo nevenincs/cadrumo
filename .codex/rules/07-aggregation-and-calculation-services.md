@@ -1,0 +1,18 @@
+---
+name: 07-aggregation-and-calculation-services
+trigger: always_on
+---
+
+# Aggregation and calculation services
+
+Aggregation and calculation services provide source resolvers that turn profile facts, transactions, invoices, registers and prior filings into values for a selected Modelo revision. A typed source mesh keeps scalar amounts, rows, relations, diagnostics and provenance distinct; exclusive merge rejects duplicate ownership. IVA uses dated admission, EUR and payment evidence, prorrata and invoice cross-checks. Renta has distinct annual, cumulative quarterly and agrarian routes; withholding recognition feeds periodic captures and annual views. OSS/IOSS, M720, inventory and counterpart previews are narrower capabilities with their own source and provenance limits. An aggregate or parser-supported input alone does not establish a filing-grade calculation. [Source mesh](../../src/cadrumo/application/aggregation/source_mesh.py#L865) [IVA admission](../../src/cadrumo/application/aggregation/_iva_transaction.py#L197) [Renta source](../../src/cadrumo/application/aggregation/renta_income_ledger.py#L292).
+
+Cross-period prefill requires source observations stamped for the caller's pinned authority; a separate clean-state gate checks filing revision, member coverage, verification, and official evidence. M303 IVA carry uses a canonical disposition envelope and atomic observation/history co-commit contract; an unknown opening balance stays unresolved for annual M390. Withholding mutation uses baseline-guarded replacement and exact-command replay. These are strong local controls, while storage atomicity and authority accuracy depend on adapters and bundled data. [Clean-state gate](../../src/cadrumo/application/calculations/cross_period_clean_state.py#L639) [M303 co-commit](../../src/cadrumo/application/calculations/iva_compensation_history.py#L276) [Withholding mutation](../../src/cadrumo/application/aggregation/withholding_observation_service.py#L374).
+
+The highest-priority scoped findings are a raw foreign-currency versus EUR comparison in an invoice silence-guard branch and filing-snapshot fingerprints that omit calculation-relevant IVA fields. Authority-generation reopening in M303 transition and withholding helpers matters if historical generations are reachable; fractional integer/date coercion in detail-row assembly needs upstream admission checks. These are code-level findings and conditional impacts, not confirmed production filing errors. [Currency comparison](../../src/cadrumo/application/aggregation/_modelo_bindings_invoice_iva_refusal.py#L36) [Snapshot fields](../../src/cadrumo/application/aggregation/ledger_filing_snapshot.py#L94) [Generation reopening](../../src/cadrumo/application/aggregation/m303_arrivals.py#L121).
+
+## Aggregation and completeness invariants
+
+Use one canonical typed aggregation mechanism across pull, preview, calculation and filing. Enroll source families and validators in the shared dispatch; do not add modelo-name branches or private summation paths. Eligibility, sign, rounding, currency and period come from the governing relationship and typed contract, never labels.
+
+Keep absent, unknown, unsupported, deferred, advisory, not-applicable and proven-zero states distinct. Resolve inherited/projected declarations before declaring registry data missing. Required gaps and independent-source disagreements must reach the user as structured findings; suppression is narrowly keyed, justified and reviewable. No downstream consumer may promote advisory inputs to filing grade. Verify multi-source inclusion/exclusion, missing inputs, diagnostic propagation and parity through the real resolver.

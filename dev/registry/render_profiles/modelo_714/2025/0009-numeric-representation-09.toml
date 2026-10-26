@@ -1,0 +1,649 @@
+schema_version = 1
+fragment_id = "numeric-representation-09"
+width_17_rules = []
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-05 Patrimonio"
+source_row = 65
+source_cell = "A65"
+ordinal = "60"
+ordinal_absent = false
+record_identity = "714-05 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2025-714-05-row-65"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - Valor 6"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-05 Patrimonio"
+source_row = 65
+source_cell = "A65"
+ordinal = "60"
+ordinal_absent = false
+record_identity = "714-05 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-05 Patrimonio"
+source_row = 67
+source_cell = "A67"
+ordinal = "62"
+ordinal_absent = false
+record_identity = "714-05 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2025-714-05-row-67"
+decision_statement = "The five-position participation percentage carries three whole and two fractional digits."
+justification = "Reviewed hundredth-of-percentage-point scale for this exact participation slot. Retain the source's Num/N sign declaration; the workbook leaves Contenido blank, so the split is reviewed policy. Exact source meaning: (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - % Titularidad 7"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-05 Patrimonio"
+source_row = 67
+source_cell = "A67"
+ordinal = "62"
+ordinal_absent = false
+record_identity = "714-05 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-05 Patrimonio"
+source_row = 74
+source_cell = "A74"
+ordinal = "69"
+ordinal_absent = false
+record_identity = "714-05 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2025-714-05-row-74"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - Valor 7"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-05 Patrimonio"
+source_row = 74
+source_cell = "A74"
+ordinal = "69"
+ordinal_absent = false
+record_identity = "714-05 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-05 Patrimonio"
+source_row = 75
+source_cell = "A75"
+ordinal = "70"
+ordinal_absent = false
+record_identity = "714-05 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2025-714-05-row-75"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: (1) Bienes y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva negociadas - Total [08]"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-05 Patrimonio"
+source_row = 75
+source_cell = "A75"
+ordinal = "70"
+ordinal_absent = false
+record_identity = "714-05 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-05 Patrimonio"
+source_row = 77
+source_cell = "A77"
+ordinal = "72"
+ordinal_absent = false
+record_identity = "714-05 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2025-714-05-row-77"
+decision_statement = "The five-position participation percentage carries three whole and two fractional digits."
+justification = "Reviewed hundredth-of-percentage-point scale for this exact participation slot. Retain the source's Num/N sign declaration; the workbook leaves Contenido blank, so the split is reviewed policy. Exact source meaning: (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - % Titularidad 1"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-05 Patrimonio"
+source_row = 77
+source_cell = "A77"
+ordinal = "72"
+ordinal_absent = false
+record_identity = "714-05 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-05 Patrimonio"
+source_row = 84
+source_cell = "A84"
+ordinal = "79"
+ordinal_absent = false
+record_identity = "714-05 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2025-714-05-row-84"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - Valor 1"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-05 Patrimonio"
+source_row = 84
+source_cell = "A84"
+ordinal = "79"
+ordinal_absent = false
+record_identity = "714-05 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-05 Patrimonio"
+source_row = 86
+source_cell = "A86"
+ordinal = "81"
+ordinal_absent = false
+record_identity = "714-05 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2025-714-05-row-86"
+decision_statement = "The five-position participation percentage carries three whole and two fractional digits."
+justification = "Reviewed hundredth-of-percentage-point scale for this exact participation slot. Retain the source's Num/N sign declaration; the workbook leaves Contenido blank, so the split is reviewed policy. Exact source meaning: (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - % Titularidad 2"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-05 Patrimonio"
+source_row = 86
+source_cell = "A86"
+ordinal = "81"
+ordinal_absent = false
+record_identity = "714-05 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-05 Patrimonio"
+source_row = 93
+source_cell = "A93"
+ordinal = "88"
+ordinal_absent = false
+record_identity = "714-05 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2025-714-05-row-93"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - Valor 2"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-05 Patrimonio"
+source_row = 93
+source_cell = "A93"
+ordinal = "88"
+ordinal_absent = false
+record_identity = "714-05 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-05 Patrimonio"
+source_row = 95
+source_cell = "A95"
+ordinal = "90"
+ordinal_absent = false
+record_identity = "714-05 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2025-714-05-row-95"
+decision_statement = "The five-position participation percentage carries three whole and two fractional digits."
+justification = "Reviewed hundredth-of-percentage-point scale for this exact participation slot. Retain the source's Num/N sign declaration; the workbook leaves Contenido blank, so the split is reviewed policy. Exact source meaning: (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - % Titularidad 3"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-05 Patrimonio"
+source_row = 95
+source_cell = "A95"
+ordinal = "90"
+ordinal_absent = false
+record_identity = "714-05 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-05 Patrimonio"
+source_row = 102
+source_cell = "A102"
+ordinal = "97"
+ordinal_absent = false
+record_identity = "714-05 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2025-714-05-row-102"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - Valor 3"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-05 Patrimonio"
+source_row = 102
+source_cell = "A102"
+ordinal = "97"
+ordinal_absent = false
+record_identity = "714-05 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-05 Patrimonio"
+source_row = 104
+source_cell = "A104"
+ordinal = "99"
+ordinal_absent = false
+record_identity = "714-05 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2025-714-05-row-104"
+decision_statement = "The five-position participation percentage carries three whole and two fractional digits."
+justification = "Reviewed hundredth-of-percentage-point scale for this exact participation slot. Retain the source's Num/N sign declaration; the workbook leaves Contenido blank, so the split is reviewed policy. Exact source meaning: (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - % Titularidad 4"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-05 Patrimonio"
+source_row = 104
+source_cell = "A104"
+ordinal = "99"
+ordinal_absent = false
+record_identity = "714-05 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-05 Patrimonio"
+source_row = 111
+source_cell = "A111"
+ordinal = "106"
+ordinal_absent = false
+record_identity = "714-05 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2025-714-05-row-111"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - Valor 4"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-05 Patrimonio"
+source_row = 111
+source_cell = "A111"
+ordinal = "106"
+ordinal_absent = false
+record_identity = "714-05 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-05 Patrimonio"
+source_row = 113
+source_cell = "A113"
+ordinal = "108"
+ordinal_absent = false
+record_identity = "714-05 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2025-714-05-row-113"
+decision_statement = "The five-position participation percentage carries three whole and two fractional digits."
+justification = "Reviewed hundredth-of-percentage-point scale for this exact participation slot. Retain the source's Num/N sign declaration; the workbook leaves Contenido blank, so the split is reviewed policy. Exact source meaning: (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - % Titularidad 5"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-05 Patrimonio"
+source_row = 113
+source_cell = "A113"
+ordinal = "108"
+ordinal_absent = false
+record_identity = "714-05 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-05 Patrimonio"
+source_row = 120
+source_cell = "A120"
+ordinal = "115"
+ordinal_absent = false
+record_identity = "714-05 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2025-714-05-row-120"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - Valor 5"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-05 Patrimonio"
+source_row = 120
+source_cell = "A120"
+ordinal = "115"
+ordinal_absent = false
+record_identity = "714-05 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-05 Patrimonio"
+source_row = 122
+source_cell = "A122"
+ordinal = "117"
+ordinal_absent = false
+record_identity = "714-05 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2025-714-05-row-122"
+decision_statement = "The five-position participation percentage carries three whole and two fractional digits."
+justification = "Reviewed hundredth-of-percentage-point scale for this exact participation slot. Retain the source's Num/N sign declaration; the workbook leaves Contenido blank, so the split is reviewed policy. Exact source meaning: (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - % Titularidad 6"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-05 Patrimonio"
+source_row = 122
+source_cell = "A122"
+ordinal = "117"
+ordinal_absent = false
+record_identity = "714-05 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-05 Patrimonio"
+source_row = 129
+source_cell = "A129"
+ordinal = "124"
+ordinal_absent = false
+record_identity = "714-05 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2025-714-05-row-129"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - Valor 6"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-05 Patrimonio"
+source_row = 129
+source_cell = "A129"
+ordinal = "124"
+ordinal_absent = false
+record_identity = "714-05 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-05 Patrimonio"
+source_row = 131
+source_cell = "A131"
+ordinal = "126"
+ordinal_absent = false
+record_identity = "714-05 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2025-714-05-row-131"
+decision_statement = "The five-position participation percentage carries three whole and two fractional digits."
+justification = "Reviewed hundredth-of-percentage-point scale for this exact participation slot. Retain the source's Num/N sign declaration; the workbook leaves Contenido blank, so the split is reviewed policy. Exact source meaning: (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - % Titularidad 7"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-05 Patrimonio"
+source_row = 131
+source_cell = "A131"
+ordinal = "126"
+ordinal_absent = false
+record_identity = "714-05 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-05 Patrimonio"
+source_row = 138
+source_cell = "A138"
+ordinal = "133"
+ordinal_absent = false
+record_identity = "714-05 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2025-714-05-row-138"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades juríd. - Valor 7"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-05 Patrimonio"
+source_row = 138
+source_cell = "A138"
+ordinal = "133"
+ordinal_absent = false
+record_identity = "714-05 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-05 Patrimonio"
+source_row = 139
+source_cell = "A139"
+ordinal = "134"
+ordinal_absent = false
+record_identity = "714-05 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2025-714-05-row-139"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: (1) Bienes y derechos - G2. Valores no exentos - Acciones y particip. fondos otras entidades - Total [09]"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-05 Patrimonio"
+source_row = 139
+source_cell = "A139"
+ordinal = "134"
+ordinal_absent = false
+record_identity = "714-05 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "percentage_decimal"
+value_policy = "implied-decimal"
+integer_digits = 3
+decimal_digits = 2
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-05 Patrimonio"
+source_row = 141
+source_cell = "A141"
+ordinal = "136"
+ordinal_absent = false
+record_identity = "714-05 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2025-714-05-row-141"
+decision_statement = "The five-position participation percentage carries three whole and two fractional digits."
+justification = "Reviewed hundredth-of-percentage-point scale for this exact participation slot. Retain the source's Num/N sign declaration; the workbook leaves Contenido blank, so the split is reviewed policy. Exact source meaning: (1) Bienes y derechos - G3. Valores no exentos - Acciones y particip. Inst. Invers. Colectiva no negociadas - % Titularidad 1"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-05 Patrimonio"
+source_row = 141
+source_cell = "A141"
+ordinal = "136"
+ordinal_absent = false
+record_identity = "714-05 Patrimonio"
+
+[design_identity]
+modelo = "714"
+source_ref = "aeat-dr-714-2025"
+source_sha256 = "660e2ce1f4cea1405e27b4251231036e75b78aef33512afc22dec8081c7cb4d3"
+design_epoch = "2025"

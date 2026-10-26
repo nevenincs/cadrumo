@@ -1,0 +1,233 @@
+"""Strict tests for the BOE-prescribed Modelo 100 first-slice routing.
+
+Two boundaries get coverage:
+
+* Every casilla id the routing table targets is a real casilla on
+  the modelo-100 registry. This is the cross-domain referential-
+  integrity property the snapshot-time gate enforces.
+* The constant's coverage of SpendingCategory is closed: the test
+  pins the exact category set so a future SpendingCategory enum
+  addition without a corresponding routing entry is caught at
+  test time, not at runtime by the renta validator.
+"""
+
+from __future__ import annotations
+
+from datetime import date
+
+import pytest
+
+from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.modelo import Modelo
+from ...calculations.registry.authority import PinnedAuthorityOperation
+from ...calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
+from ...calculations.registry.ledger_renta_gastos_estimacion_directa_bindings import (
+    renta_first_slice_binding_target_casillas,
+)
+from ...calculations.registry.tests.registry_tree import full_published_modelo
+from ...categories.spending_category import SpendingCategory
+from ...categories.spending_category_catalogue import spending_category_tokens
+from .._first_slice_routing import (
+    resolve_first_slice_expense_routing,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+# The routing check reads no dated authority, so any snapshot year serves.
+_FILING_YEAR = 2025
+
+
+def _first_slice_expense_routing(operation: PinnedAuthorityOperation) -> dict[SpendingCategory, CasillaId]:
+    return resolve_first_slice_expense_routing(
+        category_type=SpendingCategory,
+        category_tokens=lambda selected_authority, coordinate: spending_category_tokens(
+            effective_date=coordinate,
+            authority=selected_authority,
+        ),
+        casilla_factory=validated_casilla_id,
+        model_code="100",
+        fact_id="modelo-100-first-slice-expense-routing-mapping",
+        effective_date=date(2025, 12, 31),
+        authority=operation,
+    )
+
+
+def test_first_slice_target_casillas_is_closed_set(operation: PinnedAuthorityOperation) -> None:
+    """The targets the routing table can resolve to are exactly these casillas.
+
+    The set is closed by BOE prescription; a new entry should
+    only land alongside a corresponding registry-data update on
+    modelo 100. Asserting the closed set surfaces additions as
+    test failures so the migration is intentional.
+    """
+
+    assert frozenset(_first_slice_expense_routing(operation).values()) == frozenset(
+        {
+            "0183",
+            "0186",
+            "0191",
+            "0192",
+            "0193",
+            "0194",
+            "0195",
+            "0199",
+            "0200",
+            "0202",
+            "0203",
+            "0206",
+            "0208",
+            "0217",
+        },
+    )
+
+
+def test_every_spending_category_routes_to_a_first_slice_casilla(operation: PinnedAuthorityOperation) -> None:
+    """No :class:`SpendingCategory` member is silently unrouted.
+
+    Every deducible autónomo expense category resolves to a real
+    Modelo 100 estimación-directa casilla. A category left out of
+    dated first-slice routing projection would silently drop that
+    expense class from the annual filing while the M130 quarterly
+    path still accepted it (``no-silent-under-declaration``,
+    ``aeat-calculation-aggregation``).
+    """
+
+    routing = _first_slice_expense_routing(operation)
+    categories = spending_category_tokens(effective_date=date(2025, 12, 31), authority=operation)
+    unrouted = [category for category in categories if category not in routing]
+    assert unrouted == []
+
+
+def test_first_slice_routing_targets_exist_in_modelo_100_registry(operation: PinnedAuthorityOperation) -> None:
+    """Cross-domain integrity: every routing target is a casilla on M100.
+
+    Loads the modelo-100 registry from bundled data and asserts that
+    every target casilla id the routing table mentions is declared
+    as a casilla on at least one revision of M100. This is the
+    domain-layer mirror of the snapshot-time gate wired into
+    :func:`_check_all_id_references`.
+    """
+
+    modelo_100 = full_published_modelo(operation, "100")
+
+    all_casilla_ids: set[CasillaId] = set()
+    for revision in modelo_100.revisions.values():
+        all_casilla_ids.update(casilla.id for casilla in revision.casillas)
+
+    missing = frozenset(_first_slice_expense_routing(operation).values()) - all_casilla_ids
+    assert not missing, f"first-slice routing targets casillas absent from modelo-100: {sorted(missing)!r}"
+
+
+def test_first_slice_check_is_registered_with_the_registry_validator() -> None:
+    """Importing ``renta`` registers the first-slice cross-domain check.
+
+    The registry validator depends only on the abstract
+    ``CrossDomainSnapshotCheck`` Protocol. The concrete renta check is
+    injected at ``renta`` package import time. This test confirms the
+    registration side effect landed (importing this test module imports
+    ``renta``).
+    """
+
+    from ...calculations.registry.validate_cross_domain_snapshot import registered_cross_domain_check_identities
+    from ..first_slice_routing_integrity import check_first_slice_routing
+
+    assert check_first_slice_routing.__module__ in registered_cross_domain_check_identities()
+
+
+def test_registered_check_fires_through_the_snapshot_build_gate() -> None:
+    """The registered renta check runs inside ``_check_all_id_references``.
+
+    Drives a divergent casilla set through the registered check against a
+    representative revision-scoped binding-target set: a binding target
+    absent from the revision must surface as a failure string. This
+    proves the Protocol-injected check is wired into the snapshot gate
+    rather than dead code.
+
+    The check is scoped to a revision's OWN
+    ``ledger_renta_gastos_estimacion_directa_aggregation`` binding targets (never the
+    universal ``first_slice_target_casillas`` codomain) -- see
+    :mod:`cadrumo.domain.renta.first_slice_routing_integrity` for why a
+    revision that declares no such bindings has a legitimately empty
+    required set.
+    """
+
+    from ..first_slice_routing_integrity import check_first_slice_routing
+
+    representative_targets = frozenset({"0183", "0195"})
+    # A casilla set missing every routing target must report them all.
+    failures = check_first_slice_routing("100", frozenset(), representative_targets, filing_year=_FILING_YEAR)
+    assert len(failures) == 1
+    for target in representative_targets:
+        assert target in failures[0]
+    # A complete casilla set reports nothing.
+    assert (
+        check_first_slice_routing("100", representative_targets, representative_targets, filing_year=_FILING_YEAR) == []
+    )
+    # A revision with no first-slice bindings has an empty required set --
+    # reports nothing even with an empty casilla set (the 2020-2022 shape).
+    assert check_first_slice_routing("100", frozenset(), frozenset(), filing_year=_FILING_YEAR) == []
+    # A non-100 modelo is outside the first slice -- no check.
+    assert check_first_slice_routing("303", frozenset(), representative_targets, filing_year=_FILING_YEAR) == []
+
+
+def test_renta_first_slice_binding_target_casillas_is_revision_scoped(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """The per-revision binding-target helper reflects real registry data.
+
+    Every edition inside the support envelope binds exactly the routing
+    casillas its own design declares: "Aportaciones a mutualidades
+    alternativas" shares the combined ``0186`` Seguridad Social casilla until
+    the design adds the dedicated ``0195`` box, so the edition before that box
+    exists binds one casilla fewer. Editions below the floor are stored history
+    and declare no ledger bindings. This is the property that makes the
+    universal ``first_slice_target_casillas`` codomain unsuitable as a
+    per-revision referential-integrity requirement.
+    """
+
+    modelo_100 = full_published_modelo(operation, "100")
+    support = operation.supported_filing_years()
+    routing = frozenset(_first_slice_expense_routing(operation).values())
+    in_envelope = 0
+
+    for revision in modelo_100.revisions.values():
+        targets = renta_first_slice_binding_target_casillas(revision)
+        if not support.admits_filing_year(revision.valid_from.year):
+            assert targets == frozenset(), revision.id
+            continue
+        in_envelope += 1
+        declared = frozenset(casilla.id for casilla in revision.casillas)
+        assert targets == routing & declared, revision.id
+
+    assert in_envelope, "no Modelo 100 edition lies inside the support envelope"
+
+
+def test_modelo_100_snapshots_build_cleanly_across_every_revision(operation: PinnedAuthorityOperation) -> None:
+    """Every supported Modelo 100 revision's snapshot passes referential integrity.
+
+    This is the real end-to-end proof for the fix: building a snapshot for a
+    revision that declares no first-slice ledger bindings (2022) must not
+    raise, even though casilla ``0195`` -- part of the universal routing
+    table's codomain -- does not exist on it. Building 2023-2025 must also
+    succeed. A regression back to checking the universal codomain against
+    every revision's own casilla set reproduces the exact defect this test
+    guards against.
+
+    The years come from the published support envelope; an authored revision
+    below its floor is stored history and must be refused, not built.
+    """
+    directory = operation.modelo_directory("100")
+    assert directory.supported_filing_years is not None, "modelo 100 declares no supported filing years"
+    floor = directory.supported_filing_years.floor
+    authored_years = sorted(int(revision.id) for revision in directory.revisions)
+    supported = [year for year in authored_years if year >= floor]
+    assert 2022 in supported
+    assert 2025 in supported
+
+    for year in supported:
+        snapshot = operation.snapshot(Modelo("100"), filing_year=year, period="0A")
+        assert snapshot.revision.id == str(year)
+
+    for year in (year for year in authored_years if year < floor):
+        with pytest.raises(FilingYearOutsideSupportEnvelopeError):
+            operation.snapshot(Modelo("100"), filing_year=year, period="0A")

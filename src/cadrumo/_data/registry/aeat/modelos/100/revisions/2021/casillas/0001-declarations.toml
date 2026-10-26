@@ -1,0 +1,1655 @@
+[[revisions."2021".casillas]]
+id = "0157"
+number = "0157"
+section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
+semantic_role = "irpf_inmueble_gasto_deducible_alquiler_locales"
+legal_refs = ["ley-35-2006:art-23-2021"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "0158"
+number = "0158"
+section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
+data_type = "nif"
+semantic_role = "irpf_inmueble_arrendatario_nif"
+legal_refs = ["ley-35-2006:art-23-2021"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "0201"
+number = "0201"
+section = ["resultados", "deduccion_autonomica_res", "castilla_la_mancha_res"]
+semantic_role = "irpf_deduccion_castilla_la_mancha_residencia_zonas_rurales"
+continuidad_id = "irpf-deduccion-castilla-la-mancha-residencia-zonas-rurales"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "0204"
+number = "0204"
+section = ["resultados", "deduccion_autonomica_res", "castilla_la_mancha_res"]
+semantic_role = "irpf_deduccion_castilla_la_mancha_vivienda_zonas_rurales"
+continuidad_id = "irpf-deduccion-castilla-la-mancha-vivienda-zonas-rurales"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "0207"
+number = "0207"
+section = ["resultados", "deduccion_autonomica_res", "castilla_la_mancha_res"]
+semantic_role = "irpf_deduccion_castilla_la_mancha_traslado_vivienda"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "0209"
+number = "0209"
+section = ["resultados", "deduccion_autonomica_res", "castilla_la_mancha_res"]
+semantic_role = "irpf_deduccion_castilla_la_mancha_familia_monoparental"
+continuidad_id = "irpf-deduccion-castilla-la-mancha-familia-monoparental"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "0210"
+number = "0210"
+section = ["resultados", "deduccion_autonomica_res", "castilla_la_mancha_res"]
+semantic_role = "irpf_deduccion_castilla_la_mancha_guarderia"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "0211"
+continuidad_id = "irpf-deduccion-castilla-la-mancha-guarderia-cm19"
+number = "0211"
+section = ["resultados", "deduccion_autonomica_res", "castilla_la_mancha_res"]
+semantic_role = "irpf_deduccion_castilla_la_mancha_guarderia"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "0212"
+number = "0212"
+section = ["resultados", "deduccion_autonomica_res", "castilla_la_mancha_res"]
+semantic_role = "irpf_deduccion_castilla_la_mancha_arrendamiento_vinculado"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "0213"
+number = "0213"
+section = ["resultados", "deduccion_autonomica_res", "castilla_la_mancha_res"]
+semantic_role = "irpf_deduccion_castilla_la_mancha_arrendamiento_familia_numerosa"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "0228"
+number = "0228"
+section = ["resultados", "deduccion_autonomica_res", "castilla_la_mancha_res"]
+semantic_role = "irpf_deduccion_castilla_la_mancha_arrendamiento_familia_monoparental"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "0229"
+number = "0229"
+section = ["resultados", "deduccion_autonomica_res", "castilla_la_mancha_res"]
+semantic_role = "irpf_deduccion_castilla_la_mancha_nacimiento_adopcion"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "0230"
+number = "0230"
+section = ["resultados", "deduccion_autonomica_res", "galicia_res"]
+semantic_role = "irpf_deduccion_galicia_vivienda_aldeas_modelo"
+continuidad_id = "irpf-deduccion-galicia-vivienda-aldeas-modelo"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "0250"
+continuidad_id = "irpf-deduccion-la-rioja-fomento-mecenazgo-lr19"
+number = "0250"
+section = ["resultados", "deduccion_autonomica_res", "la_rioja_res"]
+semantic_role = "irpf_deduccion_la_rioja_fomento_mecenazgo"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "0251"
+number = "0251"
+section = ["resultados", "deduccion_autonomica_res", "la_rioja_res"]
+semantic_role = "irpf_deduccion_la_rioja_donaciones_investigacion_patrimonio"
+continuidad_id = "irpf-deduccion-la-rioja-donaciones-investigacion-patrimonio"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "0252"
+number = "0252"
+section = ["resultados", "deduccion_autonomica_res", "la_rioja_res"]
+semantic_role = "irpf_deduccion_la_rioja_donaciones_empresas_culturales"
+continuidad_id = "irpf-deduccion-la-rioja-donaciones-empresas-culturales"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "0253"
+number = "0253"
+section = ["resultados", "deduccion_autonomica_res", "la_rioja_res"]
+semantic_role = "irpf_deduccion_la_rioja_fomento_mecenazgo"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "0254"
+number = "0254"
+section = ["resultados", "deduccion_autonomica_res", "la_rioja_res"]
+semantic_role = "irpf_deduccion_la_rioja_cantidades_investigacion_restauracion"
+continuidad_id = "irpf-deduccion-la-rioja-cantidades-investigacion-restauracion"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "0266"
+continuidad_id = "irpf-ganancia-premios-ayuda-patrimonio-historico"
+number = "0266"
+section = ["toma_datos_ampliada", "gp_premios", "otras"]
+semantic_role = "irpf_ganancia_premios_ayuda_patrimonio_historico"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "0279"
+number = "0279"
+section = ["toma_datos_ampliada", "gp_premios", "otras"]
+semantic_role = "irpf_ganancia_premios_ayuda_jovenes_agricultores"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "0426"
+number = "0426"
+section = ["toma_datos_ampliada", "red_base_imponible", "red_prevision_social"]
+semantic_role = "irpf_red_prevision_social_contribuciones_empresariales_anexo_c3"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "2021 RGONEMP is a distinct Anexo C.3 employer-contribution slot; later 0426 revisions are worker contributions conditioned on employer contributions."
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2021"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "0427"
+number = "0427"
+section = ["toma_datos_ampliada", "red_base_imponible", "red_prevision_social"]
+semantic_role = "irpf_red_prevision_social_contribuciones_empresariales_excepto_scd"
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2021"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "0428"
+number = "0428"
+section = ["toma_datos_ampliada", "red_base_imponible", "red_prevision_social"]
+semantic_role = "irpf_red_prevision_social_aportaciones_ejercicio_2021"
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2021"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "0437"
+number = "0437"
+section = ["toma_datos_ampliada", "red_base_imponible", "red_prevision_social"]
+semantic_role = "irpf_red_prevision_social_exceso_2016_2020"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "2021-only rolling 2016-2020 social-provision excess window; the label explicitly names the window and is not the 2020 2015-2019 slot."
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2021"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "0567"
+number = "0567"
+section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
+semantic_role = "irpf_deduccion_eficiencia_energetica_viviendas"
+input_kind = "computed"
+formula = "renta-deduccion-eficiencia-energetica-vivienda-suma"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "0683"
+continuidad_id = "irpf-anexo-a-obra-fecha-inicio-fechainiobradis"
+number = "0683"
+section = ["resultados", "anexo_a_res", "deduccion_vivienda_habitual_res"]
+data_type = "text"
+semantic_role = "irpf_anexo_a_obra_fecha_inicio"
+legal_refs = ["ley-35-2006:dt-18"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "0684"
+continuidad_id = "irpf-anexo-a-obra-fecha-fin-fechafinobradis"
+number = "0684"
+section = ["resultados", "anexo_a_res", "deduccion_vivienda_habitual_res"]
+data_type = "text"
+semantic_role = "irpf_anexo_a_obra_fecha_fin"
+legal_refs = ["ley-35-2006:dt-18"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "0689"
+number = "0689"
+section = ["resultados", "deduccion_autonomica_res", "asturias_res"]
+semantic_role = "irpf_deduccion_asturias_traslado_domicilio"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "0690"
+continuidad_id = "irpf-anexo-a-vivienda-fecha-adquisicion-fechavh"
+number = "0690"
+section = ["resultados", "anexo_a_res", "deduccion_vivienda_habitual_res"]
+data_type = "text"
+semantic_role = "irpf_anexo_a_vivienda_fecha_adquisicion"
+legal_refs = ["ley-35-2006:dt-18"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "0691"
+continuidad_id = "irpf-anexo-a-obra-fecha-inicio-fechainiobravh"
+number = "0691"
+section = ["resultados", "anexo_a_res", "deduccion_vivienda_habitual_res"]
+data_type = "text"
+semantic_role = "irpf_anexo_a_obra_fecha_inicio"
+legal_refs = ["ley-35-2006:dt-18"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "0692"
+continuidad_id = "irpf-anexo-a-obra-fecha-fin-fechafinobravh"
+number = "0692"
+section = ["resultados", "anexo_a_res", "deduccion_vivienda_habitual_res"]
+data_type = "text"
+semantic_role = "irpf_anexo_a_obra_fecha_fin"
+legal_refs = ["ley-35-2006:dt-18"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "0816"
+number = "0816"
+section = ["resultados", "deduccion_autonomica_res", "andalucia_res"]
+semantic_role = "irpf_deduccion_andalucia_familia_numerosa"
+continuidad_id = "irpf-deduccion-andalucia-familia-numerosa"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "0842"
+number = "0842"
+section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado_flag"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "0846"
+number = "0846"
+section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
+semantic_role = "irpf_deduccion_canarias_palma_desarraigo"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "0847"
+number = "0847"
+section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
+semantic_role = "irpf_deduccion_canarias_palma_cesion_inmueble"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "0848"
+number = "0848"
+section = ["resultados", "deduccion_autonomica_res", "canarias_res"]
+semantic_role = "irpf_deduccion_canarias_palma_gastos_enfermedad"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1180"
+number = "1180"
+section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
+semantic_role = "irpf_deduccion_c_valenciana_vehiculos_electricos"
+continuidad_id = "irpf-deduccion-c-valenciana-vehiculos-electricos"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1181"
+number = "1181"
+section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
+semantic_role = "irpf_deduccion_c_valenciana_residencia_municipio_riesgo"
+continuidad_id = "irpf-deduccion-c-valenciana-residencia-municipio-riesgo"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1182"
+number = "1182"
+section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
+semantic_role = "irpf_deduccion_c_valenciana_acciones_participaciones_generado"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1183"
+number = "1183"
+section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
+semantic_role = "irpf_deduccion_c_valenciana_acciones_participaciones"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1184"
+number = "1184"
+section = ["resultados", "deduccion_autonomica_res", "c_valenciana_res"]
+semantic_role = "irpf_deduccion_c_valenciana_acciones_participaciones_pendiente"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1185"
+number = "1185"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_inst_auto"]
+semantic_role = "irpf_anexo_b_energia_satisfecho_aplicado"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1186"
+number = "1186"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_inst_auto"]
+semantic_role = "irpf_anexo_b_inst_auto_importe_pendiente_anterior"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1206"
+number = "1206"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_inst_auto"]
+semantic_role = "irpf_anexo_b_carry_forward_pending"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1207"
+number = "1207"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_inst_auto"]
+semantic_role = "irpf_anexo_b_inst_auto_importe_aplicado"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1208"
+number = "1208"
+section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_inst_auto"]
+semantic_role = "irpf_anexo_b_inst_auto_importe_pendiente"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1209"
+number = "1209"
+section = ["resultados", "deduccion_autonomica_res", "castilla_y_leon_res"]
+data_type = "nif"
+semantic_role = "irpf_deduccion_cyl_otro_progenitor_nif"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1244"
+continuidad_id = "irpf-anualidades-alimentos-otro-progenitor-nif-pnifop2cl14"
+number = "1244"
+section = ["resultados", "deduccion_autonomica_res", "castilla_y_leon_res"]
+data_type = "nif"
+semantic_role = "irpf_anualidades_alimentos_otro_progenitor_nif"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1556"
+number = "1556"
+section = ["resultados", "deduccion_autonomica_res", "asturias_res"]
+semantic_role = "irpf_deduccion_asturias_vivienda_jovenes"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1557"
+number = "1557"
+section = ["resultados", "deduccion_autonomica_res", "asturias_res"]
+semantic_role = "irpf_deduccion_asturias_formacion_autoempleados"
+continuidad_id = "irpf-deduccion-asturias-formacion-autoempleados"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1610"
+number = "1610"
+section = ["resultados", "deduccion_autonomica_res", "asturias_res"]
+semantic_role = "irpf_deduccion_asturias_vivienda_protegida_generado_pendiente"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1611"
+number = "1611"
+section = ["resultados", "deduccion_autonomica_res", "asturias_res"]
+semantic_role = "irpf_deduccion_asturias_vivienda_protegida_pendiente_ejercicio_anterior"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1612"
+number = "1612"
+section = ["toma_datos_ampliada", "gp_otros_elementos", "elemento_patrimonial"]
+data_type = "boolean"
+semantic_role = "irpf_ganancia_otros_transmision_onerosa"
+continuidad_id = "irpf-ganancia-otros-transmision-onerosa"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1613"
+number = "1613"
+section = ["toma_datos_ampliada", "gp_otros_elementos", "elemento_patrimonial"]
+data_type = "boolean"
+semantic_role = "irpf_ganancia_otros_transmision_gratuita"
+continuidad_id = "irpf-ganancia-otros-transmision-gratuita"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1655"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-50 (BOE-A-2021-16230 art 1.2; alta 2021-10-06) introduce la deduccion por mejoras energeticas. aeat-dr-100-2021-dictionary:986 declara PCLCALREF, ruta /DatosEconomicos/TomaDatosAmpliada/AnexoA/MejorasEnergeticasViv/ReduccionCalRef/PCLCALREF, tipo X; ese campo/contexto no existe en aeat-dr-100-2020-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+continuidad_id = "irpf-deduccion-eficiencia-energetica-vivienda-situacion-clave-pclcalref"
+number = "1655"
+section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
+data_type = "text"
+semantic_role = "irpf_deduccion_eficiencia_energetica_vivienda_situacion_clave"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1656"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-50 (BOE-A-2021-16230 art 1.2; alta 2021-10-06) introduce la deduccion por mejoras energeticas. aeat-dr-100-2021-dictionary:987 declara PRCCALREF, ruta /DatosEconomicos/TomaDatosAmpliada/AnexoA/MejorasEnergeticasViv/ReduccionCalRef/PRCCALREF, tipo X; ese campo/contexto no existe en aeat-dr-100-2020-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+number = "1656"
+section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
+data_type = "text"
+semantic_role = "irpf_deduccion_eficiencia_energetica_vivienda_referencia_catastral"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1657"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-50 (BOE-A-2021-16230 art 1.2; alta 2021-10-06) introduce la deduccion por mejoras energeticas. aeat-dr-100-2021-dictionary:988 declara PNIF1CALREF, ruta /DatosEconomicos/TomaDatosAmpliada/AnexoA/MejorasEnergeticasViv/ReduccionCalRef/PNIF1CALREF, tipo X; ese campo/contexto no existe en aeat-dr-100-2020-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+continuidad_id = "irpf-deduccion-eficiencia-energetica-obra-proveedor-nif-pnif1calref"
+number = "1657"
+section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
+data_type = "nif"
+semantic_role = "irpf_deduccion_eficiencia_energetica_obra_proveedor_nif"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1658"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-50 (BOE-A-2021-16230 art 1.2; alta 2021-10-06) introduce la deduccion por mejoras energeticas. aeat-dr-100-2021-dictionary:989 declara PNIF2CALREF, ruta /DatosEconomicos/TomaDatosAmpliada/AnexoA/MejorasEnergeticasViv/ReduccionCalRef/PNIF2CALREF, tipo X; ese campo/contexto no existe en aeat-dr-100-2020-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+continuidad_id = "irpf-deduccion-eficiencia-energetica-obra-proveedor-nif-pnif2calref"
+number = "1658"
+section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
+data_type = "nif"
+semantic_role = "irpf_deduccion_eficiencia_energetica_obra_proveedor_nif"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1659"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-50 (BOE-A-2021-16230 art 1.2; alta 2021-10-06) introduce la deduccion por mejoras energeticas. aeat-dr-100-2021-dictionary:990 declara PFECHA1CALREF, ruta /DatosEconomicos/TomaDatosAmpliada/AnexoA/MejorasEnergeticasViv/ReduccionCalRef/PFECHA1CALREF, tipo FEC; ese campo/contexto no existe en aeat-dr-100-2020-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+continuidad_id = "irpf-deduccion-eficiencia-energetica-fecha-certificado-anterior-pfecha1calref"
+number = "1659"
+section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
+data_type = "text"
+semantic_role = "irpf_deduccion_eficiencia_energetica_fecha_certificado_anterior"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1660"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-50 (BOE-A-2021-16230 art 1.2; alta 2021-10-06) introduce la deduccion por mejoras energeticas. aeat-dr-100-2021-dictionary:994 declara CALREF, ruta /DatosEconomicos/TomaDatosAmpliada/AnexoA/MejorasEnergeticasViv/ReduccionCalRef/CALREF, tipo P102; ese campo/contexto no existe en aeat-dr-100-2020-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+number = "1660"
+section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
+semantic_role = "irpf_deduccion_eficiencia_energetica_vivienda_cantidades_satisfechas"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1661"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-50 (BOE-A-2021-16230 art 1.2; alta 2021-10-06) introduce la deduccion por mejoras energeticas. aeat-dr-100-2021-dictionary:995 declara BASETREF, ruta /DatosEconomicos/Resultados/AnexoARes/DeduccionMejorasEnergeticasVivRes/ReduccionCalRefRes/BASETREF, tipo P102; ese campo/contexto no existe en aeat-dr-100-2020-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+continuidad_id = "irpf-anexo-a-mejora-energia-deduccion-importe-basetref"
+number = "1661"
+section = ["resultados", "anexo_a_res", "deduccion_mejoras_energeticas_viv_res"]
+semantic_role = "irpf_anexo_a_mejora_energia_deduccion_importe"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1662"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-50 (BOE-A-2021-16230 art 1.2; alta 2021-10-06) introduce la deduccion por mejoras energeticas. aeat-dr-100-2021-dictionary:996 declara IMPTREF, ruta /DatosEconomicos/Resultados/AnexoARes/DeduccionMejorasEnergeticasVivRes/ReduccionCalRefRes/IMPTREF, tipo P102; ese campo/contexto no existe en aeat-dr-100-2020-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+continuidad_id = "irpf-anexo-a-mejora-energia-deduccion-importe-imptref"
+number = "1662"
+section = ["resultados", "anexo_a_res", "deduccion_mejoras_energeticas_viv_res"]
+semantic_role = "irpf_anexo_a_mejora_energia_deduccion_importe"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1663"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-50 (BOE-A-2021-16230 art 1.2; alta 2021-10-06) introduce la deduccion por mejoras energeticas. aeat-dr-100-2021-dictionary:997 declara PCLCEPNR, ruta /DatosEconomicos/TomaDatosAmpliada/AnexoA/MejorasEnergeticasViv/MejoraEnergiaPrimaria/PCLCEPNR, tipo X; ese campo/contexto no existe en aeat-dr-100-2020-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+continuidad_id = "irpf-deduccion-eficiencia-energetica-vivienda-situacion-clave-pclcepnr"
+number = "1663"
+section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
+data_type = "text"
+semantic_role = "irpf_deduccion_eficiencia_energetica_vivienda_situacion_clave"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1664"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-50 (BOE-A-2021-16230 art 1.2; alta 2021-10-06) introduce la deduccion por mejoras energeticas. aeat-dr-100-2021-dictionary:998 declara PRCCEPNR, ruta /DatosEconomicos/TomaDatosAmpliada/AnexoA/MejorasEnergeticasViv/MejoraEnergiaPrimaria/PRCCEPNR, tipo X; ese campo/contexto no existe en aeat-dr-100-2020-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+number = "1664"
+section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
+data_type = "text"
+semantic_role = "irpf_deduccion_eficiencia_energetica_vivienda_referencia_catastral"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1665"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-50 (BOE-A-2021-16230 art 1.2; alta 2021-10-06) introduce la deduccion por mejoras energeticas. aeat-dr-100-2021-dictionary:999 declara PNIF1CEPNR, ruta /DatosEconomicos/TomaDatosAmpliada/AnexoA/MejorasEnergeticasViv/MejoraEnergiaPrimaria/PNIF1CEPNR, tipo X; ese campo/contexto no existe en aeat-dr-100-2020-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+continuidad_id = "irpf-deduccion-eficiencia-energetica-obra-proveedor-nif-pnif1cepnr"
+number = "1665"
+section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
+data_type = "nif"
+semantic_role = "irpf_deduccion_eficiencia_energetica_obra_proveedor_nif"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1666"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-50 (BOE-A-2021-16230 art 1.2; alta 2021-10-06) introduce la deduccion por mejoras energeticas. aeat-dr-100-2021-dictionary:1000 declara PNIF2CEPNR, ruta /DatosEconomicos/TomaDatosAmpliada/AnexoA/MejorasEnergeticasViv/MejoraEnergiaPrimaria/PNIF2CEPNR, tipo X; ese campo/contexto no existe en aeat-dr-100-2020-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+continuidad_id = "irpf-deduccion-eficiencia-energetica-obra-proveedor-nif-pnif2cepnr"
+number = "1666"
+section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
+data_type = "nif"
+semantic_role = "irpf_deduccion_eficiencia_energetica_obra_proveedor_nif"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1667"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-50 (BOE-A-2021-16230 art 1.2; alta 2021-10-06) introduce la deduccion por mejoras energeticas. aeat-dr-100-2021-dictionary:1001 declara PFECHA1CEPNR, ruta /DatosEconomicos/TomaDatosAmpliada/AnexoA/MejorasEnergeticasViv/MejoraEnergiaPrimaria/PFECHA1CEPNR, tipo FEC; ese campo/contexto no existe en aeat-dr-100-2020-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+continuidad_id = "irpf-deduccion-eficiencia-energetica-fecha-certificado-anterior-pfecha1cepnr"
+number = "1667"
+section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
+data_type = "text"
+semantic_role = "irpf_deduccion_eficiencia_energetica_fecha_certificado_anterior"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1668"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-50 (BOE-A-2021-16230 art 1.2; alta 2021-10-06) introduce la deduccion por mejoras energeticas. aeat-dr-100-2021-dictionary:1007 declara CEPNR, ruta /DatosEconomicos/TomaDatosAmpliada/AnexoA/MejorasEnergeticasViv/MejoraEnergiaPrimaria/CEPNR, tipo P102; ese campo/contexto no existe en aeat-dr-100-2020-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+number = "1668"
+section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
+semantic_role = "irpf_deduccion_eficiencia_energetica_vivienda_cantidades_satisfechas"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1669"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-50 (BOE-A-2021-16230 art 1.2; alta 2021-10-06) introduce la deduccion por mejoras energeticas. aeat-dr-100-2021-dictionary:1008 declara BASETCEPNR, ruta /DatosEconomicos/Resultados/AnexoARes/DeduccionMejorasEnergeticasVivRes/MejoraEnergiaPrimariaRes/BASETCEPNR, tipo P102; ese campo/contexto no existe en aeat-dr-100-2020-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+continuidad_id = "irpf-anexo-a-mejora-energia-deduccion-importe-basetcepnr"
+number = "1669"
+section = ["resultados", "anexo_a_res", "deduccion_mejoras_energeticas_viv_res"]
+semantic_role = "irpf_anexo_a_mejora_energia_deduccion_importe"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1670"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-50 (BOE-A-2021-16230 art 1.2; alta 2021-10-06) introduce la deduccion por mejoras energeticas. aeat-dr-100-2021-dictionary:1009 declara IMPTCEPNR, ruta /DatosEconomicos/Resultados/AnexoARes/DeduccionMejorasEnergeticasVivRes/MejoraEnergiaPrimariaRes/IMPTCEPNR, tipo P102; ese campo/contexto no existe en aeat-dr-100-2020-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+continuidad_id = "irpf-anexo-a-mejora-energia-deduccion-importe-imptcepnr"
+number = "1670"
+section = ["resultados", "anexo_a_res", "deduccion_mejoras_energeticas_viv_res"]
+semantic_role = "irpf_anexo_a_mejora_energia_deduccion_importe"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1671"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-50 (BOE-A-2021-16230 art 1.2; alta 2021-10-06) introduce la deduccion por mejoras energeticas. aeat-dr-100-2021-dictionary:1010 declara TITEDIF, ruta /DatosEconomicos/TomaDatosAmpliada/AnexoA/MejorasEnergeticasViv/ObrasEdificios/TITEDIF, tipo TIT; ese campo/contexto no existe en aeat-dr-100-2020-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+# aeat-dr-100-2021-dictionary:1010: TITEDIF, titular de la deduccion por rehabilitacion energetica del edificio.
+continuidad_id = "irpf-deduccion-eficiencia-energetica-edificios-contribuyente-titular"
+number = "1671"
+section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
+data_type = "text"
+semantic_role = "irpf_toma_datos_declarante_selector"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1672"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-50 (BOE-A-2021-16230 art 1.2; alta 2021-10-06) introduce la deduccion por mejoras energeticas. aeat-dr-100-2021-dictionary:1011 declara PCLEDIF, ruta /DatosEconomicos/TomaDatosAmpliada/AnexoA/MejorasEnergeticasViv/ObrasEdificios/PCLEDIF, tipo X; ese campo/contexto no existe en aeat-dr-100-2020-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+continuidad_id = "irpf-deduccion-eficiencia-energetica-vivienda-situacion-clave-pcledif"
+number = "1672"
+section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
+data_type = "text"
+semantic_role = "irpf_deduccion_eficiencia_energetica_vivienda_situacion_clave"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1673"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-50 (BOE-A-2021-16230 art 1.2; alta 2021-10-06) introduce la deduccion por mejoras energeticas. aeat-dr-100-2021-dictionary:1012 declara PRCEDIF, ruta /DatosEconomicos/TomaDatosAmpliada/AnexoA/MejorasEnergeticasViv/ObrasEdificios/PRCEDIF, tipo X; ese campo/contexto no existe en aeat-dr-100-2020-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+number = "1673"
+section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
+data_type = "text"
+semantic_role = "irpf_deduccion_eficiencia_energetica_vivienda_referencia_catastral"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1674"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-50 (BOE-A-2021-16230 art 1.2; alta 2021-10-06) introduce la deduccion por mejoras energeticas. aeat-dr-100-2021-dictionary:1013 declara PNIF1EDIF, ruta /DatosEconomicos/TomaDatosAmpliada/AnexoA/MejorasEnergeticasViv/ObrasEdificios/PNIF1EDIF, tipo X; ese campo/contexto no existe en aeat-dr-100-2020-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+continuidad_id = "irpf-deduccion-eficiencia-energetica-obra-proveedor-nif-pnif1edif"
+number = "1674"
+section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
+data_type = "nif"
+semantic_role = "irpf_deduccion_eficiencia_energetica_obra_proveedor_nif"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1675"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-50 (BOE-A-2021-16230 art 1.2; alta 2021-10-06) introduce la deduccion por mejoras energeticas. aeat-dr-100-2021-dictionary:1014 declara PNIF2EDIF, ruta /DatosEconomicos/TomaDatosAmpliada/AnexoA/MejorasEnergeticasViv/ObrasEdificios/PNIF2EDIF, tipo X; ese campo/contexto no existe en aeat-dr-100-2020-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+continuidad_id = "irpf-deduccion-eficiencia-energetica-obra-proveedor-nif-pnif2edif"
+number = "1675"
+section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
+data_type = "nif"
+semantic_role = "irpf_deduccion_eficiencia_energetica_obra_proveedor_nif"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1676"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-50 (BOE-A-2021-16230 art 1.2; alta 2021-10-06) introduce la deduccion por mejoras energeticas. aeat-dr-100-2021-dictionary:1015 declara PFECHA1EDIF, ruta /DatosEconomicos/TomaDatosAmpliada/AnexoA/MejorasEnergeticasViv/ObrasEdificios/PFECHA1EDIF, tipo FEC; ese campo/contexto no existe en aeat-dr-100-2020-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+continuidad_id = "irpf-deduccion-eficiencia-energetica-fecha-certificado-anterior-pfecha1edif"
+number = "1676"
+section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
+data_type = "text"
+semantic_role = "irpf_deduccion_eficiencia_energetica_fecha_certificado_anterior"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1677"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-50 (BOE-A-2021-16230 art 1.2; alta 2021-10-06) introduce la deduccion por mejoras energeticas. aeat-dr-100-2021-dictionary:1021 declara EDIF, ruta /DatosEconomicos/TomaDatosAmpliada/AnexoA/MejorasEnergeticasViv/ObrasEdificios/EDIF, tipo P102; ese campo/contexto no existe en aeat-dr-100-2020-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+number = "1677"
+section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
+semantic_role = "irpf_deduccion_eficiencia_energetica_vivienda_cantidades_satisfechas"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1678"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-50 (BOE-A-2021-16230 art 1.2; alta 2021-10-06) introduce la deduccion por mejoras energeticas. aeat-dr-100-2021-dictionary:1022 declara BASETEDIF, ruta /DatosEconomicos/Resultados/AnexoARes/DeduccionMejorasEnergeticasVivRes/ObrasEdificiosRes/BASETEDIF, tipo P102; ese campo/contexto no existe en aeat-dr-100-2020-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+number = "1678"
+section = ["resultados", "anexo_a_res", "deduccion_mejoras_energeticas_viv_res"]
+semantic_role = "irpf_anexo_a_mejora_energia_edificio_deduccion_importe"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1679"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-50 (BOE-A-2021-16230 art 1.2; alta 2021-10-06) introduce la deduccion por mejoras energeticas. aeat-dr-100-2021-dictionary:1023 declara IMPTEDIF, ruta /DatosEconomicos/Resultados/AnexoARes/DeduccionMejorasEnergeticasVivRes/ObrasEdificiosRes/IMPTEDIF, tipo P102; ese campo/contexto no existe en aeat-dr-100-2020-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+number = "1679"
+section = ["resultados", "anexo_a_res", "deduccion_mejoras_energeticas_viv_res"]
+semantic_role = "irpf_anexo_a_mejora_energia_deduccion_importe"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1680"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-50 (BOE-A-2021-16230 art 1.2; alta 2021-10-06) introduce la deduccion por mejoras energeticas. aeat-dr-100-2021-dictionary:1024 declara PEXCEDIF, ruta /DatosEconomicos/Resultados/AnexoARes/DeduccionMejorasEnergeticasVivRes/ObrasEdificiosRes/PEXCEDIF, tipo P102; ese campo/contexto no existe en aeat-dr-100-2020-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+number = "1680"
+section = ["resultados", "anexo_a_res", "deduccion_mejoras_energeticas_viv_res"]
+semantic_role = "irpf_anexo_a_mejora_energia_exceso_pendiente"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1681"
+number = "1681"
+section = ["resultados", "anexo_a_res", "reserva_inversiones_canarias_res"]
+semantic_role = "irpf_anexo_a_ric_dotacion_importe"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1682"
+number = "1682"
+section = ["resultados", "anexo_a_res", "reserva_inversiones_canarias_res"]
+data_type = "text"
+semantic_role = "irpf_anexo_a_ric_dotacion_anio"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1683"
+number = "1683"
+section = ["resultados", "anexo_a_res", "reserva_inversiones_canarias_res"]
+semantic_role = "irpf_anexo_a_ric_inversion_tipo_cd"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1684"
+number = "1684"
+section = ["resultados", "anexo_a_res", "reserva_inversiones_canarias_res"]
+semantic_role = "irpf_anexo_a_ric_dotacion_importe"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1685"
+number = "1685"
+section = ["resultados", "anexo_a_res", "reserva_inversiones_canarias_res"]
+semantic_role = "irpf_anexo_a_ric_dotacion_importe"
+legal_refs = ["ley-35-2006:art-77"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1686"
+# Grounding: aeat-dr-100-2021-dictionary:1069, M21ITA; deducción del régimen general por innovación tecnológica (art. 35.2 LIS) aplicada.
+continuidad_id = "irpf-incentivos-inversion-innovacion-tecnologica-aplicado"
+number = "1686"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado_flag"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1687"
+number = "1687"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado_flag"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1688"
+number = "1688"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado_flag"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1689"
+# Grounding: aeat-dr-100-2021-dictionary:1153, M21ALIA; importe aplicado del programa Alicante 2021. Salida Vuelta al Mundo a Vela (Anexo A).
+continuidad_id = "irpf-aeip-alicante-2021-salida-vuelta-al-mundo-a-vela-aplicado"
+number = "1689"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1690"
+# Grounding: aeat-dr-100-2021-dictionary:1168, M21BIRA; importe aplicado del programa Bicentenarios de la independencia de las Republicas lberoamericanas (Anexo A).
+continuidad_id = "irpf-aeip-bicentenarios-de-la-independencia-de-las-republicas-lberoamericanas-aplicado"
+number = "1690"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1691"
+# Grounding: aeat-dr-100-2021-dictionary:1171, M21AERA; importe aplicado del programa 150 Aniversario de creación de la Academia de España en Roma (Anexo A).
+continuidad_id = "irpf-aeip-150-aniversario-de-creacion-de-la-academia-de-espana-en-roma-aplicado"
+number = "1691"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1692"
+number = "1692"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1693"
+# Grounding: aeat-dr-100-2021-dictionary:1177, M21SUMA; importe aplicado del programa Celebración del Summit "MADBLUE" (Anexo A).
+continuidad_id = "irpf-aeip-celebracion-del-summit-madblue-aplicado"
+number = "1693"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1694"
+# Grounding: aeat-dr-100-2021-dictionary:1180, M21ESMA; importe aplicado del programa 30 Aniversario de la Escuela Superior de Música Reina Sofía (Anexo A).
+continuidad_id = "irpf-aeip-30-aniversario-de-la-escuela-superior-de-musica-reina-sofia-aplicado"
+number = "1694"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1695"
+# Grounding: aeat-dr-100-2021-dictionary:1183, M21ASGA; importe aplicado del programa Año Santo Guadalupense 2021 (Anexo A).
+continuidad_id = "irpf-aeip-ano-santo-guadalupense-2021-aplicado"
+number = "1695"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1697"
+# Grounding: aeat-dr-100-2021-dictionary:1186, M21DCMA; importe aplicado del programa Torneo Davis Cup Madrid (Anexo A).
+continuidad_id = "irpf-aeip-torneo-davis-cup-madrid-aplicado"
+number = "1697"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1698"
+# Grounding: aeat-dr-100-2021-dictionary:1189, M21MHWA; importe aplicado del programa MADRID HORSE WEEK 21/23 (Anexo A).
+continuidad_id = "irpf-aeip-madrid-horse-week-21-23-aplicado"
+number = "1698"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1699"
+# Grounding: aeat-dr-100-2021-dictionary:1192, M21CREA; importe aplicado del programa Centenario del Rugby en España y de la Unió Esportiva Santboiana (Anexo A).
+continuidad_id = "irpf-aeip-centenario-del-rugby-en-espana-y-de-la-unio-esportiva-santboiana-aplicado"
+number = "1699"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1700"
+# Grounding: aeat-dr-100-2021-dictionary:1195, M21SCUA; importe aplicado del programa Solheim Cup 2023 (Anexo A).
+continuidad_id = "irpf-aeip-solheim-cup-2023-aplicado"
+number = "1700"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1701"
+# Grounding: aeat-dr-100-2021-dictionary:1198, M21CRSA; importe aplicado del programa IX Centenario de la Reconquista de Sigüenza (Anexo A).
+continuidad_id = "irpf-aeip-ix-centenario-de-la-reconquista-de-siguenza-aplicado"
+number = "1701"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1702"
+continuidad_id = "irpf-aeip-barcelona-mobile-world-capital-aplicado"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2020-dictionary:1047 y aeat-dr-100-2021-dictionary:1201: campos M21BWCA y M21MWCA; columna Aplicado en esta declaración del programa Barcelona Mobile World Capital en Anexo A. Misma designación y función fiscal. Cambio de campo adjudicado en el registro de adjudicaciones de identidad."
+number = "1702"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1703"
+# Grounding: aeat-dr-100-2021-dictionary:1204, M21VCMA; importe aplicado del programa Valencia, Capital Mundial del Diseño 2022 / Valencia World Design Capital 2022 (Anexo A).
+continuidad_id = "irpf-aeip-valencia-capital-mundial-del-diseno-2022-valencia-world-design-capital-2022-aplicado"
+number = "1703"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1704"
+# Grounding: aeat-dr-100-2021-dictionary:1207, M21UNEA; importe aplicado del programa Cincuenta aniversario de la Universidad Nacional de Educación a Distancia (UNED) (Anexo A).
+continuidad_id = "irpf-aeip-cincuenta-aniversario-de-la-universidad-nacional-de-educacion-a-distancia-uned-aplicado"
+number = "1704"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1705"
+# Grounding: aeat-dr-100-2021-dictionary:1210, M21CROA; importe aplicado del programa Centenario de Revista de Occidente (Anexo A).
+continuidad_id = "irpf-aeip-centenario-de-revista-de-occidente-aplicado"
+number = "1705"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1706"
+# Grounding: aeat-dr-100-2021-dictionary:1213, M21FCCA; importe aplicado del programa 50 aniversario del fallecimiento de Clara Campoamor. 90 años del inicio de una democracia plena (Anexo A).
+continuidad_id = "irpf-aeip-50-aniversario-del-fallecimiento-de-clara-campoamor-90-anos-del-inicio-de-una-democracia-plena-aplicado"
+number = "1706"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1707"
+# Grounding: aeat-dr-100-2021-dictionary:1216, M21FANA; importe aplicado del programa V Centenario del fallecimiento de Elio Antonio de Nebrija (Anexo A).
+continuidad_id = "irpf-aeip-v-centenario-del-fallecimiento-de-elio-antonio-de-nebrija-aplicado"
+number = "1707"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1708"
+# Grounding: aeat-dr-100-2021-dictionary:1219, M21NMEA; importe aplicado del programa Nuevas Metas II (Anexo A).
+continuidad_id = "irpf-aeip-nuevas-metas-ii-aplicado"
+number = "1708"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1709"
+number = "1709"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1710"
+# Grounding: aeat-dr-100-2021-dictionary:1225, M21ARDA; importe aplicado del programa Andalucía Región Europea del Deporte 2021 (Anexo A).
+continuidad_id = "irpf-aeip-andalucia-region-europea-del-deporte-2021-aplicado"
+number = "1710"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1711"
+# Grounding: aeat-dr-100-2021-dictionary:1228, M21AOOA; importe aplicado del programa 75 aniversario de la Ópera en Oviedo (Anexo A).
+continuidad_id = "irpf-aeip-75-aniversario-de-la-opera-en-oviedo-aplicado"
+number = "1711"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1712"
+# Grounding: aeat-dr-100-2021-dictionary:1231, M21HRCA; importe aplicado del programa Hábitos Saludables para el control del riesgo Cardiovascular "Aprender a cuidarnos" (Anexo A).
+continuidad_id = "irpf-aeip-habitos-saludables-para-el-control-del-riesgo-cardiovascular-aprender-a-cuidarnos-aplicado"
+number = "1712"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1713"
+# Grounding: aeat-dr-100-2021-dictionary:1234, M21MBEA; importe aplicado del programa Mundiales Bádminton España (Anexo A).
+continuidad_id = "irpf-aeip-mundiales-badminton-espana-aplicado"
+number = "1713"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1714"
+# Grounding: aeat-dr-100-2021-dictionary:1237, M21CBCA; importe aplicado del programa Centenario de la Batalla de Covadonga-Cuadonga (Anexo A).
+continuidad_id = "irpf-aeip-centenario-de-la-batalla-de-covadonga-cuadonga-aplicado"
+number = "1714"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1715"
+# Grounding: aeat-dr-100-2021-dictionary:1240, M21CCPA; importe aplicado del programa VII Centenario de la Catedral de Palencia 2021-2022 (Anexo A).
+continuidad_id = "irpf-aeip-vii-centenario-de-la-catedral-de-palencia-2021-2022-aplicado"
+number = "1715"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1716"
+# Grounding: aeat-dr-100-2021-dictionary:1243, M21RTUA; importe aplicado del programa FITUR especial: recuperación turismo (Anexo A).
+continuidad_id = "irpf-aeip-fitur-especial-recuperacion-turismo-aplicado"
+number = "1716"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1717"
+# Grounding: aeat-dr-100-2021-dictionary:1246, M21PDIA; importe aplicado del programa Programa Deporte lnclusivo (Anexo A).
+continuidad_id = "irpf-aeip-programa-deporte-lnclusivo-aplicado"
+number = "1717"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1718"
+# Grounding: aeat-dr-100-2021-dictionary:1249, M21CSCA; importe aplicado del programa Valencia 2020-2021, Año Jubilar. Camino del Santo Cáliz (Anexo A).
+continuidad_id = "irpf-aeip-valencia-2020-2021-ano-jubilar-camino-del-santo-caliz-aplicado"
+number = "1718"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1719"
+# Grounding: aeat-dr-100-2021-dictionary:1252, M21ENEA; importe aplicado del programa Enfermedades Neurodegenerativas. Año lnternacional de la lnvestigación e lnnovación. Período 2021-2022 (Anexo A).
+continuidad_id = "irpf-aeip-enfermedades-neurodegenerativas-ano-lnternacional-de-la-lnvestigacion-e-lnnovacion-periodo-2021-2022-aplicado"
+number = "1719"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1720"
+# Grounding: aeat-dr-100-2021-dictionary:1255, M21SJDA; importe aplicado del programa 50 aniversario del Hospital Sant Joan de Deu (Anexo A).
+continuidad_id = "irpf-aeip-50-aniversario-del-hospital-sant-joan-de-deu-aplicado"
+number = "1720"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1721"
+# Grounding: aeat-dr-100-2021-dictionary:1258, M21COMA; importe aplicado del programa El tiempo de la libertad, Comuneros V Centenario (Anexo A).
+continuidad_id = "irpf-aeip-el-tiempo-de-la-libertad-comuneros-v-centenario-aplicado"
+number = "1721"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1722"
+number = "1722"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+data_type = "boolean"
+semantic_role = "irpf_deduccion_cine_productor_financiacion_externa_flag"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1723"
+number = "1723"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+data_type = "boolean"
+semantic_role = "irpf_deduccion_cine_financiador_flag"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1724"
+# Grounding: aeat-dr-100-2021-dictionary:1262, NIF1RG; NIF del primer productor financiado en el régimen general.
+continuidad_id = "irpf-incentivos-inversion-productor-1-nif"
+number = "1724"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+data_type = "nif"
+semantic_role = "irpf_deduccion_inversion_empresarial_productor_nif"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1725"
+# Grounding: aeat-dr-100-2021-dictionary:1263, NIF2RG; NIF del segundo productor financiado en el régimen general.
+continuidad_id = "irpf-incentivos-inversion-productor-2-nif"
+number = "1725"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+data_type = "nif"
+semantic_role = "irpf_deduccion_inversion_empresarial_productor_nif"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1726"
+# Grounding: aeat-dr-100-2021-dictionary:1264, NIF3RG; NIF del tercer productor financiado en el régimen general.
+continuidad_id = "irpf-incentivos-inversion-productor-3-nif"
+number = "1726"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+data_type = "nif"
+semantic_role = "irpf_deduccion_inversion_empresarial_productor_nif"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1727"
+# Grounding: aeat-dr-100-2021-dictionary:1282, M22ITA; deducción canaria por innovación tecnológica (art. 35.2 LIS) aplicada.
+continuidad_id = "irpf-incentivos-inversion-canarias-innovacion-tecnologica-aplicado"
+number = "1727"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado_flag"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1728"
+# Grounding: aeat-dr-100-2021-dictionary:1288, M22PEEA; deducción canaria por producciones cinematográficas extranjeras en España (art. 36.2 LIS) aplicada.
+continuidad_id = "irpf-incentivos-inversion-canarias-producciones-cinematograficas-extranjeras-aplicado"
+number = "1728"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado_flag"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1729"
+number = "1729"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+semantic_role = "irpf_anexo_a_aeip_aplicado_flag"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1730"
+number = "1730"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+data_type = "boolean"
+semantic_role = "irpf_deduccion_cine_productor_financiacion_externa_flag"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1731"
+number = "1731"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+data_type = "boolean"
+semantic_role = "irpf_deduccion_cine_financiador_flag"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1732"
+# Grounding: aeat-dr-100-2021-dictionary:1301, NIF1CAN; NIF del primer productor financiado en Canarias.
+continuidad_id = "irpf-incentivos-inversion-canarias-productor-1-nif"
+number = "1732"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+data_type = "nif"
+semantic_role = "irpf_deduccion_inversion_empresarial_productor_nif"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1733"
+# Grounding: aeat-dr-100-2021-dictionary:1302, NIF2CAN; NIF del segundo productor financiado en Canarias.
+continuidad_id = "irpf-incentivos-inversion-canarias-productor-2-nif"
+number = "1733"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+data_type = "nif"
+semantic_role = "irpf_deduccion_inversion_empresarial_productor_nif"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1734"
+# Grounding: aeat-dr-100-2021-dictionary:1303, NIF3CAN; NIF del tercer productor financiado en Canarias.
+continuidad_id = "irpf-incentivos-inversion-canarias-productor-3-nif"
+number = "1734"
+section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
+data_type = "nif"
+semantic_role = "irpf_deduccion_inversion_empresarial_productor_nif"
+legal_refs = ["ley-35-2006:art-68.2"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1735"
+# aeat-dr-100-2021-dictionary:1735: G4ATIT, titular de ayudas publicas imputables por cuartas partes.
+continuidad_id = "irpf-ayudas-publicas-imputacion-cuartas-partes-contribuyente-titular"
+number = "1735"
+section = ["resultados", "anexo_c_res", "gan_per_cuartas"]
+data_type = "text"
+semantic_role = "irpf_toma_datos_declarante_selector"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1736"
+number = "1736"
+section = ["resultados", "anexo_c_res", "gan_per_cuartas"]
+data_type = "text"
+semantic_role = "irpf_anexo_c_gan_per_cuartas_tipo_ayuda"
+continuidad_id = "irpf-anexo-c-gan-per-cuartas-tipo-ayuda"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1737"
+number = "1737"
+section = ["resultados", "anexo_c_res", "gan_per_cuartas"]
+data_type = "text"
+semantic_role = "irpf_anexo_c_gan_per_cuartas_anio_obtencion"
+continuidad_id = "irpf-anexo-c-gan-per-cuartas-anio-obtencion"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1738"
+number = "1738"
+section = ["resultados", "anexo_c_res", "gan_per_cuartas"]
+semantic_role = "irpf_anexo_c_gan_per_cuartas_importe_total"
+continuidad_id = "irpf-anexo-c-gan-per-cuartas-importe-total"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1739"
+number = "1739"
+section = ["resultados", "anexo_c_res", "gan_per_cuartas"]
+semantic_role = "irpf_anexo_c_gan_per_cuartas_aplicado"
+continuidad_id = "irpf-anexo-c-gan-per-cuartas-aplicado"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1740"
+number = "1740"
+section = ["resultados", "anexo_c_res", "gan_per_cuartas"]
+semantic_role = "irpf_anexo_c_gan_per_cuartas_pendiente"
+continuidad_id = "irpf-anexo-c-gan-per-cuartas-pendiente"
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1741"
+number = "1741"
+section = ["resultados", "anexo_c_res", "contribuciones_sist_prevision_social_rt_res"]
+data_type = "text"
+semantic_role = "irpf_anexo_c_reductor_contribuyente_codigo"
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2021"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1742"
+number = "1742"
+section = ["resultados", "anexo_c_res", "contribuciones_sist_prevision_social_rt_res"]
+semantic_role = "irpf_anexo_c_contribucion_empleador_sps_rt_pendiente_inicio"
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2021"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1743"
+number = "1743"
+section = ["resultados", "anexo_c_res", "contribuciones_sist_prevision_social_rt_res"]
+semantic_role = "irpf_anexo_c_exceso_sps_rt_aplicado"
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2021"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1744"
+number = "1744"
+section = ["resultados", "anexo_c_res", "contribuciones_sist_prevision_social_rt_res"]
+semantic_role = "irpf_anexo_c_contribucion_empleador_sps_rt_pendiente_inicio"
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2021"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1745"
+number = "1745"
+section = ["resultados", "anexo_c_res", "contribuciones_sist_prevision_social_rt_res"]
+semantic_role = "irpf_anexo_c_exceso_sps_rt_aplicado"
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2021"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1746"
+number = "1746"
+section = ["resultados", "anexo_c_res", "contribuciones_sist_prevision_social_rt_res"]
+semantic_role = "irpf_anexo_c_contribucion_empleador_sps_rt_pendiente_fin"
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2021"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1747"
+number = "1747"
+section = ["resultados", "anexo_c_res", "contribuciones_sist_prevision_social_rt_res"]
+semantic_role = "irpf_anexo_c_contribucion_empleador_sps_rt_pendiente_inicio"
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2021"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1748"
+number = "1748"
+section = ["resultados", "anexo_c_res", "contribuciones_sist_prevision_social_rt_res"]
+semantic_role = "irpf_anexo_c_exceso_sps_rt_aplicado"
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2021"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1749"
+number = "1749"
+section = ["resultados", "anexo_c_res", "contribuciones_sist_prevision_social_rt_res"]
+semantic_role = "irpf_anexo_c_contribucion_empleador_sps_rt_pendiente_fin"
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2021"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1750"
+number = "1750"
+section = ["resultados", "anexo_c_res", "contribuciones_sist_prevision_social_rt_res"]
+semantic_role = "irpf_anexo_c_contribucion_empleador_sps_rt_pendiente_inicio"
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2021"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1751"
+number = "1751"
+section = ["resultados", "anexo_c_res", "contribuciones_sist_prevision_social_rt_res"]
+semantic_role = "irpf_anexo_c_exceso_sps_rt_aplicado"
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2021"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1752"
+number = "1752"
+section = ["resultados", "anexo_c_res", "contribuciones_sist_prevision_social_rt_res"]
+semantic_role = "irpf_anexo_c_contribucion_empleador_sps_rt_pendiente_fin"
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2021"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1753"
+number = "1753"
+section = ["resultados", "anexo_c_res", "contribuciones_sist_prevision_social_rt_res"]
+semantic_role = "irpf_anexo_c_contribucion_empleador_sps_rt_pendiente_inicio"
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2021"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1754"
+number = "1754"
+section = ["resultados", "anexo_c_res", "contribuciones_sist_prevision_social_rt_res"]
+semantic_role = "irpf_anexo_c_exceso_sps_rt_aplicado"
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2021"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1755"
+number = "1755"
+section = ["resultados", "anexo_c_res", "contribuciones_sist_prevision_social_rt_res"]
+semantic_role = "irpf_anexo_c_contribucion_empleador_sps_rt_pendiente_fin"
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2021"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1756"
+number = "1756"
+section = ["resultados", "anexo_c_res", "aportaciones_sist_prevision_social_rg_res"]
+data_type = "text"
+semantic_role = "irpf_anexo_c_reductor_contribuyente_codigo"
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2021"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1757"
+number = "1757"
+section = ["resultados", "anexo_c_res", "aportaciones_sist_prevision_social_rg_res"]
+semantic_role = "irpf_anexo_c_exceso_sps_rg_aportaciones_periodo"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "2021-only Anexo C RG personal-contribution period row; AEAT split this subsection only in the 2021 revision."
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2021"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1758"
+number = "1758"
+section = ["resultados", "anexo_c_res", "aportaciones_sist_prevision_social_rg_res"]
+semantic_role = "irpf_anexo_c_exceso_sps_rg_aportaciones_aplicado"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "2021-only Anexo C RG personal-contribution applied row; AEAT split this subsection only in the 2021 revision."
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2021"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1759"
+number = "1759"
+section = ["resultados", "anexo_c_res", "aportaciones_sist_prevision_social_rg_res"]
+semantic_role = "irpf_anexo_c_exceso_sps_rg_aportaciones_pendiente_fin"
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2021"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1760"
+number = "1760"
+section = ["resultados", "anexo_c_res", "contribuciones_sist_prevision_social_rg_res"]
+data_type = "text"
+semantic_role = "irpf_anexo_c_reductor_contribuyente_codigo"
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2021"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1761"
+number = "1761"
+section = ["resultados", "anexo_c_res", "contribuciones_sist_prevision_social_rg_res"]
+semantic_role = "irpf_anexo_c_exceso_sps_rg_contribuciones_periodo"
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2021"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1762"
+number = "1762"
+section = ["resultados", "anexo_c_res", "contribuciones_sist_prevision_social_rg_res"]
+semantic_role = "irpf_anexo_c_contribucion_empresarial_rg_aplicado"
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2021"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1763"
+number = "1763"
+section = ["resultados", "anexo_c_res", "contribuciones_sist_prevision_social_rg_res"]
+semantic_role = "irpf_anexo_c_contribucion_empresarial_rg_pendiente_fin"
+legal_refs = ["ley-35-2006:art-51", "ley-35-2006:art-52-2021"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1764"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-50 (BOE-A-2021-16230 art 1.2; alta 2021-10-06) introduce la deduccion por mejoras energeticas. aeat-dr-100-2021-dictionary:991 declara PFECHA2CALREF, ruta /DatosEconomicos/TomaDatosAmpliada/AnexoA/MejorasEnergeticasViv/ReduccionCalRef/PFECHA2CALREF, tipo FEC; ese campo/contexto no existe en aeat-dr-100-2020-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+continuidad_id = "irpf-deduccion-eficiencia-energetica-fecha-certificado-posterior-pfecha2calref"
+number = "1764"
+section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
+data_type = "text"
+semantic_role = "irpf_deduccion_eficiencia_energetica_fecha_certificado_posterior"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1765"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-50 (BOE-A-2021-16230 art 1.2; alta 2021-10-06) introduce la deduccion por mejoras energeticas. aeat-dr-100-2021-dictionary:992 declara PDEMANDA1CALREF, ruta /DatosEconomicos/TomaDatosAmpliada/AnexoA/MejorasEnergeticasViv/ReduccionCalRef/PDEMANDA1CALREF, tipo P102; ese campo/contexto no existe en aeat-dr-100-2020-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+number = "1765"
+section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
+semantic_role = "irpf_deduccion_eficiencia_energetica_demanda_anterior"
+continuidad_id = "irpf-deduccion-eficiencia-energetica-demanda-anterior"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1766"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-50 (BOE-A-2021-16230 art 1.2; alta 2021-10-06) introduce la deduccion por mejoras energeticas. aeat-dr-100-2021-dictionary:993 declara PDEMANDA2CALREF, ruta /DatosEconomicos/TomaDatosAmpliada/AnexoA/MejorasEnergeticasViv/ReduccionCalRef/PDEMANDA2CALREF, tipo P102; ese campo/contexto no existe en aeat-dr-100-2020-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+number = "1766"
+section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
+semantic_role = "irpf_deduccion_eficiencia_energetica_demanda_posterior"
+continuidad_id = "irpf-deduccion-eficiencia-energetica-demanda-posterior"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1767"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-50 (BOE-A-2021-16230 art 1.2; alta 2021-10-06) introduce la deduccion por mejoras energeticas. aeat-dr-100-2021-dictionary:1002 declara PFECHA2CEPNR, ruta /DatosEconomicos/TomaDatosAmpliada/AnexoA/MejorasEnergeticasViv/MejoraEnergiaPrimaria/PFECHA2CEPNR, tipo FEC; ese campo/contexto no existe en aeat-dr-100-2020-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+continuidad_id = "irpf-deduccion-eficiencia-energetica-fecha-certificado-posterior-pfecha2cepnr"
+number = "1767"
+section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
+data_type = "text"
+semantic_role = "irpf_deduccion_eficiencia_energetica_fecha_certificado_posterior"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1768"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-50 (BOE-A-2021-16230 art 1.2; alta 2021-10-06) introduce la deduccion por mejoras energeticas. aeat-dr-100-2021-dictionary:1003 declara PCONS1CEPNR, ruta /DatosEconomicos/TomaDatosAmpliada/AnexoA/MejorasEnergeticasViv/MejoraEnergiaPrimaria/PCONS1CEPNR, tipo P102; ese campo/contexto no existe en aeat-dr-100-2020-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+continuidad_id = "irpf-deduccion-eficiencia-energetica-consumo-anterior-pcons1cepnr"
+number = "1768"
+section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
+semantic_role = "irpf_deduccion_eficiencia_energetica_consumo_anterior"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1769"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-50 (BOE-A-2021-16230 art 1.2; alta 2021-10-06) introduce la deduccion por mejoras energeticas. aeat-dr-100-2021-dictionary:1004 declara PCONS2CEPNR, ruta /DatosEconomicos/TomaDatosAmpliada/AnexoA/MejorasEnergeticasViv/MejoraEnergiaPrimaria/PCONS2CEPNR, tipo P102; ese campo/contexto no existe en aeat-dr-100-2020-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+continuidad_id = "irpf-deduccion-eficiencia-energetica-consumo-posterior-pcons2cepnr"
+number = "1769"
+section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
+semantic_role = "irpf_deduccion_eficiencia_energetica_consumo_posterior"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1770"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-50 (BOE-A-2021-16230 art 1.2; alta 2021-10-06) introduce la deduccion por mejoras energeticas. aeat-dr-100-2021-dictionary:1005 declara PLETRA1CEPNR, ruta /DatosEconomicos/TomaDatosAmpliada/AnexoA/MejorasEnergeticasViv/MejoraEnergiaPrimaria/PLETRA1CEPNR, tipo X; ese campo/contexto no existe en aeat-dr-100-2020-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+continuidad_id = "irpf-deduccion-eficiencia-energetica-calificacion-anterior-pletra1cepnr"
+number = "1770"
+section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
+data_type = "text"
+semantic_role = "irpf_deduccion_eficiencia_energetica_calificacion_anterior"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1771"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-50 (BOE-A-2021-16230 art 1.2; alta 2021-10-06) introduce la deduccion por mejoras energeticas. aeat-dr-100-2021-dictionary:1006 declara PLETRA2CEPNR, ruta /DatosEconomicos/TomaDatosAmpliada/AnexoA/MejorasEnergeticasViv/MejoraEnergiaPrimaria/PLETRA2CEPNR, tipo X; ese campo/contexto no existe en aeat-dr-100-2020-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+continuidad_id = "irpf-deduccion-eficiencia-energetica-calificacion-posterior-pletra2cepnr"
+number = "1771"
+section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
+data_type = "text"
+semantic_role = "irpf_deduccion_eficiencia_energetica_calificacion_posterior"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1772"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-50 (BOE-A-2021-16230 art 1.2; alta 2021-10-06) introduce la deduccion por mejoras energeticas. aeat-dr-100-2021-dictionary:1016 declara PFECHA2EDIF, ruta /DatosEconomicos/TomaDatosAmpliada/AnexoA/MejorasEnergeticasViv/ObrasEdificios/PFECHA2EDIF, tipo FEC; ese campo/contexto no existe en aeat-dr-100-2020-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+continuidad_id = "irpf-deduccion-eficiencia-energetica-fecha-certificado-posterior-pfecha2edif"
+number = "1772"
+section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
+data_type = "text"
+semantic_role = "irpf_deduccion_eficiencia_energetica_fecha_certificado_posterior"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1773"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-50 (BOE-A-2021-16230 art 1.2; alta 2021-10-06) introduce la deduccion por mejoras energeticas. aeat-dr-100-2021-dictionary:1017 declara PCONS1EDIF, ruta /DatosEconomicos/TomaDatosAmpliada/AnexoA/MejorasEnergeticasViv/ObrasEdificios/PCONS1EDIF, tipo P102; ese campo/contexto no existe en aeat-dr-100-2020-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+continuidad_id = "irpf-deduccion-eficiencia-energetica-consumo-anterior-pcons1edif"
+number = "1773"
+section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
+semantic_role = "irpf_deduccion_eficiencia_energetica_consumo_anterior"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1774"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-50 (BOE-A-2021-16230 art 1.2; alta 2021-10-06) introduce la deduccion por mejoras energeticas. aeat-dr-100-2021-dictionary:1018 declara PCONS2EDIF, ruta /DatosEconomicos/TomaDatosAmpliada/AnexoA/MejorasEnergeticasViv/ObrasEdificios/PCONS2EDIF, tipo P102; ese campo/contexto no existe en aeat-dr-100-2020-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+continuidad_id = "irpf-deduccion-eficiencia-energetica-consumo-posterior-pcons2edif"
+number = "1774"
+section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
+semantic_role = "irpf_deduccion_eficiencia_energetica_consumo_posterior"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1775"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-50 (BOE-A-2021-16230 art 1.2; alta 2021-10-06) introduce la deduccion por mejoras energeticas. aeat-dr-100-2021-dictionary:1019 declara PLETRA1EDIF, ruta /DatosEconomicos/TomaDatosAmpliada/AnexoA/MejorasEnergeticasViv/ObrasEdificios/PLETRA1EDIF, tipo X; ese campo/contexto no existe en aeat-dr-100-2020-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+continuidad_id = "irpf-deduccion-eficiencia-energetica-calificacion-anterior-pletra1edif"
+number = "1775"
+section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
+data_type = "text"
+semantic_role = "irpf_deduccion_eficiencia_energetica_calificacion_anterior"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1776"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "ley-35-2006:da-50 (BOE-A-2021-16230 art 1.2; alta 2021-10-06) introduce la deduccion por mejoras energeticas. aeat-dr-100-2021-dictionary:1020 declara PLETRA2EDIF, ruta /DatosEconomicos/TomaDatosAmpliada/AnexoA/MejorasEnergeticasViv/ObrasEdificios/PLETRA2EDIF, tipo X; ese campo/contexto no existe en aeat-dr-100-2020-dictionary. Nueva casilla para este beneficio fiscal, no ausencia de extraccion."
+continuidad_id = "irpf-deduccion-eficiencia-energetica-calificacion-posterior-pletra2edif"
+number = "1776"
+section = ["toma_datos_ampliada", "anexo_a", "mejoras_energeticas_viv"]
+data_type = "text"
+semantic_role = "irpf_deduccion_eficiencia_energetica_calificacion_posterior"
+legal_refs = ["ley-35-2006:da-50"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1780"
+number = "1780"
+section = ["resultados", "regularizacion_res"]
+data_type = "iban"
+semantic_role = "irpf_rectificacion_iban"
+legal_refs = ["ley-35-2006:art-97"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1781"
+number = "1781"
+section = ["resultados", "regularizacion_res", "rectsepa"]
+data_type = "iban"
+semantic_role = "irpf_regularizacion_sepa_cuenta_iban"
+legal_refs = ["ley-35-2006:art-97"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1782"
+number = "1782"
+section = ["resultados", "regularizacion_res", "rectsepa"]
+data_type = "text"
+semantic_role = "irpf_rectsepa_swift_bic"
+legal_refs = ["ley-35-2006:art-97"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1783"
+number = "1783"
+section = ["resultados", "regularizacion_res", "rectnosepa"]
+data_type = "text"
+semantic_role = "irpf_rectnosepa_swift_bic"
+legal_refs = ["ley-35-2006:art-97"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1784"
+number = "1784"
+section = ["resultados", "regularizacion_res", "rectnosepa"]
+data_type = "text"
+semantic_role = "irpf_rectnosepa_cuenta_numero"
+legal_refs = ["ley-35-2006:art-97"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1785"
+number = "1785"
+section = ["resultados", "regularizacion_res", "rectnosepa"]
+data_type = "text"
+semantic_role = "irpf_rectnosepa_banco_nombre"
+legal_refs = ["ley-35-2006:art-97"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1786"
+number = "1786"
+section = ["resultados", "regularizacion_res", "rectnosepa"]
+data_type = "text"
+semantic_role = "irpf_rectnosepa_banco_direccion"
+legal_refs = ["ley-35-2006:art-97"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1787"
+number = "1787"
+section = ["resultados", "regularizacion_res", "rectnosepa"]
+data_type = "text"
+semantic_role = "irpf_rectnosepa_banco_ciudad"
+legal_refs = ["ley-35-2006:art-97"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1789"
+number = "1789"
+section = ["resultados", "regularizacion_res", "rectnosepa"]
+data_type = "text"
+semantic_role = "irpf_rectnosepa_pais_codigo"
+legal_refs = ["ley-35-2006:art-97"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1790"
+number = "1790"
+section = ["resultados", "compensacion_conyuges_res"]
+data_type = "iban"
+semantic_role = "irpf_compensacion_conyuges_iban"
+continuidad_id = "irpf-compensacion-conyuges-iban"
+legal_refs = ["ley-35-2006:art-97"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1791"
+number = "1791"
+section = ["resultados", "compensacion_conyuges_res", "compsepa"]
+data_type = "text"
+semantic_role = "irpf_compensacion_conyuges_sepa_codigo"
+continuidad_id = "irpf-compensacion-conyuges-sepa-codigo"
+legal_refs = ["ley-35-2006:art-97"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1792"
+continuidad_id = "irpf-compensacion-conyuges-swift-bic-tswift"
+number = "1792"
+section = ["resultados", "compensacion_conyuges_res", "compsepa"]
+data_type = "text"
+semantic_role = "irpf_compensacion_conyuges_swift_bic"
+legal_refs = ["ley-35-2006:art-97"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1793"
+continuidad_id = "irpf-compensacion-conyuges-swift-bic-pcompswiftotros"
+number = "1793"
+section = ["resultados", "compensacion_conyuges_res", "compnosepa"]
+data_type = "text"
+semantic_role = "irpf_compensacion_conyuges_swift_bic"
+legal_refs = ["ley-35-2006:art-97"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1794"
+number = "1794"
+section = ["resultados", "compensacion_conyuges_res", "compnosepa"]
+data_type = "text"
+semantic_role = "irpf_compensacion_conyuges_numero_cuenta"
+continuidad_id = "irpf-compensacion-conyuges-numero-cuenta"
+legal_refs = ["ley-35-2006:art-97"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1795"
+number = "1795"
+section = ["resultados", "compensacion_conyuges_res", "compnosepa"]
+data_type = "text"
+semantic_role = "irpf_compensacion_conyuges_entidad_bancaria_nombre"
+continuidad_id = "irpf-compensacion-conyuges-entidad-bancaria-nombre"
+legal_refs = ["ley-35-2006:art-97"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1796"
+number = "1796"
+section = ["resultados", "compensacion_conyuges_res", "compnosepa"]
+data_type = "text"
+semantic_role = "irpf_compensacion_conyuges_bank_address"
+continuidad_id = "irpf-compensacion-conyuges-bank-address"
+legal_refs = ["ley-35-2006:art-97"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1797"
+number = "1797"
+section = ["resultados", "compensacion_conyuges_res", "compnosepa"]
+data_type = "text"
+semantic_role = "irpf_compensacion_conyuges_entidad_ciudad"
+continuidad_id = "irpf-compensacion-conyuges-entidad-ciudad"
+legal_refs = ["ley-35-2006:art-97"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]
+[[revisions."2021".casillas]]
+id = "1799"
+number = "1799"
+section = ["resultados", "compensacion_conyuges_res", "compnosepa"]
+data_type = "country_code"
+semantic_role = "irpf_compensacion_conyuges_nosepa_pais_codigo"
+continuidad_id = "irpf-compensacion-conyuges-nosepa-pais-codigo"
+legal_refs = ["ley-35-2006:art-97"]
+additional_source_refs = ["aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd"]

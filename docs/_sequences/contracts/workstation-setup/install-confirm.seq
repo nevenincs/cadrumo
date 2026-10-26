@@ -1,0 +1,9 @@
+@step Confirm the command is on your path.
+@static aeat --version
+@blocked nondeterministic-output Prints the installed release number, which changes with every release of the tool.
+@step Ask what is installed and what is missing.
+@static aeat config check
+@blocked nondeterministic-output Reports this host's memory, accelerator and installed browsers, which differ on every machine.
+@step Run the same check with machine-readable output for scripted setups.
+@static aeat --format json config check
+@blocked nondeterministic-output Reports this host's memory, accelerator and installed browsers, which differ on every machine.

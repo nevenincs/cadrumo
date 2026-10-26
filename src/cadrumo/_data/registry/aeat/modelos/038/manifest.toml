@@ -1,0 +1,26 @@
+[modelo]
+id = "038"
+tax_domain = "informative"
+cadence = "monthly"
+calculation_class = "informative"
+jurisdiction = "ES-AEAT"
+legal_refs = [
+    "orden-hac-66-2002:art-1",
+    "orden-hac-66-2002:art-6",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "enrolled-modelo-038-procedure",
+    "aeat-dr-038-2024",
+]
+
+# Filing years below the support floor existed in law under Orden HAC/66/2002
+# and are not authored. From the floor to May 2024 the modelo is filed on AEAT's
+# 2012 design (aeat-dr-038-2012); Orden HAC/646/2024 art. 1 adds the IRUS field
+# to the tipo 2 record and its disposicion final unica applies it first to the
+# June 2024 declaration, which the 2024-desde-06 edition renders.
+[modelo.inception.unauthored]
+earliest_authored = 2022
+reason = "Approved by Orden HAC/66/2002; filing years before 2022 existed in law and lie below the supported floor, so they are not authored. 2022 to May 2024 is authored from aeat-dr-038-2012, the design in force until Orden HAC/646/2024 added the IRUS field from the June 2024 declaration, and June 2024 onward from aeat-dr-038-2024."
+legal_refs = ["orden-hac-66-2002:art-1"]
+source_refs = ["aeat-dr-038-2012"]

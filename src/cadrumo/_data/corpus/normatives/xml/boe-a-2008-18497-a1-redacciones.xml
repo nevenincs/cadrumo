@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<response>
+  <status>
+    <code>200</code>
+    <text>ok</text>
+  </status>
+  <data>
+    <bloque id="a1" tipo="precepto" titulo="Artículo 1">
+      <version id_norma="BOE-A-2008-18497" fecha_publicacion="20081117" fecha_vigencia="20081118">
+        <p class="articulo">Artículo 1. Aprobación del modelo 216.</p>
+        <p class="parrafo">Se aprueba el modelo 216 «Impuesto sobre la Renta de no Residentes. Rentas obtenidas sin mediación de establecimiento permanente. Retenciones e ingresos a cuenta. Declaración-documento de ingreso». Dicho modelo, que figura como anexo I de la presente Orden, consta de dos ejemplares: Ejemplar para el declarante y ejemplar para la entidad colaboradora-AEAT.</p>
+        <p class="parrafo">El número de justificante que habrá de figurar en dicho modelo será un número secuencial cuyos tres primeros dígitos se corresponderán con el código 216.</p>
+      </version>
+    </bloque>
+  </data>
+</response>

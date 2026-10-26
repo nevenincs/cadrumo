@@ -1,0 +1,84 @@
+[revisions."2026-y-siguientes"]
+casilla_source_refs = ["boe-modelo-296-form-text", "boe-modelo-296-form-layout"]
+# Applicability-grade edition from ejercicio 2026, stored as the differences from
+# the 2024-2025 edition (storage baselines select payload only).
+#
+# WHAT CHANGED. Orden HAC/623/2026 art. 2 rewrites three fields of the tipo-2
+# perceptor record -- CODIGO (135), CODIGO EMISOR (136-147) and CLAVE DE MERCADO
+# (412, whose values become A to E) -- and adds CLAVE DE PERSONALIDAD DEL TITULAR
+# REGISTRAL at position 310 of the anexo "Valores negociables. Relacion de
+# certificados de pago". Its disposicion final unica applies the change first to
+# the declaracion of ejercicio 2026, filed in 2027. The complete layout is
+# boe-modelo-296-2026-layout, BOE's consolidated Anexo III redaction of 24 June
+# 2026.
+#
+# WHY APPLICABILITY. AEAT has not published the ejercicio-2026 diseno de registro
+# (its 200-299 index, updated 14/07/2026, lists 2024 only), so no export layout
+# is generated. Serving the 2024-2025 layout at filing grade would render the
+# replaced fields; it is not adopted, and filing grade returns only when AEAT's
+# 2026 design is captured and a layout generated from it.
+authority_grade = "applicability"
+valid_from = 2026-01-01
+period_selector = { year_from = 2026, periods = ["0A"] }
+orden_aplicabilidad = ["orden-eha-3290-2008:art-6"]
+legal_refs = ["orden-eha-3290-2008:art-6", "orden-hac-623-2026:art-segundo", "orden-hac-623-2026:disposicion-final-unica", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout", "boe-modelo-296-2026-layout"]
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-09-30
+casilla_storage_baseline = "2024-2025"
+family_storage_baseline = "2024-2025"
+scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest", "export_layouts"]
+
+[[revisions."2026-y-siguientes".cleared_families]]
+family = "export_layouts"
+cause = "not_authored_for_this_edition"
+reason = "No generated export layout exists for this edition: AEAT has not published the ejercicio-2026 diseno de registro. The predecessor's layout renders a different record set and is not adopted."
+
+[[revisions."2026-y-siguientes".cleared_families]]
+family = "projection_endpoints"
+cause = "not_authored_for_this_edition"
+reason = "Projection endpoints admit the fields a generated export record repeats. This edition carries no generated export, so the predecessor's endpoints, which cite its own design, are not adopted."
+
+[revisions."2026-y-siguientes".family_dispositions.parameters]
+reason = """
+A parameter holds a regulatory value a formula of this revision applies -- a rate, a threshold, a coefficient. Modelo 296 applies none: its hoja-resumen prints four boxes and computes none of them, and the IRNR retencion rate is applied by the retenedor at payment time, reaching this annual summary as an amount already withheld."""
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout"]
+
+[revisions."2026-y-siguientes".family_dispositions.live_cross_references]
+reason = """
+A live cross-reference declares an AEAT surface this application READS at runtime. Cadrumo operates no live surface for modelo 296 and never performs live AEAT submission, so there is no host to allow, no method to bound and no guard policy to name. Should an adapter ever read this modelo, the family becomes applicable and this disposition must be revisited."""
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout"]
+
+[revisions."2026-y-siguientes".family_dispositions.extraction_profiles]
+reason = """
+An extraction profile matches printed labels in a filed artefact and must be grounded against an AEAT-published document that PRINTS those labels. This edition's layout authority, boe-modelo-296-2026-layout, is a record description printing no form labels, and no label-printing specimen is bundled, so authoring patterns would invent them."""
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-2026-layout"]
+
+[revisions."2026-y-siguientes".family_dispositions.formulas]
+reason = """
+The hoja-resumen approved as ANEXO II of Orden EHA/3290/2008 prints four boxes and computes none of them: each is an aggregation the declarante performs over its own tipo-2 perceptor records, none an arithmetic relation between the boxes. Box 04 counts only some of the perceptores box 03 counts, so no formula may relate the two."""
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-6"]
+source_refs = ["boe-modelo-296-form-text", "boe-modelo-296-form-layout"]
+
+[[revisions."2026-y-siguientes".family_removals]]
+family = "application_links"
+selector = {revision = "2024-2025", id = "modelo-296-export"}
+[[revisions."2026-y-siguientes".family_overrides]]
+family = "filing_schedules"
+selector = {revision = "2024-2025", id = "modelo-296-anual"}
+sequence_additions = {source_refs = ["boe-modelo-296-2026-layout"]}
+sequence_removals = {source_refs = [0]}
+
+# The calculation closure is unchanged; the manifest is keyed to this year's layout.
+[[revisions."2026-y-siguientes".family_overrides]]
+family = "completeness_manifest"
+selector = {revision = "2024-2025", id = "aeat-dr-296-2024"}
+replacement_id = "boe-modelo-296-2026-layout"
+sequence_additions = {source_refs = ["boe-modelo-296-2026-layout"]}
+sequence_removals = {source_refs = [0]}
+
+# The export surface is retired with the layout that would back it.

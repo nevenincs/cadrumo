@@ -1,0 +1,10 @@
+[[revisions."2019-y-siguientes".applicability]]
+id = "m130-seed"
+applicable_entity_types = ["natural_person"]
+required_income_categories = ["actividad_economica"]
+required_estimation_regimes = ["directa_normal", "directa_simplificada"]
+applicable_fiscal_residencies = ["resident_irpf"]
+applicable_reason = "Modelo 130 (pago fraccionado del IRPF): la persona física residente IRPF declara rendimientos de actividades económicas en estimación directa, que generan la obligación del pago fraccionado."
+not_applicable_reason = "Modelo 130 no aplica: el pago fraccionado en estimación directa solo corresponde a la persona física residente IRPF que obtiene rendimientos de actividades económicas determinados por ese método. Una actividad en estimación objetiva presenta el Modelo 131; un contribuyente NON_RESIDENT_IRNR queda en la ruta IRNR."
+cuota_bearing = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "trlirnr-rdleg-5-2004:art-2"]

@@ -1,0 +1,34 @@
+[revisions."2017-y-siguientes"]
+casilla_source_refs = ["aeat-dr-122-2016", "enrolled-modelo-122-procedure"]
+authority_grade = "applicability"
+# Modelo 122 regularización del derecho a la deducción por familia numerosa /
+# personas con discapacidad a cargo (IRPF), approved by orden-hfp-105-2017 art 5
+# with its plazo grounded verbatim in orden-hfp-105-2017 art 7. This revision
+# carries declaration-header casillas only. The authoritative
+# Modelo 122 diseño de registro IS bundled (aeat-dr-122-2016) but no
+# casilla-to-position mapping has been authored from it yet, so no numbered
+# form casilla is fabricated here.
+# Deadline-shape note: art 7 sets an event-anchored plazo — from the date the
+# advance payments were unduly received until the close of the annual IRPF
+# campaign — not a fixed calendar window. This revision therefore carries NO
+# calendar deadline_windows and no deadline application link; a fixed date is not
+# fabricated. The approval and plazo articles are grounded verbatim.
+valid_from = 2017-01-01
+period_selector = { year_from = 2017, periods = ["0A"] }
+orden_aplicabilidad = ["orden-hfp-105-2017:art-5"]
+legal_refs = [
+    "orden-hfp-105-2017:art-5",
+    "orden-hfp-105-2017:art-7",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "enrolled-modelo-122-procedure",
+    "enrolled-modelo-122-layout",
+    # Already-registered record design. AEAT titles it "122 - Orden
+    # HFP/105/2017 (Ejercicios 2016 y siguientes)", so it governs every year
+    # this revision claims (2017 onward); the revision simply never cited it.
+    "aeat-dr-122-2016",
+]
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-08-19

@@ -1,0 +1,1427 @@
+[revisions."2022-2t-4t"]
+casilla_storage_baseline = "2022-1t"
+predecessor = { none = { reason = "No legal predecessor is declared. The root was introduced on the converter's predecessor-row-without-lineage diagnostic against '2022-1t', a materialisation limit and not an official-structure claim. The 2022 second-to-fourth-quarter record design (aeat-dr-490-2022-2t) renumbers the liquidation and regularisation boxes, inserts the territorial attribution and declared-base rows and moves regularisation tables three and four to a third page. The payload is stored against the '2022-1t' edition through casilla_storage_baseline and family_storage_baseline: the 153 inherited rows are kept through overrides, 124 of them under renumbered ids, the 200 boxes new on this design are stated with positions for the design order, and overrides, removals and the restated export records carry the remaining differences. Storage reuse makes no continuity claim; naming '2022-1t' as legal predecessor is a separate continuity decision.", cause = "predecessor_row_without_lineage", legal_refs = ["orden-hac-590-2021:art-1"], source_refs = ["enrolled-modelo-490-procedure", "aeat-dr-490-2022-2t"] } }
+casilla_source_refs = ["aeat-dr-490-2022-2t"]
+authority_grade = "applicability"
+# Modelo 490 autoliquidacion del Impuesto sobre Determinados Servicios
+# Digitales, approved by orden-hac-590-2021 art 1, plazo grounded verbatim in
+# orden-hac-590-2021 art 3.
+#
+# ERA SPLIT. AEAT publishes THREE record designs for this modelo and binds each
+# to a disjoint span; the previous single '2021-y-siguientes' revision spanned
+# all three at once, so no layout authored on it could be correct for more than
+# one era. Every boundary below is read off AEAT's own index title for the
+# artefact, never chosen to make a window check pass.
+#
+# TWO of the three boundaries fall MID-YEAR (2022-1t|2t and nothing else at
+# 2023), which a year-granular period_selector cannot express on its own. They
+# are carried by PERIOD narrowing instead: '2021' and '2022-1t' both consume the
+# same design but are separate revisions because one covers a whole year and the
+# other a single quarter, and '2022-1t' / '2022-2t-4t' share filing year 2022
+# with disjoint period lists. select_revision resolves on (year, period) so the
+# pair is unambiguous; select_revision_for_year deliberately refuses a year-only
+# answer here, naming this exact case.
+#
+# This revision consumes AEAT's "Orden HAC/590/2021 (Ejercicio 2022 periodo 2T-4T)" design.
+#
+# NO export layout is declared on this revision. That is an absent filing
+# capability honestly reported by the export-layout gate, not an exemption.
+#
+# This revision cites its OWN era's diseno de registro. That source was
+# registered on 2026-08-16 under explicit operator authorisation; the
+# registration provenance -- what was verified and what was not -- is recorded
+# beside the source in legal/modelo-490.toml, because a source's review_status
+# token carries no reviewer field of its own.
+#
+# No deadline_windows and no deadline application link: the only windows this modelo
+# ever declared were for 2025 and 2026, which belong to the 2023-y-siguientes
+# revision. No window is fabricated for a past year.
+id = "2022-2t-4t"
+valid_from = 2022-04-01
+valid_to = 2022-12-31
+period_selector = { years = [2022], periods = ["2T", "3T", "4T"] }
+orden_aplicabilidad = ["orden-hac-590-2021:art-1"]
+legal_refs = [
+    "orden-hac-590-2021:art-1",
+    "orden-hac-590-2021:art-3",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "enrolled-modelo-490-procedure",
+    "aeat-dr-490-2022-2t",
+]
+review_status = "agent_reviewed"
+reviewed_by = "agent-prepared-pending-operator"
+reviewed_at = 2026-08-19
+family_storage_baseline = "2022-1t"
+scoped_families = ["export_layouts", "workbook_parity_refs"]
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "490-01-indicador-pagina-complementaria-12" }
+fields = { continuidad_evidence = "aeat-dr-490-2021 y aeat-dr-490-2022-2t: DR49001 conserva el indicador C o blanco de pagina complementaria de liquidacion, distinto del indicador de declaracion complementaria.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "490-01-tipo-declaracion-13" }
+fields = { continuidad_evidence = "aeat-dr-490-2021 y aeat-dr-490-2022-2t: DR49001 nota 1 mantiene I ingreso, U domiciliacion, N negativa y D devolucion.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "490-01-identificacion-email-154" }
+fields = { continuidad_evidence = "aeat-dr-490-2021 y aeat-dr-490-2022-2t: DR49001 mantiene el correo electronico de identificacion del declarante.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "490-01-identificacion-nif-representante-254" }
+fields = { continuidad_evidence = "aeat-dr-490-2021 y aeat-dr-490-2022-2t: DR49001 mantiene el NIF del representante, separado del NIF del declarante.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "490-01-identificacion-nombre-representante-263" }
+fields = { continuidad_evidence = "aeat-dr-490-2021 y aeat-dr-490-2022-2t: DR49001 mantiene razon social, nombre y apellidos del representante como un campo combinado.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "490-01-grupo-denominacion-388" }
+fields = { continuidad_evidence = "aeat-dr-490-2021 y aeat-dr-490-2022-2t: DR49001 mantiene la denominacion o nombre del grupo.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "490-01-grupo-pais-dominante-513" }
+fields = { continuidad_evidence = "aeat-dr-490-2021 y aeat-dr-490-2022-2t: DR49001 mantiene el pais de residencia de la dominante codificado ISO 3166-1 alfa-2.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "490-01-grupo-dominante-515" }
+fields = { continuidad_evidence = "aeat-dr-490-2021 y aeat-dr-490-2022-2t: DR49001 mantiene la entidad dominante del grupo, distinta de su pais de residencia y del nombre del grupo.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "liq-indicador-regularizacion-A" }
+fields = { continuidad_evidence = "aeat-dr-490-2021 y aeat-dr-490-2022-2t: DR49001 mantiene el indicador X o blanco de regularizacion de base imponible del art. 10.3 Ley 4/2020.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "liq-publi-ing-01" }
+fields = { continuidad_evidence = "aeat-dr-490-2021 y aeat-dr-490-2022-2t: DR49001 mantiene los ingresos totales de servicios de publicidad en linea, no su base imponible.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "liq-publi-base-02" }
+fields = { continuidad_evidence = "aeat-dr-490-2021 y aeat-dr-490-2022-2t: DR49001 mantiene la base imponible del periodo de servicios de publicidad en linea, separada de su regularizacion.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "liq-publi-reg-base-03" }
+fields = { continuidad_evidence = "aeat-dr-490-2021 y aeat-dr-490-2022-2t: DR49001 mantiene la regularizacion con signo de la base imponible de publicidad en linea, art. 10.3.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "liq-interm-a-ing-04" }
+fields = { continuidad_evidence = "aeat-dr-490-2021 y aeat-dr-490-2022-2t: DR49001 mantiene los ingresos totales de intermediacion en linea con entrega de bienes o prestacion de servicios subyacentes.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "liq-interm-a-base-05" }
+fields = { continuidad_evidence = "aeat-dr-490-2021 y aeat-dr-490-2022-2t: DR49001 mantiene la base imponible de intermediacion en linea con entrega de bienes o prestacion de servicios subyacentes.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "liq-interm-a-reg-base-06" }
+fields = { continuidad_evidence = "aeat-dr-490-2021 y aeat-dr-490-2022-2t: DR49001 mantiene la regularizacion con signo, art. 10.3, de intermediacion con entrega de bienes o prestacion de servicios subyacentes.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "liq-interm-b-ing-07" }
+fields = { continuidad_evidence = "aeat-dr-490-2021 y aeat-dr-490-2022-2t: DR49001 mantiene los ingresos totales de los demas servicios de intermediacion en linea, distintos del grupo con prestaciones subyacentes.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "liq-interm-b-base-08" }
+fields = { continuidad_evidence = "aeat-dr-490-2021 y aeat-dr-490-2022-2t: DR49001 mantiene la base imponible de los demas servicios de intermediacion en linea.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "liq-interm-b-reg-base-09" }
+fields = { continuidad_evidence = "aeat-dr-490-2021 y aeat-dr-490-2022-2t: DR49001 mantiene la regularizacion con signo de la base imponible de los demas servicios de intermediacion en linea, art. 10.3.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "liq-datos-ing-10" }
+fields = { continuidad_evidence = "aeat-dr-490-2021 y aeat-dr-490-2022-2t: DR49001 mantiene los ingresos totales de los servicios de transmision de datos, no su base imponible.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "liq-datos-base-11" }
+fields = { continuidad_evidence = "aeat-dr-490-2021 y aeat-dr-490-2022-2t: DR49001 mantiene la base imponible del periodo de los servicios de transmision de datos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "liq-datos-reg-base-12" }
+fields = { continuidad_evidence = "aeat-dr-490-2021 y aeat-dr-490-2022-2t: DR49001 mantiene la regularizacion con signo de la base imponible de los servicios de transmision de datos, art. 10.3.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "liq-base-imponible-total-13" }
+fields = { continuidad_evidence = "aeat-dr-490-2021 y aeat-dr-490-2022-2t: DR49001 mantiene la suma de las bases imponibles del periodo de publicidad, las dos clases de intermediacion y transmision de datos.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "liq-reg-periodos-anteriores-14" }
+fields = { continuidad_evidence = "aeat-dr-490-2021 y aeat-dr-490-2022-2t: DR49001 mantiene la suma con signo de las cuatro regularizaciones de base imponible de periodos anteriores, art. 10.3 Ley 4/2020.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "liq-tipo-15" }
+fields = { continuidad_evidence = "aeat-dr-490-2021 y aeat-dr-490-2022-2t: DR49001 mantiene el tipo impositivo aplicado a la base imponible total del periodo.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "liq-cuota-integra-16" }
+fields = { continuidad_evidence = "aeat-dr-490-2021 y aeat-dr-490-2022-2t: DR49001 mantiene la cuota integra como producto de base imponible total del periodo por tipo impositivo, antes de reparto territorial.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "liq21-ajuste-cuota-integra-17" }
+fields = { continuidad_evidence = "BOE-A-2021-9721 original annex liquidation [17] and BOE-A-2022-8830 replacement annex liquidation [18] identify the total quota adjustment for prior-period regularization under art.10.3. AEAT aeat-dr-490-2021 computes it as total regularized base [14] times rate [15]; aeat-dr-490-2022-2t references aggregate [363] of the same positive/negative quarterly adjustments. The new territorial amount has its own separate [19], so [18] retains the pre-allocation total role. The N-to-Num wire restriction changes accepted representation, not this legal identity; no new signed-export capability is claimed.", continuidad_origin = "grounded", id = "ajuste-cuota-integra-regularizacion-18", number = "18" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "resultado-a-deducir-18" }
+fields = { continuidad_evidence = "aeat-dr-490-2021, aeat-dr-490-2022-2t y aeat-dr-490-2023; resoluciones sucesivas: la insercion territorial anterior funda [18]>[25], y la resolucion 2022-2t-4t>2023 confirma Resultado. A deducir [25] en posicion 975 en ambos disenos. En este edge solo se anade [23], sin repurposicion.", continuidad_origin = "grounded", id = "resultado-a-deducir-25", number = "25" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "liq21-resultado-19" }
+fields = { continuidad_evidence = "aeat-dr-490-2021, aeat-dr-490-2022-2t y aeat-dr-490-2023; resoluciones sucesivas: la insercion territorial anterior funda [19]>[26], y la resolucion 2022-2t-4t>2023 confirma Resultado de la liquidacion [26] en posicion 992 en ambos disenos. En este edge solo se anade [23], sin repurposicion.", continuidad_origin = "grounded", id = "resultado-liquidacion-26", number = "26" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "490-01-ingreso-bic-swift-950" }
+fields = { continuidad_evidence = "aeat-dr-490-2021 y aeat-dr-490-2022-2t: DR49001 mantiene el codigo BIC/SWIFT de ingreso o devolucion, separado del IBAN; el desplazamiento del campo no cambia su funcion.", continuidad_origin = "grounded", id = "490-01-ingreso-bic-swift-1009" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "490-01-ingreso-iban-961" }
+fields = { continuidad_evidence = "aeat-dr-490-2021 y aeat-dr-490-2022-2t: DR49001 mantiene el codigo IBAN de la cuenta de ingreso o devolucion, de 34 caracteres; el desplazamiento del campo no cambia su funcion.", continuidad_origin = "grounded", id = "490-01-ingreso-iban-1020" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "490-01-declaracion-complementaria-995" }
+fields = { continuidad_evidence = "aeat-dr-490-2021 y aeat-dr-490-2022-2t: DR49001 mantiene C o blanco para la declaracion complementaria, distinto del indicador de pagina complementaria.", continuidad_origin = "grounded", id = "490-01-declaracion-complementaria-1054" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "490-01-justificante-anterior-996" }
+fields = { continuidad_evidence = "aeat-dr-490-2021 y aeat-dr-490-2022-2t: DR49001 mantiene el numero de justificante de la declaracion anterior de 13 caracteres, asociado a la declaracion complementaria.", continuidad_origin = "grounded", id = "490-01-justificante-anterior-1055" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "490-01-declaracion-negativa-1009" }
+fields = { continuidad_evidence = "aeat-dr-490-2021 y aeat-dr-490-2022-2t: DR49001 mantiene N o blanco para la declaracion negativa, distinto del tipo general de declaracion.", continuidad_origin = "grounded", id = "490-01-declaracion-negativa-1068" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "490-02-indicador-pagina-complementaria-12" }
+fields = { continuidad_evidence = "aeat-dr-490-2021 y aeat-dr-490-2022-2t: DR49002 campo 5, posicion 12, longitud 1, tipo A: 'Indicador de pagina complementaria', identico en ambos disenos (mismo numero de campo, posicion, longitud, tipo y rotulo impreso).", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "490-02-regularizacion-ejercicio-13" }
+fields = { continuidad_evidence = "aeat-dr-490-2021 y aeat-dr-490-2022-2t: DR49002 campo 6, posicion 13, longitud 4, tipo Num; el rotulo pasa de 'Regularizacion (art. 10.3 Ley).Ejercicio' a 'Regularizacion (art. 10.3 Ley 4/2020).Ejercicio': misma norma citada de forma completa, mismo campo, posicion, longitud y tipo.", continuidad_origin = "grounded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-positiva-1" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 1, quarter 1T continues positive regularization of the taxable base. Former cell 1 becomes 28. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-positiva-28", number = "28" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-positiva-8" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 1, quarter 2T continues positive regularization of the taxable base. Former cell 8 becomes 49. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-positiva-49", number = "49" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-positiva-14" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 1, quarter 3T continues positive regularization of the taxable base. Former cell 14 becomes 70. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-positiva-70", number = "70" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-positiva-20" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 1, quarter 4T continues positive regularization of the taxable base. Former cell 20 becomes 91. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-positiva-91", number = "91" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-negativa-2" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 1, quarter 1T continues negative regularization of the taxable base. Former cell 2 becomes 29. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-negativa-29", number = "29" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-negativa-9" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 1, quarter 2T continues negative regularization of the taxable base. Former cell 9 becomes 50. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-negativa-50", number = "50" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-negativa-15" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 1, quarter 3T continues negative regularization of the taxable base. Former cell 15 becomes 71. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-negativa-71", number = "71" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-negativa-21" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 1, quarter 4T continues negative regularization of the taxable base. Former cell 21 becomes 92. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-negativa-92", number = "92" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-total-3" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 1, quarter 1T continues sum of positive and negative base regularizations. Former cell 3 becomes 30. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-total-30", number = "30" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-total-10" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 1, quarter 2T continues sum of positive and negative base regularizations. Former cell 10 becomes 51. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-total-51", number = "51" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-total-16" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 1, quarter 3T continues sum of positive and negative base regularizations. Former cell 16 becomes 72. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-total-72", number = "72" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-total-22" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 1, quarter 4T continues sum of positive and negative base regularizations. Former cell 22 becomes 93. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-total-93", number = "93" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-tipo-4-221" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 1, quarter 1T continues tax rate applied to this quarter's regularization. Former cell 4-221 becomes 31. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-tipo-31", number = "31" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-tipo-4-224" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 1, quarter 2T continues tax rate applied to this quarter's regularization. Former cell 4-224 becomes 52. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-tipo-52", number = "52" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-tipo-4-227" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 1, quarter 3T continues tax rate applied to this quarter's regularization. Former cell 4-227 becomes 73. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-tipo-73", number = "73" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-tipo-4-230" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 1, quarter 4T continues tax rate applied to this quarter's regularization. Former cell 4-230 becomes 94. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-tipo-94", number = "94" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-positiva-5" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 1, quarter 1T continues positive base regularization multiplied by the tax rate. Former cell 5 becomes 32. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-positiva-32", number = "32" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-positiva-11" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 1, quarter 2T continues positive base regularization multiplied by the tax rate. Former cell 11 becomes 53. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-positiva-53", number = "53" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "decl.ejercicio" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "decl.periodo" }
+fields = { continuidad_origin = "seeded" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg-total-cuota-101" }
+fields = { continuidad_evidence = "aeat-dr-490-2021, aeat-dr-490-2022-2t y aeat-dr-490-2023; resoluciones sucesivas: el traslado anterior funda [101]>[363], y la resolucion 2022-2t-4t>2023 confirma Total Regularizacion (cuota) [363] en posicion 1805 en ambos disenos. En este edge solo se anade [23], sin repurposicion.", continuidad_origin = "grounded", id = "reg-total-cuota-363", number = "363", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-negativa-27" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 2, quarter 1T continues negative regularization of the taxable base. Former cell 27 becomes 113. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-negativa-113", number = "113" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-negativa-34" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 2, quarter 2T continues negative regularization of the taxable base. Former cell 34 becomes 134. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-negativa-134", number = "134" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-negativa-40" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 2, quarter 3T continues negative regularization of the taxable base. Former cell 40 becomes 155. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-negativa-155", number = "155" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-negativa-46" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 2, quarter 4T continues negative regularization of the taxable base. Former cell 46 becomes 176. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-negativa-176", number = "176" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-total-28" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 2, quarter 1T continues sum of positive and negative base regularizations. Former cell 28 becomes 114. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-total-114", number = "114" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-total-35" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 2, quarter 2T continues sum of positive and negative base regularizations. Former cell 35 becomes 135. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-total-135", number = "135" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-total-41" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 2, quarter 3T continues sum of positive and negative base regularizations. Former cell 41 becomes 156. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-total-156", number = "156" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-total-47" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 2, quarter 4T continues sum of positive and negative base regularizations. Former cell 47 becomes 177. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-total-177", number = "177" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-tipo-29-645" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 2, quarter 1T continues tax rate applied to this quarter's regularization. Former cell 29-645 becomes 115. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-tipo-115", number = "115" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-tipo-29-648" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 2, quarter 2T continues tax rate applied to this quarter's regularization. Former cell 29-648 becomes 136. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-tipo-136", number = "136" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-tipo-29-651" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 2, quarter 3T continues tax rate applied to this quarter's regularization. Former cell 29-651 becomes 157. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-tipo-157", number = "157" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-tipo-29-654" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 2, quarter 4T continues tax rate applied to this quarter's regularization. Former cell 29-654 becomes 178. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-tipo-178", number = "178" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-positiva-30" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 2, quarter 1T continues positive base regularization multiplied by the tax rate. Former cell 30 becomes 116. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-positiva-116", number = "116" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-positiva-36" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 2, quarter 2T continues positive base regularization multiplied by the tax rate. Former cell 36 becomes 137. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-positiva-137", number = "137" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-positiva-42" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 2, quarter 3T continues positive base regularization multiplied by the tax rate. Former cell 42 becomes 158. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-positiva-158", number = "158" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-positiva-48" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 2, quarter 4T continues positive base regularization multiplied by the tax rate. Former cell 48 becomes 179. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-positiva-179", number = "179" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-negativa-31" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 2, quarter 1T continues negative base regularization multiplied by the tax rate. Former cell 31 becomes 117. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-negativa-117", number = "117" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-negativa-37" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 2, quarter 2T continues negative base regularization multiplied by the tax rate. Former cell 37 becomes 138. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-negativa-138", number = "138" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-negativa-43" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 2, quarter 3T continues negative base regularization multiplied by the tax rate. Former cell 43 becomes 159. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-negativa-159", number = "159" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-negativa-49" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 2, quarter 4T continues negative base regularization multiplied by the tax rate. Former cell 49 becomes 180. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-negativa-180", number = "180" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-total-32" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 2, quarter 1T continues sum of the positive and negative quota regularizations before territorial allocation. Former cell 32 becomes 118. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-total-118", number = "118" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-total-38" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 2, quarter 2T continues sum of the positive and negative quota regularizations before territorial allocation. Former cell 38 becomes 139. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-total-139", number = "139" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-total-44" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 2, quarter 3T continues sum of the positive and negative quota regularizations before territorial allocation. Former cell 44 becomes 160. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-total-160", number = "160" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-total-50" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 2, quarter 4T continues sum of the positive and negative quota regularizations before territorial allocation. Former cell 50 becomes 181. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-total-181", number = "181" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-positiva-17" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 1, quarter 3T continues positive base regularization multiplied by the tax rate. Former cell 17 becomes 74. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-positiva-74", number = "74" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-positiva-23" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 1, quarter 4T continues positive base regularization multiplied by the tax rate. Former cell 23 becomes 95. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-positiva-95", number = "95" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-negativa-6" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 1, quarter 1T continues negative base regularization multiplied by the tax rate. Former cell 6 becomes 33. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-negativa-33", number = "33" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-negativa-12" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 1, quarter 2T continues negative base regularization multiplied by the tax rate. Former cell 12 becomes 54. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-negativa-54", number = "54" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-negativa-18" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 1, quarter 3T continues negative base regularization multiplied by the tax rate. Former cell 18 becomes 75. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-negativa-75", number = "75" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-negativa-24" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 1, quarter 4T continues negative base regularization multiplied by the tax rate. Former cell 24 becomes 96. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-negativa-96", number = "96" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-total-7" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 1, quarter 1T continues sum of the positive and negative quota regularizations before territorial allocation. Former cell 7 becomes 34. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-total-34", number = "34" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-total-13" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 1, quarter 2T continues sum of the positive and negative quota regularizations before territorial allocation. Former cell 13 becomes 55. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-total-55", number = "55" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-total-19" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 1, quarter 3T continues sum of the positive and negative quota regularizations before territorial allocation. Former cell 19 becomes 76. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-total-76", number = "76" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-total-25" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 1, quarter 4T continues sum of the positive and negative quota regularizations before territorial allocation. Former cell 25 becomes 97. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-total-97", number = "97" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "490-02-regularizacion-ejercicio-437" }
+fields = { continuidad_evidence = "BOE-A-2021-9721 original annex and BOE-A-2022-8830 replacement annex preserve the second exercise table, its own Ejercicio header and four quarter columns. AEAT aeat-dr-490-2021 DR49002 490-02-regularizacion-ejercicio-437 and aeat-dr-490-2022-2t 490-02-regularizacion-ejercicio-909 encode that same table header after the territorial columns widen the tables; the third and fourth tables move to DR49003. The exercise value is entered by the declarant, not inferred from filing year or byte order.", continuidad_origin = "grounded", id = "490-02-regularizacion-ejercicio-909", number = "490-02-regularizacion-ejercicio-909" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-positiva-26" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 2, quarter 1T continues positive regularization of the taxable base. Former cell 26 becomes 112. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-positiva-112", number = "112" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-positiva-33" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 2, quarter 2T continues positive regularization of the taxable base. Former cell 33 becomes 133. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-positiva-133", number = "133" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-positiva-39" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 2, quarter 3T continues positive regularization of the taxable base. Former cell 39 becomes 154. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-positiva-154", number = "154" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-positiva-45" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49002, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 2, quarter 4T continues positive regularization of the taxable base. Former cell 45 becomes 175. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-positiva-175", number = "175" }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "490-02-regularizacion-ejercicio-861" }
+fields = { continuidad_evidence = "BOE-A-2021-9721 original annex and BOE-A-2022-8830 replacement annex preserve the third exercise table, its own Ejercicio header and four quarter columns. AEAT aeat-dr-490-2021 DR49002 490-02-regularizacion-ejercicio-861 and aeat-dr-490-2022-2t 490-03-regularizacion-ejercicio-13 encode that same table header after the territorial columns widen the tables; the third and fourth tables move to DR49003. The exercise value is entered by the declarant, not inferred from filing year or byte order.", continuidad_origin = "grounded", id = "490-03-regularizacion-ejercicio-13", number = "490-03-regularizacion-ejercicio", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-positiva-51" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 3, quarter 1T continues positive regularization of the taxable base. Former cell 51 becomes 196. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-positiva-196", number = "196", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-positiva-58" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 3, quarter 2T continues positive regularization of the taxable base. Former cell 58 becomes 217. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-positiva-217", number = "217", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-positiva-64" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 3, quarter 3T continues positive regularization of the taxable base. Former cell 64 becomes 238. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-positiva-238", number = "238", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-positiva-70" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 3, quarter 4T continues positive regularization of the taxable base. Former cell 70 becomes 259. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-positiva-259", number = "259", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-negativa-52" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 3, quarter 1T continues negative regularization of the taxable base. Former cell 52 becomes 197. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-negativa-197", number = "197", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-negativa-59" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 3, quarter 2T continues negative regularization of the taxable base. Former cell 59 becomes 218. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-negativa-218", number = "218", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-negativa-65" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 3, quarter 3T continues negative regularization of the taxable base. Former cell 65 becomes 239. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-negativa-239", number = "239", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-negativa-71" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 3, quarter 4T continues negative regularization of the taxable base. Former cell 71 becomes 260. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-negativa-260", number = "260", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-total-53" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 3, quarter 1T continues sum of positive and negative base regularizations. Former cell 53 becomes 198. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-total-198", number = "198", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-total-60" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 3, quarter 2T continues sum of positive and negative base regularizations. Former cell 60 becomes 219. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-total-219", number = "219", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-total-66" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 3, quarter 3T continues sum of positive and negative base regularizations. Former cell 66 becomes 240. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-total-240", number = "240", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-total-72" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 3, quarter 4T continues sum of positive and negative base regularizations. Former cell 72 becomes 261. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-total-261", number = "261", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-tipo-54-1069" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 3, quarter 1T continues tax rate applied to this quarter's regularization. Former cell 54-1069 becomes 199. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-tipo-199", number = "199", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-tipo-54-1072" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 3, quarter 2T continues tax rate applied to this quarter's regularization. Former cell 54-1072 becomes 220. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-tipo-220", number = "220", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-tipo-54-1075" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 3, quarter 3T continues tax rate applied to this quarter's regularization. Former cell 54-1075 becomes 241. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-tipo-241", number = "241", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-tipo-54-1078" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 3, quarter 4T continues tax rate applied to this quarter's regularization. Former cell 54-1078 becomes 262. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-tipo-262", number = "262", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-positiva-55" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 3, quarter 1T continues positive base regularization multiplied by the tax rate. Former cell 55 becomes 200. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-positiva-200", number = "200", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-positiva-61" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 3, quarter 2T continues positive base regularization multiplied by the tax rate. Former cell 61 becomes 221. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-positiva-221", number = "221", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-positiva-67" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 3, quarter 3T continues positive base regularization multiplied by the tax rate. Former cell 67 becomes 242. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-positiva-242", number = "242", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-positiva-73" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 3, quarter 4T continues positive base regularization multiplied by the tax rate. Former cell 73 becomes 263. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-positiva-263", number = "263", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-negativa-56" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 3, quarter 1T continues negative base regularization multiplied by the tax rate. Former cell 56 becomes 201. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-negativa-201", number = "201", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-negativa-62" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 3, quarter 2T continues negative base regularization multiplied by the tax rate. Former cell 62 becomes 222. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-negativa-222", number = "222", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-negativa-68" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 3, quarter 3T continues negative base regularization multiplied by the tax rate. Former cell 68 becomes 243. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-negativa-243", number = "243", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-negativa-74" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 3, quarter 4T continues negative base regularization multiplied by the tax rate. Former cell 74 becomes 264. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-negativa-264", number = "264", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-total-57" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 3, quarter 1T continues sum of the positive and negative quota regularizations before territorial allocation. Former cell 57 becomes 202. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-total-202", number = "202", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-total-63" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 3, quarter 2T continues sum of the positive and negative quota regularizations before territorial allocation. Former cell 63 becomes 223. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-total-223", number = "223", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-total-69" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 3, quarter 3T continues sum of the positive and negative quota regularizations before territorial allocation. Former cell 69 becomes 244. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-total-244", number = "244", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-total-75" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 3, quarter 4T continues sum of the positive and negative quota regularizations before territorial allocation. Former cell 75 becomes 265. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-total-265", number = "265", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "490-02-regularizacion-ejercicio-1285" }
+fields = { continuidad_evidence = "BOE-A-2021-9721 original annex and BOE-A-2022-8830 replacement annex preserve the fourth exercise table, its own Ejercicio header and four quarter columns. AEAT aeat-dr-490-2021 DR49002 490-02-regularizacion-ejercicio-1285 and aeat-dr-490-2022-2t 490-03-regularizacion-ejercicio-909 encode that same table header after the territorial columns widen the tables; the third and fourth tables move to DR49003. The exercise value is entered by the declarant, not inferred from filing year or byte order.", continuidad_origin = "grounded", id = "490-03-regularizacion-ejercicio-909", number = "490-03-regularizacion-ejercicio-909", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-positiva-76" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 4, quarter 1T continues positive regularization of the taxable base. Former cell 76 becomes 280. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-positiva-280", number = "280", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-positiva-83" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 4, quarter 2T continues positive regularization of the taxable base. Former cell 83 becomes 301. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-positiva-301", number = "301", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-positiva-89" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 4, quarter 3T continues positive regularization of the taxable base. Former cell 89 becomes 322. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-positiva-322", number = "322", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-positiva-95" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 4, quarter 4T continues positive regularization of the taxable base. Former cell 95 becomes 343. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-positiva-343", number = "343", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-negativa-77" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 4, quarter 1T continues negative regularization of the taxable base. Former cell 77 becomes 281. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-negativa-281", number = "281", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-negativa-84" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 4, quarter 2T continues negative regularization of the taxable base. Former cell 84 becomes 302. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-negativa-302", number = "302", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-negativa-90" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 4, quarter 3T continues negative regularization of the taxable base. Former cell 90 becomes 323. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-negativa-323", number = "323", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-negativa-96" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 4, quarter 4T continues negative regularization of the taxable base. Former cell 96 becomes 344. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-negativa-344", number = "344", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-total-78" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 4, quarter 1T continues sum of positive and negative base regularizations. Former cell 78 becomes 282. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-total-282", number = "282", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-total-85" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 4, quarter 2T continues sum of positive and negative base regularizations. Former cell 85 becomes 303. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-total-303", number = "303", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-total-91" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 4, quarter 3T continues sum of positive and negative base regularizations. Former cell 91 becomes 324. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-total-324", number = "324", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-base-total-97" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 4, quarter 4T continues sum of positive and negative base regularizations. Former cell 97 becomes 345. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-base-total-345", number = "345", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-tipo-79-1493" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 4, quarter 1T continues tax rate applied to this quarter's regularization. Former cell 79-1493 becomes 283. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-tipo-283", number = "283", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-tipo-79-1496" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 4, quarter 2T continues tax rate applied to this quarter's regularization. Former cell 79-1496 becomes 304. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-tipo-304", number = "304", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-tipo-79-1499" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 4, quarter 3T continues tax rate applied to this quarter's regularization. Former cell 79-1499 becomes 325. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-tipo-325", number = "325", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-tipo-79-1502" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 4, quarter 4T continues tax rate applied to this quarter's regularization. Former cell 79-1502 becomes 346. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-tipo-346", number = "346", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-positiva-80" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 4, quarter 1T continues positive base regularization multiplied by the tax rate. Former cell 80 becomes 284. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-positiva-284", number = "284", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-positiva-86" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 4, quarter 2T continues positive base regularization multiplied by the tax rate. Former cell 86 becomes 305. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-positiva-305", number = "305", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-positiva-92" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 4, quarter 3T continues positive base regularization multiplied by the tax rate. Former cell 92 becomes 326. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-positiva-326", number = "326", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-positiva-98" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 4, quarter 4T continues positive base regularization multiplied by the tax rate. Former cell 98 becomes 347. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-positiva-347", number = "347", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-negativa-81" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 4, quarter 1T continues negative base regularization multiplied by the tax rate. Former cell 81 becomes 285. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-negativa-285", number = "285", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-negativa-87" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 4, quarter 2T continues negative base regularization multiplied by the tax rate. Former cell 87 becomes 306. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-negativa-306", number = "306", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-negativa-93" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 4, quarter 3T continues negative base regularization multiplied by the tax rate. Former cell 93 becomes 327. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-negativa-327", number = "327", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-negativa-99" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 4, quarter 4T continues negative base regularization multiplied by the tax rate. Former cell 99 becomes 348. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-negativa-348", number = "348", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-total-82" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 4, quarter 1T continues sum of the positive and negative quota regularizations before territorial allocation. Former cell 82 becomes 286. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-total-286", number = "286", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-total-88" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 4, quarter 2T continues sum of the positive and negative quota regularizations before territorial allocation. Former cell 88 becomes 307. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-total-307", number = "307", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-total-94" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 4, quarter 3T continues sum of the positive and negative quota regularizations before territorial allocation. Former cell 94 becomes 328. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-total-328", number = "328", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_overrides]]
+selector = { revision = "2022-1t", id = "reg21-cuota-total-100" }
+fields = { continuidad_evidence = "AEAT aeat-dr-490-2021 DR49002 and aeat-dr-490-2022-2t DR49003, verified against the original BOE-A-2021-9721 annex and replacement BOE-A-2022-8830 annex: exercise table 4, quarter 4T continues sum of the positive and negative quota regularizations before territorial allocation. Former cell 100 becomes 349. The annex preserves the four separately entered exercise tables and quarter columns; added declared-base and territorial-allocation rows change letters and numbering, not this role. This is an instance-qualified table correspondence, not a match on a number or byte position.", continuidad_origin = "grounded", id = "reg-cuota-total-349", number = "349", section = ["490_03"] }
+removed_fields = []
+restate_provenance = true
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "cuota-integra-estado-17"
+position = 25
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "ajuste-cuota-integra-reg-estado-19"
+position = 27
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "terr-alava-20"
+position = 28
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "terr-guipuzcoa-21"
+position = 29
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "terr-vizcaya-22"
+position = 30
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "terr-comun-24"
+position = 31
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-declarada-27"
+position = 41
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-declarada-48"
+position = 42
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-declarada-69"
+position = 43
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-declarada-90"
+position = 44
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-total-cuota-363"
+position = 196
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-negativa-113"
+position = 197
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-negativa-134"
+position = 197
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-negativa-155"
+position = 197
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-negativa-176"
+position = 197
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-total-114"
+position = 197
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-total-135"
+position = 197
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-total-156"
+position = 197
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-total-177"
+position = 197
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-tipo-115"
+position = 197
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-tipo-136"
+position = 197
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-tipo-157"
+position = 197
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-tipo-178"
+position = 197
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-positiva-116"
+position = 197
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-positiva-137"
+position = 197
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-positiva-158"
+position = 197
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-positiva-179"
+position = 197
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-negativa-117"
+position = 197
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-negativa-138"
+position = 197
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-negativa-159"
+position = 197
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-negativa-180"
+position = 197
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-total-118"
+position = 197
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-total-139"
+position = 197
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-total-160"
+position = 197
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-total-181"
+position = 197
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-positiva-74"
+position = 236
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-positiva-95"
+position = 236
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-negativa-33"
+position = 236
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-negativa-54"
+position = 236
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-negativa-75"
+position = 236
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-negativa-96"
+position = 236
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-total-34"
+position = 236
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-total-55"
+position = 236
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-total-76"
+position = 236
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-total-97"
+position = 236
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "490-02-regularizacion-ejercicio-909"
+position = 280
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-positiva-112"
+position = 284
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-positiva-133"
+position = 284
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-positiva-154"
+position = 284
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-positiva-175"
+position = 284
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "490-03-regularizacion-ejercicio-13"
+position = 290
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-positiva-196"
+position = 294
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-positiva-217"
+position = 294
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-positiva-238"
+position = 294
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-positiva-259"
+position = 294
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-negativa-197"
+position = 294
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-negativa-218"
+position = 294
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-negativa-239"
+position = 294
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-negativa-260"
+position = 294
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-total-198"
+position = 294
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-total-219"
+position = 294
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-total-240"
+position = 294
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-total-261"
+position = 294
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-tipo-199"
+position = 294
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-tipo-220"
+position = 294
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-tipo-241"
+position = 294
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-tipo-262"
+position = 294
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-positiva-200"
+position = 294
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-positiva-221"
+position = 294
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-positiva-242"
+position = 294
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-positiva-263"
+position = 294
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-negativa-201"
+position = 294
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-negativa-222"
+position = 294
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-negativa-243"
+position = 294
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-negativa-264"
+position = 294
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-total-202"
+position = 294
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-total-223"
+position = 294
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-total-244"
+position = 294
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-total-265"
+position = 294
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "490-03-regularizacion-ejercicio-909"
+position = 338
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-positiva-280"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-positiva-301"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-positiva-322"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-positiva-343"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-negativa-281"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-negativa-302"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-negativa-323"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-negativa-344"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-total-282"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-total-303"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-total-324"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-base-total-345"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-tipo-283"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-tipo-304"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-tipo-325"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-tipo-346"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-positiva-284"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-positiva-305"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-positiva-326"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-positiva-347"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-negativa-285"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-negativa-306"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-negativa-327"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-negativa-348"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-total-286"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-total-307"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-total-328"
+position = 342
+
+[[revisions."2022-2t-4t".casilla_positions]]
+id = "reg-cuota-total-349"
+position = 342
+
+[[revisions."2022-2t-4t".family_overrides]]
+family = "constructs"
+selector = {revision = "2022-1t", id = "modelo-490-autoliquidacion"}
+sequence_additions = {casilla_ids = ["490-01-declaracion-complementaria-1054", "490-01-declaracion-negativa-1068", "490-01-ingreso-bic-swift-1009", "490-01-ingreso-iban-1020", "490-01-justificante-anterior-1055", "490-02-regularizacion-ejercicio-909", "490-03-indicador-pagina-complementaria-12", "490-03-regularizacion-ejercicio-13", "490-03-regularizacion-ejercicio-909", "ajuste-cuota-integra-reg-estado-19", "ajuste-cuota-integra-regularizacion-18", "cuota-integra-estado-17", "reg-ajuste-distribucion-120", "reg-ajuste-distribucion-141", "reg-ajuste-distribucion-162", "reg-ajuste-distribucion-183", "reg-ajuste-distribucion-204", "reg-ajuste-distribucion-225", "reg-ajuste-distribucion-246", "reg-ajuste-distribucion-267", "reg-ajuste-distribucion-288", "reg-ajuste-distribucion-309", "reg-ajuste-distribucion-330", "reg-ajuste-distribucion-351", "reg-ajuste-distribucion-36", "reg-ajuste-distribucion-57", "reg-ajuste-distribucion-78", "reg-ajuste-distribucion-99", "reg-ajuste-total-estado-100", "reg-ajuste-total-estado-121", "reg-ajuste-total-estado-142", "reg-ajuste-total-estado-163", "reg-ajuste-total-estado-184", "reg-ajuste-total-estado-205", "reg-ajuste-total-estado-226", "reg-ajuste-total-estado-247", "reg-ajuste-total-estado-268", "reg-ajuste-total-estado-289", "reg-ajuste-total-estado-310", "reg-ajuste-total-estado-331", "reg-ajuste-total-estado-352", "reg-ajuste-total-estado-37", "reg-ajuste-total-estado-58", "reg-ajuste-total-estado-79", "reg-base-declarada-111", "reg-base-declarada-132", "reg-base-declarada-153", "reg-base-declarada-174", "reg-base-declarada-195", "reg-base-declarada-216", "reg-base-declarada-237", "reg-base-declarada-258", "reg-base-declarada-27", "reg-base-declarada-279", "reg-base-declarada-300", "reg-base-declarada-321", "reg-base-declarada-342", "reg-base-declarada-48", "reg-base-declarada-69", "reg-base-declarada-90", "reg-base-negativa-113", "reg-base-negativa-134", "reg-base-negativa-155", "reg-base-negativa-176", "reg-base-negativa-197", "reg-base-negativa-218", "reg-base-negativa-239", "reg-base-negativa-260", "reg-base-negativa-281", "reg-base-negativa-29", "reg-base-negativa-302", "reg-base-negativa-323", "reg-base-negativa-344", "reg-base-negativa-50", "reg-base-negativa-71", "reg-base-negativa-92", "reg-base-positiva-112", "reg-base-positiva-133", "reg-base-positiva-154", "reg-base-positiva-175", "reg-base-positiva-196", "reg-base-positiva-217", "reg-base-positiva-238", "reg-base-positiva-259", "reg-base-positiva-28", "reg-base-positiva-280", "reg-base-positiva-301", "reg-base-positiva-322", "reg-base-positiva-343", "reg-base-positiva-49", "reg-base-positiva-70", "reg-base-positiva-91", "reg-base-total-114", "reg-base-total-135", "reg-base-total-156", "reg-base-total-177", "reg-base-total-198", "reg-base-total-219", "reg-base-total-240", "reg-base-total-261", "reg-base-total-282", "reg-base-total-30", "reg-base-total-303", "reg-base-total-324", "reg-base-total-345", "reg-base-total-51", "reg-base-total-72", "reg-base-total-93", "reg-cuota-estado-119", "reg-cuota-estado-140", "reg-cuota-estado-161", "reg-cuota-estado-182", "reg-cuota-estado-203", "reg-cuota-estado-224", "reg-cuota-estado-245", "reg-cuota-estado-266", "reg-cuota-estado-287", "reg-cuota-estado-308", "reg-cuota-estado-329", "reg-cuota-estado-35", "reg-cuota-estado-350", "reg-cuota-estado-56", "reg-cuota-estado-77", "reg-cuota-estado-98", "reg-cuota-negativa-117", "reg-cuota-negativa-138", "reg-cuota-negativa-159", "reg-cuota-negativa-180", "reg-cuota-negativa-201", "reg-cuota-negativa-222", "reg-cuota-negativa-243", "reg-cuota-negativa-264", "reg-cuota-negativa-285", "reg-cuota-negativa-306", "reg-cuota-negativa-327", "reg-cuota-negativa-33", "reg-cuota-negativa-348", "reg-cuota-negativa-54", "reg-cuota-negativa-75", "reg-cuota-negativa-96", "reg-cuota-positiva-116", "reg-cuota-positiva-137", "reg-cuota-positiva-158", "reg-cuota-positiva-179", "reg-cuota-positiva-200", "reg-cuota-positiva-221", "reg-cuota-positiva-242", "reg-cuota-positiva-263", "reg-cuota-positiva-284", "reg-cuota-positiva-305", "reg-cuota-positiva-32", "reg-cuota-positiva-326", "reg-cuota-positiva-347", "reg-cuota-positiva-53", "reg-cuota-positiva-74", "reg-cuota-positiva-95", "reg-cuota-total-118", "reg-cuota-total-139", "reg-cuota-total-160", "reg-cuota-total-181", "reg-cuota-total-202", "reg-cuota-total-223", "reg-cuota-total-244", "reg-cuota-total-265", "reg-cuota-total-286", "reg-cuota-total-307", "reg-cuota-total-328", "reg-cuota-total-34", "reg-cuota-total-349", "reg-cuota-total-55", "reg-cuota-total-76", "reg-cuota-total-97", "reg-tipo-115", "reg-tipo-136", "reg-tipo-157", "reg-tipo-178", "reg-tipo-199", "reg-tipo-220", "reg-tipo-241", "reg-tipo-262", "reg-tipo-283", "reg-tipo-304", "reg-tipo-31", "reg-tipo-325", "reg-tipo-346", "reg-tipo-52", "reg-tipo-73", "reg-tipo-94", "reg-total-cuota-363", "reg-total-cuota-estado-364", "resultado-a-deducir-25", "resultado-liquidacion-26", "terr-alava-20", "terr-alava-con-reg-102", "terr-alava-con-reg-123", "terr-alava-con-reg-144", "terr-alava-con-reg-165", "terr-alava-con-reg-186", "terr-alava-con-reg-207", "terr-alava-con-reg-228", "terr-alava-con-reg-249", "terr-alava-con-reg-270", "terr-alava-con-reg-291", "terr-alava-con-reg-312", "terr-alava-con-reg-333", "terr-alava-con-reg-354", "terr-alava-con-reg-39", "terr-alava-con-reg-60", "terr-alava-con-reg-81", "terr-alava-per-101", "terr-alava-per-122", "terr-alava-per-143", "terr-alava-per-164", "terr-alava-per-185", "terr-alava-per-206", "terr-alava-per-227", "terr-alava-per-248", "terr-alava-per-269", "terr-alava-per-290", "terr-alava-per-311", "terr-alava-per-332", "terr-alava-per-353", "terr-alava-per-38", "terr-alava-per-59", "terr-alava-per-80", "terr-comun-24", "terr-comun-con-reg-110", "terr-comun-con-reg-131", "terr-comun-con-reg-152", "terr-comun-con-reg-173", "terr-comun-con-reg-194", "terr-comun-con-reg-215", "terr-comun-con-reg-236", "terr-comun-con-reg-257", "terr-comun-con-reg-278", "terr-comun-con-reg-299", "terr-comun-con-reg-320", "terr-comun-con-reg-341", "terr-comun-con-reg-362", "terr-comun-con-reg-47", "terr-comun-con-reg-68", "terr-comun-con-reg-89", "terr-comun-per-109", "terr-comun-per-130", "terr-comun-per-151", "terr-comun-per-172", "terr-comun-per-193", "terr-comun-per-214", "terr-comun-per-235", "terr-comun-per-256", "terr-comun-per-277", "terr-comun-per-298", "terr-comun-per-319", "terr-comun-per-340", "terr-comun-per-361", "terr-comun-per-46", "terr-comun-per-67", "terr-comun-per-88", "terr-guipuzcoa-21", "terr-guipuzcoa-con-reg-104", "terr-guipuzcoa-con-reg-125", "terr-guipuzcoa-con-reg-146", "terr-guipuzcoa-con-reg-167", "terr-guipuzcoa-con-reg-188", "terr-guipuzcoa-con-reg-209", "terr-guipuzcoa-con-reg-230", "terr-guipuzcoa-con-reg-251", "terr-guipuzcoa-con-reg-272", "terr-guipuzcoa-con-reg-293", "terr-guipuzcoa-con-reg-314", "terr-guipuzcoa-con-reg-335", "terr-guipuzcoa-con-reg-356", "terr-guipuzcoa-con-reg-41", "terr-guipuzcoa-con-reg-62", "terr-guipuzcoa-con-reg-83", "terr-guipuzcoa-per-103", "terr-guipuzcoa-per-124", "terr-guipuzcoa-per-145", "terr-guipuzcoa-per-166", "terr-guipuzcoa-per-187", "terr-guipuzcoa-per-208", "terr-guipuzcoa-per-229", "terr-guipuzcoa-per-250", "terr-guipuzcoa-per-271", "terr-guipuzcoa-per-292", "terr-guipuzcoa-per-313", "terr-guipuzcoa-per-334", "terr-guipuzcoa-per-355", "terr-guipuzcoa-per-40", "terr-guipuzcoa-per-61", "terr-guipuzcoa-per-82", "terr-vizcaya-22", "terr-vizcaya-con-reg-106", "terr-vizcaya-con-reg-127", "terr-vizcaya-con-reg-148", "terr-vizcaya-con-reg-169", "terr-vizcaya-con-reg-190", "terr-vizcaya-con-reg-211", "terr-vizcaya-con-reg-232", "terr-vizcaya-con-reg-253", "terr-vizcaya-con-reg-274", "terr-vizcaya-con-reg-295", "terr-vizcaya-con-reg-316", "terr-vizcaya-con-reg-337", "terr-vizcaya-con-reg-358", "terr-vizcaya-con-reg-43", "terr-vizcaya-con-reg-64", "terr-vizcaya-con-reg-85", "terr-vizcaya-per-105", "terr-vizcaya-per-126", "terr-vizcaya-per-147", "terr-vizcaya-per-168", "terr-vizcaya-per-189", "terr-vizcaya-per-210", "terr-vizcaya-per-231", "terr-vizcaya-per-252", "terr-vizcaya-per-273", "terr-vizcaya-per-294", "terr-vizcaya-per-315", "terr-vizcaya-per-336", "terr-vizcaya-per-357", "terr-vizcaya-per-42", "terr-vizcaya-per-63", "terr-vizcaya-per-84"], source_refs = ["aeat-dr-490-2022-2t"]}
+sequence_removals = {casilla_ids = [2, 3, 11, 12, 13, 16, 18, 19, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152], source_refs = [1]}
+sequence_order = {casilla_ids = [0, 1, 29, 30, 2, 3, 4, 5, 6, 7, 8, 31, 32, 33, 9, 10, 11, 34, 35, 36, 37, 38, 39, 40, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294, 295, 296, 297, 298, 299, 300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 316, 317, 318, 319, 320, 321, 322, 323, 324, 325, 326, 327, 328, 329, 330, 331, 332, 333, 334, 335, 336, 337, 338, 339, 340, 341, 342, 343, 344, 345, 346, 347, 348, 349, 350, 351, 352]}
+
+[[revisions."2022-2t-4t".family_overrides]]
+family = "application_links"
+selector = {revision = "2022-1t", id = "modelo-490-export"}
+sequence_additions = {source_refs = ["aeat-dr-490-2022-2t"]}
+sequence_removals = {source_refs = [0]}
+
+[[revisions."2022-2t-4t".family_overrides]]
+family = "workbook_parity_refs"
+selector = {revision = "2022-1t", id = "modelo-490-static-layout"}
+fields = {workbook_source = "aeat-dr-490-2022-2t"}
+sequence_additions = {source_refs = ["aeat-dr-490-2022-2t"]}
+sequence_removals = {source_refs = [0]}

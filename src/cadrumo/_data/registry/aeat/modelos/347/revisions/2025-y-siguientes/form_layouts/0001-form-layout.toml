@@ -1,0 +1,135 @@
+# Authored form structure; automatic generation preserves this declaration.
+# Reconcile source changes explicitly. Authorship does not imply completed review.
+
+[[revisions.2025-y-siguientes.form_layouts]]
+id = "form-layout"
+revision_id = "2025-y-siguientes"
+seed_source = "authored"
+review = { state = "generated", notes = "Partial authored adaptation of BOE-A-2011-19397 Annex I: summary PDF7, declared persons PDF9, rented properties PDF11. Quarterly operation and property-transfer amounts retain separate columns within each declared record. Electronic-only revision fields remain accounted for. Summary boxes 01-04 read the existing scalar bindings through exact declared export owners, without introducing editable casillas or reinterpreting split wire amounts. Paper date, signatory and role are informational; the blank handwritten-signature and administration spaces do not certify electronic signature or receipt; this draft is not a completed official-form reproduction or filing-readiness claim." }
+generator_version = 1
+source_state_digest = "c148f3c29974e6d555eb27f8f4fad2295568f07394f1c6ed19e8b09af3a98867"
+design_sources = [
+    { source_ref = "boe-modelo-347-2011-form-pdf", sha256 = "5b5bbfeb8f50443bfded5e8467354f5803c884e86a62465e1a4abe89ce76de13" },
+]
+placements = [
+    { casilla_id = "contraparte.arrendamiento-local-negocio", kind = "on_form" },
+    { casilla_id = "contraparte.bienes-vinculados", kind = "on_form" },
+    { casilla_id = "contraparte.clave-operacion", kind = "on_form" },
+    { casilla_id = "contraparte.criterio-caja", kind = "on_form" },
+    { casilla_id = "contraparte.ejercicio-operacion", kind = "on_form" },
+    { casilla_id = "contraparte.importe-Q1", kind = "on_form" },
+    { casilla_id = "contraparte.importe-Q2", kind = "on_form" },
+    { casilla_id = "contraparte.importe-Q3", kind = "on_form" },
+    { casilla_id = "contraparte.importe-Q4", kind = "on_form" },
+    { casilla_id = "contraparte.importe-anual", kind = "on_form" },
+    { casilla_id = "contraparte.importe-criterio-caja", kind = "on_form" },
+    { casilla_id = "contraparte.importe-metalico", kind = "on_form" },
+    { casilla_id = "contraparte.importe-transmisiones-Q1", kind = "on_form" },
+    { casilla_id = "contraparte.importe-transmisiones-Q2", kind = "on_form" },
+    { casilla_id = "contraparte.importe-transmisiones-Q3", kind = "on_form" },
+    { casilla_id = "contraparte.importe-transmisiones-Q4", kind = "on_form" },
+    { casilla_id = "contraparte.importe-transmisiones-inmuebles", kind = "on_form" },
+    { casilla_id = "contraparte.inversion-sujeto-pasivo", kind = "on_form" },
+    { casilla_id = "contraparte.nif", kind = "on_form" },
+    { casilla_id = "contraparte.nif-operador-comunitario", kind = "on_form" },
+    { casilla_id = "contraparte.nombre", kind = "on_form" },
+    { casilla_id = "contraparte.numero-convocatoria-bdns", kind = "on_form" },
+    { casilla_id = "contraparte.operacion-seguro", kind = "on_form" },
+    { casilla_id = "contraparte.pais-codigo", kind = "on_form" },
+    { casilla_id = "contraparte.provincia-codigo", kind = "on_form" },
+    { casilla_id = "contraparte.representante-legal-nif", kind = "on_form" },
+    { casilla_id = "decl.complementaria-sustitutiva", kind = "on_form" },
+    { casilla_id = "decl.ejercicio", kind = "on_form" },
+    { casilla_id = "decl.numero-justificante", kind = "on_form" },
+    { casilla_id = "decl.persona-relacion", kind = "on_form" },
+    { casilla_id = "decl.persona-relacion-telefono", kind = "on_form" },
+    { casilla_id = "decl.representante-legal-nif", kind = "on_form" },
+    { casilla_id = "decl.tipo-declaracion", kind = "working_figure" },
+    { casilla_id = "inmueble.arrendatario-nif", kind = "on_form" },
+    { casilla_id = "inmueble.arrendatario-nombre", kind = "on_form" },
+    { casilla_id = "inmueble.direccion", kind = "on_form" },
+    { casilla_id = "inmueble.importe-operacion", kind = "on_form" },
+    { casilla_id = "inmueble.referencia-catastral", kind = "on_form" },
+    { casilla_id = "inmueble.representante-legal-nif", kind = "on_form" },
+    { casilla_id = "inmueble.situacion", kind = "on_form" },
+    { casilla_id = "firma-fecha", kind = "on_form" },
+    { casilla_id = "firma-nombre", kind = "on_form" },
+    { casilla_id = "firma-cargo", kind = "on_form" },
+]
+
+[[revisions.2025-y-siguientes.form_layouts.pages]]
+id = "m347-declarante"
+official_ref = "BOE-A-2011-19397, anexo I, hoja resumen (PDF 7)"
+heading_key = "modelo.schema.347.form.page.m347-declarante.heading"
+
+[[revisions.2025-y-siguientes.form_layouts.pages.sections]]
+id = "identificacion"
+heading_key = "modelo.schema.347.form.section.identificacion.heading"
+blocks = [
+    { kind = "context_field", id = "nif", export_layout_id = "generated-modelo-347-2025-y-siguientes-fichero", export_record_id = "m347-declarante", export_field_id = "m347-2025.declarante.f004", heading_key = "modelo.schema.347.form.context.nif.heading" },
+    { kind = "context_field", id = "nombre", export_layout_id = "generated-modelo-347-2025-y-siguientes-fichero", export_record_id = "m347-declarante", export_field_id = "m347-2025.declarante.f005", heading_key = "modelo.schema.347.form.context.nombre.heading" },
+    { kind = "field", id = "decl-representante-legal-nif", casilla_id = "decl.representante-legal-nif" },
+]
+
+[[revisions.2025-y-siguientes.form_layouts.pages.sections]]
+id = "contacto"
+heading_key = "modelo.schema.347.form.section.contacto.heading"
+blocks = [
+    { kind = "field", id = "decl-persona-relacion", casilla_id = "decl.persona-relacion" },
+    { kind = "field", id = "decl-persona-relacion-telefono", casilla_id = "decl.persona-relacion-telefono" },
+]
+
+[[revisions.2025-y-siguientes.form_layouts.pages.sections]]
+id = "declaracion"
+heading_key = "modelo.schema.347.form.section.declaracion.heading"
+blocks = [
+    { kind = "field", id = "decl-ejercicio", casilla_id = "decl.ejercicio" },
+    { kind = "field", id = "decl-numero-justificante", casilla_id = "decl.numero-justificante" },
+    { kind = "field", id = "decl-complementaria-sustitutiva", casilla_id = "decl.complementaria-sustitutiva" },
+    { kind = "context_field", id = "anterior", export_layout_id = "generated-modelo-347-2025-y-siguientes-fichero", export_record_id = "m347-declarante", export_field_id = "m347-2025.declarante.f011", heading_key = "modelo.schema.347.form.context.anterior.heading" },
+]
+
+[[revisions.2025-y-siguientes.form_layouts.pages.sections]]
+id = "resumen"
+heading_key = "modelo.schema.347.form.section.resumen.heading"
+blocks = [
+    { box_number = "01", kind = "context_field", id = "resumen-personas", export_layout_id = "generated-modelo-347-2025-y-siguientes-fichero", export_record_id = "m347-declarante", export_field_id = "m347-2025.declarante.f012", heading_key = "modelo.schema.347.form.summary.personas.heading" },
+    { box_number = "02", kind = "context_field", id = "resumen-operaciones", export_layout_id = "generated-modelo-347-2025-y-siguientes-fichero", export_record_id = "m347-declarante", export_field_id = "m347-2025.declarante.f013", heading_key = "modelo.schema.347.form.summary.operaciones.heading" },
+    { box_number = "03", kind = "context_field", id = "resumen-inmuebles", export_layout_id = "generated-modelo-347-2025-y-siguientes-fichero", export_record_id = "m347-declarante", export_field_id = "m347-2025.declarante.f014", heading_key = "modelo.schema.347.form.summary.inmuebles.heading" },
+    { box_number = "04", kind = "context_field", id = "resumen-arrendamientos", export_layout_id = "generated-modelo-347-2025-y-siguientes-fichero", export_record_id = "m347-declarante", export_field_id = "m347-2025.declarante.f015", heading_key = "modelo.schema.347.form.summary.arrendamientos.heading" },
+]
+
+[[revisions.2025-y-siguientes.form_layouts.pages.sections]]
+id = "firma"
+heading_key = "modelo.schema.347.form.section.firma.heading"
+blocks = [
+    { kind = "field", id = "firma-fecha", casilla_id = "firma-fecha" },
+    { kind = "field", id = "firma-nombre", casilla_id = "firma-nombre" },
+    { kind = "field", id = "firma-cargo", casilla_id = "firma-cargo" },
+    { kind = "grid", id = "firma-manuscrita", columns = [{ key = "firma", heading_key = "modelo.schema.347.form.signature.space.heading" }, { key = "administracion", heading_key = "modelo.schema.347.form.signature.administracion.heading" }], rows = [{ key = "firma", heading_key = "modelo.schema.347.form.signature.paper.heading", cells = [{ kind = "blank" }, { kind = "blank" }] }] },
+]
+
+[[revisions.2025-y-siguientes.form_layouts.pages]]
+id = "m347-declarado"
+official_ref = "BOE-A-2011-19397, anexo I, declarados (PDF 9)"
+heading_key = "modelo.schema.347.form.page.m347-declarado.heading"
+
+[[revisions.2025-y-siguientes.form_layouts.pages.sections]]
+id = "general"
+heading_key = "modelo.schema.347.form.section.general.heading"
+blocks = [
+    { kind = "repeating", id = "m347-declarado", row_source = "export_record", export_record_id = "m347-declarado", columns = [{ key = "contraparte-nif", heading_key = "modelo.schema.347.form.column.contraparte-nif.heading", casilla_id = "contraparte.nif" }, { key = "contraparte-nombre", heading_key = "modelo.schema.347.form.column.contraparte-nombre.heading", casilla_id = "contraparte.nombre" }, { key = "contraparte-representante-legal-nif", heading_key = "modelo.schema.347.form.column.contraparte-representante-legal-nif.heading", casilla_id = "contraparte.representante-legal-nif" }, { key = "contraparte-provincia-codigo", heading_key = "modelo.schema.347.form.column.contraparte-provincia-codigo.heading", casilla_id = "contraparte.provincia-codigo" }, { key = "contraparte-pais-codigo", heading_key = "modelo.schema.347.form.column.contraparte-pais-codigo.heading", casilla_id = "contraparte.pais-codigo" }, { key = "contraparte-clave-operacion", heading_key = "modelo.schema.347.form.column.contraparte-clave-operacion.heading", casilla_id = "contraparte.clave-operacion" }, { key = "contraparte-importe-anual", heading_key = "modelo.schema.347.form.column.contraparte-importe-anual.heading", casilla_id = "contraparte.importe-anual" }, { key = "contraparte-importe-transmisiones-inmuebles", heading_key = "modelo.schema.347.form.column.contraparte-importe-transmisiones-inmuebles.heading", casilla_id = "contraparte.importe-transmisiones-inmuebles" }, { key = "contraparte-operacion-seguro", heading_key = "modelo.schema.347.form.column.contraparte-operacion-seguro.heading", casilla_id = "contraparte.operacion-seguro" }, { key = "contraparte-importe-metalico", heading_key = "modelo.schema.347.form.column.contraparte-importe-metalico.heading", casilla_id = "contraparte.importe-metalico" }, { key = "contraparte-ejercicio-operacion", heading_key = "modelo.schema.347.form.column.contraparte-ejercicio-operacion.heading", casilla_id = "contraparte.ejercicio-operacion" }, { key = "contraparte-importe-transmisiones-q1", heading_key = "modelo.schema.347.form.column.contraparte-importe-transmisiones-q1.heading", casilla_id = "contraparte.importe-transmisiones-Q1" }, { key = "contraparte-importe-transmisiones-q2", heading_key = "modelo.schema.347.form.column.contraparte-importe-transmisiones-q2.heading", casilla_id = "contraparte.importe-transmisiones-Q2" }, { key = "contraparte-importe-transmisiones-q3", heading_key = "modelo.schema.347.form.column.contraparte-importe-transmisiones-q3.heading", casilla_id = "contraparte.importe-transmisiones-Q3" }, { key = "contraparte-importe-transmisiones-q4", heading_key = "modelo.schema.347.form.column.contraparte-importe-transmisiones-q4.heading", casilla_id = "contraparte.importe-transmisiones-Q4" }, { key = "contraparte-bienes-vinculados", heading_key = "modelo.schema.347.form.column.contraparte-bienes-vinculados.heading", casilla_id = "contraparte.bienes-vinculados" }, { key = "contraparte-importe-criterio-caja", heading_key = "modelo.schema.347.form.column.contraparte-importe-criterio-caja.heading", casilla_id = "contraparte.importe-criterio-caja" }, { key = "contraparte-numero-convocatoria-bdns", heading_key = "modelo.schema.347.form.column.contraparte-numero-convocatoria-bdns.heading", casilla_id = "contraparte.numero-convocatoria-bdns" }, { key = "contraparte-arrendamiento-local-negocio", heading_key = "modelo.schema.347.form.column.contraparte-arrendamiento-local-negocio.heading", casilla_id = "contraparte.arrendamiento-local-negocio" }, { key = "contraparte-criterio-caja", heading_key = "modelo.schema.347.form.column.contraparte-criterio-caja.heading", casilla_id = "contraparte.criterio-caja" }, { key = "contraparte-nif-operador-comunitario", heading_key = "modelo.schema.347.form.column.contraparte-nif-operador-comunitario.heading", casilla_id = "contraparte.nif-operador-comunitario" }, { key = "contraparte-importe-q1", heading_key = "modelo.schema.347.form.column.contraparte-importe-q1.heading", casilla_id = "contraparte.importe-Q1" }, { key = "contraparte-importe-q2", heading_key = "modelo.schema.347.form.column.contraparte-importe-q2.heading", casilla_id = "contraparte.importe-Q2" }, { key = "contraparte-importe-q3", heading_key = "modelo.schema.347.form.column.contraparte-importe-q3.heading", casilla_id = "contraparte.importe-Q3" }, { key = "contraparte-importe-q4", heading_key = "modelo.schema.347.form.column.contraparte-importe-q4.heading", casilla_id = "contraparte.importe-Q4" }, { key = "contraparte-inversion-sujeto-pasivo", heading_key = "modelo.schema.347.form.column.contraparte-inversion-sujeto-pasivo.heading", casilla_id = "contraparte.inversion-sujeto-pasivo" }], grids = [{ kind = "grid", id = "trimestres", columns = [{ key = "operaciones", heading_key = "modelo.schema.347.form.column.operaciones.heading" }, { key = "transmisiones", heading_key = "modelo.schema.347.form.column.transmisiones.heading" }], rows = [{ key = "trimestre-1", heading_key = "modelo.schema.347.form.row.trimestre-1.heading", cells = [{ kind = "casilla", casilla_id = "contraparte.importe-Q1" }, { kind = "casilla", casilla_id = "contraparte.importe-transmisiones-Q1" }] }, { key = "trimestre-2", heading_key = "modelo.schema.347.form.row.trimestre-2.heading", cells = [{ kind = "casilla", casilla_id = "contraparte.importe-Q2" }, { kind = "casilla", casilla_id = "contraparte.importe-transmisiones-Q2" }] }, { key = "trimestre-3", heading_key = "modelo.schema.347.form.row.trimestre-3.heading", cells = [{ kind = "casilla", casilla_id = "contraparte.importe-Q3" }, { kind = "casilla", casilla_id = "contraparte.importe-transmisiones-Q3" }] }, { key = "trimestre-4", heading_key = "modelo.schema.347.form.row.trimestre-4.heading", cells = [{ kind = "casilla", casilla_id = "contraparte.importe-Q4" }, { kind = "casilla", casilla_id = "contraparte.importe-transmisiones-Q4" }] }] }] },
+]
+
+[[revisions.2025-y-siguientes.form_layouts.pages]]
+id = "m347-inmueble"
+official_ref = "BOE-A-2011-19397, anexo I, inmuebles (PDF 11)"
+heading_key = "modelo.schema.347.form.page.m347-inmueble.heading"
+condition = "optional_record"
+
+[[revisions.2025-y-siguientes.form_layouts.pages.sections]]
+id = "general"
+heading_key = "modelo.schema.347.form.section.general.heading"
+blocks = [
+    { kind = "repeating", id = "m347-inmueble", row_source = "export_record", export_record_id = "m347-inmueble", columns = [{ key = "inmueble-arrendatario-nif", heading_key = "modelo.schema.347.form.column.inmueble-arrendatario-nif.heading", casilla_id = "inmueble.arrendatario-nif" }, { key = "inmueble-arrendatario-nombre", heading_key = "modelo.schema.347.form.column.inmueble-arrendatario-nombre.heading", casilla_id = "inmueble.arrendatario-nombre" }, { key = "inmueble-representante-legal-nif", heading_key = "modelo.schema.347.form.column.inmueble-representante-legal-nif.heading", casilla_id = "inmueble.representante-legal-nif" }, { key = "inmueble-importe-operacion", heading_key = "modelo.schema.347.form.column.inmueble-importe-operacion.heading", casilla_id = "inmueble.importe-operacion" }, { key = "inmueble-situacion", heading_key = "modelo.schema.347.form.column.inmueble-situacion.heading", casilla_id = "inmueble.situacion" }, { key = "inmueble-referencia-catastral", heading_key = "modelo.schema.347.form.column.inmueble-referencia-catastral.heading", casilla_id = "inmueble.referencia-catastral" }, { key = "inmueble-direccion", heading_key = "modelo.schema.347.form.column.inmueble-direccion.heading", casilla_id = "inmueble.direccion" }] },
+]

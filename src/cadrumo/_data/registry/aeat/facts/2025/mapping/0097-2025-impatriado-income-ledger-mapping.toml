@@ -1,0 +1,46 @@
+[fact]
+fact_id = "impatriado-income-ledger-registry-mapping"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "impatriado-income-ledger-registry-mapping:2025"
+date_axis = "filing_period"
+# Modelo 151 is one annual filing; the selected M151 schedule declares only
+# the 0A period. Keep the fact selector aligned with this variant's 2025
+# effective boundary rather than admitting quarterly/monthly tokens.
+period_selector = { year_from = 2025, periods = ["0A"] }
+legal_refs = ["ley-35-2006:art-93", "ley-35-2006:art-27", "ley-35-2006:art-28"]
+source_refs = [
+  "aeat-modelo-151-procedure",
+  "boe-modelo-151-layout",
+  "aeat-modelo-130-instructions",
+  "aeat-renta-2025-manual-parte1",
+]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-151-procedure"
+required_text = ["Modelo 151"]
+
+[[fact.variants.source_citations]]
+source_ref = "boe-modelo-151-layout"
+required_text = ["declaración anual"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["actividades económicas"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Rendimientos del trabajo"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "applicability.modelos", value = "151" },
+  { key = "binding.source_kind", value = "ledger_impatriado_income_aggregation" },
+  { key = "target.casilla_id", value = "impatriado.base-liquidable-general" },
+  { key = "source.jurisdictions", value = "ES" },
+  { key = "eligible.income_categories", value = "actividad_economica,trabajo" },
+]

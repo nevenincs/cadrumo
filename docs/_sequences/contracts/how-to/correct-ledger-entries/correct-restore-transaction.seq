@@ -1,0 +1,9 @@
+@step Stash a transaction so there is something to restore.
+@setup aeat --format json app ledger add --date 2026-03-15 --amount 80.00 --direction OUTGOING --description "Stashed by mistake" --idempotency-key correct-restore
+@capture transaction_id result.transaction_id
+@setup aeat app ledger stash {transaction_id} --reason "waiting for invoice" --yes
+@step Return it to your everyday lists and totals.
+aeat app ledger restore {transaction_id} --reason "stashed by mistake" --yes
+@step Confirm the lifecycle state is ACTIVE again.
+@result aeat --format json app ledger view {transaction_id}
+@expect result.transaction.lifecycle_state == "ACTIVE"

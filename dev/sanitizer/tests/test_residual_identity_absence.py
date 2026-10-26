@@ -1,0 +1,667 @@
+"""No real identity survives sanitisation in a committed real-corpus fixture.
+
+The sibling adversarial gate asserts that the synthetic placeholders LANDED. It
+never asserts that no real identity SURVIVED, and its docstring justifies the
+omission by saying the test does not have the cleartext. This module is the
+other half, and it disproves that justification: detection needs no cleartext,
+only a pattern, a checksum, and the sidecar's own record of what the sanitiser
+wrote. See :mod:`dev.sanitizer.residual_identity` for the argument in full.
+
+SCOPE, AND WHY IT IS PROVENANCE-DRIVEN RATHER THAN A LIST. Only fixtures whose
+sidecar declares ``provenance = "real_corpus"`` are scanned. That is not an
+exemption list -- the project rule ``aeat-quality-gates``
+forbids hardcoding per-fixture exceptions in test source, and this is the
+opposite: the scope is READ from each sidecar, so a new real specimen is
+enrolled automatically the moment it lands.
+
+The scope is principled, not convenient. A residual is a value that entered the
+document as real and survived, so the risk class is exactly "a real document was
+sanitised". A ``synthetic_generated`` fixture never carried a real identity: its
+generator AUTHORS identity-shaped values outright and does not record them in
+``replacements_applied``, because nothing was replaced. Scanning one therefore
+measures the generator's own fakes, not a leak -- confirmed empirically, since
+every checksum-valid hit across the committed tree today falls on a synthetic
+fixture and every real-corpus fixture is clean.
+
+Re-stamping a real fixture as synthetic to silence this gate does not work: the
+provenance-vs-``/Producer`` cross-check in
+``registry/tests/test_verification_source_fixture_metadata.py`` already fails a
+sidecar claiming ``synthetic_generated`` on a PDF without the generator
+signature. That gate owns the mis-stamp check; this one does not restate it.
+
+THE LIVE POSITIVE CONTROL, AND WHY IT IS NOT COMMITTED. The scans above are
+absence assertions over already-sanitised artefacts. What they cannot show is
+that the gate and the sanitiser AGREE: that a document the sanitiser really
+processed passes the scan when checked against the manifest the sanitiser
+really emitted. Every other proof in this module feeds a hand-written sidecar,
+so a sanitiser that wrote a synthetic it forgot to record -- or recorded under a
+different normalisation -- would false-positive on its own output, and a gate
+that fires on correct output is a gate that gets silenced. That is the failure
+mode the original hole came from.
+
+:func:`test_the_gate_and_the_sanitiser_agree_end_to_end` closes it by building a
+PRE-SANITISATION specimen: a document deliberately carrying checksum-valid
+identity tokens, which the gate must FLAG, which the real ``sanitize_pdf`` then
+processes, and whose output the gate must find CLEAN against the sanitiser's own
+``replacements_applied``. Until the withdrawn real renders were replaced, the
+leaking fixtures themselves were that control; replacing them removed it, and
+this restores it.
+
+The specimen is GENERATED IN-TEST and never committed. That is a deliberate
+choice over the alternatives -- a new provenance value, or its own directory --
+and the reasons are structural rather than aesthetic:
+
+- A file that deliberately carries identity-shaped tokens is the one kind of
+  file that must never enter git history, because history outlives every
+  intention about it. That is the lesson the whole fixture replacement was
+  about.
+- It needs no exclusion at all. ``_real_corpus_fixtures`` walks COMMITTED
+  artefacts under the package root, so an in-memory specimen is outside the
+  scope by construction. A committed one would have to be taught to the scanner,
+  and a scanner that knows about a specific specimen is the per-fixture
+  allowlist ``aeat-quality-gates`` forbids, whatever it is
+  called.
+- Nothing is lost by it: ``sanitize_pdf`` takes bytes, not a path, so the
+  end-to-end path is identical either way.
+
+Its tokens are checksum-valid because the detectors verify checksums and would
+not fire otherwise, and they are built from all-zero and all-one bodies so no
+reader can mistake them for a real document or account.
+
+HANDLING RULE. No assertion in this module can print a matched value. Findings
+carry a pattern class, a surface, and an offset, and that is all the failure
+message renders.
+"""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import pytest
+from pydantic import SecretStr
+
+from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
+from cadrumo.tests.inventory import SRC_CADRUMO
+from cadrumo.tests.pdf_fixtures import text_pdf_bytes
+
+from .._pipeline import sanitize_pdf
+from .._records import IbanReplacement, NameReplacement, NifReplacement, TokenMap
+from ..residual_identity import (
+    CHECKSUM_VERIFIED_KINDS,
+    ResidualKind,
+    accounted_for_values,
+    scan_for_residual_identities,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("published_authority_scope")]
+
+#: Synthetic specimen identities PLANTED to prove the scanner actually fires.
+#:
+#: Both are checksum-valid but built from all-zero bodies so neither can
+#: resemble a real document or account. ``00000000T`` is the AEAT control letter
+#: for body ``0`` (``TRWAGMYFPDXBNJZSQVHLCKE[0]``); ``ES82`` + twenty zeros is
+#: the mod-97 completion of an all-zero BBAN.
+#:
+#: Named for what they ARE -- values planted into a specimen -- rather than for
+#: what they are not. They are a positive control, not a test double: nothing
+#: here stands in for a collaborator, and the real ``sanitize_pdf`` processes
+#: them. ``_PLANTED_`` also pairs with the ``_SYNTHETIC_`` values below, so the
+#: specimen's before and after sides are one vocabulary.
+_PLANTED_NIF = "00000000T"
+_PLANTED_IBAN = "ES8200000000000000000000"
+
+#: The legal-entity and prefixed spellings of the same all-zero convention.
+#:
+#: ``B00000000`` is an all-zero CIF body under the ``B`` kind, whose control is
+#: a digit and is ``0`` for that body; ``ES00000000T`` is the intra-community
+#: spelling of the planted NIF above. Both are as unmistakably synthetic as the
+#: pair above and exist for the same reason: a class cannot be shown to refuse a
+#: wrong control character unless it is also shown to accept a right one.
+_PLANTED_CIF = "B00000000"
+_PLANTED_NIF_IVA = "ES00000000T"
+_PLANTED_NAME = "NOMBRE DE PRUEBA CERO"
+"""The name the pre-sanitisation specimen carries before the sanitiser rewrites it.
+
+Names carry no checksum, so this is never a blocking finding; it is here because
+a specimen the sanitiser rewrites on only one axis would not exercise the
+manifest across the categories a real ``TokenMap`` declares.
+"""
+
+#: What the sanitiser writes IN PLACE of the planted values.
+#:
+#: Both are checksum-valid, and deliberately DIFFERENT from the planted pair, so
+#: a sanitiser that failed to rewrite anything would leave the planted values in
+#: place and the end-to-end control would still fire. All-one bodies keep them
+#: as obviously synthetic on sight as the all-zero originals.
+_SYNTHETIC_NIF = "Y0000001S"
+_SYNTHETIC_IBAN = "ES6011111111111111111111"
+_SYNTHETIC_NAME = "APELLIDO APELLIDO NOMBRE"
+
+
+def _candidate_sidecars(target: Path) -> tuple[Path, ...]:
+    """Return the sidecar names the two fixture writers give ``target``.
+
+    Both rules applied FORWARD, in the writers' own form: the evidence-corpus
+    writer appends ``.provenance.json`` to the artefact's FULL filename, and
+    the justificante generators write ``pdf_path.with_suffix('.json')``. Order
+    matters only for an artefact that somehow carries both; the full-name form
+    is the unambiguous one, so it wins.
+    """
+    return (
+        target.with_name(target.name + ".provenance.json"),
+        target.with_suffix(".json"),
+    )
+
+
+def _real_corpus_fixtures(root: Path = SRC_CADRUMO) -> tuple[list[tuple[Path, Path]], list[str]]:
+    """Every committed artefact whose sidecar declares real provenance.
+
+    Walks the whole package, not one fixture directory. The module docstring
+    above promises the scope is READ from each sidecar so a new real specimen
+    enrols "automatically the moment it lands"; scanning only
+    ``fixtures/justificantes`` did not keep that promise. Four real-provenance
+    artefacts live outside it in the ledger evidence corpus and were never
+    scanned once.
+
+    The narrowing also made this gate unsatisfiable the moment it landed. Its
+    two justificante specimens had just been replaced with synthetic ones
+    because they leaked, so the directory held no real specimen at all, and the
+    non-emptiness guard below fired with a message asserting that NO committed
+    fixture declares ``real_corpus`` -- while four do. A gate reporting a red
+    on a false premise is worse than a silent one, because the premise is what
+    a reader carries away.
+
+    Both sidecar conventions in the tree are honoured, and the walk runs in
+    the direction the writers do: ARTEFACT to sidecar, applying each writer's
+    own naming rule forward (``X.json`` beside ``X.pdf`` for the justificante
+    fixtures, ``X.<ext>.provenance.json`` beside ``X.<ext>`` for the evidence
+    corpus). Walking sidecar-to-artefact instead means INVERTING those rules,
+    and the plain convention has no inverse: ``X.json`` names no extension, so
+    an inverse has to guess one. The guess was ``.pdf``, which silently made
+    the promise below false for every other artefact kind -- 19 of the 92
+    plain-convention sidecars in the tree sit beside something that is not a
+    PDF (``.html``, ``.csv``, ``.tsv``, ``.txt``, ``.xml``), and none of them
+    was ever offered to this scan. Today all 19 declare synthetic provenance,
+    so the scanned population is the same either way; re-stamping any one of
+    them ``real_corpus`` would have enrolled nothing.
+
+    Non-PDF artefacts are in scope because the scan reads bytes and a JPEG can
+    carry an identity in its metadata exactly as a PDF can in a content stream.
+    """
+    pairs: list[tuple[Path, Path]] = []
+    unreadable: list[str] = []
+    seen: set[Path] = set()
+    # A sidecar is always a SIBLING of what it describes, so the artefacts
+    # worth offering the forward rule all live in a directory that holds at
+    # least one JSON file. Finding those directories costs the same single
+    # ``*.json`` walk this scan always did; the per-directory listing that
+    # follows is shallow and reaches every artefact kind, not only ``.pdf``.
+    sidecars = frozenset(
+        path for path in scan_directory(root, pattern="*.json", recursive=True) if "__pycache__" not in path.parts
+    )
+    for directory in sorted({path.parent for path in sidecars}):
+        for target in scan_directory(directory, select=DirectoryEntryKind.FILES):
+            if target.suffix == ".json" or target in seen:
+                continue
+            sidecar_path = next(
+                (candidate for candidate in _candidate_sidecars(target) if candidate in sidecars),
+                None,
+            )
+            if sidecar_path is None:
+                continue
+            try:
+                sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, UnicodeDecodeError) as refusal:
+                # A sidecar that will not parse cannot be asked whether its target is
+                # real corpus, so the pair silently leaves this scan entirely. With
+                # four fixtures in scope, one unreadable sidecar removes a quarter of
+                # the protected corpus and the gate still reports clean. These are
+                # committed files, so a broken one is a defect and is refused below
+                # rather than skipped.
+                unreadable.append(f"{sidecar_path}: {refusal}")
+                continue
+            if isinstance(sidecar, dict) and sidecar.get("provenance") == "real_corpus":
+                seen.add(target)
+                pairs.append((target, sidecar_path))
+    return pairs, unreadable
+
+
+_REAL_CORPUS_FIXTURES, _UNREADABLE_SIDECARS = _real_corpus_fixtures()
+
+
+def test_a_real_corpus_artefact_that_is_not_a_pdf_is_enrolled(tmp_path: Path) -> None:
+    """The scan reaches every artefact kind, not only ``.pdf``.
+
+    The teeth for the walk direction. While the scan inverted the plain
+    ``X.json`` convention by guessing ``.pdf``, an artefact of any other kind
+    was unreachable however its sidecar was stamped: the guessed name simply
+    did not exist, and the pair left the scan without a word. A JPEG carries
+    an identity in its metadata exactly as a PDF does in a content stream, so
+    that silence was a hole in the scope, not a narrowing of it.
+
+    Run against an isolated tree rather than the committed one: every
+    non-PDF plain-convention sidecar in the package declares synthetic
+    provenance today, so the committed corpus cannot show the difference,
+    and re-stamping one to prove a point is exactly the mis-declaration a
+    sibling gate exists to refuse.
+    """
+    (tmp_path / "specimen.xml").write_text("<x/>", encoding="utf-8")
+    plain = tmp_path / "specimen.json"
+    plain.write_text(json.dumps({"provenance": "real_corpus"}), encoding="utf-8")
+    (tmp_path / "scan.jpg").write_text("not really a jpeg", encoding="utf-8")
+    full = tmp_path / "scan.jpg.provenance.json"
+    full.write_text(json.dumps({"provenance": "real_corpus"}), encoding="utf-8")
+
+    pairs, unreadable = _real_corpus_fixtures(tmp_path)
+
+    assert not unreadable
+    assert dict(pairs) == {
+        tmp_path / "specimen.xml": plain,
+        tmp_path / "scan.jpg": full,
+    }
+
+
+def test_real_corpus_fixture_scope_is_not_empty() -> None:
+    """The gate must have something to scan, or its green means nothing.
+
+    Without this, deleting or re-stamping every real specimen would leave the
+    scan loop iterating zero times and reporting success -- the same vacuity the
+    sibling gate's own "when no fixtures are committed yet" branch tolerates.
+    """
+    assert _REAL_CORPUS_FIXTURES, (
+        "no committed fixture declares provenance='real_corpus', so the residual-identity "
+        "scan has nothing to check and its passing result is vacuous"
+    )
+
+
+def test_every_committed_sidecar_can_be_read() -> None:
+    """A sidecar that will not parse takes its fixture out of this scan silently.
+
+    The provenance question is asked OF the sidecar, so an unparseable one is
+    not a fixture with unknown provenance -- it is a fixture that never enters
+    the scope at all, and the scan then reports clean over a corpus it quietly
+    shrank. Four fixtures carry ``provenance='real_corpus'`` today, so one
+    unreadable sidecar removes a quarter of what this gate protects.
+
+    Refused rather than announced: all 1,142 committed sidecars parse, and a
+    committed file that does not is a broken tracked artefact, not a racing
+    input a peer is mid-write on.
+    """
+    assert not _UNREADABLE_SIDECARS, (
+        "these committed sidecars could not be parsed, so the fixtures beside them were "
+        f"never asked whether they are real corpus and were never scanned: {_UNREADABLE_SIDECARS}"
+    )
+
+
+@pytest.mark.parametrize(
+    "pdf_path,sidecar_path",
+    _REAL_CORPUS_FIXTURES,
+    ids=[f"{p.parent.name}-{p.stem}" for p, _ in _REAL_CORPUS_FIXTURES],
+)
+def test_no_checksum_valid_identity_survives_in_a_real_corpus_fixture(
+    pdf_path: Path,
+    sidecar_path: Path,
+) -> None:
+    """No unaccounted-for, checksum-valid identity remains in a sanitised specimen."""
+    sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
+    findings = scan_for_residual_identities(pdf_path.read_bytes(), sidecar)
+    assert not findings, (
+        f"RESIDUAL-IDENTITY [{pdf_path.parent.name}/{pdf_path.stem}]: "
+        f"{len(findings)} checksum-valid identity value(s) survived sanitisation and are not "
+        f"accounted for by the sidecar's replacements_applied.\n"
+        + "\n".join(f"  {finding.describe()}" for finding in findings)
+        + "\n  Values are deliberately not shown. Re-sanitise the specimen; do not add an exception."
+    )
+
+
+def test_scanner_flags_a_planted_identity_the_sidecar_does_not_account_for() -> None:
+    """Anti-tautology proof: the scanner fires on a value nobody declared.
+
+    The gate above is an absence assertion, and an absence assertion is worth
+    nothing unless the detector behind it demonstrably fires. Planting two
+    checksum-valid identities into a document whose sidecar declares no
+    replacements must produce exactly two blocking findings.
+    """
+    planted = _pdf_bytes_containing(f"NIF {_PLANTED_NIF} IBAN {_PLANTED_IBAN}")
+    findings = scan_for_residual_identities(planted, {"replacements_applied": []})
+    kinds = {finding.kind for finding in findings}
+    assert kinds == {ResidualKind.NIF_NIE, ResidualKind.IBAN}, (
+        f"planted NIF and IBAN must both be flagged; got kinds {sorted(k.value for k in kinds)}"
+    )
+
+
+def test_scanner_does_not_flag_a_value_the_sidecar_accounts_for() -> None:
+    """The other half of the proof: a declared synthetic is not a residual.
+
+    This is the condition that makes cleartext-free detection possible. Without
+    it every scan would drown in the sanitiser's own replacements, since a
+    synthetic placeholder is identity-shaped and checksum-valid by design. If
+    this test ever fails, the gate has become a noise generator and will be
+    silenced -- the failure mode that left the original hole open.
+    """
+    planted = _pdf_bytes_containing(f"NIF {_PLANTED_NIF} IBAN {_PLANTED_IBAN}")
+    sidecar = {
+        "replacements_applied": [
+            {"synthetic": _PLANTED_NIF},
+            {"synthetic": _PLANTED_IBAN},
+        ]
+    }
+    assert scan_for_residual_identities(planted, sidecar) == ()
+
+
+def test_scanner_ignores_identity_shaped_values_that_fail_their_checksum() -> None:
+    """The checksum layer must not be decorative.
+
+    An eight-digit run followed by a letter is common in a content stream. If
+    the scanner flagged shape alone it would fire constantly, so this pins that
+    a wrong control letter and a wrong IBAN check are both ignored. Without it,
+    a refactor that dropped the checksum call would still pass every other test
+    in this module.
+    """
+    # Same bodies as the valid fixtures above, with deliberately wrong checks.
+    wrong_nif = "00000000X"
+    wrong_iban = "ES0000000000000000000000"
+    planted = _pdf_bytes_containing(f"NIF {wrong_nif} IBAN {wrong_iban}")
+    assert scan_for_residual_identities(planted, {"replacements_applied": []}) == ()
+
+
+def test_advisory_kinds_are_excluded_from_the_blocking_tier() -> None:
+    """Email and phone carry no checksum, so they must not fail a build.
+
+    Measured over the committed tree, the phone pattern alone produces over a
+    thousand matches, essentially all of them digit runs inside content streams
+    rather than telephone numbers. A gate that fires that often is silenced
+    rather than fixed, so the shape-only classes stay reportable but
+    non-blocking.
+    """
+    assert ResidualKind.EMAIL not in CHECKSUM_VERIFIED_KINDS
+    assert ResidualKind.PHONE not in CHECKSUM_VERIFIED_KINDS
+    assert frozenset(ResidualKind) - {ResidualKind.EMAIL, ResidualKind.PHONE} == CHECKSUM_VERIFIED_KINDS
+
+
+#: Shape-valid, checksum-invalid specimens, one per blocking class.
+#:
+#: Each body is the shape its class matches, carrying a control character the
+#: AEAT algorithm does not produce for that body. The expected control for an
+#: all-zero NIF body is 'T' and for the CIF body 1234567 under kind 'B' it is
+#: '4', both derived from the published algorithm rather than from this
+#: scanner's output.
+#:
+#: Hand-authored here, so it is an independent root from
+#: :data:`CHECKSUM_VERIFIED_KINDS`; the completeness gate below holds the two
+#: sides equal.
+_SHAPE_ONLY_SPECIMENS: tuple[tuple[str, ResidualKind], ...] = (
+    ("00000000X", ResidualKind.NIF_NIE),
+    ("K0000000X", ResidualKind.NIF_NIE),
+    ("B12345670", ResidualKind.CIF),
+    ("ESB12345670", ResidualKind.NIF_IVA),
+    ("ES00000000X", ResidualKind.NIF_IVA),
+    ("ES0000000000000000000000", ResidualKind.IBAN),
+)
+
+
+def test_the_shape_only_specimens_cover_exactly_the_blocking_tier() -> None:
+    """Every class :data:`CHECKSUM_VERIFIED_KINDS` blocks on has a refusal specimen.
+
+    The refusal check below is parametrised from a hand-authored table, so it
+    proves only that the classes SOMEONE listed reject their own shape. Its name
+    quantifies over every blocking class, and nothing tied the table to the set
+    that defines that tier: a fifth kind promoted into
+    :data:`CHECKSUM_VERIFIED_KINDS` would block the build on an arithmetic claim
+    no specimen had ever tested, and the quantified gate would stay green at four
+    classes out of five.
+
+    The two sides are independent roots -- the table is authored in this module,
+    the tier in :mod:`dev.sanitizer.residual_identity` -- so promoting a kind
+    without a specimen, or listing an advisory kind as though it blocked, moves
+    one side only and reddens here.
+    """
+    covered = {kind for _specimen, kind in _SHAPE_ONLY_SPECIMENS}
+
+    unspecimened = sorted(kind.value for kind in CHECKSUM_VERIFIED_KINDS - covered)
+    assert not unspecimened, (
+        f"blocking classes with no shape-only refusal specimen: {unspecimened}; "
+        "a class that fails the build on an arithmetic claim must be shown to "
+        "refuse a specimen of exactly its own shape"
+    )
+
+    non_blocking = sorted(kind.value for kind in covered - CHECKSUM_VERIFIED_KINDS)
+    assert not non_blocking, (
+        f"specimens claim {non_blocking} refuse their own shape, but these kinds "
+        "are advisory-tier and carry no checksum to refuse with"
+    )
+
+
+@pytest.mark.parametrize(("shape_only", "kind"), _SHAPE_ONLY_SPECIMENS)
+def test_every_blocking_class_is_admitted_by_arithmetic_and_not_by_shape(
+    shape_only: str,
+    kind: ResidualKind,
+) -> None:
+    """A blocking class must reject its own shape when the check character is wrong.
+
+    Membership of :data:`CHECKSUM_VERIFIED_KINDS` is a claim that arithmetic,
+    not shape, admits the match. Asserting the membership alone would let a
+    class join the blocking tier with a validator that accepts everything, so
+    each class is made to refuse a specimen of exactly its own shape.
+    """
+    planted = _pdf_bytes_containing(f"identity {shape_only}")
+
+    findings = scan_for_residual_identities(planted, {"replacements_applied": []})
+
+    assert kind not in {finding.kind for finding in findings}, (
+        f"{kind.value} reported a specimen of its own shape whose control character is wrong, "
+        "so the class is admitted by shape rather than by its checksum"
+    )
+
+
+def test_a_legal_entity_identity_and_its_prefixed_spelling_are_both_found() -> None:
+    """The refusal proofs above are worthless unless the classes also fire.
+
+    A scanner carrying only the natural-person shape reported a document naming
+    a company by its tax identity as clean, and the same blindness covered the
+    prefixed spelling of every shape. Both are planted here with control
+    characters the published algorithm does produce, so a class that quietly
+    stopped matching cannot pass as a class that found nothing to report.
+    """
+    planted = _pdf_bytes_containing(f"empresa {_PLANTED_CIF} intracomunitario {_PLANTED_NIF_IVA}")
+
+    findings = scan_for_residual_identities(planted, {"replacements_applied": []})
+
+    assert {ResidualKind.CIF, ResidualKind.NIF_IVA} <= {finding.kind for finding in findings}, (
+        "a legal-entity identity and an ES-prefixed identity must both be blocking findings; "
+        f"got kinds {sorted(k.value for k in {f.kind for f in findings})}"
+    )
+
+
+def test_the_gate_and_the_sanitiser_agree_end_to_end() -> None:
+    """A document the sanitiser really processed passes its own manifest.
+
+    The live positive control. Three claims in sequence, and each one is load
+    bearing:
+
+    1. The gate FLAGS the pre-sanitisation specimen. Without this the rest could
+       pass on a document that never carried anything, which is exactly how an
+       absence assertion goes quietly vacuous.
+    2. The real :func:`sanitize_pdf` processes it -- no stub, no hand-built
+       output.
+    3. The gate finds the OUTPUT clean when checked against the sanitiser's own
+       ``replacements_applied``. This is the seam nothing else covers: every
+       other proof here supplies a sidecar written by the test, so a synthetic
+       the sanitiser wrote but failed to record would go unnoticed until it
+       false-positived on a real operator's file.
+
+    The specimen plants its identity on two different surfaces -- DocInfo and a
+    content stream -- because the sanitiser treats them separately and a fix that
+    covered only one would still satisfy a single-surface specimen.
+    """
+    source = _pre_sanitisation_specimen()
+
+    before = scan_for_residual_identities(source, {"replacements_applied": []})
+    assert {finding.kind for finding in before} == {ResidualKind.NIF_NIE, ResidualKind.IBAN}, (
+        "the pre-sanitisation specimen must be visibly dirty to the gate, or the clean "
+        f"result below proves nothing; got kinds {sorted(k.value for k in {f.kind for f in before})}"
+    )
+
+    result = sanitize_pdf(source, _pre_sanitisation_token_map())
+    sidecar = {"replacements_applied": [row.model_dump() for row in result.replacements_applied]}
+
+    after = scan_for_residual_identities(result.output_bytes, sidecar)
+    assert not after, (
+        "the residual gate flags genuine sanitiser output when checked against the manifest "
+        "the sanitiser itself emitted. Either a real value survived, or a synthetic the "
+        "sanitiser wrote is missing from replacements_applied -- both make this gate fire on "
+        "correct output, which is how a gate gets silenced.\n"
+        + "\n".join(f"  {finding.describe()}" for finding in after)
+    )
+
+
+def test_the_end_to_end_control_depends_on_a_complete_manifest() -> None:
+    """Anti-vacuity proof for the control above: drop a row, and it must fire.
+
+    The clean result above could hold for the wrong reason -- if the scan simply
+    found nothing identity-shaped in the output, the manifest would be
+    irrelevant and the seam would still be uncovered. Removing the NIF row from
+    the sanitiser's own manifest must therefore turn the output dirty, which
+    proves the output really does carry a checksum-valid synthetic and that the
+    manifest really is what accounts for it.
+    """
+    result = sanitize_pdf(_pre_sanitisation_specimen(), _pre_sanitisation_token_map())
+    rows = [row.model_dump() for row in result.replacements_applied]
+    without_nif = [row for row in rows if row["synthetic"] != _SYNTHETIC_NIF]
+    assert len(without_nif) < len(rows), "the sanitiser must have recorded the NIF replacement"
+
+    findings = scan_for_residual_identities(result.output_bytes, {"replacements_applied": without_nif})
+
+    assert ResidualKind.NIF_NIE in {finding.kind for finding in findings}, (
+        "dropping the NIF row from the manifest left the scan clean, so the end-to-end control "
+        "above is not actually checking the output against the manifest"
+    )
+
+
+def test_a_no_op_rewrite_cannot_account_for_the_value_it_left_standing() -> None:
+    """The manifest is the scan's suppression set, and it is self-asserted.
+
+    Every other proof here varies what the manifest OMITS. This one varies what
+    it CLAIMS, which is the direction that inflates the clean set: a rewrite
+    whose ``real`` equals its ``synthetic`` changes nothing in the document, yet
+    lands a ``replacements_applied`` row naming the surviving cleartext. The
+    real value is then both present in the output and declared accounted for,
+    and the specimen scans clean against its own sidecar while scanning dirty
+    against an empty one -- a residual talked out of existence by the artefact
+    under verification.
+
+    Nothing refuses the no-op at its source: the replacement records validate
+    the synthetic's SHAPE, never that it differs from the cleartext, so the
+    construction below is one production accepts today. The row does contradict
+    itself, though -- ``real_sha256`` is the digest of the cleartext, and here it
+    is also the digest of the synthetic -- and that is the join the scan now
+    makes before admitting a value into the accounted set.
+    """
+    identity_rewrite = NifReplacement(
+        real=SecretStr(_PLANTED_NIF),
+        synthetic=_PLANTED_NIF,
+        surface_label="taxpayer NIF",
+    )
+    assert identity_rewrite.synthetic == _PLANTED_NIF, (
+        "production must still accept a real==synthetic replacement for this gate to be "
+        "about a reachable state; if it now refuses one, the refusal belongs in the "
+        "replacement records and this gate should assert that instead"
+    )
+    token_map = TokenMap(
+        nif=(identity_rewrite,),
+        name=(
+            NameReplacement(real=SecretStr(_PLANTED_NAME), synthetic=_SYNTHETIC_NAME, surface_label="taxpayer name"),
+        ),
+        iban=(
+            IbanReplacement(
+                real=SecretStr(_PLANTED_IBAN), synthetic=_SYNTHETIC_IBAN, surface_label="domiciliacion IBAN"
+            ),
+        ),
+    )
+
+    result = sanitize_pdf(_pre_sanitisation_specimen(), token_map)
+    rows = [row.model_dump() for row in result.replacements_applied]
+    self_rows = [row for row in rows if row["synthetic"] == _PLANTED_NIF]
+    assert self_rows, (
+        "the sanitiser recorded no row for the no-op rewrite, so this gate is not "
+        "exercising the self-accounting path it claims to"
+    )
+
+    unaccounted = scan_for_residual_identities(result.output_bytes, {"replacements_applied": []})
+    assert ResidualKind.NIF_NIE in {finding.kind for finding in unaccounted}, (
+        "the cleartext NIF did not survive the no-op rewrite, so the clean-vs-dirty contrast below would prove nothing"
+    )
+
+    findings = scan_for_residual_identities(result.output_bytes, {"replacements_applied": rows})
+
+    assert ResidualKind.NIF_NIE in {finding.kind for finding in findings}, (
+        "a row claiming a value was replaced by itself was admitted into the accounted "
+        "set, so it suppressed the very cleartext it left standing. Values are "
+        "deliberately not shown; see the surviving finding classes: "
+        + ", ".join(sorted({finding.kind.value for finding in findings}))
+    )
+    assert _CANONICAL_PLANTED_NIF not in accounted_for_values({"replacements_applied": rows})
+    assert _CANONICAL_SYNTHETIC_IBAN in accounted_for_values({"replacements_applied": rows}), (
+        "the join must cut only the self-contradicting row: a genuine replacement's "
+        "synthetic still has to be accounted for, or the scan becomes a noise generator"
+    )
+
+
+#: Canonicalised forms the accounted-set assertions above compare against,
+#: matching :func:`dev.sanitizer.residual_identity.accounted_for_values`.
+_CANONICAL_PLANTED_NIF = _PLANTED_NIF.replace(" ", "").upper()
+_CANONICAL_SYNTHETIC_IBAN = _SYNTHETIC_IBAN.replace(" ", "").upper()
+
+
+def _pre_sanitisation_specimen() -> bytes:
+    """A document deliberately carrying checksum-valid identity, never committed.
+
+    See the module docstring for why this is generated rather than stored. The
+    values are the same all-zero planted pair the planted-identity proofs use,
+    so a reader meets one vocabulary rather than two.
+    """
+    import io
+
+    from reportlab.lib.pagesizes import A4
+    from reportlab.pdfgen import canvas
+
+    buffer = io.BytesIO()
+    pdf_canvas = canvas.Canvas(buffer, pagesize=A4, invariant=True)
+    # DocInfo: a surface the sanitiser scrubs separately from page content.
+    pdf_canvas.setTitle(f"Justificante {_PLANTED_NIF}")
+    pdf_canvas.setAuthor(_PLANTED_NAME)
+    pdf_canvas.setFont("Helvetica", 10)
+    pdf_canvas.drawString(50, 760, f"NIF: {_PLANTED_NIF}")
+    pdf_canvas.drawString(50, 740, f"Apellidos y nombre: {_PLANTED_NAME}")
+    pdf_canvas.drawString(50, 720, f"Codigo Cuenta Cliente (IBAN): {_PLANTED_IBAN}")
+    pdf_canvas.showPage()
+    pdf_canvas.save()
+    return buffer.getvalue()
+
+
+def _pre_sanitisation_token_map() -> TokenMap:
+    """The operator-supplied rewrite for the specimen above.
+
+    The synthetics are themselves checksum-valid -- a placeholder has to be, or
+    it would not round-trip through the parsers that read these documents -- and
+    that is precisely why the manifest matters: after sanitisation the output
+    still contains identity-shaped, checksum-valid values, and only
+    ``replacements_applied`` distinguishes them from a residual.
+    """
+    return TokenMap(
+        nif=(NifReplacement(real=SecretStr(_PLANTED_NIF), synthetic=_SYNTHETIC_NIF, surface_label="taxpayer NIF"),),
+        name=(
+            NameReplacement(real=SecretStr(_PLANTED_NAME), synthetic=_SYNTHETIC_NAME, surface_label="taxpayer name"),
+        ),
+        iban=(
+            IbanReplacement(
+                real=SecretStr(_PLANTED_IBAN), synthetic=_SYNTHETIC_IBAN, surface_label="domiciliacion IBAN"
+            ),
+        ),
+    )
+
+
+def _pdf_bytes_containing(text: str) -> bytes:
+    """Build a one-page PDF whose content stream carries ``text``."""
+    return text_pdf_bytes((text,))

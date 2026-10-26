@@ -1,0 +1,10 @@
+@step Review the named profile without deleting it or entering its password.
+aeat --format json config profile delete docs-sequence-sandbox
+@expect status == "success"
+@expect result.deleted == false
+@expect exit_code == 0
+@step Delete only the named sandbox profile after confirming the irreversible operation.
+@result aeat --format json config profile delete docs-sequence-sandbox --yes
+@expect status == "success"
+@expect result.deleted == true
+@expect exit_code == 0

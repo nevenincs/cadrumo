@@ -1,0 +1,795 @@
+"""Resumable censo acquisition, exact review, and cotejo application."""
+
+from __future__ import annotations
+
+import secrets
+from collections.abc import Awaitable, Callable
+from contextlib import AbstractAsyncContextManager
+from dataclasses import dataclass
+from enum import StrEnum
+from typing import TYPE_CHECKING, Final, Literal
+from uuid import UUID
+
+from pydantic import BaseModel, Field, field_validator, model_validator
+
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import (
+    AccessAction,
+    Availability,
+    DisclosureCategory,
+    DisclosurePermission,
+)
+
+from ...core.async_cleanup import AsyncCloseable
+from ...core.bucket_pointer import require_active_bucket_id
+from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.hashing import content_hash_hex, sha256_hex
+from ...core.identity.digest import ContentDigest, ContentDigestOrAbsent
+from ...core.identity.profile import ProfileId
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.operations import (
+    EFFECTS_WITHOUT_PARTIAL_COMMIT,
+    OperationCancellation,
+    OperationClosePolicy,
+    OperationDeadline,
+    OperationDurability,
+    OperationEffect,
+    OperationInteractionKind,
+)
+from ...core.time.clock import now
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.user_profile.values import UserProfileRecord
+from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
+from ..auth.operator_scope_ports import OperatorScopePorts
+from ..auth.protocols import BrowserSessionFactoryPort
+from ..live.censo_ports import CensalFetchPort
+from ..live.session import LiveSessionWriteReceipt, SessionWriteReporter
+from ..operations.access_resolution import (
+    COMMITTING_OPERATION_LIFECYCLE_ACTIONS,
+    OBSERVATION_DISCLOSING_ACTIONS,
+    OperationAccessContext,
+    ResolvedOperationAccess,
+    bind_operation_access,
+    operation_disclosures,
+)
+from ..operations.capabilities import (
+    OperationBaselinePolicy,
+    OperationCapabilities,
+    OperationConflictScope,
+    OperationOwnedResource,
+    OperationReplayPolicy,
+    OperationRequestStoragePolicy,
+    OperationSensitiveInputPolicy,
+)
+from ..operations.interactions import OperationResponseIntentValue
+from ..operations.models import OperationRequest
+from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
+from ..operations.owner import OperationExecutorContext, OperationResumeCheckpoint
+from ..operations.persistence.journal import serialize_operation_operand
+from ..operations.registry import (
+    OperationPublicDefinitionRegistrationV1,
+    OperationReconciliationPolicy,
+    OperationSchemaBindingV1,
+    operation_public_schema_reference,
+)
+from ..operations.subject_reference import OperationSubjectReferenceV1
+from ..operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
+from ..operator_actions.models import ActionReference
+from .access_errors import ProfileAccessRefusedError
+from .capsule_record import ProfileRecordConflictError
+from .censal_observation import CensalObservation
+from .censo_sync import (
+    CENSAL_ADOPTABLE_PATHS,
+    CENSO_SOURCE_TAG,
+    censal_facts_from_read,
+    reconcile_censal_read,
+)
+from .cotejo_apply import apply_cotejo
+from .profile_record_repository import ProfileRecordRepository
+from .projections import record_to_effective_facts
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
+    from .censal_preview_operation import CensalPreviewProviderPreflight
+
+CENSAL_OPERATION_DEFINITION_ID = "user-profile.censo-review"
+CENSAL_PHASE_PREFLIGHT = "censo.preflight"
+CENSAL_PHASE_CLAVE_DEVICE_WAIT = "censo.clave-device-wait"
+CENSAL_PHASE_REMOTE_READ = "censo.remote-read"
+CENSAL_PHASE_PROPOSAL = "censo.proposal"
+CENSAL_PHASE_INTERACTION_WAIT = "censo.interaction-wait"
+CENSAL_PHASE_APPLY = "censo.apply"
+CENSAL_PHASE_REJECT = "censo.reject"
+CENSAL_PHASE_SETTLEMENT = "censo.settlement"
+_CENSAL_PHASES = (
+    CENSAL_PHASE_PREFLIGHT,
+    CENSAL_PHASE_CLAVE_DEVICE_WAIT,
+    CENSAL_PHASE_REMOTE_READ,
+    CENSAL_PHASE_PROPOSAL,
+    CENSAL_PHASE_INTERACTION_WAIT,
+    CENSAL_PHASE_APPLY,
+    CENSAL_PHASE_REJECT,
+    CENSAL_PHASE_SETTLEMENT,
+)
+
+
+class CensalFieldIntent(StrEnum):
+    """Closed operator intent for one reviewed censo-derived profile field."""
+
+    ADOPT = "adopt"
+    PRESERVE = "preserve"
+
+
+class CensalReviewedFieldIntent(BaseModel):
+    """One exact field decision retained with the reviewed observation."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    path: str = Field(min_length=3, max_length=160)
+    intent: CensalFieldIntent
+
+    @field_validator("path")
+    @classmethod
+    @pydantic_validation_boundary
+    def _require_adoptable_path(cls, value: str) -> str:
+        if value not in CENSAL_ADOPTABLE_PATHS:
+            raise ValueError("censal field intent must target a canonical adoptable profile path")
+        return value
+
+
+class CensalProfileBaseline(BaseModel):
+    """Exact immutable profile revision against which the proposal was reviewed."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    profile_id: ProfileId
+    record_revision: int = Field(ge=1)
+    content_digest: ContentDigest
+
+    @classmethod
+    def from_record(cls, record: UserProfileRecord) -> CensalProfileBaseline:
+        """Capture the canonical revision and self-verifying content digest.
+
+        Core types:
+        :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+        """
+        return cls(
+            profile_id=record.profile_id,
+            record_revision=record.record_revision,
+            content_digest=record.content_digest,
+        )
+
+
+#: Wire version of the reviewed-operand record. Named rather than written as a
+#: bare default so the number has one home: a reader can find every site bound
+#: to this shape, and a bump cannot land on the model while a writer stamping
+#: the old number silently disagrees with it.
+CENSAL_REVIEWED_OPERAND_SCHEMA_VERSION: Final[Literal[2]] = 2
+
+
+class CensalReviewedOperand(BaseModel):
+    """Encrypted exact preimage approved or rejected by the operator."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    schema_version: Literal[2] = CENSAL_REVIEWED_OPERAND_SCHEMA_VERSION
+    observation: CensalObservation
+    baseline: CensalProfileBaseline
+    field_intents: tuple[CensalReviewedFieldIntent, ...]
+    session_write_recorded: bool = False
+    proposed_effect_digest: ContentDigestOrAbsent = ""
+
+    @field_validator("field_intents")
+    @classmethod
+    @pydantic_validation_boundary
+    def _require_unique_field_intents(
+        cls,
+        value: tuple[CensalReviewedFieldIntent, ...],
+    ) -> tuple[CensalReviewedFieldIntent, ...]:
+        paths = tuple(item.path for item in value)
+        if paths != CENSAL_ADOPTABLE_PATHS:
+            raise ValueError(
+                "censal reviewed operand field intents must cover every canonical "
+                "adoptable path exactly once and in canonical order"
+            )
+        return value
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _bind_proposed_effect(self) -> CensalReviewedOperand:
+        expected = self._expected_proposed_effect_digest()
+        if not self.proposed_effect_digest:
+            object.__setattr__(self, "proposed_effect_digest", expected)
+        elif self.proposed_effect_digest != expected:
+            raise ValueError("censal proposed-effect digest does not match the reviewed operand")
+        return self
+
+    def _expected_proposed_effect_digest(self) -> ContentDigest:
+        return content_hash_hex(
+            self.model_dump(
+                mode="json",
+                exclude={
+                    "proposed_effect_digest": True,
+                    # Existing reviewed preimages predate consultation evidence.
+                    # Their digest must not acquire a new empty default field.
+                    "observation": set() if self.observation.consultations else {"consultations"},
+                },
+                exclude_defaults=False,
+                exclude_none=False,
+                exclude_unset=False,
+            )
+        )
+
+
+class CensalOperationRequest(BaseModel):
+    """Exact preflight baseline and review choices with no bearer material."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    baseline: CensalProfileBaseline
+    field_intents: tuple[CensalReviewedFieldIntent, ...]
+
+    @field_validator("field_intents")
+    @classmethod
+    @pydantic_validation_boundary
+    def _require_complete_intents(
+        cls, value: tuple[CensalReviewedFieldIntent, ...]
+    ) -> tuple[CensalReviewedFieldIntent, ...]:
+        if tuple(item.path for item in value) != CENSAL_ADOPTABLE_PATHS:
+            raise ValueError("censal operation request must decide every adoptable path in canonical order")
+        return value
+
+
+def build_censal_operation_request(record: UserProfileRecord) -> CensalOperationRequest:
+    """Bind the exact baseline and safe per-field defaults for frontend review.
+
+    Core types:
+    :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+    """
+    effective = record_to_effective_facts(record)
+    return CensalOperationRequest(
+        baseline=CensalProfileBaseline.from_record(record),
+        field_intents=tuple(
+            CensalReviewedFieldIntent(
+                path=path,
+                intent=(
+                    CensalFieldIntent.ADOPT
+                    if (current := effective.get(path)) is None or current.source == CENSO_SOURCE_TAG
+                    else CensalFieldIntent.PRESERVE
+                ),
+            )
+            for path in CENSAL_ADOPTABLE_PATHS
+        ),
+    )
+
+
+class CensalOperationOutcome(StrEnum):
+    """Settled domain outcome represented by the executor result reference."""
+
+    APPLIED = "applied"
+    REJECTED = "rejected"
+
+
+class CensalOperationResult(BaseModel):
+    """Typed schema for the safe result referenced by a completed continuation."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    outcome: CensalOperationOutcome
+    reviewed_proposal_digest: ContentDigest
+
+
+class CensalReviewResponse(BaseModel):
+    """Authority-free public decision submitted for a censal REVIEW."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    response_version: Literal[1]
+    intent: OperationResponseIntentValue
+
+
+class CensalReviewFieldProjectionV1(BaseModel):
+    """One safe censo field displayed for an exact REVIEW decision."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    path: str = Field(min_length=3, max_length=160)
+    intent: CensalFieldIntent
+    observed_value: str | None
+
+
+class CensalReviewProjectionV1(BaseModel):
+    """Bearer-free public projection of the encrypted censal proposal."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    projection_version: Literal[1]
+    reviewed_proposal_digest: ContentDigest
+    fields: tuple[CensalReviewFieldProjectionV1, ...]
+
+
+CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING = OperationSchemaBindingV1.bind(
+    schema_id="user-profile.censo-review.response",
+    schema_version=1,
+    model_type=CensalReviewResponse,
+)
+
+CENSAL_REVIEW_PROJECTION_SCHEMA_BINDING = OperationSchemaBindingV1.bind(
+    schema_id="user-profile.censo-review.projection",
+    schema_version=1,
+    model_type=CensalReviewProjectionV1,
+)
+
+
+def _project_censal_review(
+    operand: BaseModel,
+    interaction: object,
+) -> BaseModel:
+    """Project only reviewed field values; discard custody and bearer facts."""
+    del interaction
+    reviewed = CensalReviewedOperand.model_validate(operand, strict=True)
+    observed = {fact.path: str(fact.value) for fact in censal_facts_from_read(reviewed.observation)}
+    return CensalReviewProjectionV1(
+        projection_version=1,
+        reviewed_proposal_digest=sha256_hex(serialize_operation_operand(reviewed)),
+        fields=tuple(
+            CensalReviewFieldProjectionV1(
+                path=item.path,
+                intent=item.intent,
+                observed_value=observed.get(item.path),
+            )
+            for item in reviewed.field_intents
+        ),
+    )
+
+
+_CENSAL_REVIEW_ACTIONS = frozenset({AccessAction.REVIEW, AccessAction.RESPOND})
+
+
+def resolve_censal_operation_access(
+    request: OperationRequest[BaseModel], context: OperationAccessContext, /
+) -> ResolvedOperationAccess:
+    """Resolve only exact-profile censal work, with separate provider readiness."""
+    _validated_censal_operation_access_request(request, context)
+    return bind_operation_access(
+        context,
+        profile_id=context.profile_id,
+        definition_id=request.definition_id,
+        actions=COMMITTING_OPERATION_LIFECYCLE_ACTIONS | _CENSAL_REVIEW_ACTIONS,
+        disclosures=_censal_operation_disclosures(context),
+        periods=frozenset(),
+        period_independent=True,
+        requires_all_periods=False,
+        requires_human=False,
+        provider=Availability.NOT_REQUIRED,
+    )
+
+
+def _validated_censal_operation_access_request(
+    request: OperationRequest[BaseModel], context: OperationAccessContext
+) -> CensalOperationRequest:
+    payload = request.payload
+    if request.definition_id != CENSAL_OPERATION_DEFINITION_ID or not isinstance(payload, CensalOperationRequest):
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    baseline = payload.baseline
+    if request.subject_ref != baseline.profile_id or context.profile_id != UUID(baseline.profile_id):
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    return payload
+
+
+def _censal_operation_disclosures(context: OperationAccessContext) -> frozenset[DisclosurePermission]:
+    if context.action in _CENSAL_REVIEW_ACTIONS:
+        projection = context.contract.review_projection_schema
+        if projection is None or context.contract.interaction_response_schema is None:
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+        return frozenset(
+            (
+                DisclosurePermission(
+                    destination_id=context.destination_id,
+                    projection_id=projection.schema_id,
+                    category=DisclosureCategory.PROFILE_VALUES,
+                ),
+            )
+        )
+    return operation_disclosures(
+        context,
+        observed_by=OBSERVATION_DISCLOSING_ACTIONS,
+        result_categories=frozenset({DisclosureCategory.PROFILE_VALUES}),
+        result_schema_id=None,
+    )
+
+
+def build_censal_operation_registration(
+    definition: OperationDefinition,
+) -> OperationPublicDefinitionRegistrationV1:
+    """Bind the canonical censal definition to its public REVIEW contract."""
+    return OperationPublicDefinitionRegistrationV1.compose(
+        definition=definition,
+        request_schema=OperationSchemaBindingV1.bind(
+            schema_id="user-profile.censo-review.request",
+            schema_version=1,
+            model_type=CensalOperationRequest,
+        ),
+        result_schema=OperationSchemaBindingV1.bind(
+            schema_id="user-profile.censo-review.result",
+            schema_version=1,
+            model_type=CensalOperationResult,
+        ),
+        review_projection_schema=CENSAL_REVIEW_PROJECTION_SCHEMA_BINDING,
+        interaction_response_schema=CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING,
+        reviewed_operand_type=CensalReviewedOperand,
+        review_projector=_project_censal_review,
+        access_resolver=resolve_censal_operation_access,
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class CensalOperationAcquisition:
+    """Completed read plus its idempotently closeable acquisition resource."""
+
+    observation: CensalObservation
+    resource: AsyncCloseable | None = None
+
+
+def _load_exact_baseline(
+    request: OperationRequest[CensalOperationRequest],
+    *,
+    profile_decode_context: ProfileDecodeContext,
+) -> UserProfileRecord:
+    profile_id = require_active_bucket_id()
+    baseline = request.payload.baseline
+    if request.subject_ref != baseline.profile_id or profile_id != baseline.profile_id:
+        raise ProfileRecordConflictError("censal operation baseline does not identify the active profile")
+    record = ProfileRecordRepository.for_current_session(
+        profile_id,
+        profile_decode_context=profile_decode_context,
+    ).load(profile_id)
+    if (
+        record.profile_id != baseline.profile_id
+        or record.record_revision != baseline.record_revision
+        or record.content_digest != baseline.content_digest
+    ):
+        raise ProfileRecordConflictError("censal operation baseline is stale")
+    return record
+
+
+async def _acknowledge_if_cancelled(context: OperationExecutorContext) -> bool:
+    if not context.cancellation.cancellation_requested:
+        return False
+    await context.cancellation.acknowledge_cancellation()
+    return True
+
+
+class CensalOperationExecutor:
+    """Acquire once, publish one durable review, and resume only from it."""
+
+    def __init__(
+        self,
+        *,
+        certificate_secret_backend_factory: CertificateSecretBackendFactory,
+        browser_session_factory: BrowserSessionFactoryPort,
+        operator_scope_ports: OperatorScopePorts,
+        censal_fetch_port: CensalFetchPort,
+        provider_preflight: CensalPreviewProviderPreflight,
+        acquire: Callable[[], Awaitable[CensalObservation | CensalOperationAcquisition]] | None = None,
+        apply: Callable[[CensalReviewedOperand], None] | None = None,
+        before_irreversible_section: Callable[[], Awaitable[None]] | None = None,
+    ) -> None:
+        """Initialize the executor with its acquisition, apply, and boundary hooks."""
+        self._provider_preflight = provider_preflight
+        self._acquire = acquire
+        self._certificate_secret_backend_factory = certificate_secret_backend_factory
+        self._browser_session_factory = browser_session_factory
+        self._operator_scope_ports = operator_scope_ports
+        self._censal_fetch_port = censal_fetch_port
+        self._apply = apply
+        self._before_irreversible_section = before_irreversible_section or _ready_for_irreversible_section
+
+    async def execute(
+        self,
+        request: OperationRequest[CensalOperationRequest],
+        context: OperationExecutorContext,
+    ) -> str | None:
+        """Acquire the observation and publish one durable review checkpoint."""
+        if await _acknowledge_if_cancelled(context):
+            return None
+        await context.events.phase(CENSAL_PHASE_PREFLIGHT)
+        record = _load_exact_baseline(
+            request,
+            profile_decode_context=context.authority_operation.profile_decode_context(),
+        )
+        self._provider_preflight(UUID(request.payload.baseline.profile_id), context.authority_operation)
+        if await _acknowledge_if_cancelled(context):
+            return None
+        await context.events.phase(CENSAL_PHASE_CLAVE_DEVICE_WAIT)
+        await context.events.phase(CENSAL_PHASE_REMOTE_READ)
+        session_receipt = LiveSessionWriteReceipt(context.events.effect)
+        acquired = (
+            await self._acquire()
+            if self._acquire is not None
+            else await _pull_censal_datos(
+                certificate_secret_backend_factory=self._certificate_secret_backend_factory,
+                browser_session_factory=self._browser_session_factory,
+                operator_scope_ports=self._operator_scope_ports,
+                censal_fetch_port=self._censal_fetch_port,
+                authority_operation=context.authority_operation,
+                effect_guard=context.cancellation.irreversible_section,
+                on_session_write=session_receipt,
+            )
+        )
+        if isinstance(acquired, CensalOperationAcquisition):
+            observation = acquired.observation
+            if acquired.resource is not None:
+                context.cleanup.own(acquired.resource, family=OperationOwnedResource.ASYNC_TASK)
+                # Resume consumes only the durable operand, so a process-local
+                # acquisition handle must be released before the detachable
+                # review is published. Supervisor ownership remains the retry
+                # path when this idempotent close does not complete.
+                await acquired.resource.close()
+        else:
+            observation = acquired
+        if await _acknowledge_if_cancelled(context):
+            return None
+        await context.events.phase(CENSAL_PHASE_PROPOSAL)
+        current = _load_exact_baseline(
+            request,
+            profile_decode_context=context.authority_operation.profile_decode_context(),
+        )
+        reconcile_censal_read(
+            current,
+            censal_facts_from_read(observation),
+            incoming_identity=observation.identity.nif,
+        )
+        operand = CensalReviewedOperand(
+            observation=observation,
+            baseline=CensalProfileBaseline.from_record(record),
+            field_intents=request.payload.field_intents,
+            session_write_recorded=session_receipt.written,
+        )
+        await context.events.phase(CENSAL_PHASE_INTERACTION_WAIT)
+        continuation_digest = content_hash_hex(
+            {
+                "schema_version": 1,
+                "operation_id": context.identity.operation_id,
+                "proposed_effect_digest": operand.proposed_effect_digest,
+            }
+        )
+        await context.interactions.publish_review(
+            interaction_id=secrets.token_hex(32),
+            identity=context.identity,
+            revision=context.revision + 1,
+            presentation_code="censo.review.ready",
+            response_schema_ref=operation_public_schema_reference(CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING.identity),
+            continuation_digest=continuation_digest,
+            expires_at=None,
+            reviewed_operand=operand,
+            baseline_digest=content_hash_hex(operand.baseline.model_dump(mode="json")),
+            proposed_effect_digest=operand.proposed_effect_digest,
+        )
+        return None
+
+    async def resume(
+        self,
+        request: OperationRequest[CensalOperationRequest],
+        checkpoint: OperationResumeCheckpoint,
+        context: OperationExecutorContext,
+    ) -> str | None:
+        """Resume a consumed review checkpoint and apply or reject its operand."""
+        del request
+        if await _acknowledge_if_cancelled(context):
+            return None
+        if not checkpoint.consumed:
+            return None
+        proposal_digest = checkpoint.reviewed_proposal_digest
+        operand = await context.operands.resolve(proposal_digest, CensalReviewedOperand)
+        if checkpoint.response_action == "reject":
+            return await self._settle_rejected_review(proposal_digest, operand, context)
+        await context.events.phase(CENSAL_PHASE_APPLY)
+        if await _acknowledge_if_cancelled(context):
+            return None
+        _require_current_operand_baseline(
+            operand,
+            profile_decode_context=context.authority_operation.profile_decode_context(),
+        )
+        await self._before_irreversible_section()
+        return await self._apply_consumed_review(proposal_digest, operand, context)
+
+    async def _settle_rejected_review(
+        self,
+        proposal_digest: str,
+        operand: CensalReviewedOperand,
+        context: OperationExecutorContext,
+    ) -> str:
+        await context.events.phase(CENSAL_PHASE_REJECT)
+        await context.events.effect(OperationEffect.UPDATED if operand.session_write_recorded else OperationEffect.NONE)
+        await context.events.phase(CENSAL_PHASE_SETTLEMENT)
+        return await context.operands.put(
+            CensalOperationResult(
+                outcome=CensalOperationOutcome.REJECTED,
+                reviewed_proposal_digest=proposal_digest,
+            ),
+            written_at=now(),
+        )
+
+    async def _apply_consumed_review(
+        self,
+        proposal_digest: str,
+        operand: CensalReviewedOperand,
+        context: OperationExecutorContext,
+    ) -> str | None:
+        entered_irreversible_section = False
+        stale_conflict: ProfileRecordConflictError | None = None
+        try:
+            async with context.cancellation.irreversible_section():
+                entered_irreversible_section = True
+                await context.events.effect(OperationEffect.UNKNOWN)
+                try:
+                    if self._apply is None:
+                        _apply_reviewed_cotejo(
+                            operand,
+                            profile_decode_context=context.authority_operation.profile_decode_context(),
+                        )
+                    else:
+                        self._apply(operand)
+                except ProfileRecordConflictError as exc:
+                    stale_conflict = exc
+        except ValueError:
+            if not entered_irreversible_section and context.cancellation.cancellation_requested:
+                await context.cancellation.acknowledge_cancellation()
+                return None
+            raise
+        if stale_conflict is not None:
+            await context.events.effect(
+                OperationEffect.UPDATED if operand.session_write_recorded else OperationEffect.NONE
+            )
+            raise stale_conflict
+        await context.events.effect(OperationEffect.UPDATED)
+        await context.events.phase(CENSAL_PHASE_SETTLEMENT)
+        return await context.operands.put(
+            CensalOperationResult(
+                outcome=CensalOperationOutcome.APPLIED,
+                reviewed_proposal_digest=proposal_digest,
+            ),
+            written_at=now(),
+        )
+
+
+async def _pull_censal_datos(
+    *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    browser_session_factory: BrowserSessionFactoryPort,
+    operator_scope_ports: OperatorScopePorts,
+    censal_fetch_port: CensalFetchPort,
+    authority_operation: PinnedAuthorityOperation,
+    effect_guard: Callable[[], AbstractAsyncContextManager[None]],
+    on_session_write: SessionWriteReporter,
+) -> CensalObservation:
+    """Acquire through the sole public live application door."""
+    from ..live.censo import pull_censal_datos
+
+    return await pull_censal_datos(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        browser_session_factory=browser_session_factory,
+        operator_scope_ports=operator_scope_ports,
+        censal_fetch_port=censal_fetch_port,
+        authority_operation=authority_operation,
+        effect_guard=effect_guard,
+        on_session_write=on_session_write,
+    )
+
+
+def _require_current_operand_baseline(
+    operand: CensalReviewedOperand,
+    *,
+    profile_decode_context: ProfileDecodeContext,
+) -> None:
+    """Keep proven stale state at NONE before entering the ambiguous write window."""
+    profile_id = require_active_bucket_id()
+    baseline = operand.baseline
+    record = ProfileRecordRepository.for_current_session(
+        profile_id,
+        profile_decode_context=profile_decode_context,
+    ).load(profile_id)
+    if (
+        profile_id != baseline.profile_id
+        or record.profile_id != baseline.profile_id
+        or record.record_revision != baseline.record_revision
+        or record.content_digest != baseline.content_digest
+    ):
+        raise ProfileRecordConflictError("reviewed censal proposal baseline is stale")
+
+
+def _apply_reviewed_cotejo(
+    operand: CensalReviewedOperand,
+    *,
+    profile_decode_context: ProfileDecodeContext,
+) -> None:
+    """Delegate to the sole exact censal mutation authority."""
+    apply_cotejo(
+        None,
+        reviewed_proposal=operand,
+        profile_decode_context=profile_decode_context,
+    )
+
+
+async def _ready_for_irreversible_section() -> None:
+    """Default non-blocking boundary before irreversible profile apply."""
+
+
+def build_censal_operation_definition(
+    *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    browser_session_factory: BrowserSessionFactoryPort,
+    operator_scope_ports: OperatorScopePorts,
+    censal_fetch_port: CensalFetchPort,
+    provider_preflight: CensalPreviewProviderPreflight,
+    acquire: Callable[[], Awaitable[CensalObservation | CensalOperationAcquisition]] | None = None,
+    apply: Callable[[CensalReviewedOperand], None] | None = None,
+    before_irreversible_section: Callable[[], Awaitable[None]] | None = None,
+) -> OperationDefinition:
+    """Build the one CENSO registration with its outer live authorities bound."""
+
+    def build() -> CensalOperationExecutor:
+        return CensalOperationExecutor(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            browser_session_factory=browser_session_factory,
+            operator_scope_ports=operator_scope_ports,
+            censal_fetch_port=censal_fetch_port,
+            provider_preflight=provider_preflight,
+            acquire=acquire,
+            apply=apply,
+            before_irreversible_section=before_irreversible_section,
+        )
+
+    return OperationDefinition(
+        definition_id=CENSAL_OPERATION_DEFINITION_ID,
+        public_error_detail=True,
+        request_type=CensalOperationRequest,
+        subject_reference=OperationSubjectReferenceV1.payload_field("baseline", "profile_id"),
+        result_type=CensalOperationResult,
+        executor_factory=OperationExecutorFactory(
+            request_type=CensalOperationRequest,
+            executor_type=CensalOperationExecutor,
+            build=build,
+        ),
+        phase_codes=_CENSAL_PHASES,
+        interaction_kinds=frozenset({OperationInteractionKind.REVIEW}),
+        action_reference=ActionReference(action_id=OPERATOR_ACTION_CATALOGUE.lookup("operator.profile.edit").action_id),
+        capabilities=OperationCapabilities(
+            durability=OperationDurability.RESUMABLE,
+            cancellation=OperationCancellation.COOPERATIVE,
+            deadline=OperationDeadline.COOPERATIVE,
+            replay=OperationReplayPolicy.RESUMABLE,
+            baseline=OperationBaselinePolicy.EXACT_APPROVAL,
+            request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
+            sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
+            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
+            owned_resources=frozenset({OperationOwnedResource.ASYNC_TASK}),
+            permitted_effects=EFFECTS_WITHOUT_PARTIAL_COMMIT,
+            close_policy=OperationClosePolicy.DETACH_ALLOWED,
+        ),
+        reconciliation_policy=OperationReconciliationPolicy.RESUME_FROM_CHECKPOINT,
+    )
+
+
+__all__ = [
+    "CENSAL_OPERATION_DEFINITION_ID",
+    "CENSAL_REVIEW_PROJECTION_SCHEMA_BINDING",
+    "CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING",
+    "CensalFieldIntent",
+    "CensalOperationAcquisition",
+    "CensalOperationExecutor",
+    "CensalOperationOutcome",
+    "CensalOperationRequest",
+    "CensalOperationResult",
+    "CensalProfileBaseline",
+    "CensalReviewFieldProjectionV1",
+    "CensalReviewProjectionV1",
+    "CensalReviewResponse",
+    "CensalReviewedFieldIntent",
+    "CensalReviewedOperand",
+    "build_censal_operation_definition",
+    "build_censal_operation_registration",
+    "build_censal_operation_request",
+    "resolve_censal_operation_access",
+]

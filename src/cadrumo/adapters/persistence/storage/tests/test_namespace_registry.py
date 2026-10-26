@@ -1,0 +1,877 @@
+"""Tests for the secure-storage namespace and hierarchy registry."""
+
+from __future__ import annotations
+
+import importlib.util
+
+import pytest
+from pydantic import ValidationError
+
+from cadrumo.adapters.persistence.storage.tests.namespace_registry_support import lookup_namespace_definition
+
+from .....core.classification.policies import SensitivityClass
+from .....core.errors.error_codes import build_error_envelope
+from .....core.storage_taxonomy import StorageCategory, StorageCustodyProfile
+from .....core.storage_taxonomy_locations import storage_location
+from ..errors import NamespaceRegistryError
+from ..namespace_registry import (
+    STORAGE_NAMESPACE_REGISTRY,
+    secure_object_logical_path,
+    secure_object_namespace_logical_path,
+)
+from ..namespace_taxonomy import (
+    StorageCustodyDisposition,
+    StorageNamespaceScope,
+    StoragePathAnchor,
+    StoragePathKind,
+    StorageRemoteMirrorPolicy,
+)
+from ..secure_object_namespaces import (
+    AEAT_BROWSER_SESSION_NAMESPACE,
+    AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
+    AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE,
+    AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE,
+    APPLICATION_EVIDENCE_BUNDLE_NAMESPACE,
+    ATTACHMENT_BLOB_NAMESPACE,
+    ATTACHMENT_MANIFEST_NAMESPACE,
+    BUCKET_EVENT_HISTORY_NAMESPACE,
+    CALCULATION_OBSERVATIONS_NAMESPACE,
+    CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE,
+    GOOGLE_DRIVE_CONFIG_NAMESPACE,
+    GOOGLE_OAUTH_METADATA_NAMESPACE,
+    GOOGLE_OAUTH_TOKEN_NAMESPACE,
+    INVOICE_CATALOGUE_NAMESPACE,
+    IVA_COMPENSATION_HISTORY_NAMESPACE,
+    IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE,
+    IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE,
+    LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE,
+    LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE,
+    LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE,
+    LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE,
+    LIVE_VERIFY_OBSERVATION_NAMESPACE,
+    LLM_CACHE_NAMESPACE,
+    LLM_USAGE_NAMESPACE,
+    PROFILE_INVENTORY_LEDGER_NAMESPACE,
+    SECURE_OBJECT_CATALOGUE_KEY,
+    SECURE_OBJECT_DEFAULT_KEY,
+    SECURE_OBJECT_WORKFLOW_STATE_KEY,
+    TEST_SECURE_BOUND_CONTRACT_NAMESPACE,
+    TEST_SESSION_LIFECYCLE_NAMESPACE,
+    TEST_SNAPSHOT_BASE_PROBE_NAMESPACE,
+    TRANSACTION_PARTICIPATION_INDEX_NAMESPACE,
+    WORKFLOW_STATE_NAMESPACE,
+    SecureObjectNamespaceDefinition,
+    StorageHierarchyRegistry,
+)
+from ..storage_path_definitions import (
+    BLOB_MANIFEST_SCHEMA_VERSION,
+    BUCKET_DB_DIRNAME,
+    BUCKET_LOCK_FILENAME,
+    BUCKETS_DIRNAME,
+    StoragePathDefinition,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+_EXPECTED_NAMESPACE_KEYS_IN_ORDER = (
+    "workflow_state",
+    "workflow_runs",
+    "operation_secure_references",
+    "user_profile_value",
+    "user_profile_snapshot",
+    "profile_actividad_asset_history",
+    "profile_inventory_ledger",
+    "profile_bienes_inversion_iva_register",
+    "profile_foreign_asset_register",
+    "profile_modelo_360_solicitud",
+    "profile_prorrata_register",
+    "application_filing_history",
+    "auth_apoderado_configuration",
+    "calculation_observations",
+    "retencion_observations",
+    "withholding_observations",
+    "withholding_workflow",
+    "iva_wallet_reconciliation_decisions",
+    "iva_wallet_reconciliation_decision_events",
+    "modelo_reconciliation_records",
+    "modelo_edit_receipt",
+    "sync_run_records",
+    "iva_compensation_history",
+    "live_iva_remote_state_acquisitions",
+    "application_evidence_bundles",
+    "ledger_purchase_invoice_evidence",
+    "ledger_extraction_draft",
+    "ledger_confirmation_record",
+    "ledger_confirmed_counterparty_facts",
+    "ledger_classification_rules",
+    "ledger_own_accounts",
+    "live_borrador_100_snapshot",
+    "live_m036_declaration",
+    "m145_communication_record",
+    "test_snapshot_base_probe",
+    "test_session_lifecycle",
+    "test_secure_bound_contract",
+    "test_runtime_profile",
+    "live_expedientes_snapshot",
+    "live_notifications_snapshot",
+    "live_notification_document",
+    "live_justificante_capture_snapshot",
+    "live_verify_observations",
+    "attachment_blobs",
+    "attachment_manifests",
+    "aeat_browser_sessions",
+    "clave_movil_diagnostics",
+    "google_artifact_receipts",
+    "google_oauth_token",
+    "google_oauth_metadata",
+    "google_drive_config",
+    "provider_settings",
+    "model_role_selections",
+    "llm_cache",
+    "llm_usage",
+    "llm_run_telemetry",
+    "llm_evidence_consent_ledger",
+    "aeat_filed_declaration_artefacts",
+    "aeat_filed_declaration_observations",
+    "aeat_iva_wallet_observations",
+    "modelo_review_package_signing_key",
+    "modelo_review_package_recipient_fingerprint_registry",
+    "modelo_review_package_recipient_replay_guard",
+    "modelo_review_package_recipient_encryption_key",
+    "bucket_event_history",
+    "submission_records",
+    "justificante_metadata",
+    "filing_drafts",
+    "invoice_catalogue",
+    "transaction_catalogue",
+    "usage_ratio_profile",
+    "modelo_work_unit_catalogue",
+    "modelo_verification_report_catalogue",
+    "modelo_filing_record_catalogue",
+    "modelo_calculation_revision_catalogue",
+    "transaction_participation_index",
+)
+
+
+def _first_sequence_divergence(actual: tuple[str, ...], expected: tuple[str, ...]) -> str | None:
+    """Name the first position where two namespace sequences disagree."""
+    for position, (actual_key, expected_key) in enumerate(zip(actual, expected, strict=False)):
+        if actual_key != expected_key:
+            return f"index {position}: registry declares {actual_key!r}, expected {expected_key!r}"
+    if len(actual) != len(expected):
+        return f"length: registry declares {len(actual)} namespaces, expected {len(expected)}"
+    return None
+
+
+def test_secure_object_registry_preserves_the_declared_namespace_sequence() -> None:
+    """The aggregate registry's order is a stable hierarchy contract."""
+    declared = tuple(definition.key for definition in STORAGE_NAMESPACE_REGISTRY.namespaces)
+
+    assert _first_sequence_divergence(declared, _EXPECTED_NAMESPACE_KEYS_IN_ORDER) is None
+
+
+@pytest.mark.parametrize("omitted_position", [0, 14, len(_EXPECTED_NAMESPACE_KEYS_IN_ORDER) - 1])
+def test_namespace_sequence_tripwire_detects_an_unenrolled_namespace(omitted_position: int) -> None:
+    """An expected sequence missing one declared namespace is reported, not accepted."""
+    declared = tuple(definition.key for definition in STORAGE_NAMESPACE_REGISTRY.namespaces)
+    omitted = declared[omitted_position]
+    incomplete = tuple(key for key in declared if key != omitted)
+
+    divergence = _first_sequence_divergence(declared, incomplete)
+
+    assert divergence is not None
+    assert repr(omitted) in divergence or divergence.startswith("length:")
+
+
+def test_secure_object_registry_names_application_namespaces() -> None:
+    expedientes = lookup_namespace_definition("live_expedientes_snapshot")
+
+    assert expedientes == LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE
+
+
+def test_secure_object_registry_names_live_m036_declaration_namespace() -> None:
+    """The M036 declarative-recording verbs
+    persist operator declarations through this namespace.
+    """
+    from ..secure_object_namespaces import LIVE_M036_DECLARATION_NAMESPACE
+
+    declaration = lookup_namespace_definition("live_m036_declaration")
+
+    assert declaration == LIVE_M036_DECLARATION_NAMESPACE
+    assert declaration.namespace == "cadrumo.application.modelo.m036_declaration"
+    assert declaration.sensitivity is SensitivityClass.IDENTITY
+    assert declaration.object_key_grammar == "m036-declaration:{bucket_id}:{declaration_id}"
+
+
+def test_secure_object_registry_names_m145_communication_record_namespace() -> None:
+    """Modelo 145 local communication records persist through this namespace."""
+    from ..secure_object_namespaces import M145_COMMUNICATION_RECORD_NAMESPACE
+
+    record = lookup_namespace_definition("m145_communication_record")
+
+    assert record == M145_COMMUNICATION_RECORD_NAMESPACE
+    assert record.namespace == "cadrumo.application.modelo.m145_communication_record"
+    assert record.sensitivity is SensitivityClass.FINANCIAL
+    assert record.object_key_grammar == "m145-communication:{bucket_id}:{communication_record_id}"
+    assert record.scope is StorageNamespaceScope.BUCKET_LOCAL
+
+
+def test_secure_object_registry_names_live_justificante_capture_namespace() -> None:
+    """The live justificante-capture verb persists the pulled receipt
+    through this bucket-scoped FINANCIAL namespace (live-justificante-reconcile decision).
+    """
+    capture = lookup_namespace_definition("live_justificante_capture_snapshot")
+
+    assert capture == LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE
+    assert capture.namespace == "cadrumo.application.live.justificante_capture_snapshot"
+    assert capture.sensitivity is SensitivityClass.FINANCIAL
+    assert capture.object_key_grammar == "justificante-capture-snapshot:{bucket_id}:{snapshot_id}"
+    assert capture.scope is StorageNamespaceScope.BUCKET_LOCAL
+
+
+def test_singleton_object_keys_are_named_registry_values() -> None:
+    workflow_state = lookup_namespace_definition("workflow_state")
+    invoice_catalogue = lookup_namespace_definition("invoice_catalogue")
+    inventory_ledger = lookup_namespace_definition("profile_inventory_ledger")
+
+    assert workflow_state.require_default_object_key() == SECURE_OBJECT_WORKFLOW_STATE_KEY
+    assert invoice_catalogue.require_default_object_key() == SECURE_OBJECT_CATALOGUE_KEY
+    assert inventory_ledger.require_default_object_key() == SECURE_OBJECT_DEFAULT_KEY
+
+
+def test_profile_ledger_namespaces_are_registered() -> None:
+    inventory = lookup_namespace_definition("profile_inventory_ledger")
+
+    assert inventory == PROFILE_INVENTORY_LEDGER_NAMESPACE
+    assert inventory.namespace == "cadrumo.persistence.profile.inventory"
+    assert inventory.sensitivity is SensitivityClass.FINANCIAL
+    assert inventory.schema_version == 1
+    assert inventory.require_default_object_key() == "default"
+
+
+def test_profile_ledger_namespace_registration_coverage_is_present() -> None:
+    registered_keys = {definition.key for definition in STORAGE_NAMESPACE_REGISTRY.namespaces}
+
+    assert {
+        "profile_inventory_ledger",
+        "ledger_classification_rules",
+        "invoice_catalogue",
+        "application_filing_history",
+        "filing_drafts",
+        "iva_wallet_reconciliation_decisions",
+        "iva_wallet_reconciliation_decision_events",
+        "iva_compensation_history",
+        "calculation_observations",
+        "modelo_calculation_revision_catalogue",
+        "transaction_participation_index",
+    } <= registered_keys
+
+
+def test_transaction_participation_index_namespace_is_registered() -> None:
+    registered = lookup_namespace_definition("transaction_participation_index")
+
+    assert registered.namespace == "cadrumo.domain.modelos.participation_index"
+    assert registered.owner == "cadrumo.domain.modelos"
+    assert registered.sensitivity is SensitivityClass.FINANCIAL
+    assert registered.scope is StorageNamespaceScope.PROFILE_LOCAL
+    assert registered.schema_version == 1
+    assert registered.object_key_grammar == "{transaction_id}"
+    assert registered.custody_disposition is StorageCustodyDisposition.DERIVED_REBUILDABLE
+
+
+def test_modelo_catalogue_namespaces_pin_their_persisted_addresses() -> None:
+    """The four modelo catalogue namespaces pin their on-disk storage addresses.
+
+    A namespace string is the address previously-written rows live at, and a
+    schema version is the envelope contract, so neither may drift silently: an
+    edit orphans persisted envelopes rather than failing loudly. These four
+    carried a second copy of both values in their domain modules, which acted as
+    an incidental pin until the duplicate authority was removed. This test is the
+    deliberate pin that replaces it, alongside the singleton catalogue object key
+    each of the four addresses its single row by.
+    """
+    from ..secure_object_namespaces import (
+        MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE,
+        MODELO_FILING_RECORD_CATALOGUE_NAMESPACE,
+        MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE,
+        MODELO_WORK_UNIT_CATALOGUE_NAMESPACE,
+    )
+
+    # Each address is pinned with its OWN schema version rather than a shared
+    # literal. The four no longer sit at one version -- the calculation-revision
+    # catalogue has bumped -- and collapsing that back to a single expected
+    # value would make a correct per-namespace bump red for the wrong reason.
+    # The pin stays per namespace, so a bump still requires a deliberate edit
+    # here, which is the tripwire this test exists to be.
+    expected_addresses = {
+        MODELO_WORK_UNIT_CATALOGUE_NAMESPACE: ("cadrumo.domain.modelos.work_units", 1),
+        MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE: ("cadrumo.domain.modelos.calculation_revisions", 4),
+        MODELO_FILING_RECORD_CATALOGUE_NAMESPACE: ("cadrumo.domain.modelos.filing_records", 2),
+        MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE: ("cadrumo.domain.modelos.verification_reports", 1),
+    }
+
+    for definition, (namespace, schema_version) in expected_addresses.items():
+        assert definition.namespace == namespace
+        assert definition.schema_version == schema_version, (
+            f"{namespace} changed its envelope contract from {schema_version} to "
+            f"{definition.schema_version}; a version is the contract previously written "
+            "rows were stamped under, so confirm the bump is intended and update this pin"
+        )
+        assert definition.require_default_object_key() == SECURE_OBJECT_CATALOGUE_KEY
+        assert definition.sensitivity is SensitivityClass.FINANCIAL
+        # Each must resolve from the registry under its own key, so a definition
+        # cannot satisfy this test while being absent from the authority set.
+        assert lookup_namespace_definition(definition.key) is definition
+
+    # The four are distinct addresses; a copy-paste collapsing two would pass
+    # every per-definition assertion above.
+    assert len({namespace for namespace, _ in expected_addresses.values()}) == 4
+
+
+def test_every_registered_namespace_declares_explicit_custody_disposition() -> None:
+    missing = [
+        definition.key
+        for definition in STORAGE_NAMESPACE_REGISTRY.namespaces
+        if "custody_disposition" not in definition.model_fields_set
+    ]
+
+    assert missing == []
+    assert {definition.custody_disposition for definition in STORAGE_NAMESPACE_REGISTRY.namespaces} <= set(
+        StorageCustodyDisposition,
+    )
+
+
+def test_every_namespace_owner_resolves_to_a_real_module() -> None:
+    """Every ``owner`` must name a module that still exists.
+
+    The prefix assertion below checks only that an owner *starts with*
+    ``cadrumo.``, which a relocated module keeps satisfying after its real path
+    changes. Two rows had already rotted that way -- the test-topology refactor
+    moved both modules under a ``tests/`` package and updated the importers but
+    not these strings, because a string is a data consumer and no import breaks.
+    Storage-namespace ownership is the record of who is accountable for a body
+    of encrypted operator data, so a row naming a module that no longer exists
+    reports an owner nobody can be held to.
+    """
+    unresolvable = [
+        definition.owner
+        for definition in STORAGE_NAMESPACE_REGISTRY.namespaces
+        if definition.owner.startswith("cadrumo.") and not _module_exists(definition.owner)
+    ]
+
+    assert unresolvable == [], f"namespace owners naming modules that do not exist: {sorted(set(unresolvable))}"
+
+
+def _module_exists(dotted_path: str) -> bool:
+    """Report whether ``dotted_path`` is importable without importing it."""
+    try:
+        return importlib.util.find_spec(dotted_path) is not None
+    except (ImportError, ValueError):
+        # A parent package that does not exist raises rather than returning
+        # None, which is the same answer for this gate's purposes.
+        return False
+
+
+def test_every_namespace_row_uses_cadrumo_owners_and_preserves_six_authority_segments() -> None:
+    """Ownership and authority-segment invariants hold for every registered row.
+
+    Deliberately gates on the PROPERTY, never on the row tally. This test
+    asserted ``len(definitions) == 67`` and its name carried the same number,
+    so adding a sixty-eighth namespace reddened it for no reason the assertion
+    was written to catch. A count encodes the moment it was written, trains
+    everyone to bump the constant, and then detects nothing — the registry is
+    expected to grow, and growth is not the defect. What must hold at every
+    size is that each row is cadrumo-owned and that the AEAT authority segments
+    stay exactly as enumerated below.
+    """
+    definitions = STORAGE_NAMESPACE_REGISTRY.namespaces
+
+    assert definitions, "the namespace registry must not be empty"
+    assert all(
+        definition.namespace.startswith(("cadrumo.", "cadrumo-test.", "cadrumo-tests.")) for definition in definitions
+    )
+    assert all(
+        definition.owner.startswith(("cadrumo.", "cadrumo-test.", "cadrumo-tests.")) for definition in definitions
+    )
+    assert not any(
+        definition.namespace.startswith(("aeat.", "aeat-test.", "aeat-tests.")) for definition in definitions
+    )
+    assert {
+        (definition.key, definition.namespace, definition.owner)
+        for definition in definitions
+        if ".aeat." in definition.namespace
+    } == {
+        ("aeat_browser_sessions", "cadrumo.outbound.aeat.auth.sessions", "cadrumo.adapters.outbound.aeat.auth"),
+        (
+            "clave_movil_diagnostics",
+            "cadrumo.outbound.aeat.auth.clave_movil.diagnostics",
+            "cadrumo.adapters.outbound.aeat.auth",
+        ),
+        (
+            "aeat_filed_declaration_artefacts",
+            "cadrumo.outbound.aeat.sede.filed_declaration.artefacts",
+            "cadrumo.adapters.outbound.aeat.sede",
+        ),
+        (
+            "aeat_filed_declaration_observations",
+            "cadrumo.outbound.aeat.sede.filed_declaration.observations",
+            "cadrumo.adapters.outbound.aeat.sede",
+        ),
+        (
+            "aeat_iva_wallet_observations",
+            "cadrumo.outbound.aeat.sede.iva_compensation_wallet.observations",
+            "cadrumo.adapters.outbound.aeat.sede",
+        ),
+    }
+
+
+def test_custody_profile_projection_matches_bucket_custody_worked_examples() -> None:
+    full_namespaces = STORAGE_NAMESPACE_REGISTRY.namespaces_for_custody_profile(StorageCustodyProfile.FULL)
+    structured_namespaces = STORAGE_NAMESPACE_REGISTRY.namespaces_for_custody_profile(
+        StorageCustodyProfile.STRUCTURED,
+    )
+    full_keys = {definition.key for definition in full_namespaces}
+    structured_keys = {definition.key for definition in structured_namespaces}
+
+    cross_period_keys = {
+        CALCULATION_OBSERVATIONS_NAMESPACE.key,
+        IVA_COMPENSATION_HISTORY_NAMESPACE.key,
+        IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE.key,
+        IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE.key,
+    }
+    evidence_keys = {
+        ATTACHMENT_BLOB_NAMESPACE.key,
+        ATTACHMENT_MANIFEST_NAMESPACE.key,
+        APPLICATION_EVIDENCE_BUNDLE_NAMESPACE.key,
+        LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE.key,
+    }
+
+    assert cross_period_keys <= full_keys
+    assert cross_period_keys <= structured_keys
+    assert evidence_keys <= full_keys
+    assert evidence_keys.isdisjoint(structured_keys)
+    assert INVOICE_CATALOGUE_NAMESPACE.key in full_keys
+    assert INVOICE_CATALOGUE_NAMESPACE.key in structured_keys
+    assert BUCKET_EVENT_HISTORY_NAMESPACE.key in full_keys
+    assert BUCKET_EVENT_HISTORY_NAMESPACE.key not in structured_keys
+    assert TRANSACTION_PARTICIPATION_INDEX_NAMESPACE.key not in full_keys
+    assert TRANSACTION_PARTICIPATION_INDEX_NAMESPACE.key not in structured_keys
+
+
+def test_auth_session_cache_remote_namespaces_are_registered() -> None:
+    expected_contracts = {
+        "aeat_browser_sessions": (
+            AEAT_BROWSER_SESSION_NAMESPACE,
+            "cadrumo.outbound.aeat.auth.sessions",
+            SensitivityClass.SESSION,
+            "{storage_state_path_posix}",
+        ),
+        "clave_movil_diagnostics": (
+            CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE,
+            "cadrumo.outbound.aeat.auth.clave_movil.diagnostics",
+            SensitivityClass.SESSION,
+            "{diagnostic_id_or_timestamp_iso}",
+        ),
+        "google_oauth_token": (
+            GOOGLE_OAUTH_TOKEN_NAMESPACE,
+            "cadrumo.google.oauth.token",
+            SensitivityClass.SECRET,
+            "{profile}",
+        ),
+        "google_oauth_metadata": (
+            GOOGLE_OAUTH_METADATA_NAMESPACE,
+            "cadrumo.google.oauth.metadata",
+            SensitivityClass.FINANCIAL,
+            "{profile}",
+        ),
+        "google_drive_config": (
+            GOOGLE_DRIVE_CONFIG_NAMESPACE,
+            "cadrumo.google.drive.config",
+            SensitivityClass.FINANCIAL,
+            "{profile}",
+        ),
+        "llm_cache": (
+            LLM_CACHE_NAMESPACE,
+            "cadrumo.adapters.outbound.llm.cache",
+            SensitivityClass.DIAGNOSTIC,
+            "{logical_root}|{provider}|{model}|{prompt_hash}|{args_hash}",
+        ),
+        "llm_usage": (
+            LLM_USAGE_NAMESPACE,
+            "cadrumo.adapters.outbound.llm.usage",
+            SensitivityClass.DIAGNOSTIC,
+            "{logical_root}|{created_at_iso}|{request_id}|{uuid4_hex}",
+        ),
+        "aeat_filed_declaration_artefacts": (
+            AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
+            "cadrumo.outbound.aeat.sede.filed_declaration.artefacts",
+            SensitivityClass.FINANCIAL,
+            "{sha256_hex}",
+        ),
+        "aeat_filed_declaration_observations": (
+            AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE,
+            "cadrumo.outbound.aeat.sede.filed_declaration.observations",
+            SensitivityClass.FINANCIAL,
+            "{sha256(modelo,ejercicio,period,expediente_id)}",
+        ),
+        "aeat_iva_wallet_observations": (
+            AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE,
+            "cadrumo.outbound.aeat.sede.iva_compensation_wallet.observations",
+            SensitivityClass.FINANCIAL,
+            "{sha256(taxpayer_nif,target_year,target_period,captured_at)}",
+        ),
+        "application_evidence_bundles": (
+            APPLICATION_EVIDENCE_BUNDLE_NAMESPACE,
+            "cadrumo.application.evidence.bundles",
+            SensitivityClass.AUDIT,
+            "{bundle_id}",
+        ),
+        "ledger_purchase_invoice_evidence": (
+            LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE,
+            "cadrumo.application.ledger.purchase_invoice_evidence",
+            SensitivityClass.FINANCIAL,
+            "{bucket_id}",
+        ),
+        "live_expedientes_snapshot": (
+            LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE,
+            "cadrumo.application.live.expedientes_snapshot",
+            SensitivityClass.FINANCIAL,
+            "expedientes-snapshot:{bucket_id}:{snapshot_id}",
+        ),
+        "live_notifications_snapshot": (
+            LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE,
+            "cadrumo.application.live.notifications_snapshot",
+            SensitivityClass.FINANCIAL,
+            "notifications-snapshot:{bucket_id}:{snapshot_id}",
+        ),
+        "live_verify_observations": (
+            LIVE_VERIFY_OBSERVATION_NAMESPACE,
+            "cadrumo.application.live.verify_observations",
+            SensitivityClass.IDENTITY,
+            "verify-observation:{bucket_id}:{observation_id}",
+        ),
+        "test_snapshot_base_probe": (
+            TEST_SNAPSHOT_BASE_PROBE_NAMESPACE,
+            "cadrumo.application.live.test_snapshot_base_probe",
+            SensitivityClass.FINANCIAL,
+            "snapshot-base-probe:{bucket_id}:{snapshot_id}",
+        ),
+    }
+
+    for key, (expected, namespace, sensitivity, object_key_grammar) in expected_contracts.items():
+        registered = lookup_namespace_definition(key)
+
+        assert registered == expected
+        assert registered.namespace == namespace
+        assert registered.sensitivity is sensitivity
+        assert registered.schema_version == 1
+        assert registered.object_key_grammar == object_key_grammar
+
+
+def test_auth_session_cache_namespace_registration_coverage_is_present() -> None:
+    registered_keys = {definition.key for definition in STORAGE_NAMESPACE_REGISTRY.namespaces}
+
+    assert {
+        "aeat_browser_sessions",
+        "clave_movil_diagnostics",
+        "google_oauth_token",
+        "google_oauth_metadata",
+        "google_drive_config",
+        "llm_cache",
+        "llm_usage",
+        "aeat_filed_declaration_artefacts",
+        "aeat_filed_declaration_observations",
+        "aeat_iva_wallet_observations",
+        "application_evidence_bundles",
+        "ledger_purchase_invoice_evidence",
+        "live_expedientes_snapshot",
+        "live_notifications_snapshot",
+        "live_verify_observations",
+        "test_snapshot_base_probe",
+        "test_secure_bound_contract",
+    } <= registered_keys
+
+
+_LOCAL_ONLY_NAMESPACE_KEYS = frozenset(
+    {"provider_settings", "model_role_selections", "google_oauth_token", "google_oauth_metadata"}
+)
+"""Production namespaces that must never reach a remote mirror.
+
+Provider keys, the per-role model choice that names models on this machine, and
+each profile's Google sign-in.
+"""
+
+
+def test_secure_namespaces_default_to_ciphertext_remote_mirror_policy() -> None:
+    production_namespaces = tuple(
+        namespace
+        for namespace in STORAGE_NAMESPACE_REGISTRY.namespaces
+        if not namespace.key.startswith("test_") and namespace.key not in _LOCAL_ONLY_NAMESPACE_KEYS
+    )
+
+    assert production_namespaces
+    assert all(
+        namespace.remote_mirror_policy is StorageRemoteMirrorPolicy.CIPHERTEXT_WITH_METADATA
+        for namespace in production_namespaces
+    )
+    assert all(namespace.remote_mirror_requires_revision for namespace in production_namespaces)
+    assert all(namespace.remote_mirror_requires_integrity_manifest for namespace in production_namespaces)
+
+
+def test_provider_credentials_are_never_mirrored_or_carried() -> None:
+    """Provider keys are durable on this machine only.
+
+    LOCAL_ONLY keeps them off every remote mirror, and PROCESS_LOCAL keeps them
+    out of both custody carry profiles, so neither a portable export nor a
+    restorative backup holds them.
+    """
+    local_only = {
+        namespace.key
+        for namespace in STORAGE_NAMESPACE_REGISTRY.namespaces
+        if namespace.remote_mirror_policy is StorageRemoteMirrorPolicy.LOCAL_ONLY
+    }
+    provider_settings = lookup_namespace_definition("provider_settings")
+
+    assert local_only == _LOCAL_ONLY_NAMESPACE_KEYS
+    assert provider_settings.sensitivity is SensitivityClass.SECRET
+    assert provider_settings.scope is StorageNamespaceScope.PROFILE_LOCAL
+    assert provider_settings.custody_disposition is StorageCustodyDisposition.PROCESS_LOCAL
+    for profile in StorageCustodyProfile:
+        assert provider_settings not in STORAGE_NAMESPACE_REGISTRY.namespaces_for_custody_profile(profile)
+
+
+def test_model_role_selections_are_a_namespace_of_their_own_with_the_provider_records_custody() -> None:
+    """The per-role choice is kept apart from the provider records but is never mirrored or carried either."""
+    provider_settings = lookup_namespace_definition("provider_settings")
+    selections = lookup_namespace_definition("model_role_selections")
+
+    assert selections.namespace != provider_settings.namespace
+    assert selections.sensitivity is provider_settings.sensitivity
+    assert selections.scope is StorageNamespaceScope.PROFILE_LOCAL
+    assert selections.custody_disposition is StorageCustodyDisposition.PROCESS_LOCAL
+    assert selections.remote_mirror_policy is StorageRemoteMirrorPolicy.LOCAL_ONLY
+    for profile in StorageCustodyProfile:
+        assert selections not in STORAGE_NAMESPACE_REGISTRY.namespaces_for_custody_profile(profile)
+
+
+def test_a_profiles_google_sign_in_stays_in_its_profile_folder() -> None:
+    """A refresh token and its sign-in record never mirror remotely and never travel in a custody carry."""
+    for key in ("google_oauth_token", "google_oauth_metadata"):
+        definition = lookup_namespace_definition(key)
+        assert definition.remote_mirror_policy is StorageRemoteMirrorPolicy.LOCAL_ONLY
+        assert definition.scope is StorageNamespaceScope.PROFILE_LOCAL
+        assert definition.custody_disposition is StorageCustodyDisposition.PROCESS_LOCAL
+        for profile in StorageCustodyProfile:
+            assert definition not in STORAGE_NAMESPACE_REGISTRY.namespaces_for_custody_profile(profile)
+
+
+def test_test_only_namespaces_do_not_require_remote_mirror_metadata() -> None:
+    expected_namespaces = {
+        "test_secure_bound_contract": TEST_SECURE_BOUND_CONTRACT_NAMESPACE,
+        "test_snapshot_base_probe": TEST_SNAPSHOT_BASE_PROBE_NAMESPACE,
+        "test_session_lifecycle": TEST_SESSION_LIFECYCLE_NAMESPACE,
+    }
+
+    for key, expected_namespace in expected_namespaces.items():
+        namespace = lookup_namespace_definition(key)
+
+        assert namespace == expected_namespace
+        assert namespace.remote_mirror_policy is StorageRemoteMirrorPolicy.TEST_ONLY
+        assert namespace.remote_mirror_requires_revision is False
+        assert namespace.remote_mirror_requires_integrity_manifest is False
+
+
+def test_registry_path_definitions_name_persisted_hierarchy_segments() -> None:
+    bucket_root = STORAGE_NAMESPACE_REGISTRY.path_by_key("bucket_root")
+    bucket_db = STORAGE_NAMESPACE_REGISTRY.path_by_key("bucket_db")
+    lockfile = STORAGE_NAMESPACE_REGISTRY.path_by_key("bucket_lock")
+    blob_manifest = STORAGE_NAMESPACE_REGISTRY.path_by_key("blob_manifest")
+
+    assert bucket_root.segment == BUCKETS_DIRNAME
+    assert bucket_db.segment == BUCKET_DB_DIRNAME
+    assert lockfile.segment == BUCKET_LOCK_FILENAME
+    assert blob_manifest.schema_version == BLOB_MANIFEST_SCHEMA_VERSION
+
+
+def test_the_retired_plaintext_manifest_has_no_path_definition() -> None:
+    """The retirement is asserted, not merely left as an absence.
+
+    A member that simply stops being declared is indistinguishable from one
+    nobody got around to declaring -- which is the confusion that let this
+    manifest sit half-retired, its reader deleted while the hierarchy still
+    declared it as a live format. Naming the absence means re-adding a
+    definition is a deliberate act that fails here first.
+    """
+    with pytest.raises(KeyError):
+        STORAGE_NAMESPACE_REGISTRY.path_by_key("bucket_manifest")
+    retired_manifest = storage_location(StorageCategory.BUCKET_MANIFEST).subpath
+    assert retired_manifest not in {path.segment for path in STORAGE_NAMESPACE_REGISTRY.paths}
+
+
+# ---------------------------------------------------------------------------
+# contract: NamespaceRegistryError error-registry and real-behavior invariant tests
+# ---------------------------------------------------------------------------
+
+
+def test_namespace_registry_error_round_trips_through_build_error_envelope() -> None:
+    err = NamespaceRegistryError("test invariant violation")
+    envelope = build_error_envelope(err)
+    assert envelope.code == "INTEGRITY_STORAGE_NAMESPACE_REGISTRY"
+    assert envelope.category == "INTEGRITY"
+    assert envelope.message
+
+
+def _make_namespace_definition(**overrides: object) -> SecureObjectNamespaceDefinition:
+    defaults: dict[str, object] = {
+        "key": "test_key",
+        "namespace": "aeat-test",
+        "owner": "aeat-test",
+        "sensitivity": SensitivityClass.AUDIT,
+        "schema_version": 1,
+        "object_key_grammar": "{id}",
+        "scope": StorageNamespaceScope.PROFILE_LOCAL,
+        "custody_disposition": StorageCustodyDisposition.STRUCTURED_CUSTODY,
+    }
+    defaults.update(overrides)
+    return SecureObjectNamespaceDefinition.model_validate(defaults)
+
+
+def _assert_caused_by_namespace_registry_error(error: ValidationError, case_id: str) -> None:
+    causes = [entry.get("ctx", {}).get("error") for entry in error.errors()]
+    assert any(
+        isinstance(cause, ValueError) and isinstance(cause.__cause__, NamespaceRegistryError) for cause in causes
+    ), case_id
+
+
+def test_namespace_definition_invariant_violations_raise_namespace_registry_error() -> None:
+    cases: tuple[tuple[str, dict[str, object], str], ...] = (
+        ("key-whitespace", {"key": " whitespace_key "}, "registry key must not carry surrounding whitespace"),
+        ("key-path-separator", {"key": "path/sep"}, "registry key must be a storage-safe slug"),
+        ("namespace-path-separator", {"namespace": "aeat/bad"}, "namespace must not contain path separators"),
+        ("namespace-whitespace", {"namespace": " aeat.bad "}, "namespace must not carry surrounding whitespace"),
+        (
+            "default-key-whitespace",
+            {"default_object_key": " bad "},
+            "default object key must not carry surrounding whitespace",
+        ),
+        (
+            "default-key-path-separator",
+            {"default_object_key": "path/sep"},
+            "default object key must not contain path separators",
+        ),
+    )
+
+    for case_id, overrides, expected_message in cases:
+        with pytest.raises(ValidationError) as exc_info:
+            _make_namespace_definition(**overrides)
+
+        errors = exc_info.value.errors()
+        _assert_caused_by_namespace_registry_error(exc_info.value, case_id)
+        assert any(expected_message in str(error) for error in errors), case_id
+
+
+def test_namespace_definition_remote_mirror_policy_constraints_are_enforced() -> None:
+    cases: tuple[tuple[str, dict[str, object], str], ...] = (
+        (
+            "ciphertext-requires-revision",
+            {"remote_mirror_requires_revision": False},
+            "ciphertext remote mirror namespaces require revision and integrity metadata",
+        ),
+        (
+            "ciphertext-requires-integrity-manifest",
+            {"remote_mirror_requires_integrity_manifest": False},
+            "ciphertext remote mirror namespaces require revision and integrity metadata",
+        ),
+        (
+            "test-only-rejects-metadata-requirements",
+            {"remote_mirror_policy": StorageRemoteMirrorPolicy.TEST_ONLY},
+            "local-only and test-only namespaces must not require remote mirror metadata",
+        ),
+    )
+
+    for case_id, overrides, expected_message in cases:
+        with pytest.raises(ValidationError) as exc_info:
+            _make_namespace_definition(**overrides)
+
+        assert any(expected_message in str(error) for error in exc_info.value.errors()), case_id
+
+
+def _make_path_definition(**overrides: object) -> StoragePathDefinition:
+    defaults: dict[str, object] = {
+        "key": "test_path",
+        "kind": StoragePathKind.DIRECTORY,
+        "grammar": "<root>/test/",
+        "owner": "aeat-test",
+        "anchor": StoragePathAnchor.STORAGE_ROOT,
+    }
+    defaults.update(overrides)
+    return StoragePathDefinition.model_validate(defaults)
+
+
+def test_path_definition_invariant_violations_raise_namespace_registry_error() -> None:
+    cases: tuple[tuple[str, dict[str, object], str], ...] = (
+        ("key-whitespace", {"key": " bad_key "}, "path key must not carry surrounding whitespace"),
+        ("key-path-separator", {"key": "path/sep"}, "path key must not contain path separators"),
+        ("segment-whitespace", {"segment": " bad_segment "}, "path segment must not carry surrounding whitespace"),
+        ("segment-path-separator", {"segment": "path/sep"}, "path segment must be a single component"),
+    )
+
+    for case_id, overrides, expected_message in cases:
+        with pytest.raises(ValidationError) as exc_info:
+            _make_path_definition(**overrides)
+
+        errors = exc_info.value.errors()
+        _assert_caused_by_namespace_registry_error(exc_info.value, case_id)
+        assert any(expected_message in str(error) for error in errors), case_id
+
+
+def test_duplicate_registry_entries_raise_namespace_registry_error() -> None:
+    namespace = _make_namespace_definition()
+    duplicate_workflow_state = WORKFLOW_STATE_NAMESPACE.model_copy(update={"key": "workflow_state_duplicate"})
+    path = _make_path_definition(key="dup_path", grammar="<root>/dup/")
+    cases = (
+        (
+            "namespace-key",
+            (namespace, namespace),
+            (),
+            "duplicate secure-object namespace registry key",
+        ),
+        (
+            "namespace-value",
+            (WORKFLOW_STATE_NAMESPACE, duplicate_workflow_state),
+            (),
+            "duplicate secure-object namespace value",
+        ),
+        (
+            "path-key",
+            (),
+            (path, path),
+            "duplicate storage path registry key",
+        ),
+    )
+
+    for case_id, namespaces, paths, expected_message in cases:
+        with pytest.raises(ValidationError) as exc_info:
+            StorageHierarchyRegistry(namespaces=namespaces, paths=paths)
+
+        assert any(expected_message in str(error) for error in exc_info.value.errors()), case_id
+
+
+def test_secure_object_logical_path_uses_registered_sql_grammar() -> None:
+    path_definition = STORAGE_NAMESPACE_REGISTRY.path_by_key("secure_objects_table")
+
+    marker = secure_object_logical_path("cadrumo.persistence.profile.inventory", "default")
+
+    assert path_definition.kind is StoragePathKind.LOGICAL_SQL
+    assert path_definition.grammar == "db://secure_objects/<namespace>/<object_key>"
+    assert marker.as_posix() == "db:/secure_objects/cadrumo.persistence.profile.inventory/default"
+
+
+def test_secure_object_namespace_logical_path_uses_registered_sql_grammar() -> None:
+    path_definition = STORAGE_NAMESPACE_REGISTRY.path_by_key("secure_objects_table")
+
+    marker = secure_object_namespace_logical_path("cadrumo.domain.attachments.blobs")
+
+    assert path_definition.kind is StoragePathKind.LOGICAL_SQL
+    assert path_definition.grammar == "db://secure_objects/<namespace>/<object_key>"
+    assert marker.as_posix() == "db:/secure_objects/cadrumo.domain.attachments.blobs"

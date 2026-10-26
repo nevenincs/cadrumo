@@ -1,0 +1,361 @@
+schema_version = 1
+fragment_id = "numeric-representation-20"
+width_17_rules = []
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-10 Patrimonio"
+source_row = 33
+source_cell = "A33"
+ordinal = "28"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2023-714-10-row-33"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: (6) Liquidación - Deducciones y bonificaciones autonómicas - Bonificación autonómica - Importe aplicado [50]"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-10 Patrimonio"
+source_row = 33
+source_cell = "A33"
+ordinal = "28"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-10 Patrimonio"
+source_row = 34
+source_cell = "A34"
+ordinal = "29"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2023-714-10-row-34"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: (6) Liquidación - Cuota a ingresar - Cuota a ingresar [55]"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-10 Patrimonio"
+source_row = 34
+source_cell = "A34"
+ordinal = "29"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-10 Patrimonio"
+source_row = 35
+source_cell = "A35"
+ordinal = "30"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2023-714-10-row-35"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: (7) Regularización declaración complementaria - Cuota ingresar anteriores autoliquidaciones/liquidaciones [56]"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-10 Patrimonio"
+source_row = 35
+source_cell = "A35"
+ordinal = "30"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-10 Patrimonio"
+source_row = 36
+source_cell = "A36"
+ordinal = "31"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2023-714-10-row-36"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: (7) Regularización declaración complementaria - Diferencia a ingresar resultado declaración complementaria [57]"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-10 Patrimonio"
+source_row = 36
+source_cell = "A36"
+ordinal = "31"
+ordinal_absent = false
+record_identity = "714-10 Patrimonio"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-Ingreso o Devolución"
+source_row = 11
+source_cell = "A11"
+ordinal = "6"
+ordinal_absent = false
+record_identity = "714-Ingreso o Devolución"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2023-714-ingreso-row-11"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: Resumen de la declaración - Total bienes y derechos no exentos [23]"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-Ingreso o Devolución"
+source_row = 11
+source_cell = "A11"
+ordinal = "6"
+ordinal_absent = false
+record_identity = "714-Ingreso o Devolución"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-Ingreso o Devolución"
+source_row = 12
+source_cell = "A12"
+ordinal = "7"
+ordinal_absent = false
+record_identity = "714-Ingreso o Devolución"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2023-714-ingreso-row-12"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: Resumen de la declaración - Base imponible [25]"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-Ingreso o Devolución"
+source_row = 12
+source_cell = "A12"
+ordinal = "7"
+ordinal_absent = false
+record_identity = "714-Ingreso o Devolución"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-Ingreso o Devolución"
+source_row = 13
+source_cell = "A13"
+ordinal = "8"
+ordinal_absent = false
+record_identity = "714-Ingreso o Devolución"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2023-714-ingreso-row-13"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: Resumen de la declaración - Base liquidable [27]"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-Ingreso o Devolución"
+source_row = 13
+source_cell = "A13"
+ordinal = "8"
+ordinal_absent = false
+record_identity = "714-Ingreso o Devolución"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-Ingreso o Devolución"
+source_row = 14
+source_cell = "A14"
+ordinal = "9"
+ordinal_absent = false
+record_identity = "714-Ingreso o Devolución"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2023-714-ingreso-row-14"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: Resumen de la declaración - Cuota íntegra [29]"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-Ingreso o Devolución"
+source_row = 14
+source_cell = "A14"
+ordinal = "9"
+ordinal_absent = false
+record_identity = "714-Ingreso o Devolución"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-Ingreso o Devolución"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+ordinal_absent = false
+record_identity = "714-Ingreso o Devolución"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2023-714-ingreso-row-15"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: Liquidación - Cuota a ingresar (casilla [55] página 10 declaración)   [55]"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-Ingreso o Devolución"
+source_row = 15
+source_cell = "A15"
+ordinal = "10"
+ordinal_absent = false
+record_identity = "714-Ingreso o Devolución"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-Ingreso o Devolución"
+source_row = 16
+source_cell = "A16"
+ordinal = "11"
+ordinal_absent = false
+record_identity = "714-Ingreso o Devolución"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2023-714-ingreso-row-16"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: Complementaria - Diferencia a ingresar como resultado de la declaración complementaria (casilla [57] página 10)   [57]"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-Ingreso o Devolución"
+source_row = 16
+source_cell = "A16"
+ordinal = "11"
+ordinal_absent = false
+record_identity = "714-Ingreso o Devolución"
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "N"
+semantic_kind = "decimal"
+value_policy = "implied-decimal"
+integer_digits = 11
+decimal_digits = 2
+sign_policy = "n-prefix-negative-blank-nonnegative"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "714-Ingreso o Devolución"
+source_row = 17
+source_cell = "A17"
+ordinal = "12"
+ordinal_absent = false
+record_identity = "714-Ingreso o Devolución"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m714-2023-714-ingreso-row-17"
+decision_statement = "The thirteen-position signed valuation or monetary amount carries eleven whole digits and two fractional digits. Negative values use the source N marker."
+justification = "Reviewed cent-scale for this exact monetary slot; the source names its valuation, base, quota or debt meaning and types it N. This policy supplies the omitted scale rather than claiming a quoted split. Exact source meaning: Ingreso - Importe (casilla [55] o casilla [57] en caso declaración complementaria)  [I]"
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "714-Ingreso o Devolución"
+source_row = 17
+source_cell = "A17"
+ordinal = "12"
+ordinal_absent = false
+record_identity = "714-Ingreso o Devolución"
+
+[design_identity]
+modelo = "714"
+source_ref = "aeat-dr-714-2023"
+source_sha256 = "b51178affa2a64ec2d538657136e807c11802457922f97e9333018d414c66299"
+design_epoch = "2023"

@@ -1,0 +1,4 @@
+@step Clear the saved progress of interrupted commands.
+@result aeat --format json config repair reset-progress --yes
+@expect result.fingerprint.reason_class == "absent"
+@expect exit_code == 0

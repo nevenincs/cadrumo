@@ -1,0 +1,178 @@
+[revisions."2024-y-siguientes"]
+# This edition declares an explicit root rather than omitting the predecessor
+# key, so that an edition for the 2020-2023 era can be authored ahead of it
+# without two editions of modelo 216 omitting the key at once, which the
+# predecessor-forest rule refuses. The declaration is inert while this is the
+# only edition and load-bearing the moment an earlier one lands.
+predecessor = { none = { cause = "official_structure_differs", reason = "The 2024 form is a redesign, not a revision of the 2020-2023 form: aeat-dr-216-2020-2023 prints seven unnumbered partidas over a flat liquidacion with no section structure, while aeat-dr-216-2024 prints numbered boxes [01] to [21] in two sections (I rentas sometidas a retencion, II rentas no sometidas), each split dividendos / resto de rentas / totales. This edition's seventeen casillas are ids '05' to '21', which are 2024 box numbers and do not exist on the earlier form. The 2024 design refuses the earlier years in its own validation: its devengo-ejercicio field [01] is declared obligatorio with >= 2024. No merge from the earlier edition produces this one, so no predecessor is declared. The payload is stored against the 2020-2023 edition through family_storage_baseline: the shared applicability seed, filing schedule and filing and deadline links are inherited with overrides for their differences. No casilla is shared, so no casilla baseline is declared. Storage reuse makes no continuity claim.", legal_refs = ["orden-eha-3290-2008:art-1"], source_refs = ["aeat-dr-216-2024"] } }
+# Storage reuse only, not legal continuity: keyed families are stored as
+# differences from the 2020-2023 edition's effective members.
+family_storage_baseline = "2020-2023"
+formula_source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]
+casilla_source_refs = ["boe-modelo-216-form-layout"]
+application_link_source_refs = ["aeat-modelo-216-procedure"]
+# Prepared and reviewed by an agent against the bundled diseño de registros and
+# the ordenes this revision cites; NO human operator has countersigned it, and
+# 'agent_reviewed' plus this reviewer token record that state honestly rather
+# than claiming the operator's own sign-off.
+#
+# What the review established, by measurement:
+#   - every casilla legal_ref and source_ref resolves to the legal catalogue, and
+#     every cited source's corpus file is present on disk;
+#   - every formula targets a casilla of this revision;
+#   - every enrolled schema family resolves;
+#   - every cited source's applicability window overlaps this revision's own life;
+#   - and all 1 fixed-width record(s) of the DERIVED layout were paired to
+#     their design sheet and cover it: no design DATA position is left
+#     unaddressed, and none reaches past its declared record length.
+#
+# The coverage figure is measured on the layout AFTER binding derivation, which
+# is what the renderer and the completeness gate consume; the raw export_layouts
+# collection holds only inline fields and reading it understates coverage badly.
+#
+# This stamp claims no fresh-render reproduction evidence: that belongs to the
+# revisions enrolled in the generated-tree drift gate, and this one is not.
+#
+# What it does NOT establish: that the figures a filing produces are correct
+# against AEAT. That is a tax review against official sources, and it is what an
+# operator re-stamping this to 'operator_reviewed' would be attesting.
+authority_grade = "filing"
+# Modelo 216 IRNR retención autoliquidación. The current form layout is approved
+# by Orden HAC/56/2024 (BOE-A-2024-1772); the binding filing plazo persists from
+# Orden EHA/3290/2008 art 4 (trimestral: first 20 natural days of April, July,
+# October, January). valid_to is open: the withholding surface has no annual
+# coefficient table, so a new revision is authored only on a statutory or
+# form-structure change.
+valid_from = 2024-01-01
+period_selector = { year_from = 2024, periods = ["1T", "2T", "3T", "4T"] }
+orden_aplicabilidad = ["orden-eha-3290-2008:art-1"]
+legal_refs = [
+    "orden-eha-3290-2008:art-1",
+    "orden-eha-3290-2008:art-1",
+    "orden-eha-3290-2008:art-4",
+    "trlirnr-rdleg-5-2004:art-24",
+]
+source_refs = [
+    "aeat-modelo-216-procedure",
+    "boe-modelo-216-form-layout",
+    "aeat-dr-216-2024",
+    "aeat-calendario-contribuyente-2024",
+    "aeat-calendario-contribuyente-2025",
+    "aeat-calendario-contribuyente-2026",
+]
+scoped_families = ["completeness_manifest"]
+review_status = "agent_reviewed"
+reviewed_by = "agent-review-pending-operator"
+reviewed_at = 2026-10-08
+
+[revisions."2024-y-siguientes".family_dispositions.projection_endpoints]
+reason = """
+A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (modelo-216-2024-fichero-boe) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction rather than unbuilt: authoring a projection row into the layout is what would make this family apply, and that change reaches this declaration through \
+the same revision."""
+legal_refs = [
+    "orden-eha-3290-2008:art-1",
+    "orden-eha-3290-2008:art-1",
+    "orden-eha-3290-2008:art-4",
+    "trlirnr-rdleg-5-2004:art-24",
+]
+source_refs = [
+    "aeat-modelo-216-procedure",
+    "boe-modelo-216-form-layout",
+    "aeat-dr-216-2024",
+]
+
+[revisions."2024-y-siguientes".family_dispositions.parameters]
+reason = """
+A parameter holds a regulatory value a formula of this revision applies -- a rate, a threshold, a coefficient. Modelo 216 applies none. Measured on the revision itself, all six of its formulas are pure aggregation: casillas 07, 10 and 13 add the dividendos and resto columns of the rentas sometidas block, 16 and 19 do the same for the rentas no sometidas block, and 21 subtracts the prior-autoliquidacion result from the retenciones total. The IRNR retencion rate is applied by the retenedor at \
+payment time and arrives here as an already-withheld amount in casillas 11 and 12, so the rate is spent before this modelo sees the figure. Contrast modelo 115, which DOES hold one: its casilla 03 is computed as percent(02, irpf.urban_rental_withholding_rate). Modelo 216 has no such value to hold, and the family is empty by the shape of its own calculation rather than by omission."""
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
+source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]
+
+[revisions."2024-y-siguientes".family_dispositions.dependency_classifications]
+reason = """
+A dependency classification declares which OTHER modelo's filing a value here derives from, and modelo 216 derives from none. It reports the retenciones the retenedor itself practised on rentas satisfied to contribuyentes del IRNR sin establecimiento permanente in the period, from its own records rather than folded in from another return. The dependency in this family runs the OTHER way: modelo 296 is the annual resumen that summarises the 216 filings of the year, so it is 296 that classifies a \
+dependency on 216. Nothing upstream of 216 exists to classify, so the family is inapplicable by this modelo's position in the chain rather than merely unpopulated."""
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
+source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]
+[revisions."2024-y-siguientes".family_dispositions.bindings]
+reason = """
+A binding resolves a casilla value from a declared source, and none this registry offers can serve modelo 216. The sibling retenciones autoliquidaciones bind through source = 'retenciones_aggregation', whose selector scopes by RetencionScheme -- and every member of that enum is an IRPF scheme (rendimientos_trabajo, actividades_economicas, premios, arrendamiento_urbano, intereses, dividendos, otros_capital_mobiliario). None is IRNR. This modelo declares retenciones on rentas satisfied to \
+contribuyentes sin establecimiento permanente under TRLIRNR art. 24, so any existing scheme would aggregate RESIDENT IRPF withholding into a non-resident return. The dividendos member is the easiest such mistake: 216 splits dividendos from resto as the IRPF capital schemes do, but it serves resident recipients (modelo 123). Every input casilla here is manual, and only a BOUND casilla requires a binding. The family is empty because the store models no IRNR scheme; adding one is a core change no \
+fragment can assert."""
+legal_refs = [
+    "trlirnr-rdleg-5-2004:art-24",
+    "orden-eha-3290-2008:art-1",
+]
+source_refs = [
+    "aeat-modelo-216-procedure",
+    "boe-modelo-216-form-layout",
+    "aeat-dr-216-2024",
+]
+
+[[revisions."2024-y-siguientes".family_removals]]
+family = "constructs"
+selector = {revision = "2020-2023", id = "modelo-216-liquidacion"}
+
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "filing_schedules"
+selector = {revision = "2020-2023", id = "modelo-216-trimestral"}
+sequence_additions = {profile_conditions = [{field = "enrollment.large_company", op = "equals", value = false, explanation = "Modelo 216 trimestral para retenedores no sujetos a autoliquidacion mensual por gran empresa; el plazo es de los veinte primeros dias naturales de abril, julio, octubre y enero.", legal_refs = ["orden-eha-3290-2008:art-4"], source_refs = ["aeat-modelo-216-procedure"]}], source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]}
+sequence_removals = {profile_conditions = [0], source_refs = [0, 1]}
+
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2020-2023", id = "modelo-216-deadline"}
+sequence_additions = {source_refs = ["aeat-modelo-216-procedure"]}
+sequence_removals = {source_refs = [0, 1]}
+
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2020-2023", id = "modelo-216-filing"}
+sequence_additions = {source_refs = ["aeat-modelo-216-procedure"]}
+sequence_removals = {source_refs = [0, 1]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "formulas"
+selector = {revision = "2020-2023", id = "modelo-216-resultado"}
+fields = {target_casilla_id = "21"}
+sequence_additions = {"expression.args" = [{casilla_id = "13"}, {casilla_id = "20"}], legal_refs = ["trlirnr-rdleg-5-2004:art-24"], source_citations = [{source_ref = "aeat-modelo-216-procedure", required_text = ["el importe correspondiente a la resta de las casillas 13 y 20"]}], source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]}
+sequence_removals = {"expression.args" = [0, 1], source_citations = [0], source_refs = [0]}
+sequence_order = {legal_refs = [1, 0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2020-2023", id = "modelo-216-calculation"}
+sequence_additions = {legal_refs = ["trlirnr-rdleg-5-2004:art-24"], source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2020-2023", id = "modelo-216-export"}
+sequence_additions = {legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"], source_refs = ["aeat-dr-216-2024"]}
+sequence_removals = {source_refs = [0]}
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "completeness_manifest"
+selector = {revision = "2020-2023", id = "aeat-dr-216-2020-2023"}
+replacement_id = "boe-modelo-216-form-layout"
+sequence_additions = {casillas = [{casilla_id = "10", number = "10"}, {casilla_id = "08", number = "08"}, {casilla_id = "09", number = "09"}, {casilla_id = "13", number = "13"}, {casilla_id = "11", number = "11"}, {casilla_id = "12", number = "12"}, {casilla_id = "21", number = "21"}, {casilla_id = "20", number = "20"}, {casilla_id = "05", number = "05"}, {casilla_id = "06", number = "06"}, {casilla_id = "07", number = "07"}, {casilla_id = "14", number = "14"}, {casilla_id = "15", number = "15"}, {casilla_id = "16", number = "16"}, {casilla_id = "17", number = "17"}, {casilla_id = "18", number = "18"}, {casilla_id = "19", number = "19"}], legal_refs = ["trlirnr-rdleg-5-2004:art-24"], source_refs = ["boe-modelo-216-form-layout"]}
+sequence_removals = {casillas = [0, 1, 2], source_refs = [0, 1]}
+
+# Storage reuse preserves the lifecycle link identities; their current-era
+# grounding is the AEAT instructions for exercise2024 and following.
+
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2020-2023", id = "modelo-216-snapshot-review"}
+fields = {source_refs = ["aeat-modelo-216-procedure"]}
+
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2020-2023", id = "modelo-216-snapshot-approval"}
+fields = {source_refs = ["aeat-modelo-216-procedure"]}
+
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2020-2023", id = "modelo-216-snapshot-reconciliation"}
+fields = {source_refs = ["aeat-modelo-216-procedure"]}
+
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "application_links"
+selector = {revision = "2020-2023", id = "modelo-216-snapshot-workflow"}
+fields = {source_refs = ["aeat-modelo-216-procedure"]}

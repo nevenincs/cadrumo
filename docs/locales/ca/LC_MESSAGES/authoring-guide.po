@@ -1,0 +1,320 @@
+# Catalan translation of the Cadrumo documentation.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-09-29 16:20+0200\n"
+"PO-Revision-Date: 2026-07-18 14:00+0200\n"
+"Last-Translator: Cadrumo docs team <docs@cadrumo.example>\n"
+"Language: ca\n"
+"Language-Team: ca <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../authoring-guide.md:1
+msgid "Authoring and reviewing documentation"
+msgstr "Redacció i revisió de la documentació"
+
+#: ../../authoring-guide.md:3
+msgid ""
+"Cadrumo is a Spanish tax-filing application. AEAT is the external Spanish"
+" tax authority. This guide shows you how to make a documentation change "
+"and take it through review. Four documentation surfaces exist: repository"
+" markdown, in-source docstrings, and two generated references — one for "
+"the application programming interface (API) and one for the command-line "
+"interface (CLI)."
+msgstr ""
+"Cadrumo és una aplicació per presentar impostos a Espanya. L'AEAT és "
+"l'autoritat fiscal espanyola externa. Aquesta guia et mostra com fer un "
+"canvi a la documentació i portar-lo per la revisió. Hi ha quatre "
+"superfícies de documentació: el markdown del repositori, les docstrings "
+"dins del codi font i dues referències generades: una per a la interfície "
+"de programació d'aplicacions (API) i una per a la interfície de línia "
+"d'ordres (CLI)."
+
+#: ../../authoring-guide.md:5
+msgid "Choose the right surface"
+msgstr "Tria la superfície adequada"
+
+#: ../../authoring-guide.md:7
+msgid "Where you make a change depends on what you're changing:"
+msgstr "El lloc on fas un canvi depèn del que canvies:"
+
+#: ../../authoring-guide.md:9
+msgid ""
+"**Repository markdown** is hand-written. Edit the README or a guide under"
+" `docs/` directly."
+msgstr ""
+"El **markdown del repositori** s'escriu a mà. Edita el README o una guia "
+"dins de `docs/` directament."
+
+#: ../../authoring-guide.md:10
+msgid ""
+"**Docstrings** are the single source for the API reference. Edit the "
+"docstring in the source, and let Sphinx (the documentation build tool) "
+"render it. Never copy a signature into prose by hand."
+msgstr ""
+"Les **docstrings** són la font única de la referència de l'API. Edita la "
+"docstring al codi font i deixa que Sphinx (l'eina de construcció de la "
+"documentació) la generi. No copiïs mai una signatura a mà dins de la "
+"prosa."
+
+#: ../../authoring-guide.md:11
+msgid ""
+"**The API reference** is generated from the source modules at the start "
+"of every full documentation build. Only its overview page, "
+"`docs/api/index.md`, is hand-written; the module pages are build output "
+"and are never committed."
+msgstr ""
+"La **referència de l'API** es genera a partir dels mòduls del codi font a"
+" l'inici de cada compilació completa de la documentació. Només la seva "
+"pàgina de resum, `docs/api/index.md`, s'escriu a mà; les pàgines dels "
+"mòduls són sortida de la compilació i no es desen mai al repositori."
+
+#: ../../authoring-guide.md:12
+msgid ""
+"**The CLI reference** is generated from the command tree (the full set of"
+" CLI commands and subcommands). Don't edit it; regenerate it with the "
+"commands that follow."
+msgstr ""
+"La **referència de la CLI** es genera a partir de l'arbre d'ordres (el "
+"conjunt complet d'ordres i subordres de la CLI). No l'editis; torna-la a "
+"generar amb les ordres següents."
+
+#: ../../authoring-guide.md:14
+msgid "Definitions of generation terms"
+msgstr "Definicions dels termes de generació"
+
+#: ../../authoring-guide.md:16
+msgid ""
+"When working with generated documentation, understand the following "
+"terminology:"
+msgstr ""
+"Quan treballis amb documentació generada, cal que coneguis la "
+"terminologia següent:"
+
+#: ../../authoring-guide.md:18
+msgid ""
+"**stub**: A reference stub page is a generated reStructuredText (`.rst`) "
+"file under `docs/api/`. Each stub corresponds to a Python module or "
+"package and contains the `automodule` directive that makes Sphinx pull "
+"the live docstrings from the code. A full build writes the stubs fresh "
+"from the module tree, so adding or removing a module needs no extra step."
+msgstr ""
+"**stub**: una pàgina stub de referència és un fitxer reStructuredText "
+"(`.rst`) generat dins de `docs/api/`. Cada stub correspon a un mòdul o "
+"paquet de Python i conté la directiva `automodule` que fa que Sphinx "
+"extregui les docstrings en viu del codi. Una compilació completa torna a "
+"escriure els stubs a partir de l'arbre de mòduls, de manera que afegir o "
+"treure un mòdul no requereix cap pas addicional."
+
+#: ../../authoring-guide.md:19
+msgid ""
+"**sequence golden**: The committed, recorded output of a documented CLI "
+"sequence. Only `just docs-generate-sequences` writes goldens."
+msgstr ""
+"**golden de seqüència**: la sortida enregistrada i desada al repositori "
+"d'una seqüència de la CLI documentada. Només `just docs-generate-"
+"sequences` escriu goldens."
+
+#: ../../authoring-guide.md:21
+msgid "Preview and verify a change"
+msgstr "Previsualitza i verifica un canvi"
+
+#: ../../authoring-guide.md:23
+msgid "Choose the narrowest preview that shows your change:"
+msgstr "Tria la previsualització més reduïda que mostri el teu canvi:"
+
+#: ../../authoring-guide.md:25
+msgid ""
+"**One page:** `just docs-page authoring-guide` renders a single page. The"
+" path is relative to the repository or to `docs/`, and the suffix is "
+"optional. Use it while you write. A repeat preview reuses its build cache"
+" and takes about 20 seconds."
+msgstr ""
+"**Una pàgina:** `just docs-page authoring-guide` genera una sola pàgina. "
+"El camí és relatiu al repositori o a `docs/`, i el sufix és opcional. "
+"Fes-la servir mentre escrius. Una previsualització repetida reutilitza la"
+" seva memòria cau de compilació i triga uns 20 segons."
+
+#: ../../authoring-guide.md:26
+msgid ""
+"**A directory:** `just docs-page how-to` renders every page under that "
+"directory. Use it when a change spans several related pages."
+msgstr ""
+"**Un directori:** `just docs-page how-to` genera totes les pàgines "
+"d'aquest directori. Fes-lo servir quan un canvi abasti diverses pàgines "
+"relacionades."
+
+#: ../../authoring-guide.md:27
+msgid ""
+"**Live preview:** `just docs-serve` rebuilds and refreshes the browser "
+"whenever a page under `docs/` changes. It serves the taxpayer-facing "
+"pages on port 8788, and running it again attaches to the preview that is "
+"already running. To watch docstrings and API pages as well, run `uv run "
+"--no-sync python -m dev.docs.serve --scope full --open-browser`."
+msgstr ""
+"**Previsualització en directe:** `just docs-serve` recompila i actualitza"
+" el navegador cada vegada que canvia una pàgina dins de `docs/`. Serveix "
+"les pàgines per als contribuents al port 8788, i tornar-lo a executar es "
+"connecta a la previsualització que ja està en marxa. Per seguir també els"
+" canvis de les docstrings i de les pàgines de l'API, executa `uv run "
+"--no-sync python -m dev.docs.serve --scope full --open-browser`."
+
+#: ../../authoring-guide.md:28
+msgid ""
+"**Full build:** `just docs-build` builds the whole site, including the "
+"API reference. Run it before you hand a change over for review."
+msgstr ""
+"**Compilació completa:** `just docs-build` compila tot el lloc, inclosa "
+"la referència de l'API. Executa-la abans d'enviar un canvi a revisió."
+
+#: ../../authoring-guide.md:30
+msgid ""
+"Previews render CLI sequences from their committed goldens and don't "
+"execute them, so a preview never proves a sequence still matches the "
+"product. Verify the sequences and the rest of the documentation with:"
+msgstr ""
+"Les previsualitzacions generen les seqüències de la CLI a partir dels "
+"seus goldens desats al repositori i no les executen, de manera que una "
+"previsualització mai no demostra que una seqüència encara coincideixi amb"
+" el producte. Verifica les seqüències i la resta de la documentació amb:"
+
+#: ../../authoring-guide.md:38
+msgid ""
+"`just docs-sequences-check` and `just docs-generate-sequences` refuse to "
+"run while the local registry authority is stale. Refresh it with `uv run "
+"--no-sync python -m dev.registry.pipeline publish-authority --if-stale`, "
+"then run the command again."
+msgstr ""
+"`just docs-sequences-check` i `just docs-generate-sequences` es neguen a "
+"executar-se mentre l'autoritat local del registre estigui obsoleta. "
+"Actualitza-la amb `uv run --no-sync python -m dev.registry.pipeline "
+"publish-authority --if-stale` i torna a executar l'ordre."
+
+#: ../../authoring-guide.md:40
+msgid ""
+"`just docs-check` fails on a broken cross-reference or a command "
+"reference that no longer matches the commands."
+msgstr ""
+"`just docs-check` falla si hi ha una referència creuada trencada o una "
+"referència d'ordre que ja no coincideix amb les ordres."
+
+#: ../../authoring-guide.md:42
+msgid "Take a narrative change through review"
+msgstr "Porta un canvi narratiu per la revisió"
+
+#: ../../authoring-guide.md:44
+msgid ""
+"A change to the README or a guide under `docs/` moves through a staged "
+"review. Each stage has a distinct reviewer, and each completes before the"
+" next begins:"
+msgstr ""
+"Un canvi al README o a una guia dins de `docs/` avança per una revisió "
+"per etapes. Cada etapa té un revisor diferent i cadascuna es completa "
+"abans que comenci la següent:"
+
+#: ../../authoring-guide.md:46
+msgid ""
+"**Wireframe.** Outline the document as titles and section intents. Assign"
+" each page a Diataxis type — Diataxis is a documentation framework that "
+"sorts pages into four kinds: tutorial, how-to, reference, or explanation."
+msgstr ""
+"**Esquema.** Esbossa el document com a títols i intencions de secció. "
+"Assigna a cada pàgina un tipus de Diataxis: Diataxis és un marc de "
+"documentació que classifica les pàgines en quatre menes: tutorial, guia "
+"pràctica, referència o explicació."
+
+#: ../../authoring-guide.md:47
+msgid ""
+"**Refinement.** A reviewer with no project context reads only the "
+"wireframe and confirms a newcomer would understand what each section "
+"delivers. Revise until every section passes."
+msgstr ""
+"**Refinament.** Un revisor sense context del projecte llegeix només "
+"l'esquema i confirma que un nouvingut entendria què aporta cada secció. "
+"Fes els canvis necessaris fins que totes les seccions ho superin."
+
+#: ../../authoring-guide.md:48
+msgid ""
+"**Context.** Researchers gather the facts, commands, paths, and source "
+"locations each section needs."
+msgstr ""
+"**Context.** Els investigadors apleguen els fets, les ordres, els camins "
+"i les ubicacions del codi font que necessita cada secció."
+
+#: ../../authoring-guide.md:49
+msgid ""
+"**Drafting.** Authors write each section from the gathered context and "
+"the project's prose-style rules."
+msgstr ""
+"**Redacció.** Els autors escriuen cada secció a partir del context "
+"aplegat i de les regles d'estil de prosa del projecte."
+
+#: ../../authoring-guide.md:50
+msgid ""
+"**Technical review.** Reviewers verify every command, flag, path, and "
+"class name against the code."
+msgstr ""
+"**Revisió tècnica.** Els revisors verifiquen cada ordre, opció, camí i "
+"nom de classe amb el codi."
+
+#: ../../authoring-guide.md:51
+msgid ""
+"**Editorial review.** A reviewer with no project context checks the "
+"writing against the same prose-style rules."
+msgstr ""
+"**Revisió editorial.** Un revisor sense context del projecte comprova la "
+"redacció amb les mateixes regles d'estil de prosa."
+
+#: ../../authoring-guide.md:52
+msgid ""
+"**Approval.** The change lands once the technical and editorial reviews "
+"pass."
+msgstr ""
+"**Aprovació.** El canvi s'incorpora un cop passen les revisions tècnica i"
+" editorial."
+
+#: ../../authoring-guide.md:54
+msgid "Keep the roles separate"
+msgstr "Mantén els rols separats"
+
+#: ../../authoring-guide.md:56
+msgid ""
+"Keep research, drafting, and review in separate hands. When you gather "
+"context, don't write the final prose. When you author, write from the "
+"gathered context, and don't invent facts. When you review for editorial "
+"quality, work from the document alone, without the codebase. The "
+"separation keeps each judgment honest."
+msgstr ""
+"Mantén la recerca, la redacció i la revisió en mans diferents. Quan "
+"apleguis context, no escriguis la prosa final. Quan redactis, escriu a "
+"partir del context aplegat i no inventis fets. Quan revisis la qualitat "
+"editorial, treballa només amb el document, sense la base de codi. La "
+"separació garanteix que cada valoració sigui honesta."
+
+#: ../../authoring-guide.md:58
+msgid "Don't encode process metadata"
+msgstr "No hi incloguis metadades de procés"
+
+#: ../../authoring-guide.md:60
+msgid ""
+"Documentation paths, filenames, and content carry domain and topic names "
+"only. Don't put the documentation framework or the project-management "
+"process into them. That rules out wave, phase, and step identifiers, plan"
+" and decision-record identifiers, and agent or campaign labels. A reader "
+"should see the product, not the process that built it."
+msgstr ""
+"Els camins, els noms de fitxer i el contingut de la documentació només "
+"porten noms de domini i de tema. No hi posis el marc de documentació ni "
+"el procés de gestió del projecte. Això exclou els identificadors d'onada,"
+" fase i pas, els identificadors de pla i de registre de decisions, i les "
+"etiquetes d'agent o de campanya. Un lector ha de veure el producte, no el"
+" procés que el va construir."
+

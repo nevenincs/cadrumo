@@ -1,0 +1,16 @@
+{
+  "corrections": [
+    {
+      "kind": "header_cell",
+      "sheet": "100-03",
+      "header_row": 5,
+      "column_index": 2,
+      "column_role": "length",
+      "reason": "AEAT's header row for sheet '100-03' declares 'Nº'/'Posic.'/'Tipo'/'Descripción'/'Validación' but the length-column header cell (column index 2, immediately after 'Posic.') is not empty and not absent -- it is a run of whitespace characters, where every other bundled Modelo 100 edition (checked: 2017) reads 'Long.' at the identical row and column. The whitespace-versus-empty distinction is what makes this a publication defect rather than a genuinely absent column: AEAT typed something there and it was not the header word. The 54 field rows beneath this header are ordinary, complete, contiguous record content (real bracket casilla numbers [001]-[047], header at row 5, 'Total:' row confirming the extent) -- structurally identical in every other respect to every sheet on this same tab family that parses without correction. Identical .xls and .xlsx containers of the same 2015 publication carry the same blank cell -- one defect, two symptom files.",
+      "editions_read": [
+        "20-100-ejercicio-2015-1-75-mb-xls.xls (this file; sheet 100-03 row 5 read directly -- column index 2 is a whitespace-only string, not None)",
+        "22-100-ejercicio-2017-actualizacion-04-04-2018-6-98-mb-xls.xlsx (sheet 100-03, row 5, column index 2, reads 'Long.')"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,351 @@
+"""The onboarding run's advisories, and the distinctions they must not collapse.
+
+Three separate confusions are gated here, each of which would put a false
+statement in front of an operator:
+
+* A REFUSED pair reported as an empty one. The register walker refuses a page
+  whose grid declares more records than it rendered, so a refused pair also
+  reports zero rows; reading that zero as "nothing filed" is the silent
+  under-report this feature exists to remove.
+* An expected-but-not-found warning raised from the register's offered option
+  list. That list's scoping to the authenticated NIF is unconfirmed, so an alert
+  derived from it could be pure noise — and an advisory only earns trust if every
+  firing is a real finding.
+* Several filings for one period reported as a problem. A complementaria is
+  lawful, so it is INFO; a warning would put a red flag on legal behaviour.
+
+The run model and its advisories are pure functions over an already-composed
+run, so they are exercised without a live session.
+"""
+
+from __future__ import annotations
+
+import pytest
+
+from ....core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
+from ....core.json_contract import NoticeSeverity
+from ....core.register_scoping_signal import RegisterScopingSignal
+from ..filed_history_discovery import FiledHistoryOnboardingRun, FiledHistoryPairOutcome, expected_but_not_found_notice
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_PROFILE = (FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY,)
+_REGISTER = (FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS,)
+_BOTH = (
+    FiledHistoryDiscoverySignal.PROFILE_APPLICABILITY,
+    FiledHistoryDiscoverySignal.AEAT_REGISTER_OPTIONS,
+)
+
+
+def _pair(
+    *,
+    modelo: str = "303",
+    ejercicio: int = 2025,
+    signals: tuple[FiledHistoryDiscoverySignal, ...] = _PROFILE,
+    row_count: int = 0,
+    refused: bool = False,
+    walk_attempted: bool = True,
+    walk_completed: bool | None = None,
+) -> FiledHistoryPairOutcome:
+    return FiledHistoryPairOutcome(
+        modelo=modelo,
+        ejercicio=ejercicio,
+        signals=signals,
+        walk_attempted=walk_attempted,
+        walk_completed=not refused if walk_completed is None else walk_completed,
+        row_count=row_count,
+        reached_count=row_count,
+        captured_count=row_count,
+        refused=refused,
+        failure_type="SedeParseError" if refused else None,
+        failure_message="refusing an under-reported filing history" if refused else None,
+    )
+
+
+# ------------------------------------------- refusal is never a legitimate empty
+
+
+def test_a_refused_pair_is_not_a_genuine_empty() -> None:
+    refused = _pair(refused=True)
+    assert refused.row_count == 0
+    assert refused.is_a_genuine_empty is False
+
+
+def test_a_pair_that_answered_with_no_rows_is_a_genuine_empty() -> None:
+    assert _pair(row_count=0, refused=False).is_a_genuine_empty is True
+
+
+def test_the_run_partitions_refusals_away_from_empties() -> None:
+    run = FiledHistoryOnboardingRun(
+        pairs=(
+            _pair(modelo="303", ejercicio=2025, refused=True),
+            _pair(modelo="100", ejercicio=2024, row_count=0),
+            _pair(modelo="130", ejercicio=2024, row_count=3),
+        ),
+    )
+    assert {pair.modelo for pair in run.refused_pairs} == {"303"}
+    assert {pair.modelo for pair in run.genuinely_empty_pairs} == {"100"}
+    # The refused pair appears in neither the empty set nor the captured count.
+    assert not set(run.refused_pairs) & set(run.genuinely_empty_pairs)
+
+
+# --------------------------------------------- expected-but-not-found asymmetry
+
+
+def test_the_warning_fires_for_a_profile_expected_pair_with_no_rows() -> None:
+    notice = expected_but_not_found_notice(FiledHistoryOnboardingRun(pairs=(_pair(signals=_PROFILE),)))
+    assert notice is not None
+    assert notice.severity is NoticeSeverity.WARNING
+    assert notice.code == "live.filed.pull_all.expected_but_not_found"
+    # Machine-queryable context is the contract; the message is localised prose.
+    assert notice.context is not None
+    assert notice.context["missing_count"] == "1"
+    assert notice.context["pairs"] == "303/2025"
+
+
+def test_the_warning_never_fires_for_a_register_only_pair() -> None:
+    # The register's option list may carry no information about this taxpayer, so
+    # an alert derived from its emptiness could be pure noise.
+    assert expected_but_not_found_notice(FiledHistoryOnboardingRun(pairs=(_pair(signals=_REGISTER),))) is None
+
+
+def test_the_warning_still_fires_when_a_pair_carries_both_signals() -> None:
+    # Being ALSO offered by the register must not downgrade a profile expectation.
+    notice = expected_but_not_found_notice(FiledHistoryOnboardingRun(pairs=(_pair(signals=_BOTH),)))
+    assert notice is not None
+    assert notice.severity is NoticeSeverity.WARNING
+
+
+def test_the_warning_never_fires_for_a_refused_pair() -> None:
+    """A refusal is not an answer, so it is not a missing filing either.
+
+    The pair did not report "no filings"; it failed to report at all. Naming it
+    here would tell the operator a filing is missing when nothing established
+    that, while its real failure row travels separately.
+    """
+    run = FiledHistoryOnboardingRun(pairs=(_pair(signals=_PROFILE, refused=True),))
+    assert expected_but_not_found_notice(run) is None
+
+
+def test_the_warning_stays_quiet_when_every_expected_pair_produced_rows() -> None:
+    run = FiledHistoryOnboardingRun(pairs=(_pair(signals=_PROFILE, row_count=2),))
+    assert expected_but_not_found_notice(run) is None
+
+
+def test_the_warning_names_every_missing_pair_not_just_a_count() -> None:
+    run = FiledHistoryOnboardingRun(
+        pairs=(
+            _pair(modelo="303", ejercicio=2025),
+            _pair(modelo="130", ejercicio=2024),
+            _pair(modelo="100", ejercicio=2023, signals=_REGISTER),
+        ),
+    )
+    notice = expected_but_not_found_notice(run)
+    assert notice is not None
+    assert notice.context is not None
+    named = notice.context["pairs"]
+    assert "303/2025" in named
+    assert "130/2024" in named
+    # The register-only pair is absent from the named set.
+    assert "100/2023" not in named
+    assert notice.context["missing_count"] == "2"
+
+
+# ------------------------------------------------------- the denominator note
+
+
+def test_the_note_differs_between_a_measured_run_and_an_unmeasurable_one() -> None:
+    """The two cases must not render the same sentence.
+
+    Asserted as a difference rather than on wording: the note is localised prose,
+    so matching English text here would pass or fail on the ambient locale rather
+    than on the behaviour. What matters is that a run with no taxpayer-specific
+    denominator cannot produce the same statement as one that has one.
+    """
+    register_only = FiledHistoryOnboardingRun(pairs=(_pair(signals=_REGISTER),))
+    with_profile = FiledHistoryOnboardingRun(pairs=(_pair(signals=_PROFILE),))
+    assert register_only.denominator_note
+    assert with_profile.denominator_note
+    assert register_only.denominator_note != with_profile.denominator_note
+
+
+def test_the_note_counts_profile_pairs_separately_from_register_only_pairs() -> None:
+    # The counts are interpolated identifiers rather than translated words, so
+    # they are the locale-independent part of the note.
+    run = FiledHistoryOnboardingRun(
+        pairs=(
+            _pair(modelo="303", ejercicio=2025, signals=_PROFILE),
+            _pair(modelo="100", ejercicio=2024, signals=_REGISTER),
+            _pair(modelo="130", ejercicio=2024, signals=_REGISTER),
+        ),
+    )
+    note = run.denominator_note
+    assert "1" in note
+    assert "2" in note
+
+
+def test_the_run_carries_no_completeness_ratio_field() -> None:
+    names = " ".join(FiledHistoryOnboardingRun.model_fields).casefold()
+    for token in ("percent", "fraction", "ratio", "pct", "completeness"):
+        assert token not in names
+    for name, field in FiledHistoryOnboardingRun.model_fields.items():
+        assert field.annotation is not float, f"{name} is a float; a ratio has no honest denominator here"
+
+
+def test_the_run_defaults_to_an_inconclusive_scoping_reading() -> None:
+    # Never a resolved answer, and never a default that implies one.
+    assert FiledHistoryOnboardingRun().scoping_signal is RegisterScopingSignal.INCONCLUSIVE
+
+
+def test_a_pair_nominated_by_nothing_is_refused() -> None:
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError, match="signals"):
+        FiledHistoryPairOutcome(
+            modelo="303", ejercicio=2025, signals=(), walk_attempted=True, walk_completed=True, reached_count=0
+        )
+
+
+# ------------------------- the run model's justificante unreached-evidence slot
+
+
+def test_the_run_model_holds_one_advisory_per_unreached_reason_without_merging() -> None:
+    """The taxonomy has members, and the run model keeps one advisory per member.
+
+    Both halves are about the model, not about any operator. The reasons exist
+    because a capture could extract casillas and report zero justificante evidence
+    with no visible cause -- one log line and a ``None`` for every different
+    failure -- so the advisory slot is only worth carrying if it can hold the
+    distinction rather than collapsing it. That is what is asserted: the enum is
+    non-empty, and a run constructed with one advisory per member reads back the
+    full set with nothing merged.
+
+    It proves NOTHING about anything reaching an operator: the advisories are
+    written onto the model and read back off the same object, so deleting the
+    transport that forwards them would leave this green. The forwarding itself is
+    driven at the transport boundary by the CLI relay tests.
+
+    The expected set is derived from the enum rather than hand-listed: a
+    hand-listed tuple is exactly how a newly added reason goes uncarried and
+    unnoticed.
+    """
+    from ....core.json_contract import Notice, NoticeSeverity
+    from ..filed_observation_persistence import (
+        FILED_JUSTIFICANTE_UNREACHED_NOTICE_CODE,
+        FiledJustificanteUnreachedReason,
+    )
+
+    reasons = tuple(FiledJustificanteUnreachedReason)
+    assert len(reasons) >= 6, "the reason taxonomy shrank; this test would under-cover the advisory slot"
+
+    run = FiledHistoryOnboardingRun(
+        pairs=(_pair(row_count=1),),
+        evidence_notices=tuple(
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code=FILED_JUSTIFICANTE_UNREACHED_NOTICE_CODE,
+                message=f"artefact produced no evidence ({reason.value})",
+                context={"reason": reason.value, "modelo": "130"},
+            )
+            for reason in reasons
+        ),
+    )
+
+    carried = {
+        notice.context["reason"]
+        for notice in run.evidence_notices
+        if (notice.context is not None and notice.context) and notice.code == FILED_JUSTIFICANTE_UNREACHED_NOTICE_CODE
+    }
+    assert carried == {reason.value for reason in reasons}
+    # One advisory per reason: the model merged nothing on the way in.
+    assert len(run.evidence_notices) == len(reasons)
+
+
+def test_the_run_advisory_builder_uses_a_different_code_from_the_evidence_advisories() -> None:
+    """The run's own advisory and the per-artefact ones share a channel, not an identity.
+
+    The load-bearing half runs the real ``expected_but_not_found_notice`` builder;
+    the evidence advisory it is compared against is written onto the model by this
+    test, so the comparison is about the two CODES being distinguishable and not
+    about either advisory travelling anywhere.
+    """
+    from ....core.json_contract import Notice, NoticeSeverity
+    from ..filed_observation_persistence import FILED_JUSTIFICANTE_UNREACHED_NOTICE_CODE
+
+    run = FiledHistoryOnboardingRun(
+        pairs=(_pair(signals=_PROFILE, row_count=0),),
+        evidence_notices=(
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code=FILED_JUSTIFICANTE_UNREACHED_NOTICE_CODE,
+                message="artefact produced no evidence (csv_mismatch)",
+                context={"reason": "csv_mismatch"},
+            ),
+        ),
+    )
+    missing = expected_but_not_found_notice(run)
+    assert missing is not None
+    # Different codes, so a consumer can tell an unfiled period from an unusable
+    # receipt -- two facts a single "evidence missing" notice would have merged.
+    assert missing.code != FILED_JUSTIFICANTE_UNREACHED_NOTICE_CODE
+    assert run.evidence_notices[0].code == FILED_JUSTIFICANTE_UNREACHED_NOTICE_CODE
+
+
+def test_a_run_given_no_evidence_advisories_defaults_to_carrying_none() -> None:
+    # The empty default matters: a truthy default would make every clean run look
+    # like it had an unreached artefact. It says nothing about what a transport does.
+    assert FiledHistoryOnboardingRun(pairs=(_pair(row_count=1),)).evidence_notices == ()
+
+
+def test_unattempted_expected_pair_is_neither_empty_nor_missing() -> None:
+    """A cap prevents a register answer; zero is not proof of absent filings."""
+    pair = _pair(walk_attempted=False, walk_completed=False)
+    pair.require_consistent()
+    run = FiledHistoryOnboardingRun(pairs=(pair,))
+    assert pair.is_a_genuine_empty is False
+    assert run.genuinely_empty_pairs == ()
+    assert expected_but_not_found_notice(run) is None
+
+
+def test_preview_register_rows_are_present_without_persisted_captures() -> None:
+    """Actual positive rows remain positive when the preview deliberately writes nothing."""
+    pair = FiledHistoryPairOutcome(
+        modelo="100",
+        ejercicio=2025,
+        signals=_PROFILE,
+        walk_attempted=True,
+        walk_completed=True,
+        row_count=2,
+        reached_count=2,
+        captured_count=0,
+    )
+    pair.require_consistent()
+    run = FiledHistoryOnboardingRun(pairs=(pair,), dry_run=True, reached_count=2, captured_count=0)
+    assert pair.row_count == 2
+    assert pair.is_a_genuine_empty is False
+    assert run.genuinely_empty_pairs == ()
+    assert expected_but_not_found_notice(run) is None
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"walk_attempted": False, "walk_completed": True},
+        {"walk_attempted": False, "walk_completed": False, "row_count": 1},
+        {"walk_attempted": True, "walk_completed": False, "reached_count": 1},
+        {"row_count": 1, "reached_count": 2},
+        {"row_count": 1, "reached_count": 0, "captured_count": 1},
+    ],
+    ids=[
+        "completed-without-attempt",
+        "unattempted-rows",
+        "incomplete-reached",
+        "reached-exceeds-rows",
+        "captured-exceeds-reached",
+    ],
+)
+def test_history_pair_refuses_impossible_walk_and_counter_facts(changes: dict[str, bool | int]) -> None:
+    """Malformed accounting must not become a public filing-absence claim."""
+    pair = _pair().model_copy(update=changes)
+    with pytest.raises(ValueError):
+        pair.require_consistent()

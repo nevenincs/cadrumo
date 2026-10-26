@@ -1,0 +1,20 @@
+[modelo]
+id = "309"
+tax_domain = "iva"
+cadence = "event"
+jurisdiction = "ES-AEAT"
+legal_refs = [
+    "orden-hfp-1245-2022:art-unico",
+    "orden-hac-3625-2003:apartado-1",
+    "orden-hac-3625-2003:apartado-3",
+]
+source_refs = [
+    "aeat-dr-309-2004",
+    "aeat-dr-309-2016",
+    "aeat-dr-309-2018",
+    "aeat-dr-309-2023",
+    "aeat-modelo-309-instructions",
+    "aeat-modelo-309-procedure",
+    "boe-modelo-309-2003-form",
+]
+

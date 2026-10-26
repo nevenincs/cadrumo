@@ -1,0 +1,115 @@
+[legal."orden-hac-539-2003:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-539-2003.html#a1"
+document_id = "BOE-A-2003-5304"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-5304#a1"
+published_at = 2003-03-10
+effective_from = 2003-03-11
+review_status = "agent_reviewed"
+reviewed_at = 2026-07-04
+reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2003-5304 art 1; pending operator re-stamp)"
+notes = "Orden HAC/539/2003 art 1: aprueba los diseños físicos y lógicos del modelo 186, declaración informativa de nacimientos y defunciones. Orden habilitante del modelo 186."
+required_text = [
+    "Se aprueban los diseños físicos y lógicos, modelo 186",
+    "Declaración informativa de nacimientos y defunciones",
+]
+
+[legal."orden-hac-539-2003:art-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-539-2003.html#a4"
+document_id = "BOE-A-2003-5304"
+article = "4"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-5304#a4"
+published_at = 2003-03-10
+effective_from = 2003-03-11
+review_status = "agent_reviewed"
+reviewed_at = 2026-07-04
+reviewed_by = "agent-prepared (corpus-grounded against the bundled BOE-A-2003-5304 art 4; pending operator re-stamp)"
+notes = "Orden HAC/539/2003 art 4: plazo de presentación del modelo 186. El plazo es el del mes natural siguiente a aquel al que la declaración está referida, con periodicidad mensual."
+required_text = [
+    "el del mes natural siguiente a aquel al que la declaración esté referida",
+    "con una periodicidad mensual",
+]
+
+[sources."enrolled-modelo-186-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-539-2003.html"
+sha256 = "30af0e1d0358d744027a7c550d4b3cfedaa91574f61e9cdd51a19f64741136c3"
+bytes = 1042
+retrieved_at = 2026-07-04
+published_at = 2003-03-10
+applies_from = 2003-03-11
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-5304"
+review_status = "pending_review"
+
+# The same bundled orden HTML as enrolled-modelo-186-procedure, kept as a
+# separate id because several revision and construct rows cite it by name.
+#
+# Retiered 2026-08-16: it stood at layout_authority solely to satisfy the
+# workbook-parity gate, and the layout-authority content probe correctly refused
+# it -- 1042 bytes of article text that names its annex ("que figura en el anexo
+# de esta orden") without containing it. An orden publishes its layout in the
+# ANNEX. The parity anchor now cites boe-modelo-186-anexo-i-tipo1, the BOE Anexo
+# I image that carries the real position table, so nothing needs this file to
+# pretend to be a layout authority any more. It is what it always was: an
+# approval-and-deadline excerpt.
+[sources."enrolled-modelo-186-layout"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-539-2003.html"
+sha256 = "30af0e1d0358d744027a7c550d4b3cfedaa91574f61e9cdd51a19f64741136c3"
+bytes = 1042
+retrieved_at = 2026-07-04
+published_at = 2003-03-10
+applies_from = 2003-03-11
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-5304"
+review_status = "pending_review"
+
+# The BOE consolidated text of Orden HAC/539/2003 embeds its Anexo I/II
+# "diseños físicos y lógicos" position tables as scanned PNG images rather
+# than extractable text (verified via BOE's own document viewer, 2026-08-15).
+# This is Anexo I image 1 -- "MODELO 186 (NACIMIENTOS) B.- TIPO DE REGISTRO 1:
+# REGISTRO DE DECLARANTE" -- fetched directly from BOE and read back byte-for-
+# byte before hashing. It carries the real position table this modelo's
+# export layout is grounded against: 1 TIPO DE REGISTRO (constante '1'),
+# 2-4 MODELO DECLARACIÓN (constante 'NAC' for nacimientos), 5-13 N.I.F. DEL
+# DECLARANTE, 14-53 RAZÓN SOCIAL, 54-57 EJERCICIO DE ENVÍO, 58-59 MES DE
+# ENVÍO, 60-69 NÚMERO TOTAL DE REGISTROS, 70-320 BLANCOS. No "declaración
+# complementaria/sustitutiva" field exists in this tipo-1 record (unlike the
+# 100-199 informativa family's usual 121-122 pair), confirmed directly from
+# this image -- not assumed by analogy.
+# This points at the PNG exactly as BOE serves it. It carries no text layer,
+# so the record-design reader cannot parse it and this source stays
+# unreadable -- that refusal is the true state of the evidence, not a defect
+# to route around. A derived PDF wrapper previously stood here solely so the
+# reader (which addresses .pdf/.xls/.xlsx/.xlsm) could reach the image; it was
+# a generated artefact, not an official source, and was removed. Do not
+# re-create it: transcribing the position table below requires reading the
+# image, and no file conversion turns an image into a machine-readable design.
+#
+# It is therefore registered as a form_spec, NOT a record_design. That axis
+# states what the tooling can do with the artefact, and the record-design
+# reader addresses only .pdf/.xls/.xlsx/.xlsm; declaring record_design over an
+# image asserts a parseability this file does not have and hard-fails the
+# registry load. The evidence_tier stays layout_authority because the image IS
+# the layout authority -- it simply is not machine-readable.
+[sources."boe-modelo-186-anexo-i-tipo1"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_186/files/01-186-anexo-i-tipo1-nacimientos.png"
+sha256 = "662639891a323cd1139fac3c4220a61e87ae1be25b062006ac840f71488273c6"
+bytes = 183396
+retrieved_at = 2026-08-15
+published_at = 2003-03-10
+applies_from = 2003-03-11
+source_url = "https://www.boe.es/datos/imagenes/disp/2003/63/05304_8169760_image1.png"
+review_status = "pending_review"

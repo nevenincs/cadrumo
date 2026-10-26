@@ -1,0 +1,435 @@
+import { useEffect, useRef, useState } from "react";
+import { Terminal, type ITheme } from "@xterm/xterm";
+import { FitAddon } from "@xterm/addon-fit";
+import "@xterm/xterm/css/xterm.css";
+import {
+  HostUnavailable,
+  type Host,
+  type TerminalKind,
+  type TerminalSession,
+} from "../shell/host";
+import { useStrings } from "../shell/strings";
+import { failureCode } from "../errors";
+import { terminalFont } from "../shell/terminalFont";
+import { terminalRenderer } from "../shell/terminalRenderer";
+import { EmptyState } from "@/components/ui/empty";
+
+export type TerminalStatus =
+  | { phase: "starting" }
+  | { phase: "running" }
+  | { phase: "exited"; code: number | null }
+  | { phase: "failed"; message: string }
+  | { phase: "unavailable" };
+
+export type TerminalApi = {
+  focus(): void;
+  selection(): string;
+  hasSelection(): boolean;
+  selectAll(): void;
+  clear(): void;
+  paste(text: string): void;
+};
+
+const DIM = "\x1b[2m";
+const RESET = "\x1b[0m";
+// ConPTY may pass OSC ahead of its buffered screen repaint. Keep the cover
+// until output has settled, then wait for xterm to render that buffer.
+const TUI_PAINT_SETTLE_MS = 100;
+
+type Props = {
+  host: Host;
+  kind: TerminalKind;
+  shown: boolean;
+  theme: ITheme;
+  fontSize: number;
+  label: string;
+  isShellChord: (event: KeyboardEvent) => boolean;
+  onStatus: (kind: TerminalKind, status: TerminalStatus) => void;
+  onMenu: (event: MouseEvent, kind: TerminalKind) => void;
+  onAppearanceToggle: () => void;
+  register: (kind: TerminalKind, api: TerminalApi) => void;
+  /** Render as the bottom panel's tab panel for this kind. */
+  tabPanel?: boolean;
+};
+
+export function TerminalPane({
+  host,
+  kind,
+  shown,
+  theme,
+  fontSize,
+  label,
+  isShellChord,
+  onStatus,
+  onMenu,
+  onAppearanceToggle,
+  register,
+  tabPanel,
+}: Props) {
+  const t = useStrings();
+  const container = useRef<HTMLDivElement>(null);
+  const terminal = useRef<{ term: Terminal; fit: FitAddon } | null>(null);
+  // Optional terminals acquire resources only when first opened. Once used,
+  // keep their buffer and session while hidden; the account gate owns TUI.
+  const [activated, setActivated] = useState(kind === "tui" || shown);
+  if (shown && !activated) setActivated(true);
+  // The session effect runs once per pane; everything else it reads is live.
+  const live = useRef({
+    isShellChord,
+    onStatus,
+    onMenu,
+    onAppearanceToggle,
+    register,
+    theme,
+    fontSize,
+    t,
+    shown,
+  });
+  live.current = {
+    isShellChord,
+    onStatus,
+    onMenu,
+    onAppearanceToggle,
+    register,
+    theme,
+    fontSize,
+    t,
+    shown,
+  };
+  const [unavailable, setUnavailable] = useState(false);
+  const [loading, setLoading] = useState(kind === "tui");
+  const [fontFamily, setFontFamily] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!activated) return;
+    let cancelled = false;
+    void terminalFont().then((family) => {
+      if (!cancelled) setFontFamily(family);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [activated]);
+
+  useEffect(() => {
+    if (!activated || !fontFamily) return;
+    const element = container.current;
+    if (!element) return;
+    const term = new Terminal({
+      // A blinking cursor redraws on a timer for as long as the pane has focus, which the
+      // TUI pane keeps while the window sits idle.
+      cursorBlink: false,
+      fontFamily,
+      fontSize: live.current.fontSize,
+      lineHeight: 1,
+      rescaleOverlappingGlyphs: true,
+      // The TUI's bright slots are semantic surfaces, not bold text colors.
+      drawBoldTextInBrightColors: kind !== "tui",
+      scrollback: 5000,
+      theme: live.current.theme,
+    });
+    const fit = new FitAddon();
+    term.loadAddon(fit);
+    term.open(element);
+    const disposeRenderer = terminalRenderer(term, () => {
+      if (element.clientWidth > 0 && element.clientHeight > 0) fit.fit();
+    });
+    terminal.current = { term, fit };
+    // Shell chords never reach the session; every other key belongs to it.
+    term.attachCustomKeyEventHandler(
+      (event) =>
+        !(event.type === "keydown" && live.current.isShellChord(event)),
+    );
+
+    let disposed = false;
+    let session: TerminalSession | null = null;
+    let exited = false;
+    let ready = kind !== "tui";
+    let readyReceived = false;
+    let revealAfterRender = false;
+    let revealTimer = 0;
+    let mouseTracking = false;
+    let queue = Promise.resolve();
+    let openingInput: Uint8Array[] = [];
+    const clearOpeningInput = () => {
+      for (const bytes of openingInput) bytes.fill(0);
+      openingInput = [];
+    };
+    const status = (next: TerminalStatus) => {
+      if (disposed) return;
+      if (next.phase === "exited" || next.phase === "failed") {
+        window.clearTimeout(revealTimer);
+        readyReceived = false;
+        revealAfterRender = false;
+        ready = true;
+        setLoading(false);
+      }
+      live.current.onStatus(kind, next);
+    };
+    const settlePresentation = () => {
+      if (!readyReceived || ready || disposed || exited) return;
+      revealAfterRender = false;
+      window.clearTimeout(revealTimer);
+      revealTimer = window.setTimeout(() => {
+        revealAfterRender = true;
+        term.refresh(0, term.rows - 1);
+      }, TUI_PAINT_SETTLE_MS);
+    };
+
+    // Input is queued in order and never dropped: the host's write queue
+    // applies backpressure, so even a very large paste arrives whole.
+    const send = (bytes: Uint8Array) => {
+      const target = session;
+      if (disposed || exited) return;
+      if (!target) {
+        // ConPTY can request the cursor position before terminal_open returns.
+        // Keep xterm's reply until the session can accept it, or Windows may
+        // leave the child waiting for console initialization indefinitely.
+        openingInput.push(bytes);
+        return;
+      }
+      queue = queue
+        .then(() => target.write(bytes))
+        .catch((error: unknown) =>
+          status({ phase: "failed", message: failureCode(error) }),
+        );
+    };
+
+    const start = () => {
+      clearOpeningInput();
+      exited = false;
+      ready = kind !== "tui";
+      readyReceived = false;
+      window.clearTimeout(revealTimer);
+      revealAfterRender = false;
+      setLoading(!ready);
+      term.reset();
+      status({ phase: "starting" });
+      host
+        .openTerminal(kind, { cols: term.cols, rows: term.rows }, (event) => {
+          if (disposed) return;
+          if (event.type === "data") {
+            // Acknowledge only what xterm has drawn: the host pauses the PTY
+            // instead of dropping output when the view falls behind.
+            term.write(event.bytes, () => {
+              event.drawn();
+              settlePresentation();
+            });
+          } else if (event.type === "started") {
+            // A spawned process may still be resuming sign-in or composing
+            // its first screen. Only the TUI's drawn readiness reveals it.
+            if (kind !== "tui") status({ phase: "running" });
+          } else if (event.type === "exited") {
+            clearOpeningInput();
+            session = null;
+            exited = true;
+            mouseTracking = false;
+            term.write(
+              `\r\n${DIM}${live.current.t("desktop.session.exit_line", { code: event.code ?? "?" })}${RESET}\r\n`,
+            );
+            status({ phase: "exited", code: event.code });
+          } else {
+            clearOpeningInput();
+            session = null;
+            exited = true;
+            term.write(
+              `\r\n${DIM}${live.current.t("desktop.session.failed", { reason: event.message })}${RESET}\r\n`,
+            );
+            status({ phase: "failed", message: event.message });
+          }
+        })
+        .then((opened) => {
+          if (disposed || exited) {
+            clearOpeningInput();
+            void opened.close();
+            return;
+          }
+          session = opened;
+          const pending = openingInput;
+          openingInput = [];
+          for (const bytes of pending) send(bytes);
+          void opened.resize(term.cols, term.rows);
+        })
+        .catch((error: unknown) => {
+          clearOpeningInput();
+          if (error instanceof HostUnavailable) {
+            setUnavailable(true);
+            status({ phase: "unavailable" });
+          } else {
+            exited = true;
+            status({ phase: "failed", message: failureCode(error) });
+          }
+        });
+    };
+
+    const encoder = new TextEncoder();
+    const input = term.onData((data) => {
+      if (exited && data === "\r") start();
+      else send(encoder.encode(data));
+    });
+    const binary = term.onBinary((data) =>
+      send(Uint8Array.from(data, (char) => char.charCodeAt(0))),
+    );
+    // Applications that enable mouse reporting own plain right-click.
+    const modes = term.parser.registerCsiHandler(
+      { prefix: "?", final: "h" },
+      (params) => {
+        if (params.some((p) => p === 1000 || p === 1002 || p === 1003))
+          mouseTracking = true;
+        return false;
+      },
+    );
+    const modesOff = term.parser.registerCsiHandler(
+      { prefix: "?", final: "l" },
+      (params) => {
+        if (params.some((p) => p === 1000 || p === 1002 || p === 1003))
+          mouseTracking = false;
+        return false;
+      },
+    );
+    const appearance = term.parser.registerOscHandler(777, (data) => {
+      if (kind !== "tui") return false;
+      if (data === "cadrumo;appearance;toggle") {
+        live.current.onAppearanceToggle();
+        return true;
+      }
+      if (data === "cadrumo;presentation;loading") {
+        window.clearTimeout(revealTimer);
+        readyReceived = false;
+        revealAfterRender = false;
+        ready = false;
+        term.blur();
+        setLoading(true);
+        status({ phase: "starting" });
+        return true;
+      }
+      if (data === "cadrumo;presentation;ready") {
+        readyReceived = true;
+        return true;
+      }
+      return false;
+    });
+    const rendered = term.onRender(() => {
+      if (!revealAfterRender || disposed || exited) return;
+      revealAfterRender = false;
+      ready = true;
+      setLoading(false);
+      status({ phase: "running" });
+    });
+    const resized = term.onResize(
+      ({ cols, rows }) => void session?.resize(cols, rows),
+    );
+
+    const menu = (event: MouseEvent) => {
+      if (mouseTracking && !event.shiftKey) return;
+      event.preventDefault();
+      live.current.onMenu(event, kind);
+    };
+    element.addEventListener("contextmenu", menu);
+
+    live.current.register(kind, {
+      focus: () => {
+        if (ready && live.current.shown && element.offsetParent !== null)
+          term.focus();
+      },
+      selection: () => term.getSelection(),
+      hasSelection: () => term.hasSelection(),
+      selectAll: () => term.selectAll(),
+      clear: () => term.clear(),
+      paste: (text) => {
+        if (ready) term.paste(text);
+      },
+    });
+
+    let frame = 0;
+    const observer = new ResizeObserver(() => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        if (element.clientWidth > 0 && element.clientHeight > 0) fit.fit();
+      });
+    });
+    observer.observe(element);
+    if (element.clientWidth > 0 && element.clientHeight > 0) fit.fit();
+    start();
+
+    return () => {
+      disposed = true;
+      window.clearTimeout(revealTimer);
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+      element.removeEventListener("contextmenu", menu);
+      input.dispose();
+      clearOpeningInput();
+      binary.dispose();
+      modes.dispose();
+      modesOff.dispose();
+      appearance.dispose();
+      rendered.dispose();
+      resized.dispose();
+      // Close at once: closing stops any write still waiting on the host's
+      // queue, so it cannot hold the session open.
+      void session?.close().catch(() => undefined);
+      disposeRenderer();
+      term.dispose();
+      terminal.current = null;
+    };
+  }, [host, kind, activated, fontFamily]);
+
+  useEffect(() => {
+    if (terminal.current) terminal.current.term.options.theme = theme;
+  }, [theme]);
+
+  useEffect(() => {
+    const current = terminal.current;
+    if (!current) return;
+    current.term.options.fontSize = fontSize;
+    const frame = requestAnimationFrame(() => {
+      const element = container.current;
+      if (element && element.clientWidth > 0 && element.clientHeight > 0)
+        current.fit.fit();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [fontSize]);
+
+  return (
+    <div
+      className="relative min-h-0 flex-1"
+      hidden={!shown}
+      style={{ background: theme.background }}
+      aria-label={label}
+      data-terminal={kind}
+      aria-busy={loading && !unavailable}
+      // Named, so it needs a role: the TUI's frame is a group, a panel
+      // terminal the tab panel of its tab.
+      role={tabPanel ? "tabpanel" : "group"}
+      id={tabPanel ? `panel-${kind}` : undefined}
+      aria-labelledby={tabPanel ? `tab-${kind}` : undefined}
+    >
+      {/* Without a host there is no session to show: keep the terminal's
+          size for fitting but draw only the note, not an idle cursor. */}
+      <div
+        className="terminal-host absolute inset-y-1.5 right-1 left-3"
+        ref={container}
+        style={unavailable || loading ? { visibility: "hidden" } : undefined}
+        inert={unavailable || loading}
+      />
+      {loading && !unavailable && (
+        <EmptyState
+          role="status"
+          className="absolute inset-0"
+          busy
+          description={t("desktop.startup.workspace")}
+        />
+      )}
+      {unavailable && (
+        <EmptyState
+          role="status"
+          className="absolute inset-0"
+          icon="unplug"
+          descriptionClassName="terminal-note"
+          description={t("desktop.host.unavailable")}
+        />
+      )}
+    </div>
+  );
+}

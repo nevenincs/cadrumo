@@ -1,0 +1,13 @@
+
+[[revisions.2023.casillas]]
+id = "perc.ceuta-melilla"
+number = "188"
+segmento = "perceptor"
+data_type = "integer"
+continuidad_id = "capital-ajeno-perceptor-deduccion-territorial"
+semantic_role = "capital_ajeno_perceptor_deduccion_territorial"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "AEAT Modelo 194 type 2 position 188 is reserved BLANCOS in the 2019 design and DEDUCCION CEUTA O MELILLA / ISLA DE LA PALMA in the 2023 design (Orden HFP/1284/2023 article 6)."
+section = ["perceptores"]
+legal_refs = ["orden-1999-11-18:apartado-cuarto", "ley-35-2006:art-99"]
+source_refs = ["aeat-dr-194-2023"]

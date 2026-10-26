@@ -1,0 +1,269 @@
+[[revisions."2025".parameters]]
+id = "renta-ric-reduccion-rate-maximo"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-19-1994:art-27"]
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Reserva para Inversiones en Canarias", "rendimiento neto"]
+
+[[revisions."2025".parameters.values]]
+value = "80"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+
+[[revisions."2025".parameters]]
+id = "renta-ric-materializacion-plazo-anos"
+data_type = "decimal"
+unit = "years"
+legal_refs = ["ley-19-1994:art-27"]
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Reserva para Inversiones en Canarias", "tres años"]
+
+[[revisions."2025".parameters.values]]
+value = "3"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+
+[[revisions."2025".parameters]]
+id = "renta-ric-mantenimiento-plazo-anos"
+data_type = "decimal"
+unit = "years"
+legal_refs = ["ley-19-1994:art-27"]
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Reserva para Inversiones en Canarias", "cinco años"]
+
+[[revisions."2025".parameters.values]]
+value = "5"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+
+[[revisions."2025".parameters]]
+id = "renta-zec-tipo-gravamen-reducido"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-19-1994:art-43"]
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Zona Especial Canaria", "tipo de gravamen"]
+
+[[revisions."2025".parameters.values]]
+value = "4"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+
+[[revisions."2025".parameters]]
+id = "renta-estimacion-objetiva-indice-corrector-empresas-pequena-dimension-rate"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["orden-hac-1347-2024:art-4", "ley-35-2006:art-31"]
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["estimación objetiva", "índice corrector"]
+
+[[revisions."2025".parameters.values]]
+value = "10"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+
+[[revisions."2025".parameters]]
+id = "renta-atribucion-rentas-rate-pass-through"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-35-2006:art-87", "ley-35-2006:art-89"]
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["régimen de atribución de rentas", "atribuirán a los socios"]
+
+[[revisions."2025".parameters.values]]
+value = "100"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+# -----------------------------------------------------------------------------
+# Mínimo del contribuyente (LIRPF arts. 56 + 57 + 73).
+# The statutory baseline is 5,550 EUR per LIRPF art. 57. Autonomous
+# communities may modify the autonómica portion per LIRPF art. 73.
+# CCAA-specific 2025 uplifts (Madrid / Canarias / Galicia were
+# observed but not verifiable against the AEAT
+# part2-deducciones-autonomicas PDF — the corpus stores only the
+# binary, no plaintext for `required_text` corpus-checks). Until
+# those uplifts are extracted from the manual and properly grounded,
+# the dispatch table routes every CCAA to the statutory baseline.
+# Operators in CCAAs that legislate an uplift can override casilla
+# 0512 manually for now.
+# -----------------------------------------------------------------------------
+
+[[revisions."2025".parameters]]
+id = "renta-deduccion-madrid-nacimiento-adopcion-cuantia"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-77", "madrid-dl-1-2010:art-4"]
+source_refs = ["aeat-renta-2025-manual-deducciones-autonomicas"]
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-deducciones-autonomicas"
+required_text = ["721,70 euros por cada hijo nacido o adoptado"]
+
+[[revisions."2025".parameters.values]]
+value = "721.70"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+
+[[revisions."2025".parameters]]
+id = "renta-deduccion-madrid-nacimiento-adopcion-limite-contribuyente-individual"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-77", "madrid-dl-1-2010:art-18"]
+source_refs = ["aeat-renta-2025-manual-deducciones-autonomicas"]
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-deducciones-autonomicas"
+required_text = ["30.930 euros en tributación individual"]
+
+[[revisions."2025".parameters.values]]
+value = "30930"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+
+[[revisions."2025".parameters]]
+id = "renta-deduccion-madrid-nacimiento-adopcion-limite-contribuyente-conjunta"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-77", "madrid-dl-1-2010:art-18"]
+source_refs = ["aeat-renta-2025-manual-deducciones-autonomicas"]
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-deducciones-autonomicas"
+required_text = ["37.322,20 euros en tributación conjunta"]
+
+[[revisions."2025".parameters.values]]
+value = "37322.20"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+
+[[revisions."2025".parameters]]
+id = "renta-deduccion-madrid-nacimiento-adopcion-limite-unidad-familiar"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-77", "madrid-dl-1-2010:art-18"]
+source_refs = ["aeat-renta-2025-manual-deducciones-autonomicas"]
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-deducciones-autonomicas"
+required_text = ["61.860 euros"]
+
+[[revisions."2025".parameters.values]]
+value = "61860"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+
+# Modelo 100 Art. 58.1 LIRPF rentas ceiling conditioning the mínimo por
+# descendientes. A descendant holding rentas anuales (excluidas las exentas)
+# above this figure generates no mínimo, so the ceiling is an eligibility
+# threshold rather than an amount paid.
+# Modelo 2025 LIRPF art. 23.1.a) carry-forward window for gastos de reparacion y
+# conservacion.
+#
+# Existed only as a Python literal. It keys on the FILING PERIOD and modelo 100
+# declares a revision for every supported year, so it is authorable here without
+# the acquisition-year trap that blocks the LIVA bienes-de-inversion figures.
+#
+# The RIRPF grado-de-discapacidad threshold was authored alongside this and then
+# WITHDRAWN: it cites RIRPF art. 72, which is not present in the legal catalogue,
+# and the registry correctly refused it as an unknown legal id. Citing a
+# catalogued-but-wrong article to make it pass would be worse than leaving the
+# figure in Python, so it stays a Python constant until its provision is
+# catalogued.
+
+[[revisions."2025".parameters]]
+id = "rebeca-maritime-exemption-fraction"
+data_type = "ratio"
+unit = "ratio"
+legal_refs = ["ley-19-1994:art-75"]
+source_refs = ["boe-ley-19-1994-art-75-statutory-facts", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Está exenta el 50 por 100 de los ingresos íntegros procedentes del trabajo personal"]
+
+[[revisions."2025".parameters.values]]
+value = "0.50"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+
+[[revisions."2025".parameters]]
+id = "lirpf-art-7p-exemption-cap"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-7"]
+source_refs = ["boe-lirpf-statutory-facts", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["límite máximo de 60.100 euros anuales"]
+
+[[revisions."2025".parameters.values]]
+value = "60100"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+# Mínimo del contribuyente aplicable al GRAVAMEN AUTONÓMICO para residentes en
+# Principado de Asturias (Ley 22/2009 art. 46.1.a cede esta competencia a la comunidad).
+# La Ley del Principado 3/2025 añade el art. 2 bis y entra en vigor el 3 de diciembre de
+# 2025 sin efectos anteriores, por lo que alcanza el devengo del 31 de diciembre de 2025;
+# el manual lo lista por primera vez para 2025. Importe general; los incrementos por edad
+# de la comunidad siguen como parámetros propios.
+
+[[revisions."2025".parameters]]
+id = "renta-minimo-contribuyente-base-asturias"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["asturias-dl-2-2014:art-2-bis"]
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["6.105 euros anuales con carácter general"]
+
+[[revisions."2025".parameters.values]]
+value = "6105"
+date_axis = "filing_period"
+valid_from = 2025-12-03
+[[revisions."2025".parameters]]
+id = "renta-minimo-contribuyente-edad-65-74-asturias"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["asturias-dl-2-2014:art-2-bis"]
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["1.265 euros anuales por contribuyente mayor de 65 años"]
+
+[[revisions."2025".parameters.values]]
+value = "1265"
+date_axis = "filing_period"
+valid_from = 2025-12-03
+[[revisions."2025".parameters]]
+id = "renta-minimo-contribuyente-edad-75-asturias"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["asturias-dl-2-2014:art-2-bis"]
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["1.540 euros anuales por contribuyente mayor de 75 años"]
+
+[[revisions."2025".parameters.values]]
+value = "1540"
+date_axis = "filing_period"
+valid_from = 2025-12-03
+# 2025 IRPF activity-asset linear-amortization authority. The coefficient and
+# maximum-period tables are parallel exact-key catalogues: an absent regime,
+# method, or class is unsupported and must never fall back to a nearby row.
+

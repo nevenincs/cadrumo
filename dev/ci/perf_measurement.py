@@ -1,0 +1,451 @@
+"""Load-immune process CPU-time measurement for performance gates.
+
+The `.github` control plane's honest-perf-gate invariant requires every
+performance benchmark to ASSERT process CPU-time and to print wall-clock as an
+advisory only. The reason is measured, not theoretical: the fleet runs several
+jobs per physical machine and the workstation additionally hosts the
+developer's own agent fleet, so wall-clock on a compute-bound measurement is
+dominated by co-resident load. A bare ``python -c "import sys"`` spawn measured
+1.63-5.00 s WALL on that box while its CPU stayed at 0.08 s -- a 20x spread in
+the quantity a wall gate would bind, and a 1.4x spread in the quantity a CPU
+gate binds.
+
+This module is the single home for that measurement so no benchmark grows its
+own copy. Three shapes are covered:
+
+* **In-process** work is measured with :func:`time.process_time` directly at
+  the call site -- it is a stdlib one-liner and needs no wrapper.
+* **Subprocess** work needs :func:`timed_subprocess`, because reading a child's
+  CPU time is genuinely platform-specific: POSIX takes an ``RUSAGE_CHILDREN``
+  delta around the reaped child, while Windows needs a Job Object to aggregate
+  a process TREE (a console-script shim spawns the real interpreter as a
+  grandchild that per-process times would miss entirely).
+* **A call that spawns its own children**, such as a transport that runs a
+  command process per call, needs :func:`process_tree_cpu`: its own
+  ``process_time`` reads near zero while the child does the work.
+
+Caveat stated honestly: CPU-time excludes wait-time, but SMT and cache
+contention still inflate it. The measured inflation on the workstation is
+~1.64x (a steady-state calculation measuring 1.97 CPU-s quiet and 3.23 CPU-s
+under full co-resident load), so ceilings derived from a baseline must carry
+that margin rather than pretending CPU-time is perfectly load-invariant.
+
+That same exclusion of wait-time is a HOLE as well as a virtue, which is why
+:func:`wall_advisory_message` also lives here. A test blocked on a wedged
+network mount burns almost no CPU, so converting a gate to CPU-time removes
+the only instrument that could ever notice it stalling. A conversion keeps its
+wall threshold as a non-failing advisory rather than deleting it, and this
+module owns that emission for the same reason it owns the measurement. One gate
+emits the advisory today, so nothing has drifted yet; the emission lives here so
+the second converted gate inherits this convention instead of inventing its own.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import ctypes
+import subprocess
+import sys
+import time
+import warnings
+from collections.abc import Generator, Mapping, Sequence
+from contextlib import contextmanager
+from dataclasses import dataclass
+from functools import cache
+from pathlib import Path
+from typing import Any, Final
+
+from dev._paths import UTF_8
+
+_UTF_8: Final[str] = UTF_8
+
+#: Measured SMT/cache-contention inflation of CPU-time on the shared
+#: workstation (3.23 CPU-s loaded against 1.97 CPU-s quiet for one
+#: steady-state calculation). A ceiling derived from a baseline measurement
+#: multiplies by this rather than assuming CPU-time is perfectly load-invariant.
+CPU_CONTENTION_MARGIN: Final[float] = 1.64
+
+
+class WallClockAdvisory(UserWarning):
+    """A CPU-gated benchmark's WALL time looks wedged rather than merely loaded.
+
+    Never a failure. It is raised on the warnings channel rather than printed
+    because the channel is the only one that reaches a reader on a PASSING
+    test: the broad serial pass runs ``pytest -q ... -n0`` with no ``-s``, so
+    fd-level capture swallows every ``print`` from a test that passes, which is
+    exactly the run this signal exists for. pytest renders its warnings summary
+    by default, including under ``-q``.
+    """
+
+
+def wall_advisory_message(
+    label: str,
+    *,
+    wall_seconds: float,
+    cpu_seconds: float,
+    wall_advisory_seconds: float,
+    hang_wall_to_cpu_ratio: float,
+) -> str | None:
+    """Return a wedge advisory for ``label``, or ``None`` when nothing is wrong.
+
+    Moving a perf gate from wall-clock to CPU-time is the correct instrument
+    choice for the co-residency this fleet has (see the module docstring), but
+    a straight conversion DELETES the only bound that can see a share hang: a
+    test blocked on a wedged network mount burns almost no CPU, so a CPU
+    ceiling can never fire on it however long it stalls. This keeps the wall
+    threshold as the trigger and hands the reader both clocks.
+
+    The ratio is what stops the retained bound decaying into noise. On a box
+    this loaded the wall threshold alone is crossed constantly by tests that
+    are merely queued behind co-resident work, and an advisory that fires on
+    every run is one every reader learns to skip. Load inflates BOTH clocks;
+    a block inflates only wall. So the advisory needs both conditions, and
+    ``hang_wall_to_cpu_ratio`` is per-site rather than global because the
+    ratio a healthy site runs at depends on how much of its wall time is
+    spawn-wait: an in-process aggregation sits near 1, while a subprocess cold
+    start pays process creation the SUT is not answerable for.
+
+    Args:
+        label: Benchmark identity, quoted verbatim into the advisory.
+        wall_seconds: Measured wall-clock seconds (the advisory's trigger).
+        cpu_seconds: Measured process CPU seconds (the asserted gate's figure).
+        wall_advisory_seconds: Retained wall threshold; at or below it the site
+            is healthy by definition and nothing is emitted.
+        hang_wall_to_cpu_ratio: Wall-to-CPU ratio above which a crossing is
+            wedge-shaped rather than load-shaped, derived per site from that
+            site's own measured loaded maximum.
+
+    Returns:
+        The advisory text when it fired, so a caller can also route it
+        somewhere durable; ``None`` when it did not.
+    """
+    if wall_seconds <= wall_advisory_seconds:
+        return None
+    # A zero-CPU sample is the wedge in its purest form, not a division to
+    # guard around: it is what a fully-blocked test measures.
+    ratio = float("inf") if cpu_seconds <= 0.0 else wall_seconds / cpu_seconds
+    if ratio <= hang_wall_to_cpu_ratio:
+        return None
+
+    message = (
+        f"{label}: wall {wall_seconds:.3f}s crossed its {wall_advisory_seconds:.3f}s advisory "
+        f"threshold on {cpu_seconds:.3f} CPU-s (ratio {ratio:.1f}x, wedge above "
+        f"{hang_wall_to_cpu_ratio:.1f}x). CPU is the asserted gate and it is unaffected, so "
+        f"this is NOT a performance regression — it is wall time spent not computing, which "
+        f"is what a blocked mount or a wedged child looks like and what a CPU ceiling can "
+        f"never see. A merely loaded box inflates both clocks and does not reach here."
+    )
+    warnings.warn(message, WallClockAdvisory, stacklevel=2)
+    return message
+
+
+class ProcessCpuMeasurementError(RuntimeError):
+    """Raised when a child process's CPU time cannot be measured."""
+
+
+_JOB_ACCOUNTING_UNAVAILABLE = "Job Object CPU accounting is only available on Windows"
+
+
+class WindowsJobCpuAccounting:
+    """Total CPU seconds of a child AND its descendants via a Job Object.
+
+    A console-script launcher on Windows is an exe shim that spawns the real
+    python interpreter as a grandchild, so per-process ``GetProcessTimes``
+    reads only the shim (~0 CPU). A Job Object aggregates the whole tree: the
+    shim is assigned right after spawn, its descendants inherit membership, and
+    the job's basic accounting keeps the FINAL user + kernel totals (100 ns
+    units) queryable after every member exits.
+    """
+
+    #: ``WinDLL`` is a ``CDLL`` subclass, and only ``CDLL`` is nameable in an
+    #: annotation on every platform -- an annotation is not a runtime branch,
+    #: so no guard can narrow it.
+    _kernel32: ctypes.CDLL
+    _job: Any
+
+    def __init__(self) -> None:
+        """Create the job object every measured child will be assigned to.
+
+        Every method here opens with ``if sys.platform == "win32"`` rather than
+        relying on the caller's dispatch: that positive block is the only guard
+        shape each checker this project runs narrows on, so the ``ctypes``
+        Windows API resolves when the tree is analysed for Linux or macOS.
+        """
+        if sys.platform == "win32":
+            self._kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+            self._job = self._kernel32.CreateJobObjectW(None, None)
+            if not self._job:
+                raise ProcessCpuMeasurementError(f"CreateJobObject failed (error {ctypes.get_last_error()})")
+            return
+        raise ProcessCpuMeasurementError(_JOB_ACCOUNTING_UNAVAILABLE)
+
+    def assign(self, process: Any) -> None:
+        """Enrol a live child (and, by inheritance, its descendants) in the job."""
+        if sys.platform == "win32":
+            # The private Popen handle is the point: assignment must target the
+            # live child before it spawns the interpreter grandchild.
+            if not self._kernel32.AssignProcessToJobObject(self._job, int(process._handle)):
+                raise ProcessCpuMeasurementError(
+                    f"AssignProcessToJobObject failed for pid {process.pid} (error {ctypes.get_last_error()})",
+                )
+            return
+        raise ProcessCpuMeasurementError(_JOB_ACCOUNTING_UNAVAILABLE)
+
+    def cpu_seconds(self) -> float:
+        """Return the job's total user + kernel CPU seconds across every member."""
+        if sys.platform == "win32":
+
+            class _JobBasicAccounting(ctypes.Structure):
+                _fields_ = (
+                    ("TotalUserTime", ctypes.c_longlong),
+                    ("TotalKernelTime", ctypes.c_longlong),
+                    ("ThisPeriodTotalUserTime", ctypes.c_longlong),
+                    ("ThisPeriodTotalKernelTime", ctypes.c_longlong),
+                    ("TotalPageFaultCount", ctypes.c_uint32),
+                    ("TotalProcesses", ctypes.c_uint32),
+                    ("ActiveProcesses", ctypes.c_uint32),
+                    ("TotalTerminatedProcesses", ctypes.c_uint32),
+                )
+
+            accounting = _JobBasicAccounting()
+            job_object_basic_accounting_information = 1
+            ok = self._kernel32.QueryInformationJobObject(
+                self._job,
+                job_object_basic_accounting_information,
+                ctypes.byref(accounting),
+                ctypes.sizeof(accounting),
+                None,
+            )
+            if not ok:
+                raise ProcessCpuMeasurementError(
+                    f"QueryInformationJobObject failed (error {ctypes.get_last_error()})",
+                )
+            total_100ns = int(accounting.TotalUserTime) + int(accounting.TotalKernelTime)
+            return total_100ns / 10_000_000
+        raise ProcessCpuMeasurementError(_JOB_ACCOUNTING_UNAVAILABLE)
+
+    def assign_current_process(self) -> None:
+        """Enrol this process, so every child it spawns afterwards joins the job.
+
+        The job carries no limits, so membership changes nothing but the
+        accounting; a child that opens a job of its own nests inside this one.
+        """
+        if sys.platform == "win32":
+            current = self._kernel32.GetCurrentProcess
+            current.restype = ctypes.c_void_p
+            if not self._kernel32.AssignProcessToJobObject(self._job, ctypes.c_void_p(current())):
+                raise ProcessCpuMeasurementError(
+                    f"AssignProcessToJobObject failed for this process (error {ctypes.get_last_error()})",
+                )
+            return
+        raise ProcessCpuMeasurementError(_JOB_ACCOUNTING_UNAVAILABLE)
+
+    def close(self) -> None:
+        """Release the job handle."""
+        self._kernel32.CloseHandle(self._job)
+
+
+@dataclass
+class ProcessTreeCpu:
+    """CPU spent by this process and by the children it reaped during one call.
+
+    Filled in when the :func:`process_tree_cpu` block exits.
+    """
+
+    wall_seconds: float = 0.0
+    own_cpu_seconds: float = 0.0
+    child_cpu_seconds: float = 0.0
+
+    @property
+    def cpu_seconds(self) -> float:
+        """Return the whole tree's CPU, the figure a gate binds."""
+        return self.own_cpu_seconds + self.child_cpu_seconds
+
+
+@cache
+def _current_process_job() -> WindowsJobCpuAccounting:
+    """Return the job this process joined for tree accounting, joining it on first use.
+
+    A process can join a job but never leave it, so it is joined once.
+    """
+    job = WindowsJobCpuAccounting()
+    job.assign_current_process()
+    return job
+
+
+def _reaped_child_cpu_seconds() -> float:
+    """Return the cumulative CPU of every child this process has reaped (POSIX)."""
+    if sys.platform != "win32":
+        import resource
+
+        usage = resource.getrusage(resource.RUSAGE_CHILDREN)
+        return usage.ru_utime + usage.ru_stime
+    raise ProcessCpuMeasurementError("reaped-child CPU accounting is only available on POSIX")
+
+
+@contextmanager
+def process_tree_cpu() -> Generator[ProcessTreeCpu]:
+    """Measure a block's own CPU plus the CPU of every child it runs to completion.
+
+    ``time.process_time`` alone reads only this process, so a call that hands
+    its work to a child process measures near zero however expensive the child
+    is. POSIX adds the ``RUSAGE_CHILDREN`` delta, which covers every child the
+    block waited for; Windows reads the delta of a Job Object this process has
+    joined, whose members include every child spawned since. A child still
+    running when the block exits is not counted on POSIX, so the measured call
+    must wait for its children, as a command runner does.
+    """
+    measured = ProcessTreeCpu()
+    if sys.platform == "win32":
+        job = _current_process_job()
+        tree_started = job.cpu_seconds()
+    else:
+        tree_started = _reaped_child_cpu_seconds()
+    own_started = time.process_time()
+    started = time.monotonic()
+    try:
+        yield measured
+    finally:
+        measured.wall_seconds = time.monotonic() - started
+        measured.own_cpu_seconds = time.process_time() - own_started
+        if sys.platform == "win32":
+            # The job total includes this process, so its own share comes off.
+            tree = job.cpu_seconds() - tree_started
+            measured.child_cpu_seconds = max(0.0, tree - measured.own_cpu_seconds)
+        else:
+            measured.child_cpu_seconds = _reaped_child_cpu_seconds() - tree_started
+
+
+@dataclass(frozen=True)
+class SubprocessTiming:
+    """One timed child run: CPU seconds gate, wall seconds are advisory."""
+
+    wall_seconds: float
+    cpu_seconds: float
+    returncode: int
+    stdout: str
+    stderr: str
+
+
+async def _communicate_child(
+    argv: Sequence[str],
+    *,
+    env: Mapping[str, str] | None,
+    cwd: str | None,
+    timeout_s: float,
+    input_text: str | None = None,
+    accounting: WindowsJobCpuAccounting | None = None,
+) -> tuple[str, str, int]:
+    """Spawn an explicit child, optionally enrolling it in Windows accounting.
+
+    Without ``input_text`` the child inherits this process's stdin, exactly as
+    before the channel existed; with it, the text is the child's whole stdin.
+    """
+    process = await asyncio.create_subprocess_exec(
+        *argv,
+        cwd=cwd,
+        env=env,
+        stdin=None if input_text is None else asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    if accounting is not None:
+        transport = getattr(process, "_transport", None)
+        get_extra_info = getattr(transport, "get_extra_info", None)
+        if not callable(get_extra_info):
+            process.kill()
+            await process.communicate()
+            raise ProcessCpuMeasurementError("asyncio did not expose the child transport")
+        raw_process = get_extra_info("subprocess")
+        if raw_process is None:
+            process.kill()
+            await process.communicate()
+            raise ProcessCpuMeasurementError("asyncio did not expose the Windows child handle")
+        accounting.assign(raw_process)
+    stdin_bytes = None if input_text is None else input_text.encode(_UTF_8)
+    try:
+        stdout, stderr = await asyncio.wait_for(process.communicate(stdin_bytes), timeout=timeout_s)
+    except TimeoutError as error:
+        process.kill()
+        await process.communicate()
+        raise subprocess.TimeoutExpired(list(argv), timeout_s) from error
+    returncode = process.returncode
+    if returncode is None:
+        raise ProcessCpuMeasurementError("child exited without a return code")
+    return (
+        stdout.decode(_UTF_8, errors="strict"),
+        stderr.decode(_UTF_8, errors="strict"),
+        returncode,
+    )
+
+
+def timed_subprocess(
+    argv: Sequence[str],
+    *,
+    env: Mapping[str, str] | None = None,
+    cwd: Path | None = None,
+    timeout_s: float,
+    input_text: str | None = None,
+) -> SubprocessTiming:
+    """Run one child and return its wall time, TREE CPU time, and captured output.
+
+    CPU seconds is the load-immune figure a perf gate binds. POSIX reads the
+    ``RUSAGE_CHILDREN`` delta around the reaped child; Windows aggregates the
+    child and every descendant through a :class:`WindowsJobCpuAccounting` job,
+    which stays queryable after the members exit.
+
+    ``input_text`` is written to the child's stdin and then closed, which is
+    how a product command receives a machine secret; omitted, the child
+    inherits this process's stdin.
+
+    The return code is REPORTED, never raised on: a benchmark and a structural
+    gate want different failure vocabulary for a non-zero child, so that choice
+    stays with the caller.
+    """
+    argv_list = [str(part) for part in argv]
+    run_env = None if env is None else dict(env)
+    run_cwd = None if cwd is None else str(cwd)
+
+    if sys.platform == "win32":
+        accounting = WindowsJobCpuAccounting()
+        try:
+            started = time.monotonic()
+            stdout, stderr, returncode = asyncio.run(
+                _communicate_child(
+                    argv_list,
+                    env=run_env,
+                    cwd=run_cwd,
+                    timeout_s=timeout_s,
+                    input_text=input_text,
+                    accounting=accounting,
+                )
+            )
+            elapsed = time.monotonic() - started
+            cpu_seconds = accounting.cpu_seconds()
+        finally:
+            accounting.close()
+    else:
+        import resource
+
+        before = resource.getrusage(resource.RUSAGE_CHILDREN)
+        started = time.monotonic()
+        stdout, stderr, returncode = asyncio.run(
+            _communicate_child(
+                argv_list,
+                env=run_env,
+                cwd=run_cwd,
+                timeout_s=timeout_s,
+                input_text=input_text,
+            )
+        )
+        elapsed = time.monotonic() - started
+        after = resource.getrusage(resource.RUSAGE_CHILDREN)
+        cpu_seconds = (after.ru_utime - before.ru_utime) + (after.ru_stime - before.ru_stime)
+
+    return SubprocessTiming(
+        wall_seconds=elapsed,
+        cpu_seconds=cpu_seconds,
+        returncode=returncode,
+        stdout=stdout,
+        stderr=stderr,
+    )

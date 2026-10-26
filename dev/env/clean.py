@@ -1,0 +1,811 @@
+"""The repository's one reclamation command, over three families with three owners.
+
+Dispatches the worktree's own ignored output (this module), release-build
+scratch under ``var/`` (:mod:`dev.packaging.build_scratch_reclaim`), and the
+temp directory's pytest, session and test-run storage
+(:mod:`dev.env.temp_reaper`). Each family keeps its rules where they are
+reasoned about; this file decides only which sections run and in what order.
+
+Version-control metadata is protected and never inspected or modified.
+
+The command always exits 0. It is a maintenance report whose removals are a
+side effect, not a gate: there is no state of a developer's worktree that this
+should turn a build red over. Report by default, act under ``--apply``, one
+section at a time under ``--only``.
+
+Run ``just clean`` for the report and ``just clean-apply`` to act on it.
+
+The worktree section, which is what the rest of this module implements, sorts
+ignored paths into three populations that are not interchangeable:
+
+**Regenerable output.** ``__pycache__``, the tool caches, every ``cache`` and
+``.cache`` tree, ``build/``, ``dist/``, the generated documentation trees, and
+the ``.logs/`` scratch root. Every byte of it is reproduced by a command that
+already exists, nothing reads it across a run boundary, and deleting it costs a
+rebuild. This is the only family this module removes.
+
+**State an operator would lose.** ``.env`` and everything under ``env/``, the
+``.venv``, ``secrets/``, ``cadrumo-storage/``, the ``.vault`` and ``.vaultspec``
+trees. Most of it is ignored by git for exactly
+the reason it must survive a clean: it is local, it is not reproducible from
+the repository, and some of it is live key material and taxpayer financial
+data. This family is protected by name and is never walked, never sized and
+never removed -- not even when a cache directory sits inside it.
+
+**Everything else that is ignored.** ``scratch/``, ``.tmp/``, ``dbg/``, the
+root-level one-shot dumps the ``.gitignore`` collects at its foot. It is
+*probably* disposable and it is *often* the biggest thing on the disk, but the
+name says "ad-hoc", not "reproducible", and an agent's half-finished capture is
+indistinguishable on disk from a finished one. This family is reported with its
+size and left alone. ``--include PATH`` promotes one entry into the removal set
+for a single run, which is how an operator says "that one, yes" without this
+module having guessed it.
+
+Files not excluded by the filesystem ignore policy are never cleanup targets.
+"""
+
+from __future__ import annotations
+
+import argparse
+import os
+import shutil
+import sys
+from dataclasses import dataclass
+from enum import Enum
+from pathlib import Path
+from typing import Final, TextIO
+
+from cadrumo.core.link_safety import is_link_like
+from dev._paths import REPO_ROOT
+from dev.packaging.build_scratch_reclaim import matching_family, report_build_scratch, report_var_scratch
+from dev.source_tree import ignored_paths
+from dev.test_runs.reaper import assess_run_directories
+
+from .temp_reaper import report_temporary_storage
+
+WORKTREE_FAMILY: Final = "worktree"
+VAR_SCRATCH_FAMILY: Final = "var-scratch"
+TEMP_FAMILY: Final = "temp"
+
+FAMILIES: Final[frozenset[str]] = frozenset({WORKTREE_FAMILY, VAR_SCRATCH_FAMILY, TEMP_FAMILY})
+"""The three reclamation families this command dispatches, each with one owner.
+
+Folded into one command because they were three commands an operator had to
+know about separately, and the accrual they bound does not respect that split:
+the biggest thing on the disk moved between ``var/`` and ``.logs/`` depending on
+what had been run that week, so a report covering one of them at a time never
+showed where the space actually went.
+
+Folded as DISPATCH rather than as a merge. Each family's rules stay in the
+module that owns them -- this file reasons about ignored worktree paths,
+:mod:`dev.packaging.build_scratch_reclaim` about registered scratch families and
+their live owners, :mod:`dev.env.temp_reaper` about session liveness and idle
+ceilings. A single set of merged rules would have to be right about all three
+kinds of evidence at once, and the one that got it wrong would delete something.
+"""
+
+BLOAT_THRESHOLD_BYTES: Final = 10 * 1000 * 1000
+"""Size at which a spared entry is called out as suspected bloat rather than listed.
+
+Not a deletion threshold -- nothing here deletes on size -- but the line
+between "an ignored file" and "the reason the volume is full". Ten megabytes is
+larger than any scratch note, any captured command output and any one-shot
+script, and smaller than every accrual family that has actually filled a disk
+in this repository.
+"""
+
+PROTECTED_SEGMENTS: Final[frozenset[str]] = frozenset(
+    {
+        ".git",
+        ".venv",
+        "venv",
+        "env",
+        "secrets",
+        "cadrumo-storage",
+        ".claude",
+        ".codex",
+        ".agents",
+        ".gemini",
+        ".agent",
+        ".idea",
+        ".vscode",
+    }
+)
+"""Directory names that stop this module at any depth, whatever they contain.
+
+Matched per path segment rather than as a root-anchored prefix. A nested
+``env/`` or ``secrets/`` holds the same thing a top-level one does, and the
+enumeration below reports whole directories, so a segment test is what makes
+the protection independent of where git happened to collapse the entry.
+
+``var`` is deliberately absent, and its absence is the corrected version of a
+mistake worth recording. It was protected here on the strength of its name and
+the ignore file's warning that a local run materialises real key material and
+real financial data. Looking inside showed something else: ``var/storage``
+holds a ``cache/`` tree of content-addressed registry pickles, a corpus-text
+extraction cache and a validation verdict -- 346 MB of pure derived output and
+not one byte of taxpayer data. The store the warning is about lives at
+``secrets/`` and ``cadrumo-storage/``, which are still protected by segment
+wherever they appear, including underneath ``var``. Guarding a name instead of
+a fact is what this module's own docstring tells its reader not to do.
+
+``.logs`` is absent for the same reason, and its removal from this set is the
+second correction of that one mistake. It was protected as state an operator
+would lose, on the strength of holding "evidence". What it actually holds is
+captured command output, downloaded BOE payloads, draft vault bodies staged on
+their way into ``.vault/``, and a cache: output of runs, written by a run and
+read back by nothing. ``.logs`` is a scratch root, the boundary is one-way --
+code may write there and must not read from there -- and a tool that spares it
+asserts a durability the tree does not have. No child of it is excepted. A
+family a run is still writing is deferred to the section that can observe that
+run's owner, which is a question about one live process rather than a claim
+about the tree.
+"""
+
+VAR_SCRATCH_OWNER: Final = "var"
+"""The mixed root whose scratch families are judged by the packaging sweep.
+
+Everything directly under ``var`` except :data:`VAR_APPLICATION_STORAGE` is
+reported by the build-scratch section instead of here. That section knows which
+names are registered scratch families and whether their owning process is still
+alive; this module knows neither, and two mechanisms printing a verdict about
+one directory is how an operator ends up trusting the wrong one.
+"""
+
+VAR_APPLICATION_STORAGE: Final = "var/storage"
+"""The dev loop's application storage root, which is not build scratch.
+
+``CADRUMO_LOCAL_STORAGE_ROOT`` is pointed here by the justfile, so this tree is
+the application's own cache and logs rather than anything the release build
+minted. It stays with the worktree section, which is what owns caches.
+"""
+
+LOGS_SCRATCH_OWNER: Final = ".logs"
+"""The repository's scratch log root, removed by this section in full.
+
+Captured stdout and stderr, downloaded BOE payloads, draft vault bodies staged
+on their way into ``.vault/``, audit-run output and a cache. Every entry is
+something a run wrote; nothing in the product or the development tooling is
+entitled to read one back, so the whole root is regenerable by definition.
+"""
+
+# `.logs` has no privileged child and no exception. Every family under it is
+# run output, reapable at any age, with no retention window anywhere in the
+# path. The ONE question a family can raise is liveness -- a run writing its
+# directory right now -- and that question is answered by observing the owning
+# pid, never by recognising a name. `LOGS_TEST_RUNS` used to sit here as a
+# name-keyed spare, and it was wrong in both directions at once: it spared
+# FINISHED test runs from this section, so `--only worktree` left them
+# indefinitely, and it protected nothing else, so a live `audit-runs` or
+# `lane-runs` directory was reaped mid-write by the branch below.
+
+BUILD_OUTPUT_ROOT: Final = "build"
+MIXED_ROOTS: Final[frozenset[str]] = frozenset(
+    {VAR_SCRATCH_OWNER, VAR_APPLICATION_STORAGE, LOGS_SCRATCH_OWNER, BUILD_OUTPUT_ROOT}
+)
+"""Ignored directories whose children are classified individually.
+
+Git collapses a wholly-ignored directory to one entry, which is normally the
+saving that makes this command affordable. It is wrong for a root that holds
+several unrelated things: ``var`` carries the release cohort's working trees,
+an operator's long-lived probe trees, and a cache, and no single verdict is
+right for all three. The packaging sweep that owns ``var`` says the same thing
+in its own words -- it is a mixed directory, so the rule cannot be keyed on the
+parent. ``.logs`` is here for the narrower version of the same reason: every
+child is reapable, but a child a run is still writing has to reach the section
+that can observe its owner, and splitting the root is what lets it.
+
+Expansion is one level per entry and recurses only while the child is itself
+named here, so this stays a short, readable list rather than a general walk of
+whatever git happened to collapse.
+"""
+
+PROTECTED_NAME_PREFIXES: Final[tuple[str, ...]] = (".env", "vault", ".vault")
+"""Name prefixes that protect a segment: the dotenv family and every vault tree.
+
+``vault`` is a prefix rather than an exact name on purpose. ``.vault``,
+``.vaultspec`` and ``.vault-scratch`` are three different things with one
+property in common -- the harness owns them, and this module has no business
+deciding what inside them is disposable.
+"""
+
+PROTECTED_SUFFIXES: Final[tuple[str, ...]] = (
+    ".key",
+    ".kdf",
+    ".pem",
+    ".p12",
+    ".pfx",
+    ".db",
+    ".sqlite3",
+    ".pypirc",
+    ".netrc",
+)
+"""File extensions that protect an entry wherever it sits.
+
+The belt to the segment list's braces. Key material and local databases are the
+two families whose accidental removal is unrecoverable rather than merely
+expensive, and both have moved between directories in this repository's
+history; keying on the name as well as the location means a move cannot quietly
+take a file out of protection.
+"""
+
+CACHE_DIRECTORY_NAMES: Final[frozenset[str]] = frozenset(
+    {
+        "cache",
+        ".cache",
+        "__pycache__",
+        "__pypackages__",
+        ".pytest_cache",
+        ".grimp_cache",
+        ".import_linter_cache",
+        ".ruff_cache",
+        ".mypy_cache",
+        ".ty_cache",
+        ".pyrefly_cache",
+        ".complexipy_cache",
+        ".hypothesis",
+        ".tox",
+        ".nox",
+        ".pytype",
+        ".pyre",
+        ".scrapy",
+        ".webassets-cache",
+        ".ipynb_checkpoints",
+        ".pdm-build",
+        "cython_debug",
+        "htmlcov",
+    }
+)
+"""Tool cache directories, matched by name at any depth.
+
+Every one is rebuilt by the tool that owns it on its next run, and none is read
+by anything else. Depth-independence is the point for ``__pycache__``, which
+appears beside every package in the tree.
+
+Bare ``cache`` and ``.cache`` are present, and their arrival reverses an earlier
+reading of this list. They were held out as too generic to act on -- both are
+also ordinary names for a directory something durable lives in -- so they earned
+a FLAG line instead of a removal. That caution cost 2.3 GB at the repository
+root and bought nothing: a directory named ``cache`` is a cache, in this tree
+and in every other, and no ``cache`` or ``.cache`` directory in this repository
+holds anything a command cannot rebuild. Generic is the wrong axis. What decides
+a removal is whether the name states a role, and these two state it as plainly
+as ``__pycache__`` does. ``.grimp_cache`` joins them by the same test, having sat
+unclaimed beside ``.import_linter_cache`` since the graph builder grew its own
+store.
+
+The protection ordering in :func:`classify` is what makes this affordable: a
+``cache`` inside ``secrets/`` or a vault tree is still spared, because
+protection is tested before reapability and neither test was loosened here.
+"""
+
+GENERATED_PATHS: Final[frozenset[str]] = frozenset(
+    {
+        "build",
+        "dist",
+        "sdist",
+        "wheels",
+        "site",
+        "target",
+        "docs/_build",
+        "docs/cli",
+        "docs/_generated",
+        "docs/locales/pot",
+        "docs/_static/cli-tree.json",
+        "docs/_static/download-latest.json",
+        "playwright-report",
+        "test-results",
+        ".playwright-mcp",
+        "var/storage/cache",
+    }
+)
+"""Build and documentation outputs, matched as exact repository-relative paths.
+
+Root-anchored where the cache names above are not, because these names are
+generic. A ``build/`` at the repository root is a packaging artefact; a
+``build/`` inside a corpus directory could be anything, and this module is not
+the thing that should find out.
+
+``var/storage/cache`` is the dev loop's own application cache, and it is here
+rather than in :data:`CACHE_DIRECTORY_NAMES` for exactly that reason: the
+justfile points ``CADRUMO_LOCAL_STORAGE_ROOT`` into the checkout, so this one
+path is derived output by construction, while a bare ``cache`` anywhere else
+still earns a report line instead of a removal.
+"""
+
+CACHE_FILE_SUFFIXES: Final[tuple[str, ...]] = (".pyc", ".pyo", ".pyd", ".pyz", ".egg-info")
+"""Compiled and packaging artefacts identified by extension alone.
+
+``.mo`` and ``.pot`` are not here even though the ignore file lists them: the
+compiled catalogues are a build product of a locale pipeline this module does
+not run, and mixing a translation artefact into a cache sweep is how a locale
+gate starts failing for a reason nobody connects to a cleanup.
+"""
+
+CACHE_FILE_NAMES: Final[frozenset[str]] = frozenset(
+    {
+        ".coverage",
+        "coverage.xml",
+        ".dmypy.json",
+        "dmypy.json",
+        "nosetests.xml",
+    }
+)
+
+SPARED_LISTING_LIMIT: Final = 12
+"""How many below-threshold spared entries are listed before the tail is summed.
+
+Only the tail is folded; every entry over :data:`BLOAT_THRESHOLD_BYTES` is
+printed whatever this says, because those are the lines the section exists for.
+"""
+
+
+def _partition_worktree_entries(entries: list[Entry]) -> tuple[list[Entry], list[Entry], list[Entry], int]:
+    """Partition worktree entries."""
+    reap = sorted((entry for entry in entries if entry.verdict is Verdict.REAP), key=lambda item: -item.total_bytes)
+    spared = sorted((entry for entry in entries if entry.verdict is Verdict.FLAG), key=lambda item: -item.total_bytes)
+    keep = [entry for entry in entries if entry.verdict is Verdict.KEEP]
+    reap_bytes = sum(entry.total_bytes for entry in reap)
+    return (reap, spared, keep, reap_bytes)
+
+
+def _print_spared_tail(rest: list[Entry], verbose: bool, stream: TextIO) -> None:
+    """Print spared tail."""
+    shown = rest if verbose else rest[:SPARED_LISTING_LIMIT]
+    for entry in shown:
+        print(f"        {_human(entry.total_bytes)}  {entry.relative}", file=stream)
+    remainder = rest[len(shown) :]
+    if remainder:
+        total = sum(entry.total_bytes for entry in remainder)
+        print(f"        ... and {len(remainder)} smaller entries, {_human(total)} (--verbose lists them)", file=stream)
+
+
+def _print_reap_families(reap: list[Entry], reap_bytes: int, applying: bool, verbose: bool, stream: TextIO) -> None:
+    """Print reap families."""
+    families = {reason: [entry for entry in reap if entry.reason == reason] for reason in {e.reason for e in reap}}
+    for reason, family in sorted(families.items(), key=lambda item: -sum(e.total_bytes for e in item[1])):
+        _print_reap_family(reason, family, verbose, stream)
+    if reap:
+        verb = "reclaimed" if applying else "reclaimable"
+        print(f"  {verb}: {_human(reap_bytes)} across {len(reap)} entries", file=stream)
+
+
+def _report_worktree(
+    repo_root: Path, selected: frozenset[str], promoted: frozenset[str], applying: bool, verbose: bool
+) -> tuple[int, list[Entry]]:
+    """Report worktree."""
+    reap_bytes = 0
+    spared: list[Entry] = []
+    if WORKTREE_FAMILY in selected:
+        entries = assess(repo_root, promoted=promoted)
+        reap_bytes, spared = _report(entries, applying=applying, verbose=verbose, stream=sys.stdout)
+        if applying:
+            reclaimed, removed = reclaim(repo_root, entries)
+            print(f"\n  removed {removed} entries, {_human(reclaimed)}", file=sys.stdout)
+    return (reap_bytes, spared)
+
+
+class Verdict(Enum):
+    """What this module has decided about one ignored entry."""
+
+    REAP = "REAP"
+    FLAG = "FLAG"
+    KEEP = "KEEP"
+
+
+@dataclass(frozen=True)
+class Entry:
+    """One ignored path, the decision made about it, and the evidence for that decision."""
+
+    relative: str
+    verdict: Verdict
+    reason: str
+    total_bytes: int = 0
+
+    @property
+    def bloated(self) -> bool:
+        """Is this a spared entry large enough to be worth an operator's attention?"""
+        return self.verdict is Verdict.FLAG and self.total_bytes >= BLOAT_THRESHOLD_BYTES
+
+
+def _protection(relative: str) -> str | None:
+    """Return why ``relative`` is protected, or ``None`` when it is not.
+
+    Every segment is tested, not just the first. Git may collapse a directory
+    at any depth, so the segment that carries the protection is not reliably the
+    one at the front of the path.
+    """
+    for segment in (part for part in relative.strip("/").split("/") if part):
+        if segment in PROTECTED_SEGMENTS:
+            return f"'{segment}' holds local state that is not reproducible from the repository"
+        if segment.startswith(PROTECTED_NAME_PREFIXES):
+            return f"'{segment}' belongs to the dotenv or vault family, which this command never touches"
+        if segment.endswith(PROTECTED_SUFFIXES):
+            return f"'{segment}' looks like key material or a local database"
+    return None
+
+
+def _reapable(relative: str) -> str | None:
+    """Return why ``relative`` is regenerable output, or ``None`` when it is not."""
+    stripped = relative.strip("/")
+    segments = [part for part in stripped.split("/") if part]
+    if not segments:
+        return None
+    if stripped in GENERATED_PATHS:
+        return "a build or documentation output regenerated by its owning command"
+    for segment in segments:
+        if segment in CACHE_DIRECTORY_NAMES:
+            return f"'{segment}' is a tool cache rebuilt on the tool's next run"
+    name = segments[-1]
+    if name.endswith(CACHE_FILE_SUFFIXES):
+        return "a compiled or packaging artefact with no source role"
+    if name in CACHE_FILE_NAMES or name.startswith(".coverage."):
+        return "a measurement artefact regenerated by the run that produced it"
+    return None
+
+
+def holds_only_cache(path: Path) -> bool:
+    """Is every file below ``path`` a tool cache or compiled artefact?
+
+    This is what turns an orphaned package directory back into a cache. Deleting
+    a module's source leaves ``fincas/__pycache__/`` and ``fincas/tests/__pycache__/``
+    behind, and git then reports the whole of ``fincas/`` as ignored -- one path
+    whose own name matches nothing in :data:`CACHE_DIRECTORY_NAMES`, so the name
+    test alone spares a directory containing nothing but ``.pyc`` files.
+
+    The answer is established by looking, not inferred from the name, which is
+    why it is allowed to promote a removal. A link anywhere below makes the
+    answer False: a link is not the thing it names, and this walk cannot speak
+    for whatever is on the other side of one.
+    """
+    if is_link_like(path) or not path.is_dir():
+        return False
+    seen = False
+    for parent, directories, files in os.walk(path):
+        location = Path(parent)
+        if location.name in CACHE_DIRECTORY_NAMES:
+            directories.clear()
+            seen = seen or bool(files)
+            continue
+        if any(is_link_like(location / name) for name in (*directories, *files)):
+            return False
+        for name in files:
+            if _reapable(name) is None:
+                return False
+            seen = True
+    return seen
+
+
+def expand(repo_root: Path, relative: str) -> list[str]:
+    """Return the entries to classify for ``relative``: itself, or its children.
+
+    A mixed root is replaced by its immediate children, and a child that is
+    itself a mixed root is replaced in turn. Everything else is returned
+    unchanged, so this costs one directory listing for the two names in
+    :data:`MIXED_ROOTS` and nothing at all for the rest of the enumeration.
+
+    A listing that cannot be read yields the parent unchanged. Failing back to
+    the collapsed entry is the outcome that spares: the parent is not reapable
+    by name, so it becomes a report line rather than a removal.
+    """
+    stripped = relative.strip("/")
+    if stripped not in MIXED_ROOTS:
+        return [relative]
+    directory = repo_root / stripped
+    if is_link_like(directory):
+        return [relative]
+    try:
+        children = sorted(entry.name for entry in directory.iterdir())
+    except OSError:
+        return [relative]
+    if not children:
+        return [relative]
+    expanded: list[str] = []
+    for name in children:
+        child = f"{stripped}/{name}"
+        expanded.extend(expand(repo_root, f"{child}/" if (directory / name).is_dir() else child))
+    return expanded
+
+
+def _live_run_count(repo_root: Path, relative: str) -> int:
+    """Return how many run directories under this ``.logs`` entry an owner is still writing.
+
+    The only question ``.logs`` can raise, and it is asked of the operating
+    system rather than of the path. :func:`assess_run_directories` resolves each
+    run's owning pid from the marker in the run's own name; a directory whose
+    owner is gone, or which wrote the completion record a run writes last, is
+    reclaimable at any age. So an entry reads as live only while a process is
+    actually inside it, and reads as reapable the moment that stops being true
+    -- including for a run family this module has never heard of.
+
+    ``relative`` is either the root itself, in which case every family below it
+    is asked, or one family. The assessor expects a family root (it scans
+    ``<date>/<run>`` beneath what it is given), so handing it the wrong depth
+    would have it read date directories as runs and spare them all; the depth is
+    therefore normalised here rather than assumed by the caller.
+    """
+    parts = relative.strip("/").split("/")
+    root = repo_root / LOGS_SCRATCH_OWNER
+    if len(parts) == 1:
+        try:
+            families = [child for child in sorted(root.iterdir()) if child.is_dir() and not child.is_symlink()]
+        except OSError:
+            return 0
+    else:
+        families = [root / parts[1]]
+    return sum(1 for family in families for verdict in assess_run_directories(family) if not verdict.reclaimable)
+
+
+def classify(repo_root: Path, relative: str, *, promoted: frozenset[str] = frozenset()) -> tuple[Verdict, str]:
+    """Decide one ignored entry, protection first.
+
+    The ordering is the whole safety property. A protected tree that happens to
+    contain a cache directory is still protected, and an operator's explicit
+    ``--include`` promotes only from FLAG -- never past a protection, because
+    the paths protection covers are the ones whose removal cannot be undone by
+    re-running a command.
+    """
+    protection = _protection(relative)
+    if protection is not None:
+        return Verdict.KEEP, protection
+    stripped = relative.strip("/")
+    if stripped.startswith(f"{VAR_SCRATCH_OWNER}/") and not stripped.startswith(VAR_APPLICATION_STORAGE):
+        return Verdict.KEEP, "release-build scratch, judged by its owning section below"
+    if stripped.startswith(f"{BUILD_OUTPUT_ROOT}/"):
+        if matching_family(Path(stripped).name) is not None:
+            return Verdict.KEEP, "registered build scratch, judged by its owning section below"
+        return Verdict.REAP, "generated build output"
+    if stripped == LOGS_SCRATCH_OWNER or stripped.startswith(f"{LOGS_SCRATCH_OWNER}/"):
+        live = _live_run_count(repo_root, stripped)
+        if live:
+            return Verdict.KEEP, f"{live} run directory(s) whose owner is still writing; reaped by their section below"
+        return Verdict.REAP, f"'{LOGS_SCRATCH_OWNER}' is scratch output that no code may read back"
+    reason = _reapable(relative)
+    if reason is not None:
+        return Verdict.REAP, reason
+    if holds_only_cache(repo_root / relative.strip("/")):
+        return Verdict.REAP, "an orphaned directory holding nothing but tool cache output"
+    if relative.strip("/") in promoted:
+        return Verdict.REAP, "promoted for this run by an explicit --include"
+    return Verdict.FLAG, "ignored, but not something this command can prove is regenerable"
+
+
+def measure(path: Path) -> int:
+    """Return the total bytes under ``path``, absorbing what cannot be read.
+
+    Under-reporting is the safe direction for every number this module prints:
+    the REAP total is a claim about what was reclaimed, and the FLAG total is an
+    argument for an operator to spend attention on something. Overstating either
+    is the failure mode worth designing against.
+
+    A link is measured as zero rather than followed. Its size is the size of a
+    tree this module is not looking at, and attributing that tree's bytes to an
+    entry here would invite a removal decision about someone else's data.
+    """
+    if is_link_like(path):
+        return 0
+    try:
+        if path.is_file():
+            return path.stat().st_size
+    except OSError:
+        return 0
+    total = 0
+    stack = [path]
+    while stack:
+        try:
+            with os.scandir(stack.pop()) as entries:
+                for entry in entries:
+                    try:
+                        # `scandir` carries the kind and the size from the
+                        # directory read itself on every platform this runs on,
+                        # so the branch below costs no syscall where `os.walk`
+                        # plus a joined `os.stat` pays for a second lookup per
+                        # file. Over the 40 GB `var/` tree that is the whole
+                        # difference between a command an operator runs and one
+                        # they learn to skip.
+                        if entry.is_dir(follow_symlinks=False):
+                            stack.append(Path(entry.path))
+                        elif entry.is_file(follow_symlinks=False):
+                            total += entry.stat(follow_symlinks=False).st_size
+                    except OSError:
+                        continue
+        except OSError:
+            continue
+    return total
+
+
+def assess(repo_root: Path, *, promoted: frozenset[str] = frozenset()) -> list[Entry]:
+    """Judge every ignored entry, deleting nothing and never walking a protected tree.
+
+    Protected entries carry no size for the same reason they carry no risk:
+    sizing them means walking ``.venv`` and ``var/storage`` on every run, and
+    that cost is what stops a maintenance command from being run at all.
+    """
+    entries: list[Entry] = []
+    enumerated = [child for relative in ignored_paths(repo_root) for child in expand(repo_root, relative)]
+    for relative in enumerated:
+        verdict, reason = classify(repo_root, relative, promoted=promoted)
+        measured = 0 if verdict is Verdict.KEEP else measure(repo_root / relative.strip("/"))
+        entries.append(Entry(relative=relative, verdict=verdict, reason=reason, total_bytes=measured))
+    return entries
+
+
+def reclaim(repo_root: Path, entries: list[Entry]) -> tuple[int, int]:
+    """Remove every REAP entry and return ``(bytes reclaimed, entries removed)``.
+
+    Best-effort per entry, on the same reasoning the temp reaper uses: a cache
+    file a live tool still holds open makes the removal fail partway, that is
+    not a state anything reads, and the next run finishes the job. A link is
+    skipped rather than removed, because removing a link is one operation and
+    removing what it points at is a different one.
+    """
+    reclaimed = 0
+    removed = 0
+    for entry in entries:
+        if entry.verdict is not Verdict.REAP:
+            continue
+        target = repo_root / entry.relative.strip("/")
+        if is_link_like(target) or not target.exists():
+            continue
+        if target.is_dir():
+            shutil.rmtree(target, ignore_errors=True)
+        else:
+            try:
+                target.unlink()
+            except OSError:
+                continue
+        if target.exists():
+            # The absorbed failure above is deliberate, but a partial removal
+            # reclaimed no known quantity and must not be counted into a total
+            # printed to the operator as 'reclaimed'.
+            continue
+        reclaimed += entry.total_bytes
+        removed += 1
+    return reclaimed, removed
+
+
+def _human(value: int) -> str:
+    """Render a byte count in the largest unit that keeps it above 1.
+
+    Fixed gigabytes read as ``0.000 GB`` for most of what this command finds,
+    and a report whose sizes are all zero is a report nobody uses to decide
+    anything.
+    """
+    for unit, scale in (("GB", 1_000_000_000), ("MB", 1_000_000), ("KB", 1_000)):
+        if value >= scale:
+            return f"{value / scale:6.1f} {unit}"
+    return f"{value:6d}  B"
+
+
+def _print_spared(spared: list[Entry], *, verbose: bool, stream: TextIO) -> None:
+    """List the spared entries: every suspected bloat, then the largest of the rest.
+
+    Bloat lines are never truncated -- they are the reason this section exists.
+    Below the threshold the population is long-tailed (one entry per abandoned
+    agent scratch directory, per stale transaction lock), and printing all of it
+    buries the lines that need a decision. ``--verbose`` prints the inventory
+    when an operator actually wants to read it.
+    """
+    bloated = [entry for entry in spared if entry.bloated]
+    rest = [entry for entry in spared if not entry.bloated]
+    for entry in bloated:
+        print(f"  BLOAT {_human(entry.total_bytes)}  {entry.relative}", file=stream)
+    _print_spared_tail(rest, verbose, stream)
+    if bloated:
+        print(
+            f"  {len(bloated)} entr{'y' if len(bloated) == 1 else 'ies'} above"
+            f" {BLOAT_THRESHOLD_BYTES // 1_000_000} MB were NOT removed:"
+            " inspect, then delete by hand or re-run with --include <path>.",
+            file=stream,
+        )
+
+
+def _report(entries: list[Entry], *, applying: bool, verbose: bool, stream: TextIO) -> tuple[int, list[Entry]]:
+    """Print the decided entries and return ``(reapable bytes, spared entries)``.
+
+    The reap side is summarised by family rather than listed. Several hundred
+    ``__pycache__`` directories are one fact about the worktree, not several
+    hundred, and a per-path listing of them pushes the spared and git sections
+    off the operator's screen.
+    """
+    reap, spared, keep, reap_bytes = _partition_worktree_entries(entries)
+
+    print("\nRegenerable build and cache output", file=stream)
+    if not reap:
+        print("  none present", file=stream)
+    _print_reap_families(reap, reap_bytes, applying, verbose, stream)
+
+    total_spared = sum(entry.total_bytes for entry in spared)
+    print(f"\nIgnored, spared, not provably regenerable: {len(spared)} entries, {_human(total_spared)}", file=stream)
+    if spared:
+        _print_spared(spared, verbose=verbose, stream=stream)
+    else:
+        print("  none", file=stream)
+
+    print(
+        f"\nProtected or owned elsewhere, never walked: {len(keep)} entries"
+        " (dotenv, vault trees, venv, secrets, agent and editor state,"
+        " plus var/ scratch reported by its own section below)",
+        file=stream,
+    )
+    return reap_bytes, spared
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Report the worktree's reclaimable output, removing it only under ``--apply``."""
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "--apply",
+        action="store_true",
+        help="remove the REAP entries; without it nothing is deleted",
+    )
+    parser.add_argument(
+        "--include",
+        action="append",
+        default=[],
+        metavar="PATH",
+        help="promote one spared entry into the removal set for this run; never overrides a protection",
+    )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="list every entry instead of summarising the reaped families and the spared tail",
+    )
+    parser.add_argument(
+        "--only",
+        choices=sorted(FAMILIES),
+        action="append",
+        default=[],
+        metavar="FAMILY",
+        help=f"run only the named section(s): {', '.join(sorted(FAMILIES))}. Repeatable; default is all three",
+    )
+    arguments = parser.parse_args(argv)
+    selected = frozenset(arguments.only) or FAMILIES
+    promoted = frozenset(path.replace("\\", "/").strip("/") for path in arguments.include)
+
+    repo_root = REPO_ROOT
+    print(f"Worktree {repo_root}", file=sys.stdout)
+    print("  Source files and local state remain outside the removal set.")
+
+    reap_bytes = 0
+    spared: list[Entry] = []
+    reap_bytes, spared = _report_worktree(repo_root, selected, promoted, arguments.apply, arguments.verbose)
+
+    if VAR_SCRATCH_FAMILY in selected:
+        report_var_scratch(
+            sys.stdout,
+            repo_root / VAR_SCRATCH_OWNER,
+            apply=arguments.apply,
+            measure=measure,
+            bloat_threshold=BLOAT_THRESHOLD_BYTES,
+            ignore_names=frozenset({Path(VAR_APPLICATION_STORAGE).name}),
+        )
+        report_build_scratch(
+            sys.stdout,
+            repo_root / BUILD_OUTPUT_ROOT,
+            apply=arguments.apply,
+            measure=measure,
+        )
+
+    if TEMP_FAMILY in selected:
+        report_temporary_storage(sys.stdout, apply=arguments.apply, verbose=arguments.verbose)
+
+    if not arguments.apply:
+        print("\nNothing was deleted; pass --apply to act on the REAP lines above.", file=sys.stdout)
+
+    if WORKTREE_FAMILY in selected and not reap_bytes and not spared:
+        print("\nClean: no regenerable output, and nothing ignored that needs a decision.", file=sys.stdout)
+    return 0
+
+
+def _print_reap_family(reason: str, family: list[Entry], verbose: bool, stream: TextIO) -> None:
+    """Print reap family."""
+    total = sum(entry.total_bytes for entry in family)
+    print(f"  REAP {_human(total)}  {len(family):4d} entries  {reason}", file=stream)
+    if verbose:
+        for entry in family:
+            print(f"                  {_human(entry.total_bytes)}  {entry.relative}", file=stream)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

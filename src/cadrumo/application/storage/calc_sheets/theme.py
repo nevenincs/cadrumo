@@ -1,0 +1,137 @@
+"""Shared visual design system for modelo workbook exports.
+
+This module is the single source of truth for the export look — the font
+family and the role→style palette consumed by the Google Sheets apply adapter.
+Centralising the design
+here is what makes uniform application structural rather than coincidental.
+The adapter imports :data:`WORKBOOK_FONT_FAMILY` and :data:`ROLE_STYLES` and
+translates the declarative :class:`RoleStyle` into its formatting API. The palette
+mirrors the calm, boxed look of the official AEAT paper modelo: a slate header
+band, light blue-grey section banners, pale-yellow operator-input boxes,
+light-grey computed/protected cells, and a green-accented final result.
+
+The colours are stored as plain ``RRGGBB`` hex; :func:`hex_to_rgb_floats`
+converts to the 0..1 channel floats the Sheets API wants.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from enum import StrEnum
+from typing import Final, Literal
+
+# A single declared monospace family. Roboto Mono is a native Google-Sheets
+# font rendered by the live Sheets transport.
+WORKBOOK_FONT_FAMILY: Final[str] = "Roboto Mono"
+FORM_FONT_FAMILY: Final[str] = "Arial"
+FORM_SHOW_GRIDLINES: Final[bool] = False
+WORKBOOK_FONT_SIZE: Final[int] = 11
+
+STYLED_RANGE_VERTICAL_ALIGN: Final[str] = "middle"
+"""Vertical alignment applied to every role-styled range.
+
+Unlike the horizontal alignment this is uniform across roles, which is why it
+belongs here rather than on :class:`RoleStyle`.
+"""
+
+# Slate brand ink used for header-band text and emphasis foregrounds.
+_SLATE: Final[str] = "1F3864"
+_WHITE: Final[str] = "FFFFFF"
+_INK: Final[str] = "1A1A1A"
+
+
+class StyleRole(StrEnum):
+    """The closed set of presentation roles a styled range can carry.
+
+    Each role maps to exactly one :class:`RoleStyle` in :data:`ROLE_STYLES`;
+    the engine tags ranges with a role and the renderer resolves the role to
+    concrete fill / font / alignment through this module.
+    """
+
+    HEADER = "header"
+    SECTION_BANNER = "section_banner"
+    INPUT = "input"
+    COMPUTED = "computed"
+    RESULT = "result"
+    TITLE = "title"
+    BODY = "body"
+    CASILLA = "casilla"
+    FORM_LABEL = "form_label"
+    FORM_SECTION = "form_section"
+    FORM_INPUT = "form_input"
+    FORM_COMPUTED = "form_computed"
+    FORM_RESULT = "form_result"
+
+
+HorizontalAlign = Literal["left", "center", "right"]
+
+
+@dataclass(frozen=True, slots=True)
+class RoleStyle:
+    """A declarative cell style independent of any rendering backend.
+
+    ``fill_hex`` / ``font_hex`` are ``RRGGBB`` (or ``None`` for "no fill" /
+    "default ink"); ``bold`` toggles weight; ``align`` is the horizontal
+    alignment; ``wrap`` requests text wrapping. Explicit row heights remain
+    owned by the shared layout, including merged fields.
+    """
+
+    fill_hex: str | None
+    font_hex: str | None
+    bold: bool
+    align: HorizontalAlign
+    wrap: bool = False
+    font_size: int = WORKBOOK_FONT_SIZE
+
+
+ROLE_STYLES: Final[dict[StyleRole, RoleStyle]] = {
+    StyleRole.CASILLA: RoleStyle(fill_hex="FFFFFF", font_hex="243746", bold=True, align="center"),
+    StyleRole.FORM_LABEL: RoleStyle(fill_hex="FFFFFF", font_hex="243746", bold=False, align="left", wrap=True),
+    StyleRole.FORM_SECTION: RoleStyle(fill_hex="EDF1F3", font_hex="243746", bold=True, align="left", wrap=True),
+    StyleRole.FORM_INPUT: RoleStyle(fill_hex="EDF5FF", font_hex="145DA0", bold=False, align="right"),
+    StyleRole.FORM_COMPUTED: RoleStyle(fill_hex="F5F6F7", font_hex="243746", bold=False, align="right"),
+    StyleRole.FORM_RESULT: RoleStyle(fill_hex="E6F2EC", font_hex="243746", bold=True, align="right"),
+    # Slate band, white bold, centred — the column-title row on every tab.
+    StyleRole.HEADER: RoleStyle(fill_hex=_SLATE, font_hex=_WHITE, bold=True, align="center"),
+    # Light blue-grey banner, slate bold — the first cell of each casilla section.
+    StyleRole.SECTION_BANNER: RoleStyle(fill_hex="D6E4F0", font_hex=_SLATE, bold=True, align="left"),
+    # Pale yellow box, right-aligned — operator fills these in.
+    StyleRole.INPUT: RoleStyle(fill_hex="FFF8E1", font_hex=_INK, bold=False, align="right"),
+    # Light grey, right-aligned — derived / protected values.
+    StyleRole.COMPUTED: RoleStyle(fill_hex="F2F2F2", font_hex=_INK, bold=False, align="right"),
+    # Green accent, slate bold — the filing result (resultado / cuota).
+    StyleRole.RESULT: RoleStyle(fill_hex="C6E0B4", font_hex=_SLATE, bold=True, align="right"),
+    # No fill, slate bold — the Guía title and other headline prose.
+    StyleRole.TITLE: RoleStyle(fill_hex=None, font_hex=_SLATE, bold=True, align="left", font_size=16),
+    # No fill, default ink, left — plain body text (concepto / refs), wrap opt-in.
+    StyleRole.BODY: RoleStyle(fill_hex=None, font_hex=None, bold=False, align="left"),
+}
+
+
+def hex_to_rgb_floats(value: str) -> dict[str, float]:
+    """Convert an ``RRGGBB`` hex string to the Sheets API ``{red,green,blue}`` floats.
+
+    Args:
+        value: A six-character ``RRGGBB`` hex colour (case-insensitive).
+
+    Returns:
+        A mapping with ``red`` / ``green`` / ``blue`` keys, each a 0..1 float.
+    """
+    cleaned = value.lstrip("#")
+    red = int(cleaned[0:2], 16) / 255.0
+    green = int(cleaned[2:4], 16) / 255.0
+    blue = int(cleaned[4:6], 16) / 255.0
+    return {"red": red, "green": green, "blue": blue}
+
+
+__all__ = [
+    "FORM_FONT_FAMILY",
+    "ROLE_STYLES",
+    "STYLED_RANGE_VERTICAL_ALIGN",
+    "WORKBOOK_FONT_FAMILY",
+    "WORKBOOK_FONT_SIZE",
+    "HorizontalAlign",
+    "RoleStyle",
+    "StyleRole",
+    "hex_to_rgb_floats",
+]

@@ -1,0 +1,71 @@
+"""Canonical semantic producer vocabulary for registry export fields."""
+
+from __future__ import annotations
+
+from enum import StrEnum
+from typing import Final
+
+from ..export_field_kind import CasillaFieldKind
+
+__all__ = [
+    "ExportComputedKey",
+    "ExportDraftAttribute",
+    "ExportSemanticPayloadAxis",
+    "export_semantic_payload_axis",
+]
+
+
+class ExportDraftAttribute(StrEnum):
+    """Closed draft values the filing renderer may project directly."""
+
+    FILING_YEAR = "filing_year"
+    PERIOD_CODE = "period_code"
+    PERIOD_START_DATE = "period_start_date"
+    PERIOD_END_DATE = "period_end_date"
+
+
+class ExportComputedKey(StrEnum):
+    """Closed export values computed by the filing renderer."""
+
+    ENVELOPE_CLOSING_TAG = "envelope_closing_tag"
+    SEPA_MARCA = "sepa_marca"
+    #: Renders the official ``C`` "página complementaria" marker on a
+    #: continuation page -- a further page of the same type carrying the
+    #: occurrences the first could not hold -- and blank on the principal page.
+    #: DR303 and DR353 state the reading outright ("se cumplimentará cuando en
+    #: el fichero van más de una página del mismo tipo"); DR131, DR232 and DR360
+    #: print the same slot on their repeating pages and declare a complementaria
+    #: in a separate campo, so the slot carries no amendment meaning.
+    CONTINUATION_PAGE_MARKER = "continuation_page_marker"
+    M303_COMPLEMENTARIA_MARKER = "m303_complementaria_marker"
+    M303_NO_ACTIVITY_MARKER = "m303_no_activity_marker"
+
+
+class ExportSemanticPayloadAxis(StrEnum):
+    """The one payload field permitted for each semantic export kind."""
+
+    CASILLA_ID = "casilla_id"
+    BINDING = "binding"
+    LITERAL = "literal"
+    PRODUCER_KEY = "producer_key"
+    PROJECTION_REF = "projection_ref"
+    DRAFT_ATTRIBUTE = "draft_attribute"
+    COMPUTED_KEY = "computed_key"
+
+
+_PAYLOAD_AXIS_BY_KIND: Final[dict[CasillaFieldKind, ExportSemanticPayloadAxis | None]] = {
+    CasillaFieldKind.CASILLA: ExportSemanticPayloadAxis.CASILLA_ID,
+    CasillaFieldKind.BINDING: ExportSemanticPayloadAxis.BINDING,
+    CasillaFieldKind.LITERAL: ExportSemanticPayloadAxis.LITERAL,
+    CasillaFieldKind.HEADER: ExportSemanticPayloadAxis.PRODUCER_KEY,
+    CasillaFieldKind.PROJECTION: ExportSemanticPayloadAxis.PROJECTION_REF,
+    CasillaFieldKind.DRAFT: ExportSemanticPayloadAxis.DRAFT_ATTRIBUTE,
+    CasillaFieldKind.COMPUTED: ExportSemanticPayloadAxis.COMPUTED_KEY,
+    CasillaFieldKind.FILLER: None,
+    CasillaFieldKind.CHECKSUM: None,
+}
+
+
+def export_semantic_payload_axis(kind: CasillaFieldKind) -> ExportSemanticPayloadAxis | None:
+    """Return the sole semantic payload axis admitted for ``kind``."""
+    return _PAYLOAD_AXIS_BY_KIND[kind]

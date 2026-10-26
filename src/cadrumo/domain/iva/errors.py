@@ -1,0 +1,70 @@
+"""Canonical domain errors for the :mod:`cadrumo.domain.iva` subpackage.
+
+Every failure mode raised by the IVA substrate inherits from
+:class:`IvaError`, which in turn inherits from
+:class:`cadrumo.core.errors.hierarchy.CadrumoError`. Downstream callers catch the base class
+when they want to treat the substrate as an opaque unit, or the specific
+subclass when they need to distinguish missing-rate from missing-category or
+corpus load failures.
+"""
+
+from __future__ import annotations
+
+from ...core.errors.hierarchy import CadrumoError
+
+
+class IvaError(CadrumoError):
+    """Base error for every :mod:`cadrumo.domain.iva` failure mode."""
+
+
+class IvaRateNotFoundError(IvaError):
+    """Raised when :func:`cadrumo.domain.iva.lookup.lookup_rate` cannot resolve a rate.
+
+    The lookup fails either because the requested member state is absent from
+    :func:`cadrumo.domain.iva.rates.load_iva_rate_table`, because no rate of the requested
+    :class:`cadrumo.domain.iva.schema.IvaRateKind` is registered for that member state,
+    or because every registered rate's effective window excludes the
+    requested date.
+    """
+
+
+class IvaCategoryNotFoundError(IvaError):
+    """Raised when a lookup against a resolved IVA catalogue misses."""
+
+
+class IvaCatalogueError(IvaError):
+    """Raised when an IVA catalogue cannot be loaded, resolved, or validated."""
+
+
+class IvaRateOverlapError(IvaError):
+    """Raised when two :class:`cadrumo.domain.iva.schema.IvaRateRecord` records share a window.
+
+    The substrate enforces that for every ``(member_state, kind)`` partition
+    of :func:`cadrumo.domain.iva.rates.load_iva_rate_table` no two records have overlapping
+    ``effective_from`` / ``effective_until`` ranges. Adding a new record that
+    violates this invariant raises this error at module import time so the
+    regression surfaces in CI rather than silently affecting
+    :func:`cadrumo.domain.iva.lookup.lookup_rate` results.
+    """
+
+
+class IvaValidationError(IvaError):
+    """Raised on invalid IVA field values.
+
+    Its canonical registered ancestry is :class:`IvaError`. Pydantic
+    validators translate this registered failure to ``ValueError`` at their
+    narrow boundary.
+    """
+
+
+class ProrrataError(IvaError):
+    """Base error for IVA prorrata calculation failures (LIVA arts. 101-103)."""
+
+
+class ProrrataInputError(ProrrataError):
+    """Raised when prorrata inputs violate domain invariants.
+
+    Its canonical registered ancestry is :class:`ProrrataError`. Pydantic
+    model validators translate this registered failure to ``ValueError`` at
+    their narrow boundary.
+    """

@@ -1,0 +1,13 @@
+[
+  {
+    "chapter_id": "cap1",
+    "title": "Campaña de la declaración del IRPF",
+    "summary": "Aspectos generales y novedades de la campaña de declaración del IRPF.",
+    "sections": [
+      {
+        "section_id": "sec1",
+        "relative_path": "structure/sections/cap1/sec1.json"
+      }
+    ]
+  }
+]

@@ -1,0 +1,41 @@
+schema_version = 1
+fragment_id = "numeric-representation"
+width_17_rules = []
+signed_composite_rules = []
+literal_numeric_rules = []
+
+[[singleton_rules]]
+rule_kind = "singleton_numeric"
+aeat_type = "Num"
+semantic_kind = "year_yyyy"
+value_policy = "four-digit-year"
+integer_digits = 4
+decimal_digits = 0
+sign_policy = "unsigned"
+allowed_values = []
+
+[singleton_rules.anchor]
+sheet = "Pág. 1"
+source_row = 15
+source_cell = "A15"
+record_identity = "Pág. 1"
+ordinal = "10"
+
+[singleton_rules.evidence]
+authority_kind = "reviewed_policy"
+decision_id = "m126-2020-row-15-year-yyyy"
+decision_statement = "The four-position Devengo ejercicio field carries the filing year."
+justification = "The selected official parser leaf names Ejercicio and spans four numeric positions; the target draft semantics are filing_year."
+
+[singleton_rules.evidence.governed_anchor]
+sheet = "Pág. 1"
+source_row = 15
+source_cell = "A15"
+record_identity = "Pág. 1"
+ordinal = "10"
+
+[design_identity]
+modelo = "126"
+design_epoch = "2020"
+source_ref = "aeat-dr-126-2020"
+source_sha256 = "50a764a112681bd979a2c76bc0749a2c5f42eb8de577bb5512bdcc6756e06ea3"

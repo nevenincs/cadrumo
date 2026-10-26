@@ -1,0 +1,27 @@
+# Terminology Handbook concept fragment.
+# Compiled by the strict loader in `dev.docs.terminology_handbook` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `dev.docs.terminology_handbook` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
+
+[concept]
+concept_id = "modelo-145"
+domain = "modelo"
+lifecycle = "draft"
+domain_refs = ["modelo:145"]
+created_at = 2026-07-30
+updated_at = 2026-07-30
+
+[language.es]
+short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Model 145, comunicació de dades personals i familiars al pagador dels rendiments del treball"
+
+[language.en]
+short_description = "Modelo 145, communication of personal and family data to the employment-income payer"
+
+[language.hu]
+short_description = "145-ös modell: a munkajövedelem kifizetőjének átadott személyes és családi adatok közlése"
+

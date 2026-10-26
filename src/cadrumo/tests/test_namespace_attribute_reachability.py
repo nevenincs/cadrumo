@@ -1,0 +1,197 @@
+"""An attribute reached through a package namespace must actually be there.
+
+A module can bind a package successfully and still fail later when it reads an
+attribute the package does not define:
+
+    from . import crypto          # still resolves -- crypto is a real package
+    ...
+    crypto.encrypt_record(...)    # AttributeError when the path runs
+
+The import is valid, the module imports cleanly, and only the attribute access
+fails at runtime. This gate resolves each relative import that binds a
+package name, collects every attribute read through that binding, and asserts
+the name is statically bound by the package initializer. Lazy export maps are
+not treated as valid namespace authority.
+
+The check is deliberately about REACHABILITY, not about whether reaching
+through a namespace is good style.
+"""
+
+from __future__ import annotations
+
+import ast
+from pathlib import Path
+
+import pytest
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+_SRC = Path(__file__).resolve().parent.parent
+
+
+def _is_package(path: Path) -> bool:
+    """Whether *path* is a package directory, matched case-sensitively.
+
+    The case check matters: this repository is developed on a case-insensitive
+    filesystem, where a class named ``Envelope`` imported beside an
+    ``envelope`` package resolves to the directory and reads as a namespace
+    binding it is not.
+    """
+    if not (path.is_dir() and (path / "__init__.py").is_file()):
+        return False
+    return path.name in {entry.name for entry in path.parent.iterdir()}
+
+
+def _resolve_relative(module_path: Path, level: int, module: str | None) -> Path:
+    base = module_path.parent
+    for _ in range(level - 1):
+        base = base.parent
+    if module is not None and module:
+        for part in module.split("."):
+            base = base / part
+    return base
+
+
+def _reachable_names(package_init: Path) -> set[str]:
+    """Names an attribute read on this package can resolve to."""
+    try:
+        tree = ast.parse(package_init.read_text(encoding="utf-8"))
+    except (OSError, SyntaxError):  # a peer's mid-edit file is not our finding
+        return set()
+    names: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef):
+            names.add(node.name)
+        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            names.add(node.target.id)
+        elif isinstance(node, ast.Assign):
+            targets = [t.id for t in node.targets if isinstance(t, ast.Name)]
+            names.update(targets)
+        elif isinstance(node, ast.ImportFrom):
+            names.update(alias.asname or alias.name for alias in node.names)
+        elif isinstance(node, ast.Import):
+            names.update((alias.asname or alias.name).split(".")[0] for alias in node.names)
+    return names
+
+
+def _unreachable_attribute_reads(root: Path = _SRC) -> dict[str, list[str]]:
+    findings: dict[str, list[str]] = {}
+    for path in sorted(root.rglob("*.py")):
+        relative = path.relative_to(root).as_posix()
+        try:
+            tree = ast.parse(path.read_text(encoding="utf-8"))
+        except SyntaxError:
+            continue
+        bound_packages: dict[str, Path] = {}
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.ImportFrom) or not node.level:
+                continue
+            target = _resolve_relative(path, node.level, node.module)
+            for alias in node.names:
+                candidate = target / alias.name
+                if _is_package(candidate):
+                    bound_packages[alias.asname or alias.name] = candidate
+        if not bound_packages:
+            continue
+        reads: dict[str, set[str]] = {}
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.value.id in bound_packages:
+                reads.setdefault(node.value.id, set()).add(node.attr)
+        for binding, attributes in reads.items():
+            package = bound_packages[binding]
+            reachable = _reachable_names(package / "__init__.py")
+            missing = sorted(
+                attribute for attribute in attributes if attribute not in reachable and not attribute.startswith("__")
+            )
+            if missing:
+                package_name = package.relative_to(root).as_posix()
+                findings.setdefault(relative, []).extend(f"{package_name}.{attribute}" for attribute in missing)
+    return findings
+
+
+def test_no_attribute_is_read_through_a_namespace_that_lacks_it() -> None:
+    """A package binding may not reach a name its namespace does not carry."""
+    findings = _unreachable_attribute_reads()
+    assert not findings, (
+        "these modules read an attribute through a package namespace that does "
+        "not expose it, which raises AttributeError only when the path runs. Test modules are scanned too: a test reaching through a retired namespace fails at collection, which is the same defect arriving one step earlier, and three such reads survived a retirement because this check used to skip them. "
+        "Import the owning submodule directly: "
+        f"{findings}"
+    )
+
+
+def _dynamic_attribute_reads() -> dict[str, list[str]]:
+    """Attributes read straight off a dynamically imported cadrumo module.
+
+    ``import_module("cadrumo.x.y").Thing`` is not an import statement, so the
+    static resolution above cannot see it and neither can a repointer that
+    rewrites import lines. This shape is what survived the contribuyente
+    retirement and broke roughly forty tests: the module still resolved, and
+    only the attribute was gone.
+
+    Only literal targets are checked. A computed module name is a dispatch
+    mechanism whose targets are not knowable here, and pretending otherwise
+    would make this check lie about its coverage.
+    """
+    findings: dict[str, list[str]] = {}
+    for path in sorted(_SRC.rglob("*.py")):
+        relative = path.relative_to(_SRC).as_posix()
+        if "tests" in path.relative_to(_SRC).parts or path.name.startswith("test_"):
+            continue
+        try:
+            tree = ast.parse(path.read_text(encoding="utf-8"))
+        except SyntaxError:
+            continue
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Attribute) or not isinstance(node.value, ast.Call):
+                continue
+            call = node.value
+            func = call.func
+            name = func.id if isinstance(func, ast.Name) else getattr(func, "attr", None)
+            if name != "import_module" or not call.args:
+                continue
+            target = call.args[0]
+            if not (isinstance(target, ast.Constant) and isinstance(target.value, str)):
+                continue
+            if not target.value.startswith("cadrumo."):
+                continue
+            module_path = _SRC.parent / Path(target.value.replace(".", "/"))
+            init = module_path / "__init__.py"
+            source = init if init.is_file() else module_path.with_suffix(".py")
+            if not source.is_file():
+                findings.setdefault(relative, []).append(f"{target.value} (module not found)")
+                continue
+            if node.attr not in _reachable_names(source):
+                findings.setdefault(relative, []).append(f"{target.value}.{node.attr}")
+    return findings
+
+
+def test_no_attribute_is_read_off_a_dynamically_imported_module_that_lacks_it() -> None:
+    """A string import hides a broken reach from every static check."""
+    findings = _dynamic_attribute_reads()
+    assert not findings, (
+        "these modules read an attribute off a dynamically imported module that "
+        "does not expose it. A string import resolves at runtime, so this fails "
+        "only on the path that runs it: name the owning module instead. "
+        f"{findings}"
+    )
+
+
+def test_the_resolver_reports_a_read_through_a_namespace_that_lacks_it(tmp_path: Path) -> None:
+    """The negative assertion above holds trivially if resolution stops working.
+
+    The source tree no longer binds packages relatively, so a real binding is
+    no longer available to anchor it. A minimal tree with one broken reach
+    proves the resolver still sees a relative package binding and reports the
+    attribute its namespace does not carry.
+    """
+    package = tmp_path / "pkg"
+    (package / "sub").mkdir(parents=True)
+    (package / "__init__.py").write_text("", encoding="utf-8")
+    (package / "sub" / "__init__.py").write_text("PRESENT = 1\n", encoding="utf-8")
+    (package / "reader.py").write_text(
+        "from . import sub\n\nvalue = sub.PRESENT\nmissing = sub.ABSENT\n",
+        encoding="utf-8",
+    )
+
+    assert _unreachable_attribute_reads(tmp_path) == {"pkg/reader.py": ["pkg/sub.ABSENT"]}

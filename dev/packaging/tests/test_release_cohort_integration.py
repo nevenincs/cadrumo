@@ -1,0 +1,109 @@
+"""Real clean-source integration proof for release-cohort construction."""
+
+from __future__ import annotations
+
+import uuid
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+
+import pytest
+
+from dev._paths import REPO_ROOT
+from dev.source_tree import repository_files, snapshot
+
+from ..authority_staging import stage_published_authority
+from ..build_scratch_reclaim import (
+    RELEASE_COHORT_INTEGRATION_FAMILY,
+    matching_family,
+    remove_tree,
+    var_scratch_name,
+)
+from ..cohort_manifest import REQUIRED_ARTIFACT_KINDS
+from ..release_cohort import build_release_cohort
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+def _stable_source_snapshot(repo_root: Path, destination: Path) -> Path:
+    """Snapshot the working repository into a source whose content cannot move.
+
+    A cohort is always built from the enumerated content it is given — no
+    revision is ever pinned or passed in, here or in production. That leaves
+    this reproducibility proof one requirement: both builds must see the
+    *same* content. Against the working repository they do not, because this
+    tree is shared with concurrent agents and each build takes minutes, so an
+    edit landing in between silently changes the second build's source.
+    Snapshotting once gives the test a source nobody else edits, so "build the
+    same content twice" really does build the same thing twice.
+    """
+    snapshot(repo_root, repository_files(repo_root), destination)
+    # The published authority is gitignored generated output, so the
+    # enumeration omits it and a snapshot alone could only build an
+    # authority-less cohort. Staged once here, both builds read identical
+    # bytes, which is what this proof requires of every input.
+    stage_published_authority(repo_root, destination)
+    (destination / "build").mkdir(exist_ok=True)
+    return destination
+
+
+def test_real_clean_source_build_is_complete_and_reproducible() -> None:
+    """Build the real 12-member cohort twice from the same content and compare every digest."""
+    repo_root = REPO_ROOT
+    build = (repo_root / "build").resolve()
+    build.mkdir(parents=True, exist_ok=True)
+    # Named through the scratch registry rather than spelled here, so the
+    # collection-time reclaim and this mint site cannot disagree about the
+    # family, and so the name carries this process as its owner.
+    snapshot_root = build / var_scratch_name(RELEASE_COHORT_INTEGRATION_FAMILY, uuid.uuid4().hex)
+    try:
+        source = _stable_source_snapshot(repo_root, snapshot_root)
+        outputs = (
+            source / "build" / "first",
+            source / "build" / "second",
+        )
+        # Each build enumerates and snapshots the same fixed source on its own.
+        # Their outputs and clean child processes are independent, so running
+        # both now lets the digest comparison retain its two-build proof while
+        # using the available build time in parallel.
+        with ThreadPoolExecutor(max_workers=2) as builders:
+            first_build = builders.submit(build_release_cohort, repo_root=source, output_dir=outputs[0])
+            second_build = builders.submit(build_release_cohort, repo_root=source, output_dir=outputs[1])
+            first = first_build.result()
+            second = second_build.result()
+
+        assert first.manifest.source.source_digest == second.manifest.source.source_digest
+        assert first.manifest.cohort_id == second.manifest.cohort_id
+        assert first.manifest.source == second.manifest.source
+        assert {record.name for record in first.manifest.artifacts} == set(
+            REQUIRED_ARTIFACT_KINDS,
+        )
+        assert tuple(
+            (
+                record.name,
+                record.kind,
+                record.path,
+                record.sha256,
+                record.size,
+            )
+            for record in first.manifest.artifacts
+        ) == tuple(
+            (
+                record.name,
+                record.kind,
+                record.path,
+                record.sha256,
+                record.size,
+            )
+            for record in second.manifest.artifacts
+        )
+    finally:
+        # One removal covers both cohorts: they are built inside the snapshot.
+        #
+        # NOT `shutil.rmtree(..., ignore_errors=True)`. A copied source tree
+        # can carry read-only members, and Windows refuses to unlink a
+        # read-only file; `ignore_errors` swallows that refusal, so the block
+        # reported success while leaving the copy on disk. The shared reclaim
+        # clears the attribute and retries.
+        resolved = snapshot_root.resolve()
+        if resolved.parent == build and matching_family(resolved.name) is not None and resolved.exists():
+            remove_tree(resolved)

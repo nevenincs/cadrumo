@@ -1,0 +1,199 @@
+---
+tags:
+  - '#exec'
+  - '#agent-harness'
+date: '2026-10-21'
+modified: '2026-10-21'
+body_schema: 'body-v2'
+body_hash: 'sha256:895719b0de4ec773d135c15aa49d9ec78dc66f1259d76416fec9e53bcb800556'
+related:
+  - "[[2026-10-21-agent-harness-plan]]"
+---
+
+# `agent-harness` ledger
+
+## Changes
+
+- `S01` `verify:` `git -C Y:/code/cadrumo-agent-worktrees/main log --diff-filter=A --format=%h-%cI-%s -- src/cadrumo_agent/harness/_data/agent: fork point 5bdf185 2026-10-16T09:18:40+02:00` -> `pass`
+- `S01` `verify:` `git -C Y:/code/cadrumo-worktrees/tui log --format=%h-%cI-%s e4188cc067 -- src/cadrumo_harness/_data/agent: only post-fork change is 72cd94bc66 to reference/command-operations.md` -> `pass`
+- `S01` `by:` `implementation-engineer-standard`
+- `S02` `D` `src/cadrumo_harness/mcp/operating_layer.py`
+- `S02` `D` `src/cadrumo_harness/mcp/tests/test_operating_layer.py`
+- `S02` `M` `src/cadrumo_harness/mcp/server.py`
+- `S02` `M` `src/cadrumo_harness/mcp/runtime_adapter.py`
+- `S02` `M` `src/cadrumo_harness/mcp/protocol_contract.py`
+- `S02` `M` `src/cadrumo_harness/mcp/surfaces.py`
+- `S02` `M` `src/cadrumo_harness/mcp/main.py`
+- `S02` `M` `src/cadrumo_harness/mcp/tests/test_installed_stdio.py`
+- `S02` `M` `src/cadrumo_harness/mcp/tests/test_tool_annotations.py`
+- `S02` `M` `src/cadrumo_harness/mcp/tests/test_mcp_surface_pins.py`
+- `S02` `M` `dev/quality/metadata/import_load_targets.json`
+- `S02` `M` `dev/quality/metadata/import_load_targets.cadrumo_harness.json`
+- `S02` `verify:` `pytest src/cadrumo_harness/mcp/tests` -> `pass`
+- `S02` `verify:` `pytest -m integration src/cadrumo_harness/mcp/tests/test_installed_stdio.py test_tool_annotations.py test_mcp_surface_pins.py test_mcp_surfaces.py` -> `pass`
+- `S02` `verify:` `ty check src/cadrumo_harness` -> `pass`
+- `S02` `by:` `implementation-engineer-high`
+- `S03` `D` `src/cadrumo_harness/_data`
+- `S03` `D` `src/cadrumo_harness/_resources.py`
+- `S03` `D` `src/cadrumo_harness/resources.py`
+- `S03` `D` `src/cadrumo_harness/_skill_metadata.py`
+- `S03` `D` `src/cadrumo_harness/workspace.py`
+- `S03` `D` `src/cadrumo_harness/tests`
+- `S03` `D` `dev/harness_data`
+- `S03` `D` `dev/agent_eval/tests/test_rule_surface_conformance.py`
+- `S03` `M` `dev/agent_eval/_runner.py`
+- `S03` `M` `dev/agent_eval/_models.py`
+- `S03` `M` `dev/agent_eval/tests/test_modelo_130_golden.py`
+- `S03` `M` `dev/packaging/tests/test_verdict_cache_not_distributed.py`
+- `S03` `M` `pyproject.toml`
+- `S03` `M` `.importlinter`
+- `S03` `M` `dev/quality/metadata/import_load_targets.json`
+- `S03` `M` `dev/quality/metadata/import_load_targets.cadrumo_harness.json`
+- `S03` `M` `dev/quality/metadata/import_load_targets.dev.json`
+- `S03` `verify:` `lint-imports --config .importlinter --no-cache` -> `pass`
+- `S03` `verify:` `pytest src/cadrumo_harness dev/agent_eval` -> `pass`
+- `S03` `verify:` `pytest -n0 dev/packaging/tests/test_verdict_cache_not_distributed.py` -> `pass`
+- `S03` `verify:` `ty check src/cadrumo_harness dev/agent_eval` -> `pass`
+- `S03` `by:` `implementation-engineer-high`
+- `S04` `R` `dev/agent_eval` -> `dev/mcp_eval`
+- `S04` `D` `dev/agent_eval/live`
+- `S04` `D` `dev/agent_eval/_flywheel.py`
+- `S04` `D` `dev/agent_eval/_live_scoring.py`
+- `S04` `D` `dev/agent_eval/_report.py`
+- `S04` `D` `dev/agent_eval/_replay.py`
+- `S04` `D` `dev/agent_eval/tests/test_live_access.py`
+- `S04` `D` `dev/agent_eval/tests/test_live_agent_command.py`
+- `S04` `D` `dev/agent_eval/tests/test_live_capture.py`
+- `S04` `D` `dev/agent_eval/tests/test_live_evidence.py`
+- `S04` `D` `dev/agent_eval/tests/test_live_isolated_host.py`
+- `S04` `D` `dev/agent_eval/tests/test_live_lane.py`
+- `S04` `D` `dev/agent_eval/tests/test_live_oracle.py`
+- `S04` `D` `dev/agent_eval/tests/test_live_outcome.py`
+- `S04` `D` `dev/agent_eval/tests/test_live_recorder.py`
+- `S04` `D` `dev/agent_eval/tests/test_live_scenarios.py`
+- `S04` `D` `dev/agent_eval/tests/test_live_scripted_driver.py`
+- `S04` `D` `dev/agent_eval/tests/test_live_scoring_properties.py`
+- `S04` `D` `dev/agent_eval/tests/test_report_and_flywheel.py`
+- `S04` `D` `dev/agent_eval/tests/test_lifecycle_order_authority.py`
+- `S04` `D` `dev/agent_eval/tests/_scripted_registration_channels.py`
+- `S04` `M` `dev/mcp_eval/__init__.py`
+- `S04` `M` `dev/mcp_eval/_models.py`
+- `S04` `M` `dev/mcp_eval/_runner.py`
+- `S04` `R` `dev/agent_eval/live/package_copy.py` -> `dev/runtime_lifecycle/package_copy.py`
+- `S04` `R` `dev/agent_eval/tests/test_live_package_copy.py` -> `dev/runtime_lifecycle/tests/test_package_copy.py`
+- `S04` `M` `dev/runtime_lifecycle/tests/agent_service/conftest.py`
+- `S04` `M` `dev/runtime_lifecycle/README.md`
+- `S04` `M` `dev/identity/_tree_scan.py`
+- `S04` `M` `dev/tests/test_dev_cli_justfile_wiring.py`
+- `S04` `M` `dev/tests/test_dev_tree_holds_no_run_output.py`
+- `S04` `M` `justfile`
+- `S04` `M` `.importlinter`
+- `S04` `M` `.vaultspec/skills/cadrumo-start/references/agent-integration.md`
+- `S04` `M` `.claude/skills/cadrumo-start/references/agent-integration.md`
+- `S04` `M` `.agents/skills/cadrumo-start/references/agent-integration.md`
+- `S04` `M` `dev/quality/metadata/import_load_targets.json`
+- `S04` `M` `dev/quality/metadata/import_load_targets.dev.json`
+- `S04` `verify:` `lint-imports --config .importlinter --no-cache` -> `pass`
+- `S04` `verify:` `pytest dev/mcp_eval dev/tests dev/identity/tests dev/runtime_lifecycle/tests/test_package_copy.py` -> `fail`
+- `S04` `verify:` `ty check dev/mcp_eval dev/runtime_lifecycle dev/identity dev/tests` -> `pass`
+- `S04` `by:` `implementation-engineer-high`
+- `S05` `R` `src/cadrumo_harness` -> `src/cadrumo_mcp`
+- `S05` `R` `dev/quality/metadata/import_load_targets.cadrumo_harness.json` -> `dev/quality/metadata/import_load_targets.cadrumo_mcp.json`
+- `S05` `M` `pyproject.toml`
+- `S05` `M` `.importlinter`
+- `S05` `M` `justfile`
+- `S05` `M` `dev/first_party_source.py`
+- `S05` `M` `dev/locales/_paths.py`
+- `S05` `M` `dev/ci/change_scope.py`
+- `S05` `M` `dev/quality/import_load_worker.py`
+- `S05` `M` `dev/quality/suite.py`
+- `S05` `M` `dev/packaging/dependency_contract.py`
+- `S05` `M` `dev/packaging/installed_wheel_binding.py`
+- `S05` `M` `dev/packaging/command_spec_attestation.py`
+- `S05` `M` `dev/runtime_lifecycle`
+- `S05` `M` `dev/audit/tests`
+- `S05` `M` `dev/docs/apidocs/tests`
+- `S05` `M` `dev/operation_contract_manifest/tests`
+- `S05` `M` `dev/quality/tests`
+- `S05` `M` `dev/tests`
+- `S05` `M` `dev/smoke/smoke_check.py`
+- `S05` `M` `src/cadrumo/core/errors/failure_report.py`
+- `S05` `M` `src/cadrumo/application/tests/test_dependency_registry_conformance.py`
+- `S05` `M` `src/cadrumo_agent_service/host/launch_environment.py`
+- `S05` `M` `src/cadrumo_agent_service/host/tests/test_launch_environment.py`
+- `S05` `M` `src/cadrumo_agent_service/host/tests/agent_tree_relay_probe.py`
+- `S05` `M` `native/application/src/error/application.rs`
+- `S05` `M` `native/desktop/src-tauri/src/logs/severity.rs`
+- `S05` `M` `docs/api/index.md`
+- `S05` `M` `docs/architecture/index.md`
+- `S05` `M` `docs/locales/ca/LC_MESSAGES/architecture/index.po`
+- `S05` `M` `docs/locales/es/LC_MESSAGES/architecture/index.po`
+- `S05` `M` `docs/locales/hu/LC_MESSAGES/architecture/index.po`
+- `S05` `M` `.vaultspec/skills/cadrumo-start`
+- `S05` `M` `.claude/skills/cadrumo-start`
+- `S05` `M` `.agents/skills/cadrumo-start`
+- `S05` `M` `src/cadrumo_mcp/mcp/tests/test_handshake_free_revision.py`
+- `S05` `verify:` `lint-imports --config .importlinter --no-cache` -> `pass`
+- `S05` `verify:` `just check-style` -> `pass`
+- `S05` `verify:` `just check-format` -> `pass`
+- `S05` `verify:` `just check-types` -> `fail`
+- `S05` `verify:` `pytest src/cadrumo_mcp src/cadrumo_agent_service` -> `pass`
+- `S05` `verify:` `pytest -m integration src/cadrumo_mcp` -> `pass`
+- `S05` `verify:` `pytest dev/quality/tests dev/packaging/tests dev/audit/tests dev/ci/tests dev/docs/apidocs/tests dev/operation_contract_manifest/tests dev/locales/tests` -> `fail`
+- `S05` `by:` `implementation-engineer-high`
+- `S06` `A` `dev/quality/tests/test_no_authored_agent_content.py`
+- `S06` `M` `src/cadrumo_mcp/mcp/tests/test_installed_stdio.py`
+- `S06` `verify:` `pytest dev/quality/tests/test_no_authored_agent_content.py` -> `pass`
+- `S06` `verify:` `pytest -m integration src/cadrumo_mcp/mcp/tests/test_installed_stdio.py` -> `pass`
+- `S06` `verify:` `pytest dev/quality/tests dev/tests` -> `pass`
+- `S06` `by:` `implementation-engineer-high`
+- `S07` `M` `dev/mcp_eval/_runner.py`
+- `S07` `M` `dev/mcp_eval/_models.py`
+- `S07` `A` `dev/mcp_eval/tests/test_lifecycle_stage_order.py`
+- `S07` `M` `dev/mcp_eval/tests/test_modelo_130_golden.py`
+- `S07` `M` `src/cadrumo_mcp/mcp/tests/test_installed_stdio.py`
+- `S07` `M` `src/cadrumo/application/overview/tests/test_calendar_profile_context.py`
+- `S07` `M` `pyproject.toml`
+- `S07` `M` `.importlinter`
+- `S07` `M` `docs/technical/architecture.md`
+- `S07` `M` `docs/technical/topics/runtime-tui-and-agent-harness.md`
+- `S07` `M` `docs/technical/assessments/knowledge-and-provenance.md`
+- `S07` `M` `docs/technical/articles/catalogue.md`
+- `S07` `M` `docs/technical/reading-guide.md`
+- `S07` `M` `docs/technical/manifest.json`
+- `S07` `D` `docs/technical/articles/186-agent-personas-operator-rules-and-workflow-skills.md`
+- `S07` `D` `docs/technical/articles/187-filing-skills-and-the-mcp-operator-harness.md`
+- `S07` `M` `native/application-environment.toml`
+- `S07` `verify:` `lint-imports --config .importlinter --no-cache` -> `pass`
+- `S07` `verify:` `just check-style` -> `pass`
+- `S07` `verify:` `just check-format` -> `pass`
+- `S07` `verify:` `just check-types` -> `pass`
+- `S07` `verify:` `pytest dev/mcp_eval src/cadrumo_mcp/mcp/tests/test_installed_stdio.py dev/tests/test_native_build_recipes.py` -> `pass`
+- `S07` `verify:` `pytest -m integration dev/mcp_eval/tests/test_modelo_130_golden.py src/cadrumo_mcp/mcp/tests/test_installed_stdio.py` -> `pass`
+- `S07` `verify:` `pytest dev/audit/tests/test_dead_code_scan.py dev/audit/tests/test_dead_code.py src/cadrumo_agent_service/host/tests/test_launch_environment.py` -> `pass`
+- `S07` `verify:` `pytest src/cadrumo/application/overview/tests/test_calendar_profile_context.py` -> `pass`
+- `S07` `by:` `implementation-engineer-high`
+- `S07` `M` `dev/quality/tests/test_no_authored_agent_content.py`
+- `S07` `M` `dev/mcp_eval/tests/test_response_provenance_golden.py`
+- `S07` `M` `dev/mcp_eval/tests/test_under_declaration_golden.py`
+- `S07` `verify:` `pytest dev/quality/tests src/cadrumo_mcp dev/mcp_eval` -> `pass`
+- `S07` `verify:` `pytest -m integration src/cadrumo_mcp dev/mcp_eval` -> `pass`
+- `S07` `verify:` `just check-types` -> `pass`
+- `S07` `verify:` `lint-imports --config .importlinter --no-cache` -> `pass`
+- `S07` `verify:` `python -m dev.docs.build --single-page technical/topics/runtime-tui-and-agent-harness` -> `pass`
+- `S08` `A` `refs/heads/wip/main-worktree-harness-rename-20261015`
+- `S08` `M` `refs/heads/main`
+- `S08` `verify:` `git -C Y:/code/cadrumo-worktrees/main show --stat 8c6fa6d561 (230 files preserved)` -> `pass`
+- `S08` `by:` `orchestrator`
+
+## Notes
+
+- `S01` No skill or rule semantic changes found after the cadrumo-agent fork date (2026-10-16T09:18:40+02:00); last rules/skills commit before e4188cc067 was ca427b0666 (2026-10-15), which predates the fork. The only post-fork Cadrumo commit touching `src/cadrumo_harness/_data/agent` is 72cd94bc66, editing reference/command-operations.md only; that generated operation catalogue is explicitly out of scope per the plan (cadrumo-agent derives operation knowledge from MCP discovery) and no cadrumo-agent skill references it. No port was applicable; no cadrumo-agent file was edited.
+- `S01` Concurrent cadrumo-agent dirty files (rules/cadrumo-operator-operating-rules.md, skills/cadrumo-alta-contribuyente/SKILL.md, skills/cadrumo-calendario-fiscal/SKILL.md) were left untouched per instruction; no port was owed to them since no qualifying post-fork Cadrumo-side change existed.
+- `S03` Seven integration tests in `dev/agent_eval` `(test_under_declaration_golden.py,` `test_response_provenance_golden.py)` fail with 'CLI scenario requires the injected `invoke_cli` fixture'. No file on that failure path changed in this plan; the seam dates from the 2026-10-19 CLI-rename repair and belongs to the concurrent full-suite repair work.
+- `S04` The one failure in that run, `dev/tests/test_no_home_directory_cache_paths.py,` reports `dev/smoke/acquisition_lane.py:262,` a file no Step of this plan touches; it arrived with commit bbd9f1f340 from concurrent type-gate work.
+- `S05` The type gate's single diagnostic and the one failing operation-contract test name files outside this plan: `src/cadrumo/application/overview/tests/test_calendar_profile_context.py` (its import was removed by concurrent commit eb06cb0954) and `src/cadrumo_runtime/host/session_watch.py` (commit 91c2bc5231). `docs/technical/**` keeps the old package name on purpose: those pages are dated snapshot analyses of code that no longer exists, so renaming the path in them would misstate what was analysed. The docs catalogue generator could not run whole (it would prune 705 committed catalogues), so the three architecture catalogues were refreshed with its per-page mode, which marks the changed paragraph fuzzy and leaves the translation to a later batch.
+- `S06` The new gate immediately reported a real leftover: the installed-stdio test still named cadrumo://rule/cadrumo-operator-grounding to prove a resource read reaches no handler. The assertion is about the absent resources capability, so the URI became cadrumo://any/document.
+- `S07` The type gate's last diagnostic came from concurrent commit eb06cb0954, which renamed `_PROFILE_FIELD_WARNING_META` to `_PROFILE_FIELD_WARNING_LOCALE_KEYS` and left one test importing the old name; the two-line test repair is in this Step so the gate closes. native/CONTRACT.md's `SKILLS_DIR` and `RULES_DIR` removal is applied but left uncommitted: another session holds uncommitted profile-delete edits in that file. `dev/docs/tests/test_docs_catalogue_drift.py` fails for four how-to pages whose sources another session is editing; architecture/index.md, the page this plan changed, is in sync.
+- `S07` Fix-forward on the re-review: the serving scan now reads production sources only, through `dev.first_party_source.is_production_source,` so a test may name a retired channel to prove it answers `unknown_tool;` a new fixture proves a planted channel in a production module beside that test surface is still caught. A third check refuses a reintroduced `src/cadrumo_harness,` proven on a planted fixture. Separately, the seven `dev/mcp_eval` integration failures carried since S03 are fixed at their root: their `runtime_profile` fixtures bound the public CLI runner but not the injected fixture ports, so the product's own work-unit helper had no invocation.
+- `S08` S08 squash is built from the tui tree at the commit that records this Step; local main is not pushed (no PR, no CI, per user instruction).

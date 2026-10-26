@@ -1,0 +1,1167 @@
+"""Hard gate: no TEST may sit outside every declared pytest lane.
+
+An unreachable test is worse than a missing one. It reports nothing while
+looking like coverage, so its rot is invisible until somebody happens to read
+it. That state is not hypothetical here: the fourteen channel-generator tests
+sat in it long enough for two independent breakages to accumulate, and the
+author of the second had no signal at all.
+
+The unit of the finding is the TEST, not the file. A file-level verdict is both
+too noisy and too quiet at once, and this repository has one file proving each
+half: ``test_secure_sql.py`` was reported entirely unreachable because a single
+``os_keychain`` test dragged the flattened marker set out of every lane (too
+noisy), while the genuine defect underneath -- that one test really is selected
+by no lane -- is invisible to any model that answers only "does SOME test in
+this file run" (too quiet). Reporting per test resolves both.
+
+No stored baseline and no allowlist. The worklist is recomputed from the tree on
+every run, so coverage can only ratchet up: a new test outside every lane fails
+immediately rather than being absorbed into an accepted set that nobody revisits.
+There is no declaration channel and no holdout: a test directory no lane sweeps
+is a finding, whose remedy is a lane path or deleting the directory.
+
+THIS MODULE'S LOCATION IS LOAD-BEARING, and the requirement is reach rather than
+a particular directory: a guard against unreachable tests must itself sit inside
+a selection the lanes actually run, or it is unreachable by exactly the defect it
+exists to catch. Its earliest home, ``dev/ci/tests``, was reached only by one
+per-push workflow, which put the strongest reachability model in the tree among the
+weakest-reached files in it.
+
+It now lives under ``dev/tests``, moved here with its lane and justfile consumers
+by the full-corpus collectability relocation. Measured from this location rather
+than assumed: ``dev/tests`` is named by justfile recipes the merge gate and
+the release proof invoke. Before moving this module
+again, count the lanes that name the destination and confirm the number does not
+fall; an earlier version of this note recorded the reach of a previous home and
+instructed the reader not to perform the move that had already happened.
+
+It replaces two gates that asked overlapping questions, and it deliberately
+kept the weaker one's only advantage. The retired ``dev/``-only gate was
+path-only and could not see marker exclusion; this one asks BOTH questions, so
+it strictly subsumes it -- verified before deletion at 178 ``dev/`` test files,
+with zero findings the retired gate would have caught and this one misses.
+
+Three questions, not one, each existing because the one above it has a blind
+spot the next closes:
+
+* Per-test: does some lane's path scope cover this file AND its marker
+  expression select this test's own effective markers?
+* Path-level: does ANY lane name this file at all? Cheap, weaker, and retained
+  because the per-test question is blind to a module holding no test functions
+  and to a tracked file absent from disk. Both classes are empty in this tree
+  today; neither is impossible, and a consolidation that silently drops the
+  check would be a regression wearing a consolidation's clothes.
+* Directory-level: does any lane's path scope SWEEP the directory, rather than
+  happen to name a file inside it? Both questions above start from a file that
+  already exists, so both can only report a hole after somebody has fallen into
+  it. ``dev/harness/tests`` held one module, one recipe named that module by
+  path, and so both passed while the directory sat in no lane's scope at all --
+  a second proof added beside the first would have been collected by nothing.
+  An empty ``tests`` package is the same hole with the fall not yet taken, and
+  it offers the file-level questions nothing to report however orphaned it is.
+
+The directory question is deliberately answered from DERIVED sides, both of
+them: the lane scopes from the justfile through the same authority the other
+two use, the directory set from the tracked tree. A hand-maintained list on
+either side would reproduce one level up the exact defect being caught, because
+an enumeration nobody extends is how every hole above was dug.
+"""
+
+from __future__ import annotations
+
+import functools
+from pathlib import Path
+
+import pytest
+
+from dev._paths import REPO_ROOT
+from dev.ci.lane_configuration import configured_testpaths
+from dev.ci.lane_contracts import Lane
+from dev.ci.lane_ctest_commands import CTEST_EXTERNAL_TOOL_RECIPE, CTEST_MODULE_DIR, CTEST_RECIPE
+from dev.ci.lane_marker_inventory import (
+    discover_test_directories,
+    discover_test_files,
+    expression_selects,
+    marker_sets_in,
+    tracked_test_directories,
+    tracked_test_files,
+)
+from dev.ci.lane_reachability import analyse_directory_coverage, analyse_reachability, ci_invoked_lanes, declared_lanes
+from dev.ci.lane_workflow_graph import ci_invoked_recipes, workflow_triggers
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+_ROOT: Path = REPO_ROOT
+
+#: The markers whose tests CI genuinely cannot run, each because a PRECONDITION
+#: is absent from a headless runner rather than because nobody wired a lane.
+#: Every one is documented with its reason in pyproject's marker table, and
+#: every one has a justfile recipe that enrolls it for the environment that can.
+#: This is the honest holdout set, and it is the only accepted answer to "why
+#: does CI never run this test".
+_CI_INCAPABLE_MARKERS: frozenset[str] = frozenset(
+    {
+        # Needs a tool outside the Python dependency set: LibreOffice for binary
+        # .xls conversion, or the npm-installed Hunspell dictionaries.
+        "external_tool",
+        # Reads a real external service; opt-in, and never enabled on CI.
+        "aeat_live",
+        # Asserts on the OS credential store, which is a property of an
+        # interactive logon session a headless runner does not have.
+        "os_keychain",
+        # Queries the resident vaultspec-rag service, a separate product this
+        # project does not install.
+        "resident_service",
+        # Scores against the ingestion measurement corpus, operator data held
+        # outside the checkout that no runner holds or installs.
+        "private_ingest_corpus",
+    },
+)
+
+
+# Exhaustive populations. Focused selectors such as ``test-cli`` deliberately
+# do not appear here: they are useful developer views over a canonical subject,
+# not a second owner of the same corpus.
+_CANONICAL_POPULATION_RECIPES: frozenset[str] = frozenset(
+    {
+        "test-pytest-harness",
+        "test-unit",
+        "test-integration-parallel",
+        "test-integration-serial",
+        "test-calculations",
+        "test-registry-conformance",
+        "test-test-policy",
+        "test-repository-contracts",
+        # The documentation build's tests compile the whole site, so they have
+        # the one owner CI runs once, not the repository contracts it runs on
+        # every supported interpreter.
+        "docs-check",
+        # `test-ci-contracts` itself holds no pytest invocation: it is the
+        # local aggregate over these two, which own the population between
+        # them. The release proof runs each as its own step and the merge gate
+        # runs only the first.
+        "test-ci-contracts-gate",
+        "test-ci-perf",
+        "test-packaging-contracts",
+        "test-packaging-serial",
+        "test-installed-oracles",
+        "test-channel-artifacts",
+        "test-windows",
+        "test-native-host-facilities",
+        "test-agent-protocol",
+        "test-os-keychain",
+        "test-resident-service",
+        "test-registry-live",
+        "test-workbook-parity",
+        "test-locale-spelling",
+        "test-ingest-corpus",
+        "test-powershell-literal",
+        "test-calculation-summary-pdf",
+        "test-components-role",
+        # CTest's package-stage process assertions have their own opt-in lane;
+        # ordinary native verification is a distinct population with no pytest tests.
+        "test-native-live",
+    },
+)
+_FOCUSED_SELECTORS: frozenset[str] = frozenset({"test-cli", "test-tui", "test-smoke"})
+
+
+@functools.lru_cache(maxsize=1)
+def _canonical_population_rows() -> tuple[tuple[str, frozenset[str], tuple[str, ...]], ...]:
+    """Return each tracked test's canonical justfile owners and markers."""
+    lanes = tuple(lane for lane in declared_lanes(_ROOT) if lane.recipe in _CANONICAL_POPULATION_RECIPES)
+    rows: list[tuple[str, frozenset[str], tuple[str, ...]]] = []
+    for relative in tracked_test_files(_ROOT):
+        relative_path = str(relative).replace("\\", "/")
+        markers = marker_sets_in(_ROOT / relative)
+        assert markers is not None, f"tracked test markers could not be read: {relative_path}"
+        for item in markers:
+            owner_names: set[str] = set()
+            for lane in lanes:
+                recipe = lane.recipe
+                if (
+                    not isinstance(recipe, str)
+                    or not lane.covers(relative_path)
+                    or not expression_selects(lane.marker_expression, item.markers)
+                ):
+                    continue
+                owner_names.add(recipe)
+            owners = tuple(sorted(owner_names))
+            rows.append((f"{relative_path}::{item.test}", item.markers, owners))
+    return tuple(rows)
+
+
+def test_canonical_population_ownership_is_exhaustive_and_unique() -> None:
+    """Every non-held-out test has exactly one canonical subject owner."""
+    rows = _canonical_population_rows()
+    assert len(rows) > 10_000, "the ownership inventory became vacuous"
+
+    unowned = [(node_id, markers) for node_id, markers, owners in rows if not owners]
+    multiply_owned = [(node_id, owners) for node_id, _markers, owners in rows if len(owners) != 1]
+
+    assert not unowned, "non-resident tests have no canonical owner:\n" + "\n".join(node_id for node_id, _ in unowned)
+    assert not multiply_owned, "canonical populations overlap:\n" + "\n".join(
+        f"{node_id}: {owners}" for node_id, owners in multiply_owned
+    )
+
+    counts = {
+        recipe: sum(recipe in owners for _node_id, _markers, owners in rows) for recipe in _CANONICAL_POPULATION_RECIPES
+    }
+    assert all(counts.values()), f"a canonical population selected nothing: {counts}"
+
+
+def test_native_package_assertions_have_exactly_one_live_owner() -> None:
+    """Stage-process assertions each belong to the opt-in CTest lane."""
+    rows = _canonical_population_rows()
+    native_rows = {node_id: owners for node_id, markers, owners in rows if "native_package" in markers}
+
+    assert set(native_rows) == {
+        "dev/runtime_lifecycle/tests/agent_service/test_shared_session.py::test_runtime_and_service_share_the_admitted_boot",
+        "dev/runtime_lifecycle/tests/agent_service/test_shared_session.py::test_service_exposes_the_provider_catalog",
+        "dev/runtime_lifecycle/tests/agent_service/test_shared_session.py::test_administration_reuses_the_live_service",
+        "dev/runtime_lifecycle/tests/agent_service/test_shared_session.py::test_cli_reads_the_same_profile_after_shared_setup",
+        "dev/runtime_lifecycle/tests/test_clients.py::test_packaged_client_authentication_and_profile_scope",
+        "dev/runtime_lifecycle/tests/test_lifecycle.py::test_login_logout_profile_switch_and_stale_receipt",
+        "dev/runtime_lifecycle/tests/test_lifecycle.py::test_exact_runtime_crash_manager_recovery_and_operation_state",
+        "dev/runtime_lifecycle/tests/test_lifecycle.py::test_wrong_password_never_admits_private_work",
+        "dev/runtime_lifecycle/tests/test_lifecycle.py::test_manager_death_preserves_custody_and_successor_restores_verified_supervision",
+    }
+    assert set(native_rows.values()) == {("test-native-live",)}
+
+
+def test_resident_service_population_and_retired_backstop_are_explicit() -> None:
+    """Resident-service tests have one capability lane and the old backstop is gone."""
+    rows = _canonical_population_rows()
+    resident_owners = {owners for _node_id, markers, owners in rows if "resident_service" in markers}
+    assert resident_owners == {("test-resident-service",)}
+
+    assert not any(lane.recipe == "test-dev-tooling" for lane in declared_lanes(_ROOT))
+    assert not [node_id for node_id, _markers, owners in rows if not owners], (
+        "the retired backstop left an unowned test"
+    )
+
+
+def test_focused_selectors_and_measurement_profile_are_not_population_owners() -> None:
+    """Focused developer selectors and coverage measurement stay outside the census."""
+    declared = {lane.recipe for lane in declared_lanes(_ROOT)}
+    assert declared >= _FOCUSED_SELECTORS
+    assert "test-coverage" in declared
+    assert not (_FOCUSED_SELECTORS & _CANONICAL_POPULATION_RECIPES)
+    assert "test-coverage" not in _CANONICAL_POPULATION_RECIPES
+
+
+#: A module whose one test is module-marked ``unit``, so a lane accepting
+#: ``unit`` selects it and the finding under test is never marker noise.
+_UNIT_MODULE: str = (
+    "import pytest\n\npytestmark = [pytest.mark.unit]\n\n\ndef test_{name}() -> None:\n    assert True\n"
+)
+
+
+def _synthetic_repository(root: Path, *, lane: str) -> None:
+    """Write a minimal tree carrying one declared lane and no tests yet."""
+    (root / "pyproject.toml").write_text('testpaths = ["src"]\n', encoding="utf-8")
+    (root / "justfile").write_text(f"check:\n    {lane}\n", encoding="utf-8")
+
+
+def _repository_with_lanes(root: Path, *lanes: str) -> None:
+    """Write a minimal tree whose justfile declares exactly these pytest lanes.
+
+    The multi-lane form of :func:`_synthetic_repository`. The directory
+    questions need a tree where one lane sweeps a scope and another names a
+    single file inside a different one, which is the shape a one-lane fixture
+    cannot express.
+    """
+    (root / "pyproject.toml").write_text('testpaths = ["src"]\n', encoding="utf-8")
+    body = "\n".join(f"    {lane}" for lane in lanes)
+    (root / "justfile").write_text(f"check:\n{body}\n", encoding="utf-8")
+
+
+def _write_test(path: Path, body: str) -> None:
+    """Write a test module, creating its parents."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(body, encoding="utf-8")
+
+
+def test_every_test_is_selected_by_some_declared_lane() -> None:
+    """The gate itself. Hard-cut: no baseline, no allowlist, no exceptions."""
+    report = analyse_reachability(_ROOT)
+
+    assert report.unreachable == (), (
+        "these tests are selected by no declared lane, so nothing runs them:\n  "
+        + "\n  ".join(entry.describe() for entry in report.unreachable)
+        + "\n\nEither add a lane that names the path AND accepts the marker, or "
+        "change the marker. A test nobody runs reads as coverage and is not."
+    )
+
+
+def test_every_test_ci_cannot_run_declares_why() -> None:
+    """The gate that matters: DECLARED is not RUN, and only one excuse counts.
+
+    ``test_every_test_is_selected_by_some_declared_lane`` asks whether the
+    repository declares a lane, and a justfile recipe satisfies it. That is the
+    right answer to its question and a dangerously reassuring answer to the one
+    a reader usually means, because a recipe no workflow invokes is a lane that
+    has never run. Two of them proved it at once: ``just test-integration``
+    (370 integration-marked modules under ``src/`` -- every cross-layer test in
+    the product) and ``just test-tooling`` (the canonical ``dev/`` subject aggregate, whose
+    own recipe docstring says "the gates that no other lane reaches") were both
+    declared, both healthy, and named by no workflow. The declared-lane gate
+    reported full coverage over tests CI had never once executed.
+
+    So this asks the stronger question, and accepts exactly one answer for a
+    test CI does not run: that a precondition is genuinely absent from a
+    headless runner, declared by one of the markers in
+    ``_CI_INCAPABLE_MARKERS``. "Nobody wired a lane" is not on the list.
+    """
+    report = analyse_reachability(_ROOT, lanes=ci_invoked_lanes(_ROOT))
+
+    unexplained = [entry for entry in report.unreachable if not (entry.markers & _CI_INCAPABLE_MARKERS)]
+
+    assert unexplained == [], (
+        "no CI lane runs these tests, and none of them carries a marker saying why:\n  "
+        + "\n  ".join(entry.describe() for entry in unexplained)
+        + "\n\nA justfile recipe is NOT enough -- a recipe no workflow invokes has "
+        "never run. Either invoke the owning recipe from a workflow, or carry a "
+        f"marker from {sorted(_CI_INCAPABLE_MARKERS)} if the precondition truly "
+        "cannot exist on a runner."
+    )
+
+
+def test_the_ci_invoked_model_is_strictly_stronger_than_the_declared_one() -> None:
+    """The two questions must not silently collapse into one.
+
+    If ``ci_invoked_lanes`` ever returned everything ``declared_lanes`` does,
+    the gate above would still pass while asking nothing -- the exact
+    false-green shape this module exists to refuse, one level up. This pins the
+    gap as real: recipes exist that no workflow invokes (``test-os-keychain``,
+    ``test-workbook-parity``, ``test-registry-live``, and the
+    coverage and smoke conveniences), and they must stay excluded.
+    """
+    declared = declared_lanes(_ROOT)
+    invoked = ci_invoked_lanes(_ROOT)
+
+    assert set(invoked) <= set(declared), "a CI-invoked lane that is not declared is a parser fault"
+    assert len(invoked) < len(declared), (
+        "every declared lane now reads as CI-invoked; either the parser broke or "
+        "the distinction collapsed, and the CI-reachability gate is now vacuous"
+    )
+
+    invoked_recipes = ci_invoked_recipes(_ROOT)
+    # The integration lane is invoked as its two SEPARATE passes, not through the
+    # combined `test-integration` convenience: CI carries an independent verdict
+    # per pass, because the parallel pass is deterministic while the serial pass
+    # includes wall-clock budgets that flake on a shared machine. `test-integration`
+    # therefore stays declared-but-not-CI-invoked, which is correct rather than a
+    # hole -- the union of the two passes covers exactly what it selects. The CI
+    # contracts are split the same way: `test-ci-contracts` is the local
+    # convenience over its deterministic and CPU-budget legs.
+    expected_invoked = {
+        "test-gate",
+        "test-unit",
+        "test-ci-contracts-gate",
+        "test-ci-perf",
+        "test-native-bundle",
+        "test-integration-parallel",
+        "test-integration-serial",
+        "test-pytest-harness",
+        "test-registry",
+        "test-test-policy",
+        "test-repository-contracts",
+        "docs-check",
+    }
+    assert expected_invoked <= invoked_recipes
+    assert "test-native-live" not in invoked_recipes
+    assert not ({"test-os-keychain", "test-workbook-parity", "test-registry-live"} & invoked_recipes)
+
+
+def test_a_recipe_no_workflow_invokes_is_declared_but_not_ci_invoked(tmp_path: Path) -> None:
+    """Anti-tautology for the distinction, against a synthetic tree.
+
+    Without this the CI-reachability gate could pass because the recipe parser
+    finds nothing rather than because CI genuinely reaches the lanes, and those
+    two outcomes are indistinguishable from the verdict alone.
+    """
+    (tmp_path / "pyproject.toml").write_text('testpaths = ["src"]\n', encoding="utf-8")
+    (tmp_path / "justfile").write_text(
+        "wired:\n    pytest -q src -m unit\n\norphan:\n    pytest -q other/tests -m unit\n",
+        encoding="utf-8",
+    )
+    workflows = tmp_path / ".github" / "workflows"
+    workflows.mkdir(parents=True)
+    (workflows / "probe.yml").write_text(
+        "name: Probe\njobs:\n  build:\n    steps:\n      - run: just wired\n",
+        encoding="utf-8",
+    )
+
+    assert ci_invoked_recipes(tmp_path) == frozenset({"wired"})
+
+    declared = declared_lanes(tmp_path)
+    invoked = ci_invoked_lanes(tmp_path)
+    assert {lane.recipe for lane in declared} == {"wired", "orphan"}
+    assert {lane.recipe for lane in invoked} == {"wired"}
+
+    # The orphan recipe's path is covered when declaration is the question, and
+    # uncovered when execution is.
+    module = "import pytest\n\npytestmark = [pytest.mark.unit]\n\n\ndef test_a() -> None:\n    assert True\n"
+    _write_test(tmp_path / "other" / "tests" / "test_only_the_orphan_reaches.py", module)
+    files = discover_test_files(tmp_path)
+
+    assert analyse_reachability(tmp_path, lanes=declared, files=files).unreachable == ()
+    stranded = analyse_reachability(tmp_path, lanes=invoked, files=files).unreachable
+    assert [entry.path for entry in stranded] == ["other/tests/test_only_the_orphan_reaches.py"]
+
+
+def test_recipe_discovery_reads_run_blocks_not_english_prose(tmp_path: Path) -> None:
+    """ "just" is an ordinary English word, and these workflows use it as one.
+
+    Scanning raw workflow text harvested `is`, `uses`, and `natively` as recipe
+    names, from a step named "Ensure just is available" and a comment reading
+    "provision just natively". Three phantom recipes is harmless only until one
+    of those words IS a recipe name -- at which point an unreached lane reads as
+    reached, and the gate above goes quiet about a real hole.
+    """
+    (tmp_path / "pyproject.toml").write_text('testpaths = ["src"]\n', encoding="utf-8")
+    (tmp_path / "justfile").write_text("uses:\n    pytest -q src -m unit\n", encoding="utf-8")
+    workflows = tmp_path / ".github" / "workflows"
+    workflows.mkdir(parents=True)
+    (workflows / "probe.yml").write_text(
+        "name: Probe\n"
+        "jobs:\n"
+        "  build:\n"
+        "    steps:\n"
+        "      # taiki-e mangles its path; provision just natively\n"
+        '      - name: "Ensure just is available"\n'
+        "        run: scoop install just\n",
+        encoding="utf-8",
+    )
+
+    # `scoop install just` ends in the bare word, and the prose names a real
+    # recipe. Neither is an invocation.
+    assert ci_invoked_recipes(tmp_path) == frozenset()
+
+
+def test_one_just_call_naming_two_parameterless_recipes_invokes_both(tmp_path: Path) -> None:
+    """`just a b` runs both recipes, but `just c b` passes `b` to a parameterised `c`.
+
+    Reading only the first word left every second recipe of a chained call
+    reported unreached, while reading every word would call an argument a recipe.
+    """
+    (tmp_path / "pyproject.toml").write_text('testpaths = ["src"]\n', encoding="utf-8")
+    (tmp_path / "justfile").write_text(
+        "first:\n    pytest -q src\n\nsecond:\n    pytest -q src\n\n"
+        "takes value:\n    pytest -q src\n\nvalue:\n    pytest -q src\n",
+        encoding="utf-8",
+    )
+    workflows = tmp_path / ".github" / "workflows"
+    workflows.mkdir(parents=True)
+    (workflows / "probe.yml").write_text(
+        "name: Probe\non: pull_request\njobs:\n  build:\n    steps:\n"
+        "      - run: just first second\n      - run: just takes value\n",
+        encoding="utf-8",
+    )
+
+    assert ci_invoked_recipes(tmp_path) == frozenset({"first", "second", "takes"})
+
+
+def test_recipes_run_through_the_lane_transport_are_invoked(tmp_path: Path) -> None:
+    """`python -m dev.test_runs lanes a b` runs `just a` and `just b`.
+
+    Read with the transport's own parser: the value of `--preflight-count` and
+    of `--lane-kind` are arguments, not lanes, and a prose mention of the
+    module outside an executed line invokes nothing.
+    """
+    (tmp_path / "pyproject.toml").write_text('testpaths = ["src"]\n', encoding="utf-8")
+    (tmp_path / "justfile").write_text(
+        "sweep:\n"
+        "    # python -m dev.test_runs lanes _commented\n"
+        "    uv run python -m dev.test_runs lanes --preflight-count 1 --lane-kind _first=collection _first _second\n\n"
+        "_first:\n    pytest -q src\n\n_second:\n    pytest -q src\n\n_commented:\n    pytest -q src\n",
+        encoding="utf-8",
+    )
+    workflows = tmp_path / ".github" / "workflows"
+    workflows.mkdir(parents=True)
+    (workflows / "probe.yml").write_text(
+        "name: Probe\non: pull_request\njobs:\n  build:\n    steps:\n      - run: just sweep\n",
+        encoding="utf-8",
+    )
+
+    assert ci_invoked_recipes(tmp_path) == frozenset({"sweep", "_first", "_second"})
+
+
+def test_a_reusable_workflow_call_carries_the_callers_events(tmp_path: Path) -> None:
+    """A workflow reached only through `uses: ./.github/workflows/...` inherits the caller's reach.
+
+    The contrast is the claim: the same called file with the calling job removed
+    keeps only its own declared event.
+    """
+    workflows = tmp_path / ".github" / "workflows"
+    workflows.mkdir(parents=True)
+    (workflows / "called.yml").write_text(
+        "name: Called\non: workflow_call\njobs:\n  build:\n    steps:\n      - run: just first\n",
+        encoding="utf-8",
+    )
+    caller = workflows / "caller.yml"
+    caller.write_text(
+        "name: Caller\non: push\njobs:\n  gate:\n    uses: ./.github/workflows/called.yml\n",
+        encoding="utf-8",
+    )
+
+    assert workflow_triggers(tmp_path)[".github/workflows/called.yml"] == ("push", "workflow_call")
+
+    caller.write_text("name: Caller\non: push\njobs: {}\n", encoding="utf-8")
+    assert workflow_triggers(tmp_path)[".github/workflows/called.yml"] == ("workflow_call",)
+
+
+def test_no_test_file_sits_outside_every_lane_path() -> None:
+    """The path-level half, retained because the per-test half is blind to two inputs.
+
+    A module with no test functions, and a tracked file absent from disk, both
+    yield no tests -- so the per-test question reports nothing however orphaned
+    they are. Both classes are empty today and neither is impossible, which is
+    exactly why this is a gate and not a comment.
+    """
+    report = analyse_reachability(_ROOT)
+
+    assert report.unnamed == (), (
+        "these test files sit outside every lane's path scope, so no marker "
+        "expression could ever reach them:\n  " + "\n  ".join(report.unnamed)
+    )
+
+
+_CTEST_MODULE: str = """add_test(NAME bundle.lifecycle COMMAND "${CADRUMO_DEV_PYTHON}" -B -m pytest
+    -n 0 -m integration "${PROJECT_SOURCE_DIR}/dev/lifecycle/tests"
+    --package "${CADRUMO_PATH_STAGE}/$<CONFIG>/app")
+set_tests_properties(bundle.lifecycle PROPERTIES LABELS external_tool)
+add_test(NAME bundle.source-lifecycle COMMAND "${CADRUMO_DEV_PYTHON}" -B -m pytest
+    -n 0 -m integration "${PROJECT_SOURCE_DIR}/dev/lifecycle/tests"
+    --package "${CADRUMO_PATH_STAGE}/$<CONFIG>/app")
+add_test(NAME bundle.entrypoint COMMAND "${CADRUMO_PATH_STAGE}/$<CONFIG>/app/bin/aeat" --help)
+"""
+
+
+def test_ctest_pytest_lanes_follow_the_external_tool_label(tmp_path: Path) -> None:
+    """A CTest label moves its pytest lane to the opt-in live recipe."""
+    _synthetic_repository(tmp_path, lane="pytest -q src -m unit")
+    module = tmp_path / CTEST_MODULE_DIR / "Packaging.cmake"
+    module.parent.mkdir(parents=True)
+    module.write_text(_CTEST_MODULE, encoding="utf-8")
+
+    lanes = [lane for lane in declared_lanes(tmp_path) if lane.recipe in {CTEST_RECIPE, CTEST_EXTERNAL_TOOL_RECIPE}]
+
+    assert {lane.recipe: (lane.paths, lane.marker_expression) for lane in lanes} == {
+        CTEST_RECIPE: (("dev/lifecycle/tests",), "integration"),
+        CTEST_EXTERNAL_TOOL_RECIPE: (("dev/lifecycle/tests",), "integration"),
+    }
+
+
+def test_external_tool_ctest_lane_is_declared_but_not_ci_reached(tmp_path: Path) -> None:
+    """The CI native recipe deliberately runs ordinary CTest, not the live lane."""
+    (tmp_path / "pyproject.toml").write_text('testpaths = ["src"]\n', encoding="utf-8")
+    (tmp_path / "justfile").write_text(
+        "test-native-ci:\n    just test-native-bundle\n\n"
+        "test-native-bundle:\n    cmake --build build --target verify\n\n"
+        "test-native-live:\n    cmake --build build --target verify-native-live\n",
+        encoding="utf-8",
+    )
+    workflows = tmp_path / ".github" / "workflows"
+    workflows.mkdir(parents=True)
+    (workflows / "probe.yml").write_text(
+        "name: Probe\non: push\njobs:\n  native:\n    steps:\n      - run: just test-native-ci\n",
+        encoding="utf-8",
+    )
+    module = tmp_path / CTEST_MODULE_DIR / "Packaging.cmake"
+    module.parent.mkdir(parents=True)
+    module.write_text(_CTEST_MODULE, encoding="utf-8")
+
+    lanes = declared_lanes(tmp_path)
+    invoked = ci_invoked_lanes(tmp_path)
+
+    assert any(lane.recipe == CTEST_EXTERNAL_TOOL_RECIPE for lane in lanes)
+    assert not any(lane.recipe == CTEST_EXTERNAL_TOOL_RECIPE for lane in invoked)
+    assert any(lane.recipe == CTEST_RECIPE for lane in invoked)
+
+
+def test_a_test_only_ctest_runs_is_reachable_and_unreachable_without_it(tmp_path: Path) -> None:
+    """The CTest lane reaches its suite, and removing it orphans the same suite."""
+    _synthetic_repository(tmp_path, lane="pytest -q src -m unit")
+    _write_test(
+        tmp_path / "dev" / "lifecycle" / "tests" / "test_package.py",
+        _UNIT_MODULE.format(name="package").replace("unit", "integration"),
+    )
+    files = discover_test_files(tmp_path)
+
+    orphaned = analyse_reachability(tmp_path, files=files)
+    module = tmp_path / CTEST_MODULE_DIR / "Packaging.cmake"
+    module.parent.mkdir(parents=True)
+    module.write_text(_CTEST_MODULE, encoding="utf-8")
+    reached = analyse_reachability(tmp_path, files=files)
+
+    assert orphaned.unnamed == ("dev/lifecycle/tests/test_package.py",)
+    assert reached.unnamed == ()
+    assert reached.unreachable == ()
+
+
+def test_the_path_check_catches_what_the_per_test_check_cannot(tmp_path: Path) -> None:
+    """The blind spot, proven rather than asserted.
+
+    A ``test_*.py`` holding no test functions is invisible to the per-test
+    model -- there is nothing to report unreachable. Without the path-level
+    question, consolidating onto the stronger model would have dropped this
+    finding silently, and nobody would have noticed for a long time.
+    """
+    _synthetic_repository(tmp_path, lane="pytest -q src -m unit")
+    _write_test(tmp_path / "outside" / "tests" / "test_no_tests_at_all.py", "HELPER = 1\n")
+
+    report = analyse_reachability(tmp_path, files=discover_test_files(tmp_path))
+
+    assert report.unreachable == (), "a testless module offers no test to call unreachable"
+    assert report.unnamed == ("outside/tests/test_no_tests_at_all.py",)
+
+
+def test_the_gate_measured_a_real_corpus() -> None:
+    """A parser that found nothing would report perfect coverage.
+
+    This is the gate's own failure mode: zero lanes means every test is
+    unreachable, but zero *analysed files* would make the gate pass vacuously.
+    Both sides are pinned so a broken reader cannot read as a clean tree.
+
+    A skipped file is an unreadable tracked test module, and it contributes no
+    entries at all -- every test inside it goes unmeasured while ``unreachable``
+    stays empty and the gate reads clean. The tolerance for that is DERIVED, not
+    a tuned number: this worktree runs many agents at once, so a file can be
+    caught between writes, and the honest discriminator is whether it is STILL
+    unreadable when asked again. A transient race re-reads cleanly and costs the
+    gate nothing; a file that stays unreadable is a real finding at any count.
+    """
+    report = analyse_reachability(_ROOT)
+    lanes = declared_lanes(_ROOT)
+
+    assert len(lanes) > 10, "lane discovery collapsed; the gate would be measuring nothing"
+    assert report.analysed > 1000, f"only {report.analysed} files analysed; the reader has stopped matching"
+
+    persistent = [relative for relative in report.skipped if marker_sets_in(_ROOT / relative) is None]
+
+    assert persistent == [], (
+        f"{len(persistent)} tracked test file(s) are still unreadable on a second read against "
+        f"{report.analysed} analysed, so every test inside them went unmeasured while the gate "
+        "read clean: " + ", ".join(persistent)
+    )
+
+
+def test_no_test_directory_sits_outside_every_lane_path() -> None:
+    """The directory question: would a module written here be collected by anything?
+
+    Every other check in this module starts from a file that already exists, so
+    each can only report a hole once somebody has fallen into it. This one
+    reports the hole while it is still empty.
+
+    The concrete case it was built from: ``dev/harness/tests`` held one module,
+    ``just test-pytest-harness`` named that module by path, and so the file was
+    covered, its markers were selected, and both file-level checks above passed
+    -- while the DIRECTORY sat inside no lane's scope at all. A second proof
+    added beside the first would have been collected by no lane, no CI job and
+    no local sweep, and nothing in this file would have said so until someone
+    wrote it and noticed it never ran.
+    """
+    report = analyse_directory_coverage(_ROOT)
+
+    assert report.uncovered == (), (
+        "no lane's path scope sweeps these test directories, so a module written into one is "
+        "collected by nothing -- name the directory in the lane that owns it, or delete the "
+        "directory:\n  " + "\n  ".join(report.uncovered)
+    )
+
+
+def test_the_directory_gate_measured_a_real_corpus() -> None:
+    """The gate's own failure mode: a walker that found nothing reports a clean tree.
+
+    An empty ``uncovered`` is the same value whether every directory is swept
+    or none was discovered, so the corpus size has to be pinned beside the
+    finding or the two outcomes are indistinguishable.
+    """
+    report = analyse_directory_coverage(_ROOT)
+    lanes = declared_lanes(_ROOT)
+
+    assert len(lanes) > 10, "lane discovery collapsed; the gate would be measuring nothing"
+    assert report.analysed > 100, f"only {report.analysed} test directories discovered; the walker has stopped matching"
+    assert tracked_test_directories(_ROOT) == tuple(sorted(set(tracked_test_directories(_ROOT)))), (
+        "directory discovery must be sorted and duplicate-free, or the finding's order is not stable"
+    )
+
+
+def test_a_directory_whose_only_module_is_named_individually_is_still_uncovered(tmp_path: Path) -> None:
+    """Detector teeth for the exact defect, in an isolated tree.
+
+    A lane names ONE file inside ``outside/tests``. Every file-level question
+    is satisfied by that -- the file is covered, its markers are selected, no
+    test is unreachable and no file is unnamed -- so a gate built only on those
+    questions reports a clean tree. The directory is swept by nothing, and the
+    next module written beside the named one would be collected by nobody.
+    """
+    _repository_with_lanes(
+        tmp_path,
+        "pytest -q src -m unit",
+        "pytest -q outside/tests/test_named_individually.py -m unit",
+    )
+    _write_test(tmp_path / "src" / "tests" / "test_covered.py", _UNIT_MODULE.format(name="covered"))
+    _write_test(tmp_path / "outside" / "tests" / "test_named_individually.py", _UNIT_MODULE.format(name="named"))
+
+    files = analyse_reachability(tmp_path, files=discover_test_files(tmp_path))
+    directories = analyse_directory_coverage(tmp_path, directories=discover_test_directories(tmp_path))
+
+    assert files.unreachable == (), "the control: the named file really is selected, so this is not marker noise"
+    assert files.unnamed == (), "the control: the file-level question is satisfied and reports a clean tree"
+
+    assert directories.uncovered == ("outside/tests",)
+    assert directories.analysed == 2, "both directories must be measured, or the finding is an artefact of one"
+
+
+def test_a_directory_a_lane_sweeps_is_accepted(tmp_path: Path) -> None:
+    """The positive case: widening the lane from the file to its directory clears the finding.
+
+    Same tree as the detector above with one token changed, so the difference
+    between reported and accepted is the lane scope and nothing else.
+    """
+    _repository_with_lanes(tmp_path, "pytest -q src -m unit", "pytest -q outside/tests -m unit")
+    _write_test(tmp_path / "src" / "tests" / "test_covered.py", _UNIT_MODULE.format(name="covered"))
+    _write_test(tmp_path / "outside" / "tests" / "test_named_individually.py", _UNIT_MODULE.format(name="named"))
+
+    directories = analyse_directory_coverage(tmp_path, directories=discover_test_directories(tmp_path))
+
+    assert directories.uncovered == ()
+    assert directories.analysed == 2, "a clean result over an empty corpus would be meaningless"
+
+
+def test_an_empty_tests_package_is_reported_before_a_module_falls_into_it(tmp_path: Path) -> None:
+    """The hole with the fall not yet taken, which no file-level model can see.
+
+    A ``tests`` package holding only ``__init__.py`` offers the per-file and
+    per-test questions nothing to analyse however orphaned it is. It is
+    nonetheless the emptiest form of the defect: the first module written into
+    it is collected by nobody, and the author learns that from a silent absence
+    rather than a failure.
+    """
+    _repository_with_lanes(tmp_path, "pytest -q src -m unit")
+    _write_test(tmp_path / "src" / "tests" / "test_covered.py", _UNIT_MODULE.format(name="covered"))
+    empty_package = tmp_path / "outside" / "tests"
+    empty_package.mkdir(parents=True)
+    (empty_package / "__init__.py").write_text('"""Tests for a subsystem with none yet."""\n', encoding="utf-8")
+
+    files = analyse_reachability(tmp_path, files=discover_test_files(tmp_path))
+    directories = analyse_directory_coverage(tmp_path, directories=discover_test_directories(tmp_path))
+
+    assert files.unnamed == (), "an empty package offers the file-level question nothing to report"
+    assert files.unreachable == ()
+    assert directories.uncovered == ("outside/tests",)
+
+
+def test_a_collapsed_lane_parse_condemns_the_corpus_rather_than_absolving_it(tmp_path: Path) -> None:
+    """Anti-vacuity in the other direction: a broken reader must not score perfectly.
+
+    Zero lanes means nothing is swept. A model that answered "covered" for a
+    directory no lane names would turn a parser that stopped matching into a
+    clean tree, which is the false green this whole module refuses.
+    """
+    _repository_with_lanes(tmp_path, "pytest -q src -m unit")
+    _write_test(tmp_path / "src" / "tests" / "test_covered.py", _UNIT_MODULE.format(name="covered"))
+    discovered = discover_test_directories(tmp_path)
+    assert discovered, "the fixture must discover something for the claim to mean anything"
+
+    report = analyse_directory_coverage(tmp_path, lanes=(), directories=discovered)
+
+    assert report.uncovered == discovered
+    assert report.analysed == len(discovered)
+
+
+def test_a_file_level_exclusion_does_not_unsweep_its_directory(tmp_path: Path) -> None:
+    """``--ignore`` of one module holds that module out; the directory keeps its sweep.
+
+    The distinction decides whether an exclusion is read as a hole. A lane that
+    sweeps ``src`` and ignores one file still collects the next file added
+    beside it, so the directory is covered and reporting it would be a false
+    positive. An ignore of the DIRECTORY is the case that genuinely unsweeps
+    it, which is what the harness package relies on.
+    """
+    _repository_with_lanes(
+        tmp_path,
+        "pytest -q src --ignore=src/tests/test_excluded.py -m unit",
+        "pytest -q outside --ignore=outside/tests -m unit",
+    )
+    _write_test(tmp_path / "src" / "tests" / "test_excluded.py", _UNIT_MODULE.format(name="excluded"))
+    _write_test(tmp_path / "outside" / "tests" / "test_in_ignored_dir.py", _UNIT_MODULE.format(name="ignored"))
+
+    lane, directory_lane = declared_lanes(tmp_path)
+
+    assert lane.covers_directory("src/tests"), "one ignored file must not unsweep the directory around it"
+    assert not lane.covers("src/tests/test_excluded.py"), "the ignored file itself is still held out"
+    assert not directory_lane.covers_directory("outside/tests"), "an ignored directory is genuinely unswept"
+
+
+def test_discovery_reads_the_real_tree() -> None:
+    """The real tree is the control: discovery finds a large, well-formed corpus."""
+    discovered = tracked_test_files(_ROOT)
+    assert len(discovered) > 1000, "discovery collapsed"
+    assert all(path.name.startswith("test_") for path in discovered)
+
+
+def test_discovery_honours_gitignore_without_a_git_repository(tmp_path: Path) -> None:
+    """Discovery reads the working tree modulo ``.gitignore``, never a version-control tool.
+
+    No ``.git`` directory exists in this fixture at all, so a discovery
+    mechanism that shells out to a version-control tool would find nothing (or,
+    worse, silently answer for the wrong repository if it walked up to one). A
+    file the repository's own ``.gitignore`` admits is discovered whether or
+    not it has ever been committed -- the working tree is what the next lane
+    run collects -- and a file an ignore rule excludes never is.
+    """
+    (tmp_path / ".gitignore").write_text("ignored/\n", encoding="utf-8")
+    _write_test(tmp_path / "kept" / "tests" / "test_kept.py", "def test_a() -> None:\n    assert True\n")
+    _write_test(tmp_path / "ignored" / "tests" / "test_excluded.py", "def test_b() -> None:\n    assert True\n")
+
+    discovered = tracked_test_files(tmp_path)
+
+    assert Path("kept/tests/test_kept.py") in discovered
+    assert Path("ignored/tests/test_excluded.py") not in discovered
+
+
+def test_a_planted_orphan_reds_the_gate(tmp_path: Path) -> None:
+    """Anti-tautology, against an injectable root rather than the real tree.
+
+    Without this the gate could pass because its discovery is broken rather than
+    because the tree is clean, and those two outcomes look identical.
+    """
+    _synthetic_repository(tmp_path, lane="pytest -q src -m unit")
+    unit_module = "import pytest\n\npytestmark = [pytest.mark.unit]\n\n\ndef test_{name}() -> None:\n    assert True\n"
+    _write_test(tmp_path / "src" / "tests" / "test_covered.py", unit_module.format(name="a"))
+
+    clean = analyse_reachability(tmp_path, files=discover_test_files(tmp_path))
+    assert clean.unreachable == ()
+    assert clean.analysed == 1
+
+    _write_test(tmp_path / "outside" / "tests" / "test_orphan.py", unit_module.format(name="b"))
+
+    dirty = analyse_reachability(tmp_path, files=discover_test_files(tmp_path))
+    assert [entry.path for entry in dirty.unreachable] == ["outside/tests/test_orphan.py"]
+    assert [entry.test for entry in dirty.unreachable] == ["test_b"]
+
+
+def test_a_marker_only_exclusion_also_reds_the_gate(tmp_path: Path) -> None:
+    """The half a path-only model would miss, proven separately."""
+    _synthetic_repository(tmp_path, lane="pytest -q src -m unit")
+    # In the lane's path, but carrying a marker the lane's expression rejects.
+    _write_test(
+        tmp_path / "src" / "tests" / "test_serial_only.py",
+        "import pytest\n\n"
+        "pytestmark = [pytest.mark.integration, pytest.mark.serial]\n\n\n"
+        "def test_c() -> None:\n    assert True\n",
+    )
+
+    report = analyse_reachability(tmp_path, files=discover_test_files(tmp_path))
+    assert [entry.path for entry in report.unreachable] == ["src/tests/test_serial_only.py"]
+
+
+def test_one_excluded_test_does_not_condemn_its_reachable_siblings(tmp_path: Path) -> None:
+    """The false positive that motivated per-test granularity, pinned.
+
+    This is the exact shape of
+    ``src/cadrumo/adapters/persistence/storage/tests/test_secure_sql.py``: module
+    marked ``unit``, one test additionally marked ``os_keychain``, and every
+    lane excluding that marker. Flattening the file's markers into one set makes
+    the WHOLE file read as unreachable while its unit siblings run daily.
+    """
+    _synthetic_repository(tmp_path, lane="pytest -q src -m 'unit and not os_keychain'")
+    _write_test(
+        tmp_path / "src" / "tests" / "test_mixed.py",
+        "import pytest\n\n"
+        "pytestmark = [pytest.mark.unit]\n\n\n"
+        "def test_ordinary() -> None:\n    assert True\n\n\n"
+        "@pytest.mark.os_keychain\ndef test_needs_keychain() -> None:\n    assert True\n",
+    )
+
+    report = analyse_reachability(tmp_path, files=discover_test_files(tmp_path))
+
+    # The excluded test is reported; its sibling is not, and the file is not.
+    assert [entry.test for entry in report.unreachable] == ["test_needs_keychain"]
+    assert report.affected_files() == ("src/tests/test_mixed.py",)
+
+
+def test_an_unreadable_tracked_file_is_skipped_not_reported(tmp_path: Path) -> None:
+    """A peer's in-flight deletion must not read as an orphaned test.
+
+    Discovery walks the tree at one instant; a path it names can still vanish
+    before it is read, when a peer's deletion lands in between. Treating that
+    as "no tests, therefore unreachable" would red a shared gate on another
+    agent's in-flight work; treating it as unmarked would be worse still. It is
+    counted, not judged.
+    """
+    _synthetic_repository(tmp_path, lane="pytest -q src -m unit")
+    absent = tmp_path / "src" / "tests" / "test_deleted_by_a_peer.py"
+
+    report = analyse_reachability(tmp_path, files=[absent])
+
+    assert report.unreachable == ()
+    assert report.skipped == ("src/tests/test_deleted_by_a_peer.py",)
+    assert report.analysed == 0
+
+
+def test_marker_and_path_are_both_required() -> None:
+    """Reachability needs both halves, which is why the real hole survived.
+
+    The generator tests were excluded twice over: lanes reaching their path
+    rejected their marker, and lanes accepting their marker did not reach their
+    path. A model checking only one half calls them reachable.
+    """
+    right_path_wrong_marker = Lane(source="t", paths=("packaging/homebrew/tests",), marker_expression="unit")
+    right_marker_wrong_path = Lane(source="t", paths=("dev/ci/tests",), marker_expression="serial")
+    target = "packaging/homebrew/tests/test_homebrew_generate.py"
+    markers = frozenset({"integration", "serial"})
+
+    assert right_path_wrong_marker.covers(target)
+    assert not expression_selects(right_path_wrong_marker.marker_expression, markers)
+    assert expression_selects(right_marker_wrong_path.marker_expression, markers)
+    assert not right_marker_wrong_path.covers(target)
+
+
+def test_an_ignore_equals_form_excludes_the_file_but_not_its_sibling(tmp_path: Path) -> None:
+    """``--ignore=PATH`` is one token, and must exclude exactly that file.
+
+    Before ``Lane`` carried ``exclusions``, it had no concept of ``--ignore`` at
+    all, so a lane whose scope was ``src`` covered a file its own invocation
+    excludes -- the exact shape ``just test-integration`` takes for the harness
+    modules, via the single-token ``{{harness_exclusions}}`` expansion.
+    """
+    (tmp_path / "pyproject.toml").write_text('testpaths = ["src"]\n', encoding="utf-8")
+    (tmp_path / "justfile").write_text(
+        "check:\n    pytest -q src -m unit --ignore=src/tests/test_excluded.py\n",
+        encoding="utf-8",
+    )
+    module = "import pytest\n\npytestmark = [pytest.mark.unit]\n\n\ndef test_a() -> None:\n    assert True\n"
+    _write_test(tmp_path / "src" / "tests" / "test_excluded.py", module)
+    _write_test(tmp_path / "src" / "tests" / "test_kept.py", module)
+
+    lanes = declared_lanes(tmp_path)
+    assert len(lanes) == 1
+    lane = lanes[0]
+    assert lane.exclusions == ("src/tests/test_excluded.py",)
+    assert lane.covers("src/tests/test_kept.py")
+    assert not lane.covers("src/tests/test_excluded.py")
+
+    report = analyse_reachability(tmp_path, files=discover_test_files(tmp_path))
+    assert [entry.path for entry in report.unreachable] == ["src/tests/test_excluded.py"]
+
+
+def test_an_ignore_space_form_excludes_the_file_the_same_way(tmp_path: Path) -> None:
+    """``--ignore PATH`` is two tokens; the exclusion must not depend on spelling."""
+    (tmp_path / "pyproject.toml").write_text('testpaths = ["src"]\n', encoding="utf-8")
+    (tmp_path / "justfile").write_text(
+        "check:\n    pytest -q src -m unit --ignore src/tests/test_excluded.py\n",
+        encoding="utf-8",
+    )
+    module = "import pytest\n\npytestmark = [pytest.mark.unit]\n\n\ndef test_a() -> None:\n    assert True\n"
+    _write_test(tmp_path / "src" / "tests" / "test_excluded.py", module)
+    _write_test(tmp_path / "src" / "tests" / "test_kept.py", module)
+
+    lane = declared_lanes(tmp_path)[0]
+    assert lane.exclusions == ("src/tests/test_excluded.py",)
+    assert lane.covers("src/tests/test_kept.py")
+    assert not lane.covers("src/tests/test_excluded.py")
+
+
+def test_justfile_variable_interpolation_resolves_before_ignore_parsing(tmp_path: Path) -> None:
+    """The real defect: an unresolved ``{{name}}`` is never a valid ``--ignore`` value.
+
+    ``just test-integration`` writes its exclusion as ``{{harness_exclusions}}``,
+    a variable this module cannot see the value of by reading justfile text
+    alone. A reader that tokenises the literal eight-character string
+    ``{{harness_exclusions}}`` either treats it as a nonsense path or silently
+    drops it -- either way the exclusion is lost and the lane reads as covering
+    a file it does not run.
+    """
+    (tmp_path / "pyproject.toml").write_text('testpaths = ["src"]\n', encoding="utf-8")
+    (tmp_path / "justfile").write_text(
+        'excluded_file := "src/tests/test_excluded.py"\n\n'
+        "check:\n    pytest -q src -m unit --ignore={{excluded_file}}\n",
+        encoding="utf-8",
+    )
+    module = "import pytest\n\npytestmark = [pytest.mark.unit]\n\n\ndef test_a() -> None:\n    assert True\n"
+    _write_test(tmp_path / "src" / "tests" / "test_excluded.py", module)
+    _write_test(tmp_path / "src" / "tests" / "test_kept.py", module)
+
+    lane = declared_lanes(tmp_path)[0]
+    assert lane.exclusions == ("src/tests/test_excluded.py",)
+    assert lane.covers("src/tests/test_kept.py")
+    assert not lane.covers("src/tests/test_excluded.py")
+
+
+def test_an_unresolved_template_residue_does_not_silently_widen_a_lanes_paths() -> None:
+    """Pins the exact shape of a real defect this module carried for hours, undetected.
+
+    A justfile edit moved literal recipe paths behind `{{name}}` variables.
+    Before template resolution existed, `_paths_of` found no positional-path
+    token on the affected lines, so `_pytest_invocations` fell back to the
+    configured testpaths -- and `test-pytest-harness`'s lane silently widened from two
+    named files to the WHOLE `src/cadrumo` tree. Nothing reds when this
+    happens: a wider lane only ever makes MORE tests look reachable, so the
+    unreachable-test gate stays green throughout. The only way to catch a
+    regression here is to positively pin what a lane's paths must equal, which
+    is what this test does. Do not read either assertion as trivia -- deleting
+    them removes the only signal this failure mode has.
+
+    Two lanes, two different unresolved-residue shapes:
+
+    - `test-unit` is genuinely pathless (no positional path argument at all)
+      AND carries an unresolvable `{{ if durations == "" {...} else {...} }}`
+      construct. Its correct behaviour is to inherit `configured_testpaths`;
+      this pins that the residue does not accidentally produce a non-empty (and
+      therefore narrower-than-correct) or a wrong path list.
+    - `docs-check` carries two real explicit paths sitting next to an
+      unresolved `{{workers}}` reference. `workers` is a RECIPE PARAMETER
+      (`docs-check workers="auto":`), not a top-level justfile variable, so
+      `just --evaluate` structurally cannot resolve it -- it will never appear
+      in `_just_variables`'s output. This pins that the neighbouring bare
+      residue token does not swallow, corrupt, or crowd out the real paths.
+    """
+    lanes = declared_lanes(_ROOT)
+
+    unit_lanes = [lane for lane in lanes if lane.recipe == "test-unit"]
+    assert unit_lanes, "test-unit must still be declared"
+    for lane in unit_lanes:
+        assert lane.paths == configured_testpaths(_ROOT), (
+            "test-unit's unresolved duration-flag residue must not change its inherited "
+            f"testpaths fallback; got {lane.paths!r}"
+        )
+
+    docs_check_lanes = [lane for lane in lanes if lane.recipe == "docs-check"]
+    assert docs_check_lanes, "docs-check must still be declared"
+    for lane in docs_check_lanes:
+        assert lane.paths == (
+            "dev/docs/tests",
+            "dev/docs/apidocs/tests",
+        ), f"docs-check's unresolved `workers` template residue must not swallow its real paths; got {lane.paths!r}"
+
+
+@pytest.mark.parametrize(
+    ("expression", "markers", "selected"),
+    [
+        pytest.param("unit or (integration and not serial)", {"integration", "serial"}, False, id="serial-excluded"),
+        pytest.param("unit or (integration and not serial)", {"integration"}, True, id="integration-included"),
+        pytest.param("unit or (integration and not serial)", {"unit"}, True, id="unit-included"),
+        pytest.param("serial", {"integration", "serial"}, True, id="serial-selected"),
+        pytest.param("docs", {"unit", "hex_core"}, False, id="docs-lane-rejects-unit"),
+        pytest.param("not integration", {"unit"}, True, id="negation"),
+        pytest.param(None, {"anything"}, True, id="no-expression-selects-all"),
+        pytest.param("((((", {"unit"}, False, id="unparseable-is-not-selection"),
+    ],
+)
+def test_expression_evaluation_is_structural_not_substring(
+    expression: str | None,
+    markers: set[str],
+    selected: bool,
+) -> None:
+    """``and``/``or``/``not`` and precedence decide, not string containment.
+
+    ``unit or (integration and not serial)`` contains the substring "serial"
+    while rejecting serial-marked files, so a containment check would invert the
+    answer on the exact case this gate exists to catch.
+    """
+    assert expression_selects(expression, frozenset(markers)) is selected
+
+
+def test_markers_are_collected_per_test_from_every_scope(tmp_path: Path) -> None:
+    """Module, class, and function markers all reach the test that carries them."""
+    module = tmp_path / "test_scopes.py"
+    module.write_text(
+        "import pytest\n\n"
+        "pytestmark = [pytest.mark.integration]\n\n\n"
+        "@pytest.mark.serial\n"
+        "class TestGroup:\n"
+        "    @pytest.mark.hex_core\n"
+        "    def test_inner(self) -> None:\n        assert True\n\n\n"
+        "def test_outer() -> None:\n    assert True\n",
+        encoding="utf-8",
+    )
+
+    resolved = marker_sets_in(module)
+    assert resolved is not None
+    by_name = {entry.test: entry.markers for entry in resolved}
+
+    assert by_name["test_inner"] == frozenset({"integration", "serial", "hex_core"})
+    assert by_name["test_outer"] == frozenset({"integration"})
+
+
+def test_marker_sets_distinguish_absent_from_testless(tmp_path: Path) -> None:
+    """None means unreadable; an empty tuple means read and holding no tests.
+
+    Collapsing the two is what would let a peer's staged deletion be reported as
+    a file whose tests nothing runs.
+    """
+    empty = tmp_path / "test_no_tests.py"
+    empty.write_text("import pytest\n\npytestmark = [pytest.mark.unit]\n", encoding="utf-8")
+
+    assert marker_sets_in(empty) == ()
+    assert marker_sets_in(tmp_path / "test_never_written.py") is None
+
+
+def test_every_ci_invoked_lane_carries_the_triggers_that_reach_it() -> None:
+    """The trigger model must not degrade to silence for every lane at once.
+
+    ``ci_invoked_lanes`` already drops a lane no workflow reaches, so every
+    lane it returns has a route and therefore at least one event. An empty
+    tuple here means the trigger resolution stopped working, not that a lane
+    is manual.
+
+    This is a real failure mode, not a hypothetical one. In a workflow file
+    the ``on:`` key is a YAML 1.1 boolean: a parser reading ``document['on']``
+    gets ``None`` for every workflow in this repository, because the block is
+    stored under the key ``True``. That spelling yields an empty trigger set
+    everywhere, and every lane would then read as automatic -- reporting full
+    coverage precisely when the instrument had stopped measuring.
+    """
+    lanes = ci_invoked_lanes(REPO_ROOT)
+
+    assert lanes, "no CI-invoked lane was resolved at all"
+    silent = tuple(lane.source for lane in lanes if not lane.triggers)
+    assert silent == (), (
+        "these lanes resolved no trigger, so the model cannot say whether CI runs "
+        "them without a person asking:\n  " + "\n  ".join(silent)
+    )
+
+
+#: Floor for the workflow directory: three lanes and three dispatch-only reports.
+_MINIMUM_WORKFLOWS = 6
+
+
+def test_the_trigger_reader_finds_the_on_block_under_its_yaml_boolean_key() -> None:
+    """Read against the workflows themselves, not against the lane model.
+
+    The gate above would still pass if every workflow were genuinely
+    dispatch-only. This one fails instead when the reader stops finding the
+    block at all, which is the shape the boolean key produces.
+    """
+    triggers = workflow_triggers(REPO_ROOT)
+
+    assert len(triggers) >= _MINIMUM_WORKFLOWS, f"only {len(triggers)} workflows were read"
+    unread = tuple(name for name, events in triggers.items() if not events)
+    assert unread == (), (
+        "these workflow files yielded no event at all, which is what reading the "
+        "`on:` key by its string spelling produces:\n  " + "\n  ".join(unread)
+    )
+
+
+def test_at_least_one_lane_runs_without_a_person_asking() -> None:
+    """A vacuity floor over the automatic set.
+
+    Deliberately NOT a gate on how many lanes are manual-only. That number is
+    large -- most of this repository's development gates are reachable only
+    through a dispatch-only workflow -- and whether that is wrong is an
+    operator's decision, not this gate's. What must never happen silently is
+    the automatic set emptying, which would leave nothing gating a push while
+    every lane still resolved.
+    """
+    lanes = ci_invoked_lanes(REPO_ROOT)
+    automatic = tuple(lane for lane in lanes if lane.runs_on_change)
+
+    assert automatic, "no CI-invoked lane runs without a person asking, so nothing this model describes gates a push"
+    assert all(lane.is_manual_only is not lane.runs_on_change for lane in lanes), (
+        "a lane reported as both automatic and manual-only, or as neither"
+    )

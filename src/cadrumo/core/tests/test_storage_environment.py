@@ -1,0 +1,358 @@
+"""Repository defaults and environment-controlled storage relocation."""
+
+from __future__ import annotations
+
+import os
+from pathlib import Path
+
+import pytest
+
+from ...tests.env_scope import isolated_aeat_env
+from .. import storage_environment as storage_environment_module
+from ..config import Settings
+from ..config_state_root import default_storage_root, live_state_root_inputs, platform_user_data_root
+from ..errors.hierarchy import CoreValidationError
+from ..storage_environment import (
+    STORAGE_ROOT,
+    TEMPORARY_VARIABLES,
+    TOOL_STORAGE_LOCATIONS,
+    ChildEnvironmentProfile,
+    StorageMode,
+    StorageModeEvidence,
+    child_environment,
+    configured_storage_root,
+    detect_storage_mode,
+    relayed_setting_names,
+    storage_directory,
+    tool_storage_environment,
+    withheld_child_settings,
+)
+from ..storage_taxonomy import (
+    STORAGE_ROOT_SETTINGS_FIELD,
+    StorageCategory,
+    StorageOverridePolicy,
+)
+from ..storage_taxonomy_locations import STORAGE_TAXONOMY, storage_location
+from .checkout import project_root
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+def test_unset_root_defaults_to_repository_even_from_another_directory(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repository = project_root()
+    monkeypatch.chdir(tmp_path)
+    with isolated_aeat_env():
+        assert default_storage_root() == repository / "var" / "storage"
+        assert platform_user_data_root(live_state_root_inputs()) == repository
+
+
+def test_shared_root_relocates_settings_and_relative_refinements(tmp_path: Path) -> None:
+    root = tmp_path / "relocated"
+    with isolated_aeat_env(CADRUMO_STORAGE_ROOT=str(root), CADRUMO_LOG_DIR="diagnostics", CADRUMO_DEV_CACHE_ROOT=""):
+        settings = Settings()
+        assert configured_storage_root() == root
+        assert settings.cadrumo_local_storage_root == root
+        assert settings.cadrumo_log_dir == root / "diagnostics"
+        assert settings.cadrumo_temp_dir == root / "tmp"
+        assert settings.cadrumo_connection_socket_dir == root / "runtime"
+        assert settings.cadrumo_playwright_browsers_dir == root / "components" / "playwright"
+        assert storage_directory("CADRUMO_DEV_CACHE_ROOT", "development/cache") == root / "development" / "cache"
+
+
+def test_local_refinement_and_absolute_member_override_win(tmp_path: Path) -> None:
+    local = tmp_path / "backend"
+    logs = tmp_path / "logs"
+    with isolated_aeat_env(
+        CADRUMO_STORAGE_ROOT=str(tmp_path / "shared"),
+        CADRUMO_LOCAL_STORAGE_ROOT=str(local),
+        CADRUMO_LOG_DIR=str(logs),
+    ):
+        settings = Settings()
+        assert configured_storage_root() == local
+        assert settings.cadrumo_local_storage_root == local
+        assert settings.cadrumo_log_dir == logs
+        assert settings.cadrumo_token_dir == local / "tokens"
+
+
+def test_blank_overrides_are_unset_and_relative_root_anchors_to_repository() -> None:
+    with isolated_aeat_env(
+        CADRUMO_STORAGE_ROOT=" var/alternate ", CADRUMO_LOCAL_STORAGE_ROOT=" \t", CADRUMO_TEMP_DIR=" "
+    ):
+        settings = Settings()
+        root = project_root() / "var" / "alternate"
+        assert settings.cadrumo_local_storage_root == root
+        assert settings.cadrumo_temp_dir == root / "tmp"
+
+
+def test_isolated_launch_allowlist_carries_storage_controls_without_credentials() -> None:
+    controls = Settings.storage_env_var_names()
+    assert {
+        "CADRUMO_LOCAL_STORAGE_ROOT",
+        "CADRUMO_TEMP_DIR",
+        "CADRUMO_RUNTIME_SOCKET_DIR",
+        "CADRUMO_OLLAMA_HOME_DIR",
+    } <= controls
+    # The development root variable is honoured only in a checkout; children inherit the pinned root.
+    assert STORAGE_ROOT.development_variable not in controls
+    assert "CADRUMO_SECRET_PASSPHRASE" not in controls
+    assert "CADRUMO_CERTIFICATE_PASSWORD_SECRET" not in controls
+    assert "CADRUMO_CLAVE_PERMANENTE_PASSWORD" not in controls
+    assert "CADRUMO_AUTH_PROVIDER" not in controls
+
+
+def test_checkout_module_is_development_from_any_directory(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    evidence = detect_storage_mode(Path(storage_environment_module.__file__))
+    assert evidence == StorageModeEvidence(StorageMode.DEVELOPMENT, project_root())
+    assert (project_root() / "pyproject.toml").is_file()
+
+
+def test_module_outside_a_checkout_is_installed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    site = tmp_path / "Lib" / "site-packages"
+    module = site.joinpath(*STORAGE_ROOT.checkout_module[1:])
+    module.parent.mkdir(parents=True)
+    module.write_bytes(Path(storage_environment_module.__file__).read_bytes())
+    # A marker beside the package is not a checkout: the module must sit at src/<package>/core.
+    (site / STORAGE_ROOT.checkout_marker).write_text("[project]\n", encoding="utf-8")
+    monkeypatch.chdir(project_root())
+    assert detect_storage_mode(module) == StorageModeEvidence(StorageMode.INSTALLED, None)
+
+
+def test_checkout_layout_without_marker_is_installed(tmp_path: Path) -> None:
+    module = tmp_path.joinpath(*STORAGE_ROOT.checkout_module)
+    module.parent.mkdir(parents=True)
+    module.write_bytes(Path(storage_environment_module.__file__).read_bytes())
+    assert detect_storage_mode(module).mode is StorageMode.INSTALLED
+    (tmp_path / STORAGE_ROOT.checkout_marker).write_text("[project]\n", encoding="utf-8")
+    assert detect_storage_mode(module) == StorageModeEvidence(StorageMode.DEVELOPMENT, tmp_path.resolve())
+
+
+def test_location_settings_are_separate_from_development_tools() -> None:
+    product = Settings.storage_env_var_names()
+    development = frozenset(variable for variable, _default in TOOL_STORAGE_LOCATIONS.values())
+    overridable = {
+        location.settings_field.upper()
+        for location in STORAGE_TAXONOMY.values()
+        if location.override_policy is StorageOverridePolicy.OPERATOR_OVERRIDABLE
+        and (location.settings_field is not None and location.settings_field)
+    }
+    overridable.update(
+        location.environment_variable
+        for location in STORAGE_TAXONOMY.values()
+        if location.override_policy is StorageOverridePolicy.OPERATOR_OVERRIDABLE
+        and location.environment_variable is not None
+    )
+    assert {"CADRUMO_LOCAL_STORAGE_ROOT", "CADRUMO_TEMP_DIR"} <= product
+    assert product == overridable | {"CADRUMO_LOCAL_STORAGE_ROOT"}
+    assert "CADRUMO_STORAGE_ROOT" not in product
+    assert "CADRUMO_TOOL_CACHE_DIR" in development
+    assert not product & development
+    assert not {"XDG_CACHE_HOME", "UV_CACHE_DIR"} & (product | development)
+    assert not any(name.startswith("CADRUMO_UV_") for name in development)
+    assert not {"UV_CACHE_DIR", "UV_PYTHON_INSTALL_DIR", "UV_TOOL_DIR", "UV_TOOL_BIN_DIR"} & set(TOOL_STORAGE_LOCATIONS)
+    proxy = {"CADRUMO_PROXY_URL", "CADRUMO_PROXY_USERNAME", "CADRUMO_PROXY_BYPASS"}
+    assert relayed_setting_names() == product | {"CADRUMO_AUTHORITY_ROOT"} | proxy
+
+
+def test_uv_global_paths_remain_owned_by_the_machine_and_uv(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    machine_paths = {
+        "UV_CACHE_DIR": str(tmp_path / "machine-cache"),
+        "UV_PYTHON_INSTALL_DIR": str(tmp_path / "machine-python"),
+        "UV_TOOL_DIR": str(tmp_path / "machine-tools"),
+        "UV_TOOL_BIN_DIR": str(tmp_path / "machine-tool-bin"),
+    }
+    retired_controls = {
+        "CADRUMO_UV_CACHE_DIR": str(tmp_path / "retired-cache"),
+        "CADRUMO_UV_PYTHON_DIR": str(tmp_path / "retired-python"),
+        "CADRUMO_UV_TOOL_DIR": str(tmp_path / "retired-tools"),
+        "CADRUMO_UV_TOOL_BIN_DIR": str(tmp_path / "retired-tool-bin"),
+    }
+    for name, value in {**machine_paths, **retired_controls}.items():
+        monkeypatch.setenv(name, value)
+
+    managed = tool_storage_environment()
+    child = {**os.environ, **managed}
+    for name in retired_controls:
+        monkeypatch.delenv(name)
+    without_retired_controls = tool_storage_environment()
+
+    assert not set(machine_paths) & managed.keys()
+    assert {name: child[name] for name in machine_paths} == machine_paths
+    assert managed == without_retired_controls
+    assert not set(retired_controls) & {variable for variable, _default in TOOL_STORAGE_LOCATIONS.values()}
+
+
+def _received(tmp_path: Path) -> dict[str, str]:
+    return {
+        "PATH": "ambient-path",
+        "SYSTEMROOT": "ambient-system-root",
+        "CADRUMO_STORAGE_ROOT": str(tmp_path / "shared"),
+        "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "inherited"),
+        "CADRUMO_TEMP_DIR": "worker-temp",
+        "CADRUMO_LOG_DIR": str(tmp_path / "logs"),
+        "CADRUMO_UV_CACHE_DIR": str(tmp_path / "uv"),
+        "CADRUMO_SECRET_PASSPHRASE": "must-not-cross",
+        "CADRUMO_LLM_OPENAI_API_KEY": "must-not-cross",
+        "AEAT_SEDE_EXPEDIENTES_PATH": "must-not-cross",
+        "PYTHONPATH": "must-not-cross",
+        "LD_PRELOAD": "must-not-cross",
+        "VIRTUAL_ENV": "must-not-cross",
+        "CADRUMO_AUTHORITY_ROOT": str(tmp_path / "authority"),
+        "XDG_CACHE_HOME": str(tmp_path / "pinned-cache"),
+    }
+
+
+def test_operator_child_keeps_its_location_settings_and_pins_the_root(tmp_path: Path) -> None:
+    root = tmp_path / "root"
+    received = _received(tmp_path)
+    environment = child_environment(ChildEnvironmentProfile.OPERATOR, root, received=received, sys_platform="win32")
+    temporary = str((root / "worker-temp").resolve())
+    assert environment == {
+        "PATH": "ambient-path",
+        "SYSTEMROOT": "ambient-system-root",
+        "CADRUMO_LOCAL_STORAGE_ROOT": str(root.resolve()),
+        "CADRUMO_TEMP_DIR": "worker-temp",
+        "CADRUMO_LOG_DIR": str(tmp_path / "logs"),
+        "CADRUMO_AUTHORITY_ROOT": str(tmp_path / "authority"),
+        "XDG_CACHE_HOME": str(tmp_path / "pinned-cache"),
+        # Interpreter and loader names are not settings of this command line;
+        # a packaged image's host defines them, and outside a package they pass.
+        "PYTHONPATH": "must-not-cross",
+        "LD_PRELOAD": "must-not-cross",
+        "VIRTUAL_ENV": "must-not-cross",
+        "TEMP": temporary,
+        "TMP": temporary,
+        "TMPDIR": temporary,
+    }
+    assert (root / "worker-temp").is_dir()
+
+
+def test_strict_child_carries_only_pins_and_the_authority_root(tmp_path: Path) -> None:
+    root = tmp_path / "neutral" / "state"
+    received = _received(tmp_path)
+    environment = child_environment(
+        ChildEnvironmentProfile.STRICT, root, received=received, base={}, sys_platform="win32"
+    )
+    temporary = str((root / "tmp").resolve())
+    assert environment == {
+        "CADRUMO_LOCAL_STORAGE_ROOT": str(root.resolve()),
+        "CADRUMO_AUTHORITY_ROOT": str(tmp_path / "authority"),
+        "TEMP": temporary,
+        "TMP": temporary,
+        "TMPDIR": temporary,
+    }
+    ambient = child_environment(ChildEnvironmentProfile.STRICT, root, received=received, sys_platform="win32")
+    assert set(ambient) == {
+        *environment,
+        "PATH",
+        "SYSTEMROOT",
+        "XDG_CACHE_HOME",
+        "PYTHONPATH",
+        "LD_PRELOAD",
+        "VIRTUAL_ENV",
+    }
+    assert ambient["XDG_CACHE_HOME"] == received["XDG_CACHE_HOME"]
+
+
+@pytest.mark.parametrize("profile", list(ChildEnvironmentProfile))
+def test_packaged_pywin32_cache_resolves_beneath_the_root_without_a_host_pin(
+    tmp_path: Path, profile: ChildEnvironmentProfile
+) -> None:
+    location = storage_location(StorageCategory.PYWIN32_GENERATED_CACHE)
+    assert location.override_policy is StorageOverridePolicy.FIXED
+    assert location.settings_field is None
+    root = (tmp_path / "root").resolve()
+    assert root.joinpath(location.relative_path()) == root / "cache" / "pywin32" / "gen_py"
+    received = {"XDG_CACHE_HOME": str(tmp_path / "former-cache-pin")}
+    for sys_platform in ("win32", "linux"):
+        environment = child_environment(profile, root, received=received, base={}, sys_platform=sys_platform)
+        assert "XDG_CACHE_HOME" not in environment
+        assert environment[STORAGE_ROOT.variable] == str(root)
+
+
+def test_pinned_names_and_precedence_come_from_the_declaration() -> None:
+    assert (STORAGE_ROOT.variable, *TEMPORARY_VARIABLES) == (
+        "CADRUMO_LOCAL_STORAGE_ROOT",
+        "TEMP",
+        "TMP",
+        "TMPDIR",
+    )
+    assert STORAGE_ROOT.precedence == ("CADRUMO_LOCAL_STORAGE_ROOT", "CADRUMO_STORAGE_ROOT")
+    assert STORAGE_ROOT.root_variables(StorageMode.INSTALLED) == ("CADRUMO_LOCAL_STORAGE_ROOT",)
+    assert STORAGE_ROOT_SETTINGS_FIELD == "cadrumo_local_storage_root"
+
+
+@pytest.mark.parametrize("profile", list(ChildEnvironmentProfile))
+def test_child_refuses_relative_pin_without_creating_state(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, profile: ChildEnvironmentProfile
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    with pytest.raises(CoreValidationError, match="absolute storage root pin"):
+        child_environment(profile, Path("relative-state"), received={})
+    assert not (tmp_path / "relative-state").exists()
+
+
+@pytest.mark.parametrize("platform", ["win32", "linux", "darwin"])
+def test_child_environment_uses_platform_variable_case_rules(tmp_path: Path, platform: str) -> None:
+    root = tmp_path / "state"
+    received = {
+        "Path": "ambient",
+        "pythonpath": "lower-case-value",
+        "dyld_insert_libraries": "lower-case-loader",
+        "DYLD_INSERT_LIBRARIES": "blocked-loader",
+        STORAGE_ROOT.variable.lower(): "must-not-replace-pin",
+        "CADRUMO_TEMP_DIR".lower(): "alternate-temp",
+        "CADRUMO_AUTHORITY_ROOT".lower(): str(tmp_path / "authority-pin"),
+    }
+    environment = child_environment(ChildEnvironmentProfile.OPERATOR, root, received=received, sys_platform=platform)
+    assert environment[STORAGE_ROOT.variable] == str(root.resolve())
+    if platform == "win32":
+        assert "pythonpath" not in environment
+        assert environment["PYTHONPATH"] == "lower-case-value"
+        assert environment["PATH"] == "ambient"
+        assert environment["CADRUMO_AUTHORITY_ROOT"] == str(tmp_path / "authority-pin")
+        assert environment["TEMP"] == str(root / "alternate-temp")
+        assert STORAGE_ROOT.variable.lower() not in environment
+    else:
+        assert environment["pythonpath"] == "lower-case-value"
+        assert environment["dyld_insert_libraries"] == "lower-case-loader"
+        assert environment["DYLD_INSERT_LIBRARIES"] == "blocked-loader"
+        assert environment["Path"] == "ambient"
+        assert "CADRUMO_AUTHORITY_ROOT" not in environment
+        assert environment["TEMP"] == str(root / "tmp")
+
+
+def test_operator_child_follows_the_operators_proxy_but_never_receives_the_password_setting(tmp_path: Path) -> None:
+    root = tmp_path / "root"
+    proxy = {
+        "CADRUMO_PROXY_URL": "http://lane:synthetic-proxy-word@127.0.0.1:3128",
+        "CADRUMO_PROXY_USERNAME": "lane",
+        "CADRUMO_PROXY_BYPASS": "example.invalid",
+        "CADRUMO_PROXY_PASSWORD_SECRET": "must-not-cross",
+    }
+    received = {**_received(tmp_path), **proxy}
+    operator = child_environment(ChildEnvironmentProfile.OPERATOR, root, received=received, sys_platform="win32")
+    assert {name: operator.get(name) for name in proxy} == {
+        **proxy,
+        "CADRUMO_PROXY_PASSWORD_SECRET": None,
+    }
+    strict = child_environment(ChildEnvironmentProfile.STRICT, root, received=received, sys_platform="win32")
+    assert not any(name.startswith("CADRUMO_PROXY_") for name in strict)
+    assert "CADRUMO_PROXY_URL" in relayed_setting_names()
+    assert "CADRUMO_PROXY_PASSWORD_SECRET" not in relayed_setting_names()
+
+
+def test_a_process_holding_the_proxy_withholds_it_from_the_environment_its_children_inherit(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    word = "synthetic-proxy-word"
+    monkeypatch.setenv("CADRUMO_PROXY_URL", f"http://lane:{word}@127.0.0.1:3128")
+    monkeypatch.setenv("CADRUMO_PROXY_PASSWORD_SECRET", word)
+    monkeypatch.setenv("CADRUMO_LOG_DIR", "kept")
+    with withheld_child_settings():
+        assert not any(name.upper().startswith("CADRUMO_PROXY_") for name in os.environ)
+        assert os.environ["CADRUMO_LOG_DIR"] == "kept"
+    assert os.environ["CADRUMO_PROXY_URL"] == f"http://lane:{word}@127.0.0.1:3128"
+    assert os.environ["CADRUMO_PROXY_PASSWORD_SECRET"] == word

@@ -1,0 +1,112 @@
+"""Canonical application projection of one read-only AEAT censal observation."""
+
+from __future__ import annotations
+
+from datetime import date, datetime
+from typing import Literal
+
+from pydantic import AnyHttpUrl, BaseModel, Field
+
+from ...core.models import STRICT_FROZEN_CONFIG
+
+
+class CensalCell(BaseModel):
+    """Rendered evidence; a blank selection is not a negative answer."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    role: Literal["label", "casilla", "value"]
+    text: str | None
+    column: str | None = None
+
+
+class CensalRow(BaseModel):
+    """A labelled record, preserving unfamiliar and blank cells."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    label: str | None = None
+    columns: tuple[str, ...] = ()
+    cells: tuple[CensalCell, ...]
+
+
+class CensalSection(BaseModel):
+    """A named group whose field and column labels survive reordering."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    title: str = Field(min_length=1)
+    rows: tuple[CensalRow, ...]
+
+
+class CensalConsultation(BaseModel):
+    """One consultation's evidence, without interpreting eligibility or liability."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    kind: Literal["actividades", "locales", "situacion_tributaria", "obligaciones"]
+    source_url: AnyHttpUrl
+    sections: tuple[CensalSection, ...] = Field(min_length=1)
+    activity_row_index: int | None = Field(default=None, ge=0)
+    """For premises, the parent row in the flattened activities observation."""
+
+
+class CensalObservationIdentity(BaseModel):
+    """Exact identity group observed on the censal consulta surface."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    nif: str | None = Field(default=None, max_length=32)
+    apellidos_y_nombre: str | None = Field(default=None, max_length=256)
+    administracion_domicilio_fiscal: str | None = Field(default=None, max_length=128)
+    lugar_nacimiento: str | None = Field(default=None, max_length=128)
+    fecha_nacimiento: date | None = None
+    pasaporte: str | None = Field(default=None, max_length=64)
+    sexo: str | None = Field(default=None, max_length=32)
+    nacionalidad: str | None = Field(default=None, max_length=64)
+    estado_civil: str | None = Field(default=None, max_length=64)
+    obligado_notificaciones_electronicas: bool | None = None
+    suscrito_voluntariamente_notificaciones_electronicas: bool | None = None
+
+
+class CensalObservationAddress(BaseModel):
+    """Exact fiscal or notification address group in a censal observation."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    tipo_via: str | None = Field(default=None, max_length=32)
+    nombre_via: str | None = Field(default=None, max_length=128)
+    tipo_numero: str | None = Field(default=None, max_length=32)
+    numero_casa: str | None = Field(default=None, max_length=32)
+    calificacion_numero: str | None = Field(default=None, max_length=32)
+    bloque: str | None = Field(default=None, max_length=32)
+    portal: str | None = Field(default=None, max_length=32)
+    escalera: str | None = Field(default=None, max_length=32)
+    planta: str | None = Field(default=None, max_length=32)
+    puerta: str | None = Field(default=None, max_length=32)
+    complemento: str | None = Field(default=None, max_length=128)
+    localidad: str | None = Field(default=None, max_length=128)
+    referencia_catastral: str | None = Field(default=None, max_length=32)
+    indicador_referencia_catastral: str | None = Field(default=None, max_length=256)
+    codigo_postal: str | None = Field(default=None, max_length=16)
+    municipio: str | None = Field(default=None, max_length=128)
+    provincia: str | None = Field(default=None, max_length=64)
+    destinatario: str | None = Field(default=None, max_length=256)
+    en_calidad_de: str | None = Field(default=None, max_length=128)
+
+
+class CensalObservation(BaseModel):
+    """One exact, immutable read of the taxpayer's censal consulta."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    identity: CensalObservationIdentity
+    domicilio_fiscal: CensalObservationAddress
+    domicilio_notificacion: CensalObservationAddress
+    captured_at: datetime
+    source_url: AnyHttpUrl
+    mode: Literal["read"] = "read"
+    consultations: tuple[CensalConsultation, ...] = ()
+
+
+__all__ = ["CensalObservation", "CensalObservationAddress", "CensalObservationIdentity"]

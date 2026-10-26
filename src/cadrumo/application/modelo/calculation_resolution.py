@@ -1,0 +1,409 @@
+"""Calculation input-channel resolution helpers.
+
+The helpers merge caller, backend, profile, and borrador channels for a
+:class:`RegistrySnapshot`, then build the canonical input map consumed by the
+selected :class:`ModeloRevision`.
+
+This module is the calculation-service assembly layer between source resolution
+and engine execution. It delegates source-specific work to the binding
+resolution helpers, then returns typed channel bundles that
+:func:`application.modelo.calculation_actions.calculate_modelo_revision` can pass to
+:func:`domain.calculations.registry.formula_runtime.calculate_registry_snapshot` and the
+:class:`CalculationRevision` persistence boundary.
+
+See Also:
+    :func:`application.modelo.binding_resolution.resolve_borrador_source_tier`
+        Resolves the optional borrador tier before the final precedence merge.
+    :func:`application.modelo.binding_resolution.resolve_profile_source_tier`
+        Resolves profile-sourced bindings as the lowest-precedence tier.
+    :func:`application.aggregation.source_resolution_operations.merge_source_resolutions_by_precedence`
+        Applies the ordered overlay contract used by this module.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from dataclasses import dataclass
+from datetime import date
+from decimal import Decimal
+from typing import TYPE_CHECKING
+
+from ...core.casilla_id import CasillaId, validated_casilla_id
+from ...core.period import Period
+from ...domain.calculations.registry.bindings import (
+    resolve_available_bound_inputs_by_casilla_id,
+    resolve_bound_casilla_binding_value,
+)
+from ...domain.calculations.registry.casilla_membership import text_family_casilla_ids
+from ...domain.calculations.registry.ids import (
+    BindingId,
+    RelationId,
+)
+from ...domain.calculations.registry.schema import (
+    ModeloRevision,
+    RegistrySnapshot,
+)
+from ...domain.calculations.registry.schema_input_kind import InputKind
+from ...domain.identifiers import canonical_decimal_string as _canonical_decimal_str
+from ...domain.modelos.calculation_revision import PERSISTED_BOOLEAN_BINDING_TOKENS
+from ...domain.modelos.filing_record import FilingDeclarationKind
+from ...domain.modelos.work_unit import WorkUnit
+from ..aggregation.source_mesh import CalculationSourceResolution
+from ..aggregation.source_resolution_operations import merge_source_resolutions_by_precedence
+from .binding_resolution import (
+    lift_previous_filing_casilla_overrides_to_bindings,
+    reject_binding_channel_mismatch,
+    resolve_borrador_source_tier,
+    resolve_declaration_period_inputs,
+    resolve_profile_source_tier,
+)
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ..live.borrador_100 import Borrador100SnapshotRepository
+    from .work_profile import ModeloWorkProfile
+
+
+@dataclass(frozen=True, slots=True)
+class ResolvedCalculationChannels:
+    """Merged engine binding channels for one calculation.
+
+    ``bindings`` feeds the Decimal channel, ``enum_bindings`` feeds string
+    dispatch keys, ``date_bindings`` feeds date-valued profile bindings, and
+    ``boolean_bindings`` feeds the truth values of bindings whose registry value
+    contract declares the boolean channel.
+    The borrador fields carry the typed snapshot trace from
+    :class:`~application.aggregation.source_mesh.CalculationSourceResolution` through to
+    the persisted :class:`CalculationRevision`.
+    """
+
+    bindings: dict[BindingId, Decimal]
+    enum_bindings: dict[BindingId, str]
+    date_bindings: dict[BindingId, date]
+    boolean_bindings: dict[BindingId, bool]
+    borrador_snapshot_id: str | None
+    bindings_sourced_from_borrador: tuple[BindingId, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class ResolvedCalculationInputs:
+    """Canonical per-channel casilla inputs for one engine run.
+
+    ``casilla_inputs`` feeds ``calculate_registry_snapshot(inputs=...)`` and
+    ``text_casilla_inputs`` feeds its ``text_inputs=...`` channel. Callers
+    receive both together so a string-family casilla cannot be silently dropped
+    on the way to the engine.
+    """
+
+    casilla_inputs: dict[CasillaId, Decimal]
+    text_casilla_inputs: dict[CasillaId, str]
+
+
+@dataclass(frozen=True, slots=True)
+class CalculationReplayPayloads:
+    """Canonical string payloads stored for calculation replay.
+
+    The persistence layer stores user-visible inputs as strings, not live
+    :class:`~decimal.Decimal` instances. These maps are derived after all source
+    overlays have settled so replay and revision identity use the same canonical
+    values the engine consumed. They are the persisted replay side of the
+    :class:`CalculationRevision` hash domain, not an independent calculation
+    path.
+    """
+
+    input_values_by_casilla_id: dict[CasillaId, str]
+    binding_overrides: dict[BindingId, str]
+    row_binding_values: dict[BindingId, dict[str, str]]
+    relation_overrides: dict[RelationId, str]
+
+
+def resolve_calculation_binding_channels(
+    *,
+    work_unit: WorkUnit,
+    snapshot: RegistrySnapshot,
+    casilla_inputs: Mapping[CasillaId, Decimal],
+    caller_binding_values: Mapping[BindingId, Decimal],
+    caller_enum_binding_values: Mapping[BindingId, str],
+    backend_binding_values: Mapping[BindingId, Decimal],
+    borrador_snapshot_id: str | None,
+    borrador_snapshot_repository: Borrador100SnapshotRepository | None,
+    operation: PinnedAuthorityOperation,
+    profile: ModeloWorkProfile,
+) -> ResolvedCalculationChannels:
+    """Resolve all binding channels for ``work_unit`` and ``snapshot``.
+
+    The ``work_unit`` is the :class:`WorkUnit` whose bucket, filing year, and
+    period select the source-resolution axis. The ``snapshot`` is the
+    :class:`RegistrySnapshot` supplying the revision whose binding
+    channels are being resolved.
+
+    The source-precedence ladder is profile, backend, borrador, then caller. The
+    returned :class:`ResolvedCalculationChannels` contains the merged Decimal,
+    enum, date, and boolean channels, plus any
+    :class:`~application.live.borrador_100.Borrador100SnapshotRepository` provenance,
+    after
+    :func:`application.modelo.binding_resolution.reject_binding_channel_mismatch`
+    verifies the registry-declared channel shape and
+    :func:`application.modelo.binding_resolution.lift_previous_filing_casilla_overrides_to_bindings`
+    mirrors eligible previous-filing casilla overrides onto their binding ids.
+    """
+    borrador_resolution = resolve_borrador_source_tier(
+        bucket_id=work_unit.bucket_id,
+        snapshot=snapshot,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        borrador_snapshot_id=borrador_snapshot_id,
+        caller_binding_values=caller_binding_values,
+        caller_enum_binding_values=caller_enum_binding_values,
+        borrador_snapshot_repository=borrador_snapshot_repository,
+        operation=operation,
+    )
+    profile_resolution = resolve_profile_source_tier(
+        bucket_id=work_unit.bucket_id,
+        snapshot=snapshot,
+        caller_binding_values=caller_binding_values,
+        caller_enum_binding_values=caller_enum_binding_values,
+        borrador_resolution=borrador_resolution,
+        backend_binding_values=backend_binding_values,
+        operation=operation,
+        profile=profile,
+    )
+    backend_tier = CalculationSourceResolution(
+        resolver_id="calculate_backend_bindings",
+        binding_values=dict(backend_binding_values),
+    )
+    caller_tier = CalculationSourceResolution(
+        resolver_id="calculate_caller_bindings",
+        binding_values=dict(caller_binding_values),
+        enum_binding_values=dict(caller_enum_binding_values),
+    )
+    merged = merge_source_resolutions_by_precedence(
+        (profile_resolution, backend_tier, borrador_resolution, caller_tier),
+    )
+    resolved_bindings = dict(sorted(merged.binding_values.items()))
+    resolved_enum_bindings = dict(sorted(merged.enum_binding_values.items()))
+    resolved_date_bindings = dict(sorted(merged.date_binding_values.items()))
+    resolved_boolean_bindings = dict(sorted(merged.boolean_binding_values.items()))
+    reject_binding_channel_mismatch(
+        snapshot.revision,
+        resolved_bindings,
+        resolved_enum_bindings,
+        resolved_boolean_bindings,
+    )
+    resolved_bindings = dict(
+        sorted(
+            lift_previous_filing_casilla_overrides_to_bindings(
+                snapshot.revision,
+                casilla_inputs,
+                resolved_bindings,
+            ).items(),
+        ),
+    )
+    borrador_provenance = merged.borrador_provenance
+    return ResolvedCalculationChannels(
+        bindings=resolved_bindings,
+        enum_bindings=resolved_enum_bindings,
+        date_bindings=resolved_date_bindings,
+        boolean_bindings=resolved_boolean_bindings,
+        borrador_snapshot_id=borrador_provenance.snapshot_id if borrador_provenance is not None else None,
+        bindings_sourced_from_borrador=(
+            borrador_provenance.bindings_sourced if borrador_provenance is not None else ()
+        ),
+    )
+
+
+def resolve_calculation_inputs(
+    *,
+    revision: ModeloRevision,
+    filing_year: int,
+    period: Period,
+    backend_casilla_inputs: Mapping[CasillaId, Decimal] | None,
+    resolved_bindings: Mapping[BindingId, Decimal],
+    casilla_inputs: Mapping[CasillaId, Decimal],
+    text_casilla_inputs: Mapping[CasillaId, str] | None = None,
+    profile_text_casilla_inputs: Mapping[CasillaId, str] | None = None,
+) -> ResolvedCalculationInputs:
+    """Build the canonical casilla input maps for engine execution.
+
+    The ``revision`` is the :class:`ModeloRevision` whose declaration-period and
+    bound casilla inputs are being projected. The :class:`~core.period.Period`
+    supplies the filing-period casilla values that the registry declares as
+    inputs.
+
+    Declaration-period bindings are projected first, followed by backend casilla
+    inputs, bound casillas resolved from merged binding values, and finally the
+    caller's explicit casilla overrides. Both returned maps are sorted for stable
+    replay payloads and revision identity.
+
+    A work-unit calculation prepares the period's original declaration -- the
+    kind the local filing record carries -- so the ``tipo_declaracion`` role
+    receives :attr:`~cadrumo.domain.modelos.filing_record.FilingDeclarationKind.ORIGINAL`;
+    an amendment is built by the amendment service with its own kind.
+    ``profile_text_casilla_inputs`` are the bound text casillas the declarant's
+    profile answers, resolved by
+    :func:`~application.modelo.profile_export_binding.resolve_profile_text_casilla_inputs`;
+    they rank below a bound value on the binding channel and below the caller's
+    own text.
+
+    The two channels are returned together, and never merged, because the
+    registry assigns each casilla to exactly one of them by declared
+    ``data_type`` family: the ``filing_period`` role is ``period_code`` (a
+    string family whose ``period_code`` validator accepts ``1T``, ``EXT-1T``,
+    and every other declared token), while ``filing_year`` is ``year`` and stays
+    on the Decimal channel.
+    """
+    declaration = resolve_declaration_period_inputs(
+        revision,
+        filing_year=filing_year,
+        period=period,
+        declaration_kind=FilingDeclarationKind.ORIGINAL,
+    )
+    return ResolvedCalculationInputs(
+        casilla_inputs=dict(
+            sorted(
+                {
+                    **declaration.casilla_inputs,
+                    **dict(backend_casilla_inputs or {}),
+                    **resolve_available_bound_inputs_by_casilla_id(revision, resolved_bindings),
+                    **casilla_inputs,
+                }.items(),
+            ),
+        ),
+        text_casilla_inputs=dict(
+            sorted(
+                {
+                    **declaration.text_casilla_inputs,
+                    **dict(profile_text_casilla_inputs or {}),
+                    **_bound_text_casilla_inputs(revision, resolved_bindings),
+                    **dict(text_casilla_inputs or {}),
+                }.items(),
+            ),
+        ),
+    )
+
+
+def _bound_text_casilla_inputs(
+    revision: ModeloRevision,
+    resolved_bindings: Mapping[BindingId, Decimal],
+) -> dict[CasillaId, str]:
+    """Project resolved binding values onto the text casillas they are bound to.
+
+    A bound text casilla -- such as a declaration-type code read from the
+    profile -- can arrive on the binding channel as a number. It is still text:
+    it enters the calculation on the text channel, spelled as the canonical
+    decimal token its binding resolved to, which is the same spelling a replay
+    of the persisted inputs reads back. A casilla whose binding resolved to
+    nothing stays absent.
+    """
+    text_casilla_ids = text_family_casilla_ids(revision.casillas)
+    projected: dict[CasillaId, str] = {}
+    for casilla in revision.casillas:
+        if casilla.input_kind != InputKind.BOUND or casilla.id not in text_casilla_ids:
+            continue
+        value, _binding_ids = resolve_bound_casilla_binding_value(casilla, resolved_bindings)
+        if value is not None:
+            projected[casilla.id] = _canonical_decimal_str(value)
+    return projected
+
+
+def _binding_replay_overrides(
+    resolved_bindings: Mapping[BindingId, Decimal],
+    resolved_enum_bindings: Mapping[BindingId, str],
+    resolved_date_bindings: Mapping[BindingId, date],
+    resolved_boolean_bindings: Mapping[BindingId, bool] | None,
+) -> dict[BindingId, str]:
+    """Serialize admitted decimal, enum, date and boolean channels before relation de-duplication."""
+    binding_overrides = dict(
+        sorted(
+            [(k.strip(), _canonical_decimal_str(v)) for k, v in resolved_bindings.items()]
+            + [(k.strip(), v.strip()) for k, v in resolved_enum_bindings.items()]
+            + [(k.strip(), v.isoformat()) for k, v in resolved_date_bindings.items()]
+            + [(k.strip(), PERSISTED_BOOLEAN_BINDING_TOKENS[v]) for k, v in (resolved_boolean_bindings or {}).items()],
+        ),
+    )
+    return binding_overrides
+
+
+def build_calculation_replay_payloads(
+    *,
+    resolved_inputs: Mapping[CasillaId, Decimal],
+    resolved_bindings: Mapping[BindingId, Decimal],
+    resolved_enum_bindings: Mapping[BindingId, str],
+    resolved_date_bindings: Mapping[BindingId, date],
+    resolved_relations: Mapping[RelationId, Decimal],
+    resolved_row_bindings: Mapping[tuple[BindingId, int], Decimal | str | int | bool] | None = None,
+    resolved_boolean_bindings: Mapping[BindingId, bool] | None = None,
+) -> CalculationReplayPayloads:
+    """Convert resolved engine inputs into persisted :class:`CalculationReplayPayloads`.
+
+    Casilla and relation Decimals are canonicalized with the domain decimal
+    formatter. Decimal, enum, date, and boolean binding channels share the single
+    ``binding_overrides`` replay map (a truth value as ``true``/``false``) because that is the persisted scalar
+    :class:`CalculationRevision` contract. Row-indexed bindings are carried in
+    ``row_binding_values`` so the row coordinate remains structured for draft
+    and export replay instead of being encoded into a synthetic binding id. The
+    replay payload is built after source precedence and bound-casilla projection
+    so its values match the engine inputs exactly.
+
+    A carried relation value is keyed by the binding it folds into, so the
+    relation prefill resolves it on both channels. Replay reads both channels
+    into one namespace, so a relation entry that repeats its binding's value
+    is dropped; a relation entry that disagrees is kept, and the revision's
+    channel-uniqueness invariant refuses it rather than choosing a winner.
+    """
+    binding_overrides = _binding_replay_overrides(
+        resolved_bindings, resolved_enum_bindings, resolved_date_bindings, resolved_boolean_bindings
+    )
+    relation_overrides = {
+        relation_id: value
+        for relation_id, value in sorted((k.strip(), _canonical_decimal_str(v)) for k, v in resolved_relations.items())
+        if binding_overrides.get(relation_id) != value
+    }
+    return CalculationReplayPayloads(
+        input_values_by_casilla_id=dict(
+            sorted(
+                (
+                    validated_casilla_id(k, surface="calculate_modelo_revision.input_values_by_casilla_id"),
+                    _canonical_decimal_str(v),
+                )
+                for k, v in resolved_inputs.items()
+            ),
+        ),
+        binding_overrides=binding_overrides,
+        row_binding_values=_row_binding_replay_values(resolved_row_bindings or {}),
+        relation_overrides=relation_overrides,
+    )
+
+
+def _row_binding_replay_values(
+    resolved_row_bindings: Mapping[tuple[BindingId, int], Decimal | str | int | bool],
+) -> dict[BindingId, dict[str, str]]:
+    replay_values: dict[BindingId, dict[str, str]] = {}
+    for (binding_id, row_index), value in sorted(resolved_row_bindings.items()):
+        if row_index < 1:
+            raise ValueError(f"row binding {binding_id!r} carries non-positive row index {row_index!r}")
+        row_values = replay_values.setdefault(binding_id.strip(), {})
+        if isinstance(value, bool):
+            # A subclass of ``int``, so tested before ``int``/``Decimal`` --
+            # matches the boolean-to-Decimal("1")/Decimal("0") convention
+            # already established for engine-facing binding channels (see
+            # ``profile_binding._decimal_value``).
+            canonical = _canonical_decimal_str(Decimal("1") if value else Decimal("0"))
+        elif isinstance(value, Decimal):
+            canonical = _canonical_decimal_str(value)
+        elif isinstance(value, int):
+            canonical = _canonical_decimal_str(Decimal(value))
+        else:
+            canonical = value.strip()
+        row_values[str(row_index)] = canonical
+    return replay_values
+
+
+__all__ = [
+    "CalculationReplayPayloads",
+    "ResolvedCalculationChannels",
+    "ResolvedCalculationInputs",
+    "build_calculation_replay_payloads",
+    "resolve_calculation_binding_channels",
+    "resolve_calculation_inputs",
+]

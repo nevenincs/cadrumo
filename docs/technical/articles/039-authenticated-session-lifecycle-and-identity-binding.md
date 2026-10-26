@@ -1,0 +1,44 @@
+# Authenticated session lifecycle and identity binding
+
+[Technical overview](../architecture.md) · [Article index](catalogue.md) · [Snapshot and reading guide](../reading-guide.md)
+
+> This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
+
+**Report:** `STAGE-2-039` · **Topic:** [Authentication and storage management](../topics/authentication-and-storage-management.md)
+
+<!-- preserved:article -->
+## Scope
+
+This chunk covers 2 authentication application modules (1,319 lines; 10,894 measured o200k_base proxy tokens): persisted-session discovery and lifecycle orchestration in sessions.py, plus teardown-operation access policy. I read every assigned range in two bounded pages. Static-only review; no browser, provider, storage adapter or application execution was performed.
+
+## Capabilities and mechanism
+
+The central service either reuses a still-verified session or performs a fresh provider authentication. It selects the active provider using profile auth preference before configured fallback, then enters exact active-profile custody and a per-profile mutation span. Before network work it refuses pending auth recovery and resolves the active profile’s credential/identity facts. Its sequence is: optionally clear a requested acquisition lock under the operation effect guard, probe persisted state, acquire a provider/profile lock, probe again to close the race with a concurrent login, optionally remove the prior session for fresh login, authenticate and verify, validate the assertion and taxpayer identity, then return a typed result. The outer caller stages encrypted browser-state writes and publishes them only after this flow succeeds. Public session entry (`src/cadrumo/application/auth/sessions.py`) Locked reuse/acquisition sequence (`src/cadrumo/application/auth/sessions.py`) Caller publication boundary (`src/cadrumo/application/auth/operator.py`)
+
+Certificate providers use the regular authenticate/verify methods and do not accept a caller-selected target URL. Cl@ve providers must implement target-aware authenticate and verify, and Cl@ve Móvil must additionally expose a direct persisted-session probe. Provider objects are closed through a lifecycle context that retries cleanup and does not replace a primary authentication exception with a close failure. These are structural contracts; adapter implementations determine concrete browser routes and session-token semantics. Targeted provider protocols (`src/cadrumo/application/auth/sessions.py`) Provider authentication dispatch (`src/cadrumo/application/auth/sessions.py`) Provider cleanup lifecycle (`src/cadrumo/application/auth/sessions.py`)
+
+Persisted storage-state paths are logical IDs keyed by profile bucket and provider kind. The store port handles encrypted records; the application validates common metadata, expected provider kind and UTC-aware dates, and surfaces malformed metadata as typed auth-session failures. Reserved provider kinds without a persistence stem do not get manufactured session paths. Deletion can target one provider or sweep the known session-bearing set. Logical per-profile keys (`src/cadrumo/application/auth/sessions.py`) Load and provider check (`src/cadrumo/application/auth/sessions.py`) Scoped delete and existence (`src/cadrumo/application/auth/sessions.py`)
+
+## Identity and credential knowledge
+
+Cl@ve credentials use one shared profile-first resolver for both live entry and operator readiness. Profile facts are read only when an open session serves the exact active bucket; otherwise the environment/settings surface remains the available source. When profile and settings both provide a field, the profile value wins for that field. Bound profile credentials are copied into a validated Settings instance for the outbound provider, with secret wrappers applied to DNI/NIE and support number fields. Profile-first resolution (`src/cadrumo/application/auth/sessions.py`) Scoped profile fact read (`src/cadrumo/application/auth/sessions.py`) Provider settings binding (`src/cadrumo/application/auth/sessions.py`)
+
+Live entry requires a Cl@ve Móvil route, a DNI/NIE, and a contrast value only when the non-QR route needs it. For Cl@ve credential modes it validates the profile tax identifier and configured DNI/NIE as Spanish tax IDs and refuses malformed or mismatched identities. Certificate identity is not knowable from Settings, so its expected identity comes from the profile and is checked against the session returned after certificate login. A profile whose fiscal ID was deliberately cleared is refused; an incomplete setup profile with no ID may authenticate so that the later profile read can own the corresponding refusal. Pre-browser Cl@ve validation (`src/cadrumo/application/auth/sessions.py`) Taxpayer identity comparison (`src/cadrumo/application/auth/sessions.py`) Deferred identity rule (`src/cadrumo/application/auth/sessions.py`)
+
+Failed assertions are reduced to status, error text, URL host/path and a cookie-presence flag; query values and cookie contents are omitted because redirects may carry session material. The session records still include taxpayer identity, certificate thumbprint/subject, Cl@ve landing URL and a Móvil confirmation code marked audit-only. They are operationally sensitive even without the browser storage state, whose encryption and retention are delegated to the adapter. Failure diagnostic projection (`src/cadrumo/application/auth/sessions.py`) Session identity/detail fields (`src/cadrumo/application/auth/session_types.py`)
+
+## Security and implementation assessment
+
+The implementation has layered identity checks: configured Cl@ve identity must match the profile, every returned session is compared with the expected identity, persisted metadata must identify the provider whose key was read, and reuse requires a provider verification probe. Same-bucket/root custody checks and two probes around acquisition locking protect session reuse and duplicate authentication. The teardown access resolver requires an explicit committing action and binds its result to the exact profile; it confers local logout/reset permission only, with provider availability marked not required. Session identity comparison (`src/cadrumo/application/auth/sessions.py`) Exact-profile teardown policy (`src/cadrumo/application/auth/teardown_operation_access.py`)
+
+One conditional identity-hardening question remains: AeatSession requires identity_nif to have length at least one, but does not itself canonicalize it; the final comparison normalizes the session value and skips comparison if normalization yields blank. Trace all provider constructors and persisted-session verification to verify they reject whitespace-only or otherwise empty normalized identities before this point. If those upstream guarantees are absent, this local skip could bypass the last identity comparison. Session field constraint (`src/cadrumo/application/auth/session_types.py`) Normalized blank comparison behavior (`src/cadrumo/application/auth/sessions.py`)
+
+The target_url passed through to Cl@ve providers is a meaningful trust input. This chunk requires target-aware implementations but does not authorize a URL or define which callers may supply it; synthesis should trace the live-read gate, target allowlist and adapter navigation. Likewise, acquisition lock correctness depends on the filesystem implementation reviewed in the adjacent lock chunk; the two-probe ordering here is useful only if that lock is atomic and stale recovery cannot remove a live owner’s lock. See [the lock-race analysis](037-authentication-certificate-sources-and-diagnostic-privacy.md) for the scoped acquisition-lock finding.
+
+No confirmed defect is established in these two files alone. The identity normalization behavior, caller/target admission invariant and storage-adapter guarantees are follow-ups that require cross-module evidence. No tests or runtime verification are claimed.
+
+## Complete assigned-file coverage
+
+- sessions.py (1,256 lines) (`src/cadrumo/application/auth/sessions.py`)
+- teardown_operation_access.py (63 lines) (`src/cadrumo/application/auth/teardown_operation_access.py`)
+<!-- /preserved:article -->

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<response>
+  <status>
+    <code>200</code>
+    <text>ok</text>
+  </status>
+  <data>
+    <bloque id="df" tipo="precepto" titulo="Disposición final primera">
+      <version id_norma="BOE-A-2022-2980" fecha_publicacion="20220225" fecha_vigencia="20220226">
+        <p class="articulo">Disposición final primera. Modificación de la Orden EHA/3481/2008, de 1 de diciembre, por la que se aprueba el modelo 189 de declaración informativa anual acerca de valores, seguros y rentas, los diseños físicos y lógicos para la sustitución de las hojas interiores de dicho modelo por soportes directamente legibles por ordenador y se establecen las condiciones y el procedimiento para su presentación telemática.</p>
+        <p class="parrafo">Se modifica el campo “NOMINAL DE LOS VALORES”, que ocupa las posiciones 146-163, y se renumera la posición inicial del campo “BLANCOS”, del registro de tipo 2, registro de declarado, de los diseños físicos y lógicos del modelo 189, contenidos en el anexo II, con el siguiente contenido:</p>
+        <blockquote class="sangrado">
+          <table class="tabla">
+            <colgroup>
+              <col/>
+              <col/>
+              <col/>
+            </colgroup>
+            <thead>
+              <tr>
+                <th class="cabeza_tabla">«Posiciones</th>
+                <th class="cabeza_tabla">Naturaleza</th>
+                <th class="cabeza_tabla">Descripción de los campos</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="cuerpo_tabla_centro">146-163</td>
+                <td class="cuerpo_tabla_izq">Numérico.</td>
+                <td class="cuerpo_tabla_izq">Nominal unitario de los valores.</td>
+              </tr>
+              <tr>
+                <td class="cuerpo_tabla_centro"> </td>
+                <td class="cuerpo_tabla_izq"> </td>
+                <td class="cuerpo_tabla_izq">Cuando se consigne la clave «A» en el campo «CLAVE DE VALOR» (posición 81 del registro de tipo 2, registro de declarado), se consignará el nominal unitario de las acciones o participaciones en el capital social o en los fondos propios de entidades jurídicas negociadas en mercados organizados correspondiente al declarado.</td>
+              </tr>
+              <tr>
+                <td class="cuerpo_tabla_centro"> </td>
+                <td class="cuerpo_tabla_izq"> </td>
+                <td class="cuerpo_tabla_izq">Este campo se subdivide en dos:</td>
+              </tr>
+              <tr>
+                <td class="cuerpo_tabla_centro"> </td>
+                <td class="cuerpo_tabla_izq"> </td>
+                <td class="cuerpo_tabla_izq">146-159 Parte entera del importe del nominal unitario de la operación.</td>
+              </tr>
+              <tr>
+                <td class="cuerpo_tabla_centro"> </td>
+                <td class="cuerpo_tabla_izq"> </td>
+                <td class="cuerpo_tabla_izq">160-163 Parte decimal del importe del nominal unitario de la operación.</td>
+              </tr>
+              <tr>
+                <td class="cuerpo_tabla_centro">164-500</td>
+                <td class="cuerpo_tabla_centro">—</td>
+                <td class="cuerpo_tabla_izq">BLANCOS.»</td>
+              </tr>
+            </tbody>
+          </table>
+        </blockquote>
+        <blockquote>
+          <p class="nota_pie">Redactada conforme a las correcciones de errores publicadas en BOE núm. 60, de 11 de marzo de 2022, <a class="refPost">Ref. BOE-A-2022-3810</a> y BOE núm. 71, de 24 de marzo de 2022. <a class="refPost">Ref. BOE-A-2022-4629</a></p>
+        </blockquote>
+      </version>
+    </bloque>
+  </data>
+</response>
