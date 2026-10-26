@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:ed402598eaf79fb297f40669e1c6ee405a874163a2bce5b18804bacd182e2401'
+body_hash: 'sha256:41acb6ca9a8c3bec05c7738fa5f1a33c3cd35ee3ae58b0a5b62339325f13c605'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -992,6 +992,150 @@ related:
 - `S24` `verify:` `cmake --build build/windows-x64 --config Debug --target desktop-host-unit-test (584 passed, 1 ignored)` -> `pass`
 - `S24` `verify:` `cmake --build build/windows-x64 --config Debug --target desktop-host-unit-clippy` -> `pass`
 - `S09` `verify:` `desktop-host-unit-test: provider_settings::wire keyless-lane tests compiled and passed` -> `pass`
+- `S31` `M` `dev/ci/tests/test_core_external_constants.py`
+- `S31` `M` `dev/docs/sequences/runner.py`
+- `S31` `M` `dev/docs/sequences/runtime_fixture.py`
+- `S31` `M` `dev/operation_contract_manifest/tests/test_operation_frontend_parity.py`
+- `S31` `M` `dev/operation_contract_manifest/tests/test_operation_mcp_surface_policies.py`
+- `S31` `M` `dev/packaging/tests/test_native_local_ai_address.py`
+- `S31` `M` `dev/quality/metadata/application_entrypoint_modules.json`
+- `S31` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S31` `M` `dev/quality/metadata/import_load_targets.json`
+- `S31` `M` `dev/quality/tests/test_no_python_provisioning.py`
+- `S31` `M` `dev/runtime_lifecycle/tests/test_service_model_run_relay.py`
+- `S31` `M` `dev/tests/test_no_home_directory_cache_paths.py`
+- `S31` `M` `docs/reference/environment-overrides.md`
+- `S31` `M` `env/.env.example`
+- `S31` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S31` `M` `src/cadrumo/adapters/outbound/components/tests/recorded_rows.py`
+- `S31` `M` `src/cadrumo/adapters/outbound/llm/client.py`
+- `S31` `M` `src/cadrumo/adapters/outbound/llm/errors.py`
+- `S31` `M` `src/cadrumo/adapters/outbound/llm/providers/agent.py`
+- `S31` `D` `src/cadrumo/adapters/outbound/llm/tests/load_headroom_support.py`
+- `S31` `M` `src/cadrumo/adapters/outbound/llm/tests/model_run_support.py`
+- `S31` `M` `src/cadrumo/adapters/outbound/llm/tests/test_agent_dispatch.py`
+- `S31` `D` `src/cadrumo/adapters/outbound/llm/tests/test_dispatch_load_headroom.py`
+- `S31` `M` `src/cadrumo/adapters/outbound/llm/tests/test_evidence_draft_vision.py`
+- `S31` `M` `src/cadrumo/adapters/outbound/llm/tests/test_llm_vision_classifier.py`
+- `S31` `M` `src/cadrumo/adapters/outbound/llm/tests/test_reverse_charge_reading_against_a_loopback_reader.py`
+- `S31` `M` `src/cadrumo/adapters/outbound/llm/tests/test_wired_reading_against_a_loopback_reader.py`
+- `S31` `M` `src/cadrumo/adapters/persistence/operations/tests/local_reader_operation_support.py`
+- `S31` `M` `src/cadrumo/adapters/persistence/operations/tests/test_local_reader_read_operations.py`
+- `S31` `M` `src/cadrumo/adapters/persistence/profile/tests/_invoice_confirmation_test_support.py`
+- `S31` `M` `src/cadrumo/adapters/persistence/profile/tests/test_batch_inference_pacing.py`
+- `S31` `M` `src/cadrumo/adapters/persistence/profile/tests/test_batch_ingest_runner.py`
+- `S31` `M` `src/cadrumo/application/invoices/tests/test_bulk_import_reader_reason.py`
+- `S31` `M` `src/cadrumo/application/invoices/tests/test_catalogue_intake_operation.py`
+- `S31` `M` `src/cadrumo/application/ledger/batch_ingest.py`
+- `S31` `M` `src/cadrumo/application/ledger/invoice_draft_extraction_ports.py`
+- `S31` `M` `src/cadrumo/application/ledger/invoice_draft_records.py`
+- `S31` `M` `src/cadrumo/application/ledger/invoice_evidence_readiness_operation.py`
+- `S31` `D` `src/cadrumo/application/ledger/tests/loopback_reader.py`
+- `S31` `M` `src/cadrumo/application/ledger/tests/test_evidence_reader_refusal_key.py`
+- `S31` `M` `src/cadrumo/application/ledger/tests/test_invoice_evidence_reader_readiness_recovery.py`
+- `S31` `M` `src/cadrumo/application/ledger/tests/test_invoice_evidence_readiness_external_client_access.py`
+- `S31` `M` `src/cadrumo/application/ledger/tests/test_llm_review_operation.py`
+- `S31` `M` `src/cadrumo/application/local_reader.py`
+- `S31` `M` `src/cadrumo/application/local_reader_contracts.py`
+- `S31` `M` `src/cadrumo/application/local_reader_report.py`
+- `S31` `M` `src/cadrumo/application/local_reader_status_operation.py`
+- `S31` `M` `src/cadrumo/application/operations/access_facts.py`
+- `S31` `M` `src/cadrumo/application/operations/tests/test_model_runs.py`
+- `S31` `M` `src/cadrumo/application/provisioning.py`
+- `S31` `M` `src/cadrumo/application/provisioning_contracts.py`
+- `S31` `D` `src/cadrumo/application/provisioning_host.py`
+- `S31` `D` `src/cadrumo/application/provisioning_runtime.py`
+- `S31` `M` `src/cadrumo/application/tests/test_local_reader.py`
+- `S31` `M` `src/cadrumo/application/tests/test_local_reader_operation_access.py`
+- `S31` `M` `src/cadrumo/application/tests/test_provisioning.py`
+- `S31` `D` `src/cadrumo/application/tests/test_provisioning_hardware_contention.py`
+- `S31` `D` `src/cadrumo/application/tests/test_provisioning_host.py`
+- `S31` `D` `src/cadrumo/application/tests/test_provisioning_model_inventory.py`
+- `S31` `M` `src/cadrumo/application/tests/test_workstation_check_configuration.py`
+- `S31` `M` `src/cadrumo/application/tests/test_workstation_check_operation.py`
+- `S31` `M` `src/cadrumo/application/workstation_check.py`
+- `S31` `M` `src/cadrumo/core/capabilities.py`
+- `S31` `M` `src/cadrumo/core/component_records.py`
+- `S31` `M` `src/cadrumo/core/config_runtime_fields.py`
+- `S31` `M` `src/cadrumo/core/hardware.py`
+- `S31` `M` `src/cadrumo/core/tests/test_component_records.py`
+- `S31` `M` `src/cadrumo/core/tests/test_settings_lifecycle_gate.py`
+- `S31` `M` `src/cadrumo/entrypoints/cli/config/provision_cli.py`
+- `S31` `M` `src/cadrumo/entrypoints/cli/config/provision_payloads.py`
+- `S31` `M` `src/cadrumo/entrypoints/cli/tests/test_component_setup_refusal_text.py`
+- `S31` `M` `src/cadrumo/entrypoints/cli/tests/test_evidence_field_notices.py`
+- `S31` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_evidence_batch_cli.py`
+- `S31` `M` `src/cadrumo/entrypoints/cli/tests/test_llm_vision_classifier.py`
+- `S31` `M` `src/cadrumo/entrypoints/local_reader_operation_composition.py`
+- `S31` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S31` `M` `src/cadrumo/entrypoints/tests/conformance_family_contract.py`
+- `S31` `M` `src/cadrumo/entrypoints/tests/conformance_invoice_intake_support.py`
+- `S31` `M` `src/cadrumo/entrypoints/tests/conformance_ledger_classification_support.py`
+- `S31` `M` `src/cadrumo/entrypoints/tests/conformance_ledger_evidence_ingestion_support.py`
+- `S31` `M` `src/cadrumo/entrypoints/tests/conformance_ledger_seed_support.py`
+- `S31` `M` `src/cadrumo/entrypoints/tests/conformance_local_reader_support.py`
+- `S31` `M` `src/cadrumo/entrypoints/tests/conformance_workstation_check_support.py`
+- `S31` `M` `src/cadrumo/entrypoints/tests/invoice_evidence_operation_test_support.py`
+- `S31` `M` `src/cadrumo/entrypoints/tests/registered_executor_case_support.py`
+- `S31` `M` `src/cadrumo/entrypoints/tests/registered_executor_conformance_runner.py`
+- `S31` `M` `src/cadrumo/entrypoints/tests/test_evidence_batch_reader_pause_settlement.py`
+- `S31` `M` `src/cadrumo/entrypoints/tests/test_ledger_classification_actor_by_frontend.py`
+- `S31` `M` `src/cadrumo/entrypoints/tests/test_ledger_evidence_invoice_external_client_admission.py`
+- `S31` `M` `src/cadrumo/entrypoints/tests/test_ledger_file_imports_submitted_directly.py`
+- `S31` `M` `src/cadrumo/entrypoints/tests/test_ledger_write_actor_by_frontend.py`
+- `S31` `M` `src/cadrumo/entrypoints/tests/test_modelo_work_external_client_admission.py`
+- `S31` `M` `src/cadrumo/entrypoints/tests/test_operation_actor_label_by_frontend.py`
+- `S31` `M` `src/cadrumo/entrypoints/tests/test_operation_subject_binding.py`
+- `S31` `M` `src/cadrumo/entrypoints/tui/ledger/evidence_records.py`
+- `S31` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_evidence_refusal_and_review_setup_offer.py`
+- `S31` `M` `src/cadrumo/entrypoints/workstation_check_operation_composition.py`
+- `S31` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S31` `M` `src/cadrumo/locales/en/errors.yml`
+- `S31` `M` `src/cadrumo/locales/es/errors.yml`
+- `S31` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S31` `M` `src/cadrumo/tests/llm_vision_evidence_support.py`
+- `S31` `D` `src/cadrumo/tests/loopback_llm.py`
+- `S31` `M` `src/cadrumo_agent_service/adapters/agent_background_runs.py`
+- `S31` `M` `src/cadrumo_agent_service/adapters/served_catalog_models.py`
+- `S31` `M` `src/cadrumo_agent_service/adapters/tests/test_agent_background_runs.py`
+- `S31` `M` `src/cadrumo_agent_service/adapters/tests/test_agent_background_runs_gateway.py`
+- `S31` `M` `src/cadrumo_agent_service/adapters/tests/test_served_catalog_models.py`
+- `S31` `M` `src/cadrumo_agent_service/providers/application/model_runs.py`
+- `S31` `M` `src/cadrumo_agent_service/providers/application/ports.py`
+- `S31` `M` `src/cadrumo_agent_service/providers/application/tests/synthetic_catalog.py`
+- `S31` `M` `src/cadrumo_agent_service/providers/application/tests/test_keyless_lane.py`
+- `S31` `M` `src/cadrumo_agent_service/providers/application/tests/test_live_catalogue_selection.py`
+- `S31` `M` `src/cadrumo_agent_service/providers/application/tests/test_model_role_selections.py`
+- `S31` `M` `src/cadrumo_agent_service/providers/application/tests/test_model_runs.py`
+- `S31` `M` `src/cadrumo_agent_service/providers/domain/catalog.py`
+- `S31` `M` `src/cadrumo_client/contracts/model_runs.py`
+- `S31` `M` `src/cadrumo_client/contracts/tests/test_model_runs.py`
+- `S31` `M` `src/cadrumo_runtime/host/operation_authority.py`
+- `S31` `M` `src/cadrumo_runtime/host/profile_connection_model_runs.py`
+- `S31` `M` `src/cadrumo_runtime/host/tests/frontend/cli/ledger_ux_support.py`
+- `S31` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_direction_reaches_the_confirm_boundary.py`
+- `S31` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_evidence_label_reading_notice.py`
+- `S31` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_profile_free_commands_without_keychain.py`
+- `S31` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_runtime_ledger_review_native.py`
+- `S31` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_evidence.py`
+- `S31` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_import.py`
+- `S31` `M` `src/cadrumo_runtime/host/tests/test_model_run_admission.py`
+- `S31` `M` `src/cadrumo_runtime/host/tests/test_model_run_authority.py`
+- `S31` `A` `src/cadrumo/application/tests/local_ai_program_rows.py`
+- `S31` `A` `src/cadrumo/application/tests/test_provisioning_hardware_profile.py`
+- `S31` `M` `native/desktop/frontend/src/shell/ledger.ts`
+- `S31` `M` `native/desktop/frontend/src/components/ledger/documents/DocumentPanels.tsx`
+- `S31` `M` `native/desktop/frontend/src/dev/ledgerEvidenceFixture.ts`
+- `S31` `M` `native/desktop/frontend/src/dev/ledgerFixture.ts`
+- `S31` `M` `native/desktop/frontend/tests/provisioning-recovery.spec.ts`
+- `S31` `verify:` `just check-import-boundaries` -> `pass`
+- `S31` `verify:` `just check-style` -> `pass`
+- `S31` `verify:` `just check-format` -> `pass`
+- `S31` `verify:` `just check-types` -> `pass`
+- `S31` `verify:` `uv run --no-sync python -m dev.operation_contract_manifest.generate --check` -> `pass`
+- `S31` `verify:` `uv run --no-sync pytest -m '' focused S31 suites` -> `pass`
+- `S31` `verify:` `npx tsc --noEmit, eslint, prettier on desktop frontend` -> `pass`
+- `S31` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -1060,3 +1204,4 @@ related:
 - `S25` The recorded role conversations under `src/cadrumo/tests/fixtures/components_role` were rewritten to plan contract 3 and `set_up_in_desktop` by script, not re-recorded: re-record them against the final role.
 - `S25` The `external_tool` role tests `(test_client_drives_the_real_role,` `test_provision_drives_the_real_role,` `test_setup_tools_drive_the_real_role,` conformance and lane real-role cases) were not run: no built binary.
 - `S25` Shared with P04.S30: the locale catalogue common.yml files and `dev/locales/desktop_chrome.py` also carry its licence and different-model-version string removals.
+- `S31` desktop-host-unit-test build was stopped by the orchestrator before it ran; `test_provision_drives_the_real_role` needs a built role image `(CADRUMO_DEVELOPMENT_ROLE_IMAGE)` and did not run
