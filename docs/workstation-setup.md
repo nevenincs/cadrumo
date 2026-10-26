@@ -6,9 +6,10 @@ machine yet, start at [Get Cadrumo](download.md) for the install channels.
 Configuration and first use start in the [quickstart](how-to/quickstart.md)
 once the install checks pass.
 
-Cadrumo works without any optional service. Google export, on-host LLM vision,
-and cloud LLM upload are all optional, and so is connecting an AI assistant. The
-core filing workflow runs with none of them.
+Cadrumo works without any optional service. Google export, reading scanned or
+image documents with a model you select, and cloud LLM upload are all optional,
+and so is connecting an AI assistant. The core filing workflow runs with none of
+them.
 
 ## Before you start
 

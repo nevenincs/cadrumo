@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-26 10:51+0100\n"
+"POT-Creation-Date: 2026-10-26 18:31+0100\n"
 "PO-Revision-Date: 2026-07-18 14:00+0200\n"
 "Last-Translator: Cadrumo docs team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -38,28 +38,30 @@ msgstr ""
 
 #: ../../workstation-setup.md:9
 msgid ""
-"Cadrumo works without any optional service. Google export, on-host LLM "
-"vision, and cloud LLM upload are all optional, and so is connecting an AI"
-" assistant. The core filing workflow runs with none of them."
+"Cadrumo works without any optional service. Google export, reading "
+"scanned or image documents with a model you select, and cloud LLM upload "
+"are all optional, and so is connecting an AI assistant. The core filing "
+"workflow runs with none of them."
 msgstr ""
 "Cadrumo funciona sense cap servei opcional. L'exportació a Google, la "
-"visió LLM al mateix equip i la pujada a un LLM al núvol són opcionals, "
-"igual que connectar un assistent d'IA. El flux de treball de presentació "
-"bàsic funciona sense cap d'aquests."
+"lectura de documents escanejats o en imatge amb un model que triïs i la "
+"pujada a un LLM al núvol són opcionals, igual que connectar un assistent "
+"d'IA. El flux de treball de presentació bàsic funciona sense cap "
+"d'aquests."
 
-#: ../../workstation-setup.md:13
+#: ../../workstation-setup.md:14
 msgid "Before you start"
 msgstr "Abans de començar"
 
-#: ../../workstation-setup.md:15
+#: ../../workstation-setup.md:16
 msgid "You need:"
 msgstr "Necessites:"
 
-#: ../../workstation-setup.md:17
+#: ../../workstation-setup.md:18
 msgid "Python 3.13 or newer."
 msgstr "Python 3.13 o superior."
 
-#: ../../workstation-setup.md:18
+#: ../../workstation-setup.md:19
 msgid ""
 "Several hundred megabytes of free disk space for Cadrumo and its "
 "dependencies. The package download alone is about 76 MB."
@@ -67,11 +69,11 @@ msgstr ""
 "Diversos centenars de megabytes d'espai lliure al disc per a Cadrumo i "
 "les seves dependències. Només la baixada del paquet ocupa uns 76 MB."
 
-#: ../../workstation-setup.md:21
+#: ../../workstation-setup.md:22
 msgid "Install the CLI"
 msgstr "Instal·la la CLI"
 
-#: ../../workstation-setup.md:23
+#: ../../workstation-setup.md:24
 msgid ""
 "Pick one channel from the table in [Get Cadrumo](download.md#install-"
 "channels) and run the command it lists. A `uv` tool install keeps Cadrumo"
@@ -85,7 +87,7 @@ msgstr ""
 "Scoop encara no estan publicats, així que de moment fes servir a totes "
 "les plataformes un canal de paquet de Python."
 
-#: ../../workstation-setup.md:28
+#: ../../workstation-setup.md:29
 msgid ""
 "The Python package installs both the `aeat` command and the `cadrumo-mcp`"
 " server."
@@ -93,15 +95,15 @@ msgstr ""
 "El paquet de Python instal·la tant l'ordre `aeat` com el servidor "
 "`cadrumo-mcp`."
 
-#: ../../workstation-setup.md:31
+#: ../../workstation-setup.md:32
 msgid "If you contribute to Cadrumo, work from a source checkout instead:"
 msgstr "Si contribueixes a Cadrumo, treballa des d'una còpia del codi font:"
 
-#: ../../workstation-setup.md:40
+#: ../../workstation-setup.md:41
 msgid "Confirm the install"
 msgstr "Confirma la instal·lació"
 
-#: ../../workstation-setup.md:42
+#: ../../workstation-setup.md:43
 msgid ""
 "No taxpayer profile is needed for these checks; you create one with `aeat"
 " config profile create` after installing. See [Set up a profile](how-to"
@@ -111,7 +113,7 @@ msgstr ""
 "un amb `aeat config profile create` després d'instal·lar. Consulta "
 "[Configura un perfil](how-to/profile-setup.md)."
 
-#: ../../workstation-setup.md:46
+#: ../../workstation-setup.md:47
 msgid ""
 "Confirm the command is on your path and the capability posture is "
 "readable. Then run the workstation check on your own machine. Its "
@@ -129,33 +131,33 @@ msgstr ""
 "comprovacions de configuració automatitzades (`--format json` és una "
 "opció global, per la qual cosa va abans de l'ordre):"
 
-#: ../../workstation-setup.md:56
+#: ../../workstation-setup.md:57
 msgid "Install optional extras"
 msgstr "Instal·la extres opcionals"
 
-#: ../../workstation-setup.md:58
+#: ../../workstation-setup.md:59
 msgid "The core install is lean. Each optional extra adds one capability:"
 msgstr "La instal·lació bàsica és lleugera. Cada extra afegeix una capacitat:"
 
-#: ../../workstation-setup.md:60
+#: ../../workstation-setup.md:61
 msgid "`google` - Google Drive and Sheets export."
 msgstr "`google` - exportació a Google Drive i Google Sheets."
 
-#: ../../workstation-setup.md:61
+#: ../../workstation-setup.md:62
 msgid "`browser` - live AEAT reads through browser automation."
 msgstr ""
 "`browser` - lectures en directe de l'AEAT mitjançant automatització del "
 "navegador."
 
-#: ../../workstation-setup.md:62
+#: ../../workstation-setup.md:63
 msgid "`ofx` - OFX and QFX bank-statement import."
 msgstr "`ofx` - importació d'extractes bancaris OFX i QFX."
 
-#: ../../workstation-setup.md:63
+#: ../../workstation-setup.md:64
 msgid "`llm` - on-host document reading through the local AI."
 msgstr "`llm` - lectura de documents al mateix equip a través de la IA local."
 
-#: ../../workstation-setup.md:64
+#: ../../workstation-setup.md:65
 msgid ""
 "`pdf` - writing the calculation-summary PDF. Reading and verifying a "
 "summary needs no extra."
@@ -163,11 +165,11 @@ msgstr ""
 "`pdf` - generació del PDF de resum del càlcul. Llegir i verificar un "
 "resum no requereix cap extra."
 
-#: ../../workstation-setup.md:66
+#: ../../workstation-setup.md:67
 msgid "`all` - every extra in this list."
 msgstr "`all` - tots els extres d'aquesta llista."
 
-#: ../../workstation-setup.md:68
+#: ../../workstation-setup.md:69
 msgid ""
 "Name the extras you need when you install: in your channel's install "
 "command, write the package as `cadrumo[google,browser]` instead of "
@@ -181,7 +183,7 @@ msgstr ""
 "que fes servir el canal amb què l'has instal·lat. En una còpia del codi "
 "font, afegeix extres amb `uv sync --extra google --extra browser`."
 
-#: ../../workstation-setup.md:73
+#: ../../workstation-setup.md:74
 msgid ""
 "`aeat config check` reports each extra as `extra:<name>` available or "
 "missing. Install a missing one by repeating your channel's install "
@@ -191,11 +193,11 @@ msgstr ""
 " o absent. Instal·la'n un d'absent repetint l'ordre d'instal·lació del "
 "teu canal amb aquest extra indicat."
 
-#: ../../workstation-setup.md:77
+#: ../../workstation-setup.md:78
 msgid "Set up the browser and the local AI"
 msgstr "Prepara el navegador i la IA local"
 
-#: ../../workstation-setup.md:79
+#: ../../workstation-setup.md:80
 msgid ""
 "Two optional extras use a component that Cadrumo sets up on this "
 "computer. The `browser` extra drives a Chromium build for live AEAT "
@@ -215,7 +217,7 @@ msgstr ""
 " cadascuna de les seves baixades amb la mida i la suma de verificació "
 "fixades."
 
-#: ../../workstation-setup.md:87
+#: ../../workstation-setup.md:88
 msgid ""
 "See where you stand first. `aeat config provision status` reads only what"
 " this computer already has, so it downloads nothing and works offline. "
@@ -225,11 +227,11 @@ msgstr ""
 "que aquest ordinador ja té, així que no baixa res i funciona sense "
 "connexió. Cada fila que no està a punt indica com solucionar-ho."
 
-#: ../../workstation-setup.md:91
+#: ../../workstation-setup.md:92
 msgid "Set up the browser"
 msgstr "Prepara el navegador"
 
-#: ../../workstation-setup.md:93
+#: ../../workstation-setup.md:94
 msgid ""
 "To set up the browser, run `aeat config provision setup`. The command "
 "first checks that it can reach the download servers. It then prints its "
@@ -248,11 +250,11 @@ msgstr ""
 "terminal on respondre, no es baixa res i l'ordre indica que necessita la "
 "teva aprovació. Un navegador que ja està preparat es queda com està."
 
-#: ../../workstation-setup.md:101
+#: ../../workstation-setup.md:102
 msgid "To set up the browser alone:"
 msgstr "Per preparar només el navegador:"
 
-#: ../../workstation-setup.md:106
+#: ../../workstation-setup.md:107
 msgid ""
 "To delete the browser from this computer, run `aeat config provision "
 "remove browser`. The command asks first, and `--yes` confirms without "
@@ -262,7 +264,7 @@ msgstr ""
 "provision remove browser`. L'ordre et pregunta abans, i `--yes` ho "
 "confirma sense preguntar. Pots tornar-lo a preparar quan vulguis."
 
-#: ../../workstation-setup.md:110
+#: ../../workstation-setup.md:111
 msgid ""
 "Offline, `status` still answers and a browser that is already set up "
 "keeps working. `setup` refuses before it downloads anything, and says "
@@ -274,11 +276,11 @@ msgstr ""
 "indica si l'ordinador no té connexió, si no es pot arribar a un servidor "
 "o si la xarxa ha bloquejat la baixada."
 
-#: ../../workstation-setup.md:115
+#: ../../workstation-setup.md:116
 msgid "Set up the local AI in the desktop app"
 msgstr "Prepara la IA local a l'aplicació d'escriptori"
 
-#: ../../workstation-setup.md:117
+#: ../../workstation-setup.md:118
 msgid ""
 "Only the Cadrumo desktop app sets up the local AI. The `aeat` command "
 "line, the terminal interface and an AI assistant connected through MCP "
@@ -291,7 +293,7 @@ msgstr ""
 "poden triar els models. Quan la IA local no està a punt, et remeten a "
 "l'aplicació d'escriptori."
 
-#: ../../workstation-setup.md:122
+#: ../../workstation-setup.md:123
 msgid ""
 "In the desktop app, choose a model for each reader role. Cadrumo names no"
 " model and sets no default: the models on offer come from the Cadrumo "
@@ -316,7 +318,7 @@ msgstr ""
 "cap gestor de paquets, ni drets d'administrador, ni un instal·lador a "
 "part a Windows, macOS o Linux."
 
-#: ../../workstation-setup.md:132
+#: ../../workstation-setup.md:133
 msgid ""
 "A copy of the local AI program (Ollama) that you installed yourself is "
 "detected and left alone. Cadrumo never starts, stops, or changes it, and "
@@ -326,7 +328,7 @@ msgstr ""
 "(Ollama), Cadrumo la detecta i no la toca. Mai no la inicia, no l'atura "
 "ni la canvia, i la seva pròpia còpia escolta en una altra adreça local."
 
-#: ../../workstation-setup.md:136
+#: ../../workstation-setup.md:137
 msgid ""
 "The local AI runs in the background under the Cadrumo manager, which "
 "starts when you sign in to your computer or open the Cadrumo app. The "
@@ -343,7 +345,7 @@ msgstr ""
 "còpia del codi font, la IA local consta com a no iniciada i la lectura de"
 " documents es rebutja fins que estigui en marxa."
 
-#: ../../workstation-setup.md:143
+#: ../../workstation-setup.md:144
 msgid ""
 "Every model request goes through the Cadrumo agent service to the model "
 "chosen for its role. LLM classification uses only a model that runs on "
@@ -356,11 +358,11 @@ msgstr ""
 "moviments amb un LLM](how-to/classify-with-llm.md#set-up-the-local-"
 "reader)."
 
-#: ../../workstation-setup.md:148
+#: ../../workstation-setup.md:149
 msgid "Check every component"
 msgstr "Comprova tots els components"
 
-#: ../../workstation-setup.md:150
+#: ../../workstation-setup.md:151
 msgid ""
 "`aeat config provision verify` checks every component fully: it reaches "
 "the download servers, opens the browser, and asks each chosen local model"
@@ -375,7 +377,7 @@ msgstr ""
 "amb l'estat 2 tret que tots els components que comprova es puguin fer "
 "servir."
 
-#: ../../workstation-setup.md:156
+#: ../../workstation-setup.md:157
 msgid ""
 "These commands work with or without a signed-in profile. A Cadrumo build "
 "without its native components, such as a source checkout that has not "
@@ -386,7 +388,7 @@ msgstr ""
 " del codi font que no els ha compilat, indica que cap component no està "
 "inclòs en aquesta versió."
 
-#: ../../workstation-setup.md:160
+#: ../../workstation-setup.md:161
 msgid ""
 "Run `aeat config check` again after each change to confirm the gap is "
 "closed."
@@ -394,11 +396,11 @@ msgstr ""
 "Torna a executar `aeat config check` després de cada canvi per confirmar "
 "que la mancança està resolta."
 
-#: ../../workstation-setup.md:162
+#: ../../workstation-setup.md:163
 msgid "Connect an AI assistant"
 msgstr "Connecta un assistent d'IA"
 
-#: ../../workstation-setup.md:164
+#: ../../workstation-setup.md:165
 msgid ""
 "Cadrumo installs `cadrumo-mcp` alongside `aeat`. The server connects an "
 "agent to registered operations through the local runtime, either under "
@@ -413,7 +415,7 @@ msgstr ""
 "per confirmar que és al teu camí de cerca. En una còpia de treball del "
 "codi font, comprova el punt d'entrada instal·lat amb:"
 
-#: ../../workstation-setup.md:175
+#: ../../workstation-setup.md:176
 msgid ""
 "[Connect an agent](how-to/connect-an-agent.md) shows both ways to connect"
 " and the grant request flow."
@@ -421,11 +423,11 @@ msgstr ""
 "[Connecta un agent](how-to/connect-an-agent.md) mostra les dues maneres "
 "de connectar-s'hi i el flux de sol·licitud d'autoritzacions."
 
-#: ../../workstation-setup.md:178
+#: ../../workstation-setup.md:179
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../workstation-setup.md:180
+#: ../../workstation-setup.md:181
 msgid ""
 "[Quickstart](how-to/quickstart.md) - from an empty profile to an exported"
 " modelo file."
@@ -433,7 +435,7 @@ msgstr ""
 "[Inici ràpid](how-to/quickstart.md) - d'un perfil buit a un fitxer de "
 "modelo exportat."
 
-#: ../../workstation-setup.md:182
+#: ../../workstation-setup.md:183
 msgid ""
 "[Set up a profile](how-to/profile-setup.md) - including the per-profile "
 "service capabilities (Google export, LLM vision, cloud evidence upload)."
@@ -442,10 +444,10 @@ msgstr ""
 "capacitats de servei per perfil (exportació a Google, visió LLM, pujada "
 "de proves al núvol)."
 
-#: ../../workstation-setup.md:184
+#: ../../workstation-setup.md:185
 msgid "[Connect an agent](how-to/connect-an-agent.md)"
 msgstr "[Connecta un agent](how-to/connect-an-agent.md)"
 
-#: ../../workstation-setup.md:185
+#: ../../workstation-setup.md:186
 msgid "[Troubleshooting](how-to/troubleshooting.md)"
 msgstr "[Resolució de problemes](how-to/troubleshooting.md)"

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-26 10:51+0100\n"
+"POT-Creation-Date: 2026-10-26 18:31+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo translation team\n"
 "Language: ca\n"
@@ -1076,17 +1076,21 @@ msgstr ""
 #: ../../how-to/profile-setup.md:432
 msgid ""
 "`llm_vision`: read scanned and image invoices with the vision model you "
-"chose in the Cadrumo desktop app. On by default."
+"chose in the Cadrumo desktop app. On by default. It does not decide where"
+" the read runs: a model that reads off this computer also needs "
+"`cloud_evidence_upload` and your consent for each read."
 msgstr ""
 "`llm_vision`: llegeix factures escanejades i en imatge amb el model de "
 "visió que has triat a l'aplicació d'escriptori de Cadrumo. Activat per "
-"defecte."
+"defecte. No decideix on s'executa la lectura: un model que llegeix fora "
+"d'aquest equip necessita a més `cloud_evidence_upload` i el teu "
+"consentiment per a cada lectura."
 
-#: ../../how-to/profile-setup.md:434
+#: ../../how-to/profile-setup.md:436
 msgid "`google_export`: export calculations to Google Sheets. On by default."
 msgstr "`google_export`: exporta càlculs a Google Sheets. Activat per defecte."
 
-#: ../../how-to/profile-setup.md:436
+#: ../../how-to/profile-setup.md:438
 msgid ""
 "Turn any capability on or off with `aeat config profile capabilities "
 "set`. The example turns `llm_vision` off. Pass `cloud_evidence_upload on`"
@@ -1101,7 +1105,7 @@ msgstr ""
 "extra; consulta [Instal·la Cadrumo](../workstation-setup.md) per als "
 "extres."
 
-#: ../../how-to/profile-setup.md:441
+#: ../../how-to/profile-setup.md:443
 msgid ""
 "Sign out without deleting the profile using `aeat config logout` after "
 "the login-gated maintenance and capability checks above. Logout revokes "
@@ -1117,11 +1121,11 @@ msgstr ""
 "exigeixen una autenticació nova. Les credencials d'API inscrites "
 "conserven la seva autoritat independent:"
 
-#: ../../how-to/profile-setup.md:451
+#: ../../how-to/profile-setup.md:453
 msgid "See what changed"
 msgstr "Mira què ha canviat"
 
-#: ../../how-to/profile-setup.md:453
+#: ../../how-to/profile-setup.md:455
 msgid ""
 "Every change to a profile - creation, edits, imports, classifications, "
 "calculations, and filings - is recorded as an event in that profile's "
@@ -1136,7 +1140,7 @@ msgstr ""
 "sessió oberta, així que inicia primer sessió al perfil. L'exemple llista "
 "els filtres que accepta `aeat config profile history`:"
 
-#: ../../how-to/profile-setup.md:463
+#: ../../how-to/profile-setup.md:465
 msgid ""
 "Repeat `--event-type` to include several types. Narrow the window with "
 "`--since` and `--until`, or match one record with `--object-id` or "
@@ -1149,11 +1153,11 @@ msgstr ""
 "acceptats, de manera que un valor buit és una manera ràpida de descobrir "
 "el vocabulari."
 
-#: ../../how-to/profile-setup.md:468
+#: ../../how-to/profile-setup.md:470
 msgid "Delete a profile permanently"
 msgstr "Elimina un perfil permanentment"
 
-#: ../../how-to/profile-setup.md:470
+#: ../../how-to/profile-setup.md:472
 msgid ""
 "Open **Manage profiles** from the profile menu or sign-in screen. You can"
 " create a profile or delete one stored under your current OS account. You"
@@ -1166,7 +1170,7 @@ msgstr ""
 "perfil per suprimir-lo. Els perfils d'altres comptes del sistema operatiu"
 " no apareixen a la llista."
 
-#: ../../how-to/profile-setup.md:474
+#: ../../how-to/profile-setup.md:476
 msgid ""
 "Choose **Delete profile**, type its displayed name exactly, and "
 "acknowledge the data loss. This permanently removes its local invoices, "
@@ -1183,7 +1187,7 @@ msgstr ""
 " perfil. Els registres sota protecció de conservació no es poden "
 "suprimir."
 
-#: ../../how-to/profile-setup.md:480
+#: ../../how-to/profile-setup.md:482
 msgid ""
 "On the command line, first review the named profile without `--yes`; "
 "nothing is deleted. Add `--yes` only when you intend to remove that "
@@ -1193,11 +1197,11 @@ msgstr ""
 "`--yes`; no se suprimeix res. Afegeix `--yes` només quan vulguis suprimir"
 " aquest perfil de manera permanent:"
 
-#: ../../how-to/profile-setup.md:487
+#: ../../how-to/profile-setup.md:489
 msgid "If setup looks wrong"
 msgstr "Si la configuració sembla incorrecta"
 
-#: ../../how-to/profile-setup.md:489
+#: ../../how-to/profile-setup.md:491
 msgid ""
 "If a command reports no active profile, an invalid field value, or that "
 "you're working under the wrong profile, see [Diagnose and repair your "
@@ -1207,7 +1211,7 @@ msgstr ""
 " vàlid, o que estàs treballant sota el perfil incorrecte, consulta "
 "[Diagnostica i repara la teva configuració local](troubleshooting.md)."
 
-#: ../../how-to/profile-setup.md:493
+#: ../../how-to/profile-setup.md:495
 msgid ""
 "When the troubleshooting steps don't resolve it, follow [Prepare a "
 "privacy-safe support request](troubleshooting.md#prepare-a-privacy-safe-"
@@ -1221,26 +1225,26 @@ msgstr ""
 "deixar fora abans de portar el problema al gestor d'incidències del "
 "projecte."
 
-#: ../../how-to/profile-setup.md:499
+#: ../../how-to/profile-setup.md:501
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../how-to/profile-setup.md:501
+#: ../../how-to/profile-setup.md:503
 msgid "[Import and manage transactions](import-bank-statements.md)"
 msgstr "[Importa i gestiona els moviments](import-bank-statements.md)"
 
-#: ../../how-to/profile-setup.md:502
+#: ../../how-to/profile-setup.md:504
 msgid "[Maintain Modelo 036 census facts in your profile](censo-update.md)"
 msgstr "[Mantén les dades censals del Modelo 036 al teu perfil](censo-update.md)"
 
-#: ../../how-to/profile-setup.md:503
+#: ../../how-to/profile-setup.md:505
 msgid "[Plan your filing calendar](filing-calendar.md)"
 msgstr "[Planifica el teu calendari de presentacions](filing-calendar.md)"
 
-#: ../../how-to/profile-setup.md:504
+#: ../../how-to/profile-setup.md:506
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr "[Revisa i aporta entrades de càlcul](review-calculation-values.md)"
 
-#: ../../how-to/profile-setup.md:505
+#: ../../how-to/profile-setup.md:507
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[Referència de la CLI](../cli/index.rst)"

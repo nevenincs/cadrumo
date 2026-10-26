@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-26 10:51+0100\n"
+"POT-Creation-Date: 2026-10-26 18:31+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -1076,19 +1076,23 @@ msgstr ""
 #: ../../how-to/profile-setup.md:432
 msgid ""
 "`llm_vision`: read scanned and image invoices with the vision model you "
-"chose in the Cadrumo desktop app. On by default."
+"chose in the Cadrumo desktop app. On by default. It does not decide where"
+" the read runs: a model that reads off this computer also needs "
+"`cloud_evidence_upload` and your consent for each read."
 msgstr ""
 "`llm_vision`: lee las facturas escaneadas y en imagen con el modelo de "
 "visión que elegiste en la aplicación de escritorio de Cadrumo. Activada "
-"por defecto."
+"por defecto. No decide dónde se ejecuta la lectura: un modelo que lee "
+"fuera de este equipo necesita además `cloud_evidence_upload` y tu "
+"consentimiento en cada lectura."
 
-#: ../../how-to/profile-setup.md:434
+#: ../../how-to/profile-setup.md:436
 msgid "`google_export`: export calculations to Google Sheets. On by default."
 msgstr ""
 "`google_export`: exporta los cálculos a Google Sheets. Activada por "
 "defecto."
 
-#: ../../how-to/profile-setup.md:436
+#: ../../how-to/profile-setup.md:438
 msgid ""
 "Turn any capability on or off with `aeat config profile capabilities "
 "set`. The example turns `llm_vision` off. Pass `cloud_evidence_upload on`"
@@ -1102,7 +1106,7 @@ msgstr ""
 "capacidad cuyo extra de paquete falte necesita que instales ese extra; "
 "consulta [Instalar Cadrumo](../workstation-setup.md) para ver los extras."
 
-#: ../../how-to/profile-setup.md:441
+#: ../../how-to/profile-setup.md:443
 msgid ""
 "Sign out without deleting the profile using `aeat config logout` after "
 "the login-gated maintenance and capability checks above. Logout revokes "
@@ -1118,11 +1122,11 @@ msgstr ""
 "una nueva autenticación. Las credenciales de API inscritas conservan su "
 "autoridad independiente:"
 
-#: ../../how-to/profile-setup.md:451
+#: ../../how-to/profile-setup.md:453
 msgid "See what changed"
 msgstr "Ve qué cambió"
 
-#: ../../how-to/profile-setup.md:453
+#: ../../how-to/profile-setup.md:455
 msgid ""
 "Every change to a profile - creation, edits, imports, classifications, "
 "calculations, and filings - is recorded as an event in that profile's "
@@ -1137,7 +1141,7 @@ msgstr ""
 "así que inicia sesión primero en el perfil. El ejemplo enumera los "
 "filtros que acepta `aeat config profile history`:"
 
-#: ../../how-to/profile-setup.md:463
+#: ../../how-to/profile-setup.md:465
 msgid ""
 "Repeat `--event-type` to include several types. Narrow the window with "
 "`--since` and `--until`, or match one record with `--object-id` or "
@@ -1150,11 +1154,11 @@ msgstr ""
 "admitidos, así que un valor vacío es una forma rápida de descubrir el "
 "vocabulario."
 
-#: ../../how-to/profile-setup.md:468
+#: ../../how-to/profile-setup.md:470
 msgid "Delete a profile permanently"
 msgstr "Eliminar un perfil de forma permanente"
 
-#: ../../how-to/profile-setup.md:470
+#: ../../how-to/profile-setup.md:472
 msgid ""
 "Open **Manage profiles** from the profile menu or sign-in screen. You can"
 " create a profile or delete one stored under your current OS account. You"
@@ -1167,7 +1171,7 @@ msgstr ""
 "perfil para eliminarlo. Los perfiles de otras cuentas del sistema "
 "operativo no aparecen en la lista."
 
-#: ../../how-to/profile-setup.md:474
+#: ../../how-to/profile-setup.md:476
 msgid ""
 "Choose **Delete profile**, type its displayed name exactly, and "
 "acknowledge the data loss. This permanently removes its local invoices, "
@@ -1184,7 +1188,7 @@ msgstr ""
 "eliminar el último perfil. Los registros sujetos a protección de "
 "conservación no se pueden eliminar."
 
-#: ../../how-to/profile-setup.md:480
+#: ../../how-to/profile-setup.md:482
 msgid ""
 "On the command line, first review the named profile without `--yes`; "
 "nothing is deleted. Add `--yes` only when you intend to remove that "
@@ -1194,11 +1198,11 @@ msgstr ""
 "sin `--yes`; no se elimina nada. Añade `--yes` solo cuando quieras "
 "eliminar ese perfil de forma permanente:"
 
-#: ../../how-to/profile-setup.md:487
+#: ../../how-to/profile-setup.md:489
 msgid "If setup looks wrong"
 msgstr "Si la configuración parece incorrecta"
 
-#: ../../how-to/profile-setup.md:489
+#: ../../how-to/profile-setup.md:491
 msgid ""
 "If a command reports no active profile, an invalid field value, or that "
 "you're working under the wrong profile, see [Diagnose and repair your "
@@ -1208,7 +1212,7 @@ msgstr ""
 "no válido o de que estás trabajando bajo el perfil equivocado, consulta "
 "[Diagnosticar y reparar tu configuración local](troubleshooting.md)."
 
-#: ../../how-to/profile-setup.md:493
+#: ../../how-to/profile-setup.md:495
 msgid ""
 "When the troubleshooting steps don't resolve it, follow [Prepare a "
 "privacy-safe support request](troubleshooting.md#prepare-a-privacy-safe-"
@@ -1221,26 +1225,26 @@ msgstr ""
 "Indica las salidas que debes incluir y los datos personales que debes "
 "omitir antes de llevar el problema al gestor de incidencias del proyecto."
 
-#: ../../how-to/profile-setup.md:499
+#: ../../how-to/profile-setup.md:501
 msgid "Next steps"
 msgstr "Próximos pasos"
 
-#: ../../how-to/profile-setup.md:501
+#: ../../how-to/profile-setup.md:503
 msgid "[Import and manage transactions](import-bank-statements.md)"
 msgstr "[Importar y gestionar movimientos](import-bank-statements.md)"
 
-#: ../../how-to/profile-setup.md:502
+#: ../../how-to/profile-setup.md:504
 msgid "[Maintain Modelo 036 census facts in your profile](censo-update.md)"
 msgstr "[Mantener los datos censales del Modelo 036 en tu perfil](censo-update.md)"
 
-#: ../../how-to/profile-setup.md:503
+#: ../../how-to/profile-setup.md:505
 msgid "[Plan your filing calendar](filing-calendar.md)"
 msgstr "[Planificar tu calendario de presentaciones](filing-calendar.md)"
 
-#: ../../how-to/profile-setup.md:504
+#: ../../how-to/profile-setup.md:506
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr "[Revisar y aportar las entradas de cálculo](review-calculation-values.md)"
 
-#: ../../how-to/profile-setup.md:505
+#: ../../how-to/profile-setup.md:507
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[Referencia de la CLI](../cli/index.rst)"
