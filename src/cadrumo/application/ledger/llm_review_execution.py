@@ -304,6 +304,7 @@ class LedgerLlmReviewExecutor:
         """Capture once, then settle a preview or publish the secure REVIEW checkpoint."""
         ports = self._ports(request, context)
         payload = request.payload
+        ports.llm.refuse_vision_model_override(payload.vision_model)
         await context.events.phase("ledger.llm.acquire")
 
         def acquire() -> LedgerLlmReviewedOperand:

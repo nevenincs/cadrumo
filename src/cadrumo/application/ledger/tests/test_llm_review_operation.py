@@ -201,6 +201,15 @@ class _Repository:
         return self.catalogue
 
 
+class _NamedVisionModelRefusedError(Exception):
+    """The outer port's refusal of a named vision model, as this unit fixture stands it in."""
+
+
+def _refuse_named_vision_model(model: str | None) -> None:
+    if model is not None:
+        raise _NamedVisionModelRefusedError
+
+
 class _Case:
     def __init__(self, authority: PinnedAuthorityOperation, mode: _Mode = "classification") -> None:
         self.baseline = _baseline()
@@ -228,7 +237,7 @@ class _Case:
         )
         self.ports = LedgerLlmOperationPorts(
             ledger=self.ledger,
-            llm=cast(LLMClassificationPorts, object()),
+            llm=cast(LLMClassificationPorts, SimpleNamespace(refuse_vision_model_override=_refuse_named_vision_model)),
             settings=cast(Settings, object()),
         )
         self.events = _Events()
@@ -880,6 +889,32 @@ async def test_terminal_preview_cannot_be_reopened_as_pending_review_or_resumed_
 _THIS_MACHINE = "http://127.0.0.1:11434/api/chat"
 _ANOTHER_MACHINE = "http://reader.example.invalid:11434/api/chat"
 _FIRST_PHASE = "ledger.llm.acquire"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("mode", ["classification", "saturated", "auto_split", "split"])
+@pytest.mark.parametrize("read_evidence", [False, True], ids=["no-evidence", "evidence"])
+async def test_a_named_vision_model_is_refused_before_the_movement_is_read(
+    monkeypatch: pytest.MonkeyPatch,
+    authority_operation: PinnedAuthorityOperation,
+    mode: _Mode,
+    read_evidence: bool,
+) -> None:
+    """The refusal does not wait for an image read: no phase, no catalogue load, no model call."""
+    case = _Case(authority_operation, mode)
+    case.payload = LedgerLlmReviewRequest.model_validate(
+        {**case.payload.model_dump(), "vision_model": "synthetic-vision:2", "read_evidence": read_evidence}
+    )
+    case.request = case.request.model_copy(update={"payload": case.payload})
+    calls = _model_calls(monkeypatch, case, mode)
+
+    with pytest.raises(_NamedVisionModelRefusedError):
+        await LedgerLlmReviewExecutor(case.factory).execute(case.request, case.context)
+
+    assert calls == []
+    assert case.repository.loads == 0
+    assert case.events.phases == [] and case.events.effects == []
+    assert case.interactions.published is None
 
 
 def _reader_endpoint(case: _Case, endpoint: str) -> None:

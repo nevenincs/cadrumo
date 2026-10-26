@@ -13,7 +13,7 @@ from ..adapters.inbound.einvoice.shape import probe_document_shape
 from ..adapters.outbound.llm.errors import LLMCacheError, LLMConfigError, LLMProviderError
 from ..adapters.outbound.llm.models import MultimodalImageInput
 from ..adapters.outbound.llm.pdf_rasterisation import rasterise_pdf_pages_to_base64_png
-from ..adapters.outbound.llm.preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
+from ..adapters.outbound.llm.providers.agent import model_override_refusal_error, refuse_vision_model_override
 from ..adapters.outbound.llm.text_classifier import TextLLMClassifier
 from ..adapters.outbound.llm.vision_classifier import VisionLLMClassifier
 from ..adapters.persistence.llm.run_records import LLMRunRecord, LLMRunRecorder
@@ -43,7 +43,6 @@ from ..application.ledger.preconditions import LedgerPreconditionCondition
 from ..application.operator_actions.models import PreconditionVerdict
 from ..core.config import Settings
 from ..core.model_roles import ModelRole
-from ..core.operator_action_enums import ActionEvidenceProvenance
 from ..core.time.clock import now
 from ..domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ..domain.transactions.errors import LLMClassifierError, TransactionValidationError
@@ -59,28 +58,6 @@ def _reader_unavailable(verdict: PreconditionVerdict) -> PurchaseInvoiceEvidence
         LedgerPreconditionCondition.EVIDENCE_READER_AVAILABLE.value,
         translated_message=evidence_reader_refusal_key(verdict),
         precondition_verdict=verdict,
-    )
-
-
-def _refuse_per_read_model(model: str) -> LLMConfigError:
-    """Return the refusal for a per-read model name the agent path cannot honour.
-
-    The model a role reads with is the person's selection for that role, held by
-    the agent service. A request names a role, never a model, so a per-read
-    model would be silently ignored if it were accepted. The name itself stays
-    out of the refusal.
-    """
-    facts: dict[str, str | int | bool] = {
-        "model_override_present": bool(model),
-        "model_role": ModelRole.VISION_TRANSCRIPTION.value,
-    }
-    return LLMConfigError(
-        context=facts,
-        precondition_verdict=llm_no_recovery_verdict(
-            LLMPreconditionCondition.AGENT_MODEL_OVERRIDE_ABSENT,
-            facts=facts,
-            provenance=ActionEvidenceProvenance.APPLICATION_STATE,
-        ),
     )
 
 
@@ -247,10 +224,11 @@ def compose_ledger_llm(*, bucket_id: str, settings: Settings) -> LedgerLlmCompos
         make_text_classifier=make_text_classifier,
         make_vision_classifier=lambda spec, model: VisionReader(
             VisionLLMClassifier(spec=spec, settings=settings),
-            refusal=None if model is None else _refuse_per_read_model(model),
+            refusal=None if model is None else model_override_refusal_error(role=ModelRole.VISION_TRANSCRIPTION),
         ),
         run_reader=run_reader,
         record_classifier_run=record_classifier_run,
+        refuse_vision_model_override=refuse_vision_model_override,
     )
     return LedgerLlmComposition(
         ports=ports,

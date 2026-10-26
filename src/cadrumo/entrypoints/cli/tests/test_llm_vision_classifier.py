@@ -15,6 +15,7 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo_client.contracts.model_runs import ModelRunLane, ModelRunMediaKind, ModelRunRefusalCode
 
+from ....adapters.outbound.llm.errors import LLMConfigError
 from ....adapters.outbound.llm.tests.model_run_support import TEXT_ONLY_LANE, serving_agent
 from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ....application.ledger.evidence_errors import PurchaseInvoiceEvidenceReaderError
@@ -140,6 +141,27 @@ def test_a_per_read_vision_model_is_refused_rather_than_silently_ignored() -> No
     ):
         _classify(_image_evidence(), vision_model="synthetic-vision:2")
 
+    verdict = raised.value.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == "llm.agent.model_override_absent"
+    assert verdict.evidence[0].values == {
+        "model_override_present": True,
+        "model_role": ModelRole.VISION_TRANSCRIPTION.value,
+    }
+    assert service.lookups == []
+    assert service.runs == []
+
+
+@pytest.mark.parametrize("vision_model", ["synthetic-vision:2", ""], ids=["named", "empty"])
+def test_the_composed_boundary_refuses_a_named_vision_model_without_asking_the_service(vision_model: str) -> None:
+    """The operation calls this port before it reads anything, so text, image and absent evidence refuse alike."""
+    with serving_agent(replies=(_classification_json(),), lane=_VISION_LANE) as service:
+        ports = _llm_ports(load_settings())
+        ports.refuse_vision_model_override(None)
+        with pytest.raises(LLMConfigError) as raised:
+            ports.refuse_vision_model_override(vision_model)
+
+    assert build_error_envelope(raised.value).code == "REFUSED_LLM_CONFIG"
     verdict = raised.value.terminal_precondition_verdict
     assert verdict is not None
     assert verdict.failed_condition_id == "llm.agent.model_override_absent"

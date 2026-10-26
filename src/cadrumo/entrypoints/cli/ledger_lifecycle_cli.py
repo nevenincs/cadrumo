@@ -563,9 +563,11 @@ def _ledger_split_llm(
     """
     from cadrumo_client.contracts.contracts import RefusalCode
 
+    from ...adapters.outbound.llm.providers.agent import refuse_vision_model_override
     from ...application.operations.schema_identity import OperationSchemaIdentityV1
     from .operation_ledger_view import resolve_ledger_transaction_id
 
+    refuse_vision_model_override(vision_model)
     _validate_split_llm_options(
         child_amount=child_amount,
         child_description=child_description,

@@ -22,6 +22,7 @@ from cadrumo_client.commands.registered_operation_contracts import (
     RegisteredOperationReviewHandler,
 )
 
+from ....adapters.outbound.llm.errors import LLMConfigError
 from ....application.ledger.classify_result_contracts import (
     LedgerClassifyOperationResult,
 )
@@ -265,7 +266,7 @@ class _ReviewPort:
         monkeypatch.setattr(module, "emit_envelope", emit)
 
 
-def _invoke(mode: _Mode, action: _Action, *, business_pct: str = "0.25") -> None:
+def _invoke(mode: _Mode, action: _Action, *, business_pct: str = "0.25", vision_model: str | None = None) -> None:
     ctx = cast(typer.Context, cast(object, None))
     if mode == "split":
         lifecycle.ledger_split(
@@ -276,7 +277,7 @@ def _invoke(mode: _Mode, action: _Action, *, business_pct: str = "0.25") -> None
             yes=action == "apply",
             actor="operator",
             read_evidence=True,
-            vision_model="fixture-vision",
+            vision_model=vision_model,
             reason="Operator review",
         )
     elif mode == "auto_split":
@@ -289,7 +290,7 @@ def _invoke(mode: _Mode, action: _Action, *, business_pct: str = "0.25") -> None
             reject=action == "reject",
             actor="operator",
             read_evidence=True,
-            vision_model="fixture-vision",
+            vision_model=vision_model,
             reason="Operator review",
         )
     else:
@@ -304,9 +305,31 @@ def _invoke(mode: _Mode, action: _Action, *, business_pct: str = "0.25") -> None
             reject=action == "reject",
             actor="operator",
             read_evidence=True,
-            vision_model="fixture-vision",
+            vision_model=vision_model,
             reason="Operator review",
         )
+
+
+@pytest.mark.parametrize("mode", ["classification", "saturated", "auto_split", "split"])
+@pytest.mark.parametrize("vision_model", ["synthetic-vision:2", ""], ids=["named", "empty"])
+def test_a_named_vision_model_is_refused_before_anything_is_read(
+    monkeypatch: pytest.MonkeyPatch, mode: _Mode, vision_model: str
+) -> None:
+    """The person's selection is the only model choice, so the option refuses whatever the evidence would be."""
+    port = _ReviewPort(_review(mode))
+    definition = LEDGER_SPLIT_REVIEW_DEFINITION_ID if mode == "split" else LEDGER_CLASSIFY_REVIEW_DEFINITION_ID
+    port.bind(monkeypatch, lifecycle if mode == "split" else classify, definition_id=definition)
+
+    with pytest.raises(LLMConfigError) as raised:
+        _invoke(mode, "apply", vision_model=vision_model)
+
+    verdict = raised.value.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == "llm.agent.model_override_absent"
+    assert verdict.evidence[0].values == {"model_override_present": True, "model_role": "vision_transcription"}
+    assert vision_model == "" or vision_model not in str(raised.value)
+    assert port.viewed == [], "the movement's handle is not even resolved"
+    assert port.requests == [], "no review is asked"
 
 
 @pytest.mark.parametrize("mode", ["classification", "saturated", "auto_split", "split"])
@@ -358,7 +381,7 @@ def test_review_routes_bind_exact_profile_options_and_render_worker_facts(
             business_pct="0.25" if action == "apply" and mode in {"classification", "saturated"} else None,
             actor="operator",
             read_evidence=True,
-            vision_model="fixture-vision",
+            vision_model=None,
             reason="Operator review",
         )
     ]

@@ -76,6 +76,10 @@ def _run_review(
     business_pct: str | None = None,
 ) -> LedgerLlmReviewProjection | LedgerLlmOperationResult:
     """Use the canonical reviewed-operation driver and correlate the settled proposal."""
+    from ...adapters.outbound.llm.providers.agent import refuse_vision_model_override
+
+    # The person's selection is the only model choice; a named model is refused before anything is read.
+    refuse_vision_model_override(vision_model)
     client = bound_profile_client(ctx)
     # A review holds the movement it names: the operator's handle is resolved
     # to its canonical id first, so every ask about one movement conflicts.
