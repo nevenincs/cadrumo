@@ -34,7 +34,6 @@ from ..dependency_contracts import (
     DependencyBlockedReason,
     DependencyItemDeclaration,
     DependencyItemKind,
-    DependencyNote,
     DependencyRecoveryAction,
     DependencyStaleReason,
     DependencyState,
@@ -82,7 +81,6 @@ _WORDED_FAMILIES: Final[tuple[type[StrEnum], ...]] = (
     DependencyStaleReason,
     DependencyFailureCategory,
     DependencyRecoveryAction,
-    DependencyNote,
 )
 
 
@@ -553,7 +551,7 @@ def test_setup_wording_has_the_same_authored_keys_in_every_language(catalogue: s
     assert not findings, "\n".join(findings)
 
 
-def test_setup_wording_covers_every_state_reason_category_action_and_note() -> None:
+def test_setup_wording_covers_every_state_reason_category_and_action() -> None:
     """Every closed value a status row can carry has wording in every language."""
     findings: list[str] = []
     for locale in SUPPORTED_OUTPUT_LANGUAGES:

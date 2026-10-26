@@ -14,7 +14,6 @@ from ..dependency_contracts import (
     DependencyBlockedReason,
     DependencyCheckMode,
     DependencyItemKind,
-    DependencyNote,
     DependencyRecoveryAction,
     DependencyStaleReason,
     DependencyState,
@@ -28,7 +27,6 @@ from ..dependency_wording import (
     dependency_failure_key,
     dependency_held_sentence,
     dependency_name_key,
-    dependency_note_key,
     dependency_retry_sentence,
     dependency_row_wording,
     dependency_space_sentence,
@@ -48,7 +46,6 @@ def _all_keys() -> tuple[str, ...]:
         *(f"{root}.blocked.{reason.value}" for reason in DependencyBlockedReason),
         *(dependency_failure_key(category) for category in DependencyFailureCategory),
         *(dependency_action_key(action) for action in DependencyRecoveryAction),
-        *(dependency_note_key(note) for note in DependencyNote),
         f"{root}.in_desktop",
         f"{root}.retry",
         f"{root}.space_needed",
@@ -87,7 +84,6 @@ def test_a_row_renders_its_name_reason_and_one_button() -> None:
     assert wording.name == "Browser for the tax agency website"
     assert wording.sentence == "There is not enough free disk space."
     assert wording.action == "Try again"
-    assert wording.note is None
     spanish = dependency_row_wording(failed, BROWSER_DECLARATION, locale="es")
     assert spanish.action == "Volver a intentarlo"
     with pytest.raises(ValueError):
@@ -98,16 +94,10 @@ def test_a_row_renders_its_name_reason_and_one_button() -> None:
         kind=DependencyItemKind.LOCAL_AI,
         mode=DependencyCheckMode.FULL,
         state=DependencyState.READY,
-        note=DependencyNote.OWN_NETWORK_SETTINGS,
     )
     declaration = next(d for d in dependency_item_declarations() if d.item_id == ready.item_id)
     rendered = dependency_row_wording(ready, declaration, locale="en")
-    assert (rendered.name, rendered.sentence, rendered.note, rendered.action) == (
-        "Local AI",
-        "Ready.",
-        "Uses its own network settings.",
-        None,
-    )
+    assert (rendered.name, rendered.sentence, rendered.action) == ("Local AI", "Ready.", None)
 
 
 def _desktop_row() -> DependencyStatusRow:

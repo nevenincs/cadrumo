@@ -3583,8 +3583,6 @@ desktop:
     lead_running: You can close this; setup keeps going and Settings shows how it's
       doing.
     not_now: Not now
-    note:
-      own_network_settings: Uses its own network settings.
     open: Open setup
     outcome_cancelled: Setup was cancelled. What was already downloaded is kept.
     outcome_completed: Everything is set up.

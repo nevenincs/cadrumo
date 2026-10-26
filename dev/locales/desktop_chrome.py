@@ -512,7 +512,6 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
             "secure_connection_failed",
             "unexpected",
         ),
-        "desktop.setup.note.": ("own_network_settings",),
         "desktop.setup.action.": ("check_again", "resume", "set_up", "set_up_in_desktop", "try_again", "update"),
         "desktop.setup.role.": (
             "column_role_mapping",
@@ -3206,7 +3205,6 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.setup.failure.unexpected",
         "desktop.setup.item.browser",
         "desktop.setup.item.local_ai",
-        "desktop.setup.note.own_network_settings",
         "desktop.setup.part_model",
         "desktop.setup.part_program",
         "desktop.setup.retry",

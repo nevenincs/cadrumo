@@ -1976,8 +1976,6 @@ application:
         que un filtro de red lo impida.
       unexpected: Algo ha salido mal.
     in_desktop: Configúrala en la aplicación de escritorio de Cadrumo.
-    note:
-      own_network_settings: Usa su propia configuración de red.
     refusal:
       column_names_local_ai_not_ready: la IA local, que lee los nombres de las columnas
         de este archivo, no está lista, así que no se ha leído el archivo. Configura

@@ -20,7 +20,6 @@ from ..core.i18n.render import tr
 from .dependency_contracts import (
     DependencyBlockedReason,
     DependencyItemDeclaration,
-    DependencyNote,
     DependencyRecoveryAction,
     DependencyStaleReason,
     DependencyState,
@@ -38,7 +37,6 @@ __all__ = [
     "dependency_failure_key",
     "dependency_held_sentence",
     "dependency_name_key",
-    "dependency_note_key",
     "dependency_retry_sentence",
     "dependency_row_wording",
     "dependency_sentence_key",
@@ -79,11 +77,6 @@ def dependency_action_key(action: DependencyRecoveryAction) -> str:
     return _key(f"action.{action.value}")
 
 
-def dependency_note_key(note: DependencyNote) -> str:
-    """Return the catalogue key of a usable item's note."""
-    return _key(f"note.{note.value}")
-
-
 def _stale_key(reason: DependencyStaleReason) -> str:
     return _key(f"stale.{reason.value}")
 
@@ -105,11 +98,10 @@ def dependency_sentence_key(row: DependencyStatusRow) -> str:
 
 @dataclass(frozen=True, slots=True)
 class DependencyRowWording:
-    """What a surface shows for one item: its name, its sentence, an optional note and button label."""
+    """What a surface shows for one item: its name, its sentence and its button label."""
 
     name: str
     sentence: str
-    note: str | None
     action: str | None
 
 
@@ -122,7 +114,6 @@ def dependency_row_wording(
     return DependencyRowWording(
         name=tr(dependency_name_key(declaration), locale=locale),
         sentence=tr(dependency_sentence_key(row), locale=locale),
-        note=None if row.note is None else tr(dependency_note_key(row.note), locale=locale),
         action=None if row.recovery is None else tr(dependency_action_key(row.recovery), locale=locale),
     )
 

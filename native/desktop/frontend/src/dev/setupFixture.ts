@@ -89,7 +89,6 @@ const row = (
   recovery_action_id: RECOVERY_ACTION[kind],
   version: null,
   size_bytes: size,
-  note: null,
 });
 
 function seeds(): Seed[] {
@@ -137,7 +136,6 @@ function readied(held: SetupRow): SetupRow {
     recovery: null,
     recovery_action_id: null,
     version: "1.0",
-    note: held.kind === "local_ai" ? "own_network_settings" : null,
   };
 }
 
@@ -468,7 +466,6 @@ export function setupFixture({
         state: "provisioning",
         recovery: null,
         recovery_action_id: null,
-        note: null,
       };
     }
     run = { ...run, stage: "running", review: null };

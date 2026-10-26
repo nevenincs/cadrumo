@@ -3614,8 +3614,6 @@ desktop:
     lead_running: Ezt bezárhatod; a beállítás folytatódik, és a Beállításokban látod,
       hogy áll.
     not_now: Most nem
-    note:
-      own_network_settings: A saját hálózati beállításait használja.
     open: Beállítás megnyitása
     outcome_cancelled: A beállítás megszakadt. Ami már letöltődött, megmarad.
     outcome_completed: Minden be van állítva.

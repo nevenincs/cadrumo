@@ -577,7 +577,7 @@ impl BrowserLayout {
                 .collect();
             let only = (mode == CheckMode::Quick).then_some(executables.as_slice());
             if check_manifest(&self.root, receipt, only).intact() {
-                Observation::Present { note: None }
+                Observation::Present
             } else {
                 Observation::Failed(FailureCategory::DamagedDownload)
             }
@@ -604,7 +604,7 @@ impl BrowserLayout {
     ) -> FullCheck {
         let local = self.local_reading(CheckMode::Full, reading);
         let launchable = match local.observation {
-            Observation::Present { .. } => true,
+            Observation::Present => true,
             Observation::Absent | Observation::Unreadable => self.incomplete().is_empty(),
             _ => false,
         };
@@ -640,7 +640,7 @@ impl BrowserLayout {
                 FullCheck {
                     reading: if matches {
                         Reading {
-                            observation: Observation::Present { note: None },
+                            observation: Observation::Present,
                             ..local
                         }
                     } else {
@@ -1585,7 +1585,7 @@ pub(crate) mod tests {
         let reading = fixture
             .layout
             .quick_check(&fixture.receipts.read(ItemId::Browser));
-        assert_eq!(reading.observation, Observation::Present { note: None });
+        assert_eq!(reading.observation, Observation::Present);
         assert_eq!(reading.mode, CheckMode::Quick);
         assert_eq!(reading.version.as_deref(), Some(BROWSER_VERSION));
 
@@ -1607,7 +1607,7 @@ pub(crate) mod tests {
             .path
             .clone();
         fs::write(resource.under(&root), b"changed").unwrap();
-        assert_eq!(quick(&fixture), Observation::Present { note: None });
+        assert_eq!(quick(&fixture), Observation::Present);
         let environment = BTreeMap::new();
         let scratch = fixture.directory.path().join("tmp");
         let full = fixture.layout.full_check(
@@ -1701,10 +1701,7 @@ pub(crate) mod tests {
             &stand_in(&working, &scratch),
             &cancellation,
         );
-        assert_eq!(
-            passed.reading.observation,
-            Observation::Present { note: None }
-        );
+        assert_eq!(passed.reading.observation, Observation::Present);
         assert_eq!(passed.reading.mode, CheckMode::Full);
         assert_eq!(passed.launched_version.as_deref(), Some(BROWSER_VERSION));
         fixture
@@ -1716,16 +1713,13 @@ pub(crate) mod tests {
                 UNIX_EPOCH + Duration::from_secs(1_792_846_800),
             )
             .unwrap();
-        assert_eq!(quick(&fixture), Observation::Present { note: None });
+        assert_eq!(quick(&fixture), Observation::Present);
         let again = fixture.layout.full_check(
             &fixture.receipts.read(ItemId::Browser),
             &stand_in(&working, &scratch),
             &cancellation,
         );
-        assert_eq!(
-            again.reading.observation,
-            Observation::Present { note: None }
-        );
+        assert_eq!(again.reading.observation, Observation::Present);
         assert_eq!(
             fs::read_dir(&scratch).unwrap().count(),
             0,
@@ -1961,7 +1955,7 @@ pub(crate) mod tests {
         assert!(single.layout.damaged(&reading).is_empty());
         assert_eq!(
             single.layout.quick_check(&reading).observation,
-            Observation::Present { note: None }
+            Observation::Present
         );
     }
 

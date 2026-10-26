@@ -206,7 +206,7 @@ impl ServerSupervisor {
         if self.not_set_up == Some(stamp) && self.state == ServerState::NotSetUp {
             return self.state;
         }
-        if self.program.observe_quick() != (Observation::Present { note: None }) {
+        if self.program.observe_quick() != Observation::Present {
             self.not_set_up = Some(stamp);
             self.state = ServerState::NotSetUp;
             return self.state;

@@ -605,10 +605,9 @@ impl Program {
     /// no network and no start.
     pub fn observe_quick(&self) -> Observation {
         match self.store.inspect_quick(&self.artifact) {
-            Ok(QuickInspection::Active(_)) => Observation::Present { note: None },
+            Ok(QuickInspection::Active(_)) => Observation::Present,
             Ok(QuickInspection::Other { .. }) => Observation::Differs {
                 stale: StaleReason::ProgramTooOld,
-                note: None,
             },
             Ok(QuickInspection::Missing) => Observation::Absent,
             Ok(QuickInspection::Damaged) => Observation::Failed(FailureCategory::DamagedDownload),
@@ -621,7 +620,7 @@ impl Program {
     /// with no server running the program reads `program_not_running`.
     pub fn observe_full(&self) -> Observation {
         let quick = self.observe_quick();
-        if quick != (Observation::Present { note: None }) {
+        if quick != Observation::Present {
             return quick;
         }
         match self.store.inspect(&self.artifact) {
@@ -630,7 +629,7 @@ impl Program {
             Err(_) => return Observation::Unreadable,
         }
         match self.running_server() {
-            Some(_) => Observation::Present { note: None },
+            Some(_) => Observation::Present,
             None => Observation::Failed(FailureCategory::ProgramNotRunning),
         }
     }

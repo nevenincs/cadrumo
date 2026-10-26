@@ -47,8 +47,7 @@ use cadrumo_application::{
         plan::SetupPlan,
         role_host,
         state::{
-            BlockedReason, CheckMode, ItemState, Note, RecoveryAction, SetupStep, StaleReason,
-            StatusRow,
+            BlockedReason, CheckMode, ItemState, RecoveryAction, SetupStep, StaleReason, StatusRow,
         },
     },
     value::Sha256Digest,
@@ -1000,9 +999,6 @@ fn details(rows: &[StatusRow], setup: Option<&SetupTrack>) -> String {
         if let Some(version) = &row.version {
             parts.push(format!("version: {version}"));
         }
-        if let Some(note) = row.note {
-            parts.push(format!("note: {}", code(self::note(note))));
-        }
         lines.push(parts.join("; "));
     }
     if let Some(track) = setup {
@@ -1053,7 +1049,6 @@ fn row(row: &StatusRow) -> wire::Row {
         recovery_action_id: row.recovery_action_id().map(str::to_owned),
         version: row.version.clone(),
         size_bytes: row.size_estimate_bytes,
-        note: row.note.map(note),
     }
 }
 
@@ -1077,12 +1072,6 @@ fn blocked(reason: BlockedReason) -> wire::BlockedReason {
         BlockedReason::NeedsPerson => wire::BlockedReason::NeedsPerson,
         BlockedReason::Hardware => wire::BlockedReason::Hardware,
         BlockedReason::NotInThisBuild => wire::BlockedReason::NotInThisBuild,
-    }
-}
-
-fn note(note: Note) -> wire::Note {
-    match note {
-        Note::OwnNetworkSettings => wire::Note::OwnNetworkSettings,
     }
 }
 

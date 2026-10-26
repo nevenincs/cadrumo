@@ -130,8 +130,6 @@ def _row(row: ComponentsRow, language: str) -> dict[str, Any]:
     declaration = next(item for item in dependency_item_declarations() if item.item_id == row.item_id)
     wording = dependency_row_wording(status, declaration, locale=language)
     words = {"name": wording.name, "sentence": wording.sentence}
-    if wording.note is not None:
-        words["note"] = wording.note
     if wording.action is not None:
         words["action"] = wording.action
     return {**row.model_dump(mode="json", exclude_none=True), "words": words}

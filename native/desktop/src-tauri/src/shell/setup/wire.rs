@@ -114,13 +114,6 @@ pub enum StaleReason {
     ProgramTooOld,
 }
 
-/// A secondary fact a usable item can carry without changing its state.
-#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
-#[serde(rename_all = "snake_case")]
-pub enum Note {
-    OwnNetworkSettings,
-}
-
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Failure {
@@ -273,7 +266,6 @@ pub struct Row {
     pub recovery_action_id: Option<String>,
     pub version: Option<String>,
     pub size_bytes: Option<u64>,
-    pub note: Option<Note>,
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
@@ -463,7 +455,6 @@ impl Row {
             && (self.stale_reason.is_none() || self.state == State::Stale)
             && (self.blocked_reason.is_none() || self.state == State::Blocked)
             && (self.failure.is_none() || self.state == State::Failed)
-            && (self.note.is_none() || matches!(self.state, State::Ready | State::Stale))
     }
 }
 
@@ -691,7 +682,7 @@ mod tests {
             "item": "browser", "kind": "browser", "mode": "quick", "state": "absent",
             "stale_reason": null, "blocked_reason": null, "failure": null, "recovery": "set_up",
             "recovery_action_id": "operator.provision.browser",
-            "version": null, "size_bytes": 180000000, "note": null,
+            "version": null, "size_bytes": 180000000,
         })
     }
 
@@ -754,7 +745,7 @@ mod tests {
 
     #[test]
     fn a_value_outside_a_closed_set_or_a_bound_is_a_host_failure() {
-        let cases: [Case; 20] = [
+        let cases: [Case; 18] = [
             ("unknown state", |s| s["rows"][0]["state"] = json!("broken")),
             ("a word", |s| {
                 s["rows"][0]["sentence"] = json!("Not set up yet.")
@@ -765,13 +756,6 @@ mod tests {
             }),
             ("reason on another state", |s| {
                 s["rows"][0]["failure"] = json!("offline")
-            }),
-            ("note on an absent item", |s| {
-                s["rows"][0]["note"] = json!("own_network_settings")
-            }),
-            ("unknown note", |s| {
-                s["rows"][0]["state"] = json!("ready");
-                s["rows"][0]["note"] = json!("shiny")
             }),
             ("duplicate rows", |s| {
                 let copy = s["rows"][0].clone();

@@ -3638,8 +3638,6 @@ desktop:
     lead_running: Pots tancar això; la configuració continua i Configuració mostra
       com va.
     not_now: Ara no
-    note:
-      own_network_settings: Fa servir la seva pròpia configuració de xarxa.
     open: Obre la configuració
     outcome_cancelled: S'ha cancel·lat la configuració. El que ja s'havia baixat es
       conserva.

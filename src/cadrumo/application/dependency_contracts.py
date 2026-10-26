@@ -37,7 +37,6 @@ __all__ = [
     "DependencyItemDeclaration",
     "DependencyItemId",
     "DependencyItemKind",
-    "DependencyNote",
     "DependencyRecoveryAction",
     "DependencySetupStep",
     "DependencyStaleReason",
@@ -123,12 +122,6 @@ class DependencyStaleReason(StrEnum):
     PROGRAM_TOO_OLD = "program_too_old"
 
 
-class DependencyNote(StrEnum):
-    """Secondary fact a ready item can carry without changing its state."""
-
-    OWN_NETWORK_SETTINGS = "own_network_settings"
-
-
 class DependencyRecoveryAction(StrEnum):
     """The single button a surface offers for an item's current state.
 
@@ -206,7 +199,7 @@ class DependencyStatusRow(BaseModel):
     """The derived, renderer-neutral status of one setup item.
 
     Every surface renders this row and nothing else: the state, exactly the
-    reason that state requires, an optional note, and the one recovery button.
+    reason that state requires, and the one recovery button.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -218,7 +211,6 @@ class DependencyStatusRow(BaseModel):
     stale_reason: DependencyStaleReason | None = None
     blocked_reason: DependencyBlockedReason | None = None
     failure_category: DependencyFailureCategory | None = None
-    note: DependencyNote | None = None
     version: Annotated[str, StringConstraints(min_length=1, max_length=128)] | None = None
     size_estimate_bytes: NonNegativeInt | None = None
     recovery: DependencyRecoveryAction | None = None
@@ -237,8 +229,6 @@ class DependencyStatusRow(BaseModel):
             blocked_reason=self.blocked_reason,
             failure_category=self.failure_category,
         )
-        if self.note is not None and self.state not in {DependencyState.READY, DependencyState.STALE}:
-            raise ValueError("only a usable item carries a note")
         if (self.recovery is None) != (self.recovery_action_id is None):
             raise ValueError("a recovery button and its operator action are offered together")
         return self

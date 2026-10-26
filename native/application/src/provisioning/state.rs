@@ -49,13 +49,6 @@ pub enum StaleReason {
     ProgramTooOld,
 }
 
-/// A secondary fact a usable item can carry without changing its state.
-#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
-#[serde(rename_all = "snake_case")]
-pub enum Note {
-    OwnNetworkSettings,
-}
-
 /// The one button a surface offers for an item's state.
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -104,13 +97,8 @@ impl SetupStep {
 /// `Differs` rest on something observed on this computer, never on a receipt alone.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Observation {
-    Present {
-        note: Option<Note>,
-    },
-    Differs {
-        stale: StaleReason,
-        note: Option<Note>,
-    },
+    Present,
+    Differs { stale: StaleReason },
     Absent,
     Unreadable,
     Blocked(BlockedReason),
@@ -119,7 +107,7 @@ pub enum Observation {
 
 impl Observation {
     pub fn usable(self) -> bool {
-        matches!(self, Self::Present { .. } | Self::Differs { .. })
+        matches!(self, Self::Present | Self::Differs { .. })
     }
 }
 
@@ -156,18 +144,9 @@ impl Reading {
             .or_else(|| first(|o| matches!(o, Observation::Blocked(_))))
             .or_else(|| first(|o| matches!(o, Observation::Absent)))
             .or_else(|| first(|o| matches!(o, Observation::Differs { .. })));
-        let note = parts.iter().find_map(|part| match part.observation {
-            Observation::Present { note } | Observation::Differs { note, .. } => note,
-            _ => None,
-        });
-        let observation = match decisive {
-            Some(Observation::Differs { stale, .. }) => Observation::Differs { stale, note },
-            Some(other) => other,
-            None => Observation::Present { note },
-        };
         Reading {
             mode,
-            observation,
+            observation: decisive.unwrap_or(Observation::Present),
             version: program.version.clone(),
         }
     }
@@ -239,13 +218,12 @@ pub enum Activity {
 }
 
 /// The derived, renderer-neutral status of one item. Every surface renders this row:
-/// the state with exactly its reason, an optional note, and at most one recovery button.
+/// the state with exactly its reason and at most one recovery button.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct StatusRow {
     pub item: ItemId,
     pub mode: CheckMode,
     pub state: ItemState,
-    pub note: Option<Note>,
     pub version: Option<String>,
     pub size_estimate_bytes: Option<u64>,
     pub recovery: Option<RecoveryAction>,
@@ -270,9 +248,6 @@ impl Serialize for StatusRow {
             ItemState::Blocked(reason) => map.serialize_entry("blocked_reason", &reason)?,
             ItemState::Failed(category) => map.serialize_entry("failure_category", &category)?,
             _ => {}
-        }
-        if let Some(note) = self.note {
-            map.serialize_entry("note", &note)?;
         }
         if let Some(version) = &self.version {
             map.serialize_entry("version", version)?;
@@ -306,7 +281,7 @@ pub fn derive_row(
                 reason @ (BlockedReason::Hardware | BlockedReason::NotInThisBuild),
             ),
         ) => ItemState::Blocked(reason),
-        (_, Observation::Present { .. }) => ItemState::Ready,
+        (_, Observation::Present) => ItemState::Ready,
         (Activity::Interrupted, _) => ItemState::Failed(FailureCategory::Interrupted),
         // A setup that failed outranks what the item differs by: the Update a stale row
         // offers would run the very transfer that failed, so the row keeps the failure
@@ -322,15 +297,10 @@ pub fn derive_row(
             None => ItemState::Absent,
         },
     };
-    let note = match reading.observation {
-        Observation::Present { note } | Observation::Differs { note, .. } if state.usable() => note,
-        _ => None,
-    };
     StatusRow {
         item: declaration.id,
         mode: reading.mode,
         state,
-        note,
         version: reading.version.clone(),
         size_estimate_bytes: None,
         recovery: recovery_for(state),
@@ -404,7 +374,7 @@ mod tests {
 
     #[test]
     fn a_running_setup_wins_then_unreadable_then_the_observation() {
-        let present = Observation::Present { note: None };
+        let present = Observation::Present;
         assert_eq!(
             row(present, Activity::Running(SetupStep::Download), None).state,
             ItemState::Provisioning
@@ -439,7 +409,6 @@ mod tests {
     fn an_interruption_offers_resume_whatever_else_the_check_observed() {
         let differs = Observation::Differs {
             stale: StaleReason::OlderRevision,
-            note: Some(Note::OwnNetworkSettings),
         };
         for observation in [
             Observation::Absent,
@@ -455,11 +424,10 @@ mod tests {
                 Some(FailureCategory::DiskFull),
             );
             assert_eq!(
-                (interrupted.state, interrupted.recovery, interrupted.note),
+                (interrupted.state, interrupted.recovery),
                 (
                     ItemState::Failed(FailureCategory::Interrupted),
-                    Some(RecoveryAction::Resume),
-                    None
+                    Some(RecoveryAction::Resume)
                 ),
                 "{observation:?}"
             );
@@ -559,7 +527,6 @@ mod tests {
         let mut stale = row(
             Observation::Differs {
                 stale: StaleReason::OlderRevision,
-                note: Some(Note::OwnNetworkSettings),
             },
             Activity::Idle,
             None,
@@ -572,7 +539,6 @@ mod tests {
                 "mode": "quick",
                 "state": "stale",
                 "stale_reason": "older_revision",
-                "note": "own_network_settings",
                 "version": "0.40.10",
                 "recovery": "update",
                 "recovery_action_id": "operator.provision.browser",
@@ -602,15 +568,6 @@ mod tests {
             serde_json::to_value(&failed).unwrap()["failure_category"],
             "disk_full"
         );
-        assert!(
-            row(
-                Observation::Absent,
-                Activity::Running(SetupStep::Install),
-                None
-            )
-            .note
-            .is_none()
-        );
     }
 
     fn part(observation: Observation) -> Reading {
@@ -619,15 +576,14 @@ mod tests {
 
     #[test]
     fn the_local_ai_reads_as_the_worst_of_its_parts() {
-        let present = Observation::Present { note: None };
+        let present = Observation::Present;
         let differs = Observation::Differs {
             stale: StaleReason::OlderRevision,
-            note: None,
         };
         let mut program = part(present);
         program.version = Some("0.40.10".into());
         let cases = [
-            (vec![present, present], Observation::Present { note: None }),
+            (vec![present, present], Observation::Present),
             (vec![present, differs], differs),
             (vec![differs, Observation::Absent], Observation::Absent),
             (
@@ -668,24 +624,9 @@ mod tests {
         let missing_program = Reading::worst_of_parts(
             CheckMode::Full,
             &part(Observation::Absent),
-            &[part(Observation::Present {
-                note: Some(Note::OwnNetworkSettings),
-            })],
+            &[part(Observation::Present)],
         );
         assert_eq!(missing_program.observation, Observation::Absent);
-        let noted = Reading::worst_of_parts(
-            CheckMode::Full,
-            &program,
-            &[part(Observation::Present {
-                note: Some(Note::OwnNetworkSettings),
-            })],
-        );
-        assert_eq!(
-            noted.observation,
-            Observation::Present {
-                note: Some(Note::OwnNetworkSettings)
-            }
-        );
     }
 
     fn report(outcome: Reachability) -> NetworkReport {
@@ -723,7 +664,7 @@ mod tests {
                 .held_by_network(&report(Reachability::Reachable)),
             absent
         );
-        let ready = reading(Observation::Present { note: None });
+        let ready = reading(Observation::Present);
         assert_eq!(
             ready
                 .clone()
@@ -762,10 +703,9 @@ mod tests {
         );
         assert!(items_to_set_up(&failed_without_a_button).is_empty());
         let done = rows(
-            Observation::Present { note: None },
+            Observation::Present,
             Observation::Differs {
                 stale: StaleReason::OlderRevision,
-                note: None,
             },
         );
         assert!(setup_complete(&done));

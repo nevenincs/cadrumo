@@ -5,17 +5,11 @@ import { Spinner } from "@/components/ui/spinner";
 import type { SetupRow } from "../../ipc/contract";
 import { useStrings } from "../../shell/strings";
 import { formatSize } from "../agent/files";
-import {
-  actionWords,
-  itemName,
-  noteWords,
-  rowSentence,
-  rowTone,
-} from "./setupWords";
+import { actionWords, itemName, rowSentence, rowTone } from "./setupWords";
 
 /** One component: its name, then its state said once -- its sentence, marked
- * by a glyph that repeats nothing -- its note, its size where it has one, and
- * the one button that would move it on. */
+ * by a glyph that repeats nothing -- its size where it has one, and the one
+ * button that would move it on. */
 export function SetupRowItem({
   row,
   locale,
@@ -57,11 +51,6 @@ export function SetupRowItem({
         )}
         <span data-setup-sentence>{rowSentence(t, row)}</span>
       </p>
-      {row.note && (
-        <p className="text-sm text-muted-foreground">
-          {noteWords(t, row.note)}
-        </p>
-      )}
       {row.size_bytes !== null && row.state !== "ready" && (
         <p className="text-sm text-muted-foreground">
           {formatSize(locale, row.size_bytes)}

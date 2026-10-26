@@ -3637,8 +3637,6 @@ desktop:
     lead_running: Puedes cerrar esto; la configuración sigue y Ajustes muestra cómo
       va.
     not_now: Ahora no
-    note:
-      own_network_settings: Usa su propia configuración de red.
     open: Abrir la configuración
     outcome_cancelled: Se ha cancelado la configuración. Lo ya descargado se conserva.
     outcome_completed: Todo está configurado.

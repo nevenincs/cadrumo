@@ -225,7 +225,6 @@ const localAiRow = (
   recovery_action_id: state === "absent" ? LOCAL_AI_SETUP_ACTION : null,
   version: null,
   size_bytes: null,
-  note: null,
 });
 
 test("an item's setup leads to its row, and nowhere while the status has no row", () => {

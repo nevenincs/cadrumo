@@ -231,7 +231,6 @@ def _item_payload(row: DependencyStatusRow) -> ProvisionItemPayload:
         stale_reason=None if row.stale_reason is None else row.stale_reason.value,
         blocked_reason=None if row.blocked_reason is None else row.blocked_reason.value,
         failure_category=None if row.failure_category is None else row.failure_category.value,
-        note=None if row.note is None else row.note.value,
         version=row.version,
         size_estimate_bytes=row.size_estimate_bytes,
         recovery=None if row.recovery is None else row.recovery.value,
@@ -247,8 +246,7 @@ def _row_lines(rows: Iterable[DependencyStatusRow]) -> list[str]:
     for row in rows:
         declaration = _declaration(row.item_id)
         wording = dependency_row_wording(row, declaration)
-        sentence = wording.sentence if wording.note is None else f"{wording.sentence} {wording.note}"
-        lines.append(f"{wording.name}\t{sentence}")
+        lines.append(f"{wording.name}\t{wording.sentence}")
         if row.recovery is DependencyRecoveryAction.SET_UP_IN_DESKTOP:
             lines.append("\t" + dependency_desktop_pointer())
         elif row.recovery_action_id is not None:

@@ -38,7 +38,6 @@ from ....application.dependency_contracts import (
     DependencyHostName,
     DependencyItemId,
     DependencyItemKind,
-    DependencyNote,
     DependencyRecoveryAction,
     DependencySetupStep,
     DependencyStaleReason,
@@ -173,7 +172,7 @@ _RECOVERY_ACTION_PREFIX: Final = "operator.provision."
 
 
 class ComponentsRow(BaseModel):
-    """One item's derived state as the role reports it: the state, exactly its reason, a note and one button.
+    """One item's derived state as the role reports it: the state, exactly its reason and one button.
 
     Only the local AI row ever points to the desktop, because only the desktop sets it up.
     """
@@ -186,7 +185,6 @@ class ComponentsRow(BaseModel):
     stale_reason: DependencyStaleReason | None = None
     blocked_reason: DependencyBlockedReason | None = None
     failure_category: DependencyFailureCategory | None = None
-    note: DependencyNote | None = None
     version: _Version | None = None
     size_estimate_bytes: NonNegativeInt | None = None
     recovery: DependencyRecoveryAction | None = None

@@ -59,7 +59,6 @@ from cadrumo.adapters.outbound.components.role_image import DEVELOPMENT_ROLE_IMA
 from cadrumo.application.dependency_contracts import (
     DependencyBlockedReason,
     DependencyCheckMode,
-    DependencyNote,
     DependencyRecoveryAction,
     DependencyStaleReason,
     DependencyState,
@@ -96,7 +95,6 @@ _ROW_FIELDS: Final = (
     "stale_reason",
     "blocked_reason",
     "failure_category",
-    "note",
     "version",
     "size_estimate_bytes",
     "recovery",
@@ -320,7 +318,6 @@ def test_the_desktop_wire_contract_admits_every_code_a_row_carries() -> None:
         "State": DependencyState,
         "BlockedReason": DependencyBlockedReason,
         "StaleReason": DependencyStaleReason,
-        "Note": DependencyNote,
         "Failure": DependencyFailureCategory,
         "Recovery": DependencyRecoveryAction,
     }

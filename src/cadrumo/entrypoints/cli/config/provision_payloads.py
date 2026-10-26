@@ -63,7 +63,6 @@ class ProvisionItemPayload(OutputSchema):
     stale_reason: str | None = None
     blocked_reason: str | None = None
     failure_category: str | None = None
-    note: str | None = None
     version: str | None = None
     size_estimate_bytes: int | None = None
     recovery: str | None = None

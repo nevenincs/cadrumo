@@ -303,7 +303,7 @@ impl Models {
         hardware: &Hardware,
     ) -> Observation {
         let quick = self.observe_quick(model, hardware);
-        if quick != (Observation::Present { note: None }) {
+        if quick != Observation::Present {
             return quick;
         }
         match listed(server, &model.name) {
@@ -312,7 +312,7 @@ impl Models {
             Ok(true) => {}
         }
         match generate_one_token(server, &model.name) {
-            Ok(true) => Observation::Present { note: None },
+            Ok(true) => Observation::Present,
             Ok(false) => Observation::Absent,
             Err(error) => Observation::Failed(error.category()),
         }
@@ -326,12 +326,12 @@ impl Models {
         model: &SelectedModel,
         pull: &mut Pull<'_>,
     ) -> Result<Observation, LocalAiError> {
-        if self.installed(&model.name) == (Observation::Present { note: None }) {
+        if self.installed(&model.name) == Observation::Present {
             (pull.events)(TransferEvent::Progress {
                 completed: model.size_bytes,
                 total: model.size_bytes,
             });
-            return Ok(Observation::Present { note: None });
+            return Ok(Observation::Present);
         }
         for attempt in 1..=pull.policy.max_attempts {
             pull.cancellation.check()?;
@@ -339,13 +339,13 @@ impl Models {
                 Attempt::Done => {
                     // The program said it has the model; one it did not store whole, or
                     // does not list, is not the model the plan named.
-                    if self.installed(&model.name) != (Observation::Present { note: None }) {
+                    if self.installed(&model.name) != Observation::Present {
                         return Err(LocalAiError::Failed(FailureCategory::DamagedDownload));
                     }
                     if !listed(server, &model.name)? {
                         return Err(LocalAiError::Failed(FailureCategory::DamagedDownload));
                     }
-                    return Ok(Observation::Present { note: None });
+                    return Ok(Observation::Present);
                 }
                 Attempt::Failed(category) if !retried(category) => {
                     return Err(LocalAiError::Failed(category));
@@ -462,7 +462,7 @@ impl Models {
             .chain(&manifest.layers)
             .all(|layer| blob_stored(&self.root, layer));
         if stored {
-            Observation::Present { note: None }
+            Observation::Present
         } else {
             Observation::Absent
         }

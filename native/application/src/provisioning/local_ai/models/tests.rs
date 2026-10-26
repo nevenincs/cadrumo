@@ -117,7 +117,7 @@ const ROOMY: Hardware = Hardware {
     nvidia_vram_bytes: None,
 };
 
-const PRESENT: Observation = Observation::Present { note: None };
+const PRESENT: Observation = Observation::Present;
 
 #[test]
 fn a_selection_takes_well_formed_triples_only_and_orders_them_by_role() {
@@ -728,7 +728,6 @@ fn the_local_ai_reads_as_the_worst_of_its_program_and_models() {
     };
     let older = Observation::Differs {
         stale: StaleReason::ProgramTooOld,
-        note: None,
     };
     assert_eq!(read(PRESENT, &[PRESENT, PRESENT]), PRESENT);
     assert_eq!(

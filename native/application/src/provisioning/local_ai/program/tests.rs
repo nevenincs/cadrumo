@@ -292,7 +292,7 @@ fn a_pinned_archive_installs_runs_as_the_engines_child_and_is_stopped_before_it_
 
     let active = program.install(&mut transfer).unwrap();
     assert!(active.executable.starts_with(&locations.programs));
-    assert_eq!(program.observe_quick(), Observation::Present { note: None });
+    assert_eq!(program.observe_quick(), Observation::Present);
 
     // The program runs as this engine's child, configured only by the engine.
     stand_in(&mut program, "9.8.7");
@@ -388,8 +388,7 @@ fn a_pinned_archive_installs_runs_as_the_engines_child_and_is_stopped_before_it_
     assert_eq!(
         program.observe_quick(),
         Observation::Differs {
-            stale: StaleReason::ProgramTooOld,
-            note: None
+            stale: StaleReason::ProgramTooOld
         }
     );
     assert!(matches!(
@@ -562,7 +561,7 @@ fn a_program_that_never_listens_or_answers_otherwise_is_ended_and_not_running() 
         .start(free_address(), &Uncontained, &ambient, None)
         .unwrap()
         .address();
-    assert_eq!(program.observe_full(), Observation::Present { note: None });
+    assert_eq!(program.observe_full(), Observation::Present);
     // A second start under the same lease is refused while this server holds it.
     let mut second = Program::new(
         &pins_for(&bytes, "9.8.7", EXECUTABLE),

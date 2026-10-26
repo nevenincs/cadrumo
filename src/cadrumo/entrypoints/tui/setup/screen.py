@@ -305,8 +305,7 @@ class SetupScreen(AccountChromeScreen):
         table.clear()
         for row in self._rows:
             wording = dependency_row_wording(row, _declaration(row.item_id))
-            sentence = wording.sentence if wording.note is None else f"{wording.sentence} {wording.note}"
-            table.add_row(wording.name, sentence, wording.action or "", key=row.item_id)
+            table.add_row(wording.name, wording.sentence, wording.action or "", key=row.item_id)
 
     def _select_focus_item(self) -> None:
         """Select the row of the item this screen was opened on, once, so Enter runs its action."""

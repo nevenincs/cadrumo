@@ -884,7 +884,7 @@ impl Engine {
             Some(program.version().to_owned()),
             &model_observations,
         );
-        let present = Observation::Present { note: None };
+        let present = Observation::Present;
         let mut parts = Vec::new();
         if program_observation != present {
             parts.push(program.plan_part());
@@ -1022,7 +1022,7 @@ impl Engine {
         let hardware = self.hardware();
         let (program, models) = self.local_ai_parts()?.ok()?;
         let program_observation = program.observe_full();
-        let present = Observation::Present { note: None };
+        let present = Observation::Present;
         let selected = models.selection().as_slice();
         let models_observed: Vec<Observation> = match program.running_server() {
             Some(server) if program_observation == present => selected
@@ -1403,7 +1403,7 @@ impl Engine {
         cancellation: &Cancellation,
     ) -> Result<(), Stop> {
         let item = ItemId::LocalAi;
-        let present = Observation::Present { note: None };
+        let present = Observation::Present;
         let mut reporter = Reporter {
             sink,
             writer: &writer,

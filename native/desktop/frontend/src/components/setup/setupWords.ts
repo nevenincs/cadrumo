@@ -3,7 +3,6 @@ import type {
   SetupFailureCategory,
   SetupItemId,
   SetupItemKind,
-  SetupNote,
   SetupOutcome,
   SetupRecovery,
   SetupRetry,
@@ -15,7 +14,7 @@ import type { Translate } from "../../shell/strings";
 
 // The window's words for setup and the Google account. The host sends codes
 // only, and every one is worded here from the setup strings: an item's name,
-// the one sentence that states a row's state, its note and its button, a
+// the one sentence that states a row's state and its button, a
 // failure, a retry notice and a plan part, and what the shell itself says of
 // a step, an outcome, a refusal and the Google account.
 // A row's sentence is the one place its state is said. No closed value is
@@ -38,11 +37,6 @@ export function rowSentence(t: Translate, row: SetupRow): string {
   if (row.state === "failed" && row.failure)
     return failureWords(t, row.failure);
   return t(`desktop.setup.state.${row.state}`);
-}
-
-/** A usable item's secondary fact, such as "Uses its own network settings." */
-export function noteWords(t: Translate, note: SetupNote): string {
-  return t(`desktop.setup.note.${note}`);
 }
 
 /** The words of a row's one button; null when it offers none. */

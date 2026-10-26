@@ -449,7 +449,7 @@ pub fn observe_install(
             } else if !check.changed.is_empty() {
                 Observation::Failed(FailureCategory::DamagedDownload)
             } else {
-                Observation::Present { note: None }
+                Observation::Present
             }
         }
     }
@@ -587,12 +587,12 @@ mod tests {
         let present = ReceiptReading::Present(receipt(&install_root));
         assert_eq!(
             observe_install(&present, &install_root, None),
-            Observation::Present { note: None }
+            Observation::Present
         );
         let quick = [RelativePath::new("bin/tool").unwrap()];
         assert_eq!(
             observe_install(&present, &install_root, Some(&quick)),
-            Observation::Present { note: None }
+            Observation::Present
         );
         fs::write(install_root.join("data.txt"), b"DATA").unwrap();
         assert_eq!(
@@ -601,7 +601,7 @@ mod tests {
         );
         assert_eq!(
             observe_install(&present, &install_root, Some(&quick)),
-            Observation::Present { note: None },
+            Observation::Present,
             "a quick check reads only what it names"
         );
         fs::remove_dir_all(&install_root).unwrap();
@@ -684,7 +684,7 @@ mod tests {
         fs::write(install_root.join("chrome-win/chrome.exe"), b"tool bytes").unwrap();
         assert_eq!(
             observe_install(&store.read(ItemId::Browser), &install_root, None),
-            Observation::Present { note: None },
+            Observation::Present,
             "its files decide, not its age"
         );
 

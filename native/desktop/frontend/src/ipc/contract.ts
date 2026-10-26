@@ -852,9 +852,6 @@ export type SetupCheckMode = "quick" | "full";
 export type SetupStep =
   "plan" | "preflight" | "download" | "install" | "verify" | "cleanup";
 
-/** A secondary fact a usable item carries without changing its state. */
-export type SetupNote = "own_network_settings";
-
 /** One item's derived state, with exactly the reason it needs. */
 export type SetupRow = {
   item: SetupItemId;
@@ -872,8 +869,6 @@ export type SetupRow = {
   recovery_action_id: string | null;
   version: string | null;
   size_bytes: number | null;
-  /** Present only while the item is usable. */
-  note: SetupNote | null;
 };
 
 /** A status read or a full check this window started. A settled check has
