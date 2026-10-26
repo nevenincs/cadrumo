@@ -5,7 +5,7 @@ tags:
 date: '2026-10-26'
 modified: '2026-10-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:da93c212991009b4b9c5dc6b0d6432d3c0c5ccb1dbbccfcb829316fa7924a8cc'
+body_hash: 'sha256:d80e886872dc0b81363f60bc2ccab659b035a705f943bdca599300b5e46ea963'
 related:
   - "[[2026-10-26-client-concurrency-plan]]"
 ---
@@ -49,7 +49,11 @@ related:
 - `S01` `verify:` `uv run --no-sync pytest src/cadrumo_client/transport/tests/test_operation_changes.py src/cadrumo_client/transport/tests/test_operation_controller_binding.py -q` -> `pass`
 - `S01` `verify:` `uv run --no-sync pytest src/cadrumo_client/transport/tests/test_operation_changes.py src/cadrumo_client/transport/tests/test_channel_readiness_wait.py -m '' -q` -> `pass`
 - `S01` `verify:` `just check-types --count` -> `pass`
+- `S02` `M` `native/application/src/runtime_client.rs`
+- `S02` `verify:` `ctest --test-dir build/windows-x64 -C Debug --output-on-failure -R ^(application.rust|platform.rust)$` -> `pass`
+- `S02` `verify:` `ctest --test-dir build/windows-x64 -C Debug --output-on-failure -R ^application.(rustfmt|fmt|clippy|features.clippy)$` -> `pass`
 
 ## Notes
 
 - `S01` Concurrent runtime session supplied `verified_transport` disconnect-finally fix and overlapping native-channel tests; combined behavior passed. Benchmark scratch lives in .tmp/client-concurrency: 30000 cues, callbacks 30000 to 30, median burst 13.566 ms to 0.229 ms.
+- `S02` Integrated concurrent runtime session's connection-queue, subscription and idle-read changes; principal tightened transfer and already-buffered reply deadlines. Native live runtime acceptance remains separately configured.

@@ -27,7 +27,7 @@ use std::{
     io,
     path::Path,
     sync::{
-        Arc, Mutex, MutexGuard,
+        Arc, Condvar, Mutex,
         atomic::{AtomicBool, AtomicU64, Ordering},
         mpsc,
     },
@@ -47,8 +47,6 @@ const SECRET_FRAME: u8 = b'S';
 const EVENT_FRAME: u8 = b'E';
 /// The longest a reply's remaining frames may take once its first frame arrived.
 const FRAME_BUDGET: Duration = Duration::from_secs(5);
-/// The idle read is re-armed on this cadence so a close is never waited out.
-const IDLE_READ: Duration = Duration::from_secs(600);
 const TRANSFER_CHUNK_BYTES: usize = 16_384;
 const TRANSFER_LIMIT_BYTES: usize = 1_048_576;
 const RECEIPT_RECORD_MAX_BYTES: u64 = 8 * 1024;
@@ -332,6 +330,17 @@ fn read_frame(pipe: &Pipe, header_deadline: Instant) -> Result<(u8, Vec<u8>), Re
     Ok((kind, payload))
 }
 
+fn read_idle_frame(pipe: &Pipe) -> Result<(u8, Vec<u8>), Refusal> {
+    let mut header = [0u8; 5];
+    pipe.read_idle_byte(&mut header[0])?;
+    let deadline = Instant::now() + FRAME_BUDGET;
+    pipe.read_exact(&mut header[1..], deadline)?;
+    let (kind, size) = frame_header(&header)?;
+    let mut payload = vec![0u8; size];
+    pipe.read_exact(&mut payload, deadline)?;
+    Ok((kind, payload))
+}
+
 fn document(payload: &[u8]) -> Result<Map<String, Value>, Refusal> {
     match serde_json::from_slice::<Value>(payload) {
         Ok(Value::Object(object)) => Ok(object),
@@ -400,6 +409,32 @@ struct Shared {
 }
 
 impl Shared {
+    fn subscribe(&self) -> mpsc::Receiver<Event> {
+        let (sender, receiver) = mpsc::channel();
+        let mut subscribers = self.subscribers.lock().unwrap_or_else(|p| p.into_inner());
+        if self.closed.load(Ordering::Acquire) {
+            let _ = sender.send(Event::Disconnected);
+        } else {
+            subscribers.push(sender);
+        }
+        receiver
+    }
+
+    fn subscribe_scoped(&self) -> mpsc::Receiver<Pushed> {
+        let (sender, receiver) = mpsc::channel();
+        let mut subscribers = self.scoped.lock().unwrap_or_else(|p| p.into_inner());
+        if self.closed.load(Ordering::Acquire) {
+            let _ = sender.send(Pushed {
+                event: Event::Disconnected,
+                profile_id: None,
+                session_id: None,
+            });
+        } else {
+            subscribers.push(sender);
+        }
+        receiver
+    }
+
     fn dispatch(&self, pushed: &Pushed) {
         self.subscribers
             .lock()
@@ -456,8 +491,61 @@ pub struct Connection {
     pipe: Arc<Pipe>,
     hello: Hello,
     shared: Arc<Shared>,
-    exchange: Mutex<mpsc::Receiver<Map<String, Value>>>,
+    exchange: ExchangeQueue,
     reader: Mutex<Option<thread::JoinHandle<()>>>,
+}
+
+struct ExchangeQueue {
+    replies: Mutex<Option<mpsc::Receiver<Map<String, Value>>>>,
+    available: Condvar,
+}
+
+impl ExchangeQueue {
+    fn claim(&self, deadline: Instant) -> Result<ExchangeClaim<'_>, Refusal> {
+        let mut replies = self.replies.lock().unwrap_or_else(|p| p.into_inner());
+        loop {
+            let Some(remaining) = deadline.checked_duration_since(Instant::now()) else {
+                // A release may have woken this claimant just as its budget
+                // elapsed. Pass that wake on while the receiver is available.
+                if replies.is_some() {
+                    self.available.notify_one();
+                }
+                return Err(Refusal::DeadlineExceeded);
+            };
+            if let Some(replies) = replies.take() {
+                return Ok(ExchangeClaim {
+                    owner: self,
+                    replies: Some(replies),
+                });
+            }
+            (replies, _) = self
+                .available
+                .wait_timeout(replies, remaining)
+                .unwrap_or_else(|p| p.into_inner());
+        }
+    }
+}
+
+struct ExchangeClaim<'a> {
+    owner: &'a ExchangeQueue,
+    replies: Option<mpsc::Receiver<Map<String, Value>>>,
+}
+
+impl std::ops::Deref for ExchangeClaim<'_> {
+    type Target = mpsc::Receiver<Map<String, Value>>;
+
+    fn deref(&self) -> &Self::Target {
+        self.replies
+            .as_ref()
+            .expect("a held exchange owns its replies")
+    }
+}
+
+impl Drop for ExchangeClaim<'_> {
+    fn drop(&mut self) {
+        *self.owner.replies.lock().unwrap_or_else(|p| p.into_inner()) = self.replies.take();
+        self.owner.available.notify_one();
+    }
 }
 
 fn hello_document(endpoint: &Endpoint, cohort: &Cohort) -> Value {
@@ -512,12 +600,7 @@ fn read_loop(
     replies: mpsc::Sender<Map<String, Value>>,
     boot_id: String,
 ) {
-    loop {
-        let (kind, payload) = match read_frame(&pipe, Instant::now() + IDLE_READ) {
-            Ok(frame) => frame,
-            Err(Refusal::DeadlineExceeded) if !shared.closed.load(Ordering::Acquire) => continue,
-            Err(_) => break,
-        };
+    while let Ok((kind, payload)) = read_idle_frame(&pipe) {
         let Ok(document) = document(&payload) else {
             break;
         };
@@ -587,7 +670,10 @@ impl Connection {
             pipe,
             hello,
             shared,
-            exchange: Mutex::new(exchange),
+            exchange: ExchangeQueue {
+                replies: Mutex::new(Some(exchange)),
+                available: Condvar::new(),
+            },
             reader: Mutex::new(Some(reader)),
         })
     }
@@ -611,36 +697,12 @@ impl Connection {
 
     /// Every event pushed from now on, ending with [`Event::Disconnected`].
     pub fn subscribe(&self) -> mpsc::Receiver<Event> {
-        let (sender, receiver) = mpsc::channel();
-        if self.closed() {
-            let _ = sender.send(Event::Disconnected);
-        } else {
-            self.shared
-                .subscribers
-                .lock()
-                .unwrap_or_else(|poisoned| poisoned.into_inner())
-                .push(sender);
-        }
-        receiver
+        self.shared.subscribe()
     }
 
     /// As [`Connection::subscribe`], with the profile and session each event names.
     pub fn subscribe_scoped(&self) -> mpsc::Receiver<Pushed> {
-        let (sender, receiver) = mpsc::channel();
-        if self.closed() {
-            let _ = sender.send(Pushed {
-                event: Event::Disconnected,
-                profile_id: None,
-                session_id: None,
-            });
-        } else {
-            self.shared
-                .scoped
-                .lock()
-                .unwrap_or_else(|poisoned| poisoned.into_inner())
-                .push(sender);
-        }
-        receiver
+        self.shared.subscribe_scoped()
     }
 
     /// Stops exchanges and ends the connection; the reader thread is joined.
@@ -666,14 +728,8 @@ impl Connection {
         refusal
     }
 
-    fn claim(
-        &self,
-        deadline: Instant,
-    ) -> Result<MutexGuard<'_, mpsc::Receiver<Map<String, Value>>>, Refusal> {
-        let exchange = self
-            .exchange
-            .lock()
-            .unwrap_or_else(|poisoned| poisoned.into_inner());
+    fn claim(&self, deadline: Instant) -> Result<ExchangeClaim<'_>, Refusal> {
+        let exchange = self.exchange.claim(deadline)?;
         if self.closed() {
             return Err(Refusal::ConnectionClosed);
         }
@@ -690,12 +746,15 @@ impl Connection {
     }
 
     fn next_reply(
-        &self,
         replies: &mpsc::Receiver<Map<String, Value>>,
         deadline: Instant,
     ) -> Result<Map<String, Value>, Refusal> {
-        let remaining = deadline.saturating_duration_since(Instant::now());
+        let remaining = deadline
+            .checked_duration_since(Instant::now())
+            .filter(|remaining| !remaining.is_zero())
+            .ok_or(Refusal::DeadlineExceeded)?;
         match replies.recv_timeout(remaining) {
+            Ok(_) if Instant::now() >= deadline => Err(Refusal::DeadlineExceeded),
             Ok(reply) => Ok(reply),
             Err(mpsc::RecvTimeoutError::Timeout) => Err(Refusal::DeadlineExceeded),
             Err(mpsc::RecvTimeoutError::Disconnected) => Err(Refusal::ConnectionClosed),
@@ -720,10 +779,10 @@ impl Connection {
         request_id: &str,
         deadline: Instant,
     ) -> Result<Map<String, Value>, Refusal> {
-        let mut reply = self.next_reply(replies, deadline)?;
+        let mut reply = Self::next_reply(replies, deadline)?;
         self.verify_reply(&reply, request_id)?;
         if text(&reply, "kind").is_some_and(|kind| kind.ends_with("_transfer")) {
-            reply = self.assemble_transfer(replies, &reply, request_id)?;
+            reply = self.assemble_transfer(replies, &reply, request_id, deadline)?;
         }
         if text(&reply, "kind") == Some("access_refusal") {
             return Err(Refusal::Denied {
@@ -743,7 +802,9 @@ impl Connection {
         replies: &mpsc::Receiver<Map<String, Value>>,
         header: &Map<String, Value>,
         request_id: &str,
+        deadline: Instant,
     ) -> Result<Map<String, Value>, Refusal> {
+        let deadline = deadline.min(Instant::now() + FRAME_BUDGET);
         let byte_count = header
             .get("byte_count")
             .and_then(Value::as_u64)
@@ -752,7 +813,7 @@ impl Connection {
         let digest = text(header, "payload_digest").ok_or(Refusal::InvalidFrame)?;
         let mut payload = Vec::with_capacity(byte_count);
         while payload.len() < byte_count {
-            let chunk = self.next_reply(replies, Instant::now() + FRAME_BUDGET)?;
+            let chunk = Self::next_reply(replies, deadline)?;
             let offset = chunk
                 .get("offset")
                 .and_then(Value::as_u64)
@@ -1489,6 +1550,138 @@ pub fn stored_sign_in_proof(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn an_expired_exchange_does_not_accept_a_buffered_reply() {
+        let (sender, receiver) = mpsc::channel();
+        sender.send(Map::new()).unwrap();
+        assert!(matches!(
+            Connection::next_reply(&receiver, Instant::now()),
+            Err(Refusal::DeadlineExceeded)
+        ));
+        assert!(
+            Connection::next_reply(&receiver, Instant::now() + Duration::from_secs(1))
+                .unwrap()
+                .is_empty()
+        );
+    }
+
+    #[test]
+    fn a_reply_wait_ends_at_its_deadline_without_waiting_for_sender_exit() {
+        let (_sender, receiver) = mpsc::channel();
+        assert!(matches!(
+            Connection::next_reply(&receiver, Instant::now() + Duration::from_millis(20)),
+            Err(Refusal::DeadlineExceeded)
+        ));
+    }
+
+    #[test]
+    fn a_queued_exchange_times_out_without_disturbing_the_owner() {
+        let (sender, receiver) = mpsc::channel();
+        let queue = Arc::new(ExchangeQueue {
+            replies: Mutex::new(Some(receiver)),
+            available: Condvar::new(),
+        });
+        let owner = queue
+            .claim(Instant::now() + Duration::from_secs(2))
+            .unwrap();
+        let (done, finished) = mpsc::channel();
+        let contender = {
+            let queue = queue.clone();
+            thread::spawn(move || {
+                let timed_out = matches!(
+                    queue.claim(Instant::now() + Duration::from_millis(50)),
+                    Err(Refusal::DeadlineExceeded)
+                );
+                done.send(timed_out).unwrap();
+            })
+        };
+        let timed_out = finished.recv_timeout(Duration::from_secs(2));
+        sender.send(Map::new()).unwrap();
+        assert!(
+            owner
+                .recv_timeout(Duration::from_secs(1))
+                .unwrap()
+                .is_empty()
+        );
+        drop(owner);
+        contender.join().unwrap();
+        assert!(timed_out.unwrap());
+        assert!(queue.claim(Instant::now() + Duration::from_secs(1)).is_ok());
+    }
+
+    #[test]
+    fn subscription_racing_disconnect_always_receives_the_terminal_event() {
+        for _ in 0..100 {
+            let shared = Arc::new(Shared {
+                connection_id: Mutex::new(None),
+                subscribers: Mutex::new(Vec::new()),
+                scoped: Mutex::new(Vec::new()),
+                closed: AtomicBool::new(false),
+            });
+            let barrier = Arc::new(std::sync::Barrier::new(2));
+            let subscriber = {
+                let shared = shared.clone();
+                let barrier = barrier.clone();
+                thread::spawn(move || {
+                    barrier.wait();
+                    (shared.subscribe(), shared.subscribe_scoped())
+                })
+            };
+            barrier.wait();
+            shared.closed.store(true, Ordering::Release);
+            shared.dispatch(&Pushed {
+                event: Event::Disconnected,
+                profile_id: None,
+                session_id: None,
+            });
+            let (plain, scoped) = subscriber.join().unwrap();
+            assert_eq!(
+                plain.recv_timeout(Duration::from_secs(1)).unwrap(),
+                Event::Disconnected
+            );
+            assert_eq!(
+                scoped.recv_timeout(Duration::from_secs(1)).unwrap().event,
+                Event::Disconnected
+            );
+            assert!(plain.try_recv().is_err());
+            assert!(scoped.try_recv().is_err());
+        }
+    }
+
+    #[test]
+    fn an_expired_claimant_passes_on_a_release_wake() {
+        let (_sender, receiver) = mpsc::channel();
+        let queue = Arc::new(ExchangeQueue {
+            replies: Mutex::new(None),
+            available: Condvar::new(),
+        });
+        let (waiting, started) = mpsc::channel();
+        let (done, finished) = mpsc::channel();
+        let waiter = {
+            let queue = queue.clone();
+            thread::spawn(move || {
+                let held = queue.replies.lock().unwrap();
+                waiting.send(()).unwrap();
+                let (held, timeout) = queue
+                    .available
+                    .wait_timeout(held, Duration::from_secs(3))
+                    .unwrap();
+                done.send(!timeout.timed_out() && held.is_some()).unwrap();
+            })
+        };
+        started.recv_timeout(Duration::from_secs(1)).unwrap();
+        // The receiver became available, but the release wake went to an
+        // expired claimant rather than the waiter above.
+        *queue.replies.lock().unwrap() = Some(receiver);
+        assert!(matches!(
+            queue.claim(Instant::now() - Duration::from_secs(1)),
+            Err(Refusal::DeadlineExceeded)
+        ));
+        let woke = finished.recv_timeout(Duration::from_secs(1));
+        waiter.join().unwrap();
+        assert!(woke.unwrap());
+    }
 
     #[test]
     fn a_streamed_payload_follows_only_readiness_for_the_declared_upload() {
