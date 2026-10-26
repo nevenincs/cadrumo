@@ -7,6 +7,7 @@
 //! The launcher admits the agent bundled by CMake or returns a typed refusal.
 
 mod admin;
+mod dropping;
 mod gateway;
 mod launcher;
 pub(crate) mod model_roles;
@@ -50,6 +51,7 @@ pub struct AgentHost {
     session: Session,
     diagnostics: Arc<Diagnostics>,
     sign_in: Arc<SignIn>,
+    drops: dropping::Drops,
     attendance: std::sync::Mutex<Option<(u32, tauri::async_runtime::JoinHandle<()>)>>,
 }
 
@@ -87,12 +89,14 @@ impl AgentHost {
             session: Session::default(),
             diagnostics,
             sign_in: held,
+            drops: dropping::Drops::default(),
             attendance: std::sync::Mutex::new(None),
         }
     }
 
     /// Stops the launcher and everything it started, for good.
     pub async fn close(&self) -> Result<()> {
+        self.drops.clear(None);
         self.stop_attendance(None);
         self.session.close();
         self.supervisor.close().await
@@ -250,6 +254,8 @@ pub fn commands<R: Runtime>() -> Commands<R> {
         agent_snapshot,
         agent_documents,
         agent_attach,
+        agent_drop_observe,
+        agent_drop_unobserve,
         runtime_attendance_inventory,
         runtime_attendance_decide,
         runtime_attendance_subscribe,
@@ -832,6 +838,7 @@ async fn agent_attach<R: Runtime>(
     window: tauri::WebviewWindow<R>,
     conversation_id: String,
     filter_label: String,
+    drop_id: Option<String>,
     updates: Channel<upload::UploadEvent>,
 ) -> std::result::Result<Vec<upload::Picked>, Refused> {
     use tauri_plugin_dialog::DialogExt;
@@ -848,18 +855,22 @@ async fn agent_attach<R: Runtime>(
         let extensions: Vec<&str> = policy.extensions.iter().map(String::as_str).collect();
         // The packaged test host takes the lane's files where the lane gives
         // some; every other build always asks the person.
-        let paths: Vec<std::path::PathBuf> = match upload::lane_picks(upload::lane_directory()) {
-            Some(paths) => paths,
-            None => window
-                .dialog()
-                .file()
-                .set_parent(&window)
-                .add_filter(filter_label, &extensions)
-                .blocking_pick_files()
-                .unwrap_or_default()
-                .into_iter()
-                .filter_map(|picked| picked.into_path().ok())
-                .collect(),
+        let paths: Vec<std::path::PathBuf> = if let Some(id) = drop_id {
+            host.drops.take(&id, &gateway)?
+        } else {
+            match upload::lane_picks(upload::lane_directory()) {
+                Some(paths) => paths,
+                None => window
+                    .dialog()
+                    .file()
+                    .set_parent(&window)
+                    .add_filter(filter_label, &extensions)
+                    .blocking_pick_files()
+                    .unwrap_or_default()
+                    .into_iter()
+                    .filter_map(|picked| picked.into_path().ok())
+                    .collect(),
+            }
         };
         let (picked, queued) = upload::stage(paths, &policy);
         if !queued.is_empty() {
@@ -870,6 +881,42 @@ async fn agent_attach<R: Runtime>(
         Ok(picked)
     })
     .await
+}
+
+/// Watches native drags without exposing file paths to the webview.
+#[tauri::command]
+async fn agent_drop_observe<R: Runtime>(
+    host: State<'_, Arc<AgentHost>>,
+    window: tauri::WebviewWindow<R>,
+    updates: Channel<dropping::Signal>,
+) -> std::result::Result<u32, Refused> {
+    let subscription = blocking(&host, move |host| {
+        Ok(host
+            .drops
+            .observe(updates, Session::gateway(&host.supervisor)?))
+    })
+    .await?;
+    if !host
+        .drops
+        .listening
+        .swap(true, std::sync::atomic::Ordering::AcqRel)
+    {
+        let owner = host.inner().clone();
+        let observed = window.clone();
+        window.on_window_event(move |event| {
+            if let tauri::WindowEvent::DragDrop(drag) = event
+                && let Ok(scale) = observed.scale_factor()
+            {
+                owner.drops.event(drag, scale);
+            }
+        });
+    }
+    Ok(subscription)
+}
+
+#[tauri::command]
+fn agent_drop_unobserve(host: State<'_, Arc<AgentHost>>, subscription: u32) {
+    host.drops.clear(Some(subscription));
 }
 
 #[cfg(test)]

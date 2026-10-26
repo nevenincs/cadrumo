@@ -13,6 +13,7 @@ import type {
   AgentSession,
   AgentStreamEvent,
   AgentUploadEvent,
+  AgentDropSignal,
 } from "./agentSession";
 import {
   readSkillDetail,
@@ -504,10 +505,29 @@ function tauriAgent(call: HostCall): {
           () => undefined,
         ),
       send: (request) => call("agent_send", { request }),
-      attach: (conversationId, filterLabel, onEvent) => {
+      attach: (conversationId, filterLabel, onEvent, dropId) => {
         const updates = new Channel<AgentUploadEvent>();
         updates.onmessage = onEvent;
-        return call("agent_attach", { conversationId, filterLabel, updates });
+        return call("agent_attach", {
+          conversationId,
+          filterLabel,
+          updates,
+          ...(dropId ? { dropId } : {}),
+        });
+      },
+      async observeDrops(listener) {
+        let active = true;
+        const updates = new Channel<AgentDropSignal>();
+        updates.onmessage = (signal) => {
+          if (active) listener(signal);
+        };
+        const subscription = await call("agent_drop_observe", { updates });
+        return () => {
+          active = false;
+          void call("agent_drop_unobserve", { subscription }).catch(
+            () => undefined,
+          );
+        };
       },
       cancel: (replyId) =>
         call("agent_cancel", { replyId }).then(() => undefined),

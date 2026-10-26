@@ -32,6 +32,14 @@ unsafe extern "system" {
     ) -> i32;
     fn OpenInputDesktop(flags: u32, inherit: i32, access: u32) -> *mut c_void;
     fn CloseDesktop(desktop: *mut c_void) -> i32;
+    fn GetAsyncKeyState(key: i32) -> i16;
+}
+
+/// The physical Shift state, including during an Explorer drag when the
+/// webview receives no keyboard events.
+pub fn shift_pressed() -> bool {
+    // SAFETY: this queries a virtual key and takes no pointers or ownership.
+    unsafe { GetAsyncKeyState(0x10) < 0 }
 }
 type ConsoleHandler = unsafe extern "system" fn(u32) -> i32;
 

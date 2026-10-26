@@ -93,7 +93,7 @@ export type StagedDocuments = {
   sent: (conversationId: string) => void;
   /** Picks files and stores them for `conversationId`, where the host can;
    * a refusal of the pick itself is given back as its code. */
-  attach?: (conversationId: string) => Promise<string | null>;
+  attach?: (conversationId: string, dropId?: string) => Promise<string | null>;
 };
 
 export function useStagedDocuments({
@@ -159,10 +159,12 @@ export function useStagedDocuments({
 
   const attachHost = session?.attach?.bind(session);
   const attach = attachHost
-    ? async (id: string) => {
+    ? async (id: string, dropId?: string) => {
         // An event for an upload no longer staged, or staged elsewhere, is
         // left alone; an upload stored is named for the next message.
-        const onEvent = (event: AgentUploadEvent) =>
+        let announced = false;
+        const early: AgentUploadEvent[] = [];
+        const apply = (event: AgentUploadEvent) =>
           setStaging((held) => {
             if (held.reader !== reader || held.conversation !== id) return held;
             const at = held.uploads.findIndex(
@@ -196,8 +198,12 @@ export function useStagedDocuments({
                 };
             }
           });
+        const onEvent = (event: AgentUploadEvent) => {
+          if (announced) apply(event);
+          else early.push(event);
+        };
         try {
-          const picked = await attachHost(id, filterLabel, onEvent);
+          const picked = await attachHost(id, filterLabel, onEvent, dropId);
           if (picked.length > 0)
             update.current(id, (held) => ({
               ...held,
@@ -210,6 +216,8 @@ export function useStagedDocuments({
                   ),
               ],
             }));
+          announced = true;
+          early.forEach(apply);
           return null;
         } catch (error) {
           return failureCode(error);

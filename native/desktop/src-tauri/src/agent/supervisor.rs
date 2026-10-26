@@ -1064,6 +1064,93 @@ mod tests {
         assert!(!first.same_instance(&replacement));
     }
 
+    #[test]
+    fn native_drops_keep_paths_private_and_claim_them_once_for_the_observing_gateway() {
+        use crate::agent::dropping::Drops;
+        use tauri::{DragDropEvent, PhysicalPosition, ipc::InvokeResponseBody};
+        let gateway = Gateway {
+            port: 12345,
+            bearer: Arc::new(Zeroizing::new("test-bearer".to_owned())),
+            workspace_root: "workspace".to_owned(),
+            generation: 1,
+            instance: Arc::new(()),
+        };
+        let replacement = Gateway {
+            instance: Arc::new(()),
+            ..gateway.clone()
+        };
+        let signals = Arc::new(Mutex::new(Vec::<serde_json::Value>::new()));
+        let received = signals.clone();
+        let channel = Channel::new(move |body| {
+            let InvokeResponseBody::Json(body) = body else {
+                panic!("Expected a drop signal");
+            };
+            lock(&received).push(serde_json::from_str(&body).unwrap());
+            Ok(())
+        });
+        let drops = Drops::default();
+        let first = drops.observe(channel.clone(), gateway.clone());
+        let paths = vec![std::path::PathBuf::from("private/invoice.pdf")];
+        let position = PhysicalPosition::new(240.0, 360.0);
+        drops.event(
+            &DragDropEvent::Enter {
+                paths: paths.clone(),
+                position,
+            },
+            2.0,
+        );
+        drops.event(
+            &DragDropEvent::Drop {
+                paths: paths.clone(),
+                position,
+            },
+            2.0,
+        );
+        let held = lock(&signals);
+        assert_eq!(held[0]["x"], 120.0);
+        assert_eq!(held[0]["y"], 180.0);
+        assert_eq!(held[0]["count"], 1);
+        let id = held[1]["drop_id"].as_str().unwrap().to_owned();
+        assert!(!serde_json::to_string(&*held).unwrap().contains("private"));
+        assert!(
+            !serde_json::to_string(&*held)
+                .unwrap()
+                .contains("invoice.pdf")
+        );
+        drop(held);
+        assert!(drops.take(&id, &replacement).is_err());
+        assert!(drops.take("invented", &gateway).is_err());
+        assert_eq!(drops.take(&id, &gateway).unwrap(), paths);
+        assert!(drops.take(&id, &gateway).is_err());
+        let received = signals.clone();
+        let second = drops.observe(
+            Channel::new(move |body| {
+                let InvokeResponseBody::Json(body) = body else {
+                    panic!("Expected a drop signal");
+                };
+                lock(&received).push(serde_json::from_str(&body).unwrap());
+                Ok(())
+            }),
+            gateway.clone(),
+        );
+        drops.clear(Some(first));
+        // A retired observer cannot clear its replacement.
+        assert_ne!(first, second);
+        drops.event(
+            &DragDropEvent::Drop {
+                paths: paths.clone(),
+                position,
+            },
+            2.0,
+        );
+        let id = lock(&signals)[2]["drop_id"].as_str().unwrap().to_owned();
+        assert_eq!(drops.take(&id, &gateway).unwrap(), paths);
+        drops.event(&DragDropEvent::Drop { paths, position }, 2.0);
+        let id = lock(&signals)[3]["drop_id"].as_str().unwrap().to_owned();
+        drops.clear(Some(second));
+        assert!(drops.take(&id, &gateway).is_err());
+    }
+
     /// Stands in for new sign-in observations: the test's source is read again every `period`.
     fn every(period: Duration) -> Changed {
         Arc::new(move || Box::pin(tokio::time::sleep(period)))

@@ -9,6 +9,7 @@ import { offeredOptions } from "../shell/agentPermission";
 import type {
   AgentApproval,
   AgentApprovalOption,
+  AgentDropSignal,
   AgentQuestion,
   AgentQuestionnaire,
   AgentQuestionnaireAnswer,
@@ -325,6 +326,7 @@ declare global {
     __fixtureAgentSession?: AgentSession;
     /** The same session's read projections, for controlled transport delays. */
     __fixtureAgentViews?: AgentViews;
+    __fixtureAgentDrop?: (signal: AgentDropSignal) => void;
     /** Every resolution of a questionnaire the page has handed the host, in
      * order, whether the agent took it or not. */
     __fixtureAgentAnswers?: AgentQuestionnaireAnswer[];
@@ -1231,8 +1233,18 @@ export function fixtureAgent({
           // The picker always picks the same three files: one the storage
           // takes, one the host refuses before sending anything, and one the
           // storage refuses once it is sent.
-          async attach(conversationId, filterLabel, onEvent) {
+          async observeDrops(listener) {
+            say("agentObserveDrops");
+            await check();
+            window.__fixtureAgentDrop = listener;
+            return () => {
+              if (window.__fixtureAgentDrop === listener)
+                delete window.__fixtureAgentDrop;
+            };
+          },
+          async attach(conversationId, filterLabel, onEvent, dropId) {
             say(`agentAttach ${conversationId} ${filterLabel}`);
+            if (dropId) say(`agentAttachDrop ${conversationId} ${dropId}`);
             await check();
             const ids = [id("upload"), id("upload"), id("upload")] as const;
             const timer = (ms: number, then: () => void) =>

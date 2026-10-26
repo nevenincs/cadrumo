@@ -15,6 +15,7 @@ import type {
   AgentQuestionnaireAnswer,
   AgentSendRequest,
   AgentUploadEvent,
+  AgentDropSignal,
   AgentUploadPick,
   AgentSendResult,
   AgentServiceStatus,
@@ -1633,8 +1634,17 @@ export interface HostCommands {
       conversationId: string;
       filterLabel: string;
       updates: Channel<AgentUploadEvent>;
+      dropId?: string;
     }>;
     result: AgentUploadPick[];
+  };
+  agent_drop_observe: {
+    args: Authorized<{ updates: Channel<AgentDropSignal> }>;
+    result: number;
+  };
+  agent_drop_unobserve: {
+    args: Authorized<{ subscription: number }>;
+    result: null;
   };
   agent_send: {
     args: Authorized<{ request: AgentSendRequest }>;

@@ -299,6 +299,26 @@ export type AgentUploadEvent =
   | { kind: "stored"; id: string; document: AgentDocumentRecord }
   | { kind: "refused"; id: string; code: string };
 
+/** A native drag in webview coordinates. Paths and file bytes stay in the
+ * host; a drop can be claimed once using its opaque handle. */
+export type AgentDropSignal =
+  | { kind: "left" }
+  | {
+      kind: "over";
+      x: number;
+      y: number;
+      count: number;
+      shift: boolean | null;
+    }
+  | {
+      kind: "dropped";
+      x: number;
+      y: number;
+      count: number;
+      shift: boolean | null;
+      drop_id: string;
+    };
+
 /** A stored document a send names. */
 export type AgentDocumentRef = { name: string; sha256: string };
 
@@ -558,7 +578,13 @@ export interface AgentSession {
     conversationId: string,
     filterLabel: string,
     onEvent: (event: AgentUploadEvent) => void,
+    dropId?: string,
   ): Promise<AgentUploadPick[]>;
+  /** Watches native drops while the agent column accepts attachments.
+   * Cleanup cannot remove a newer observer. */
+  observeDrops?(
+    listener: (signal: AgentDropSignal) => void,
+  ): Promise<() => void>;
   /** Stops a reply that is still working. The run is `cancelling` until it
    * is `cancelled`. */
   cancel(replyId: string): Promise<void>;

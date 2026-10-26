@@ -22,6 +22,8 @@ import {
 import { useRememberedChoice } from "../shell/agentChoice";
 import { DocumentLister, documentRefs } from "../shell/agentDocuments";
 import { useStagedDocuments } from "../shell/agentStaging";
+import { useAgentDrops } from "../shell/agentDrops";
+import { DropOverlay } from "./agent/DropOverlay";
 import {
   newestReply,
   useAgentStatus,
@@ -683,7 +685,7 @@ export function AgentColumn({
   // not started yet is reserved first, as its first message would.
   const attach =
     staging.attach && session && reader !== null
-      ? async () => {
+      ? async (dropId?: string) => {
           let id = conversationId;
           try {
             if (id === null) {
@@ -694,10 +696,26 @@ export function AgentColumn({
             change({ sendFailure: failureCode(error) });
             return;
           }
-          const failure = await staging.attach?.(id);
+          const failure = await staging.attach?.(id, dropId);
           if (failure) change({ sendFailure: failure });
         }
       : undefined;
+
+  const dropping = useAgentDrops({
+    session,
+    enabled:
+      shown &&
+      reader !== null &&
+      !!attach &&
+      !historyOpen &&
+      !settingsOpen &&
+      status?.state === "ready",
+    reader,
+    conversationId,
+    onDrop: (id) => {
+      void attach?.(id);
+    },
+  });
 
   // A send that did not go is given back to the composer to try again.
   const giveBack = (text: string, failure: string | null) =>
@@ -896,7 +914,10 @@ export function AgentColumn({
           : serviceNotice;
 
   return (
-    <>
+    <div
+      ref={dropping.target}
+      className="relative flex min-h-0 flex-1 flex-col"
+    >
       <AgentHeader
         // A conversation not yet started has no title; one the agent was
         // given none for says so.
@@ -1272,7 +1293,13 @@ export function AgentColumn({
           onClose={() => setSkillShown(null)}
         />
       )}
-    </>
+      <DropOverlay
+        visible={dropping.drag !== null}
+        armed={dropping.drag?.armed}
+        fileCount={dropping.drag?.count}
+        locale={locale}
+      />
+    </div>
   );
 }
 
