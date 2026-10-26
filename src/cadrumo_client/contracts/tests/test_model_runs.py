@@ -161,6 +161,16 @@ def test_a_body_round_trips_and_one_beyond_its_bound_is_refused() -> None:
         decode_model_run_body(bytes(MODEL_RUN_MAX_BODY_BYTES + 1))
 
 
+def test_a_body_that_states_no_run_option_round_trips_without_one() -> None:
+    """Omitted options stay omitted across the carrier: nothing fills in a bound or a temperature."""
+    body = ModelRunBody(prompt="Read this.")
+
+    decoded = decode_model_run_body(encode_model_run_body(body))
+
+    assert decoded == body
+    assert (decoded.max_output_tokens, decoded.temperature, decoded.context_tokens) == (None, None, None)
+
+
 _AGENT_MODEL_ID_LENGTH = 512
 """cadrumo-agent's longest model id in its catalogues."""
 

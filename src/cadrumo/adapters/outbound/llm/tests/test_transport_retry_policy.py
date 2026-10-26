@@ -27,10 +27,10 @@ from ....persistence.llm.run_records import LLMRunRecorder
 from ....persistence.llm.usage import UsageRecorder
 from ..client import LLMClient, LLMRetryPolicy, transport_retry_permitted
 from ..errors import (
-    LLMBusyError,
     LLMCacheError,
     LLMConfigError,
     LLMConsentError,
+    LLMContentionError,
     LLMError,
     LLMProviderError,
     LLMRateLimitError,
@@ -39,11 +39,11 @@ from ..errors import (
 )
 from ..models import LLMRequest
 from ..providers.base import ProviderCompletion
-from ._arena_fixtures import _fresh_arena
+from ._client_process_state import _fresh_client_process_state
 from .model_run_support import serving_agent
 from .scripted_adapter_support import COMPLETION_TEXT, ScriptedAdapter, provider_request
 
-__all__ = ["_fresh_arena"]
+__all__ = ["_fresh_client_process_state"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.usefixtures("operation")]
 
@@ -203,14 +203,14 @@ def test_only_transport_boundary_failures_are_retryable() -> None:
     "refusal",
     [
         LLMConsentError("off-host read refused"),
-        LLMBusyError("arena full"),
+        LLMContentionError("model does not fit"),
         LLMConfigError("cannot carry images"),
         LLMValidationError("bad shape"),
         LLMCacheError("cache write failed"),
     ],
 )
 def test_a_refusal_is_never_retryable(refusal: LLMError) -> None:
-    """Consent, occupancy, capability, schema and storage refusals all stay put.
+    """Consent, load, capability, schema and storage refusals all stay put.
 
     Each names a decision the system already took, or a condition that does not
     decay on a timer. Re-sending re-attempts the decision.

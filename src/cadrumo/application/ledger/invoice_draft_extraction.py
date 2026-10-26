@@ -109,7 +109,6 @@ from .evidence_textlayer import transcribe_text_layer
 from .invoice_draft_extraction_ports import (
     EvidenceConsentProof,
     InvoiceDraftExtractionPorts,
-    InvoiceDraftReaderBusyRefusedError,
     InvoiceDraftReaderHeadroomRefusedError,
     InvoiceDraftReaderUnavailableError,
     StructuredInvoiceReadError,
@@ -496,21 +495,16 @@ def _label_read_after_reader_unavailable(
     )
 
 
-def _label_read_after_admission_refusal(
+def _label_read_after_load_refusal(
     labels: LabelReading | None,
-    error: InvoiceDraftReaderHeadroomRefusedError | InvoiceDraftReaderBusyRefusedError,
+    error: InvoiceDraftReaderHeadroomRefusedError,
 ) -> tuple[InvoiceDraft, LabelReadingFallback]:
-    """Retain partial rule facts, or preserve admission control's own refusal."""
+    """Retain partial rule facts, or preserve the agent's own load refusal."""
     if labels is None or not labels.read_fields:
         raise error.cause from None
-    cause = (
-        LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED
-        if isinstance(error, InvoiceDraftReaderHeadroomRefusedError)
-        else LabelReadingFallbackCause.INFERENCE_SLOT_BUSY
-    )
     return labels.draft, _label_reading_fallback(
         labels,
-        cause=cause,
+        cause=LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED,
         reader_error=error.cause,
         failed_condition_id=error.failed_condition_id,
     )
@@ -537,8 +531,8 @@ def _read_transcription_fields(
         model_read = ports.read_text(transcription, settings, consent_token, authority_values)
     except InvoiceDraftReaderUnavailableError as exc:
         return _label_read_after_reader_unavailable(labels, exc)
-    except (InvoiceDraftReaderHeadroomRefusedError, InvoiceDraftReaderBusyRefusedError) as exc:
-        return _label_read_after_admission_refusal(labels, exc)
+    except InvoiceDraftReaderHeadroomRefusedError as exc:
+        return _label_read_after_load_refusal(labels, exc)
     read = model_read if labels is None else merge_label_reading_with_model_draft(labels, model_read)
     return read, None
 

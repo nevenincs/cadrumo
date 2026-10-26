@@ -413,9 +413,6 @@ class LabelReadingFallbackCause(StrEnum):
     LOAD_HEADROOM_REFUSED = "load_headroom_refused"
     """The agent refused to load the model: it does not fit this machine's free memory."""
 
-    INFERENCE_SLOT_BUSY = "inference_slot_busy"
-    """Admission control refused the fill: every on-host inference slot was already held by another read."""
-
 
 class LabelReadingFallback(BaseModel):
     """The label reading stood in for an optional model fill that did not run.
@@ -437,11 +434,9 @@ class LabelReadingFallback(BaseModel):
             the model was to fill, in name order.
         reader_error_type: The class of the failure or refusal the reader raised.
         failed_condition_id: The refusal's failed precondition, when it carried
-            one; an admission refusal names which precondition failed, such as
-            unmeasurable free memory, a measured shortfall or an occupied
-            inference slot, and an unavailable reader names what the reader
-            probe found missing, such as an unanswering runtime or an
-            uninstalled model.
+            one; the agent's load refusal names the precondition it failed,
+            and an unavailable reader names what the reader probe found
+            missing, such as an unanswering runtime or an uninstalled model.
         recovery_action_id: The operator action that would let the model fill
             run, when the refusal named one; an unavailable reader the local AI
             setup can supply names that setup, so a surface can offer it.

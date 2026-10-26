@@ -1,8 +1,9 @@
-"""LLM runtime tuning settings layered on top of timeout config.
+"""Runtime settings layered on top of timeout config.
 
-Defines :class:`CadrumoRuntimeSettings`, which adds the model-runtime tuning
-fields (memory floor, on-host concurrency, per-request timeouts) consumed by the
-LLM-backed invoice-read pipeline, and the fixed address of the local AI server.
+Defines :class:`CadrumoRuntimeSettings`, which adds the document-read deadline
+consumed by the LLM-backed invoice-read pipeline, the browser, lock, session and
+log settings, and the fixed address of the local AI server. Cadrumo sets no model
+option and admits no model load: the agent decides both.
 """
 
 from __future__ import annotations
@@ -26,52 +27,10 @@ class CadrumoRuntimeSettings(CadrumoTimeoutSettings):
         default=300,
         gt=0,
         description=(
-            "Per-request timeout for the on-host local vision read; larger than the "
-            "general LLM timeout because a local vision model on consumer hardware "
-            "(CPU or a modest GPU) can take one to several minutes to read an invoice"
+            "Deadline, in seconds, of one agent run that reads a document; larger than "
+            "the general LLM timeout because a model on consumer hardware (CPU or a "
+            "modest GPU) can take one to several minutes to read an invoice"
         ),
-    )
-    cadrumo_llm_model_runtime_memory_floor_bytes: int = Field(
-        default=8 * 1024**3,
-        gt=0,
-        description=(
-            "Minimum total system memory the local AI program needs before a "
-            "local read is worth attempting, covering a small model's weights, its "
-            "context window and normal OS residency. Below it the program does not "
-            "refuse -- it loads and thrashes, or is killed mid-read, which reaches "
-            "the operator as an unexplained timeout rather than as a hardware "
-            "shortfall. Tunable: raise it on a computer that runs a larger "
-            "selected model"
-        ),
-    )
-    cadrumo_llm_local_inference_concurrency: int = Field(
-        default=1,
-        ge=1,
-        description=(
-            "How many on-host inference requests this process may have waiting on "
-            "the local AI at once. Whether a model fits the memory free is the "
-            "agent's answer when it loads the model; this only keeps one process "
-            "from stacking runs on the agent's serial loads. A request arriving "
-            "while the arena is full is REFUSED rather than queued -- a queued "
-            "request would wait holding its decoded pages in memory. It does not "
-            "bound off-host dispatch, which occupies none of this machine's memory"
-        ),
-    )
-    cadrumo_llm_default_max_tokens: int = Field(
-        default=1024,
-        gt=0,
-        description="Default maximum output tokens when an LLM request omits ``max_tokens``",
-    )
-    cadrumo_llm_default_temperature: float = Field(
-        default=0.0,
-        ge=0.0,
-        # Capped where the REQUEST model caps it, not where a provider API
-        # elsewhere allows. This value is fed straight into an LlmRequest whose
-        # own temperature is bounded at one, so a configured 1.5 validated here
-        # as settings and then failed at request construction -- a configuration
-        # the app called valid and could never use.
-        le=1.0,
-        description="Default sampling temperature when an LLM request omits ``temperature``",
     )
     cadrumo_browser_locale: str = Field(
         default="es-ES",

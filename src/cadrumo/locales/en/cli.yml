@@ -245,11 +245,6 @@ cli:
         invoice_number_help: Supplier invoice number
         iva_amount_help: Invoice IVA amount
         iva_rate_help: Applied IVA rate as a percentage, for example 21
-        label_reading_busy_refused: 'The automatic reader did not run because another
-          reading was already using this machine. The {count} field(s) the labels
-          did not cover have not been read yet and stay empty: {fields}. The document
-          was read from its labels only; extract again once the other reading finishes,
-          or fill in those fields yourself.'
         label_reading_headroom_refused: 'The automatic reader did not run because
           this machine does not have enough free memory for it. The {count} field(s)
           the labels did not cover have not been read yet and stay empty: {fields}.

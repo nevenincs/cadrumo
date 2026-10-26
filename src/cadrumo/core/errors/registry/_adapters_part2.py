@@ -208,16 +208,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.adapters.outbound.llm.errors.LLMBusyError",
-        ErrorCode(
-            code="REFUSED_LLM_BUSY",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_llm_busy",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.adapters.outbound.llm.errors.LLMConsentError",
         ErrorCode(
             code="REFUSED_LLM_CONSENT",

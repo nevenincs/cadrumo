@@ -93,21 +93,11 @@ class LLMContentionError(_LLMPreconditionErrorMixin, LLMError):
     """Raised when the agent could not load the selected model with the memory this computer has free.
 
     The agent's ``model_does_not_fit`` refusal: cadrumo-agent owns load
-    admission and decides it when it loads the model. Distinct from
-    :exc:`LLMBusyError`, which counts this process's own runs and asks nobody.
+    admission and decides it when it loads the model.
 
     Never retryable. The condition does not decay on a timer -- it decays when
     the load on the computer changes -- so re-sending the same run straight away
     meets the same memory.
-    """
-
-
-class LLMBusyError(_LLMPreconditionErrorMixin, LLMError):
-    """Raised when an on-host inference slot is not free and the request is refused.
-
-    Deliberately NOT a subclass of :exc:`~llm.LLMProviderError`: nothing
-    failed, and no request reached the agent. This process already has as many
-    runs on the local AI as it was configured to have at once.
     """
 
 

@@ -57,9 +57,8 @@ Where each row stops:
   ``download_bytes`` to a number literal, even as a single entry; in the
   environment template, a variable whose name has ``MODEL`` in it and ends in
   ``_SIZE``, ``_SIZE_BYTES`` or ``_DOWNLOAD_BYTES`` and carries a number. A size
-  read from the catalogue, a size beside a key that names no model, and the
-  local program's memory floor, which is the program's and not a model's, are
-  not seen.
+  read from the catalogue and a size beside a key that names no model are not
+  seen.
 - Model licence. An entry that names a model by one of those keys and also
   binds ``licence``, ``license``, ``licence_name``, ``license_name``,
   ``licence_spdx``, ``license_spdx`` or ``spdx`` to a string literal; in the
@@ -782,7 +781,7 @@ _FIXTURES: Final[Mapping[tuple[Kind, Row], tuple[str, str]]] = {
     ),
     (Kind.ENV, Row.SIZE): (
         "CADRUMO_LLM_MODEL_SIZE_BYTES=1234\n# CADRUMO_READER_MODEL_SIZE=5\n",
-        "CADRUMO_LLM_MODEL_RUNTIME_MEMORY_FLOOR_BYTES=8589934592\nCADRUMO_LLM_MODEL_SIZE_BYTES=\n",
+        "CADRUMO_LOG_FILE_MAX_BYTES=10485760\nCADRUMO_LLM_MODEL_SIZE_BYTES=\n",
     ),
     # licence
     (Kind.PYTHON, Row.LICENCE): (

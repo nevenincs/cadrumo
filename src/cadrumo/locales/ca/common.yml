@@ -5823,10 +5823,6 @@ tui:
         findings_heading: Resultats de la revisió
         identity: Factura {number} amb data {date}
         label_reading:
-          busy_refused: 'El lector automàtic no s''ha executat perquè una altra lectura
-            feia servir aquest equip. {count} camps que les etiquetes no cobrien encara
-            no s''han llegit i queden buits: {fields}. Torna a llegir el document
-            quan acabi l''altra lectura.'
           headroom_refused: 'El lector automàtic no s''ha executat perquè aquest equip
             no té prou memòria lliure. {count} camps que les etiquetes no cobrien
             encara no s''han llegit i queden buits: {fields}. Allibera memòria i torna

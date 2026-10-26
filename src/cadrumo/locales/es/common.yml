@@ -5837,10 +5837,6 @@ tui:
         findings_heading: Observaciones
         identity: Factura {number} con fecha {date}
         label_reading:
-          busy_refused: 'El lector automático no se ejecutó porque había otra lectura
-            usando este equipo. {count} campo(s) que las etiquetas no cubrían aún
-            no se han leído y siguen vacíos: {fields}. Vuelve a leer el documento
-            cuando termine la otra lectura.'
           headroom_refused: 'El lector automático no se ejecutó porque este equipo
             no tiene memoria libre suficiente para él. {count} campo(s) que las etiquetas
             no cubrían aún no se han leído y siguen vacíos: {fields}. Libera memoria

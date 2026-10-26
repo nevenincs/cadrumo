@@ -288,8 +288,6 @@ def _label_reading_line(fallback: LabelReadingFallback) -> str:
             )
         case LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED:
             key = "tui.ledger.evidence.draft.label_reading.headroom_refused"
-        case LabelReadingFallbackCause.INFERENCE_SLOT_BUSY:
-            key = "tui.ledger.evidence.draft.label_reading.busy_refused"
         case unhandled:
             assert_never(unhandled)
     return tr(key, count=len(fallback.unread_fields), fields=", ".join(fallback.unread_fields))
@@ -299,7 +297,7 @@ def label_reading_setup_item(fallback: LabelReadingFallback | None) -> str | Non
     """The setup item whose setup would let the model fill what a label reading left unread.
 
     Only a reader that was not ready and whose probe named a setup action names
-    an item; a refused load or a busy slot is not something setup ends.
+    an item; a refused load is not something setup ends.
     """
     if fallback is None or fallback.cause is not LabelReadingFallbackCause.READER_UNAVAILABLE:
         return None

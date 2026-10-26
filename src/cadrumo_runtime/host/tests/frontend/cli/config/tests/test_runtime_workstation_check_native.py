@@ -51,8 +51,11 @@ def test_config_check_preserves_the_full_worker_report_and_text_rows(
     dependency_rows = {row["service"]: row for row in payload["dependencies"]}
     assert "local-inference-hardware" in dependency_rows
     assert "local-ai:program" in dependency_rows
-    assert not {"local-inference-contention", "local-reader:vision_transcription"} & set(dependency_rows)
-    assert "model-runtime-hardware-floor" in dependency_rows
+    assert not {
+        "local-inference-contention",
+        "local-reader:vision_transcription",
+        "model-runtime-hardware-floor",
+    } & set(dependency_rows)
     assert "playwright-chromium" in dependency_rows
     assert {"extra:google", "extra:browser"} <= set(dependency_rows)
     assert "extra:anthropic" not in dependency_rows

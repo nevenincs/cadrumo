@@ -704,9 +704,9 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
       blockers: [],
       fallback: image
         ? {
-            cause: "inference_slot_busy",
+            cause: "load_headroom_refused",
             unread_fields: ["invoice_number", "grand_total", "invoice_date"],
-            reader_error_type: "ReaderBusy",
+            reader_error_type: "LLMContentionError",
             failed_condition_id: null,
           }
         : tools.readerMissing

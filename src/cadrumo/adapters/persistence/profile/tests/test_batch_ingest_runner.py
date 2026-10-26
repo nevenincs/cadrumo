@@ -124,9 +124,7 @@ def _run_batch(
 
     Without explicit settings the run reads through the loopback reader's
     agent, never the host's runtime, which refuses every run at its start with
-    ``run_refusal`` when one is given. The on-host slot is pinned to its
-    declared default, so the outcome cannot depend on what this machine happens
-    to have set up.
+    ``run_refusal`` when one is given.
     """
     if settings is not None:
         return _run_batch_with(
@@ -137,18 +135,11 @@ def _run_batch(
             on_item=on_item,
         )
     with serving_a_loopback_reader(replies=(), run_refusal=run_refusal):
-        aligned = runtime.settings.model_copy(
-            update={
-                "cadrumo_llm_local_inference_concurrency": Settings.model_fields[
-                    "cadrumo_llm_local_inference_concurrency"
-                ].default,
-            },
-        )
         return _run_batch_with(
             runtime,
             sources=sources,
             direction=direction,
-            settings=aligned,
+            settings=runtime.settings,
             on_item=on_item,
         )
 

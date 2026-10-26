@@ -27,7 +27,6 @@ import sys
 
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
-from ..core.config import Settings, load_settings
 from ..core.errors.hierarchy import pydantic_validation_boundary
 from ..core.hardware import AcceleratorKind
 from ..core.models import STRICT_FROZEN_CONFIG
@@ -49,7 +48,6 @@ __all__ = [
     "below_capacity_floor",
     "probe_hardware_profile",
     "probe_local_inference_hardware",
-    "probe_model_runtime_hardware_floor",
     "probe_optional_extra",
     "probe_optional_extras",
     "read_accelerator",
@@ -146,8 +144,7 @@ def read_system_memory() -> SystemMemoryReading:
     measurement and cannot disagree about the moment they describe.
 
     A platform that answers nothing yields ``None``, never a guess: an unknown
-    quantity must not be reported as a shortfall by
-    :func:`probe_model_runtime_hardware_floor`.
+    quantity must not be reported as a shortfall.
     """
     if sys.platform == "win32":
         # The positive block, rather than an early return off Windows, is what
@@ -184,75 +181,6 @@ def read_system_memory() -> SystemMemoryReading:
                     free = None
             return SystemMemoryReading(total_bytes=total, free_bytes=free)
         return SystemMemoryReading()
-
-
-def read_total_system_memory_bytes() -> int | None:
-    """Return total physical system memory in bytes, or ``None`` when unreadable.
-
-    A narrowing of :func:`read_system_memory` for the hardware-floor diagnostic,
-    which judges the machine's installed capacity rather than its present
-    headroom. Kept as the one total-only reader so there is no second platform
-    branch to drift.
-    """
-    return read_system_memory().total_bytes
-
-
-def probe_model_runtime_hardware_floor(
-    settings: Settings | None = None,
-    *,
-    total_memory_bytes: int | None = None,
-) -> DependencyStatus:
-    """Report whether this machine meets the local model runtime's memory floor.
-
-    The third capability axis. The product already distinguishes *installed*
-    (:class:`~cadrumo.core.optional_extras.OptionalExtra`) from *permitted*
-    (:class:`~cadrumo.core.capabilities.ServiceCapability`); this answers *capable* -- and is
-    named for the floor it measures rather than for the word "capability",
-    which already denotes four unrelated concepts in this tree (modelo-revision
-    capability, terminal capability, operator service capability, optional-extra
-    capability).
-
-    Below the floor the local runtime does not refuse. It loads and thrashes, or
-    is killed mid-read, and the operator sees an unexplained timeout. This probe
-    turns that into a typed row naming the shortfall and the accepted floor.
-
-    Unknown memory reports ``available`` **true** with a detail saying so. That
-    is deliberate and is the safe direction for a *diagnostic*: an unreadable
-    platform must not manufacture a shortfall that blocks a machine which may be
-    perfectly adequate. The refusal is raised only on a *measured* shortfall.
-
-    Args:
-        settings: Settings carrying the configured floor; loaded when omitted.
-        total_memory_bytes: Observed total memory, for callers that have already
-            measured it. Defaults to :func:`read_total_system_memory_bytes`.
-
-    Returns:
-        A :class:`DependencyStatus` on the ``model-runtime-hardware-floor`` row.
-    """
-    resolved = settings if settings is not None else load_settings()
-    floor = resolved.cadrumo_llm_model_runtime_memory_floor_bytes
-    observed = total_memory_bytes if total_memory_bytes is not None else read_total_system_memory_bytes()
-    if observed is None:
-        return DependencyStatus(
-            service="model-runtime-hardware-floor",
-            available=True,
-            facts={"total_memory_measured": False, "memory_floor_bytes": floor},
-        )
-    if observed < floor:
-        return DependencyStatus(
-            service="model-runtime-hardware-floor",
-            available=False,
-            facts={"total_memory_bytes": observed, "memory_floor_bytes": floor},
-            precondition_verdict=provisioning_no_recovery_verdict(
-                ProvisioningPreconditionCondition.HARDWARE_FLOOR_MET,
-                facts={"total_memory_bytes": observed, "memory_floor_bytes": floor},
-            ),
-        )
-    return DependencyStatus(
-        service="model-runtime-hardware-floor",
-        available=True,
-        facts={"total_memory_bytes": observed, "memory_floor_bytes": floor},
-    )
 
 
 def probe_optional_extra(extra: OptionalExtra) -> DependencyStatus:
@@ -491,8 +419,7 @@ def below_capacity_floor(profile: HardwareProfile, requirement_bytes: int) -> bo
 def probe_local_inference_hardware(profile: HardwareProfile | None = None) -> DependencyStatus:
     """Report the measured hardware profile as a diagnostic row, unknown shown as unverified.
 
-    Follows the shipped direction of :func:`probe_model_runtime_hardware_floor`:
-    an unreadable figure keeps ``available`` **true** and is rendered as
+    An unreadable figure keeps ``available`` **true** and is rendered as
     ``unverified``, because a *diagnostic* must not manufacture a shortfall on a
     platform it merely cannot measure.
 

@@ -4,7 +4,12 @@ from __future__ import annotations
 
 import base64
 import json
+import threading
+from collections.abc import Generator
+from contextlib import contextmanager
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from typing import override
 
 import pytest
 from pydantic import JsonValue, ValidationError
@@ -165,6 +170,65 @@ _AGENT_LOAD_BOUND_SECONDS = 60.0
 
 def test_a_run_start_waits_past_the_agent_s_model_load_bound() -> None:
     assert RUN_START_SECONDS > _AGENT_LOAD_BOUND_SECONDS
+
+
+@contextmanager
+def _run_start_recorded(tmp_path: Path) -> Generator[tuple[BackgroundRunEndpoint, list[dict[str, object]]]]:
+    """Serve a loopback gateway that records each run-start request and refuses it as not installed.
+
+    The refusal ends the run at its start, so the only request on the wire is
+    the one under test and nothing needs cleaning up afterwards.
+    """
+    received: list[dict[str, object]] = []
+
+    class _Handler(BaseHTTPRequestHandler):
+        def do_POST(self) -> None:
+            length = int(self.headers.get("Content-Length", "0"))
+            received.append(json.loads(self.rfile.read(length)))
+            payload = _selection_refusal("model_not_installed")
+            self.send_response(422)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+
+        @override
+        def log_message(self, format: str, *args: object) -> None:
+            del format, args
+
+    server = ThreadingHTTPServer(("127.0.0.1", 0), _Handler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        yield BackgroundRunEndpoint(port=server.server_address[1], workspace_root=tmp_path), received
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join()
+
+
+def _start_one(endpoint: BackgroundRunEndpoint, body: ModelRunBody) -> None:
+    runs = HostedBackgroundRuns(
+        endpoint=lambda: endpoint, bearer=bytearray(b"synthetic-bearer"), host_token=bytearray(b"synthetic-host")
+    )
+    outcome = runs.run(lane=_LANE, body=body, deadline_seconds=30, options=())
+    assert outcome == ModelRunRefusal(code=ModelRunRefusalCode.MODEL_NOT_INSTALLED)
+
+
+def test_a_run_that_states_no_reply_bound_sends_none_to_the_agent(tmp_path: Path) -> None:
+    with _run_start_recorded(tmp_path) as (endpoint, received):
+        _start_one(endpoint, ModelRunBody(prompt="Read this."))
+
+    assert len(received) == 1
+    assert received[0]["background"] == {"system": "", "deadline_seconds": 30}
+
+
+def test_a_stated_reply_bound_reaches_the_agent_unchanged(tmp_path: Path) -> None:
+    with _run_start_recorded(tmp_path) as (endpoint, received):
+        _start_one(endpoint, ModelRunBody(prompt="Read this.", max_output_tokens=16))
+
+    assert len(received) == 1
+    assert received[0]["background"] == {"system": "", "max_output_tokens": 16, "deadline_seconds": 30}
 
 
 def _reply(**fields: object) -> bytes:

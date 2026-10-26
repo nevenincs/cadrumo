@@ -226,10 +226,10 @@ def _degraded_row(name: str, *, status: BatchItemStatus = "ingested") -> BatchIt
         source_name=name,
         status=status,
         label_reading_fallback=LabelReadingFallback(
-            cause=LabelReadingFallbackCause.INFERENCE_SLOT_BUSY,
+            cause=LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED,
             unread_fields=("currency", "supplier_name"),
-            reader_error_type="LLMBusyError",
-            failed_condition_id="llm.local_inference.slot_available",
+            reader_error_type="LLMContentionError",
+            failed_condition_id="provisioning.load_capacity.available",
         ),
     )
 
@@ -249,20 +249,20 @@ def test_a_degraded_draft_keeps_its_status_and_is_reported_on_every_surface() ->
     rows = {row.source_name: row for row in payload.items}
     degraded = rows["ticket.pdf"].label_reading_fallback
     assert degraded is not None
-    assert degraded.cause == "inference_slot_busy"
+    assert degraded.cause == "load_headroom_refused"
     assert degraded.unread_fields == ["currency", "supplier_name"]
-    assert degraded.reader_error_type == "LLMBusyError"
-    assert degraded.failed_condition_id == "llm.local_inference.slot_available"
+    assert degraded.reader_error_type == "LLMContentionError"
+    assert degraded.failed_condition_id == "provisioning.load_capacity.available"
     assert rows["clean.pdf"].label_reading_fallback is None
 
     notices = {notice.code: notice for notice in _run_notices(run)}
     warning = notices["ledger.evidence.batch.label_reading_degraded"]
     assert warning.severity.value == "warning"
-    assert warning.context == {"label_reading_degraded": "1", "reasons": "inference_slot_busy"}
+    assert warning.context == {"label_reading_degraded": "1", "reasons": "load_headroom_refused"}
 
     lines = _batch_text_lines(run, bucket_id="bucket", direction=InvoiceKind.RECEIVED)
     assert (
-        "label_reading\tticket.pdf\tinference_slot_busy\tllm.local_inference.slot_available\tcurrency,supplier_name"
+        "label_reading\tticket.pdf\tload_headroom_refused\tprovisioning.load_capacity.available\tcurrency,supplier_name"
         in lines
     )
     assert not any(line.startswith("label_reading\tclean.pdf") for line in lines)

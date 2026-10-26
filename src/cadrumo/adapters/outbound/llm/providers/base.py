@@ -26,7 +26,9 @@ class ProviderRequest(BaseModel):
         model: Fully resolved provider model identifier.
         prompt: Rendered prompt text sent to the provider.
         system: Optional system prompt prepended to the conversation.
-        max_tokens: Maximum number of output tokens to request.
+        max_tokens: Maximum number of output tokens to request, or ``None``
+            meaning the run states no bound and the lane's own behaviour
+            applies. Cadrumo supplies no value of its own.
         temperature: Sampling temperature in the inclusive range ``[0.0, 1.0]``,
             or ``None`` meaning the parameter is OMITTED from the wire rather
             than sent at some default. The distinction is load-bearing: a
@@ -47,7 +49,11 @@ class ProviderRequest(BaseModel):
     model: str = Field(description="Resolved provider model.")
     prompt: str = Field(description="Rendered prompt text.")
     system: str | None = Field(default=None, description="Optional system prompt.")
-    max_tokens: int = Field(ge=1, description="Maximum output tokens.")
+    max_tokens: int | None = Field(
+        default=None,
+        ge=1,
+        description="Maximum output tokens, or None to state no bound.",
+    )
     temperature: float | None = Field(
         default=None,
         ge=0.0,

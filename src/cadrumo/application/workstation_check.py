@@ -84,20 +84,19 @@ def _probe_dependency_statuses(
     from .provisioning import (
         probe_hardware_profile,
         probe_local_inference_hardware,
-        probe_model_runtime_hardware_floor,
         probe_optional_extras,
     )
     from .provisioning_browser import probe_playwright_browser
 
     # The local AI program's health only. Which model each role reads with is
     # the person's selection, which the agent's catalogue reports; whether a
-    # load fits is the agent's answer when it loads the model.
+    # load fits is the agent's answer when it loads the model. The hardware row
+    # reports what was measured and judges nothing.
     program = probe_local_ai_program(program_row)
-    hardware_floor = probe_model_runtime_hardware_floor()
     hardware = probe_local_inference_hardware(probe_hardware_profile())
     playwright = probe_playwright_browser()
     extras = probe_optional_extras()
-    statuses = (program, hardware_floor, hardware, playwright, *extras)
+    statuses = (program, hardware, playwright, *extras)
     return statuses, extras
 
 

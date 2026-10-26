@@ -264,11 +264,6 @@ cli:
         invoice_number_help: Número de factura del proveedor
         iva_amount_help: Importe de IVA de la factura
         iva_rate_help: Tipo de IVA aplicado como porcentaje, por ejemplo 21
-        label_reading_busy_refused: 'El lector automático no se ejecutó porque había
-          otra lectura usando ya este equipo. Los {count} campo(s) que las etiquetas
-          no cubrían aún no se han leído y siguen vacíos: {fields}. El documento se
-          leyó solo a partir de sus etiquetas; vuelve a extraer cuando termine la
-          otra lectura, o rellena tú esos campos.'
         label_reading_headroom_refused: 'El lector automático no se ejecutó porque
           este equipo no tiene memoria libre suficiente para él. Los {count} campo(s)
           que las etiquetas no cubrían aún no se han leído y siguen vacíos: {fields}.

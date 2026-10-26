@@ -107,10 +107,10 @@ def test_batch_snapshot_restores_all_rows_and_canonical_precondition_facts() -> 
             needed_inference=letter != "a",
             label_reading_fallback=(
                 LabelReadingFallback(
-                    cause=LabelReadingFallbackCause.INFERENCE_SLOT_BUSY,
+                    cause=LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED,
                     unread_fields=("supplier_name",),
-                    reader_error_type="LLMBusyError",
-                    failed_condition_id="llm.local_inference.slot_available",
+                    reader_error_type="LLMContentionError",
+                    failed_condition_id="provisioning.load_capacity.available",
                 )
                 if status == "no_op"
                 else None

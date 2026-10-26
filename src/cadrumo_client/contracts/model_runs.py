@@ -241,7 +241,8 @@ class ModelRunBody(BaseModel):
     system: str | None = None
     prompt: Annotated[str, Field(min_length=1)]
     attachments: tuple[ModelRunAttachment, ...] = Field(default=(), max_length=MODEL_RUN_MAX_ATTACHMENTS)
-    max_output_tokens: Annotated[int, Field(ge=1, le=65_536)]
+    max_output_tokens: Annotated[int, Field(ge=1, le=65_536)] | None = None
+    """The reply bound the caller states; ``None`` states none and the run carries none."""
     temperature: Annotated[float, Field(ge=0.0, le=1.0)] | None = None
     context_tokens: _ContextTokens | None = None
     """The context window the run needs; only a lane that honours it receives it."""

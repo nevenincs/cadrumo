@@ -13,8 +13,6 @@ import asyncio
 import secrets
 import threading
 import time
-from collections.abc import Generator
-from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING
@@ -33,7 +31,7 @@ from cadrumo_client.contracts.model_runs import (
 from ....application.operations.model_runs import ModelRunPort, current_model_run_port
 from ....core.config import Settings
 from ....core.errors.error_codes import get_registered_error_code
-from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
+from ....core.errors.hierarchy import CadrumoError
 from ....core.hashing import content_hash_hex
 from ....core.logging import get_logger
 from ....core.models import STRICT_FROZEN_CONFIG
@@ -41,7 +39,6 @@ from ....core.operator_action_enums import ActionEvidenceProvenance
 from ....core.time.clock import now
 from .consent import agent_consent_binding
 from .errors import (
-    LLMBusyError,
     LLMCacheError,
     LLMConfigError,
     LLMConsentError,
@@ -183,10 +180,10 @@ class _ProviderPacing:
     makes every LATER dispatch at that provider wait out the same window
     without having to be told about it.
 
-    Process-wide and keyed by provider, for the reason the inference arena is:
-    the constraint belongs to the vendor account, which two clients and two
-    batch runs share, so per-client state would pace neither. Off-host only in
-    practice, because nothing local issues a rate limit.
+    Process-wide and keyed by provider: the constraint belongs to the vendor
+    account, which two clients and two batch runs share, so per-client state
+    would pace neither. Off-host only in practice, because nothing local issues
+    a rate limit.
 
     Monotonic instants rather than wall-clock, so a clock adjustment mid-run
     cannot arm a wait measured in hours.
@@ -222,96 +219,6 @@ class _ProviderPacing:
 
 
 _PROVIDER_PACING = _ProviderPacing()
-
-
-class _OnHostInferenceArena:
-    """The process-wide occupancy bound on concurrent on-host inference.
-
-    It bounds how many runs this process has waiting on the local AI at once,
-    and it decides nothing about memory: whether a model fits is the agent's
-    answer when it loads the model. The bound keeps one process from stacking
-    runs on the agent's serial model loads while each holds its decoded pages.
-
-    **Refusal, not queueing.** A waiting request would hold its decoded pages
-    in memory for as long as it waits, so the queue itself would become an
-    allocation that grows with load. A refusal is synchronous, typed, and
-    observable at the caller; the caller may retry later.
-
-    Loop-agnostic on purpose. A :class:`asyncio.Semaphore` binds to the event
-    loop that created it, and this process runs LLM work under several
-    short-lived loops (each ``asyncio.run`` from a synchronous CLI path opens a
-    new one), so a loop-bound primitive would silently bound nothing across
-    them. The occupancy count is guarded by a plain
-    :class:`threading.Lock` instead, which holds across loops and threads
-    alike, and is only ever held for the duration of an integer comparison --
-    never across an await.
-    """
-
-    def __init__(self, limit: int) -> None:
-        self._limit = limit
-        self._held = 0
-        self._lock = threading.Lock()
-
-    @property
-    def limit(self) -> int:
-        """Return the configured number of simultaneous on-host inference slots."""
-        return self._limit
-
-    @property
-    def held(self) -> int:
-        """Return how many slots are occupied right now."""
-        with self._lock:
-            return self._held
-
-    def try_acquire(self) -> bool:
-        """Take a slot if one is free, without ever blocking.
-
-        Returns:
-            True when a slot was taken and the caller must release it; False
-            when the arena is full and the caller must refuse.
-        """
-        with self._lock:
-            if self._held >= self._limit:
-                return False
-            self._held += 1
-            return True
-
-    def release(self) -> None:
-        """Give a slot back.
-
-        Raises:
-            RuntimeError: When more releases than acquisitions have run. This is
-                a bug in the dispatch path rather than an operator condition,
-                and it must be loud: a release that silently underflows would
-                let the arena admit more than its limit forever after, which is
-                the failure this whole class exists to prevent.
-        """
-        with self._lock:
-            if self._held <= 0:
-                msg = "on-host inference arena released more slots than it holds"
-                raise InternalInvariantError(msg)
-            self._held -= 1
-
-
-_on_host_arena: _OnHostInferenceArena | None = None
-_ON_HOST_ARENA_LOCK = threading.Lock()
-
-
-def _on_host_inference_arena(settings: Settings) -> _OnHostInferenceArena:
-    """Return the process-wide on-host inference arena, sized on first use.
-
-    A singleton for the reason the bound exists at all: the resource it protects
-    is the machine, not the client object, so two :class:`LLMClient` instances
-    -- which production builds freely, one per caller -- must contend for the
-    same slots. Sized from settings at first use rather than rebuilt per client,
-    because a rebuild would hand a fresh, empty arena to the second client and
-    the bound would hold for neither.
-    """
-    global _on_host_arena
-    with _ON_HOST_ARENA_LOCK:
-        if _on_host_arena is None:
-            _on_host_arena = _OnHostInferenceArena(settings.cadrumo_llm_local_inference_concurrency)
-        return _on_host_arena
 
 
 @dataclass(frozen=True)
@@ -441,12 +348,8 @@ class LLMClient:
             model=model,
             prompt=request.prompt,
             system=request.system,
-            max_tokens=request.max_tokens or self.settings.cadrumo_llm_default_max_tokens,
-            temperature=(
-                request.temperature
-                if request.temperature is not None
-                else self.settings.cadrumo_llm_default_temperature
-            ),
+            max_tokens=request.max_tokens,
+            temperature=request.temperature,
             timeout_s=self.settings.cadrumo_llm_default_timeout_s,
             images=request.images,
         )
@@ -455,8 +358,7 @@ class LLMClient:
         run_started_at = now()
         run_clock_start = time.monotonic()
         try:
-            with self._on_host_admission(agent.lane):
-                completion = await self._complete_with_retries(adapter, provider_request)
+            completion = await self._complete_with_retries(adapter, provider_request)
         except Exception as exc:  # LLM provider adapters surface heterogeneous exceptions; log+re-raise here
             # WARNING, not ERROR: the caller owns this failure and renders it as
             # a typed refusal on stderr; an ERROR record would print the
@@ -544,13 +446,6 @@ class LLMClient:
     ) -> ProviderCompletion:
         """Run one dispatch, re-sending it only while the taxonomy permits.
 
-        **Inside the admission slot, not around it.** A retrying request keeps
-        its on-host slot across its waits, which is the safe direction:
-        releasing it would let a second request take the arena and turn this
-        one's next attempt into a busy refusal -- converting a transient
-        failure into a different refusal for no reason. The bounded budget is
-        what keeps holding the slot honest.
-
         The budget is checked BEFORE sleeping, so a wait that would outlive the
         budget is not taken at all: the caller gets the real failure at the
         moment the budget is spent rather than after one last pointless pause.
@@ -599,58 +494,6 @@ class LLMClient:
                 )
                 await asyncio.sleep(delay)
                 attempt += 1
-
-    @contextmanager
-    def _on_host_admission(self, lane: ModelRunLane) -> Generator[None]:
-        """Hold one on-host inference slot for the duration of a dispatch.
-
-        Applied at the client's single dispatch point, like every other boundary
-        on this path, and scoped by the resolved lane's typed
-        ``reads_off_host`` flag rather than by a provider, transport or model
-        name. A lane that reads off the host is unbounded here, because its
-        dispatch occupies none of this machine's device memory. The resource
-        this bound protects is local, so the bound is local too.
-
-        Wrapped around the adapter call ONLY, not around the whole method: a
-        cache hit runs no inference and returns before this point, and holding a
-        slot through a cache read would refuse a second request over work that
-        never touches the device.
-
-        Args:
-            lane: The lane the agent service resolved for this dispatch.
-
-        Yields:
-            Nothing; the slot is held for the body and released on any exit.
-
-        Raises:
-            LLMBusyError: When every on-host slot is already occupied.
-        """
-        if lane.reads_off_host:
-            yield
-            return
-        provider = LLMProvider.AGENT
-        arena = _on_host_inference_arena(self.settings)
-        if not arena.try_acquire():
-            raise LLMBusyError(
-                context={
-                    "provider": provider.value,
-                    "local_inference_limit": arena.limit,
-                    "local_inference_slot_available": False,
-                },
-                precondition_verdict=llm_no_recovery_verdict(
-                    LLMPreconditionCondition.LOCAL_INFERENCE_SLOT_AVAILABLE,
-                    facts={
-                        "provider": provider.value,
-                        "local_inference_limit": arena.limit,
-                        "local_inference_slot_available": False,
-                    },
-                    provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-                ),
-            )
-        try:
-            yield
-        finally:
-            arena.release()
 
     def _require_evidence_consent(
         self,

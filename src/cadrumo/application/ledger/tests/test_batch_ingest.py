@@ -195,12 +195,12 @@ def test_the_content_address_must_be_a_real_digest() -> None:
         _item("invoice.pdf", "ingested")
 
 
-def _busy_fallback() -> LabelReadingFallback:
+def _degraded_fallback() -> LabelReadingFallback:
     return LabelReadingFallback(
-        cause=LabelReadingFallbackCause.INFERENCE_SLOT_BUSY,
+        cause=LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED,
         unread_fields=("supplier_name",),
-        reader_error_type="LLMBusyError",
-        failed_condition_id="llm.local_inference.slot_available",
+        reader_error_type="LLMContentionError",
+        failed_condition_id="provisioning.load_capacity.available",
     )
 
 
@@ -212,11 +212,11 @@ def test_a_row_whose_draft_exists_carries_its_degraded_reading(status: BatchItem
         identity=batch_item_identity(content_address=_A, direction=InvoiceKind.RECEIVED),
         direction=InvoiceKind.RECEIVED,
         status=status,
-        label_reading_fallback=_busy_fallback(),
+        label_reading_fallback=_degraded_fallback(),
     )
 
     assert row.status == status
-    assert row.label_reading_fallback == _busy_fallback()
+    assert row.label_reading_fallback == _degraded_fallback()
     assert not summarise_batch([row]).any_failed
 
 
@@ -228,7 +228,7 @@ def test_a_paused_row_cannot_claim_a_degraded_reading() -> None:
             identity=batch_item_identity(content_address=_A, direction=InvoiceKind.RECEIVED),
             direction=InvoiceKind.RECEIVED,
             status="paused",
-            label_reading_fallback=_busy_fallback(),
+            label_reading_fallback=_degraded_fallback(),
         )
 
 
@@ -242,5 +242,5 @@ def test_a_refused_row_cannot_claim_a_degraded_reading() -> None:
             status="refused",
             refusal_code="not_readable",
             refusal_verdict=_reader_unavailable_verdict(),
-            label_reading_fallback=_busy_fallback(),
+            label_reading_fallback=_degraded_fallback(),
         )

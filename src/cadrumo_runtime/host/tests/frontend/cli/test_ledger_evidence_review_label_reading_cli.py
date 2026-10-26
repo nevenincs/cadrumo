@@ -49,7 +49,6 @@ _REFERENCE = "ev-label-reading-001"
 _LABEL_READING_CODES = {
     LabelReadingFallbackCause.READER_UNAVAILABLE: "ledger.evidence.label_reading.reader_unavailable",
     LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED: "ledger.evidence.label_reading.headroom_refused",
-    LabelReadingFallbackCause.INFERENCE_SLOT_BUSY: "ledger.evidence.label_reading.busy_refused",
 }
 _REVIEW_VIEW = ["app", "ledger", "evidence", "review", "view", _REFERENCE]
 
@@ -60,10 +59,6 @@ _REFUSALS: dict[LabelReadingFallbackCause, tuple[str, str | None]] = {
     LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED: (
         "InvoiceDraftReaderHeadroomRefusedError",
         ProvisioningPreconditionCondition.LOAD_CAPACITY_AVAILABLE.value,
-    ),
-    LabelReadingFallbackCause.INFERENCE_SLOT_BUSY: (
-        "InvoiceDraftReaderBusyRefusedError",
-        "llm.local_inference.slot_available",
     ),
 }
 
@@ -178,7 +173,7 @@ def test_a_draft_stored_before_the_degradation_was_kept_names_none_in_review(ses
                 draft=_draft(),
                 extractor="extract_invoice_draft_from_evidence",
                 drafted_at=datetime(2026, 9, 1, 9, 0, tzinfo=UTC),
-                label_reading_fallback=_fallback(LabelReadingFallbackCause.INFERENCE_SLOT_BUSY),
+                label_reading_fallback=_fallback(LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED),
             ),
         ),
     )

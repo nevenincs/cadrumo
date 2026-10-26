@@ -49,7 +49,6 @@ def _prepare_check(context: ConformanceFamilyContext) -> ConformancePreparation:
             assert row.capability.value in row.reason
         assert [row.service for row in projection.dependencies] == [
             LOCAL_AI_PROGRAM_SERVICE,
-            "model-runtime-hardware-floor",
             "local-inference-hardware",
             PLAYWRIGHT_BROWSER_SERVICE,
             *(f"extra:{extra.extra}" for extra in OPTIONAL_EXTRAS),

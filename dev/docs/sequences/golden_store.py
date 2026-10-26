@@ -333,9 +333,7 @@ def golden_path(page: str, sequence_id: str, *, goldens_root: Path | None = None
 PLATFORM_CONDITIONAL_PREFLIGHT_CHECKS = frozenset(
     {
         "storage:windows-long-path",
-        "model-runtime-hardware-floor",
         "local-inference-hardware",
-        "local-inference-contention",
     },
 )
 """Health rows whose ``detail`` describes the HOST, not the product.
@@ -346,12 +344,10 @@ to record the capture:
 
 - ``storage:windows-long-path`` reports ``"not applicable on this platform"``
   off Windows and one of several ``LongPathsEnabled`` verdicts on it.
-- ``model-runtime-hardware-floor`` reports the host's total RAM against the
-  configured floor -- literally ``"total system memory 63.9 GiB meets ..."``.
-- ``local-inference-hardware`` and ``local-inference-contention`` report live
-  free system memory, accelerator kind, and free VRAM when an NVML reader is
-  installed -- figures that drift between two runs on the SAME machine as
-  ordinary system load shifts, not only between machines.
+- ``local-inference-hardware`` reports live free system memory, accelerator
+  kind, and free VRAM when an NVML reader is installed -- figures that drift
+  between two runs on the SAME machine as ordinary system load shifts, not only
+  between machines.
 
 Pinning any of these means the golden can only match the machine (and moment)
 that wrote it: a Windows capture reds the Linux docs runner, a Linux capture
@@ -375,9 +371,7 @@ _ROW_ID_KEYS: tuple[str, ...] = ("check", "service")
 #: pinned under ``facts``, which reintroduces the very defect
 #: :data:`PLATFORM_CONDITIONAL_PREFLIGHT_CHECKS` documents: the local hardware
 #: probe's free system memory and free VRAM are live readings that drift between
-#: two runs on the same box as ordinary processes allocate memory. The
-#: contention row repeats the selected free-capacity value as
-#: ``binding_free_bytes`` and must follow the same comparison policy.
+#: two runs on the same box as ordinary processes allocate memory.
 #:
 #: This is deliberately a row-id/fact-name coordinate, not a suffix rule.
 #: Total RAM, total VRAM, thresholds, shortfalls, and byte-valued facts on every
@@ -387,7 +381,6 @@ _VOLATILE_HOST_FACT_COORDINATES: frozenset[tuple[str, str]] = frozenset(
     {
         ("local-inference-hardware", "free_memory_bytes"),
         ("local-inference-hardware", "free_vram_bytes"),
-        ("local-inference-contention", "binding_free_bytes"),
     },
 )
 

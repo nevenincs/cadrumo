@@ -107,6 +107,26 @@ def test_a_completed_run_returns_the_reply_and_names_the_lane_that_served_it(tmp
     assert body.prompt == "Classify these lines."
 
 
+def test_a_request_that_states_no_run_option_sends_none_to_the_service(tmp_path: Path) -> None:
+    """Cadrumo defaults no reply bound and no sampling temperature: the lane's own behaviour applies."""
+    with serving_agent(replies=("{}",)) as service:
+        asyncio.run(_client(_settings(tmp_path)).complete(_consented()))
+
+    ((_, body),) = service.runs
+    assert body.max_output_tokens is None
+    assert body.temperature is None
+    assert body.context_tokens is None
+
+
+def test_the_run_options_a_request_states_reach_the_service_unchanged(tmp_path: Path) -> None:
+    with serving_agent(replies=("{}",)) as service:
+        asyncio.run(_client(_settings(tmp_path)).complete(_consented(max_tokens=200, temperature=0.0)))
+
+    ((_, body),) = service.runs
+    assert body.max_output_tokens == 200
+    assert body.temperature == 0.0
+
+
 def test_a_lookup_refusal_reaches_the_consumer_without_a_run(tmp_path: Path) -> None:
     with (
         serving_agent(lookup_refusal=ModelRunRefusalCode.NO_SELECTION) as service,

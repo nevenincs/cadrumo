@@ -219,6 +219,7 @@ class HostedBackgroundRuns(BackgroundRunGateway):
         options: tuple[BackgroundOption, ...],
     ) -> ModelRunRefusal | None:
         named = {option.value: getattr(body, option.value) for option in options}
+        bound = {} if body.max_output_tokens is None else {"max_output_tokens": body.max_output_tokens}
         request: dict[str, object] = {
             "run_id": run_id,
             "message": body.prompt,
@@ -230,7 +231,7 @@ class HostedBackgroundRuns(BackgroundRunGateway):
             },
             "background": {
                 "system": body.system or "",
-                "max_output_tokens": body.max_output_tokens,
+                **bound,
                 "deadline_seconds": deadline_seconds,
                 **{name: value for name, value in named.items() if value is not None},
             },

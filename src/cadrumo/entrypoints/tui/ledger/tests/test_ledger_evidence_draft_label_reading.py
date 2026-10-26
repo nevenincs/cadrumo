@@ -61,7 +61,6 @@ def test_a_draft_read_in_full_shows_no_label_reading_line() -> None:
     [
         (LabelReadingFallbackCause.READER_UNAVAILABLE, "tui.ledger.evidence.draft.label_reading.reader_unavailable"),
         (LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED, "tui.ledger.evidence.draft.label_reading.headroom_refused"),
-        (LabelReadingFallbackCause.INFERENCE_SLOT_BUSY, "tui.ledger.evidence.draft.label_reading.busy_refused"),
     ],
 )
 def test_a_degraded_draft_names_the_unread_fields_and_the_remedy_for_its_cause(

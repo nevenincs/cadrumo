@@ -262,11 +262,6 @@ cli:
         invoice_number_help: Número de factura del proveïdor
         iva_amount_help: Import d'IVA de la factura
         iva_rate_help: Tipus d'IVA aplicat com a percentatge, per exemple 21
-        label_reading_busy_refused: 'El lector automàtic no s''ha executat perquè
-          una altra lectura ja feia servir aquest equip. Els {count} camps que les
-          etiquetes no cobrien encara no s''han llegit i queden buits: {fields}. El
-          document s''ha llegit només a partir de les etiquetes; torna a extreure
-          quan acabi l''altra lectura, o emplena tu aquests camps.'
         label_reading_headroom_refused: 'El lector automàtic no s''ha executat perquè
           aquest equip no té prou memòria lliure. Els {count} camps que les etiquetes
           no cobrien encara no s''han llegit i queden buits: {fields}. El document

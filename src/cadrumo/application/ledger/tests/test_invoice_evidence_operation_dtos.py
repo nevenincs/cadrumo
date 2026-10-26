@@ -269,7 +269,7 @@ def test_invoice_projection_preserves_label_fallback_across_json(cause: LabelRea
         cause=cause,
         unread_fields=("invoice_date", "supplier_tax_id"),
         reader_error_type="ReaderAdmissionRefusedError",
-        failed_condition_id="llm.inference_slot",
+        failed_condition_id="provisioning.load_capacity.available",
         recovery_action_id="operator.provision.local_ai",
     )
     source = _draft().with_label_reading_fallback(fallback)

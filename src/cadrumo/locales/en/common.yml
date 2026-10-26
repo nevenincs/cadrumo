@@ -5727,10 +5727,6 @@ tui:
         findings_heading: Findings
         identity: Invoice {number} dated {date}
         label_reading:
-          busy_refused: 'The automatic reader did not run because another reading
-            was using this machine. {count} field(s) the labels did not cover have
-            not been read yet and stay empty: {fields}. Read the document again once
-            the other reading finishes.'
           headroom_refused: 'The automatic reader did not run because this machine
             does not have enough free memory for it. {count} field(s) the labels did
             not cover have not been read yet and stay empty: {fields}. Free some memory

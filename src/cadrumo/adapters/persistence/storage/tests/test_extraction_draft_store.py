@@ -383,13 +383,13 @@ def test_deleting_a_persisted_provenance_field_makes_the_load_refuse() -> None:
         ExtractionDraftDocument.model_validate_json(json.dumps(corrupted))
 
 
-def _busy_fallback() -> LabelReadingFallback:
+def _degraded_fallback() -> LabelReadingFallback:
     """A degraded reading populated off every default, so a dropped field cannot pass as a default."""
     return LabelReadingFallback(
-        cause=LabelReadingFallbackCause.INFERENCE_SLOT_BUSY,
+        cause=LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED,
         unread_fields=("currency", "supplier_name"),
-        reader_error_type="LLMBusyError",
-        failed_condition_id="llm.local_inference.slot_available",
+        reader_error_type="LLMContentionError",
+        failed_condition_id="provisioning.load_capacity.available",
     )
 
 
@@ -404,7 +404,7 @@ def test_a_degraded_reading_is_stored_with_its_draft_across_the_encrypted_bounda
     written = write_extraction_draft(
         bucket_id=profile.bucket_id,
         evidence_reference=_REFERENCE,
-        draft=_two_rate_draft().with_label_reading_fallback(_busy_fallback()),
+        draft=_two_rate_draft().with_label_reading_fallback(_degraded_fallback()),
         extractor="extract_invoice_draft_from_evidence",
         settings=profile.settings,
     )
@@ -412,7 +412,7 @@ def test_a_degraded_reading_is_stored_with_its_draft_across_the_encrypted_bounda
     reloaded = load_extraction_drafts(profile.bucket_id, profile.settings)
 
     assert reloaded == written, "the boundary must return exactly what crossed it"
-    assert reloaded.drafts[0].label_reading_fallback == _busy_fallback()
+    assert reloaded.drafts[0].label_reading_fallback == _degraded_fallback()
     # One home once stored: the record, not a second copy on the draft.
     assert reloaded.drafts[0].draft.label_reading_fallback is None
 
@@ -457,7 +457,7 @@ def test_a_draft_stored_before_the_degradation_was_kept_reads_as_none_recorded(p
                 draft=_two_rate_draft(),
                 extractor="extract_invoice_draft_from_evidence",
                 drafted_at=datetime(2026, 9, 1, 9, 0, tzinfo=UTC),
-                label_reading_fallback=_busy_fallback(),
+                label_reading_fallback=_degraded_fallback(),
             ),
         ),
     )

@@ -5797,10 +5797,6 @@ tui:
         findings_heading: Ellenőrzési megállapítások
         identity: '{number} számla, kelte {date}'
         label_reading:
-          busy_refused: 'Az automatikus olvasó nem futott le, mert egy másik olvasás
-            használta ezt a gépet. A címkék által nem lefedett {count} mező még nem
-            lett beolvasva, ezért üres marad: {fields}. Olvasd be újra a dokumentumot,
-            amint a másik olvasás befejeződött.'
           headroom_refused: 'Az automatikus olvasó nem futott le, mert ezen a gépen
             nincs elég szabad memória hozzá. A címkék által nem lefedett {count} mező
             még nem lett beolvasva, ezért üres marad: {fields}. Szabadíts fel memóriát,

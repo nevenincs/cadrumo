@@ -1490,7 +1490,7 @@ export type EvidenceDraft = {
 };
 /** Why some fields were left unread: the model fill did not run. */
 export type LabelReadingFallback = {
-  cause: "reader_unavailable" | "load_headroom_refused" | "inference_slot_busy";
+  cause: "reader_unavailable" | "load_headroom_refused";
   unread_fields: string[];
   reader_error_type: string;
   failed_condition_id?: string | null;

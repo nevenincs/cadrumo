@@ -27,7 +27,7 @@ from ....persistence.llm.usage import UsageRecorder
 from .. import client as client_module
 from ..client import LLMClient, LLMRetryPolicy
 from ..errors import LLMRateLimitError
-from ._arena_fixtures import reset_client_process_state
+from ._client_process_state import reset_client_process_state
 from .scripted_adapter_support import COMPLETION_TEXT, ScriptedAdapter, provider_request
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

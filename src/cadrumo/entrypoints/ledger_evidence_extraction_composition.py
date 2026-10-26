@@ -15,7 +15,6 @@ from ..adapters.inbound.pdf.page_text_extraction import extract_pages_text_from_
 from ..adapters.outbound.llm.client import LLMClient
 from ..adapters.outbound.llm.consent import EvidenceConsentToken
 from ..adapters.outbound.llm.errors import (
-    LLMBusyError,
     LLMConfigError,
     LLMConsentError,
     LLMContentionError,
@@ -53,7 +52,6 @@ from ..application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
 from ..application.ledger.invoice_draft_extraction_ports import (
     EvidenceConsentProof,
     InvoiceDraftExtractionPorts,
-    InvoiceDraftReaderBusyRefusedError,
     InvoiceDraftReaderHeadroomRefusedError,
     InvoiceDraftReaderUnavailableError,
     StructuredInvoiceReadError,
@@ -94,8 +92,8 @@ def evidence_text_layer_ports() -> EvidenceTextLayerPorts:
     return EvidenceTextLayerPorts(extract_pages_text=extract_pages_text)
 
 
-def _failed_condition_id(refusal: LLMContentionError | LLMBusyError) -> str | None:
-    """Return the precondition an admission refusal failed, as the application carries it."""
+def _failed_condition_id(refusal: LLMContentionError) -> str | None:
+    """Return the precondition a load refusal failed, as the application carries it."""
     verdict = refusal.terminal_precondition_verdict
     return None if verdict is None else str(verdict.failed_condition_id)
 
@@ -272,8 +270,6 @@ def _invoice_read_text(
         raise InvoiceDraftReaderUnavailableError(exc) from exc
     except LLMContentionError as exc:
         raise InvoiceDraftReaderHeadroomRefusedError(exc, failed_condition_id=_failed_condition_id(exc)) from exc
-    except LLMBusyError as exc:
-        raise InvoiceDraftReaderBusyRefusedError(exc, failed_condition_id=_failed_condition_id(exc)) from exc
 
 
 def _invoice_propose_supply_nature(

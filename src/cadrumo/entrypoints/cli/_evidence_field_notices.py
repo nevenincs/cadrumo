@@ -306,9 +306,6 @@ def label_reading_fallback_notices(fallback: LabelReadingFallback | None) -> lis
         case LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED:
             code = "ledger.evidence.label_reading.headroom_refused"
             message = tr("cli.app.ledger.evidence.label_reading_headroom_refused", count=count, fields=unread)
-        case LabelReadingFallbackCause.INFERENCE_SLOT_BUSY:
-            code = "ledger.evidence.label_reading.busy_refused"
-            message = tr("cli.app.ledger.evidence.label_reading_busy_refused", count=count, fields=unread)
         case unhandled:
             assert_never(unhandled)
     context = {
