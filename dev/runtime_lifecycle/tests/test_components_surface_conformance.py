@@ -324,8 +324,11 @@ def test_the_desktop_wire_contract_admits_every_code_a_row_carries() -> None:
         "Failure": DependencyFailureCategory,
         "Recovery": DependencyRecoveryAction,
     }
+    # The desktop's own engine is always admitted to provision the local AI, so its rows
+    # never carry the recovery that sends a read-only surface to the desktop.
+    never_on_the_desktop = {DependencyRecoveryAction.SET_UP_IN_DESKTOP.value}
     for name, family in families.items():
-        engine = frozenset(member.value for member in family)
+        engine = frozenset(member.value for member in family) - never_on_the_desktop
         assert _wire_enum(source, name) == engine, name
 
 
