@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#dependency-provisioning'
 date: '2026-10-18'
-modified: '2026-10-25'
+modified: '2026-10-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:e1d69e8d2bdd27f9f2ca6854106baffd4974da9189bce67902224e281fe53fb7'
+body_hash: 'sha256:bb0363ddc81b07024eb8dbbeeb472fa94f4a5e1a2d99030b5d8d6e6338842857'
 related:
   - "[[2026-10-18-dependency-provisioning-mechanisms-reference]]"
   - "[[2026-06-15-dependency-provisioning-adr]]"
@@ -121,7 +121,7 @@ Accepted 2026-10-18 on the owner's advance authorization, relayed by the coordin
 
 ### D8. Front-end parity
 
-- Every operation in D3 is submittable from the CLI, TUI and MCP with the same decision and the same result.
+- Every component command is available from the CLI, TUI and MCP with the same decision and the same result, except that only the desktop sets up or removes the local AI (amendment 2026-10-26). Those surfaces report the local AI and route `operator.provision.local_ai` to the desktop.
 - The operator-action catalogue gains `operator.provision.setup`, `operator.provision.model`, `operator.provision.runtime` and `operator.provision.google_sign_in`, beside the existing browser entry. Every dependency refusal names one of them as its recovery. (Amended 2026-10-19 by the operator-review amendment below.)
 - Google sign-in is the product's registered `config.google.login` operation, which admits only a person's session. The CLI submits it and keeps its controlling-terminal check before answering the consent review. The TUI submits the same operation on its own connection. The desktop host submits it through the held person bridge's generic relay and answers its consent review, because the person's click is the gesture and Google's consent page is the approval. MCP does not serve it. (Amended 2026-10-18 under the runtime-boundary ruling recorded in the amendment below. This line first said that sign-in runs as the runtime's authentication command, reached from the desktop by a closed person-bridge action, and that the interactive-terminal gate also admits a kernel-verified person connection.)
 
@@ -236,7 +236,7 @@ Basis: operator review 2026-10-19. The operator reviewed the setup dialog in the
    - D3 and D4: a plan entry may carry ordered parts (the program, then each role whose model is not ready). The entry's size, hosts, licence notices and outside-program install are exactly the sum of its parts, and the approval digest binds every part, so a changed part needs a new approval. Setup runs the parts in order under the item's one lock and stops at the first that does not finish. Roles sharing one model still download it once.
    - D5: phase codes and the progress subject name `local_ai`; progress is one figure over the whole item's known download.
    - D7: the full check covers every part, so the local AI's bound is 60 s per part.
-   - D8: the catalogue's local AI recovery is `operator.provision.local_ai`, performed by `aeat config provision pull`, which now sets up the whole local AI. `operator.provision.model` and `operator.provision.runtime` are removed, `aeat config provision install` is removed, and `pull` and `verify` lose `--role` (no surface sets up a single role any more). `--model` still names one catalogue model for every role.
+   - D8: the catalogue's local AI recovery is `operator.provision.local_ai`, performed in the desktop's setup. `operator.provision.model` and `operator.provision.runtime` are removed, `aeat config provision install` and `pull` are removed, and `verify` loses `--role` (no surface sets up a single role).
 2. **Status once.** Every surface states a row's state exactly once: the product's sentence, marked by a glyph that repeats no word. The desktop's separate status pill and its words are removed, and the setup prompt's title is the item's name with its sentence beneath.
 3. **Settings advisory.** Settings no longer lists components. While setup is unfinished it shows one line at the top, "Cadrumo setup is not complete. Click here to complete it.", with an action glyph; while setup runs, one line that it is running; clicking either opens the single setup flow. When setup is complete it shows nothing. This replaces D10's Components section and its "Open setup" button.
 4. **Google leaves setup.** Google sign-in is not a software dependency and belongs to the current profile, not to the installation.
@@ -284,5 +284,9 @@ Basis: the owner's first-hand rulings of 2026-10-25 in conversation, recorded in
 
 - **D1 and the 2026-10-19 amendment, ruling 1.** "`local_ai` is the program and the model each catalogue role reads with" is replaced by: "`local_ai` is the program and the model the person selected for each local role. The parts of its plan are the program, then one pull per selected local model not yet installed. Cadrumo keeps no catalogue role list of models."
 - **D7 (verification).** "The catalogue gains an expected digest per model. When the installed digest differs ... `stale`" is withdrawn. Replaced by: "A local model's integrity is Ollama's content-addressed manifest. Cadrumo keeps no expected digest, and a model has no digest-based `stale` state." The role fitness verdict and the one-token generation follow the 2026-10-24 amendment.
-- **D8 and the 2026-10-19 amendment, ruling 1.** "`--model` still names one catalogue model for every role" is replaced by: "`aeat config provision pull` sets up the program and the models in the per-role selection. `--model` is removed, because the selection is the only input."
+- **D8 and the 2026-10-19 amendment, ruling 1.** `--model` and `aeat config provision pull` are removed; the desktop sets up the program and the models in the per-role selection (amendment 2026-10-26).
 - **D13 (scope).** Added to the out-of-scope list: any model definition owned by Cadrumo. "A Cadrumo-owned model runtime" stays narrowed as on 2026-10-24.
+
+### Amendment 2026-10-26: only the desktop provisions the local AI
+
+Basis: the owner's first-hand ruling of 2026-10-26 in conversation, recorded in `2026-10-24-rust-component-provisioning-adr` amendment 2026-10-26. No Python module and no cadrumo-agent can download or install the local AI program or pull a model; the desktop alone sets up and removes the local AI from the per-role selection. D8 and its notes above state the result. The browser keeps its setup on every surface.

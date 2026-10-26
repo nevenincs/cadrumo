@@ -15,7 +15,7 @@ related:
   - '[[2026-10-13-agent-attachments-adr]]'
 modified: '2026-10-26'
 body_schema: body-v2
-body_hash: 'sha256:1611555a9d75f3a898d176a83b3963d777a57253dbf8f61e6729321e47462147'
+body_hash: 'sha256:2585d6deaf66725be5b047c93854768d649dd8c09e501a543e1238f1483dce73'
 ---
 
 # `agent-owned-models` plan
@@ -36,7 +36,9 @@ Scope by phase:
 - P04 removes model pins from the Rust engine and feeds it the selection (new ADR constraints 2, 9, 10; Rust provisioning and unified-setup amendments).
 - P05 delivers the selection surfaces, documentation, locales and the conformance review (new ADR constraints 5, 6).
 
-Open point for the executor: the selection is stored by the agent service, whose administration is served over the desktop person channel and is absent from `aeat` (provider-settings ADR constraint 5). `P05.S25` adds the CLI and TUI set operations through the tax operation surface and the runtime-to-service frame. Before that Step, confirm with the owner that setting a role's model, which holds no secret, may use that surface.
+Authorization basis, 2026-10-26: the owner's first-hand ruling in conversation that only the desktop provisions the local AI program and models, that no `src/cadrumo*` Python module and no cadrumo-agent can pull, download or install them, that every model capability goes through cadrumo-agent, and that divergent and superseded code is deleted ("complete the work"). It is recorded as amendment 2026-10-26 of `2026-10-24-rust-component-provisioning-adr`, `2026-10-25-agent-owned-models-adr` and `2026-10-18-dependency-provisioning-unified-setup-adr`. It rescopes `P04.S22`, `P05.S25` and `P05.S28` and adds `P04.S30`. The selection is set on the desktop alone; the CLI, TUI and MCP set no selection.
+
+Shared contract for `P04.S22`, `P04.S30` and `P05.S25`: the recovery code `set_up_in_desktop` (Rust `RecoveryAction::SetUpInDesktop`, Python `DependencyRecoveryAction.SET_UP_IN_DESKTOP`), carried with the action id `operator.provision.local_ai`, is what the read-only role gives the local AI row in place of set-up, update, try-again and resume. A component command line naming `local_ai` for `plan`, `setup` or `remove`, or carrying `--model`, is an invalid request.
 
 ## Steps
 
@@ -81,18 +83,19 @@ Drop model pins from the engine, take the selected local models as input, pull t
 - [x] `P04.S19` - Remove model pins, model items and licence data from the engine and the staged pin data; keep program pins; `native/application/src/provisioning/pins.rs, native/application/src/provisioning/items.rs, native/application/src/provisioning/local_ai/models.rs`.
 - [x] `P04.S20` - Accept the selected local models as role, model-name and size_bytes triples in the plan and setup commands and bind them in the plan digest; `native/application/src/provisioning/protocol.rs, native/application/src/provisioning/plan.rs, native/application/src/provisioning/role_host.rs`.
 - [x] `P04.S21` - Pull each selected model on the supervised server, report rows from the selection and Ollama's installed list, and drop digest-based stale; compute the hardware floor from the supplied size_bytes; `native/application/src/provisioning/local_ai/models.rs, native/application/src/provisioning/local_ai/hardware.rs, native/application/src/provisioning/state.rs, native/application/src/provisioning/engine.rs`.
-- [ ] `P04.S22` - Pass the stored selection from the Python component client and the desktop setup host to the role, and delete the pinned model fixtures; `src/cadrumo/adapters/outbound/components/client.py, src/cadrumo/adapters/outbound/components/protocol.py, native/desktop/src-tauri/src/shell/setup/components.rs, native/desktop/frontend/src/dev/setupFixture.ts`.
+- [ ] `P04.S22` - Give the engine a local AI admission that only the desktop host grants with the selected local models, serve the local AI read-only from the components role (no --model, refuse plan, setup and removal naming local_ai, recovery set_up_in_desktop), and delete the model-pin residue (licence and override advisories, the different-model-version stale reason); `native/application/src/provisioning/engine.rs, native/application/src/provisioning/protocol.rs, native/application/src/provisioning/state.rs, native/application/src/provisioning/plan.rs`.
 - [x] `P04.S23` - Prove the pull path with a synthetic model id against the fake Ollama server and remove the remaining model literals from engine tests; `native/application/src/provisioning/local_ai/fake_ollama.rs, native/application/src/provisioning/local_ai/models`.
+- [ ] `P04.S30` - Read the per-role selection and cadrumo-agent's catalogue cards in the desktop setup host and admit the in-process engine with each keyless on-host lane's selection as role, model and size triples before every command, refusing a selection whose card states no size; drop the start command's model argument and the pinned model fixtures; `native/desktop/src-tauri/src/shell/setup/components.rs, native/desktop/src-tauri/src/shell/setup/wire.rs, native/desktop/frontend/src/shell/tauriHost.ts, native/desktop/frontend/src/dev/setupFixture.ts`.
 
 ### Phase `P05` - Surfaces and docs
 
 Give the person a per-role selection on every surface with licence and vision capability, update documentation and the four locales, prove surface conformance and review.
 
 - [ ] `P05.S24` - Add the per-role selection control to the desktop agent settings, showing licence, vision capability and the recommended entry; replace the picker's offline fallback, which assembles cadrumo-agent's served catalog DTO from its internal modules and fails in a package since background_requests became required, with the public declared_provider_catalog() document shown as not yet observed; `native/desktop/frontend/src/components/agent/AgentSettingsPopover.tsx, native/desktop/frontend/src/dev/catalogue, native/desktop/frontend/src/shell/agentCatalog.ts, src/cadrumo_agent_service/service.py, src/cadrumo_agent_service/adapters/provider_catalog_metadata.py`.
-- [ ] `P05.S25` - Add the selection read and set to the TUI setup flow and the CLI through registered operations, and the read to MCP; register the role-selection action and attach it to the NO_SELECTION model-run verdict; `src/cadrumo/entrypoints/tui/setup/screen.py, src/cadrumo/entrypoints/cli/config/_provision_command_specs.py`.
+- [ ] `P05.S25` - Make every Python surface read-only for the local AI: delete aeat config provision pull, keep setup and removal to the browser, refuse a Python component request naming local_ai for plan, setup or removal, route the local AI recovery and NO_SELECTION to the desktop in the CLI, TUI and MCP, and delete the winget and Homebrew installer locator and its installer fields; `src/cadrumo/adapters/outbound/components/client.py, src/cadrumo/entrypoints/cli/config/provision_cli.py, src/cadrumo/entrypoints/tui/setup/screen.py, src/cadrumo_mcp/mcp/component_setup.py, src/cadrumo/application/provisioning_host.py`.
 - [ ] `P05.S26` - Update the how-to, CLI reference, technical articles and API pages that describe local models, pins or the direct adapter; `docs/how-to/classify-with-llm.md, docs/cli/config/provision.rst, docs/technical/articles/027-local-reader-provisioning-workstation-health-and-application-contracts.md, docs/technical/articles/168-profile-custody-provisioning-and-runtime-configuration.md`.
 - [ ] `P05.S27` - Add and translate the selection, licence and NO_SELECTION strings in en, es, ca and hu in the informal singular through the dev.locales set-batch workflow; `src/cadrumo/locales/en, src/cadrumo/locales/es, src/cadrumo/locales/ca, src/cadrumo/locales/hu`.
-- [ ] `P05.S28` - Prove selection conformance across desktop, TUI, CLI and MCP, empty the gate burn-down list, and extend the gate's scanned roots to Rust under native/application, Rust and TypeScript under native/desktop, and env/.env.example, adding the rows model-name, model-digest and model-table for each added file kind plus a model-size row (a byte or gigabyte size bound to a model entry) and a model-licence row (a licence identifier bound to a model entry) in every scanned kind, each shown to catch an isolated defect and to pass a clean fixture, with the stopping point restated; `dev/quality/tests/test_no_model_definitions.py, src/cadrumo/entrypoints/tui/setup/tests`.
+- [ ] `P05.S28` - Prove desktop-only local AI provisioning and selection across desktop, TUI, CLI and MCP; extend the no-Python-provisioning gate to refuse a Python component request or command line naming local_ai for plan, setup or removal and any --model argument; empty the model-definition gate burn-down list and extend its scanned roots to Rust under native/application, Rust and TypeScript under native/desktop, and env/.env.example, adding the rows model-name, model-digest and model-table for each added file kind plus a model-size row and a model-licence row in every scanned kind, each shown to catch an isolated defect and to pass a clean fixture, with the stopping point restated; `dev/quality/tests/test_no_python_provisioning.py, dev/quality/tests/test_no_model_definitions.py, src/cadrumo/entrypoints/tui/setup/tests`.
 
 ## Parallelization
 
@@ -107,9 +110,9 @@ Phase P02 is serial and blocked until cadrumo-agent delivers its catalogue schem
 
 Phase P03 starts after P02. `P03.S12`, `P03.S13` and `P03.S14` own disjoint consumer files and run in parallel. `P03.S15` follows all three, because it deletes the adapter they stop using. `P03.S16` follows `P03.S15`, `P03.S17` follows `P03.S16`, and `P03.S18` is last. They share the burn-down list in the gate, so they serialize.
 
-Phase P04 owns `native/application` for `P04.S19` to `P04.S21` and `P04.S23`, which may run in parallel with P03 once P02 fixes the `size_bytes` field, because Rust and Python files are disjoint. They serialize with each other as `S19`, `S20`, `S21`, `S23`. `P04.S22` spans both languages and runs after P03 and `P04.S21`.
+Phase P04 owns `native/application` for `P04.S19` to `P04.S21` and `P04.S23`, which may run in parallel with P03 once P02 fixes the `size_bytes` field, because Rust and Python files are disjoint. They serialize with each other as `S19`, `S20`, `S21`, `S23`. `P04.S22` runs after P03 and `P04.S21`; `P04.S30` follows `P04.S22`, because it uses the engine's admission. `P05.S25` owns Python files only and runs in parallel with `P04.S22` under the shared contract in the Description.
 
-Phase P05 starts after P03 and P04. `P05.S24` (desktop), `P05.S25` (TUI and CLI) and `P05.S26` (documentation) own disjoint files and run in parallel. `P05.S27` follows the first two, because they fix the strings. `P05.S28` is last.
+Phase P05 starts after P03 and P04. `P05.S24` (desktop selection control) follows `P04.S30`; `P05.S26` (documentation) runs in parallel with it. `P05.S27` follows the first two, because they fix the strings. `P05.S28` is last.
 
 ## Verification
 
