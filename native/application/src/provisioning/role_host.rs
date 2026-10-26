@@ -4,8 +4,8 @@
 //! resolution ([`installation_config`]).
 //!
 //! The installation fixes everything but the local models: those are the person's
-//! selection, which the client names on the command line and the protocol hands the
-//! engine, so the host reads no model from the package or the environment.
+//! selection, which only the desktop admits to its own engine, so the host reads no model
+//! from the package or the environment and the role serves the local AI read-only.
 //!
 //! The image's package names the pins and the bundled browser driver; the storage root
 //! and its relocatable members come from the package's storage rules, the same ones every

@@ -6,9 +6,9 @@
 //! selected a local model for, and is exactly their sum; roles that share one model count
 //! its download once. A model part is the selection triple itself: its id is the role,
 //! its target version the model's name and its size the size the selected catalogue
-//! entry states. The engine words no licence: the person saw the catalogue entry's
-//! licence when they selected the model. The digest covers the contract version and
-//! every entry in order, spelled as the product's canonical JSON, so a changed role,
+//! entry states. A plan carries no licence or fit notice: the person saw the catalogue
+//! entry's licence and facts when they selected the model. The digest covers the contract
+//! version and every entry in order, spelled as the product's canonical JSON, so a changed role,
 //! model name, size, host, destination, version or item set needs a new approval while a
 //! re-measured free space does not.
 
@@ -23,7 +23,7 @@ use serde_json::{Value, json};
 use std::collections::BTreeSet;
 
 /// Folded into every digest so a plan-shape change can never reuse an approval.
-pub const PLAN_CONTRACT_VERSION: u32 = 2;
+pub const PLAN_CONTRACT_VERSION: u32 = 3;
 
 /// Fixed free space kept beyond the planned download, on top of the 20 % margin.
 pub const SPACE_HEADROOM_BYTES: u64 = 1024 * 1024 * 1024;
@@ -36,29 +36,6 @@ pub fn required_free_bytes(download_bytes: u64) -> u64 {
         .saturating_add(SPACE_HEADROOM_BYTES)
 }
 
-/// A licence or fit notice a person must see before a model downloads; part of what an
-/// approval binds.
-#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd, Serialize)]
-#[serde(rename_all = "snake_case")]
-pub enum Advisory {
-    FitExceedsMeasuredHeadroom,
-    FitUnverified,
-    LicenceCommercialUseBarred,
-    LicenceUnverified,
-    OverrideBelowContextFloor,
-    OverrideNotInCatalogue,
-}
-
-/// The licence a planned part comes under: locale-neutral facts a surface words its notice
-/// from. The engine states none for a model, whose licence the catalogue shows.
-#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd, Serialize)]
-pub struct PartLicence {
-    /// The SPDX identifier, or the `LicenseRef-` identifier of an unlisted licence.
-    pub spdx_id: String,
-    /// The licence's own title, which a notice names it by.
-    pub name: String,
-}
-
 /// One piece of an item's plan: the local AI program, or the model the person selected for
 /// one role. `download_bytes` is `None` when the source does not say in advance.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -69,8 +46,6 @@ pub struct PlanPart {
     pub destination: Option<Destination>,
     pub installs_outside_program: bool,
     pub target_version: Option<String>,
-    pub advisories: Vec<Advisory>,
-    pub licence: Option<PartLicence>,
 }
 
 impl PlanPart {
@@ -86,18 +61,7 @@ impl PlanPart {
             "destination": self.destination,
             "installs_outside_program": self.installs_outside_program,
             "target_version": self.target_version,
-            "advisories": self.advisories,
-            "licence": self.licence,
         })
-    }
-
-    /// Whether the part carries a licence notice it cannot word: a commercial-use bar
-    /// without the licence it comes from.
-    fn bars_unnamed_licence(&self) -> bool {
-        self.licence.is_none()
-            && self
-                .advisories
-                .contains(&Advisory::LicenceCommercialUseBarred)
     }
 }
 
@@ -110,7 +74,6 @@ pub struct PlanEntry {
     pub destination: Option<Destination>,
     pub installs_outside_program: bool,
     pub target_version: Option<String>,
-    pub advisories: Vec<Advisory>,
     pub parts: Vec<PlanPart>,
 }
 
@@ -141,7 +104,6 @@ impl PlanEntry {
             destination: Some(destination),
             installs_outside_program: false,
             target_version,
-            advisories: Vec::new(),
             parts: Vec::new(),
         })
     }
@@ -164,9 +126,6 @@ impl PlanEntry {
             {
                 return Err(invalid("a part names its id, hosts and destination once"));
             }
-            if part.bars_unnamed_licence() {
-                return Err(invalid("a licence notice names the licence it is about"));
-            }
         }
         if parts.is_empty() {
             return Err(invalid("an entry in parts has at least one part"));
@@ -177,10 +136,6 @@ impl PlanEntry {
                 hosts.push(host.clone());
             }
         }
-        let advisories: BTreeSet<Advisory> = parts
-            .iter()
-            .flat_map(|part| part.advisories.iter().copied())
-            .collect();
         Ok(Self {
             item,
             download_bytes: Some(known_part_bytes(&parts)),
@@ -188,7 +143,6 @@ impl PlanEntry {
             destination: Some(destination),
             installs_outside_program: parts.iter().any(|part| part.installs_outside_program),
             target_version: None,
-            advisories: advisories.into_iter().collect(),
             parts,
         })
     }
@@ -211,7 +165,6 @@ impl PlanEntry {
             "destination": self.destination,
             "installs_outside_program": self.installs_outside_program,
             "target_version": self.target_version,
-            "advisories": self.advisories,
             "parts": self.parts.iter().map(PlanPart::value).collect::<Vec<_>>(),
         })
     }
@@ -318,12 +271,7 @@ mod tests {
             .collect()
     }
 
-    fn model(
-        role: &str,
-        bytes: Option<u64>,
-        version: Option<&str>,
-        advisories: Vec<Advisory>,
-    ) -> PlanPart {
+    fn model(role: &str, bytes: Option<u64>, version: Option<&str>) -> PlanPart {
         PlanPart {
             part_id: role.into(),
             download_bytes: bytes,
@@ -331,8 +279,6 @@ mod tests {
             destination: Some(Destination::OllamaModels),
             installs_outside_program: false,
             target_version: version.map(str::to_owned),
-            advisories,
-            licence: None,
         }
     }
 
@@ -356,22 +302,15 @@ mod tests {
             destination: None,
             installs_outside_program: true,
             target_version: Some("0.40.10".into()),
-            advisories: Vec::new(),
-            licence: None,
         };
         let local = PlanEntry::of_parts(
             ItemId::LocalAi,
             vec![
                 program,
-                model("column_role_mapping", Some(5_000), Some(TEXT), Vec::new()),
-                model("supply_nature_proposal", None, None, Vec::new()),
-                model("text_extraction", Some(5_000), Some(TEXT), Vec::new()),
-                model(
-                    "vision_transcription",
-                    Some(7_000),
-                    Some(VISION),
-                    Vec::new(),
-                ),
+                model("column_role_mapping", Some(5_000), Some(TEXT)),
+                model("supply_nature_proposal", None, None),
+                model("text_extraction", Some(5_000), Some(TEXT)),
+                model("vision_transcription", Some(7_000), Some(VISION)),
             ],
             Destination::OllamaModels,
         )
@@ -386,7 +325,7 @@ mod tests {
         // product's Python canonical JSON (`content_hash_hex`), not by this crate.
         assert_eq!(
             plan.digest().as_str(),
-            "c11dfaa19cdbcce048e6f3cbead662d059e9edba83460dd7ce6b9d0844875c12"
+            "4d8d19a2ea5da69c0ebc4275ae72a0ac56b086218a0c61230afa4da5a9ffe546"
         );
         assert_eq!(plan.entries[1].download_bytes, Some(1_586_241_413));
         assert_eq!(plan.space.required_bytes, 3_367_785_403);
@@ -456,7 +395,7 @@ mod tests {
         assert!(
             PlanEntry::of_parts(
                 ItemId::Browser,
-                vec![model("a", None, None, Vec::new())],
+                vec![model("a", None, None)],
                 Destination::OllamaModels
             )
             .is_err()
@@ -464,19 +403,12 @@ mod tests {
         assert!(
             PlanEntry::of_parts(
                 ItemId::LocalAi,
-                vec![
-                    model("a", None, None, Vec::new()),
-                    model("a", None, None, Vec::new())
-                ],
+                vec![model("a", None, None), model("a", None, None)],
                 Destination::OllamaModels,
             )
             .is_err()
         );
-        let unnamed = model("a", None, None, vec![Advisory::LicenceCommercialUseBarred]);
-        assert!(
-            PlanEntry::of_parts(ItemId::LocalAi, vec![unnamed], Destination::OllamaModels).is_err()
-        );
-        let mut nowhere = model("a", None, None, Vec::new());
+        let mut nowhere = model("a", None, None);
         nowhere.destination = None;
         assert!(
             PlanEntry::of_parts(ItemId::LocalAi, vec![nowhere], Destination::OllamaModels).is_err()

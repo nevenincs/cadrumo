@@ -74,6 +74,9 @@ struct ChildConfig {
     measure_hardware: bool,
     /// The fixture computer's memory, with no NVIDIA card.
     memory_bytes: u64,
+    /// The local models the child's engine is admitted to provision, as role, name and
+    /// size: `Some` plays the desktop's engine, `None` the role as it ships.
+    admitted: Option<Vec<(String, String, u64)>>,
     arguments: Vec<String>,
 }
 
@@ -112,6 +115,13 @@ fn child_engine(config: &ChildConfig) -> Result<Engine, Error> {
         policy: RetryPolicy::default(),
     })?;
     engine.browser_leading = fake_leading();
+    if let Some(admitted) = &config.admitted {
+        let models = admitted
+            .iter()
+            .map(|(role, name, size)| SelectedModel::new(role, name, *size))
+            .collect::<Result<_, _>>()?;
+        engine.admit_local_ai(LocalModels::new(models)?);
+    }
     Ok(engine)
 }
 
@@ -152,9 +162,9 @@ struct World {
     server: TlsServer,
     ollama: Option<FakeOllama>,
     driver: bool,
-    /// The local models the person selected, as role, name and size; every command but
-    /// `cancel` names them on its command line, as a client does.
-    local_models: Vec<(String, String, u64)>,
+    /// The local models the desktop admits its engine to provision; `None` runs the role
+    /// as it ships, read-only for the local AI.
+    admitted: Option<Vec<(String, String, u64)>>,
     spawned: AtomicUsize,
 }
 
@@ -326,15 +336,17 @@ impl World {
             false,
             Some(fake),
         );
-        world.local_models = [
-            ("vision_transcription", VISION, vision.size()),
-            ("text_extraction", TEXT, text.size()),
-            ("column_role_mapping", TEXT, text.size()),
-            ("supply_nature_proposal", TEXT, text.size()),
-        ]
-        .into_iter()
-        .map(|(role, name, size)| (role.to_owned(), name.to_owned(), size))
-        .collect();
+        world.admitted = Some(
+            [
+                ("vision_transcription", VISION, vision.size()),
+                ("text_extraction", TEXT, text.size()),
+                ("column_role_mapping", TEXT, text.size()),
+                ("supply_nature_proposal", TEXT, text.size()),
+            ]
+            .into_iter()
+            .map(|(role, name, size)| (role.to_owned(), name.to_owned(), size))
+            .collect(),
+        );
         world
     }
 
@@ -354,7 +366,7 @@ impl World {
             server,
             ollama,
             driver,
-            local_models: Vec::new(),
+            admitted: None,
             spawned: AtomicUsize::new(0),
         }
     }
@@ -364,17 +376,7 @@ impl World {
     }
 
     fn config(&self, arguments: &[&str]) -> ChildConfig {
-        let mut arguments: Vec<String> = arguments.iter().map(|word| (*word).to_owned()).collect();
-        if arguments.first().is_some_and(|name| name != "cancel") {
-            for (role, name, size) in &self.local_models {
-                arguments.extend([
-                    "--model".into(),
-                    role.clone(),
-                    name.clone(),
-                    size.to_string(),
-                ]);
-            }
-        }
+        let arguments = arguments.iter().map(|word| (*word).to_owned()).collect();
         ChildConfig {
             root: self.root(),
             pins: self.directory.path().join("pins"),
@@ -388,6 +390,7 @@ impl World {
             free_bytes: Some(1024 * GIB),
             measure_hardware: false,
             memory_bytes: 64 * GIB,
+            admitted: self.admitted.clone(),
             arguments,
         }
     }
@@ -1190,10 +1193,39 @@ fn the_local_ai_installs_its_program_pulls_each_model_once_and_checks_every_role
             "vision_transcription"
         ]
     );
-    assert_eq!(review["plan"]["contract_version"], 2);
+    assert_eq!(review["plan"]["contract_version"], 3);
+    let keys = |value: &Value| {
+        let mut keys: Vec<String> = value.as_object().unwrap().keys().cloned().collect();
+        keys.sort_unstable();
+        keys
+    };
+    assert_eq!(
+        keys(entry),
+        [
+            "destination",
+            "download_bytes",
+            "installs_outside_program",
+            "item_id",
+            "parts",
+            "source_hosts",
+            "target_version"
+        ],
+        "a plan entry carries no licence or fit notice"
+    );
     let parts = entry["parts"].as_array().unwrap();
     for part in parts {
-        assert_eq!(part["licence"], Value::Null, "the engine states no licence");
+        assert_eq!(
+            keys(part),
+            [
+                "destination",
+                "download_bytes",
+                "installs_outside_program",
+                "part_id",
+                "source_hosts",
+                "target_version"
+            ],
+            "a plan part carries no licence or fit notice"
+        );
     }
     assert_eq!(
         parts[1..]
@@ -1334,7 +1366,7 @@ fn the_hardware_floor_is_the_selected_models_size_and_no_selection_is_never_held
         "models of a few hundred bytes fit in any memory"
     );
 
-    world.local_models[0].2 = GIB + 1;
+    world.admitted.as_mut().unwrap()[0].2 = GIB + 1;
     let held = small(&world, &["status"]);
     let local_ai = row(&held.result, "local_ai");
     assert_eq!(
@@ -1355,7 +1387,7 @@ fn the_hardware_floor_is_the_selected_models_size_and_no_selection_is_never_held
     let roomy = world.run(&["status"]);
     assert_eq!(row(&roomy.result, "local_ai")["state"], "absent");
 
-    world.local_models.clear();
+    world.admitted = Some(Vec::new());
     let alone = small(&world, &["plan", "--item", "local_ai"]);
     assert_eq!(alone.result["outcome"], "ok", "{}", alone.result);
     let parts = alone.result["plan"]["entries"][0]["parts"]
@@ -1377,6 +1409,67 @@ fn the_hardware_floor_is_the_selected_models_size_and_no_selection_is_never_held
             .len(),
         0,
         "planning asks the server nothing"
+    );
+}
+
+#[test]
+fn the_role_as_it_ships_reports_the_local_ai_but_never_provisions_it() {
+    let text = StoredModel::new(1);
+    let vision = StoredModel::new(9);
+    let mut world = World::local_ai(&text, &vision);
+    world.admitted = None;
+
+    let status = world.run(&["status"]);
+    let local_ai = row(&status.result, "local_ai");
+    assert_eq!(local_ai["state"], "absent", "{local_ai}");
+    assert_eq!(local_ai["recovery"], "set_up_in_desktop");
+    assert_eq!(
+        local_ai["recovery_action_id"],
+        "operator.provision.local_ai"
+    );
+
+    for command in ["plan", "setup", "remove"] {
+        let refused = world.run(&[command, "--item", "local_ai"]);
+        assert_eq!(
+            (refused.code, &refused.result["outcome"]),
+            (1, &json!("refused")),
+            "{command}: {}",
+            refused.result
+        );
+        assert!(
+            refused.events.iter().all(|event| event["type"] != "review"),
+            "{command}"
+        );
+    }
+
+    for command in ["plan", "setup"] {
+        let every = world.run(&[command]);
+        assert!(
+            every.result["plan"]["entries"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .all(|entry| entry["item_id"] != "local_ai"),
+            "a {command} of every item leaves the local AI out: {}",
+            every.result
+        );
+        assert!(every.events.iter().all(|event| event["type"] != "review"));
+    }
+
+    assert_eq!(world.archive_requests(), 0, "nothing was downloaded");
+    assert!(!world.programs().join(EXECUTABLE).exists());
+    assert_eq!(
+        world
+            .ollama
+            .as_ref()
+            .unwrap()
+            .state
+            .lock()
+            .unwrap()
+            .requests
+            .len(),
+        0,
+        "no model was pulled"
     );
 }
 
@@ -1408,30 +1501,14 @@ fn a_command_line_the_protocol_does_not_have_is_refused_without_an_engine() {
         &["remove"],
         &["cancel", "--item", "browser"],
         &["verify", "--full"],
-        &["plan", "--model", "text_extraction", "", "5"],
-        &["plan", "--model", "text_extraction", TEXT, "0"],
-        &["plan", "--model", "text_extraction", TEXT, "-5"],
-        &["plan", "--model", "text_extraction", TEXT, "+5"],
-        &["plan", "--model", "text_extraction", TEXT, "5.0"],
+        &["plan", "--model", "text_extraction", TEXT, "5"],
         &[
-            "plan",
+            "setup",
+            "--item",
+            "local_ai",
             "--model",
             "text_extraction",
             TEXT,
-            "99999999999999999999",
-        ],
-        &["plan", "--model", "text_extraction", TEXT],
-        &["plan", "--model", "Text Extraction", TEXT, "5"],
-        &["plan", "--model", "text_extraction", "../escape:test", "5"],
-        &[
-            "plan",
-            "--model",
-            "text_extraction",
-            TEXT,
-            "5",
-            "--model",
-            "text_extraction",
-            VISION,
             "5",
         ],
         &["cancel", "--model", "text_extraction", TEXT, "5"],
@@ -1479,54 +1556,18 @@ fn a_command_line_the_protocol_does_not_have_is_refused_without_an_engine() {
             items: vec![ItemId::Browser]
         })
     );
-    assert_eq!(
-        CommandLine::parse(&["status"]).unwrap().local_models,
-        LocalModels::default(),
-        "no selection names no model"
-    );
-    assert_eq!(
-        CommandLine::parse(&[
-            "setup",
-            "--model",
-            "vision_transcription",
-            VISION,
-            "7",
-            "--item",
-            "local_ai",
-            "--model",
-            "text_extraction",
-            TEXT,
-            "5",
-        ])
-        .unwrap(),
-        CommandLine {
-            command: Command::Setup(SetupRequest {
-                items: Some(vec![ItemId::LocalAi]),
-                approved: None,
-            }),
-            local_models: LocalModels::new(vec![
-                SelectedModel::new("text_extraction", TEXT, 5).unwrap(),
-                SelectedModel::new("vision_transcription", VISION, 7).unwrap(),
-            ])
-            .unwrap(),
-        }
-    );
 }
 
-/// The plan's digest for the selection `models`, as the role reports it.
+/// The plan's digest for the admitted selection `models`.
 fn plan_digest(world: &World, models: &[(&str, &str, u64)]) -> String {
-    let mut arguments = vec!["plan".to_owned(), "--item".into(), "local_ai".into()];
-    for (role, name, size) in models {
-        arguments.extend([
-            "--model".into(),
-            (*role).to_owned(),
-            (*name).to_owned(),
-            size.to_string(),
-        ]);
-    }
     let config = ChildConfig {
-        arguments,
-        ..world.config(&["plan"])
+        admitted: Some(
+            models
+                .iter()
+                .map(|(role, name, size)| ((*role).to_owned(), (*name).to_owned(), *size))
+                .collect(),
+        ),
+        ..world.config(&["plan", "--item", "local_ai"])
     };
     let planned = world.start_with(&config).finish();
     assert_eq!(planned.result["outcome"], "ok", "{}", planned.result);
@@ -1546,7 +1587,7 @@ fn the_plan_digest_binds_every_selected_role_name_and_size() {
     assert_eq!(
         plan_digest(&world, &[selection[1], selection[0]]),
         digest,
-        "the order the client names them in is not part of the plan"
+        "the order the desktop admits them in is not part of the plan"
     );
     for changed in [
         [("text_extraction", "synthetic-text:other", 5), selection[1]],

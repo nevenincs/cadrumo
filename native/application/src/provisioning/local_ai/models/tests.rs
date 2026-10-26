@@ -220,8 +220,6 @@ fn the_plan_has_a_part_per_selected_role_and_counts_a_shared_model_once() {
         assert_eq!(part.destination, Some(Destination::OllamaModels));
         assert!(!part.installs_outside_program);
         assert_eq!(part.source_hosts[0].as_str(), "registry.ollama.ai");
-        assert!(part.advisories.is_empty());
-        assert_eq!(part.licence, None, "the engine states no licence");
     }
     assert_eq!(parts[0].target_version.as_deref(), Some(TEXT));
     assert_eq!(parts[0].target_version, parts[1].target_version);
@@ -233,8 +231,6 @@ fn the_plan_has_a_part_per_selected_role_and_counts_a_shared_model_once() {
         destination: Some(Destination::LocalAiProgram),
         installs_outside_program: false,
         target_version: Some("1.0.0".into()),
-        advisories: Vec::new(),
-        licence: None,
     };
     let entry = PlanEntry::of_parts(
         ItemId::LocalAi,

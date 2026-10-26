@@ -40,10 +40,14 @@
 //! selected model through it. Without a manager the server never comes, and the models
 //! fail as `program_not_running`.
 //!
-//! The local models are the person's selection, which the owner hands the engine with
-//! [`Engine::select_local_models`]: role, model name and download size, as the selected
-//! catalogue entries state them. The engine names no model itself, so with no selection
-//! the local AI is its program alone.
+//! Only an owner that admits the local AI with [`Engine::admit_local_ai`] may plan, set up
+//! or remove it; the desktop host alone does, handing over the person's selection: role,
+//! model name and download size, as the selected catalogue entries state them. The engine
+//! names no model itself, so with an empty selection the local AI is its program alone.
+//! An engine that was never admitted serves the local AI read-only: it reports and fully
+//! checks the program, offers [`RecoveryAction::SetUpInDesktop`] where a set-up, update,
+//! retry or resume would be offered, leaves the item out of a setup that names none, and
+//! refuses a plan, setup or removal that names it.
 
 use super::{
     activity::{
@@ -65,8 +69,8 @@ use super::{
     plan::{PlanEntry, SetupPlan},
     receipts::{ReceiptReading, ReceiptStore},
     state::{
-        self, Activity, BlockedReason, CheckMode, ItemState, Observation, Reading, SetupStep,
-        StatusRow,
+        self, Activity, BlockedReason, CheckMode, ItemState, Observation, Reading, RecoveryAction,
+        SetupStep, StatusRow,
     },
     transfer::{Pacing, RetryPolicy, SystemPacing, Transfer, TransferEvent},
 };
@@ -277,8 +281,9 @@ pub struct Engine {
     config: EngineConfig,
     activity: ActivityStore,
     receipts: ReceiptStore,
-    /// The local models the person selected; none until the owner selects them.
-    local_models: LocalModels,
+    /// The person's local model selection when the owner admitted the local AI's
+    /// provisioning; `None` serves the local AI read-only.
+    local_ai: Option<LocalModels>,
     /// Arguments a test's stand-in browser is launched with.
     #[cfg(test)]
     pub(crate) browser_leading: Vec<OsString>,
@@ -519,7 +524,7 @@ impl Engine {
         Ok(Self {
             activity: ActivityStore::new(config.locations.activity.clone())?,
             receipts: ReceiptStore::new(config.locations.receipts.clone())?,
-            local_models: LocalModels::default(),
+            local_ai: None,
             config,
             #[cfg(test)]
             browser_leading: Vec::new(),
@@ -530,10 +535,27 @@ impl Engine {
         &self.config.locations
     }
 
-    /// Sets the local models every later command plans, pulls, checks and removes: the
-    /// person's selection, as the caller read it. It replaces any earlier selection.
-    pub fn select_local_models(&mut self, models: LocalModels) {
-        self.local_models = models;
+    /// Admits the local AI's provisioning with the local models every later command plans,
+    /// pulls, checks and removes: the person's selection, as the desktop read it. It
+    /// replaces any earlier selection. No other owner calls it.
+    pub fn admit_local_ai(&mut self, models: LocalModels) {
+        self.local_ai = Some(models);
+    }
+
+    /// The selection the local AI is admitted with; none for a read-only engine.
+    fn local_models(&self) -> LocalModels {
+        self.local_ai.clone().unwrap_or_default()
+    }
+
+    /// Whether this engine may plan, set up or remove `item`.
+    fn provisions(&self, item: ItemId) -> bool {
+        item != ItemId::LocalAi || self.local_ai.is_some()
+    }
+
+    /// The refusal of a plan, setup or removal naming an item this engine serves read-only.
+    fn read_only_refusal(&mut self, items: &[ItemId]) -> Option<Report> {
+        let item = items.iter().copied().find(|item| !self.provisions(*item))?;
+        Some(Report::new(Outcome::Refused, self.quick_rows(&ItemId::ALL)).for_item(item, None))
     }
 
     /// Every item's state. A quick check reads local facts only; a full check also runs
@@ -672,6 +694,9 @@ impl Engine {
     /// Removes `items`, each under its writer lock: the browser's builds and receipt, and
     /// the local AI's program and selected models.
     pub fn remove(&mut self, items: &[ItemId], events: &mut dyn FnMut(Event)) -> Report {
+        if let Some(refusal) = self.read_only_refusal(items) {
+            return refusal;
+        }
         let sink = Sink::new(events);
         let mut removed = Vec::new();
         for item in ItemId::ALL.into_iter().filter(|item| items.contains(item)) {
@@ -764,10 +789,7 @@ impl Engine {
         match Program::new(pins, platform, self.config.locations.clone()) {
             Ok(Some(program)) => Some(Ok((
                 program,
-                Models::new(
-                    self.local_models.clone(),
-                    self.config.locations.models.clone(),
-                ),
+                Models::new(self.local_models(), self.config.locations.models.clone()),
             ))),
             Ok(None) => None,
             Err(error) => Some(Err(error)),
@@ -865,6 +887,19 @@ impl Engine {
         if row.state != ItemState::Ready {
             row.size_estimate_bytes = survey.entry.as_ref().and_then(|entry| entry.download_bytes);
         }
+        if !self.provisions(item)
+            && matches!(
+                row.recovery,
+                Some(
+                    RecoveryAction::SetUp
+                        | RecoveryAction::Update
+                        | RecoveryAction::TryAgain
+                        | RecoveryAction::Resume
+                )
+            )
+        {
+            row.recovery = Some(RecoveryAction::SetUpInDesktop);
+        }
         row
     }
 
@@ -904,7 +939,7 @@ impl Engine {
                 });
                 if let Some(mut hosts) = network::item_hosts(&self.config.pins, item.as_str()) {
                     if item == ItemId::LocalAi {
-                        hosts.extend(self.local_models.hosts());
+                        hosts.extend(self.local_models().hosts());
                     }
                     let hosts: Vec<HostName> = hosts.into_iter().collect();
                     let report = network::preflight(&self.config.network, &hosts, HOST_TIMEOUT);
@@ -977,6 +1012,9 @@ impl Engine {
         &mut self,
         items: Option<&[ItemId]>,
     ) -> Result<(Vec<StatusRow>, Option<SetupPlan>), Report> {
+        if let Some(refusal) = items.and_then(|requested| self.read_only_refusal(requested)) {
+            return Err(refusal);
+        }
         let mut surveys: Vec<(ItemId, Survey)> = ItemId::ALL
             .into_iter()
             .map(|item| (item, self.survey(item)))
@@ -987,7 +1025,10 @@ impl Engine {
             .collect();
         let running: Vec<ItemId> = rows
             .iter()
-            .filter(|row| items.is_none_or(|requested| requested.contains(&row.item)))
+            .filter(|row| match items {
+                None => self.provisions(row.item),
+                Some(requested) => requested.contains(&row.item),
+            })
             .filter(|row| matches!(row.state, ItemState::Provisioning | ItemState::Verifying))
             .map(|row| row.item)
             .collect();

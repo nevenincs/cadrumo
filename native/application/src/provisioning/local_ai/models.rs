@@ -281,8 +281,6 @@ impl Models {
                 destination: Some(Destination::OllamaModels),
                 installs_outside_program: false,
                 target_version: Some(model.name.to_string()),
-                advisories: Vec::new(),
-                licence: None,
             })
             .collect()
     }

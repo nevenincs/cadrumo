@@ -598,8 +598,6 @@ impl Program {
             destination: Some(Destination::LocalAiProgram),
             installs_outside_program: false,
             target_version: Some(self.version.clone()),
-            advisories: Vec::new(),
-            licence: None,
         }
     }
 

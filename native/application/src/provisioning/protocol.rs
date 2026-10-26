@@ -12,14 +12,11 @@
 //! | `cancel` |                                           | stops setups in other processes    |
 //! | `remove` | `--item <id>`... (at least one)           | removes the items                  |
 //!
-//! Every command but `cancel` also takes `--model <role> <name> <size_bytes>`, once per
-//! local role the person selected a model for: the role, the model's name as its registry
-//! spells it, and its download size in bytes as the selected catalogue entry states it.
-//! These are the local models the command plans, pulls, checks and removes, and a plan
-//! names each one, so its digest binds every role, name and size it pulls. Without any
-//! the local AI is its program alone: the engine chooses no model itself. An empty name,
-//! a size that is not a positive whole number, or a role named twice is refused as an
-//! invalid request.
+//! The role serves the local AI read-only: its engine is never admitted to provision it,
+//! so `status` and `verify` report it with the recovery `set_up_in_desktop`, a `plan`,
+//! `setup` or `remove` that names it is refused, and a setup of every item leaves it out.
+//! Only the desktop, which links the engine and admits the models the person selected,
+//! plans, pulls and removes the local AI.
 //!
 //! Output lines carry a `type`: `started` first, then any `phase`, `progress`, `notice`
 //! and `review` events, and one `result` last. Every value is a closed code or a
@@ -47,7 +44,6 @@
 use super::{
     engine::{Answer, Engine, Event, Report, SetupRequest},
     items::ItemId,
-    local_ai::models::{LocalModels, SelectedModel},
     plan::SetupPlan,
     state::{self, CheckMode},
 };
@@ -90,11 +86,10 @@ impl Command {
     }
 }
 
-/// One command line of the role: its command and the local models the person selected.
+/// One command line of the role.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct CommandLine {
     pub command: Command,
-    pub local_models: LocalModels,
 }
 
 impl CommandLine {
@@ -105,18 +100,8 @@ impl CommandLine {
         let mut items = Vec::new();
         let mut full = false;
         let mut approve = None;
-        let mut models = Vec::new();
         while let Some(word) = words.next() {
             match word? {
-                "--model" if name != "cancel" => {
-                    let role = words.next()??;
-                    let model = words.next()??;
-                    let size = words.next()??;
-                    if !size.bytes().all(|c| c.is_ascii_digit()) {
-                        return None;
-                    }
-                    models.push(SelectedModel::new(role, model, size.parse().ok()?).ok()?);
-                }
                 "--item" => {
                     let item = ItemId::parse(words.next()??)?;
                     if !items.contains(&item) {
@@ -151,10 +136,7 @@ impl CommandLine {
             "remove" if !items.is_empty() => Command::Remove { items },
             _ => return None,
         };
-        Some(Self {
-            command,
-            local_models: LocalModels::new(models).ok()?,
-        })
+        Some(Self { command })
     }
 }
 
@@ -337,11 +319,7 @@ pub fn serve(
         output: Arc::new(Mutex::new(output)),
         cancellation: cancellation.clone(),
     };
-    let Some(CommandLine {
-        command,
-        local_models,
-    }) = CommandLine::parse(arguments)
-    else {
+    let Some(CommandLine { command }) = CommandLine::parse(arguments) else {
         lines.send(&json!({
             "type": "result",
             "command": null,
@@ -379,7 +357,6 @@ pub fn serve(
             return 1;
         }
     };
-    engine.select_local_models(local_models);
     let mut events = |event| lines.send(&event_value(event));
     let report = match &command {
         Command::Status { mode, items } => engine.status(*mode, items, &mut events, &cancellation),

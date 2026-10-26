@@ -15,7 +15,7 @@ related:
   - '[[2026-10-13-agent-attachments-adr]]'
 modified: '2026-10-26'
 body_schema: body-v2
-body_hash: 'sha256:2585d6deaf66725be5b047c93854768d649dd8c09e501a543e1238f1483dce73'
+body_hash: 'sha256:2e6f174463d2eedcb02be877b234792fa75d9b3eb4b7cd459ff1a4f7e5026720'
 ---
 
 # `agent-owned-models` plan
@@ -38,7 +38,7 @@ Scope by phase:
 
 Authorization basis, 2026-10-26: the owner's first-hand ruling in conversation that only the desktop provisions the local AI program and models, that no `src/cadrumo*` Python module and no cadrumo-agent can pull, download or install them, that every model capability goes through cadrumo-agent, and that divergent and superseded code is deleted ("complete the work"). It is recorded as amendment 2026-10-26 of `2026-10-24-rust-component-provisioning-adr`, `2026-10-25-agent-owned-models-adr` and `2026-10-18-dependency-provisioning-unified-setup-adr`. It rescopes `P04.S22`, `P05.S25` and `P05.S28` and adds `P04.S30`. The selection is set on the desktop alone; the CLI, TUI and MCP set no selection.
 
-Shared contract for `P04.S22`, `P04.S30` and `P05.S25`: the recovery code `set_up_in_desktop` (Rust `RecoveryAction::SetUpInDesktop`, Python `DependencyRecoveryAction.SET_UP_IN_DESKTOP`), carried with the action id `operator.provision.local_ai`, is what the read-only role gives the local AI row in place of set-up, update, try-again and resume. A component command line naming `local_ai` for `plan`, `setup` or `remove`, or carrying `--model`, is an invalid request.
+Shared contract for `P04.S22`, `P04.S30` and `P05.S25`: the recovery code `set_up_in_desktop` (Rust `RecoveryAction::SetUpInDesktop`, Python `DependencyRecoveryAction.SET_UP_IN_DESKTOP`), carried with the action id `operator.provision.local_ai`, is what the read-only role gives the local AI row in place of set-up, update, try-again and resume. The role's engine is never admitted to provision the local AI, so a `plan`, `setup` or `remove` naming `local_ai` is answered with the outcome `refused` (exit 1) and its row's `set_up_in_desktop` recovery, and a setup of every item leaves it out; a command line carrying `--model` is an invalid request (exit 64).
 
 ## Steps
 
@@ -83,7 +83,7 @@ Drop model pins from the engine, take the selected local models as input, pull t
 - [x] `P04.S19` - Remove model pins, model items and licence data from the engine and the staged pin data; keep program pins; `native/application/src/provisioning/pins.rs, native/application/src/provisioning/items.rs, native/application/src/provisioning/local_ai/models.rs`.
 - [x] `P04.S20` - Accept the selected local models as role, model-name and size_bytes triples in the plan and setup commands and bind them in the plan digest; `native/application/src/provisioning/protocol.rs, native/application/src/provisioning/plan.rs, native/application/src/provisioning/role_host.rs`.
 - [x] `P04.S21` - Pull each selected model on the supervised server, report rows from the selection and Ollama's installed list, and drop digest-based stale; compute the hardware floor from the supplied size_bytes; `native/application/src/provisioning/local_ai/models.rs, native/application/src/provisioning/local_ai/hardware.rs, native/application/src/provisioning/state.rs, native/application/src/provisioning/engine.rs`.
-- [ ] `P04.S22` - Give the engine a local AI admission that only the desktop host grants with the selected local models, serve the local AI read-only from the components role (no --model, refuse plan, setup and removal naming local_ai, recovery set_up_in_desktop), and delete the model-pin residue (licence and override advisories, the different-model-version stale reason); `native/application/src/provisioning/engine.rs, native/application/src/provisioning/protocol.rs, native/application/src/provisioning/state.rs, native/application/src/provisioning/plan.rs`.
+- [x] `P04.S22` - Give the engine a local AI admission that only the desktop host grants with the selected local models, serve the local AI read-only from the components role (no --model, refuse plan, setup and removal naming local_ai, recovery set_up_in_desktop), and delete the model-pin residue (licence and override advisories, the different-model-version stale reason); `native/application/src/provisioning/engine.rs, native/application/src/provisioning/protocol.rs, native/application/src/provisioning/state.rs, native/application/src/provisioning/plan.rs`.
 - [x] `P04.S23` - Prove the pull path with a synthetic model id against the fake Ollama server and remove the remaining model literals from engine tests; `native/application/src/provisioning/local_ai/fake_ollama.rs, native/application/src/provisioning/local_ai/models`.
 - [ ] `P04.S30` - Read the per-role selection and cadrumo-agent's catalogue cards in the desktop setup host and admit the in-process engine with each keyless on-host lane's selection as role, model and size triples before every command, refusing a selection whose card states no size; drop the start command's model argument and the pinned model fixtures; `native/desktop/src-tauri/src/shell/setup/components.rs, native/desktop/src-tauri/src/shell/setup/wire.rs, native/desktop/frontend/src/shell/tauriHost.ts, native/desktop/frontend/src/dev/setupFixture.ts`.
 
