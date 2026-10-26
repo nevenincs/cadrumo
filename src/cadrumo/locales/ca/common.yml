@@ -3433,28 +3433,41 @@ desktop:
       blocked: 'Cal abans de sincronitzar:'
       cancel: Atura la sincronització
       checking: S’està comprovant què necessita la sincronització…
+      conflict: La revisió ha canviat. Actualitza la sincronització i torna-la a revisar.
       device: Aprova la sol·licitud d’accés a l’aplicació Cl@ve.
       done: Sincronització completada. Revisa les dades que encara falten al perfil.
+      failed: La sincronització ha fallat sense canviar el teu perfil. Comprova l’accés
+        a l’AEAT i torna-ho a provar.
       identity: Afegeix el NIF o NIE
       incoming: AEAT
       preserve: Conserva la resposta desada.
+      profile_mismatch: La sol·licitud censal no coincideix amb el perfil de la sessió.
+        Actualitza el teu perfil i, si persisteix, comunica el codi mostrat.
       pull: Consulta les dades censals
       reading: Consultant les dades censals…
       ready: L’accés a l’AEAT està configurat. Podràs revisar les dades obtingudes
         abans de desar-les.
+      refused: El servei ha rebutjat la sincronització. Comprova el perfil i l’accés
+        a l’AEAT abans de tornar-ho a provar.
       reject: Descarta els canvis
       review_count: 'Valors de l’AEAT per revisar: {count}'
       review_hint: Els canvis es mostren a sota, al seu lloc. No es desa res fins
         que confirmis.
       scope: Importa el domicili fiscal, el codi postal i la referència cadastral
         del Cens. La resta de dades del perfil requereixen les teves respostes.
+      session: La teva sessió ha acabat. Torna a iniciar sessió per continuar.
       setup: Configura l’accés a l’AEAT
       source: Desat des del cens de l’AEAT
       stopped: Sincronització aturada. No s’han desat canvis al perfil.
+      subject_busy: Hi ha una altra sincronització activa per a aquest perfil. Espera
+        que acabi i, si continua bloquejada, comunica el codi mostrat.
       title: Sincronitza amb l’AEAT
       unavailable: No s’ha pogut comprovar la sincronització. Prova d’actualitzar.
-      unknown: El resultat no està confirmat. Actualitza abans d’iniciar una altra
-        sincronització.
+      unknown: No s’ha pogut confirmar l’estat de la sincronització. Actualitza per
+        tornar-lo a comprovar. No en podràs iniciar cap altra fins que es resolgui
+        aquesta operació.
+      unknown_start: No s’ha pogut confirmar si s’ha iniciat la sincronització. No
+        n’iniciïs cap altra; contacta amb suport i indica el codi unknown.
       unsupported: Aquest accés requereix una interacció disponible al terminal. Cancel·la
         aquest intent i sincronitza el Cens des del terminal.
     close: Tanca el perfil

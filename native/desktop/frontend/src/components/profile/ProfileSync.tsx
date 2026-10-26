@@ -57,10 +57,41 @@ export function ProfileSync({
   if (error || snapshot?.state === "unknown") {
     glyph = <Icon name="alert" />;
     status = t(
-      uncertain || snapshot?.state === "unknown"
-        ? "desktop.profile.censo.unknown"
-        : "desktop.profile.censo.unavailable",
+      uncertain && !snapshot
+        ? "desktop.profile.censo.unknown_start"
+        : uncertain || snapshot?.state === "unknown"
+          ? "desktop.profile.censo.unknown"
+          : error === "profile_mismatch"
+            ? "desktop.profile.censo.profile_mismatch"
+            : error === "subject_busy"
+              ? "desktop.profile.censo.subject_busy"
+              : error === "refused"
+                ? "desktop.profile.censo.refused"
+                : error === "conflict"
+                  ? "desktop.profile.censo.conflict"
+                  : error === "not_signed_in" ||
+                      error === "authentication_required" ||
+                      error === "session_inactive" ||
+                      error === "session_expired"
+                    ? "desktop.profile.censo.session"
+                    : "desktop.profile.censo.unavailable",
     );
+    if (
+      error &&
+      [
+        "profile_mismatch",
+        "subject_busy",
+        "authentication_required",
+        "session_inactive",
+        "session_expired",
+      ].includes(error)
+    ) {
+      status = (
+        <span>
+          {status} ({error})
+        </span>
+      );
+    }
     actions = (
       <Button size="xs" variant="outline" disabled={busy} onClick={sync.retry}>
         {t("desktop.profile.refresh")}
@@ -193,6 +224,11 @@ export function ProfileSync({
       case "stopped":
         glyph = <Icon name="alert" />;
         status = t("desktop.profile.censo.stopped");
+        actions = pull;
+        break;
+      case "failed":
+        glyph = <Icon name="alert" />;
+        status = t("desktop.profile.censo.failed");
         actions = pull;
         break;
       case "unsupported":

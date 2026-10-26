@@ -3386,26 +3386,39 @@ desktop:
       blocked: 'Needed before you can sync:'
       cancel: Stop synchronization
       checking: Checking what synchronization needs…
+      conflict: The review has changed. Refresh the sync and review it again.
       device: Approve the sign-in request in your Cl@ve app.
       done: Synchronization complete. Review any remaining gaps in your profile.
+      failed: The sync failed without changing your profile. Check AEAT access and
+        try again.
       identity: Add tax ID
       incoming: AEAT
       preserve: Keep your saved answer.
+      profile_mismatch: The census request does not match the signed-in profile. Refresh
+        your profile; if this persists, report the code shown.
       pull: Retrieve Censo data
       reading: Retrieving Censo data…
       ready: AEAT sign-in is set up. You can review the retrieved information before
         saving.
+      refused: The runtime refused the sync. Check the profile and AEAT access settings
+        before trying again.
       reject: Discard changes
       review_count: 'AEAT values to review: {count}'
       review_hint: Changes are shown in place below. Nothing is saved until you confirm.
       scope: Import your fiscal address, postcode and cadastral reference from Censo.
         Other profile details still need your answers.
+      session: Your session has ended. Sign in again to continue.
       setup: Set up AEAT sign-in
       source: Saved from AEAT Censo
       stopped: Synchronization stopped. No profile changes were saved.
+      subject_busy: Another sync for this profile is still active. Wait for it to
+        finish; if it remains blocked, report the code shown.
       title: Sync from AEAT
       unavailable: Could not check synchronization. Try refreshing.
-      unknown: The result is not confirmed. Refresh before starting another synchronization.
+      unknown: We could not confirm the sync’s status. Refresh to check it again.
+        Another sync remains blocked until this operation is resolved.
+      unknown_start: We could not confirm whether the sync started. Do not start another
+        sync; contact support with code unknown.
       unsupported: This sign-in needs an interaction available in the terminal. Cancel
         this attempt and use Censo sync in the terminal.
     close: Close profile

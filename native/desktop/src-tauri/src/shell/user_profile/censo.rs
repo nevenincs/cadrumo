@@ -88,11 +88,27 @@ impl Session {
         if reply["kind"] != "operation_observed"
             || p["operation_id"] != self.operation
             || p["definition_id"] != DEFINITION
-            || p["subject_ref"] != format!("profile:{}", self.profile)
+            || p["subject_ref"] != self.profile
         {
             return Err(protocol());
         }
         Ok(p.clone())
+    }
+    async fn initial_status(&mut self) -> Snapshot {
+        match self.status().await {
+            Ok(snapshot) => snapshot,
+            Err(_) => {
+                let snapshot = Snapshot {
+                    operation: self.operation.clone(),
+                    state: "unknown",
+                    can_cancel: false,
+                    review_digest: None,
+                    fields: vec![],
+                };
+                self.snapshot = Some(snapshot.clone());
+                snapshot
+            }
+        }
     }
     async fn status(&mut self) -> Result<Snapshot> {
         let p = self.observe().await?;
@@ -111,8 +127,10 @@ impl Session {
                 )
                 .await?;
                 settled_state(&result, &self.operation)?
-            } else if p["effect"] == "none" {
+            } else if p["effect"] == "none" && p["terminal_condition"] == "cancelled" {
                 "stopped"
+            } else if p["effect"] == "none" {
+                "failed"
             } else {
                 "unknown"
             };
@@ -221,6 +239,9 @@ pub async fn profile_censo_readiness(
     }
     Ok(answer)
 }
+async fn submit(person: &HeldPerson, profile: &str, payload: Value) -> Result<String> {
+    super::super::relay::submit(person, DEFINITION, profile, payload, true).await
+}
 #[tauri::command]
 pub async fn profile_censo_start(
     host: State<'_, Arc<ProfileHost>>,
@@ -236,7 +257,7 @@ pub async fn profile_censo_start(
         if same_session {
             let snapshot = existing.status().await?;
             existing.check(&host).await?;
-            if !matches!(snapshot.state, "done" | "stopped") {
+            if !matches!(snapshot.state, "done" | "stopped" | "failed") {
                 return Ok(snapshot);
             }
         }
@@ -259,15 +280,7 @@ pub async fn profile_censo_start(
     {
         return Err(protocol());
     }
-    let reply = ProfileHost::call(&person,json!({"action":"operation_submit","definition_id":DEFINITION,"subject_ref":format!("profile:{profile}"),"payload":prepared["operation_request"]})).await.map_err(|_| Failure::new("unknown"))?;
-    if reply["kind"] == "operation_refused" {
-        return Err(Failure::new("refused"));
-    }
-    let operation = reply["operation_id"]
-        .as_str()
-        .filter(|id| super::super::setup::wire::is_hex64(id))
-        .ok_or_else(|| Failure::new("unknown"))?
-        .to_owned();
+    let operation = submit(&person, &profile, prepared["operation_request"].clone()).await?;
     let mut next = Session {
         person,
         profile,
@@ -276,10 +289,10 @@ pub async fn profile_censo_start(
         review: None,
         snapshot: None,
     };
-    let result = next.status().await;
-    next.check(&host).await?;
+    let result = next.initial_status().await;
     *session = Some(next);
-    result
+    session.as_ref().unwrap().check(&host).await?;
+    Ok(result)
 }
 #[tauri::command]
 pub async fn profile_censo_status(
@@ -405,6 +418,191 @@ fn profile_censo_unobserve(host: State<'_, Arc<ProfileHost>>, subscription: u32)
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(windows)]
+    #[tokio::test]
+    async fn submission_and_review_bind_the_bare_profile_and_settle() {
+        use super::super::super::scripted::{OPERATION, PROFILE, holder, observed, resulted, step};
+        let held = holder(|_| {
+            vec![
+                step(
+                    "operation_submit",
+                    json!([
+                        ["definition_id", DEFINITION],
+                        ["subject_ref", PROFILE],
+                        ["payload.baseline.profile_id", PROFILE]
+                    ]),
+                    json!({"kind":"operation_submitted","operation_id":OPERATION}),
+                    false,
+                ),
+                step(
+                    "operation_observe",
+                    json!([["operation_id", OPERATION]]),
+                    observed(
+                        DEFINITION,
+                        PROFILE,
+                        "running",
+                        json!({"pending_interaction":{"disposition":"review_available","revision":1,"interaction_id":"i"}}),
+                    ),
+                    false,
+                ),
+                step(
+                    "operation_review",
+                    json!([["operation_id", OPERATION]]),
+                    json!({"kind":"operation_review","operation_id":OPERATION,"interaction_id":"i","revision":1,"review_digest":"b".repeat(64),"document":{"projection":{"projection_version":1,"fields":[{"path":"contact.postcode","intent":"adopt","observed_value":"29001"}]}}}),
+                    false,
+                ),
+                step(
+                    "operation_observe",
+                    json!([["operation_id", OPERATION]]),
+                    observed(
+                        DEFINITION,
+                        PROFILE,
+                        "terminal",
+                        json!({"terminal_condition":"succeeded"}),
+                    ),
+                    false,
+                ),
+                step(
+                    "operation_result",
+                    json!([["operation_id", OPERATION]]),
+                    resulted(DEFINITION, json!({"outcome":"applied"})),
+                    false,
+                ),
+            ]
+        });
+        let operation = submit(
+            &held.person,
+            PROFILE,
+            json!({"baseline":{"profile_id":PROFILE}}),
+        )
+        .await
+        .unwrap();
+        let mut session = Session {
+            person: held.person,
+            profile: PROFILE.into(),
+            operation,
+            effective: json!([{"path":"contact.postcode","effective_value":"29005"}]),
+            review: None,
+            snapshot: None,
+        };
+        let review = session.status().await.unwrap();
+        assert_eq!(review.state, "review");
+        assert_eq!(review.fields[0].incoming.as_deref(), Some("29001"));
+        assert_eq!(session.status().await.unwrap().state, "done");
+    }
+
+    #[cfg(windows)]
+    #[tokio::test]
+    async fn initial_observation_failure_keeps_operation_for_recovery() {
+        use super::super::super::scripted::{OPERATION, PROFILE, holder, observed, step};
+        let held = holder(|_| {
+            vec![
+                step(
+                    "operation_observe",
+                    json!([["operation_id", OPERATION]]),
+                    json!({"kind":"operation_refused", "code":"unavailable"}),
+                    false,
+                ),
+                step(
+                    "operation_observe",
+                    json!([["operation_id", OPERATION]]),
+                    observed(DEFINITION, PROFILE, "running", json!({})),
+                    false,
+                ),
+            ]
+        });
+        let mut session = Session {
+            person: held.person,
+            profile: PROFILE.into(),
+            operation: OPERATION.into(),
+            effective: json!([]),
+            review: None,
+            snapshot: None,
+        };
+        let first = session.initial_status().await;
+        assert_eq!(first.state, "unknown");
+        assert_eq!(first.operation, OPERATION);
+        assert_eq!(session.status().await.unwrap().state, "reading");
+    }
+
+    #[cfg(windows)]
+    #[tokio::test]
+    async fn failed_no_effect_is_distinct_from_cancellation() {
+        use super::super::super::scripted::{OPERATION, PROFILE, holder, observed, step};
+        let held = holder(|_| {
+            vec![
+                step(
+                    "operation_observe",
+                    json!([]),
+                    observed(
+                        DEFINITION,
+                        PROFILE,
+                        "terminal",
+                        json!({"terminal_condition":"failed", "effect":"none"}),
+                    ),
+                    false,
+                ),
+                step(
+                    "operation_observe",
+                    json!([]),
+                    observed(
+                        DEFINITION,
+                        PROFILE,
+                        "terminal",
+                        json!({"terminal_condition":"cancelled", "effect":"none"}),
+                    ),
+                    false,
+                ),
+            ]
+        });
+        let mut session = Session {
+            person: held.person,
+            profile: PROFILE.into(),
+            operation: OPERATION.into(),
+            effective: json!([]),
+            review: None,
+            snapshot: None,
+        };
+        assert_eq!(session.status().await.unwrap().state, "failed");
+        assert_eq!(session.status().await.unwrap().state, "stopped");
+    }
+
+    #[cfg(windows)]
+    #[tokio::test]
+    async fn submission_keeps_refusal_reason_and_lost_admission_uncertain() {
+        use super::super::super::scripted::{PROFILE, holder, step};
+        for (reply, code, reason) in [
+            (
+                json!({"kind":"operation_refused","code":"profile_mismatch"}),
+                "refused",
+                Some("profile_mismatch"),
+            ),
+            (
+                json!({"kind":"operation_refused","code":"unavailable"}),
+                "unknown",
+                None,
+            ),
+        ] {
+            let held = holder(|_| {
+                vec![step(
+                    "operation_submit",
+                    json!([["subject_ref", PROFILE]]),
+                    reply.clone(),
+                    false,
+                )]
+            });
+            let error = submit(
+                &held.person,
+                PROFILE,
+                json!({"baseline":{"profile_id":PROFILE}}),
+            )
+            .await
+            .unwrap_err();
+            assert_eq!(error.code, code);
+            assert_eq!(error.reason.as_deref(), reason);
+        }
+    }
+
     #[test]
     fn successful_rejection_is_not_presented_as_a_saved_profile() {
         let mut result = json!({"kind":"operation_result","operation_id":"op","definition_id":DEFINITION,"document":{"projection":{"outcome":"rejected"}}});

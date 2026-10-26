@@ -205,7 +205,12 @@ export const UserProfilePage = memo(function UserProfilePage({
             .map((field) => field.path),
         ),
       );
-    if (syncState === "done" || syncState === "stopped") reviewed.current = [];
+    if (
+      syncState === "done" ||
+      syncState === "stopped" ||
+      syncState === "failed"
+    )
+      reviewed.current = [];
   }, [syncState]);
 
   const saved = profile.saved;
@@ -420,7 +425,8 @@ export const UserProfilePage = memo(function UserProfilePage({
     !sync.uncertain &&
     (!sync.snapshot ||
       sync.snapshot.state === "done" ||
-      sync.snapshot.state === "stopped");
+      sync.snapshot.state === "stopped" ||
+      sync.snapshot.state === "failed");
   const changePassword = host.profiles?.changePassword;
   const profileActions: PageAction[] = [
     ...(host.censo

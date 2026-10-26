@@ -9,28 +9,46 @@ declare global {
       starts(): number;
       answers(): number;
       statuses(): number;
+      readinessChecks(): number;
       burst(): void;
       /** Holds every answer in flight until `release`. */
       hold(): void;
       release(): void;
+      holdReadiness(): void;
+      releaseReadiness(): void;
+      releaseStatus(): void;
     };
   }
 }
 /** Browser-only Censo outcomes. Never contacts AEAT. */
 export function censoFixture(
   profile: UserProfilePort & { peek(path: string): string | null },
-  mode?: "ready" | "nie" | "uncertain",
+  mode?: "ready" | "nie" | "uncertain" | "refused" | "initial_unknown",
 ): CensoPort {
-  let ready = mode === "ready" || mode === "uncertain",
+  let ready =
+      mode === "ready" ||
+      mode === "uncertain" ||
+      mode === "refused" ||
+      mode === "initial_unknown",
     failure = mode === "uncertain",
     starts = 0,
     answers = 0;
   let snapshot: CensoSnapshot | null = null;
+  let releaseStatus = () => {};
+  const statusHeld =
+    mode === "initial_unknown"
+      ? new Promise<void>((resolve) => {
+          releaseStatus = resolve;
+        })
+      : null;
   let statuses = 0;
+  let readinessChecks = 0;
   const listeners = new Set<() => void>();
   // An answer waits here while held: released by the scenario, not a timer.
   let held: Promise<void> | null = null;
   let release = () => {};
+  let readinessHeld: Promise<void> | null = null;
+  let releaseReadiness = () => {};
   const controls = {
     ready() {
       ready = true;
@@ -41,6 +59,7 @@ export function censoFixture(
     starts: () => starts,
     answers: () => answers,
     statuses: () => statuses,
+    readinessChecks: () => readinessChecks,
     burst() {
       for (let i = 0; i < 25; i++) listeners.forEach((listener) => listener());
     },
@@ -53,6 +72,16 @@ export function censoFixture(
       });
     },
     release: () => release(),
+    holdReadiness() {
+      readinessHeld ??= new Promise<void>((resolve) => {
+        releaseReadiness = () => {
+          readinessHeld = null;
+          resolve();
+        };
+      });
+    },
+    releaseReadiness: () => releaseReadiness(),
+    releaseStatus: () => releaseStatus(),
   };
   return {
     async observe(changed) {
@@ -63,6 +92,8 @@ export function censoFixture(
     },
     async readiness() {
       window.__scenarioCenso = controls;
+      await readinessHeld;
+      readinessChecks++;
       const taxId = profile.peek("identity.tax_id");
       const requirements = [
         {
@@ -98,6 +129,8 @@ export function censoFixture(
     async start() {
       starts++;
       if (failure) throw { code: "unknown" };
+      if (mode === "refused")
+        throw { code: "refused", reason: "profile_mismatch" };
       snapshot = {
         operation: "a".repeat(64),
         state: "review",
@@ -124,10 +157,19 @@ export function censoFixture(
           },
         ],
       };
+      if (mode === "initial_unknown")
+        return {
+          ...snapshot,
+          state: "unknown",
+          can_cancel: false,
+          review_digest: null,
+          fields: [],
+        };
       return structuredClone(snapshot);
     },
     async status() {
       statuses++;
+      await statusHeld;
       if (!snapshot || failure) throw { code: "unavailable" };
       return structuredClone(snapshot);
     },

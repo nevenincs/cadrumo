@@ -19,6 +19,7 @@ export type CensoSnapshot = {
     | "review"
     | "done"
     | "stopped"
+    | "failed"
     | "unknown"
     | "unsupported";
   can_cancel: boolean;
@@ -68,12 +69,23 @@ export const censoRequirementKeys = {
 
 /** Codes after which a Censo act is known not to have happened. */
 const SETTLED_FAILURES = ["refused", "conflict", "not_signed_in"];
+type CensoError =
+  | "profile_mismatch"
+  | "subject_busy"
+  | "authentication_required"
+  | "session_inactive"
+  | "session_expired"
+  | "refused"
+  | "conflict"
+  | "not_signed_in"
+  | "unavailable"
+  | "unknown";
 
 /**
  * One profile's Censo synchronization: what it still needs, and the pull in
  * progress. Runtime pushes drive the pull; a slow check recovers a lost cue.
  * A failure whose outcome is not known is `uncertain`, and nothing is retried
- * or started again until the person refreshes.
+ * or started again without an authoritative operation status.
  */
 export function useCensoSync(
   port: CensoPort | undefined,
@@ -84,7 +96,8 @@ export function useCensoSync(
   const [readiness, setReadiness] = useState<CensoReadiness | null>(null);
   const [snapshot, setSnapshot] = useState<CensoSnapshot | null>(null);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState(false);
+  const [actionError, setActionError] = useState<CensoError | null>(null);
+  const [readinessError, setReadinessError] = useState(false);
   const [uncertain, setUncertain] = useState(false);
   const [reload, setReload] = useState(0);
   const settled = useRef(onSettled);
@@ -93,7 +106,8 @@ export function useCensoSync(
   const revision = profile?.record_revision ?? null;
   const operation = snapshot?.operation;
   const state = snapshot?.state;
-  const finished = state === "done" || state === "stopped";
+  const finished =
+    state === "done" || state === "stopped" || state === "failed";
 
   useEffect(() => {
     if (!active || !port || id === null || operation) return;
@@ -103,11 +117,11 @@ export function useCensoSync(
       .then((value) => {
         if (live) {
           setReadiness(value);
-          setError(false);
+          setReadinessError(false);
         }
       })
       .catch(() => {
-        if (live) setError(true);
+        if (live) setReadinessError(true);
       });
     return () => {
       live = false;
@@ -134,11 +148,11 @@ export function useCensoSync(
         const value = await port.status(id, operation);
         if (live) {
           setSnapshot(value);
-          setError(false);
+          setActionError(null);
           setUncertain(false);
         }
       } catch {
-        if (live) setError(true);
+        if (live) setActionError("unavailable");
       } finally {
         fetching = false;
       }
@@ -167,7 +181,7 @@ export function useCensoSync(
           }
         })
         .catch(() => {
-          if (live) setError(true);
+          if (live) setActionError("unavailable");
         });
     return () => {
       live = false;
@@ -182,9 +196,9 @@ export function useCensoSync(
   }, [finished, operation]);
 
   const run = async (decision?: CensoDecision) => {
-    if (!port || id === null || busy) return;
+    if (!port || id === null || busy || (uncertain && !snapshot)) return;
     setBusy(true);
-    setError(false);
+    setActionError(null);
     try {
       const value =
         decision && snapshot
@@ -197,11 +211,35 @@ export function useCensoSync(
           : await port.start(id);
       setSnapshot(value);
     } catch (failure) {
-      setError(true);
       const code =
         typeof failure === "object" && failure && "code" in failure
           ? String(failure.code)
           : "";
+      const reason =
+        typeof failure === "object" &&
+        failure &&
+        "reason" in failure &&
+        typeof failure.reason === "string"
+          ? failure.reason
+          : "";
+      if (
+        code === "refused" &&
+        (reason === "profile_mismatch" ||
+          reason === "subject_busy" ||
+          reason === "authentication_required" ||
+          reason === "session_inactive" ||
+          reason === "session_expired")
+      ) {
+        setActionError(reason);
+      } else if (
+        code === "refused" ||
+        code === "conflict" ||
+        code === "not_signed_in"
+      ) {
+        setActionError(code);
+      } else {
+        setActionError("unknown");
+      }
       if (!SETTLED_FAILURES.includes(code)) setUncertain(true);
     } finally {
       setBusy(false);
@@ -212,7 +250,7 @@ export function useCensoSync(
     readiness,
     snapshot,
     busy,
-    error,
+    error: actionError ?? (readinessError ? "unavailable" : null),
     uncertain,
     start: () => run(),
     answer: (decision: CensoDecision) => run(decision),
@@ -225,7 +263,8 @@ export function useCensoSync(
     /** Checks again after a failure; an uncertain outcome stays uncertain
      * until a check answers. */
     retry: () => {
-      setError(false);
+      if (!uncertain) setActionError(null);
+      setReadinessError(false);
       setReload((value) => value + 1);
     },
   };

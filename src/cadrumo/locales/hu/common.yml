@@ -3415,27 +3415,43 @@ desktop:
       blocked: 'A szinkronizáláshoz szükséges:'
       cancel: Szinkronizálás leállítása
       checking: A szinkronizálás feltételeinek ellenőrzése…
+      conflict: Az ellenőrzés megváltozott. Frissítsd a szinkronizálást, és ellenőrizd
+        újra.
       device: Hagyd jóvá a bejelentkezést a Cl@ve alkalmazásban.
       done: A szinkronizálás befejeződött. Ellenőrizd a profil még hiányzó adatait.
+      failed: A szinkronizálás sikertelen volt, a profilod nem változott. Ellenőrizd
+        az AEAT-hozzáférést, és próbáld újra.
       identity: Adóazonosító megadása
       incoming: AEAT
       preserve: A mentett válasz megőrzése.
+      profile_mismatch: Az adóhatósági nyilvántartásra vonatkozó kérés nem egyezik
+        a bejelentkezett profillal. Frissítsd a profilodat, és ha a hiba továbbra
+        is fennáll, jelezd a megjelenő kódot.
       pull: Censo-adatok lekérése
       reading: Censo-adatok lekérése…
       ready: Az AEAT-bejelentkezés be van állítva. Mentés előtt áttekintheted a lekért
         adatokat.
+      refused: A szolgáltatás elutasította a szinkronizálást. Újrapróbálás előtt ellenőrizd
+        a profilt és az AEAT-hozzáférést.
       reject: Módosítások elvetése
       review_count: 'Ellenőrzendő AEAT-értékek: {count}'
       review_hint: A változások lent, a helyükön látszanak. Semmi sem mentődik, amíg
         meg nem erősíted.
       scope: Adócím, irányítószám és kataszteri azonosító átvétele a Censóból. A profil
         többi adatát neked kell megadnod.
+      session: A munkameneted véget ért. A folytatáshoz jelentkezz be újra.
       setup: AEAT-bejelentkezés beállítása
       source: Az AEAT censóból mentve
       stopped: A szinkronizálás leállt. A profil nem módosult.
+      subject_busy: Ehhez a profilhoz még egy másik szinkronizálás folyamatban van.
+        Várd meg, amíg befejeződik; ha továbbra is elakad, jelezd a megjelenő kódot.
       title: Szinkronizálás az AEAT-tól
       unavailable: A szinkronizálás nem ellenőrizhető. Próbálj frissíteni.
-      unknown: Az eredmény nem igazolt. Új szinkronizálás előtt frissíts.
+      unknown: Nem sikerült megerősíteni a szinkronizálás állapotát. Frissítsd az
+        ismételt ellenőrzéshez. Amíg ez a művelet nem rendeződik, másik szinkronizálás
+        nem indítható.
+      unknown_start: Nem sikerült megerősíteni, hogy elindult-e a szinkronizálás.
+        Ne indíts másikat; fordulj az ügyfélszolgálathoz az unknown kóddal.
       unsupported: Ehhez a bejelentkezéshez a terminálban elérhető művelet szükséges.
         Szakítsd meg ezt a próbálkozást, és használd a terminál Censo-szinkronizálását.
     close: Profil bezárása

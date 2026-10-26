@@ -723,15 +723,73 @@ test("an uncertain Censo start is not silently retried", async ({ page }) => {
     exact: true,
   });
   await pull.click();
-  await expect(region).toContainText(label("desktop.profile.censo.unknown"));
+  await expect(region).toContainText(
+    label("desktop.profile.censo.unknown_start"),
+  );
   await region
     .getByRole("button", {
       name: label("desktop.profile.refresh"),
       exact: true,
     })
     .click();
-  await expect(pull).toBeDisabled();
+  await expect(region).toContainText(
+    label("desktop.profile.censo.unknown_start"),
+  );
+  await expect(pull).toHaveCount(0);
   expect(await page.evaluate(() => window.__scenarioCenso!.starts())).toBe(1);
+});
+
+test("an initially unknown status recovers the admitted operation", async ({
+  page,
+}) => {
+  await open(page, "censo-initial-unknown");
+  const region = band(page);
+  await region
+    .getByRole("button", {
+      name: label("desktop.profile.censo.pull"),
+      exact: true,
+    })
+    .click();
+  await expect(region).toContainText(label("desktop.profile.censo.unknown"));
+  await page.evaluate(() => window.__scenarioCenso!.releaseStatus());
+  await expect(region).toContainText(
+    label("desktop.profile.censo.review_count", { count: 3 }),
+  );
+  expect(await page.evaluate(() => window.__scenarioCenso!.starts())).toBe(1);
+});
+
+test("a late readiness check does not erase a profile refusal", async ({
+  page,
+}) => {
+  await open(page, "censo-refused");
+  const region = band(page);
+  const pull = region.getByRole("button", {
+    name: label("desktop.profile.censo.pull"),
+    exact: true,
+  });
+  await pull.click();
+  await expect(region).toContainText(
+    label("desktop.profile.censo.profile_mismatch"),
+  );
+  await page.evaluate(() => window.__scenarioCenso!.holdReadiness());
+  await region
+    .getByRole("button", {
+      name: label("desktop.profile.refresh"),
+      exact: true,
+    })
+    .click();
+  await pull.click();
+  await expect(region).toContainText(
+    label("desktop.profile.censo.profile_mismatch"),
+  );
+  await page.evaluate(() => window.__scenarioCenso!.releaseReadiness());
+  await expect
+    .poll(() => page.evaluate(() => window.__scenarioCenso!.readinessChecks()))
+    .toBe(2);
+  await expect(region).toContainText(
+    label("desktop.profile.censo.profile_mismatch"),
+  );
+  expect(await page.evaluate(() => window.__scenarioCenso!.starts())).toBe(2);
 });
 
 test("saved Cl@ve setup asks specifically for the NIE support number", async ({

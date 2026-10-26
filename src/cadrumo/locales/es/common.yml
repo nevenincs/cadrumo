@@ -3435,27 +3435,41 @@ desktop:
       blocked: 'Necesario antes de sincronizar:'
       cancel: Detener sincronización
       checking: Comprobando qué necesita la sincronización…
+      conflict: La revisión ha cambiado. Actualiza la sincronización y vuelve a revisarla.
       device: Aprueba la solicitud de acceso en tu aplicación Cl@ve.
       done: Sincronización completada. Revisa los datos que aún faltan en tu perfil.
+      failed: La sincronización ha fallado sin cambiar tu perfil. Comprueba el acceso
+        a la AEAT e inténtalo de nuevo.
       identity: Añadir NIF o NIE
       incoming: AEAT
       preserve: Conservar tu respuesta guardada.
+      profile_mismatch: La solicitud censal no coincide con el perfil de la sesión.
+        Actualiza tu perfil y, si persiste, comunica el código mostrado.
       pull: Consultar datos censales
       reading: Consultando datos censales…
       ready: El acceso a la AEAT está configurado. Podrás revisar los datos obtenidos
         antes de guardarlos.
+      refused: El servicio ha rechazado la sincronización. Comprueba el perfil y el
+        acceso a la AEAT antes de volver a intentarlo.
       reject: Descartar cambios
       review_count: 'Valores de la AEAT por revisar: {count}'
       review_hint: Los cambios se muestran abajo, en su sitio. No se guarda nada hasta
         que confirmes.
       scope: Importa tu domicilio fiscal, código postal y referencia catastral del
         Censo. Los demás datos del perfil requieren tus respuestas.
+      session: Tu sesión ha terminado. Inicia sesión de nuevo para continuar.
       setup: Configurar acceso a la AEAT
       source: Guardado desde el censo de la AEAT
       stopped: Sincronización detenida. No se han guardado cambios en el perfil.
+      subject_busy: Hay otra sincronización activa para este perfil. Espera a que
+        termine y, si sigue bloqueada, comunica el código mostrado.
       title: Sincronizar con la AEAT
       unavailable: No se ha podido comprobar la sincronización. Prueba a actualizar.
-      unknown: El resultado no está confirmado. Actualiza antes de iniciar otra sincronización.
+      unknown: No se ha podido confirmar el estado de la sincronización. Actualiza
+        para comprobarlo de nuevo. No podrás iniciar otra hasta que se resuelva esta
+        operación.
+      unknown_start: No se ha podido confirmar si se inició la sincronización. No
+        inicies otra; contacta con soporte e indica el código unknown.
       unsupported: Este acceso requiere una interacción disponible en el terminal.
         Cancela este intento y sincroniza el Censo desde el terminal.
     close: Cerrar perfil

@@ -25,7 +25,7 @@ export type SubmitOutcome =
   | { kind: "fail"; code: HostErrorCode };
 
 export type Scenario = {
-  censo?: "ready" | "nie" | "uncertain";
+  censo?: "ready" | "nie" | "uncertain" | "refused" | "initial_unknown";
   id: string;
   title: string;
   summary: string;
@@ -161,6 +161,30 @@ export const SCENARIOS: readonly Scenario[] = [
     summary:
       "Open Your profile, then Sync from AEAT. This is a simulation; no AEAT request is sent.",
     censo: "ready",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "censo-initial-unknown",
+    title: "Censo: Initial status unavailable",
+    summary: "Simulates recovery of a known operation without contacting AEAT.",
+    censo: "initial_unknown",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "censo-refused",
+    title: "Censo: Profile refused",
+    summary: "Simulates a profile mismatch without contacting AEAT.",
+    censo: "refused",
     signIn: {
       status: { ...signedOut, state: "present" },
       profile: "Ana Soler",
