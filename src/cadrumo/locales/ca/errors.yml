@@ -1232,7 +1232,8 @@ errors:
     refused_ledger_evidence_page_unsupported_media: Només els documents PDF, JPEG
       i PNG es poden mostrar com a pàgina.
     refused_ledger_evidence_reader_unavailable: El lector automàtic no ha pogut funcionar,
-      així que no s'ha llegit res.
+      així que no s'ha llegit res. Tria o revisa el model que llegeix els documents
+      a l'aplicació d'escriptori de Cadrumo i torna-ho a provar.
     refused_ledger_evidence_reader_unreadable_answer: El lector de documents ha respost
       en un format que aquesta ordre no ha pogut llegir, així que no s'ha pres res
       del document. No s'ha desat res; torna a executar l'ordre i, si continua passant,

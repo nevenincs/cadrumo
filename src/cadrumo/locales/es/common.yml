@@ -1539,8 +1539,8 @@ desktop:
         vision: Leído de la imagen
       paused_local_ai: La IA local, que lee los documentos en pausa, no está lista.
         Vuelve a añadirlos cuando esté lista para terminarlos.
-      paused_unavailable: La IA local no ha podido leer los documentos en pausa en
-        este ordenador. Vuelve a añadirlos más tarde para terminarlos.
+      paused_unavailable: La IA local no ha podido leer los documentos en pausa. Elige
+        o revisa su modelo en los ajustes del agente y vuelve a añadirlos para terminarlos.
       printed_differs: El documento indica {printed}; la factura registra {recorded}.
       provenance: '{origin}, {grounding}'
       queue: Lecturas por revisar
@@ -2097,8 +2097,8 @@ desktop:
         own_account_mismatch: Sus filas indican otra cuenta.
         reader_unavailable: 'No se ha leído: la IA local, que lee este archivo, no
           está lista.'
-        reader_unavailable_here: 'No se ha leído: la IA local no puede leer este archivo
-          en este ordenador.'
+        reader_unavailable_here: 'No se ha leído: la IA local no está disponible ahora
+          mismo. Elige o revisa su modelo en los ajustes del agente.'
         result_limit: 'Más de 4.096 filas: impórtalo por partes.'
         source_changed: 'Ha cambiado tras la vista previa: vuelve a previsualizarlo.'
         transaction_validation: No se ha podido leer como extracto bancario.
@@ -3673,6 +3673,11 @@ desktop:
     rail_busy: Configurando los componentes
     rail_incomplete: La configuración no ha terminado
     refused_busy: Ya hay una configuración en curso en otro sitio. Espera a que termine.
+    refused_model_selection_unusable: Cadrumo no puede usar los modelos que has elegido.
+      Elígelos de nuevo en los ajustes del agente y vuelve a intentarlo.
+    refused_model_size_unstated: Cadrumo no puede planificar la descarga porque el
+      agente no indica el tamaño de uno de los modelos que has elegido. Elige otro
+      modelo en los ajustes del agente y vuelve a intentarlo.
     refused_not_cancellable: Ahora no se puede detener la configuración. Terminará
       en breve.
     refused_not_pending: Ese plan ya no espera respuesta.
@@ -5844,7 +5849,8 @@ tui:
             leer el documento.'
           reader_unavailable: 'El lector automático no pudo iniciarse. {count} campo(s)
             que las etiquetas no cubrían aún no se han leído y siguen vacíos: {fields}.
-            Vuelve a leer el documento más tarde.'
+            Elige o revisa el modelo que lee los documentos en la aplicación de escritorio
+            de Cadrumo y vuelve a leer el documento.'
         line: '{index}. {description} · cantidad: {quantity} · precio unitario: {unit_price}
           · base: {base} · tipo: {rate} · IVA: {iva} · tipo de recargo: {recargo_rate}
           · recargo: {recargo}'
@@ -5966,8 +5972,9 @@ tui:
           partial: 'Este lote fue parcial: algunos documentos se guardaron y otros
             no. Vuelve a lanzarlo después de corregir los rechazados; los documentos
             guardados no se guardan dos veces.'
-          paused: La IA local no ha podido leer los documentos en pausa en este ordenador.
-            Vuelve a lanzar el lote más tarde para terminarlos.
+          paused: La IA local no ha podido leer los documentos en pausa. Elige o revisa
+            su modelo en la aplicación de escritorio de Cadrumo y vuelve a lanzar
+            el lote para terminarlos.
           paused_local_ai_not_ready: La IA local, que lee los documentos en pausa,
             no está lista. Vuelve a lanzar el lote cuando esté lista para terminarlos.
           writes: 'Registros escritos: {count}.'
@@ -6209,8 +6216,9 @@ tui:
         own_account_mismatch: el extracto indica otra cuenta distinta de la que elegiste
         reader_unavailable: la IA local, que lee este fichero, no está lista, así
           que no se leyó el fichero
-        reader_unavailable_here: la IA local no puede leer este fichero en este ordenador,
-          así que no se leyó el fichero
+        reader_unavailable_here: la IA local no está disponible ahora mismo, así que
+          no se leyó el fichero; elige o revisa su modelo en la aplicación de escritorio
+          de Cadrumo
         result_limit: la importación alcanzó su límite de filas antes de este fichero
         source_changed: el fichero cambió después de la previsualización y no se importó
           nada de él; vuelve a previsualizarlo
@@ -6819,8 +6827,8 @@ tui:
   local_reader:
     card:
       action: Abrir lector de documentos
-      description: Comprueba si los documentos de factura se pueden leer en este equipo
-        y prepara el lector, su runtime y sus modelos.
+      description: Comprueba si los documentos de factura se pueden leer en este equipo.
+        El lector y sus modelos se configuran en la aplicación de escritorio de Cadrumo.
       title: Lector de documentos
   modelo:
     editor:

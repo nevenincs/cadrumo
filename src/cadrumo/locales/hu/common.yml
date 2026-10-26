@@ -1519,8 +1519,9 @@ desktop:
       paused_local_ai: A helyi MI, amely a szüneteltetett dokumentumokat olvassa,
         nem áll készen. A befejezésükhöz add hozzá újra a dokumentumokat, amint készen
         áll.
-      paused_unavailable: A helyi MI nem tudta beolvasni a szüneteltetett dokumentumokat
-        ezen a számítógépen. A befejezésükhöz később add hozzá újra a dokumentumokat.
+      paused_unavailable: A helyi MI nem tudta beolvasni a szüneteltetett dokumentumokat.
+        Válaszd ki vagy ellenőrizd a modelljét az ügynök beállításaiban, majd a befejezésükhöz
+        add hozzá újra a dokumentumokat.
       printed_differs: A dokumentumon {printed} áll; a számla {recorded} összeget
         rögzít.
       provenance: '{origin}, {grounding}'
@@ -2077,8 +2078,8 @@ desktop:
         own_account_mismatch: A sorai másik számlát neveznek meg.
         reader_unavailable: 'Nincs beolvasva: a helyi MI, amely ezt a fájlt olvassa,
           nem áll készen.'
-        reader_unavailable_here: 'Nincs beolvasva: a helyi MI nem tudja beolvasni
-          ezt a fájlt ezen a számítógépen.'
+        reader_unavailable_here: 'Nincs beolvasva: a helyi MI jelenleg nem érhető
+          el. Válaszd ki vagy ellenőrizd a modelljét az ügynök beállításaiban.'
         result_limit: 'Több mint 4096 sor: importáld részletekben.'
         source_changed: 'Az előnézet óta megváltozott: nézd meg újra.'
         transaction_validation: Nem olvasható be bankszámlakivonatként.
@@ -3649,6 +3650,11 @@ desktop:
     rail_busy: Az összetevők beállítása folyamatban
     rail_incomplete: A beállítás nem fejeződött be
     refused_busy: Máshol már fut egy beállítás. Várd meg, amíg befejeződik.
+    refused_model_selection_unusable: A Cadrumo nem tudja használni a kiválasztott
+      modelleket. Válaszd ki őket újra az ügynök beállításaiban, majd próbáld újra.
+    refused_model_size_unstated: A Cadrumo nem tudja megtervezni a letöltést, mert
+      az ügynök nem közli az egyik kiválasztott modell méretét. Válassz másik modellt
+      az ügynök beállításaiban, majd próbáld újra.
     refused_not_cancellable: A beállítás most nem állítható le. Hamarosan befejeződik.
     refused_not_pending: Ez a terv már nem vár válaszra.
     refused_not_signed_in: Előbb jelentkezz be a profilodba.
@@ -5803,7 +5809,8 @@ tui:
             a dokumentumot.'
           reader_unavailable: 'Az automatikus olvasó nem indult el. A címkék által
             nem lefedett {count} mező még nem lett beolvasva, ezért üres marad: {fields}.
-            Olvasd be újra a dokumentumot később.'
+            Válaszd ki vagy ellenőrizd a dokumentumokat olvasó modellt a Cadrumo asztali
+            alkalmazásában, majd olvasd be újra a dokumentumot.'
         line: '{index}. {description} · mennyiség: {quantity} · egységár: {unit_price}
           · adóalap: {base} · adókulcs: {rate} · áfa: {iva} · áfapótlék kulcsa: {recargo_rate}
           · áfapótlék: {recargo}'
@@ -5924,8 +5931,9 @@ tui:
           partial: 'A köteg részleges volt: egyes dokumentumok tárolódtak, mások nem.
             Az elutasítottak javítása után futtasd újra; a tárolt dokumentumok nem
             kerülnek kétszer tárolásra.'
-          paused: A helyi MI nem tudta beolvasni a szüneteltetett dokumentumokat ezen
-            a számítógépen. A befejezésükhöz később futtasd újra a beolvasást.
+          paused: A helyi MI nem tudta beolvasni a szüneteltetett dokumentumokat.
+            Válaszd ki vagy ellenőrizd a modelljét a Cadrumo asztali alkalmazásában,
+            majd a befejezésükhöz futtasd újra a beolvasást.
           paused_local_ai_not_ready: A helyi MI, amely a szüneteltetett dokumentumokat
             olvassa, nem áll készen. A befejezésükhöz futtasd újra a beolvasást, amint
             készen áll.
@@ -6166,8 +6174,9 @@ tui:
         own_account_mismatch: a kivonat más számlát nevez meg, mint amit választottál
         reader_unavailable: a helyi MI, amely ezt a fájlt olvassa, nem áll készen,
           ezért a fájl nem lett beolvasva
-        reader_unavailable_here: a helyi MI ezen a számítógépen nem tudja olvasni
-          ezt a fájlt, ezért a fájl nem lett beolvasva
+        reader_unavailable_here: a helyi MI jelenleg nem érhető el, ezért a fájl nem
+          lett beolvasva; válaszd ki vagy ellenőrizd a modelljét a Cadrumo asztali
+          alkalmazásában
         result_limit: az importálás e fájl előtt elérte a sorkorlátot
         source_changed: a fájl az előnézet után megváltozott, ezért semmi sem került
           importálásra belőle; nézd meg újra az előnézetet
@@ -6770,8 +6779,8 @@ tui:
   local_reader:
     card:
       action: Dokumentumolvasó megnyitása
-      description: Nézd meg, beolvashatók-e a számladokumentumok ezen a gépen, és
-        állítsd be az olvasót, a futtatókörnyezetét és a modelljeit.
+      description: Nézd meg, beolvashatók-e a számladokumentumok ezen a gépen. Az
+        olvasót és a modelljeit a Cadrumo asztali alkalmazásában kell beállítani.
       title: Dokumentumolvasó
   modelo:
     editor:

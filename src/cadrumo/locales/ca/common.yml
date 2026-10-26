@@ -1535,8 +1535,9 @@ desktop:
         vision: Llegit de la imatge
       paused_local_ai: La IA local, que llegeix els documents en pausa, no està a
         punt. Torna-los a afegir quan estigui a punt per acabar-los.
-      paused_unavailable: La IA local no ha pogut llegir els documents en pausa en
-        aquest ordinador. Torna-los a afegir més tard per acabar-los.
+      paused_unavailable: La IA local no ha pogut llegir els documents en pausa. Tria
+        o revisa el seu model a la configuració de l'agent i torna-los a afegir per
+        acabar-los.
       printed_differs: El document indica {printed}; la factura registra {recorded}.
       provenance: '{origin}, {grounding}'
       queue: Lectures per revisar
@@ -2092,8 +2093,8 @@ desktop:
         own_account_mismatch: Les seves files indiquen un altre compte.
         reader_unavailable: 'No s''ha llegit: la IA local, que llegeix aquest fitxer,
           no està a punt.'
-        reader_unavailable_here: 'No s''ha llegit: la IA local no pot llegir aquest
-          fitxer en aquest ordinador.'
+        reader_unavailable_here: 'No s''ha llegit: la IA local no està disponible
+          ara mateix. Tria o revisa el seu model a la configuració de l''agent.'
         result_limit: 'Més de 4.096 files: importa''l per parts.'
         source_changed: 'Ha canviat després de la previsualització: torna a previsualitzar-lo.'
         transaction_validation: No s'ha pogut llegir com a extracte bancari.
@@ -3674,6 +3675,11 @@ desktop:
     rail_busy: S'estan configurant els components
     rail_incomplete: La configuració no ha acabat
     refused_busy: Ja hi ha una configuració en curs en un altre lloc. Espera que acabi.
+    refused_model_selection_unusable: Cadrumo no pot fer servir els models que has
+      triat. Tria'ls de nou a la configuració de l'agent i torna-ho a provar.
+    refused_model_size_unstated: Cadrumo no pot planificar la baixada perquè l'agent
+      no indica la mida d'un dels models que has triat. Tria un altre model a la configuració
+      de l'agent i torna-ho a provar.
     refused_not_cancellable: Ara no es pot aturar la configuració. Acabarà aviat.
     refused_not_pending: Aquest pla ja no espera resposta.
     refused_not_signed_in: Primer inicia la sessió al teu perfil.
@@ -5829,7 +5835,8 @@ tui:
             a llegir el document.'
           reader_unavailable: 'El lector automàtic no s''ha pogut iniciar. {count}
             camps que les etiquetes no cobrien encara no s''han llegit i queden buits:
-            {fields}. Torna a llegir el document més tard.'
+            {fields}. Tria o revisa el model que llegeix els documents a l''aplicació
+            d''escriptori de Cadrumo i torna a llegir el document.'
         line: '{index}. {description} · quantitat: {quantity} · preu unitari: {unit_price}
           · base: {base} · tipus: {rate} · IVA: {iva} · tipus de recàrrec: {recargo_rate}
           · recàrrec: {recargo}'
@@ -5950,8 +5957,9 @@ tui:
           partial: 'Aquest lot ha estat parcial: alguns documents s''han desat i d''altres
             no. Torna a llançar-lo després de corregir els rebutjats; els documents
             desats no es desen dues vegades.'
-          paused: La IA local no ha pogut llegir els documents en pausa en aquest
-            ordinador. Torna a llançar el lot més tard per acabar-los.
+          paused: La IA local no ha pogut llegir els documents en pausa. Tria o revisa
+            el seu model a l'aplicació d'escriptori de Cadrumo i torna a llançar el
+            lot per acabar-los.
           paused_local_ai_not_ready: La IA local, que llegeix els documents en pausa,
             no està a punt. Torna a llançar el lot quan estigui a punt per acabar-los.
           writes: 'Registres escrits: {count}.'
@@ -6190,8 +6198,9 @@ tui:
         own_account_mismatch: l'extracte indica un compte diferent del que has triat
         reader_unavailable: la IA local, que llegeix aquest fitxer, no està a punt,
           així que no s'ha llegit el fitxer
-        reader_unavailable_here: la IA local no pot llegir aquest fitxer en aquest
-          ordinador, així que no s'ha llegit el fitxer
+        reader_unavailable_here: la IA local no està disponible ara mateix, així que
+          no s'ha llegit el fitxer; tria o revisa el seu model a l'aplicació d'escriptori
+          de Cadrumo
         result_limit: la importació ha arribat al límit de files abans d'aquest fitxer
         source_changed: el fitxer ha canviat després de la previsualització i no se
           n'ha importat res; torna a previsualitzar-lo
@@ -6800,7 +6809,8 @@ tui:
     card:
       action: Obre el lector de documents
       description: Comprova si els documents de factura es poden llegir en aquest
-        equip i prepara el lector, el seu runtime i els seus models.
+        equip. El lector i els seus models es configuren a l'aplicació d'escriptori
+        de Cadrumo.
       title: Lector de documents
   modelo:
     editor:

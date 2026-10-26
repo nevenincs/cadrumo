@@ -110,7 +110,7 @@ cli:
         batch_paused_local_ai_not_ready: La IA local, que llegeix els documents en
           pausa, no està a punt.
         batch_paused_local_ai_unavailable: La IA local no ha pogut llegir els documents
-          en pausa en aquest ordinador.
+          en pausa. Tria o revisa el seu model a l'aplicació d'escriptori de Cadrumo.
         batch_pending_review_message: Alguns esborranys contenen una incidència que
           has de resoldre tu abans de crear una factura. Estan retinguts, no fallits.
         batch_progress_message: 'processat %{source}: %{status}'
@@ -2714,8 +2714,7 @@ cli:
         removed: '%{name}: s''ha esborrat d''aquest ordinador.'
         yes_help: L'esborra sense preguntar.
       report:
-        help: Indica la memòria d'aquest ordinador, el model triat per a cada rol
-          i si es pot carregar ara.
+        help: Indica la memòria d'aquest ordinador i el model triat per a cada rol.
       setup:
         help: 'Prepara el que aquesta línia d''ordres pot preparar: el navegador.
           Mostra què es baixarà, quant ocupa i on es desa, i et pregunta abans de
@@ -3305,9 +3304,9 @@ cli:
         automàticament i no es pot establir a mà. Tria''n una: BUSINESS, PERSONAL,
         MIXED.'
       taxable_base_help: Import de base imposable
-      vision_model_help: Substitueix el model de visió local d'Ollama per llegir una
-        factura escanejada o en imatge (p. ex. qwen2.5vl:7b); per defecte fa servir
-        el model configurat.
+      vision_model_help: 'No s''admet: cada tasca llegeix amb el model que has triat
+        per a ella a l''aplicació d''escriptori de Cadrumo, així que es rebutja indicar-hi
+        un model.'
     counterparty:
       errors:
         nothing_asserted: 'Per confirmar ''{identifier}'' cal almenys una resposta:
@@ -3386,8 +3385,9 @@ cli:
       file_help: Ruta a l'arxiu de l'extracte bancari o directori
       file_reader_not_ready: 'Extracte no llegit: {file} el llegeix la IA local, que
         no està a punt.'
-      file_reader_unavailable: 'Extracte no llegit: la IA local no pot llegir {file}
-        en aquest ordinador.'
+      file_reader_unavailable: 'Extracte no llegit: la IA local no està disponible
+        ara mateix per llegir {file}. Tria o revisa el seu model a l''aplicació d''escriptori
+        de Cadrumo i torna-ho a provar.'
       file_refused: 'Extracte rebutjat i omès: {file}. La resta de la carpeta s''ha
         importat.'
       file_refused_account_mismatch: 'Extracte rebutjat i omès: {file} indica un compte

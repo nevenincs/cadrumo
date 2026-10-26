@@ -1507,8 +1507,8 @@ desktop:
         vision: Read from the image
       paused_local_ai: Local AI, which reads the paused documents, is not ready. Add
         them again once it is ready to finish them.
-      paused_unavailable: Local AI could not read the paused documents on this computer.
-        Add them again later to finish them.
+      paused_unavailable: Local AI could not read the paused documents. Choose or
+        check its model in the agent settings, then add them again to finish them.
       printed_differs: The document prints {printed}; the invoice records {recorded}.
       provenance: '{origin}, {grounding}'
       queue: Readings to review
@@ -2061,8 +2061,8 @@ desktop:
         other: 'Not imported: {code}'
         own_account_mismatch: Its rows name a different account.
         reader_unavailable: 'Not read: Local AI, which reads this file, is not ready.'
-        reader_unavailable_here: 'Not read: Local AI cannot read this file on this
-          computer.'
+        reader_unavailable_here: 'Not read: Local AI is not available right now. Choose
+          or check its model in the agent settings.'
         result_limit: 'More than 4,096 rows: import it in parts.'
         source_changed: 'Changed after the preview: preview it again.'
         transaction_validation: Couldn't be read as a bank statement.
@@ -3618,6 +3618,11 @@ desktop:
     rail_busy: Setting up components
     rail_incomplete: Setup isn't finished
     refused_busy: Setup is already running elsewhere. Wait for it to finish.
+    refused_model_selection_unusable: Cadrumo can't use the models you chose. Choose
+      them again in the agent settings, then try again.
+    refused_model_size_unstated: Cadrumo can't plan the download because the agent
+      doesn't say how big one of the models you chose is. Choose another model in
+      the agent settings, then try again.
     refused_not_cancellable: Setup can't be stopped right now. It will finish shortly.
     refused_not_pending: That plan is no longer waiting for an answer.
     refused_not_signed_in: Sign in to your profile first.
@@ -5734,7 +5739,8 @@ tui:
             again.'
           reader_unavailable: 'The automatic reader could not start. {count} field(s)
             the labels did not cover have not been read yet and stay empty: {fields}.
-            Read the document again later.'
+            Choose or check the model that reads documents in the Cadrumo desktop
+            app, then read the document again.'
         line: '{index}. {description} · quantity: {quantity} · unit price: {unit_price}
           · base: {base} · rate: {rate} · IVA: {iva} · surcharge rate: {recargo_rate}
           · surcharge: {recargo}'
@@ -5851,8 +5857,8 @@ tui:
           partial: 'This batch was partial: some documents were stored and others
             were not. Run it again after fixing the refused ones; stored documents
             are not stored twice.'
-          paused: Local AI could not read the paused documents on this computer. Run
-            the batch again later to finish them.
+          paused: Local AI could not read the paused documents. Choose or check its
+            model in the Cadrumo desktop app, then run the batch again to finish them.
           paused_local_ai_not_ready: Local AI, which reads the paused documents, is
             not ready. Run the batch again once it is ready to finish them.
           writes: 'Records written: {count}.'
@@ -6086,8 +6092,8 @@ tui:
           you chose
         reader_unavailable: the local AI, which reads this file, is not ready, so
           the file was not read
-        reader_unavailable_here: the local AI cannot read this file on this computer,
-          so the file was not read
+        reader_unavailable_here: the local AI is not available right now, so the file
+          was not read; choose or check its model in the Cadrumo desktop app
         result_limit: the import reached its row limit before this file
         source_changed: the file changed after its preview, so nothing from it was
           imported; preview it again
@@ -6689,8 +6695,8 @@ tui:
   local_reader:
     card:
       action: Open document reader
-      description: See whether invoice documents can be read on this machine, and
-        set up the reader, its runtime and its models.
+      description: See whether invoice documents can be read on this machine. The
+        reader and its models are set up in the Cadrumo desktop app.
       title: Document reader
   modelo:
     editor:

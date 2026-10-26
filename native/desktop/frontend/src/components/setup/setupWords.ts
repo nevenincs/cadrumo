@@ -189,6 +189,10 @@ export function refusalWords(t: Translate, code: string): string {
       return t("desktop.setup.refused_not_cancellable");
     case "unavailable":
       return t("desktop.setup.refused_unavailable");
+    case "model_selection_unusable":
+      return t("desktop.setup.refused_model_selection_unusable");
+    case "model_size_unstated":
+      return t("desktop.setup.refused_model_size_unstated");
     default:
       return t("desktop.setup.refused_other");
   }

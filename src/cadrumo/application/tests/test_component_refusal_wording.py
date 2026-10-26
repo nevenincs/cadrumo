@@ -75,6 +75,21 @@ def test_a_refusal_setup_repairs_says_so_and_one_it_cannot_does_not() -> None:
         assert ("Set it up" in text) is (key in _OFFERS_SETUP), f"{key}: {text!r}"
 
 
+#: The sentences for a reader that setup cannot repair: with no model chosen, a model that does not fit or a
+#: computer too small, the person's next step is the model chosen in the desktop app.
+_POINTS_TO_THE_MODEL_CHOICE = (_READER_UNAVAILABLE, _IMPORT_UNSERVABLE, _LABEL_UNAVAILABLE)
+
+
+@pytest.mark.parametrize("locale", SUPPORTED_OUTPUT_LANGUAGES)
+def test_a_refusal_setup_cannot_repair_sends_the_person_to_the_desktop_app_to_choose_a_model(locale: str) -> None:
+    for key in _POINTS_TO_THE_MODEL_CHOICE:
+        assert "Cadrumo" in _text(key, locale), f"{key} in {locale} does not name the desktop app"
+    english = _text(_IMPORT_UNSERVABLE, "en")
+    assert "Choose or check its model in the Cadrumo desktop app" in english
+    for key in _POINTS_TO_THE_MODEL_CHOICE:
+        assert "on this computer" not in _text(key, "en"), f"{key} still blames the computer for a missing choice"
+
+
 def test_each_refusal_names_its_component_as_setup_names_it() -> None:
     for key, declaration in _SENTENCES.items():
         if declaration is None:

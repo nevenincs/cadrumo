@@ -107,7 +107,8 @@ cli:
         batch_paused_local_ai_not_ready: A helyi MI, amely a szüneteltetett dokumentumokat
           olvassa, nem áll készen.
         batch_paused_local_ai_unavailable: A helyi MI nem tudta beolvasni a szüneteltetett
-          dokumentumokat ezen a számítógépen.
+          dokumentumokat. Válaszd ki vagy ellenőrizd a modelljét a Cadrumo asztali
+          alkalmazásában.
         batch_pending_review_message: Néhány piszkozat olyan problémát hordoz, amelyet
           neked kell rendezned a számla létrehozása előtt. Ezek visszatartva vannak,
           nem hiúsultak meg.
@@ -2703,8 +2704,7 @@ cli:
         removed: '%{name}: törölve erről a számítógépről.'
         yes_help: Kérdés nélkül törli.
       report:
-        help: Jelzi a számítógép memóriáját, az egyes szerepekhez választott modellt,
-          és hogy most betölthető-e.
+        help: Jelzi a számítógép memóriáját és az egyes szerepekhez választott modellt.
       setup:
         help: 'Előkészíti, amit ez a parancssor elő tud készíteni: a böngészőt. Megmutatja,
           mi töltődik le, mekkora és hová kerül, és megkérdez, mielőtt bármit letöltene.
@@ -3271,9 +3271,9 @@ cli:
       system_state_not_assignable: 'A(z) ''%{value}'' besorolást a Cadrumo automatikusan
         állítja be, kézzel nem adható meg. Válassz egyet: BUSINESS, PERSONAL, MIXED.'
       taxable_base_help: Adóköteles alapösszeg.
-      vision_model_help: Írd felül a helyi Ollama látómodellt egy beszkennelt vagy
-        képi számla olvasásához (pl. qwen2.5vl:7b); alapértelmezetten a beállított
-        modellt használja.
+      vision_model_help: 'Nem használható: minden feladat azzal a modellel olvas,
+        amelyet a Cadrumo asztali alkalmazásában választottál hozzá, ezért a megadott
+        modellt a program elutasítja.'
     counterparty:
       errors:
         nothing_asserted: 'A(z) ''{identifier}'' megerősítéséhez legalább egy válasz
@@ -3352,8 +3352,9 @@ cli:
       file_help: A bankikivonati fájl vagy könyvtár elérési útja.
       file_reader_not_ready: 'A kivonat nem lett beolvasva: a(z) {file} fájlt a helyi
         MI olvassa, amely nem áll készen.'
-      file_reader_unavailable: 'A kivonat nem lett beolvasva: a helyi MI ezen a számítógépen
-        nem tudja beolvasni a(z) {file} fájlt.'
+      file_reader_unavailable: 'A kivonat nem lett beolvasva: a helyi MI jelenleg
+        nem érhető el a(z) {file} fájl olvasásához. Válaszd ki vagy ellenőrizd a modelljét
+        a Cadrumo asztali alkalmazásában, majd próbáld újra.'
       file_refused: 'Elutasított és kihagyott kivonat: {file}. A mappa többi része
         importálva lett.'
       file_refused_account_mismatch: 'Elutasított és kihagyott kivonat: a(z) {file}

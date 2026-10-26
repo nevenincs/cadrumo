@@ -620,8 +620,9 @@ application:
           did not cover were not read and stay empty: %{fields}. Set it up in the
           Cadrumo desktop app, then extract again.'
         reader_unavailable: 'The automatic reader could not run, so the %{count} field(s)
-          the labels did not cover stay empty: %{fields}. Extract again later, or
-          fill them in yourself.'
+          the labels did not cover stay empty: %{fields}. Choose or check the model
+          that reads documents in the Cadrumo desktop app and extract again, or fill
+          them in yourself.'
   live:
     borrador:
       errors:
@@ -1862,13 +1863,15 @@ application:
       column_names_local_ai_not_ready: Local AI, which reads this file's column names,
         is not ready, so the file was not read. Set it up in the Cadrumo desktop app,
         then try again.
-      column_names_local_ai_unavailable: Local AI cannot read this file's column names
-        on this computer, so the file was not read.
+      column_names_local_ai_unavailable: Local AI, which reads this file's column
+        names, is not available right now, so the file was not read. Choose or check
+        its model in the Cadrumo desktop app, then try again.
       statement_local_ai_not_ready: Local AI, which reads this PDF statement, is not
         ready, so the statement was not read. Set it up in the Cadrumo desktop app,
         then try again.
-      statement_local_ai_unavailable: Local AI cannot read this PDF statement on this
-        computer, so the statement was not read.
+      statement_local_ai_unavailable: Local AI, which reads this PDF statement, is
+        not available right now, so the statement was not read. Choose or check its
+        model in the Cadrumo desktop app, then try again.
     retry: Connection problem. Trying again in %{seconds} seconds (attempt %{attempt}).
     space_needed: Setup needs %{required} free and %{free} is available.
     stale:

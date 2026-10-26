@@ -667,8 +667,9 @@ application:
           que les etiquetes no cobrien no s''han llegit i queden buits: %{fields}.
           Configura-la a l''aplicació d''escriptori de Cadrumo i torna a extreure.'
         reader_unavailable: 'El lector automàtic no ha pogut funcionar, així que els
-          %{count} camps que les etiquetes no cobrien queden buits: %{fields}. Torna
-          a extreure més tard, o emplena''ls tu.'
+          %{count} camps que les etiquetes no cobrien queden buits: %{fields}. Tria
+          o revisa el model que llegeix els documents a l''aplicació d''escriptori
+          de Cadrumo i torna a extreure, o emplena''ls tu.'
   live:
     borrador:
       errors:
@@ -1979,13 +1980,17 @@ application:
       column_names_local_ai_not_ready: la IA local, que llegeix els noms de les columnes
         d'aquest fitxer, no està a punt, així que no s'ha llegit el fitxer. Configura-la
         a l'aplicació d'escriptori de Cadrumo i torna-ho a provar.
-      column_names_local_ai_unavailable: la IA local no pot llegir els noms de les
-        columnes d'aquest fitxer en aquest ordinador, així que no s'ha llegit el fitxer.
+      column_names_local_ai_unavailable: la IA local, que llegeix els noms de les
+        columnes d'aquest fitxer, no està disponible ara mateix, així que no s'ha
+        llegit el fitxer. Tria o revisa el seu model a l'aplicació d'escriptori de
+        Cadrumo i torna-ho a provar.
       statement_local_ai_not_ready: la IA local, que llegeix aquest extracte bancari
         en PDF, no està a punt, així que no s'ha llegit l'extracte. Configura-la a
         l'aplicació d'escriptori de Cadrumo i torna-ho a provar.
-      statement_local_ai_unavailable: la IA local no pot llegir aquest extracte bancari
-        en PDF en aquest ordinador, així que no s'ha llegit l'extracte.
+      statement_local_ai_unavailable: la IA local, que llegeix aquest extracte bancari
+        en PDF, no està disponible ara mateix, així que no s'ha llegit l'extracte.
+        Tria o revisa el seu model a l'aplicació d'escriptori de Cadrumo i torna-ho
+        a provar.
     retry: Problema de connexió. Es tornarà a provar d'aquí a %{seconds} segons (intent
       %{attempt}).
     space_needed: La configuració necessita %{required} lliures i n'hi ha %{free}

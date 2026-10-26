@@ -1131,7 +1131,8 @@ errors:
     refused_ledger_evidence_page_unsupported_media: Only PDF, JPEG and PNG documents
       can be shown as a page.
     refused_ledger_evidence_reader_unavailable: The automatic reader could not run,
-      so nothing was read.
+      so nothing was read. Choose or check the model that reads documents in the Cadrumo
+      desktop app, then try again.
     refused_ledger_evidence_reader_unreadable_answer: The document reader answered
       in a form this command could not read, so nothing was taken from the document.
       Nothing was saved; run the command again, and if it keeps happening the reader
