@@ -1,27 +1,30 @@
-"""A batch whose reader is missing settles with the reader probe's verdict in its result.
+"""A batch whose reader is missing settles with the agent service's verdict in its result.
 
-Evidence ingestion does not refuse when the local AI is not ready: it pauses
-the documents that need a model and reports why in the settled result, so the
-verdict reaches a frontend in another process through the result projection
-rather than through an error detail. The registered batch runs through the
-real registry, supervisor, journal and encrypted operand store, with its
-production composition, against a real text-layer PDF and a real loopback
-runtime that answers its model inventory. No read may be sent to the runtime.
+Evidence ingestion does not refuse the run when the local AI is not ready.
+The first document that needs the role is attempted, and the service's
+refusal is that document's own: it names the local AI setup and closes the
+role for the rest of the run, so every later document that needs it pauses
+unread. The settled result carries the verdict, so it reaches a frontend in
+another process through the result projection rather than through an error
+detail. The registered batch runs through the real registry, supervisor,
+journal and encrypted operand store, with its production composition, against
+real text-layer PDFs. Its model runs reach a recording stand-in for the agent
+service through an execution authority, as the runtime host's authority
+relays them. No run may reach the service.
 """
 
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Generator, Iterator
-from contextlib import contextmanager
+from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
-from http import HTTPStatus
 from pathlib import Path
-from typing import ClassVar, override
 from uuid import UUID
 
 import pytest
 from pydantic import BaseModel
+
+from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
 
 from ...adapters.persistence.operations.tests.supervision_support import run_to_settlement
 from ...adapters.persistence.operations.tests.supervisor_test_support import operation_repositories
@@ -44,39 +47,22 @@ from ...application.operations.projection_services import OperationResultProject
 from ...application.operations.registry import OperationRegistry
 from ...application.operations.supervisor import OperationSupervisor
 from ...application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID, ProvisioningPreconditionCondition
-from ...application.tests.role_model_support import configured_role_model
 from ...core.config import override_settings
 from ...core.model_roles import ModelRole
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.iva.schema import InvoiceKind
-from ...tests.loopback_llm import SilentLoopbackHandler, serving_loopback, write_json_response
 from ...tests.pdf_fixtures import text_pdf_bytes
 from ..ledger_evidence_ingestion_operation_composition import build_ledger_evidence_ingestion_operation_ports
+from .dependency_operation_gating_support import RecordingRunsAuthority, agent_refusing
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _PROFILE = UUID("9f4a6b8c-0d1e-4f2a-9b3c-8d9e0f1a2b3c")
 
-#: Figures with no label the rules read, so the document needs the text model.
+#: Figures with no label the rules read, so each document needs the text model.
 _NO_LABELS = ("B1234567X B17283946 766,30",)
-
-
-class _InventoryRuntime(SilentLoopbackHandler):
-    """A real runtime endpoint that answers its inventory and records every read it is sent."""
-
-    installed: ClassVar[tuple[str, ...]] = ()
-    reads: ClassVar[list[str]] = []
-
-    @override
-    def do_GET(self) -> None:
-        names = self.installed if self.path == "/api/tags" else ()
-        write_json_response(self, {"models": [{"name": name, "size": 1} for name in names]}, status=HTTPStatus.OK)
-
-    @override
-    def do_POST(self) -> None:
-        self.reads.append(self.path)
-        self.send_error(HTTPStatus.INTERNAL_SERVER_ERROR)
+_OTHER_NO_LABELS = ("B7654321X B17283946 412,90",)
 
 
 @pytest.fixture
@@ -91,31 +77,15 @@ def operation() -> Iterator[PinnedAuthorityOperation]:
         yield pinned
 
 
-@contextmanager
-def _runtime_holding_only_the_vision_model() -> Generator[None]:
-    """Serve a runtime that holds the vision model but not the text model a text-layer PDF needs.
-
-    Admission control is configured for a host whose headroom cannot be
-    measured, the documented operator setting, so the lane's only cause to
-    pause is the reader itself.
-    """
-    _InventoryRuntime.reads = []
-    vision = configured_role_model(ModelRole.VISION_TRANSCRIPTION)
-    _InventoryRuntime.installed = (vision,)
-    with (
-        serving_loopback(_InventoryRuntime, path="/api/chat") as chat_url,
-        override_settings(cadrumo_llm_ollama_chat_url=chat_url, cadrumo_llm_contention_check_override=True),
-    ):
-        yield
-
-
 def test_a_batch_paused_for_its_missing_text_model_settles_with_the_local_ai_setup_in_its_result(
     tmp_path: Path, profile: TestRuntimeProfile, operation: PinnedAuthorityOperation
 ) -> None:
     folder = tmp_path / "documents"
     folder.mkdir()
-    document = folder / "unlabelled.pdf"
-    document.write_bytes(text_pdf_bytes(_NO_LABELS))
+    first = folder / "first-unlabelled.pdf"
+    first.write_bytes(text_pdf_bytes(_NO_LABELS))
+    second = folder / "second-unlabelled.pdf"
+    second.write_bytes(text_pdf_bytes(_OTHER_NO_LABELS))
     definitions = build_ledger_evidence_ingestion_definitions(build_ledger_evidence_ingestion_operation_ports)
     registrations = build_ledger_evidence_ingestion_registrations(definitions)
     (registration,) = registrations
@@ -132,7 +102,7 @@ def test_a_batch_paused_for_its_missing_text_model_settles_with_the_local_ai_set
                 subject_ref=profile_operation_subject(str(_PROFILE)),
                 payload=LedgerEvidenceBatchRequest(
                     profile_id=_PROFILE,
-                    sources=(str(document),),
+                    sources=(str(first), str(second)),
                     source_directory=str(folder),
                     direction=InvoiceKind.RECEIVED,
                 ),
@@ -156,7 +126,13 @@ def test_a_batch_paused_for_its_missing_text_model_settles_with_the_local_ai_set
         assert isinstance(projection, LedgerEvidenceBatchProjection)
         return receipt.condition, receipt.effect, projection
 
-    with _runtime_holding_only_the_vision_model():
+    # Admission control is configured for a host whose headroom cannot be
+    # measured, the documented operator setting, so the only cause to stop is
+    # the reader itself.
+    with (
+        agent_refusing(ModelRunRefusalCode.MODEL_NOT_INSTALLED) as agent,
+        override_settings(cadrumo_llm_contention_check_override=True),
+    ):
         journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
@@ -174,19 +150,31 @@ def test_a_batch_paused_for_its_missing_text_model_settles_with_the_local_ai_set
             execution_timeout=timedelta(minutes=2),
             cleanup_timeout=timedelta(minutes=1),
             response_token_factory=lambda: "3" * 64,
+            execution_authority=RecordingRunsAuthority(agent),
         )
         service = OperationResultProjectionService(reader=journal, registry=registry, operands=operands)
         condition, effect, projection = asyncio.run(settle(supervisor, service))
 
     assert condition is OperationTerminalCondition.SUCCEEDED
-    assert effect is OperationEffect.NONE, "a paused document must not be stored"
-    (item,) = projection.run.items
-    assert item.status == "paused"
-    pause = projection.run.inference_pause
-    assert pause is not None, "the settled result lost the reader probe's verdict"
-    verdict = pause.precondition_verdict.to_verdict()
-    assert verdict.failed_condition_id == ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED.value
-    assert verdict.evidence[0].values["role"] == ModelRole.TEXT_EXTRACTION.value
-    assert verdict.action is not None
-    assert verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID
-    assert _InventoryRuntime.reads == [], "a read was sent before the reader was checked"
+    # The first document's evidence was stored before its read was refused and the second
+    # was never touched, so the run wrote something and left work undone.
+    assert effect is OperationEffect.PARTIAL
+    run = projection.run.to_run()
+    attempted, paused = run.items
+    assert attempted.source_name == first.name
+    assert attempted.status == "refused"
+    refused = attempted.refusal_verdict
+    assert refused is not None
+    assert paused.source_name == second.name
+    assert paused.status == "paused"
+    assert paused.refusal_verdict is None
+    pause = run.inference_pause
+    assert pause is not None, "the settled result lost the service's verdict"
+    for verdict in (refused, pause.precondition_verdict):
+        assert verdict.failed_condition_id == ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED.value
+        assert verdict.evidence[0].values["role"] == ModelRole.TEXT_EXTRACTION.value
+        assert verdict.action is not None
+        assert verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID
+    # The closed role is not asked again for the second document.
+    assert agent.lookups == [ModelRole.TEXT_EXTRACTION]
+    assert agent.runs == [], "a run was sent for a role whose model is not installed"

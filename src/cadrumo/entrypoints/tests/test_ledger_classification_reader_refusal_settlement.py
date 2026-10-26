@@ -1,36 +1,42 @@
-"""A refused model classification settles with the reader probe's verdict, so every frontend can offer setup.
+"""A refused model classification settles with the agent service's typed verdict, so every frontend can act on it.
 
 The registered classification review runs through the real registry,
-supervisor, journal and encrypted operand store, with the production local
-reader composition, against a stored ledger row and a real loopback runtime
-that answers its model inventory. The refusal is then read back the way a
-frontend in another process reads it: as the operation's recorded error
-detail. That detail must carry the verdict naming the local AI setup, must not
-carry the row's private text, and no read may be sent to the runtime first.
+supervisor, journal and encrypted operand store, with the production ledger
+model composition, against a stored ledger row. Its model runs reach a
+recording stand-in for the agent service through an execution authority, as
+the runtime host's authority relays them. The refusal is then read back the
+way a frontend in another process reads it: as the operation's recorded error
+detail. A selected model that is not installed names the local AI setup; a
+role with no selection names the role and says it needs one. The detail must
+not carry the row's private text, and no run may reach the service.
 """
 
 from __future__ import annotations
 
 import asyncio
-import socket
-from collections.abc import Generator, Iterator
-from contextlib import contextmanager
+from collections.abc import Iterator, Mapping
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
-from http import HTTPStatus
 from pathlib import Path
-from typing import ClassVar, override
 from uuid import UUID
 
 import pytest
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
+
+from ...adapters.outbound.llm.preconditions import LLMPreconditionCondition
+from ...adapters.outbound.llm.tests.model_run_support import RecordingModelRuns
 from ...adapters.persistence.operations.tests.supervision_support import run_to_settlement
 from ...adapters.persistence.operations.tests.supervisor_test_support import operation_repositories
 from ...adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from ...application.ledger.evidence_errors import EVIDENCE_LOCAL_AI_NOT_READY_KEY, PurchaseInvoiceEvidenceReaderError
+from ...application.ledger.evidence_errors import (
+    EVIDENCE_LOCAL_AI_NOT_READY_KEY,
+    EVIDENCE_READER_UNAVAILABLE_KEY,
+    PurchaseInvoiceEvidenceReaderError,
+)
 from ...application.ledger.llm_review_contracts import (
     LEDGER_CLASSIFY_REVIEW_DEFINITION_ID,
     LedgerLlmReviewRequest,
@@ -56,8 +62,7 @@ from ...application.operations.projection_services import OperationResultProject
 from ...application.operations.registry import OperationRegistry
 from ...application.operations.supervisor import OperationSupervisor
 from ...application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID, ProvisioningPreconditionCondition
-from ...application.tests.role_model_support import configured_role_model
-from ...core.config import load_settings, override_settings
+from ...core.config import load_settings
 from ...core.errors.error_codes import get_registered_error_code
 from ...core.model_roles import ModelRole
 from ...core.operations import OperationEffect, OperationTerminalCondition
@@ -65,8 +70,8 @@ from ...domain.calculations.registry.governed_fact_scope import validating_gover
 from ...domain.transactions.enums import TransactionDirection
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ...tests.loopback_llm import SilentLoopbackHandler, serving_loopback, write_json_response
 from ..ledger_llm_composition import compose_ledger_llm
+from .dependency_operation_gating_support import RecordingRunsAuthority, agent_refusing
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -77,50 +82,10 @@ _REGISTERED = get_registered_error_code(PurchaseInvoiceEvidenceReaderError)
 _PRIVATE_DESCRIPTION = "synthetic private classification row 5f2c"
 
 
-class _InventoryRuntime(SilentLoopbackHandler):
-    """A real runtime endpoint that answers its inventory and records every read it is sent."""
-
-    installed: ClassVar[tuple[str, ...]] = ()
-    reads: ClassVar[list[str]] = []
-
-    @override
-    def do_GET(self) -> None:
-        names = self.installed if self.path == "/api/tags" else ()
-        write_json_response(self, {"models": [{"name": name, "size": 1} for name in names]}, status=HTTPStatus.OK)
-
-    @override
-    def do_POST(self) -> None:
-        self.reads.append(self.path)
-        self.send_error(HTTPStatus.INTERNAL_SERVER_ERROR)
-
-
 @pytest.fixture
 def profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=str(_PROFILE)) as runtime_profile:
         yield runtime_profile
-
-
-@contextmanager
-def _runtime_holding_only_the_vision_model() -> Generator[None]:
-    """Serve a runtime that holds the vision model but not the text model a classification reads with."""
-    _InventoryRuntime.reads = []
-    vision = configured_role_model(ModelRole.VISION_TRANSCRIPTION)
-    _InventoryRuntime.installed = (vision,)
-    with (
-        serving_loopback(_InventoryRuntime, path="/api/chat") as chat_url,
-        override_settings(cadrumo_llm_ollama_chat_url=chat_url),
-    ):
-        yield
-
-
-@contextmanager
-def _unanswering_runtime() -> Generator[None]:
-    """Point the reader at a loopback port nothing listens on, so the runtime does not answer."""
-    _InventoryRuntime.reads = []
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as reserved:
-        reserved.bind(("127.0.0.1", 0))
-        with override_settings(cadrumo_llm_ollama_chat_url=f"http://127.0.0.1:{reserved.getsockname()[1]}/api/chat"):
-            yield
 
 
 def _stored_row(repository: TransactionCatalogueRepository) -> Transaction:
@@ -152,7 +117,7 @@ def _stored_row(repository: TransactionCatalogueRepository) -> Transaction:
 
 
 def _settle_and_read_detail(
-    tmp_path: Path, profile: TestRuntimeProfile
+    tmp_path: Path, profile: TestRuntimeProfile, service: RecordingModelRuns
 ) -> tuple[OperationTerminalCondition, str | None, OperationErrorDetailV1]:
     repository = TransactionCatalogueRepository(bucket_id=str(_PROFILE), objects=profile.repository)
     settings = load_settings()
@@ -190,6 +155,7 @@ def _settle_and_read_detail(
             execution_timeout=timedelta(minutes=2),
             cleanup_timeout=timedelta(minutes=1),
             response_token_factory=lambda: "3" * 64,
+            execution_authority=RecordingRunsAuthority(service),
         )
 
         async def settle() -> tuple[OperationTerminalCondition, str | None, OperationErrorDetailV1]:
@@ -230,39 +196,60 @@ def _settle_and_read_detail(
         return asyncio.run(settle())
 
 
-def _assert_names_the_local_ai_setup(
+def _assert_refused_by_the_reader(
     settled: tuple[OperationTerminalCondition, str | None, OperationErrorDetailV1],
-    condition: ProvisioningPreconditionCondition,
-) -> None:
+    service: RecordingModelRuns,
+    *,
+    message_key: str,
+    condition: LLMPreconditionCondition | ProvisioningPreconditionCondition,
+) -> Mapping[str, str | int | bool | Decimal]:
     refused, refusal_ref, detail = settled
     assert refused is OperationTerminalCondition.REFUSED
     assert refusal_ref == _REGISTERED.code
     assert detail.kind is OperationErrorDetailKind.REGISTERED_ERROR
     assert detail.error_code == _REGISTERED.code
-    assert detail.message_key == EVIDENCE_LOCAL_AI_NOT_READY_KEY
+    assert detail.message_key == message_key
     verdict = detail.precondition_verdict()
-    assert verdict is not None, "the settled refusal lost the reader probe's verdict"
+    assert verdict is not None, "the settled refusal lost the service's verdict"
     assert verdict.failed_condition_id == condition.value
-    assert verdict.evidence[0].values["role"] == ModelRole.TEXT_EXTRACTION.value
-    assert verdict.action is not None
-    assert verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID
+    facts = verdict.evidence[0].values
+    assert facts["role"] == ModelRole.TEXT_EXTRACTION.value
     assert _PRIVATE_DESCRIPTION not in detail.model_dump_json(), "the published detail carries the row's text"
-    assert _InventoryRuntime.reads == [], "a read was sent before the reader was checked"
+    assert service.lookups == [ModelRole.TEXT_EXTRACTION]
+    assert service.runs == [], "a run was sent for a role the service cannot run"
+    if message_key == EVIDENCE_LOCAL_AI_NOT_READY_KEY:
+        assert verdict.action is not None
+        assert verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID
+    else:
+        assert verdict.action is None
+    return facts
 
 
 def test_a_classification_refused_for_its_missing_text_model_settles_with_the_local_ai_setup(
     tmp_path: Path, profile: TestRuntimeProfile
 ) -> None:
-    with _runtime_holding_only_the_vision_model():
-        settled = _settle_and_read_detail(tmp_path, profile)
+    with agent_refusing(ModelRunRefusalCode.MODEL_NOT_INSTALLED) as service:
+        settled = _settle_and_read_detail(tmp_path, profile, service)
 
-    _assert_names_the_local_ai_setup(settled, ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED)
+    _assert_refused_by_the_reader(
+        settled,
+        service,
+        message_key=EVIDENCE_LOCAL_AI_NOT_READY_KEY,
+        condition=ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED,
+    )
 
 
-def test_a_classification_refused_for_an_unanswering_runtime_settles_with_the_local_ai_setup(
+def test_a_classification_with_no_text_selection_settles_naming_the_role_that_needs_one(
     tmp_path: Path, profile: TestRuntimeProfile
 ) -> None:
-    with _unanswering_runtime():
-        settled = _settle_and_read_detail(tmp_path, profile)
+    with agent_refusing(ModelRunRefusalCode.NO_SELECTION) as service:
+        settled = _settle_and_read_detail(tmp_path, profile, service)
 
-    _assert_names_the_local_ai_setup(settled, ProvisioningPreconditionCondition.RUNTIME_REACHABLE)
+    facts = _assert_refused_by_the_reader(
+        settled,
+        service,
+        message_key=EVIDENCE_READER_UNAVAILABLE_KEY,
+        condition=LLMPreconditionCondition.AGENT_MODEL_RUN_COMPLETED,
+    )
+    assert facts["model_run_refusal"] == ModelRunRefusalCode.NO_SELECTION.value
+    assert facts["role_selection_required"] is True

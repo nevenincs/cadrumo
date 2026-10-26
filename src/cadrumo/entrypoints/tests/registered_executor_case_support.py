@@ -340,7 +340,6 @@ class _FamilyResultResolver:
 
 _MODEL_RUNTIME_CLOSED_DEFINITIONS = frozenset(
     {
-        "local-reader.provision",
         "ledger.evidence.reader-readiness",
         "ledger.evidence.extract",
         "ledger.evidence.confirm",

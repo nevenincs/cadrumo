@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:b330321bf8564cd9ef57a4a0ff2d74246438fb0c399e9a8dd5d45642c5d21c7a'
+body_hash: 'sha256:008c6a21fb673422afbcc1fd31dc48beb1198ffb331b171077bd7c35a65aff22'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -704,6 +704,23 @@ related:
 - `S18` `verify:` `uv run --no-sync python -m dev.operation_contract_manifest.generate --check` -> `pass`
 - `S18` `verify:` `ruff check and ruff format --check on touched files` -> `pass`
 - `S18` `by:` `high-implementer`
+- `S14` `M` `src/cadrumo/entrypoints/tests/test_invoice_intake_operation_composition.py`
+- `S14` `M` `src/cadrumo/entrypoints/tests/test_evidence_reader_refusal_settlement.py`
+- `S14` `M` `src/cadrumo/entrypoints/tests/test_ledger_classification_reader_refusal_settlement.py`
+- `S14` `M` `src/cadrumo/entrypoints/tests/test_evidence_confirm_reader_refusal_settlement.py`
+- `S14` `M` `src/cadrumo/entrypoints/tests/test_evidence_batch_reader_pause_settlement.py`
+- `S14` `M` `src/cadrumo/entrypoints/tests/test_invoice_import_reader_refusal_settlement.py`
+- `S14` `M` `src/cadrumo_runtime/host/tests/frontend/cli/portable_human_cli_runtime.py`
+- `S14` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_evidence_label_reading_notice.py`
+- `S14` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_direction_reaches_the_confirm_boundary.py`
+- `S14` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tests -m "(unit or integration) and not perf"` -> `pass`
+- `S14` `verify:` `uv run --no-sync pytest src/cadrumo_runtime/host/tests/frontend/cli/test_ledger_evidence_label_reading_notice.py src/cadrumo_runtime/host/tests/frontend/cli/test_direction_reaches_the_confirm_boundary.py -m "(unit or integration) and not perf"` -> `pass`
+- `S14` `by:` `standard-implementer`
+- `S16` `M` `src/cadrumo/entrypoints/tests/registered_executor_case_support.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/registered_executor_conformance_expectations.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/test_workstation_check_operation_composition.py`
+- `S16` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tests -m "(unit or integration) and not perf"` -> `pass`
+- `S16` `by:` `standard-implementer`
 
 ## Notes
 
@@ -750,3 +767,7 @@ related:
 - `S18` Coordinator ruling 2026-10-26: pin-local-ai becomes pin-local-ai-program, covering the Ollama program archives only. `local_ai_program.toml` was re-rendered through `render_pins(load_program_pins())` with no download; it is byte-identical apart from its header line.
 - `S18` The unit lane was reused from P03.S17: this Step changes no Python under src, and the only src file is the pin table's header comment.
 - `S18` The reviewed-operation lane reads with whatever model the operator's store holds instead of a pinned name. docs/how-to/classify-with-llm.md still names models; P05.S26 owns it.
+- `S14` P03 test fallout
+- `S14` Stale since S14 routed every read through the agent service: the reader-refusal settlement tests asserted the deleted inventory probe and now drive a recording agent stand-in through an execution authority; the portable CLI runtime fixture gains a model-run door `(serving_portable_agent),` without which every model run under it refused `runtime_invalid_frame.` `test_runtime_ledger_review_native` still fails `service_unavailable:` its native runtime admits no agent service and needs a native stand-in.
+- `S16` P03 test fallout
+- `S16` Stale since S16: the conformance matrix still declared a case for the deleted local-reader.provision operation, and the workstation check stub still returned the dropped vision-reader status. The case row and its closed-runtime entry were deleted with their subject; the stub returns the program status and extras.

@@ -1,28 +1,29 @@
-"""A confirm whose re-read needs the local AI settles with the reader probe's verdict in its detail.
+"""A confirm whose re-read needs the local AI settles with the agent service's verdict in its detail.
 
 Confirming a document reads it again through the same composed readers as the
 extraction. The registered confirm runs through the real registry, supervisor,
 journal and encrypted operand store, with its production composition, against
-a stored image and a real loopback runtime that answers its inventory without
-the vision model. The refusal is read back the way a frontend in another
-process reads it: as the operation's recorded error detail, which must carry
-the verdict naming the local AI setup, with no read sent to the runtime first.
+a stored image. Its model runs reach a recording stand-in for the agent
+service through an execution authority, as the runtime host's authority
+relays them, and the service reports the vision selection's model is not
+installed. The refusal is read back the way a frontend in another process
+reads it: as the operation's recorded error detail, which must carry the
+verdict naming the local AI setup, with no run sent to the service.
 """
 
 from __future__ import annotations
 
 import asyncio
 import hashlib
-from collections.abc import Generator, Iterator
-from contextlib import contextmanager
+from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
-from http import HTTPStatus
 from pathlib import Path
-from typing import ClassVar, override
 from uuid import UUID
 
 import pytest
 from pydantic import BaseModel
+
+from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
 
 from ...adapters.persistence.operations.tests.supervision_support import run_to_settlement
 from ...adapters.persistence.operations.tests.supervisor_test_support import operation_repositories
@@ -49,8 +50,6 @@ from ...application.operations.projection_services import OperationResultProject
 from ...application.operations.registry import OperationRegistry
 from ...application.operations.supervisor import OperationSupervisor
 from ...application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID, ProvisioningPreconditionCondition
-from ...application.tests.role_model_support import configured_role_model
-from ...core.config import override_settings
 from ...core.errors.error_codes import get_registered_error_code
 from ...core.model_roles import ModelRole
 from ...core.operations import OperationTerminalCondition, profile_operation_subject
@@ -59,30 +58,13 @@ from ...domain.attachments.models import Attachment
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.iva.schema import InvoiceKind
 from ...tests.llm_vision_evidence_support import png_image
-from ...tests.loopback_llm import SilentLoopbackHandler, serving_loopback, write_json_response
 from ..invoice_evidence_operation_composition import build_invoice_evidence_operation_ports
+from .dependency_operation_gating_support import RecordingRunsAuthority, agent_refusing
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _PROFILE = UUID("6c1d3e5f-7a9b-4c2d-8e4f-5a6b7c8d9e0f")
 _REGISTERED = get_registered_error_code(PurchaseInvoiceEvidenceReaderError)
-
-
-class _InventoryRuntime(SilentLoopbackHandler):
-    """A real runtime endpoint that answers its inventory and records every read it is sent."""
-
-    installed: ClassVar[tuple[str, ...]] = ()
-    reads: ClassVar[list[str]] = []
-
-    @override
-    def do_GET(self) -> None:
-        names = self.installed if self.path == "/api/tags" else ()
-        write_json_response(self, {"models": [{"name": name, "size": 1} for name in names]}, status=HTTPStatus.OK)
-
-    @override
-    def do_POST(self) -> None:
-        self.reads.append(self.path)
-        self.send_error(HTTPStatus.INTERNAL_SERVER_ERROR)
 
 
 @pytest.fixture
@@ -95,19 +77,6 @@ def profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 def operation() -> Iterator[PinnedAuthorityOperation]:
     with bundled_indexed_authority().operation() as pinned:
         yield pinned
-
-
-@contextmanager
-def _runtime_holding_only_the_text_model() -> Generator[None]:
-    """Serve a runtime that holds the text model but not the vision model an image needs."""
-    _InventoryRuntime.reads = []
-    model = configured_role_model(ModelRole.TEXT_EXTRACTION)
-    _InventoryRuntime.installed = (model,)
-    with (
-        serving_loopback(_InventoryRuntime, path="/api/chat") as chat_url,
-        override_settings(cadrumo_llm_ollama_chat_url=chat_url),
-    ):
-        yield
 
 
 def _stored_image(profile: TestRuntimeProfile) -> tuple[str, str]:
@@ -175,7 +144,7 @@ def test_a_confirm_whose_re_read_needs_the_vision_model_settles_with_the_local_a
         assert isinstance(detail, OperationErrorDetailV1)
         return receipt.condition, receipt.refusal_ref, detail
 
-    with _runtime_holding_only_the_text_model():
+    with agent_refusing(ModelRunRefusalCode.MODEL_NOT_INSTALLED) as agent:
         journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )
@@ -193,6 +162,7 @@ def test_a_confirm_whose_re_read_needs_the_vision_model_settles_with_the_local_a
             execution_timeout=timedelta(minutes=2),
             cleanup_timeout=timedelta(minutes=1),
             response_token_factory=lambda: "3" * 64,
+            execution_authority=RecordingRunsAuthority(agent),
         )
         service = OperationResultProjectionService(reader=journal, registry=registry, operands=operands)
         condition, refusal_ref, detail = asyncio.run(settle(supervisor, service))
@@ -202,9 +172,10 @@ def test_a_confirm_whose_re_read_needs_the_vision_model_settles_with_the_local_a
     assert detail.kind is OperationErrorDetailKind.REGISTERED_ERROR
     assert detail.error_code == _REGISTERED.code
     verdict = detail.precondition_verdict()
-    assert verdict is not None, "the settled refusal lost the reader probe's verdict"
+    assert verdict is not None, "the settled refusal lost the service's verdict"
     assert verdict.failed_condition_id == ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED.value
     assert verdict.evidence[0].values["role"] == ModelRole.VISION_TRANSCRIPTION.value
     assert verdict.action is not None
     assert verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID
-    assert _InventoryRuntime.reads == [], "a read was sent before the reader was checked"
+    assert agent.lookups == [ModelRole.VISION_TRANSCRIPTION]
+    assert agent.runs == [], "a run was sent for a role whose model is not installed"

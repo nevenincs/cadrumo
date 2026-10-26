@@ -2,24 +2,24 @@
 
 The registered ``ledger.invoice.import`` runs through the production registry,
 the real supervisor, journal and encrypted operand store, and its production
-port composition, against a real loopback runtime that answers its inventory
-with no model and records every read it is sent. The refusal is then read back
-the way a frontend in another process reads it: as the operation's recorded
-error detail. That detail must carry the verdict naming the local AI setup,
-must not carry a value from the book, and no read may be sent first.
+port composition. Its model runs reach a recording stand-in for the agent
+service through an execution authority, as the runtime host's authority
+relays them, and the service reports the column-mapping selection's model is
+not installed. The refusal is then read back the way a frontend in another
+process reads it: as the operation's recorded error detail. That detail must
+carry the verdict naming the local AI setup, must not carry a value from the
+book, and no run may reach the service.
 """
 
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Generator
-from contextlib import contextmanager
-from http import HTTPStatus
 from pathlib import Path
-from typing import override
 from uuid import UUID
 
 import pytest
+
+from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
 
 from ...application.invoices.catalogue_intake_contracts import (
     INVOICE_IMPORT_OPERATION_DEFINITION_ID,
@@ -37,14 +37,13 @@ from ...application.operations.frontend_requests import (
 )
 from ...application.operations.registry import OperationRegistry
 from ...application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID, ProvisioningPreconditionCondition
-from ...core.config import override_settings
 from ...core.model_roles import ModelRole
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.iva.schema import InvoiceKind
 from ...tests.inventory import FIXTURES_DIR
-from ...tests.loopback_llm import SilentLoopbackHandler, serving_loopback, write_json_response
 from . import registered_executor_case_support as conformance
+from .dependency_operation_gating_support import operation_runtime
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -53,27 +52,6 @@ _LIBRO = FIXTURES_DIR / "financial" / "tabular-dialects" / "libro_facturas_exped
 #: Cell values of that book; none may reach the published detail.
 _BOOK_VALUES = ("2025/0142", "Talleres Berrocal", "A82645177", "4272.00")
 _READER_REFUSAL_CODE = "REFUSED_LEDGER_IMPORT_READER"
-
-
-@contextmanager
-def _runtime_holding_nothing(posts: list[str]) -> Generator[None]:
-    """Serve a real runtime that answers its inventory with no model and records every read it is sent."""
-
-    class _EmptyRuntime(SilentLoopbackHandler):
-        @override
-        def do_GET(self) -> None:
-            write_json_response(self, {"models": []}, status=HTTPStatus.OK)
-
-        @override
-        def do_POST(self) -> None:
-            posts.append(self.path)
-            self.send_error(HTTPStatus.INTERNAL_SERVER_ERROR)
-
-    with (
-        serving_loopback(_EmptyRuntime, path="/api/chat") as chat_url,
-        override_settings(cadrumo_llm_ollama_chat_url=chat_url),
-    ):
-        yield
 
 
 def _settle_and_read_detail(
@@ -111,14 +89,8 @@ def test_an_invoice_book_whose_column_model_is_missing_settles_with_the_local_ai
     del operation
     book = tmp_path / "libro.csv"
     book.write_bytes(_LIBRO.read_bytes())
-    posts: list[str] = []
-    with (
-        _runtime_holding_nothing(posts),
-        conformance.conformance_operation_runtime(
-            tmp_path / "runtime", cleanup=conformance.OperationRuntimeCloseWitness()
-        ) as (driver, registry, profile_id),
-    ):
-        observed, detail = _settle_and_read_detail(driver, registry, profile_id, book)
+    with operation_runtime(tmp_path, ModelRunRefusalCode.MODEL_NOT_INSTALLED) as runtime:
+        observed, detail = _settle_and_read_detail(runtime.driver, runtime.registry, runtime.profile_id, book)
 
     projection = observed.projection
     assert projection.terminal_condition is OperationTerminalCondition.REFUSED, projection
@@ -127,11 +99,12 @@ def test_an_invoice_book_whose_column_model_is_missing_settles_with_the_local_ai
     assert detail.kind is OperationErrorDetailKind.REGISTERED_ERROR
     assert detail.error_code == _READER_REFUSAL_CODE
     verdict = detail.precondition_verdict()
-    assert verdict is not None, "the settled refusal lost the reader probe's verdict"
+    assert verdict is not None, "the settled refusal lost the service's verdict"
     assert verdict.failed_condition_id == ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED.value
     assert {str(item.values.get("role")) for item in verdict.evidence} == {ModelRole.COLUMN_ROLE_MAPPING.value}
     assert verdict.action is not None
     assert verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID
     published = detail.model_dump_json()
     assert not [value for value in _BOOK_VALUES if value in published], "the published detail carries book values"
-    assert posts == [], "a read was sent before the reader was checked"
+    assert runtime.service.lookups == [ModelRole.COLUMN_ROLE_MAPPING]
+    assert runtime.service.runs == [], "a run was sent for a role whose model is not installed"

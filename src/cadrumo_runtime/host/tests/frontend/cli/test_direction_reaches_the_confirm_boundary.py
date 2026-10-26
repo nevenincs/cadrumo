@@ -7,26 +7,25 @@ so ``suggested_kind`` could have been stamped ``None`` on every real document
 while every unit suite stayed green. That is the failure this module exists to
 make impossible: it drives the public entry point against a real encrypted
 bucket carrying a real profile, a real PDF, a real text-layer transcription and
-a real HTTP endpoint, and reads what comes out the other side.
+the agent service's model-run port, and reads what comes out the other side.
 
 Nothing in the application is substituted. The reading model's REPLY is authored
-by these cases and served over a real socket, exactly as a runtime returns one;
-everything downstream of that socket is production code. No inference runs, so
-this is executable on a machine with no accelerator.
+by these cases and answered by a recording stand-in for the agent service, as
+the service returns one on the person's on-host text selection; everything
+downstream of that port is production code. No inference runs, so this is
+executable on a machine with no accelerator.
 """
 
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
-from http import HTTPStatus
 from pathlib import Path
-from typing import ClassVar, override
 from uuid import UUID
 
 import pytest
 
 from cadrumo.adapters.outbound.llm.tests.load_headroom_support import extraction_ports_under_admitted_load
+from cadrumo.adapters.outbound.llm.tests.model_run_support import ON_HOST_LANE, serving_agent
 from cadrumo.adapters.persistence.profile.catalogue_creation import build_catalogue_creation_ports
 from cadrumo.adapters.persistence.profile.counterparty_establishment import CounterpartyEstablishmentRepository
 from cadrumo.adapters.persistence.profile.invoice_confirmation import build_invoice_confirmation_ports
@@ -48,20 +47,12 @@ from cadrumo.domain.iva.regime_legend import RegimeLegend, resolve_regime_legend
 from cadrumo.domain.iva.schema import InvoiceKind
 from cadrumo.entrypoints.adapter_composition import build_ledger_evidence_ports
 from cadrumo.entrypoints.ledger_evidence_extraction_composition import invoice_draft_extraction_ports
-from cadrumo.tests.loopback_llm import (
-    SilentLoopbackHandler,
-    ollama_chat_reply,
-    read_json_body,
-    serving_loopback,
-    write_json_response,
-)
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
 from .portable_human_cli_runtime import portable_human_cli_runtime
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-READING_RUNTIME_MODEL = "qwen2.5:7b"
 _FILER_CIF = "B17283946"
 _COUNTERPARTY_CIF = "B12345674"
 _BAD_CHECKSUM_CIF = "B1234567X"
@@ -142,32 +133,6 @@ _COMMON_READ = {
 }
 
 
-class _ReaderEndpoint(SilentLoopbackHandler):
-    """A real local endpoint speaking the runtime's ``/api/chat`` wire shape."""
-
-    reply: ClassVar[str] = ""
-
-    @override
-    def do_POST(self) -> None:
-        read_json_body(self)
-        write_json_response(
-            self,
-            ollama_chat_reply(
-                self.reply,
-                model=READING_RUNTIME_MODEL,
-                prompt_eval_count=100,
-                eval_count=50,
-            ),
-            status=HTTPStatus.OK,
-        )
-
-
-@pytest.fixture
-def reader_url() -> Iterator[str]:
-    with serving_loopback(_ReaderEndpoint, path="/api/chat") as chat_url:
-        yield chat_url
-
-
 class _LiveDocument:
     """A real evidence record in a real bucket, read through the real entry point."""
 
@@ -216,7 +181,7 @@ class _LiveDocument:
 
 
 @pytest.fixture
-def live_document(tmp_path: Path, reader_url: str):
+def live_document(tmp_path: Path):
     """Yield a factory standing up a real profile, bucket and evidence record.
 
     The profile declares the filer's own tax identifier, which is the fact the
@@ -224,19 +189,13 @@ def live_document(tmp_path: Path, reader_url: str):
     derivation reports that it was never supplied.
     """
     dispose_engine()
+    # The reply the service gives the next read; each added document authors its own.
+    reply = {"text": "{}"}
     with (
-        override_settings(
-            cadrumo_local_storage_root=tmp_path,
-            cadrumo_output_language="en",
-            cadrumo_llm_ollama_chat_url=reader_url,
-            # The reader is on-host, so its load is admitted against measured
-            # headroom before the request is sent. The operator override admits
-            # a machine whose accelerator this build cannot measure, and the
-            # margin is zero because this runtime loads no weights. A measured
-            # shortfall still refuses.
-            cadrumo_llm_contention_check_override=True,
-            cadrumo_llm_contention_safety_margin_bytes=0,
-        ),
+        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
+        # The person's text selection stays on this computer and its catalogue
+        # entry states no size, so no load is assessed and nothing leaves the host.
+        serving_agent(lane=ON_HOST_LANE, answer=lambda _body: reply["text"]),
         isolated_profile_storage_root(tmp_path=tmp_path) as storage_root,
         bundled_indexed_authority().operation() as operation,
     ):
@@ -248,7 +207,7 @@ def live_document(tmp_path: Path, reader_url: str):
             legends = resolve_regime_legends(operation=operation, effective_date=period.end_date)
 
             def _add(lines: tuple[str, ...], read: dict[str, str]) -> _LiveDocument:
-                _ReaderEndpoint.reply = json.dumps({**_COMMON_READ, **read})
+                reply["text"] = json.dumps({**_COMMON_READ, **read})
                 document = tmp_path / f"factura-{len(lines)}-{len(read)}.pdf"
                 document.write_bytes(text_pdf_bytes(lines))
                 added = runtime.invoke(

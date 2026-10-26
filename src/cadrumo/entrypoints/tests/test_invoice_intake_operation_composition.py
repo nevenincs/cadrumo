@@ -2,15 +2,16 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Generator
-from contextlib import AbstractContextManager, contextmanager
-from http import HTTPStatus
+from collections.abc import Callable
 from pathlib import Path
-from typing import override
 from uuid import UUID, uuid4
 
 import pytest
 
+from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
+
+from ...adapters.outbound.llm.preconditions import LLMPreconditionCondition
+from ...adapters.outbound.llm.tests.model_run_support import ON_HOST_LANE, serving_agent
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
@@ -22,12 +23,12 @@ from ...application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID, 
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...core.config import override_settings
 from ...core.hashing import canonical_json_bytes, sha256_hex
+from ...core.model_roles import ModelRole
 from ...domain.buckets.event import BucketEventHistoryCatalogue, BucketEventType
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.iva.schema import InvoiceKind
 from ...tests.inventory import FIXTURES_DIR
-from ...tests.loopback_llm import SilentLoopbackHandler, serving_loopback, write_json_response
 from ..invoice_intake_operation_composition import build_invoice_intake_ports
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -35,9 +36,6 @@ _PROFILE = UUID("76767676-7676-4767-8676-767676767676")
 
 #: A Spanish libro registro whose column names only the mapping lane can read.
 _LIBRO = FIXTURES_DIR / "financial" / "tabular-dialects" / "libro_facturas_expedidas_2025_2026.csv"
-
-#: A port nothing listens on, so the runtime genuinely does not answer.
-_CLOSED_ENDPOINT = "http://127.0.0.1:1/api/chat"
 
 
 def test_composed_wizard_and_book_use_retained_pin_and_reopen_canonical_encrypted_audit(
@@ -124,56 +122,41 @@ def test_composed_wizard_and_book_use_retained_pin_and_reopen_canonical_encrypte
     assert admissions == ["provider"]
 
 
-@contextmanager
-def _runtime_without_models() -> Generator[str]:
-    """Serve an Ollama-shaped runtime that answers and holds no model at all."""
-
-    class _Runtime(SilentLoopbackHandler):
-        @override
-        def do_GET(self) -> None:
-            if self.path == "/api/tags":
-                write_json_response(self, {"models": []}, status=HTTPStatus.OK)
-            else:
-                self.send_error(HTTPStatus.NOT_FOUND)
-
-        @override
-        def do_POST(self) -> None:
-            pytest.fail("a mapping model known to be missing was asked")
-
-    with serving_loopback(_Runtime, path="/api/chat") as endpoint:
-        yield endpoint
-
-
-@contextmanager
-def _closed_runtime() -> Generator[str]:
-    yield _CLOSED_ENDPOINT
-
-
 @pytest.mark.parametrize(
-    ("runtime", "condition"),
+    ("refusal", "condition", "action_id"),
     [
-        (_runtime_without_models, ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED),
-        (_closed_runtime, ProvisioningPreconditionCondition.RUNTIME_REACHABLE),
+        (
+            ModelRunRefusalCode.MODEL_NOT_INSTALLED,
+            ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED,
+            LOCAL_AI_PROVISION_ACTION_ID,
+        ),
+        (ModelRunRefusalCode.NO_SELECTION, LLMPreconditionCondition.AGENT_MODEL_RUN_COMPLETED, None),
     ],
-    ids=["model-missing", "runtime-unanswering"],
+    ids=["model-not-installed", "no-selection"],
 )
-def test_a_book_whose_mapping_reader_is_missing_refuses_with_the_local_ai_setup(
+def test_a_book_whose_mapping_reader_is_missing_refuses_with_its_typed_verdict(
     tmp_path: Path,
     authority_operation: PinnedAuthorityOperation,
-    runtime: Callable[[], AbstractContextManager[str]],
-    condition: ProvisioningPreconditionCondition,
+    refusal: ModelRunRefusalCode,
+    condition: LLMPreconditionCondition | ProvisioningPreconditionCondition,
+    action_id: str | None,
 ) -> None:
-    """The composed mapper reports the reader, and the book refuses with its verdict rather than missing columns."""
+    """The composed mapper reports the reader, and the book refuses with its verdict rather than missing columns.
+
+    The agent service refuses the column-mapping role's lookup. A selected
+    model the local server does not hold names the local AI setup; a role
+    with no selection names no action and says the role needs one. Either
+    way nothing is run.
+    """
     admissions: list[str] = []
     with (
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id=str(_PROFILE)),
-        runtime() as endpoint,
         override_settings(
-            cadrumo_llm_ollama_chat_url=endpoint,
             cadrumo_llm_cache_dir=tmp_path / "cache",
             cadrumo_llm_usage_dir=tmp_path / "usage",
             cadrumo_llm_run_record_dir=tmp_path / "run-record",
         ),
+        serving_agent(lane=ON_HOST_LANE, lookup_refusal=refusal) as service,
     ):
         ports = build_invoice_intake_ports(
             profile_id=_PROFILE,
@@ -186,15 +169,27 @@ def test_a_book_whose_mapping_reader_is_missing_refuses_with_the_local_ai_setup(
         assert ports.mapping_reasons() == ()
 
     assert admissions == ["provider"]
+    assert service.lookups == [ModelRole.COLUMN_ROLE_MAPPING]
+    assert service.runs == []
     verdict = raised.value.terminal_precondition_verdict
     assert verdict is not None
     assert verdict.failed_condition_id == condition.value
-    assert verdict.action is not None
-    assert verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID
+    facts = {key: value for evidence in verdict.evidence for key, value in evidence.values.items()}
+    assert facts["model_run_refusal"] == refusal.value
+    assert facts["model_role"] == ModelRole.COLUMN_ROLE_MAPPING.value
+    if refusal is ModelRunRefusalCode.NO_SELECTION:
+        assert facts["role_selection_required"] is True
     detail = build_operation_error_detail(raised.value)
     assert detail is not None
     assert detail.error_code == "REFUSED_LEDGER_IMPORT_READER"
     projected = detail.precondition_verdict()
     assert projected is not None
-    assert projected.action is not None
-    assert projected.action.action_id == LOCAL_AI_PROVISION_ACTION_ID
+    assert projected.failed_condition_id == condition.value
+    if action_id is None:
+        assert verdict.action is None
+        assert projected.action is None
+    else:
+        assert verdict.action is not None
+        assert verdict.action.action_id == action_id
+        assert projected.action is not None
+        assert projected.action.action_id == action_id

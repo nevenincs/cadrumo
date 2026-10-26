@@ -3,6 +3,12 @@
 The transport and physical worker isolation are test ports. Password proof,
 human admission, registered operation execution and access guards are production
 owners. This fixture proves those composed contracts, never native custody.
+
+The profile's agent service is a test port too: a model run an operation sends
+under its held START permit is answered by the stand-in that
+:func:`serving_portable_agent` binds, as the runtime relays it to the profile's
+admitted service. With none bound, the run is refused ``service_unavailable``,
+which is what the runtime answers when no service is admitted.
 """
 
 from __future__ import annotations
@@ -28,6 +34,7 @@ from uuid import UUID, uuid4
 import pytest
 from click.testing import Result
 
+from cadrumo.adapters.outbound.llm.tests.model_run_support import RecordingModelRuns
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
 from cadrumo.adapters.persistence.storage.custody.tests.portable_password_custody import portable_password_custody
 from cadrumo.adapters.persistence.storage.master_key.active_session import (
@@ -45,12 +52,13 @@ from cadrumo.application.user_profile.access_contracts import (
 )
 from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore
 from cadrumo.application.user_profile.automation_enrollment import AutomationInventory
+from cadrumo.core.model_roles import ModelRole
 from cadrumo.core.time.clock import now
 from cadrumo.core.time.utc import UtcInstant
 from cadrumo.domain.calculations.registry.authority_location import published_authority_generation
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.tests.cli_fixture_ports import ClickInvokeKwargs
-from cadrumo_client.contracts.access_vocabulary import Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import (
     ByteChannel,
@@ -58,6 +66,15 @@ from cadrumo_client.contracts.contracts import (
     Peer,
     RefusalCode,
     RefusalError,
+)
+from cadrumo_client.contracts.model_runs import (
+    ModelRunBody,
+    ModelRunHeader,
+    ModelRunOutcome,
+    ModelRunRefusal,
+    ModelRunRefusalCode,
+    ModelRunServed,
+    decode_model_run_body,
 )
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport import credentials
@@ -75,6 +92,7 @@ from cadrumo_runtime.commands import runtime_automation_request
 from cadrumo_runtime.contracts.worker_authorization import (
     WorkerAuthorityRequest,
     WorkerAuthorizationOwner,
+    WorkerAuthorizationRequest,
     WorkerAutomationInventoryRequest,
 )
 from cadrumo_runtime.host import session_owner, worker_service
@@ -228,6 +246,80 @@ class _ContextServer(RetainedRuntimeTransportServer):
         self.test_context.copy().run(super()._connection, channel)
 
 
+_SERVED_AGENTS: list[RecordingModelRuns] = []
+
+
+@contextmanager
+def serving_portable_agent(service: RecordingModelRuns) -> Generator[RecordingModelRuns]:
+    """Answer every model run the portable runtime relays with ``service`` until the block exits."""
+    _SERVED_AGENTS.append(service)
+    try:
+        yield service
+    finally:
+        _SERVED_AGENTS.remove(service)
+
+
+async def _agent_answer(
+    service: RecordingModelRuns, role: str | None, header: ModelRunHeader | None, body: ModelRunBody | None
+) -> tuple[ModelRunOutcome, bytearray]:
+    """Answer one lookup, selections read or run, in the outcome shape the service returns it."""
+    if header is None:
+        if role is None:
+            selections = await service.selections()
+            if isinstance(selections, ModelRunRefusal):
+                return ModelRunOutcome(refusal=selections.code), bytearray()
+            return ModelRunOutcome(selections=selections), bytearray()
+        try:
+            known = ModelRole(role)
+        except ValueError:
+            return ModelRunOutcome(refusal=ModelRunRefusalCode.UNKNOWN_ROLE), bytearray()
+        lane = await service.lookup(known)
+        if isinstance(lane, ModelRunRefusal):
+            return ModelRunOutcome(refusal=lane.code), bytearray()
+        return ModelRunOutcome(lane=lane), bytearray()
+    if body is None:
+        raise RefusalError(RefusalCode.INVALID_FRAME)
+    output = await service.run(header, body)
+    if isinstance(output, ModelRunRefusal):
+        return ModelRunOutcome(refusal=output.code), bytearray()
+    text = bytearray(output.text.encode("utf-8"))
+    served = ModelRunServed(
+        provider_id=output.provider_id,
+        transport=output.transport,
+        model=output.model,
+        agent_version=output.agent_version,
+    )
+    return ModelRunOutcome(served=served, text_byte_count=len(text)), text
+
+
+class _ModelRunLease(WorkerAuthorizationLease):
+    """A held permit whose one model run reaches the bound agent stand-in instead of a native channel."""
+
+    _answered = False
+
+    @override
+    def model_run(
+        self, role: str | None, header: ModelRunHeader | None, body: bytearray, *, answer_seconds: float
+    ) -> tuple[ModelRunOutcome, bytearray]:
+        del answer_seconds
+        request = self.request
+        try:
+            # The production lease admits one run, only under a START permit.
+            if (
+                not isinstance(request, WorkerAuthorizationRequest)
+                or request.request.action is not AccessAction.START
+                or self._answered
+            ):
+                raise RefusalError(RefusalCode.INVALID_FRAME)
+            self._answered = True
+            decoded = None if header is None else decode_model_run_body(body)
+        finally:
+            body[:] = bytes(len(body))
+        if not _SERVED_AGENTS:
+            return ModelRunOutcome(refusal=ModelRunRefusalCode.SERVICE_UNAVAILABLE), bytearray()
+        return asyncio.run(_agent_answer(_SERVED_AGENTS[-1], role, header, decoded))
+
+
 class _Authorization(WorkerAuthorizationClient):
     def __init__(self, identity: ProfileWorkerIdentity, root: Path, owner: WorkerAuthorizationOwner) -> None:
         super().__init__(identity=identity, root=root, parent_pid=os.getpid())
@@ -244,7 +336,7 @@ class _Authorization(WorkerAuthorizationClient):
     async def guard(self, request: WorkerAuthorityRequest) -> AsyncGenerator[WorkerAuthorizationLease]:
         # The actual runtime owner evaluates and holds its thread-affine fence.
         with self.owner.authorize(request):
-            yield WorkerAuthorizationLease(connections=self.connections, request=request)
+            yield _ModelRunLease(connections=self.connections, request=request)
 
     @override
     async def inventory(self, request: WorkerAutomationInventoryRequest) -> AutomationInventory:

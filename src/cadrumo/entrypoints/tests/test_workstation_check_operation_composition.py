@@ -14,6 +14,7 @@ from ...adapters.persistence.storage.tests.profile_capsule_runtime import open_t
 from ...adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ...application import workstation_check as service
 from ...application.auth.operator_probe_ports import OperatorProbePorts
+from ...application.local_reader import LOCAL_AI_PROGRAM_SERVICE
 from ...application.preflight import HealthSeverity, PreflightCheck
 from ...application.provisioning import DependencyStatus
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
@@ -34,7 +35,7 @@ def test_exact_encrypted_profile_capabilities_and_retained_pin_reach_canonical_r
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Canonical capability reads retain source and issue behavior without a live probe."""
-    vision = DependencyStatus(service="local_reader:vision", available=True, facts={"installed": True, "count": 0})
+    program = DependencyStatus(service=LOCAL_AI_PROGRAM_SERVICE, available=True, facts={"installed": True, "count": 0})
     google = DependencyStatus(service="extra:google", available=True, facts={"installed": True})
     preflight_row = PreflightCheck(
         check="synthetic:registry", healthy=True, severity=HealthSeverity.OK, facts={"assembled": True, "records": 0}
@@ -42,10 +43,10 @@ def test_exact_encrypted_profile_capabilities_and_retained_pin_reach_canonical_r
     observed: list[str] = []
     captured: list[OperatorProbePorts] = []
 
-    def dependencies() -> tuple[tuple[DependencyStatus, ...], DependencyStatus, tuple[DependencyStatus, ...]]:
+    def dependencies() -> tuple[tuple[DependencyStatus, ...], tuple[DependencyStatus, ...]]:
         assert governed_facts_in_scope() is authority_operation
         observed.append("dependencies")
-        return (vision, google), vision, (google,)
+        return (program, google), (google,)
 
     def preflight(
         *, object_path_suffix_length: int, operator_probe_ports: OperatorProbePorts
@@ -76,7 +77,7 @@ def test_exact_encrypted_profile_capabilities_and_retained_pin_reach_canonical_r
         assert decisions[ServiceCapability.LLM_VISION].enabled
         assert decisions[ServiceCapability.LLM_VISION].source is CapabilitySource.PROFILE
         assert not decisions[ServiceCapability.GOOGLE_EXPORT].enabled
-        assert report.dependencies == (vision, google) and report.preflight == (preflight_row,)
+        assert report.dependencies == (program, google) and report.preflight == (preflight_row,)
         assert WorkstationCheckProjection.from_report(report).to_report() == report
         assert observed == ["dependencies", "preflight"] and captured == [ports.operator_probe_ports]
         assert governed_facts_in_scope() is previous_scope

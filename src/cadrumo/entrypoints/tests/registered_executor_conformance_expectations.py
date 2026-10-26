@@ -485,11 +485,6 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
             ("modelo-reconcile-pull.prepare",),
             expected_refusal_ref="REFUSED_LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NOT_FOUND",
         ),
-        # Verify against a closed runtime endpoint: the executor settles its
-        # typed not-ready outcome and changes nothing on the host.
-        RegisteredExecutorConformanceCase(
-            "local-reader.provision", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
-        ),
         RegisteredExecutorConformanceCase(
             "modelo.work.rename", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
