@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:624ff002913cd3cffe5abcc0c5502f00c6c467f4f0ed349802bdc855c32deb30'
+body_hash: 'sha256:ed402598eaf79fb297f40669e1c6ee405a874163a2bce5b18804bacd182e2401'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -853,6 +853,114 @@ related:
 - `S24` `verify:` `dev.locales.desktop_chrome --shell-source generation` -> `pass`
 - `S24` `verify:` `dev/quality/tests/test_no_model_definitions.py` -> `pass`
 - `S24` `by:` `implementation-engineer`
+- `S25` `M` `src/cadrumo/application/provisioning_host.py`
+- `S25` `M` `src/cadrumo/application/local_reader_status_operation.py`
+- `S25` `M` `src/cadrumo/application/ledger/invoice_evidence_readiness_operation.py`
+- `S25` `M` `src/cadrumo/application/tests/test_provisioning_host.py`
+- `S25` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S25` `M` `src/cadrumo/core/external_constants.toml`
+- `S25` `M` `native/desktop/frontend/src/shell/ledger.ts`
+- `S25` `M` `native/desktop/frontend/src/dev/ledgerEvidenceFixture.ts`
+- `S25` `M` `dev/locales/desktop_chrome.py`
+- `S25` `M` `dev/locales/fstring_registry.py`
+- `S25` `M` `dev/locales/tests/test_audit.py`
+- `S25` `M` `dev/runtime_lifecycle/tests/test_components_surface_conformance.py`
+- `S25` `M` `dev/smoke/acquisition_lane.py`
+- `S25` `M` `dev/smoke/tests/test_acquisition_lane.py`
+- `S25` `M` `src/cadrumo/adapters/inbound/financial/providers/tests/test_mapped_tabular_reader_unavailable.py`
+- `S25` `M` `src/cadrumo/adapters/outbound/components/client.py`
+- `S25` `M` `src/cadrumo/adapters/outbound/components/protocol.py`
+- `S25` `M` `src/cadrumo/adapters/outbound/components/tests/recorded_rows.py`
+- `S25` `M` `src/cadrumo/adapters/outbound/components/tests/test_client.py`
+- `S25` `M` `src/cadrumo/adapters/outbound/components/tests/test_client_drives_the_real_role.py`
+- `S25` `M` `src/cadrumo/adapters/outbound/components/tests/test_protocol.py`
+- `S25` `M` `src/cadrumo/adapters/outbound/llm/providers/agent.py`
+- `S25` `M` `src/cadrumo/adapters/outbound/llm/tests/test_agent_dispatch.py`
+- `S25` `M` `src/cadrumo/application/dependency_contracts.py`
+- `S25` `M` `src/cadrumo/application/dependency_wording.py`
+- `S25` `M` `src/cadrumo/application/invoices/tests/test_bulk_import_reader_reason.py`
+- `S25` `M` `src/cadrumo/application/ledger/evidence_errors.py`
+- `S25` `M` `src/cadrumo/application/ledger/invoice_draft_extraction.py`
+- `S25` `M` `src/cadrumo/application/ledger/tests/test_evidence_reader_refusal_key.py`
+- `S25` `M` `src/cadrumo/application/operator_actions/catalogue.py`
+- `S25` `M` `src/cadrumo/application/operator_actions/tests/test_catalogue.py`
+- `S25` `M` `src/cadrumo/application/operator_surface/action_targets.py`
+- `S25` `M` `src/cadrumo/application/provisioning_contracts.py`
+- `S25` `M` `src/cadrumo/application/tests/test_dependency_health_rows.py`
+- `S25` `M` `src/cadrumo/application/tests/test_dependency_registry_conformance.py`
+- `S25` `M` `src/cadrumo/application/tests/test_dependency_wording.py`
+- `S25` `M` `src/cadrumo/entrypoints/cli/_component_setup_rendering.py`
+- `S25` `M` `src/cadrumo/entrypoints/cli/command_operation_table.py`
+- `S25` `M` `src/cadrumo/entrypoints/cli/config/_provision_command_specs.py`
+- `S25` `M` `src/cadrumo/entrypoints/cli/config/provision_cli.py`
+- `S25` `M` `src/cadrumo/entrypoints/cli/config/provision_payloads.py`
+- `S25` `M` `src/cadrumo/entrypoints/cli/config/tests/test_check_setup_rows.py`
+- `S25` `M` `src/cadrumo/entrypoints/cli/tests/test_component_setup_refusal_text.py`
+- `S25` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_evidence_batch_cli.py`
+- `S25` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_import_reader_refusal_settlement.py`
+- `S25` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_authentication_contract.py`
+- `S25` `M` `src/cadrumo/entrypoints/cli/tests/test_provision_components_role.py`
+- `S25` `M` `src/cadrumo/entrypoints/cli/tests/test_provision_drives_the_real_role.py`
+- `S25` `M` `src/cadrumo/entrypoints/cli/tests/test_provision_offline_status.py`
+- `S25` `M` `src/cadrumo/entrypoints/tests/test_evidence_reader_refusal_settlement.py`
+- `S25` `M` `src/cadrumo/entrypoints/tests/test_ledger_classification_reader_refusal_settlement.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/ledger/tests/setup_status_fixtures.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_evidence_draft_setup_offer.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_evidence_files_batch.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_evidence_refusal_and_review_setup_offer.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_import_setup_offer.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/operations/tests/test_modal_setup_offer.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/setup/offer.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/setup/screen.py`
+- `S25` `M` `src/cadrumo/entrypoints/tui/setup/tests/test_setup_screen.py`
+- `S25` `M` `src/cadrumo/locales/ca/application.yml`
+- `S25` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S25` `M` `src/cadrumo/locales/ca/common.yml`
+- `S25` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S25` `M` `src/cadrumo/locales/en/application.yml`
+- `S25` `M` `src/cadrumo/locales/en/cli.yml`
+- `S25` `M` `src/cadrumo/locales/en/common.yml`
+- `S25` `M` `src/cadrumo/locales/en/errors.yml`
+- `S25` `M` `src/cadrumo/locales/es/application.yml`
+- `S25` `M` `src/cadrumo/locales/es/cli.yml`
+- `S25` `M` `src/cadrumo/locales/es/common.yml`
+- `S25` `M` `src/cadrumo/locales/es/errors.yml`
+- `S25` `M` `src/cadrumo/locales/hu/application.yml`
+- `S25` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S25` `M` `src/cadrumo/locales/hu/common.yml`
+- `S25` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S25` `M` `src/cadrumo/tests/components_role_replay.py`
+- `S25` `M` `src/cadrumo/tests/fixtures/components_role/cancel_nothing_running.jsonl`
+- `S25` `D` `src/cadrumo/tests/fixtures/components_role/plan_every_item.jsonl`
+- `S25` `M` `src/cadrumo/tests/fixtures/components_role/remove_absent_browser.jsonl`
+- `S25` `M` `src/cadrumo/tests/fixtures/components_role/setup_browser_completed.jsonl`
+- `S25` `M` `src/cadrumo/tests/fixtures/components_role/setup_declined.jsonl`
+- `S25` `M` `src/cadrumo/tests/fixtures/components_role/setup_follow_stopped.jsonl`
+- `S25` `M` `src/cadrumo/tests/fixtures/components_role/setup_followed_completed.jsonl`
+- `S25` `M` `src/cadrumo/tests/fixtures/components_role/setup_input_refused.jsonl`
+- `S25` `D` `src/cadrumo/tests/fixtures/components_role/setup_local_ai_refused_host_unreachable.jsonl`
+- `S25` `M` `src/cadrumo/tests/fixtures/components_role/setup_plan_changed.jsonl`
+- `S25` `M` `src/cadrumo/tests/fixtures/components_role/setup_refused_blocked_by_network.jsonl`
+- `S25` `M` `src/cadrumo/tests/fixtures/components_role/status_quick.jsonl`
+- `S25` `M` `src/cadrumo/tests/fixtures/components_role/status_quick_browser_ready.jsonl`
+- `S25` `M` `src/cadrumo/tests/fixtures/components_role/transcripts.json`
+- `S25` `M` `src/cadrumo_mcp/mcp/component_setup.py`
+- `S25` `M` `src/cadrumo_mcp/mcp/protocol_contract.py`
+- `S25` `M` `src/cadrumo_mcp/mcp/tests/test_result_page_tool.py`
+- `S25` `M` `src/cadrumo_mcp/mcp/tests/test_setup_tools.py`
+- `S25` `M` `src/cadrumo_mcp/mcp/tests/test_setup_tools_drive_the_real_role.py`
+- `S25` `M` `src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_evidence.py`
+- `S25` `A` `src/cadrumo/tests/fixtures/components_role/plan_browser.jsonl`
+- `S25` `verify:` `uv run --no-sync pytest components adapter, dependency wording/contracts/registry/health rows, operator actions, CLI provision and refusal text, TUI setup and ledger/modal offers, MCP setup tools and result tool, agent dispatch, dev/smoke, dev/quality no_python_provisioning and no_model_definitions, dev/locales audit and dynamic registry (focused modules)` -> `pass`
+- `S25` `verify:` `just check-import-boundaries` -> `pass`
+- `S25` `verify:` `just check-style` -> `pass`
+- `S25` `verify:` `just check-format` -> `pass`
+- `S25` `verify:` `just check-types` -> `pass`
+- `S25` `verify:` `uv run --no-sync python -m dev.operation_contract_manifest.generate --check` -> `pass`
+- `S25` `by:` `implementation-engineer`
+- `S24` `verify:` `cmake --build build/windows-x64 --config Debug --target desktop-host-unit-test (584 passed, 1 ignored)` -> `pass`
+- `S24` `verify:` `cmake --build build/windows-x64 --config Debug --target desktop-host-unit-clippy` -> `pass`
+- `S09` `verify:` `desktop-host-unit-test: provider_settings::wire keyless-lane tests compiled and passed` -> `pass`
 
 ## Notes
 
@@ -912,3 +1020,7 @@ related:
 - `S15` P03 review fix: batch-consent-refusal-closes-no-role
 - `S26` Focused dev/docs pytest run incomplete: profile-delete sequences hit runtime worker exchange timeouts and the 590s wrapper killed two workers; localization and catalogue-drift tests passed. docs/cli/config/provision.rst still lists pull/load/--model; regeneration belongs to S28.
 - `S24` Desktop crate not compiled: no CMake inputs here; Rust checked by rustfmt only. python -m dev.quality.types exits 1 on one ty diagnostic in `src/cadrumo/entrypoints/tui/setup/tests/test_setup_screen.py,` another session's uncommitted file. Plan file left uncommitted: it carries other workers' uncommitted edits.
+- `S25` `test_the_desktop_wire_contract_admits_every_code_a_row_carries` fails until the desktop wire's Recovery enum gains SetUpInDesktop (P04.S30); the Python vocabulary now carries it.
+- `S25` The recorded role conversations under `src/cadrumo/tests/fixtures/components_role` were rewritten to plan contract 3 and `set_up_in_desktop` by script, not re-recorded: re-record them against the final role.
+- `S25` The `external_tool` role tests `(test_client_drives_the_real_role,` `test_provision_drives_the_real_role,` `test_setup_tools_drive_the_real_role,` conformance and lane real-role cases) were not run: no built binary.
+- `S25` Shared with P04.S30: the locale catalogue common.yml files and `dev/locales/desktop_chrome.py` also carry its licence and different-model-version string removals.
