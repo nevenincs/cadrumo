@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:5177b56fe07cf06c158bc2294539f8a263b1a8513bf4adeee9395f60d19240dd'
+body_hash: 'sha256:f32c16da7cfa38d7d321193f5d241029918ea5565b90aa305f87d549de87b424'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -1410,6 +1410,18 @@ related:
 - `S31` `verify:` `eslint on the touched frontend files` -> `pass`
 - `S31` `verify:` `prettier --check on the touched frontend files` -> `pass`
 - `S31` `verify:` `just check-import-boundaries` -> `fail`
+- `S31` `M` `src/cadrumo/domain/transactions/llm.py`
+- `S31` `M` `src/cadrumo/entrypoints/cli/_ledger_llm_cli.py`
+- `S31` `M` `src/cadrumo/adapters/inbound/financial/providers/pdf_statement.py`
+- `S31` `M` `src/cadrumo/core/image_media_type.py`
+- `S31` `M` `src/cadrumo/adapters/outbound/llm/consent.py`
+- `S31` `M` `src/cadrumo/core/field_origin.py`
+- `S31` `M` `src/cadrumo/application/ledger/statement_reading.py`
+- `S31` `M` `src/cadrumo/application/ledger/evidence_input.py`
+- `S31` `M` `src/cadrumo/application/ledger/document_transcription.py`
+- `S31` `verify:` `uv run --no-sync pytest src/cadrumo/core/tests/test_field_origin.py src/cadrumo/core/tests/test_image_media_type.py src/cadrumo/domain/transactions/tests/test_llm_evidence_prompt.py src/cadrumo/adapters/outbound/llm/tests/test_evidence_consent_gate.py src/cadrumo/adapters/outbound/llm/tests/test_preconditions.py -n 0` -> `pass`
+- `S31` `verify:` `just check-style` -> `pass`
+- `S31` `verify:` `just check-format` -> `pass`
 
 ## Notes
 
