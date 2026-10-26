@@ -480,6 +480,13 @@ function tauriAgent(call: HostCall): {
         };
       },
       providerCatalog: () => call("agent_provider_catalog", {}),
+      modelRoles: () => call("agent_model_roles", {}),
+      setModelRole: (role, lane, model, expectedRevision) =>
+        call("agent_model_role_set", { role, lane, model, expectedRevision }),
+      clearModelRole: (role, expectedRevision) =>
+        call("agent_model_role_clear", { role, expectedRevision }),
+      modelLicence: (provider, transport, model) =>
+        call("agent_model_licence", { provider, transport, model }),
       skills: () =>
         call("agent_skills", {}).then((answer) =>
           readable(readSkillInventory(answer)),

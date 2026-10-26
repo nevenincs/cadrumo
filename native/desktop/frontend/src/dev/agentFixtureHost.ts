@@ -28,7 +28,12 @@ import {
   type AgentToolStatus,
   type AgentViews,
 } from "../shell/agentViews";
-import { FIXTURE_CATALOG } from "./fixtures/agentCatalog";
+import type { AgentModelRoles } from "../ipc/contract";
+import {
+  FIXTURE_BACKGROUND_LANES,
+  FIXTURE_CATALOG,
+  FIXTURE_DECLARED_CATALOG,
+} from "./fixtures/agentCatalog";
 import {
   FIXTURE_SKILLS,
   MANY_FIXTURE_SKILLS,
@@ -73,9 +78,22 @@ export type FixtureAsks = "questions" | "approval" | "review";
 /** What the conversations have stored: the fixture documents, nothing at
  * all, storage the host does not serve, or storage that cannot be read. */
 export type FixtureDocuments = "stored" | "none" | "unavailable" | "failed";
-/** How the service answers the catalog: served, or busy starting the agent
- * until the scenario publishes the agent's status. */
-export type FixtureCatalog = "served" | "busy";
+/** How the service answers the catalog: served, busy starting the agent
+ * until the scenario publishes the agent's status, or starting with only the
+ * agent's declared catalog until the scenario publishes it ready. */
+export type FixtureCatalog = "served" | "busy" | "declared";
+
+/** The roles the made-up service keeps a selection for, in its order, and the
+ * one whose runs read images. The desktop is told them by the service. */
+const FIXTURE_ROLES = [
+  "vision_transcription",
+  "text_extraction",
+  "column_role_mapping",
+  "supply_nature_proposal",
+] as const;
+const IMAGE_ROLE = "vision_transcription";
+
+const revisionOf = (count: number) => count.toString(16).padStart(64, "0");
 
 /** How many stored documents one listing page holds here: few enough that
  * the fixture's longest list is read in several. */
@@ -485,9 +503,52 @@ export function fixtureAgent({
   session: AgentSession;
   /** Publishes the agent's status, as the service does once it is ready. */
   publishStatus: (status?: AgentServiceStatus) => void;
+  /** Changes the stored selections from elsewhere. */
+  changeRolesElsewhere: () => void;
 } {
   let catalogBusy = catalog === "busy";
-  let publishedStatus: AgentServiceStatus | null = null;
+  let catalogDeclared = catalog === "declared";
+  let publishedStatus: AgentServiceStatus | null = catalogDeclared
+    ? { state: "starting", lane: "development" }
+    : null;
+  // The person's selection per role, as the made-up service stores it, and
+  // how many changes it has committed, which its revision names.
+  const selections = new Map<string, { lane: string; model: string }>();
+  let committed = 0;
+  const roleSnapshot = (): AgentModelRoles => ({
+    state: "readable",
+    roles: FIXTURE_ROLES.map((role) => ({
+      role,
+      lane: selections.get(role)?.lane ?? null,
+      model: selections.get(role)?.model ?? null,
+    })),
+    revision: revisionOf(committed),
+  });
+  const guarded = async (expectedRevision: string) => {
+    await check();
+    if (expectedRevision !== revisionOf(committed))
+      throw coded("agent_model_role_revision_conflict");
+  };
+  /** The models of a lane of the catalog the service would answer now, by
+   * catalogue lane id, as a run names them. */
+  const laneModels = (laneId: string) => {
+    if (turnedOff().has(laneId)) return undefined;
+    if (catalogDeclared)
+      return FIXTURE_DECLARED_CATALOG.catalog.providers
+        ?.find((held) => held.id === laneId)
+        ?.models?.map((model) => ({
+          id: model.id,
+          vision: model.vision ?? null,
+          licence: model.licence ?? null,
+        }));
+    return (FIXTURE_CATALOG.providers ?? [])
+      .find((held) => `${held.provider_id}_${held.transport}` === laneId)
+      ?.catalog.models?.map((entry) => ({
+        id: entry.model,
+        vision: entry.vision ?? null,
+        licence: entry.licence ?? null,
+      }));
+  };
   const statusListeners = new Set<(status: AgentServiceStatus) => void>();
   const inventory = skills === "many" ? MANY_FIXTURE_SKILLS : FIXTURE_SKILLS;
   const knownSkill = (name: string) => {
@@ -1062,11 +1123,70 @@ export function fixtureAgent({
       // A lane turned off in the settings is not offered, as the service
       // leaves it out of the catalog it serves.
       const off = turnedOff();
+      if (catalogDeclared)
+        return {
+          ...FIXTURE_DECLARED_CATALOG,
+          catalog: {
+            ...FIXTURE_DECLARED_CATALOG.catalog,
+            providers: (
+              FIXTURE_DECLARED_CATALOG.catalog.providers ?? []
+            ).filter((lane) => !off.has(lane.id)),
+          },
+        };
       return {
         ...FIXTURE_CATALOG,
         providers: (FIXTURE_CATALOG.providers ?? []).filter(
           (lane) => !off.has(`${lane.provider_id}_${lane.transport}`),
         ),
+      };
+    },
+    async modelRoles() {
+      say("agentModelRoles");
+      await check();
+      return roleSnapshot();
+    },
+    async setModelRole(role, lane, model, expectedRevision) {
+      say(`agentModelRoleSet ${role}`);
+      await guarded(expectedRevision);
+      if (!(FIXTURE_ROLES as readonly string[]).includes(role))
+        throw coded("agent_model_role_unknown_role");
+      const models = laneModels(lane);
+      if (!models) throw coded("agent_model_role_unknown");
+      if (!FIXTURE_BACKGROUND_LANES.has(lane))
+        throw coded("agent_model_role_lane_not_runnable");
+      const entry = models.find((held) => held.id === model);
+      if (!entry) throw coded("agent_model_role_model_not_in_catalogue");
+      if (role === IMAGE_ROLE && entry.vision !== true)
+        throw coded("agent_model_role_vision_required");
+      selections.set(role, { lane, model });
+      committed += 1;
+      return roleSnapshot();
+    },
+    async clearModelRole(role, expectedRevision) {
+      say(`agentModelRoleClear ${role}`);
+      await guarded(expectedRevision);
+      if (!(FIXTURE_ROLES as readonly string[]).includes(role))
+        throw coded("agent_model_role_unknown_role");
+      selections.delete(role);
+      committed += 1;
+      return roleSnapshot();
+    },
+    async modelLicence(provider, transport, model) {
+      say(`agentModelLicence ${model}`);
+      await check();
+      // Only a ready agent serves licence texts.
+      if (catalogDeclared) throw coded("agent_service_not_ready");
+      const entry = laneModels(`${provider}_${transport}`)?.find(
+        (held) => held.id === model,
+      );
+      if (!entry?.licence) throw coded("agent_gateway_licence_unknown");
+      return {
+        ...entry.licence,
+        provider,
+        transport,
+        model,
+        installed: true,
+        text: `${entry.licence.name}\n\nA made-up licence text for ${model}, served by the scenario host.`,
       };
     },
     ...(skills === "unavailable"
@@ -1390,7 +1510,14 @@ export function fixtureAgent({
   const publishStatus = (next?: AgentServiceStatus) => {
     publishedStatus = next ?? null;
     catalogBusy = false;
+    // A declared catalog gives way to the served one once the agent is ready.
+    if (next === undefined || next.state === "ready") catalogDeclared = false;
     for (const listener of statusListeners) listener(status());
   };
-  return { agent, session, publishStatus };
+  /** Commits a change to the selections as another window would, so the
+   * revision this one read is out of date. */
+  const changeRolesElsewhere = () => {
+    committed += 1;
+  };
+  return { agent, session, publishStatus, changeRolesElsewhere };
 }

@@ -102,12 +102,14 @@ function seeds(): Seed[] {
         destination: "components/browser",
         installs_outside_program: false,
         shares_download_with: null,
+        advisories: [],
+        licences: [],
         parts: [],
       },
     },
     {
-      // One item: the program that runs the models, then the model selected for
-      // each role. Two roles select the same model, so only the first downloads it.
+      // One item: the program that runs the models, then each role's model.
+      // Two roles read with the same model, so only the first downloads it.
       row: row("local_ai", "local_ai", 3.4 * GB),
       plan: {
         download_bytes: 3.4 * GB,
@@ -115,6 +117,10 @@ function seeds(): Seed[] {
         destination: "models",
         installs_outside_program: true,
         shares_download_with: null,
+        advisories: ["licence_commercial_use_barred"],
+        licences: [
+          { model: "qwen2.5vl:3b", licence: "Qwen RESEARCH LICENSE AGREEMENT" },
+        ],
         parts: [
           { part: "program", download_bytes: null },
           { part: "vision_transcription", download_bytes: 2.4 * GB },
@@ -574,7 +580,6 @@ export function setupFixture({
         kind: checkMode === "full" ? "status_full" : "status_quick",
         stage: "done",
         failure: null,
-        refusal: null,
       };
       return Promise.resolve(publish());
     },
@@ -589,7 +594,6 @@ export function setupFixture({
         kind: "verify",
         stage: "done",
         failure: null,
-        refusal: null,
       };
       return Promise.resolve(publish());
     },

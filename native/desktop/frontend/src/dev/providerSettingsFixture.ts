@@ -40,11 +40,15 @@ const AUTH: Record<string, ProviderSettingsRecord["auth_kind"]> = {
   beta_cli: "provider_sign_in_only",
   gateway_cli: "api_key_with_base_url",
   relay_cli: "api_key_with_base_url",
+  local_api: "none",
 };
 
 /** The address a gateway lane is reached at unless the person gives one. */
 const DEFAULT_BASE_URL: Record<string, string> = {
   gateway_cli: "https://gateway.example/v1",
+  // The address the made-up agent declares for its keyless lane; the agent
+  // runs against the one the desktop launches it with, so none is shown.
+  local_api: "http://127.0.0.1:41000",
 };
 
 /** The settings lanes of the made-up catalog: id `<provider>_<transport>`. */
@@ -153,6 +157,14 @@ function initial(
   ProviderSettingsRecord,
   "mode" | "available" | "source" | "readiness" | "reason"
 > {
+  // A lane with nothing to set up is ready once it is listed.
+  if (seed.auth_kind === "none")
+    return {
+      mode: "unset",
+      available: true,
+      source: "none",
+      readiness: "ready",
+    };
   if (seed.auth_kind !== "provider_sign_in_only")
     return {
       mode: "unset",

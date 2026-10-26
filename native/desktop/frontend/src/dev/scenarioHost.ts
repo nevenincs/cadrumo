@@ -145,6 +145,8 @@ declare global {
     __scenarioProviderSignIn?: ProviderSignInFixtureControls;
     /** Publishes the fixture agent's status, as its service does when ready. */
     __scenarioAgentPublishStatus?: (status?: AgentServiceStatus) => void;
+    /** Commits a change to the fixture agent's role selections elsewhere. */
+    __scenarioModelRolesChangeElsewhere?: () => void;
     /** The next password change is answered as unconfirmed. */
     __scenarioPassword?: { uncertain(): void; changes(): number };
     /** The made-up window port, where the scenario offers one. */
@@ -454,6 +456,7 @@ export function scenarioHost(
     agent,
     session: agentSession,
     publishStatus,
+    changeRolesElsewhere,
   } = fixtureAgent({
     say,
     wait: () => wait(options.latencyMs),
@@ -473,6 +476,11 @@ export function scenarioHost(
   window.__scenarioAgentPublishStatus = (status) => {
     publishedBefore?.(status);
     publishStatus(status);
+  };
+  const changedBefore = window.__scenarioModelRolesChangeElsewhere;
+  window.__scenarioModelRolesChangeElsewhere = () => {
+    changedBefore?.();
+    changeRolesElsewhere();
   };
 
   const providerSettings = providerFixture.settings;

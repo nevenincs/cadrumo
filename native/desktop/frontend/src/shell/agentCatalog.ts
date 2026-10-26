@@ -6,9 +6,11 @@ import type {
   ProviderWay,
 } from "@/components/agent/types";
 import type {
+  AgentCatalogAnswer,
   AgentCatalogEntry,
+  AgentDeclaredCatalog,
+  AgentDeclaredLane,
   AgentEffort,
-  AgentProviderCatalog,
   AgentProviderLane,
   AgentSelectionRecord,
 } from "./agentSession";
@@ -41,6 +43,20 @@ import type { Translate } from "./strings";
 // it, so none is offered. A capability proof may name a tool server or a
 // multi-agent generation. This way-level summary only shows proofs that apply
 // across the lane, never a model- or generation-specific proof.
+//
+// While no agent is ready the service answers with the agent's declared
+// catalog instead, in an envelope (`kind: "declared"`). It says which lanes
+// exist and nothing of whether one can run here, so every lane of it is listed
+// as not yet observed and none can be chosen until the served catalog comes.
+
+/** The catalog answer is the agent's declared catalog, not a served one. */
+export const isDeclared = (
+  answer: AgentCatalogAnswer,
+): answer is AgentDeclaredCatalog => answer.kind === "declared";
+
+/** The served lanes of a catalog answer; a declared catalog serves none. */
+const servedLanes = (answer: AgentCatalogAnswer): AgentProviderLane[] =>
+  isDeclared(answer) ? [] : (answer.providers ?? []);
 
 /** The identity of a lane: one provider, reached one way. */
 const wayId = (lane: AgentProviderLane) =>
@@ -174,13 +190,67 @@ export type CatalogChoices = {
   /** The catalog lists lanes, but none says what provider or transport it
    * is: the service is older than this column. */
   incompatible: boolean;
+  /** False while the lanes are only the agent's declared ones, which no
+   * running agent has observed yet. */
+  observed: boolean;
 };
+
+const declaredUnderstood = (lane: AgentDeclaredLane) =>
+  typeof lane.provider === "string" &&
+  lane.provider !== "" &&
+  (lane.transport === "api" || lane.transport === "cli");
+
+/** The declared lanes, each listed under its provider and none choosable. */
+function declaredChoices(
+  t: Translate,
+  catalog: AgentDeclaredCatalog,
+): CatalogChoices {
+  const declared = catalog.catalog.providers ?? [];
+  const key = (lane: AgentDeclaredLane) => `${lane.provider}/${lane.transport}`;
+  const lanes = declared.filter(
+    (lane, index) =>
+      declaredUnderstood(lane) &&
+      declared.findIndex((held) => key(held) === key(lane)) === index,
+  );
+  const grouped = new Map<string, AgentDeclaredLane[]>();
+  for (const lane of lanes)
+    grouped.set(lane.provider, [...(grouped.get(lane.provider) ?? []), lane]);
+  const models: Record<string, ModelOption[]> = {};
+  const providers = [...grouped].map(([id, group]): ProviderOption => {
+    const ways = [...group]
+      .sort(
+        (a, b) => Number(a.transport === "cli") - Number(b.transport === "cli"),
+      )
+      .map((lane): ProviderWay => {
+        models[key(lane)] = [];
+        return {
+          id: key(lane),
+          transport: lane.transport,
+          selectable: false,
+          unavailableReason: t("desktop.agent.lane_not_observed"),
+        };
+      });
+    return {
+      id,
+      name: group[0]?.display_name ?? id,
+      selectable: false,
+      ways,
+    };
+  });
+  return {
+    providers,
+    models,
+    incompatible: declared.length > 0 && lanes.length === 0,
+    observed: false,
+  };
+}
 
 /** The providers and models the column offers, as the catalog has them. */
 export function catalogChoices(
   t: Translate,
-  catalog: AgentProviderCatalog,
+  catalog: AgentCatalogAnswer,
 ): CatalogChoices {
+  if (isDeclared(catalog)) return declaredChoices(t, catalog);
   const served = catalog.providers ?? [];
   const lanes = served.filter(
     (lane, index) =>
@@ -244,6 +314,7 @@ export function catalogChoices(
     providers,
     models,
     incompatible: served.length > 0 && lanes.length === 0,
+    observed: true,
   };
 }
 
@@ -349,10 +420,10 @@ const isModelId = (id: string) =>
 /** What a send runs with, as a run start takes it; null while the model is
  * not one the way offers or the person has written. */
 export function selectionRecord(
-  catalog: AgentProviderCatalog,
+  catalog: AgentCatalogAnswer,
   selection: AgentSelection,
 ): AgentSelectionRecord | null {
-  const lane = catalog.providers?.find(
+  const lane = servedLanes(catalog).find(
     (held) => understood(held) && wayId(held) === selection.wayId,
   );
   if (!lane) return null;
@@ -375,10 +446,10 @@ export function selectionRecord(
  * `selectionRecord`. Null where the catalog no longer has its lane, or no
  * longer lists its model. */
 export function ranSelection(
-  catalog: AgentProviderCatalog,
+  catalog: AgentCatalogAnswer,
   ran: AgentRanWith,
 ): AgentSelection | null {
-  const lane = catalog.providers?.find(
+  const lane = servedLanes(catalog).find(
     (held) =>
       understood(held) &&
       held.provider_id === ran.provider &&

@@ -1,10 +1,13 @@
 import type {
   AgentCatalogEntry,
+  AgentDeclaredCatalog,
   AgentEffort,
   AgentLaneCapability,
+  AgentModelLicenceFacts,
   AgentNativeControl,
   AgentProviderCatalog,
   AgentProviderLane,
+  AgentRecommendedCapability,
 } from "../../shell/agentSession";
 
 // A provider catalog in the shape cadrumo-agent serves it, for the scenario
@@ -76,6 +79,8 @@ const DECLARED_LANES: readonly DeclaredLane[] = [
   declare("zeta", "cli", "declared"),
   declare("eta", "cli", "declared"),
   declare("theta", "cli", "declared"),
+  // A lane run on this computer, with no key: its models state what they are.
+  declare("local", "api", "catalog"),
 ];
 
 const CHECKED = "2026-10-13T08:00:00Z";
@@ -136,6 +141,9 @@ type FixtureModel = {
   description?: string;
   efforts: AgentEffort[];
   default_effort?: AgentEffort;
+  vision?: boolean | null;
+  size_bytes?: number | null;
+  licence?: AgentModelLicenceFacts | null;
 };
 
 /** The lane's models and the controls they take, as the catalog serves them. */
@@ -154,6 +162,11 @@ function modelsOf(models: FixtureModel[]) {
       native_control_ids: control ? [control.control_id] : [],
       efforts: model.efforts,
       default_effort: model.default_effort ?? null,
+      vision: model.vision ?? null,
+      size_bytes: model.size_bytes ?? null,
+      context_length: null,
+      licence: model.licence ?? null,
+      installed: true,
     };
   });
   return { entries, controls: [...controls.values()] };
@@ -163,6 +176,8 @@ type Fixture = {
   held?: keyof typeof HELD;
   models?: FixtureModel[];
   recommended?: string;
+  /** What the lane recommends per capability, by model. */
+  recommendedFor?: Partial<Record<AgentRecommendedCapability, string>>;
   /** Controls beyond efforts that the lane advertises; the column offers none. */
   extraControls?: AgentNativeControl[];
   /** The capabilities that have been proven on this made-up host; every
@@ -233,6 +248,40 @@ const FIXTURES: Record<string, Fixture> = {
   "delta/cli": { held: "notConfigured" },
   // The one gateway whose key is set: its models are written, not listed.
   "gateway/cli": {},
+  "local/api": {
+    models: [
+      {
+        entry_id: "synthetic-text:1",
+        display_name: "Synthetic Text 1",
+        efforts: [],
+        vision: false,
+        size_bytes: 2_500_000_000,
+        licence: {
+          spdx: "Apache-2.0",
+          name: "Example Apache-style licence",
+          digest: `sha256:${"a".repeat(64)}`,
+        },
+      },
+      {
+        entry_id: "synthetic-vision:1",
+        display_name: "Synthetic Vision 1",
+        efforts: [],
+        vision: true,
+        size_bytes: 3_200_000_000,
+        licence: {
+          spdx: null,
+          name: "Example community licence",
+          digest: `sha256:${"b".repeat(64)}`,
+        },
+      },
+      {
+        entry_id: "synthetic-plain:1",
+        display_name: "Synthetic Plain 1",
+        efforts: [],
+      },
+    ],
+    recommendedFor: { vision: "synthetic-vision:1", text: "synthetic-text:1" },
+  },
 };
 
 const KEYED = new Set(["gateway/cli"]);
@@ -264,6 +313,9 @@ function lane(declared: DeclaredLane): AgentProviderLane {
             revision: declared.catalog_revision ?? "fixture-1",
           },
       recommended_entry_id: fixture.recommended ?? entries[0]?.entry_id ?? null,
+      ...(fixture.recommendedFor
+        ? { recommended: fixture.recommendedFor }
+        : {}),
       models: entries,
       native_controls: [
         ...declared.native_controls,
@@ -286,3 +338,34 @@ export const FIXTURE_CATALOG: AgentProviderCatalog = {
   api_version: "v1",
   providers: DECLARED_LANES.map(lane),
 };
+
+/** The same made-up lanes as cadrumo-agent's declared catalog states them,
+ * in the envelope the service answers with while no agent is ready. */
+export const FIXTURE_DECLARED_CATALOG: AgentDeclaredCatalog = {
+  kind: "declared",
+  catalog: {
+    schema_version: 5,
+    providers: (FIXTURE_CATALOG.providers ?? []).map((served) => ({
+      id: `${served.provider_id}_${served.transport}`,
+      provider: served.provider_id,
+      transport: served.transport,
+      display_name: served.display_name,
+      recommended: served.catalog.recommended ?? {},
+      models: (served.catalog.models ?? []).map((entry) => ({
+        id: entry.model,
+        display_name: entry.display_name,
+        vision: entry.vision ?? null,
+        size_bytes: entry.size_bytes ?? null,
+        context_length: entry.context_length ?? null,
+        licence: entry.licence ?? null,
+      })),
+    })),
+  },
+};
+
+/** The lanes on which the made-up agent runs a document reading in the
+ * background, by catalogue lane id; a role on any other is refused. */
+export const FIXTURE_BACKGROUND_LANES: ReadonlySet<string> = new Set([
+  "alpha_api",
+  "local_api",
+]);

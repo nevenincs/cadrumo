@@ -22,19 +22,11 @@
 //! request, and the window keeps following until that setup ends. Closing the
 //! window stops only its following; the setup it followed goes on.
 //!
-//! Each engine a check or setup builds is admitted with the person's selection
-//! of local models before it runs (`admission`). A selection that cannot be
-//! admitted refuses the command and the engine never runs, so a refused check
-//! or setup changes no row.
-//!
 //! The engine words nothing; every value here is a code or a locale-neutral
 //! fact, and the window words them. A browser check's process ends with the
 //! window: on Windows it runs inside the window's kill-on-close job, and on
 //! Linux and macOS inside the window's process scope (`installation`).
-use super::{
-    admission::Admission,
-    wire::{self, CheckKind, CheckStage, Outcome, Refusal, RunStage},
-};
+use super::wire::{self, CheckKind, CheckStage, Outcome, Refusal, RunStage};
 use cadrumo_application::{
     component::Cancellation,
     error::Error,
@@ -44,7 +36,7 @@ use cadrumo_application::{
         failure::FailureCategory,
         items::{Destination, ItemId, Locations},
         local_ai::hardware::Hardware,
-        plan::SetupPlan,
+        plan::{Advisory, PlanEntry, SetupPlan},
         role_host,
         state::{
             BlockedReason, CheckMode, ItemState, Note, RecoveryAction, SetupStep, StaleReason,
@@ -85,23 +77,6 @@ pub fn installation() -> Arc<Engines> {
             engine: Engine::new(config)?,
         })
     })
-}
-
-/// Why a command got no engine to run on.
-enum Unready {
-    /// The installation's own settings could not make an engine.
-    Engine(Error),
-    /// The person's selection of local models could not be admitted.
-    Refused(Refusal),
-}
-
-/// An engine of this installation admitted with the local models the person
-/// selected, as the agent service states them now. Every check and setup runs
-/// on one, so no engine plans, pulls or checks a model nobody selected.
-fn admitted(engines: &Engines, admission: &Admission) -> Result<Engine, Unready> {
-    let Installation { mut engine } = engines().map_err(Unready::Engine)?;
-    engine.admit_local_ai(admission.local_models().map_err(Unready::Refused)?);
-    Ok(engine)
 }
 
 fn lock<T>(value: &Mutex<T>) -> MutexGuard<'_, T> {
@@ -147,8 +122,6 @@ struct CheckTrack {
     /// The category a refused check carried, which the window words as it words a row's;
     /// `None` for a check that is running, done, or failed with no category at all.
     failure: Option<wire::Failure>,
-    /// The refusal of a check whose engine could not be admitted with the selection.
-    refusal: Option<Refusal>,
 }
 
 struct SetupTrack {
@@ -207,9 +180,6 @@ struct Window {
     setup: Option<SetupTrack>,
     /// The plans this window approved, by digest.
     approved: BTreeSet<String>,
-    /// The setup whose engine could not be admitted, by operation id, and why. Its track
-    /// is gone: the start that asked for it is refused with this.
-    refused: Option<(String, Refusal)>,
     workers: Vec<JoinHandle<()>>,
     /// Stops a check at its next transfer chunk or browser launch once the window closes.
     checks: Arc<Cancellation>,
@@ -258,15 +228,13 @@ pub struct View {
 /// The engine as this window drives it.
 pub struct Components {
     engines: Arc<Engines>,
-    admission: Arc<Admission>,
     shared: Arc<Shared>,
 }
 
 impl Components {
-    pub fn new(engines: Arc<Engines>, admission: Arc<Admission>) -> Self {
+    pub fn new(engines: Arc<Engines>) -> Self {
         Self {
             engines,
-            admission,
             shared: Arc::new(Shared {
                 window: Mutex::default(),
                 changed: watch::Sender::new(0),
@@ -340,15 +308,13 @@ impl Components {
             kind,
             stage: CheckStage::Running,
             failure: None,
-            refusal: None,
         });
         let engines = self.engines.clone();
-        let admission = self.admission.clone();
         let shared = self.shared.clone();
         let cancellation = window.checks.clone();
         self.spawn(window, "setup-check", move || {
-            let report = admitted(&*engines, &admission).map(|mut engine| {
-                let engine = &mut engine;
+            let report = engines().map(|mut installation| {
+                let engine = &mut installation.engine;
                 match kind {
                     CheckKind::StatusQuick => {
                         engine.status(CheckMode::Quick, &ItemId::ALL, &mut |_| {}, &cancellation)
@@ -366,25 +332,18 @@ impl Components {
                     .is_some_and(|check| check.operation_id == id);
                 // A refusal the engine classified itself, such as a setting it cannot
                 // use, is that category's refusal: the window is given the category to
-                // word, as the role's other clients are given it. A selection that could
-                // not be admitted is the person's to fix, so it crosses as its own code.
-                let (stage, category, refusal) = match report {
+                // word, as the role's other clients are given it.
+                let (stage, category) = match report {
                     Ok(report) if report.outcome.succeeded() => {
                         window.rows = Some((report.mode, report.rows));
-                        (CheckStage::Done, None, None)
+                        (CheckStage::Done, None)
                     }
-                    Ok(report) => (CheckStage::Failed, report.failure.map(failure), None),
-                    Err(Unready::Engine(error)) => (
-                        CheckStage::Failed,
-                        Some(failure(failure_category(&error))),
-                        None,
-                    ),
-                    Err(Unready::Refused(refusal)) => (CheckStage::Failed, None, Some(refusal)),
+                    Ok(report) => (CheckStage::Failed, report.failure.map(failure)),
+                    Err(error) => (CheckStage::Failed, Some(failure(failure_category(&error)))),
                 };
                 if let Some(check) = window.check.as_mut().filter(|_| current) {
                     check.stage = stage;
                     check.failure = category;
-                    check.refusal = refusal;
                 }
             });
         });
@@ -426,9 +385,7 @@ impl Components {
                 track.item(*item);
             }
             window.setup = Some(track);
-            window.refused = None;
             let engines = self.engines.clone();
-            let admission = self.admission.clone();
             let shared = self.shared.clone();
             let request = SetupRequest {
                 items,
@@ -436,15 +393,7 @@ impl Components {
             };
             let run_id = id.clone();
             self.spawn(&mut window, "setup-run", move || {
-                run_setup(
-                    &*engines,
-                    &admission,
-                    &shared,
-                    &run_id,
-                    &request,
-                    resume,
-                    &cancellation,
-                );
+                run_setup(&*engines, &shared, &run_id, &request, resume, &cancellation);
             });
             id
         };
@@ -455,10 +404,7 @@ impl Components {
             {
                 let mut window = lock(&self.shared.window);
                 match window.setup_of(&id) {
-                    None => {
-                        let refused = window.refused.take_if(|(refused, _)| *refused == id);
-                        return Err(refused.map_or(Refusal::Busy, |(_, refusal)| refusal));
-                    }
+                    None => return Err(Refusal::Busy),
                     Some(track) if track.stage != RunStage::Planning => return Ok(()),
                     Some(_) => {}
                 }
@@ -615,7 +561,6 @@ impl Components {
                 kind: check.kind,
                 stage: check.stage,
                 failure: check.failure,
-                refusal: check.refusal,
             }),
             setup: window.setup.as_ref().map(run),
             details: details(read.unwrap_or_default(), window.setup.as_ref()),
@@ -627,33 +572,21 @@ impl Components {
 /// and a plan that changed after its approval is asked about again.
 fn run_setup(
     engines: &Engines,
-    admission: &Admission,
     shared: &Shared,
     id: &str,
     request: &SetupRequest,
     resume: bool,
     cancellation: &Cancellation,
 ) {
-    let mut engine = match admitted(engines, admission) {
-        Ok(engine) => engine,
-        Err(Unready::Engine(error)) => {
+    let Installation { mut engine } = match engines() {
+        Ok(installation) => installation,
+        Err(error) => {
             // A setting the engine cannot use is a classified refusal of its own; the
             // window words the category it is given, as the role's clients do.
             let category = failure(failure_category(&error));
             shared.update(|window| {
                 if let Some(track) = window.setup_of(id) {
                     settle_failed(track, category);
-                }
-            });
-            return;
-        }
-        Err(Unready::Refused(refusal)) => {
-            // Nothing was planned, so there is no setup to settle: the start that asked
-            // for it is refused instead, and the window shows no run.
-            shared.update(|window| {
-                if window.setup_of(id).is_some() {
-                    window.setup = None;
-                    window.refused = Some((id.to_owned(), refusal));
                 }
             });
             return;
@@ -850,6 +783,27 @@ fn download_key(destination: Option<Destination>, version: Option<&String>) -> O
     Some((destination?, version?.clone()))
 }
 
+/// Each planned model whose licence bars commercial use, with the licence's display name
+/// as the plan carries it; roles sharing a model name it once.
+fn licences(entry: &PlanEntry) -> Vec<wire::Licence> {
+    let found: BTreeSet<wire::Licence> = entry
+        .parts
+        .iter()
+        .filter(|part| {
+            part.advisories
+                .contains(&Advisory::LicenceCommercialUseBarred)
+        })
+        .filter_map(|part| {
+            let model = part.target_version.as_deref()?.split('@').next()?;
+            Some(wire::Licence {
+                model: model.to_owned(),
+                licence: part.licence.as_ref()?.name.clone(),
+            })
+        })
+        .collect();
+    found.into_iter().collect()
+}
+
 fn review_view(plan: &SetupPlan, locations: &Locations) -> wire::Review {
     let mut first_by_download: BTreeMap<DownloadKey, ItemId> = BTreeMap::new();
     let entries = plan
@@ -889,6 +843,12 @@ fn review_view(plan: &SetupPlan, locations: &Locations) -> wire::Review {
                     .map(|destination| locations.destination(destination).display().to_string()),
                 installs_outside_program: entry.installs_outside_program,
                 shares_download_with,
+                advisories: entry
+                    .advisories
+                    .iter()
+                    .map(|advisory| advice(*advisory))
+                    .collect(),
+                licences: licences(entry),
                 parts,
             }
         })
@@ -1029,6 +989,7 @@ fn check_mode(mode: CheckMode) -> wire::CheckMode {
 fn stale(reason: StaleReason) -> wire::StaleReason {
     match reason {
         StaleReason::OlderRevision => wire::StaleReason::OlderRevision,
+        StaleReason::DifferentModelVersion => wire::StaleReason::DifferentModelVersion,
         StaleReason::ProgramTooOld => wire::StaleReason::ProgramTooOld,
     }
 }
@@ -1051,10 +1012,7 @@ fn note(note: Note) -> wire::Note {
 
 fn recovery(action: RecoveryAction) -> wire::Recovery {
     match action {
-        // Only an engine that was never admitted names the desktop, and every engine this
-        // window runs is admitted. Were one not, the desktop's set-up is the button the
-        // window offers.
-        RecoveryAction::SetUp | RecoveryAction::SetUpInDesktop => wire::Recovery::SetUp,
+        RecoveryAction::SetUp => wire::Recovery::SetUp,
         RecoveryAction::Update => wire::Recovery::Update,
         RecoveryAction::TryAgain => wire::Recovery::TryAgain,
         RecoveryAction::Resume => wire::Recovery::Resume,
@@ -1070,6 +1028,17 @@ fn step(step: SetupStep) -> wire::Step {
         SetupStep::Install => wire::Step::Install,
         SetupStep::Verify => wire::Step::Verify,
         SetupStep::Cleanup => wire::Step::Cleanup,
+    }
+}
+
+fn advice(advisory: Advisory) -> wire::Advisory {
+    match advisory {
+        Advisory::FitExceedsMeasuredHeadroom => wire::Advisory::FitExceedsMeasuredHeadroom,
+        Advisory::FitUnverified => wire::Advisory::FitUnverified,
+        Advisory::LicenceCommercialUseBarred => wire::Advisory::LicenceCommercialUseBarred,
+        Advisory::LicenceUnverified => wire::Advisory::LicenceUnverified,
+        Advisory::OverrideBelowContextFloor => wire::Advisory::OverrideBelowContextFloor,
+        Advisory::OverrideNotInCatalogue => wire::Advisory::OverrideNotInCatalogue,
     }
 }
 

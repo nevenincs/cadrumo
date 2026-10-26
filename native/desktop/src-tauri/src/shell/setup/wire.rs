@@ -14,9 +14,10 @@ const NAME_LIMIT: usize = 256;
 const VERSION_LIMIT: usize = 128;
 const PATH_LIMIT: usize = 4096;
 const DETAILS_LIMIT: usize = 16 * 1024;
+const MODEL_LIMIT: usize = 128;
 
-/// The parts a local AI plan is made of: its program, then the model the
-/// person selected for each local role.
+/// The parts a local AI plan is made of: its program, then the model each
+/// catalogue role reads with.
 pub const PARTS: [&str; 5] = [
     "program",
     "vision_transcription",
@@ -39,12 +40,6 @@ pub enum Refusal {
     NotPending,
     NotCancellable,
     Unavailable,
-    /// The person's selection cannot be handed to the engine: its record is
-    /// unreadable, or a selected role or model is not one the engine can pull.
-    ModelSelectionUnusable,
-    /// A selected local model's catalogue entry states no download size, so the
-    /// plan can neither size the download nor check the hardware for it.
-    ModelSizeUnstated,
 }
 
 /// What a command refuses with. Only the code crosses to the window.
@@ -103,6 +98,7 @@ pub enum BlockedReason {
 #[serde(rename_all = "snake_case")]
 pub enum StaleReason {
     OlderRevision,
+    DifferentModelVersion,
     ProgramTooOld,
 }
 
@@ -144,6 +140,18 @@ pub enum Recovery {
     TryAgain,
     Resume,
     CheckAgain,
+}
+
+/// Why a model's plan entry is worth telling the person about.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Ord, PartialEq, PartialOrd, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Advisory {
+    LicenceCommercialUseBarred,
+    LicenceUnverified,
+    OverrideNotInCatalogue,
+    OverrideBelowContextFloor,
+    FitExceedsMeasuredHeadroom,
+    FitUnverified,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -278,10 +286,6 @@ pub struct Check {
     /// The category a failed check carried, worded as a row's failure is; absent while
     /// the check runs, when it is done, and when a failure carried no category.
     pub failure: Option<Failure>,
-    /// Why the check was refused before the engine ran: the person's selection of local
-    /// models could not be handed to it. Present only on a failed check, and never with a
-    /// `failure`.
-    pub refusal: Option<Refusal>,
 }
 
 /// One part of the local AI's plan: its program, or the model one role reads
@@ -293,6 +297,16 @@ pub struct PlanPart {
     pub download_bytes: Option<u64>,
 }
 
+/// A planned model whose licence bars commercial use: the model and the
+/// licence's display name, as the pins state it, which the window's notice
+/// names.
+#[derive(Clone, Debug, Deserialize, Eq, Ord, PartialEq, PartialOrd, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct Licence {
+    pub model: String,
+    pub licence: String,
+}
+
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct PlanEntry {
@@ -302,6 +316,11 @@ pub struct PlanEntry {
     pub destination: Option<String>,
     pub installs_outside_program: bool,
     pub shares_download_with: Option<String>,
+    /// Empty except on the local AI's entry; the plan digest binds it.
+    pub advisories: Vec<Advisory>,
+    /// The planned models whose licence bars commercial use; present exactly
+    /// when `advisories` names that bar. The plan digest binds them.
+    pub licences: Vec<Licence>,
     /// The parts of the local AI, in the order setup carries them out; empty
     /// for any other item.
     pub parts: Vec<PlanPart>,
@@ -423,6 +442,18 @@ fn plain_option(text: Option<&String>, limit: usize) -> bool {
     text.is_none_or(|text| plain(text, limit))
 }
 
+/// A catalogue model name.
+pub fn is_model_name(text: &str) -> bool {
+    text.len() <= MODEL_LIMIT
+        && text
+            .bytes()
+            .next()
+            .is_some_and(|b| b.is_ascii_alphanumeric())
+        && text
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || b".-_:/".contains(&b))
+}
+
 /// An operator action's identifier: `operator.` and dotted lower-case words.
 pub fn is_action_id(text: &str) -> bool {
     text.len() <= 64
@@ -462,12 +493,16 @@ impl Row {
 
 impl PlanEntry {
     fn valid(&self) -> bool {
+        let barred = self
+            .advisories
+            .contains(&Advisory::LicenceCommercialUseBarred);
         is_item_id(&self.item)
             && !self.source_hosts.is_empty()
             && self.source_hosts.len() <= MAX_HOSTS
             && self.source_hosts.iter().all(|host| is_host(host))
             && unique(&self.source_hosts)
             && plain_option(self.destination.as_ref(), PATH_LIMIT)
+            && (self.advisories.is_empty() || self.item == "local_ai")
             && (self.parts.is_empty() || self.item == "local_ai")
             && self.parts.len() <= PARTS.len()
             && unique(self.parts.iter().map(|part| &part.part))
@@ -475,18 +510,18 @@ impl PlanEntry {
                 .parts
                 .iter()
                 .all(|part| PARTS.contains(&part.part.as_str()))
+            && self.advisories.iter().collect::<BTreeSet<_>>().len() == self.advisories.len()
+            && barred != self.licences.is_empty()
+            && self.licences.len() <= PARTS.len()
+            && self.licences.iter().collect::<BTreeSet<_>>().len() == self.licences.len()
+            && self
+                .licences
+                .iter()
+                .all(|licence| is_model_name(&licence.model) && plain(&licence.licence, NAME_LIMIT))
             && self
                 .shares_download_with
                 .as_deref()
                 .is_none_or(|other| is_item_id(other) && other != self.item)
-    }
-}
-
-impl Check {
-    fn valid(&self) -> bool {
-        is_hex64(&self.operation_id)
-            && (self.refusal.is_none()
-                || (self.stage == CheckStage::Failed && self.failure.is_none()))
     }
 }
 
@@ -543,7 +578,10 @@ impl Snapshot {
             && self.rows.iter().all(Row::valid)
             && read == self.complete.is_some()
             && (read || self.rows.is_empty())
-            && self.check.as_ref().is_none_or(Check::valid)
+            && self
+                .check
+                .as_ref()
+                .is_none_or(|check| is_hex64(&check.operation_id))
             && self.setup.as_ref().is_none_or(Run::valid)
             && (self.google.stage == GoogleStage::Failed) == self.google.failure.is_some()
             && (self.google.email.is_none() || self.google.state == Some(GoogleState::SignedIn))
@@ -616,12 +654,16 @@ pub fn verify_request(selected: Option<Vec<String>>) -> Result<Action, Applicati
     Ok(Action::Verify(items(selected)?))
 }
 
-/// Setup of `items`, or of every item not ready, planned first. A setup names no
-/// model: the engine is handed the person's selection when the command runs.
+/// Setup of `items`, or of every item not ready, planned first. Every role's
+/// model is the one this build pins, so a setup names no model of its own.
 pub fn start_request(
     selected: Option<Vec<String>>,
+    model: Option<String>,
     resume: bool,
 ) -> Result<Action, ApplicationError> {
+    if model.is_some() {
+        return Err(invalid());
+    }
     Ok(Action::Start {
         items: items(selected)?,
         resume,
@@ -683,7 +725,7 @@ mod tests {
                 "item": "browser", "download_bytes": 100, "source_hosts": ["cdn.playwright.dev"],
                 "destination": "C:\\Cadrumo\\components\\playwright",
                 "installs_outside_program": false, "shares_download_with": null,
-                "parts": [],
+                "advisories": [], "licences": [], "parts": [],
             }],
             "known_download_bytes": 100, "has_unknown_size": false,
             "installs_outside_program": false, "required_bytes": 1073741944,
@@ -708,10 +750,7 @@ mod tests {
     fn snapshot() -> Value {
         json!({
             "rows": [row()], "rows_mode": "quick", "complete": false, "hardware_limited": false,
-            "check": {
-                "operation_id": "c".repeat(64), "kind": "status_quick", "stage": "done",
-                "failure": null, "refusal": null,
-            },
+            "check": {"operation_id": "c".repeat(64), "kind": "status_quick", "stage": "done"},
             "setup": run("review"),
             "google": {"state": "signed_out", "email": null, "drive_folder_id": null, "stage": "idle", "failure": null},
             "details": "Cadrumo setup details\nitem: browser; state: absent; check: quick\n",
@@ -823,13 +862,14 @@ mod tests {
         assert!(check_request("deep").is_err());
         assert_eq!(verify_request(None).unwrap(), Action::Verify(None));
         assert_eq!(
-            start_request(Some(vec!["local_ai".into()]), true).unwrap(),
+            start_request(Some(vec!["local_ai".into()]), None, true).unwrap(),
             Action::Start {
                 items: Some(vec!["local_ai".into()]),
                 resume: true,
             }
         );
-        assert!(start_request(Some(vec![]), false).is_err());
+        // Every role's model is pinned by the build: a setup cannot name another.
+        assert!(start_request(None, Some("qwen3:4b".into()), false).is_err());
         for selected in [
             vec![],
             vec!["printer".to_owned()],
@@ -863,69 +903,58 @@ mod tests {
         );
     }
 
-    fn with_parts() -> Value {
-        let mut planned = snapshot();
-        let entry = &mut planned["setup"]["review"]["entries"][0];
+    fn licensed() -> Value {
+        let mut licensed = snapshot();
+        let entry = &mut licensed["setup"]["review"]["entries"][0];
         entry["item"] = json!("local_ai");
         entry["parts"] = json!([
             {"part": "program", "download_bytes": null},
             {"part": "text_extraction", "download_bytes": 100},
         ]);
-        planned
+        entry["advisories"] = json!(["licence_commercial_use_barred", "fit_unverified"]);
+        entry["licences"] =
+            json!([{"model": "qwen2.5:3b", "licence": "Qwen RESEARCH LICENSE AGREEMENT"}]);
+        licensed
     }
 
     #[test]
-    fn the_local_ais_entry_carries_its_program_and_the_roles_it_pulls_for() {
-        let shown = parsed(with_parts()).expect("a valid snapshot");
-        assert_eq!(serde_json::to_value(&shown).unwrap(), with_parts());
-        let cases: [Case; 4] = [
-            ("parts on another item", |e| e["item"] = json!("browser")),
-            ("a part outside the roles", |e| {
-                e["parts"][1]["part"] = json!("weather")
+    fn a_model_entry_carries_its_closed_advisories_and_the_licences_they_bar() {
+        let shown = parsed(licensed()).expect("a valid snapshot");
+        assert_eq!(serde_json::to_value(&shown).unwrap(), licensed());
+        let cases: [Case; 7] = [
+            ("unknown advisory", |e| {
+                e["advisories"] = json!(["licence_free"])
             }),
-            ("a part twice", |e| e["parts"][1]["part"] = json!("program")),
-            ("a field the plan no longer carries", |e| {
-                e["advisories"] = json!([])
+            ("repeated advisory", |e| {
+                e["advisories"] = json!([
+                    "licence_commercial_use_barred",
+                    "licence_commercial_use_barred"
+                ])
             }),
+            ("advisory off a model", |e| e["item"] = json!("browser")),
+            ("licence without the barred advisory", |e| {
+                e["advisories"] = json!(["licence_unverified"])
+            }),
+            ("barred advisory without licence", |e| {
+                e["licences"] = json!([])
+            }),
+            ("control text", |e| {
+                e["licences"][0]["licence"] = json!("a\tb")
+            }),
+            ("unknown part", |e| e["parts"][1]["part"] = json!("weather")),
         ];
         for (name, change) in cases {
-            let mut changed = with_parts();
+            let mut changed = licensed();
             change(&mut changed["setup"]["review"]["entries"][0]);
             assert!(parsed(changed).is_none(), "{name}");
         }
     }
 
     #[test]
-    fn a_check_the_selection_refused_carries_that_refusal_and_no_failure() {
-        let refused = |change: fn(&mut Value)| {
-            let mut snapshot = snapshot();
-            snapshot["check"]["stage"] = json!("failed");
-            snapshot["check"]["refusal"] = json!("model_size_unstated");
-            change(&mut snapshot["check"]);
-            parsed(snapshot)
-        };
-        let shown = refused(|_| ()).expect("a valid snapshot");
-        assert_eq!(
-            shown.check.as_ref().and_then(|check| check.refusal),
-            Some(Refusal::ModelSizeUnstated)
-        );
-        assert!(refused(|check| check["refusal"] = json!("model_selection_unusable")).is_some());
-        assert!(refused(|check| check["failure"] = json!("offline")).is_none());
-        assert!(refused(|check| check["stage"] = json!("running")).is_none());
-        assert!(refused(|check| check["refusal"] = json!("pigeon")).is_none());
-    }
-
-    #[test]
     fn a_refusal_serializes_as_its_code_only() {
-        for (refusal, code) in [
-            (Refusal::NotCancellable, "not_cancellable"),
-            (Refusal::ModelSelectionUnusable, "model_selection_unusable"),
-            (Refusal::ModelSizeUnstated, "model_size_unstated"),
-        ] {
-            assert_eq!(
-                serde_json::to_value(CommandFailure::from(refusal)).unwrap(),
-                json!({"code": code})
-            );
-        }
+        assert_eq!(
+            serde_json::to_value(CommandFailure::from(Refusal::NotCancellable)).unwrap(),
+            json!({"code":"not_cancellable"})
+        );
     }
 }

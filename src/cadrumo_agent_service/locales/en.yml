@@ -87,6 +87,7 @@ desktop:
     lane_no_catalog: Could not load models. Try again.
     lane_not_admitted: Not available on this computer. Choose another.
     lane_not_configured: Set up this provider in settings.
+    lane_not_observed: Not checked yet. You can choose it once the agent is ready.
     lane_notice: Conversations in this version aren't encrypted.
     lane_signed_out: Sign in to this provider in settings.
     lane_unreachable: Can't connect. Check this provider in settings.
@@ -100,6 +101,53 @@ desktop:
     message_label: Message
     message_placeholder: Ask about a modelo, a deadline or your records
     model: Model
+    model_role_capability_text: text
+    model_role_capability_vision: images
+    model_role_choose_lane: Choose a provider
+    model_role_choose_model: Choose a model
+    model_role_clear: Clear
+    model_role_current: 'Chosen: {model} on {lane}'
+    model_role_heading: Model {role}
+    model_role_lane: Provider {role}
+    model_role_licence: 'Licence: {licence}'
+    model_role_licence_show: Show the licence text
+    model_role_licence_unavailable: The licence text can be read once the agent is
+      ready.
+    model_role_licence_unknown: 'Licence: not stated'
+    model_role_model: Model {role}
+    model_role_none: Nothing chosen
+    model_role_recommended: 'Use the agent''s recommendation for {capability}: {model}'
+    model_role_refused_catalog_unavailable: Couldn't read the agent's list of providers.
+      Try again.
+    model_role_refused_committed_readback_failed: Your choice was saved but couldn't
+      be read back. Open this again to check it.
+    model_role_refused_lane_not_runnable: That provider can't read documents in the
+      background. Choose another one.
+    model_role_refused_model_not_in_catalogue: The provider doesn't list that model
+      now. Choose another one.
+    model_role_refused_revision_conflict: Your choices changed somewhere else. They've
+      been read again, so try once more.
+    model_role_refused_unknown: Couldn't save your choice. Try again.
+    model_role_refused_unknown_role: Cadrumo doesn't know this task. Update Cadrumo
+      and try again.
+    model_role_refused_vision_required: This task reads images. Choose a model that
+      reads images.
+    model_role_save: Save
+    model_role_saved: Saved.
+    model_role_size: 'Download size: {size}'
+    model_role_vision_no: Doesn't read images
+    model_role_vision_unknown: Whether it reads images isn't stated
+    model_role_vision_yes: Reads images
+    model_roles_close: Close
+    model_roles_failed: Couldn't read your model choices. Try again.
+    model_roles_lead: 'Choose the provider and model that reads your documents for
+      each task. Nothing is chosen for you: each model''s licence is shown so you
+      can decide.'
+    model_roles_loading: Reading your choices…
+    model_roles_no_lanes: The agent lists no model to choose from yet.
+    model_roles_open: Models for reading documents
+    model_roles_title: Models for reading documents
+    model_roles_unreadable: Your saved model choices can't be read.
     model_written: This provider doesn't list its models. Enter the model name exactly
       as the provider writes it.
     more_files: +{count} more

@@ -345,11 +345,7 @@ pub(crate) async fn assemble<R: Runtime>(
     app.manage(manager.clone());
     app.manage(Arc::new(TerminalState::new(launch)));
     let sign_in = app.state::<Arc<shell::sign_in::SignIn>>().inner().clone();
-    let agent = app.state::<Arc<agent::AgentHost>>().inner().clone();
-    app.manage(Arc::new(shell::setup::SetupHost::new(
-        sign_in.clone(),
-        agent,
-    )));
+    app.manage(Arc::new(shell::setup::SetupHost::new(sign_in.clone())));
     let profile = Arc::new(shell::user_profile::ProfileHost::new(sign_in.clone()));
     app.manage(profile.clone());
     app.manage(Arc::new(shell::ledger::LedgerHost::new(profile.clone())));

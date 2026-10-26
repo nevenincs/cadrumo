@@ -300,6 +300,18 @@ impl Client {
         self.get(&format!("/runs/{run}/history"))
     }
 
+    /// `GET /v1/provider-licences/{provider}/{transport}/{model}`: the licence
+    /// text of one model a lane lists, for names the caller has checked. Each
+    /// is one percent-encoded segment, so a model id reaches no other route.
+    pub fn licence(&self, provider: &str, transport: &str, model: &str) -> Result<Value, Refused> {
+        self.get(&format!(
+            "/provider-licences/{}/{}/{}",
+            segment(provider),
+            segment(transport),
+            segment(model)
+        ))
+    }
+
     /// `GET /v1/skills`: every skill of the agent, by name.
     pub fn skills(&self) -> Result<Value, Refused> {
         self.get("/skills")

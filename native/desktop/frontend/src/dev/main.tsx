@@ -86,7 +86,7 @@ function readParams() {
       (skills) => skills === params.get("skills"),
     ),
     // How the service answers the agent's catalog.
-    agentCatalog: (["served", "busy"] as const).find(
+    agentCatalog: (["served", "busy", "declared"] as const).find(
       (catalog) => catalog === params.get("catalog"),
     ),
     // The shape of the component setup.

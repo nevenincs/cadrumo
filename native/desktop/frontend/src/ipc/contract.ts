@@ -9,7 +9,8 @@ import type { Channel } from "@tauri-apps/api/core";
 import type {
   AgentAnswerResult,
   AgentApproval,
-  AgentProviderCatalog,
+  AgentCatalogAnswer,
+  AgentModelLicence,
   AgentQuestionnaire,
   AgentQuestionnaireAnswer,
   AgentSendRequest,
@@ -1632,10 +1633,33 @@ export interface HostCommands {
     args: Authorized<{ subscription: number }>;
     result: null;
   };
-  /** cadrumo-agent's catalog, unchanged and unfiltered. */
-  agent_provider_catalog: { args: Authorized; result: AgentProviderCatalog };
+  /** cadrumo-agent's catalog, unchanged, less the lanes the profile turned
+   * off; while no agent is ready, its declared catalog in an envelope. */
+  agent_provider_catalog: { args: Authorized; result: AgentCatalogAnswer };
   /** The person's model selection for every role, as the agent service stores it. */
   agent_model_roles: { args: Authorized; result: AgentModelRoles };
+  /** Selects a lane and model for one role at the revision read. A refusal is
+   * `agent_model_role_<reason>` for the service's reasons, such as
+   * `agent_model_role_vision_required`, or a column code. */
+  agent_model_role_set: {
+    args: Authorized<{
+      role: string;
+      lane: string;
+      model: string;
+      expectedRevision: string;
+    }>;
+    result: AgentModelRoles;
+  };
+  /** Clears one role's selection at the revision read. */
+  agent_model_role_clear: {
+    args: Authorized<{ role: string; expectedRevision: string }>;
+    result: AgentModelRoles;
+  };
+  /** One model's licence text, from the ready agent's licence route. */
+  agent_model_licence: {
+    args: Authorized<{ provider: string; transport: string; model: string }>;
+    result: AgentModelLicence;
+  };
   /** cadrumo-agent's skills, as `GET /v1/skills` lists them, unchanged. */
   agent_skills: { args: Authorized; result: unknown };
   /** One skill with its SKILL.md, as `GET /v1/skills/{name}` serves it. A

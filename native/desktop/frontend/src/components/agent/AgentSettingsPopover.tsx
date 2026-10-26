@@ -1,4 +1,5 @@
 import { useId, useState, type ReactElement } from "react";
+import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -19,13 +20,16 @@ import type { AgentSelection, ModelOption, ProviderOption } from "./types";
  * efforts of the model chosen. A provider reached more than one way is more
  * than one entry of the first list, and choosing an entry chooses the way.
  * It holds no choice of its own: every change is handed to `onChange`, and
- * what it shows is `selection`.
+ * what it shows is `selection`. Where `onModelRoles` is given, it also opens
+ * the person's model choice for each role that reads documents, which is
+ * separate from the conversation's.
  */
 export function AgentSettingsPopover({
   providers,
   models,
   selection,
   onChange,
+  onModelRoles,
   children,
 }: {
   providers: readonly ProviderOption[];
@@ -33,6 +37,7 @@ export function AgentSettingsPopover({
   models: Readonly<Record<string, readonly ModelOption[]>>;
   selection: AgentSelection;
   onChange: (selection: AgentSelection) => void;
+  onModelRoles?: () => void;
   /** The one element that opens the popover. */
   children: ReactElement;
 }) {
@@ -184,6 +189,20 @@ export function AgentSettingsPopover({
               ))}
             </NativeSelect>
           </Field>
+        )}
+        {onModelRoles && (
+          <Button
+            type="button"
+            variant="link"
+            size="xs"
+            className="justify-self-start"
+            onClick={() => {
+              setOpen(false);
+              onModelRoles();
+            }}
+          >
+            {t("desktop.agent.model_roles_open")}
+          </Button>
         )}
       </PopoverContent>
     </Popover>

@@ -88,6 +88,7 @@ desktop:
     lane_no_catalog: No se han podido cargar los modelos. Vuelve a intentarlo.
     lane_not_admitted: No está disponible en este equipo. Elige otro.
     lane_not_configured: Configura este proveedor en los ajustes.
+    lane_not_observed: Aún sin comprobar. Podrás elegirlo cuando el agente esté listo.
     lane_notice: Las conversaciones de esta versión no están cifradas.
     lane_signed_out: Inicia sesión en este proveedor desde los ajustes.
     lane_unreachable: No se puede conectar. Revisa este proveedor en los ajustes.
@@ -101,6 +102,53 @@ desktop:
     message_label: Mensaje
     message_placeholder: Pregunta por un modelo, un plazo o tus registros
     model: Modelo
+    model_role_capability_text: texto
+    model_role_capability_vision: imágenes
+    model_role_choose_lane: Elige un proveedor
+    model_role_choose_model: Elige un modelo
+    model_role_clear: Quitar
+    model_role_current: 'Elegido: {model} en {lane}'
+    model_role_heading: Modelo {role}
+    model_role_lane: Proveedor {role}
+    model_role_licence: 'Licencia: {licence}'
+    model_role_licence_show: Ver el texto de la licencia
+    model_role_licence_unavailable: Podrás leer el texto de la licencia cuando el
+      agente esté listo.
+    model_role_licence_unknown: 'Licencia: no indicada'
+    model_role_model: Modelo {role}
+    model_role_none: Nada elegido
+    model_role_recommended: 'Usa la recomendación del agente para {capability}: {model}'
+    model_role_refused_catalog_unavailable: No se ha podido leer la lista de proveedores
+      del agente. Vuelve a intentarlo.
+    model_role_refused_committed_readback_failed: Tu elección se ha guardado, pero
+      no se ha podido volver a leer. Ábrelo de nuevo para comprobarla.
+    model_role_refused_lane_not_runnable: Ese proveedor no puede leer documentos en
+      segundo plano. Elige otro.
+    model_role_refused_model_not_in_catalogue: El proveedor ya no ofrece ese modelo.
+      Elige otro.
+    model_role_refused_revision_conflict: Tus elecciones han cambiado en otro sitio.
+      Se han vuelto a leer; inténtalo otra vez.
+    model_role_refused_unknown: No se ha podido guardar tu elección. Vuelve a intentarlo.
+    model_role_refused_unknown_role: Cadrumo no conoce esta tarea. Actualiza Cadrumo
+      y vuelve a intentarlo.
+    model_role_refused_vision_required: Esta tarea lee imágenes. Elige un modelo que
+      lea imágenes.
+    model_role_save: Guardar
+    model_role_saved: Guardado.
+    model_role_size: 'Tamaño de descarga: {size}'
+    model_role_vision_no: No lee imágenes
+    model_role_vision_unknown: No se indica si lee imágenes
+    model_role_vision_yes: Lee imágenes
+    model_roles_close: Cerrar
+    model_roles_failed: No se han podido leer tus elecciones de modelo. Vuelve a intentarlo.
+    model_roles_lead: 'Elige el proveedor y el modelo que leen tus documentos en cada
+      tarea. Nada se elige por ti: se muestra la licencia de cada modelo para que
+      decidas.'
+    model_roles_loading: Leyendo tus elecciones…
+    model_roles_no_lanes: El agente aún no ofrece ningún modelo para elegir.
+    model_roles_open: Modelos para leer documentos
+    model_roles_title: Modelos para leer documentos
+    model_roles_unreadable: No se pueden leer tus elecciones de modelo guardadas.
     model_written: Este proveedor no lista sus modelos. Escribe el nombre del modelo
       tal como lo escribe el proveedor.
     more_files: +{count} más

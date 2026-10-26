@@ -63,6 +63,7 @@ import { Composer, type ComposerReferences } from "./agent/Composer";
 import { documentSource } from "./agent/DocumentMentions";
 import { HistoryList } from "./agent/HistoryList";
 import { QuestionsPrompt } from "./agent/QuestionsPrompt";
+import { ModelRolesDialog, type ModelRoleHost } from "./agent/ModelRolesDialog";
 import { SkillDialog } from "./agent/SkillDialog";
 import { useSkillInventory } from "./agent/SlashSuggestions";
 import type { SkillCommand } from "../shell/agentSkills";
@@ -367,10 +368,34 @@ export function AgentColumn({
     [session],
   );
   const [skillShown, setSkillShown] = useState<SkillCommand | null>(null);
-  // What it can run is the agent's own catalog, every lane of it.
+  // The person's model for each role that reads documents, where the host
+  // offers reading and changing it.
+  const [rolesShown, setRolesShown] = useState(false);
+  const roleHost = useMemo((): ModelRoleHost | null => {
+    if (
+      !session?.modelRoles ||
+      !session.setModelRole ||
+      !session.clearModelRole
+    )
+      return null;
+    return {
+      read: session.modelRoles.bind(session),
+      set: session.setModelRole.bind(session),
+      clear: session.clearModelRole.bind(session),
+      ...(session.modelLicence
+        ? { licence: session.modelLicence.bind(session) }
+        : {}),
+    };
+  }, [session]);
+  // What it can run is the agent's own catalog, every lane of it. While the
+  // agent starts, the service answers with the lanes the agent declares,
+  // which are listed but cannot be chosen; the catalog is read again once the
+  // agent is ready.
+  const starting = status?.state === "starting";
   const readCatalog = useMemo(
-    () => (ready && session ? () => session.providerCatalog() : null),
-    [ready, session],
+    () =>
+      (ready || starting) && session ? () => session.providerCatalog() : null,
+    [ready, starting, session],
   );
   // Read again after each saved change to the provider settings, so a
   // provider turned off leaves the list and one turned on comes back.
@@ -832,16 +857,18 @@ export function AgentColumn({
     ((status?.state === "refused" &&
       status.code === "agent_provider_credential_missing") ||
       (offer !== null &&
+        offer.observed &&
         !offer.providers.some((provider) => provider.selectable)));
+  const serviceNotice = status ? serviceWords(t, status) : null;
   const notice = incompatible
     ? t("desktop.agent.service_incompatible")
     : catalogBusy
       ? t("desktop.agent.service_starting")
       : noProvider
         ? t("desktop.agent.no_provider")
-        : status
-          ? serviceWords(t, status)
-          : null;
+        : offer !== null && !offer.observed
+          ? (serviceNotice ?? t("desktop.agent.lane_not_observed"))
+          : serviceNotice;
 
   return (
     <>
@@ -1173,8 +1200,17 @@ export function AgentColumn({
                   }
                 : undefined
             }
+            onModelRoles={roleHost ? () => setRolesShown(true) : undefined}
           />
         </div>
+      )}
+      {rolesShown && roleHost && (
+        <ModelRolesDialog
+          host={roleHost}
+          catalog={catalog.kind === "ready" ? catalog.value : null}
+          locale={locale}
+          onClose={() => setRolesShown(false)}
+        />
       )}
       {skillShown && (
         <SkillDialog

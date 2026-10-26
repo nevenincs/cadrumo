@@ -2,13 +2,7 @@
 //! storage root of its own, the bundled driver's layout, pinned archives and a
 //! local TLS publisher the engine's network reaches. Nothing here stands in
 //! for the engine; every review, event and report is the engine's own.
-use super::super::{
-    admission::{
-        Admission,
-        tests::{GB, HOSTED, HOSTED_MODEL, LOCAL, Replies, TEXT, VISION, declared},
-    },
-    wire::{Google, Snapshot},
-};
+use super::super::wire::{Google, Snapshot};
 use super::*;
 use cadrumo_application::provisioning::{
     browser::DriverManifest,
@@ -26,10 +20,6 @@ use std::{
 };
 
 const HOST: &str = "cdn.example.com";
-/// The registry the program pulls a model without a host of its own from.
-const MODEL_HOST: &str = "registry.ollama.ai";
-/// What the pinned local AI program archive is said to weigh.
-const PROGRAM_BYTES: u64 = 1000;
 const DRIVER: &str = "1.64.0-beta-1791568591000";
 const BROWSER_VERSION: &str = "156.0.8078.4";
 const GIB: u64 = 1024 * 1024 * 1024;
@@ -148,7 +138,7 @@ impl Fixture {
         std::fs::create_dir_all(&pins).unwrap();
         std::fs::write(pins.join("browser_archives.toml"), table).unwrap();
         driver(&scratch.0.join("driver"));
-        let certificate = TestCertificate::new(&[HOST, MODEL_HOST]);
+        let certificate = TestCertificate::new(&[HOST]);
         let server = TlsServer::start(&certificate, move |request: &Request| {
             let Some(bytes) = served.get(request.target()) else {
                 return Reply::Bytes(response(
@@ -187,33 +177,6 @@ impl Fixture {
             free_bytes: Some(512 * GIB),
             reachable: true,
         }
-    }
-
-    /// The same installation with the local AI program pinned, as a build that ships it.
-    fn with_program(self) -> Self {
-        let platform = Platform::current().expect("tests run on a supported platform");
-        let table = format!(
-            "program = \"ollama\"
-version = \"9.9.9\"
-hosts = [\"{HOST}\"]
-
-[[archives]]
-platform = \"{}\"
-url = \"https://{HOST}/program/ollama.zip\"
-format = \"zip\"
-executable = \"ollama\"
-download_bytes = {PROGRAM_BYTES}
-sha256 = \"{}\"
-",
-            platform.as_str(),
-            "0".repeat(64),
-        );
-        std::fs::write(
-            self.scratch.0.join("pins").join("local_ai_program.toml"),
-            table,
-        )
-        .unwrap();
-        self
     }
 
     fn root(&self) -> PathBuf {
@@ -270,24 +233,6 @@ sha256 = \"{}\"
     }
 }
 
-/// An admission over a service where nobody selected a model for any role.
-fn without_selection() -> Arc<Admission> {
-    Arc::new(Admission::new(Arc::new(Replies::without_selection())))
-}
-
-/// The window's component engine over `fixture`, with no local model selected.
-fn window(fixture: &Fixture) -> Components {
-    Components::new(fixture.engines(), without_selection())
-}
-
-/// The window's engine over `fixture`, admitted from `replies`, which the caller keeps to
-/// ask what the engine read.
-fn selecting(fixture: &Fixture, replies: Replies) -> (Components, Arc<Replies>) {
-    let replies = Arc::new(replies);
-    let admission = Arc::new(Admission::new(replies.clone()));
-    (Components::new(fixture.engines(), admission), replies)
-}
-
 /// The engine's part of the snapshot once `done` holds, composed as the
 /// window receives it.
 async fn until(components: &Components, done: impl Fn(&View) -> bool) -> Snapshot {
@@ -325,7 +270,7 @@ async fn reviewing(components: &Components) -> (String, wire::Review) {
 #[tokio::test]
 async fn the_first_read_carries_every_items_codes_and_no_words() {
     let fixture = Fixture::new(Serving::Whole);
-    let components = window(&fixture);
+    let components = Components::new(fixture.engines());
     components.observe();
     let snapshot = until(&components, |view| {
         view.check
@@ -364,7 +309,7 @@ async fn the_first_read_carries_every_items_codes_and_no_words() {
             .contains("item: browser; state: absent; check: quick")
     );
     let shown = serde_json::to_value(&snapshot).unwrap();
-    for word in ["name", "sentence", "action_label"] {
+    for word in ["name", "sentence", "action_label", "licence_notice"] {
         assert!(shown["rows"][0].get(word).is_none(), "{word}");
     }
     // Rows already read are not read again on the next observation.
@@ -380,7 +325,7 @@ async fn the_first_read_carries_every_items_codes_and_no_words() {
 #[tokio::test]
 async fn the_plan_waits_for_the_window_and_a_rejection_downloads_nothing() {
     let fixture = Fixture::new(Serving::Whole);
-    let components = window(&fixture);
+    let components = Components::new(fixture.engines());
     let (operation, plan) = reviewing(&components).await;
     assert!(wire::is_hex64(&operation) && wire::is_hex64(&plan.plan_digest));
     let entry = &plan.entries[0];
@@ -415,7 +360,7 @@ async fn the_plan_waits_for_the_window_and_a_rejection_downloads_nothing() {
 #[tokio::test]
 async fn an_approval_binds_the_digest_shown_and_the_setup_runs_until_it_fails() {
     let fixture = Fixture::new(Serving::Whole);
-    let components = window(&fixture);
+    let components = Components::new(fixture.engines());
     let (operation, plan) = reviewing(&components).await;
     assert_eq!(
         components
@@ -458,7 +403,7 @@ async fn an_approval_binds_the_digest_shown_and_the_setup_runs_until_it_fails() 
 #[tokio::test]
 async fn resume_applies_a_plan_this_window_approved_without_a_second_review() {
     let fixture = Fixture::new(Serving::Whole);
-    let components = window(&fixture);
+    let components = Components::new(fixture.engines());
     let (operation, plan) = reviewing(&components).await;
     components
         .answer(&operation, &plan.plan_digest, wire::Decision::Apply)
@@ -488,7 +433,7 @@ async fn resume_applies_a_plan_this_window_approved_without_a_second_review() {
             .is_some_and(|result| result.failure.is_some())
     );
     // A window that approved nothing yet still asks.
-    let other = window(&fixture);
+    let other = Components::new(fixture.engines());
     other.start(None, true).await.unwrap();
     until(&other, |view| stage(view) == Some(RunStage::Review)).await;
     other.close().await;
@@ -498,7 +443,7 @@ async fn resume_applies_a_plan_this_window_approved_without_a_second_review() {
 async fn a_cancel_stops_a_running_setup_at_its_next_chunk() {
     let gate = Arc::new(Released::default());
     let fixture = Fixture::new(Serving::Gated(gate.clone()));
-    let components = window(&fixture);
+    let components = Components::new(fixture.engines());
     let (operation, plan) = reviewing(&components).await;
     components
         .answer(&operation, &plan.plan_digest, wire::Decision::Apply)
@@ -546,7 +491,7 @@ fn moving(view: &View) -> bool {
 
 /// A window whose approved setup holds at the gate halfway through its first archive.
 async fn running(fixture: &Fixture) -> Components {
-    let owner = window(fixture);
+    let owner = Components::new(fixture.engines());
     let (operation, plan) = reviewing(&owner).await;
     owner
         .answer(&operation, &plan.plan_digest, wire::Decision::Apply)
@@ -558,7 +503,7 @@ async fn running(fixture: &Fixture) -> Components {
 
 /// A second window of the same installation, following the setup the first runs.
 async fn following(fixture: &Fixture) -> (Components, wire::Run) {
-    let follower = window(fixture);
+    let follower = Components::new(fixture.engines());
     follower.start(None, false).await.unwrap();
     let run = until(&follower, moving).await.setup.unwrap();
     (follower, run)
@@ -645,7 +590,7 @@ async fn a_following_window_cancels_the_setup_it_follows_as_the_persons_act() {
 #[tokio::test]
 async fn a_cancel_declines_the_plan_a_setup_waits_on() {
     let fixture = Fixture::new(Serving::Whole);
-    let components = window(&fixture);
+    let components = Components::new(fixture.engines());
     let (operation, _) = reviewing(&components).await;
     components.cancel(&operation).await.unwrap();
     let settled = until(&components, |view| stage(view) == Some(RunStage::Settled)).await;
@@ -656,7 +601,7 @@ async fn a_cancel_declines_the_plan_a_setup_waits_on() {
 #[tokio::test]
 async fn a_second_start_joins_the_setup_that_waits() {
     let fixture = Fixture::new(Serving::Whole);
-    let components = window(&fixture);
+    let components = Components::new(fixture.engines());
     let (operation, _) = reviewing(&components).await;
     components.start(None, false).await.unwrap();
     assert_eq!(components.view().setup.unwrap().operation_id, operation);
@@ -674,14 +619,14 @@ async fn a_second_start_joins_the_setup_that_waits() {
 async fn too_little_space_and_no_network_refuse_before_anything_is_asked() {
     let mut fixture = Fixture::new(Serving::Whole);
     fixture.free_bytes = Some(1);
-    let components = window(&fixture);
+    let components = Components::new(fixture.engines());
     components.start(None, false).await.unwrap();
     let full = until(&components, |view| stage(view) == Some(RunStage::Settled)).await;
     assert_eq!(full.setup.unwrap().outcome, Some(Outcome::NotEnoughSpace));
 
     fixture.free_bytes = Some(512 * GIB);
     fixture.reachable = false;
-    let components = window(&fixture);
+    let components = Components::new(fixture.engines());
     components
         .start(Some(vec![ItemId::Browser]), false)
         .await
@@ -702,7 +647,7 @@ async fn too_little_space_and_no_network_refuse_before_anything_is_asked() {
 #[tokio::test]
 async fn an_item_this_build_cannot_set_up_settles_with_its_refusal() {
     let fixture = Fixture::new(Serving::Whole);
-    let components = window(&fixture);
+    let components = Components::new(fixture.engines());
     components
         .start(Some(vec![ItemId::LocalAi]), false)
         .await
@@ -726,7 +671,7 @@ async fn a_setting_the_engine_cannot_use_gives_the_check_its_category() {
             ),
         ))
     });
-    let components = Components::new(engines, without_selection());
+    let components = Components::new(engines);
 
     components.check(wire::CheckMode::Quick);
 
@@ -748,7 +693,7 @@ async fn a_setting_the_engine_cannot_use_gives_the_check_its_category() {
 #[tokio::test]
 async fn a_full_check_replaces_the_rows_it_read() {
     let fixture = Fixture::new(Serving::Whole);
-    let components = window(&fixture);
+    let components = Components::new(fixture.engines());
     components.verify(vec![ItemId::Browser]);
     let checked = until(&components, |view| {
         view.check
@@ -766,228 +711,62 @@ async fn a_full_check_replaces_the_rows_it_read() {
 }
 
 #[test]
-fn a_download_two_roles_share_is_counted_once_in_the_review() {
+fn a_shared_download_is_counted_once_and_a_barred_licence_is_named() {
     use cadrumo_application::{
-        provisioning::plan::{PlanEntry, PlanPart},
+        provisioning::plan::{PartLicence, PlanEntry, PlanPart},
         value::HostName,
     };
-    let part = |role: &str, model: &str| PlanPart {
+    let host = || vec![HostName::new("registry.ollama.ai").unwrap()];
+    let part = |role: &str, model: &str, advisories: Vec<Advisory>| PlanPart {
         part_id: role.into(),
         download_bytes: Some(100),
-        source_hosts: vec![HostName::new(MODEL_HOST).unwrap()],
+        source_hosts: host(),
         destination: Some(Destination::OllamaModels),
         installs_outside_program: false,
-        target_version: Some(model.into()),
+        target_version: Some(format!("{model}@{}", "a".repeat(64))),
+        advisories,
+        licence: Some(PartLicence {
+            spdx_id: "LicenseRef-Qwen-Research".into(),
+            name: "Qwen RESEARCH LICENSE AGREEMENT".into(),
+        }),
     };
     let entry = PlanEntry::of_parts(
         ItemId::LocalAi,
         vec![
-            part("text_extraction", TEXT),
-            part("column_role_mapping", TEXT),
+            part(
+                "text_extraction",
+                "qwen2.5:3b",
+                vec![Advisory::LicenceCommercialUseBarred],
+            ),
+            part(
+                "column_role_mapping",
+                "qwen2.5:3b",
+                vec![Advisory::LicenceCommercialUseBarred],
+            ),
         ],
         Destination::OllamaModels,
     )
     .unwrap();
     let plan = SetupPlan::new(vec![entry], Some(512 * GIB)).unwrap();
     let shown = review_view(&plan, &Locations::under(Path::new("/state")));
+    let entry = &shown.entries[0];
     assert_eq!(
-        shown.entries[0]
+        entry
             .parts
             .iter()
             .map(|part| part.download_bytes)
             .collect::<Vec<_>>(),
         [Some(100), Some(0)]
     );
-}
-
-/// The plan a start of the local AI alone puts under review, with the window that asked
-/// for it and the operation it belongs to.
-async fn local_ai_plan(fixture: &Fixture, replies: Replies) -> (Components, String, wire::Review) {
-    let (components, _) = selecting(fixture, replies);
-    components
-        .start(Some(vec![ItemId::LocalAi]), false)
-        .await
-        .unwrap();
-    let asked = until(&components, |view| {
-        matches!(stage(view), Some(RunStage::Review | RunStage::Settled))
-    })
-    .await;
-    let run = asked.setup.as_ref().expect("a setup");
     assert_eq!(
-        run.stage,
-        RunStage::Review,
-        "the plan waits for the window, but the setup ended {:?} {:?}",
-        run.outcome,
-        run.failure
+        entry.licences,
+        [wire::Licence {
+            model: "qwen2.5:3b".into(),
+            licence: "Qwen RESEARCH LICENSE AGREEMENT".into(),
+        }]
     );
-    let (operation, plan) = review(&asked);
-    (components, operation, plan)
-}
-
-/// Declines the plan under review, so nothing is set up.
-async fn decline(components: &Components, operation: &str, plan: &wire::Review) {
-    components
-        .answer(operation, &plan.plan_digest, wire::Decision::Reject)
-        .await
-        .unwrap();
-    until(components, |view| stage(view) == Some(RunStage::Settled)).await;
-}
-
-#[tokio::test]
-async fn the_local_ai_is_planned_from_the_selection_with_the_sizes_its_entries_state() {
-    let picks = [
-        ("vision_transcription", LOCAL, VISION),
-        ("text_extraction", LOCAL, TEXT),
-        ("column_role_mapping", HOSTED, HOSTED_MODEL),
-    ];
-    let listed = [(TEXT, Some(2 * GB)), (VISION, Some(3 * GB))];
-    // A running agent serves the catalogue; before one is ready the declared one stands in.
-    let services = [
-        Replies::selecting(&picks, &listed),
-        Replies::selecting(&picks, &listed).answering("catalog", declared(&listed)),
-    ];
-    for replies in services {
-        let fixture = Fixture::new(Serving::Whole).with_program();
-        let (components, operation, plan) = local_ai_plan(&fixture, replies).await;
-        let entry = &plan.entries[0];
-        assert_eq!(entry.item, "local_ai");
-        // The program, then one pull for each local role's model, none for the hosted one.
-        assert_eq!(
-            entry
-                .parts
-                .iter()
-                .map(|part| (part.part.as_str(), part.download_bytes))
-                .collect::<Vec<_>>(),
-            [
-                ("program", Some(PROGRAM_BYTES)),
-                ("text_extraction", Some(2 * GB)),
-                ("vision_transcription", Some(3 * GB)),
-            ]
-        );
-        assert_eq!(entry.download_bytes, Some(PROGRAM_BYTES + 5 * GB));
-        for host in [HOST, MODEL_HOST] {
-            assert!(
-                entry.source_hosts.iter().any(|named| named == host),
-                "{host}"
-            );
-        }
-        assert_eq!(fixture.downloads(), 0, "nothing moves before the answer");
-        decline(&components, &operation, &plan).await;
-    }
-}
-
-#[tokio::test]
-async fn a_size_the_catalogue_states_differently_is_a_plan_the_person_approves_anew() {
-    let mut digests = Vec::new();
-    for size in [2 * GB, 2 * GB + 1] {
-        let fixture = Fixture::new(Serving::Whole).with_program();
-        let replies =
-            Replies::selecting(&[("text_extraction", LOCAL, TEXT)], &[(TEXT, Some(size))]);
-        let (components, operation, plan) = local_ai_plan(&fixture, replies).await;
-        digests.push(plan.plan_digest.clone());
-        decline(&components, &operation, &plan).await;
-    }
-    assert_ne!(digests[0], digests[1]);
-}
-
-#[tokio::test]
-async fn a_selection_that_cannot_be_admitted_refuses_the_start_and_runs_nothing() {
-    let unreadable = serde_json::json!({"unreadable": true, "roles": [], "revision": null});
-    let cases = [
-        (
-            "a card without a size",
-            Replies::selecting(&[("text_extraction", LOCAL, TEXT)], &[(TEXT, None)]),
-            Refusal::ModelSizeUnstated,
-        ),
-        (
-            "a card with a zero size",
-            Replies::selecting(&[("text_extraction", LOCAL, TEXT)], &[(TEXT, Some(0))]),
-            Refusal::ModelSizeUnstated,
-        ),
-        (
-            "an unreadable record",
-            Replies::default().answering("model_roles", unreadable),
-            Refusal::ModelSelectionUnusable,
-        ),
-        (
-            "a service that does not answer",
-            Replies::default(),
-            Refusal::Unavailable,
-        ),
-    ];
-    for (name, replies, refusal) in cases {
-        let fixture = Fixture::new(Serving::Whole);
-        let (components, _) = selecting(&fixture, replies);
-        assert_eq!(components.start(None, false).await, Err(refusal), "{name}");
-        assert!(components.view().setup.is_none(), "{name}: no run is shown");
-        // The refusal is the start's own: asking again is refused the same way.
-        assert_eq!(components.start(None, false).await, Err(refusal), "{name}");
-        assert_eq!(fixture.downloads(), 0, "{name}");
-    }
-}
-
-#[tokio::test]
-async fn a_check_the_selection_refused_reports_the_refusal_and_reads_no_rows() {
-    let fixture = Fixture::new(Serving::Whole);
-    let replies = Replies::selecting(&[("text_extraction", LOCAL, TEXT)], &[(TEXT, None)]);
-    let (components, _) = selecting(&fixture, replies);
-    components.check(wire::CheckMode::Quick);
-    let checked = until(&components, |view| {
-        view.check
-            .as_ref()
-            .is_some_and(|check| check.stage != CheckStage::Running)
-    })
-    .await;
-    let check = checked.check.unwrap();
     assert_eq!(
-        (check.stage, check.failure, check.refusal),
-        (CheckStage::Failed, None, Some(Refusal::ModelSizeUnstated))
+        entry.advisories,
+        [wire::Advisory::LicenceCommercialUseBarred]
     );
-    assert!(checked.rows.is_empty());
-}
-
-#[tokio::test]
-async fn every_command_that_runs_the_engine_reads_the_selection_first() {
-    let fixture = Fixture::new(Serving::Whole);
-    let (components, replies) = selecting(&fixture, Replies::without_selection());
-    let reads = || {
-        replies
-            .asked()
-            .iter()
-            .filter(|action| *action == "model_roles")
-            .count()
-    };
-    let finished = |after: Option<String>| {
-        move |view: &View| {
-            view.check.as_ref().is_some_and(|check| {
-                check.stage != CheckStage::Running && Some(&check.operation_id) != after.as_ref()
-            })
-        }
-    };
-    components.check(wire::CheckMode::Quick);
-    let first = until(&components, finished(None)).await.check.unwrap();
-    assert_eq!(reads(), 1);
-    components.verify(vec![ItemId::Browser]);
-    until(&components, finished(Some(first.operation_id.clone()))).await;
-    assert_eq!(reads(), 2);
-    let (operation, plan) = reviewing(&components).await;
-    assert_eq!(reads(), 3);
-    decline(&components, &operation, &plan).await;
-}
-
-#[tokio::test]
-async fn stopping_a_setup_another_window_runs_reads_no_selection() {
-    let gate = Arc::new(Released::default());
-    let fixture = Fixture::new(Serving::Gated(gate.clone()));
-    let owner = running(&fixture).await;
-    let (follower, replies) = selecting(&fixture, Replies::without_selection());
-    follower.start(None, false).await.unwrap();
-    let run = until(&follower, moving).await.setup.unwrap();
-    let before = replies.asked();
-    // Asking another setup to stop builds an engine for nothing but that request.
-    follower.cancel(&run.operation_id).await.unwrap();
-    assert_eq!(replies.asked(), before);
-    gate.release();
-    until(&owner, |view| stage(view) == Some(RunStage::Settled)).await;
-    until(&follower, |view| stage(view) == Some(RunStage::Settled)).await;
 }

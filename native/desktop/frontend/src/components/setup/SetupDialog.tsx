@@ -27,6 +27,7 @@ import { SetupRowItem } from "./SetupRowItem";
 import {
   failureWords,
   itemName,
+  licenceWords,
   outcomeWords,
   overallShare,
   partName,
@@ -84,6 +85,14 @@ function PlanSummary({
 }) {
   const t = useStrings();
   const size = (bytes: number) => formatSize(locale, bytes);
+  // What an approval also agrees to is said here, never only in the detail.
+  const notices = [
+    ...new Set(
+      review.entries.flatMap((entry) =>
+        entry.licences.map((licence) => licenceWords(t, licence)),
+      ),
+    ),
+  ];
   return (
     <div className="grid gap-2 text-sm text-foreground">
       <p data-setup-plan-size>{planSize(t, review, locale)}</p>
@@ -100,6 +109,11 @@ function PlanSummary({
       {review.installs_outside_program && (
         <p>{t("desktop.setup.plan_outside_program")}</p>
       )}
+      {notices.map((notice) => (
+        <p key={notice} data-setup-licence className="text-muted-foreground">
+          {notice}
+        </p>
+      ))}
       {!review.space_sufficient && (
         <Alert role="alert">{t("desktop.setup.space_short")}</Alert>
       )}
@@ -345,13 +359,9 @@ export function SetupDialog({
   );
   const main = snapshot ? mainAction(t, run, rows) : null;
   // A check the engine refused under a category of its own, such as a setting
-  // it cannot use, or that was refused because the person's selection of local
-  // models could not be admitted: it reports no row, so its sentence is the
-  // only thing to say.
+  // it cannot use: it reports no row, so its sentence is the only thing to say.
   const checkFailure =
     snapshot?.check?.stage === "failed" ? snapshot.check.failure : null;
-  const checkRefusal =
-    snapshot?.check?.stage === "failed" ? snapshot.check.refusal : null;
   const description =
     stage === "review"
       ? t("desktop.setup.lead_review")
@@ -386,15 +396,11 @@ export function SetupDialog({
         {checkFailure !== null && (
           <Alert role="alert">{failureWords(t, checkFailure)}</Alert>
         )}
-        {checkRefusal !== null && (
-          <Alert role="alert">{refusalWords(t, checkRefusal)}</Alert>
-        )}
 
         {control.read.kind === "loading" ||
         (snapshot !== null &&
           snapshot.rows.length === 0 &&
-          checkFailure === null &&
-          checkRefusal === null) ? (
+          checkFailure === null) ? (
           <p className="flex items-center gap-2 text-sm text-muted-foreground">
             <Spinner />
             {t("desktop.setup.checking")}

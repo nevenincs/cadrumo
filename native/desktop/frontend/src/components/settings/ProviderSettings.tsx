@@ -284,12 +284,13 @@ function WayRow({
   const state = connectionStatus(provider);
   const detail = detailWords(t, provider);
   const connection = connectionWords(t, provider.transport);
+  // A keyless lane runs against the server on this computer that Cadrumo
+  // launches the agent with, not the address the agent declares by default,
+  // so no address is shown for it.
   const address =
     provider.authKind === "api_key_with_base_url"
       ? (provider.baseUrl ?? provider.defaultBaseUrl)
-      : keyless
-        ? provider.defaultBaseUrl
-        : undefined;
+      : undefined;
   return (
     <li
       data-lane={provider.id}

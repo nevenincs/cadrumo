@@ -1,3 +1,4 @@
+import type { AgentModelRoles } from "../ipc/contract";
 import type {
   AgentSkillDetail,
   AgentSkillInventory,
@@ -108,7 +109,35 @@ export type AgentCatalogEntry = {
   /** The efforts this model accepts; none when it takes no effort. */
   efforts?: AgentEffort[];
   default_effort?: AgentEffort | null;
+  /** What is known of the model itself, each null where nothing states it. */
+  vision?: boolean | null;
+  size_bytes?: number | null;
+  context_length?: number | null;
+  licence?: AgentModelLicenceFacts | null;
+  /** False only for a model a lane on this computer recommends but this
+   * computer does not hold. */
+  installed?: boolean;
 };
+
+/** The licence a model is distributed under, without its text; the text is
+ * the agent's licence route's. */
+export type AgentModelLicenceFacts = {
+  spdx: string | null;
+  name: string;
+  digest?: string;
+};
+
+/** A model's licence in full, as the agent's licence route serves it. */
+export type AgentModelLicence = AgentModelLicenceFacts & {
+  provider: string;
+  transport: AgentTransport;
+  model: string;
+  installed: boolean;
+  text: string;
+};
+
+/** A capability cadrumo-agent recommends a lane's model for. */
+export type AgentRecommendedCapability = "vision" | "text";
 
 export type AgentNativeControlOption = {
   option_id: string;
@@ -164,6 +193,9 @@ export type AgentProviderLane = {
       reason?: string | null;
     };
     recommended_entry_id?: string | null;
+    /** The model the lane recommends for each capability, by the value a run
+     * names it by. An offer only: nothing applies it. */
+    recommended?: Partial<Record<AgentRecommendedCapability, string>>;
     models?: AgentCatalogEntry[];
     native_controls?: AgentNativeControl[];
   };
@@ -180,9 +212,44 @@ export type AgentProviderLane = {
 
 /** cadrumo-agent's provider catalog: every lane it knows, runnable or not. */
 export type AgentProviderCatalog = {
+  /** A served catalog is never an envelope. */
+  kind?: never;
   api_version?: string;
   providers?: AgentProviderLane[];
 };
+
+/** One model a lane declares, as cadrumo-agent's declared catalog states it. */
+export type AgentDeclaredModel = {
+  id: string;
+  display_name: string;
+  vision?: boolean | null;
+  size_bytes?: number | null;
+  context_length?: number | null;
+  licence?: AgentModelLicenceFacts | null;
+};
+
+/** One lane cadrumo-agent declares. It says what exists, never whether the
+ * lane is configured, signed in or runnable here. */
+export type AgentDeclaredLane = {
+  /** The catalogue lane id a role selection names. */
+  id: string;
+  provider: string;
+  transport: AgentTransport;
+  display_name: string;
+  recommended?: Partial<Record<AgentRecommendedCapability, string>>;
+  models?: AgentDeclaredModel[];
+};
+
+/** What the service answers while no agent is ready: the agent's declared
+ * catalog in an envelope, so it is never read as a served one. */
+export type AgentDeclaredCatalog = {
+  kind: "declared";
+  catalog: { schema_version?: number; providers?: AgentDeclaredLane[] };
+};
+
+/** What a catalog read answers: the ready agent's served catalog, or its
+ * declared one while none is ready. */
+export type AgentCatalogAnswer = AgentProviderCatalog | AgentDeclaredCatalog;
 
 /** What a turn runs with, field for field what cadrumo-agent's run start
  * takes of an agent (`AgentSpec`): the provider and the way into it, the model
@@ -436,8 +503,32 @@ export interface AgentSession {
   observeStatus(
     listener: (status: AgentServiceStatus) => void,
   ): Promise<() => void>;
-  /** cadrumo-agent's provider catalog, as it serves it. */
-  providerCatalog(): Promise<AgentProviderCatalog>;
+  /** cadrumo-agent's provider catalog, as it serves it, or its declared
+   * catalog while no agent is ready. */
+  providerCatalog(): Promise<AgentCatalogAnswer>;
+  /** The person's model selection for every role. Absent where the host
+   * offers none. */
+  modelRoles?(): Promise<AgentModelRoles>;
+  /** Selects `lane` and `model` for `role` at the revision read; answers
+   * every role's selection after it. A refusal carries the service's reason
+   * as `agent_model_role_<reason>`. */
+  setModelRole?(
+    role: string,
+    lane: string,
+    model: string,
+    expectedRevision: string,
+  ): Promise<AgentModelRoles>;
+  /** Clears the selection for `role` at the revision read. */
+  clearModelRole?(
+    role: string,
+    expectedRevision: string,
+  ): Promise<AgentModelRoles>;
+  /** The licence text of one model a lane lists; only a ready agent has it. */
+  modelLicence?(
+    provider: string,
+    transport: AgentTransport,
+    model: string,
+  ): Promise<AgentModelLicence>;
   /** cadrumo-agent's own skills, every one, by name. Absent where the host
    * serves none. */
   skills?(): Promise<AgentSkillInventory>;

@@ -202,6 +202,9 @@ pub fn commands<R: Runtime>() -> Commands<R> {
         agent_status_unsubscribe,
         agent_provider_catalog,
         agent_model_roles,
+        agent_model_role_set,
+        agent_model_role_clear,
+        agent_model_licence,
         agent_skills,
         agent_skill,
         agent_skill_verify,
@@ -449,6 +452,106 @@ async fn agent_model_roles(
                 .with_reason("admin_model_roles_contract"),
             )
         })
+    })
+    .await
+}
+
+/// One guarded change to the person's selections, answered with every role's
+/// selection after it or the reason it was not made.
+fn change_model_roles(
+    host: &AgentHost,
+    request: Value,
+) -> std::result::Result<model_roles::ModelRoles, Refused> {
+    let answer = host
+        .administer(request, None)
+        .map_err(|error| host.refuse(admin_refusal(&error), error))?;
+    if let Some(code) = model_roles::change_refusal(&answer) {
+        return refused(code);
+    }
+    model_roles::parse(&answer).ok_or_else(|| {
+        host.refuse(
+            "agent_service_failed",
+            cadrumo_application::error::application::ApplicationError::new(
+                cadrumo_application::error::application::ErrorCode::ReadFailed,
+                cadrumo_application::error::application::Operation::Cli,
+            )
+            .with_reason("admin_model_roles_contract"),
+        )
+    })
+}
+
+/// Selects `lane` and `model` for `role`, at the revision the person read.
+#[tauri::command]
+async fn agent_model_role_set(
+    host: State<'_, Arc<AgentHost>>,
+    role: String,
+    lane: String,
+    model: String,
+    expected_revision: String,
+) -> std::result::Result<model_roles::ModelRoles, Refused> {
+    if !model_roles::is_role(&role)
+        || !model_roles::is_lane(&lane)
+        || !model_roles::is_model(&model)
+        || !model_roles::is_revision(&expected_revision)
+    {
+        return refused("agent_invalid_request");
+    }
+    blocking(&host, move |host| {
+        change_model_roles(
+            host,
+            serde_json::json!({
+                "action": "model_role_set",
+                "role": role,
+                "provider": lane,
+                "model": model,
+                "expected_revision": expected_revision,
+            }),
+        )
+    })
+    .await
+}
+
+/// Clears the selection for `role`, at the revision the person read.
+#[tauri::command]
+async fn agent_model_role_clear(
+    host: State<'_, Arc<AgentHost>>,
+    role: String,
+    expected_revision: String,
+) -> std::result::Result<model_roles::ModelRoles, Refused> {
+    if !model_roles::is_role(&role) || !model_roles::is_revision(&expected_revision) {
+        return refused("agent_invalid_request");
+    }
+    blocking(&host, move |host| {
+        change_model_roles(
+            host,
+            serde_json::json!({
+                "action": "model_role_clear",
+                "role": role,
+                "expected_revision": expected_revision,
+            }),
+        )
+    })
+    .await
+}
+
+/// The licence text of one model a lane lists, relayed from the ready agent.
+#[tauri::command]
+async fn agent_model_licence(
+    host: State<'_, Arc<AgentHost>>,
+    provider: String,
+    transport: String,
+    model: String,
+) -> std::result::Result<Value, Refused> {
+    // A provider identity has the grammar of a role: a lowercase slug of up to 64.
+    if !model_roles::is_role(&provider)
+        || !matches!(transport.as_str(), "api" | "cli")
+        || !model_roles::is_model(&model)
+    {
+        return refused("agent_invalid_request");
+    }
+    blocking(&host, move |host| {
+        gateway::Client::new(&Session::gateway(&host.supervisor)?)
+            .licence(&provider, &transport, &model)
     })
     .await
 }
