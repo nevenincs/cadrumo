@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:5c7ea5287e17f093fcdff2911fd2cc235cd0963533865699a2888a63c5ba897c'
+body_hash: 'sha256:0af118fb13127d927ea0370fc865180c37e446f5cf7d75ed52d63cb5d561c239'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -1209,6 +1209,22 @@ related:
 - `S27` `verify:` `key-set assertions of test_committed_catalogues_follow_contextual_product_identity_contract (prose, display name, stale inventory, normalised references) computed in memory for ca, en, es and hu: extra and missing both empty` -> `pass`
 - `S27` `verify:` `uv run --no-sync pytest -n 0 -m '' dev/locales/tests/test_audit.py -k contextual_product_identity: reaches the last assertion, manager.audit().ok` -> `fail`
 - `S27` `by:` `vaultspec-high-executor`
+- `S22` `M` `native/desktop/src-tauri/src/shell/setup/components.rs`
+- `S22` `M` `native/desktop/src-tauri/src/shell/setup/wire.rs`
+- `S22` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S22` `M` `native/desktop/frontend/src/dev/setupFixture.ts`
+- `S22` `M` `native/desktop/frontend/src/components/setup/setupWords.ts`
+- `S22` `M` `src/cadrumo/application/dependency_contracts.py`
+- `S22` `M` `src/cadrumo/application/tests/test_dependency_contracts.py`
+- `S22` `M` `src/cadrumo/application/tests/test_dependency_wording.py`
+- `S22` `M` `src/cadrumo/locales/en/application.yml`
+- `S22` `M` `src/cadrumo/locales/es/application.yml`
+- `S22` `M` `src/cadrumo/locales/ca/application.yml`
+- `S22` `M` `src/cadrumo/locales/hu/application.yml`
+- `S22` `verify:` `CTest test application.rust in build/windows-x64, Debug (native/application cargo test through CMake; 311 passed, 1 ignored)` -> `pass`
+- `S22` `verify:` `uv run --no-sync pytest -n 0 -m '' test_dependency_contracts, test_dependency_wording, test_dependency_registry_conformance and the desktop wire conformance tests: 58 passed` -> `pass`
+- `S22` `verify:` `native/desktop/frontend: tsc --noEmit, eslint and prettier --check on contract.ts, setupFixture.ts and setupWords.ts` -> `pass`
+- `S22` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -1285,3 +1301,6 @@ related:
 - `S27` Sixteen strings per locale name Cadrumo as prose and are registered in `_PROSE_KEYS,` none reworded: they send the person to the Cadrumo desktop app (the five refusals and setup lines in `application.ledger.evidence.label_reading.reader_unavailable,` `application.provisioning.refusal.*_local_ai_unavailable,` `cli.app.ledger.evidence.batch_paused_local_ai_unavailable,` `cli.ledger.import.file_reader_unavailable,` `errors.refused.refused_ledger_evidence_reader_unavailable,` `errors.refused.refused_llm_contention,` `tui.ledger.evidence.draft.label_reading.reader_unavailable,` `tui.ledger.evidence_files.batch.outcome.paused,` `tui.ledger.import.refusal.reader_unavailable_here,` `tui.local_reader.card.description),` or name Cadrumo as the actor `(desktop.setup.refused_model_selection_unusable,` `desktop.setup.refused_model_size_unstated,` `desktop.providers.local_model_remove_failed,` `desktop.providers.local_model_remove_still_selected,` `desktop.providers.local_models_lead).` The seventeenth key, `cli.ledger.classify.vision_model_help,` was deleted with the option. Commit 21cddd50f2.
 - `S27` The test's final manager.audit() assertion fails on other sessions' uncommitted work, not on these keys: `errors.refused.refused_unread_setting` is missing and the four `*_busy_refused` keys are extra in every locale.
 - `S27` Correction to the registration note above: eleven of the sixteen keys send the person to the Cadrumo desktop app and five name Cadrumo as the actor; the word 'five' there is wrong.
+- `S22` Also closes the P05.S31 residue: the `downloaded_not_loaded` note had no producer and is gone from the engine (state.rs), the desktop wire and host mapping, the TypeScript SetupNote, the Python DependencyNote and application.provisioning.note in four locales. Commit 79ff11cdcf.
+- `S22` Pending in the working tree, held by another session's uncommitted hunks in the same files: the `desktop_chrome.py` declared family and key `(desktop.setup.note.downloaded_not_loaded)` and the `desktop.setup.note.downloaded_not_loaded` leaf in src/cadrumo/locales/{en,es,ca,hu}/common.yml. Their removal is made in the working tree and is committed once those files hold only this change.
+- `S22` The desktop crate (wire.rs, components.rs) is not built here: only the application.rust CMake test target was run. The remaining Note variant, `own_network_settings,` also has no producer; the tests that carried the deleted variant use it.
