@@ -1,6 +1,5 @@
 import { useId, useState, type ReactNode } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty";
 import { FieldLabel } from "@/components/ui/field";
@@ -677,7 +676,7 @@ export function ReaderReadiness({
           ready.host.available,
           t("desktop.ledger.documents.reader.host"),
           ready.host.available
-            ? ready.host.version_withheld || !ready.host.version
+            ? !ready.host.version
               ? t("desktop.ledger.documents.reader.available")
               : t("desktop.ledger.documents.reader.version", {
                   version: ready.host.version,
@@ -706,9 +705,6 @@ export function ReaderReadiness({
               {role.ready
                 ? t("desktop.ledger.documents.reader.ready")
                 : t("desktop.ledger.documents.reader.not_ready")}
-              {role.contention_causes?.map((cause) => (
-                <Badge key={cause}>{cause}</Badge>
-              ))}
             </span>
           </li>
         ))}

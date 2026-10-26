@@ -90,17 +90,19 @@ const decimal = (value: string | null): PublicDecimal | null =>
   value === null ? null : { decimal: value };
 const fileName = (path: string) => path.split(/[\\/]/).pop() || path;
 
-/** The setup the reader probe names when the local AI is missing. */
+/** The setup the components role names when the local AI is missing. */
 const LOCAL_AI_SETUP = "operator.provision.local_ai";
-/** What the probe found missing: the program that runs the models. */
-const RUNTIME_REACHABLE = "provisioning.runtime.reachable";
+/** What the reader check found missing: the program that runs the models. */
+const RUNTIME_INSTALLED = "provisioning.runtime.installed";
+/** What the reader check found missing: the role's model on the server. */
+const ROLE_MODEL_INSTALLED = "provisioning.role_model.installed";
 
 /** A label reading that stood without the model fill the local AI gives. */
 const withoutReader = (unread: string[]): LabelReadingFallback => ({
   cause: "reader_unavailable",
   unread_fields: unread,
   reader_error_type: "InvoiceDraftReaderUnavailableError",
-  failed_condition_id: RUNTIME_REACHABLE,
+  failed_condition_id: RUNTIME_INSTALLED,
   recovery_action_id: LOCAL_AI_SETUP,
 });
 
@@ -115,13 +117,13 @@ const readerRefusal = () =>
     context: [],
     context_entries_omitted: 0,
     precondition_verdict_json: JSON.stringify({
-      failed_condition_id: RUNTIME_REACHABLE,
+      failed_condition_id: RUNTIME_INSTALLED,
       evidence: [
         {
-          condition_id: RUNTIME_REACHABLE,
-          evidence_id: `${RUNTIME_REACHABLE}.observation`,
+          condition_id: RUNTIME_INSTALLED,
+          evidence_id: `${RUNTIME_INSTALLED}.observation`,
           provenance: "runtime_observation",
-          values: { reachable: false },
+          values: { local_ai_state: "absent" },
         },
       ],
       action: { action_id: LOCAL_AI_SETUP },
@@ -187,8 +189,9 @@ function ticketPage(spec: Spec): {
 } {
   const width = 360;
   const height = 520;
-  const ids = spec.blockers?.find((blocker) => blocker.field === "supplier_tax_id")
-    ?.candidates ?? [];
+  const ids =
+    spec.blockers?.find((blocker) => blocker.field === "supplier_tax_id")
+      ?.candidates ?? [];
   const [top, foot] = [ids[0]?.value ?? "", ids[1]?.value ?? ""];
   const line = (y: number, text: string, size = 16, weight = 400) =>
     `<text x="24" y="${y}" font-family="monospace" font-size="${size}" font-weight="${weight}">${text}</text>`;
@@ -1403,13 +1406,8 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
     return {
       profile_id: profileId,
       host: {
-        platform: "windows",
-        endpoint_url: null,
-        endpoint_local: true,
-        executable_located: true,
-        reachable: true,
+        state: "ready",
         version: "0.9.2",
-        version_withheld: false,
         available: true,
         failed_condition_id: null,
       },
@@ -1418,23 +1416,17 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
           role: "document_text",
           model: "reader-text-small",
           installed: true,
-          resident: true,
-          load_admitted: true,
-          contention_causes: [],
           ready: true,
           failed_condition_id: null,
         },
         {
           role: "document_vision",
           model: "reader-vision-medium",
-          installed: true,
-          resident: false,
-          load_admitted: false,
-          contention_causes: ["memory_headroom"],
+          installed: false,
           ready: false,
-          failed_condition_id: "inference.load_headroom",
-          // Memory headroom is not something setup supplies.
-          recovery_action_id: null,
+          failed_condition_id: ROLE_MODEL_INSTALLED,
+          // The local AI setup downloads the role's model.
+          recovery_action_id: LOCAL_AI_SETUP,
         },
       ],
       extraction_ready: true,
@@ -1444,32 +1436,24 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
   }
 
   /** The readers of a computer whose local AI program is not installed: the
-   * probe reaches nothing, so no role can read and no model is measured. */
+   * components role reports it absent, so no role can read. */
   function missingReader(): JsonObject {
     const role = (name: string) => ({
       role: name,
       model: null,
       installed: null,
-      resident: null,
-      load_admitted: null,
-      contention_causes: [],
       ready: false,
-      failed_condition_id: RUNTIME_REACHABLE,
-      // The probe names the local AI setup for a runtime that does not answer.
+      failed_condition_id: RUNTIME_INSTALLED,
+      // The components role names the local AI setup for an absent program.
       recovery_action_id: LOCAL_AI_SETUP,
     });
     return {
       profile_id: profileId,
       host: {
-        platform: "windows",
-        endpoint_url: null,
-        endpoint_local: true,
-        executable_located: false,
-        reachable: false,
+        state: "absent",
         version: null,
-        version_withheld: false,
         available: false,
-        failed_condition_id: RUNTIME_REACHABLE,
+        failed_condition_id: RUNTIME_INSTALLED,
       },
       roles: [role("document_text"), role("document_vision")],
       extraction_ready: false,

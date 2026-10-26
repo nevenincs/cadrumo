@@ -57,7 +57,7 @@ test("the setup action is found in every shape a refusal carries it", () => {
   ).toBe("operator.provision.local_ai");
   expect(
     provisionActionOf({
-      failed_condition_id: "provisioning.runtime.reachable",
+      failed_condition_id: "provisioning.runtime.installed",
       action_id: "operator.provision.local_ai",
     }),
   ).toBe("operator.provision.local_ai");

@@ -1712,13 +1712,13 @@ export function ledgerFixture(options: Options): LedgerPort {
     };
   }
 
-  /** The pause a batch reports when the local AI's program does not answer:
+  /** The pause a batch reports when the local AI's program is not set up:
    * its verdict names the local AI's setup. */
   function readerPause(): JsonObject {
     return {
-      facts: [{ name: "runtime_reachable", value: false }],
+      facts: [{ name: "local_ai_state", value: "absent" }],
       precondition_verdict: {
-        failed_condition_id: "provisioning.runtime.reachable",
+        failed_condition_id: "provisioning.runtime.installed",
         evidence: [],
         action_id: "operator.provision.local_ai",
         argument_bindings: [],

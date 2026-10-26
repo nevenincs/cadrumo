@@ -62,6 +62,7 @@ import type {
   ProrrataSeedSectorRequest,
   ProrrataSettleSectorRequest,
 } from "./ledgerSetup";
+import type { SetupState } from "../ipc/contract";
 
 /** The definitions the host admits, mirroring its closed list. */
 export const LEDGER_DEFINITIONS = [
@@ -1717,29 +1718,25 @@ export type EvidenceConsentListResult = {
 export type ReaderRole = {
   role: string;
   model?: string | null;
+  /** Whether the local AI server holds the model, as the agent states it;
+   * absent or null when nobody stated it, which is not "not installed". */
   installed?: boolean | null;
-  resident?: boolean | null;
-  load_admitted?: boolean | null;
-  contention_causes?: string[];
   ready: boolean;
   failed_condition_id?: string | null;
   /** The operator action the reader check named for `failed_condition_id`,
-   * such as the local AI setup for a runtime that does not answer or a
-   * model that is not installed; absent where setup cannot change what is
+   * such as the local AI setup for a program that is not set up or a model
+   * that is not installed; absent where setup cannot change what is
    * missing. An identifier for routing, never shown. */
   recovery_action_id?: string | null;
 };
 /** What can read documents on this computer. */
 export type ReaderReadinessResult = {
   profile_id: string;
+  /** The local AI program as the components role's status row reports it;
+   * `state` is absent when the role reported no row, which is unknown. */
   host: {
-    platform: "windows" | "macos" | "linux" | "other";
-    endpoint_url?: string | null;
-    endpoint_local: boolean;
-    executable_located: boolean;
-    reachable: boolean;
+    state?: SetupState | null;
     version?: string | null;
-    version_withheld?: boolean;
     available: boolean;
     failed_condition_id?: string | null;
   };
