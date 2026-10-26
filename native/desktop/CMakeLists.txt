@@ -333,11 +333,11 @@ if(BUILD_TESTING)
 endif()
 
 cadrumo_build_step(step_comment desktop-run GROUP desktop
-  SUMMARY "run the desktop application against the package root")
+  SUMMARY "run the desktop image in the selected package")
 add_custom_target(desktop-run
   COMMAND "${CMAKE_COMMAND}" -E env ${desktop_environment} "${desktop_configuration}"
     "CADRUMO_DESKTOP_PACKAGE_ROOT=${CADRUMO_DESKTOP_PACKAGE_ROOT}"
-    "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/tauri.mjs" run
+    "${CADRUMO_DESKTOP_PACKAGE_ROOT}/${desktop_package_path}"
   WORKING_DIRECTORY "${CMAKE_BINARY_DIR}" COMMENT "${step_comment}" VERBATIM)
 
 cadrumo_build_step(step_comment desktop-headless-test GROUP verification

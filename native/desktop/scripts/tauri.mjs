@@ -17,7 +17,6 @@ import {
   identity as readIdentity,
   profile,
   artifactFile,
-  executable,
   tauriConfig,
 } from "./configuration.mjs";
 
@@ -38,14 +37,6 @@ if (
   (process.argv.length > 4 || filter?.startsWith("-"))
 )
   throw new Error("Host tests accept one optional Rust test-name filter.");
-if (action === "run") {
-  const result = spawnSync(executable(), process.argv.slice(3), {
-    stdio: "inherit",
-    windowsHide: true,
-  });
-  if (result.error) throw result.error;
-  process.exit(result.status ?? 1);
-}
 const cli = resolve(desktop, "frontend/node_modules/@tauri-apps/cli/tauri.js");
 const icons = buildPath("desktop_icons");
 const contract = process.env.CADRUMO_NATIVE_CONTRACT;
