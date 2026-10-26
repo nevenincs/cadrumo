@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:a0833b813e606f77520231ee8b4345db6fa671ddc5520513af26fcf965a633a3'
+body_hash: 'sha256:372c57aad95c3946c3be416ff81bb2c992c586962979953d74bcb975e102af51'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -1296,6 +1296,20 @@ related:
 - `S31` `verify:` `just check-types` -> `pass`
 - `S31` `verify:` `operation_contract_manifest.generate --check` -> `pass`
 - `S31` `by:` `implementer-high`
+- `S31` `M` `dev/docs/tests/test_env_reference.py`
+- `S31` `M` `dev/env/__main__.py`
+- `S31` `M` `dev/env/_dotenv.py`
+- `S31` `M` `dev/env/tests/test_dotenv.py`
+- `S31` `A` `dev/quality/tests/test_no_unread_settings.py`
+- `S31` `M` `justfile`
+- `S31` `M` `src/cadrumo/core/config.py`
+- `S31` `M` `src/cadrumo/core/errors/registry/_core.py`
+- `S31` `A` `src/cadrumo/core/tests/test_unread_settings.py`
+- `S31` `A` `src/cadrumo/core/unread_settings.py`
+- `S31` `verify:` `pytest dev/quality/tests/test_no_unread_settings.py dev/env/tests core/tests/test_unread_settings.py` -> `pass`
+- `S31` `verify:` `ruff check . and ruff format --check .` -> `pass`
+- `S31` `verify:` `just check-types` -> `pass`
+- `S31` `verify:` `just check-import-boundaries` -> `fail`
 
 ## Notes
 
@@ -1382,3 +1396,5 @@ related:
 - `S22` Locale part of the `downloaded_not_loaded` removal: the `desktop_chrome.py` declared family and key and the `desktop.setup.note.downloaded_not_loaded` leaf in four common.yml catalogues were committed by the orchestrator in a2486bbf53, together with another agent's reader-panel keys. No `downloaded_not_loaded` token remains in src, dev, native or docs at HEAD.
 - `S27` Re-run at a2486bbf53 with the shared catalogues committed: `dev/locales/tests/test_audit.py` has 11 passed and 2 failed, `test_committed_catalogues_follow_contextual_product_identity_contract` and `test_committed_catalogues_pass_production_audit.` Both fail only on manager.audit(): `errors.refused.refused_unread_setting` is missing and four `*_busy_refused` keys are extra, because other sessions' uncommitted edits to core/errors/registry, adapters/outbound/llm/errors.py and `core/unread_settings.py` add and remove the code that names them. All key-set assertions of the identity gate pass.
 - `S31` The `refused_llm_busy` and `canonical_invoice_draft_reader_busy_refused` error strings and the capabilities.py docstring reference stay for a follow-up: another session holds uncommitted hunks in those shared files.
+- `S31` check-import-boundaries reports only findings in another session's untracked dev/ci benchmark modules and the dev target set they make stale; no finding is in a file this Step touched.
+- `S31` The error string for the unread-setting refusal and its test wait for another session to commit `src/cadrumo/locales/*/errors.yml.`
