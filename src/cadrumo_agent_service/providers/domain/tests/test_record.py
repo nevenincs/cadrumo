@@ -149,3 +149,33 @@ def test_a_selection_names_any_model_id_the_catalogue_carries(model: str) -> Non
 def test_a_selection_refuses_a_model_id_no_catalogue_carries(model: str) -> None:
     with pytest.raises(ValidationError):
         ModelRoleSelection(role=ModelRole.TEXT_EXTRACTION, lane="example_api", model=model)
+
+
+_AGENT_LANE_ID_LENGTH = 68
+"""cadrumo-agent's longest lane id: its 64-character provider metadata key, an underscore and the transport."""
+
+
+@pytest.mark.parametrize(
+    "lane",
+    [
+        pytest.param("l" * (_AGENT_LANE_ID_LENGTH - 4) + "_api", id="longest-the-agent-names"),
+        pytest.param("o" * 36 + "_cli", id="forty-characters-stored-before"),
+    ],
+)
+def test_a_record_and_a_selection_are_keyed_by_any_lane_id_the_catalogue_carries(lane: str) -> None:
+    document = json.loads(provider_settings_record_document(_record()))
+    document["provider"] = lane
+
+    assert parse_provider_settings_record(json.dumps(document).encode()).provider == lane
+    assert ModelRoleSelection(role=ModelRole.TEXT_EXTRACTION, lane=lane, model="example-model-1").lane == lane
+
+
+def test_a_record_and_a_selection_refuse_a_lane_id_one_past_the_agent_s_bound() -> None:
+    lane = "l" * (_AGENT_LANE_ID_LENGTH - 3) + "_api"
+    document = json.loads(provider_settings_record_document(_record()))
+    document["provider"] = lane
+
+    with pytest.raises(ValidationError):
+        parse_provider_settings_record(json.dumps(document).encode())
+    with pytest.raises(ValidationError):
+        ModelRoleSelection(role=ModelRole.TEXT_EXTRACTION, lane=lane, model="example-model-1")

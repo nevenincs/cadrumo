@@ -31,9 +31,18 @@ from pydantic import (
 
 from cadrumo.core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from cadrumo_client.contracts.model_runs import MODEL_RUN_MODEL_ID_MAX_LENGTH, MODEL_RUN_MODEL_ID_PATTERN
+from cadrumo_client.contracts.model_runs import (
+    MODEL_RUN_LANE_ID_PATTERN,
+    MODEL_RUN_MODEL_ID_MAX_LENGTH,
+    MODEL_RUN_MODEL_ID_PATTERN,
+    MODEL_RUN_PROVIDER_ID_PATTERN,
+)
 
 BASE_URL_MAX_LENGTH: Final[int] = 2048
+DISPLAY_NAME_MAX_LENGTH: Final[int] = 256
+"""The longest lane display name: the agent serves the same name capped at 256 characters."""
+CLI_PROGRAM_MAX_LENGTH: Final[int] = 255
+"""The longest cli program name: one file name, which no common filesystem lets exceed 255 characters."""
 MAX_CATALOG_LANES: Final[int] = 128
 _BASE_URL_FORBIDDEN: Final[frozenset[str]] = frozenset("*?[%$")
 _LOOPBACK_HOSTS: Final[frozenset[str]] = frozenset({"127.0.0.1", "localhost", "::1"})
@@ -42,14 +51,19 @@ RECOMMENDED_KEY_MAX_LENGTH: Final[int] = 64
 MODEL_ID_MAX_LENGTH: Final[int] = MODEL_RUN_MODEL_ID_MAX_LENGTH
 RECOMMENDED_VALUE_MAX_LENGTH: Final[int] = MODEL_ID_MAX_LENGTH
 
-_PROVIDER_ID_PATTERN: Final[str] = r"^[a-z][a-z0-9_]{0,39}$"
-_PROVIDER_ID: Final[re.Pattern[str]] = re.compile(_PROVIDER_ID_PATTERN)
+_LANE_ID: Final[re.Pattern[str]] = re.compile(MODEL_RUN_LANE_ID_PATTERN)
 
-ProviderId = Annotated[str, StringConstraints(pattern=_PROVIDER_ID_PATTERN)]
-"""A lane or provider identity id: a lowercase storage-safe slug."""
+ProviderId = Annotated[str, StringConstraints(pattern=MODEL_RUN_PROVIDER_ID_PATTERN)]
+"""A provider identity or agent credential id: a lowercase storage-safe slug of up to 64 characters."""
 
-CliProgram = Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_-]{0,63}$")]
-"""The executable name a cli lane runs."""
+LaneId = Annotated[str, StringConstraints(pattern=MODEL_RUN_LANE_ID_PATTERN)]
+"""A lane id: its provider id and transport joined by an underscore; also a stored record's key."""
+
+CliProgram = Annotated[
+    str,
+    StringConstraints(min_length=1, max_length=CLI_PROGRAM_MAX_LENGTH, pattern=r'^[^\x00-\x1f\x7f/\\:*?"<>|]+$'),
+]
+"""The executable name a cli lane resolves on the search path: one file name, without a path separator."""
 
 LicenceDigest = Annotated[str, StringConstraints(pattern=r"^sha256:[0-9a-f]{64}$")]
 """The digest of a licence text the agent ships: ``sha256:`` and 64 lowercase hex digits."""
@@ -252,12 +266,12 @@ class ProviderCatalogEntry(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    id: ProviderId
+    id: LaneId
     """The agent's lane id; commands address a lane by it and its record is keyed by it."""
     provider: ProviderId
     """The agent provider identity this lane reaches."""
     transport: ProviderTransport
-    display_name: str = Field(min_length=1, max_length=64)
+    display_name: str = Field(min_length=1, max_length=DISPLAY_NAME_MAX_LENGTH)
     """The identity's product name, the same on every lane of that identity."""
     description: str
     auth_kind: ProviderAuthKind
@@ -352,7 +366,7 @@ class ProviderCatalog(BaseModel):
 
     def entry(self, provider_id: str) -> ProviderCatalogEntry | None:
         """Return the lane ``provider_id`` names, or ``None`` when the agent did not report it."""
-        if not _PROVIDER_ID.fullmatch(provider_id):
+        if not _LANE_ID.fullmatch(provider_id):
             return None
         return next((entry for entry in self.providers if entry.id == provider_id), None)
 
@@ -382,6 +396,8 @@ def parse_provider_catalog(text: str) -> ProviderCatalog:
 
 __all__ = [
     "BASE_URL_MAX_LENGTH",
+    "CLI_PROGRAM_MAX_LENGTH",
+    "DISPLAY_NAME_MAX_LENGTH",
     "MAX_CATALOG_LANES",
     "MODEL_ID_MAX_LENGTH",
     "RECOMMENDED_KEY_MAX_LENGTH",
@@ -391,6 +407,7 @@ __all__ = [
     "CatalogModelFacts",
     "CliProgram",
     "LaneBackground",
+    "LaneId",
     "LicenceDigest",
     "ModelLicence",
     "ProviderAuthKind",

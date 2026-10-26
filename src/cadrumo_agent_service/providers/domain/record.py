@@ -46,7 +46,7 @@ from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG as _STRICT_FRO
 from cadrumo.core.time.utc import UtcInstant
 from cadrumo_client.contracts.model_runs import MODEL_RUN_MODEL_ID_PATTERN
 
-from .catalog import BASE_URL_MAX_LENGTH, ProviderId, validate_https_base_url
+from .catalog import BASE_URL_MAX_LENGTH, LaneId, validate_https_base_url
 
 PROVIDER_SETTINGS_RECORD_SCHEMA_VERSION: Final[Literal[1]] = 1
 CREDENTIAL_SECRET_MIN_LENGTH: Final[int] = 8
@@ -158,7 +158,7 @@ class ProviderSettingsRecord(BaseModel):
     model_config = _STRICT_FROZEN_HIDDEN_INPUT
 
     schema_version: Literal[1]
-    provider: ProviderId
+    provider: LaneId
     assistant_auth: AssistantAuth
     credential_state: CredentialState
     credential: ProviderCredential | None = None
@@ -187,7 +187,7 @@ class ModelRoleSelection(BaseModel):
     model_config = _STRICT_FROZEN
 
     role: ModelRole
-    lane: ProviderId
+    lane: LaneId
     """The catalogue lane id, never the provider identity alone."""
     model: ModelId
 

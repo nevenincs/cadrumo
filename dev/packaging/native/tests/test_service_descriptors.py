@@ -78,4 +78,9 @@ def test_agent_descriptor_keeps_model_role_selections_in_their_own_registered_na
     assert selections.namespace != capabilities[PROVIDER_RECORD_CAPABILITY].namespace
     assert re.fullmatch(selections.key_pattern, MODEL_ROLE_SELECTIONS_KEY) is not None
     assert re.fullmatch(selections.key_pattern, "example_api") is None
+    # A provider record is keyed by its lane id: up to the agent's 64-character provider id and "_api".
+    records = capabilities[PROVIDER_RECORD_CAPABILITY]
+    for stored in ("example_api", "e" * 36 + "_cli", "e" * 64 + "_api"):
+        assert re.fullmatch(records.key_pattern, stored) is not None
+    assert re.fullmatch(records.key_pattern, "e" * 65 + "_api") is None
     assert holder.record_capabilities == ()

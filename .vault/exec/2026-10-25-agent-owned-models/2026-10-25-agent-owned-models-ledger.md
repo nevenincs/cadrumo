@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:c79be06217dee8b527bc761914453be404d5b64c749869d551fbb17c0e8cff2d'
+body_hash: 'sha256:1572a5e5f9bd0bdbe7f44b230dd2baf39131eeb22519c7fead110b8649ae424f'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -728,6 +728,22 @@ related:
 - `S14` `verify:` `python -m dev.quality.types` -> `pass`
 - `S14` `verify:` `lint-imports --config .importlinter --no-cache` -> `pass`
 - `S14` `by:` `implementation-high`
+- `S08` `M` `src/cadrumo_client/contracts/tests/test_model_runs.py`
+- `S08` `M` `src/cadrumo_agent_service/providers/domain/record.py`
+- `S08` `M` `src/cadrumo_agent_service/providers/domain/tests/test_record.py`
+- `S08` `M` `src/cadrumo_agent_service/providers/application/contracts.py`
+- `S08` `M` `src/cadrumo_agent_service/providers/application/ports.py`
+- `S08` `M` `src/cadrumo_agent_service/providers/application/resolution.py`
+- `S08` `M` `dev/packaging/native/service_descriptors.py`
+- `S08` `M` `dev/packaging/native/tests/test_service_descriptors.py`
+- `S08` `verify:` `uv run --no-sync pytest src/cadrumo_agent_service src/cadrumo_client -q` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest src/cadrumo_agent_service/adapters/tests/test_agent_provider_catalog_declared.py -m integration -n 0` -> `pass`
+- `S08` `verify:` `uv run --no-sync pytest dev/packaging/native/tests/test_service_descriptors.py` -> `pass`
+- `S08` `verify:` `ruff check and ruff format --check on touched files` -> `pass`
+- `S08` `verify:` `uv run --no-sync lint-imports --config .importlinter --no-cache` -> `pass`
+- `S08` `verify:` `uv run --no-sync python -m dev.operation_contract_manifest.generate --check` -> `fail`
+- `S08` `verify:` `uv run --no-sync python -m dev.quality.types` -> `fail`
+- `S08` `by:` `implementation-engineer`
 
 ## Notes
 
@@ -778,3 +794,5 @@ related:
 - `S14` Stale since S14 routed every read through the agent service: the reader-refusal settlement tests asserted the deleted inventory probe and now drive a recording agent stand-in through an execution authority; the portable CLI runtime fixture gains a model-run door `(serving_portable_agent),` without which every model run under it refused `runtime_invalid_frame.` `test_runtime_ledger_review_native` still fails `service_unavailable:` its native runtime admits no agent service and needs a native stand-in.
 - `S16` P03 test fallout
 - `S16` Stale since S16: the conformance matrix still declared a case for the deleted local-reader.provision operation, and the workstation check stub still returned the dropped vision-reader status. The case row and its closed-runtime entry were deleted with their subject; the stub returns the program status and extras.
+- `S08` P02 review follow-up: remaining bounds
+- `S08` The manifest drift (ledger.evidence.reader-readiness, local-reader.status) and the one ty diagnostic `(tui/setup/tests/test_setup_screen.py)` come from other uncommitted edits; rendering the manifest with the HEAD `model_runs` gives the same drift.

@@ -181,6 +181,31 @@ def test_a_lane_carries_a_model_id_as_long_as_the_agent_allows_and_refuses_one_l
         ModelRunSelectedModel(lane_id="example_cli", model="synthetic\tmodel")
 
 
+_AGENT_PROVIDER_ID_LENGTH = 64
+"""cadrumo-agent's longest provider metadata key, which bounds a provider id."""
+
+
+def test_a_lane_carries_a_provider_id_as_long_as_the_agent_allows_and_refuses_one_longer() -> None:
+    longest = "p" * _AGENT_PROVIDER_ID_LENGTH
+
+    for model in (ModelRunLane, ModelRunServed, ModelRunConsentBinding):
+        fields = _SERVED.model_dump() if model is ModelRunServed else _LANE.model_dump()
+        if model is ModelRunConsentBinding:
+            fields = {"evidence_content_address": "a" * 64, **{key: fields[key] for key in ("transport", "model")}}
+        assert model.model_validate({**fields, "provider_id": longest}).provider_id == longest
+        with pytest.raises(ValidationError):
+            model.model_validate({**fields, "provider_id": longest + "p"})
+
+
+def test_a_selection_names_a_lane_id_as_long_as_the_agent_allows_and_refuses_one_longer() -> None:
+    longest = "l" * _AGENT_PROVIDER_ID_LENGTH + "_api"
+
+    assert ModelRunSelectedModel(lane_id=longest, model="example-model-1").lane_id == longest
+    assert ModelRunSelectedModel(lane_id="o" * 36 + "_cli", model="example-model-1").lane_id == "o" * 36 + "_cli"
+    with pytest.raises(ValidationError):
+        ModelRunSelectedModel(lane_id="l" + longest, model="example-model-1")
+
+
 def test_media_kinds_are_read_from_the_media_type_alone() -> None:
     assert model_run_media_kind("image/png") is ModelRunMediaKind.IMAGE
     assert model_run_media_kind("Application/PDF") is ModelRunMediaKind.PDF

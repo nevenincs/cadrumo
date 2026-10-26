@@ -328,6 +328,91 @@ def test_an_spdx_identifier_as_long_as_the_agent_allows_parses_and_one_longer_is
         parse_provider_catalog(_with_licence({"spdx": longest + "S", "name": "Synthetic", "digest": _DIGEST}))
 
 
+_AGENT_PROVIDER_ID_LENGTH = 64
+"""cadrumo-agent's longest provider metadata key, which bounds a provider id and its credential id."""
+_PROGRAM_NAME_LENGTH = 255
+"""The longest file name a cli program can have on a common filesystem."""
+
+
+def _provider_lane(provider: str) -> dict[str, Any]:
+    return _key_lane(id=f"{provider}_api", provider=provider, agent_credential_id=provider)
+
+
+def test_a_provider_id_as_long_as_the_agent_allows_parses_and_one_longer_is_refused() -> None:
+    longest = "p" * _AGENT_PROVIDER_ID_LENGTH
+    lane_id = f"{longest}_api"
+
+    entry = parse_provider_catalog(_document(_provider_lane(longest))).entry(lane_id)
+
+    assert entry is not None and (entry.id, entry.provider, entry.agent_credential_id) == (lane_id, longest, longest)
+    with pytest.raises(CoreValidationError):
+        parse_provider_catalog(_document(_provider_lane(longest + "p")))
+
+
+def test_a_credential_id_as_long_as_the_agent_allows_parses_and_one_longer_is_refused() -> None:
+    longest = "c" * _AGENT_PROVIDER_ID_LENGTH
+
+    entry = parse_provider_catalog(_document(_key_lane(agent_credential_id=longest))).entry("example_api")
+
+    assert entry is not None and entry.agent_credential_id == longest
+    with pytest.raises(CoreValidationError):
+        parse_provider_catalog(_document(_key_lane(agent_credential_id=longest + "c")))
+
+
+def test_a_lane_id_one_past_the_longest_provider_and_transport_is_neither_parsed_nor_looked_up() -> None:
+    catalog = parse_provider_catalog(_document(_key_lane()))
+
+    assert catalog.entry("p" * (_AGENT_PROVIDER_ID_LENGTH + 1) + "_api") is None
+    assert catalog.entry("example_api") is not None
+
+
+def test_a_lane_id_stored_under_the_earlier_forty_character_rule_still_parses() -> None:
+    provider = "o" * 36
+    entry = parse_provider_catalog(_document(_provider_lane(provider))).entry(f"{provider}_api")
+
+    assert entry is not None and len(entry.id) == 40
+
+
+def test_a_display_name_as_long_as_the_agent_serves_parses_and_one_longer_is_refused() -> None:
+    longest = "D" * _AGENT_DISPLAY_LENGTH
+
+    entry = parse_provider_catalog(_document(_key_lane(display_name=longest))).entry("example_api")
+
+    assert entry is not None and entry.display_name == longest
+    with pytest.raises(CoreValidationError):
+        parse_provider_catalog(_document(_key_lane(display_name=longest + "D")))
+
+
+@pytest.mark.parametrize(
+    "program",
+    [
+        pytest.param("x" * _PROGRAM_NAME_LENGTH, id="longest-file-name"),
+        pytest.param("agy", id="short"),
+        pytest.param("Example-CLI.v2", id="mixed-case-dot-and-hyphen"),
+    ],
+)
+def test_a_cli_program_that_is_one_file_name_parses(program: str) -> None:
+    entry = parse_provider_catalog(_document(_cli_lane(cli_programs=[program]))).entry("example_cli")
+
+    assert entry is not None and entry.cli_programs == (program,)
+
+
+@pytest.mark.parametrize(
+    "program",
+    [
+        pytest.param("x" * (_PROGRAM_NAME_LENGTH + 1), id="one-past-the-longest-file-name"),
+        pytest.param("", id="empty"),
+        pytest.param("bin/example", id="slash"),
+        pytest.param("bin\\example", id="backslash"),
+        pytest.param("c:example", id="drive-colon"),
+        pytest.param("exam\tple", id="control-character"),
+    ],
+)
+def test_a_cli_program_that_is_not_one_file_name_is_refused(program: str) -> None:
+    with pytest.raises(CoreValidationError):
+        parse_provider_catalog(_document(_cli_lane(cli_programs=[program])))
+
+
 def test_the_keyless_kind_takes_no_credential_no_sign_in_and_no_url_override() -> None:
     kind = ProviderAuthKind.NONE
 

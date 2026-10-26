@@ -21,7 +21,7 @@ from cadrumo.core.json_contract import OutputSchema
 from cadrumo.core.model_roles import ModelRole
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
-from ..domain.catalog import ProviderAuthKind, ProviderConsumer, ProviderId, ProviderTransport
+from ..domain.catalog import LaneId, ProviderAuthKind, ProviderConsumer, ProviderId, ProviderTransport
 from ..domain.record import ModelId
 
 ProviderSettingsRevision = Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{64}$")]
@@ -90,7 +90,7 @@ class CliState(StrEnum):
 class ProviderStatusEntry(OutputSchema):
     """Masked status of one provider."""
 
-    id: ProviderId
+    id: LaneId
     """The lane id every change addresses."""
     provider: ProviderId
     """The provider identity the lane reaches; frontends key icons by it."""
@@ -168,7 +168,7 @@ class ModelRoleSelectionEntry(OutputSchema):
     """One role and the lane and model the person selected for it; both ``None`` when there is none."""
 
     role: ModelRole
-    lane: ProviderId | None
+    lane: LaneId | None
     """The catalogue lane id the selection names."""
     model: ModelId | None
 

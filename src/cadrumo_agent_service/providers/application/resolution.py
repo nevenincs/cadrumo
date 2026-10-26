@@ -31,7 +31,7 @@ from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG as _STRICT_FROZEN_HIDDEN_INPUT
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 
-from ..domain.catalog import ProviderAuthKind, ProviderCatalogEntry, ProviderConsumer, ProviderId
+from ..domain.catalog import LaneId, ProviderAuthKind, ProviderCatalogEntry, ProviderConsumer
 from ..domain.record import (
     AssistantAuth,
     CredentialKind,
@@ -81,7 +81,7 @@ class ResolvedDirectCredential(BaseModel):
 
     model_config = _STRICT_FROZEN_HIDDEN_INPUT
 
-    provider: ProviderId
+    provider: LaneId
     consumer: ProviderConsumer
     kind: CredentialKind
     secret: SecretStr
@@ -96,7 +96,7 @@ class ResolvedProviderSignIn(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    provider: ProviderId
+    provider: LaneId
     consumer: ProviderConsumer
     generation: Hex64Str
 
@@ -116,7 +116,7 @@ class ResolvedKeyless(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    provider: ProviderId
+    provider: LaneId
     consumer: ProviderConsumer
     generation: Hex64Str
 

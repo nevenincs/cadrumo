@@ -19,7 +19,7 @@ from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG as _STRICT_FROZEN_HIDDEN_INPUT
 from cadrumo_client.contracts.model_runs import ModelRunMediaKind
 
-from ..domain.catalog import BackgroundOption, CatalogModelFacts, ProviderCatalog, ProviderId
+from ..domain.catalog import BackgroundOption, CatalogModelFacts, LaneId, ProviderCatalog
 from ..domain.record import ModelRoleSelectionsRecord, ProviderSettingsRecord
 
 
@@ -37,7 +37,7 @@ class AbsentProviderRecord(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    provider: ProviderId
+    provider: LaneId
 
 
 class UnreadableProviderRecord(BaseModel):
@@ -49,7 +49,7 @@ class UnreadableProviderRecord(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    provider: ProviderId
+    provider: LaneId
     revision: Hex64Str | None
 
 

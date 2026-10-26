@@ -49,7 +49,20 @@ MODEL_RUN_MODEL_ID_MAX_LENGTH: Final = 512
 MODEL_RUN_MODEL_ID_PATTERN: Final = r"^[^\x00-\x1f\x7f]{1,512}$"
 """A model id as the agent's catalogues carry it: 1 to 512 characters, none a C0 control or DEL."""
 
-_LANE_ID = r"^[a-z][a-z0-9_]{0,39}$"
+MODEL_RUN_PROVIDER_ID_MAX_LENGTH: Final = 64
+"""The longest provider identity id, in characters: the agent's provider metadata key bound."""
+
+MODEL_RUN_PROVIDER_ID_PATTERN: Final = rf"^[a-z][a-z0-9_]{{0,{MODEL_RUN_PROVIDER_ID_MAX_LENGTH - 1}}}$"
+"""A provider identity id: a lowercase storage-safe slug of 1 to 64 characters."""
+
+MODEL_RUN_LANE_ID_MAX_LENGTH: Final = MODEL_RUN_PROVIDER_ID_MAX_LENGTH + len("_api")
+"""The longest lane id, in characters: a provider id, an underscore and its three-letter transport."""
+
+MODEL_RUN_LANE_ID_PATTERN: Final = rf"^[a-z][a-z0-9_]{{0,{MODEL_RUN_LANE_ID_MAX_LENGTH - 1}}}$"
+"""A lane id: a lowercase storage-safe slug of 1 to 68 characters; ids stored under the earlier 40 still match."""
+
+_PROVIDER_ID = MODEL_RUN_PROVIDER_ID_PATTERN
+_LANE_ID = MODEL_RUN_LANE_ID_PATTERN
 _TRANSPORT = r"^[a-z][a-z0-9_]{0,15}$"
 _MODEL = MODEL_RUN_MODEL_ID_PATTERN
 _ROLE = r"^[a-z][a-z0-9_]{0,63}$"
@@ -130,7 +143,7 @@ class ModelRunLane(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    provider_id: Annotated[str, Field(pattern=_LANE_ID)]
+    provider_id: Annotated[str, Field(pattern=_PROVIDER_ID)]
     transport: Annotated[str, Field(pattern=_TRANSPORT)]
     model: Annotated[str, Field(pattern=_MODEL)]
     reads_off_host: bool
@@ -185,7 +198,7 @@ class ModelRunConsentBinding(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     evidence_content_address: Hex64Str
-    provider_id: Annotated[str, Field(pattern=_LANE_ID)]
+    provider_id: Annotated[str, Field(pattern=_PROVIDER_ID)]
     transport: Annotated[str, Field(pattern=_TRANSPORT)]
     model: Annotated[str, Field(pattern=_MODEL)]
 
@@ -263,7 +276,7 @@ class ModelRunOutput(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     text: str
-    provider_id: Annotated[str, Field(pattern=_LANE_ID)]
+    provider_id: Annotated[str, Field(pattern=_PROVIDER_ID)]
     transport: Annotated[str, Field(pattern=_TRANSPORT)]
     model: Annotated[str, Field(pattern=_MODEL)]
     agent_version: Annotated[str, Field(min_length=1, max_length=64)]
@@ -282,7 +295,7 @@ class ModelRunServed(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    provider_id: Annotated[str, Field(pattern=_LANE_ID)]
+    provider_id: Annotated[str, Field(pattern=_PROVIDER_ID)]
     transport: Annotated[str, Field(pattern=_TRANSPORT)]
     model: Annotated[str, Field(pattern=_MODEL)]
     agent_version: Annotated[str, Field(min_length=1, max_length=64)]
@@ -417,6 +430,8 @@ def decode_model_run_body(encoded: bytes | bytearray) -> ModelRunBody:
 
 __all__ = [
     "MODEL_RUN_CAPABILITY",
+    "MODEL_RUN_LANE_ID_MAX_LENGTH",
+    "MODEL_RUN_LANE_ID_PATTERN",
     "MODEL_RUN_MAX_ATTACHMENTS",
     "MODEL_RUN_MAX_BODY_BYTES",
     "MODEL_RUN_MAX_DEADLINE_SECONDS",
@@ -424,6 +439,8 @@ __all__ = [
     "MODEL_RUN_MAX_ROLES",
     "MODEL_RUN_MODEL_ID_MAX_LENGTH",
     "MODEL_RUN_MODEL_ID_PATTERN",
+    "MODEL_RUN_PROVIDER_ID_MAX_LENGTH",
+    "MODEL_RUN_PROVIDER_ID_PATTERN",
     "ModelRunAttachment",
     "ModelRunBody",
     "ModelRunCompleteRequest",

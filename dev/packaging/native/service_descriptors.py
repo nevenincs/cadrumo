@@ -14,7 +14,7 @@ from cadrumo.adapters.persistence.storage.secure_object_namespaces import (
 from cadrumo.application.operations.person_acts import operation_is_persons_act
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo_client.contracts.access_vocabulary import AccessAction
-from cadrumo_client.contracts.model_runs import MODEL_RUN_CAPABILITY
+from cadrumo_client.contracts.model_runs import MODEL_RUN_CAPABILITY, MODEL_RUN_LANE_ID_PATTERN
 
 from .hashing import digest
 from .layout import ApplicationImage, entrypoint_files
@@ -57,7 +57,8 @@ def stage_service_descriptors(root: Path, layout: dict[str, Any], images: tuple[
                 "namespace": EXTENSION_SETTINGS_NAMESPACE.namespace,
                 "schema_version": EXTENSION_SETTINGS_NAMESPACE.schema_version,
                 "classification": EXTENSION_SETTINGS_NAMESPACE.sensitivity.value,
-                "key_pattern": "^[a-z][a-z0-9_]{0,39}$",
+                # A provider-settings record is keyed by its lane id.
+                "key_pattern": MODEL_RUN_LANE_ID_PATTERN,
                 "maximum_bytes": 32768,
                 "actions": ["read", "write", "delete", "generation"],
             },
