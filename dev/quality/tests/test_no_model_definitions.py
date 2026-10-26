@@ -79,11 +79,7 @@ _BARE_DIGEST: Final = re.compile(r"[0-9a-f]{64}", re.IGNORECASE)
 _TABLE_KEYS: Final = frozenset({"model_id", "model_name", "runtime_id", "manifest_digest"})
 
 #: Files that define a model today. Later Steps remove entries; none may be added.
-_BURN_DOWN: Final = frozenset(
-    {
-        "src/cadrumo/core/config_runtime_fields.py",
-    }
-)
+_BURN_DOWN: Final = frozenset[str]()
 
 
 def _is_model_name(text: str) -> bool:

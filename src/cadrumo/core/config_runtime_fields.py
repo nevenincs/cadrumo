@@ -1,8 +1,8 @@
 """LLM provider endpoint and runtime tuning settings layered on top of timeout config.
 
 Defines :class:`CadrumoRuntimeSettings`, which adds the local Ollama endpoint
-URL and model-runtime tuning fields (context window, per-request timeouts) consumed by
-the LLM-backed invoice-read pipeline.
+URL and model-runtime tuning fields (memory floor, admission, per-request timeouts)
+consumed by the LLM-backed invoice-read pipeline.
 """
 
 from __future__ import annotations
@@ -31,16 +31,6 @@ class CadrumoRuntimeSettings(CadrumoTimeoutSettings):
             "override for non-localhost Ollama deployments"
         ),
     )
-    cadrumo_llm_ollama_num_ctx: int = Field(
-        default=8192,
-        gt=0,
-        description=(
-            "Ollama context window (num_ctx) for local requests. The vision read sends "
-            "the full registry allow-list prompt plus the encoded invoice image, which "
-            "exceeds Ollama's 4096 default; 8192 fits the prompt + image + output with "
-            "headroom and still runs on consumer hardware"
-        ),
-    )
     cadrumo_llm_vision_read_timeout_s: int = Field(
         default=300,
         gt=0,
@@ -54,15 +44,13 @@ class CadrumoRuntimeSettings(CadrumoTimeoutSettings):
         default=8 * 1024**3,
         gt=0,
         description=(
-            "Minimum total system memory the local model runtime needs before a "
-            "vision read is worth attempting. Sized for the default vision model "
-            "(qwen3-vl:2b, ~1.9 GB of weights) plus the 8192-token context window "
-            "and normal OS residency, which is why the floor sits well above the "
-            "weight size alone. Below it the runtime does not refuse -- it loads "
-            "and thrashes, or is killed mid-read, which reaches the operator as "
-            "an unexplained timeout rather than as a hardware shortfall. Tunable "
-            "because the floor tracks the configured model: raise it when "
-            "overriding upward to a larger catalogued candidate"
+            "Minimum total system memory the local AI program needs before a "
+            "local read is worth attempting, covering a small model's weights, its "
+            "context window and normal OS residency. Below it the program does not "
+            "refuse -- it loads and thrashes, or is killed mid-read, which reaches "
+            "the operator as an unexplained timeout rather than as a hardware "
+            "shortfall. Tunable: raise it on a computer that runs a larger "
+            "selected model"
         ),
     )
     cadrumo_llm_contention_safety_margin_bytes: int = Field(

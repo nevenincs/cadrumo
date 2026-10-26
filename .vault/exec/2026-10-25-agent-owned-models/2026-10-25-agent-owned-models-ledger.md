@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:f3e2f12ce6f4489842146ee69e5e63717f6785fa42e7ce7561e31ac5f5bd685b'
+body_hash: 'sha256:aee3109788a4b1d5fdae5770b6312613f49203fb5ed0311915659f1eb0aee588'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -680,6 +680,16 @@ related:
 - `S16` `verify:` `uv run --no-sync python -m dev.operation_contract_manifest.generate --check (after just generate-operation-contract-manifest)` -> `pass`
 - `S16` `verify:` `ruff check and ruff format --check on touched files` -> `pass`
 - `S16` `by:` `high-implementer`
+- `S17` `M` `src/cadrumo/core/config_runtime_fields.py`
+- `S17` `M` `env/.env.example`
+- `S17` `M` `docs/reference/environment-overrides.md`
+- `S17` `M` `dev/quality/tests/test_no_model_definitions.py`
+- `S17` `verify:` `uv run --no-sync pytest src/cadrumo src/cadrumo_agent_service src/cadrumo_client -q (34841 passed; only the 4 baseline test_snapshot_proof failures)` -> `pass`
+- `S17` `verify:` `uv run --no-sync pytest dev/quality/tests/test_no_model_definitions.py dev/quality/tests/test_no_python_provisioning.py dev/ci/tests/test_cloud_transport_fully_deleted.py dev/docs/tests/test_env_reference.py src/cadrumo/core/tests/test_config.py dev/env/tests/test_dotenv.py -m ''` -> `pass`
+- `S17` `verify:` `uv run --no-sync python -m dev.quality.types` -> `pass`
+- `S17` `verify:` `uv run --no-sync python -m dev.operation_contract_manifest.generate --check` -> `pass`
+- `S17` `verify:` `ruff check and ruff format --check on touched files` -> `pass`
+- `S17` `by:` `high-implementer`
 
 ## Notes
 
@@ -720,3 +730,6 @@ related:
 - `S16` Batch: the pre-check is gone; a read refused for measured contention closes the lane for the run and its document is paused, not refused.
 - `S16` The four model settings and their env/.env.example lines moved into this Step because their defaults came from the deleted table; the env-example parity gate and the generated environment page required the lines here. The dev model-pin generator moved here too, because it imported the deleted loader.
 - `S16` Pre-existing, unchanged by this Step: 7 integration tests in entrypoints/tests (evidence, confirm, batch pause, classification, invoice import refusal settlement) still assert the inventory-probe refusal the extract path stopped using in P03.S14/S15 (the HEAD extract path calls no inventory probe); `cadrumo_runtime` `test_ledger_evidence_label_reading_notice` fails `REFUSED_LOCAL_RUNTIME` `runtime_invalid_frame.`
+- `S17` `num_ctx` had no reader after P03.S16 (the ranking's context bar), and the agent adapter sends no `context_tokens,` so the setting was deleted rather than mapped.
+- `S17` `cadrumo_llm_model_runtime_memory_floor_bytes` kept as the program's hardware floor (coordinator ruling 2026-10-26); only its description changed, to name no model. Amended ADR constraint 9 governs the engine, not this setting.
+- `S17` The burn-down list is empty: `config_runtime_fields.py` was its last entry, and the gate requires removing a file that no longer offends. The generated environment page was regenerated with python -m `dev.docs.env_reference.`
