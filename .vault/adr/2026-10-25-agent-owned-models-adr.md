@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:343decde4b3aee6afe4746285133358c683d5dc6a97484c9a04f71072811c32c'
+body_hash: 'sha256:731ab770e89f02b84c4666e8066778c1cf239e83587a3413a4bd54739bae9c19'
 related:
   - "[[2026-10-24-rust-component-provisioning-reference]]"
   - "[[2026-10-24-rust-component-provisioning-adr]]"
@@ -171,3 +171,11 @@ Basis: the owner's first-hand ruling in conversation on 2026-10-25, "both", answ
 ## Amendment 2026-10-26, desktop-only provisioning
 
 Basis: the owner's first-hand ruling of 2026-10-26 in conversation, recorded in `2026-10-24-rust-component-provisioning-adr` amendment 2026-10-26: only the desktop provisions the local AI program and models, and no Python module or cadrumo-agent can pull, download or install them. Constraint 9, the Implementation outline and the D8 note above state the result.
+
+### Amendment 2026-10-26: the Ollama lane's provider settings provision its models
+
+Basis: the owner's first-hand rulings of 2026-10-26 in conversation: "the actual ollama settings require allowing enabling/disabling and downloading/removing local models", "the existing LLM provisioning work is correctly folded in to the ollama agent provider settings ux element", "preferred vision models must remain primary priority elements", and the answers "Pick role, then set up", "Add per-model remove" and "Yes, off gates setup". `2026-10-24-rust-component-provisioning-adr` amendment 2026-10-26 states the engine side.
+
+- **Implementation, the selection control.** A keyless local lane's row in the desktop provider settings carries its model controls. The lane switch turns the local lane on or off. While it is on, the row lists the lane's catalogue models in the order cadrumo-agent serves them, with each model's size, vision capability, licence, installed state and the roles that use it. The catalogue's recommended entries, vision first, lead the list as offers and are never applied silently. Cadrumo adds no ranking of its own.
+- **Download.** Download asks which roles the model serves. The desktop names no role and so offers every role the service lists; the service refuses a role the model cannot serve, such as the vision role for a model the catalogue does not mark vision-capable (`agent_model_role_vision_required`), and the row says so. Download stores those selections through the per-role selection and then opens the existing setup review, so a model is pulled only once it is selected and only after the person approves the plan.
+- **Remove.** Remove clears the roles that name the model and then removes that model through the desktop's engine. The per-role dialog in the agent column stays and uses the same selection record.

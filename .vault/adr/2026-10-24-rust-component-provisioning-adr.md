@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:e10432983c95ff5b65f74e883010f5ee43af916f954803f57e282dbb081cb0ea'
+body_hash: 'sha256:dbd0098a74baaf13c60f4f1e9c97114e8fbf6542faeae187e4bc229daddad547'
 related:
   - "[[2026-10-24-rust-component-provisioning-reference]]"
   - "[[2026-10-18-dependency-provisioning-unified-setup-adr]]"
@@ -110,3 +110,11 @@ Basis: the owner's first-hand rulings of 2026-10-25 in conversation, recorded in
 ### Amendment 2026-10-26: only the desktop provisions the local AI
 
 Basis: the owner's first-hand ruling of 2026-10-26 in conversation: "CLI should NEVER ever EVER allow to prvision models; every llm capability must be routed through to cadrumo-agent", with the architecture "cadrumo binary native ollama and model privisioning", "neither cadrumo-agent, nor src/cadrumo* python modules should have any capability to pull, download, install ollama or models", "The actual downloads are gui siude operations handled entirely. All divergent and old superseeded code to be deleted." Constraints 1, 2, 3, 8 and 12 and the chosen option state the result. Parity of local AI setup across the CLI, TUI and MCP (unified-setup D8) does not apply to the local AI: those surfaces report it and route its recovery to the desktop. The browser keeps its setup on every surface.
+
+### Amendment 2026-10-26: the desktop removes one local model, and a turned-off lane is not admitted
+
+Basis: the owner's first-hand answers of 2026-10-26 in conversation, given while the Ollama provider settings were designed: per-model remove ("Add per-model remove"), the lane switch gates setup ("Yes, off gates setup"), and a model is downloaded by picking its role and then running setup ("Pick role, then set up"). The `2026-10-25-agent-owned-models-adr` amendment of the same date places the controls.
+
+- **Constraint 2 (exposure).** The desktop host may also remove one named local model the person picked, beside removing the whole `local_ai` item. It is a desktop command over a new engine operation that runs under the `local_ai` writer lock. It deletes that model's manifest and only the layers no remaining manifest uses, and it keeps the program, the receipt and every other model. When any remaining manifest cannot be read, every layer stays. The `components` role and every Python surface still cannot remove a model.
+- **Constraint 8 (models).** Removing a model does not change the selection. The desktop clears every role selection that names the model before it asks the engine to remove it, so the next setup does not pull it again.
+- **Admission.** The desktop admits the engine only with the selections whose keyless lane is turned on. A lane the person turned off (`mode` `disabled`) hands the engine none of its models, so setup pulls nothing for it, and with no other local selection the `local_ai` item is the program alone.
