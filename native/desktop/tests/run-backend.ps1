@@ -72,19 +72,28 @@ function Resolve-BuildMember([string]$Member) {
 }
 $generated = Resolve-BuildMember $paths.generated
 $testing = Resolve-BuildMember $paths.desktop_testing
-foreach ($name in @('contract.json','contract.rs','identity.json')) {
+foreach ($name in @('contract.json','contract.rs','identity.json','rust-environment.json')) {
     if (-not (Test-Path -LiteralPath (Join-Path $generated $name))) { throw "Missing generated $name; configure/generate native metadata first." }
 }
 if ($Mode -eq 'Clippy' -and $Filter) { throw 'Clippy does not accept a test filter.' }
 if ($Mode -eq 'Package' -and -not $PackageRoot) { throw 'Package mode requires an existing assembled PackageRoot.' }
 if ($PackageRoot) { $PackageRoot = (Resolve-Path -LiteralPath $PackageRoot).ProviderPath }
 $saved = @{}
-function Set-TestEnvironment([string]$Name, [string]$Value) {
+function Set-TestEnvironment([string]$Name, $Value) {
     if (-not $saved.ContainsKey($Name)) { $saved[$Name] = [Environment]::GetEnvironmentVariable($Name, 'Process') }
-    [Environment]::SetEnvironmentVariable($Name, $Value, 'Process')
+    if ($null -eq $Value) {
+        Remove-Item -LiteralPath "Env:$Name" -ErrorAction SilentlyContinue
+    } else {
+        [Environment]::SetEnvironmentVariable($Name, [string]$Value, 'Process')
+    }
 }
 Push-Location -LiteralPath $repository
 try {
+    $rustEnvironment = Get-Content -LiteralPath (Join-Path $generated 'rust-environment.json') -Raw | ConvertFrom-Json
+    foreach ($entry in $rustEnvironment.environment.PSObject.Properties) {
+        Set-TestEnvironment $entry.Name ([string]$entry.Value)
+    }
+    Set-TestEnvironment 'CARGO_BUILD_TARGET' $null
     $rootVariable = & $DevPython -B -c 'from cadrumo.core.storage_environment import STORAGE_ROOT; print(STORAGE_ROOT.variable)'
     if ($LASTEXITCODE -ne 0 -or -not $rootVariable) { throw 'Cannot resolve the canonical storage-root variable.' }
     $allowlist = & $DevPython -B -c 'import json, sys; print("\n".join(json.load(open(sys.argv[1], encoding="utf-8"))["application_environment"]["location_names"]))' (Join-Path $generated 'contract.json')
@@ -117,7 +126,7 @@ try {
     & node @arguments
     $testExit = $LASTEXITCODE
 } finally {
-    foreach ($name in $saved.Keys) { [Environment]::SetEnvironmentVariable($name, $saved[$name], 'Process') }
+    foreach ($name in $saved.Keys) { Set-TestEnvironment $name $saved[$name] }
     Pop-Location
 }
 exit $testExit

@@ -118,3 +118,48 @@ def test_desktop_runner_defaults_to_the_windows_repository_preset(runner: str) -
         if preset.get("cacheVariables", {}).get("CADRUMO_TARGET") == "windows-x86-64"
     ]
     assert _same_directory(result.stdout.strip().splitlines()[-1], REPO_ROOT / "build" / windows)
+
+
+@pytest.mark.windows_only
+def test_backend_environment_unsets_absent_values_and_restores_the_original_environment() -> None:
+    powershell = shutil.which("pwsh") or shutil.which("powershell")
+    assert powershell is not None
+    runner = str(DESKTOP / "tests/run-backend.ps1").replace("'", "''")
+    harness = """
+$ErrorActionPreference = 'Stop'
+$errors = $null
+$ast = [Management.Automation.Language.Parser]::ParseFile('<runner>', [ref]$null, [ref]$errors)
+if ($errors) { throw "The runner does not parse: $errors" }
+$setter = $ast.Find({
+    param($node)
+    $node -is [Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -eq 'Set-TestEnvironment'
+}, $false)
+. ([scriptblock]::Create($setter.Extent.Text))
+$saved = @{}
+$present = 'CADRUMO_TEST_RUNNER_PRESENT'
+$absent = 'CADRUMO_TEST_RUNNER_ABSENT'
+Set-Item -LiteralPath "Env:$present" -Value 'original'
+Remove-Item -LiteralPath "Env:$absent" -ErrorAction SilentlyContinue
+Set-TestEnvironment $present 'overridden'
+Set-TestEnvironment $absent 'temporary'
+Set-TestEnvironment $present $null
+Set-TestEnvironment $absent $null
+$environment = [Environment]::GetEnvironmentVariables('Process')
+if ($environment.Contains($present) -or $environment.Contains($absent)) { throw 'Null must remove the variable' }
+foreach ($name in $saved.Keys) { Set-TestEnvironment $name $saved[$name] }
+$environment = [Environment]::GetEnvironmentVariables('Process')
+if ($environment[$present] -ne 'original') { throw 'The original value was not restored' }
+if ($environment.Contains($absent)) { throw 'An originally absent variable must remain absent' }
+""".replace("<runner>", runner)
+    result = run_command(
+        [
+            powershell,
+            "-NoLogo",
+            "-NoProfile",
+            "-NonInteractive",
+            "-EncodedCommand",
+            base64.b64encode(harness.encode("utf-16-le")).decode("ascii"),
+        ],
+        cwd=REPO_ROOT,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
