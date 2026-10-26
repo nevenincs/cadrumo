@@ -15,7 +15,7 @@ related:
   - '[[2026-10-13-agent-attachments-adr]]'
 modified: '2026-10-26'
 body_schema: body-v2
-body_hash: 'sha256:58664f7a0bb6c78b29260cafee18e7b9aa6fef40c16a8939e872047415616a53'
+body_hash: 'sha256:9b1f01b6f12ddd8c0771d564e5ece956a23d69494090d93a76e381ed33b10a84'
 ---
 
 # `agent-owned-models` plan
@@ -87,7 +87,7 @@ Drop model pins from the engine, take the selected local models as input, pull t
 - [x] `P04.S21` - Pull each selected model on the supervised server, report rows from the selection and Ollama's installed list, and drop digest-based stale; compute the hardware floor from the supplied size_bytes; `native/application/src/provisioning/local_ai/models.rs, native/application/src/provisioning/local_ai/hardware.rs, native/application/src/provisioning/state.rs, native/application/src/provisioning/engine.rs`.
 - [x] `P04.S22` - Give the engine a local AI admission that only the desktop host grants with the selected local models, serve the local AI read-only from the components role (no --model, refuse plan, setup and removal naming local_ai, recovery set_up_in_desktop), and delete the model-pin residue (licence and override advisories, the different-model-version stale reason); `native/application/src/provisioning/engine.rs, native/application/src/provisioning/protocol.rs, native/application/src/provisioning/state.rs, native/application/src/provisioning/plan.rs`.
 - [x] `P04.S23` - Prove the pull path with a synthetic model id against the fake Ollama server and remove the remaining model literals from engine tests; `native/application/src/provisioning/local_ai/fake_ollama.rs, native/application/src/provisioning/local_ai/models`.
-- [ ] `P04.S30` - Read the per-role selection and cadrumo-agent's catalogue cards in the desktop setup host and admit the in-process engine with each keyless on-host lane's selection as role, model and size triples before every command, refusing a selection whose card states no size; drop the start command's model argument and the pinned model fixtures; `native/desktop/src-tauri/src/shell/setup/components.rs, native/desktop/src-tauri/src/shell/setup/wire.rs, native/desktop/frontend/src/shell/tauriHost.ts, native/desktop/frontend/src/dev/setupFixture.ts`.
+- [x] `P04.S30` - Read the per-role selection and cadrumo-agent's catalogue cards in the desktop setup host and admit the in-process engine with each keyless on-host lane's selection as role, model and size triples before every command, refusing a selection whose card states no size; drop the start command's model argument and the pinned model fixtures; `native/desktop/src-tauri/src/shell/setup/components.rs, native/desktop/src-tauri/src/shell/setup/wire.rs, native/desktop/frontend/src/shell/tauriHost.ts, native/desktop/frontend/src/dev/setupFixture.ts`.
 
 ### Phase `P05` - Surfaces and docs
 
