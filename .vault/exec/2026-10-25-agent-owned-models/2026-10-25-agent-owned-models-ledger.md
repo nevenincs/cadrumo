@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:172ebc528876f9af6fcecf1f640689c29c95a4b1056a658a3fcfcbe35537cbba'
+body_hash: 'sha256:0a4b8c9a590561f1b5db9dd0c5ea8d6b8f6a9726905ad3fbcddc74f9fba59a95'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -1245,6 +1245,13 @@ related:
 - `S27` `M` `native/desktop/frontend/tests/scenarios/ledger-documents.spec.ts`
 - `S27` `verify:` `npx playwright test ledger-documents ledger-provisioning ledger-documents-model provisioning-recovery` -> `pass`
 - `S27` `verify:` `uv run --no-sync pytest dev/locales/tests/test_desktop_chrome.py -n 0` -> `pass`
+- `S22` `M` `dev/locales/desktop_chrome.py`
+- `S22` `M` `src/cadrumo/locales/en/common.yml`
+- `S22` `M` `src/cadrumo/locales/es/common.yml`
+- `S22` `M` `src/cadrumo/locales/ca/common.yml`
+- `S22` `M` `src/cadrumo/locales/hu/common.yml`
+- `S22` `verify:` `uv run --no-sync pytest -n 0 -m '' dev/locales/tests/test_desktop_chrome.py dev/quality/tests/test_no_model_definitions.py dev/quality/tests/test_no_python_provisioning.py: all passed` -> `pass`
+- `S27` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -1328,3 +1335,5 @@ related:
 - `S27` just check-import-boundaries exits 7 on other sessions' uncommitted work: private imports in `dev/ci/profile_wizard_benchmark.py` and `dev/ci/runtime_journal_benchmark.py,` and the new module `cadrumo.core.unread_settings,` which `import_load_targets.json` does not list yet. The deleted module leaves no stale row: no recorded module is missing from the tree, and the first run loaded 4944 of 4944 modules and kept 30 of 30 contracts.
 - `S27` just check-types exits 1 on two ty diagnostics in another session's uncommitted `src/cadrumo_agent_service/adapters/tests/test_agent_background_runs.py;` none are in files this work touched.
 - `S27` a2486bbf53 also carries P04.S22's `downloaded_not_loaded` locale removal in the shared catalogues
+- `S22` Locale part of the `downloaded_not_loaded` removal: the `desktop_chrome.py` declared family and key and the `desktop.setup.note.downloaded_not_loaded` leaf in four common.yml catalogues were committed by the orchestrator in a2486bbf53, together with another agent's reader-panel keys. No `downloaded_not_loaded` token remains in src, dev, native or docs at HEAD.
+- `S27` Re-run at a2486bbf53 with the shared catalogues committed: `dev/locales/tests/test_audit.py` has 11 passed and 2 failed, `test_committed_catalogues_follow_contextual_product_identity_contract` and `test_committed_catalogues_pass_production_audit.` Both fail only on manager.audit(): `errors.refused.refused_unread_setting` is missing and four `*_busy_refused` keys are extra, because other sessions' uncommitted edits to core/errors/registry, adapters/outbound/llm/errors.py and `core/unread_settings.py` add and remove the code that names them. All key-set assertions of the identity gate pass.
