@@ -9,7 +9,7 @@
 <!-- preserved:article -->
 ## Scope
 
-This chunk covers six application files (3,792 lines; 31,272 measured `o200k_base` proxy tokens): secure-source assembly for the installed workbench; the operation and public result projection for generation reads; the canonical workstation health report and its worker operation; and the local contention row. I read every assigned range across six bounded pages. Static review only; no authenticated worker, private storage, external provider, or runtime check was executed. This report describes application contracts and does not validate the underlying tax or legal content.
+This chunk covers five application files: secure-source assembly for the installed workbench; the operation and public result projection for generation reads; and the canonical workstation health report and its worker operation. Static review only; no authenticated worker, private storage, external provider, or runtime check was executed. This report describes application contracts and does not validate the underlying tax or legal content.
 
 ## Workbench generation
 
@@ -25,7 +25,7 @@ The registered `workbench.generation` operation is profile- and subject-bound, r
 
 ## Workstation health operation
 
-`run_workstation_check` gathers effective capabilities, dependency status, preflight rows, and capability/dependency inconsistencies for one immutable profile. It rechecks the active bucket around each stage. Hardware is measured once and reused for both the hardware row and the selected-model contention assessment, avoiding contradictory readings taken at different moments. The diagnostic treats an unmeasurable contention input as reportable/unverified, while the acting model-load path fails closed. Canonical workstation report (`src/cadrumo/application/workstation_check.py`) Shared hardware reading (`src/cadrumo/application/workstation_check.py`) Contention row projection (`src/cadrumo/application/workstation_contention.py`)
+`run_workstation_check` gathers effective capabilities, dependency status, preflight rows, and capability/dependency inconsistencies for one immutable profile. It rechecks the active bucket around each stage. The local AI program's row is judged from the components role's quick status row, which the operation reads through an injected reader; a role that returns no row reads as unknown. The report judges the program, the memory floor, the measured hardware, the Playwright browser and the optional extras. It judges no model and no load: which model each role reads with is the person's selection in the agent's catalogue, and whether a load fits the memory free is cadrumo-agent's answer when it loads the model. An unmeasurable hardware figure is reported as unverified and never as a shortfall. Canonical workstation report (`src/cadrumo/application/workstation_check.py`) Dependency statuses (`src/cadrumo/application/workstation_check.py`)
 
 The worker operation checks the request, operation identity, and active profile; builds ports for that exact profile and authority operation; runs the report in a worker thread; and checks the profile again before retaining it. The snapshot models round-trip dependency and preflight facts through the existing canonical validators. The result projector requires a successful terminal receipt with `NONE` effect, the exact profile subject, and no refusal/failure references. The report is request-bound rather than replayed as if a later check were the same observation. Worker execution and profile checks (`src/cadrumo/application/workstation_check_operation.py`) Receipt-checked result projection (`src/cadrumo/application/workstation_check_operation.py`)
 
@@ -34,7 +34,6 @@ The worker operation checks the request, operation identity, and active profile;
 - workbench_generation.py (1,803 lines) (`src/cadrumo/application/workbench_generation.py`)
 - workbench_generation_operation.py (216 lines) (`src/cadrumo/application/workbench_generation_operation.py`)
 - workbench_generation_projection.py (1,167 lines) (`src/cadrumo/application/workbench_generation_projection.py`)
-- workstation_check.py (160 lines) (`src/cadrumo/application/workstation_check.py`)
-- workstation_check_operation.py (363 lines) (`src/cadrumo/application/workstation_check_operation.py`)
-- workstation_contention.py (83 lines) (`src/cadrumo/application/workstation_contention.py`)
+- workstation_check.py (126 lines) (`src/cadrumo/application/workstation_check.py`)
+- workstation_check_operation.py (375 lines) (`src/cadrumo/application/workstation_check_operation.py`)
 <!-- /preserved:article -->

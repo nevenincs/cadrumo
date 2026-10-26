@@ -9,15 +9,15 @@
 <!-- preserved:article -->
 ## Scope
 
-This chunk covers six application files (2,924 lines): local AI server reads and memory admission; the canonical operator state projection and its auth/read ports; root storage write-policy decisions; and per-session workbench capture memoization. Static review only; no app execution, runtime requests, storage writes, or model operations were performed. This review does not assess legal correctness or confirm external runtime behavior.
+This chunk covers five application files (2,422 lines): the canonical operator state projection and its auth/read ports; root storage write-policy decisions; and per-session workbench capture memoization. Static review only; no app execution, runtime requests, storage writes, or model operations were performed. The load admission and installed-state boundary is described from the sources it now lives in. This review does not assess legal correctness or confirm external runtime behavior.
 
-## Runtime lifecycle and resource boundaries
+## Load admission and installed state
 
-The runtime reads distinguish installed models on disk from resident models in memory, and preserve an unreadable inventory (`None`) separately from a measured-empty one. Short-timeout GET probes cover resident state and installed inventory at the address the local AI component record names; only unreachable results are cached, for a short configured interval, while successful reads remain live. Exact model matching treats an absent tag as `:latest`, because a different tag is a different download and a different memory claim. Runtime probe and model identity rules (`src/cadrumo/application/provisioning_runtime.py`) Inventory projection (`src/cadrumo/application/provisioning_runtime.py`)
+Cadrumo does not admit a local model load. cadrumo-agent loads every local model and is the only judge of whether one fits the memory free; it refuses a load that does not fit with `model_does_not_fit`, and the agent service maps that refusal to `ModelRunRefusalCode.MODEL_DOES_NOT_FIT`, which the agent provider raises as `LLMContentionError`. That error is never retryable, because the condition decays when the load on the computer changes, not on a timer. It is distinct from `LLMBusyError`, which counts only this process's own on-host runs against the configured concurrency and asks nobody. Load refusal and mapping (`src/cadrumo/adapters/outbound/llm/providers/agent.py`) Error contract (`src/cadrumo/adapters/outbound/llm/errors.py`)
 
-This module only asks the server what it holds and judges whether a load would fit now. It pulls, loads, unloads and removes nothing: the native component engine, driven for the local AI by the desktop alone, installs the program and pulls the models the person selected, and the runtime manager runs the server. Model names come from the person's per-role selection in cadrumo-agent's catalogue, never from Cadrumo settings. Module boundary (`src/cadrumo/application/provisioning_runtime.py`)
+Python asks the local AI server nothing. A role's installed state is the agent service's reading of the `installed` flag of the catalogue the agent serves, carried on the role's lane; an absent flag is unknown and is never rendered as not installed. The local AI program's presence and version come from the components role's read-only quick status, read with a bounded timeout. Model names come from the person's per-role selection in cadrumo-agent's catalogue, never from Cadrumo settings. Only the desktop provisions the program and models: the native component engine installs the program and pulls the models the person selected, and the runtime manager runs the server. Installed state from the agent service (`src/cadrumo_agent_service/adapters/served_catalog_models.py`) Program row (`src/cadrumo/entrypoints/local_reader_operation_composition.py`) Lane judgement (`src/cadrumo/application/local_reader.py`)
 
-Admission uses free memory in the binding arena, never total capacity. For a known accelerator it considers the best individual device; for a measured no-accelerator machine it uses free system memory. Unknown free capacity refuses by default, with a deliberate override that applies only to an unmeasurable state, not to a measured shortfall. On a shortfall, runtime resident data is used to estimate what Cadrumo might unload and what remains attributable to peers. A data-completeness gap deserves follow-up: resident byte fields are optional, `_attributed_resident_bytes` treats each missing size as zero, and the shortfall remainder is then labeled peer-process use. A readable resident list with unreadable sizes can therefore undercount Cadrumo's own footprint and misstate the cause. Require complete size measurements before making that attribution, or label the cause unverified. Admission and attribution (`src/cadrumo/application/provisioning_runtime.py`) Shortfall attribution (`src/cadrumo/application/provisioning_runtime.py`)
+The memory the application layer still reads is the installed capacity and the reported figures. A model whose catalogue size exceeds the installed system memory, and the largest NVIDIA card's installed memory when there is one, refuses as a capacity floor that setup cannot change. Free system and device memory are measured and reported by `local-reader.report` but never used to admit or refuse a load. Capacity floor (`src/cadrumo/application/provisioning.py`) Report (`src/cadrumo/application/local_reader_report.py`)
 
 ## Canonical state and readiness
 
@@ -37,10 +37,9 @@ Workbench memoization belongs to one authenticated session and keys the reusable
 
 ## Coverage appendix
 
-- provisioning_runtime.py (505 lines) (`src/cadrumo/application/provisioning_runtime.py`)
-- state_projection.py (1,493 lines) (`src/cadrumo/application/state_projection.py`)
+- state_projection.py (1,494 lines) (`src/cadrumo/application/state_projection.py`)
 - state_projection_auth.py (438 lines) (`src/cadrumo/application/state_projection_auth.py`)
 - state_projection_ports.py (86 lines) (`src/cadrumo/application/state_projection_ports.py`)
 - storage_write_policy.py (294 lines) (`src/cadrumo/application/storage_write_policy.py`)
-- workbench_capture_memory.py (108 lines) (`src/cadrumo/application/workbench_capture_memory.py`)
+- workbench_capture_memory.py (110 lines) (`src/cadrumo/application/workbench_capture_memory.py`)
 <!-- /preserved:article -->
