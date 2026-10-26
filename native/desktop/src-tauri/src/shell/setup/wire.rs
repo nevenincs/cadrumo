@@ -4,7 +4,10 @@
 //! counts, hosts, folders and versions. The window words every one of them
 //! from its own catalogue. A value outside a closed set or a bound exceeded is
 //! a host failure, never passed on.
-use cadrumo_application::error::application::{ApplicationError, ErrorCode, Operation};
+use cadrumo_application::{
+    error::application::{ApplicationError, ErrorCode, Operation},
+    provisioning::local_ai::models::ModelName,
+};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 
@@ -45,6 +48,11 @@ pub enum Refusal {
     /// A selected local model's catalogue entry states no download size, so the
     /// plan can neither size the download nor check the hardware for it.
     ModelSizeUnstated,
+    /// A model a role still selects is not removed: setup would pull it again.
+    ModelStillSelected,
+    /// The engine did not remove the model; what is stored is unchanged or reads
+    /// again on the next check.
+    ModelNotRemoved,
 }
 
 /// What a command refuses with. Only the code crosses to the window.
@@ -587,6 +595,10 @@ pub enum Action {
     Cancel {
         operation_id: String,
     },
+    /// Removing one local model no role selects.
+    RemoveModel {
+        model: String,
+    },
     GoogleSignIn,
     GoogleSignOut,
 }
@@ -642,6 +654,14 @@ pub fn answer_request(
         operation_id: operation_id.to_owned(),
         plan_digest: plan_digest.to_owned(),
         decision,
+    })
+}
+
+/// Removing the local model `model`, named as a selection names it.
+pub fn remove_model_request(model: &str) -> Result<Action, ApplicationError> {
+    ModelName::parse(model).map_err(|_| invalid())?;
+    Ok(Action::RemoveModel {
+        model: model.to_owned(),
     })
 }
 
@@ -861,6 +881,14 @@ mod tests {
                 operation_id: "e".repeat(64)
             }
         );
+        assert_eq!(
+            remove_model_request("synthetic-text:test").unwrap(),
+            Action::RemoveModel {
+                model: "synthetic-text:test".to_owned()
+            }
+        );
+        assert!(remove_model_request("").is_err());
+        assert!(remove_model_request("not a model").is_err());
     }
 
     fn with_parts() -> Value {
@@ -921,6 +949,8 @@ mod tests {
             (Refusal::NotCancellable, "not_cancellable"),
             (Refusal::ModelSelectionUnusable, "model_selection_unusable"),
             (Refusal::ModelSizeUnstated, "model_size_unstated"),
+            (Refusal::ModelStillSelected, "model_still_selected"),
+            (Refusal::ModelNotRemoved, "model_not_removed"),
         ] {
             assert_eq!(
                 serde_json::to_value(CommandFailure::from(refusal)).unwrap(),

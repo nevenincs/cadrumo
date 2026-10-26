@@ -24,6 +24,9 @@ export type RoleModel = {
   vision: boolean | null;
   sizeBytes: number | null;
   licence: AgentModelLicenceFacts | null;
+  /** Whether this computer holds the model; null where the catalog does not
+   * say, as the declared one does not. */
+  installed: boolean | null;
 };
 
 /** One lane a role can name, with its models. */
@@ -68,6 +71,7 @@ export function roleLanes(answer: AgentCatalogAnswer): RoleLane[] {
         vision: model.vision ?? null,
         sizeBytes: model.size_bytes ?? null,
         licence: model.licence ?? null,
+        installed: null,
       }));
       if (models.length === 0) return [];
       return [
@@ -90,6 +94,8 @@ export function roleLanes(answer: AgentCatalogAnswer): RoleLane[] {
       vision: entry.vision ?? null,
       sizeBytes: entry.size_bytes ?? null,
       licence: entry.licence ?? null,
+      // The served catalog marks only a model this computer lacks.
+      installed: entry.installed ?? true,
     }));
     if (models.length === 0) return [];
     return [
@@ -103,6 +109,29 @@ export function roleLanes(answer: AgentCatalogAnswer): RoleLane[] {
       },
     ];
   });
+}
+
+/** The lane's models with what cadrumo-agent recommends leading, in the
+ * order it recommends them (vision first), then the rest in the catalogue's
+ * own order. Nothing is ranked here beyond what the catalogue says. */
+export function localModelOrder(
+  lane: RoleLane,
+): { model: RoleModel; recommended: AgentRecommendedCapability[] }[] {
+  const recommended = (id: string) =>
+    lane.recommended
+      .filter((entry) => entry.model === id)
+      .map((entry) => entry.capability);
+  const leading = lane.recommended
+    .map((entry) => entry.model)
+    .filter((id, index, ids) => ids.indexOf(id) === index)
+    .flatMap((id) => lane.models.filter((model) => model.id === id));
+  const rest = lane.models.filter(
+    (model) => !leading.some((held) => held.id === model.id),
+  );
+  return [...leading, ...rest].map((model) => ({
+    model,
+    recommended: recommended(model.id),
+  }));
 }
 
 /** The roles of a readable snapshot, in the service's order. */

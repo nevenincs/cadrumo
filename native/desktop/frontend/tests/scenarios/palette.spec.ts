@@ -5,6 +5,7 @@ import {
 } from "../../src/shell/navigation/windowViews";
 import { seedLayout } from "../support/layout";
 import { label } from "../support/strings";
+import { windowToast } from "../support/toast";
 
 // The palette's views come from the navigation register: each is found by
 // its label, its keywords and its id, opens through the navigator, and keeps
@@ -254,9 +255,7 @@ test("copying the link of the view shown copies the section's link", async ({
   await expect
     .poll(() => calls(target))
     .toContain(`writeClipboard ${link.length} characters`);
-  await expect(
-    target.locator("[data-slot=toast]:not(.ledger-toast)"),
-  ).toHaveText(label("desktop.toast.copied"));
+  await expect(windowToast(target)).toHaveText(label("desktop.toast.copied"));
 });
 
 test("two views of one name are told apart by the page they are on", async ({

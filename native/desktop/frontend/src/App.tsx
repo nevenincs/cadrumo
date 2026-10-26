@@ -25,6 +25,7 @@ import {
 } from "./components/CommandPalette";
 import {
   ContextMenu,
+  type MenuAction,
   type MenuAnchor,
   type MenuEntry,
 } from "./components/ContextMenu";
@@ -35,9 +36,7 @@ import {
   type DocsMenuRequest,
 } from "./components/DocsFrame";
 import type {
-  ContextMenuItem,
   DocsTheme,
-  HostFailure,
   PresentationOutcome,
   SetupItemId,
   SetupRow,
@@ -100,7 +99,6 @@ import {
 } from "./components/TerminalPane";
 import {
   bridgeChords,
-  chordLabel,
   findAction,
   primaryChord,
   viewActions,
@@ -124,7 +122,6 @@ import {
 } from "./shell/layout";
 import { useMetric, useTerminalFontSize } from "./shell/metrics";
 import { AEAT_SEDE } from "./shell/links";
-import { fromPointer } from "./shell/pointer";
 import {
   SOURCE_LOCALE,
   OUTPUT_LANGUAGES,
@@ -177,14 +174,7 @@ const TABS: readonly (readonly [PanelTab, string, IconName])[] = [
 
 type OpenMenu = { items: MenuEntry[]; at: MenuAnchor };
 
-const isSeparator = (item: MenuEntry): item is { separator: true } =>
-  "separator" in item;
-
-const isHostFailure = (value: unknown): value is HostFailure =>
-  typeof value === "object" &&
-  value !== null &&
-  typeof (value as Partial<HostFailure>).code === "string" &&
-  typeof (value as Partial<HostFailure>).operation === "string";
+const isAction = (item: MenuEntry): item is MenuAction => "id" in item;
 
 /** The exit code of a session that has exited, null when it is unknown. */
 const exitCode = (status: TerminalStatus): number | null | undefined =>
@@ -507,7 +497,6 @@ export function App({ host }: { host: Host }) {
   const docs = useRef<DocsFrameApi>(null);
   const terminals = useRef<Partial<Record<TerminalKind, TerminalApi>>>({});
   const toastTimer = useRef(0);
-  const nativeMenus = useRef(host.nativeMenus);
 
   // Layout geometry, read from the canonical tokens (src/styles/tokens.css) instead
   // of duplicated as literals; each metric re-reads on resize.
@@ -835,6 +824,15 @@ export function App({ host }: { host: Host }) {
     setSetupPrompt(null);
     setSetupDialog({ open: true, focus });
   }, []);
+  // Setup on the local AI's row, which a model chosen in the provider settings
+  // is downloaded through.
+  const setUpLocalAi = useCallback(() => {
+    const target = setupTargetOf(
+      "operator.provision.local_ai",
+      setupSnapshot?.rows ?? [],
+    );
+    openSetup(target && target !== "general" ? target.item : null);
+  }, [openSetup, setupSnapshot]);
   const setupShown = useRef(false);
   useEffect(() => {
     if (!setupIncomplete || setupShown.current) return;
@@ -2302,43 +2300,19 @@ export function App({ host }: { host: Host }) {
     return () => window.removeEventListener("keydown", key, true);
   }, [chordAllowed]);
 
-  // Menus: drawn by the operating system when the host can, otherwise here.
+  // Menus: the shell draws every one, in the Cadrumo theme, whichever host it
+  // runs in. The caller places it: at the pointer, or at what holds focus.
   const openMenu = useCallback(
-    (items: MenuEntry[], at: MenuAnchor, pointer: boolean) => {
-      const run = (id: string | null) => {
-        const chosen = items.find(
-          (item) => !isSeparator(item) && item.id === id,
-        );
-        if (chosen && !isSeparator(chosen)) chosen.run?.();
-      };
-      if (nativeMenus.current) {
-        const plain: ContextMenuItem[] = items.map((item) =>
-          isSeparator(item)
-            ? item
-            : {
-                id: item.id,
-                label: item.label,
-                shortcut: item.shortcut,
-                enabled: item.enabled,
-              },
-        );
-        // The host places a menu at a point: under the anchor, where it
-        // has a height.
-        const point = { x: at.x, y: at.y + (at.height ?? 0) };
-        host.showMenu(plain, pointer ? undefined : point).then(run, (error) => {
-          // Where the host cannot draw a blocking native menu, the shell
-          // draws this one and every later menu itself.
-          if (isHostFailure(error) && error.code === "unsupported_platform") {
-            nativeMenus.current = false;
-            setMenu({ items, at });
-          }
-        });
-      } else {
-        setMenu({ items, at });
-      }
-    },
-    [host],
+    (items: MenuEntry[], at: MenuAnchor) => setMenu({ items, at }),
+    [],
   );
+
+  // An item that does what a registry action does takes its icon and its
+  // first chord, so a shown shortcut is one the keymap binds.
+  const registered = useCallback((id: string) => {
+    const known = actionsRef.current.find((action) => action.id === id);
+    return { icon: known?.icon, chord: known?.chords?.[0] };
+  }, []);
 
   const docsMenu = useCallback(
     (request: DocsMenuRequest) => {
@@ -2347,18 +2321,14 @@ export function App({ host }: { host: Host }) {
           {
             id: "copy",
             label: t("desktop.menu.copy"),
-            shortcut: chordLabel({
-              mod: true,
-              code: "KeyC",
-              key: "C",
-              scope: "docs",
-            }),
+            icon: "copy",
             enabled: !!request.selection,
             run: () => copy(request.selection),
           },
           {
             id: "link",
             label: t("desktop.menu.copy_link"),
+            icon: "link",
             enabled: !!request.link,
             run: () => copy(request.link?.href ?? ""),
           },
@@ -2366,36 +2336,29 @@ export function App({ host }: { host: Host }) {
           {
             id: "back",
             label: t("desktop.action.docs_back"),
-            shortcut: primaryChord(
-              actionsRef.current.find((a) => a.id === "docs.back"),
-            ),
+            ...registered("docs.back"),
             enabled: true,
             run: () => runAction("docs.back"),
           },
           {
             id: "forward",
             label: t("desktop.action.docs_forward"),
-            shortcut: primaryChord(
-              actionsRef.current.find((a) => a.id === "docs.forward"),
-            ),
+            ...registered("docs.forward"),
             enabled: true,
             run: () => runAction("docs.forward"),
           },
           {
             id: "home",
             label: t("desktop.rail.docs_home"),
-            shortcut: primaryChord(
-              actionsRef.current.find((a) => a.id === "docs.home"),
-            ),
+            ...registered("docs.home"),
             enabled: true,
             run: () => runAction("docs.home"),
           },
         ],
         { x: request.x, y: request.y },
-        request.pointer,
       );
     },
-    [openMenu, t, copy, runAction],
+    [openMenu, registered, t, copy, runAction],
   );
 
   const terminalMenu = useCallback(
@@ -2406,24 +2369,21 @@ export function App({ host }: { host: Host }) {
         {
           id: "copy",
           label: t("desktop.menu.copy"),
-          shortcut: primaryChord(
-            actionsRef.current.find((a) => a.id === "terminal.copy"),
-          ),
+          ...registered("terminal.copy"),
           enabled: api.hasSelection(),
           run: () => copy(api.selection()),
         },
         {
           id: "paste",
           label: t("desktop.menu.paste"),
-          shortcut: primaryChord(
-            actionsRef.current.find((a) => a.id === "terminal.paste"),
-          ),
+          ...registered("terminal.paste"),
           enabled: true,
           run: () => paste(kind),
         },
         {
           id: "select-all",
           label: t("desktop.menu.select_all"),
+          icon: "selectAll",
           enabled: true,
           run: () => api.selectAll(),
         },
@@ -2434,26 +2394,24 @@ export function App({ host }: { host: Host }) {
           {
             id: "clear",
             label: t("desktop.menu.clear"),
+            icon: "erase",
             enabled: true,
             run: () => api.clear(),
           },
         );
-      openMenu(
-        items,
-        { x: event.clientX, y: event.clientY },
-        fromPointer(event),
-      );
+      openMenu(items, { x: event.clientX, y: event.clientY });
     },
-    [openMenu, t, copy, paste],
+    [openMenu, registered, t, copy, paste],
   );
 
   const recordMenu = useCallback(
-    ({ at, pointer, record, visible }: RecordMenuRequest) => {
+    ({ at, record, visible }: RecordMenuRequest) => {
       openMenu(
         [
           {
             id: "line",
             label: t("desktop.menu.copy_line"),
+            icon: "copy",
             enabled: true,
             run: () =>
               copy(
@@ -2465,6 +2423,7 @@ export function App({ host }: { host: Host }) {
           {
             id: "visible",
             label: t("desktop.menu.copy_visible"),
+            icon: "copyAll",
             enabled: true,
             run: () => copyLogs(recordsText(visible)),
           },
@@ -2472,6 +2431,7 @@ export function App({ host }: { host: Host }) {
           {
             id: "logger",
             label: t("desktop.menu.only_logger"),
+            icon: "filter",
             enabled: !!record.logger,
             run: () => setFilters((f) => ({ ...f, logger: record.logger })),
           },
@@ -2480,12 +2440,12 @@ export function App({ host }: { host: Host }) {
             label: t("desktop.menu.only_level", {
               level: (record.level ?? "INFO").toLowerCase(),
             }),
+            icon: "filter",
             enabled: !!record.level,
             run: () => selectLogLevel(Math.max(0, levelRank(record.level))),
           },
         ],
         at,
-        pointer,
       );
     },
     [openMenu, t, copy, copyLogs, setFilters, selectLogLevel],
@@ -3026,6 +2986,7 @@ export function App({ host }: { host: Host }) {
           <UserProfilePage
             maximized={maximized === "docs"}
             onToggleMaximize={toggleProfileMaximized}
+            maximizeChord={byId("view.maximize")?.chords?.[0]}
             contribute={contribute}
             openMenu={openMenu}
             accountActions={profileAccountActions}
@@ -3206,6 +3167,11 @@ export function App({ host }: { host: Host }) {
         onMenu={openMenu}
         onToolRefused={onToolRefused}
         onOpenLink={openLink}
+        onSetUpLocalAi={setupOffered ? setUpLocalAi : undefined}
+        onRemoveLocalModel={setupOffered ? setup.removeModel : undefined}
+        setupSettled={
+          setupRun?.stage === "settled" ? setupRun.operation_id : null
+        }
         onOpenView={(url, opened) =>
           nav.openLink(url, {
             opened: (shown) => opened?.(shown.opened),
@@ -3640,24 +3606,17 @@ export function App({ host }: { host: Host }) {
                 // from.
                 key={`${menu.at.x}:${menu.at.y}`}
                 label={t("desktop.palette.actions")}
-                items={menu.items.map((item) =>
-                  isSeparator(item)
-                    ? item
-                    : {
-                        id: item.id,
-                        label: item.label,
-                        shortcut: item.shortcut,
-                        enabled: item.enabled,
-                      },
-                )}
+                items={menu.items}
                 at={menu.at}
                 choose={(id) => {
                   const items = menu.items;
                   setMenu(null);
-                  const chosen = items.find(
-                    (item) => !isSeparator(item) && item.id === id,
-                  );
-                  if (chosen && !isSeparator(chosen)) chosen.run?.();
+                  items
+                    .find(
+                      (item): item is MenuAction =>
+                        isAction(item) && item.id === id,
+                    )
+                    ?.run?.();
                 }}
               />
             )}

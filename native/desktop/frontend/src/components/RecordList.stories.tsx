@@ -116,23 +116,26 @@ function WithMenu(args: Args) {
           {
             id: "copy",
             label: t("desktop.menu.copy_line"),
+            icon: "copy",
             enabled: true,
-            shortcut: "Ctrl+C",
           },
           {
             id: "visible",
             label: t("desktop.menu.copy_visible"),
+            icon: "copyAll",
             enabled: true,
           },
           { separator: true },
           {
             id: "level",
             label: t("desktop.menu.only_level", { level: "WARNING" }),
+            icon: "filter",
             enabled: true,
           },
           {
             id: "logger",
             label: t("desktop.menu.only_logger", { logger: "tui.app" }),
+            icon: "filter",
             enabled: false,
           },
         ]}

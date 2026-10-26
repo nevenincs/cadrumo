@@ -170,7 +170,10 @@ test("providers start collapsed and keep each connection separately accessible",
     await expect(mark).toHaveAttribute("data-provider", declared.provider);
     const bundled =
       declared.provider === "codex" || declared.provider === "claude";
-    await expect(mark).toHaveAttribute("data-mark", bundled ? "mono" : "none");
+    await expect(mark).toHaveAttribute(
+      "data-mark",
+      bundled ? "mono" : "generic",
+    );
     const style = await mark.getAttribute("style");
     if (bundled) expect(style).toContain("data:image/svg+xml");
     else expect(style).toBeNull();

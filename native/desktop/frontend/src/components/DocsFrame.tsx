@@ -38,8 +38,6 @@ export type DocsMenuRequest = {
   /** Shell viewport coordinates. */
   x: number;
   y: number;
-  /** False when the menu key opened it, so it belongs at x, y. */
-  pointer: boolean;
   selection: string;
   link: DocsLink | null;
 };
@@ -248,8 +246,6 @@ export const DocsFrame = forwardRef<DocsFrameApi, Props>(
             p.onMenu({
               x: rect.left + element.clientLeft + data.x,
               y: rect.top + element.clientTop + data.y,
-              // Pages built before the bridge reported it were pointer-opened.
-              pointer: data.pointer !== false,
               // Bounded here as well as in the bridge: a hostile script can
               // post without the bridge.
               selection:

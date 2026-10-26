@@ -261,16 +261,29 @@ test("a detail's context menu offers its own actions, by pointer and by key", as
   const profile = await open(page);
   await row(profile, "identity.email").click({ button: "right" });
   const menu = page.getByRole("menu");
+  const edit = menu.getByRole("menuitem", {
+    name: label("desktop.profile.edit_field", { field: "Contact email" }),
+  });
+  await expect(edit).toBeVisible();
+  // Each shows the key the page runs it by: Copy's is pressed below, and
+  // Enter's in the test of the details' keys.
+  const mac = process.platform === "darwin";
+  await expect(edit.locator("kbd")).toHaveText("Enter");
+  const copy = menu.getByRole("menuitem", {
+    name: label("desktop.profile.action.copy", { field: "Contact email" }),
+  });
+  await expect(copy.locator("kbd")).toHaveText(
+    mac ? ["⌘", "C"] : ["Ctrl", "C"],
+  );
+  // Clearing has no key of the page's own, so it shows none.
   await expect(
-    menu.getByRole("menuitem", {
-      name: label("desktop.profile.edit_field", { field: "Contact email" }),
-    }),
-  ).toBeVisible();
-  await menu
-    .getByRole("menuitem", {
-      name: label("desktop.profile.action.copy", { field: "Contact email" }),
-    })
-    .click();
+    menu
+      .getByRole("menuitem", {
+        name: label("desktop.profile.action.clear", { field: "Contact email" }),
+      })
+      .locator("kbd"),
+  ).toHaveCount(0);
+  await copy.click();
   await expect(
     page.getByRole("status").getByText(label("desktop.toast.copied")),
   ).toBeVisible();
@@ -278,6 +291,18 @@ test("a detail's context menu offers its own actions, by pointer and by key", as
   expect(await page.evaluate(() => window.__scenarioHostCalls ?? [])).toContain(
     `writeClipboard ${"ana.soler@example.test".length} characters`,
   );
+  // The key the menu shows copies it again.
+  const copies = () =>
+    page.evaluate(
+      () =>
+        (window.__scenarioHostCalls ?? []).filter((call) =>
+          call.startsWith("writeClipboard"),
+        ).length,
+    );
+  const copied = await copies();
+  await row(profile, "identity.email").focus();
+  await page.keyboard.press(mac ? "Meta+KeyC" : "Control+KeyC");
+  await expect.poll(copies).toBe(copied + 1);
   // The menu key opens it on the focused detail; a missing value cannot be copied.
   await row(profile, "identity.tax_id").focus();
   await page.keyboard.press("Shift+F10");
@@ -290,6 +315,41 @@ test("a detail's context menu offers its own actions, by pointer and by key", as
   ).toBeDisabled();
   await page.keyboard.press("Escape");
   await expect(row(profile, "identity.tax_id")).toBeFocused();
+});
+
+test("the actions menu leads each action with its icon and shows the chord of the key that runs it", async ({
+  page,
+}) => {
+  await open(page);
+  await page
+    .locator(".user-profile-page")
+    .getByRole("button", {
+      name: label("desktop.profile.action.menu"),
+      exact: true,
+    })
+    .click();
+  const menu = page.getByRole("menu");
+  const item = (key: string) =>
+    menu.getByRole("menuitem", { name: label(key), exact: true });
+  const full = item("desktop.profile.maximize");
+  await expect(full.locator("[data-icon=maximize]")).toHaveCount(1);
+  // The window's own chord for full screen, in the platform's notation.
+  await expect(full.locator("kbd")).toHaveText(
+    process.platform === "darwin" ? ["⇧", "⌘", "M"] : ["Ctrl", "Shift", "M"],
+  );
+  // Searching and the key sheet have keys of the page's own, typed rather than
+  // placed, as "/" and "?" sit elsewhere on other layouts; the registry binds
+  // neither. The page's key test presses both.
+  const search = item("desktop.profile.search");
+  await expect(search.locator("[data-icon=search]")).toHaveCount(1);
+  await expect(search.locator("kbd")).toHaveText("/");
+  await expect(item("desktop.profile.keys.title").locator("kbd")).toHaveText(
+    "?",
+  );
+  // Collapsing every group has no key.
+  await expect(
+    item("desktop.profile.action.collapse").locator("kbd"),
+  ).toHaveCount(0);
 });
 
 test("the palette leads with the focused detail and reaches every section", async ({
@@ -826,6 +886,32 @@ test("the password changes only with the current one, and an unconfirmed change 
   expect(await changes()).toBe(3);
 });
 
+test("a save waits for a pending refresh and submits the unchanged draft once", async ({
+  page,
+}) => {
+  const profile = await open(page);
+  await editButton(profile, "Given name").click();
+  const dialog = page.getByRole("dialog", { name: "Given name", exact: true });
+  await dialog.getByLabel("Given name", { exact: true }).fill("Queued draft");
+  await page.evaluate(() => {
+    window.__scenarioProfile!.deferRead();
+    window.__scenarioProfile!.burst();
+  });
+  await expect(profile).toContainText(label("desktop.profile.loading"));
+  await save(dialog).click();
+  await expect(
+    dialog.getByRole("button", {
+      name: label("desktop.profile.saving"),
+      exact: true,
+    }),
+  ).toBeDisabled();
+  expect(await page.evaluate(() => window.__scenarioProfile!.writes())).toBe(0);
+  await page.evaluate(() => window.__scenarioProfile!.releaseRead());
+  await expect(dialog).toHaveCount(0);
+  await expect(profile).toContainText("Queued draft");
+  expect(await page.evaluate(() => window.__scenarioProfile!.writes())).toBe(1);
+});
+
 test("a failed pending profile read leaves loading and allows a retry", async ({
   page,
 }) => {
@@ -838,6 +924,7 @@ test("a failed pending profile read leaves loading and allows a retry", async ({
     label("desktop.profile.unavailable"),
   );
   await expect(profile).not.toContainText(label("desktop.profile.loading"));
+  await expect(profile).toContainText("Soler Vidal");
   const refresh = profile.getByRole("button", {
     name: label("desktop.profile.refresh"),
     exact: true,

@@ -1,6 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { agentTurns, ask, settled } from "../support/agent";
 import { label } from "../support/strings";
+import { windowToast } from "../support/toast";
 
 // The pages' own guards and focus targets under the window's navigator: a
 // profile draft and an unanswered Censo review asked about, a Censo answer
@@ -8,9 +9,6 @@ import { label } from "../support/strings";
 // pane opens freely, and a link's row revealed in the Ledger's grids, or
 // announced when the person's view hides it or it is not there.
 
-// The window's own toast, not a page's.
-const toast = (page: Page) =>
-  page.locator("[data-slot=toast]:not(.ledger-toast)");
 const calendar = (page: Page) => page.locator(".calendar-page");
 const profilePage = (page: Page) => page.locator(".user-profile-page");
 const prompt = (page: Page) => page.locator(".navigation-prompt");
@@ -118,7 +116,9 @@ test("an open dialog stands every navigation down and keeps its input", async ({
   await current.fill("not yet sent");
   for (const each of [link, pane]) {
     await each.dispatchEvent("click");
-    await expect(toast(page)).toHaveText(label("desktop.navigation.modal"));
+    await expect(windowToast(page)).toHaveText(
+      label("desktop.navigation.modal"),
+    );
   }
   await expect(dialog).toBeVisible();
   await expect(current).toHaveValue("not yet sent");
@@ -156,7 +156,7 @@ test("an unanswered Censo review is asked about, and an answer in flight is refu
     .poll(() => page.evaluate(() => window.__scenarioCenso!.answers()))
     .toBe(1);
   await link.click();
-  await expect(toast(page)).toHaveText(label("desktop.navigation.busy"));
+  await expect(windowToast(page)).toHaveText(label("desktop.navigation.busy"));
   await expect(prompt(page)).toHaveCount(0);
   await expect(profilePage(page)).toBeVisible();
   await page.evaluate(() => window.__scenarioCenso!.release());
@@ -176,7 +176,9 @@ test("a palette navigation is not held by the palette's own dialog", async ({
     .fill(label("navigation.view.calendar.label"));
   await palette.getByRole("listbox").getByRole("option").first().click();
   await expect(calendar(page)).toBeVisible();
-  await expect(toast(page)).not.toHaveText(label("desktop.navigation.modal"));
+  await expect(windowToast(page)).not.toHaveText(
+    label("desktop.navigation.modal"),
+  );
 });
 
 // ---- A link's row in the Ledger -------------------------------------------

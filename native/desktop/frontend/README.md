@@ -162,8 +162,7 @@ environment or from `.env.local`.
 ### What a scenario proves
 
 A scenario is design and test evidence only. The scenario host answers from
-data: a sign-in it accepts authenticated nothing, its menus are drawn by the
-shell because the native popup is not simulated, and its clipboard is a
+data: a sign-in it accepts authenticated nothing, and its clipboard is a
 variable. Nothing seen here verifies the Tauri host, the runtime, the packaged
 documentation or the `cadrumo-docs` scheme.
 
@@ -637,9 +636,6 @@ to be checked in a built desktop package, on an interactive desktop, with
   refusal is not retried, and the canonical refusal codes arrive as the shell
   expects them. The last packaged run failed here on the letter case of a code
   (see below); the browser tests cannot see the host's answer.
-- **Native menus.** The host draws context menus; the shell's own menu is the
-  stand-in the browser shows. The menu key on a log record sends the row's
-  position, which only the host can place.
 - **Content security policy and the `cadrumo-docs` scheme.** The browser test
   applies the policy from the configuration template to the production bundle;
   the window applies the generated one to the packaged documentation origin.

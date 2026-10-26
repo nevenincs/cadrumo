@@ -14,6 +14,7 @@ import type {
   GridRow,
 } from "@/components/ui/data-grid";
 import { exactly, type CellRange } from "@/components/ui/dataGridModel";
+import { chordMatches, type ChordKeys } from "@/shared/chords";
 import type { LedgerRow } from "../../../shell/ledger";
 import { percentOf, copyAmount } from "../../../shell/ledgerGrammar";
 import { planApply, routeChange } from "../../../shell/ledgerPlan";
@@ -107,6 +108,15 @@ function changedFields(
 }
 
 export const COST_WARNING_WRITES = 10;
+
+/** Takes the active cell's staged change back: this grid runs it, and the
+ * movement menu that offers it shows it. */
+export const REVERT_CELL_CHORD: ChordKeys = {
+  code: "KeyZ",
+  key: "Z",
+  ctrl: true,
+  alt: true,
+};
 
 const cellKey = (key: string, column: string) => `${key}\u0000${column}`;
 const TRANSFER = "INTERNAL_TRANSFER";
@@ -738,14 +748,11 @@ export function useMovementEditing(input: MovementEditingInput) {
     (target as HTMLElement).closest?.(
       "input, textarea, select, [contenteditable=true]",
     ) !== null;
-  /** Ctrl+Alt+Z, taken before the grid reads it as a typed character. */
+  /** Revert cell, taken before the grid reads it as a typed character. A
+   * layout that types something else on it is not the chord. */
   const onKeyDownCapture = (event: KeyboardEvent<HTMLElement>) => {
     if (
-      event.code === "KeyZ" &&
-      event.ctrlKey &&
-      event.altKey &&
-      !event.shiftKey &&
-      !event.metaKey &&
+      chordMatches(REVERT_CELL_CHORD, event) &&
       /^z$/i.test(event.key) &&
       !inField(event.target)
     ) {

@@ -224,6 +224,23 @@ fn a_hosted_lane_is_not_admitted_and_its_catalogue_is_not_read() {
 }
 
 #[test]
+fn a_local_lane_the_person_turned_off_is_not_admitted_and_its_catalogue_is_not_read() {
+    let turned_off = json!({
+        "development": false,
+        "providers": [lane(LOCAL, "synthetic_local", "none", "disabled", false)],
+    });
+    let (admission, replies) = watched(
+        Replies::selecting(
+            &[("vision_transcription", LOCAL, VISION)],
+            &[(VISION, Some(3 * GB))],
+        )
+        .answering("status", turned_off),
+    );
+    assert!(admission.local_models().unwrap().is_empty());
+    assert_eq!(replies.asked(), ["model_roles", "status"]);
+}
+
+#[test]
 fn a_lane_the_status_does_not_list_is_not_admitted() {
     let (admission, replies) = watched(Replies::selecting(
         &[("text_extraction", "synthetic_gone_api", TEXT)],

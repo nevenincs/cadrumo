@@ -324,9 +324,9 @@ test("a PDF statement while the setup status cannot be read offers nothing", asy
 test("a reader held back by memory offers no setup, though the local AI is not set up", async ({
   page: target,
 }) => {
-  // The vision role is not ready because this computer lacks the memory to
-  // load it now; its row names no setup, so none is offered even while the
-  // local AI's setup is unfinished.
+  // The vision role is not ready because this computer has less memory than
+  // its model needs; its row names no setup, so none is offered even while
+  // the local AI's setup is unfinished.
   await openDocuments(target, "fresh", "documents");
   await tab(target, "readers").click();
   const readers = section(target).locator(".ledger-readers");

@@ -1327,51 +1327,6 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
       }),
     );
 
-    // Native context menu -------------------------------------------------------
-    await check(
-      "context-menu-null",
-      "a shell context menu opened and dismissed resolves null",
-      async () => {
-        const pending = session.call("shell_context_menu", {
-          items: [{ id: "s10", label: "S10 probe & menu", enabled: true }],
-          x: 40,
-          y: 40,
-        });
-        const menu = await waitFor(
-          async () =>
-            (await input.windows([hostPid])).find((w) => w.class === "#32768"),
-          { timeout: 5000, what: "the native menu" },
-        ).catch(() => null);
-        if (menu) {
-          await input.post(hostPid, "cancelmode");
-          const closed = await exited(
-            pending.then(() => ({})),
-            3000,
-          );
-          if (!closed) {
-            await input.activate(hostPid).catch(() => undefined);
-            await input.chord(hostPid, "escape").catch(() => undefined);
-          }
-        }
-        const result = await Promise.race([
-          pending,
-          sleep(8000).then(() => ({ ok: false, error: { code: "no answer" } })),
-        ]);
-        if (!menu)
-          return {
-            verdict: FAIL,
-            detail: `no native menu window appeared; result ${JSON.stringify(result)}`,
-          };
-        return result.ok && result.value.chosen === null
-          ? {
-              verdict: PASS,
-              detail:
-                "menu window #32768 appeared and the dismissal resolved null",
-            }
-          : { verdict: FAIL, detail: `result ${JSON.stringify(result)}` };
-      },
-    );
-
     // Accelerators and default context menus --------------------------------------
     const browserCdp = await session.browser.newBrowserCDPSession();
     const snapshot = async () =>

@@ -1735,19 +1735,8 @@ control manager records. Aborts that bypass panicking (stack overflow,
 | `open_external` | `token`, `url` | Opens the URL with the system's registered handler. Only lowercase `https://` with a host and no user information, or `mailto:` with an address, written as printable ASCII without a backslash and at most 8192 bytes; anything else is `invalid_arguments`. |
 | `shell_clipboard_read` | `token` | `{text}`. |
 | `shell_clipboard_write` | `token`, `text` | At most 1 MiB of UTF-8, else `invalid_arguments`. |
-| `shell_context_menu` | `token`, `items`, optional `x` and `y` | `{chosen}`: the id of the enabled item chosen, or null when the menu closed without a choice. |
 
-`shell_context_menu` takes 1 to 64 items, each `{id, label, enabled, shortcut?}`
-or `{separator: true}`, with at least one action. Ids, labels and shortcuts are
-at most 128, 256 and 64 characters without control characters, and ids are
-unique. The host names each native item `ctx/<popup>/<id>` and doubles every `&`
-so labels show literally. `x` and `y` come together, as a logical position in
-shell CSS pixels within 1,000,000 of the origin; without them the menu opens at
-the cursor. One popup is open at a time, and a second request is refused with
-`session_unavailable`. The command is asynchronous because the Windows popup
-blocks until the menu closes. A sentinel queued on the main thread afterwards
-resolves a dismissal to null after any pending menu event. Other platforms
-refuse it with `unsupported_platform`.
+The host shows no native menu: the shell draws every context menu itself.
 
 ### WebView2 requirements
 

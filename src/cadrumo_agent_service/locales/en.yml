@@ -319,6 +319,24 @@ desktop:
     key_label: '{provider} API key'
     key_note: It's saved encrypted on this computer and never shown again.
     load_failed: Could not load providers. Try again.
+    local_model_absent: Not downloaded
+    local_model_choose_roles: Use for reading documents
+    local_model_download: Download
+    local_model_installed: Downloaded
+    local_model_pick_roles: Read documents with this model
+    local_model_recommended: Recommended for reading {capability}
+    local_model_remove: Remove
+    local_model_remove_failed: Cadrumo couldn't remove the model. Try again.
+    local_model_remove_still_selected: Cadrumo still reads documents with this model.
+      Choose another model for that reading, then remove this one.
+    local_model_unused: Not used for reading documents yet.
+    local_model_use: Use
+    local_model_used_by: Reads documents {roles}
+    local_models_lead: Cadrumo reads your documents with the models you choose here,
+      such as scanned pages and document text. A model is downloaded only once you
+      choose what it reads in your documents.
+    local_models_none: The agent lists no models for this connection yet.
+    local_models_title: Models on this computer
     reason_check_settings: Check these settings and try again.
     reason_record_unreadable: The saved API key can't be read. Add it again.
     refresh: Try again

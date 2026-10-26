@@ -94,8 +94,9 @@ const fileName = (path: string) => path.split(/[\\/]/).pop() || path;
 const LOCAL_AI_SETUP = "operator.provision.local_ai";
 /** What the reader check found missing: the program that runs the models. */
 const RUNTIME_INSTALLED = "provisioning.runtime.installed";
-/** What the reader check found missing: the role's model on the server. */
-const ROLE_MODEL_INSTALLED = "provisioning.role_model.installed";
+/** What the reader check found short: this computer's memory for the role's
+ * model, which no setup supplies. */
+const HARDWARE_FLOOR_MET = "provisioning.hardware_floor.met";
 
 /** A label reading that stood without the model fill the local AI gives. */
 const withoutReader = (unread: string[]): LabelReadingFallback => ({
@@ -1422,11 +1423,11 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
         {
           role: "document_vision",
           model: "reader-vision-medium",
-          installed: false,
+          installed: true,
           ready: false,
-          failed_condition_id: ROLE_MODEL_INSTALLED,
-          // The local AI setup downloads the role's model.
-          recovery_action_id: LOCAL_AI_SETUP,
+          failed_condition_id: HARDWARE_FLOOR_MET,
+          // Memory is not something setup supplies, so the check names none.
+          recovery_action_id: null,
         },
       ],
       extraction_ready: true,

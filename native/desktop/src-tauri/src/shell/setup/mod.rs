@@ -225,6 +225,7 @@ impl SetupHost {
                     .await
             }
             Action::Cancel { operation_id } => self.components.cancel(operation_id).await,
+            Action::RemoveModel { model } => self.components.remove_model(model).await,
         }
     }
 
@@ -450,6 +451,7 @@ pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
         desktop_setup_start,
         desktop_setup_answer,
         desktop_setup_cancel,
+        desktop_setup_remove_model,
         desktop_google_sign_in,
         desktop_google_sign_out,
         desktop_setup_observe,
@@ -510,6 +512,16 @@ async fn desktop_setup_cancel(
     operation_id: String,
 ) -> std::result::Result<DesktopSetup, CommandFailure> {
     host.exchange(wire::cancel_request(&operation_id)?, true)
+        .await
+}
+
+/// Removes one local model the person picked, once no role selects it.
+#[tauri::command]
+async fn desktop_setup_remove_model(
+    host: State<'_, Arc<SetupHost>>,
+    model: String,
+) -> std::result::Result<DesktopSetup, CommandFailure> {
+    host.exchange(wire::remove_model_request(&model)?, true)
         .await
 }
 

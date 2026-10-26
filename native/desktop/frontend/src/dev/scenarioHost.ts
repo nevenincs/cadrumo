@@ -704,8 +704,6 @@ export function scenarioHost(
           },
         }
       : {}),
-    // The shell draws its own menu here; the native popup is not simulated.
-    nativeMenus: false,
 
     about() {
       say("about");
@@ -928,10 +926,6 @@ export function scenarioHost(
         return Promise.reject(failure("invalid_arguments", "webview"));
       clipboard = text;
       return Promise.resolve();
-    },
-
-    showMenu() {
-      return Promise.reject(failure("unsupported_platform", "webview"));
     },
 
     openExternal(url) {

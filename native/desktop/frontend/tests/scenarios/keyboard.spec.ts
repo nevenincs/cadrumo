@@ -723,7 +723,7 @@ test("Enter on a record opens its detail", async ({ page: target }) => {
   await expect(row.locator("pre")).toHaveCount(0);
 });
 
-test("the menu stand-in follows the arrow keys and closes on Escape", async ({
+test("a context menu follows the arrow keys and closes on Escape", async ({
   page: target,
 }) => {
   await open(target);

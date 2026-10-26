@@ -165,8 +165,8 @@ test("the searchable list has one entry for each connection, with its provider's
     if (why) expect(row?.text, wayOf(served)).toContain(why);
     expect(row?.disabled, wayOf(served)).toBe(why !== null);
     expect(row?.marks, wayOf(served)).toEqual([
-      // The made-up fixture provider has no bundled mark, so it uses fallback.
-      { provider: served.provider_id, kind: "none", tag: "span" },
+      // The made-up fixture provider has no bundled mark, so it wears the generic one.
+      { provider: served.provider_id, kind: "generic", tag: "span" },
     ]);
   }
   // Example Alpha and Example Beta each have two distinguishable choices.

@@ -34,7 +34,8 @@ import {
   SegmentedControlItem,
 } from "@/components/ui/segmented-control";
 import { Spinner } from "@/components/ui/spinner";
-import { chordLabel, primaryChord, type Action } from "../../shell/actions";
+import { chordMatches, type ChordKeys } from "@/shared/chords";
+import type { Action, Chord } from "../../shell/actions";
 import type { Host } from "../../shell/host";
 import type { ProfileView } from "../../shell/layout";
 import { useNavigationGuard } from "../../shell/navigation/hooks";
@@ -70,20 +71,14 @@ import {
 import type { MenuEntry, OpenMenu } from "../ContextMenu";
 import { PasswordChange, ProfileShortcuts } from "./ProfileDialogs";
 import { ProfileEditor, type ProfileDraft } from "./ProfileEditor";
+import { PROFILE_KEYS } from "./profileKeys";
 import { ProfileSync } from "./ProfileSync";
 
-/** A profile action, with the key that runs it on the page where it has one.
- * The page's menus, its actions button and the window's palette all read
- * these, so a label exists once. */
-type PageAction = Action & { hint?: string };
+/** A profile action and, where the page runs it by a key of its own, that
+ * key: the page's menus show it from the declaration its handlers match. */
+type PageAction = Action & { pageKey?: ChordKeys };
 
 const STATUS_GROUPS = ["required", "unset", "filled"] as const;
-const copyChord = chordLabel({
-  code: "KeyC",
-  key: "C",
-  mod: true,
-  scope: "app",
-});
 
 // Drawn again only when what it is given changes: the window redraws far more
 // often than the profile does.
@@ -95,6 +90,7 @@ export const UserProfilePage = memo(function UserProfilePage({
   page,
   maximized,
   onToggleMaximize,
+  maximizeChord,
   view,
   onViewChange,
   onAeatSetup,
@@ -112,6 +108,8 @@ export const UserProfilePage = memo(function UserProfilePage({
   /** Full screen: the page has the window to itself. */
   maximized: boolean;
   onToggleMaximize(): void;
+  /** The registry's chord for full screen, shown beside it in the menus. */
+  maximizeChord?: Chord;
   view: ProfileView;
   onViewChange(update: (current: ProfileView) => ProfileView): void;
   /** Opens the profile's AEAT access page in the workspace. */
@@ -344,7 +342,7 @@ export const UserProfilePage = memo(function UserProfilePage({
         t("desktop.profile.edit_field", { field: field.label }),
         "edit",
         () => editRow(row),
-        { hint: "Enter", enabled: () => writable },
+        { pageKey: PROFILE_KEYS.edit, enabled: () => writable },
       ),
       action(
         "copy",
@@ -353,7 +351,7 @@ export const UserProfilePage = memo(function UserProfilePage({
         () => {
           if (value) onCopy(value);
         },
-        { hint: copyChord, enabled: () => !!value },
+        { pageKey: PROFILE_KEYS.copy, enabled: () => !!value },
       ),
       action(
         "clear",
@@ -393,7 +391,7 @@ export const UserProfilePage = memo(function UserProfilePage({
       t("desktop.profile.action.edit_entry"),
       "edit",
       () => editEntry(section, entry),
-      { hint: "Enter", enabled: () => writable },
+      { pageKey: PROFILE_KEYS.edit, enabled: () => writable },
     ),
     action(
       "add",
@@ -489,7 +487,7 @@ export const UserProfilePage = memo(function UserProfilePage({
         searchInput.current?.focus();
         searchInput.current?.select();
       },
-      { hint: "/" },
+      { pageKey: PROFILE_KEYS.search },
     ),
     action(
       "expand",
@@ -512,22 +510,14 @@ export const UserProfilePage = memo(function UserProfilePage({
       t(maximized ? "desktop.profile.compact" : "desktop.profile.maximize"),
       maximized ? "restore" : "maximize",
       onToggleMaximize,
-      {
-        hint: chordLabel({
-          code: "KeyM",
-          key: "M",
-          mod: true,
-          shift: true,
-          scope: "app",
-        }),
-      },
+      { chords: maximizeChord ? [maximizeChord] : undefined },
     ),
     action(
       "shortcuts",
       t("desktop.profile.keys.title"),
       "keyboard",
       () => setShortcuts(true),
-      { hint: "?" },
+      { pageKey: PROFILE_KEYS.help },
     ),
   ];
   function groupKeys() {
@@ -571,8 +561,9 @@ export const UserProfilePage = memo(function UserProfilePage({
   const entry = (item: PageAction): MenuEntry => ({
     id: item.id,
     label: item.label,
+    icon: item.icon,
+    chord: item.pageKey ?? item.chords?.[0],
     enabled: item.enabled ? item.enabled() : true,
-    shortcut: item.hint ?? (primaryChord(item) || undefined),
     run: item.run,
   });
   const menuOf = (...groups: PageAction[][]): MenuEntry[] =>
@@ -582,10 +573,7 @@ export const UserProfilePage = memo(function UserProfilePage({
         ...(index ? [{ separator: true as const }] : []),
         ...items.map(entry),
       ]);
-  const detailMenu = (
-    at: { x: number; y: number; height?: number },
-    pointer: boolean,
-  ) =>
+  const detailMenu = (at: { x: number; y: number; height?: number }) =>
     openMenu(
       menuOf(
         focusedActions(),
@@ -594,7 +582,6 @@ export const UserProfilePage = memo(function UserProfilePage({
         ),
       ),
       at,
-      pointer,
     );
   const actionsMenu = (button: HTMLElement) => {
     const box = button.getBoundingClientRect();
@@ -605,7 +592,6 @@ export const UserProfilePage = memo(function UserProfilePage({
         accountActions().filter((item) => !item.enabled || item.enabled()),
       ),
       { x: box.left, y: box.top, height: box.height },
-      false,
     );
   };
 
@@ -617,11 +603,11 @@ export const UserProfilePage = memo(function UserProfilePage({
     );
     const mod = event.ctrlKey || event.metaKey;
     if (typing || event.altKey) return;
-    if (!mod && event.key === "/") {
+    if (chordMatches(PROFILE_KEYS.search, event)) {
       event.preventDefault();
       searchInput.current?.focus();
       searchInput.current?.select();
-    } else if (!mod && event.key === "?") {
+    } else if (chordMatches(PROFILE_KEYS.help, event)) {
       event.preventDefault();
       setShortcuts(true);
     } else if (mod && !event.shiftKey && event.code === "KeyF") {
@@ -650,6 +636,26 @@ export const UserProfilePage = memo(function UserProfilePage({
     const head = target.dataset.kind === "head";
     const key = head ? id.slice("head:".length) : "";
     if (event.altKey) return;
+    if (
+      [PROFILE_KEYS.edit, ...PROFILE_KEYS.editToo].some((keys) =>
+        chordMatches(keys, event),
+      )
+    ) {
+      if (head) return;
+      event.preventDefault();
+      if (!writable) return;
+      if (row) editRow(row);
+      else if (owner) editEntry(owner.section, owner.entry);
+      return;
+    }
+    if (chordMatches(PROFILE_KEYS.copy, event)) {
+      if (row && !row.field.masked && !window.getSelection()?.toString()) {
+        event.preventDefault();
+        const value = fieldValue(row.field);
+        if (value) onCopy(value);
+      }
+      return;
+    }
     switch (event.key) {
       case "ArrowDown":
       case "j":
@@ -687,15 +693,6 @@ export const UserProfilePage = memo(function UserProfilePage({
           else go(items[at + 1]);
         }
         return;
-      case "Enter":
-      case "F2":
-      case "e":
-        if (head || event.ctrlKey || event.metaKey) return;
-        event.preventDefault();
-        if (!writable) return;
-        if (row) editRow(row);
-        else if (owner) editEntry(owner.section, owner.entry);
-        return;
       case "Delete":
         if (owner && writable) {
           event.preventDefault();
@@ -709,23 +706,7 @@ export const UserProfilePage = memo(function UserProfilePage({
         event.preventDefault();
         {
           const box = target.getBoundingClientRect();
-          detailMenu(
-            { x: box.left + 24, y: box.top, height: box.height },
-            false,
-          );
-        }
-        return;
-      case "c":
-      case "C":
-        if (
-          (event.ctrlKey || event.metaKey) &&
-          row &&
-          !row.field.masked &&
-          !window.getSelection()?.toString()
-        ) {
-          event.preventDefault();
-          const value = fieldValue(row.field);
-          if (value) onCopy(value);
+          detailMenu({ x: box.left + 24, y: box.top, height: box.height });
         }
         return;
     }
@@ -1011,7 +992,7 @@ export const UserProfilePage = memo(function UserProfilePage({
           event.preventDefault();
           event.currentTarget.focus();
           setActive(row.id);
-          detailMenu({ x: event.clientX, y: event.clientY }, true);
+          detailMenu({ x: event.clientX, y: event.clientY });
         }}
         className={cn(
           "group/row relative flex min-h-control-xs cursor-default items-start gap-3 rounded-md px-2 py-0.5 break-inside-avoid outline-none",
@@ -1225,7 +1206,7 @@ export const UserProfilePage = memo(function UserProfilePage({
                       event.preventDefault();
                       event.currentTarget.focus();
                       setActive(id);
-                      detailMenu({ x: event.clientX, y: event.clientY }, true);
+                      detailMenu({ x: event.clientX, y: event.clientY });
                     }}
                     className="group/row flex items-center gap-3 rounded-md px-2 py-1 outline-none hover:bg-accent focus-visible:bg-selected focus-visible:ring-2 focus-visible:ring-ring"
                   >
@@ -1469,7 +1450,7 @@ export const UserProfilePage = memo(function UserProfilePage({
       {draft && (
         <ProfileEditor
           draft={draft}
-          busy={busy}
+          busy={profile.saving}
           blocked={profile.error === "unknown"}
           onRefresh={profile.refresh}
           changed={

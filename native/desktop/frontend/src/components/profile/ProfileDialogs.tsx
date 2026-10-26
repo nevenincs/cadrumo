@@ -13,6 +13,7 @@ import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Kbd } from "@/components/ui/kbd";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Spinner } from "@/components/ui/spinner";
+import { chordText } from "@/shared/chords";
 import type { PasswordChangeResult } from "../../ipc/contract";
 import { chordLabel } from "../../shell/actions";
 import {
@@ -22,6 +23,7 @@ import {
   type ProfileAccounts,
 } from "../../shell/profiles";
 import { useStrings } from "../../shell/strings";
+import { PROFILE_KEYS } from "./profileKeys";
 
 const chord = (key: string, shift = false) =>
   chordLabel({ code: `Key${key}`, key, mod: true, shift, scope: "app" });
@@ -40,14 +42,14 @@ export function ProfileShortcuts({
     [["Home", "End"], t("desktop.profile.keys.first_last")],
     [["[", "]"], t("desktop.profile.keys.section")],
     [["←", "→"], t("desktop.profile.keys.toggle")],
-    [["Enter"], t("desktop.profile.keys.edit")],
+    [[chordText(PROFILE_KEYS.edit)], t("desktop.profile.keys.edit")],
     [["Shift+F10"], t("desktop.profile.keys.menu")],
-    [[chord("C")], t("desktop.profile.keys.copy")],
-    [["/"], t("desktop.profile.keys.search")],
+    [[chordText(PROFILE_KEYS.copy)], t("desktop.profile.keys.copy")],
+    [[chordText(PROFILE_KEYS.search)], t("desktop.profile.keys.search")],
     [["Esc"], t("desktop.profile.keys.clear")],
     [[chord("K")], t("desktop.profile.keys.actions")],
     [[chord("M", true)], t("desktop.profile.keys.full")],
-    [["?"], t("desktop.profile.keys.help")],
+    [[chordText(PROFILE_KEYS.help)], t("desktop.profile.keys.help")],
   ];
   return (
     <Dialog

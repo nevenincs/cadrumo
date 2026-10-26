@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-shell'
 date: '2026-10-04'
-modified: '2026-10-24'
+modified: '2026-10-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:a7a3bb2b5bc2a18c276a3d75472a8fa0d3681d541eea5679d09ca9cbb360c756'
+body_hash: 'sha256:f10b9026ef79f213fe947dd17018cd6594b0de53bd2626cd88c57feac6299bb0'
 related:
   - "[[2026-10-04-desktop-shell-reference]]"
   - "[[2026-10-03-application-packaging-adr]]"
@@ -231,11 +231,6 @@ shell to documentation:
   - `desktop_environment`: output language and documentation origin and languages
   - `open_external`, Rust-only through the opener
   - `shell_clipboard_read` and `shell_clipboard_write` for text
-  - `shell_context_menu {items, x?, y?}`, which returns `{chosen: id | null}`:
-    - Synchronous: the native popup blocks until it closes, and a main-thread sentinel resolves a dismissal as null.
-    - Pointer-opened menus omit x and y, so the menu opens at the cursor.
-    - The keyboard menu key passes a logical position in shell CSS pixels: the iframe rect, plus its border, plus the relayed client coordinates, with no device-pixel scaling.
-    - Item ids are namespaced by the host.
   - window state, Rust-only, with no JavaScript command
   - WebView2 browser accelerator keys and default context menus are disabled.
 - Browser-mode tests of the shell use a stand-in documentation origin.
@@ -258,7 +253,7 @@ shell to documentation:
 | Escape | Close the palette, a menu or settings | That surface |
 | Enter after exit | Start the session again | Exited terminal |
 
-**Context menus.** The shell describes each menu and its localized labels. A token-checked host command shows it natively and returns the chosen item, or null when the menu is dismissed. When a terminal application has mouse tracking on, Shift+right-click opens the menu.
+**Context menus.** The shell draws every context menu itself, in the Cadrumo theme, the same in the desktop application and the browser display; the host shows no native menu. Each item carries its localized label, its icon and, where an action of the registry has a chord, that chord, shown in the platform's notation. A pointer-opened menu opens at the pointer; the keyboard menu key opens it at the focused element, and for the documentation at the iframe rect plus its border plus the relayed client coordinates. When a terminal application has mouse tracking on, Shift+right-click opens the menu.
 
 | Target | Items |
 |---|---|
@@ -371,7 +366,7 @@ Amended 2026-10-22 under `2026-10-04-application-sign-in-adr` as amended that da
 
 Accepted by the user on 2026-10-23, who approved the profile page mockup with its change-password action and asked for it to be implemented. This refines the 2026-10-21 saved-views amendment for the profile page and adds one host exception.
 
-- **Profile actions.** The profile page's actions are entries of the one action registry, so the palette, the page's actions button and its context menu offer the same list. Field actions (edit, copy, clear, about) follow the focused detail. The context menu and the actions button open through the shell's menu path, drawn by the operating system where the host can.
+- **Profile actions.** The profile page's actions are entries of the one action registry, so the palette, the page's actions button and its context menu offer the same list. Field actions (edit, copy, clear, about) follow the focused detail. The context menu and the actions button open through the shell's menu path.
 - **Saved profile view.** The layout store keeps the profile's show filter (all, unset, required, filled), grouping (section, status, none), sort (form order, missing first, alphabetical) and collapsed sections. It no longer keeps a selected section. The section selector is a section index while the page is full screen and wide enough, and a sections menu otherwise. A stored filter from before this amendment is read as the equivalent show filter.
 - **Censo.** Synchronization is a band of the profile page, not a dialog. It uses the existing `profile_censo_*` commands unchanged. The incoming values of a review are shown on the details they would change, and the review is still answered as a whole, apply or reject, with its digest. The band shows no last-synchronized time, because no product read reports one.
 - **Password change.** The host gains `profile_password_change`, a closed, token-checked command. It runs the canonical runtime CLI `config passphrase change --secrets-stdin` for the active profile. The current password, the new password and its confirmation travel in the command's raw body and the helper's standard input only. They are wiped on drop, and never appear in arguments, logs, diagnostics or the window's storage. The command line first proves the current password, then rotates the password without replacing the profile's data key. The window receives only a success or a refusal code. Nothing is retried, and an unconfirmed outcome is shown as unconfirmed. The shell still holds no session, receipt, credential, token or DEK.
@@ -413,3 +408,13 @@ Basis: the owner's approval of 2026-10-24, "all approved, implemnet", answering 
 The host's setup commands call the Rust component engine of `2026-10-24-rust-component-provisioning-adr` in process instead of relaying the `dependencies.*` operations over the person bridge. The `desktop_setup_*` commands and the refusal codes keep their names, and the Settings advisory, the setup flow and the blocked-feature prompts of the 2026-10-19 amendment are unchanged.
 
 Revised the same day, on implementation evidence: the setup snapshot can no longer carry words, because the Python wording module that produced them is retired and the engine emits only codes (constraint 4 of that record). The `DesktopSetup` snapshot therefore carries closed codes and locale-neutral facts, and the window words every item name, state, failure, action, note, retry notice, plan part and licence notice from the `desktop.setup` catalogue subtree in four languages. The host keeps what only the window knows: which check and setup it started, the plan it approved, and whether Resume may skip a second dialog. The prior sentence said the window contract was unchanged.
+
+### Amendment 2026-10-26: the shell draws every menu in the Cadrumo theme
+
+Accepted by the user on 2026-10-26, who ruled that context menus are folded into the Cadrumo theme and drawn by Cadrumo everywhere, with icons and shortcut display. Native menus drawn by the operating system could not take the theme, icons or the shell's shortcut notation, so the desktop and browser menus looked different.
+
+- **One drawing.** Every context menu and dropdown menu uses the shell's menu primitive in `native/desktop/frontend/src/components/ui/dropdown-menu.tsx`, with the theme's surfaces, borders, radii, focus treatment and spacing. No menu carries its own styling.
+- **Icons and shortcuts.** An item may carry an icon from the shell's icon set and a chord. A chord is shown in the platform's notation, Ctrl on Windows and ⌘ on macOS, from the same declaration that binds it, so a shown shortcut is the one that works. A menu never shows a shortcut no chord binds.
+- **No native path.** The host's `shell_context_menu` command and its native popup are removed with their tests; WebView2's default context menus stay disabled.
+
+Evidence: `native/desktop/frontend/src/components/ContextMenu.tsx`, `native/desktop/frontend/src/components/ui/dropdown-menu.tsx`, `native/desktop/frontend/src/shell/actions.ts` and `native/desktop/frontend/src/shared/chords.ts`.

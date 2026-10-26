@@ -3,6 +3,8 @@
 // the window of rows a viewport needs, column boxes, the keyboard chords the
 // grid takes or leaves alone, and the row and cell selections.
 
+import type { ChordKeys } from "@/shared/chords";
+
 /** One column's sizing, in rem. */
 export type ColumnMeasure = {
   id: string;
@@ -496,6 +498,9 @@ export function exactly(
     press.altKey === !!wanted.alt
   );
 }
+
+/** Fill down: the grid runs it, and a menu that offers it shows it. */
+export const FILL_DOWN_CHORD: ChordKeys = { code: "KeyD", key: "D", mod: true };
 
 /** The character a key gives unshifted on a US layout, for a letter or digit. */
 function ownCharacter(code: string): string | null {

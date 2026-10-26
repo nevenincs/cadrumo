@@ -1,6 +1,8 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { agentTurns, ask, settled } from "../support/agent";
+import { showLedgerColumn } from "../support/ledgerPage";
 import { label } from "../support/strings";
+import { windowToast } from "../support/toast";
 
 // The window's close raised by the system (its own close, Alt+F4), played on
 // the scenario host's window port, which holds a close as the native host
@@ -23,8 +25,6 @@ const answers = async (page: Page) =>
     (action) => action === "close_now" || action === "keep_open",
   );
 const prompt = (page: Page) => page.locator(".navigation-prompt");
-const toast = (page: Page) =>
-  page.locator("[data-slot=toast]:not(.ledger-toast)");
 
 test("a close over the sign-in dialog closes the window", async ({ page }) => {
   await page.goto(
@@ -38,7 +38,9 @@ test("a close over the sign-in dialog closes the window", async ({ page }) => {
   await systemClose(page);
   await expect.poll(() => closed(page)).toBe(true);
   expect(await answers(page)).toEqual(["close_now"]);
-  await expect(toast(page)).not.toHaveText(label("desktop.navigation.modal"));
+  await expect(windowToast(page)).not.toHaveText(
+    label("desktop.navigation.modal"),
+  );
 });
 
 // ---- A question already waiting -------------------------------------------
@@ -88,7 +90,9 @@ test("a close over a waiting leave question is left unanswered, and a second clo
 }) => {
   await leavePromptWaiting(page);
   await systemClose(page);
-  await expect(toast(page)).toHaveText(label("desktop.navigation.pending"));
+  await expect(windowToast(page)).toHaveText(
+    label("desktop.navigation.pending"),
+  );
   expect(await answers(page)).toEqual([]);
   expect(await closed(page)).toBe(false);
   await expect(prompt(page)).toBeVisible();
@@ -127,6 +131,8 @@ async function stagedLedger(page: Page) {
     }),
   });
   await expect(row.first()).toBeVisible();
+  // The starting preset gives up Group where the page lacks room for it.
+  await showLedgerColumn(page, "group_label");
   await row.first().locator("[data-column=group_label]").click();
   await page.keyboard.press("Enter");
   const editor = page.locator(".ledger-cell-editor");
@@ -209,7 +215,9 @@ test("a close while a Censo answer is in flight asks rather than refuses", async
   await expect(prompt(page)).toContainText(
     label("desktop.navigation.close_busy.title"),
   );
-  await expect(toast(page)).not.toHaveText(label("desktop.navigation.busy"));
+  await expect(windowToast(page)).not.toHaveText(
+    label("desktop.navigation.busy"),
+  );
   await prompt(page).locator(".navigation-prompt-stay").click();
   await expect.poll(() => answers(page)).toEqual(["keep_open"]);
   expect(await closed(page)).toBe(false);

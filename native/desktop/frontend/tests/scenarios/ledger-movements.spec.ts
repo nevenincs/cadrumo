@@ -291,6 +291,18 @@ test("grouping by counterparty heads each group with its count, sums and actions
     ).toBeVisible();
   await target.keyboard.press("Escape");
   await expect(more).toHaveCount(0);
+  // The group's own menu classifies the group, which the page's chords, acting
+  // on the selection, do not: it shows none.
+  await header.locator("[role=gridcell]").first().click({ button: "right" });
+  const groupMenu = target.getByRole("menu");
+  const asBusiness = groupMenu.getByRole("menuitem", {
+    name: label("desktop.ledger.classify.as_business"),
+    exact: true,
+  });
+  await expect(asBusiness).toBeVisible();
+  await expect(asBusiness.locator("kbd")).toHaveCount(0);
+  await target.keyboard.press("Escape");
+  await expect(groupMenu).toHaveCount(0);
   // A group folds and opens again by its header.
   const before = await dataRows(target).count();
   await header
@@ -621,6 +633,60 @@ test("Business on income asks for no expense category, and on both says which is
   await target.keyboard.press("Escape");
   await expect(classify(target)).toHaveCount(0);
   await expect(target.locator("[role=gridcell]:focus")).toHaveCount(1);
+});
+
+const ALT = process.platform === "darwin" ? "⌥" : "Alt";
+const CLASSIFY_KEYS = [
+  ["business", "B"],
+  ["personal", "P"],
+  ["mixed", "M"],
+] as const;
+
+test("the movement menus show the classify chords the page binds, and pressing them classifies", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await choosePeriod(target, 2026, "4T");
+  const menu = target.getByRole("menu");
+  const item = (key: string) =>
+    menu.getByRole("menuitem", { name: label(key), exact: true });
+  const expense = rowWith(target, "PAPELERIA TRAZO");
+  await expense.locator("[data-column=description]").click({ button: "right" });
+  for (const [kind, letter] of CLASSIFY_KEYS)
+    await expect(
+      item(`desktop.ledger.classify.as_${kind}`).locator("kbd"),
+    ).toHaveText([ALT, letter]);
+  // No chord binds reverting a whole movement, so its item shows none.
+  await expect(
+    item("desktop.ledger.edit.revert_movement").locator("kbd"),
+  ).toHaveCount(0);
+  await target.keyboard.press("Escape");
+  await expect(menu).toHaveCount(0);
+  await expense.locator("[data-column=status]").click();
+  await target.keyboard.press("Alt+KeyB");
+  await expect(classify(target)).toBeVisible();
+  await target.keyboard.press("Escape");
+  await expect(classify(target)).toHaveCount(0);
+
+  // The menu of a selection of several shows them too, and the key it shows
+  // classifies that selection.
+  await rowWith(target, "FRA 2026-058")
+    .locator("[data-column=status]")
+    .click({ modifiers: ["Control"] });
+  await page(target).locator(".ledger-selection-actions").click();
+  for (const [kind, letter] of CLASSIFY_KEYS)
+    await expect(
+      item(`desktop.ledger.classify.as_${kind}`).locator("kbd"),
+    ).toHaveText([ALT, letter]);
+  await target.keyboard.press("Escape");
+  await expect(menu).toHaveCount(0);
+  await target.keyboard.press("Alt+KeyB");
+  await expect(classify(target).getByRole("heading")).toHaveText(
+    label("desktop.ledger.classify.title_business_split", {
+      expenses: 1,
+      income: 1,
+    }),
+  );
 });
 
 test("Mixed asks its share and a category a share applies to; Enter stages, and focus returns", async ({

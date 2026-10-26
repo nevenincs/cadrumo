@@ -6,7 +6,9 @@ import {
   personTurns,
   settled,
 } from "../support/agent";
+import { showLedgerColumn } from "../support/ledgerPage";
 import { label } from "../support/strings";
+import { windowToast } from "../support/toast";
 
 // `cadrumo://view/{id}` links in an agent's reply, opened by the window's
 // navigator: in the window, in the TUI, with a notice when they open other
@@ -15,9 +17,6 @@ import { label } from "../support/strings";
 
 const calls = (page: Page) =>
   page.evaluate(() => window.__scenarioHostCalls ?? []);
-// The window's own toast, not a page's.
-const toast = (page: Page) =>
-  page.locator("[data-slot=toast]:not(.ledger-toast)");
 const link = (page: Page, name: string) =>
   agentTurns(page).getByRole("link", { name, exact: true });
 
@@ -69,7 +68,7 @@ test("a window link opens its page and gives it the keyboard", async ({
   await expect(calendar).toBeVisible();
   await expect(calendar).toBeFocused();
   // A view that opened as asked says nothing.
-  await expect(toast(page)).toHaveText("");
+  await expect(windowToast(page)).toHaveText("");
   const made = await calls(page);
   expect(made.some((call) => call.startsWith("presentView "))).toBe(false);
   await noLinkLeftTheWindow(page);
@@ -95,7 +94,7 @@ test("a window view asked of the TUI opens in the window and says so", async ({
   await linksReply(page, "signed-in");
   await link(page, "los registros, en el espacio de trabajo").click();
   await expect(page.locator(".logview")).toBeVisible();
-  await expect(toast(page)).toHaveText(
+  await expect(windowToast(page)).toHaveText(
     label("desktop.navigation.notice.in_window", {
       view: label("navigation.view.panel.logs.label"),
     }),
@@ -109,11 +108,11 @@ test("an unknown view and a link in the retired profile form say why and open no
 }) => {
   await linksReply(page, "signed-in");
   await link(page, "una vista que no existe").click();
-  await expect(toast(page)).toHaveText(
+  await expect(windowToast(page)).toHaveText(
     label("desktop.navigation.refused.unknown_view"),
   );
   await link(page, "un enlace antiguo").click();
-  await expect(toast(page)).toHaveText(
+  await expect(windowToast(page)).toHaveText(
     label("desktop.navigation.refused.link"),
   );
   const made = await calls(page);
@@ -141,6 +140,8 @@ const trayCount = async (page: Page) =>
 
 async function stageOnLedger(page: Page) {
   await page.locator("[data-rail=ledger]").click();
+  // The starting preset gives up Group where the page lacks room for it.
+  await showLedgerColumn(page, "group_label");
   const cell = cellOf(rowOf(page, "PAPELERIA TRAZO"), "group_label");
   await expect(cell).toBeVisible();
   await cell.click();
@@ -163,7 +164,9 @@ test("a link that would take down staged work asks first, keeps it on stay, and 
   // One navigation waits for an answer at a time: another is held with a
   // toast. The dialog covers the reply, so the second link is dispatched.
   await link(page, "los movimientos").dispatchEvent("click");
-  await expect(toast(page)).toHaveText(label("desktop.navigation.pending"));
+  await expect(windowToast(page)).toHaveText(
+    label("desktop.navigation.pending"),
+  );
   await leave
     .getByRole("button", { name: label("desktop.ledger.leave.cancel") })
     .first()

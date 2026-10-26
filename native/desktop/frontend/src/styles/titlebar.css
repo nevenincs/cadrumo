@@ -49,34 +49,6 @@
   .profile-status.signed-in > span {
     background: var(--success);
   }
-  .account-menu {
-    max-width: min(
-      var(--spacing-palette-max),
-      calc(100vw - var(--spacing) * 4)
-    );
-  }
-  .profile-menu-heading {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing);
-    padding: calc(var(--spacing) * 2) calc(var(--spacing) * 2.5);
-    overflow-wrap: anywhere;
-  }
-  .profile-menu-heading > span {
-    font-size: var(--text-xs);
-    color: var(--muted-foreground);
-  }
-  .profile-menu-heading > strong {
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-  .profile-menu-hint {
-    max-width: var(--spacing-dialog);
-    margin: calc(var(--spacing) * 2);
-    font-size: var(--text-sm);
-    color: var(--muted-foreground);
-  }
   .window-controls {
     display: flex;
     align-items: center;

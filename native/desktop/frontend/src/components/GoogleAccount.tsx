@@ -1,7 +1,9 @@
 import { useId } from "react";
 import { Alert } from "@/components/ui/alert";
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { Icon } from "@/components/ui/icon";
+import {
+  DropdownMenuItem,
+  DropdownMenuList,
+} from "@/components/ui/dropdown-menu";
 import { Spinner } from "@/components/ui/spinner";
 import type { GoogleAccount as GoogleAccountState } from "../ipc/contract";
 import { useStrings } from "../shell/strings";
@@ -45,8 +47,9 @@ export function GoogleAccount({
           {googleWords(t, google)}
         </p>
         {(signedIn || canSignInGoogle(google) || busy) && (
-          <div role="menu" aria-labelledby={headingId}>
+          <DropdownMenuList aria-labelledby={headingId}>
             <DropdownMenuItem
+              icon={signedIn ? "signOut" : "user"}
               aria-label={t(
                 signedIn
                   ? "desktop.google.sign_out_label"
@@ -59,12 +62,11 @@ export function GoogleAccount({
                 else onSignIn();
               }}
             >
-              <Icon name={signedIn ? "signOut" : "user"} />
               {t(
                 signedIn ? "desktop.google.sign_out" : "desktop.google.sign_in",
               )}
             </DropdownMenuItem>
-          </div>
+          </DropdownMenuList>
         )}
       </div>
       {refusal && <Alert role="alert">{refusalWords(t, refusal)}</Alert>}

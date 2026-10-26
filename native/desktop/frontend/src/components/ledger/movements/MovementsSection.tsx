@@ -20,12 +20,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { IconButton } from "@/components/ui/icon-button";
-import { exactly } from "@/components/ui/dataGridModel";
+import { exactly, FILL_DOWN_CHORD } from "@/components/ui/dataGridModel";
 import { EmptyState } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
 import { Toast } from "@/components/ui/toast";
-import { ContextMenu, type MenuAnchor } from "../../ContextMenu";
-import type { ContextMenuItem } from "../../../ipc/contract";
+import { chordMatches, type ChordKeys } from "@/shared/chords";
+import {
+  ContextMenu,
+  type MenuAnchor,
+  type MenuEntry,
+} from "../../ContextMenu";
 import type { Action } from "../../../shell/actions";
 import type { LedgerView } from "../../../shell/layout";
 import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
@@ -71,7 +75,10 @@ import {
 import { useStrings, type Translate } from "../../../shell/strings";
 import { dateFormats } from "../../../shared/dateFormats";
 import { draftRow, stageTally } from "../editing/editingModel";
-import { useMovementEditing } from "../editing/MovementEditing";
+import {
+  REVERT_CELL_CHORD,
+  useMovementEditing,
+} from "../editing/MovementEditing";
 import { periodText } from "../ledgerWords";
 import { ClassifyDialog } from "./ClassifyDialog";
 import { MovementsGrid } from "./MovementsGrid";
@@ -138,11 +145,12 @@ const TOAST_MS = 4000;
  * nothing else, asks once before it changes them. */
 const OVERWRITE_ASK = 5;
 
-/** The page's classify chords, by the key they take with Alt. */
-const CHORD_KINDS: Partial<Record<string, ClassifyKind>> = {
-  KeyB: "business",
-  KeyP: "personal",
-  KeyM: "mixed",
+/** The chord each classify kind takes, which the page runs and its menus
+ * show. */
+const CLASSIFY_CHORDS: Record<ClassifyKind, ChordKeys> = {
+  business: { code: "KeyB", key: "B", alt: true },
+  personal: { code: "KeyP", key: "P", alt: true },
+  mixed: { code: "KeyM", key: "M", alt: true },
 };
 /** Whether `element` takes typed text, so a chord there is its own: a
  * checkbox or a radio does not. */
@@ -176,13 +184,6 @@ type Asking = {
   range?: string[];
   /** A new movement's classification, filled in rather than staged. */
   draft?: string;
-};
-
-/** The chord each classify kind takes. */
-const CHORD_OF: Record<ClassifyKind, string> = {
-  business: "Alt+B",
-  personal: "Alt+P",
-  mixed: "Alt+M",
 };
 
 /** The list read that keeps the movements an import flagged as likely
@@ -1169,8 +1170,9 @@ export function MovementsSection({
   useEffect(() => {
     const onChord = (event: globalThis.KeyboardEvent) => {
       if (event.defaultPrevented || event.isComposing) return;
-      if (!exactly(event, { alt: true })) return;
-      const kind = CHORD_KINDS[event.code];
+      const kind = CLASSIFY_KINDS.find((each) =>
+        chordMatches(CLASSIFY_CHORDS[each], event),
+      );
       if (!kind) return;
       const target = event.target as HTMLElement | null;
       if (!target?.closest("[data-ledger-root]") || takesText(target)) return;
@@ -1304,10 +1306,12 @@ export function MovementsSection({
   const backToGrid = () => inspectorCommands.current.focusActive();
   const [menu, setMenu] = useState<{
     at: MenuAnchor;
-    items: ContextMenuItem[];
+    items: MenuEntry[];
     run: (id: string) => void;
   } | null>(null);
-  const classifyItems = (ids: string[] | null): ContextMenuItem[] =>
+  // A group's items act on the group, which the chords, acting on the
+  // selection, do not: only the others show them.
+  const classifyItems = (ids: string[] | null): MenuEntry[] =>
     CLASSIFY_KINDS.map((kind) => ({
       id: `classify.${kind}`,
       label: t(`desktop.ledger.classify.as_${kind}`),
@@ -1317,7 +1321,8 @@ export function MovementsSection({
           ids ? { ids, hidden: 0, partial } : classifyTarget(),
           byId,
         ).kind === "ready",
-      shortcut: CHORD_OF[kind],
+      icon: "tick",
+      ...(ids ? {} : { chord: CLASSIFY_CHORDS[kind] }),
     }));
   const openMenu = (key: string, column: string | null, at: MenuAnchor) => {
     const group = groups?.find((entry) => entry.key === key);
@@ -1335,21 +1340,24 @@ export function MovementsSection({
               {
                 id: "revert.cell",
                 label: t("desktop.ledger.edit.revert_cell"),
+                icon: "reset" as const,
+                chord: REVERT_CELL_CHORD,
                 enabled: column !== null && edit.cellStaged(key, column),
-                shortcut: "Ctrl+Alt+Z",
               },
               {
                 id: "revert.movement",
                 label: draft
                   ? t("desktop.ledger.draft.remove")
                   : t("desktop.ledger.edit.revert_movement"),
+                icon: draft ? ("trash" as const) : ("reset" as const),
                 enabled: staged,
               },
               {
                 id: "fill",
                 label: t("desktop.ledger.fill.down"),
+                icon: "fillDown" as const,
+                chord: FILL_DOWN_CHORD,
                 enabled: column !== null,
-                shortcut: "Ctrl+D",
               },
               ...(duplicates.has(key)
                 ? [
@@ -1357,6 +1365,7 @@ export function MovementsSection({
                     {
                       id: "duplicate.archive",
                       label: `${t("desktop.ledger.duplicate.archive")}…`,
+                      icon: "archive" as const,
                       enabled: true,
                     },
                   ]
@@ -1367,6 +1376,7 @@ export function MovementsSection({
               {
                 id: "category",
                 label: t("desktop.ledger.group.category"),
+                icon: "group" as const,
                 enabled: true,
               },
               ...(onMakeRule
@@ -1374,6 +1384,7 @@ export function MovementsSection({
                     {
                       id: "make_rule",
                       label: `${t("desktop.ledger.group.make_rule")}…`,
+                      icon: "filter" as const,
                       enabled: true,
                     },
                   ]
@@ -1381,6 +1392,7 @@ export function MovementsSection({
               {
                 id: "select",
                 label: t("desktop.ledger.group.select", { count: ids.length }),
+                icon: "selectAll" as const,
                 enabled: true,
               },
             ]
@@ -1465,17 +1477,19 @@ export function MovementsSection({
           {CLASSIFY_KINDS.map((kind) => (
             <DropdownMenuItem
               key={kind}
+              icon="tick"
               disabled={availabilityOf(kind).kind !== "ready"}
               onSelect={() => classifySelection(kind)}
             >
               {t(`desktop.ledger.classify.as_${kind}`)}
-              <DropdownMenuShortcut>{CHORD_OF[kind]}</DropdownMenuShortcut>
+              <DropdownMenuShortcut chord={CLASSIFY_CHORDS[kind]} />
             </DropdownMenuItem>
           ))}
           {onMakeRule && (
             <>
               <DropdownMenuSeparator />
               <DropdownMenuItem
+                icon="filter"
                 disabled={hiddenSelected.length > 0}
                 onSelect={() => onMakeRule({ ids: [...selected] })}
               >

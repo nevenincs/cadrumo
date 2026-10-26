@@ -674,6 +674,13 @@ export function setupFixture({
       later(step);
       return Promise.resolve(next);
     },
+    removeModel(model) {
+      say(`setup.removeModel ${model}`);
+      const refused = ready();
+      if (refused) return refused;
+      if (run && run.stage !== "settled") return refuse("busy");
+      return Promise.resolve(publish());
+    },
     signInGoogle() {
       say("google.signIn");
       const refused = ready();

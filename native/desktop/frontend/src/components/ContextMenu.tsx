@@ -7,31 +7,39 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type {
-  ContextMenuAction,
-  ContextMenuItem,
-  ContextMenuSeparator,
-} from "../ipc/contract";
+import type { IconName } from "@/components/ui/icon";
+import type { ChordKeys } from "@/shared/chords";
 
 /** Where a menu opens: a point, or with a height the edge of a row, which the
  * menu then opens under or over and never across. */
 export type MenuAnchor = { x: number; y: number; height?: number };
 
-/** A menu item with what choosing it does. */
-export type MenuEntry =
-  (ContextMenuAction & { run?: () => void }) | ContextMenuSeparator;
+/** One choice of a menu. */
+export type MenuAction = {
+  /** What `choose` is given when this item is chosen. */
+  id: string;
+  label: string;
+  /** A disabled item is shown but can never be chosen. */
+  enabled: boolean;
+  icon?: IconName;
+  /** The chord that does the same, taken from the declaration that binds it,
+   * the registry's or the page's own, so that a shortcut shown is one a key
+   * runs. */
+  chord?: ChordKeys;
+  /** What choosing it does, for a menu that settles its choice by id. */
+  run?: () => void;
+};
 
-/** Opens a menu: at the pointer when `pointer`, else at the anchor. */
-export type OpenMenu = (
-  items: MenuEntry[],
-  at: MenuAnchor,
-  pointer: boolean,
-) => void;
+export type MenuSeparator = { separator: true };
 
-// The shell's own drawing of a context menu, for where the host cannot show a
-// native one. In the desktop application the host draws the same item list
-// with the operating system's menu. It opens at a point, not from a control,
-// so its anchor is an empty element placed there.
+export type MenuEntry = MenuAction | MenuSeparator;
+
+/** Opens a menu at the anchor. */
+export type OpenMenu = (items: MenuEntry[], at: MenuAnchor) => void;
+
+// The shell's own drawing of every context menu, the same in the desktop
+// application and the browser. It opens at a point, not from a control, so
+// its anchor is an empty element placed there.
 export function ContextMenu({
   label,
   items,
@@ -40,7 +48,7 @@ export function ContextMenu({
 }: {
   /** The menu's accessible name: it has no visible control to take one from. */
   label: string;
-  items: ContextMenuItem[];
+  items: MenuEntry[];
   at: MenuAnchor;
   choose: (id: string | null) => void;
 }) {
@@ -91,15 +99,12 @@ export function ContextMenu({
           ) : (
             <DropdownMenuItem
               key={item.id}
+              icon={item.icon}
               disabled={!item.enabled}
               onSelect={() => choose(item.id)}
             >
               {item.label}
-              {item.shortcut && (
-                <DropdownMenuShortcut aria-hidden="true">
-                  {item.shortcut}
-                </DropdownMenuShortcut>
-              )}
+              {item.chord && <DropdownMenuShortcut chord={item.chord} />}
             </DropdownMenuItem>
           ),
         )}

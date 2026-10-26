@@ -126,6 +126,8 @@ test("window controls use authenticated commands and native presentation", async
           }
         ).__windowTest,
     );
+  // The page asks before its own close button closes, so the close it sends
+  // is the answer that the host does not hold to ask the page again.
   await expect
     .poll(async () => (await read()).actions)
     .toEqual([
@@ -133,7 +135,7 @@ test("window controls use authenticated commands and native presentation", async
       "toggle_maximize",
       "drag",
       "minimize",
-      "close",
+      "close_now",
     ]);
   expect((await read()).tokens.every((token) => token === "a".repeat(64))).toBe(
     true,

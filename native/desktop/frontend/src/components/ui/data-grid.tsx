@@ -17,6 +17,7 @@ import {
   dropColumn,
   edgeRow,
   exactly,
+  FILL_DOWN_CHORD,
   headerSelection,
   inBox,
   isPrintable,
@@ -39,6 +40,7 @@ import {
   type CommitKey,
   type SelectionCause,
 } from "@/components/ui/dataGridModel";
+import { chordMatches } from "@/shared/chords";
 
 /** What a cell's renderer knows of where it stands. */
 type CellContext = {
@@ -1231,7 +1233,7 @@ function DataGrid<R>({
       changeSelection(selectAll(dataKeys), "all");
       return true;
     }
-    if (exactly(event, { primary: true }) && event.code === "KeyD" && onFill) {
+    if (chordMatches(FILL_DOWN_CHORD, event) && onFill) {
       const target = currentRange();
       if (target) onFill(target, "down");
       return true;

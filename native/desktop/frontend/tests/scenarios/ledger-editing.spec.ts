@@ -1,6 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { showLedgerColumn } from "../support/ledgerPage";
 import { label } from "../support/strings";
 
 // Staged editing on the Ledger page over the scenario's ledger: cell
@@ -46,24 +47,6 @@ async function openLedger(target: Page, extra = "", scheme?: "light" | "dark") {
   await target.locator("[data-rail=ledger]").click();
   await expect(grid(target)).toBeVisible();
   await expect(dataRows(target).first()).toBeVisible();
-}
-
-/** Shows a column through the columns menu, as a person does where the
- * page's starting preset gives it up for want of room. */
-async function showColumn(target: Page, column: string) {
-  await page(target)
-    .getByRole("button", {
-      name: new RegExp(`^${label("desktop.ledger.columns.title")}`),
-    })
-    .click();
-  const box = target
-    .locator(`.ledger-columns li[data-column=${column}]`)
-    .getByRole("checkbox");
-  if (!(await box.isChecked())) await box.check();
-  await target.keyboard.press("Escape");
-  await expect(
-    grid(target).locator(`[role=columnheader][data-header-column=${column}]`),
-  ).toHaveCount(1);
 }
 
 /** The row whose description is `text`, among those drawn. */
@@ -424,7 +407,7 @@ test("a paste of several rows is previewed, blanks change nothing, and an open q
   page: target,
 }) => {
   await openLedger(target);
-  await showColumn(target, "group_label");
+  await showLedgerColumn(target, "group_label");
   await find(target, "farmacia nube");
   const rows = dataRows(target);
   await cellOf(rows.first(), "counterparty").click();
@@ -496,7 +479,7 @@ test("fill down copies the top value, undo and redo step through it, and revert 
   page: target,
 }) => {
   await openLedger(target);
-  await showColumn(target, "group_label");
+  await showLedgerColumn(target, "group_label");
   await find(target, "farmacia nube");
   const rows = dataRows(target);
   await typeInto(target, cellOf(rows.nth(0), "group_label"), "Ticket guardado");
@@ -529,8 +512,23 @@ test("fill down copies the top value, undo and redo step through it, and revert 
   await expect(
     cellOf(rows.nth(2), "group_label").locator("[data-staged]"),
   ).toHaveCount(1);
-  // Revert movement from the row's menu.
+  // Revert movement from the row's menu, which shows the chords of the keys
+  // pressed above: revert cell and fill down. Reverting a whole movement has
+  // no key, so none is shown.
   await cellOf(rows.nth(2), "group_label").click({ button: "right" });
+  const menu = target.getByRole("menu");
+  const shown = (key: string) =>
+    menu
+      .getByRole("menuitem", { name: label(key), exact: true })
+      .locator("kbd");
+  const mac = process.platform === "darwin";
+  await expect(shown("desktop.ledger.edit.revert_cell")).toHaveText(
+    mac ? ["⌃", "⌥", "Z"] : ["Ctrl", "Alt", "Z"],
+  );
+  await expect(shown("desktop.ledger.fill.down")).toHaveText(
+    mac ? ["⌘", "D"] : ["Ctrl", "D"],
+  );
+  await expect(shown("desktop.ledger.edit.revert_movement")).toHaveCount(0);
   await target
     .getByRole("menuitem", {
       name: label("desktop.ledger.edit.revert_movement"),
@@ -636,7 +634,7 @@ test("leaving with staged work asks first, from a shell chord too", async ({
   page: target,
 }) => {
   await openLedger(target);
-  await showColumn(target, "group_label");
+  await showLedgerColumn(target, "group_label");
   await typeInto(
     target,
     cellOf(rowOf(target, "PAPELERIA TRAZO"), "group_label"),
@@ -662,7 +660,7 @@ test("an unknown write pauses every later write until a re-read says whether it 
   page: target,
 }) => {
   await openLedger(target);
-  await showColumn(target, "group_label");
+  await showLedgerColumn(target, "group_label");
   const row = rowOf(target, "PAPELERIA TRAZO");
   await typeInto(target, cellOf(row, "counterparty"), "Trazo Papelería SL");
   await typeInto(
@@ -701,7 +699,7 @@ test("a write the read after it shows saved leaves the stage, and the re-read sa
   page: target,
 }) => {
   await openLedger(target);
-  await showColumn(target, "group_label");
+  await showLedgerColumn(target, "group_label");
   await typeInto(
     target,
     cellOf(rowOf(target, "PAPELERIA TRAZO"), "counterparty"),
@@ -897,7 +895,7 @@ test("the tray counts movements, new movements and actions on every section", as
   page: target,
 }) => {
   await openLedger(target);
-  await showColumn(target, "group_label");
+  await showLedgerColumn(target, "group_label");
   const row = rowOf(target, "PAPELERIA TRAZO");
   await typeInto(target, cellOf(row, "counterparty"), "Trazo SL");
   await typeInto(target, cellOf(row, "group_label"), "Oficina");

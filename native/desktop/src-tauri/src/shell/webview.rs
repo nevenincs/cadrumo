@@ -1,5 +1,5 @@
 //! Restrict browser features and observe failures of each shell WebView.
-//! The shell's keymap and native menus own browser accelerator keys and
+//! The shell's keymap and its own drawn menus own browser accelerator keys and
 //! context menus; process-failure callbacks carry only numeric telemetry.
 //!
 //! The COM calls live in the platform crate; this module reports their

@@ -2,6 +2,12 @@
 // shortcuts all derive from it, so a chord or a label is declared exactly once.
 
 import type { IconName } from "@/components/ui/icon";
+import {
+  chordMatches,
+  chordModifiers,
+  chordText,
+  type ChordKeys,
+} from "@/shared/chords";
 import type { BridgeChord } from "../ipc/contract";
 import {
   elementOf,
@@ -10,33 +16,14 @@ import {
 } from "./navigation/register";
 import type { Translate } from "./strings";
 
-// User-agent client hints where the engine has them (WebView2); the older
-// platform string elsewhere (WebKit), which still reports macOS correctly.
-const platform =
-  typeof navigator === "undefined"
-    ? ""
-    : ((navigator as Navigator & { userAgentData?: { platform?: string } })
-        .userAgentData?.platform ?? navigator.platform);
-export const IS_MAC = /mac|iphone|ipad/i.test(platform);
-
 /** Where a chord fires. "global": everywhere, focused terminals included.
  * "app": everywhere except a focused terminal, which keeps the key. "docs": the
  * documentation frame and shell chrome. "terminal": only a focused terminal. */
 export type ChordScope = "global" | "app" | "docs" | "terminal";
 
-export type Chord = {
-  /** KeyboardEvent.code, the physical key, so every layout reaches it. */
-  code: string;
-  /** Display text for the key itself. */
-  key: string;
-  /** Platform primary modifier: Command on macOS, Control elsewhere. */
-  mod?: boolean;
-  /** The literal Control key on every platform. */
-  ctrl?: boolean;
-  shift?: boolean;
-  alt?: boolean;
-  scope: ChordScope;
-};
+/** A window chord, by its physical key: the documentation bridge matches `code`,
+ * so a chord matched by what it types is a page's own, not the registry's. */
+export type Chord = Omit<ChordKeys, "typed"> & { scope: ChordScope };
 
 export type Action = {
   id: string;
@@ -68,40 +55,8 @@ export type Action = {
 
 export type FocusArea = "terminal" | "docs" | "chrome";
 
-type Modifiers = {
-  ctrlKey: boolean;
-  metaKey: boolean;
-  shiftKey: boolean;
-  altKey: boolean;
-};
-
-export function chordModifiers(chord: Chord): Modifiers {
-  return {
-    metaKey: IS_MAC && !!chord.mod,
-    ctrlKey: IS_MAC ? !!chord.ctrl : !!chord.mod || !!chord.ctrl,
-    shiftKey: !!chord.shift,
-    altKey: !!chord.alt,
-  };
-}
-
 export function chordLabel(chord: Chord | undefined): string {
-  if (!chord) return "";
-  const m = chordModifiers(chord);
-  if (IS_MAC) {
-    return (
-      (m.ctrlKey ? "⌃" : "") +
-      (m.altKey ? "⌥" : "") +
-      (m.shiftKey ? "⇧" : "") +
-      (m.metaKey ? "⌘" : "") +
-      chord.key
-    );
-  }
-  const parts: string[] = [];
-  if (m.ctrlKey) parts.push("Ctrl");
-  if (m.altKey) parts.push("Alt");
-  if (m.shiftKey) parts.push("Shift");
-  parts.push(chord.key);
-  return parts.join("+");
+  return chord ? chordText(chord) : "";
 }
 
 export function primaryChord(action: Action | undefined): string {
@@ -114,17 +69,6 @@ const ALLOWED: Record<FocusArea, readonly ChordScope[]> = {
   chrome: ["global", "app", "docs"],
 };
 
-function matches(chord: Chord, event: KeyboardEvent): boolean {
-  const m = chordModifiers(chord);
-  return (
-    event.code === chord.code &&
-    event.ctrlKey === m.ctrlKey &&
-    event.metaKey === m.metaKey &&
-    event.shiftKey === m.shiftKey &&
-    event.altKey === m.altKey
-  );
-}
-
 export function findAction(
   actions: readonly Action[],
   event: KeyboardEvent,
@@ -134,7 +78,7 @@ export function findAction(
   for (const action of actions) {
     for (const chord of action.chords ?? []) {
       if (!ALLOWED[focus].includes(chord.scope)) continue;
-      if (!matches(chord, event)) continue;
+      if (!chordMatches(chord, event)) continue;
       if (action.enabled && !action.enabled()) continue;
       return action;
     }

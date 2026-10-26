@@ -323,6 +323,24 @@ desktop:
     key_label: Clave de API de {provider}
     key_note: Se guarda cifrada en este equipo y no se vuelve a mostrar.
     load_failed: No se han podido cargar los proveedores. Vuelve a intentarlo.
+    local_model_absent: Sin descargar
+    local_model_choose_roles: Usar para leer documentos
+    local_model_download: Descargar
+    local_model_installed: Descargado
+    local_model_pick_roles: Lee documentos con este modelo
+    local_model_recommended: Recomendado para leer {capability}
+    local_model_remove: Quitar
+    local_model_remove_failed: Cadrumo no ha podido quitar el modelo. Vuelve a intentarlo.
+    local_model_remove_still_selected: Cadrumo todavía lee documentos con este modelo.
+      Elige otro modelo para esa lectura y luego quita este.
+    local_model_unused: Aún no lo usas para leer documentos.
+    local_model_use: Usar
+    local_model_used_by: Lee documentos {roles}
+    local_models_lead: Cadrumo lee tus documentos con los modelos que elijas aquí,
+      como páginas escaneadas y texto de documentos. Un modelo solo se descarga cuando
+      eliges qué lee en tus documentos.
+    local_models_none: El agente aún no ofrece modelos para esta conexión.
+    local_models_title: Modelos en este ordenador
     reason_check_settings: Revisa esta configuración y vuelve a intentarlo.
     reason_record_unreadable: No se puede leer la clave API guardada. Vuelve a añadirla.
     refresh: Volver a intentar

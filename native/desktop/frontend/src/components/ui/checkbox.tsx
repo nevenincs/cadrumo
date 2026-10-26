@@ -10,7 +10,7 @@ function Checkbox({
     <input
       type="checkbox"
       data-slot="checkbox"
-      className={cn("size-icon-sm shrink-0 accent-primary", className)}
+      className={cn("size-icon-sm shrink-0", className)}
       {...props}
     />
   );

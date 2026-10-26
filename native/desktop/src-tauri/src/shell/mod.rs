@@ -7,7 +7,6 @@ mod interrupts;
 pub mod language;
 pub mod ledger;
 pub mod modelo;
-mod menu;
 pub mod navigation;
 pub mod presentation;
 pub mod provider_settings;
@@ -32,7 +31,7 @@ use cadrumo_application::error::application::{ApplicationError, ErrorCode, Opera
 use serde::Serialize;
 use std::sync::Arc;
 use tauri::{
-    AppHandle, Config, Manager, RunEvent, Runtime, State, Webview, WindowEvent,
+    AppHandle, Config, Manager, RunEvent, Runtime, State, WindowEvent,
     plugin::TauriPlugin,
     utils::config::{FrontendDist, WindowConfig},
 };
@@ -54,15 +53,6 @@ struct DesktopEnvironment {
 #[derive(Serialize)]
 struct ClipboardText {
     text: String,
-}
-
-#[derive(Serialize)]
-struct ContextMenuResult {
-    chosen: Option<String>,
-}
-
-fn unavailable() -> ApplicationError {
-    ApplicationError::new(ErrorCode::DesktopUnavailable, Operation::Webview)
 }
 
 /// Runs blocking host work off the async runtime's workers.
@@ -107,57 +97,6 @@ async fn shell_clipboard_write<R: Runtime>(app: AppHandle<R>, text: String) -> R
     blocking(move || clipboard::write(&app, text)).await
 }
 
-/// Resolves when the popup has closed. The popup blocks its thread until
-/// then, so the command is asynchronous and the wait runs off the workers.
-#[tauri::command]
-async fn shell_context_menu<R: Runtime>(
-    webview: Webview<R>,
-    items: Vec<serde_json::Value>,
-    x: Option<f64>,
-    y: Option<f64>,
-) -> Result<ContextMenuResult> {
-    let popups = webview
-        .try_state::<Arc<menu::Popups>>()
-        .ok_or_else(unavailable)?
-        .inner()
-        .clone();
-    let position = menu::position(x, y)?;
-    let claim = popups.claim()?;
-    let menu = menu::Menu::new(popups.next_sequence(), items)?;
-    let window = webview.window();
-    let chosen = blocking(move || {
-        let _claim = claim;
-        show(&window, &popups, &menu, position)
-    })
-    .await?;
-    Ok(ContextMenuResult { chosen })
-}
-
-#[cfg(windows)]
-fn show<R: Runtime>(
-    window: &tauri::Window<R>,
-    popups: &menu::Popups,
-    menu: &menu::Menu,
-    position: Option<tauri::LogicalPosition<f64>>,
-) -> Result<Option<String>> {
-    menu::show(window, popups, menu, position)
-}
-
-/// Elsewhere a native popup returns before the menu closes, so the choice
-/// cannot be awaited the same way.
-#[cfg(not(windows))]
-fn show<R: Runtime>(
-    _window: &tauri::Window<R>,
-    _popups: &menu::Popups,
-    _menu: &menu::Menu,
-    _position: Option<tauri::LogicalPosition<f64>>,
-) -> Result<Option<String>> {
-    Err(ApplicationError::new(
-        ErrorCode::UnsupportedPlatform,
-        Operation::Webview,
-    ))
-}
-
 pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
     let sign_in = Arc::new(sign_in::SignIn::new(launch));
     let output_language = launch.output_language.clone();
@@ -165,8 +104,6 @@ pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
     #[cfg(windows)]
     let diagnostics = launch.diagnostics.clone();
     let about = Arc::new(about::About::new(launch));
-    let popups = Arc::new(menu::Popups::default());
-    let recorder = popups.clone();
     let activation = launch.diagnostics.clone();
     let window_states = Arc::new(window_state::WindowStates::open(
         &launch.webview,
@@ -186,7 +123,6 @@ pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
                 output_language,
             )));
             app.manage(sign_in);
-            app.manage(popups);
             app.manage(about.clone());
             app.manage(channel::Deliveries::default());
             app.manage(window_controls::Controls::default());
@@ -199,7 +135,6 @@ pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
             window_controls::attach(&window);
         })
         .on_event(move |app, event| match event {
-            RunEvent::MenuEvent(event) => recorder.record(&event.id().0),
             RunEvent::WindowEvent {
                 label,
                 event: WindowEvent::Destroyed,
@@ -238,8 +173,7 @@ pub fn commands<R: Runtime>() -> Commands<R> {
         desktop_environment,
         open_external,
         shell_clipboard_read,
-        shell_clipboard_write,
-        shell_context_menu
+        shell_clipboard_write
     ]
 }
 

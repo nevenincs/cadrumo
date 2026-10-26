@@ -991,3 +991,75 @@ async fn stopping_a_setup_another_window_runs_reads_no_selection() {
     until(&owner, |view| stage(view) == Some(RunStage::Settled)).await;
     until(&follower, |view| stage(view) == Some(RunStage::Settled)).await;
 }
+
+/// Stores `model` (`name:tag` on the default registry) in the fixture's models folder
+/// as the program would, with one layer of its own, and returns its manifest.
+fn stored_model(fixture: &Fixture, model: &str) -> PathBuf {
+    let (name, tag) = model.split_once(':').expect("a tagged model");
+    let manifest = Locations::under(&fixture.root())
+        .models
+        .join("manifests")
+        .join(MODEL_HOST)
+        .join("library")
+        .join(name)
+        .join(tag);
+    std::fs::create_dir_all(manifest.parent().unwrap()).unwrap();
+    let digest = |seed: &str| format!("sha256:{}", hex(&Sha256::digest(seed.as_bytes())));
+    let layer = |seed: &str| serde_json::json!({"digest": digest(seed), "size": 1});
+    std::fs::write(
+        &manifest,
+        serde_json::json!({"config": layer(&format!("{model} config")),
+                           "layers": [layer(&format!("{model} weights"))]})
+        .to_string(),
+    )
+    .unwrap();
+    manifest
+}
+
+fn hex(bytes: &[u8]) -> String {
+    bytes.iter().map(|byte| format!("{byte:02x}")).collect()
+}
+
+#[tokio::test]
+async fn a_model_a_role_still_selects_is_not_removed() {
+    let fixture = Fixture::new(Serving::Whole);
+    let held = stored_model(&fixture, TEXT);
+    let (components, _) = selecting(
+        &fixture,
+        Replies::selecting(&[("text_extraction", LOCAL, TEXT)], &[(TEXT, Some(2 * GB))]),
+    );
+    assert_eq!(
+        components.remove_model(TEXT).await,
+        Err(Refusal::ModelStillSelected)
+    );
+    assert!(held.exists());
+}
+
+#[tokio::test]
+async fn removing_a_model_no_role_selects_deletes_it_alone_and_reads_the_rows_after() {
+    let fixture = Fixture::new(Serving::Whole);
+    let removed = stored_model(&fixture, TEXT);
+    let kept = stored_model(&fixture, VISION);
+    let (components, _) = selecting(
+        &fixture,
+        Replies::selecting(
+            &[("vision_transcription", LOCAL, VISION)],
+            &[(VISION, Some(3 * GB)), (TEXT, Some(2 * GB))],
+        ),
+    );
+    assert_eq!(components.remove_model(TEXT).await, Ok(()));
+    assert!(!removed.exists());
+    assert!(kept.exists());
+    assert!(!components.view().rows.is_empty());
+}
+
+#[tokio::test]
+async fn a_name_the_engine_cannot_pull_is_refused_before_any_engine_runs() {
+    let fixture = Fixture::new(Serving::Whole);
+    let (components, replies) = selecting(&fixture, Replies::without_selection());
+    assert_eq!(
+        components.remove_model("not a model").await,
+        Err(Refusal::ModelSelectionUnusable)
+    );
+    assert!(replies.asked().is_empty());
+}

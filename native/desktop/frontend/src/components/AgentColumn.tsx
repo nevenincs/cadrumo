@@ -63,11 +63,14 @@ import { Composer, type ComposerReferences } from "./agent/Composer";
 import { documentSource } from "./agent/DocumentMentions";
 import { HistoryList } from "./agent/HistoryList";
 import { QuestionsPrompt } from "./agent/QuestionsPrompt";
-import { ModelRolesDialog, type ModelRoleHost } from "./agent/ModelRolesDialog";
+import { ModelRolesDialog } from "./agent/ModelRolesDialog";
 import { SkillDialog } from "./agent/SkillDialog";
 import { useSkillInventory } from "./agent/SlashSuggestions";
+import { roleLanes } from "../shell/agentModelRoles";
+import type { ModelRoleHost } from "../shell/modelRoles";
 import type { SkillCommand } from "../shell/agentSkills";
 import { AgentAccess as AgentAccessSection } from "./settings/AgentAccess";
+import { LocalModels } from "./settings/LocalModels";
 import { ProviderSettings as ProviderSettingsSection } from "./settings/ProviderSettings";
 import { Transcript } from "./agent/Transcript";
 import type {
@@ -175,6 +178,9 @@ export function AgentColumn({
   onToolRefused,
   onOpenLink,
   onOpenView,
+  onSetUpLocalAi,
+  onRemoveLocalModel,
+  setupSettled = null,
 }: {
   agent: AgentViews | undefined;
   /** Sending and the live stream, where the host offers them. */
@@ -198,7 +204,7 @@ export function AgentColumn({
   /** The column's own controls, after the conversation's. */
   trailing: ReactNode;
   onToggleMaximize: () => void;
-  /** Opens a context menu, drawn by the operating system where it can be. */
+  /** Opens a context menu, drawn by the shell. */
   onMenu?: OpenMenu;
   /** Told when the conversation shown has a tool call the product refused,
    * keyed by its reply and call. */
@@ -208,6 +214,14 @@ export function AgentColumn({
   /** Opens a `cadrumo:` link a reply carries, or says why it cannot.
    * `opened` is told the register view that opened, once it is shown. */
   onOpenView?: (url: string, opened?: (view: string) => void) => void;
+  /** Opens setup on the local AI, where this window offers setup. */
+  onSetUpLocalAi?: () => void;
+  /** Removes one local model no role selects, answering the refusal's code
+   * or null, where this window offers setup. */
+  onRemoveLocalModel?: (model: string) => Promise<string | null>;
+  /** The last setup that settled, by operation: what this computer holds may
+   * have changed, so the catalog is read again. */
+  setupSettled?: string | null;
 }) {
   const t = useStrings();
   const [setupCheck, setSetupCheck] = useState<{
@@ -404,6 +418,17 @@ export function AgentColumn({
   // count, which `catalogAgain` follows.
   const [busyReads, setBusyReads] = useState(0);
   const catalog = useAgentRead(readCatalog, catalogAgain + busyReads);
+  // A settled setup may have downloaded a model: what the catalog says this
+  // computer holds is read again.
+  useEffect(() => {
+    if (setupSettled) setCatalogAgain((count) => count + 1);
+  }, [setupSettled]);
+  // The lanes whose models the person chooses, which a lane on this computer
+  // lists in its provider settings.
+  const localLanes = useMemo(
+    () => (catalog.kind === "ready" ? roleLanes(catalog.value) : []),
+    [catalog],
+  );
   // A service still busy starting the agent answers the catalog late. The
   // column says the agent is still starting and asks again at the service's
   // next published status; a few reads, each after a longer pause, are the
@@ -953,6 +978,32 @@ export function AgentColumn({
                     onReset={settings.reset}
                     onRefresh={settings.refresh}
                     onSignInTerminal={refreshProviderAfterSignIn}
+                    localModels={
+                      roleHost
+                        ? (lane) => (
+                            <LocalModels
+                              lane={
+                                localLanes.find(
+                                  (held) => held.id === lane.id,
+                                ) ?? null
+                              }
+                              host={roleHost}
+                              locale={locale}
+                              onSetUp={onSetUpLocalAi}
+                              onRemove={
+                                onRemoveLocalModel
+                                  ? (model) =>
+                                      onRemoveLocalModel(model).then((code) => {
+                                        if (code === null)
+                                          setCatalogAgain((count) => count + 1);
+                                        return code;
+                                      })
+                                  : undefined
+                              }
+                            />
+                          )
+                        : undefined
+                    }
                   />
                 ) : settings.read.kind === "failed" ? (
                   <SectionFailure

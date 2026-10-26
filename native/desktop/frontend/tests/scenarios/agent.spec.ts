@@ -713,6 +713,25 @@ test("a conversation is renamed from its row's context menu", async ({
   await open(target);
   const body = await openHistory(target);
   await rowOf(body, "Facturas de septiembre").click({ button: "right" });
+  // F2 renames the focused row, as the test below presses it: the menu's
+  // Rename shows it, and the items no key runs show none.
+  const menu = target.getByRole("menu");
+  await expect(
+    menu
+      .getByRole("menuitem", {
+        name: label("desktop.agent.rename"),
+        exact: true,
+      })
+      .locator("kbd"),
+  ).toHaveText("F2");
+  await expect(
+    menu
+      .getByRole("menuitem", {
+        name: label("desktop.agent.archive"),
+        exact: true,
+      })
+      .locator("kbd"),
+  ).toHaveCount(0);
   await target
     .getByRole("menuitem", { name: label("desktop.agent.rename") })
     .click();
@@ -777,6 +796,26 @@ test("a double click on the conversation's title renames it, and does not maximi
   expect(
     (await calls(target)).filter((call) => call.startsWith("agentRename ")),
   ).toEqual(["agentRename c-facturas-septiembre"]);
+});
+
+test("the conversation title's menu offers Rename with no key, since none renames from the title", async ({
+  page: target,
+}) => {
+  scenarioOnly("the conversations are the scenario host's");
+  await open(target);
+  await openConversation(target, "Facturas de septiembre");
+  await column(target)
+    .getByRole("heading", { name: "Facturas de septiembre" })
+    .click({ button: "right" });
+  const menu = target.getByRole("menu");
+  const rename = menu.getByRole("menuitem", {
+    name: label("desktop.agent.rename"),
+    exact: true,
+  });
+  await expect(rename).toBeVisible();
+  await expect(rename.locator("kbd")).toHaveCount(0);
+  await target.keyboard.press("Escape");
+  await expect(menu).toHaveCount(0);
 });
 
 test("a title the agent will not take is refused, and the history says why", async ({

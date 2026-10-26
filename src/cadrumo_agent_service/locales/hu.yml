@@ -322,6 +322,25 @@ desktop:
     key_label: API-kulcs ({provider})
     key_note: Titkosítva mentjük ezen a gépen, és többé nem jelenik meg.
     load_failed: Nem sikerült betölteni a szolgáltatókat. Próbáld újra.
+    local_model_absent: Nincs letöltve
+    local_model_choose_roles: Használat dokumentumok olvasására
+    local_model_download: Letöltés
+    local_model_installed: Letöltve
+    local_model_pick_roles: Dokumentumolvasás ezzel a modellel
+    local_model_recommended: Ajánlott {capability} olvasásához
+    local_model_remove: Eltávolítás
+    local_model_remove_failed: A Cadrumo nem tudta eltávolítani a modellt. Próbáld
+      újra.
+    local_model_remove_still_selected: A Cadrumo még ezzel a modellel olvas dokumentumokat.
+      Válassz másik modellt ehhez az olvasáshoz, aztán távolítsd el ezt.
+    local_model_unused: Még nem olvasol vele dokumentumokat.
+    local_model_use: Használat
+    local_model_used_by: 'Dokumentumokat olvas: {roles}'
+    local_models_lead: A Cadrumo az itt kiválasztott modellekkel olvassa a dokumentumaidat,
+      például a beolvasott oldalakat és a dokumentumszöveget. Egy modell csak akkor
+      töltődik le, ha kiválasztod, mit olvasson a dokumentumaidban.
+    local_models_none: Az ügynök még nem kínál modellt ehhez a kapcsolathoz.
+    local_models_title: Modellek ezen a számítógépen
     reason_check_settings: Ellenőrizd a beállításokat, és próbáld újra.
     reason_record_unreadable: A mentett API-kulcs nem olvasható. Add hozzá újra.
     refresh: Újrapróbálkozás

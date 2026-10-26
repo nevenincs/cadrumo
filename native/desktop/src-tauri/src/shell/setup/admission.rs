@@ -12,6 +12,8 @@
 //!   AI is its program alone;
 //! - a selection on a lane that takes a key or a sign-in reads off this computer, and the
 //!   engine pulls nothing for it;
+//! - a selection on a keyless lane the person turned off is not admitted, so turning the
+//!   lane off stops setup pulling its models;
 //! - a selected local model whose catalogue entry is missing or states no size, or a zero
 //!   one, refuses the command, because neither the plan nor the hardware check can be
 //!   sized from nothing;
@@ -30,7 +32,7 @@ use crate::{
     },
     shell::provider_settings::{
         read_status,
-        wire::{AuthKind, CommandFailure, Entry, Refusal as ProviderRefusal, Transport},
+        wire::{AuthKind, CommandFailure, Entry, Mode, Refusal as ProviderRefusal, Transport},
     },
 };
 use cadrumo_application::{
@@ -82,7 +84,8 @@ impl Admission {
             .into_iter()
             .filter_map(|pick| {
                 let lane = lanes.iter().find(|lane| lane.id == pick.lane)?;
-                (lane.auth_kind == AuthKind::Keyless).then_some((pick, lane))
+                (lane.auth_kind == AuthKind::Keyless && lane.mode != Mode::Disabled)
+                    .then_some((pick, lane))
             })
             .collect();
         if local.is_empty() {

@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from "react";
+import { useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,11 +10,7 @@ import {
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Spinner } from "@/components/ui/spinner";
-import { failureCode } from "../../errors";
-import type {
-  AgentModelRoleSelection,
-  AgentModelRoles,
-} from "../../ipc/contract";
+import type { AgentModelRoleSelection } from "../../ipc/contract";
 import {
   capabilityWords,
   laneWords,
@@ -27,37 +23,17 @@ import {
 } from "../../shell/agentModelRoles";
 import type {
   AgentCatalogAnswer,
-  AgentModelLicence,
   AgentModelLicenceFacts,
-  AgentTransport,
 } from "../../shell/agentSession";
+import {
+  useModelRoles,
+  type ModelRoleHost,
+  type RoleChange,
+  type RoleOutcome,
+} from "../../shell/modelRoles";
 import { useStrings } from "../../shell/strings";
 
-/** What the dialog can do with the person's selections, as the host offers it. */
-export type ModelRoleHost = {
-  read: () => Promise<AgentModelRoles>;
-  set: (
-    role: string,
-    lane: string,
-    model: string,
-    expectedRevision: string,
-  ) => Promise<AgentModelRoles>;
-  clear: (role: string, expectedRevision: string) => Promise<AgentModelRoles>;
-  licence?: (
-    provider: string,
-    transport: AgentTransport,
-    model: string,
-  ) => Promise<AgentModelLicence>;
-};
-
-type Snapshot =
-  | { kind: "loading" }
-  | { kind: "failed"; code: string }
-  | { kind: "ready"; value: AgentModelRoles };
-
 type Draft = { lane: string; model: string };
-
-type Outcome = { kind: "saved" } | { kind: "refused"; code: string };
 
 type LicenceText =
   | { kind: "loading" }
@@ -71,7 +47,13 @@ const licenceWords = (licence: AgentModelLicenceFacts) =>
 
 /** What the catalog states of one model: its licence, whether it reads
  * images, and its download size, each said even where it is not known. */
-function ModelFacts({ model, locale }: { model: RoleModel; locale: string }) {
+export function ModelFacts({
+  model,
+  locale,
+}: {
+  model: RoleModel;
+  locale: string;
+}) {
   const t = useStrings();
   return (
     <ul data-slot="model-facts" className="grid gap-0.5 text-sm">
@@ -117,7 +99,7 @@ function RoleRow({
   lanes: readonly RoleLane[];
   locale: string;
   busy: boolean;
-  outcome: Outcome | undefined;
+  outcome: RoleOutcome | undefined;
   licence?: ModelRoleHost["licence"];
   onSave: (lane: string, model: string) => void;
   onClear: () => void;
@@ -342,51 +324,10 @@ export function ModelRolesDialog({
   onClose: () => void;
 }) {
   const t = useStrings();
-  const [snapshot, setSnapshot] = useState<Snapshot>({ kind: "loading" });
-  const [reads, setReads] = useState(0);
-  const [busy, setBusy] = useState<string | null>(null);
-  const [outcomes, setOutcomes] = useState<Record<string, Outcome>>({});
-  const { read } = host;
-  useEffect(() => {
-    let current = true;
-    read().then(
-      (value) => {
-        if (current) setSnapshot({ kind: "ready", value });
-      },
-      (error: unknown) => {
-        if (current) setSnapshot({ kind: "failed", code: failureCode(error) });
-      },
-    );
-    return () => {
-      current = false;
-    };
-  }, [read, reads]);
+  const { snapshot, busy, outcomes, change: changeRoles } = useModelRoles(host);
   const lanes = catalog ? roleLanes(catalog) : [];
-
-  const change = (
-    role: string,
-    act: (revision: string) => Promise<AgentModelRoles>,
-  ) => {
-    if (snapshot.kind !== "ready" || snapshot.value.state !== "readable")
-      return;
-    const { revision } = snapshot.value;
-    setBusy(role);
-    act(revision).then(
-      (value) => {
-        setBusy(null);
-        setSnapshot({ kind: "ready", value });
-        setOutcomes((held) => ({ ...held, [role]: { kind: "saved" } }));
-      },
-      (error: unknown) => {
-        const code = failureCode(error);
-        setBusy(null);
-        setOutcomes((held) => ({ ...held, [role]: { kind: "refused", code } }));
-        // Another change came first: what is stored now is read again.
-        if (code === "agent_model_role_revision_conflict")
-          setReads((count) => count + 1);
-      },
-    );
-  };
+  const change = (role: string, act: RoleChange["act"]) =>
+    void changeRoles(role, [{ role, act }]);
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>

@@ -144,6 +144,8 @@ type FixtureModel = {
   vision?: boolean | null;
   size_bytes?: number | null;
   licence?: AgentModelLicenceFacts | null;
+  /** False for a model this computer does not hold yet. */
+  installed?: boolean;
 };
 
 /** The lane's models and the controls they take, as the catalog serves them. */
@@ -166,7 +168,7 @@ function modelsOf(models: FixtureModel[]) {
       size_bytes: model.size_bytes ?? null,
       context_length: null,
       licence: model.licence ?? null,
-      installed: true,
+      installed: model.installed ?? true,
     };
   });
   return { entries, controls: [...controls.values()] };
@@ -267,6 +269,8 @@ const FIXTURES: Record<string, Fixture> = {
         display_name: "Synthetic Vision 1",
         efforts: [],
         vision: true,
+        // Recommended, but not downloaded yet.
+        installed: false,
         size_bytes: 3_200_000_000,
         licence: {
           spdx: null,

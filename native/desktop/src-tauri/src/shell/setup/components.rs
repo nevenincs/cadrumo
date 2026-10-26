@@ -43,7 +43,7 @@ use cadrumo_application::{
         engine::{Answer, Engine, Event, Outcome as Ended, Report, SetupRequest},
         failure::FailureCategory,
         items::{Destination, ItemId, Locations},
-        local_ai::hardware::Hardware,
+        local_ai::{hardware::Hardware, models::ModelName},
         plan::SetupPlan,
         role_host,
         state::{
@@ -570,6 +570,44 @@ impl Components {
                 Err(Refusal::Unavailable)
             }),
         }
+    }
+
+    /// Removes the local model `model`, which no admitted role may still select, and
+    /// takes the rows the removal reads after it. Refused while a setup runs, since
+    /// that setup holds the local AI's writer lock or may pull the model again.
+    pub async fn remove_model(&self, model: &str) -> Result<(), Refusal> {
+        let name = ModelName::parse(model).map_err(|_| Refusal::ModelSelectionUnusable)?;
+        let running = self.shared.update(|window| {
+            window.closed || window.setup.as_ref().is_some_and(SetupTrack::live)
+        });
+        if running {
+            return Err(Refusal::Busy);
+        }
+        let engines = self.engines.clone();
+        let admission = self.admission.clone();
+        let removed = tokio::task::spawn_blocking(move || {
+            let selection = admission.local_models()?;
+            if selection
+                .as_slice()
+                .iter()
+                .any(|selected| selected.name.same(&name))
+            {
+                return Err(Refusal::ModelStillSelected);
+            }
+            let Installation { mut engine } = engines().map_err(|_| Refusal::Unavailable)?;
+            engine.admit_local_ai(selection);
+            Ok(engine.remove_model(&name, &mut |_| {}))
+        })
+        .await
+        .map_err(|_| Refusal::Unavailable)??;
+        self.shared.update(|window| match removed.outcome {
+            Ended::Removed => {
+                window.rows = Some((removed.mode, removed.rows));
+                Ok(())
+            }
+            Ended::Busy => Err(Refusal::Busy),
+            _ => Err(Refusal::ModelNotRemoved),
+        })
     }
 
     /// Stops everything this window started and waits for its workers.

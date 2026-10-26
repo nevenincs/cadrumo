@@ -1721,6 +1721,23 @@ test("a context menu in the documentation offers copy, link and history", async 
   await expect(
     menu.getByRole("menuitem", { name: label("desktop.rail.docs_home") }),
   ).toBeEnabled();
+  // Each item leads with its icon; the history items show the chord the
+  // registry binds for them, in the platform's notation, and the others none:
+  // Ctrl+C in the frame is the browser's own, which neither the shell binds
+  // nor the bridge relays.
+  const alt = process.platform === "darwin" ? "⌥" : "Alt";
+  const items: [string, string, string[]][] = [
+    ["desktop.menu.copy", "copy", []],
+    ["desktop.menu.copy_link", "link", []],
+    ["desktop.action.docs_back", "back", [alt, "←"]],
+    ["desktop.action.docs_forward", "forward", [alt, "→"]],
+    ["desktop.rail.docs_home", "book", [alt, "Home"]],
+  ];
+  for (const [key, icon, chord] of items) {
+    const item = menu.getByRole("menuitem", { name: label(key), exact: true });
+    await expect(item.locator(`[data-icon=${icon}]`)).toHaveCount(1);
+    await expect(item.locator("kbd")).toHaveText(chord);
+  }
   await target.keyboard.press("Escape");
   await expect(menu).toBeHidden();
 });

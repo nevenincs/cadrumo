@@ -31,10 +31,9 @@ import {
 import type { MenuAnchor } from "./ContextMenu";
 import { useStrings } from "../shell/strings";
 
-/** Where a record's menu opens, and whether a pointer asked for it. */
+/** Where a record's menu opens. */
 export type RecordMenuRequest = {
   at: MenuAnchor;
-  pointer: boolean;
   record: LogRecord;
   /** Every record the filters let through, not only the ones drawn. */
   visible: LogRecord[];
@@ -463,7 +462,6 @@ export const RecordList = memo(function RecordList({
                 y: row.top,
                 height: row.height,
               },
-          pointer,
           record,
           visible: live.current.visible,
         });

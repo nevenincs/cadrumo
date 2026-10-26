@@ -10,7 +10,7 @@ related:
   - '[[2026-10-13-provider-settings-adr]]'
 modified: '2026-10-26'
 body_schema: body-v2
-body_hash: 'sha256:1166e3147cbef62c22293f37d7ed32a2bdd09920cf39e6ec44aefb84e3316edc'
+body_hash: 'sha256:e6870435508395ddbdd5b14f6e5fbc03191cb577e779e555f24dbd3e9e95b27a'
 ---
 
 # `ollama-provider-settings` plan
@@ -28,10 +28,10 @@ S01 belongs to the session that owns `native/application/src/provisioning`; this
 ## Steps
 
 - [x] `S01` - Add an engine operation that removes one named local model under the local_ai writer lock, keeping the program, receipt, other models and shared layers (owned by the provisioning session); `native/application/src/provisioning/engine.rs, local_ai/models.rs`.
-- [ ] `S02` - Admit only turned-on keyless lanes and expose a desktop remove-model command that clears the model's role selections first; `native/desktop/src-tauri/src/shell/setup/admission.rs, mod.rs, components.rs, wire.rs and tests`.
-- [ ] `S03` - Render the Ollama lane's local models in provider settings: switch, recommended vision entries first, size, vision, licence, installed state and roles, Download that picks roles then opens setup review, Remove; `native/desktop/frontend/src/components/settings/ProviderSettings.tsx, LocalModels.tsx, AgentColumn.tsx, shell/setup.ts, host.ts, tauriHost.ts, ipc/contract.ts`.
-- [ ] `S04` - Author the local-model strings in en, es, ca and hu through dev.locales; `canonical desktop locale sources`.
-- [ ] `S05` - Add the keyless-lane scenario and fixture facts and run the desktop frontend type, lint and Playwright gates plus the CMake desktop host tests; `native/desktop/frontend/tests/scenarios/local-models.spec.ts, src/dev/fixtures/agentCatalog.ts, src/dev/setupFixture.ts`.
+- [x] `S02` - Admit only turned-on keyless lanes and expose a desktop remove-model command that clears the model's role selections first; `native/desktop/src-tauri/src/shell/setup/admission.rs, mod.rs, components.rs, wire.rs and tests`.
+- [x] `S03` - Render the Ollama lane's local models in provider settings: switch, recommended vision entries first, size, vision, licence, installed state and roles, Download that picks roles then opens setup review, Remove; `native/desktop/frontend/src/components/settings/ProviderSettings.tsx, LocalModels.tsx, AgentColumn.tsx, shell/setup.ts, host.ts, tauriHost.ts, ipc/contract.ts`.
+- [x] `S04` - Author the local-model strings in en, es, ca and hu through dev.locales; `canonical desktop locale sources`.
+- [x] `S05` - Add the keyless-lane scenario and fixture facts and run the desktop frontend type, lint and Playwright gates plus the CMake desktop host tests; `native/desktop/frontend/tests/scenarios/local-models.spec.ts, src/dev/fixtures/agentCatalog.ts, src/dev/setupFixture.ts`.
 
 ## Parallelization
 

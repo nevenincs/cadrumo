@@ -195,13 +195,10 @@ export function LedgerHeader({
               {SETUP_SECTIONS.map((value) => (
                 <DropdownMenuItem
                   key={value}
+                  icon={value === section ? "tick" : undefined}
                   aria-current={value === section ? "page" : undefined}
                   onSelect={() => onSection(value)}
                 >
-                  <Icon
-                    name="tick"
-                    className={value === section ? undefined : "invisible"}
-                  />
                   {sectionName(t, value)}
                 </DropdownMenuItem>
               ))}

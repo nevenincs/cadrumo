@@ -343,29 +343,32 @@ export function MovementInspector({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem
+                icon="reset"
                 disabled={staged === 0}
                 onSelect={() => onStage({ type: "revert_movement", id })}
               >
-                <Icon name="reset" />
                 {t("desktop.ledger.edit.revert_movement")}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
+                icon="split"
                 disabled={tx.lifecycle_state !== "ACTIVE" || sealed}
                 onSelect={() => onSplit(row)}
               >
-                <Icon name="split" />
                 {t("desktop.ledger.inspector.action.split")}…
               </DropdownMenuItem>
               {cohort.length >= 2 && (
-                <DropdownMenuItem onSelect={() => onSelectCohort(cohort)}>
-                  <Icon name="merge" />
+                <DropdownMenuItem
+                  icon="merge"
+                  onSelect={() => onSelectCohort(cohort)}
+                >
                   {t("desktop.ledger.inspector.action.merge_select")}
                 </DropdownMenuItem>
               )}
               {lifecycleItems}
               {duplicate && (
                 <DropdownMenuItem
+                  icon="copy"
                   className="ledger-archive-duplicate"
                   disabled={
                     !lifecycleTakes(
@@ -382,15 +385,14 @@ export function MovementInspector({
                     })
                   }
                 >
-                  <Icon name="copy" />
                   {t("desktop.ledger.duplicate.archive")}…
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
               <DropdownMenuItem
+                icon="trash"
                 onSelect={() => onAction({ kind: "remove", id })}
               >
-                <Icon name="trash" />
                 {t("desktop.ledger.inspector.action.remove")}…
               </DropdownMenuItem>
             </DropdownMenuContent>

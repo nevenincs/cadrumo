@@ -38,6 +38,9 @@ export type SetupControl = {
   /** Answers the plan on screen, bound to the digest it was shown with. */
   answer(decision: "apply" | "reject"): void;
   cancel(): void;
+  /** Removes one local model no role selects; resolves with the refusal's
+   * code, or null once it is removed. */
+  removeModel(model: string): Promise<string | null>;
   /** The profile's Google account, which rides the same session but is not
    * setup: sign in through Google's own page, or remove the sign-in. */
   signInGoogle(): void;
@@ -252,6 +255,16 @@ export function useSetup(
         if (!run) return;
         send((served) => served.cancel(run.operation_id));
       },
+      removeModel: (model) =>
+        setup
+          ? setup.removeModel(model).then(
+              (state) => {
+                accept(checked(state));
+                return null;
+              },
+              (error: unknown) => failureCode(error),
+            )
+          : Promise.resolve("unavailable"),
       signInGoogle: () => send((served) => served.signInGoogle()),
       signOutGoogle: () => send((served) => served.signOutGoogle()),
       clearRefusal: () =>
@@ -259,6 +272,6 @@ export function useSetup(
           held.refusal === null ? held : { ...held, refusal: null },
         ),
     }),
-    [offered, read, snapshot, pending, refusal, send],
+    [offered, read, snapshot, pending, refusal, send, setup, accept],
   );
 }

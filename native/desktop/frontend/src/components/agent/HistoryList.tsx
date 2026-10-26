@@ -2,11 +2,16 @@ import { useEffect, useId, useRef, useState } from "react";
 import { EmptyState } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
+import { chordMatches, chordText, type ChordKeys } from "@/shared/chords";
 import { useStrings } from "../../shell/strings";
 import type { MenuEntry, OpenMenu } from "../ContextMenu";
 import { AgentIconAction, AgentTextAction } from "./AgentAction";
 import { TitleEditor } from "./TitleEditor";
 import type { ConversationGroup, ConversationSummary } from "./types";
+
+/** Renames the focused conversation: a row runs it, and the row's menu shows
+ * it. */
+const RENAME_CHORD: ChordKeys = { code: "F2", key: "F2" };
 
 /** A title matches a search when it holds every word of it, in any case. */
 function matches(title: string, query: string): boolean {
@@ -160,6 +165,8 @@ export function HistoryList({
       items.push({
         id: "rename",
         label: t("desktop.agent.rename"),
+        icon: "edit",
+        chord: RENAME_CHORD,
         enabled: true,
         run: () => setRenaming(conversation.id),
       });
@@ -167,6 +174,7 @@ export function HistoryList({
       items.push({
         id: "restore",
         label: t("desktop.agent.restore"),
+        icon: "unarchive",
         enabled: true,
         run: () => restore(conversation.id),
       });
@@ -174,6 +182,7 @@ export function HistoryList({
       items.push({
         id: "archive",
         label: t("desktop.agent.archive"),
+        icon: "archive",
         enabled: true,
         run: () => archive(conversation.id),
       });
@@ -182,6 +191,7 @@ export function HistoryList({
       items.push({
         id: "delete",
         label: t("desktop.agent.delete"),
+        icon: "trash",
         enabled: true,
         run: () => setConfirming(conversation.id),
       });
@@ -265,20 +275,18 @@ export function HistoryList({
                           const items = rowMenu(conversation);
                           if (!onMenu || items.length === 0) return;
                           event.preventDefault();
-                          onMenu(
-                            items,
-                            { x: event.clientX, y: event.clientY },
-                            true,
-                          );
+                          onMenu(items, { x: event.clientX, y: event.clientY });
                         }}
                       >
                         <AgentTextAction
                           variant="ghost"
                           aria-current={conversation.current || undefined}
                           data-open-for={conversation.id}
-                          aria-keyshortcuts={onRename ? "F2" : undefined}
+                          aria-keyshortcuts={
+                            onRename ? chordText(RENAME_CHORD) : undefined
+                          }
                           onKeyDown={(event) => {
-                            if (event.key === "F2" && onRename) {
+                            if (chordMatches(RENAME_CHORD, event) && onRename) {
                               event.preventDefault();
                               setRenaming(conversation.id);
                             }

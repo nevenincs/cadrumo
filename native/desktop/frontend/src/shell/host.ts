@@ -8,7 +8,6 @@
 
 import type {
   AboutInfo,
-  ContextMenuItem,
   DesktopEnvironment,
   DesktopLanguage,
   DesktopSetup,
@@ -101,6 +100,9 @@ export type Setup = {
     decision: "apply" | "reject",
   ): Promise<DesktopSetup>;
   cancel(operationId: string): Promise<DesktopSetup>;
+  /** Removes the local model `model`, which no role may still select: the
+   * roles that name it are cleared first. */
+  removeModel(model: string): Promise<DesktopSetup>;
   /** Opens Google's own sign-in page for the profile. */
   signInGoogle(): Promise<DesktopSetup>;
   /** Removes the profile's stored Google sign-in. */
@@ -124,8 +126,6 @@ export interface Host {
   };
   /** False when no desktop host exists (browser preview). */
   readonly available: boolean;
-  /** Whether menus are drawn by the operating system. */
-  readonly nativeMenus: boolean;
   environment(): Promise<DesktopEnvironment>;
   /** What this installation is, where the host reads it from the package. */
   about?(): Promise<AboutInfo>;
@@ -173,12 +173,6 @@ export interface Host {
   /** Copies a log selection with the larger bounded log-transfer limit. */
   copyLogs?(text: string): Promise<void>;
   revealLogs?(): Promise<void>;
-  /** Resolves to the chosen item id, or null when dismissed. Omit `at` for a
-   * pointer-opened menu so the host places it at the cursor. */
-  showMenu(
-    items: ContextMenuItem[],
-    at?: { x: number; y: number },
-  ): Promise<string | null>;
   openExternal(url: string): Promise<void>;
   /** The profiles on this computer, to choose from and to add to, where
    * this host offers them. Without them the shell signs in to the one
@@ -226,7 +220,6 @@ export function browserHost(location: Location): Host {
   const unavailable = () => Promise.reject(new HostUnavailable());
   return {
     available: false,
-    nativeMenus: false,
     environment() {
       const docs = new URLSearchParams(location.search).get("docs");
       if (!docs) return unavailable();
@@ -260,7 +253,6 @@ export function browserHost(location: Location): Host {
       navigator.clipboard?.writeText
         ? navigator.clipboard.writeText(text)
         : unavailable(),
-    showMenu: unavailable,
     openExternal: unavailable,
   };
 }

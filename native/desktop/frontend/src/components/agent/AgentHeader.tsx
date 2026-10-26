@@ -97,12 +97,12 @@ export function AgentHeader({
                         {
                           id: "rename",
                           label: t("desktop.agent.rename"),
+                          icon: "edit",
                           enabled: true,
                           run: () => setEditing(true),
                         },
                       ],
                       { x: event.clientX, y: event.clientY },
-                      true,
                     );
                   }
                 : undefined

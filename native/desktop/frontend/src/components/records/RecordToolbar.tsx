@@ -207,17 +207,17 @@ export function RecordToolbar({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
+                  icon="copy"
                   disabled={!visible.length}
                   onSelect={() => onCopy(recordsText(visible))}
                 >
-                  <Icon name="copy" />
                   {t("desktop.menu.copy_visible")}
                 </DropdownMenuItem>
                 <DropdownMenuItem
+                  icon="copyAll"
                   disabled={!all.length}
                   onSelect={() => onCopy(recordsText(all))}
                 >
-                  <Icon name="copyAll" />
                   {t("desktop.logs.copy_all")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -238,17 +238,17 @@ export function RecordToolbar({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
+                  icon="download"
                   disabled={!visible.length}
                   onSelect={() => onExport(recordsText(visible))}
                 >
-                  <Icon name="download" />
                   {t("desktop.logs.export_visible")}
                 </DropdownMenuItem>
                 <DropdownMenuItem
+                  icon="downloadAll"
                   disabled={!all.length}
                   onSelect={() => onExport(recordsText(all))}
                 >
-                  <Icon name="downloadAll" />
                   {t("desktop.logs.export_all")}
                 </DropdownMenuItem>
               </DropdownMenuContent>

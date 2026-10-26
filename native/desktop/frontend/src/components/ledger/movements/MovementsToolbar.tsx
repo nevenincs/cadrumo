@@ -567,12 +567,16 @@ export function MovementsToolbar({
             {groupBy && (
               <>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={() => onFoldAll(false)}>
-                  <Icon name="expandAll" />
+                <DropdownMenuItem
+                  icon="expandAll"
+                  onSelect={() => onFoldAll(false)}
+                >
                   {t("desktop.ledger.group.expand_all")}
                 </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => onFoldAll(true)}>
-                  <Icon name="collapseAll" />
+                <DropdownMenuItem
+                  icon="collapseAll"
+                  onSelect={() => onFoldAll(true)}
+                >
                   {t("desktop.ledger.group.collapse_all")}
                 </DropdownMenuItem>
               </>

@@ -1,6 +1,5 @@
 import { Channel, invoke } from "@tauri-apps/api/core";
 import type {
-  ContextMenuItem,
   DesktopSetup,
   LogBatch,
   ManagerSignal,
@@ -175,7 +174,6 @@ export function tauriHost(): Host {
       },
     },
     available: true,
-    nativeMenus: true,
     window: {
       action: (action) =>
         call("shell_window_action", { action }).then(() => undefined),
@@ -240,6 +238,7 @@ export function tauriHost(): Host {
       answer: (operationId, planDigest, decision) =>
         call("desktop_setup_answer", { operationId, planDigest, decision }),
       cancel: (operationId) => call("desktop_setup_cancel", { operationId }),
+      removeModel: (model) => call("desktop_setup_remove_model", { model }),
       signInGoogle: () => call("desktop_google_sign_in", {}),
       signOutGoogle: () => call("desktop_google_sign_out", {}),
       async observe(listener) {
@@ -315,13 +314,6 @@ export function tauriHost(): Host {
     exportLogs: (text) => call("logs_export", { text }),
     copyLogs: (text) => call("logs_copy", { text }).then(() => undefined),
     revealLogs: () => call("logs_reveal", {}).then(() => undefined),
-    async showMenu(items: ContextMenuItem[], at?: { x: number; y: number }) {
-      const { chosen } = await call(
-        "shell_context_menu",
-        at ? { items, x: at.x, y: at.y } : { items },
-      );
-      return chosen;
-    },
     openExternal,
     providerSettings: tauriProviderSettings(token, openExternal),
     agentAccess: tauriAgentAccess(call),

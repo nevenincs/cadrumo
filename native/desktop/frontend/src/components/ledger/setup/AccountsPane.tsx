@@ -461,32 +461,32 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem
+              icon="edit"
               onSelect={() => open({ kind: "update", account })}
             >
-              <Icon name="edit" />
               {t("desktop.ledger.accounts.update")}
             </DropdownMenuItem>
             <DropdownMenuItem
+              icon="tick"
               onSelect={() => open({ kind: "designate", account })}
             >
-              <Icon name="tick" />
               {t("desktop.ledger.accounts.designate")}
             </DropdownMenuItem>
             <DropdownMenuItem
+              icon="clock"
               disabled={account.closed_on !== null}
               onSelect={() => open({ kind: "close", account })}
             >
-              <Icon name="clock" />
               {t("desktop.ledger.accounts.close")}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
+              icon="trash"
               className="ledger-account-remove"
               disabled={held !== null}
               title={held ?? undefined}
               onSelect={() => void remove(account)}
             >
-              <Icon name="trash" />
               {t("desktop.ledger.accounts.remove")}
             </DropdownMenuItem>
           </DropdownMenuContent>

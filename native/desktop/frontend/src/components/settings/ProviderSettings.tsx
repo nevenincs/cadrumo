@@ -262,6 +262,7 @@ function WayRow({
   onRefresh,
   signInSupported,
   onSignIn,
+  models,
 }: {
   provider: ProviderStatus;
   busy: boolean;
@@ -273,6 +274,8 @@ function WayRow({
   onRefresh: () => void;
   signInSupported: boolean;
   onSignIn: () => void;
+  /** The models of a keyless lane on this computer, shown while it is on. */
+  models?: ReactNode;
 }) {
   const t = useStrings();
   const headingId = useId();
@@ -346,6 +349,7 @@ function WayRow({
           <span>{refusalWords(t, outcome.code)}</span>
         </p>
       )}
+      {!off && keyless && models}
       {!off && !keyless && (
         <div className="grid gap-2 pt-1">
           {signInOnly ? (
@@ -502,6 +506,7 @@ export function ProviderSettings({
   signInMethods = {},
   revisions = {},
   identity = null,
+  localModels,
 }: {
   providers: readonly ProviderStatus[];
   /** The way whose change is on its way. */
@@ -529,6 +534,9 @@ export function ProviderSettings({
   revisions?: Readonly<Record<string, string>>;
   /** Signed-in profile identity, used to discard an open attempt on switch. */
   identity?: string | null;
+  /** The model controls of a keyless lane, where the host offers them: a
+   * lane on this computer has no key or sign-in, only its models. */
+  localModels?: (lane: ProviderStatus) => ReactNode;
 }) {
   const t = useStrings();
   const titleId = useId();
@@ -618,6 +626,9 @@ export function ProviderSettings({
                 onTurnOn={() => onTurnOn(lane.id)}
                 onReset={() => onReset(lane.id)}
                 onRefresh={onRefresh}
+                models={
+                  lane.authKind === "none" ? localModels?.(lane) : undefined
+                }
               />
             )}
           />

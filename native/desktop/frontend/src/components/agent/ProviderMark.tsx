@@ -1,9 +1,11 @@
 import { cn } from "@/components/ui/cn";
+import { Icon } from "@/components/ui/icon";
 import artwork from "virtual:desktop-provider-icons";
 
 // Artwork comes from the same bundled agent that declares the providers.
 // A mask lets monochrome marks follow the current theme without inserting SVG
 // markup into the document. The adjacent provider name supplies the label.
+// A provider the agent ships no artwork for wears the generic agent mark.
 
 const SIZES = { sm: "size-icon-md", md: "size-icon-lg" } as const;
 
@@ -32,16 +34,16 @@ export function ProviderMark({
       aria-hidden="true"
       data-slot="provider-mark"
       data-provider={provider}
-      data-mark={icon ? "mono" : "none"}
+      data-mark={icon ? "mono" : "generic"}
       style={icon ? { maskImage: `url("${icon.mono}")` } : undefined}
       className={cn(
-        "inline-block shrink-0",
-        icon
-          ? "bg-current mask-contain mask-center mask-no-repeat"
-          : "rounded-full border border-dashed border-border-strong",
+        "inline-flex shrink-0 items-center justify-center",
+        icon && "bg-current mask-contain mask-center mask-no-repeat",
         SIZES[size],
         className,
       )}
-    />
+    >
+      {!icon && <Icon name="agent" className="size-full" />}
+    </span>
   );
 }

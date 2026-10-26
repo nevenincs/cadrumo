@@ -331,52 +331,6 @@ export type LogSubscription = {
  */
 export type ClipboardText = { text: string };
 
-/**
- * `id` and `label` are 1 to 128 and 1 to 256 characters, `shortcut` 1 to 64,
- * none with control characters; ids are unique within one menu.
- */
-export type ContextMenuAction = {
-  /** Returned as `chosen`; the host namespaces it internally per popup. */
-  id: string;
-  /** Shown literally; an `&` is not a mnemonic marker. */
-  label: string;
-  /** A disabled item is shown but can never be `chosen`. */
-  enabled: boolean;
-  /** Display-only accelerator text shown beside the label; binds nothing. */
-  shortcut?: string;
-};
-
-/** Exactly `{ separator: true }`; any other field is refused. */
-export type ContextMenuSeparator = { separator: true };
-
-export type ContextMenuItem = ContextMenuAction | ContextMenuSeparator;
-
-/**
- * 1 to 64 items with at least one action. `x` and `y` are both present or
- * both omitted; one without the other is refused with `invalid_arguments`.
- */
-export type ContextMenuRequest = {
-  items: ContextMenuItem[];
-} & (
-  | {
-      /**
-       * Logical position in shell CSS pixels: for a documentation menu, the
-       * iframe rect plus its border plus the relayed client coordinates, with
-       * no device-pixel scaling. Finite, with a magnitude of at most 1e6.
-       */
-      x: number;
-      y: number;
-    }
-  | {
-      /** Omit both for a pointer-opened menu, which opens at the cursor. */
-      x?: never;
-      y?: never;
-    }
-);
-
-/** Resolves when the native menu closes; `null` when it was dismissed. */
-export type ContextMenuResult = { chosen: string | null };
-
 // ---------------------------------------------------------------------------
 // Terminals
 // ---------------------------------------------------------------------------
@@ -1093,7 +1047,11 @@ export type SetupRefusalCode =
    * engine can pull. */
   | "model_selection_unusable"
   /** A selected local model's catalogue entry states no download size. */
-  | "model_size_unstated";
+  | "model_size_unstated"
+  /** A role still selects the model asked to be removed. */
+  | "model_still_selected"
+  /** The engine did not remove the model. */
+  | "model_not_removed";
 
 export type SetupRefusal = { code: SetupRefusalCode };
 
@@ -1499,6 +1457,11 @@ export interface HostCommands {
     args: Authorized<{ operationId: string }>;
     result: DesktopSetup;
   };
+  /** Removes one local model no role selects, named as a selection names it. */
+  desktop_setup_remove_model: {
+    args: Authorized<{ model: string }>;
+    result: DesktopSetup;
+  };
   /** Opens Google's own sign-in page for the signed-in profile; `google`
    * follows the attempt. */
   desktop_google_sign_in: { args: Authorized; result: DesktopSetup };
@@ -1594,16 +1557,6 @@ export interface HostCommands {
   shell_clipboard_write: {
     args: Authorized<ClipboardText>;
     result: null;
-  };
-  /**
-   * Shows a native popup and resolves when it closes. Refuses
-   * `session_unavailable` while another popup is open, `unsupported_platform`
-   * on every platform but Windows, and `invalid_arguments` for a malformed
-   * request.
-   */
-  shell_context_menu: {
-    args: Authorized<ContextMenuRequest>;
-    result: ContextMenuResult;
   };
   /**
    * The agent host. Every agent command refuses with `{ code }`: the
