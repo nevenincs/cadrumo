@@ -15,7 +15,7 @@ from cadrumo.core.model_roles import ModelRole
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from cadrumo_client.contracts.model_runs import ModelRunLane, ModelRunLicence, ModelRunRefusal, ModelRunRefusalCode
 
-from ...domain.catalog import CatalogModelFacts
+from ...domain.catalog import LiveCatalogModel
 from ..contracts import ModelRoleSelectionsStatus, ProviderSettingsRefusal, ProviderSettingsRefusalCode
 from ..lane_entries import merged_entries
 from ..model_role_selections import ModelRoleSelectionsService
@@ -42,7 +42,7 @@ _INSTALLED_UNSTATED: Final = "synthetic-installed-unstated:1"
 _SUPPLIED_DIGEST: Final = "sha256:" + "1" * 64
 
 
-def _installed() -> tuple[CatalogModelFacts, ...]:
+def _installed() -> tuple[LiveCatalogModel, ...]:
     return (
         live_model(
             _INSTALLED_TEXT,
@@ -50,6 +50,7 @@ def _installed() -> tuple[CatalogModelFacts, ...]:
             size_bytes=2_000,
             context_length=8192,
             licence={"spdx": None, "name": "Licence supplied with the model", "digest": _SUPPLIED_DIGEST},
+            installed=True,
         ),
         live_model(_INSTALLED_VISION, vision=True, size_bytes=3_000, context_length=None, licence=None),
         live_model(_INSTALLED_UNSTATED),
@@ -105,7 +106,18 @@ def test_a_model_only_the_running_agent_lists_is_selectable_and_resolves_with_it
         size_bytes=2_000,
         vision=False,
         context_length=8192,
+        installed=True,
     )
+
+
+def test_a_declared_model_the_running_agent_does_not_list_resolves_with_its_installed_state_unknown() -> None:
+    harness = _Harness(_running())
+
+    assert isinstance(harness.select(ModelRole.TEXT_EXTRACTION, KEYLESS_TEXT_MODEL), ModelRoleSelectionsStatus)
+
+    lane = harness.runs().lookup("text_extraction")
+    assert isinstance(lane, ModelRunLane)
+    assert lane.installed is None
 
 
 def test_without_a_running_agent_a_model_only_the_live_catalogue_lists_is_not_in_the_catalogue() -> None:

@@ -90,6 +90,7 @@ _TOOL_LESS_LANE: Final = ModelRunLane(
     size_bytes=None,
     vision=None,
     context_length=None,
+    installed=None,
 )
 _PNG: Final = base64.b64decode(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
@@ -143,6 +144,7 @@ class _Gateway:
                 size_bytes=None,
                 vision=None,
                 context_length=None,
+                installed=None,
             )
         pytest.fail(f"the agent catalog provides no selectable refusal fixture for background={background}, pdf={pdf}")
 
@@ -179,6 +181,7 @@ class _Gateway:
                     size_bytes=None,
                     vision=None,
                     context_length=None,
+                    installed=None,
                 )
         pytest.fail("the agent catalog serves no local lane")
 

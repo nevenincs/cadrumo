@@ -73,6 +73,22 @@ def test_the_lanes_entries_are_read_with_their_facts_and_nothing_else() -> None:
     assert (plain.vision, plain.size_bytes, plain.context_length, plain.licence) == (None, None, None, None)
 
 
+def test_whether_the_lane_s_server_holds_each_model_is_read_and_an_unstated_one_stays_unknown() -> None:
+    unstated = {key: value for key, value in _entry("synthetic-unstated:1").items() if key != "installed"}
+    models = ServedCatalogModels(
+        lambda: _document(_entry("synthetic-installed:1"), _entry("synthetic-absent:1", installed=False), unstated)
+    )
+
+    entries = models.lane_models("local", "api")
+
+    assert entries is not None
+    assert [(entry.id, entry.installed) for entry in entries] == [
+        ("synthetic-installed:1", True),
+        ("synthetic-absent:1", False),
+        ("synthetic-unstated:1", None),
+    ]
+
+
 def test_no_running_agent_is_no_live_catalogue_and_an_unlisted_lane_lists_nothing() -> None:
     assert ServedCatalogModels(lambda: None).lane_models("local", "api") is None
     assert ServedCatalogModels(lambda: _document(_entry("synthetic-installed:1"))).lane_models("absent", "api") == ()
@@ -99,6 +115,7 @@ def test_an_entry_at_the_agent_s_bounds_is_read() -> None:
         pytest.param(_document(_entry("synthetic-installed:1", size_bytes=-1)), id="size-negative"),
         pytest.param(_document(_entry("synthetic-installed:1", context_length=-1)), id="context-negative"),
         pytest.param(_document(_entry("synthetic-installed:1", vision="yes")), id="vision-not-a-bool"),
+        pytest.param(_document(_entry("synthetic-installed:1", installed="yes")), id="installed-not-a-bool"),
         pytest.param(_document(_entry("synthetic-installed:1", size_bytes="2000")), id="size-not-an-integer"),
         pytest.param(
             _document(_entry("synthetic-installed:1", licence={"spdx": None, "name": "x", "digest": "sha256:zz"})),

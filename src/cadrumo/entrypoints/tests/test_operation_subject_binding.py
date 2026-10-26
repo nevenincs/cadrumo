@@ -36,7 +36,7 @@ from ..operation_composition import build_production_operation_registry
 from .registered_executor_case_support import (
     OperationRuntimeCloseWitness,
     conformance_operation_runtime,
-    model_runtime_for_operation,
+    family_environment_for_operation,
     seeded_conformance_operation_submission,
 )
 
@@ -161,7 +161,7 @@ def test_the_real_access_resolver_admits_the_declared_subject_and_refuses_any_ot
 ) -> None:
     """A fresh submission resolves on the subject the declaration renders, and on no other."""
     with (
-        model_runtime_for_operation(definition_id),
+        family_environment_for_operation(definition_id),
         conformance_operation_runtime(tmp_path / definition_id, cleanup=OperationRuntimeCloseWitness()) as (
             _driver,
             registry,
@@ -197,7 +197,7 @@ def test_the_real_executor_runs_on_the_declared_subject_and_stops_any_other_befo
 ) -> None:
     """Each of these executors checks the subject first, so a refused subject publishes no phase at all."""
     with (
-        model_runtime_for_operation(definition_id),
+        family_environment_for_operation(definition_id),
         conformance_operation_runtime(tmp_path / definition_id, cleanup=OperationRuntimeCloseWitness()) as (
             driver,
             registry,

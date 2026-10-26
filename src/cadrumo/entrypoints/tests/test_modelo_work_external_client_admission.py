@@ -73,7 +73,7 @@ from .registered_executor_case_support import (
     _ExecutionDriver,
     _resolve_result_projection,
     conformance_operation_runtime,
-    model_runtime_for_operation,
+    family_environment_for_operation,
     seeded_conformance_operation_submission,
 )
 
@@ -409,7 +409,7 @@ def test_a_modelo_write_stores_the_session_label_for_an_automation_and_the_suppl
 ) -> None:
     """Every event the real executor appends names the label of the session that admitted it."""
     with (
-        model_runtime_for_operation(definition_id),
+        family_environment_for_operation(definition_id),
         conformance_operation_runtime(
             tmp_path / definition_id,
             cleanup=OperationRuntimeCloseWitness(),

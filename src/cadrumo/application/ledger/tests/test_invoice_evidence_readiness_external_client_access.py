@@ -1,4 +1,4 @@
-"""Reader readiness is open to every frontend and never releases the configured address in full."""
+"""Reader readiness is open to every frontend and releases the program's row and each role's judgement."""
 
 from __future__ import annotations
 
@@ -13,23 +13,24 @@ from pydantic import BaseModel
 
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
-from ....core.config import override_settings
 from ....core.model_roles import ModelRole
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.time.clock import now
+from ...dependency_contracts import DependencyState
 from ...local_reader import LocalReaderStatus, RoleLane, read_local_reader_status
 from ...operations import profile_guard
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
+from ...provisioning_contracts import ProvisioningPreconditionCondition
+from ...tests.local_ai_program_rows import LOCAL_AI_VERSION, local_ai_row
 from ..invoice_evidence_readiness_operation import (
     LEDGER_EVIDENCE_READER_READINESS_OPERATION_DEFINITION_ID,
     LedgerEvidenceReaderReadinessExecutionResult,
     LedgerEvidenceReaderReadinessExecutor,
     LedgerEvidenceReaderReadinessProjection,
     LedgerEvidenceReaderReadinessRequest,
-    _reader_endpoint_origin,
     build_ledger_evidence_reader_readiness_definition,
     build_ledger_evidence_reader_readiness_registration,
 )
@@ -37,19 +38,11 @@ from ..invoice_evidence_readiness_operation import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
-_USER = "synthetic-reader-user"
-_USER_CREDENTIAL = "synthetic-reader-credential"
-_PATH_CREDENTIAL = "synthetic-path-credential"
-_QUERY_CREDENTIAL = "synthetic-query-credential"
-# Port 1 is closed, so the probe is refused at once and nothing is contacted.
-_ENDPOINT = f"http://{_USER}:{_USER_CREDENTIAL}@127.0.0.1:1/{_PATH_CREDENTIAL}/api/chat?key={_QUERY_CREDENTIAL}"
-_CREDENTIAL_FRAGMENTS = (_USER, _USER_CREDENTIAL, _PATH_CREDENTIAL, _QUERY_CREDENTIAL, "api/chat", "key=")
 
 
 def _status(lanes: Mapping[ModelRole, RoleLane]) -> LocalReaderStatus:
-    """Measure the real reader status against an endpoint that answers nothing."""
-    with override_settings(cadrumo_llm_ollama_chat_url=_ENDPOINT):
-        return read_local_reader_status(lanes, assess_load=False)
+    """Judge the real reader status over a program the components role reports set up."""
+    return read_local_reader_status(lanes, local_ai_row(DependencyState.READY))
 
 
 def _unread_status(lanes: Mapping[ModelRole, RoleLane]) -> LocalReaderStatus:
@@ -98,83 +91,32 @@ def test_readiness_is_admitted_alike_on_every_frontend_for_either_kind_of_sessio
     assert AccessAction.COMMIT not in resolved.policy.actions
 
 
-def test_the_projection_names_where_the_reader_answers_and_nothing_else_of_the_configured_address() -> None:
+def test_the_projection_publishes_the_program_s_row_and_each_role_s_judgement() -> None:
     status = _status({})
-    assert status.host.endpoint_url == _ENDPOINT
 
     projection = LedgerEvidenceReaderReadinessProjection.from_status(_PROFILE, status)
 
-    assert projection.host.endpoint_url == "http://127.0.0.1:1"
-    assert projection.host.endpoint_local is True
-    assert projection.host.reachable is False and projection.host.available is False
-    assert projection.host.failed_condition_id is not None and projection.host.failed_condition_id
+    assert projection.host.state is DependencyState.READY
+    assert projection.host.version == LOCAL_AI_VERSION
+    assert projection.host.available is True and projection.host.failed_condition_id is None
     assert projection.extraction_ready is status.extraction_ready
     assert [row.role for row in projection.roles] == [row.role.value for row in status.roles]
     assert [row.model for row in projection.roles] == [row.model for row in status.roles]
-    released = projection.model_dump_json()
-    assert [fragment for fragment in _CREDENTIAL_FRAGMENTS if fragment in released] == []
 
 
-@pytest.mark.parametrize(
-    ("endpoint", "origin"),
-    [
-        ("http://127.0.0.1:11434/api/chat", "http://127.0.0.1:11434"),
-        ("https://reader.example.invalid/api/chat", "https://reader.example.invalid"),
-        (
-            "https://user:credential@reader.example.invalid:8443/v1/credential?key=credential#credential",
-            "https://reader.example.invalid:8443",
-        ),
-        ("http://[::1]:11434/api/chat", "http://[::1]:11434"),
-        ("reader.example.invalid:11434", None),
-        ("/var/run/synthetic-reader/socket", None),
-        (r"C:\Users\synthetic-operator\reader.sock", None),
-        ("http://reader.example.invalid:not-a-port/api/chat", None),
-        ("http:///api/chat", None),
-    ],
-)
-def test_only_the_scheme_host_and_port_of_an_address_are_kept_and_one_without_a_host_is_absent(
-    endpoint: str, origin: str | None
-) -> None:
-    assert _reader_endpoint_origin(endpoint) == origin
+def test_an_absent_program_publishes_no_version_and_its_failed_condition() -> None:
+    status = read_local_reader_status({}, local_ai_row(DependencyState.ABSENT))
 
+    projection = LedgerEvidenceReaderReadinessProjection.from_status(_PROFILE, status)
 
-@pytest.mark.parametrize(
-    ("reported", "released", "withheld"),
-    [
-        ("0.5.7", "0.5.7", False),
-        ("0.6.0-rc1+build.3", "0.6.0-rc1+build.3", False),
-        ("unknown", "unknown", False),
-        ("0.5.7 and a sentence the endpoint added for whoever reads this", None, True),
-        ("<b>0.5.7</b>", None, True),
-        ("9" * 65, None, True),
-    ],
-)
-def test_what_the_endpoint_reports_as_its_version_is_released_only_when_it_reads_as_one(
-    reported: str, released: str | None, withheld: bool
-) -> None:
-    measured = _status({})
-    answering = measured.host.model_copy(
-        update={"reachable": True, "available": True, "version": reported, "precondition_verdict": None}
-    )
-
-    projection = LedgerEvidenceReaderReadinessProjection.from_status(
-        _PROFILE, measured.model_copy(update={"host": answering})
-    )
-
-    assert (projection.host.version, projection.host.version_withheld) == (released, withheld)
-    assert projection.host.reachable is True
-    if withheld:
-        assert reported not in projection.model_dump_json()
-
-
-def test_an_endpoint_that_answers_nothing_reports_no_version_and_withholds_none() -> None:
-    projection = LedgerEvidenceReaderReadinessProjection.from_status(_PROFILE, _status({}))
-
-    assert (projection.host.version, projection.host.version_withheld) == (None, False)
+    assert projection.host.state is DependencyState.ABSENT
+    assert projection.host.version is None, "an absent program's row names the version setup would install"
+    assert projection.host.available is False
+    assert projection.host.failed_condition_id == ProvisioningPreconditionCondition.RUNTIME_INSTALLED.value
 
 
 @pytest.mark.asyncio
-async def test_the_executor_and_the_registered_projector_release_the_reduced_address(
+async def test_the_executor_and_the_registered_projector_release_the_program_s_row(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
@@ -232,6 +174,5 @@ async def test_the_executor_and_the_registered_projector_release_the_reduced_add
         ),
     )
     assert isinstance(released, LedgerEvidenceReaderReadinessProjection)
-    assert released.host.endpoint_url == "http://127.0.0.1:1"
-    document = released.model_dump_json()
-    assert [fragment for fragment in _CREDENTIAL_FRAGMENTS if fragment in document] == []
+    assert released.host.state is DependencyState.READY
+    assert released.host.version == LOCAL_AI_VERSION

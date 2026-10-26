@@ -39,6 +39,7 @@ DEFAULT_LANE = ModelRunLane(
     size_bytes=None,
     vision=None,
     context_length=None,
+    installed=None,
 )
 
 
@@ -131,6 +132,7 @@ IMAGE_LANE = ModelRunLane(
     size_bytes=None,
     vision=None,
     context_length=None,
+    installed=None,
 )
 TEXT_ONLY_LANE = ModelRunLane(
     provider_id="nearby",
@@ -142,6 +144,7 @@ TEXT_ONLY_LANE = ModelRunLane(
     size_bytes=None,
     vision=None,
     context_length=None,
+    installed=None,
 )
 ON_HOST_LANE = ModelRunLane(
     provider_id="nearby",
@@ -152,5 +155,6 @@ ON_HOST_LANE = ModelRunLane(
     size_bytes=None,
     vision=None,
     context_length=None,
+    installed=None,
 )
 """A lane whose catalogue entry declares it stays on this computer."""

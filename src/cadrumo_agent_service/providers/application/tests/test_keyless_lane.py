@@ -257,5 +257,6 @@ def test_a_role_selected_on_a_keyless_lane_is_answered_without_any_stored_record
         size_bytes=1_000_000,
         vision=False,
         context_length=4096,
+        installed=None,
     )
     assert store.records == {}

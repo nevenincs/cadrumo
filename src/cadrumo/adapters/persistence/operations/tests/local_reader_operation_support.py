@@ -1,23 +1,21 @@
 """Real supervision of the local-reader operations for tests.
 
 Every run goes through the real registry, supervisor, journal and encrypted
-operand store. The model runtime is a real loopback endpoint speaking the
-Ollama wire shapes. Each role's lane is answered by an execution authority
-standing in for the runtime host and the agent service, which have their own
-tests; the supervisor binds the model-run port it offers exactly as it binds
-the host's. Every model id is synthetic.
+operand store. The local AI program's row is the components role's quick
+status, decoded from the role's recorded output. Each role's lane is answered
+by an execution authority standing in for the runtime host and the agent
+service, which have their own tests; the supervisor binds the model-run port it
+offers exactly as it binds the host's. Every model id is synthetic.
 """
 
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Generator, Mapping
-from contextlib import asynccontextmanager, contextmanager
+from collections.abc import AsyncGenerator, Mapping
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from http import HTTPStatus
 from pathlib import Path
-from typing import ClassVar, override
 
 from pydantic import BaseModel
 
@@ -32,7 +30,7 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunRoleSelection,
 )
 
-from .....application.local_reader import RoleLane
+from .....application.local_reader import ProgramRow, RoleLane
 from .....application.local_reader_report import (
     build_local_reader_report_definition,
     build_local_reader_report_registration,
@@ -51,10 +49,9 @@ from .....application.operations.frontend_requests import (
 from .....application.operations.models import OperationIdentity, OperationRequest
 from .....application.operations.registry import OperationRegistry
 from .....application.operations.tests.authority_test_support import unread_authority_operation
-from .....core.config import override_settings
 from .....core.model_roles import ModelRole
 from .....core.operations import OperationEffect, OperationEventKind, OperationTerminalCondition
-from .....tests.loopback_llm import SilentLoopbackHandler, read_json_body, serving_loopback, write_json_response
+from ....outbound.components.tests.recorded_rows import set_up_row
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..journal import OperationJournalRepository
 from ..lease import OperationLeaseFilesystemRepository
@@ -62,11 +59,10 @@ from ..secure_references import operation_secure_reference_repository
 
 __all__ = [
     "READER_LANES",
+    "SET_UP_PROGRAM",
     "TEXT_MODEL",
     "VISION_MODEL",
-    "LoopbackModelRuntime",
     "SupervisedRun",
-    "loopback_model_runtime",
     "provisioning_registry",
     "run_supervised",
     "run_supervised_in",
@@ -76,7 +72,11 @@ VISION_MODEL = "synthetic-vision:small"
 TEXT_MODEL = "synthetic-text:small"
 
 
-def _on_host_lane(model: str) -> ModelRunLane:
+#: The local AI program as the components role reports it once set up.
+SET_UP_PROGRAM: ProgramRow = set_up_row("local_ai")
+
+
+def _on_host_lane(model: str, *, installed: bool) -> ModelRunLane:
     return ModelRunLane(
         provider_id="ollama",
         transport="api",
@@ -86,13 +86,15 @@ def _on_host_lane(model: str) -> ModelRunLane:
         size_bytes=1024,
         vision=None,
         context_length=None,
+        installed=installed,
     )
 
 
-#: The person's selection: both reader roles on the local lane, no other role selected.
+#: The person's selection: both reader roles on the local lane, the text model held by the server and the
+#: vision model not, and no other role selected.
 READER_LANES: Mapping[ModelRole, RoleLane] = {
-    ModelRole.TEXT_EXTRACTION: _on_host_lane(TEXT_MODEL),
-    ModelRole.VISION_TRANSCRIPTION: _on_host_lane(VISION_MODEL),
+    ModelRole.TEXT_EXTRACTION: _on_host_lane(TEXT_MODEL, installed=True),
+    ModelRole.VISION_TRANSCRIPTION: _on_host_lane(VISION_MODEL, installed=False),
     ModelRole.COLUMN_ROLE_MAPPING: ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION),
     ModelRole.SUPPLY_NATURE_PROPOSAL: ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION),
 }
@@ -131,60 +133,9 @@ class _SelectionAuthority:
         return ModelRunRefusal(code=ModelRunRefusalCode.RUN_FAILED)
 
 
-class LoopbackModelRuntime(SilentLoopbackHandler):
-    """A loopback runtime answering its version, inventory and resident set, and recording anything sent to it."""
-
-    installed: ClassVar[set[str]] = set()
-    residents: ClassVar[set[str]] = set()
-    requests: ClassVar[list[tuple[str, Mapping[str, object]]]] = []
-
-    @override
-    def do_GET(self) -> None:
-        if self.path == "/api/version":
-            write_json_response(self, {"version": "0.9.0"}, status=HTTPStatus.OK)
-        elif self.path == "/api/tags":
-            rows = [{"name": name, "size": 1024, "digest": f"sha256:{name}"} for name in sorted(self.installed)]
-            write_json_response(self, {"models": rows}, status=HTTPStatus.OK)
-        elif self.path == "/api/ps":
-            rows = [{"name": name, "size": 1024, "size_vram": 0} for name in sorted(self.residents)]
-            write_json_response(self, {"models": rows}, status=HTTPStatus.OK)
-        else:
-            self.send_error(HTTPStatus.NOT_FOUND)
-
-    @override
-    def do_POST(self) -> None:
-        # A read sends nothing; whatever arrives is recorded so a test can say so.
-        type(self).requests.append((self.path, read_json_body(self)))
-        self.send_error(HTTPStatus.NOT_FOUND)
-
-
-@contextmanager
-def loopback_model_runtime(
-    *, installed: set[str], residents: set[str], required_headroom_bytes: int | None = None
-) -> Generator[str]:
-    """Serve the loopback runtime and point the reader's settings at it.
-
-    Admission is overridden open by default, so it does not depend on how busy
-    the test host's memory happens to be. ``required_headroom_bytes`` instead
-    enforces admission with that safety margin.
-    """
-    LoopbackModelRuntime.installed = set(installed)
-    LoopbackModelRuntime.residents = set(residents)
-    LoopbackModelRuntime.requests = []
-    with (
-        serving_loopback(LoopbackModelRuntime, path="/api/chat") as chat_url,
-        override_settings(
-            cadrumo_llm_ollama_chat_url=chat_url,
-            cadrumo_llm_contention_safety_margin_bytes=required_headroom_bytes or 0,
-            cadrumo_llm_contention_check_override=required_headroom_bytes is None,
-        ),
-    ):
-        yield chat_url
-
-
-def provisioning_registry() -> OperationRegistry:
-    """Register the two local-reader operations."""
-    status = build_local_reader_status_definition()
+def provisioning_registry(program: ProgramRow = SET_UP_PROGRAM) -> OperationRegistry:
+    """Register the two local-reader operations, the status reading ``program`` as the local AI's row."""
+    status = build_local_reader_status_definition(lambda: program)
     report = build_local_reader_report_definition()
     return OperationRegistry(
         definitions=(report, status),
@@ -233,9 +184,10 @@ def run_supervised[RequestT: BaseModel, ResultT: BaseModel](
     result_type: type[ResultT],
     *,
     lanes: Mapping[ModelRole, RoleLane] = READER_LANES,
+    program: ProgramRow = SET_UP_PROGRAM,
 ) -> SupervisedRun[ResultT]:
-    """Settle ``request`` with ``lanes`` selected and resolve its public result as a frontend would."""
-    return run_supervised_in(tmp_path, provisioning_registry(), request, result_type, lanes=lanes)
+    """Settle ``request`` with ``lanes`` selected and ``program`` reported, and resolve its public result."""
+    return run_supervised_in(tmp_path, provisioning_registry(program), request, result_type, lanes=lanes)
 
 
 def run_supervised_in[RequestT: BaseModel, ResultT: BaseModel](

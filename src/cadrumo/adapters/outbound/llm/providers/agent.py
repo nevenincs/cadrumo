@@ -27,12 +27,13 @@ from .....application.operator_actions.models import PreconditionVerdict
 from .....application.provisioning_contracts import (
     LOCAL_AI_PROVISION_ACTION_ID,
     ProvisioningPreconditionCondition,
+    provisioning_no_recovery_verdict,
     provisioning_setup_verdict,
 )
 from .....core.config_support import LLMProvider
 from .....core.model_roles import ModelRole
 from .....core.operator_action_enums import ActionEvidenceProvenance
-from ..errors import LLMConfigError, LLMConsentError, LLMError, LLMProviderError
+from ..errors import LLMConfigError, LLMConsentError, LLMContentionError, LLMError, LLMProviderError
 from ..preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
 from ..response_json import first_json_object
 from .base import ProviderAdapter, ProviderCompletion, ProviderRequest
@@ -67,12 +68,18 @@ def model_run_refusal_verdict(refusal: ModelRunRefusal, *, role: ModelRole) -> P
     """Return the typed verdict for a refused model run, naming its recovery where one is registered.
 
     A selected model the lane's local server does not hold is supplied by the
-    local AI setup, so that refusal names it. A role with no selection says so
-    in a stable fact and names no action: the selection is made in the desktop
-    app, which no command of ours performs. Every other refusal keeps a
-    no-recovery verdict.
+    local AI setup, so that refusal names it. A model the agent could not load
+    with the memory free is the load-capacity refusal, a property of this
+    computer that no setup changes. A role with no selection says so in a
+    stable fact and names no action: the selection is made in the desktop app,
+    which no command of ours performs. Every other refusal keeps a no-recovery
+    verdict.
     """
     facts: dict[str, str | int | bool] = {"model_run_refusal": refusal.code.value, "model_role": role.value}
+    if refusal.code is ModelRunRefusalCode.MODEL_DOES_NOT_FIT:
+        return provisioning_no_recovery_verdict(
+            ProvisioningPreconditionCondition.LOAD_CAPACITY_AVAILABLE, facts={**facts, "role": role.value}
+        )
     if refusal.code is ModelRunRefusalCode.MODEL_NOT_INSTALLED:
         return provisioning_setup_verdict(
             ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED,
@@ -124,6 +131,8 @@ def model_run_refusal_error(refusal: ModelRunRefusal, *, role: ModelRole) -> LLM
     context = {"provider": LLMProvider.AGENT.value, **verdict.evidence[0].values}
     if refusal.code is ModelRunRefusalCode.CONSENT_MISSING:
         return LLMConsentError(context=context, precondition_verdict=verdict)
+    if refusal.code is ModelRunRefusalCode.MODEL_DOES_NOT_FIT:
+        return LLMContentionError(context=context, precondition_verdict=verdict)
     if refusal.code is ModelRunRefusalCode.NO_SELECTION:
         return LLMConfigError(
             context=context, precondition_verdict=verdict, translated_message=_NO_SELECTION_LOCALE_KEY

@@ -36,6 +36,7 @@ _LANE = ModelRunLane(
     size_bytes=None,
     vision=None,
     context_length=None,
+    installed=None,
 )
 _SERVED = ModelRunServed(provider_id="example", transport="cli", model="example-model-1", agent_version="1")
 _SELECTED = ModelRunSelectedModel(lane_id="example_cli", model="example-model-1")

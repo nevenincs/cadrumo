@@ -1,10 +1,11 @@
 """The measured machine and per-role selection report for local inference, and its read operation.
 
-:func:`read_local_reader_report` measures hardware, reports the lane the
-person selected for each role and judges whether the first on-host model of
-known size could be loaded right
-now. ``local-reader.report`` serves that measurement to every frontend. It
-reads only: nothing is pulled, loaded or started.
+:func:`read_local_reader_report` measures this computer's memory and
+accelerator and reports the lane the person selected for each role.
+``local-reader.report`` serves that measurement to every frontend. It reads
+only: nothing is pulled, loaded or started, and the local AI server is not
+asked anything. Whether a model fits the memory free is the agent's answer
+when it loads the model.
 """
 
 from __future__ import annotations
@@ -21,7 +22,6 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunRefusalCode,
 )
 
-from ..core.config import Settings, load_settings
 from ..core.hardware import AcceleratorKind
 from ..core.model_roles import ModelRole
 from ..core.models import STRICT_FROZEN_CONFIG
@@ -30,12 +30,10 @@ from ..core.time.clock import now
 from .local_reader import RoleLane, lane_requirement_bytes, read_role_lanes
 from .local_reader_contracts import (
     LOCAL_READER_OPERATION_SUBJECT,
-    LocalReaderContentionV1,
     LocalReaderFactV1,
     local_reader_public_facts,
     local_reader_verdict_condition,
     local_reader_verdict_facts,
-    project_local_reader_contention,
 )
 from .local_reader_operation import bind_machine_provisioning_access
 from .operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
@@ -51,12 +49,6 @@ from .provisioning_contracts import (
     ProvisioningFactValue,
     ProvisioningPreconditionCondition,
     provisioning_no_recovery_verdict,
-)
-from .provisioning_runtime import (
-    ContentionSnapshot,
-    assess_model_load_contention,
-    read_runtime_residents,
-    runtime_model_names_match,
 )
 
 __all__ = [
@@ -79,26 +71,22 @@ LOCAL_READER_REPORT_OPERATION_DEFINITION_ID = "local-reader.report"
 
 
 class LocalReaderReportModel(BaseModel):
-    """One role's resolved model and whether the runtime holds it in memory."""
+    """One role's resolved model."""
 
     model_config = STRICT_FROZEN_CONFIG
 
     role: ModelRole
     model: str | None = None
     selected: bool
-    resident: bool = False
     facts: Mapping[str, ProvisioningFactValue] = Field(default_factory=dict)
     precondition_verdict: PreconditionVerdict | None = None
 
 
 class LocalReaderReport(BaseModel):
-    """What the machine measures, which model each role resolves to, and whether one could load now.
+    """What the machine measures and which model each role resolves to.
 
-    Totals are for reporting and free amounts for acting, as on the hardware
-    profile they are read from. ``residents`` is empty both when nothing is
-    resident and when the runtime did not answer; ``runtime_reachable`` tells
-    the two apart. ``contention`` judges the first role whose selection names
-    a model with a known memory requirement, and is absent when none does.
+    Each figure is ``None`` when it could not be measured, as on the hardware
+    profile it is read from.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -108,60 +96,30 @@ class LocalReaderReport(BaseModel):
     free_vram_bytes: int | None = Field(default=None, ge=0)
     total_system_memory_bytes: int | None = Field(default=None, ge=0)
     free_system_memory_bytes: int | None = Field(default=None, ge=0)
-    runtime_reachable: bool
-    residents: tuple[str, ...] = ()
     models: tuple[LocalReaderReportModel, ...]
-    contention: ContentionSnapshot | None = None
 
 
-def read_local_reader_report(
-    lanes: Mapping[ModelRole, RoleLane], settings: Settings | None = None
-) -> LocalReaderReport:
-    """Measure hardware, report each role's selected lane, and judge admission of the first assessable load.
+def read_local_reader_report(lanes: Mapping[ModelRole, RoleLane]) -> LocalReaderReport:
+    """Measure hardware and report each role's selected lane.
 
     ``lanes`` is what :func:`~.local_reader.read_role_lanes` resolved for every
     role. Only a lane that stays on this computer names a model here, because
     only its model loads on this machine; an off-host lane is selected and
-    names none. Reads only, and never raises for an unreachable runtime or an
-    unmeasurable device: each is reported as the state it is.
+    names none. Reads only, and never raises for an unmeasurable device: each
+    figure is reported as the state it is.
     """
-    resolved = settings if settings is not None else load_settings()
     profile = probe_hardware_profile()
-    residents = read_runtime_residents(resolved)
-    resident_names = tuple(entry.name for entry in residents) if residents is not None else ()
-    models: list[LocalReaderReportModel] = []
-    primary: tuple[str, int] | None = None
-    for role in ModelRole:
-        row = _report_model(role, lanes.get(role), resident_names)
-        models.append(row)
-        answer = lanes.get(role)
-        if primary is None and isinstance(answer, ModelRunLane) and not answer.reads_off_host:
-            requirement = lane_requirement_bytes(answer)
-            primary = None if requirement is None else (answer.model, requirement)
-    contention = None
-    if primary is not None:
-        contention = assess_model_load_contention(
-            primary[0],
-            primary[1],
-            profile=profile,
-            residents=residents,
-            residents_measured=residents is not None,
-            settings=resolved,
-        )
     return LocalReaderReport(
         accelerator=profile.accelerator.kind,
         total_vram_bytes=profile.total_vram_bytes,
         free_vram_bytes=profile.free_vram_bytes,
         total_system_memory_bytes=profile.memory.total_bytes,
         free_system_memory_bytes=profile.memory.free_bytes,
-        runtime_reachable=residents is not None,
-        residents=resident_names,
-        models=tuple(models),
-        contention=contention,
+        models=tuple(_report_model(role, lanes.get(role)) for role in ModelRole),
     )
 
 
-def _report_model(role: ModelRole, answer: RoleLane | None, resident_names: tuple[str, ...]) -> LocalReaderReportModel:
+def _report_model(role: ModelRole, answer: RoleLane | None) -> LocalReaderReportModel:
     if not isinstance(answer, ModelRunLane):
         code = (answer or ModelRunRefusal(code=ModelRunRefusalCode.SERVICE_UNAVAILABLE)).code
         facts: dict[str, ProvisioningFactValue] = {
@@ -183,13 +141,7 @@ def _report_model(role: ModelRole, answer: RoleLane | None, resident_names: tupl
     requirement = lane_requirement_bytes(answer)
     if requirement is not None:
         facts["size_bytes"] = requirement
-    return LocalReaderReportModel(
-        role=role,
-        model=answer.model,
-        selected=True,
-        resident=any(runtime_model_names_match(name, answer.model) for name in resident_names),
-        facts=facts,
-    )
+    return LocalReaderReportModel(role=role, model=answer.model, selected=True, facts=facts)
 
 
 class LocalReaderReportRequest(CredentialFreeOperationRequest):
@@ -204,7 +156,6 @@ class LocalReaderReportModelV1(BaseModel):
     role: ModelRole
     model: str | None = Field(default=None, min_length=1, max_length=MODEL_RUN_MODEL_ID_MAX_LENGTH)
     selected: bool
-    resident: bool
     facts: tuple[LocalReaderFactV1, ...]
     verdict_condition_id: str | None = Field(default=None, min_length=1, max_length=128)
     verdict_facts: tuple[LocalReaderFactV1, ...]
@@ -220,10 +171,7 @@ class LocalReaderReportPublicResultV1(BaseModel):
     free_vram_bytes: NonNegativeInt | None = None
     total_system_memory_bytes: NonNegativeInt | None = None
     free_system_memory_bytes: NonNegativeInt | None = None
-    runtime_reachable: bool
-    residents: tuple[str, ...]
     models: tuple[LocalReaderReportModelV1, ...]
-    contention: LocalReaderContentionV1 | None = None
 
 
 class LocalReaderReportExecutor:
@@ -284,21 +232,17 @@ def local_reader_report_public_result(report: LocalReaderReport) -> LocalReaderR
         free_vram_bytes=report.free_vram_bytes,
         total_system_memory_bytes=report.total_system_memory_bytes,
         free_system_memory_bytes=report.free_system_memory_bytes,
-        runtime_reachable=report.runtime_reachable,
-        residents=report.residents,
         models=tuple(
             LocalReaderReportModelV1(
                 role=row.role,
                 model=row.model,
                 selected=row.selected,
-                resident=row.resident,
                 facts=local_reader_public_facts(row.facts),
                 verdict_condition_id=local_reader_verdict_condition(row.precondition_verdict),
                 verdict_facts=local_reader_verdict_facts(row.precondition_verdict),
             )
             for row in report.models
         ),
-        contention=project_local_reader_contention(report.contention),
     )
 
 

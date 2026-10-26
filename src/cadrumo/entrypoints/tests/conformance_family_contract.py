@@ -21,7 +21,6 @@ from pydantic import BaseModel
 
 from ...application.operations.frontend_requests import OperationObservationSuccessV1
 from ...application.operations.operation_definition import OperationDefinition
-from ...core.config import override_settings
 from ...core.operations import OperationEffect, OperationTerminalCondition
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
@@ -39,11 +38,6 @@ class RegisteredExecutorConformanceCase:
     expected_effect: OperationEffect
     expected_phase_codes: tuple[str, ...] | None = None
     expected_refusal_ref: str | None = None
-
-
-def closed_model_runtime() -> AbstractContextManager[object]:
-    """Point the local model runtime at a closed port so no live runtime is ever reached."""
-    return override_settings(cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat")
 
 
 @dataclass(frozen=True, slots=True)
@@ -103,14 +97,11 @@ class ConformanceFamily:
     """Every scenario one operation family contributes to the matrix.
 
     ``prepare`` is called once per case, inside the composed runtime, with
-    the case's own definition. ``closes_model_runtime`` points the local
-    model runtime at a closed port for every case in the family.
-    ``host_environment`` is entered around every case of the family, for
-    scenarios that need something of the machine arranged before the runtime
-    is composed.
+    the case's own definition. ``host_environment`` is entered around every
+    case of the family, for scenarios that need something of the machine
+    arranged before the runtime is composed.
     """
 
     cases: tuple[RegisteredExecutorConformanceCase, ...]
     prepare: Callable[[ConformanceFamilyContext], ConformancePreparation]
-    closes_model_runtime: bool = False
     host_environment: Callable[[], AbstractContextManager[object]] | None = None

@@ -65,7 +65,7 @@ def _run[ProjectionT: BaseModel](
 ) -> tuple[ProjectionT, tuple[BucketEvent, ...]]:
     """Run the seeded scenario of one operation as ``frontend`` and read what it left behind."""
     with (
-        conformance.model_runtime_for_operation(definition_id),
+        conformance.family_environment_for_operation(definition_id),
         conformance.conformance_operation_runtime(
             tmp_path / "runtime",
             cleanup=conformance.OperationRuntimeCloseWitness(),

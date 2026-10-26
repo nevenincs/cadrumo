@@ -209,6 +209,16 @@ class CatalogModelFacts(BaseModel):
     licence: ModelLicence | None
 
 
+class LiveCatalogModel(CatalogModelFacts):
+    """One model the running agent's live catalogue lists, with whether the lane's local server holds it.
+
+    A declared entry has no such state; only the running agent can say what its server holds.
+    """
+
+    installed: bool | None
+    """``None`` where the live entry does not state it: unknown, never "not installed"."""
+
+
 class ProviderCatalogModel(CatalogModelFacts):
     """One model a lane declares in the agent's declared catalogue, with its presentation fields."""
 
@@ -409,6 +419,7 @@ __all__ = [
     "LaneBackground",
     "LaneId",
     "LicenceDigest",
+    "LiveCatalogModel",
     "ModelLicence",
     "ProviderAuthKind",
     "ProviderCatalog",

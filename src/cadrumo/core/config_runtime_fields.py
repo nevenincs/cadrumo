@@ -1,8 +1,8 @@
-"""LLM provider endpoint and runtime tuning settings layered on top of timeout config.
+"""LLM runtime tuning settings layered on top of timeout config.
 
-Defines :class:`CadrumoRuntimeSettings`, which adds the local Ollama endpoint
-URL and model-runtime tuning fields (memory floor, admission, per-request timeouts)
-consumed by the LLM-backed invoice-read pipeline.
+Defines :class:`CadrumoRuntimeSettings`, which adds the model-runtime tuning
+fields (memory floor, on-host concurrency, per-request timeouts) consumed by the
+LLM-backed invoice-read pipeline, and the fixed address of the local AI server.
 """
 
 from __future__ import annotations
@@ -13,24 +13,15 @@ from pydantic import Field
 
 from .config_timeouts import CadrumoTimeoutSettings
 
-#: The loopback address the runtime manager's local AI server listens on. The package's
-#: environment declaration states the same address for the native side; a package-side
-#: test keeps the two equal.
+#: The loopback address the runtime manager's local AI server listens on, which the agent
+#: service hands to the agent it hosts. The package's environment declaration states the
+#: same address for the native side; a package-side test keeps the two equal.
 LOCAL_AI_SERVER_ADDRESS: Final = "127.0.0.1:23743"
-#: The chat endpoint of that server, the readers' default.
-LOCAL_AI_CHAT_URL: Final = f"http://{LOCAL_AI_SERVER_ADDRESS}/api/chat"
 
 
 class CadrumoRuntimeSettings(CadrumoTimeoutSettings):
-    """LLM provider endpoints and runtime tuning fields layered on top of timeouts."""
+    """LLM runtime tuning fields layered on top of timeouts."""
 
-    cadrumo_llm_ollama_chat_url: str = Field(
-        default=LOCAL_AI_CHAT_URL,
-        description=(
-            "Local Ollama /api/chat endpoint; defaults to the server the runtime manager runs, "
-            "override for non-localhost Ollama deployments"
-        ),
-    )
     cadrumo_llm_vision_read_timeout_s: int = Field(
         default=300,
         gt=0,
@@ -53,48 +44,17 @@ class CadrumoRuntimeSettings(CadrumoTimeoutSettings):
             "selected model"
         ),
     )
-    cadrumo_llm_contention_safety_margin_bytes: int = Field(
-        default=1024**3,
-        ge=0,
-        description=(
-            "Headroom kept free ABOVE a model's declared memory requirement before "
-            "a load is admitted. A model does not occupy exactly its weight size: "
-            "the KV cache grows with the context window, the runtime allocates "
-            "scratch buffers, and the display server keeps taking frames while the "
-            "read runs. Admitting a load that fits with zero margin is how a "
-            "measured-safe load still ends as an OOM kill mid-read. 1 GiB covers "
-            "the default 8192-token context plus normal desktop churn; raise it on "
-            "a machine that also drives a display, lower it on a headless box"
-        ),
-    )
-    cadrumo_llm_contention_check_override: bool = Field(
-        default=False,
-        description=(
-            "Admit a local model load even when free headroom could not be "
-            "measured. Default false: an unreadable free figure fails CLOSED at "
-            "the act, because 'could not tell' is not evidence of headroom. Set "
-            "true only on a machine known to have capacity that this build cannot "
-            "read (a non-NVIDIA accelerator, or NVML absent because cadrumo[llm] "
-            "is not installed). It does not override a MEASURED shortfall -- a "
-            "load whose requirement exceeds measured free memory is refused "
-            "regardless of this setting"
-        ),
-    )
     cadrumo_llm_local_inference_concurrency: int = Field(
         default=1,
         ge=1,
         description=(
-            "How many on-host inference requests this process may run at once. "
-            "Default one, because two concurrent reads on consumer hardware are "
-            "the same out-of-memory kill the contention check exists to prevent, "
-            "reached by another route: each load individually fits the measured "
-            "headroom, and together they do not. A request arriving while the "
-            "arena is full is REFUSED rather than queued -- a queued request "
-            "would wait holding its decoded pages in the memory under pressure, "
-            "and would run against headroom measured before it waited. Raise it "
-            "only on a machine with headroom for a second concurrent model load; "
-            "it does not bound off-host dispatch, which occupies none of this "
-            "machine's device memory"
+            "How many on-host inference requests this process may have waiting on "
+            "the local AI at once. Whether a model fits the memory free is the "
+            "agent's answer when it loads the model; this only keeps one process "
+            "from stacking runs on the agent's serial loads. A request arriving "
+            "while the arena is full is REFUSED rather than queued -- a queued "
+            "request would wait holding its decoded pages in memory. It does not "
+            "bound off-host dispatch, which occupies none of this machine's memory"
         ),
     )
     cadrumo_llm_default_max_tokens: int = Field(

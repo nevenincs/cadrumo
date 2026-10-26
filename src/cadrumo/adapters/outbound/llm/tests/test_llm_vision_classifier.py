@@ -46,6 +46,7 @@ _ON_HOST_VISION_LANE = ModelRunLane(
     size_bytes=None,
     vision=True,
     context_length=None,
+    installed=None,
 )
 _OFF_HOST_VISION_LANE = _ON_HOST_VISION_LANE.model_copy(update={"provider_id": "faraway", "reads_off_host": True})
 

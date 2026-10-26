@@ -2,18 +2,13 @@
 
 Each probe answers "is this external service available right now?" and must
 return a typed :class:`DependencyStatus` — never raise — when the dependency is
-absent. These tests exercise the real probes against a deliberately-unreachable
-Ollama endpoint and a controlled Playwright cache directory; no mocks.
+absent. These tests exercise the real probes; no mocks. The local AI program's
+row is judged from the components role's status row, tested beside the reader.
 """
 
 from __future__ import annotations
 
-import json
-from collections.abc import Generator
-from contextlib import contextmanager
-from http import HTTPStatus
 from pathlib import Path
-from typing import ClassVar, override
 
 import pytest
 
@@ -24,64 +19,10 @@ from ...core.storage_taxonomy import StorageGrouping
 from ...core.storage_taxonomy_locations import storage_tree_targets
 from ...domain.calculations.registry.authority_store import AuthorityDescriptor, AuthorityStoreError
 from ...domain.calculations.registry.errors import AuthorityDescriptorUnavailableError
-from ...tests.loopback_llm import SilentLoopbackHandler, serving_loopback, write_raw_response
 from ..cli_provisioning import admit_cli_authority, provision_cli_storage
-from ..local_reader import LOCAL_AI_PROGRAM_SERVICE, probe_local_ai_program
-from ..provisioning import DependencyStatus, probe_optional_extra, probe_optional_extras
+from ..provisioning import probe_optional_extra, probe_optional_extras
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-
-class _OllamaTagsEndpoint(SilentLoopbackHandler):
-    """Loopback Ollama endpoint returning one configured ``/api/tags`` body.
-
-    The body is written verbatim rather than through a well-formed envelope
-    builder, because every case here supplies a DELIBERATELY malformed shape --
-    a bare list, a null inventory, a numeric model name. A builder that could
-    only emit the correct envelope would silently repair the very defect the
-    probe is asked to survive.
-    """
-
-    payload: ClassVar[object]
-
-    @override
-    def do_GET(self) -> None:
-        if self.path != "/api/tags":
-            self.send_error(HTTPStatus.NOT_FOUND)
-            return
-        write_raw_response(self, json.dumps(self.payload).encode("utf-8"), status=HTTPStatus.OK)
-
-
-@contextmanager
-def _serve_ollama_tags(payload: object) -> Generator[str]:
-    _OllamaTagsEndpoint.payload = payload
-    with serving_loopback(_OllamaTagsEndpoint, path="") as endpoint:
-        yield endpoint
-
-
-def test_local_ai_program_probe_unreachable_returns_unavailable_with_remediation() -> None:
-    """An unreachable runtime yields a typed unavailable result, never an exception."""
-    # Port 1 is reserved/closed — the connection is refused fast.
-    with override_settings(cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat"):
-        status = probe_local_ai_program()
-    assert isinstance(status, DependencyStatus)
-    assert status.service == LOCAL_AI_PROGRAM_SERVICE
-    assert status.available is False
-    assert status.facts["runtime_reachable"] is False
-    assert status.precondition_verdict is not None
-    assert status.precondition_verdict.failed_condition_id == "provisioning.runtime.reachable"
-
-
-@pytest.mark.parametrize("payload", ([], {"models": None}, {"models": [{"name": 7}]}))
-def test_local_ai_program_probe_malformed_successful_tags_response_is_unavailable(payload: object) -> None:
-    """A real successful tags response with the wrong JSON shape stays a typed unavailable result."""
-    with _serve_ollama_tags(payload) as endpoint, override_settings(cadrumo_llm_ollama_chat_url=f"{endpoint}/api/chat"):
-        status = probe_local_ai_program()
-
-    assert status.service == LOCAL_AI_PROGRAM_SERVICE
-    assert status.available is False
-    assert status.facts["runtime_reachable"] is False
-    assert status.precondition_verdict is not None
 
 
 def test_probe_optional_extra_present_for_an_installed_package() -> None:

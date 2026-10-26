@@ -112,7 +112,6 @@ from ..errors import redraw_stderr_line
 from ..errors import write_stderr as draw_stderr
 from .provision_payloads import (
     ProvisionBrowserResult,
-    ProvisionContentionPayload,
     ProvisionItemPayload,
     ProvisionModelPayload,
     ProvisionProbeResult,
@@ -126,10 +125,7 @@ from .provision_payloads import (
 from .status_rendering import precondition_action_lines
 
 if TYPE_CHECKING:
-    from ....application.local_reader_contracts import (
-        LocalReaderContentionV1,
-        LocalReaderFactV1,
-    )
+    from ....application.local_reader_contracts import LocalReaderFactV1
     from ....application.operator_actions.models import PreconditionVerdict
 
 __all__ = [
@@ -746,7 +742,7 @@ def _require_settled[ResultT: BaseModel](completed: RegisteredOperationCompletio
 
 
 def provision_report(ctx: typer.Context) -> None:
-    """Report the measured hardware, each role's selected lane, and admission."""
+    """Report the measured hardware and each role's selected lane."""
     from ....application.local_reader_contracts import LOCAL_READER_OPERATION_SUBJECT
 
     completed = run_registered_operation(
@@ -785,23 +781,6 @@ def _reader_facts(facts: tuple[LocalReaderFactV1, ...]) -> dict[str, str | int |
     return local_reader_fact_mapping(facts)
 
 
-def _contention_payload(contention: LocalReaderContentionV1 | None) -> ProvisionContentionPayload | None:
-    """Project a contention verdict onto its payload, preserving the cause set."""
-    if contention is None:
-        return None
-    return ProvisionContentionPayload(
-        model=contention.model,
-        admitted=contention.admitted,
-        causes=list(contention.causes),
-        required_bytes=contention.required_bytes,
-        free_vram_bytes=contention.free_vram_bytes,
-        free_system_memory_bytes=contention.free_system_memory_bytes,
-        shortfall_bytes=contention.shortfall_bytes,
-        facts=_reader_facts(contention.facts),
-        precondition_action=_reader_action(contention.verdict_condition_id, contention.verdict_facts),
-    )
-
-
 def _provision_result_lines(result: object) -> tuple[str, ...]:
     """Render the exact graph-resolved result DTO without recovery prose.
 
@@ -830,26 +809,22 @@ def _provision_result_lines(result: object) -> tuple[str, ...]:
 
 
 def emit_provision_report(ctx: typer.Context, report: LocalReaderReportPublicResultV1) -> None:
-    """Emit the measured hardware, each role's selected lane and the admission verdict."""
+    """Emit the measured hardware and each role's selected lane."""
     result = ProvisionReportResult(
         accelerator=report.accelerator.value,
         total_vram_bytes=report.total_vram_bytes,
         free_vram_bytes=report.free_vram_bytes,
         total_system_memory_bytes=report.total_system_memory_bytes,
         free_system_memory_bytes=report.free_system_memory_bytes,
-        runtime_reachable=report.runtime_reachable,
-        residents=list(report.residents),
         models=[
             ProvisionModelPayload(
                 role=row.role.value,
                 model=row.model,
                 selected=row.selected,
-                resident=row.resident,
                 facts=_reader_facts(row.facts),
                 precondition_action=_reader_action(row.verdict_condition_id, row.verdict_facts),
             )
             for row in report.models
         ],
-        contention=_contention_payload(report.contention),
     )
     emit_envelope(ctx, command="config.provision.report", result=result, lines=_provision_result_lines(result))

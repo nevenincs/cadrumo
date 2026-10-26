@@ -12,7 +12,6 @@ from ...application.workstation_check_operation import (
 )
 from ...core.auth_provider import AuthProviderKind
 from ...core.capabilities import ServiceCapability
-from ...core.component_records import uses_managed_local_ai
 from ...core.config import load_settings
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.optional_extras import OPTIONAL_EXTRAS
@@ -35,7 +34,6 @@ def _fact(row_facts: tuple[PublicNamedScalar, ...], key: str) -> PublicScalar:
 
 
 def _prepare_check(context: ConformanceFamilyContext) -> ConformancePreparation:
-    runtime_url = load_settings().cadrumo_llm_ollama_chat_url
     gestor_mode = load_settings().cadrumo_evidence_gestor_mode
     cloud_upload_permitted = load_settings().cadrumo_evidence_cloud_upload_permitted
     request = WorkstationCheckRequest(profile_id=context.profile_id)
@@ -60,12 +58,7 @@ def _prepare_check(context: ConformanceFamilyContext) -> ConformancePreparation:
         program = by_service[LOCAL_AI_PROGRAM_SERVICE]
         assert program.available is False
         assert not {"role", "model"} & {item.key for item in program.facts}, "the program row judges no model"
-        if uses_managed_local_ai(load_settings()):
-            assert _fact(program.facts, "local_ai_located") is False
-        else:
-            assert _fact(program.facts, "runtime_reachable") is False
-            assert _fact(program.facts, "operator_endpoint") is True
-        assert all(item.value != runtime_url for item in program.facts), "the row never publishes the address"
+        assert _fact(program.facts, "local_ai_state") in {"absent", "blocked", "unknown"}
         assert program.precondition_verdict is not None
         checks = [row.check for row in projection.preflight]
         provider_checks = [f"auth-provider:{kind.value}" for kind in AuthProviderKind]
@@ -106,7 +99,6 @@ WORKSTATION_CHECK_CONFORMANCE_FAMILY = ConformanceFamily(
         ),
     ),
     prepare=_prepare,
-    closes_model_runtime=True,
 )
 
 
@@ -142,5 +134,4 @@ WORKSTATION_MATERIAL_CONFORMANCE_FAMILY = ConformanceFamily(
         ),
     ),
     prepare=_retained_workstation_prepare,
-    closes_model_runtime=True,
 )

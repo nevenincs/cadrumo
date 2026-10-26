@@ -56,7 +56,7 @@ _CASES = {
 
 
 def _registry() -> OperationRegistry:
-    status = build_local_reader_status_definition()
+    status = build_local_reader_status_definition(lambda: pytest.fail("access resolution must not read the program"))
     report = build_local_reader_report_definition()
     return OperationRegistry(
         definitions=(report, status),

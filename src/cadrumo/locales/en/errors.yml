@@ -1155,8 +1155,9 @@ errors:
     refused_llm_config: The language-model client configuration is invalid or incomplete.
     refused_llm_consent: Reading this document off-host was refused because consent
       for off-host transmission was not granted.
-    refused_llm_contention: This machine has no measured free memory to load the language
-      model right now.
+    refused_llm_contention: The selected model does not fit in this computer's free
+      memory right now. Close other programs or choose a smaller model in the Cadrumo
+      desktop app, then try again.
     refused_llm_no_model_selected: No model is chosen for this task. Choose one in
       the Cadrumo desktop app, then try again.
     refused_llm_validation: A language-model object failed validation.

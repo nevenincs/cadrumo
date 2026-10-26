@@ -60,6 +60,7 @@ _LANE = ModelRunLane(
     size_bytes=None,
     vision=None,
     context_length=None,
+    installed=None,
 )
 _ANNOUNCEMENT_SECONDS = 30
 _SERVED = ModelRunServed(provider_id="example", transport="cli", model="example-model-1", agent_version="1")

@@ -74,7 +74,7 @@ def test_a_ledger_write_records_the_session_label_for_an_automation_and_the_pers
     frontend: OperationFrontendProjection,
 ) -> None:
     with (
-        conformance.model_runtime_for_operation(definition_id),
+        conformance.family_environment_for_operation(definition_id),
         conformance.conformance_operation_runtime(
             tmp_path / definition_id,
             cleanup=conformance.OperationRuntimeCloseWitness(),

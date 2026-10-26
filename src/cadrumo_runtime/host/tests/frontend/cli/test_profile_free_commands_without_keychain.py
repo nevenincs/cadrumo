@@ -25,7 +25,6 @@ from .fresh_process import run_fresh_cli
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _NO_KEYCHAIN = {"PYTHON_KEYRING_BACKEND": "keyring.backends.fail.Keyring"}
-_CLOSED_RUNTIME = "http://127.0.0.1:1/api/chat"
 
 
 def _passphrase() -> str:
@@ -43,7 +42,6 @@ def _run(
                 "cadrumo_local_storage_root": str(storage_root),
                 "cadrumo_secret_passphrase": _passphrase(),
                 "cadrumo_output_language": "en",
-                "cadrumo_llm_ollama_chat_url": _CLOSED_RUNTIME,
             },
             env_strip_prefixes=("AEAT_", "PYTEST_"),
             extra_env={**_NO_KEYCHAIN, **(extra_env or {})},

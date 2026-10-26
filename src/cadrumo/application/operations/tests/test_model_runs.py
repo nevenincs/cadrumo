@@ -33,6 +33,7 @@ _LANE = ModelRunLane(
     size_bytes=None,
     vision=None,
     context_length=None,
+    installed=None,
 )
 _STATES = (
     ModelRunRoleSelection(

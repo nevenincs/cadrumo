@@ -42,7 +42,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.entrypoints.tests.registered_executor_case_support import (
     OperationRuntimeCloseWitness,
     conformance_operation_runtime,
-    model_runtime_for_operation,
+    family_environment_for_operation,
     seeded_conformance_operation_submission,
 )
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
@@ -153,7 +153,7 @@ def test_the_real_resolver_of_every_read_only_local_operation_holds_no_commit_an
         return
 
     with (
-        model_runtime_for_operation(definition_id),
+        family_environment_for_operation(definition_id),
         conformance_operation_runtime(tmp_path / definition_id, cleanup=OperationRuntimeCloseWitness()) as (
             _driver,
             registry,

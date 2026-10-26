@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 import asyncio
-import re
 from collections.abc import Callable, Mapping
 from typing import Annotated, Self
-from urllib.parse import urlsplit
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -19,6 +17,7 @@ from ...core.model_roles import ModelRole
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect
 from ...core.time.clock import now
+from ..dependency_contracts import DependencyState
 from ..local_reader import LocalReaderDocumentReadiness, LocalReaderStatus, RoleLane, read_role_lanes
 from ..operations.access_resolution import (
     LIFECYCLE_PERIOD_INDEPENDENT_REGISTERED_RESULT_PROFILE_VALUES_ACCESS,
@@ -32,7 +31,6 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..provisioning_host import RuntimeHostPlatform
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .invoice_evidence_operation import (
     InvoiceEvidenceLabel,
@@ -51,61 +49,28 @@ class LedgerEvidenceReaderReadinessRequest(BaseModel):
     profile_id: UUID
 
 
-def _reader_endpoint_origin(endpoint_url: str) -> str | None:
-    """Return the scheme, host and port of the configured endpoint, or ``None`` without a host.
-
-    The configured address is free text in settings: it can carry a user name
-    and password, a token in its path or query, or no host at all. Only the
-    part that says where the reader answers is a readiness fact.
-    """
-    try:
-        parts = urlsplit(endpoint_url)
-        host, port = parts.hostname, parts.port
-    except ValueError:
-        return None
-    if not parts.scheme or not (host is not None and host):
-        return None
-    authority = f"[{host}]" if ":" in host else host
-    return f"{parts.scheme}://{authority}" if port is None else f"{parts.scheme}://{authority}:{port}"
-
-
-_VERSION_TOKEN = re.compile(r"[0-9A-Za-z][0-9A-Za-z.+_-]{0,63}")
-
-
-def _reported_version(version: str | None) -> str | None:
-    """Return what the endpoint reported as its version when it reads as one."""
-    # The text is whatever answered at the configured address, which settings
-    # can point at another machine. Anything but a version is not a readiness fact.
-    return version if version is not None and _VERSION_TOKEN.fullmatch(version) is not None else None
-
-
 class ReaderHostProjectionV1(BaseModel):
-    """Closed host facts; no provisioning action is available here.
+    """The local AI program as the components role's status row reports it; no provisioning action is here.
 
-    ``endpoint_url`` is the endpoint's origin alone and is absent when the
-    configured address names no host. ``version`` is absent, with
-    ``version_withheld`` set, when the endpoint answered with something that
-    does not read as a version.
+    ``state`` is absent when the role reported no row, which is unknown.
+    ``version`` is the program version the row reports.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    platform: RuntimeHostPlatform
-    endpoint_url: Annotated[str, Field(min_length=1, max_length=2_048)] | None = None
-    endpoint_local: bool
-    executable_located: bool
-    reachable: bool
-    version: Annotated[str, Field(min_length=1, max_length=64)] | None = None
-    version_withheld: bool = False
+    state: DependencyState | None = None
+    version: Annotated[str, Field(min_length=1, max_length=128)] | None = None
     available: bool
     failed_condition_id: InvoiceEvidenceLabel | None = None
 
 
 class ReaderRoleProjectionV1(BaseModel):
-    """One role's selected lane, measured locally when it stays on this computer, and its readiness.
+    """One role's selected lane, judged locally when it stays on this computer, and its readiness.
 
-    ``recovery_action_id`` is the operator action the reader probe named for
-    ``failed_condition_id`` -- the local AI setup when the runtime does not
-    answer or the role's model is not installed -- and is absent when it named
+    ``installed`` is whether the local AI server holds the model, as the
+    agent's live catalogue states it, and absent when nobody stated it.
+    ``recovery_action_id`` is the operator action the judgement named for
+    ``failed_condition_id`` -- the local AI setup when the program is not set
+    up or the role's model is not installed -- and is absent when it named
     none, as for a role this computer cannot run.
     """
 
@@ -113,9 +78,6 @@ class ReaderRoleProjectionV1(BaseModel):
     role: Annotated[str, Field(min_length=1, max_length=128)]
     model: InvoiceEvidenceLabel | None = None
     installed: bool | None = None
-    resident: bool | None = None
-    load_admitted: bool | None = None
-    contention_causes: Annotated[tuple[str, ...], Field(max_length=32)] = ()
     ready: bool
     failed_condition_id: InvoiceEvidenceLabel | None = None
     recovery_action_id: NamespacedId | None = None
@@ -134,22 +96,16 @@ class LedgerEvidenceReaderReadinessProjection(BaseModel):
 
     @classmethod
     def from_status(cls, profile_id: UUID, status: LocalReaderStatus) -> Self:
-        """Copy measured host and role facts, and the setup action a role's probe named."""
-        host = status.host
-        version = _reported_version(host.version)
+        """Copy the program's row and the role facts, and the setup action a role's judgement named."""
+        program = status.program
         return cls(
             profile_id=profile_id,
             host=ReaderHostProjectionV1(
-                platform=host.platform,
-                endpoint_url=_reader_endpoint_origin(host.endpoint_url),
-                endpoint_local=host.endpoint_local,
-                executable_located=host.executable_located,
-                reachable=host.reachable,
-                version=version,
-                version_withheld=host.version is not None and version is None,
-                available=host.available,
+                state=program.state,
+                version=program.version,
+                available=program.available,
                 failed_condition_id=(
-                    None if host.precondition_verdict is None else host.precondition_verdict.failed_condition_id
+                    None if program.precondition_verdict is None else program.precondition_verdict.failed_condition_id
                 ),
             ),
             roles=tuple(
@@ -157,9 +113,6 @@ class LedgerEvidenceReaderReadinessProjection(BaseModel):
                     role=row.role.value,
                     model=row.model,
                     installed=row.installed,
-                    resident=row.resident,
-                    load_admitted=row.load_admitted,
-                    contention_causes=tuple(cause.value for cause in row.contention_causes),
                     ready=row.ready,
                     failed_condition_id=row.failed_condition_id,
                     recovery_action_id=row.recovery_action_id,

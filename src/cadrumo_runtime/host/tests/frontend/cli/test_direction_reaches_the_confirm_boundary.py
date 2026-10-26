@@ -24,7 +24,6 @@ from uuid import UUID
 
 import pytest
 
-from cadrumo.adapters.outbound.llm.tests.load_headroom_support import extraction_ports_under_admitted_load
 from cadrumo.adapters.outbound.llm.tests.model_run_support import ON_HOST_LANE, serving_agent
 from cadrumo.adapters.persistence.profile.catalogue_creation import build_catalogue_creation_ports
 from cadrumo.adapters.persistence.profile.counterparty_establishment import CounterpartyEstablishmentRepository
@@ -155,7 +154,7 @@ class _LiveDocument:
             evidence_id=self.evidence_id,
             bucket_id=self.bucket_id,
             settings=load_settings(),
-            ports=extraction_ports_under_admitted_load(invoice_draft_extraction_ports(evidence_ports=evidence_ports)),
+            ports=invoice_draft_extraction_ports(evidence_ports=evidence_ports),
             operation=self.operation,
             legends=self.legends,
         )
@@ -172,9 +171,7 @@ class _LiveDocument:
             invoice_confirmation_ports=build_invoice_confirmation_ports(bucket_id=self.bucket_id),
             counterparty_establishment_repository=CounterpartyEstablishmentRepository(bucket_id=self.bucket_id),
             evidence_ports=evidence_ports,
-            extraction_ports=extraction_ports_under_admitted_load(
-                invoice_draft_extraction_ports(evidence_ports=evidence_ports)
-            ),
+            extraction_ports=invoice_draft_extraction_ports(evidence_ports=evidence_ports),
             operation=self.operation,
             legends=self.legends,
         )

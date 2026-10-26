@@ -21,7 +21,9 @@ lane needs the consent the tax side bound to it, and a run on a lane that stays
 on this computer needs none. The model's licence, size, vision and context
 window travel with the lane as the entry it was found in states them, live
 while the agent runs and otherwise declared, each ``None`` when it states
-nothing; no lookup substitutes a recommended model.
+nothing; no lookup substitutes a recommended model. Whether the lane's local
+server holds the model travels the same way: the live entry states it, and a
+declared entry leaves it unknown.
 
 The run goes to cadrumo-agent as a background request through
 :class:`BackgroundRunGateway`. No secret leaves this service with the answer.
@@ -45,7 +47,14 @@ from cadrumo_client.contracts.model_runs import (
     model_run_media_kind,
 )
 
-from ..domain.catalog import BackgroundOption, CatalogModelFacts, LaneBackground, ProviderCatalog, ProviderConsumer
+from ..domain.catalog import (
+    BackgroundOption,
+    CatalogModelFacts,
+    LaneBackground,
+    LiveCatalogModel,
+    ProviderCatalog,
+    ProviderConsumer,
+)
 from ..domain.record import ModelRoleSelection
 from .lane_entries import current_lane_entries
 from .model_role_selections import selection_refusal
@@ -258,6 +267,7 @@ class _LaneAnswers:
             size_bytes=None,
             vision=None,
             context_length=None,
+            installed=None,
         )
         background = self._live_models.lane_background(entry.provider, entry.transport.value)
         accepted = lane.model_copy(update={"accepted_media": None if background is None else background.accepted_media})
@@ -278,7 +288,10 @@ class _LaneAnswers:
 
 
 def _model_lane(lane: ModelRunLane, model: CatalogModelFacts) -> ModelRunLane:
-    """Return ``lane`` carrying ``model`` and the facts its entry states, each ``None`` where it states none."""
+    """Return ``lane`` carrying ``model`` and the facts its entry states, each ``None`` where it states none.
+
+    Only a live entry states whether the lane's server holds the model; a declared one leaves it unknown.
+    """
     licence = model.licence
     return ModelRunLane(
         provider_id=lane.provider_id,
@@ -291,6 +304,7 @@ def _model_lane(lane: ModelRunLane, model: CatalogModelFacts) -> ModelRunLane:
         size_bytes=model.size_bytes,
         vision=model.vision,
         context_length=model.context_length,
+        installed=model.installed if isinstance(model, LiveCatalogModel) else None,
         accepted_media=lane.accepted_media,
     )
 

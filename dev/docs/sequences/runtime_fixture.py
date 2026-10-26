@@ -172,7 +172,6 @@ def _worker_composition() -> Generator[None]:
                 cadrumo_live_tests_enabled="",
                 cadrumo_live_tests_google="",
                 cadrumo_log_dir=root / "logs" / "worker",
-                cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat",
             ),
             frozen_clock(SANDBOX_INSTANT),
             bind_exchange_rate_provider_factory(recorded_ecb_rate_provider),

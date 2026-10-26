@@ -1,23 +1,27 @@
 """Read operation for the local document reader's status, from any frontend.
 
-``local-reader.status`` measures the runtime host and judges the lane the
-person selected for every reader role into one projection. Nothing is started, pulled, loaded or installed.
+``local-reader.status`` judges the local AI program from the components role's
+status row and the lane the person selected for every reader role into one
+projection. Nothing is started, pulled, loaded or installed, and the local AI
+server is not asked anything.
 """
 
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 
 from pydantic import BaseModel, Field
 
-from ..core.hardware import ContentionCause
 from ..core.model_roles import ModelRole
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.operations import OperationEffect
 from ..core.time.clock import now
+from .dependency_contracts import DependencyState
 from .local_reader import (
     LocalReaderDocumentReadiness,
     LocalReaderStatus,
+    ProgramRow,
     read_local_reader_status,
     read_role_lanes,
 )
@@ -25,6 +29,7 @@ from .local_reader_contracts import (
     LOCAL_READER_OPERATION_SUBJECT,
     LocalReaderFactV1,
     local_reader_public_facts,
+    local_reader_verdict_action,
     local_reader_verdict_condition,
     local_reader_verdict_facts,
 )
@@ -36,11 +41,10 @@ from .operations.operation_definition import OperationDefinition, build_single_p
 from .operations.owner import OperationExecutorContext
 from .operations.registry import OperationPublicDefinitionRegistrationV1
 from .operations.subject_reference import OperationSubjectReferenceV1
-from .provisioning_host import RuntimeHostPlatform
 
 __all__ = [
     "LOCAL_READER_STATUS_OPERATION_DEFINITION_ID",
-    "LocalReaderHostStatusV1",
+    "LocalReaderProgramStatusV1",
     "LocalReaderRoleStatusV1",
     "LocalReaderStatusExecutor",
     "LocalReaderStatusPublicResultV1",
@@ -59,27 +63,27 @@ class LocalReaderStatusRequest(CredentialFreeOperationRequest):
     """One status read of the machine's local reader."""
 
 
-class LocalReaderHostStatusV1(BaseModel):
-    """Public projection of the runtime host: whether it is installed, and whether it answers."""
+class LocalReaderProgramStatusV1(BaseModel):
+    """Public projection of the local AI program as the components role's status row reports it.
+
+    ``state`` is ``None`` when the role reported no row, which is unknown.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
-    platform: RuntimeHostPlatform
-    endpoint_url: str = Field(min_length=1)
-    endpoint_local: bool
-    executable_located: bool
-    reachable: bool
-    version: str | None = None
+    state: DependencyState | None = None
+    version: str | None = Field(default=None, min_length=1, max_length=128)
+    available: bool
     facts: tuple[LocalReaderFactV1, ...]
     verdict_condition_id: str | None = Field(default=None, min_length=1, max_length=128)
     verdict_facts: tuple[LocalReaderFactV1, ...]
+    verdict_action_id: str | None = Field(default=None, min_length=1, max_length=128)
 
 
 class LocalReaderRoleStatusV1(BaseModel):
     """Public projection of one role's reader.
 
-    ``installed``, ``resident`` and ``load_admitted`` are ``None`` when they
-    could not be measured, which is distinct from false.
+    ``installed`` is ``None`` when nobody stated it, which is distinct from false.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -87,9 +91,6 @@ class LocalReaderRoleStatusV1(BaseModel):
     role: ModelRole
     model: str | None = None
     installed: bool | None = None
-    resident: bool | None = None
-    load_admitted: bool | None = None
-    contention_causes: tuple[ContentionCause, ...]
     ready: bool
     failed_condition_id: str | None = Field(default=None, min_length=1, max_length=128)
 
@@ -99,7 +100,7 @@ class LocalReaderStatusPublicResultV1(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    host: LocalReaderHostStatusV1
+    program: LocalReaderProgramStatusV1
     roles: tuple[LocalReaderRoleStatusV1, ...]
     extraction_ready: bool
     document_readiness: LocalReaderDocumentReadiness
@@ -107,7 +108,11 @@ class LocalReaderStatusPublicResultV1(BaseModel):
 
 
 class LocalReaderStatusExecutor:
-    """Measure the reader and persist the measurement; nothing is started, pulled or installed."""
+    """Judge the reader and persist the judgement; nothing is started, pulled or installed."""
+
+    def __init__(self, read_program: Callable[[], ProgramRow]) -> None:
+        """Bind the read of the components role's status row for the local AI."""
+        self._read_program = read_program
 
     async def execute(
         self,
@@ -120,19 +125,20 @@ class LocalReaderStatusExecutor:
         await context.events.phase(LOCAL_READER_STATUS_OPERATION_DEFINITION_ID)
         await context.events.effect(OperationEffect.NONE)
         lanes = await read_role_lanes(ModelRole)
-        status = await asyncio.to_thread(read_local_reader_status, lanes)
+        program = await asyncio.to_thread(self._read_program)
+        status = await asyncio.to_thread(read_local_reader_status, lanes, program)
         return await context.operands.put(status, written_at=now())
 
 
-def build_local_reader_status_definition() -> OperationDefinition:
-    """Build the reader status read."""
+def build_local_reader_status_definition(read_program: Callable[[], ProgramRow]) -> OperationDefinition:
+    """Build the reader status read over ``read_program``, the components role's local AI row."""
     return build_single_phase_definition(
         definition_id=LOCAL_READER_STATUS_OPERATION_DEFINITION_ID,
         request_type=LocalReaderStatusRequest,
         subject_reference=OperationSubjectReferenceV1.fixed(LOCAL_READER_OPERATION_SUBJECT),
         result_type=LocalReaderStatus,
         executor_type=LocalReaderStatusExecutor,
-        build=LocalReaderStatusExecutor,
+        build=lambda: LocalReaderStatusExecutor(read_program),
         capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
     )
 
@@ -158,27 +164,22 @@ def project_local_reader_status_result(result: BaseModel, terminal_receipt: Oper
 
 def local_reader_status_public_result(status: LocalReaderStatus) -> LocalReaderStatusPublicResultV1:
     """Return the public result of one status read, whichever caller took it."""
-    host = status.host
+    program = status.program
     return LocalReaderStatusPublicResultV1(
-        host=LocalReaderHostStatusV1(
-            platform=host.platform,
-            endpoint_url=host.endpoint_url,
-            endpoint_local=host.endpoint_local,
-            executable_located=host.executable_located,
-            reachable=host.reachable,
-            version=host.version,
-            facts=local_reader_public_facts(host.facts),
-            verdict_condition_id=local_reader_verdict_condition(host.precondition_verdict),
-            verdict_facts=local_reader_verdict_facts(host.precondition_verdict),
+        program=LocalReaderProgramStatusV1(
+            state=program.state,
+            version=program.version,
+            available=program.available,
+            facts=local_reader_public_facts(program.facts),
+            verdict_condition_id=local_reader_verdict_condition(program.precondition_verdict),
+            verdict_facts=local_reader_verdict_facts(program.precondition_verdict),
+            verdict_action_id=local_reader_verdict_action(program.precondition_verdict),
         ),
         roles=tuple(
             LocalReaderRoleStatusV1(
                 role=row.role,
                 model=row.model,
                 installed=row.installed,
-                resident=row.resident,
-                load_admitted=row.load_admitted,
-                contention_causes=row.contention_causes,
                 ready=row.ready,
                 failed_condition_id=row.failed_condition_id,
             )

@@ -28,7 +28,7 @@ from ....application.ledger.preconditions import LedgerPreconditionCondition, le
 from ....application.local_reader import probe_local_ai_program
 from ....application.operator_actions.models import ConditionEvidence, PreconditionVerdict
 from ....application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID, ProvisioningPreconditionCondition
-from ....core.config import Settings, override_settings
+from ....core.config import override_settings
 from ....core.json_contract import ResolvedActionReference, ResolvedNoticeAction, ResolvedPreconditionAction
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....domain.iva.schema import InvoiceKind
@@ -134,8 +134,8 @@ def test_a_deferred_run_reports_distinctly_from_a_failed_one() -> None:
 
 
 def _local_ai_pause() -> InferencePause:
-    """The pause an unreachable local AI program gives: it names the local AI's setup."""
-    status = probe_local_ai_program(Settings(cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat"))
+    """The pause a local AI program not set up gives: it names the local AI's setup."""
+    status = probe_local_ai_program(recorded_absent_row("local_ai"))
     assert status.precondition_verdict is not None
     return InferencePause(
         facts={"runtime_reachable": False, "runtime_url": "http://127.0.0.1:11434"},

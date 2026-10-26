@@ -77,13 +77,13 @@ class SupplyNatureProposalResult(Protocol):
 
 
 class InvoiceDraftReaderHeadroomRefusedError(CadrumoError):
-    """Admission control refused to load the selected reader's model for lack of headroom.
+    """The agent refused to load the selected reader's model: it does not fit the memory free.
 
     The model was never loaded. Kept apart from
     :class:`InvoiceDraftReaderUnavailableError` because the two end differently
     when the read cannot stand without the model: an unavailable reader becomes
     the extraction's own reader refusal, while this refusal IS the load decision
-    and is re-raised exactly as admission control raised it. ``cause`` keeps that
+    and is re-raised exactly as the agent's refusal arrived. ``cause`` keeps that
     refusal, and ``failed_condition_id`` names the precondition it failed.
     """
 

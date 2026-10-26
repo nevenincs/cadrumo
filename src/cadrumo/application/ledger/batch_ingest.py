@@ -450,14 +450,14 @@ def _reader_role_for(data: bytes, *, document_shape_probe: EvidenceDocumentShape
 class _InferenceLaneState:
     """Whether inference-bearing items may still be attempted in this run.
 
-    Measured contention is batch-wide: it is a property of the machine, not of
-    one document. Every read goes through the agent service, and a lane that
-    loads on this computer is admitted at dispatch against the size its
-    catalogue entry states, before anything is loaded. So the first document
-    whose read is refused for measured contention closes the lane for every
-    later model-bearing document, which is paused with that verdict rather
-    than attempted into the same shortfall. That first document is paused too:
-    nothing was read from it, and a later run reads it.
+    Contention is batch-wide: it is a property of the machine, not of one
+    document. Every read goes through the agent service, and the agent loads a
+    lane's model on this computer at the run's start, refusing a model that
+    does not fit in the memory free. So the first document whose read is
+    refused that way closes the lane for every later model-bearing document,
+    which is paused with that verdict rather than sent into the same shortfall
+    straight away. That first document is paused too: nothing was read from
+    it, and a later run reads it.
 
     Reader availability is per ROLE, not batch-wide, because that is how it
     actually fails: a person can have a text selection and no vision selection,
@@ -496,9 +496,9 @@ class _InferenceLaneState:
         return role is None or self._reader_is_available(role)
 
     def close_on_refusal(self, verdict: PreconditionVerdict | None) -> bool:
-        """Close what a refused document's verdict says cannot run, and say whether it was measured contention.
+        """Close what a refused document's verdict says cannot run, and say whether it was contention.
 
-        A measured-contention verdict closes the lane for the rest of the run,
+        A contention verdict closes the lane for the rest of the run,
         and ``True`` tells the caller the document itself was not at fault: it
         is deferred with every later model-bearing document, not refused. Only
         the service's typed model-run refusal and the local AI setup refusal
@@ -531,14 +531,8 @@ class _InferenceLaneState:
         return next(iter(self._reader_pauses.values()), None)
 
 
-#: The measured-contention refusals of on-host load admission; each is a property of the machine.
-_CONTENTION_CONDITIONS: Final = frozenset(
-    {
-        ProvisioningPreconditionCondition.LOAD_CAPACITY_AVAILABLE.value,
-        ProvisioningPreconditionCondition.LOAD_HEADROOM_MEASURABLE.value,
-        ProvisioningPreconditionCondition.RESIDENT_SET_READABLE.value,
-    }
-)
+#: The agent's refusal to load a model with the memory free; it is a property of the machine.
+_CONTENTION_CONDITIONS: Final = frozenset({ProvisioningPreconditionCondition.LOAD_CAPACITY_AVAILABLE.value})
 
 
 def _verdict_facts(verdict: PreconditionVerdict) -> dict[str, str | int | bool]:

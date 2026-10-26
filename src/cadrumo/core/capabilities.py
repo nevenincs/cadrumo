@@ -2,8 +2,8 @@
 
 A *capability* is a per-profile opt-in/opt-out of an external service the app can
 use. It is operator intent, distinct from (a) the global safety posture (gestor
-mode, the secure-storage invariant) and (b) dependency availability (is Ollama
-running?). The three axes are ANDed at the gate, and a capability may only NARROW
+mode, the secure-storage invariant) and (b) dependency availability (is the local AI
+set up?). The three axes are ANDed at the gate, and a capability may only NARROW
 the global safety floor, never widen it.
 
 The set is declared here in ``core/`` — the innermost hexagonal ring — so the

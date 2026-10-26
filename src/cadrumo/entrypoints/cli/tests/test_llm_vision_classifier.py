@@ -49,6 +49,7 @@ _VISION_LANE = ModelRunLane(
     size_bytes=None,
     vision=True,
     context_length=None,
+    installed=None,
 )
 
 

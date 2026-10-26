@@ -1516,8 +1516,6 @@
         "cadrumo.application.provisioning",
         "cadrumo.application.provisioning_browser",
         "cadrumo.application.provisioning_contracts",
-        "cadrumo.application.provisioning_host",
-        "cadrumo.application.provisioning_runtime",
         "cadrumo.application.reference_catalogue",
         "cadrumo.application.reference_catalogue_contracts",
         "cadrumo.application.review",

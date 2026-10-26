@@ -13,16 +13,17 @@ import pytest
 
 from cadrumo.tests.english_locale_fixture import english_locale_fixture
 
-from ....core.config import Settings
 from ....core.errors.error_codes import resolve_error_message
 from ....core.field_role import FieldRole
 from ....core.model_roles import ModelRole
 from ....tests.inventory import FIXTURES_DIR
+from ...dependency_contracts import DependencyState
 from ...dependency_wording import column_reader_refusal_reason
 from ...ledger.column_roles import ColumnRoleReaderUnavailable
 from ...ledger.import_ports import LedgerImportReaderUnavailableError
 from ...local_reader import probe_local_ai_program
 from ...provisioning_contracts import ProvisioningPreconditionCondition, provisioning_no_recovery_verdict
+from ...tests.local_ai_program_rows import local_ai_row
 from ..bulk_import import read_bulk_invoice_import_source
 
 __all__ = ["english_locale_fixture"]
@@ -30,17 +31,16 @@ __all__ = ["english_locale_fixture"]
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _LIBRO = FIXTURES_DIR / "financial" / "tabular-dialects" / "libro_facturas_expedidas_2025_2026.csv"
-_CLOSED_ENDPOINT = "http://127.0.0.1:1/api/chat"
 
 
-def _unanswering_reader() -> ColumnRoleReaderUnavailable:
-    status = probe_local_ai_program(Settings(cadrumo_llm_ollama_chat_url=_CLOSED_ENDPOINT))
+def _absent_reader() -> ColumnRoleReaderUnavailable:
+    status = probe_local_ai_program(local_ai_row(DependencyState.ABSENT))
     assert status.precondition_verdict is not None
     return ColumnRoleReaderUnavailable(precondition_verdict=status.precondition_verdict)
 
 
 def test_the_book_refusal_names_local_ai_and_its_setup() -> None:
-    unavailable = _unanswering_reader()
+    unavailable = _absent_reader()
 
     def mapper(headers: Sequence[str]) -> Sequence[FieldRole] | ColumnRoleReaderUnavailable | None:
         del headers
@@ -66,4 +66,4 @@ def test_a_role_this_computer_cannot_run_offers_no_setup() -> None:
 
     assert reason.startswith("Local AI")
     assert "set it up" not in reason.lower()
-    assert reason != column_reader_refusal_reason(_unanswering_reader().precondition_verdict, locale="en")
+    assert reason != column_reader_refusal_reason(_absent_reader().precondition_verdict, locale="en")

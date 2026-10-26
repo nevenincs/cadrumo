@@ -46,6 +46,9 @@ _LOCAL_READS: Final = (
     "config.google.status",
     "diagnostics.read",
     "diagnostics.secure-objects.check",
+    # The workstation check and the three reader reads ask the components role
+    # and the agent service on this machine; none asks the local AI server.
+    "diagnostics.workstation.check",
     "ledger.actividad-asset.filing-handoff",
     "ledger.actividad-asset.forecast",
     "ledger.actividad-asset.inspect",
@@ -59,6 +62,7 @@ _LOCAL_READS: Final = (
     "ledger.evidence.list",
     "ledger.evidence.page",
     "ledger.evidence.query",
+    "ledger.evidence.reader-readiness",
     "ledger.evidence.review.list",
     "ledger.evidence.review.summary",
     "ledger.evidence.review.view",
@@ -99,6 +103,8 @@ _LOCAL_READS: Final = (
     "live.verify.latest",
     "live.verify.list",
     "live.verify.view",
+    "local-reader.report",
+    "local-reader.status",
     "modelo.036.query",
     "modelo.036.read",
     "modelo.audit.query",
@@ -154,12 +160,6 @@ _LOCAL_READS: Final = (
 _NETWORK_READS: Final = (
     # The probe browses once to the tax agency's public landing page and reads its answer.
     "diagnostics.connectivity.probe",
-    # The next four ask the local model runtime for its inventory at its
-    # endpoint setting, which can name another host.
-    "diagnostics.workstation.check",
-    "ledger.evidence.reader-readiness",
-    "local-reader.report",
-    "local-reader.status",
 )
 
 _LOCAL_WRITES: Final = (

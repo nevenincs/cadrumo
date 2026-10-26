@@ -25,7 +25,7 @@ from ....persistence.llm.consent_ledger import EvidenceConsentLedger
 from ....persistence.llm.usage import UsageRecorder
 from ..client import LLMClient
 from ..consent import EvidenceConsentToken
-from ..errors import LLMConfigError, LLMConsentError, LLMProviderError
+from ..errors import LLMConfigError, LLMConsentError, LLMContentionError, LLMProviderError
 from ..models import LLMRequest
 from ..providers.agent import JSON_REASK_INSTRUCTION
 from .model_run_support import DEFAULT_LANE, ON_HOST_LANE, RecordingModelRuns, serving_agent
@@ -144,6 +144,8 @@ def test_a_role_with_no_selection_says_to_choose_a_model_in_the_desktop_app(tmp_
         (ModelRunRefusalCode.UNKNOWN_ROLE, LLMProviderError),
         (ModelRunRefusalCode.LANE_UNAVAILABLE, LLMConfigError),
         (ModelRunRefusalCode.CONSENT_MISSING, LLMConsentError),
+        # The agent decides fit when it loads the model; the same memory meets an immediate re-send.
+        (ModelRunRefusalCode.MODEL_DOES_NOT_FIT, LLMContentionError),
     ],
 )
 def test_each_run_refusal_maps_to_its_typed_error_and_is_not_retried(
@@ -154,6 +156,30 @@ def test_each_run_refusal_maps_to_its_typed_error_and_is_not_retried(
         asyncio.run(_client(_settings(tmp_path)).complete(_consented()))
 
     assert len(service.runs) == 1
+
+
+@pytest.mark.parametrize("locale", SUPPORTED_OUTPUT_LANGUAGES)
+def test_a_model_the_agent_cannot_fit_names_the_free_memory_condition_and_how_to_free_it(
+    tmp_path: Path, locale: str
+) -> None:
+    with (
+        serving_agent(lane=ON_HOST_LANE, run_refusal=ModelRunRefusalCode.MODEL_DOES_NOT_FIT),
+        pytest.raises(LLMContentionError) as caught,
+    ):
+        asyncio.run(_client(_settings(tmp_path)).complete(_request()))
+
+    verdict = caught.value.terminal_precondition_verdict
+    assert verdict is not None
+    assert str(verdict.failed_condition_id) == "provisioning.load_capacity.available"
+    assert verdict.action is None, "setup cannot free memory"
+    assert verdict.evidence[0].values["model_run_refusal"] == "model_does_not_fit"
+    sentence = resolve_error_message(caught.value, locale=locale)
+    assert "Cadrumo" in sentence
+    if locale == "en":
+        assert sentence == (
+            "The selected model does not fit in this computer's free memory right now. Close other programs "
+            "or choose a smaller model in the Cadrumo desktop app, then try again."
+        )
 
 
 def test_a_consented_evidence_run_binds_its_consent_to_the_resolved_lane(tmp_path: Path) -> None:
@@ -253,6 +279,7 @@ def test_an_injected_port_wins_over_the_bound_one(tmp_path: Path) -> None:
             size_bytes=None,
             vision=None,
             context_length=None,
+            installed=None,
         )
     )
     settings = _settings(tmp_path)

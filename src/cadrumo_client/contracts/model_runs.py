@@ -87,6 +87,12 @@ class ModelRunRefusalCode(StrEnum):
     LANE_UNAVAILABLE = "lane_unavailable"
     MODEL_NOT_INSTALLED = "model_not_installed"
     """The selected model is not installed on the lane's local server: the person installs it or selects another."""
+    MODEL_DOES_NOT_FIT = "model_does_not_fit"
+    """The lane's local server could not load the model with the memory this computer has free.
+
+    The agent decides it when it loads the model; sending the same run again
+    straight away meets the same memory, so a caller does not retry it.
+    """
     INPUT_NOT_SUPPORTED = "input_not_supported"
     OPTION_NOT_SUPPORTED = "option_not_supported"
     """The run named a reply option its lane does not honour: a caller defect, not a configuration gap."""
@@ -136,6 +142,10 @@ class ModelRunLane(BaseModel):
     catalogue states nothing for it, and none has a default, so an answer that
     omits one is refused rather than read as unstated.
 
+    ``installed`` is whether the lane's local server holds the model, as the
+    running agent's live catalogue states it. It is ``None`` when no live
+    catalogue states it, which is unknown and never "not installed".
+
     ``accepted_media`` is what the provider catalog reports the lane accepts in
     a background run. ``None`` means the catalog says nothing, and the agent
     decides at admission.
@@ -152,6 +162,7 @@ class ModelRunLane(BaseModel):
     """The model's download size in bytes; the agent states ``0`` for an empty or unknown size."""
     vision: bool | None
     context_length: PositiveInt | None
+    installed: bool | None
     accepted_media: tuple[ModelRunMediaKind, ...] | None = None
 
 

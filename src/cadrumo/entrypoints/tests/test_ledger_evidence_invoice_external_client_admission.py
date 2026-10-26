@@ -172,7 +172,7 @@ def test_an_extraction_seals_the_full_draft_whichever_frontend_submits_it(
     """The same stored document is read on this machine, and the whole reading is sealed for every caller."""
     definition_id = "ledger.evidence.extract"
     with (
-        conformance.model_runtime_for_operation(definition_id),
+        conformance.family_environment_for_operation(definition_id),
         conformance.conformance_operation_runtime(
             tmp_path / "runtime",
             cleanup=conformance.OperationRuntimeCloseWitness(),

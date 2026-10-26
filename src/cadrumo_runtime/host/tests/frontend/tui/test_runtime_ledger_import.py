@@ -12,6 +12,7 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel
 
+from cadrumo.adapters.outbound.components.tests.recorded_rows import recorded_absent_row
 from cadrumo.application.ledger.actions_import import LedgerProviderID
 from cadrumo.application.ledger.import_operation import (
     LEDGER_IMPORT_OPERATION_DEFINITION_ID,
@@ -39,7 +40,6 @@ from cadrumo.application.provisioning_contracts import (
     ProvisioningPreconditionCondition,
     provisioning_no_recovery_verdict,
 )
-from cadrumo.core.config import Settings
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.model_roles import ModelRole
 from cadrumo.core.operations import (
@@ -257,10 +257,6 @@ def test_preview_runs_a_dry_run_of_the_planned_files_and_keeps_each_parsed_diges
     assert [item.reason for item in outcome.refused_files] == [tr("tui.ledger.import.refusal.own_account_mismatch")]
 
 
-#: A runtime port nothing listens on, so the reader probe finds no local AI answering.
-_CLOSED_ENDPOINT = "http://127.0.0.1:1/api/chat"
-
-
 def _reader_verdict(*, below_floor: bool) -> PreconditionVerdict:
     """The verdict the column mapper meets: no local AI answering, or a model too large for this computer."""
     if below_floor:
@@ -268,7 +264,7 @@ def _reader_verdict(*, below_floor: bool) -> PreconditionVerdict:
             ProvisioningPreconditionCondition.HARDWARE_FLOOR_MET,
             facts={"role": ModelRole.COLUMN_ROLE_MAPPING.value, "model": "synthetic-mapper", "required_bytes": 2**31},
         )
-    status = probe_local_ai_program(Settings(cadrumo_llm_ollama_chat_url=_CLOSED_ENDPOINT))
+    status = probe_local_ai_program(recorded_absent_row("local_ai"))
     verdict = status.precondition_verdict
     assert verdict is not None
     assert verdict.action is not None

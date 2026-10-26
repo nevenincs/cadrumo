@@ -13,8 +13,6 @@ from .operator_actions.models import ActionReference, ConditionEvidence, Precond
 
 __all__ = [
     "LOCAL_AI_PROVISION_ACTION_ID",
-    "OLLAMA_PROBE_CACHE_TTL_S",
-    "OLLAMA_PROBE_TIMEOUT_S",
     "ProvisioningFactValue",
     "ProvisioningOutcome",
     "ProvisioningPreconditionCondition",
@@ -29,26 +27,6 @@ LOCAL_AI_PROVISION_ACTION_ID = "operator.provision.local_ai"
 Every surface words it as a pointer to the desktop; none runs a command for it.
 """
 
-OLLAMA_PROBE_TIMEOUT_S = 2.0
-
-# How long one probe's answer stands before the endpoint is asked again.
-#
-# Reachability of a local model server is a property of the machine, not of the
-# work being done, so asking once per document -- or once per batch run, or once
-# per test -- re-answers a question whose answer did not change. Measured on a
-# host with no Ollama running: 65 probes of 127.0.0.1:11434 across one test
-# module, 71.5s of its 98s, at ~0.94s per refused connection. Redirecting the
-# endpoint does not help, because the cost is the connection ATTEMPT rather than
-# the target.
-#
-# Bounded rather than process-lifetime, for the same reason the registry
-# fingerprint cache is: an operator who starts their model server mid-session
-# must see it appear without restarting the process. Ten seconds folds the
-# repeated probes of one operator interaction while still noticing a server that
-# came up moments ago, and matches BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS
-# rather than inventing a second cadence.
-OLLAMA_PROBE_CACHE_TTL_S = 10.0
-
 
 class ProvisioningPreconditionCondition(StrEnum):
     """Stable failed-condition identities emitted by provisioning policy."""
@@ -57,13 +35,14 @@ class ProvisioningPreconditionCondition(StrEnum):
     PLAYWRIGHT_BROWSER_INSTALLED = "provisioning.playwright_browser.installed"
     PLAYWRIGHT_BROWSER_MANIFEST_READABLE = "provisioning.playwright_browser.manifest_readable"
     RUNTIME_REACHABLE = "provisioning.runtime.reachable"
+    """The agent stated whether the local AI server holds a role's model; unstated is unknown, never absent."""
     RUNTIME_INSTALLED = "provisioning.runtime.installed"
+    """The components role reports the local AI program set up and usable."""
     ROLE_MODEL_INSTALLED = "provisioning.role_model.installed"
     HARDWARE_FLOOR_MET = "provisioning.hardware_floor.met"
     SELECTED_MODEL_AVAILABLE = "provisioning.selected_model.available"
-    LOAD_HEADROOM_MEASURABLE = "provisioning.load_headroom.measurable"
     LOAD_CAPACITY_AVAILABLE = "provisioning.load_capacity.available"
-    RESIDENT_SET_READABLE = "provisioning.resident_set.readable"
+    """The agent loaded the selected model with the memory this computer had free."""
 
 
 ProvisioningFactValue = str | int | bool

@@ -19,7 +19,7 @@ from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG as _STRICT_FROZEN_HIDDEN_INPUT
 from cadrumo_client.contracts.model_runs import ModelRunMediaKind
 
-from ..domain.catalog import BackgroundOption, CatalogModelFacts, LaneId, ProviderCatalog
+from ..domain.catalog import BackgroundOption, LaneId, LiveCatalogModel, ProviderCatalog
 from ..domain.record import ModelRoleSelectionsRecord, ProviderSettingsRecord
 
 
@@ -184,7 +184,7 @@ class LiveCatalogModels(Protocol):
         """Return what a background run on the lane takes; ``None`` when no live catalogue says."""
         ...
 
-    def lane_models(self, provider: str, transport: str) -> tuple[CatalogModelFacts, ...] | None:
+    def lane_models(self, provider: str, transport: str) -> tuple[LiveCatalogModel, ...] | None:
         """Return the lane's live entries, empty when the lane lists none.
 
         ``None`` means there is no live catalogue to read: no agent is running,

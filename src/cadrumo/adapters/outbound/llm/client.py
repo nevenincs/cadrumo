@@ -45,7 +45,6 @@ from .errors import (
     LLMCacheError,
     LLMConfigError,
     LLMConsentError,
-    LLMContentionError,
     LLMRateLimitError,
 )
 from .preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
@@ -58,11 +57,6 @@ if TYPE_CHECKING:
     # leaving the runtime edge deferred, which is what breaks the cycle the
     # split creates: the stores import this package for the shared error and
     # model types, and the client refers back to them.
-    # The headroom measurements the contention authority consumes. Type-only
-    # for the same reason as the stores above: the runtime edge into the
-    # application package stays deferred to the one call site that needs it.
-    from ....application.provisioning import HardwareProfile
-    from ....application.provisioning_runtime import RuntimeResident
     from ...persistence.llm.cache import LLMCache
     from ...persistence.llm.consent_ledger import EvidenceConsentLedger
     from ...persistence.llm.run_records import LLMRunRecorder
@@ -233,15 +227,15 @@ _PROVIDER_PACING = _ProviderPacing()
 class _OnHostInferenceArena:
     """The process-wide occupancy bound on concurrent on-host inference.
 
-    **Refusal, not queueing, and the choice is argued from the failure
-    direction rather than from ergonomics.** A queue does not help when the
-    bound is too permissive -- both designs admit whatever the bound says -- and
-    it actively hurts when the bound is right: a waiting request holds its
-    decoded pages in the very memory under pressure for as long as it waits, so
-    the queue itself becomes an allocation that grows with load, and it runs
-    against headroom that was measured *before* it waited, which is the one
-    reading the contention check exists to keep fresh. A refusal is synchronous,
-    typed, and observable at the caller; the caller may retry after quiesce.
+    It bounds how many runs this process has waiting on the local AI at once,
+    and it decides nothing about memory: whether a model fits is the agent's
+    answer when it loads the model. The bound keeps one process from stacking
+    runs on the agent's serial model loads while each holds its decoded pages.
+
+    **Refusal, not queueing.** A waiting request would hold its decoded pages
+    in memory for as long as it waits, so the queue itself would become an
+    allocation that grows with load. A refusal is synchronous, typed, and
+    observable at the caller; the caller may retry later.
 
     Loop-agnostic on purpose. A :class:`asyncio.Semaphore` binds to the event
     loop that created it, and this process runs LLM work under several
@@ -347,19 +341,6 @@ class LLMClient:
             often and how long a transient transport failure is re-sent. Which
             failures qualify is not tunable here -- that is the error taxonomy's
             answer, read through :func:`transport_retry_permitted`.
-        hardware_profile: Optional measured
-            :class:`~application.provisioning.HardwareProfile` used for the
-            headroom check instead of probing this machine. Injecting the
-            MEASUREMENT rather than the verdict keeps the real decision
-            function on the path: a post-quiesce reading exercises the same
-            comparison, margin and attribution production runs.
-        runtime_residents: Optional resident set standing in for a live read of
-            the runtime.
-        runtime_residents_measured: False states the resident set could not be
-            read, which is a different fact from a measured-empty one and
-            reaches the fail-closed arm rather than the shortfall arm. The two
-            are indistinguishable from the refusal alone, so a case that means
-            to prove one must say which.
         model_runs: Optional port through which a request dispatched to
             :attr:`~llm.LLMProvider.AGENT` reaches the agent service. Without
             one, the port bound to the running operation is used, and outside an
@@ -378,9 +359,6 @@ class LLMClient:
         consent_ledger: EvidenceConsentLedger | None = None,
         prompt_registry: PromptRegistry | None = None,
         retry_policy: LLMRetryPolicy | None = None,
-        hardware_profile: HardwareProfile | None = None,
-        runtime_residents: tuple[RuntimeResident, ...] | None = None,
-        runtime_residents_measured: bool = True,
         model_runs: ModelRunPort | None = None,
         caller: str = "cadrumo.adapters.outbound.llm.client",
         prompt_id: str = "adhoc",
@@ -407,9 +385,6 @@ class LLMClient:
         self.consent_ledger = consent_ledger or EvidenceConsentLedger()
         self.prompt_registry = prompt_registry or PromptRegistry.seeded()
         self.retry_policy = retry_policy or LLMRetryPolicy()
-        self.hardware_profile = hardware_profile
-        self.runtime_residents = runtime_residents
-        self.runtime_residents_measured = runtime_residents_measured
         self.model_runs = model_runs
         self.caller = caller
         self.prompt_id = prompt_id
@@ -481,14 +456,6 @@ class LLMClient:
         run_clock_start = time.monotonic()
         try:
             with self._on_host_admission(agent.lane):
-                # Inside the slot and outside the retry loop, both load-bearing.
-                # Inside, because a headroom reading taken before the slot is
-                # held can be invalidated by another request loading a model
-                # between the measurement and this dispatch. Outside, because a
-                # refusal that the retry loop could see would be re-sent on a
-                # schedule, turning one refusal into several while the memory it
-                # waits for is still held.
-                self._require_load_headroom(agent.lane)
                 completion = await self._complete_with_retries(adapter, provider_request)
         except Exception as exc:  # LLM provider adapters surface heterogeneous exceptions; log+re-raise here
             # WARNING, not ERROR: the caller owns this failure and renders it as
@@ -548,72 +515,6 @@ class LLMClient:
             completion.output_tokens,
         )
         return response
-
-    def _require_load_headroom(self, lane: ModelRunLane) -> None:
-        """Refuse an on-host dispatch this machine has no measured room for.
-
-        **A wiring job, not a second detector.** The verdict comes from
-        :func:`~application.provisioning_runtime.assess_model_load_contention`, which
-        already owns the comparison, the safety margin, the fail-closed arm and
-        the attribution of a shortfall to the runtime's own residents versus a
-        peer process's device usage. That authority was deliberately
-        consolidated out of four call sites; re-deriving any part of it here
-        would undo the consolidation and give the dispatch point a second
-        opinion that could disagree with the doctor surface an operator just
-        read.
-
-        Resolved from its application defining module at call time rather than
-        at module load. The edge is downward and permitted, but this package is
-        imported by application code, so an eager binding would risk closing
-        that loop at import time.
-
-        **The requirement is the lane's catalogue size.** Only a lane whose
-        catalogue entry says it stays on this computer loads weights here, and
-        the size its entry states is the amount the load needs. An entry that
-        states no size, or ``0``, makes no claim, and inventing one would be
-        worse than not checking: a requirement read as zero flows into the
-        authority as the amount the model needs, and the check then reports the
-        load ADMITTED on evidence nobody has. Such a load skips this check and
-        still holds its inference slot.
-
-        Args:
-            lane: The lane the agent service resolved for this dispatch.
-
-        Raises:
-            LLMContentionError: When the measured verdict is not admitted,
-                carrying the authority's typed precondition verdict, model, and
-                causes.
-        """
-        if lane.reads_off_host:
-            return
-        requirement_bytes = lane.size_bytes
-        if requirement_bytes is None or requirement_bytes == 0:
-            # No model id: the line says only that the check did not run.
-            _LOGGER.debug("on-host load headroom not assessed: the lane's catalogue entry states no size")
-            return
-        from ....application.provisioning_runtime import assess_model_load_contention
-
-        model = lane.model
-        snapshot = assess_model_load_contention(
-            model,
-            requirement_bytes,
-            profile=self.hardware_profile,
-            residents=self.runtime_residents,
-            residents_measured=self.runtime_residents_measured,
-            settings=self.settings,
-        )
-        if snapshot.admitted:
-            return
-        verdict = snapshot.precondition_verdict
-        if verdict is None:
-            raise ValueError("a refused model-load contention snapshot must carry its precondition verdict")
-        raise LLMContentionError(
-            context={
-                "model": model,
-                "contention_causes": tuple(cause.value for cause in snapshot.causes),
-            },
-            precondition_verdict=verdict,
-        )
 
     @staticmethod
     async def _await_shared_pacing(provider: LLMProvider, policy: LLMRetryPolicy) -> None:

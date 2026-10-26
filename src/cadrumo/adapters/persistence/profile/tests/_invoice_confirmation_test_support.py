@@ -13,14 +13,13 @@ import json
 from collections.abc import Generator, Mapping, Sequence
 from contextlib import contextmanager
 from datetime import UTC, datetime
-from http import HTTPStatus
 from pathlib import Path
-from typing import ClassVar, NamedTuple, TypedDict, override
+from typing import NamedTuple, TypedDict
 
 import httpx
 import pytest
 
-from cadrumo_client.contracts.model_runs import ModelRunBody, ModelRunLane
+from cadrumo_client.contracts.model_runs import ModelRunBody, ModelRunLane, ModelRunRefusalCode
 
 from .....application.invoices.catalogue_creation_ports import CatalogueCreationPorts
 from .....application.ledger.counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
@@ -54,20 +53,13 @@ from .....application.ledger.invoice_draft_extraction_ports import (
 from .....application.ledger.invoice_draft_records import InvoiceDraft
 from .....application.ledger.invoice_extraction_authority import InvoiceExtractionAuthorityValues
 from .....application.ledger.preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
-from .....core.config import Settings, override_settings
+from .....core.config import Settings
 from .....core.operator_action_enums import ActionEvidenceProvenance
 from .....core.optional_extras import MissingOptionalExtraError
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .....domain.iva.regime_legend import RegimeLegend
 from .....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from .....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from .....tests.loopback_llm import (
-    SilentLoopbackHandler,
-    ollama_chat_reply,
-    read_json_body,
-    serving_loopback,
-    write_json_response,
-)
 from ....inbound.einvoice.application_translation import translate_parsed_einvoice
 from ....inbound.einvoice.parsers import parse_einvoice_document
 from ....inbound.einvoice.shape import probe_document_shape
@@ -80,12 +72,8 @@ from ....outbound.llm.evidence_draft_vision import VisionDocumentTranscriber
 from ....outbound.llm.models import MultimodalImageInput
 from ....outbound.llm.pdf_rasterisation import rasterise_pdf_pages_to_base64_png
 from ....outbound.llm.preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
-from ....outbound.llm.tests.load_headroom_support import (
-    extract_invoice_text_under_admitted_load,
-    propose_supply_nature_under_admitted_load,
-    transcribe_document_images_under_admitted_load,
-)
-from ....outbound.llm.tests.model_run_support import IMAGE_LANE, serving_agent
+from ....outbound.llm.supply_nature_proposal import SupplyNatureProposer
+from ....outbound.llm.tests.model_run_support import IMAGE_LANE, RecordingModelRuns, serving_agent
 from ...storage.attachment import AttachmentStore
 from ...storage.runtime_repository import secure_object_repository_for_bucket
 from ...storage.sql.secure_objects import SecureObjectRepository
@@ -210,18 +198,11 @@ def _invoice_draft_extraction_ports(
         try:
             if not isinstance(authority_values, InvoiceExtractionAuthorityValues):
                 raise TypeError("invoice text extraction requires resolved authority values")
-            if consent_token is None:
-                return extract_invoice_text_under_admitted_load(
-                    transcription,
-                    settings=settings,
-                    authority_values=authority_values,
-                    operation=operation,
-                )
             return TextInvoiceFieldExtractor(
                 settings=settings,
                 authority_values=authority_values,
                 operation=operation,
-                consent_token=_require_evidence_consent_token(consent_token),
+                consent_token=None if consent_token is None else _require_evidence_consent_token(consent_token),
             ).extract(transcription=transcription)
         except (MissingOptionalExtraError, LLMProviderError, httpx.HTTPError) as exc:
             raise InvoiceDraftReaderUnavailableError(exc) from exc
@@ -231,7 +212,7 @@ def _invoice_draft_extraction_ports(
     ) -> SupplyNatureProposalResult | None:
         del consent_token
         try:
-            return propose_supply_nature_under_admitted_load(transcription.text.splitlines(), settings=settings)
+            return SupplyNatureProposer(settings=settings).propose(transcription.text.splitlines())
         except Exception:
             return None
 
@@ -249,13 +230,9 @@ def _invoice_draft_extraction_ports(
     ) -> DocumentTranscription:
         try:
             inputs = tuple(MultimodalImageInput.from_base64(image.base64_data, image.media_type) for image in images)
-            if consent_token is None:
-                return transcribe_document_images_under_admitted_load(
-                    inputs, source_content_sha256=source_content_sha256, settings=settings
-                )
             return VisionDocumentTranscriber(
                 settings=settings,
-                consent_token=_require_evidence_consent_token(consent_token),
+                consent_token=None if consent_token is None else _require_evidence_consent_token(consent_token),
             ).transcribe(evidence_images=inputs, source_content_sha256=source_content_sha256)
         except (MissingOptionalExtraError, LLMProviderError, httpx.HTTPError) as exc:
             raise InvoiceDraftReaderUnavailableError(exc) from exc
@@ -418,50 +395,13 @@ def invoice_draft_extraction_kwargs(
 
 
 ReaderReply = tuple[str, Mapping[str, str]]
-READING_RUNTIME_MODEL = "qwen2.5:7b"
 
 
-class _LoopbackRequestHandler(SilentLoopbackHandler):
-    """A real local endpoint speaking the reading runtime's ``/api/chat`` shape."""
-
-    replies: ClassVar[Sequence[ReaderReply]] = ()
-    fallback: ClassVar[Mapping[str, str]] = dict[str, str]()
-    installed_models: ClassVar[tuple[str, ...]] = ()
-    """Model ids this endpoint reports installed on ``GET /api/tags``.
-
-    A fixture that serves a reader must also answer what it has: the batch lane
-    probes the role's model before it reads, so an endpoint that served chat
-    while reporting no inventory would describe a runtime that cannot exist.
-    """
-
-    @override
-    def do_GET(self) -> None:
-        write_json_response(
-            self,
-            {"models": [{"name": name, "model": name, "size": 0} for name in self.installed_models]},
-            status=HTTPStatus.OK,
-        )
-
-    @classmethod
-    def fields_for(cls, prompt: str) -> Mapping[str, str]:
-        for marker, fields in cls.replies:
-            if marker in prompt:
-                return fields
-        return cls.fallback
-
-    @override
-    def do_POST(self) -> None:
-        prompt = json.dumps(read_json_body(self)["messages"])
-        write_json_response(
-            self,
-            ollama_chat_reply(
-                json.dumps(dict(self.fields_for(prompt))),
-                model=READING_RUNTIME_MODEL,
-                prompt_eval_count=100,
-                eval_count=50,
-            ),
-            status=HTTPStatus.OK,
-        )
+def _reply_fields(replies: Sequence[ReaderReply], fallback: Mapping[str, str], prompt: str) -> Mapping[str, str]:
+    for marker, fields in replies:
+        if marker in prompt:
+            return fields
+    return fallback
 
 
 @contextmanager
@@ -470,34 +410,25 @@ def serving_a_loopback_reader(
     *,
     fallback: Mapping[str, str] | None = None,
     lane: ModelRunLane = IMAGE_LANE,
-) -> Generator[str]:
-    """Serve the deterministic reading used by these tests, through an agent that resolves every role to ``lane``."""
-    from .....application.tests.role_model_support import configured_role_model
-    from .....core.model_roles import ModelRole
+    run_refusal: ModelRunRefusalCode | None = None,
+) -> Generator[RecordingModelRuns]:
+    """Serve the deterministic reading used by these tests, through an agent that resolves every role to ``lane``.
 
-    _LoopbackRequestHandler.replies = tuple(replies)
-    _LoopbackRequestHandler.fallback = dict(fallback or {})
-    # Captured here rather than read in the handler: the server answers on its
-    # own thread, which does not see this process's settings override.
-    _LoopbackRequestHandler.installed_models = tuple(
-        configured_role_model(role) for role in (ModelRole.TEXT_EXTRACTION, ModelRole.VISION_TRANSCRIPTION)
-    )
+    Each run is answered by the first reply whose marker appears in its system
+    prompt or prompt, else by ``fallback``. ``run_refusal`` makes the agent
+    refuse every run at its start instead.
+    """
+    scripted = tuple(replies)
+    default = dict(fallback or {})
 
     def answer(body: ModelRunBody) -> str:
-        return json.dumps(dict(_LoopbackRequestHandler.fields_for(json.dumps([body.system, body.prompt]))))
+        return json.dumps(dict(_reply_fields(scripted, default, json.dumps([body.system, body.prompt]))))
 
-    # A reader that goes through the agent service is answered by the same
-    # replies, matched on the run body, as one that still reads the endpoint.
-    with (
-        serving_loopback(_LoopbackRequestHandler, path="/api/chat") as chat_url,
-        override_settings(cadrumo_llm_ollama_chat_url=chat_url),
-        serving_agent(lane=lane, answer=answer),
-    ):
-        yield chat_url
+    with serving_agent(lane=lane, answer=answer, run_refusal=run_refusal) as port:
+        yield port
 
 
 __all__ = [
-    "READING_RUNTIME_MODEL",
     "_BUCKET_ID",
     "_EVIDENCE_CORPUS",
     "InvoiceAuthorityFixture",

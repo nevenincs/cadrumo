@@ -2571,9 +2571,12 @@ def _ledger_invoice_evidence_readiness_operation(inputs: OperationCompositionInp
         build_ledger_evidence_reader_readiness_registration,
     )
     from ..application.local_reader import read_local_reader_status
+    from .local_reader_operation_composition import read_local_ai_program
 
     del inputs
-    definition = build_ledger_evidence_reader_readiness_definition(read_local_reader_status)
+    definition = build_ledger_evidence_reader_readiness_definition(
+        lambda lanes: read_local_reader_status(lanes, read_local_ai_program())
+    )
     return _built((definition,), (build_ledger_evidence_reader_readiness_registration(definition),))
 
 

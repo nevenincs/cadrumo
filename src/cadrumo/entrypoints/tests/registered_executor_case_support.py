@@ -102,7 +102,6 @@ from .conformance_family_contract import (
     ConformanceFamilyContext,
     ConformanceOutcome,
     ConformancePreparation,
-    closed_model_runtime,
 )
 from .evidence_followup_operation_test_support import (
     EvidenceFollowupConformanceCase,
@@ -338,22 +337,11 @@ class _FamilyResultResolver:
         return projection
 
 
-_MODEL_RUNTIME_CLOSED_DEFINITIONS = frozenset(
-    {
-        "ledger.evidence.reader-readiness",
-        "ledger.evidence.extract",
-        "ledger.evidence.confirm",
-    }
-)
-
-
 @contextmanager
-def model_runtime_for_operation(definition_id: str) -> Generator[None]:
-    """Close the local model runtime, and enter the family's own environment, for an operation that needs either."""
+def family_environment_for_operation(definition_id: str) -> Generator[None]:
+    """Enter the environment the family declaring ``definition_id`` arranges on the machine, if it declares one."""
     family = conformance_family_for(definition_id)
     with ExitStack() as host:
-        if definition_id in _MODEL_RUNTIME_CLOSED_DEFINITIONS or (family is not None and family.closes_model_runtime):
-            host.enter_context(closed_model_runtime())
         if family is not None and family.host_environment is not None:
             host.enter_context(family.host_environment())
         yield

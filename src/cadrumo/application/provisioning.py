@@ -5,9 +5,10 @@ service or optional package extra is usable on this workstation and returns a
 typed :class:`DependencyStatus`. :mod:`cadrumo.application.cli_provisioning`
 owns CLI authority admission and command storage materialization.
 
-The local AI program is probed by
-:func:`~cadrumo.application.local_reader.probe_local_ai_program`, so a down server
-becomes an instructive refusal instead of a raw stack trace.
+The local AI program's row is judged by
+:func:`~cadrumo.application.local_reader.probe_local_ai_program` from the
+components role's status row, so a missing program becomes an instructive
+refusal instead of a raw stack trace.
 The ``aeat config check`` command renders this module's
 statuses as
 :class:`~cadrumo.entrypoints.cli.config.check_payloads.CheckDependencyPayload`
@@ -27,39 +28,10 @@ import sys
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
 from ..core.config import Settings, load_settings
-from ..core.hardware import AcceleratorKind, ContentionCause, HardwareTier
+from ..core.errors.hierarchy import pydantic_validation_boundary
+from ..core.hardware import AcceleratorKind
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.optional_extras import OPTIONAL_EXTRAS, OptionalExtra, optional_extra_available
-
-__all__ = [
-    "OPTIONAL_EXTRAS",
-    "AcceleratorDevice",
-    "AcceleratorKind",
-    "AcceleratorReading",
-    "ContentionCause",
-    "ContentionSnapshot",
-    "DependencyStatus",
-    "HardwareProfile",
-    "HardwareTier",
-    "InstalledModel",
-    "OptionalExtra",
-    "RuntimeResident",
-    "SystemMemoryReading",
-    "assess_model_load_contention",
-    "below_capacity_floor",
-    "binding_free_bytes",
-    "probe_hardware_profile",
-    "probe_local_inference_hardware",
-    "probe_model_runtime_hardware_floor",
-    "probe_optional_extra",
-    "probe_optional_extras",
-    "read_accelerator",
-    "read_installed_models",
-    "read_runtime_residents",
-    "read_system_memory",
-]
-
-from ..core.errors.hierarchy import pydantic_validation_boundary
 from .provisioning_contracts import (
     ProvisioningFactValue,
     ProvisioningOutcome,
@@ -67,14 +39,22 @@ from .provisioning_contracts import (
     provisioning_no_recovery_verdict,
     require_provisioning_verdict,
 )
-from .provisioning_runtime import (
-    ContentionSnapshot,
-    InstalledModel,
-    RuntimeResident,
-    assess_model_load_contention,
-    read_installed_models,
-    read_runtime_residents,
-)
+
+__all__ = [
+    "AcceleratorDevice",
+    "AcceleratorReading",
+    "DependencyStatus",
+    "HardwareProfile",
+    "SystemMemoryReading",
+    "below_capacity_floor",
+    "probe_hardware_profile",
+    "probe_local_inference_hardware",
+    "probe_model_runtime_hardware_floor",
+    "probe_optional_extra",
+    "probe_optional_extras",
+    "read_accelerator",
+    "read_system_memory",
+]
 
 
 class DependencyStatus(ProvisioningOutcome):
@@ -102,12 +82,10 @@ class DependencyStatus(ProvisioningOutcome):
 class SystemMemoryReading(BaseModel):
     """Measured total and free physical system memory, either of which may be unreadable.
 
-    Both figures are carried because they answer different questions and the
-    provisioning decision separates them deliberately: ``total_bytes`` is what a
-    diagnostic row *reports* about the machine, ``free_bytes`` is the only figure
-    a load decision may *act* on. A machine with 64 GiB installed and 2 GiB free
-    cannot host a 4 GiB model, and reading the total as headroom is exactly the
-    admission error the contention check exists to prevent.
+    Both figures are carried because they answer different questions:
+    ``total_bytes`` is what this computer can hold at all, the figure the
+    capacity floor judges, and ``free_bytes`` is what was free when a
+    diagnostic row measured it.
 
     ``None`` means "not measured", never "zero". See
     :class:`~core.hardware.AcceleratorKind` for the same distinction on the device side.
@@ -169,8 +147,7 @@ def read_system_memory() -> SystemMemoryReading:
 
     A platform that answers nothing yields ``None``, never a guess: an unknown
     quantity must not be reported as a shortfall by
-    :func:`probe_model_runtime_hardware_floor`, nor mistaken for headroom by
-    :func:`assess_model_load_contention`.
+    :func:`probe_model_runtime_hardware_floor`.
     """
     if sys.platform == "win32":
         # The positive block, rather than an early return off Windows, is what
@@ -310,9 +287,8 @@ class AcceleratorDevice(BaseModel):
     """One enumerated accelerator device and its measured VRAM figures.
 
     Per-device rather than aggregated because a model loads onto ONE device: two
-    cards with 3 GiB free each are not 6 GiB of headroom for a 4 GiB model. The
-    aggregation rules that follow from that live on
-    :class:`HardwareProfile`.
+    cards with 3 GiB each cannot hold a 4 GiB model. The aggregation rules that
+    follow from that live on :class:`HardwareProfile`.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -343,19 +319,14 @@ class HardwareProfile(BaseModel):
     """The measured local-inference capacity of this machine.
 
     Carries totals AND free amounts on both the system-memory and the device
-    axis, and the two are not interchangeable: **totals are for reporting, free
-    amounts are for acting.** A diagnostic row may say "16 GiB card"; a load
-    decision may only consult :attr:`free_vram_bytes`. Deciding on a total is the
-    concrete defect this model exists to prevent -- the machine this was built
-    for has a 16 GiB card with under 4 GiB free, shared with a resident search
-    service, and a load admitted against the total takes the host down with every
-    running process on it.
+    axis. Totals say what this computer can hold at all, which the capacity
+    floor judges; free amounts are reported as they were at the measurement.
+    Whether a model fits the memory free when it loads is the agent's answer at
+    the load, never this profile's.
 
     Every figure is independently optional. ``None`` means the measurement was
-    not obtainable, and per the provisioning decision the two directions differ:
-    diagnostic rows report an unreadable figure as **unverified** and stay
-    available, while :func:`assess_model_load_contention` treats it as a refusal
-    input. See :func:`probe_hardware_profile`.
+    not obtainable, and a diagnostic row reports it as **unverified** and stays
+    available. See :func:`probe_hardware_profile`.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -368,8 +339,7 @@ class HardwareProfile(BaseModel):
         """Return summed device VRAM for REPORTING, or ``None`` when any device is unreadable.
 
         Summed because the reporting question is "what is installed in this
-        machine", which is additive. Deliberately NOT the figure any load
-        decision consults -- see :attr:`free_vram_bytes`.
+        machine", which is additive.
         """
         devices = self.accelerator.devices
         if not devices or any(device.total_vram_bytes is None for device in devices):
@@ -378,17 +348,13 @@ class HardwareProfile(BaseModel):
 
     @property
     def free_vram_bytes(self) -> int | None:
-        """Return the largest single-device free VRAM for ACTING, or ``None`` when unreadable.
+        """Return the largest single-device free VRAM, or ``None`` when unreadable.
 
-        The maximum, never the sum: a model is resident on one device, so the
-        headroom that decides admission is the best single device's, and summing
-        would manufacture capacity that no allocation can reach. Devices whose
-        free figure is unreadable are skipped rather than counted as zero --
-        they cannot host the load either way, and treating them as zero would
-        not change the maximum.
+        The maximum, never the sum: a model is resident on one device, and
+        summing would report capacity no allocation can reach. Devices whose
+        free figure is unreadable are skipped rather than counted as zero.
 
-        ``None`` when no device reported a free figure at all, which fails
-        closed at the act.
+        ``None`` when no device reported a free figure at all.
         """
         readable = [device.free_vram_bytes for device in self.accelerator.devices if device.free_vram_bytes is not None]
         if not readable:
@@ -401,13 +367,7 @@ def read_accelerator() -> AcceleratorReading:
 
     NVML (the ``nvidia-ml-py`` binding declared in the ``llm`` extra) is
     preferred over a ``nvidia-smi`` shell-out because it yields **per-device**
-    total and free figures from an in-process query with no subprocess. The
-    distinction is load-bearing for attribution: a whole-device free figure is
-    contaminated by every process on the card, which is exactly the quantity
-    :func:`assess_model_load_contention` must split between this runtime's
-    residents and peer processes -- so NVML is authoritative for the free-VRAM
-    figure, and the runtime's own ``/api/ps`` report (see
-    :func:`read_runtime_residents`) is authoritative for how much of it is ours.
+    total and free figures from an in-process query with no subprocess.
 
     Returns :attr:`~core.hardware.AcceleratorKind.UNKNOWN` when NVML is absent or
     uninitialisable, and :attr:`~core.hardware.AcceleratorKind.NONE` only on the positive
@@ -483,8 +443,7 @@ def probe_hardware_profile(
     """Measure this machine into a :class:`HardwareProfile`, never raising.
 
     Both measurements are injectable arguments rather than patched module
-    internals, so every branch of the profile and of
-    :func:`assess_model_load_contention` is exercised against real model
+    internals, so every branch of the profile is exercised against real model
     construction with real readings -- a test must never depend on this host's
     actual device state, which changes minute to minute while an automation fleet
     runs on it.
@@ -504,25 +463,6 @@ def probe_hardware_profile(
     )
 
 
-def binding_free_bytes(profile: HardwareProfile) -> int | None:
-    """Return free memory in the arena that actually binds a model load, or ``None``.
-
-    The one place the arena rule lives, which
-    :func:`assess_model_load_contention` acts on. A device load is bound by device memory,
-    a measured-accelerator-free machine by system memory, and an *unmeasurable*
-    accelerator by nothing that may be trusted -- which is ``None``, and is why
-    :attr:`~core.hardware.AcceleratorKind.UNKNOWN` does not fall through to system
-    memory: a card this build cannot read may still be holding the memory a
-    load needs.
-    """
-    kind = profile.accelerator.kind
-    if kind is AcceleratorKind.NVIDIA_CUDA:
-        return profile.free_vram_bytes
-    if kind is AcceleratorKind.NONE:
-        return profile.memory.free_bytes
-    return None
-
-
 def below_capacity_floor(profile: HardwareProfile, requirement_bytes: int) -> bool:
     """Return whether this computer cannot hold a model needing ``requirement_bytes`` at all.
 
@@ -531,8 +471,8 @@ def below_capacity_floor(profile: HardwareProfile, requirement_bytes: int) -> bo
     model's floor, the same rule the native component engine applies to a
     role's quick status. Free memory is not consulted, because a model already
     resident, or another program's load, lowers it for a while without changing
-    what the computer can hold; that is :func:`assess_model_load_contention`'s
-    question at the load. A computer whose total memory was not measured is
+    what the computer can hold; whether a load fits the memory free is the
+    agent's answer at the load. A computer whose total memory was not measured is
     never held back, and neither is one whose accelerator could not be read,
     because an unread value must not invent a shortfall.
     """
@@ -554,9 +494,7 @@ def probe_local_inference_hardware(profile: HardwareProfile | None = None) -> De
     Follows the shipped direction of :func:`probe_model_runtime_hardware_floor`:
     an unreadable figure keeps ``available`` **true** and is rendered as
     ``unverified``, because a *diagnostic* must not manufacture a shortfall on a
-    platform it merely cannot measure. The opposite direction governs
-    :func:`assess_model_load_contention`, which acts rather than reports and so
-    refuses on the same unknown.
+    platform it merely cannot measure.
 
     Args:
         profile: A measured profile; probed via :func:`probe_hardware_profile`

@@ -182,6 +182,7 @@ def test_each_role_gets_the_lane_and_model_selected_for_it() -> None:
         size_bytes=None,
         vision=None,
         context_length=None,
+        installed=None,
     )
     assert runs.lookup("vision_transcription") == ModelRunLane(
         provider_id="example",
@@ -192,6 +193,7 @@ def test_each_role_gets_the_lane_and_model_selected_for_it() -> None:
         size_bytes=None,
         vision=True,
         context_length=None,
+        installed=None,
     )
 
 
@@ -431,6 +433,7 @@ def test_a_selections_read_reports_every_role_from_one_read_of_the_record() -> N
                 size_bytes=None,
                 vision=None,
                 context_length=None,
+                installed=None,
             ),
         ),
         ModelRunRoleSelection(
@@ -530,6 +533,7 @@ def test_a_selections_read_decides_each_lane_once_however_many_roles_share_it() 
         size_bytes=None,
         vision=None,
         context_length=None,
+        installed=None,
     )
     assert lanes["supply_nature_proposal"] == ModelRunLane(
         provider_id="example",
@@ -541,6 +545,7 @@ def test_a_selections_read_decides_each_lane_once_however_many_roles_share_it() 
         size_bytes=None,
         vision=None,
         context_length=None,
+        installed=None,
     )
     assert "synthetic-key" not in repr(states)
 

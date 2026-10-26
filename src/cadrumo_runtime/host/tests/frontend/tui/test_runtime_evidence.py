@@ -13,6 +13,7 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel
 
+from cadrumo.adapters.outbound.components.tests.recorded_rows import recorded_absent_row
 from cadrumo.application.cli_exception_preconditions import nested_terminal_precondition_verdict
 from cadrumo.application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot
 from cadrumo.application.ledger.evidence import MediaKind
@@ -72,7 +73,7 @@ from cadrumo.application.operations.registry import (
     OperationRegistry,
 )
 from cadrumo.application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID
-from cadrumo.core.config import Settings, override_settings
+from cadrumo.core.config import override_settings
 from cadrumo.core.draft_discrepancy import DraftDiscrepancyKind
 from cadrumo.core.errors.error_codes import resolve_error_message
 from cadrumo.core.errors.hierarchy import RecordedRegisteredError
@@ -680,7 +681,7 @@ async def test_a_refused_extraction_raises_its_recorded_reason_with_the_verdict_
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """The recorded detail is the one the real program probe's refusal publishes, read back as another process reads it."""
-    status = probe_local_ai_program(Settings(cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat"))
+    status = probe_local_ai_program(recorded_absent_row("local_ai"))
     verdict = status.precondition_verdict
     assert verdict is not None
     detail = build_operation_error_detail(

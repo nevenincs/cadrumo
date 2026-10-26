@@ -169,5 +169,4 @@ INVOICE_INTAKE_CONFORMANCE_FAMILY = ConformanceFamily(
         ),
     ),
     prepare=_prepare,
-    closes_model_runtime=True,
 )

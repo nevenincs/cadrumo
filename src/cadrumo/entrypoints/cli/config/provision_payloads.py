@@ -6,9 +6,9 @@ the surface. Diagnostics ride the shared envelope's typed ``notices`` channel;
 nothing here declares a bespoke ``advisory``, ``next`` or ``suggestion`` field,
 which the envelope contract forbids.
 
-The contention block is carried as structured fields rather than a rendered
-sentence. Its condition, evidence, and closed outcome are projected through the
-shared action resolver; this schema does not own an instruction.
+A refusal is carried as structured fields rather than a rendered sentence. Its
+condition, evidence, and closed outcome are projected through the shared action
+resolver; this schema does not own an instruction.
 """
 
 from __future__ import annotations
@@ -17,7 +17,6 @@ from collections.abc import Mapping
 
 from pydantic import Field, NonNegativeInt
 
-from ....core.hardware import ContentionCause
 from ....core.json_contract import OutputSchema, ResolvedPreconditionAction
 from ....core.text_bounds import NonEmptyStr
 
@@ -25,32 +24,12 @@ ProvisioningFactPayload = Mapping[str, str | int | bool]
 """Locale-neutral scalar facts projected from a provisioning outcome."""
 
 
-class ProvisionContentionPayload(OutputSchema):
-    """The measured admission verdict for one model load.
-
-    ``causes`` is the :class:`~core.hardware.ContentionCause` set the application layer
-    attributed the shortfall to. The application outcome's facts and resolved
-    verdict preserve the remaining explanation without prose parsing.
-    """
-
-    model: NonEmptyStr
-    admitted: bool
-    causes: list[ContentionCause] = []
-    required_bytes: NonNegativeInt
-    free_vram_bytes: int | None = None
-    free_system_memory_bytes: int | None = None
-    shortfall_bytes: int | None = None
-    facts: ProvisioningFactPayload = Field(default_factory=dict)
-    precondition_action: ResolvedPreconditionAction | None = None
-
-
 class ProvisionModelPayload(OutputSchema):
-    """One role's selected lane: the model it loads on this computer, and whether the runtime holds it."""
+    """One role's selected lane and the model it loads on this computer."""
 
     role: NonEmptyStr
     model: str | None = None
     selected: bool
-    resident: bool = False
     facts: ProvisioningFactPayload = Field(default_factory=dict)
     precondition_action: ResolvedPreconditionAction | None = None
 
@@ -58,9 +37,9 @@ class ProvisionModelPayload(OutputSchema):
 class ProvisionReportResult(OutputSchema):
     """JSON envelope for ``aeat config provision report``.
 
-    The doctor rows for local inference in one place: what the machine measures,
-    the lane the person selected for each role, and whether the first on-host
-    model of known size could be loaded right now. Read-only -- it pulls nothing and loads nothing.
+    The doctor rows for local inference in one place: what the machine measures
+    and the lane the person selected for each role. Read-only -- it pulls
+    nothing, loads nothing and asks the local AI server nothing.
     """
 
     accelerator: str
@@ -68,10 +47,7 @@ class ProvisionReportResult(OutputSchema):
     free_vram_bytes: int | None = None
     total_system_memory_bytes: int | None = None
     free_system_memory_bytes: int | None = None
-    runtime_reachable: bool
-    residents: list[str] = []
     models: list[ProvisionModelPayload] = []
-    contention: ProvisionContentionPayload | None = None
 
 
 class ProvisionItemPayload(OutputSchema):
@@ -172,7 +148,6 @@ class ProvisionBrowserResult(ProvisionSetupResult):
 
 __all__ = [
     "ProvisionBrowserResult",
-    "ProvisionContentionPayload",
     "ProvisionItemPayload",
     "ProvisionModelPayload",
     "ProvisionProbeResult",

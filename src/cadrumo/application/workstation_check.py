@@ -1,12 +1,14 @@
 """Canonical profile capability and workstation health report assembly.
 
-Dependency, capability, contention and preflight services retain their algorithms.
+Dependency, capability and preflight services retain their algorithms.
 This report runs inside the authenticated profile worker and only reads.
 """
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
@@ -18,6 +20,9 @@ from .preflight import PreflightCheck, run_preflight_checks
 from .provisioning import DependencyStatus
 from .user_profile.access_errors import ProfileAccessRefusedError
 from .user_profile.capabilities import CapabilityDecision, resolve_active_capability
+
+if TYPE_CHECKING:
+    from .local_reader import ProgramRow
 
 
 @dataclass(frozen=True, slots=True)
@@ -38,16 +43,24 @@ def require_workstation_profile(profile_id: UUID) -> None:
 
 
 def run_workstation_check(
-    *, profile_id: UUID, operator_probe_ports: OperatorProbePorts, object_path_suffix_length: int
+    *,
+    profile_id: UUID,
+    operator_probe_ports: OperatorProbePorts,
+    object_path_suffix_length: int,
+    read_local_ai_program: Callable[[], ProgramRow],
 ) -> WorkstationCheckReport:
-    """Assemble the existing report for exactly the authenticated profile."""
+    """Assemble the existing report for exactly the authenticated profile.
+
+    ``read_local_ai_program`` reads the components role's status row for the
+    local AI program.
+    """
     capabilities: list[CapabilityDecision] = []
     for capability in ServiceCapability:
         require_workstation_profile(profile_id)
         capabilities.append(resolve_active_capability(capability))
     enabled = {row.capability.value: row.enabled for row in capabilities}
     require_workstation_profile(profile_id)
-    dependencies, extras = _probe_dependency_statuses()
+    dependencies, extras = _probe_dependency_statuses(read_local_ai_program())
     require_workstation_profile(profile_id)
     preflight = tuple(
         run_preflight_checks(
@@ -64,7 +77,9 @@ def run_workstation_check(
     )
 
 
-def _probe_dependency_statuses() -> tuple[tuple[DependencyStatus, ...], tuple[DependencyStatus, ...]]:
+def _probe_dependency_statuses(
+    program_row: ProgramRow,
+) -> tuple[tuple[DependencyStatus, ...], tuple[DependencyStatus, ...]]:
     from .local_reader import probe_local_ai_program
     from .provisioning import (
         probe_hardware_profile,
@@ -76,8 +91,8 @@ def _probe_dependency_statuses() -> tuple[tuple[DependencyStatus, ...], tuple[De
 
     # The local AI program's health only. Which model each role reads with is
     # the person's selection, which the agent's catalogue reports; whether a
-    # load fits is judged at dispatch against that selection.
-    program = probe_local_ai_program()
+    # load fits is the agent's answer when it loads the model.
+    program = probe_local_ai_program(program_row)
     hardware_floor = probe_model_runtime_hardware_floor()
     hardware = probe_local_inference_hardware(probe_hardware_profile())
     playwright = probe_playwright_browser()

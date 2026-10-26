@@ -115,5 +115,4 @@ LEDGER_EVIDENCE_INGESTION_CONFORMANCE_FAMILY = ConformanceFamily(
         ),
     ),
     prepare=_prepare,
-    closes_model_runtime=True,
 )

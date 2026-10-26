@@ -408,5 +408,4 @@ LEDGER_MATERIAL_CONFORMANCE_FAMILY = ConformanceFamily(
         ),
     ),
     prepare=_retained_ledger_prepare,
-    closes_model_runtime=True,
 )

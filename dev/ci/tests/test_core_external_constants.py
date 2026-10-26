@@ -21,7 +21,6 @@ import ast
 import re
 from collections.abc import Iterable
 from pathlib import Path
-from urllib.parse import urlsplit
 
 import pytest
 from pydantic import ValidationError
@@ -603,9 +602,6 @@ def test_runtime_tunables_are_settings_not_registry_constants() -> None:
         assert getattr(settings, field_name) == expected_value, field_name
 
     assert settings.cadrumo_live_iva_declaration_capture_timeout_ms < settings.cadrumo_live_iva_surface_timeout_ms
-    ollama_url = urlsplit(settings.cadrumo_llm_ollama_chat_url)
-    assert ollama_url.scheme == "http"
-    assert ollama_url.hostname in {"localhost", "127.0.0.1"}
 
 
 def test_settings_refuse_the_former_product_google_drive_vault_folder() -> None:

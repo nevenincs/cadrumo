@@ -101,7 +101,7 @@ def test_operator_iva_derivation_records_the_session_label_for_an_automation(
     """The audit events of the derivation carry the label the executor derived, not the typed one."""
     definition_id = "ledger.classify.iva-derive"
     with (
-        conformance.model_runtime_for_operation(definition_id),
+        conformance.family_environment_for_operation(definition_id),
         conformance.conformance_operation_runtime(
             tmp_path / "runtime",
             cleanup=conformance.OperationRuntimeCloseWitness(),

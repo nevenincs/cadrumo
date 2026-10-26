@@ -680,7 +680,6 @@ def _sandbox_template() -> Path:
         _isolated_external_tool_env(template),
         _absent_credential_vault(),
         override_settings(
-            cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat",
             cadrumo_output_language="en",
         ),
         isolated_profile_storage_root(tmp_path=template),
@@ -957,7 +956,6 @@ def sequence_sandbox(
         # A taxpayer with no auth provider configured completes the whole local
         # artefact flow, and the docs gates prove that ruled behaviour in CI.
         override_settings(
-            cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat",
             cadrumo_output_language="en",
         ),
         isolated_profile_storage_root(tmp_path=sandbox_root),

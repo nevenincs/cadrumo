@@ -47,7 +47,6 @@ from ...application.operations.projection_services import OperationResultProject
 from ...application.operations.registry import OperationRegistry
 from ...application.operations.supervisor import OperationSupervisor
 from ...application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID, ProvisioningPreconditionCondition
-from ...core.config import override_settings
 from ...core.model_roles import ModelRole
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
@@ -126,13 +125,7 @@ def test_a_batch_paused_for_its_missing_text_model_settles_with_the_local_ai_set
         assert isinstance(projection, LedgerEvidenceBatchProjection)
         return receipt.condition, receipt.effect, projection
 
-    # Admission control is configured for a host whose headroom cannot be
-    # measured, the documented operator setting, so the only cause to stop is
-    # the reader itself.
-    with (
-        agent_refusing(ModelRunRefusalCode.MODEL_NOT_INSTALLED) as agent,
-        override_settings(cadrumo_llm_contention_check_override=True),
-    ):
+    with agent_refusing(ModelRunRefusalCode.MODEL_NOT_INSTALLED) as agent:
         journal, leases, operands = operation_repositories(
             storage_root=tmp_path / "durable-state", profile_objects=profile.repository
         )

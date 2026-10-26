@@ -1247,8 +1247,9 @@ errors:
       o está incompleta.
     refused_llm_consent: Se ha rechazado la lectura del documento fuera del equipo
       porque no se ha otorgado el consentimiento para la transmisión externa.
-    refused_llm_contention: Este equipo no tiene memoria libre medida para cargar
-      el modelo de lenguaje ahora mismo.
+    refused_llm_contention: El modelo elegido no cabe ahora mismo en la memoria libre
+      de este equipo. Cierra otros programas o elige un modelo más pequeño en la aplicación
+      de escritorio de Cadrumo y vuelve a intentarlo.
     refused_llm_no_model_selected: No hay ningún modelo elegido para esta tarea. Elige
       uno en la aplicación de escritorio de Cadrumo y vuelve a intentarlo.
     refused_llm_validation: Un objeto del modelo de lenguaje no superó la validación.

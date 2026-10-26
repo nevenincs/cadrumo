@@ -40,7 +40,7 @@ from typing import ClassVar
 
 import pytest
 
-from cadrumo.adapters.outbound.llm.tests.load_headroom_support import extract_invoice_text_under_admitted_load
+from cadrumo.adapters.outbound.llm.evidence_draft_text import TextInvoiceFieldExtractor
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.application.ledger import invoice_draft_extraction as invoice_draft_extraction_module
 from cadrumo.application.ledger.document_transcription import DocumentTranscription
@@ -133,9 +133,9 @@ def _reader_ports(evidence: EvidenceInput, *, operation: PinnedAuthorityOperatio
     ) -> InvoiceDraft:
         if not isinstance(authority_values, InvoiceExtractionAuthorityValues):
             raise TypeError("text reader requires resolved invoice extraction authority values")
-        return extract_invoice_text_under_admitted_load(
-            transcription, settings=settings, authority_values=authority_values, operation=operation
-        )
+        return TextInvoiceFieldExtractor(
+            settings=settings, authority_values=authority_values, operation=operation
+        ).extract(transcription=transcription)
 
     def vision_not_expected(*_args: object, **_kwargs: object) -> DocumentTranscription:
         raise AssertionError("the text-layer reader must not invoke the vision path")

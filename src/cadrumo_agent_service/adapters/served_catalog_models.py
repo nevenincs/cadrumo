@@ -2,9 +2,10 @@
 
 The service reads the document; this adapter only finds the lane in it and
 takes two things. From each of its ``catalog.models[]`` it takes the model
-value and the facts a selection is checked against: vision, size, context
-window and licence. From its ``background_requests`` record it takes whether a
-background run may carry images and PDFs, and the reply options it honours.
+value, the facts a selection is checked against: vision, size, context window
+and licence, and whether the lane's local server holds the model. From its
+``background_requests`` record it takes whether a background run may carry
+images and PDFs, and the reply options it honours.
 Every other field is left unread. The model facts are validated with the
 declared catalogue's own rules, so a value either catalogue would refuse is
 refused here too, and a lane whose entries do not validate yields no live
@@ -25,10 +26,13 @@ from pydantic import ValidationError
 from cadrumo_client.contracts.model_runs import ModelRunMediaKind
 
 from ..providers.application.ports import LiveCatalogModels, LiveLaneBackground
-from ..providers.domain.catalog import BackgroundOption, CatalogModelFacts
+from ..providers.domain.catalog import BackgroundOption, LiveCatalogModel
 
 _FACT_FIELDS: Final = ("vision", "size_bytes", "context_length", "licence")
 """The served entry fields read besides the model value, each required, null where unstated."""
+
+_INSTALLED_FIELD: Final = "installed"
+"""Whether the lane's local server holds the model; an entry that does not state it leaves it unknown."""
 
 _MEDIA_FIELDS: Final = ((ModelRunMediaKind.IMAGE, "accepts_images"), (ModelRunMediaKind.PDF, "accepts_pdfs"))
 """Each attachment family a background run may carry, and the served field that says whether the lane takes it."""
@@ -47,7 +51,7 @@ class ServedCatalogModels(LiveCatalogModels):
         return ServedCatalogModels(_ReadOnce(self._read))
 
     @override
-    def lane_models(self, provider: str, transport: str) -> tuple[CatalogModelFacts, ...] | None:
+    def lane_models(self, provider: str, transport: str) -> tuple[LiveCatalogModel, ...] | None:
         """Return the lane's live entries, empty when the document lists no such lane, ``None`` when unread."""
         record = self._lane_record(provider, transport)
         if record is _Unread.UNREAD:
@@ -117,14 +121,16 @@ class _ReadOnce:
         return self._document
 
 
-def _entries(models: list[object]) -> tuple[CatalogModelFacts, ...] | None:
-    entries: list[CatalogModelFacts] = []
+def _entries(models: list[object]) -> tuple[LiveCatalogModel, ...] | None:
+    entries: list[LiveCatalogModel] = []
     for model in models:
         if not isinstance(model, Mapping) or "model" not in model:
             return None
-        read = {"id": model["model"]} | {field: model[field] for field in _FACT_FIELDS if field in model}
+        read = {"id": model["model"], _INSTALLED_FIELD: model.get(_INSTALLED_FIELD)} | {
+            field: model[field] for field in _FACT_FIELDS if field in model
+        }
         try:
-            entries.append(CatalogModelFacts.model_validate(read))
+            entries.append(LiveCatalogModel.model_validate(read))
         except ValidationError:
             return None
     return tuple(entries)

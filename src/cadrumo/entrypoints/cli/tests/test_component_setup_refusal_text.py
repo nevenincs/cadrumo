@@ -53,7 +53,6 @@ __all__ = ["english_locale_fixture"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_CLOSED_ENDPOINT = "http://127.0.0.1:1/api/chat"
 _BROWSER_FIX = "To fix it, run: aeat config provision browser"
 _LOCAL_AI_DESKTOP = "Local AI: Not set up yet. Set it up in the Cadrumo desktop app."
 _LOCAL_AI_HELD = "Local AI: This version of Cadrumo does not include this."
@@ -85,7 +84,7 @@ def _browser_refusal(tmp_path: Path) -> BrowserError:
 
 
 def _reader_refusal() -> PurchaseInvoiceEvidenceReaderError:
-    status = probe_local_ai_program(Settings(cadrumo_llm_ollama_chat_url=_CLOSED_ENDPOINT))
+    status = probe_local_ai_program(recorded_absent_row("local_ai"))
     assert status.available is False
     assert status.precondition_verdict is not None
     return PurchaseInvoiceEvidenceReaderError(
@@ -185,7 +184,7 @@ def test_a_worker_recorded_browser_refusal_prints_the_same_command(tmp_path: Pat
     )
 
 
-def test_an_unreachable_local_ai_prints_the_sentence_and_points_to_the_desktop_app() -> None:
+def test_a_local_ai_not_set_up_prints_the_sentence_and_points_to_the_desktop_app() -> None:
     error = _reader_refusal()
 
     with _status(recorded_absent_row):

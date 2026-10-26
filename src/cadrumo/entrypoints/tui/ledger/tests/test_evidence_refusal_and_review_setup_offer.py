@@ -35,7 +35,7 @@ from .....application.local_reader import probe_local_ai_program
 from .....application.operations.error_detail import build_operation_error_detail
 from .....application.operator_actions.models import PreconditionVerdict
 from .....application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID
-from .....core.config import Settings, override_settings
+from .....core.config import override_settings
 from .....core.errors.hierarchy import CadrumoError
 from .....core.i18n.render import tr
 from ...setup.offer import SetupItemOffer
@@ -64,13 +64,11 @@ from .workspace_fixtures import (
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _EVIDENCE_ID = "8747cbf318cf0adb"
-#: A runtime port nothing listens on, so the reader probe finds no local AI answering.
-_CLOSED_ENDPOINT = "http://127.0.0.1:1/api/chat"
 
 
 def _probe_verdict() -> PreconditionVerdict:
-    """The verdict the real reader probe gives for a local AI that does not answer."""
-    status = probe_local_ai_program(Settings(cadrumo_llm_ollama_chat_url=_CLOSED_ENDPOINT))
+    """The verdict the real program judgement gives for a local AI the components role reports absent."""
+    status = probe_local_ai_program(recorded_absent_row("local_ai"))
     verdict = status.precondition_verdict
     assert verdict is not None
     assert verdict.action is not None

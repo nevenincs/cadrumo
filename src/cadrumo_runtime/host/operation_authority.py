@@ -85,8 +85,11 @@ _LOGGER = get_logger(__name__)
 _MODEL_RUN_LOOKUP_SECONDS = 30.0
 """How long a lane lookup may wait for the service; it reads settings and runs nothing."""
 
-_MODEL_RUN_ANSWER_MARGIN_SECONDS = 30.0
-"""Time beyond a run's own deadline for the service to report the outcome it reached."""
+_MODEL_RUN_ANSWER_MARGIN_SECONDS = 130.0
+"""Time beyond a run's own deadline for the service to start the run and report the outcome it reached.
+
+It exceeds the connection's own margin, so the connection answers a run that overruns first.
+"""
 
 
 @dataclass(frozen=True, slots=True)

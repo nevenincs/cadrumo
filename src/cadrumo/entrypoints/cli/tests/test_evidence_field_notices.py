@@ -517,7 +517,7 @@ def test_a_draft_whose_model_fill_ran_or_was_never_needed_raises_no_label_readin
 def test_a_headroom_refused_fill_is_a_warning_naming_the_refusal_and_the_unread_fields() -> None:
     fallback = _fallback(
         LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED,
-        failed_condition_id="provisioning.load_headroom.measurable",
+        failed_condition_id="provisioning.load_capacity.available",
     )
 
     (notice,) = label_reading_fallback_notices(fallback)
@@ -529,7 +529,7 @@ def test_a_headroom_refused_fill_is_a_warning_naming_the_refusal_and_the_unread_
         "unread_fields": "currency, supplier_name",
         "unread_field_count": "2",
         "reader_error_type": "ReaderFailureForTest",
-        "failed_condition_id": "provisioning.load_headroom.measurable",
+        "failed_condition_id": "provisioning.load_capacity.available",
     }
     assert "currency, supplier_name" in notice.message
     assert "enough free memory" in notice.message
@@ -565,7 +565,7 @@ def test_a_reader_the_probe_can_set_up_names_local_ai_and_its_setup() -> None:
     assert notice.code == "ledger.evidence.label_reading.reader_unavailable"
     assert notice.message.startswith("Local AI is not ready")
     assert "currency, supplier_name" in notice.message
-    assert "Set it up, then extract again." in notice.message
+    assert "Set it up in the Cadrumo desktop app, then extract again." in notice.message
     assert "ReaderFailureForTest" not in notice.message
 
 

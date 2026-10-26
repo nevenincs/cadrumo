@@ -1,9 +1,11 @@
-"""No product Python downloads, installs, extracts, starts or decides the state of a component.
+"""No product Python downloads, installs, extracts, starts, asks or decides the state of a component.
 
 The native component engine owns the browser and the local AI: it downloads
 their pinned archives, installs and checks them, runs the local AI's program
 through the runtime manager, writes the receipts and location records, and
-decides every item's state. Python only locates and uses what it installed.
+decides every item's state. Python locates and uses the browser it installed.
+The local AI is reached only through the agent: no product Python calls the
+local AI server or looks for its executable.
 This gate reads the product's Python sources and refuses each way a Python
 module could take that work back. Every row is first shown to catch a
 representative defect in an isolated fixture, then run against the real tree.
@@ -32,7 +34,18 @@ Where each row stops:
   archive member by member is not extraction and passes.
 - Spawn the model program. A module that starts a process and names the
   program (``ollama``) or its ``serve`` command in a string. Naming it to
-  locate the executable without starting a process passes.
+  locate the executable without starting a process passes this row and is
+  refused by the locate row below.
+- Ask the model program. A module that names one of the program's read or
+  inference endpoints (``/api/ps``, ``/api/tags``, ``/api/version``,
+  ``/api/show``, ``/api/chat``, ``/api/generate``, ``/api/embed``), as a path
+  or as the word an endpoint helper is called with. An address built from
+  pieces the module does not spell is not seen.
+- Locate the model program. A ``which`` call given the program's name, or a
+  string naming its executable file (``ollama.exe``, ``Ollama.app``) or a
+  ``bin/ollama`` path. The bare word ``ollama`` as a provider or catalogue
+  identifier, and the storage folders named after it, name no executable and
+  pass.
 - Write a receipt or record. A module that names the components storage
   (``DEPENDENCY_RECEIPTS`` or the ``components/receipts`` and
   ``components/activity`` folders) and also writes, renames or removes a file.
@@ -83,6 +96,11 @@ _HTTP_CLIENT_MODULES: Final = frozenset(
 )
 _PULL_ENDPOINTS: Final = ("/api/pull", "api/pull", "/api/delete", "api/delete")
 _ENDPOINT_WORDS: Final = frozenset({"pull", "delete"})
+_SERVER_ENDPOINT_WORDS: Final = ("ps", "tags", "version", "show", "chat", "generate", "embed")
+_SERVER_ENDPOINTS: Final = tuple(f"/api/{word}" for word in _SERVER_ENDPOINT_WORDS)
+#: The program's executable file names; the bare program name is a file only where a lookup or a path says so.
+_PROGRAM_FILES: Final = frozenset({"ollama.exe", "ollama.app"})
+_PROGRAM_NAMES: Final = frozenset({"ollama", *_PROGRAM_FILES})
 #: The modules that read the component pins: the bytes only the engine may fetch.
 _PIN_MODULES: Final = ("cadrumo.application.browser_archive_pins",)
 _PIN_MODULE_NAMES: Final = frozenset(module.rsplit(".", 1)[1] for module in _PIN_MODULES)
@@ -320,6 +338,58 @@ def spawn_findings(source: Source) -> list[str]:
     return [f"{source.module}: starts a process and names {word!r}" for word in sorted(words)]
 
 
+def server_call_findings(source: Source) -> list[str]:
+    """Name a module that addresses one of the model program's read or inference endpoints."""
+    findings = [
+        f"{source.module}: names the model program's endpoint {endpoint!r}"
+        for endpoint in _SERVER_ENDPOINTS
+        if any(_names_endpoint(text, endpoint) for text in source.strings)
+    ]
+    findings.extend(
+        f"{source.module}:{call.lineno}: asks {name}() for the model program's {argument.value!r} endpoint"
+        for name, call in source.calls()
+        if name.endswith("endpoint")
+        for argument in call.args
+        if isinstance(argument, ast.Constant) and argument.value in _SERVER_ENDPOINT_WORDS
+    )
+    return findings
+
+
+def _names_endpoint(text: str, endpoint: str) -> bool:
+    """Whether ``endpoint`` ends a path segment in ``text``, so ``/api/chat`` does not match ``/api/chats``."""
+    start = text.find(endpoint)
+    while start >= 0:
+        end = start + len(endpoint)
+        if end == len(text) or text[end] in "/?#\\\"'":
+            return True
+        start = text.find(endpoint, start + 1)
+    return False
+
+
+def locate_findings(source: Source) -> list[str]:
+    """Name a module that looks for the model program's executable."""
+    findings = [
+        f"{source.module}:{call.lineno}: looks the model program up through {name}({argument.value!r})"
+        for name, call in source.calls()
+        if name == "which"
+        for argument in call.args[:1]
+        if isinstance(argument, ast.Constant)
+        and isinstance(argument.value, str)
+        and argument.value.strip().lower() in _PROGRAM_NAMES
+    ]
+    findings.extend(
+        f"{source.module}: names the model program's executable {text!r}"
+        for text in sorted(set(source.strings))
+        if _names_program_file(text)
+    )
+    return findings
+
+
+def _names_program_file(text: str) -> bool:
+    segments = text.strip().lower().replace("\\", "/").rstrip("/").split("/")
+    return segments[-1] in _PROGRAM_FILES or segments[-2:] == ["bin", "ollama"]
+
+
 def record_findings(source: Source) -> list[str]:
     """Name a module that names the components storage and writes, renames or removes a file."""
     names_storage = any(marker in text for text in source.strings for marker in _RECORD_MARKERS) or any(
@@ -390,6 +460,8 @@ def provisioning_findings(source: Source, hosts: Iterable[str]) -> list[str]:
         *install_findings(source),
         *extract_findings(source),
         *spawn_findings(source),
+        *server_call_findings(source),
+        *locate_findings(source),
         *record_findings(source),
         *state_findings(source),
         *operation_findings(source),
@@ -506,6 +578,38 @@ def test_a_module_that_spawns_the_model_program_is_refused() -> None:
     assert spawn_findings(locating) == []
 
 
+def test_a_module_that_asks_the_model_program_is_refused() -> None:
+    chatting = parse_source("fixture.chat", 'URL = "http://127.0.0.1:23743/api/chat"\n')
+    resident = parse_source(
+        "fixture.resident", 'def ps(ollama_endpoint, url):\n    return ollama_endpoint(url, "ps")\n'
+    )
+    version = parse_source("fixture.version", 'def read(base):\n    return f"{base}/api/version?x=1"\n')
+    agent = parse_source("fixture.agent", 'RUNS = "/v1/runs"\nCHATS = "/api/chats"\nPROVIDER = "ollama"\n')
+    assert server_call_findings(chatting) == ["fixture.chat: names the model program's endpoint '/api/chat'"]
+    assert server_call_findings(resident) == [
+        "fixture.resident:2: asks ollama_endpoint() for the model program's 'ps' endpoint"
+    ]
+    assert server_call_findings(version) == ["fixture.version: names the model program's endpoint '/api/version'"]
+    assert server_call_findings(agent) == [], "the agent's own routes and a longer path ask the program nothing"
+
+
+def test_a_module_that_locates_the_model_program_is_refused() -> None:
+    which = parse_source("fixture.which", 'import shutil\n\ndef locate():\n    return shutil.which("ollama")\n')
+    windows = parse_source("fixture.windows", 'def program(root):\n    return root / "ollama.exe"\n')
+    path = parse_source("fixture.path", 'PROGRAM = "/usr/local/bin/ollama"\nAPP = "/Applications/Ollama.app"\n')
+    provider = parse_source(
+        "fixture.provider",
+        'import shutil\n\nPROVIDER = "ollama"\nFOUND = shutil.which("git")\nMODELS = "models/ollama"\n',
+    )
+    assert locate_findings(which) == ["fixture.which:4: looks the model program up through which('ollama')"]
+    assert locate_findings(windows) == ["fixture.windows: names the model program's executable 'ollama.exe'"]
+    assert locate_findings(path) == [
+        "fixture.path: names the model program's executable '/Applications/Ollama.app'",
+        "fixture.path: names the model program's executable '/usr/local/bin/ollama'",
+    ]
+    assert locate_findings(provider) == [], "a provider id, another program's lookup and a folder name no executable"
+
+
 def test_a_module_that_writes_a_component_receipt_or_record_is_refused() -> None:
     writing = parse_source(
         "fixture.receipt",
@@ -564,7 +668,7 @@ def test_a_module_that_names_a_removed_setup_operation_is_refused() -> None:
 # --------------------------------------------------------------------------
 
 
-def test_no_product_python_downloads_installs_extracts_spawns_writes_or_decides_a_component() -> None:
+def test_no_product_python_downloads_installs_extracts_spawns_asks_locates_writes_or_decides_a_component() -> None:
     sources = _product_sources()
     hosts = _component_hosts()
     assert len(sources) > 2000, f"the census read only {len(sources)} product modules, so it would pass by reading none"
@@ -583,6 +687,8 @@ def test_the_removed_python_provisioning_modules_are_gone() -> None:
         "src/cadrumo/application/dependency_activity.py",
         "src/cadrumo/application/dependency_withdrawal.py",
         "src/cadrumo/application/local_reader_setup_items.py",
+        "src/cadrumo/application/provisioning_host.py",
+        "src/cadrumo/application/provisioning_runtime.py",
         "src/cadrumo/entrypoints/dependency_operation_composition.py",
         "src/cadrumo/adapters/outbound/browser_runtime",
         "src/cadrumo/adapters/outbound/model_runtime",

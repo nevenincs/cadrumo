@@ -8,23 +8,23 @@ conditions stop it, and each must reach the operator on the envelope's
 exactly like a document that does not print it:
 
 - the agent service cannot run the role's lane;
-- admission control refuses to load the on-host lane's model because this
-  machine shows no measured memory headroom for the size its catalogue entry
-  states. The refusal is respected: nothing is sent to the service;
+- the agent refuses to load the selected model because it does not fit this
+  computer's free memory. The refusal is respected: the fill is not retried;
 - admission control refuses the fill because another read already holds the
   process's on-host inference slot. Nothing is sent to the service either.
 
 When the labels read nothing the model read is the whole read rather than a
-fill, and admission control's refusal stands unchanged.
+fill, and its refusal stands unchanged.
 
 A batch run keeps the same fact with the draft it stores, so the item's row,
 the run's notices and a later re-run over the same documents all report it.
 
 Drives the real Typer CLI tree, a real encrypted bucket session, a real
 reportlab-generated text-bearing PDF, the real composed reader, the real
-execution authority's model-run door and the real admission check. The agent
+execution authority's model-run door and the real inference slot. The agent
 service is the recording stand-in the portable runtime relays each model run
-to; it records every run reaching it, and only its reply is authored here. The
+to; it records every run reaching it, and only its reply or its refusal is
+authored here. The
 occupied slot is held by a real client dispatch that the stand-in keeps open,
 so the arena is full the way a concurrent read fills it.
 """
@@ -52,17 +52,17 @@ from cadrumo.adapters.persistence.llm.cache import LLMCache
 from cadrumo.adapters.persistence.llm.run_records import LLMRunRecorder
 from cadrumo.adapters.persistence.llm.usage import UsageRecorder
 from cadrumo.application.provisioning_contracts import ProvisioningPreconditionCondition
-from cadrumo.core.config import load_settings, override_settings
+from cadrumo.core.config import load_settings
 from cadrumo.core.model_roles import ModelRole
 from cadrumo.tests.fixtures.settings import EnvFileFreeSettings
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
-from cadrumo_client.contracts.model_runs import ModelRunBody, ModelRunLane, ModelRunRefusalCode
+from cadrumo_client.contracts.model_runs import ModelRunBody, ModelRunRefusalCode
 
-from .ledger_ux_support import _add_evidence, _invoke, _open_bucket_session, admit_an_unmeasurable_host
+from .ledger_ux_support import _add_evidence, _invoke, _open_bucket_session
 from .portable_human_cli_runtime import serving_portable_agent
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-__all__ = ["_open_bucket_session", "admit_an_unmeasurable_host"]
+__all__ = ["_open_bucket_session"]
 
 _HEADROOM_REFUSED = "ledger.evidence.label_reading.headroom_refused"
 _READER_UNAVAILABLE = "ledger.evidence.label_reading.reader_unavailable"
@@ -71,14 +71,9 @@ _LABEL_READING_CODES = {_HEADROOM_REFUSED, _READER_UNAVAILABLE, _BUSY_REFUSED}
 _BATCH_LABEL_READING_DEGRADED = "ledger.evidence.batch.label_reading_degraded"
 _SLOT_AVAILABLE = "llm.local_inference.slot_available"
 
-#: The preconditions a headroom refusal can fail on this host: the free memory
-#: could not be measured, or it was measured short of the requirement plus the
-#: margin with the runtime's resident set readable or not.
-_HEADROOM_CONDITIONS = {
-    ProvisioningPreconditionCondition.LOAD_HEADROOM_MEASURABLE.value,
-    ProvisioningPreconditionCondition.LOAD_CAPACITY_AVAILABLE.value,
-    ProvisioningPreconditionCondition.RESIDENT_SET_READABLE.value,
-}
+#: The precondition the agent's refusal to load a model too large for the free memory fails.
+_LOAD_CAPACITY = ProvisioningPreconditionCondition.LOAD_CAPACITY_AVAILABLE.value
+_DOES_NOT_FIT = ModelRunRefusalCode.MODEL_DOES_NOT_FIT
 
 _SUPPLIER_NAME = "Estacion de Servicio Albufera SL"
 _SUPPLIER_TAX_ID = "B92000082"
@@ -100,19 +95,6 @@ _PARTIALLY_LABELLED_LINES = (
 # Nothing here is a label the rules read, so there is no reading to stand on.
 _UNLABELLED_LINES = ("B1234567X B17283946 766,30",)
 
-#: An on-host lane whose catalogue entry makes no memory claim. Admission
-#: control does not assess such a lane, so the cases whose subject is NOT
-#: admission run the same way on every host whatever its free memory.
-_UNASSESSED_LANE = ON_HOST_LANE
-
-#: An on-host lane whose catalogue entry states the size its load needs, so
-#: admission control assesses it.
-_SIZED_LANE = ON_HOST_LANE.model_copy(update={"size_bytes": 1 << 30})
-
-#: A margin no machine can satisfy, so the real admission check refuses on every
-#: host: a measurable one falls short, an unmeasurable one fails closed.
-_UNSATISFIABLE_MARGIN_BYTES = 1 << 60
-
 #: The service's reply to every fill: the one field the labels leave unread.
 _FILL_REPLY = json.dumps({"supplier_name": _SUPPLIER_NAME, "supplier_name_anchor": _SUPPLIER_NAME})
 
@@ -133,10 +115,18 @@ def _fills(service: RecordingModelRuns, *, excluding: Callable[[ModelRunBody], b
 
 @contextmanager
 def _recording_agent(
-    lane: ModelRunLane = _UNASSESSED_LANE, *, lookup_refusal: ModelRunRefusalCode | None = None
+    *,
+    lookup_refusal: ModelRunRefusalCode | None = None,
+    run_refusal: ModelRunRefusalCode | None = None,
 ) -> Generator[RecordingModelRuns]:
-    """Serve the profile's agent service on ``lane``, answering every run with the fill and recording it."""
-    service = RecordingModelRuns(replies=(_FILL_REPLY,), lane=lane, lookup_refusal=lookup_refusal)
+    """Serve the profile's agent service on the on-host lane, recording every run.
+
+    Each run is answered with the fill, or refused at its start with
+    ``run_refusal`` when one is given.
+    """
+    service = RecordingModelRuns(
+        replies=(_FILL_REPLY,), lane=ON_HOST_LANE, lookup_refusal=lookup_refusal, run_refusal=run_refusal
+    )
     with serving_portable_agent(service):
         yield service
 
@@ -150,29 +140,19 @@ def _label_reading_notices(envelope: dict[str, Any]) -> list[dict[str, Any]]:
     return [notice for notice in envelope.get("notices", []) if notice["code"] in _LABEL_READING_CODES]
 
 
-@contextmanager
-def _refusing_headroom() -> Generator[None]:
-    """Run the real admission check with a margin no host satisfies."""
-    with override_settings(
-        cadrumo_llm_contention_check_override=False,
-        cadrumo_llm_contention_safety_margin_bytes=_UNSATISFIABLE_MARGIN_BYTES,
-    ):
-        yield
-
-
-def test_a_headroom_refused_fill_leaves_the_label_reading_standing_and_never_touches_the_service(
+def test_a_fill_the_model_does_not_fit_leaves_the_label_reading_standing_and_is_not_retried(
     tmp_path: Path,
 ) -> None:
 
-    with _recording_agent(_SIZED_LANE) as service, _refusing_headroom():
+    with _recording_agent(run_refusal=_DOES_NOT_FIT) as service:
         evidence_id = _add_evidence(tmp_path, _PARTIALLY_LABELLED_LINES, filename="ticket.pdf")
         exit_code, envelope = _extract(evidence_id)
 
     assert exit_code == 0, envelope
-    # Admission control, not a failed read: the lane was looked up, and no fill
-    # reached the service, so no model was loaded to be refused afterwards.
+    # The agent refused the one fill at its start; the refusal is final for
+    # this read, so the fill is not sent again.
     assert ModelRole.TEXT_EXTRACTION in service.lookups
-    assert _fills(service) == []
+    assert _fills(service) == [ModelRole.TEXT_EXTRACTION.value]
     result = envelope["result"]
     assert result["supplier_name"] is None
     assert result["invoice_number"] == "T-0042-2026"
@@ -184,7 +164,7 @@ def test_a_headroom_refused_fill_leaves_the_label_reading_standing_and_never_tou
     assert notice["context"]["reason"] == "load_headroom_refused"
     assert notice["context"]["unread_fields"] == "supplier_name"
     assert notice["context"]["reader_error_type"] == "LLMContentionError"
-    assert notice["context"]["failed_condition_id"] in _HEADROOM_CONDITIONS
+    assert notice["context"]["failed_condition_id"] == _LOAD_CAPACITY
 
 
 def _store_reading_for_review(evidence_id: str) -> None:
@@ -261,16 +241,18 @@ def _confirm_supplying_the_unassigned_identifier(evidence_id: str) -> Result:
     return _invoke([*args, "--resolve", f"{direction[0]['blocker_id']}=supply:{_SUPPLIER_TAX_ID}"])
 
 
-def test_confirm_reports_the_headroom_refused_fill_on_the_draft_it_re_reads(tmp_path: Path) -> None:
+def test_confirm_reports_the_fill_the_model_does_not_fit_on_the_draft_it_re_reads(tmp_path: Path) -> None:
     """Confirm reads the document again, so the operator minting from it is told the same thing."""
 
-    with _recording_agent(_SIZED_LANE) as service, _refusing_headroom():
+    with _recording_agent(run_refusal=_DOES_NOT_FIT) as service:
         evidence_id = _add_evidence(tmp_path, _PARTIALLY_LABELLED_LINES, filename="ticket.pdf")
         _store_reading_for_review(evidence_id)
         confirmed = _confirm_supplying_the_unassigned_identifier(evidence_id)
 
     assert confirmed.exit_code == 0, confirmed.output
-    assert _fills(service) == []
+    # The stored reading, the review's extract and confirm's re-read each ask
+    # for the fill once; none of the three refusals is retried.
+    assert _fills(service) == [ModelRole.TEXT_EXTRACTION.value] * 3
     envelope = json.loads(confirmed.output)
     (notice,) = _label_reading_notices(envelope)
     assert notice["code"] == _HEADROOM_REFUSED
@@ -312,15 +294,15 @@ def test_an_unavailable_lane_leaves_the_label_reading_standing_with_a_warning(tm
     assert notice["context"]["failed_condition_id"] == LLMPreconditionCondition.AGENT_MODEL_RUN_COMPLETED.value
 
 
-def test_a_headroom_refusal_of_the_whole_read_is_unchanged(tmp_path: Path) -> None:
+def test_a_does_not_fit_refusal_of_the_whole_read_is_unchanged(tmp_path: Path) -> None:
     """With no label reading to stand on, the model read is required and its refusal is the command's."""
 
-    with _recording_agent(_SIZED_LANE) as service, _refusing_headroom():
+    with _recording_agent(run_refusal=_DOES_NOT_FIT) as service:
         evidence_id = _add_evidence(tmp_path, _UNLABELLED_LINES, filename="unlabelled.pdf")
         exit_code, envelope = _extract(evidence_id)
 
     assert exit_code != 0, envelope
-    assert _fills(service) == []
+    assert len(service.runs) == 1, "the refused read is not retried"
     assert envelope["error"]["code"] == "REFUSED_LLM_CONTENTION"
 
 
@@ -350,9 +332,8 @@ def _start_holding_read(tmp_path: Path, service: RecordingModelRuns) -> tuple[th
     The read reaches the same service through a port of its own, as another
     operation's read would. The thread runs in a copy of this context, because
     the case's settings and storage are bound through context variables that a
-    bare thread does not see. Its lane states no size, so the holding read is
-    admitted on headroom on any host and it is occupancy alone that the read
-    under test meets.
+    bare thread does not see. It is occupancy alone that the read under test
+    meets.
     """
     root = tmp_path / "holding-read"
     settings = EnvFileFreeSettings(
@@ -401,7 +382,7 @@ def _agent_with_the_slot(tmp_path: Path, *, held: bool) -> Generator[Callable[[]
             return "held"
         return _FILL_REPLY
 
-    service = RecordingModelRuns(lane=_UNASSESSED_LANE, answer=answer)
+    service = RecordingModelRuns(lane=ON_HOST_LANE, answer=answer)
 
     def fills() -> list[str]:
         return _fills(service, excluding=_is_holding)

@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 from typing import Any, Final, override
 
-from ...domain.catalog import CatalogModelFacts, ProviderCatalog, parse_provider_catalog
+from ...domain.catalog import LiveCatalogModel, ProviderCatalog, parse_provider_catalog
 from ..ports import (
     LiveCatalogModels,
     LiveLaneBackground,
@@ -189,7 +189,7 @@ class StaticLiveModels(LiveCatalogModels):
 
     def __init__(
         self,
-        lanes: dict[tuple[str, str], tuple[CatalogModelFacts, ...]] | None = None,
+        lanes: dict[tuple[str, str], tuple[LiveCatalogModel, ...]] | None = None,
         *,
         backgrounds: dict[tuple[str, str], LiveLaneBackground] | None = None,
     ) -> None:
@@ -209,15 +209,21 @@ class StaticLiveModels(LiveCatalogModels):
         return None if self._backgrounds is None else self._backgrounds.get((provider, transport))
 
     @override
-    def lane_models(self, provider: str, transport: str) -> tuple[CatalogModelFacts, ...] | None:
+    def lane_models(self, provider: str, transport: str) -> tuple[LiveCatalogModel, ...] | None:
         self.reads += 1
         if self._lanes is None:
             return None
         return self._lanes.get((provider, transport), ())
 
 
-def live_model(model_id: str, **facts: Any) -> CatalogModelFacts:
+def live_model(model_id: str, **facts: Any) -> LiveCatalogModel:
     """Return one live entry through the real model, every fact unstated unless named."""
-    stated: dict[str, Any] = {"vision": None, "size_bytes": None, "context_length": None, "licence": None}
+    stated: dict[str, Any] = {
+        "vision": None,
+        "size_bytes": None,
+        "context_length": None,
+        "licence": None,
+        "installed": None,
+    }
     stated.update(facts)
-    return CatalogModelFacts.model_validate({"id": model_id, **stated})
+    return LiveCatalogModel.model_validate({"id": model_id, **stated})

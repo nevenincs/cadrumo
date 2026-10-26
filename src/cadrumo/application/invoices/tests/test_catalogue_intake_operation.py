@@ -17,7 +17,6 @@ from pydantic import BaseModel
 
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
-from ....core.config import override_settings
 from ....core.hashing import sha256_hex
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.buckets.event import BucketEvent
@@ -25,6 +24,7 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.invoices.errors import InvoiceValidationError
 from ....domain.invoices.models import InvoiceCatalogue
 from ....domain.iva.schema import InvoiceKind
+from ...dependency_contracts import DependencyState
 from ...ledger.column_roles import ColumnRoleReaderUnavailable
 from ...ledger.import_ports import LedgerImportReaderUnavailableError
 from ...local_reader import probe_local_ai_program
@@ -37,6 +37,7 @@ from ...operations.owner import OperationExecutorContext
 from ...operations.refusal_evidence import OperationRefusalEvidence
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
 from ...provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID
+from ...tests.local_ai_program_rows import local_ai_row
 from ...user_profile.access_contracts import SessionKind
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import catalogue_intake_contracts as intake_contracts
@@ -528,8 +529,7 @@ def test_a_book_whose_column_reader_is_unavailable_refuses_with_the_reader_verdi
 ) -> None:
     """The verdict the reader probe returned reaches the operation error detail, and nothing was written."""
     monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
-    with override_settings(cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat"):
-        status = probe_local_ai_program()
+    status = probe_local_ai_program(local_ai_row(DependencyState.ABSENT))
     assert status.precondition_verdict is not None
     request = _unreadable_book_import(tmp_path)
     context, events, operands, _fence = _context(request, authority_operation)

@@ -197,7 +197,7 @@ def test_an_invoice_book_submitted_with_no_digest_is_imported_and_its_digest_ret
     book = tmp_path / "invoice-book.csv"
     book.write_bytes(_INVOICE_BOOK)
     with (
-        conformance.model_runtime_for_operation(INVOICE_IMPORT_OPERATION_DEFINITION_ID),
+        conformance.family_environment_for_operation(INVOICE_IMPORT_OPERATION_DEFINITION_ID),
         conformance.conformance_operation_runtime(
             tmp_path / "runtime", cleanup=conformance.OperationRuntimeCloseWitness()
         ) as (
@@ -237,7 +237,7 @@ def test_an_invoice_book_is_held_to_the_digest_a_caller_supplies(
     book.write_bytes(_INVOICE_BOOK)
     matches = supplied == "the-files-own"
     with (
-        conformance.model_runtime_for_operation(INVOICE_IMPORT_OPERATION_DEFINITION_ID),
+        conformance.family_environment_for_operation(INVOICE_IMPORT_OPERATION_DEFINITION_ID),
         conformance.conformance_operation_runtime(
             tmp_path / "runtime", cleanup=conformance.OperationRuntimeCloseWitness()
         ) as (

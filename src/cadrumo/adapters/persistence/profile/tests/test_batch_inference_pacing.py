@@ -18,15 +18,15 @@ from pathlib import Path
 import pytest
 from reportlab.pdfgen import canvas
 
+from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
+
 from .....application.ledger import tests as ledger_application_tests
 from .....application.ledger.batch_ingest import COMPLETED_BATCH_ITEM_STATUSES, BatchRunResult, run_evidence_batch
 from .....application.ledger.evidence_ports import LedgerEvidencePorts
 from .....application.ledger.invoice_extraction_authority import default_invoice_extraction_period
-from .....core.config import load_settings
 from .....domain.calculations.registry.authority import bundled_indexed_authority
 from .....domain.iva.regime_legend import resolve_regime_legends
 from .....domain.iva.schema import InvoiceKind
-from ....outbound.llm.tests.model_run_support import IMAGE_LANE
 from ...storage.attachment import AttachmentStore
 from ...storage.tests.secure_sql import TestRuntimeProfile
 from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
@@ -67,8 +67,6 @@ _LABELLED_LINES = (
     "Total factura: 1452.00 EUR",
 )
 
-_GIB = 1024**3
-
 
 runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=False, name="runtime_profile")
 
@@ -93,28 +91,14 @@ def labelled_batch(mixed_batch: Path) -> Path:
     return mixed_batch
 
 
-#: The person's selection, read on this computer, for a model no computer holds.
-#: Dispatch admits an on-host lane against the size its catalogue entry states,
-#: so a read of it is refused for measured contention on any host: memory short,
-#: or not measurable at all, both before anything is loaded.
-_OVERSIZED_LANE = IMAGE_LANE.model_copy(update={"size_bytes": 2**50})
-
-#: The measured-contention refusals of on-host load admission.
-_CONTENTION = frozenset(
-    {
-        "provisioning.load_capacity.available",
-        "provisioning.load_headroom.measurable",
-        "provisioning.resident_set.readable",
-    }
-)
+#: The agent owns load admission and refuses a run at its start when the
+#: selected model does not fit this computer's free memory.
+_DOES_NOT_FIT = ModelRunRefusalCode.MODEL_DOES_NOT_FIT
+_LOAD_CAPACITY = "provisioning.load_capacity.available"
 
 
 def _run(profile: TestRuntimeProfile, folder: Path) -> BatchRunResult:
     """Run the batch through the production extraction ports, under whatever lane the bound agent resolves."""
-    # The profile's settings are a snapshot taken before any reader was served.
-    settings = profile.settings.model_copy(
-        update={"cadrumo_llm_ollama_chat_url": load_settings().cadrumo_llm_ollama_chat_url},
-    )
     evidence_ports = LedgerEvidencePorts(
         evidence_repository=LedgerEvidenceRepositoryAdapter(objects=profile.repository),
         attachment_ingestor=LedgerEvidenceAttachmentIngestor(store=AttachmentStore(objects=profile.repository)),
@@ -127,7 +111,7 @@ def _run(profile: TestRuntimeProfile, folder: Path) -> BatchRunResult:
             bucket_id=_BUCKET_ID,
             sources=[folder],
             direction=InvoiceKind.RECEIVED,
-            settings=settings,
+            settings=profile.settings,
             evidence_ports=evidence_ports,
             extraction_ports=_invoice_draft_extraction_ports(evidence_ports=evidence_ports, operation=operation),
             operation=operation,
@@ -141,17 +125,17 @@ def test_a_contended_machine_parks_the_model_work_and_completes_the_rest(
 ) -> None:
     """The property: deterministic progress continues while inference-bearing work parks.
 
-    The selected on-host model is larger than any computer holds, so the scan's
-    read is refused for measured contention at dispatch, before anything loads.
+    The agent refuses the scan's read at its start because the selected model
+    does not fit the free memory, before anything loads.
     """
-    with serving_a_loopback_reader(replies=(), lane=_OVERSIZED_LANE):
+    with serving_a_loopback_reader(replies=(), run_refusal=_DOES_NOT_FIT):
         result = _run(runtime_profile, mixed_batch)
 
     assert result.deterministic_completed == 1
     assert result.paced == 1
     # Reported once on the run rather than stamped onto an innocent document.
     assert result.inference_pause is not None
-    assert result.inference_pause.precondition_verdict.failed_condition_id in _CONTENTION
+    assert result.inference_pause.precondition_verdict.failed_condition_id == _LOAD_CAPACITY
     # Parked, not failed: a re-run costs nothing because completed items are
     # no-ops, so this must not read as a broken document.
     assert result.any_deferred is True
@@ -169,7 +153,7 @@ def test_with_headroom_the_same_batch_paces_nothing(
 ) -> None:
     """The positive control, and the proof that the parked item's window OPENS.
 
-    Same folder, same documents, same run -- only the selected entry's size differs.
+    Same folder, same documents, same run -- only the agent's load answer differs.
     It says the parked row above genuinely WOULD have dispatched, which "it did
     not dispatch" cannot say on its own: an item that could never have been read
     would produce the same paced count.
@@ -209,7 +193,7 @@ def test_a_fully_labelled_text_layer_invoice_completes_while_the_lane_is_closed(
     labelled_batch: Path,
 ) -> None:
     """The label rules read it completely, so a closed inference lane does not park it."""
-    with serving_a_loopback_reader(replies=(), lane=_OVERSIZED_LANE):
+    with serving_a_loopback_reader(replies=(), run_refusal=_DOES_NOT_FIT):
         result = _run(runtime_profile, labelled_batch)
 
     by_name = {item.source_name: item for item in result.items}

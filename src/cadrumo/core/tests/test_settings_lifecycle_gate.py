@@ -207,14 +207,9 @@ def embedded_slash_literal_sites(module: str, source: str) -> tuple[LiteralSite,
     return tuple(sites)
 
 
-#: Narrow site pins for deliberate non-storage literals in production.
-#: The runtime installer probe only reads standard executable locations and
-#: never writes operator data to those directories.
-PERMITTED_LITERAL_PIN_SITES: Final[frozenset[tuple[str, str]]] = frozenset(
-    {
-        ("application/provisioning_host.py", "_standard_executable_paths"),
-    },
-)
+#: Narrow site pins for deliberate non-storage literals in production, as
+#: ``(module, function)``. None is needed today.
+PERMITTED_LITERAL_PIN_SITES: Final[frozenset[tuple[str, str]]] = frozenset[tuple[str, str]]()
 
 
 @releases_parsed_sources
@@ -386,10 +381,6 @@ PERMITTED_PIN_SITES: Final[frozenset[tuple[str, str]]] = frozenset(
         (
             "adapters/outbound/aeat/browser/tests/test_browser_provisioning_refusal.py",
             "_recorded_browser",
-        ),
-        (
-            "application/tests/test_local_reader.py",
-            "test_the_managed_local_ai_without_a_record_refuses_with_its_setup",
         ),
         # Directories inside a staged package image (site-packages and driver
         # folders), which only share names with taxonomy categories.

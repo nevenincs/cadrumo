@@ -17,7 +17,13 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunRefusalCode,
 )
 
-from ..agent_background_runs import BackgroundRunEndpoint, HostedBackgroundRuns, start_refusal
+from ..agent_background_runs import (
+    RUN_START_SECONDS,
+    BackgroundRunEndpoint,
+    HostedBackgroundRuns,
+    settled_reply_outcome,
+    start_refusal,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -30,6 +36,7 @@ _LANE = ModelRunLane(
     size_bytes=None,
     vision=None,
     context_length=None,
+    installed=None,
 )
 
 
@@ -118,6 +125,9 @@ def _selection_refusal(code: str) -> bytes:
             422, _selection_refusal("model_not_installed"), ModelRunRefusalCode.MODEL_NOT_INSTALLED, id="not-installed"
         ),
         pytest.param(
+            422, _selection_refusal("model_does_not_fit"), ModelRunRefusalCode.MODEL_DOES_NOT_FIT, id="does-not-fit"
+        ),
+        pytest.param(
             403,
             _selection_refusal("background_not_admitted"),
             ModelRunRefusalCode.SERVICE_UNAVAILABLE,
@@ -147,3 +157,67 @@ def test_a_run_start_the_agent_refuses_reads_as_its_closed_refusal(
     status: int, payload: bytes, expected: ModelRunRefusalCode
 ) -> None:
     assert start_refusal(status, payload) is expected
+
+
+_AGENT_LOAD_BOUND_SECONDS = 60.0
+"""cadrumo-agent's bound on loading a local model before it answers a run start."""
+
+
+def test_a_run_start_waits_past_the_agent_s_model_load_bound() -> None:
+    assert RUN_START_SECONDS > _AGENT_LOAD_BOUND_SECONDS
+
+
+def _reply(**fields: object) -> bytes:
+    """A reply read shaped as cadrumo-agent's ``GET /v1/runs/{run_id}/reply`` answers it."""
+    document: dict[str, object] = {
+        "run_id": "run-1",
+        "status": "failed",
+        "settled": True,
+        "background_request": True,
+        "reply": None,
+        "failure_reason": "provider_error",
+        "provider_condition": None,
+        "provider": "local",
+        "transport": "api",
+        "model": "example-model-1",
+        "agent_version": "0.0.0",
+    }
+    document.update(fields)
+    return json.dumps(document).encode()
+
+
+@pytest.mark.parametrize(
+    ("payload", "expected"),
+    [
+        pytest.param(
+            _reply(provider_condition="model_does_not_fit"),
+            ModelRunRefusal(code=ModelRunRefusalCode.MODEL_DOES_NOT_FIT),
+            id="does-not-fit-mid-turn",
+        ),
+        pytest.param(
+            _reply(provider_condition="provider_unavailable"),
+            ModelRunRefusal(code=ModelRunRefusalCode.RUN_FAILED),
+            id="other-failed-load",
+        ),
+        pytest.param(_reply(), ModelRunRefusal(code=ModelRunRefusalCode.RUN_FAILED), id="failed-without-condition"),
+        pytest.param(
+            _reply(failure_reason="output_limit_exceeded: 16"),
+            ModelRunRefusal(code=ModelRunRefusalCode.OUTPUT_INVALID),
+            id="output-limit",
+        ),
+        pytest.param(b"not json", ModelRunRefusal(code=ModelRunRefusalCode.RUN_FAILED), id="outside-the-contract"),
+        pytest.param(_reply(status="running", settled=False), None, id="not-settled"),
+    ],
+)
+def test_a_settled_reply_reads_as_its_outcome(payload: bytes, expected: ModelRunRefusal | None) -> None:
+    assert settled_reply_outcome(payload, _LANE) == expected
+
+
+def test_a_completed_reply_ignores_a_stale_provider_condition() -> None:
+    outcome = settled_reply_outcome(
+        _reply(status="completed", reply="read", failure_reason=None, provider_condition="model_does_not_fit"), _LANE
+    )
+
+    assert not isinstance(outcome, ModelRunRefusal)
+    assert outcome is not None
+    assert outcome.text == "read"

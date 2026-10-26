@@ -46,6 +46,7 @@ from ...domain.iva.regime_legend import resolve_regime_legends
 from ...domain.iva.schema import InvoiceKind
 from ...domain.user_profile.values import UserProfileFact
 from ..invoice_evidence_operation_composition import build_invoice_evidence_operation_ports
+from ..local_reader_operation_composition import read_local_ai_program
 
 
 @dataclass(frozen=True)
@@ -65,7 +66,7 @@ def prepare_invoice_evidence_conformance_case(
         return InvoiceEvidenceConformanceCase(
             request=LedgerEvidenceReaderReadinessRequest(profile_id=profile_id),
             expected_read=LedgerEvidenceReaderReadinessProjection.from_status(
-                profile_id=profile_id, status=read_local_reader_status({})
+                profile_id=profile_id, status=read_local_reader_status({}, read_local_ai_program())
             ),
         )
     upsert_test_profile_facts(

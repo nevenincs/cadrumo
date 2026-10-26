@@ -44,6 +44,11 @@ _LOGGER = get_logger(__name__)
 HOST_ADMISSION_HEADER: Final = "X-Host-Token"
 EXCHANGE_SECONDS: Final = 10.0
 """How long one exchange that does not wait for the model may take."""
+RUN_START_SECONDS: Final = 90.0
+"""How long a run start may take: on a lane whose models run on this computer the agent loads the model first.
+
+The agent bounds that load at 60 s, so the start is given that and a margin.
+"""
 REPLY_WAIT_MAX_SECONDS: Final = 300
 """The longest wait one reply read may ask the agent for."""
 SETTLE_MARGIN_SECONDS: Final = 10
@@ -71,6 +76,7 @@ _REFUSALS: Final[Mapping[str, ModelRunRefusalCode]] = {
     "provider_unavailable": ModelRunRefusalCode.LANE_UNAVAILABLE,
     "unknown_model": ModelRunRefusalCode.LANE_UNAVAILABLE,
     "model_not_installed": ModelRunRefusalCode.MODEL_NOT_INSTALLED,
+    "model_does_not_fit": ModelRunRefusalCode.MODEL_DOES_NOT_FIT,
     "background_option_unsupported": ModelRunRefusalCode.OPTION_NOT_SUPPORTED,
 }
 """The agent's admission refusals, in the closed set a tax worker reads.
@@ -83,6 +89,14 @@ _START_UNAVAILABLE: Final = 503
 """The status the agent starts no run with while it is busy, draining or not ready; its detail carries no code."""
 
 _OUTPUT_LIMIT_EXCEEDED: Final = "output_limit_exceeded"
+
+_PROVIDER_CONDITIONS: Final[Mapping[str, ModelRunRefusalCode]] = {
+    "model_does_not_fit": ModelRunRefusalCode.MODEL_DOES_NOT_FIT,
+}
+"""The provider conditions a failed run's reply names that a tax worker reads as their own refusal.
+
+Every other condition is a failed run.
+"""
 
 
 @dataclass(frozen=True, slots=True)
@@ -101,6 +115,7 @@ class _Reply(BaseModel):
     background_request: bool
     reply: str | None = None
     failure_reason: str | None = None
+    provider_condition: str | None = None
     provider: str | None = None
     transport: str | None = None
     model: str | None = None
@@ -229,6 +244,7 @@ class HostedBackgroundRuns(BackgroundRunGateway):
             body=json.dumps(request).encode("utf-8"),
             headers={"Content-Type": "application/json", HOST_ADMISSION_HEADER: self._host_token.decode("ascii")},
             limit=_RESPONSE_MAX_BYTES,
+            timeout=RUN_START_SECONDS,
         )
         if status in {200, 201}:
             return None
@@ -252,12 +268,9 @@ class HostedBackgroundRuns(BackgroundRunGateway):
             )
             if status != 200:
                 return ModelRunRefusal(code=ModelRunRefusalCode.RUN_FAILED)
-            try:
-                reply = _Reply.model_validate_json(payload)
-            except ValidationError:
-                return ModelRunRefusal(code=ModelRunRefusalCode.RUN_FAILED)
-            if reply.settled:
-                return _outcome(reply, lane)
+            outcome = settled_reply_outcome(payload, lane)
+            if outcome is not None:
+                return outcome
 
     def _clean_up(self, endpoint: BackgroundRunEndpoint, run_id: str, *, run: bool, attachments: bool) -> None:
         """Delete the run and its files now; the agent sweeps whatever a failed delete leaves."""
@@ -329,8 +342,26 @@ def _refusal_code(payload: bytes) -> str | None:
     return code if isinstance(code, str) else None
 
 
+def settled_reply_outcome(payload: bytes, lane: ModelRunLane) -> ModelRunOutput | ModelRunRefusal | None:
+    """Return what a run's reply read reads as, or ``None`` while the run has not settled.
+
+    A reply outside the agent's contract is a failed run. A failed run whose
+    ``provider_condition`` maps through :data:`_PROVIDER_CONDITIONS` reads as
+    that refusal, so a model the agent could not fit mid-turn reads as the same
+    refusal as one it could not fit at run start.
+    """
+    try:
+        reply = _Reply.model_validate_json(payload)
+    except ValidationError:
+        return ModelRunRefusal(code=ModelRunRefusalCode.RUN_FAILED)
+    return _outcome(reply, lane) if reply.settled else None
+
+
 def _outcome(reply: _Reply, lane: ModelRunLane) -> ModelRunOutput | ModelRunRefusal:
     if reply.status != "completed":
+        condition = _PROVIDER_CONDITIONS.get(reply.provider_condition or "")
+        if condition is not None:
+            return ModelRunRefusal(code=condition)
         if reply.failure_reason is not None and reply.failure_reason.startswith(_OUTPUT_LIMIT_EXCEEDED):
             return ModelRunRefusal(code=ModelRunRefusalCode.OUTPUT_INVALID)
         return ModelRunRefusal(code=ModelRunRefusalCode.RUN_FAILED)
@@ -350,4 +381,4 @@ def _outcome(reply: _Reply, lane: ModelRunLane) -> ModelRunOutput | ModelRunRefu
         return ModelRunRefusal(code=ModelRunRefusalCode.OUTPUT_INVALID)
 
 
-__all__ = ["BackgroundRunEndpoint", "HostedBackgroundRuns", "start_refusal"]
+__all__ = ["BackgroundRunEndpoint", "HostedBackgroundRuns", "settled_reply_outcome", "start_refusal"]

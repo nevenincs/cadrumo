@@ -245,6 +245,7 @@ def test_a_selection_made_through_the_service_is_the_lane_a_model_run_resolves()
         size_bytes=None,
         vision=True,
         context_length=None,
+        installed=None,
     )
     assert runs.lookup("text_extraction") == ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
 
@@ -422,6 +423,7 @@ def test_a_lookup_carries_the_catalogue_facts_of_the_selected_model() -> None:
         size_bytes=1_000_000,
         vision=True,
         context_length=4096,
+        installed=None,
     )
     for role in ModelRole:
         if role is not ModelRole.VISION_TRANSCRIPTION:

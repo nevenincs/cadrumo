@@ -34,7 +34,9 @@ from ..auth.operator_probe_ports import (
     ClaveIdentityProbeResult,
     OperatorProbePorts,
 )
+from ..dependency_contracts import DependencyState
 from ..ledger.tests.bulk_classify_operation_support import EffectEvents, PrivateOperands
+from ..local_reader import ProgramRow
 from ..modelo.tests.m036_operation_support import PROFILE_ID, policy_decision
 from ..operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ..operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
@@ -58,6 +60,7 @@ from ..workstation_check_operation import (
     build_workstation_check_registration,
     project_workstation_check_result,
 )
+from .local_ai_program_rows import local_ai_row
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -308,7 +311,14 @@ def test_canonical_report_keeps_issue_exit_semantics_and_checks_profile_each_sta
         observed.append(capability.value)
         return decisions[capability]
 
-    def dependencies() -> tuple[tuple[DependencyStatus, ...], tuple[DependencyStatus, ...]]:
+    program_row = local_ai_row(DependencyState.READY)
+
+    def read_program() -> ProgramRow:
+        observed.append("program")
+        return program_row
+
+    def dependencies(row: ProgramRow) -> tuple[tuple[DependencyStatus, ...], tuple[DependencyStatus, ...]]:
+        assert row is program_row
         observed.append("dependencies")
         return report.dependencies, ()
 
@@ -323,10 +333,13 @@ def test_canonical_report_keeps_issue_exit_semantics_and_checks_profile_each_sta
     monkeypatch.setattr(service, "run_preflight_checks", preflight)
     with override_settings(cadrumo_active_profile=str(PROFILE_ID)):
         actual = service.run_workstation_check(
-            profile_id=PROFILE_ID, operator_probe_ports=probes, object_path_suffix_length=1
+            profile_id=PROFILE_ID,
+            operator_probe_ports=probes,
+            object_path_suffix_length=1,
+            read_local_ai_program=read_program,
         )
     assert actual == report
-    assert observed == [*(cap.value for cap in ServiceCapability), "dependencies", "preflight"]
+    assert observed == [*(cap.value for cap in ServiceCapability), "program", "dependencies", "preflight"]
 
 
 def test_canonical_report_profile_change_blocks_next_private_probe(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -346,7 +359,10 @@ def test_canonical_report_profile_change_blocks_next_private_probe(monkeypatch: 
     monkeypatch.setattr(service, "resolve_active_capability", capability)
     with pytest.raises(ProfileAccessRefusedError):
         service.run_workstation_check(
-            profile_id=PROFILE_ID, operator_probe_ports=_probes(), object_path_suffix_length=1
+            profile_id=PROFILE_ID,
+            operator_probe_ports=_probes(),
+            object_path_suffix_length=1,
+            read_local_ai_program=lambda: pytest.fail("a refused profile must not read the program's status"),
         )
     assert calls == [next(iter(ServiceCapability))]
 

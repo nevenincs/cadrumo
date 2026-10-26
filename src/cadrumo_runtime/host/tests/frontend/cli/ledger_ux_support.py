@@ -11,7 +11,6 @@ import pytest
 from click.testing import Result
 
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from cadrumo.core.config import override_settings
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture
 
@@ -89,21 +88,6 @@ def open_ledger_ux_session(tmp_path: Path) -> Generator[None]:
 @pytest.fixture(autouse=True)
 def _open_bucket_session(tmp_path: Path) -> Iterator[None]:
     with open_ledger_ux_session(tmp_path):
-        yield
-
-
-@pytest.fixture(autouse=True)
-def admit_an_unmeasurable_host() -> Iterator[None]:
-    """Admit a model load on a host whose headroom cannot be measured, for the modules that import it.
-
-    A document whose labels leave fields unread asks the on-host text reader to
-    fill them, and admission control fails closed wherever the accelerator is
-    unreadable: the fill is then refused for headroom on this host's hardware
-    and never reaches the runtime these modules exercise. The override is the
-    documented operator setting for exactly that machine class, so it configures
-    the guard rather than reaching beneath it; a measured shortfall still refuses.
-    """
-    with override_settings(cadrumo_llm_contention_check_override=True):
         yield
 
 

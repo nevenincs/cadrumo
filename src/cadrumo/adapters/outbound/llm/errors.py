@@ -90,37 +90,24 @@ class LLMConfigError(_LLMPreconditionErrorMixin, LLMError):
 
 
 class LLMContentionError(_LLMPreconditionErrorMixin, LLMError):
-    """Raised when this machine has no measured headroom to load the model.
+    """Raised when the agent could not load the selected model with the memory this computer has free.
 
-    The other half of admission control, and a different question from
-    :exc:`LLMBusyError`. Occupancy asks how many loads are already running;
-    this asks whether ONE load fits right now, measured against free memory
-    rather than counted. Both can refuse while the other would admit.
-
-    Fails closed on an unreadable figure, because "could not tell" is not
-    evidence of headroom and is precisely the state that destroys running work
-    on a machine with no spare device memory.
+    The agent's ``model_does_not_fit`` refusal: cadrumo-agent owns load
+    admission and decides it when it loads the model. Distinct from
+    :exc:`LLMBusyError`, which counts this process's own runs and asks nobody.
 
     Never retryable. The condition does not decay on a timer -- it decays when
-    the load on the machine changes -- so re-sending on a schedule turns one
-    refusal into several while the memory it is waiting for is still held.
+    the load on the computer changes -- so re-sending the same run straight away
+    meets the same memory.
     """
 
 
 class LLMBusyError(_LLMPreconditionErrorMixin, LLMError):
     """Raised when an on-host inference slot is not free and the request is refused.
 
-    The admission half of the local-resource boundary, and deliberately NOT a
-    subclass of :exc:`~llm.LLMProviderError`: nothing failed,
-    and no request reached a runtime. The machine is already running as much
-    inference as it was configured to run at once, and a second concurrent load
-    on consumer hardware is an out-of-memory kill that takes the FIRST read down
-    with it.
-
-    Distinct from a contention refusal, which reports measured headroom against
-    one model's requirement. This one reports occupancy: the arena is full
-    regardless of what the figures say, because two loads that each fit
-    individually still do not fit together.
+    Deliberately NOT a subclass of :exc:`~llm.LLMProviderError`: nothing
+    failed, and no request reached the agent. This process already has as many
+    runs on the local AI as it was configured to have at once.
     """
 
 

@@ -1,4 +1,4 @@
-"""Keep the local AI server's fixed address equal in the package declaration, the native contract and the CLI."""
+"""Keep the local AI server's fixed address equal in the package declaration, native contract and agent launch."""
 
 from __future__ import annotations
 
@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core.config import Settings
 from cadrumo.core.config_runtime_fields import LOCAL_AI_SERVER_ADDRESS
+from cadrumo_agent_service.host.launch_environment import OLLAMA_BASE_URL
 from dev._paths import REPO_ROOT
 from dev.packaging.native.application_environment import DECLARATION, ApplicationEnvironmentError, load, parse
 from dev.packaging.native.generate import generate
@@ -16,13 +16,13 @@ from dev.packaging.native.generate import generate
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-def test_the_declared_address_reaches_the_native_contract_and_the_cli_default(tmp_path: Path) -> None:
+def test_the_declared_address_reaches_the_native_contract_and_the_agent_launch(tmp_path: Path) -> None:
     address = load(REPO_ROOT).components["local_ai_address"]
     generate(REPO_ROOT, tmp_path)
     generated = (tmp_path / "contract.rs").read_text(encoding="utf-8")
     assert f'pub const LOCAL_AI_ADDRESS: &str = "{address}";' in generated
     assert address == LOCAL_AI_SERVER_ADDRESS
-    assert Settings.model_fields["cadrumo_llm_ollama_chat_url"].default == f"http://{address}/api/chat"
+    assert f"http://{address}" == OLLAMA_BASE_URL
 
 
 @pytest.mark.parametrize(

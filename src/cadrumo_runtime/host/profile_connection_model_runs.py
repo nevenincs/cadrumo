@@ -40,8 +40,12 @@ if TYPE_CHECKING:
 _LOOKUP_ANSWER_SECONDS = 30.0
 """How long a lane lookup or selections read waits for the service; it reads settings and runs nothing."""
 
-_ANSWER_MARGIN_SECONDS = 20.0
-"""Time beyond a run's own deadline for the service to report the outcome it reached."""
+_ANSWER_MARGIN_SECONDS = 120.0
+"""Time beyond a run's own deadline for the service to start the run and report the outcome it reached.
+
+Starting a run on a lane whose model runs on this computer loads the model
+first, which the service allows 90 s; the run's deadline counts from its start.
+"""
 
 
 @dataclass

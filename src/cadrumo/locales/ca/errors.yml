@@ -1257,8 +1257,9 @@ errors:
       o està incompleta.
     refused_llm_consent: S'ha rebutjat la lectura del document fora de l'equip perquè
       no s'ha atorgat el consentiment per a la transmissió externa.
-    refused_llm_contention: Aquest equip no té memòria lliure mesurada per carregar
-      el model de llenguatge ara mateix.
+    refused_llm_contention: El model triat no hi cap ara mateix a la memòria lliure
+      d'aquest equip. Tanca altres programes o tria un model més petit a l'aplicació
+      d'escriptori de Cadrumo i torna-ho a provar.
     refused_llm_no_model_selected: No hi ha cap model triat per a aquesta tasca. Tria'n
       un a l'aplicació d'escriptori de Cadrumo i torna-ho a provar.
     refused_llm_validation: Un objecte del model de llenguatge no ha superat la validació.

@@ -41,7 +41,7 @@ from ..adapter_composition import (
     build_prorrata_register_repository,
     build_verification_repository_bundle,
 )
-from .conformance_family_contract import ConformanceFamily, RegisteredExecutorConformanceCase, closed_model_runtime
+from .conformance_family_contract import ConformanceFamily, RegisteredExecutorConformanceCase
 from .invoice_withholding_operation_test_support import (
     InvoiceWithholdingConformanceSeed,
     read_invoice_withholding_conformance_case,
@@ -53,7 +53,7 @@ from .prorrata_operation_test_support import read_prorrata_operation_conformance
 from .registered_executor_case_support import (
     OperationRuntimeCloseWitness,
     conformance_operation_runtime,
-    model_runtime_for_operation,
+    family_environment_for_operation,
     seeded_conformance_operation_submission,
 )
 from .registered_executor_outcome_assertions import _assert_registered_executor_conformance_outcome
@@ -70,11 +70,7 @@ def _run_registered_executor_conformance_case(
     definition_id = case.definition_id
     cleanup = OperationRuntimeCloseWitness()
     with (
-        (
-            closed_model_runtime()
-            if family is not None and family.closes_model_runtime
-            else model_runtime_for_operation(definition_id)
-        ),
+        family_environment_for_operation(definition_id),
         conformance_operation_runtime(tmp_path / case.definition_id, cleanup=cleanup) as (driver, registry, profile_id),
     ):
         definitions = {definition.definition_id: definition for definition in registry.definitions}

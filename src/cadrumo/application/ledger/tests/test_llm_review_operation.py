@@ -886,8 +886,6 @@ async def test_terminal_preview_cannot_be_reopened_as_pending_review_or_resumed_
     assert not case.events.effects and case.operands.published is None
 
 
-_THIS_MACHINE = "http://127.0.0.1:11434/api/chat"
-_ANOTHER_MACHINE = "http://reader.example.invalid:11434/api/chat"
 _FIRST_PHASE = "ledger.llm.acquire"
 
 
@@ -915,15 +913,6 @@ async def test_a_named_vision_model_is_refused_before_the_movement_is_read(
     assert case.repository.loads == 0
     assert case.events.phases == [] and case.events.effects == []
     assert case.interactions.published is None
-
-
-def _reader_endpoint(case: _Case, endpoint: str) -> None:
-    """Point the on-host reader's setting at ``endpoint``; the other ports stay as the case built them."""
-    case.ports = LedgerLlmOperationPorts(
-        ledger=case.ledger,
-        llm=case.ports.llm,
-        settings=Settings.model_construct(cadrumo_llm_ollama_chat_url=endpoint),
-    )
 
 
 def _model_calls(monkeypatch: pytest.MonkeyPatch, case: _Case, mode: _Mode) -> list[dict[str, object]]:
@@ -989,21 +978,18 @@ def _executor_on(case: _Case, frontend: OperationFrontendProjection | None) -> L
 @_EVERY_FRONTEND
 @pytest.mark.parametrize("mode", ["classification", "saturated", "auto_split", "split"])
 @pytest.mark.parametrize("preview", [False, True], ids=["review", "preview"])
-@pytest.mark.parametrize("endpoint", [_THIS_MACHINE, _ANOTHER_MACHINE], ids=["this-machine", "another-host"])
 async def test_a_review_asks_the_configured_reader_once_whichever_frontend_submits_it(
     monkeypatch: pytest.MonkeyPatch,
     authority_operation: PinnedAuthorityOperation,
     frontend: OperationFrontendProjection | None,
     mode: _Mode,
     preview: bool,
-    endpoint: str,
 ) -> None:
-    """The row the person worked on, the reader's address and the mode decide nothing by frontend."""
+    """The row the person worked on and the mode decide nothing by frontend."""
     case = _Case(authority_operation, mode)
     case.payload = LedgerLlmReviewRequest.model_validate({**case.payload.model_dump(), "preview": preview})
     case.request = case.request.model_copy(update={"payload": case.payload})
     _worked_on_by_the_person(case)
-    _reader_endpoint(case, endpoint)
     calls = _model_calls(monkeypatch, case, mode)
 
     await _executor_on(case, frontend).execute(case.request, case.context)
@@ -1044,7 +1030,6 @@ async def test_a_response_commits_the_reviewed_decision_whichever_frontend_submi
     """The writer is reached with the same decision and the same reviewed row, after no further read."""
     case = _Case(authority_operation, mode)
     _worked_on_by_the_person(case)
-    _reader_endpoint(case, _ANOTHER_MACHINE)
     checkpoint = case.checkpoint(case.operand(mode, children=children), action)
     loads_before = case.repository.loads
     written: list[tuple[object, object]] = []

@@ -70,6 +70,7 @@ _TEXT_LANE = ModelRunLane(
     size_bytes=None,
     vision=False,
     context_length=None,
+    installed=None,
 )
 _VISION_LANE = ModelRunLane(
     provider_id="nearby",
@@ -81,6 +82,7 @@ _VISION_LANE = ModelRunLane(
     size_bytes=None,
     vision=True,
     context_length=None,
+    installed=None,
 )
 
 

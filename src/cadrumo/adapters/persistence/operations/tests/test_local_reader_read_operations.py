@@ -1,10 +1,11 @@
 """The supervised reads of the local reader: its status and the machine report.
 
 Every run goes through the real registry, supervisor, journal and encrypted
-operand store against a real loopback runtime, with the person's selection
-answered through the operation's model-run port. Each public result is compared
-with what the application reads directly under the same settings, so the
-operation is shown to publish the measurement and nothing else.
+operand store, with the local AI program's row decoded from the components
+role's recorded output and the person's selection answered through the
+operation's model-run port. Each public result is compared with what the
+application reads directly from the same inputs, so the operation is shown to
+publish the judgement and nothing else. Nothing asks a local AI server.
 """
 
 from __future__ import annotations
@@ -13,6 +14,7 @@ from pathlib import Path
 
 import pytest
 
+from .....application.dependency_contracts import DependencyState
 from .....application.local_reader import read_local_reader_status
 from .....application.local_reader_contracts import (
     LOCAL_READER_OPERATION_SUBJECT,
@@ -28,47 +30,41 @@ from .....application.local_reader_status_operation import (
     LOCAL_READER_STATUS_OPERATION_DEFINITION_ID,
     LocalReaderStatusPublicResultV1,
 )
-from .....application.provisioning_contracts import ProvisioningPreconditionCondition
+from .....application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID, ProvisioningPreconditionCondition
 from .....application.tests.local_reader_operation_requests import (
     build_local_reader_report_request,
     build_local_reader_status_request,
 )
-from .....core.config import override_settings
 from .....core.model_roles import ModelRole
 from .....core.operations import OperationEffect
+from ....outbound.components.tests.recorded_rows import recorded_absent_row
 from .local_reader_operation_support import (
     READER_LANES,
+    SET_UP_PROGRAM,
     TEXT_MODEL,
     VISION_MODEL,
-    LoopbackModelRuntime,
-    loopback_model_runtime,
     provisioning_registry,
     run_supervised,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
-_CLOSED_LOCAL_ENDPOINT = "http://127.0.0.1:1/api/chat"
 
-
-def test_status_publishes_the_host_and_every_role_without_loading_a_model(tmp_path: Path) -> None:
-    with loopback_model_runtime(installed={TEXT_MODEL}, residents={TEXT_MODEL}) as chat_url:
-        run = run_supervised(tmp_path, build_local_reader_status_request(), LocalReaderStatusPublicResultV1)
-        direct = read_local_reader_status(READER_LANES)
-        requests = list(LoopbackModelRuntime.requests)
+def test_status_publishes_the_program_and_every_role_without_loading_a_model(tmp_path: Path) -> None:
+    run = run_supervised(tmp_path, build_local_reader_status_request(), LocalReaderStatusPublicResultV1)
+    direct = read_local_reader_status(READER_LANES, SET_UP_PROGRAM)
 
     status = run.result
-    assert status.host.reachable is True
-    assert status.host.version == "0.9.0"
-    assert status.host.endpoint_url == chat_url
-    assert status.host.endpoint_local is True
-    assert status.host.verdict_condition_id is None and status.host.verdict_facts == ()
-    assert local_reader_fact_mapping(status.host.facts) == dict(direct.host.facts)
+    assert status.program.state is DependencyState.READY
+    assert status.program.available is True
+    assert status.program.version == direct.program.version
+    assert status.program.verdict_condition_id is None and status.program.verdict_facts == ()
+    assert local_reader_fact_mapping(status.program.facts) == dict(direct.program.facts)
     assert [row.role for row in status.roles] == list(ModelRole)
     rows = {row.role: row for row in status.roles}
     text = rows[ModelRole.TEXT_EXTRACTION]
     assert text.model == TEXT_MODEL
-    assert text.installed is True and text.resident is True
+    assert text.installed is True
     assert text.ready is True
     assert text.failed_condition_id is None
     vision = rows[ModelRole.VISION_TRANSCRIPTION]
@@ -78,74 +74,69 @@ def test_status_publishes_the_host_and_every_role_without_loading_a_model(tmp_pa
     assert status.extraction_ready is False
     assert status.document_readiness is direct.document_readiness
     assert status.text_layer_model_fill_available is True
-    assert [(row.role, row.model, row.installed, row.resident, row.ready) for row in status.roles] == [
-        (row.role, row.model, row.installed, row.resident, row.ready) for row in direct.roles
+    assert [(row.role, row.model, row.installed, row.ready) for row in status.roles] == [
+        (row.role, row.model, row.installed, row.ready) for row in direct.roles
     ]
-    assert requests == [], "a status read changes nothing at the runtime"
     assert run.effect is OperationEffect.NONE
     assert run.phases == (LOCAL_READER_STATUS_OPERATION_DEFINITION_ID,)
 
 
-def test_status_reports_an_unreachable_runtime_as_a_state_with_its_refusal(tmp_path: Path) -> None:
-    with override_settings(cadrumo_llm_ollama_chat_url=_CLOSED_LOCAL_ENDPOINT):
-        run = run_supervised(tmp_path, build_local_reader_status_request(), LocalReaderStatusPublicResultV1)
+def test_status_reports_an_absent_program_as_a_state_with_its_setup(tmp_path: Path) -> None:
+    run = run_supervised(
+        tmp_path,
+        build_local_reader_status_request(),
+        LocalReaderStatusPublicResultV1,
+        program=recorded_absent_row("local_ai"),
+    )
 
-    host = run.result.host
-    assert host.reachable is False and host.version is None
-    assert host.endpoint_local is True
-    # Which refusal applies depends on whether this host has the runtime installed.
-    assert host.verdict_condition_id in {
-        ProvisioningPreconditionCondition.RUNTIME_INSTALLED,
-        ProvisioningPreconditionCondition.RUNTIME_REACHABLE,
-    }
-    verdict = local_reader_public_verdict(host.verdict_condition_id, host.verdict_facts)
+    program = run.result.program
+    assert program.state is DependencyState.ABSENT
+    assert program.available is False and program.version is None
+    assert program.verdict_condition_id == ProvisioningPreconditionCondition.RUNTIME_INSTALLED
+    assert program.verdict_action_id == LOCAL_AI_PROVISION_ACTION_ID
+    verdict = local_reader_public_verdict(
+        program.verdict_condition_id, program.verdict_facts, program.verdict_action_id
+    )
     assert verdict is not None
-    assert local_reader_fact_mapping(host.verdict_facts) == local_reader_fact_mapping(host.facts)
-    assert all(row.installed is None and row.resident is None and not row.ready for row in run.result.roles), (
-        "an unreachable runtime has no inventory, which is not the same as nothing installed"
+    assert verdict.action is not None and verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID
+    assert local_reader_fact_mapping(program.verdict_facts) == local_reader_fact_mapping(program.facts)
+    on_host = [row for row in run.result.roles if row.model is not None]
+    assert on_host, "the selection names models that load on this computer"
+    assert all(
+        not row.ready and row.failed_condition_id == ProvisioningPreconditionCondition.RUNTIME_INSTALLED
+        for row in on_host
     )
     assert run.result.extraction_ready is False
 
 
+def test_status_reports_a_role_that_cannot_answer_as_unknown_with_no_setup(tmp_path: Path) -> None:
+    run = run_supervised(tmp_path, build_local_reader_status_request(), LocalReaderStatusPublicResultV1, program=None)
+
+    program = run.result.program
+    assert program.state is None
+    assert program.available is False
+    assert program.verdict_condition_id == ProvisioningPreconditionCondition.RUNTIME_INSTALLED
+    assert program.verdict_action_id is None
+    assert local_reader_fact_mapping(program.facts) == {"local_ai_state": "unknown"}
+
+
 def test_the_report_publishes_the_measured_machine_and_each_roles_selection(tmp_path: Path) -> None:
-    with loopback_model_runtime(installed={TEXT_MODEL}, residents={TEXT_MODEL}):
-        run = run_supervised(tmp_path, build_local_reader_report_request(), LocalReaderReportPublicResultV1)
-        direct = read_local_reader_report(READER_LANES)
-        requests = list(LoopbackModelRuntime.requests)
+    run = run_supervised(tmp_path, build_local_reader_report_request(), LocalReaderReportPublicResultV1)
+    direct = read_local_reader_report(READER_LANES)
 
     report = run.result
-    assert report.runtime_reachable is True
-    assert report.residents == (TEXT_MODEL,)
     assert report.accelerator is direct.accelerator
     assert report.total_vram_bytes == direct.total_vram_bytes
     assert report.total_system_memory_bytes == direct.total_system_memory_bytes
     assert [row.role for row in report.models] == list(ModelRole)
-    assert [(row.role, row.model, row.selected, row.resident) for row in report.models] == [
-        (row.role, row.model, row.selected, row.resident) for row in direct.models
+    assert [(row.role, row.model, row.selected) for row in report.models] == [
+        (row.role, row.model, row.selected) for row in direct.models
     ]
     for published, measured in zip(report.models, direct.models, strict=True):
         verdict = local_reader_public_verdict(published.verdict_condition_id, published.verdict_facts)
         assert verdict == measured.precondition_verdict
-    assert (report.contention is None) is (direct.contention is None)
-    if report.contention is not None and direct.contention is not None:
-        assert report.contention.model == direct.contention.model
-        assert report.contention.required_bytes == direct.contention.required_bytes
-    assert requests == [], "the report pulls nothing and loads nothing"
     assert run.effect is OperationEffect.NONE
     assert run.phases == (LOCAL_READER_REPORT_OPERATION_DEFINITION_ID,)
-
-
-def test_the_report_tells_an_unreachable_runtime_from_one_with_nothing_resident(tmp_path: Path) -> None:
-    with override_settings(cadrumo_llm_ollama_chat_url=_CLOSED_LOCAL_ENDPOINT):
-        unreachable = run_supervised(
-            tmp_path / "unreachable", build_local_reader_report_request(), LocalReaderReportPublicResultV1
-        )
-    with loopback_model_runtime(installed=set(), residents=set()):
-        idle = run_supervised(tmp_path / "idle", build_local_reader_report_request(), LocalReaderReportPublicResultV1)
-
-    assert unreachable.result.runtime_reachable is False
-    assert idle.result.runtime_reachable is True
-    assert unreachable.result.residents == idle.result.residents == ()
 
 
 def test_both_reads_register_with_the_machines_fixed_subject() -> None:

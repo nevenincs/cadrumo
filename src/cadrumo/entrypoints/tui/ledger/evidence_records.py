@@ -106,7 +106,7 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
             self.query_one("#ledger-evidence-add", Button).disabled = False
 
     async def _read_readiness(self) -> LedgerReaderReadinessV1 | None:
-        """Ask the reader off the event loop: the probe looks for executables and calls the runtime."""
+        """Ask the reader off the event loop: the read waits on the components role and the agent service."""
         return await asyncio.to_thread(self.controller.reader_readiness)
 
     async def _measure_reader(self) -> None:

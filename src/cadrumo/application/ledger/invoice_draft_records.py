@@ -411,7 +411,7 @@ class LabelReadingFallbackCause(StrEnum):
     """The semantic reader, its optional extra or its on-host runtime could not be used."""
 
     LOAD_HEADROOM_REFUSED = "load_headroom_refused"
-    """Admission control refused to load the model: this machine showed no measured headroom for it."""
+    """The agent refused to load the model: it does not fit this machine's free memory."""
 
     INFERENCE_SLOT_BUSY = "inference_slot_busy"
     """Admission control refused the fill: every on-host inference slot was already held by another read."""
