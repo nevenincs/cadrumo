@@ -576,9 +576,9 @@ impl Components {
     /// that setup holds the local AI's writer lock or may pull the model again.
     pub async fn remove_model(&self, model: &str) -> Result<(), Refusal> {
         let name = ModelName::parse(model).map_err(|_| Refusal::ModelSelectionUnusable)?;
-        let running = self.shared.update(|window| {
-            window.closed || window.setup.as_ref().is_some_and(SetupTrack::live)
-        });
+        let running = self
+            .shared
+            .update(|window| window.closed || window.setup.as_ref().is_some_and(SetupTrack::live));
         if running {
             return Err(Refusal::Busy);
         }
