@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#rust-component-provisioning'
 date: '2026-10-24'
-modified: '2026-10-25'
+modified: '2026-10-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:82118bb9672457038eecc3d850da763a87fbf780d00abcf69cbd7e4019888508'
+body_hash: 'sha256:62f3b36c30387690fd235e61c772c4a3b6df1e8fcbbbebe4a89b3e7317c995db'
 related:
   - "[[2026-10-24-rust-component-provisioning-plan]]"
 ---
@@ -898,6 +898,16 @@ related:
 - `S11` `verify:` `rustfmt --edition 2024 --check on the three touched desktop sources` -> `pass`
 - `S25` `verify:` `pytest src/cadrumo/entrypoints/cli/tests/test_provision_components_role.py and dev/runtime_lifecycle/tests/test_components_surface_conformance.py (31 passed)` -> `pass`
 - `S25` `verify:` `ruff check, ruff format --check and ty on both files` -> `pass`
+- `S12` `M` `src/cadrumo/entrypoints/diagnostics_repair_composition.py`
+- `S12` `M` `src/cadrumo_runtime/host/installation_repair.py`
+- `S12` `M` `src/cadrumo_runtime/host/tests/frontend/cli/config/tests/test_installation_repair.py`
+- `S12` `verify:` `pytest -n0 -m 'windows_only and not os_keychain and not native_package' src/cadrumo_runtime/host/tests/frontend -k 'repair or check' (30)` -> `pass`
+- `S12` `verify:` `pytest -m '' test_check_setup_rows, test_diagnostics, test_diagnostics_repair_command_parity (42)` -> `pass`
+- `S12` `verify:` `pytest -n0 runtime frontend lane, same markers (632 passed, 8 failed outside repair, 0 errors)` -> `fail`
+- `S12` `verify:` `ruff check and ruff format --check on touched files` -> `pass`
+- `S12` `verify:` `python -m dev.quality.types` -> `pass`
+- `S12` `verify:` `just check-import-boundaries` -> `pass`
+- `S12` `by:` `implementation-engineer`
 
 ## Notes
 
@@ -986,3 +996,4 @@ related:
 - `S17` The server record's schema moves to 2 for the proxy digest, so a server recorded by an earlier build reads as not running until the manager starts one again; no Python or external consumer reads that record.
 - `S17` program-change-lease-reused-for-a-restart is left as recorded and is moot: the engine no longer takes the program-change lease to bounce a server, so the lease serves only the replacement and removal its module describes
 - `S11` the desktop crate was not compiled here: its build needs the CMake-generated tauri inputs, so the new check-refusal host test and the wire field rest on review; the Python wire-contract parity case covers the Failure vocabulary
+- `S12` post-plan regression fix
