@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-26'
 body_schema: 'body-v2'
-body_hash: 'sha256:4e68ea3e19c6fa60da3d5e2215bfb351bd60a314eae921877a03c30bf8fef83c'
+body_hash: 'sha256:ee09874dd0d0bb29d6daf902e954a2fa5bef95bf7b075d68aa6821abb7a37c18'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -1149,6 +1149,29 @@ related:
 - `S28` `verify:` `just check-format` -> `pass`
 - `S28` `verify:` `just check-types` -> `pass`
 - `S28` `by:` `implementation-engineer`
+- `S27` `M` `dev/locales/desktop_chrome.py`
+- `S27` `M` `native/desktop/frontend/src/components/setup/setupWords.ts`
+- `S27` `A` `native/desktop/frontend/tests/setup-words.spec.ts`
+- `S27` `M` `src/cadrumo/adapters/inbound/financial/providers/tests/test_mapped_tabular_reader_unavailable.py`
+- `S27` `M` `src/cadrumo/application/tests/test_component_refusal_wording.py`
+- `S27` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_evidence_batch_cli.py`
+- `S27` `M` `src/cadrumo/locales/ca/application.yml`
+- `S27` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S27` `M` `src/cadrumo/locales/ca/common.yml`
+- `S27` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S27` `M` `src/cadrumo/locales/en/application.yml`
+- `S27` `M` `src/cadrumo/locales/en/cli.yml`
+- `S27` `M` `src/cadrumo/locales/en/common.yml`
+- `S27` `M` `src/cadrumo/locales/en/errors.yml`
+- `S27` `M` `src/cadrumo/locales/es/application.yml`
+- `S27` `M` `src/cadrumo/locales/es/cli.yml`
+- `S27` `M` `src/cadrumo/locales/es/common.yml`
+- `S27` `M` `src/cadrumo/locales/es/errors.yml`
+- `S27` `M` `src/cadrumo/locales/hu/application.yml`
+- `S27` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S27` `M` `src/cadrumo/locales/hu/common.yml`
+- `S27` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S27` `verify:` `uv run --no-sync pytest src/cadrumo/application/tests/test_component_refusal_wording.py -n 0` -> `pass`
 
 ## Notes
 
