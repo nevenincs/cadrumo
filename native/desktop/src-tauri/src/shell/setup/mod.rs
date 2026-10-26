@@ -6,12 +6,21 @@
 //! choices only, and words every code the snapshot carries from its own
 //! catalogue. Engine progress and the session's cues each push the typed
 //! snapshot on the window's channel. Nothing polls.
+//!
+//! The local AI is provisioned from the person's selection of models, which only
+//! this host reads: before each engine command it asks the agent service for the
+//! per-role selection and the catalogue's download sizes (`admission`).
+pub mod admission;
 pub mod components;
 pub mod google;
 pub mod wire;
 
 use super::sign_in::{Presence, SignIn};
-use crate::agent::person::{HeldPerson, PersonEvent};
+use crate::agent::{
+    AgentHost,
+    person::{HeldPerson, PersonEvent},
+};
+use admission::Admission;
 use cadrumo_application::error::application::{ApplicationError, ErrorCode, Operation, Result};
 use cadrumo_application::provisioning::items::ItemId;
 use components::Components;
@@ -141,10 +150,13 @@ pub struct SetupHost {
 }
 
 impl SetupHost {
-    pub fn new(sign_in: Arc<SignIn>) -> Self {
+    pub fn new(sign_in: Arc<SignIn>, agent: Arc<AgentHost>) -> Self {
         Self {
             sign_in,
-            components: Components::new(components::installation()),
+            components: Components::new(
+                components::installation(),
+                Arc::new(Admission::new(agent)),
+            ),
             current: Mutex::new(Current {
                 value: DesktopSetup {
                     revision: 0,
@@ -472,10 +484,9 @@ async fn desktop_setup_verify(
 async fn desktop_setup_start(
     host: State<'_, Arc<SetupHost>>,
     items: Option<Vec<String>>,
-    model: Option<String>,
     resume: bool,
 ) -> std::result::Result<DesktopSetup, CommandFailure> {
-    host.exchange(wire::start_request(items, model, resume)?, true)
+    host.exchange(wire::start_request(items, resume)?, true)
         .await
 }
 

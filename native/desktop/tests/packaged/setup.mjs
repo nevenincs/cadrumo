@@ -1306,7 +1306,6 @@ export class SetupDriver {
     const previous = (await this.read()).snapshot?.setup?.operation_id ?? null;
     const started = await this.session.call("desktop_setup_start", {
       items: [this.item],
-      model: null,
       resume: false,
     });
     if (!started.ok)

@@ -92,7 +92,7 @@ export type Setup = {
    * the person approved before needs no second approval. */
   start(
     items: SetupItemId[] | null,
-    options?: { model?: string | null; resume?: boolean },
+    options?: { resume?: boolean },
   ): Promise<DesktopSetup>;
   /** Answers the plan whose `plan_digest` the review showed. */
   answer(
