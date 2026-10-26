@@ -3,7 +3,7 @@
 A statement in an arbitrary layout and language is read in two stages. The
 acquisition stage turns each page into a
 :class:`~application.ledger.document_transcription.DocumentTranscription`: the
-deterministic text layer where the page carries one, an on-host vision
+deterministic text layer where the page carries one, a vision-model
 transcription where it does not. The semantic stage then proposes the
 movements printed on that page. Both stages that need a model are an optional
 outbound capability, so inbound providers depend on this structural port and an

@@ -2,10 +2,9 @@
 
 Defines the :class:`LLMClassifier` and :class:`LLMSplitProposer` protocols and
 the allow-list-guarded response parsing every classifier answer passes through.
-Concrete transports live outside this module: the on-host readers in the gated
-inference package, and a subprocess harness on the test side. The subprocess
-CLI implementations that once lived here were the off-host route, and they were
-deleted with it.
+Concrete transports live outside this module: the readers in the LLM adapter
+package, which send each request to the lane the person selected, and a
+subprocess harness on the test side.
 
 This module keeps the part that is a SAFETY contract rather than a transport --
 the prompt spec and the parse that confine a model to selecting
@@ -212,9 +211,9 @@ class LLMClassifier(Protocol):
 
         Args:
             transaction: The transaction to classify.
-            evidence_text: Optional on-host-extracted attached-evidence text to
-                inject into the prompt. Gating of whether evidence may reach a given
-                (on-host vs cloud) classifier is the caller's responsibility.
+            evidence_text: Optional attached-evidence text extracted on this
+                computer, to inject into the prompt. Gating of whether evidence may
+                reach the selected lane is the caller's responsibility.
 
         Returns:
             A :class:`LLMClassificationResponse` with the classification result.
@@ -347,7 +346,7 @@ class PromptSpec:
                 the classification/category/iva_category and must never copy a euro
                 figure from it (the regulated numbers stay registry-derived).
             evidence_image_present: Set when the evidence is attached as an image
-                (the on-host vision-read path) instead of inlined text; the prompt
+                (the vision-read path) instead of inlined text; the prompt
                 then points the model at the attached image.
         """
         return _render_prompt(
@@ -524,10 +523,10 @@ def _evidence_section(evidence_text: str) -> list[str]:
 def _vision_evidence_section() -> list[str]:
     """Render the attached-image evidence instruction (selection-only; never emit numbers).
 
-    Used when the evidence is a scanned or image invoice read on-host by a local
-    vision model: the document is attached as an image rather than inlined as
-    text, so the prompt points the model at the attached image instead of
-    embedding extracted text.
+    Used when the evidence is a scanned or image invoice read by a vision model:
+    the document is attached as an image rather than inlined as text, so the
+    prompt points the model at the attached image instead of embedding extracted
+    text.
     """
     return [
         "An invoice or receipt image is attached to this message. Read it carefully; "
@@ -640,7 +639,7 @@ def _render_prompt(
 
     When ``evidence_text`` is given it is inlined for the model to read. When
     ``evidence_image_present`` is set (and no text), the prompt instead points the
-    model at an attached invoice image (the on-host vision-read path).
+    model at an attached invoice image (the vision-read path).
     """
     raw = transaction.raw
     effective_date = raw.value_date or raw.booked_date
@@ -826,7 +825,7 @@ def build_split_prompt(
     The model reads the attached invoice and proposes per-child *proportions* plus
     selections; it must never emit a euro amount (the application derives the
     amounts from the parent gross and the tax substrate from the registry). The
-    invoice is supplied as inlined text (``evidence_text``) or, on the on-host
+    invoice is supplied as inlined text (``evidence_text``) or, on the
     vision-read path, as an attached image (``evidence_image_present``).
     """
     resolved_spec = spec or default_prompt_spec()

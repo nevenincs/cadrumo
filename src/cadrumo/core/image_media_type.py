@@ -1,14 +1,14 @@
 """Closed taxonomy of image media types a multimodal read may carry.
 
-A vision request crosses a provider boundary that demands the format be
-*declared*, not sniffed: the Anthropic Messages API validates an image block's
-``media_type`` against the actual bytes and refuses the pair when they disagree.
-The local Ollama transport sniffs instead, which is why the declaration was
-absent for as long as that was the only transport.
+A vision request crosses a provider boundary that may demand the format be
+*declared*, not sniffed: a provider can validate an image block's
+``media_type`` against the actual bytes and refuse the pair when they disagree.
+The declaration travels with every image so the lane the person selected
+never has to sniff it.
 
 Members carry the exact IANA media-type string as their value, so a member is
 usable directly as a wire value without a lookup table. The set is the
-intersection of what the Messages API accepts for an image block and what this
+intersection of what providers accept for an image block and what this
 product can actually produce: a rasterised PDF page (always PNG) and a raw
 operator-supplied image attachment (whatever the operator had).
 

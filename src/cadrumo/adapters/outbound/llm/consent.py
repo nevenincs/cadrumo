@@ -100,7 +100,7 @@ class OffHostEvidenceReadOutcome(StrEnum):
     handles the refusals rather than falling through them.
     """
 
-    #: Neither half supplied: the on-host default, and no token.
+    #: Neither half supplied: no off-host read is asked for, and no token.
     ON_HOST_DEFAULT = "on_host_default"
     #: Both halves supplied against an off-host provider: mint a token.
     OFF_HOST_CONSENTED = "off_host_consented"
@@ -150,9 +150,9 @@ def classify_off_host_evidence_read(
 def cloud_evidence_read_permitted(settings: Settings, *, profile_eligible: bool, acknowledged: bool) -> bool:
     """Whether an off-host read of taxpayer evidence is permitted for THIS invocation.
 
-    On-host reading is always permitted and is the default; this gate governs
-    only the off-host exception. Permitted only when every one of the following
-    holds:
+    A lane that reads on this computer needs no permission; this gate governs
+    only a read the selected lane sends off it (the lane's ``reads_off_host``).
+    Permitted only when every one of the following holds:
 
     1. Gestor/professional mode is OFF (``settings.cadrumo_evidence_gestor_mode``
        is ``False``). An absolute, categorical bar: a gestor deployment never

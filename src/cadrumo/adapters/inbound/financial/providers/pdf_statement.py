@@ -2,8 +2,8 @@
 
 :class:`PdfStatementProvider` holds no knowledge of any bank. It reads each
 page's text layer with ``pdfplumber``; a page that carries none is transcribed
-by the on-host vision model instead. The on-host text model then proposes the
-movements each page prints, as printed strings, and
+by the vision model instead. The text model then proposes the movements each
+page prints, as printed strings, and
 :mod:`._statement_grounding` decides deterministically which of those
 proposals the page really prints and whether they reconcile with the printed
 balances. Only anchored, reconciled movements are emitted.
@@ -14,8 +14,9 @@ binds. This adapter never imports the outbound model adapter. A host that has
 not bound a reader declines every PDF with a stated reason, and a host whose
 reader needs the uninstalled ``llm`` extra raises the typed missing-extra
 refusal when it meets a PDF, while every other format keeps importing. A
-reader whose local AI is not ready declines the PDF with the reader probe's
-verdict, so the import refusal names the setup that would let it be read.
+reader whose selected lane needs the local AI, when that is not ready, declines
+the PDF with the reader probe's verdict, so the import refusal names the setup
+that would let it be read.
 
 Reading a statement costs model calls, so one provider instance reads each
 distinct source once: detection's validation and the following ingest share

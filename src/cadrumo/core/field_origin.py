@@ -51,7 +51,7 @@ class FieldOrigin(StrEnum):
     reviewer auditing it needs the rule set rather than a model revision.
     """
     VISION = "vision"
-    """Read by a local vision model from a rasterised page. Probabilistic."""
+    """Read by a vision model from a rasterised page. Probabilistic."""
 
     TABULAR_MAPPED = "tabular_mapped"
     """Copied from a tabular cell under a model-assigned column-role mapping.

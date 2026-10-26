@@ -81,7 +81,7 @@ class TranscriberIdentity(BaseModel):
 
     Attributes:
         origin: Which acquisition path read the document -- ``TEXT_LAYER`` for
-            the deterministic extraction, ``VISION`` for a local vision model in
+            the deterministic extraction, ``VISION`` for a vision model in
             transcription role. Constrained to :data:`ACQUISITION_ORIGINS`.
         name: The concrete reader, e.g. a deterministic extractor's name or a
             vision model's identifier. Never a coarse label like ``local``: the

@@ -22,9 +22,8 @@ stored MIME type:
   When those rules read every required field no model runs; otherwise the
   fields they could not read come from
   :func:`~llm.extract_invoice_fields_from_text`. An unreachable model, or a
-  fill admission control refuses for lack of headroom or because another read
-  holds every on-host inference slot, leaves the rule reading standing, and the
-  draft records why so the operator is told. Either way the draft is grounded
+  fill the agent refuses to load for lack of memory, leaves the rule reading
+  standing, and the draft records why so the operator is told. Either way the draft is grounded
   against that same transcription by
   :func:`~application.ledger.grounded_reading.ground_draft_against_transcription`. The
   transcription is produced by a DIFFERENT reader than the one that proposes

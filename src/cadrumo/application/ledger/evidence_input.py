@@ -1,8 +1,8 @@
-"""In-memory evidence-input representation for on-host LLM reading.
+"""In-memory evidence-input representation for LLM reading.
 
 A transient, in-process container for the decrypted bytes of a transaction's
 attached evidence (a purchase invoice or a linked attachment), read from secure
-storage so an on-host reader -- the in-tree text-layer or a local vision model --
+storage so a reader -- the in-tree text layer or a vision model --
 can consume it.
 
 CRITICAL (``sensitive-financial-data-secure-storage-only``): this object holds
@@ -48,7 +48,7 @@ class EvidenceInput(BaseModel):
     """Transient in-memory evidence bytes plus the provenance needed to cite them.
 
     Built by the resolver from evidence already held in secure storage. The bytes
-    live only for the duration of a single on-host read; this model is never
+    live only for the duration of a single read; this model is never
     persisted (see the module docstring and the overridden dump methods).
 
     Attributes:
@@ -177,7 +177,7 @@ def resolve_attachment_evidence_input(
             as provenance; it never selects the bytes.
 
     Returns:
-        :class:`EvidenceInput`: In-memory bytes plus provenance, for an on-host read.
+        :class:`EvidenceInput`: In-memory bytes plus provenance, for a read.
 
     Raises:
         PurchaseInvoiceEvidenceInputError: If the bytes match no readable
@@ -226,7 +226,7 @@ def resolve_purchase_invoice_evidence_input(
             from the resolved bytes.
 
     Returns:
-        :class:`EvidenceInput`: In-memory bytes plus provenance, for an on-host read.
+        :class:`EvidenceInput`: In-memory bytes plus provenance, for a read.
     """
     return resolve_attachment_evidence_input(
         evidence.attachment_id,
