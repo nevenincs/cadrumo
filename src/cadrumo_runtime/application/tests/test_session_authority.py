@@ -59,6 +59,7 @@ from cadrumo.application.user_profile.operations import (
     build_user_profile_operation_definitions,
     build_user_profile_operation_registrations,
 )
+from cadrumo.application.user_profile.session_retirement import SessionRetirement
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, await_cancellation_complete, close_async_resources
 from cadrumo.core.profile_session import ReceiptBindingRefusal
 from cadrumo.core.time.utc import UtcInstant
@@ -137,6 +138,7 @@ class AdmissionOwner:
         self.pending_receipts: set[UUID] = set()
         self.receipt_events: list[tuple[str, UUID]] = []
         self.after_capture: Callable[[UUID], None] = lambda _session_id: None
+        self.facts_failure: AutomationCustodyError | None = None
 
     @contextmanager
     def admission_guard(self) -> Generator[None]:
@@ -144,6 +146,8 @@ class AdmissionOwner:
             yield
 
     def facts(self, connection_id: UUID) -> SessionAuthorityFacts:
+        if self.facts_failure is not None:
+            raise self.facts_failure
         return SessionAuthorityFacts(
             self.current.profile,
             changed(
@@ -1670,7 +1674,7 @@ def test_human_sign_out_retires_human_access_but_keeps_api_session(subject: Subj
 
 
 def test_retirement_event_commits_once_even_when_physical_cleanup_needs_retry(subject: Subject) -> None:
-    from cadrumo.application.user_profile.session_retirement import SessionRetirement, SessionRetirementKind
+    from cadrumo.application.user_profile.session_retirement import SessionRetirementKind
 
     events: list[SessionRetirement] = []
     subject.authority._retired = events.append
@@ -2002,3 +2006,35 @@ def test_unknown_native_observation_denies_activity_without_retirement_and_recov
     assert human.session_id in subject.owner.retired
     subject.owner.current = SessionAuthorityFacts(subject.owner.current.profile, before)
     assert not _published(subject, human.session_id)
+
+
+def _attended_tree(subject: Subject) -> tuple[AccessSession, AccessSession, AccessSession, UUID]:
+    """An API session, a person's session and the attended child an agent service holds under it."""
+    api = subject.admit()
+    human = subject.authority.admit_human(connection_id=subject.connection)
+    assert isinstance(api, AccessSession) and api.grant_id is not None
+    assert isinstance(human, AccessSession)
+    recipient = uuid4()
+    subject.owner.connections[recipient] = api.client_id
+    child = subject.authority.delegate(
+        connection_id=subject.connection,
+        parent_session_id=human.session_id,
+        recipient_connection_id=recipient,
+        grant_id=api.grant_id,
+        scope=human.scope,
+    )
+    assert isinstance(child, AccessSession) and child.kind is SessionKind.ATTENDED
+    return api, human, child, recipient
+
+
+def test_lost_worker_custody_still_retires_every_session_as_custody_unavailable(subject: Subject) -> None:
+    """No lost custody survives a sweep: the attended child goes with its parent and the API session."""
+    retired: list[SessionRetirement] = []
+    subject.authority._retired = retired.append
+    api, human, child, _ = _attended_tree(subject)
+    subject.owner.facts_failure = AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+
+    assert set(subject.authority.revalidate_sessions()) == {api.session_id, human.session_id, child.session_id}
+    assert not subject.owner.active
+    assert {item.session_id for item in retired} == {api.session_id, human.session_id, child.session_id}
+    assert {item.reason for item in retired} == {AccessDenialCode.CUSTODY_UNAVAILABLE}
