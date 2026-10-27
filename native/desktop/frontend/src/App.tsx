@@ -85,6 +85,7 @@ import { ManageProfiles } from "./components/account/ManageProfiles";
 import { Titlebar } from "./components/Titlebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useFilingCalendar } from "./shell/calendar";
+import { useUserProfile } from "./shell/userProfile";
 import { useMessages } from "./shell/messages";
 import { useSignIn } from "./shell/signIn";
 import { usePersonActivity } from "./shell/usePersonActivity";
@@ -665,6 +666,12 @@ export function App({ host }: { host: Host }) {
     calendarVisible,
     recheckAccount,
     locale,
+  );
+  const calendarProfile = useUserProfile(
+    host.userProfile,
+    reader,
+    locale,
+    calendarVisible,
   );
   const observedMessages = useMessages(views, reader, recheckAccount, locale);
   // Withhold private counts in the same render as the account gate. The
@@ -3045,6 +3052,12 @@ export function App({ host }: { host: Host }) {
         <FilingCalendarView
           page={calendarPage}
           state={calendar.state}
+          profile={
+            calendarProfile.loading || calendarProfile.error
+              ? null
+              : calendarProfile.data
+          }
+          onNavigate={openViewLink}
           attempt={calendar.attempt}
           today={calendar.today}
           memory={calendarMemory}

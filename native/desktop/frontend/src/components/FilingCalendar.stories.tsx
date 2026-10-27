@@ -10,7 +10,9 @@ import {
   STRADDLING_CALENDAR,
 } from "@/dev/fixtures/calendar";
 import { BUSY_CALENDAR, BUSY_TODAY } from "@/dev/fixtures/calendarBusy";
+import profiles from "@/dev/fixtures/userProfile.json";
 import type { CalendarState } from "../shell/calendar";
+import type { UserProfile } from "../shell/userProfile";
 import { useStrings } from "../shell/strings";
 import { FilingCalendarView, type CalendarMemory } from "./FilingCalendar";
 import { PaneHeader } from "./PaneHeader";
@@ -77,6 +79,11 @@ function Page({
       />
       <FilingCalendarView
         state={state}
+        profile={
+          (profiles[locale as keyof typeof profiles] ??
+            profiles.en) as UserProfile
+        }
+        onNavigate={noop}
         locale={locale}
         refreshing={refreshing}
         defaultView={view}

@@ -757,6 +757,8 @@ desktop:
     modelo: Modelo {modelo}
     more: '{count} más'
     moved: Trasladado desde el {date}
+    notice:
+      attention: La información del calendario necesita atención
     observed: Historial de presentaciones y mensajes
     open_tui: Abrir en el espacio de trabajo
     payment_cutoff: Domiciliación hasta el {date}
@@ -3511,6 +3513,13 @@ desktop:
     maximize: Pantalla completa
     missing: Falta
     not_set: Sin completar
+    notice:
+      attention: La información de tu perfil necesita atención
+      hide_details: Ocultar detalles
+      incomplete: Tu perfil está incompleto
+      missing_fields: Falta información obligatoria
+      open_profile: Abrir perfil
+      show_details: Mostrar detalles
     password:
       again: Repite la nueva contraseña
       changed: Contraseña cambiada

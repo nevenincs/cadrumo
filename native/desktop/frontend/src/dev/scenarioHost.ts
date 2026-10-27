@@ -119,11 +119,22 @@ export type ScenarioHostOptions = {
   onCall?: (call: string) => void;
 };
 
+const EVIDENCE_CALENDAR: typeof FIXTURE_CALENDAR = {
+  ...FIXTURE_CALENDAR,
+  warnings: [
+    {
+      code: "filing.justificante_unverified",
+      message: "The filing receipt has not been verified.",
+      affected_modelos: ["111"],
+    },
+  ],
+};
 export const CALENDAR_SHAPES = {
   behind: BEHIND_CALENDAR,
   ahead: AHEAD_CALENDAR,
   straddling: STRADDLING_CALENDAR,
   busy: BUSY_CALENDAR,
+  evidence: EVIDENCE_CALENDAR,
 } as const;
 export type CalendarShape = keyof typeof CALENDAR_SHAPES;
 

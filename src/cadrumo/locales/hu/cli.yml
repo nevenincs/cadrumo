@@ -3931,6 +3931,7 @@ cli:
       art109_activity_income_withholding_ge_70pct_unset: A profilodban még nem szerepel,
         hogy vállalkozói vagy szakmai tevékenységed bevételének legalább 70%-ából
         vonnak-e le adóelőleget.
+      censo_enrolment_unverified: A nyilvántartásba vételt még nem ellenőrizték
       estimacion_objetiva_unset: A profilodban még nem szerepel, hogy tevékenységedre
         melyik személyijövedelemadó-megállapítási rendszer vonatkozik.
       has_employees_unset: A profilodban még nem szerepel, hogy foglalkoztatsz-e alkalmazottakat.

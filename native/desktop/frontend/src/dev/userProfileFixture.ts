@@ -18,6 +18,9 @@ declare global {
       reads(): number;
       writes(): number;
       burst(): void;
+      complete(): void;
+      completeWithMissing(): void;
+      changeIdentity(): void;
     };
   }
 }
@@ -70,6 +73,22 @@ export function userProfileFixture(
     listeners.forEach((listener) => listener());
   };
   const controls = {
+    changeIdentity() {
+      data.profile_id = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+      listeners.forEach((listener) => listener());
+    },
+    completeWithMissing() {
+      data.setup_state = "complete";
+      data.valid = true;
+      listeners.forEach((listener) => listener());
+    },
+    complete() {
+      data.setup_state = "complete";
+      data.valid = true;
+      data.missing_required = [];
+      data.notices = [];
+      listeners.forEach((listener) => listener());
+    },
     update(value: string) {
       data.sections
         .flatMap((section) => section.fields)

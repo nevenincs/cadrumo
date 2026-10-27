@@ -750,6 +750,8 @@ desktop:
     modelo: Modelo {modelo}
     more: '{count} més'
     moved: Traslladat des del {date}
+    notice:
+      attention: La informació del calendari necessita atenció
     observed: Historial de presentacions i missatges
     open_tui: Obre a l'espai de treball
     payment_cutoff: Domiciliació fins al {date}
@@ -3509,6 +3511,13 @@ desktop:
     maximize: Pantalla completa
     missing: Falta
     not_set: Sense completar
+    notice:
+      attention: La informació del teu perfil necessita atenció
+      hide_details: Amaga els detalls
+      incomplete: El teu perfil està incomplet
+      missing_fields: Falta informació obligatòria
+      open_profile: Obre el perfil
+      show_details: Mostra els detalls
     password:
       again: Repeteix la contrasenya nova
       changed: Contrasenya canviada

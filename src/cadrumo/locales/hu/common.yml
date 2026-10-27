@@ -738,6 +738,8 @@ desktop:
     modelo: Modelo {modelo}
     more: még {count}
     moved: 'Áthelyezve erről: {date}'
+    notice:
+      attention: A naptár adatai figyelmet igényelnek
     observed: Bevallási előzmények és üzenetek
     open_tui: Megnyitás a munkaterületen
     payment_cutoff: 'Beszedési megbízás eddig: {date}'
@@ -3493,6 +3495,13 @@ desktop:
     maximize: Teljes képernyő
     missing: Hiányzik
     not_set: Nincs kitöltve
+    notice:
+      attention: A profilod adatai figyelmet igényelnek
+      hide_details: Részletek elrejtése
+      incomplete: A profilod hiányos
+      missing_fields: Hiányzó kötelező adatok
+      open_profile: Profil megnyitása
+      show_details: Részletek megjelenítése
     password:
       again: Új jelszó még egyszer
       changed: Jelszó módosítva

@@ -15,7 +15,6 @@ import {
   type RefObject,
 } from "react";
 import { flushSync } from "react-dom";
-import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
@@ -35,8 +34,10 @@ import { entryKey, STATE_ORDER } from "../shell/calendarEntries";
 import { useMetric } from "../shell/metrics";
 import { useStrings } from "../shell/strings";
 import type { CalendarEntry, CalendarEvent } from "../shell/views";
+import type { UserProfile } from "../shell/userProfile";
 import { CalendarMonths } from "./calendar/CalendarMonths";
 import { EVENT_MARK, STATE_MARK, STATE_TONE } from "./calendar/calendarMarks";
+import { ProfileCompletionNotice } from "./profile/ProfileCompletionNotice";
 
 /** A reader's place in a face: what is at the top of their view, by its
  * month or its obligation, and how far under the head it sits; or that
@@ -85,6 +86,8 @@ export function FilingCalendarView({
   page,
   onRefresh,
   onOpen,
+  profile = null,
+  onNavigate,
 }: {
   state: CalendarState;
   /** What stands in the page while the account withholds the calendar: the
@@ -112,6 +115,8 @@ export function FilingCalendarView({
   /** Take the person to where this obligation is worked on. Left out where
    * the window cannot: no row then offers a way it does not have. */
   onOpen?: (entry: CalendarEntry) => void;
+  profile?: UserProfile | null;
+  onNavigate?: (url: string) => void;
 }) {
   const t = useStrings();
   const heading = useId();
@@ -896,22 +901,13 @@ export function FilingCalendarView({
               </div>
             )}
           </div>
-          {warnings.length > 0 && (
-            <Alert
-              tone="warning"
-              className="mx-4 mt-3 w-auto"
-              icon={<Icon name="alert" />}
-            >
-              <p>{t("desktop.calendar.warnings")}</p>
-              <ul className="mt-1 grid gap-0.5 text-sm">
-                {warnings.map((warning) => (
-                  <li key={warning.code + warning.affected_modelos.join()}>
-                    {warning.message}
-                  </li>
-                ))}
-              </ul>
-            </Alert>
-          )}
+          <ProfileCompletionNotice
+            key={profile?.profile_id ?? "unknown"}
+            profile={profile}
+            warnings={warnings}
+            onNavigate={onNavigate}
+            className="mx-4 mt-3 w-auto"
+          />
           {nothing ? (
             <EmptyState
               role="status"

@@ -3995,6 +3995,7 @@ cli:
       art109_activity_income_withholding_ge_70pct_unset: En tu perfil aún no consta
         si al menos el 70% de los ingresos de tu actividad empresarial o profesional
         están sujetos a retención.
+      censo_enrolment_unverified: No se ha verificado el alta en el censo
       estimacion_objetiva_unset: En tu perfil aún no consta qué régimen de estimación
         del IRPF se aplica a tu actividad.
       has_employees_unset: En tu perfil aún no consta si tienes empleados.

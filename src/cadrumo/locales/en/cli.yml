@@ -3707,6 +3707,7 @@ cli:
       art109_activity_income_withholding_ge_70pct_unset: Your profile does not yet
         record whether at least 70% of your business or professional income is subject
         to withholding.
+      censo_enrolment_unverified: Census enrolment has not been verified
       estimacion_objetiva_unset: Your profile does not yet record which income-tax
         assessment regime applies to your activity.
       has_employees_unset: Your profile does not yet record whether you employ staff.

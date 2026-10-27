@@ -722,6 +722,8 @@ desktop:
     modelo: Modelo {modelo}
     more: '{count} more'
     moved: Moved from {date}
+    notice:
+      attention: Calendar information needs attention
     observed: Filing history and messages
     open_tui: Open in workspace
     payment_cutoff: Direct debit until {date}
@@ -3460,6 +3462,13 @@ desktop:
     maximize: Full screen
     missing: Missing
     not_set: Not filled in
+    notice:
+      attention: Profile information needs attention
+      hide_details: Hide details
+      incomplete: Your profile is incomplete
+      missing_fields: Missing required information
+      open_profile: Open profile
+      show_details: Show details
     password:
       again: Repeat the new password
       changed: Password changed

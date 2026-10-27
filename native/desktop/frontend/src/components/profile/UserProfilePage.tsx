@@ -73,6 +73,7 @@ import { PasswordChange, ProfileShortcuts } from "./ProfileDialogs";
 import { ProfileEditor, type ProfileDraft } from "./ProfileEditor";
 import { PROFILE_KEYS } from "./profileKeys";
 import { ProfileSync } from "./ProfileSync";
+import { ProfileCompletionNotice } from "./ProfileCompletionNotice";
 
 /** A profile action and, where the page runs it by a key of its own, that
  * key: the page's menus show it from the declaration its handlers match. */
@@ -1440,9 +1441,10 @@ export const UserProfilePage = memo(function UserProfilePage({
           >
             {toolbar}
             <div className="grid gap-3 p-4">
-              {data.notices.map((notice, at) => (
-                <Alert key={at}>{notice.message}</Alert>
-              ))}
+              <ProfileCompletionNotice
+                key={data.profile_id}
+                profile={profile.loading || profile.error ? null : data}
+              />
               {body}
               {nothing && (
                 <p className="py-5 text-muted-foreground">

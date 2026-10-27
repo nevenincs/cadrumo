@@ -10,6 +10,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.config import override_settings
+from ....core.i18n.render import I18N_STRICT_MISSING_KEYS
 from ....core.period import Period
 from ....domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -56,6 +57,7 @@ from ..calendar_models import (
     user_state_for,
 )
 from ..calendar_warnings import calendar_applicability_profile_keys_for_modelo
+from ..read_calendar_item_projection import OverviewCalendarWarningSnapshot
 from ..status_report import build_filing_obligation_advisories
 from .calendar_test_support import (
     BUCKET_ID as _BUCKET_ID,
@@ -181,6 +183,39 @@ def test_calendar_censo_warning_requires_every_modelo_enrolment_key(
     assert modelo_303.censo_enrolment_state is OverviewCensoEnrolmentState.UNVERIFIED
     warning = next(item for item in calendar.warnings if item.code == "censo.enrolment_unverified")
     assert "303" in warning.affected_modelos
+
+
+@pytest.mark.parametrize(
+    ("language", "terms"),
+    [
+        ("en", ("census", "not", "verified")),
+        ("es", ("censo", "no", "verificado")),
+        ("ca", ("cens", "no", "verificat")),
+        ("hu", ("nyilvántartásba", "nem", "ellenőrizték")),
+    ],
+)
+def test_calendar_censo_warning_is_rendered_in_the_read_language(
+    authority_operation: PinnedAuthorityOperation, language: str, terms: tuple[str, ...]
+) -> None:
+    calendar = build_overview_calendar(
+        _profile(),
+        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 20)),
+        operation=authority_operation,
+        today=date(2025, 4, 1),
+        live_censo_verified_profile_keys=tuple(sorted(_M303_CENSO_ENROLMENT_KEYS - {"iva.regime"})),
+    )
+    warning = next(item for item in calendar.warnings if item.code == "censo.enrolment_unverified")
+    assert "303" in warning.affected_modelos
+
+    token = I18N_STRICT_MISSING_KEYS.set(True)
+    try:
+        with override_settings(cadrumo_output_language=language):
+            text = OverviewCalendarWarningSnapshot.from_warning(warning).text
+    finally:
+        I18N_STRICT_MISSING_KEYS.reset(token)
+
+    assert text is not None
+    assert all(term in text.lower() for term in terms)
 
 
 def test_calendar_censo_warning_clears_when_every_modelo_enrolment_key_is_verified(
