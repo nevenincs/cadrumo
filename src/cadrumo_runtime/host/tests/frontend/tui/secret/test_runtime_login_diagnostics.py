@@ -24,6 +24,7 @@ from cadrumo_client.contracts.session_events import LifecycleNotice
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
+from .....frontend.tui.secret import runtime_login_attempt
 from .....frontend.tui.secret.runtime_login import RuntimeLoginScreen
 from .....frontend.tui.secret.runtime_login_contracts import RuntimeLoginMethod
 
@@ -99,6 +100,26 @@ def capture() -> Iterator[_Capture]:
         logger.propagate = previous[1]
 
 
+@pytest.fixture
+def caller_thread_capture(monkeypatch: pytest.MonkeyPatch) -> Iterator[tuple[logging.Logger, _Capture]]:
+    """Attempt diagnostics on a logger whose handler faults surface on the calling thread.
+
+    A registered project logger hands its records to the background dispatch,
+    which contains every handler fault by design, so an interruption raised by
+    a handler there could never reach the login attempt. This logger sits
+    outside that dispatch and delivers to its handlers before the call returns.
+    """
+    logger = logging.Logger(runtime_login_attempt.__name__, level=logging.DEBUG)
+    logger.propagate = False
+    handler = _Capture()
+    logger.addHandler(handler)
+    monkeypatch.setattr(runtime_login_attempt, "_LOGGER", logger)
+    try:
+        yield logger, handler
+    finally:
+        logger.removeHandler(handler)
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize("failure", ["unavailable", "credential", "unexpected"])
 async def test_login_failure_is_correlated_and_keeps_private_text_out_of_logs(capture: _Capture, failure: str) -> None:
@@ -157,8 +178,9 @@ async def test_login_failure_is_correlated_and_keeps_private_text_out_of_logs(ca
 @pytest.mark.asyncio
 @pytest.mark.parametrize("primary_kind", ["none", "refusal", "cancellation"])
 async def test_cleanup_diagnostic_interrupt_cannot_skip_close_or_replace_a_primary(
-    capture: _Capture, primary_kind: str
+    caller_thread_capture: tuple[logging.Logger, _Capture], primary_kind: str
 ) -> None:
+    logger, capture = caller_thread_capture
     profile_id = uuid4()
     client = _Client(profile_id, ValueError("unused exchange failure"))
     primary = (
@@ -179,7 +201,6 @@ async def test_cleanup_diagnostic_interrupt_cannot_skip_close_or_replace_a_prima
         open_client=open_client,
         accept_handoff=lambda _handoff: False,
     )
-    logger = get_logger("cadrumo_runtime.host.frontend.tui.secret.runtime_login_attempt")
     handler = _FailingDiagnostic("tui_login_connection_cleanup_started", interruption)
     logger.addHandler(handler)
     try:
@@ -204,8 +225,9 @@ async def test_cleanup_diagnostic_interrupt_cannot_skip_close_or_replace_a_prima
 @pytest.mark.asyncio
 @pytest.mark.parametrize("event", ["tui_login_started", "tui_login_finished"])
 async def test_diagnostic_interrupt_at_attempt_boundary_still_erases_proof_and_releases_busy_state(
-    capture: _Capture, event: str
+    caller_thread_capture: tuple[logging.Logger, _Capture], event: str
 ) -> None:
+    logger, _ = caller_thread_capture
     profile_id = uuid4()
     client = _Client(profile_id, ValueError("unused exchange failure"))
     proof = bytearray(_PRIVATE_CANARY, "utf-8")
@@ -222,7 +244,6 @@ async def test_diagnostic_interrupt_at_attempt_boundary_still_erases_proof_and_r
     )
     screen._busy = True
     screen._pending_proof = proof
-    logger = get_logger("cadrumo_runtime.host.frontend.tui.secret.runtime_login_attempt")
     handler = _FailingDiagnostic(event, interruption)
     logger.addHandler(handler)
     try:

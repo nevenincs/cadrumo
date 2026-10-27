@@ -3,14 +3,12 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Generator
 from concurrent.futures import ThreadPoolExecutor
 from threading import Event
 from typing import override
 
 import pytest
 
-from cadrumo.core.logging import get_logger
 from cadrumo_client.contracts.contracts import (
     ByteChannel,
     ChannelWake,
@@ -20,6 +18,7 @@ from cadrumo_client.contracts.contracts import (
 )
 from cadrumo_runtime.contracts.profile_host import ProfileDrainResult
 
+from .. import server as runtime_server
 from ..server import RuntimeTransportServer
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -73,16 +72,18 @@ class _DiagnosticFailure(logging.Handler):
 
 
 @pytest.fixture
-def logger() -> Generator[logging.Logger]:
-    selected = get_logger("cadrumo_runtime.adapters.server")
-    previous = selected.level, selected.propagate
-    selected.setLevel(logging.DEBUG)
+def logger(monkeypatch: pytest.MonkeyPatch) -> logging.Logger:
+    """A server logger whose handler faults surface on the calling thread.
+
+    A registered project logger hands its records to the background dispatch,
+    which contains every handler fault by design, so an interruption raised by
+    a handler there could never reach the serving thread. This logger sits
+    outside that dispatch.
+    """
+    selected = logging.Logger(runtime_server.__name__, level=logging.DEBUG)
     selected.propagate = False
-    try:
-        yield selected
-    finally:
-        selected.setLevel(previous[0])
-        selected.propagate = previous[1]
+    monkeypatch.setattr(runtime_server, "_LOGGER", selected)
+    return selected
 
 
 @pytest.mark.parametrize("event", ["runtime_listener_ready", "runtime_listener_drain_started"])
