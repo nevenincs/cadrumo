@@ -396,6 +396,11 @@ class AnnouncingRotatingFileHandler(RotatingFileHandler):
             self._formatted = None
 
     @override
+    def handleError(self, record: logging.LogRecord) -> None:
+        """Refuse failed output without the stdlib's raw-record stderr fallback."""
+        raise OSError("diagnostic file delivery failed") from None
+
+    @override
     def format(self, record: logging.LogRecord) -> str:
         # The rollover check formats the record to measure it, then the append
         # formats it again; within one emit the second returns the first.

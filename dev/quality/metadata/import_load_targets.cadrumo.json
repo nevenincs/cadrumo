@@ -1796,6 +1796,7 @@
         "cadrumo.core.declaracion_idioma",
         "cadrumo.core.descendant_relacion",
         "cadrumo.core.descriptor_write",
+        "cadrumo.core.diagnostic_dispatch",
         "cadrumo.core.diagnostic_log",
         "cadrumo.core.directory_scan",
         "cadrumo.core.document_shape",

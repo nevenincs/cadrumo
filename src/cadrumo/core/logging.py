@@ -33,19 +33,27 @@ log records and plaintext diagnostic log files rooted by settings.
 
 from __future__ import annotations
 
+import atexit
 import logging
+import math
+import os
 import re
 import sys
+import time
 from collections import deque
-from collections.abc import Generator, Iterable, Iterator, Mapping
+from collections.abc import Callable, Generator, Iterable, Iterator, Mapping
 from contextlib import contextmanager
-from contextvars import ContextVar
+from contextvars import Context, ContextVar, copy_context
+from enum import Enum
+from itertools import islice
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, overload, override
+from threading import Event, Lock, Thread
+from typing import TYPE_CHECKING, Any, TextIO, cast, overload, override
 
 if TYPE_CHECKING:
     from .observability.context import RunContextInfo
 from .cli_metadata import is_metadata_invocation
+from .diagnostic_dispatch import DiagnosticDispatch, DispatchStatus
 from .diagnostic_log import DiagnosticFormatter, stamp_diagnostic_record, stamp_diagnostic_scalar_fields
 from .redaction.rules import (
     ALWAYS_REDACT_KEY_TERMS,
@@ -130,6 +138,9 @@ _PERCENT_PLACEHOLDER_RE = re.compile(
 _FORMAT_OPERAND_RE = re.compile(
     r"%(?:\((?P<mapping>[^)]+)\))?[-#+ 0-9]*(?P<width>\*)?"
     r"(?:\.(?P<precision>\*|\d*))?[hlL]?(?P<conversion>[diouxXeEfFgGcrsa])"
+)
+_FORMAT_SIZE_RE = re.compile(
+    r"%(?:\([^)]+\))?[-#+ ]*(?P<width>\d+|\*)?(?:\.(?P<precision>\d+|\*))?[hlL]?[diouxXeEfFgGcrsa]"
 )
 
 #: Base64 payload embedded in a ``data:`` URI, the shape a vision request uses
@@ -552,6 +563,8 @@ class SecretScrubbingFilter(logging.Filter):
         Returns:
             Always ``True`` — every record is allowed through after scrubbing.
         """
+        if _scrubbed_record.get() is record:
+            return True
         stamp_diagnostic_scalar_fields(record)
         _scrub_record_message_and_args(record)
         _scrub_record_exception(record)
@@ -789,6 +802,8 @@ def _prepare_log_directory(log_file: Path) -> str | None:
 def _install_secret_scrubbing_filters() -> None:
     """Attach one :class:`SecretScrubbingFilter` to the root logger and each handler."""
     root_logger = logging.getLogger()
+    if not any(isinstance(active_filter, _DispatchFilter) for active_filter in root_logger.filters):
+        root_logger.filters.insert(0, _DispatchFilter())
     if not any(isinstance(active_filter, SecretScrubbingFilter) for active_filter in root_logger.filters):
         root_logger.addFilter(SecretScrubbingFilter())
     for handler in root_logger.handlers:
@@ -796,19 +811,12 @@ def _install_secret_scrubbing_filters() -> None:
             handler.addFilter(SecretScrubbingFilter())
 
 
-def _rotating_file_handler_path() -> str:
-    """Name the rotating file handler by the dotted path dictConfig resolves.
-
-    Derived from the class rather than hand-spelled, so a typo cannot hide
-    until the first file-logging run; imported here because only a host that
-    configures file logging needs the handler module.
-    """
-    from .log_file_handler import AnnouncingRotatingFileHandler
-
-    return f"{AnnouncingRotatingFileHandler.__module__}.{AnnouncingRotatingFileHandler.__qualname__}"
-
-
 def configure_logging() -> None:
+    """Schedule idempotent diagnostic configuration without entering its I/O."""
+    _submit_work(_configure_logging)
+
+
+def _configure_logging() -> None:
     """Configure the project-wide diagnostic logging defaults.
 
     Installs settings-derived stderr/file handlers, the run-context record
@@ -845,63 +853,41 @@ def configure_logging() -> None:
     log_directory_failure = _prepare_log_directory(log_file)
     file_logging_enabled = log_directory_failure is None
 
-    configured_handlers: dict[str, dict[str, Any]] = {
-        "stderr": {
-            "level": settings.cadrumo_log_stderr_level,
-            "formatter": "standard",
-            "class": "logging.StreamHandler",
-            "stream": "ext://sys.stderr",
-            "filters": ["drop_run_event", "drop_operator_document", "third_party_debug"],
-        },
-    }
-    root_handlers = ["stderr"]
-    if file_logging_enabled:
-        configured_handlers["file"] = {
-            "level": settings.cadrumo_log_file_level,
-            "formatter": "standard",
-            "class": _rotating_file_handler_path(),
-            "filename": str(log_file),
-            "maxBytes": settings.cadrumo_log_file_max_bytes,
-            "backupCount": settings.cadrumo_log_file_backup_count,
-            "encoding": "utf-8",
-            "filters": ["drop_run_event", "third_party_debug"],
-        }
-        root_handlers.append("file")
-    from logging.config import dictConfig
+    from .log_file_handler import AnnouncingRotatingFileHandler
 
-    dictConfig(
-        {
-            "version": 1,
-            "disable_existing_loggers": False,
-            "formatters": {
-                "standard": {"()": DiagnosticFormatter, "fmt": LOG_FILE_FORMAT},
-            },
-            "filters": {
-                "drop_run_event": {"()": f"{__name__}.DropRunEventFilter"},
-                "drop_operator_document": {"()": f"{__name__}.DropOperatorDocumentEchoFilter"},
-                "third_party_debug": {"()": _ThirdPartyDebugFilter},
-            },
-            "handlers": configured_handlers,
-            "root": {
-                "handlers": root_handlers,
-                "level": settings.cadrumo_log_root_level,
-            },
-            "loggers": {
-                "alembic.runtime.plugins": {
-                    "level": "WARNING",
-                    "propagate": True,
-                },
-                "pdfminer": {
-                    "level": "WARNING",
-                    "propagate": True,
-                },
-                "pikepdf._core": {
-                    "level": "WARNING",
-                    "propagate": True,
-                },
-            },
-        },
-    )
+    stderr = _DiagnosticStreamHandler(sys.stderr)
+    stderr.setLevel(settings.cadrumo_log_stderr_level)
+    stderr.addFilter(DropOperatorDocumentEchoFilter())
+    sinks: list[logging.Handler] = [stderr]
+    if file_logging_enabled:
+        file = AnnouncingRotatingFileHandler(
+            str(log_file),
+            maxBytes=settings.cadrumo_log_file_max_bytes,
+            backupCount=settings.cadrumo_log_file_backup_count,
+            encoding="utf-8",
+            delay=True,
+        )
+        file.setLevel(settings.cadrumo_log_file_level)
+        sinks.append(file)
+    for sink in sinks:
+        sink.setFormatter(DiagnosticFormatter(LOG_FILE_FORMAT))
+        sink.addFilter(DropRunEventFilter())
+        sink.addFilter(_ThirdPartyDebugFilter())
+        sink.addFilter(SecretScrubbingFilter())
+    root_logger = logging.getLogger()
+    previous = tuple(root_logger.handlers)
+    root_logger.handlers = [
+        handler
+        for handler in previous
+        if not isinstance(handler, _AsyncDiagnosticHandler | _ConfigureOnFirstRecordHandler)
+    ]
+    root_logger.handlers.extend(_AsyncDiagnosticHandler(sink) for sink in sinks)
+    root_logger.setLevel(settings.cadrumo_log_root_level)
+    for handler in previous:
+        if isinstance(handler, _AsyncDiagnosticHandler):
+            handler.close()
+    for name in ("alembic.runtime.plugins", "pdfminer", "pikepdf._core"):
+        logging.getLogger(name).setLevel(logging.WARNING)
 
     # Local import: the observability layer imports ``cadrumo.core.logging`` for
     # its own get_logger() seed, so attaching the filter at module
@@ -940,8 +926,7 @@ def set_log_level(level: int, *, file_level: int = logging.DEBUG) -> None:
     comprehensive.  All other handlers (typically the stderr stream
     handler) receive ``level``.
 
-    :func:`configure_logging` is called first so the dictConfig contract
-    is in place before any level mutation.
+    Configuration and sink-level changes are queued before subsequent records.
 
     Args:
         level: The effective level for non-file handlers (e.g.
@@ -949,14 +934,19 @@ def set_log_level(level: int, *, file_level: int = logging.DEBUG) -> None:
         file_level: The level applied to :class:`logging.FileHandler`
             instances (default ``logging.DEBUG``).
     """
-    configure_logging()
-    root_logger = logging.getLogger()
-    root_logger.setLevel(logging.DEBUG)
-    for handler in root_logger.handlers:
-        if isinstance(handler, logging.FileHandler):
-            handler.setLevel(file_level)
-        else:
-            handler.setLevel(level)
+    # Admit records immediately; the queued command precedes their sink-level checks.
+    logging.getLogger().setLevel(logging.DEBUG)
+
+    def apply() -> None:
+        _configure_logging()
+        root_logger = logging.getLogger()
+        root_logger.setLevel(logging.DEBUG)
+        for handler in root_logger.handlers:
+            target = handler.sink if isinstance(handler, _AsyncDiagnosticHandler) else handler
+            target.setLevel(file_level if isinstance(target, logging.FileHandler) else level)
+            handler.setLevel(logging.NOTSET if isinstance(handler, _AsyncDiagnosticHandler) else target.level)
+
+    _submit_work(apply)
 
 
 _configuration_deferred = False
@@ -1001,7 +991,17 @@ class _ConfigureOnFirstRecordHandler(logging.Handler):
     configuring = False
 
     @override
+    def handle(self, record: logging.LogRecord) -> bool:
+        if _active_record.get() is not record:
+            _enqueue_record(record)
+            return True
+        return bool(super().handle(record))
+
+    @override
     def emit(self, record: logging.LogRecord) -> None:
+        if _active_record.get() is not record:
+            _enqueue_record(record)
+            return
         root_logger = logging.getLogger()
         walked = root_logger.handlers
         position = walked.index(self) if self in walked else 0
@@ -1012,11 +1012,17 @@ class _ConfigureOnFirstRecordHandler(logging.Handler):
 
 
 def _configure_for_first_record(handler: _ConfigureOnFirstRecordHandler, record: logging.LogRecord) -> None:
-    if record.levelno < logging.WARNING or _configured or _configuration_deferred or type(handler).configuring:
+    if (
+        record.levelno < logging.WARNING
+        or _configured
+        or _configuration_deferred
+        or record.__dict__.get("_cadrumo_configuration_deferred") is True
+        or type(handler).configuring
+    ):
         return
     type(handler).configuring = True
     try:
-        configure_logging()
+        _configure_logging()
     finally:
         type(handler).configuring = False
 
@@ -1067,12 +1073,9 @@ def _flush_pending_records() -> None:
     """Replay held records through the handlers configuration installed."""
     global _root_level_before_buffering
     _root_level_before_buffering = None
-    root_logger = logging.getLogger()
     while _pending_records:
         record = _pending_records.popleft()
-        for handler in root_logger.handlers:
-            if record.levelno >= handler.level:
-                handler.handle(record)
+        _deliver_work(record)
 
 
 def _retire_first_record_configuration() -> None:
@@ -1123,6 +1126,279 @@ def get_logger(name: str) -> logging.Logger:
     # otherwise records made before configuration carry no ``run_id`` at all.
     _install_run_context_record_factory()
     logger = logging.getLogger(name)
+    if not any(isinstance(active_filter, _DispatchFilter) for active_filter in logger.filters):
+        logger.filters.insert(0, _DispatchFilter())
     if not any(isinstance(active_filter, SecretScrubbingFilter) for active_filter in logger.filters):
         logger.addFilter(SecretScrubbingFilter())
     return logger
+
+
+_active_record: ContextVar[logging.LogRecord | None] = ContextVar("diagnostic_delivery_record", default=None)
+_scrubbed_record: ContextVar[logging.LogRecord | None] = ContextVar("diagnostic_scrubbed_record", default=None)
+_sink_workers: list[DiagnosticDispatch[logging.LogRecord]] = []
+_stdlib_shutdown = logging.shutdown
+
+
+def _snapshot_value(value: object, *, depth: int = 0, budget: list[int] | None = None) -> object:
+    """Copy bounded builtin shapes without invoking application rendering hooks."""
+    if budget is None:
+        budget = [256, 65536]
+    budget[0] -= 1
+    if depth >= 6 or budget[0] < 0:
+        return "<omitted:nesting>"
+    if type(value) is str:
+        if len(value) > 16384 or len(value) * 4 > budget[1]:
+            return "<omitted:oversized-text>"
+        budget[1] -= len(value) * 4
+        return value
+    if type(value) is int:
+        integer = value
+        return integer if integer.bit_length() <= 4096 else "<omitted:oversized-number>"
+    if type(value) in {float, bool, type(None)}:
+        return value
+    if type(value) in {bytes, bytearray}:
+        binary = cast(bytes | bytearray, value)
+        return bytes(binary) if len(binary) <= 256 else "<redacted:payload>"
+    if type(value) is dict:
+        mapping = cast(dict[object, object], value)
+        return {
+            cast(str, _snapshot_value(key, depth=depth + 1, budget=budget)): _snapshot_value(
+                item, depth=depth + 1, budget=budget
+            )
+            for key, item in islice(mapping.items(), 64)
+            if type(key) is str and len(key) <= 256
+        }
+    if type(value) in {tuple, list}:
+        sequence = cast(tuple[object, ...] | list[object], value)
+        return tuple(_snapshot_value(item, depth=depth + 1, budget=budget) for item in sequence[:64])
+    if isinstance(value, Enum):
+        return _snapshot_value(object.__getattribute__(value, "_value_"), depth=depth + 1, budget=budget)
+    # Opaque arguments may hide documents or execute arbitrary __str__/__repr__.
+    return "<omitted:opaque-value>"
+
+
+def _snapshot_record(record: logging.LogRecord) -> logging.LogRecord:
+    snapshot = logging.LogRecord.__new__(logging.LogRecord)
+    budget = [256, 65536]
+    snapshot.__dict__ = {
+        key: None if key == "exc_info" else _snapshot_value(value, budget=budget)
+        for key, value in islice(record.__dict__.items(), 128)
+        if type(key) is str and len(key) <= 256
+    }
+    if isinstance(record.exc_info, tuple) and isinstance(record.exc_info[1], BaseException):
+        snapshot.__dict__["_cadrumo_exception_snapshot"] = _snapshot_exception(record.exc_info[1], budget)
+    snapshot.__dict__["_cadrumo_snapshot_weight"] = 1024 + 65536 - budget[1] + (256 - budget[0]) * 32
+    return snapshot
+
+
+def _snapshot_exception(error: BaseException, budget: list[int]) -> tuple[object, ...]:
+    """Keep bounded causal frames and builtin arguments without retaining live frames."""
+    chain: list[object] = []
+    seen: set[int] = set()
+    while id(error) not in seen and len(chain) < 8:
+        seen.add(id(error))
+        name = type.__getattribute__(type(error), "__name__")
+        arguments = _snapshot_value(BaseException.__dict__["args"].__get__(error), budget=budget)
+        frames: list[tuple[str, int, str]] = []
+        traceback = BaseException.__dict__["__traceback__"].__get__(error)
+        while traceback is not None and len(frames) < 32:
+            code = traceback.tb_frame.f_code
+            frames.append(
+                (
+                    str(_snapshot_value(code.co_filename, budget=budget)),
+                    traceback.tb_lineno,
+                    str(_snapshot_value(code.co_name, budget=budget)),
+                )
+            )
+            traceback = traceback.tb_next
+        cause = BaseException.__dict__["__cause__"].__get__(error)
+        context = BaseException.__dict__["__context__"].__get__(error)
+        suppressed = BaseException.__dict__["__suppress_context__"].__get__(error)
+        following = cause if cause is not None else None if suppressed else context
+        chain.append((name, arguments, tuple(frames), "cause" if cause is not None else "context"))
+        if not isinstance(following, BaseException):
+            break
+        error = following
+    return tuple(chain)
+
+
+def _bound_format(record: logging.LogRecord) -> None:
+    """Reject allocation-sized printf requests before any formatter evaluates them."""
+    if not bool(record.args) or not isinstance(record.msg, str):
+        return
+    for index, match in enumerate(_FORMAT_SIZE_RE.finditer(record.msg)):
+        sizes = (match.group("width"), match.group("precision"))
+        oversized = any(size and size != "*" and (len(size) > 5 or int(size) > 16384) for size in sizes)
+        if "*" in sizes and isinstance(record.args, tuple):
+            oversized |= any(type(arg) is int and abs(arg) > 16384 for arg in record.args)
+        if index >= 64 or oversized:
+            record.msg, record.args = "<omitted:oversized-format>", None
+            return
+
+
+def _enqueue_record(record: logging.LogRecord) -> None:
+    if _active_record.get() is not None:
+        _dispatch.discard()
+        return
+    # Several root handlers can see one third-party record. Admit it once.
+    if record.__dict__.get("_cadrumo_queued_pid") == os.getpid():
+        return
+    record.__dict__["_cadrumo_queued_pid"] = os.getpid()
+    record.__dict__["_cadrumo_configuration_deferred"] = _configuration_deferred
+    try:
+        _submit_work(_snapshot_record(record))
+    except Exception:
+        # A malformed foreign LogRecord must not change the caller's result.
+        _dispatch.discard()
+        return
+
+
+class _DispatchFilter(logging.Filter):
+    @override
+    def filter(self, record: logging.LogRecord) -> bool:
+        if _active_record.get() is record:
+            return True
+        _enqueue_record(record)
+        return False
+
+
+def _deliver_work(work: logging.LogRecord | Callable[[], None]) -> None:
+    if not isinstance(work, logging.LogRecord):
+        work()
+        return
+    token = _active_record.set(work)
+    try:
+        exception = work.__dict__.pop("_cadrumo_exception_snapshot", None)
+        if exception is not None:
+            sections: list[str] = []
+            for name, arguments, frames, relation in reversed(exception):
+                if sections:
+                    sections.append(f"\nException {relation}:\n")
+                stack = "".join(f'  File "{path}", line {line}, in {function}\n' for path, line, function in frames)
+                sections.append(f"Traceback (most recent call last):\n{stack}{name}: {arguments}")
+            work.exc_text = "\n".join(sections)
+        _bound_format(work)
+        SecretScrubbingFilter().filter(work)
+        scrubbed = _scrubbed_record.set(work)
+        try:
+            logging.getLogger(work.name).handle(work)
+        finally:
+            _scrubbed_record.reset(scrubbed)
+    finally:
+        _active_record.reset(token)
+
+
+class _AsyncDiagnosticHandler(logging.Handler):
+    def __init__(self, sink: logging.Handler) -> None:
+        super().__init__(logging.NOTSET)
+        self.sink = sink
+        self._worker = DiagnosticDispatch(
+            self._write,
+            name=f"diagnostic-{type(sink).__name__}",
+            capacity=8192,
+            finish=sink.close,
+        )
+        _sink_workers.append(self._worker)
+
+    def _write(self, record: logging.LogRecord) -> None:
+        token = _active_record.set(record)
+        scrubbed = _scrubbed_record.set(record)
+        try:
+            self.sink.handle(record)
+        finally:
+            _scrubbed_record.reset(scrubbed)
+            _active_record.reset(token)
+
+    @override
+    def emit(self, record: logging.LogRecord) -> None:
+        if _active_record.get() is record:
+            if record.levelno < self.sink.level:
+                return
+            snapshot = logging.LogRecord.__new__(logging.LogRecord)
+            snapshot.__dict__ = record.__dict__.copy()
+            self._worker.submit(snapshot, weight=record.__dict__.get("_cadrumo_snapshot_weight", 1024))
+        else:
+            _enqueue_record(record)
+
+    @override
+    def close(self) -> None:
+        self._worker.close(timeout=0)
+        super().close()
+
+
+class _DiagnosticStreamHandler(logging.StreamHandler[TextIO]):
+    @override
+    def handleError(self, record: logging.LogRecord) -> None:
+        # The stdlib fallback prints the unsanitized record and arguments.
+        raise OSError("diagnostic stream delivery failed") from None
+
+
+_dispatch = DiagnosticDispatch[logging.LogRecord | Callable[[], None]](
+    _deliver_work, name="diagnostic-records", capacity=8192
+)
+
+
+def _submit_work(work: logging.LogRecord | Callable[[], None]) -> None:
+    """Keep configuration settings without retaining an invocation's authority lease."""
+    if _configured:
+        weight = work.__dict__.get("_cadrumo_snapshot_weight", 1024) if isinstance(work, logging.LogRecord) else 1024
+        _dispatch.submit(work, weight=weight)
+        return
+    context = Context()
+    for variable, value in copy_context().items():
+        if variable.name == "settings_override":
+            context.run(variable.set, value)
+    weight = work.__dict__.get("_cadrumo_snapshot_weight", 1024) if isinstance(work, logging.LogRecord) else 1024
+    _dispatch.submit(lambda: context.run(_deliver_work, work), weight=weight)
+
+
+def flush_logging(*, timeout: float = 2.0) -> bool:
+    """Attempt delivery within one bound; ordinary log calls never wait for this."""
+    deadline = time.monotonic() + (max(0.0, timeout) if math.isfinite(timeout) else 0.0)
+    if not _dispatch.flush(timeout=max(0.0, deadline - time.monotonic())):
+        return False
+    complete = True
+    for worker in tuple(_sink_workers):
+        complete = worker.flush(timeout=max(0.0, deadline - time.monotonic())) and complete
+    return complete
+
+
+def diagnostic_delivery_status() -> dict[str, DispatchStatus]:
+    """Read delivery health without acquiring any formatter, handler or file lock."""
+    return {
+        "records": _dispatch.status(),
+        **{f"sink_{index}": worker.status() for index, worker in enumerate(tuple(_sink_workers))},
+    }
+
+
+_shutdown_guard = Lock()
+_shutdown_finished = Event()
+_shutdown_thread: Thread | None = None
+
+
+def shutdown_logging(*, timeout: float = 2.0) -> None:
+    """Also bound stdlib shutdown, whose default waits indefinitely on sink locks."""
+    global _shutdown_thread
+    deadline = time.monotonic() + (max(0.0, timeout) if math.isfinite(timeout) else 0.0)
+    flush_logging(timeout=max(0.0, deadline - time.monotonic()))
+    for worker in tuple(_sink_workers):
+        worker.close(timeout=max(0.0, deadline - time.monotonic()))
+
+    def finish() -> None:
+        try:
+            _stdlib_shutdown()
+        finally:
+            _shutdown_finished.set()
+
+    with _shutdown_guard:
+        if _shutdown_thread is None:
+            _shutdown_thread = Thread(target=finish, name="diagnostic-shutdown", daemon=True)
+            try:
+                _shutdown_thread.start()
+            except RuntimeError:
+                _shutdown_finished.set()
+    _shutdown_finished.wait(max(0.0, deadline - time.monotonic()))
+
+
+atexit.unregister(_stdlib_shutdown)
+atexit.register(shutdown_logging)

@@ -24,7 +24,7 @@ from ..diagnostic_log import (
     stamp_diagnostic_record,
     stamp_diagnostic_scalar_fields,
 )
-from ..logging import LOG_FILE_FORMAT, SecretScrubbingFilter, get_logger
+from ..logging import LOG_FILE_FORMAT, SecretScrubbingFilter, flush_logging, get_logger
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -516,6 +516,7 @@ def test_timing_observations_are_bounded_and_keep_only_scalar_diagnostic_context
             },
             clock=lambda: observed,
         )
+        assert flush_logging(timeout=5)
     records = [record for record in caplog.records if record.name == logger.name]
     if isinstance(observed, bool) or not 0 <= observed <= (1 << 63) - 1:
         assert records == []
@@ -555,6 +556,7 @@ def test_event_fields_reach_the_written_line_only_as_scrubbed_allowed_scalars() 
             },
             level=logging.WARNING,
         )
+        assert flush_logging(timeout=5)
     finally:
         logger.removeHandler(handler)
         logger.setLevel(previous_level)
@@ -646,6 +648,7 @@ async def test_timed_task_scopes_cross_threads_and_restore_the_parent_after_fail
     with caplog.at_level(logging.DEBUG, logger=logger.name), diagnostic_scope(new=True) as parent:
         results = await asyncio.gather(observe(1, fail=False), observe(2, fail=True), return_exceptions=True)
         diagnostic_timing_event(logger, "synthetic_timing", clock=lambda: 100)
+        assert flush_logging(timeout=5)
     records = [record for record in caplog.records if record.name == logger.name]
     assert len(set(identifiers)) == 2 and parent not in identifiers
     assert results[0] == identifiers[0] and isinstance(results[1], ValueError)
@@ -666,6 +669,7 @@ def test_declared_worker_failure_cannot_be_logged_below_error(
     logger = get_logger("cadrumo.tests.worker_levels")
     with caplog.at_level(logging.DEBUG, logger=logger.name):
         diagnostic_event(logger, "worker_lifecycle", fields={"outcome": "failed"}, level=requested)
+        assert flush_logging(timeout=5)
     assert caplog.records[-1].levelno == logging.ERROR
 
 
@@ -676,4 +680,5 @@ def test_technical_event_defaults_to_debug_and_operator_info_is_preserved(
     with caplog.at_level(logging.DEBUG, logger=logger.name):
         diagnostic_event(logger, "worker_attestation_started")
         diagnostic_event(logger, "service_ready", level=logging.INFO)
+        assert flush_logging(timeout=5)
     assert [record.levelno for record in caplog.records] == [logging.DEBUG, logging.INFO]

@@ -57,6 +57,7 @@ else:
         logger.info("info record %s", "before-warning")
         if mode == "document-deferred":
             logger.warning("first record %s", "probe")
+assert project_logging.flush_logging(timeout=10)
 after_info = {"exists": log_file.exists(), "configured": project_logging._configured}
 if mode in {"late", "document-deferred"}:
     project_logging.resume_logging_configuration()
@@ -65,7 +66,8 @@ if mode in {"late", "document-deferred"}:
         logger.warning("outside document scope")
 elif mode != "overflow":
     logger.warning("first record %s", "probe")
-logging.shutdown()
+assert project_logging.flush_logging(timeout=10)
+project_logging.shutdown_logging()
 print(json.dumps({"before": before, "after_info": after_info, "configured": project_logging._configured}))
 """
 
