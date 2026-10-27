@@ -1,20 +1,22 @@
 ---
 tags:
-  - '#adr'
-  - '#mcp-purpose-authentication'
+  - "#adr"
+  - "#mcp-purpose-authentication"
 date: '2026-10-27'
-modified: '2026-10-27'
-body_schema: 'body-v2'
-body_hash: 'sha256:987d00a28a4e471d713633c641ede6d859aa67bcc9796329191bcf5194f179bc'
 related:
   - "[[2026-09-26-mcp-purpose-authentication-adr]]"
   - "[[2026-09-26-mcp-purpose-authentication-profile-access-adr]]"
   - "[[2026-10-04-application-sign-in-adr]]"
   - "[[2026-10-12-mcp-parity-attended-live-sign-in-adr]]"
   - "[[2026-09-26-mcp-purpose-authentication-reference]]"
+superseded_by: '2026-09-26-mcp-purpose-authentication-adr'
+modified: '2026-10-27'
+body_schema: 'body-v2'
+body_hash: 'sha256:2678aeb44fcd2ba0fecba928cd46e14b551591f866800436425f77cac64fdb78'
 ---
+# `mcp-purpose-authentication` adr: `worker loss session recovery` | (**status:** `superseded`)
 
-# `mcp-purpose-authentication` adr: `worker loss session recovery` | (**status:** `proposed`)
+Authorized 2026-10-27: the user approved D1 to D7 exactly as drafted, replying "continue, report when both tracks are done" to "Approve all seven as recommended, or change any?". The ruling now lives in the accepted record's "Process containment and custody lifetime" section.
 
 This record is a proposed revision of the accepted `2026-09-26-mcp-purpose-authentication-adr`, section Implementation > "Process containment and custody lifetime". The accepted body stays unchanged until the user authorizes this revision. On approval, the Implementation ruling below is appended to that section, and this proposal is then retired.
 

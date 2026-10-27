@@ -6,7 +6,7 @@ tags:
 date: '2026-09-26'
 modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:37cd9f63074634da7a8c42a566d4cd5d9942e0c8d047c47605ffc4fbac280990'
+body_hash: 'sha256:be1ff9a016fe79ae3da9689aff013cb218baf2383f83e03d0775d9909344521c'
 related:
   - '[[2026-09-26-mcp-purpose-authentication-adr]]'
   - '[[2026-09-26-mcp-purpose-authentication-audit]]'
@@ -30,7 +30,7 @@ Auto-generated index of all documents tagged with `#mcp-purpose-authentication`.
 - `2026-09-26-mcp-purpose-authentication-adr` - `mcp-purpose-authentication` adr: local runtime ownership and replacement MCP harness | (**status:** `accepted`)
 - `2026-09-26-mcp-purpose-authentication-profile-access-adr` - `mcp-purpose-authentication` adr: profile API keys, delegated sessions and CLI/TUI parity | (**status:** `accepted`)
 - `2026-10-14-mcp-purpose-authentication-renewable-stage-permits-adr` - `mcp-purpose-authentication` adr: `Renewable authority permits for executing operation stages` | (**status:** `rejected`)
-- `2026-10-27-mcp-purpose-authentication-worker-loss-recovery-adr` - `mcp-purpose-authentication` adr: `worker loss session recovery` | (**status:** `proposed`)
+- `2026-10-27-mcp-purpose-authentication-worker-loss-recovery-adr` - `mcp-purpose-authentication` adr: `worker loss session recovery` | (**status:** `superseded`)
 
 ### audit
 

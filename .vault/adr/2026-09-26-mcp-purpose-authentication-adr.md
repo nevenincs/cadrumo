@@ -1,11 +1,8 @@
 ---
 tags:
-  - '#adr'
-  - '#mcp-purpose-authentication'
+  - "#adr"
+  - "#mcp-purpose-authentication"
 date: '2026-09-26'
-modified: '2026-10-18'
-body_schema: 'body-v2'
-body_hash: 'sha256:30afd895acad0ee2d04d9456dc69e7cc082a80d66261363dacd85fec89360e81'
 related:
   - "[[2026-09-26-mcp-purpose-authentication-reference]]"
   - "[[2026-09-26-mcp-purpose-authentication-research]]"
@@ -15,11 +12,15 @@ related:
   - "[[2026-07-08-mcp-identity-linked-operation-adr]]"
   - "[[2026-07-17-mcp-call-latency-adr]]"
   - "[[2026-07-02-agent-harness-refoundation-adr]]"
-  - '[[2026-09-26-mcp-purpose-authentication-profile-access-adr]]'
-  - '[[2026-08-11-tui-architecture-adr]]'
-  - '[[2026-10-04-runtime-manager-architecture-adr]]'
+  - "[[2026-09-26-mcp-purpose-authentication-profile-access-adr]]"
+  - "[[2026-08-11-tui-architecture-adr]]"
+  - "[[2026-10-04-runtime-manager-architecture-adr]]"
+supersedes:
+  - '2026-10-27-mcp-purpose-authentication-worker-loss-recovery-adr'
+modified: '2026-10-27'
+body_schema: 'body-v2'
+body_hash: 'sha256:dc3a5cc1b91db2e6d8ee3655ba241f2df30f35f1d9de8898f626b917a0006b5c'
 ---
-
 # `mcp-purpose-authentication` adr: local runtime ownership and replacement MCP harness | (**status:** `accepted`)
 
 ## Problem Statement
@@ -131,6 +132,15 @@ The adapter ends when its MCP client disconnects and releases only its own lease
 The runtime owns worker, browser, KDF and other child resources through the existing operation resource scopes. Windows uses owned Job Objects with controlled inheritance, kill-on-close and explicit breakaway policy. POSIX uses owned process groups together with supervisor/watchdog containment that handles runtime death; a process group alone is not a parent-death guarantee. Do not rely on a taskkill or immediate-child fallback as proof of descendant containment. Refuse operation classes when their required containment cannot be established. Containment acceptance covers launch/registration races, independent descendant groups, guardian failure, inheritance and actual browsers. Interim refusal does not complete Windows, macOS or Linux platform acceptance; all three remain required.
 
 Last eligible OS logout fences private admission and effects, causes bounded shutdown and releases custody without permanently revoking independent grants or imposing profile-global suspension. Suspend/shutdown preparation is bounded best effort, backed by crash-safe persistence and reconciliation. Shutdown stops admission, requests declared settlement, waits to a bound, records unresolved ownership/effects, terminates and reaps owned descendants, closes storage/authority leases and releases key material best-effort. Revalidate authority before resumed private output or effects, and reconcile possibly committed work before retrying; timeout or process loss never implies rollback. A thread timeout cannot claim execution stopped. SIGKILL/process loss may skip cleanup, so restart recovery cannot depend on graceful callbacks.
+
+Profile worker loss suspends rather than retires. A worker that is positively lost (contained, exited or with a closed channel) suspends every lease of its profile for 120 s from the moment the loss is established. A worker that merely cannot be observed in time is not lost and keeps its leases. A suspended lease grants nothing: no admission, private projection, review response or effect. Its requests are refused with the typed refusal `CUSTODY_RECOVERING`, carrying the remaining window. Frontends present it as reconnecting and the CLI as retryable. The DEK stays only in a worker, so custody returns only through a fresh proof:
+
+- A human lease rebinds when the same native connection that held it (boot, peer process, frontend and connection id) presents the profile password or the stored receipt proof, valid for the current sign-in generation and originating OS login. The lease keeps its session id and original deadlines and is not renewed. A receipt is minted only under the post-publication mint rule. The same proof on any other connection is an ordinary sign-in under a new id.
+- Attended children present no proof. When their parent rebinds, each child whose own native connection is still open is re-admitted under its existing id, bounded by the parent's scope and remaining expiry. A child whose connection closed retires, and children of a parent that does not rebind retire with it.
+- An API-key lease rebinds only when its client presents the API key again on the same native connection within the window. The grant's validity, scope and unattended/OS-lock policy are rechecked at that point. The runtime keeps no copy of the key.
+- The desktop presents its stored receipt proof automatically, once per loss, when it observes its own human lease suspended. If the receipt is refused, it asks for the password for the rest of the window. The agent service and MCP children never present the receipt; they wait for their parent.
+
+At the end of the window, every lease not rebound retires as `CUSTODY_UNAVAILABLE`. A lease whose own deadline passes during the window retires at that deadline. A second loss of the profile's worker within 10 minutes of a previous loss retires every lease of the profile immediately and opens no window. Sign-out, positive OS lock, originating OS logout, revocation and sign-in generation advance apply immediately during a suspension, and nothing rebinds the leases they retire. Rebinding never resumes work that was in flight at the loss; that work stays `UNKNOWN` until reconciled.
 
 Runtime loss invalidates live access leases; a replacement preserves supported durable state and refuses unknown private formats. Current-only schema changes follow the existing no-legacy regime, including zero affected nonterminal operations before breaking operation-contract cutover. They do not silently translate unknown grants or jobs. Bounded resource usage and redacted diagnostics remain runtime obligations. Upgrade orchestration and restart policy belong to the per-user manager in `2026-10-04-runtime-manager-architecture-adr`.
 
