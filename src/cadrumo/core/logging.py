@@ -1428,7 +1428,7 @@ def _reset_stderr_write_guard() -> None:
     _stderr_write_guard = Lock()
 
 
-if hasattr(os, "register_at_fork"):
+if sys.platform != "win32" and hasattr(os, "register_at_fork"):
     os.register_at_fork(after_in_child=_reset_stderr_write_guard)
 
 
