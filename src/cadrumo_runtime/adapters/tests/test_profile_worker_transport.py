@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import time
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import nullcontext
@@ -15,6 +16,7 @@ import pytest
 from cadrumo.application.operations.frontend_requests import OperationObservationRequestV1
 from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
+from cadrumo.tests.log_records import delivered_records
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
@@ -250,6 +252,32 @@ def test_default_control_budget_also_bounds_queued_callers(monkeypatch: pytest.M
         assert not worker.contained and not worker.stopping
         with pytest.raises(ProfileAccessRefusedError):
             worker.status()
+
+
+def test_queued_caller_that_times_out_is_named_without_containing_the_worker(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    worker = _worker(latency=0)
+    monkeypatch.setattr(transport, "_CONTROL_EXCHANGE_SECONDS", 0.03)
+    caplog.set_level(logging.DEBUG, logger=transport.__name__)
+    with ThreadPoolExecutor(max_workers=1) as pool, worker._lock:
+        queued = pool.submit(worker.status)
+        with pytest.raises(RefusalError):
+            queued.result(timeout=2)
+
+    (record,) = [
+        item
+        for item in delivered_records(caplog, transport.__name__)
+        if item.getMessage() == "profile_worker_exchange_queue_timeout"
+    ]
+    assert record.levelno == logging.WARNING
+    fields = vars(record)
+    assert fields["request_type"] == "ProfileWorkerControlRequest"
+    assert fields["request_action"] == "status"
+    assert fields["operation_channel"] is False
+    assert fields["reason"] == RefusalCode.DEADLINE_EXCEEDED.value
+    assert fields["queue_seconds"] >= 0.0 and fields["budget_seconds"] > 0.0
+    assert not worker.contained and not worker.stopping
 
 
 def test_stopped_worker_refusal_does_not_repeat_containment() -> None:

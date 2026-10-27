@@ -87,7 +87,7 @@ class ProfileWorkerTransport(ProfileWorkerNativeLifetime):
         wire_deadline = started + default_seconds if deadline is None else deadline
         queue_seconds = 0.0
         try:
-            _acquire_exchange_lock(lock, wire_deadline)
+            _acquire_exchange_lock(lock, wire_deadline, request, operation=operation)
             try:
                 channel = self._exchange_channel(operation)
                 queue_seconds = time.monotonic() - started
@@ -210,7 +210,8 @@ class ProfileWorkerTransport(ProfileWorkerNativeLifetime):
         request = ProfileWorkerRequest(ProfileWorkerControlRequest(action="activity", request_id=uuid4()))
         started = time.monotonic()
         try:
-            _acquire_exchange_lock(self._lock, deadline)
+            # The heartbeat expects to queue behind a busy channel now and then.
+            _acquire_exchange_lock(self._lock, deadline, request, operation=False, level=logging.DEBUG)
         except RefusalError:
             return None
         queue_seconds = time.monotonic() - started
@@ -286,7 +287,7 @@ class ProfileWorkerTransport(ProfileWorkerNativeLifetime):
         deadline = time.monotonic() + _CONTROL_EXCHANGE_SECONDS
         material = bytearray()
         undispatched = False
-        _acquire_exchange_lock(self._lock, deadline)
+        _acquire_exchange_lock(self._lock, deadline, ProfileWorkerRequest(request), operation=False)
         try:
             channel = self._exchange_channel(False)
             if not self._settle_unanswered_probe(channel, deadline):
@@ -394,16 +395,57 @@ def _raise_worker_refusal(result: ProfileWorkerRefusal) -> NoReturn:
     raise AutomationCustodyError(result.reason, request_faults=result.request_faults)
 
 
-def _acquire_exchange_lock(lock: RLock, deadline: float | None) -> None:
+def _acquire_exchange_lock(
+    lock: RLock,
+    deadline: float | None,
+    request: ProfileWorkerRequest,
+    *,
+    operation: bool,
+    level: int = logging.WARNING,
+) -> None:
     """Refuse an expired queued caller before any frame is sent or custody is retired."""
     if deadline is None:
         lock.acquire()
         return
-    remaining = remaining_budget(deadline)
-    if not lock.acquire(timeout=remaining):
-        raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+    started = time.monotonic()
+    try:
+        remaining = remaining_budget(deadline)
+        if not lock.acquire(timeout=remaining):
+            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+    except RefusalError as error:
+        _log_queue_timeout(request, error, operation=operation, started=started, deadline=deadline, level=level)
+        raise
     try:
         remaining_budget(deadline)
-    except RefusalError:
+    except RefusalError as error:
         lock.release()
+        _log_queue_timeout(request, error, operation=operation, started=started, deadline=deadline, level=level)
         raise
+
+
+def _log_queue_timeout(
+    request: ProfileWorkerRequest,
+    error: RefusalError,
+    *,
+    operation: bool,
+    started: float,
+    deadline: float,
+    level: int,
+) -> None:
+    """Name a caller that gave up waiting for the shared channel; nothing was sent and the worker is kept."""
+    diagnostic_event(
+        _LOGGER,
+        "profile_worker_exchange_queue_timeout",
+        fields={
+            "request_type": type(request.root).__name__,
+            "request_action": request.root.action
+            if isinstance(request.root, ProfileWorkerControlRequest | ProfileWorkerLeaseRequest)
+            else None,
+            "operation_channel": operation,
+            "reason": error.reason.value,
+            "queue_seconds": round(time.monotonic() - started, 3),
+            "budget_seconds": round(max(0.0, deadline - started), 3),
+        },
+        level=level,
+        primary_error=error,
+    )
