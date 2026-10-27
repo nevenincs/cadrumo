@@ -117,11 +117,7 @@ function pillsOf(
     });
   // Not ready with nothing on any movement is the period's own reason:
   // said without a count.
-  else if (
-    ready === false &&
-    counts.toClassify === 0 &&
-    counts.noRate === 0
-  )
+  else if (ready === false && counts.toClassify === 0 && counts.noRate === 0)
     pills.push({
       key: "issues",
       icon: "alert",

@@ -398,8 +398,7 @@ export function readinessSets(
   const listedToClassify = new Set<string>();
   const listedNoRate = new Set<string>();
   for (const issue of found) {
-    if (issue.reason === NO_RATE_REASON)
-      listedNoRate.add(issue.transaction_id);
+    if (issue.reason === NO_RATE_REASON) listedNoRate.add(issue.transaction_id);
     if (issue.reason === TO_CLASSIFY_REASON) {
       listedToClassify.add(issue.transaction_id);
       continue;
