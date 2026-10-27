@@ -96,9 +96,6 @@ const fileName = (path: string) => path.split(/[\\/]/).pop() || path;
 const LOCAL_AI_SETUP = "operator.provision.local_ai";
 /** What the reader check found missing: the program that runs the models. */
 const RUNTIME_INSTALLED = "provisioning.runtime.installed";
-/** What the reader check found short: this computer's memory for the role's
- * model, which no setup supplies. */
-const HARDWARE_FLOOR_MET = "provisioning.hardware_floor.met";
 /** What the reader check found missing for a role the agent resolves no model
  * for: none is chosen, or the one chosen cannot run. The person chooses it in
  * the agent's settings, which no setup replaces. */
@@ -1440,14 +1437,14 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
               role: "vision_transcription",
               model: "reader-vision-medium",
               installed: true,
-              ready: false,
-              failed_condition_id: HARDWARE_FLOOR_MET,
-              // Memory is not something setup supplies, so the check names none.
-              recovery_action_id: null,
+              ready: true,
+              failed_condition_id: null,
             },
       ],
-      extraction_ready: true,
-      document_readiness: "text_layer_only",
+      extraction_ready: !tools.readerUnselected,
+      document_readiness: tools.readerUnselected
+        ? "text_layer_only"
+        : "all_documents",
       text_layer_model_fill_available: true,
     };
   }

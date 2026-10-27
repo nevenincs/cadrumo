@@ -27,7 +27,7 @@ from ..core.model_roles import ModelRole
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.operations import OperationEffect
 from ..core.time.clock import now
-from .local_reader import RoleLane, lane_requirement_bytes, read_role_lanes
+from .local_reader import RoleLane, read_role_lanes
 from .local_reader_contracts import (
     LOCAL_READER_OPERATION_SUBJECT,
     LocalReaderFactV1,
@@ -138,9 +138,10 @@ def _report_model(role: ModelRole, answer: RoleLane | None) -> LocalReaderReport
     if answer.reads_off_host:
         return LocalReaderReportModel(role=role, selected=True, facts={"role": role.value, "reads_off_host": True})
     facts = {"role": role.value, "reads_off_host": False, "selected_model": answer.model}
-    requirement = lane_requirement_bytes(answer)
-    if requirement is not None:
-        facts["size_bytes"] = requirement
+    # The catalogue states 0 for an unknown size, which is no size to report.
+    size = answer.size_bytes
+    if size is not None and size > 0:
+        facts["size_bytes"] = size
     return LocalReaderReportModel(role=role, model=answer.model, selected=True, facts=facts)
 
 

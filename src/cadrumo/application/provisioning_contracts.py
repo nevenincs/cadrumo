@@ -39,7 +39,6 @@ class ProvisioningPreconditionCondition(StrEnum):
     RUNTIME_INSTALLED = "provisioning.runtime.installed"
     """The components role reports the local AI program set up and usable."""
     ROLE_MODEL_INSTALLED = "provisioning.role_model.installed"
-    HARDWARE_FLOOR_MET = "provisioning.hardware_floor.met"
     SELECTED_MODEL_AVAILABLE = "provisioning.selected_model.available"
     LOAD_CAPACITY_AVAILABLE = "provisioning.load_capacity.available"
     """The agent loaded the selected model with the memory this computer had free."""

@@ -45,7 +45,6 @@ __all__ = [
     "DependencyStatus",
     "HardwareProfile",
     "SystemMemoryReading",
-    "below_capacity_floor",
     "probe_hardware_profile",
     "probe_local_inference_hardware",
     "probe_optional_extra",
@@ -81,9 +80,8 @@ class SystemMemoryReading(BaseModel):
     """Measured total and free physical system memory, either of which may be unreadable.
 
     Both figures are carried because they answer different questions:
-    ``total_bytes`` is what this computer can hold at all, the figure the
-    capacity floor judges, and ``free_bytes`` is what was free when a
-    diagnostic row measured it.
+    ``total_bytes`` is what this computer has installed, and ``free_bytes`` is
+    what was free when a diagnostic row measured it. Neither judges a model.
 
     ``None`` means "not measured", never "zero". See
     :class:`~core.hardware.AcceleratorKind` for the same distinction on the device side.
@@ -247,10 +245,10 @@ class HardwareProfile(BaseModel):
     """The measured local-inference capacity of this machine.
 
     Carries totals AND free amounts on both the system-memory and the device
-    axis. Totals say what this computer can hold at all, which the capacity
-    floor judges; free amounts are reported as they were at the measurement.
-    Whether a model fits the memory free when it loads is the agent's answer at
-    the load, never this profile's.
+    axis, reported as they were at the measurement. Whether this computer can
+    hold a model is the native setup's judgement, and whether a model fits the
+    memory free when it loads is the agent's answer at the load; this profile
+    judges neither.
 
     Every figure is independently optional. ``None`` means the measurement was
     not obtainable, and a diagnostic row reports it as **unverified** and stays
@@ -389,31 +387,6 @@ def probe_hardware_profile(
         memory=memory if memory is not None else read_system_memory(),
         accelerator=accelerator if accelerator is not None else read_accelerator(),
     )
-
-
-def below_capacity_floor(profile: HardwareProfile, requirement_bytes: int) -> bool:
-    """Return whether this computer cannot hold a model needing ``requirement_bytes`` at all.
-
-    A capacity judgement, never a momentary one: the installed system memory
-    and the largest NVIDIA card's installed memory are compared against the
-    model's floor, the same rule the native component engine applies to a
-    role's quick status. Free memory is not consulted, because a model already
-    resident, or another program's load, lowers it for a while without changing
-    what the computer can hold; whether a load fits the memory free is the
-    agent's answer at the load. A computer whose total memory was not measured is
-    never held back, and neither is one whose accelerator could not be read,
-    because an unread value must not invent a shortfall.
-    """
-    total = profile.memory.total_bytes
-    if total is None or total >= requirement_bytes:
-        return False
-    kind = profile.accelerator.kind
-    if kind is AcceleratorKind.NONE:
-        return True
-    if kind is not AcceleratorKind.NVIDIA_CUDA:
-        return False
-    cards = [device.total_vram_bytes for device in profile.accelerator.devices if device.total_vram_bytes is not None]
-    return bool(cards) and max(cards) < requirement_bytes
 
 
 def probe_local_inference_hardware(profile: HardwareProfile | None = None) -> DependencyStatus:

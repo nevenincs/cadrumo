@@ -10,13 +10,12 @@ whether the program is set up and which version it is, and the lane carries
 whether the program's server holds the selected model, as the agent's live
 catalogue states it.
 
-An on-host role is judged in a fixed order: a model this computer's installed
-memory cannot hold refuses first and offers nothing, because setup cannot
-change it; then a program the status row does not report usable refuses with
-the row's own recovery; then a model the server does not hold refuses with the
-local AI setup; then a model whose presence nobody stated refuses as unknown,
-never as missing. Free memory is never judged here: whether a load fits at that
-moment is the agent's answer when it loads the model.
+An on-host role is judged in a fixed order: a program the status row does not
+report usable refuses with the row's own recovery; then a model the server does
+not hold refuses with the local AI setup; then a model whose presence nobody
+stated refuses as unknown, never as missing. No judgement is made here about
+this computer's hardware or memory: the native setup owns the hardware floor,
+and whether a model loads is the agent's answer when it loads it.
 """
 
 from __future__ import annotations
@@ -35,7 +34,7 @@ from ..core.models import STRICT_FROZEN_CONFIG
 from .dependency_contracts import DependencyState, DependencyStatusRow
 from .operations.model_runs import current_model_run_port
 from .operator_actions.models import PreconditionVerdict
-from .provisioning import DependencyStatus, HardwareProfile, below_capacity_floor, probe_hardware_profile
+from .provisioning import DependencyStatus
 from .provisioning_contracts import (
     LOCAL_AI_PROVISION_ACTION_ID,
     ProvisioningFactValue,
@@ -56,7 +55,6 @@ __all__ = [
     "ProgramRow",
     "RoleLane",
     "judge_local_ai_program",
-    "lane_requirement_bytes",
     "probe_local_ai_program",
     "read_local_reader_status",
     "read_role_lanes",
@@ -187,8 +185,8 @@ class LocalReaderRoleStatus(BaseModel):
     ready: bool
     failed_condition_id: str | None = None
     #: The operator action the judgement named for the failed condition, or
-    #: ``None`` when it named none -- a role with no selection, a model this
-    #: computer cannot hold, or a ready role.
+    #: ``None`` when it named none -- a role with no selection, a program whose
+    #: state is unknown, or a ready role.
     recovery_action_id: str | None = None
 
 
@@ -232,16 +230,6 @@ class _Judgement:
     verdict: PreconditionVerdict | None = None
 
 
-def lane_requirement_bytes(lane: ModelRunLane) -> int | None:
-    """Return the memory an on-host lane's model needs, or ``None`` when its catalogue entry states none.
-
-    The catalogue states ``0`` for an unknown size; neither it nor an absent
-    size is a requirement, and inventing one would refuse on evidence nobody
-    has.
-    """
-    return lane.size_bytes or None
-
-
 def _refusal_judgement(role: ModelRole, refusal: ModelRunRefusal) -> _Judgement:
     facts: dict[str, ProvisioningFactValue] = {
         "role": role.value,
@@ -256,24 +244,9 @@ def _refusal_judgement(role: ModelRole, refusal: ModelRunRefusal) -> _Judgement:
     )
 
 
-def _on_host_judgement(role: ModelRole, lane: ModelRunLane, row: ProgramRow, hardware: HardwareProfile) -> _Judgement:
-    """Judge an on-host lane in the fixed order: capacity, program, then the model itself."""
+def _on_host_judgement(role: ModelRole, lane: ModelRunLane, row: ProgramRow) -> _Judgement:
+    """Judge an on-host lane in the fixed order: the program, then the model itself."""
     model = lane.model
-    requirement = lane_requirement_bytes(lane)
-    if requirement is not None and below_capacity_floor(hardware, requirement):
-        floor_facts: dict[str, ProvisioningFactValue] = {
-            "role": role.value,
-            "model": model,
-            "required_bytes": requirement,
-        }
-        if hardware.memory.total_bytes is not None:
-            floor_facts["total_memory_bytes"] = hardware.memory.total_bytes
-        return _Judgement(
-            ready=False,
-            verdict=provisioning_no_recovery_verdict(
-                ProvisioningPreconditionCondition.HARDWARE_FLOOR_MET, facts=floor_facts
-            ),
-        )
     if row is None or row.state not in _USABLE_STATES:
         return _Judgement(
             ready=False, verdict=_program_verdict(row, {"role": role.value, "local_ai_state": _state_fact(row)})
@@ -298,14 +271,12 @@ def _on_host_judgement(role: ModelRole, lane: ModelRunLane, row: ProgramRow, har
     return _Judgement(ready=True)
 
 
-def _role_status(
-    role: ModelRole, answer: RoleLane, row: ProgramRow, hardware: HardwareProfile
-) -> LocalReaderRoleStatus:
+def _role_status(role: ModelRole, answer: RoleLane, row: ProgramRow) -> LocalReaderRoleStatus:
     if isinstance(answer, ModelRunRefusal):
         return _status_row(role, _refusal_judgement(role, answer))
     if answer.reads_off_host:
         return LocalReaderRoleStatus(role=role, ready=True)
-    judgement = _on_host_judgement(role, answer, row, hardware)
+    judgement = _on_host_judgement(role, answer, row)
     return _status_row(role, judgement, model=answer.model, installed=answer.installed)
 
 
@@ -341,22 +312,19 @@ def read_local_reader_status(
     program: ProgramRow,
     *,
     roles: Iterable[ModelRole] | None = None,
-    hardware: HardwareProfile | None = None,
 ) -> LocalReaderStatus:
     """Judge the program's row and every role's selected lane into one projection.
 
     ``lanes`` is what :func:`read_role_lanes` resolved for each role and
     ``program`` the components role's status row for the local AI. Reads
-    nothing from the local AI: nothing is started, pulled or loaded.
-    ``hardware`` is this computer's measured hardware, measured here when
-    omitted.
+    nothing from the local AI or from this computer: nothing is started,
+    pulled, loaded or measured.
     """
-    measured = hardware if hardware is not None else probe_hardware_profile()
-    role_rows = tuple(_role_status(role, _answer(lanes, role), program, measured) for role in _selected_roles(roles))
+    role_rows = tuple(_role_status(role, _answer(lanes, role), program) for role in _selected_roles(roles))
     by_role = {row.role: row for row in role_rows}
     for role in EXTRACTION_READER_ROLES:
         if role not in by_role:
-            by_role[role] = _role_status(role, _answer(lanes, role), program, measured)
+            by_role[role] = _role_status(role, _answer(lanes, role), program)
     extraction_ready = all(by_role[role].ready for role in EXTRACTION_READER_ROLES)
     return LocalReaderStatus(
         program=judge_local_ai_program(program),

@@ -296,7 +296,6 @@ test("a role asks for a model only when it has none to run", () => {
   for (const condition of [
     "provisioning.role_model.installed",
     "provisioning.runtime.installed",
-    "provisioning.hardware_floor.met",
   ])
     expect(roleNeedsModel({ ...held, failed_condition_id: condition })).toBe(
       false,
