@@ -97,11 +97,6 @@ _INFERENCE_SURFACES: Final[tuple[tuple[str, str, str], ...]] = (
         "rasterise_pdf_pages_to_base64_png(b'%PDF-1.4\\n')",
     ),
     (
-        "cadrumo.adapters.outbound.llm.evidence_draft_text",
-        "extract_invoice_fields_from_text",
-        "extract_invoice_fields_from_text(_TRANSCRIPTION, operation=None)",
-    ),
-    (
         "cadrumo.adapters.outbound.llm.vision_classifier",
         "VisionLLMClassifier",
         "VisionLLMClassifier(spec=None)",

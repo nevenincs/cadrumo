@@ -18,7 +18,7 @@ earning the grounding the text lane earned for free.
 **What it does now.** It emits a
 :class:`~application.ledger.document_transcription.DocumentTranscription` -- reading-order text with
 printed forms preserved verbatim -- and stops. The semantic stage
-(:func:`~llm.extract_invoice_fields_from_text`) then reads that text in a
+(:class:`~llm.evidence_draft_text.TextInvoiceFieldExtractor`) then reads that text in a
 SEPARATE call, and the anchor check runs against the transcription this module
 produced. Two readers, two calls, one external check: exactly the shape the text
 lane already had, now reachable for a document that has no text layer at all.
@@ -46,7 +46,7 @@ See Also:
         The typed stage-one artefact this module produces.
     :func:`~application.ledger.evidence_textlayer.transcribe_text_layer`
         The deterministic sibling for a document that HAS a text layer.
-    :func:`~llm.extract_invoice_fields_from_text`
+    :class:`~llm.evidence_draft_text.TextInvoiceFieldExtractor`
         The stage-two semantic reader that consumes what this produces.
 """
 

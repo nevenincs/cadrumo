@@ -45,7 +45,7 @@ from ..consent import (
     mint_evidence_consent_token,
 )
 from ..errors import LLMConsentError
-from ..evidence_draft_text import TextInvoiceFieldExtractor, extract_invoice_fields_from_text
+from ..evidence_draft_text import TextInvoiceFieldExtractor
 from ..models import LLMRequest
 from .model_run_support import serving_agent
 
@@ -197,17 +197,18 @@ def test_the_text_reader_cannot_reach_around_the_gate(tmp_path: Path, *, operati
     assert bodies.qsize() == 0
 
 
-def test_the_router_wrapper_sends_nothing_off_host_without_consent(
+def test_the_default_text_reader_sends_nothing_off_host_without_consent(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """The wrapper the evidence router calls carries no consent, so an off-host lane refuses it.
+    """The default reader carries no consent, so an off-host lane refuses it.
 
     Observed at the service rather than read off the source: what keeps the
-    document on the host is the dispatch-point refusal, whatever the wrapper's
-    signature says.
+    document on the host is the dispatch-point refusal.
     """
     with _serve_agent() as bodies, pytest.raises(LLMConsentError):
-        extract_invoice_fields_from_text(_transcription(), operation=operation, settings=_settings(tmp_path))
+        TextInvoiceFieldExtractor(operation=operation, settings=_settings(tmp_path)).extract(
+            transcription=_transcription()
+        )
 
     assert bodies.qsize() == 0
 

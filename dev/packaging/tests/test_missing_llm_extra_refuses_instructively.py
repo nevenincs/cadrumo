@@ -60,7 +60,6 @@ _MARKER = "SURFACE_OUTCOMES:"
 # guard is not represented here.
 _GUARDED_SURFACES: tuple[tuple[str, str], ...] = (
     ("rasterise_pdf_pages_to_base64_png", "rasterise_pdf_pages_to_base64_png(b'%PDF-1.4\\n')"),
-    ("extract_invoice_fields_from_text", "extract_invoice_fields_from_text(_TRANSCRIPTION, operation=_OPERATION)"),
     ("VisionDocumentTranscriber", "VisionDocumentTranscriber()"),
     ("TextInvoiceFieldExtractor", "TextInvoiceFieldExtractor(operation=_OPERATION)"),
     ("TextLLMClassifier", "TextLLMClassifier(spec=None)"),
@@ -74,7 +73,6 @@ _GUARDED_SURFACES: tuple[tuple[str, str], ...] = (
 #: Defining module for each guarded surface exercised by the installed probe.
 _DEFINING_MODULES: dict[str, str] = {
     "rasterise_pdf_pages_to_base64_png": "cadrumo.adapters.outbound.llm.pdf_rasterisation",
-    "extract_invoice_fields_from_text": "cadrumo.adapters.outbound.llm.evidence_draft_text",
     "VisionDocumentTranscriber": "cadrumo.adapters.outbound.llm.evidence_draft_vision",
     "TextInvoiceFieldExtractor": "cadrumo.adapters.outbound.llm.evidence_draft_text",
     "TextLLMClassifier": "cadrumo.adapters.outbound.llm.text_classifier",

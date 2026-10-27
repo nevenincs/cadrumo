@@ -82,7 +82,6 @@ __all__ = [
     "TextInvoiceFieldExtractor",
     "build_text_field_extraction_prompt",
     "default_extraction_authority_values",
-    "extract_invoice_fields_from_text",
 ]
 
 
@@ -314,37 +313,3 @@ class TextInvoiceFieldExtractor:
         exists to answer.
         """
         return render_invoice_extraction_prompt(values=self._authority_values, fields=self._fields)
-
-
-def extract_invoice_fields_from_text(
-    transcription: DocumentTranscription,
-    *,
-    operation: PinnedAuthorityOperation,
-    settings: Settings | None = None,
-    authority_values: InvoiceExtractionAuthorityValues | None = None,
-) -> InvoiceDraft:
-    """Convenience wrapper: build a :class:`TextInvoiceFieldExtractor` and extract.
-
-    The read carries no consent token, so it runs only on a text extraction
-    lane that stays on this computer; on a lane that reads off the host the
-    client's evidence-consent check refuses it before anything is sent.
-
-    Args:
-        transcription: The acquisition-stage transcription to read.
-        operation: The caller-owned generation-pinned authority operation used
-            for authority resolution and field grounding.
-        settings: Optional resolved settings override.
-        authority_values: Application-resolved regulatory values for the prompt.
-            The routing caller resolves these ONCE per document and passes them
-            here, so a document read through several stages is read under one
-            set of rates rather than one per prompt construction.
-
-    Returns:
-        :class:`InvoiceDraft`: The grounded, best-effort extracted fields.
-    """
-    extractor = TextInvoiceFieldExtractor(
-        settings=settings,
-        operation=operation,
-        authority_values=authority_values,
-    )
-    return extractor.extract(transcription=transcription)

@@ -33,14 +33,4 @@ SourceUrl = Annotated[
 ]
 """The URL a capture came from. Present by definition -- a capture has a source."""
 
-OptionalSourceUrl = Annotated[
-    str,
-    StringConstraints(max_length=SOURCE_URL_MAX_LENGTH),
-]
-"""The same bound where the surface may legitimately have no URL to show.
-
-Separate rather than ``SourceUrl | None`` because the projection spells an absent
-value as the empty string on the wire, and a minimum of one would refuse it.
-"""
-
-__all__ = ["SOURCE_URL_MAX_LENGTH", "OptionalSourceUrl", "SourceUrl"]
+__all__ = ["SOURCE_URL_MAX_LENGTH", "SourceUrl"]

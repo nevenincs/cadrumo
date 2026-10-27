@@ -21,7 +21,7 @@ stored MIME type:
   :func:`~application.ledger.invoice_label_reader.read_invoice_fields_by_labels`.
   When those rules read every required field no model runs; otherwise the
   fields they could not read come from
-  :func:`~llm.extract_invoice_fields_from_text`. An unreachable model, or a
+  :class:`~llm.evidence_draft_text.TextInvoiceFieldExtractor`. An unreachable model, or a
   fill the agent refuses to load for lack of memory, leaves the rule reading
   standing, and the draft records why so the operator is told. Either way the draft is grounded
   against that same transcription by

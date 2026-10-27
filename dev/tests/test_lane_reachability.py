@@ -158,6 +158,7 @@ _CANONICAL_POPULATION_RECIPES: frozenset[str] = frozenset(
         "test-powershell-literal",
         "test-calculation-summary-pdf",
         "test-components-role",
+        "test-components-role-windows",
         # CTest's package-stage process assertions have their own opt-in lane;
         # ordinary native verification is a distinct population with no pytest tests.
         "test-native-live",
@@ -221,6 +222,7 @@ def test_native_package_assertions_have_exactly_one_live_owner() -> None:
         "dev/runtime_lifecycle/tests/agent_service/test_shared_session.py::test_administration_reuses_the_live_service",
         "dev/runtime_lifecycle/tests/agent_service/test_shared_session.py::test_cli_reads_the_same_profile_after_shared_setup",
         "dev/runtime_lifecycle/tests/test_clients.py::test_packaged_client_authentication_and_profile_scope",
+        "dev/runtime_lifecycle/tests/test_clients.py::test_packaged_password_rotation_retires_old_authority_and_resumes_new_receipt",
         "dev/runtime_lifecycle/tests/test_lifecycle.py::test_login_logout_profile_switch_and_stale_receipt",
         "dev/runtime_lifecycle/tests/test_lifecycle.py::test_exact_runtime_crash_manager_recovery_and_operation_state",
         "dev/runtime_lifecycle/tests/test_lifecycle.py::test_wrong_password_never_admits_private_work",

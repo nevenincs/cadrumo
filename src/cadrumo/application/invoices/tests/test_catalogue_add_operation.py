@@ -336,6 +336,10 @@ class _Context:
         self.operands = _Operands(self.cancellation, self.events)
 
     @property
+    def effect(self) -> OperationEffect:
+        return self.events.effects[-1] if self.events.effects else OperationEffect.NONE
+
+    @property
     def revision(self) -> int:
         return 1
 

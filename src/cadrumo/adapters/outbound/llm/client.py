@@ -511,8 +511,7 @@ class LLMClient:
         The confidentiality boundary, enforced at the client's single dispatch
         point for the reason the image boundary is: which requests may leave the
         host is a property of the DISPATCH, never of each caller remembering to
-        pin a provider: ``extract_invoice_fields_from_text`` is exported with
-        none, and every reader reaches the same line as every other request.
+        pin a provider: every reader reaches the same line as every other request.
 
         **Ordered before the cache read and before adapter construction, both
         deliberately.** Before the cache read, so priming an entry under consent

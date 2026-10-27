@@ -1325,7 +1325,7 @@ test-windows:
         }
     }
     $env:CADRUMO_TEST_MSI_ADAPTER = $inputs.adapter
-    uv run --no-sync pytest -v -n0 -m "windows_only and not os_keychain and not native_package" dev/packaging/tests dev/packaging/native/tests dev/desktop_agent_live/tests dev/registry/tests/test_authority_generation_publication.py dev/mcp_eval/tests dev/tests/test_native_build_recipes.py src/cadrumo/core/tests/test_atomic_write.py src/cadrumo/core/tests/test_log_file_handler.py src/cadrumo_mcp/mcp/tests src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/entrypoints src/cadrumo_client/transport/tests/test_channel_readiness_wait.py src/cadrumo_runtime src/cadrumo_agent_service dev/runtime_lifecycle/tests
+    uv run --no-sync pytest -v -n0 -m "windows_only and not os_keychain and not native_package" --ignore=dev/runtime_lifecycle/tests/test_components_review.py --ignore=dev/runtime_lifecycle/tests/test_components_human_claim.py dev/packaging/tests dev/packaging/native/tests dev/desktop_agent_live/tests dev/registry/tests/test_authority_generation_publication.py dev/mcp_eval/tests dev/tests/test_native_build_recipes.py src/cadrumo/core/tests/test_atomic_write.py src/cadrumo/core/tests/test_log_file_handler.py src/cadrumo_mcp/mcp/tests src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/entrypoints src/cadrumo_client/transport/tests src/cadrumo_runtime src/cadrumo_agent_service dev/runtime_lifecycle/tests
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 [doc('Run native macOS and Linux peer, worker containment, and custody tests on their owning host.')]
@@ -1421,6 +1421,12 @@ test-powershell-literal:
 [group('test')]
 test-components-role $CADRUMO_DEVELOPMENT_ROLE_IMAGE:
     uv run --no-sync pytest -v -n0 -m "integration and external_tool" src/cadrumo/adapters/outbound/components/tests/test_client_drives_the_real_role.py src/cadrumo/entrypoints/cli/tests/test_provision_drives_the_real_role.py src/cadrumo_mcp/mcp/tests/test_setup_tools_drive_the_real_role.py dev/runtime_lifecycle/tests/test_components_surface_conformance.py dev/smoke/tests/test_acquisition_lane.py
+
+[windows]
+[doc('Verify component review authority through the native Windows runtime using a built Cadrumo binary.')]
+[group('test')]
+test-components-role-windows $CADRUMO_DEVELOPMENT_ROLE_IMAGE:
+    uv run --no-sync pytest -v -n0 -m "integration and external_tool and windows_only" dev/runtime_lifecycle/tests/test_components_review.py dev/runtime_lifecycle/tests/test_components_human_claim.py
 
 # Run the locale orthography tests. These carry `external_tool` because they
 # read the pinned Hunspell dictionaries that `setup-locale-spelling` installs
