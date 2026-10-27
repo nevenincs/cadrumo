@@ -5,7 +5,7 @@ tags:
 date: '2026-10-27'
 modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:1a0c596447470f28fb8e67c8f8918da9ad935c5b686d110c53ba3ac3ff37bb98'
+body_hash: 'sha256:a7a8d8b8e9c599b55776dbab6bb838669e09f251e2fd9bbfe8658b0a9924e201'
 related:
   - "[[2026-10-27-rust-component-provisioning-human-review-authority-reference]]"
   - "[[2026-10-26-rust-component-provisioning-registered-operations-adr]]"
@@ -35,7 +35,7 @@ The process-local broker already owns exact checkpoint, actor and single-use bea
 
 Binding commitments:
 
-1. Only the pending REVIEW of `config.provision.setup` is claimable. No other definition gains a claim, and general original-submitter response guards remain unchanged. MCP may submit, start and observe but may never claim, inspect response authority, APPLY or REJECT this setup review, including through its original submission capability.
+1. Only the pending REVIEW of `config.provision.setup` is claimable. Every human responder, including an original human submitter, explicitly claims that current review before inspecting response authority or answering it. This gives setup one verified response and attribution path. No other definition gains a claim, and general original-submitter response guards remain unchanged. MCP may submit, start and observe but may never claim, inspect response authority, APPLY or REJECT this setup review, including through its original submission capability.
 2. An eligible claimant holds a current authenticated HUMAN session on an admitted person CLI, TUI or desktop frontend, with the existing native peer/person checks and current REVIEW/RESPOND access for the exact same active profile. API-key sessions, frontend strings, invocation origin, operation receipts and observed references are not proof. Eligibility is any such authorized human session, not just an attended MCP parent.
 3. The original invocation admission and execution lease must remain live. Claim and response recheck runtime boot, exact profile/custody binding, authority generation, claimant connection/session, operation identity, interaction, revision, current checkpoint and reviewed proposal digest. The claim also checks the digest of the canonical review document displayed to the person against a fresh runtime resolution. Observation never issues or restores authority.
 4. Under the existing authority fences and broker lock, an explicit claim assigns the retained process-local bearer to that exact human connection/session and current checkpoint. No bearer, transferable capability or secret crosses IPC. The runtime stores the claimant proof separately from the invocation binding; it must not relabel an MCP submission as human.

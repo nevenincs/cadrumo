@@ -5,40 +5,14 @@ tags:
 date: '2026-10-26'
 modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:1912de56a867f8d5c419eef48779c2449250541c92a6fe5e37cbf8192fbbd24d'
+body_hash: 'sha256:248256ef8a1ea9c8d1dd8d1a4364ae3f130e53f17fd807481b95549f1368a21f'
 related:
   - "[[2026-10-26-rust-component-provisioning-plan]]"
 ---
 
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
-
 # `rust-component-provisioning` ledger
 
 ## Changes
-
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 
 - `S01` `M` `.vault/adr/2026-08-11-tui-architecture-adr.md`
 - `S01` `M` `.vault/adr/2026-10-26-rust-component-provisioning-registered-operations-adr.md`
@@ -98,8 +72,49 @@ related:
 - `S01` `verify:` `just check-import-boundaries` -> `pass`
 - `S01` `verify:` `just generate-operation-contract-manifest` -> `pass`
 - `S01` `verify:` `just generate-import-load-targets` -> `pass`
+- `S01` `M` `src/cadrumo/application/operations/interactions.py`
+- `S01` `M` `src/cadrumo/application/operations/_projection_authority.py`
+- `S01` `M` `src/cadrumo/application/operations/composition.py`
+- `S01` `M` `src/cadrumo/application/operations/supervisor.py`
+- `S01` `A` `src/cadrumo/application/operations/tests/test_human_review_claim.py`
+- `S01` `M` `src/cadrumo_client/contracts/access_refusals.py`
+- `S01` `M` `src/cadrumo_client/contracts/operation_access.py`
+- `S01` `A` `src/cadrumo_client/contracts/tests/test_review_claim.py`
+- `S01` `M` `src/cadrumo_client/transport/operation_transport.py`
+- `S01` `M` `src/cadrumo_runtime/contracts/profile_worker.py`
+- `S01` `M` `src/cadrumo_runtime/contracts/worker_authorization.py`
+- `S01` `M` `src/cadrumo_runtime/adapters/profile_worker_operation_client.py`
+- `S01` `M` `src/cadrumo_runtime/adapters/server_connection_handling.py`
+- `S01` `M` `src/cadrumo_runtime/adapters/worker_authorization.py`
+- `S01` `M` `src/cadrumo_runtime/adapters/worker_authorization_lease.py`
+- `S01` `A` `src/cadrumo_runtime/adapters/tests/test_human_review_permit_fence.py`
+- `S01` `M` `src/cadrumo_runtime/host/profile_connection_operations.py`
+- `S01` `M` `src/cadrumo_runtime/host/profile_host.py`
+- `S01` `M` `src/cadrumo_runtime/host/operation_host.py`
+- `S01` `M` `src/cadrumo_runtime/host/operation_authority.py`
+- `S01` `M` `src/cadrumo_runtime/host/worker_operation_requests.py`
+- `S01` `M` `src/cadrumo_runtime/host/worker_service.py`
+- `S01` `A` `src/cadrumo_runtime/host/tests/test_review_claim_admission.py`
+- `S01` `M` `src/cadrumo_runtime/host/tests/test_worker_exit_cleanup.py`
+- `S01` `A` `dev/runtime_lifecycle/tests/test_components_human_claim.py`
+- `S01` `M` `src/cadrumo/application/components_operations.py`
+- `S01` `M` `src/cadrumo/entrypoints/tests/test_components_operations.py`
+- `S01` `M` `dev/runtime_lifecycle/tests/test_components_review.py`
+- `S01` `M` `.vault/adr/2026-10-27-rust-component-provisioning-human-review-authority-adr.md`
+- `S01` `M` `.vault/reference/2026-10-27-rust-component-provisioning-human-review-authority-reference.md`
+- `S01` `verify:` `uv run --no-sync pytest -v -n0 -m "unit or integration" dev/runtime_lifecycle/tests/test_components_human_claim.py src/cadrumo_runtime/host/tests/test_review_claim_admission.py src/cadrumo/application/operations/tests/test_human_review_claim.py src/cadrumo_client/contracts/tests/test_review_claim.py src/cadrumo_runtime/host/tests/test_response_scope.py --timeout=120` -> `pass`
+- `S01` `verify:` `uv run --no-sync pytest -v -n0 -m unit src/cadrumo_runtime/adapters/tests/test_human_review_permit_fence.py src/cadrumo_runtime/host/tests/test_worker_exit_cleanup.py --timeout=120` -> `pass`
+- `S01` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tests/test_components_operations.py src/cadrumo/adapters/outbound/components/tests/test_client.py -n 0 -q -m "integration or unit" -x` -> `pass`
+- `S01` `verify:` `just check-types` -> `pass`
+- `S01` `verify:` `just check-style` -> `pass`
+- `S01` `verify:` `just check-format` -> `pass`
+- `S01` `verify:` `just check-operation-contract-manifest` -> `pass`
+- `S01` `verify:` `just check-import-boundaries` -> `pass`
+- `S01` `by:` `vaultspec-code-reviewer (Terra 6.1 xhigh)`
 
 ## Notes
 
 - `S01` Partial backend checkpoint 8679cc2016 passed Terra 6.1 xhigh review; S01 remains open for accepted human-claim authority and its verification. The 47-case log is 20261027T091239.155395Z-pytest-48124-16923e78; relocated eight-case log is 20261027T090900.625958Z-pytest-66480-918978c5.
 - `S01` Configured import gate passed its unchanged source snapshot before the final retained-cleanup correction; affected-file type/lint and lifecycle tests passed after that correction. These checks cover the checkpoint, not subsequent human-claim work. Existing cached supervisor cleanup failure remains nonterminal UNKNOWN after canonical resource release; no automatic settlement claim.
+- `S01` S01 backend ec51298ef8 passed integrated review with no unresolved high finding. Owner accepted guarded human claim A; all setup responders explicitly claim. Original MCP invocation remains unchanged. Fresh authority25, component/client50 and permit/expiry50 focused cases passed; synchronized permit race uses explicit in-memory admission/I/O ports plus production permit exchange, not an actual native-session race. No new API-key-origin end-to-end claim case; parent key refusal plus existing native key admission/response-scope evidence is the explicit coverage limit.
+- `S01` Final configured types/style/format/manifest/import gates passed on frozen shared-worktree source. Import log 20261027T101035.705132Z-check-import-boundaries-55844-3d5218e6: stable snapshot74e097d3073ae736fec2ee696f33cf70318896d7ec6159411e77fda79e92368c,4948/4948 modules loaded,zero hard findings/debt. ec51298ef8 isolates feature-only hunks in three shared worker files using a reviewed private index and explicit commit pathspec; foreign async/executor/transport work remains uncommitted and preserved. S02,S03,S04 follow in parallel; S05 and plan-close review remain.
