@@ -2670,8 +2670,6 @@ cli:
       check_status: 'Consulta l''estat dels components: {command}'
       complete: Cadrumo està preparat.
       fix: 'Per solucionar-ho, executa: %{command}'
-      following: '%{name}: una altra preparació ja ho està preparant, així que aquesta
-        la segueix.'
       hardware_limited: Aquest ordinador no té prou memòria per a la IA local.
       help: Comprova el que Cadrumo necessita en aquest ordinador i prepara el navegador
         per al web de l'Agència Tributària. La IA local, amb el seu programa i els
@@ -2738,13 +2736,11 @@ cli:
         plan: planificant
         preflight: comprovant la connexió
         verify: comprovant que funciona
-      stopping: S'està aturant la preparació.
       verify:
         help: Comprova a fons un component, o tots si no n'indiques cap. No baixa
           res.
         item_help: 'Component que cal comprovar: browser o local_ai. Per defecte,
           tots.'
-      waiting_for_program: '%{name}: s''està esperant que s''iniciï el programa'
       yes_help: Aprova el pla que mostra l'ordre, sense preguntar.
     repair:
       connectivity_help: Comprovar connectivitat del navegador i la Seu AEAT
@@ -3962,6 +3958,8 @@ cli:
       el perfil o torna a executar amb l'anul·lació de perfil incomplet.
     verbose_help: Mostrar detalls i la següent acció quan existeixi
     warning:
+      aeat_evidence_conflict: Els registres de l'AEAT no coincideixen sobre una declaració
+        presentada
       applicability_evidence_disagreement: La teva resposta al perfil i les teves
         factures registrades no coincideixen sobre si aquestes obligacions s'apliquen;
         les files continuen visibles fins que corregeixis una de les dues.
@@ -3976,6 +3974,8 @@ cli:
         o serveis entre països de la UE.
       iva_regime_unset: Al teu perfil encara no consta quin règim d’IVA s’aplica a
         la teva activitat.
+      justificante_unverified: No s'ha verificat el justificant de l'AEAT d'una declaració
+        presentada
       m303_simplificado_forfait_unavailable: El Model 303 aplica, però el motor de
         càlcul forfait del règim simplificat encara no està disponible; revisa les
         caselles del règim simplificat abans de presentar.

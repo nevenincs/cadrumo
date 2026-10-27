@@ -7374,7 +7374,6 @@ tui:
       item: Component
       state: Estat
     complete: Cadrumo està preparat.
-    following: '%{name}: s''està seguint una preparació que ja està en marxa…'
     hardware_limited: Aquest ordinador no té prou memòria per a la IA local.
     hint: Retorn executa l'acció de la fila triada. En preparar, es mostra el pla
       i se't pregunta abans de baixar res.
@@ -7382,16 +7381,6 @@ tui:
     intro: 'El que Cadrumo necessita en aquest ordinador: el navegador per al web
       de l''Agència Tributària i la IA local. Tria una fila per executar-ne l''acció.
       La IA local es configura a l''aplicació d''escriptori de Cadrumo.'
-    outcome:
-      busy: Una altra preparació està canviant això ara mateix. Torna-ho a provar
-        quan acabi.
-      cancelled: Has cancel·lat la preparació.
-      completed: La preparació ha acabat.
-      follow_stopped: Has deixat de seguir l'altra preparació. Continua pel seu compte.
-      nothing_to_do: Tot ja està preparat.
-      plan_changed: El pla va canviar després que l'aprovessis, així que no s'ha baixat
-        res. Torna a començar per veure el pla nou.
-      rejected: No s'ha baixat res.
     plan:
       destination: '  Es desa a %{path}'
       entry: '%{name}: %{size} des de %{hosts}'
@@ -7405,10 +7394,8 @@ tui:
     progress: '%{name}: %{step}'
     progress_bytes: '%{name}: baixant %{done} de %{total} (%{percent}%)'
     review:
-      decline: Ara no
       open: Obre la revisió de la instal·lació
       reference: Referència de la instal·lació
-      title: Vols preparar-ho?
     set_up_all: Prepara-ho tot
     sign_in_first: Inicia la sessió per comprovar o instal·lar els components.
     size:
@@ -7421,11 +7408,8 @@ tui:
       plan: planificant
       preflight: comprovant la connexió
       verify: comprovant que funciona
-    stop: Atura
-    stopping: S'està aturant la preparació…
     title: Components
     unavailable: No s’han pogut comprovar els components. Torna-ho a provar.
-    waiting_for_program: '%{name}: s''està esperant que s''iniciï el programa'
     working: Preparant el pla…
 workspace:
   declarations:

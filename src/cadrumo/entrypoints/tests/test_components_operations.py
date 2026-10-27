@@ -33,7 +33,7 @@ from ...adapters.outbound.components.client import (
     launch_components_role,
     run_components_role,
 )
-from ...adapters.outbound.components.protocol import ComponentsCommand, ComponentsResultLine
+from ...adapters.outbound.components.protocol import ComponentsCommand, ComponentsNoticeCode, ComponentsResultLine
 from ...adapters.persistence.operations.journal import OperationJournalRepository
 from ...adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ...adapters.persistence.operations.secure_references import operation_secure_reference_repository
@@ -69,6 +69,8 @@ from ...application.operations.supervisor import OperationSupervisor
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...core.async_cleanup import AsyncResourceCleanupError, async_cleanup_failures
 from ...core.errors.error_codes import resolve_error_message
+from ...core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
+from ...core.i18n.render import lookup_translation
 from ...core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -963,3 +965,10 @@ def test_cancellation_reaches_the_role_and_settles_only_after_its_safe_acknowled
             await owner.shutdown()
 
         asyncio.run(scenario())
+
+
+def test_every_role_notice_relays_a_translated_operation_notice() -> None:
+    assert set(composition._NOTICE_LOCALE_KEYS) == set(ComponentsNoticeCode)
+    for key in composition._NOTICE_LOCALE_KEYS.values():
+        for locale in SUPPORTED_OUTPUT_LANGUAGES:
+            assert lookup_translation(key, locale=locale) is not None, (key, locale)

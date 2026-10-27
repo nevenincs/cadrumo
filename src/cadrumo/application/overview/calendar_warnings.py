@@ -318,13 +318,13 @@ _CENSO_ENROLMENT_PROFILE_KEYS = frozenset(
 )
 
 _CENSO_ENROLMENT_WARNING_CODE = "censo.enrolment_unverified"
-_CENSO_ENROLMENT_WARNING_MESSAGE = "cli.overview.warning.censo_enrolment_unverified"
+_CENSO_ENROLMENT_WARNING_LOCALE_KEY = "cli.overview.warning.censo_enrolment_unverified"
 _CENSO_ENROLMENT_ACTION_ID = "operator.profile.edit"
 _JUSTIFICANTE_UNVERIFIED_WARNING_CODE = "filing.justificante_unverified"
-_JUSTIFICANTE_UNVERIFIED_WARNING_MESSAGE = "cli.overview.warning.justificante_unverified"
+_JUSTIFICANTE_UNVERIFIED_WARNING_LOCALE_KEY = "cli.overview.warning.justificante_unverified"
 _FILED_PULL_ACTION_ID = "operator.live.filed.pull"
 _AEAT_EVIDENCE_CONFLICT_WARNING_CODE = "filing.aeat_evidence_conflict"
-_AEAT_EVIDENCE_CONFLICT_WARNING_MESSAGE = "cli.overview.warning.aeat_evidence_conflict"
+_AEAT_EVIDENCE_CONFLICT_WARNING_LOCALE_KEY = "cli.overview.warning.aeat_evidence_conflict"
 _M303_SIMPLIFICADO_FORFAIT_WARNING_CODE = "iva.regime.m303_simplificado_forfait_unavailable"
 _M303_SIMPLIFICADO_FORFAIT_WARNING_LOCALE_KEY = "cli.overview.warning.m303_simplificado_forfait_unavailable"
 _M303_SIMPLIFICADO_FORFAIT_ACTION_ID = "operator.modelo.describe"
@@ -392,7 +392,7 @@ def _calendar_censo_reconciliation_warnings(
     return (
         CalendarWarning(
             code=_CENSO_ENROLMENT_WARNING_CODE,
-            message=_CENSO_ENROLMENT_WARNING_MESSAGE,
+            message=_CENSO_ENROLMENT_WARNING_LOCALE_KEY,
             fix_action=declare_next_action(_CENSO_ENROLMENT_ACTION_ID),
             affected_modelos=tuple(sorted(affected_modelos)),
         ),
@@ -495,7 +495,7 @@ def _calendar_unverified_justificante_warnings(
     return (
         CalendarWarning(
             code=_JUSTIFICANTE_UNVERIFIED_WARNING_CODE,
-            message=_JUSTIFICANTE_UNVERIFIED_WARNING_MESSAGE,
+            message=_JUSTIFICANTE_UNVERIFIED_WARNING_LOCALE_KEY,
             fix_action=_single_fix_action_or_unscoped_pull(fix_actions),
             affected_modelos=tuple(sorted(affected_modelos)),
         ),
@@ -525,7 +525,7 @@ def _calendar_aeat_evidence_conflict_warnings(
     return (
         CalendarWarning(
             code=_AEAT_EVIDENCE_CONFLICT_WARNING_CODE,
-            message=_AEAT_EVIDENCE_CONFLICT_WARNING_MESSAGE,
+            message=_AEAT_EVIDENCE_CONFLICT_WARNING_LOCALE_KEY,
             fix_action=_single_fix_action_or_unscoped_pull(fix_actions),
             affected_modelos=tuple(sorted(affected_modelos)),
         ),

@@ -41,6 +41,13 @@ from ..core.time.clock import now
 _QUICK_TIMEOUT: Final = 30.0
 _PROGRESS_INTERVAL: Final = 0.25
 _CANCELLATION_POLL: Final = 0.2
+_NOTICE_LOCALE_KEYS: Final[dict[ComponentsNoticeCode, str]] = {
+    ComponentsNoticeCode.RETRYING: "dependencies.setup.retrying",
+    ComponentsNoticeCode.WAITING_FOR_SERVER: "dependencies.setup.waiting_for_server",
+    ComponentsNoticeCode.FOLLOWING: "dependencies.setup.following",
+    ComponentsNoticeCode.CANCEL_REQUESTED: "dependencies.setup.cancel_requested",
+    ComponentsNoticeCode.INPUT_REFUSED: "dependencies.setup.input_refused",
+}
 
 
 def _result(result: ComponentsResultLine) -> ProvisionResult:
@@ -156,7 +163,7 @@ class NativeComponentsOperationPort(ComponentsOperationPort):
                         subject_code=event.subject_code,
                     )
                 else:
-                    await context.events.notice("dependencies.setup." + event.notice_code.value)
+                    await context.events.notice(_NOTICE_LOCALE_KEYS[event.notice_code])
 
         full = command is ProvisionCommand.VERIFY
         request = ComponentsRequest(

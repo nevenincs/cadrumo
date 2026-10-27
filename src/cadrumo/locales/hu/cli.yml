@@ -2660,8 +2660,6 @@ cli:
       check_status: 'Ellenőrizd az összetevők állapotát: {command}'
       complete: A Cadrumo elő van készítve.
       fix: 'A javításhoz futtasd: %{command}'
-      following: '%{name}: egy másik előkészítés már folyamatban van, ez pedig azt
-        követi.'
       hardware_limited: Ennek a számítógépnek nincs elég memóriája a helyi MI-hez.
       help: Ellenőrzi, amire a Cadrumónak szüksége van ezen a számítógépen, és előkészíti
         az adóhivatal webhelyéhez használt böngészőt. A helyi MI-t a programjával
@@ -2726,13 +2724,11 @@ cli:
         plan: tervezés
         preflight: a kapcsolat ellenőrzése
         verify: működés ellenőrzése
-      stopping: Az előkészítés leállítása.
       verify:
         help: Alaposan ellenőriz egy összetevőt, vagy mindet, ha nem adsz meg egyet
           sem. Semmit sem tölt le.
         item_help: 'Az ellenőrzendő összetevő: browser vagy local_ai. Alapértelmezés
           szerint mind.'
-      waiting_for_program: '%{name}: várakozás a program indulására'
       yes_help: Kérdés nélkül jóváhagyja a parancs által megmutatott tervet.
     repair:
       connectivity_help: Böngésző és AEAT Sede kapcsolhatóság ellenőrzése.
@@ -3926,6 +3922,7 @@ cli:
       a profilt, vagy futtasd újra a hiányos profil felülbírálásával.
     verbose_help: Részletek és következő lépés megjelenítése, ha elérhető.
     warning:
+      aeat_evidence_conflict: Az AEAT nyilvántartásai eltérnek egy benyújtott bevallásnál
       applicability_evidence_disagreement: A profilban adott válaszod és a rögzített
         számláid eltérnek abban, hogy ezek a kötelezettségek vonatkoznak-e rád; a
         sorok láthatók maradnak, amíg a kettő közül az egyiket ki nem javítod.
@@ -3940,6 +3937,7 @@ cli:
         értékesítesz-e árut vagy szolgáltatást uniós országok között.
       iva_regime_unset: A profilodban még nem szerepel, hogy tevékenységedre melyik
         áfarendszer vonatkozik.
+      justificante_unverified: Egy benyújtott bevallás AEAT-igazolását még nem ellenőrizték
       m303_simplificado_forfait_unavailable: A Modelo 303 alkalmazandó, de a simplificado
         forfait számítási motor még nem elérhető; beadás előtt ellenőrizd az egyszerűsített
         rezsim rovatait.

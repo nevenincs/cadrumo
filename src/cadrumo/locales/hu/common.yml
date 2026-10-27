@@ -7347,7 +7347,6 @@ tui:
       item: Összetevő
       state: Állapot
     complete: A Cadrumo elő van készítve.
-    following: '%{name}: egy már futó előkészítés követése…'
     hardware_limited: Ennek a számítógépnek nincs elég memóriája a helyi MI-hez.
     hint: Az Enter futtatja a kijelölt sor műveletét. Előkészítéskor megjelenik a
       terv, és a Cadrumo megkérdez, mielőtt bármit letöltene.
@@ -7355,15 +7354,6 @@ tui:
     intro: 'Amire a Cadrumónak szüksége van ezen a számítógépen: az adóhivatal webhelyéhez
       használt böngésző és a helyi MI. Válassz egy sort a műveletének futtatásához.
       A helyi MI-t a Cadrumo asztali alkalmazásában kell beállítani.'
-    outcome:
-      busy: Egy másik előkészítés éppen ezt módosítja. Próbáld újra, ha befejeződött.
-      cancelled: Megszakítottad az előkészítést.
-      completed: Az előkészítés befejeződött.
-      follow_stopped: Abbahagytad a másik előkészítés követését. Az magától folytatódik.
-      nothing_to_do: Már minden elő van készítve.
-      plan_changed: A terv megváltozott, miután jóváhagytad, ezért semmi sem töltődött
-        le. Kezdd újra az új terv megtekintéséhez.
-      rejected: Semmi sem töltődött le.
     plan:
       destination: '  Helye: %{path}'
       entry: '%{name}: %{size}, innen: %{hosts}'
@@ -7377,10 +7367,8 @@ tui:
     progress: '%{name}: %{step}'
     progress_bytes: '%{name}: letöltés, %{done} / %{total} (%{percent}%)'
     review:
-      decline: Most nem
       open: A telepítés áttekintésének megnyitása
       reference: A telepítés hivatkozása
-      title: Előkészíted?
     set_up_all: Mindent előkészít
     sign_in_first: Jelentkezz be az összetevők ellenőrzéséhez vagy telepítéséhez.
     size:
@@ -7393,11 +7381,8 @@ tui:
       plan: tervezés
       preflight: a kapcsolat ellenőrzése
       verify: működés ellenőrzése
-    stop: Leállítás
-    stopping: Az előkészítés leállítása…
     title: Összetevők
     unavailable: Az összetevőket nem sikerült ellenőrizni. Próbáld újra.
-    waiting_for_program: '%{name}: várakozás a program indulására'
     working: A terv készül…
 workspace:
   declarations:

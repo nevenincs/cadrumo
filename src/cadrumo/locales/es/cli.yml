@@ -2692,8 +2692,6 @@ cli:
       check_status: 'Consulta el estado de los componentes: {command}'
       complete: Cadrumo está preparado.
       fix: 'Para solucionarlo, ejecuta: %{command}'
-      following: '%{name}: otra preparación ya lo está preparando, así que esta la
-        sigue.'
       hardware_limited: Este ordenador no tiene memoria suficiente para la IA local.
       help: Comprueba lo que Cadrumo necesita en este ordenador y prepara el navegador
         para la web de la Agencia Tributaria. La IA local, con su programa y sus modelos,
@@ -2760,12 +2758,10 @@ cli:
         plan: planificando
         preflight: comprobando la conexión
         verify: comprobando que funciona
-      stopping: Deteniendo la preparación.
       verify:
         help: Comprueba a fondo un componente, o todos si no indicas ninguno. No descarga
           nada.
         item_help: 'Componente que comprobar: browser o local_ai. Por defecto, todos.'
-      waiting_for_program: '%{name}: esperando a que se inicie el programa'
       yes_help: Aprueba el plan que muestra la orden, sin preguntar.
     repair:
       connectivity_help: Comprobar conectividad del navegador y la Sede AEAT
@@ -3991,6 +3987,8 @@ cli:
       el perfil o vuelve a ejecutar con la anulación de perfil incompleto.
     verbose_help: Mostrar detalles y siguiente acción cuando existan
     warning:
+      aeat_evidence_conflict: Los registros de la AEAT no coinciden sobre una declaración
+        presentada
       applicability_evidence_disagreement: Tu respuesta en el perfil y tus facturas
         registradas no coinciden sobre si estas obligaciones aplican; las filas siguen
         visibles hasta que corrijas una de las dos.
@@ -4005,6 +4003,8 @@ cli:
         o servicios entre países de la UE.
       iva_regime_unset: En tu perfil aún no consta qué régimen de IVA se aplica a
         tu actividad.
+      justificante_unverified: No se ha verificado el justificante de la AEAT de una
+        declaración presentada
       m303_simplificado_forfait_unavailable: El Modelo 303 aplica, pero el motor de
         cálculo forfait del régimen simplificado aún no está disponible; revisa las
         casillas del régimen simplificado antes de presentar.
