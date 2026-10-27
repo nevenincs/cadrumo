@@ -290,6 +290,9 @@ export function loadState(): { prefs: Prefs; layout: Layout } {
       fontSize: pick(p.fontSize, TERMINAL_FONT_SIZES, DEFAULT_PREFS.fontSize),
     },
     layout: {
+      // The Browser page is saved with the rest but never restored: opening it
+      // starts a browser on the profile's session, which a launch must not do
+      // by itself.
       page: pick(
         l.page,
         ["docs", "calendar", "profile", "ledger", "declarations"] as const,

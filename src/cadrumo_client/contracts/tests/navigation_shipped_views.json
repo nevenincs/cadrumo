@@ -25,7 +25,8 @@
     "panel",
     "panel/console",
     "panel/python",
-    "panel/logs"
+    "panel/logs",
+    "browser"
   ],
   "retired": []
 }

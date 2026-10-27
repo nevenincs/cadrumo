@@ -47,6 +47,7 @@ import { AgentColumn, type AgentColumnControl } from "./components/AgentColumn";
 import { NavigationPrompt } from "./components/NavigationPrompt";
 import { AttendanceRequests } from "./components/AttendanceRequests";
 import { ReconnectingNotice } from "./components/ReconnectingNotice";
+import { BrowserPage } from "./components/browser/BrowserPage";
 import { HostRecordList } from "./components/HostRecordList";
 import type { RecordMenuRequest } from "./components/RecordList";
 import {
@@ -402,6 +403,9 @@ export function App({ host }: { host: Host }) {
   // The declarations, or one declaration, were asked for: the page takes
   // focus once it is laid out.
   const wantsDeclarations = useRef(false);
+  const browserPage = useRef<HTMLElement>(null);
+  // The browser was asked for: the page takes focus once it is laid out.
+  const wantsBrowser = useRef(false);
   // The agent column was asked for: it takes focus once it is laid out.
   const wantsAgent = useRef(false);
   const agentColumn = useRef<HTMLElement>(null);
@@ -613,19 +617,17 @@ export function App({ host }: { host: Host }) {
   const calendarOn = views !== undefined && page === "calendar";
   const ledgerOn = host.ledger !== undefined && page === "ledger";
   const declarationsOn = host.modelo !== undefined && page === "declarations";
+  const browserOn = host.sedeView !== undefined && page === "browser";
+  // A page of the window holds the first pane, in place of the documentation.
+  const pageOn =
+    calendarOn || profileOn || ledgerOn || declarationsOn || browserOn;
   const firstPaneShown =
-    (layout.docsShown ||
-      calendarOn ||
-      profileOn ||
-      ledgerOn ||
-      declarationsOn ||
-      maximized === "docs") &&
-    unhidden("docs");
-  const docsVisible =
-    firstPaneShown && !calendarOn && !profileOn && !ledgerOn && !declarationsOn;
+    (layout.docsShown || pageOn || maximized === "docs") && unhidden("docs");
+  const docsVisible = firstPaneShown && !pageOn;
   const calendarVisible = calendarOn && firstPaneShown;
   const ledgerVisible = ledgerOn && firstPaneShown;
   const declarationsVisible = declarationsOn && firstPaneShown;
+  const browserVisible = browserOn && firstPaneShown;
   const tuiVisible =
     (layout.tuiShown || maximized === "tui") && unhidden("tui");
   const panelVisible = layout.panelOpen && unhidden("panel");
@@ -736,6 +738,23 @@ export function App({ host }: { host: Host }) {
       declarationsPage.current?.focus();
     }
   }, [declarationsVisible, openDeclaration]);
+  useEffect(() => {
+    if (browserVisible && wantsBrowser.current) {
+      wantsBrowser.current = false;
+      browserPage.current?.focus();
+    }
+  }, [browserVisible]);
+  // The page asks for the Sede itself, so opening it names no address; shown
+  // already, it only takes the keyboard.
+  const showBrowser = useCallback(() => {
+    if (browserVisible) {
+      browserPage.current?.focus();
+      return;
+    }
+    wantsBrowser.current = true;
+    setMaximized((area) => (area === "docs" ? area : null));
+    setPage("browser");
+  }, [browserVisible, setMaximized, setPage]);
   const askSignIn = useCallback(() => {
     const element = document.activeElement;
     signInOpener.current = {
@@ -1261,14 +1280,7 @@ export function App({ host }: { host: Host }) {
       }
       if (area === "agent" && !layout.agentShown) patch({ agentShown: true });
       if (area === "tui" && !layout.tuiShown) patch({ tuiShown: true });
-      if (
-        area === "docs" &&
-        !layout.docsShown &&
-        !calendarOn &&
-        !profileOn &&
-        !ledgerOn &&
-        !declarationsOn
-      )
+      if (area === "docs" && !layout.docsShown && !pageOn)
         patch({ docsShown: true });
       if (area === "panel" && !layout.panelOpen) patch({ panelOpen: true });
       setMaximized(area);
@@ -1281,10 +1293,7 @@ export function App({ host }: { host: Host }) {
       layout.tuiShown,
       layout.docsShown,
       layout.panelOpen,
-      calendarOn,
-      profileOn,
-      ledgerOn,
-      declarationsOn,
+      pageOn,
       patch,
       focusView,
     ],
@@ -1510,10 +1519,7 @@ export function App({ host }: { host: Host }) {
   // The register element of the main view shown: the first pane's page, or
   // its Ledger section; nothing while the first pane is put away.
   const shownViewId = firstPaneShown
-    ? pageViewId(
-        profileOn || calendarOn || ledgerOn || declarationsOn ? page : "docs",
-        layout.ledgerView.section,
-      )
+    ? pageViewId(pageOn ? page : "docs", layout.ledgerView.section)
     : undefined;
   // A query that is a `cadrumo:` link is one palette entry: the view it
   // opens, or why it opens none.
@@ -1591,8 +1597,7 @@ export function App({ host }: { host: Host }) {
         group: "docs",
         icon: "back",
         chords: [{ alt: true, code: "ArrowLeft", key: "←", scope: "docs" }],
-        enabled: () =>
-          !calendarOn && !profileOn && !ledgerOn && !declarationsOn,
+        enabled: () => !pageOn,
         run: () => docs.current?.back(),
       },
       {
@@ -1601,8 +1606,7 @@ export function App({ host }: { host: Host }) {
         group: "docs",
         icon: "forward",
         chords: [{ alt: true, code: "ArrowRight", key: "→", scope: "docs" }],
-        enabled: () =>
-          !calendarOn && !profileOn && !ledgerOn && !declarationsOn,
+        enabled: () => !pageOn,
         run: () => docs.current?.forward(),
       },
       {
@@ -1611,8 +1615,7 @@ export function App({ host }: { host: Host }) {
         group: "docs",
         icon: "zoomIn",
         chords: [{ mod: true, code: "Equal", key: "=", scope: "docs" }],
-        enabled: () =>
-          !calendarOn && !profileOn && !ledgerOn && !declarationsOn,
+        enabled: () => !pageOn,
         run: () =>
           patch({
             zoom: Math.min(2, Math.round((layout.zoom + 0.1) * 10) / 10),
@@ -1624,8 +1627,7 @@ export function App({ host }: { host: Host }) {
         group: "docs",
         icon: "zoomOut",
         chords: [{ mod: true, code: "Minus", key: "-", scope: "docs" }],
-        enabled: () =>
-          !calendarOn && !profileOn && !ledgerOn && !declarationsOn,
+        enabled: () => !pageOn,
         run: () =>
           patch({
             zoom: Math.max(0.5, Math.round((layout.zoom - 0.1) * 10) / 10),
@@ -1637,8 +1639,7 @@ export function App({ host }: { host: Host }) {
         group: "docs",
         icon: "reset",
         chords: [{ mod: true, code: "Digit0", key: "0", scope: "docs" }],
-        enabled: () =>
-          !calendarOn && !profileOn && !ledgerOn && !declarationsOn,
+        enabled: () => !pageOn,
         run: () => patch({ zoom: 1 }),
       },
       {
@@ -1924,6 +1925,17 @@ export function App({ host }: { host: Host }) {
               setPage("declarations");
             },
           },
+          browser: {
+            icon: "globe",
+            group: "views",
+            run: () => {
+              if (browserVisible) {
+                setPage("docs");
+                return;
+              }
+              showBrowser();
+            },
+          },
           docs: {
             id: "docs.toggle",
             icon: "book",
@@ -2098,10 +2110,11 @@ export function App({ host }: { host: Host }) {
       },
       {
         id: "link.aeat",
-        label: t("desktop.rail.aeat"),
+        label: t("desktop.browser.external"),
+        context: t("desktop.rail.aeat"),
         group: "links",
-        icon: "office",
-        keywords: "sede agencia tributaria hacienda tax agency",
+        icon: "external",
+        keywords: "sede agencia tributaria hacienda tax agency browser",
         run: () => openLink(AEAT_SEDE),
       },
       {
@@ -2243,13 +2256,12 @@ export function App({ host }: { host: Host }) {
       messages,
       say,
       showTui,
-      calendarOn,
-      profileOn,
-      ledgerOn,
-      declarationsOn,
+      pageOn,
       calendarVisible,
       ledgerVisible,
       declarationsVisible,
+      browserVisible,
+      showBrowser,
       askSignIn,
       askNewProfile,
       canCreateProfile,
@@ -2393,7 +2405,7 @@ export function App({ host }: { host: Host }) {
   useEffect(() => {
     const key = (event: KeyboardEvent) => {
       const focus: FocusArea = (event.target as HTMLElement | null)?.closest?.(
-        ".xterm",
+        ".xterm, [data-browser-surface]",
       )
         ? "terminal"
         : "chrome";
@@ -2467,6 +2479,25 @@ export function App({ host }: { host: Host }) {
       );
     },
     [openMenu, registered, t, copy, runAction],
+  );
+
+  // The AEAT shortcut opens the browser in the window; its menu is the way
+  // to the person's own browser.
+  const aeatMenu = useCallback(
+    (at: MenuAnchor) =>
+      openMenu(
+        [
+          {
+            id: "external",
+            label: t("desktop.browser.external"),
+            ...registered("link.aeat"),
+            enabled: true,
+            run: () => runAction("link.aeat"),
+          },
+        ],
+        at,
+      ),
+    [openMenu, registered, t, runAction],
   );
 
   const terminalMenu = useCallback(
@@ -2854,12 +2885,28 @@ export function App({ host }: { host: Host }) {
           } satisfies RailItem,
         ]
       : []),
+    ...(host.sedeView
+      ? [
+          {
+            id: "browser",
+            icon: "globe",
+            label: t("desktop.browser.title"),
+            pressed: browserVisible,
+            divided: !views,
+            onClick: () => runAction("view.browser"),
+          } satisfies RailItem,
+        ]
+      : []),
     {
       id: "aeat",
       icon: "office",
       label: t("desktop.rail.aeat"),
-      divided: !views,
-      onClick: () => runAction("link.aeat"),
+      divided: !views && !host.sedeView,
+      // Where the window has a browser the shortcut opens it, and the
+      // person's own browser is its menu's choice.
+      ...(host.sedeView
+        ? { onClick: showBrowser, onMenu: aeatMenu }
+        : { onClick: () => runAction("link.aeat") }),
     },
     ...(driveUrl
       ? [
@@ -3046,6 +3093,41 @@ export function App({ host }: { host: Host }) {
             />
           </ModelListContext.Provider>
         </ProvisioningRecoveryContext.Provider>
+      ) : browserOn && host.sedeView ? (
+        <BrowserPage
+          key={reader ?? ""}
+          port={host.sedeView}
+          withheld={
+            reader === null ? (
+              <SignedOut
+                account={account}
+                lead={t("desktop.browser.failure.not_signed_in")}
+                quiet
+                onSignIn={askSignIn}
+              />
+            ) : undefined
+          }
+          page={browserPage}
+          shown={firstPaneShown}
+          isShellChord={isShellChord}
+          pane={{
+            title: t("desktop.browser.title"),
+            onToggleMaximize: () => toggleMaximize("docs"),
+            controls: [
+              maximizeControl("docs", "desktop.browser.maximize"),
+              ...splitControls.map((control) => ({
+                ...control,
+                yields: true,
+              })),
+              {
+                id: "close",
+                icon: "close",
+                label: t("desktop.browser.close"),
+                run: closePage,
+              },
+            ],
+          }}
+        />
       ) : (
         <PaneHeader
           title={t(
@@ -3152,13 +3234,7 @@ export function App({ host }: { host: Host }) {
         />
       )}
       {/* Put aside, not unloaded: the page it was on is there on return. */}
-      <div
-        className={
-          calendarOn || profileOn || ledgerOn || declarationsOn
-            ? "hidden"
-            : "contents"
-        }
-      >
+      <div className={pageOn ? "hidden" : "contents"}>
         {environment.state === "ready" &&
         environment.value.docs.state === "bundled" &&
         docsEntry ? (

@@ -4,6 +4,8 @@ import { cn } from "@/components/ui/cn";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
 import { Separator } from "@/components/ui/separator";
+import { fromPointer } from "../shell/pointer";
+import type { MenuAnchor } from "./ContextMenu";
 
 export type RailItem = {
   id: string;
@@ -30,6 +32,9 @@ export type RailItem = {
   /** Starts a new cluster: a divider is drawn before this item. */
   divided?: boolean;
   onClick: () => void;
+  /** Asks for the item's own menu, at the pointer or by the menu key at the
+   * button's edge. */
+  onMenu?: (at: MenuAnchor) => void;
 };
 
 const BADGE_LIMIT = 99;
@@ -52,6 +57,23 @@ function RailButton({ item }: { item: RailItem }) {
           // A locale-independent handle for drivers outside the shell.
           data-rail={item.id}
           onClick={item.heldBy ? undefined : item.onClick}
+          onContextMenu={
+            item.onMenu
+              ? (event) => {
+                  event.preventDefault();
+                  const button = event.currentTarget.getBoundingClientRect();
+                  item.onMenu?.(
+                    fromPointer(event.nativeEvent)
+                      ? { x: event.clientX, y: event.clientY }
+                      : {
+                          x: button.right,
+                          y: button.top,
+                          height: button.height,
+                        },
+                  );
+                }
+              : undefined
+          }
           // The chosen item carries a bar on the rail's edge as well as its
           // surface, so the choice does not rest on a tint alone. A button
           // whose surface is open is marked the same way.

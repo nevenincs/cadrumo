@@ -342,6 +342,42 @@ test("a shown pane's entry hides it, and a hidden one's shows it with the keyboa
   ).toHaveText(hide);
 });
 
+test("the palette offers the browser page and the system browser as two entries", async ({
+  page: target,
+}) => {
+  await open(target);
+  const browser = label("navigation.view.browser.label");
+  const external = label("desktop.browser.external");
+  const pressed = target
+    .getByRole("navigation", { name: label("desktop.rail.label") })
+    .getByRole("button", { name: label("desktop.browser.title"), exact: true });
+
+  // The agency is found as the browser page, which opens in the window.
+  await search(target, "aeat");
+  await expect(optionTitled(target, browser)).toHaveCount(1);
+  await expect(optionTitled(target, external)).toHaveCount(1);
+  await expect(
+    optionTitled(target, external).locator(".palette-context"),
+  ).toHaveText(label("desktop.rail.aeat"));
+  await input(target).fill(browser);
+  await optionTitled(target, browser).click();
+  await expect(palette(target)).toHaveCount(0);
+  await expect(pressed).toHaveAttribute("aria-pressed", "true");
+  expect(
+    (await calls(target)).filter((call) => call.startsWith("openExternal ")),
+  ).toEqual([]);
+
+  // The same agency, by its other entry, opens the person's own browser.
+  await search(target, external);
+  await optionTitled(target, external).click();
+  await expect(palette(target)).toHaveCount(0);
+  await expect
+    .poll(async () =>
+      (await calls(target)).filter((call) => call.startsWith("openExternal ")),
+    )
+    .toEqual(["openExternal https://sede.agenciatributaria.gob.es"]);
+});
+
 test("a pasted link to a movement opens the Ledger on that row", async ({
   page: target,
 }) => {

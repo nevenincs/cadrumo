@@ -152,6 +152,12 @@ keywords = "calendar deadlines obligations plazos calendario"
 surfaces = ["gui"]
 
 [[element]]
+id = "browser"
+label = "navigation.view.browser.label"
+keywords = "browser web sede aeat agencia tributaria navegador internet"
+surfaces = ["gui"]
+
+[[element]]
 id = "docs"
 label = "navigation.view.docs.label"
 keywords = "docs documentation help guide ayuda"

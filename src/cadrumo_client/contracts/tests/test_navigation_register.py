@@ -202,6 +202,7 @@ def test_the_shipped_register_declares_the_initial_elements() -> None:
         "profile": {gui, tui},
         "profile/aeat-access": {gui, tui},
         "calendar": {gui},
+        "browser": {gui},
         "docs": {gui},
         "agent": {gui},
         "terminal": {gui},
