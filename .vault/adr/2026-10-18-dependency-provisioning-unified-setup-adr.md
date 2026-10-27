@@ -5,7 +5,7 @@ tags:
 date: '2026-10-18'
 modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:577766eaa13bfc3165f5d6cd3206f7e58cf397aff6a6be796f0befd1ec1cf32e'
+body_hash: 'sha256:8069a4b4715ec2be4e49c1ee6e89306822c7c4dd2279de911d1724c4164fea82'
 related:
   - "[[2026-10-18-dependency-provisioning-mechanisms-reference]]"
   - "[[2026-06-15-dependency-provisioning-adr]]"

@@ -54,7 +54,7 @@ class ServiceCapability(StrEnum):
 
     Members:
         LLM_VISION: Whether this profile may read scanned/image evidence with
-            the image-reading model on the local model list. Default ON; opting out
+            the model the person picked, when it reads images. Default ON; opting out
             disables the image read entirely. It does not decide where the read
             runs: the selected lane's ``reads_off_host`` does, and an off-host
             read additionally needs CLOUD_EVIDENCE_UPLOAD eligibility and the

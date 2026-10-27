@@ -1130,8 +1130,8 @@ errors:
     refused_ledger_evidence_page_unsupported_media: Only PDF, JPEG and PNG documents
       can be shown as a page.
     refused_ledger_evidence_reader_unavailable: The automatic reader could not run,
-      so nothing was read. Check the local AI's model list in the Cadrumo desktop
-      app, then try again.
+      so nothing was read. Check the model you picked in the agent's model picker
+      in the Cadrumo desktop app, then try again.
     refused_ledger_evidence_reader_unreadable_answer: The document reader answered
       in a form this command could not read, so nothing was taken from the document.
       Nothing was saved; run the command again, and if it keeps happening the reader
@@ -1155,8 +1155,11 @@ errors:
       for off-host transmission was not granted.
     refused_llm_contention: The model Cadrumo reads with does not fit in this computer's
       free memory right now. Close other programs, then try again.
-    refused_llm_no_model_selected: No model on the local AI's list can do this task.
-      Add one to the list in the Cadrumo desktop app, then try again.
+    refused_llm_model_cannot_read_images: The model you picked can't read images.
+      Pick a model that can read images in the agent's model picker in the Cadrumo
+      desktop app, then try again.
+    refused_llm_no_model_selected: No model is picked to read with. Pick one in the
+      agent's model picker in the Cadrumo desktop app, then try again.
     refused_llm_validation: A language-model object failed validation.
     refused_modelo_100_borrador_binding: The Modelo 100 borrador values cannot be
       consumed for the calculation.

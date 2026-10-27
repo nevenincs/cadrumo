@@ -503,10 +503,11 @@ only the staged native desktop parent image and grants no secret-record
 capabilities. The service's provider-settings capability retains the original
 encrypted namespace and schema; no encryption key leaves runtime custody. Its
 model-role-selections capability keeps the models the person added to a local
-lane's model list in a separate encrypted namespace under one fixed record key, so a
-list change never moves the provider-settings generation the running agent was
-started under. The service derives which listed model serves each kind of reading
-from the catalogue's capabilities; the person never chooses it.
+lane's model list, and the one model the person picked in the agent's model picker
+to read documents with, in a separate encrypted namespace under one fixed record
+key, so a change never moves the provider-settings generation the running agent was
+started under. Every kind of reading runs with the picked model, on any lane; a
+picked model that lacks a capability a reading needs is refused, never replaced.
 
 The agent image has no default profile. It admits the invocations declared in its
 invocation table in `native/application-environment.toml`, each selecting its own

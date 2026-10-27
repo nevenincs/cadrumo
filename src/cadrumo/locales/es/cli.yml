@@ -110,8 +110,9 @@ cli:
           o puedes rellenarlos tú.'
         batch_paused_local_ai_not_ready: La IA local, que lee los documentos en pausa,
           no está lista.
-        batch_paused_local_ai_unavailable: La IA local no ha podido leer los documentos
-          en pausa. Revisa su lista de modelos en la aplicación de escritorio de Cadrumo.
+        batch_paused_local_ai_unavailable: El modelo que elegiste no ha podido leer
+          los documentos en pausa. Revísalo en el selector de modelos del agente en
+          la aplicación de escritorio de Cadrumo.
         batch_pending_review_message: Algunos borradores contienen una incidencia
           que debes resolver tú antes de crear una factura. Están retenidos, no fallidos.
         batch_progress_message: 'procesado %{source}: %{status}'
@@ -3405,9 +3406,9 @@ cli:
       file_help: Ruta al archivo del extracto bancario o directorio
       file_reader_not_ready: 'Extracto no leído: {file} lo lee la IA local, que no
         está lista.'
-      file_reader_unavailable: 'Extracto no leído: la IA local no está disponible
-        ahora mismo para leer {file}. Revisa su lista de modelos en la aplicación
-        de escritorio de Cadrumo y vuelve a intentarlo.'
+      file_reader_unavailable: 'Extracto no leído: el modelo que elegiste no está
+        disponible ahora mismo para leer {file}. Revísalo en el selector de modelos
+        del agente en la aplicación de escritorio de Cadrumo y vuelve a intentarlo.'
       file_refused: 'Extracto rechazado y omitido: {file}. El resto de la carpeta
         se ha importado.'
       file_refused_account_mismatch: 'Extracto rechazado y omitido: {file} indica

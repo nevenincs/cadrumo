@@ -139,7 +139,7 @@ def test_a_lookup_refusal_reaches_the_consumer_without_a_run(tmp_path: Path) -> 
 
 
 @pytest.mark.parametrize("locale", SUPPORTED_OUTPUT_LANGUAGES)
-def test_a_role_no_listed_model_can_serve_says_to_add_one_in_the_desktop_app(tmp_path: Path, locale: str) -> None:
+def test_a_role_with_no_picked_model_says_to_pick_one_in_the_desktop_app(tmp_path: Path, locale: str) -> None:
     with (
         serving_agent(lookup_refusal=ModelRunRefusalCode.NO_SELECTION),
         pytest.raises(LLMConfigError) as caught,
@@ -152,7 +152,7 @@ def test_a_role_no_listed_model_can_serve_says_to_add_one_in_the_desktop_app(tmp
     assert "aeat" not in sentence
     if locale == "en":
         assert sentence == (
-            "No model on the local AI's list can do this task. Add one to the list in the Cadrumo desktop app, "
+            "No model is picked to read with. Pick one in the agent's model picker in the Cadrumo desktop app, "
             "then try again."
         )
 

@@ -106,8 +106,9 @@ cli:
           akkor kitöltődnek, ha az ok már megszűnt, vagy te magad is kitöltheted őket.'
         batch_paused_local_ai_not_ready: A helyi MI, amely a szüneteltetett dokumentumokat
           olvassa, nem áll készen.
-        batch_paused_local_ai_unavailable: A helyi MI nem tudta beolvasni a szüneteltetett
-          dokumentumokat. Ellenőrizd a modelllistáját a Cadrumo asztali alkalmazásában.
+        batch_paused_local_ai_unavailable: A kiválasztott modell nem tudta beolvasni
+          a szüneteltetett dokumentumokat. Ellenőrizd az ügynök modellválasztójában
+          a Cadrumo asztali alkalmazásában.
         batch_pending_review_message: Néhány piszkozat olyan problémát hordoz, amelyet
           neked kell rendezned a számla létrehozása előtt. Ezek visszatartva vannak,
           nem hiúsultak meg.
@@ -3352,9 +3353,9 @@ cli:
       file_help: A bankikivonati fájl vagy könyvtár elérési útja.
       file_reader_not_ready: 'A kivonat nem lett beolvasva: a(z) {file} fájlt a helyi
         MI olvassa, amely nem áll készen.'
-      file_reader_unavailable: 'A kivonat nem lett beolvasva: a helyi MI jelenleg
-        nem érhető el a(z) {file} fájl olvasásához. Ellenőrizd a modelllistáját a
-        Cadrumo asztali alkalmazásában, majd próbáld újra.'
+      file_reader_unavailable: 'A kivonat nem lett beolvasva: a kiválasztott modell
+        jelenleg nem érhető el a(z) {file} fájl olvasásához. Ellenőrizd az ügynök
+        modellválasztójában a Cadrumo asztali alkalmazásában, majd próbáld újra.'
       file_refused: 'Elutasított és kihagyott kivonat: {file}. A mappa többi része
         importálva lett.'
       file_refused_account_mismatch: 'Elutasított és kihagyott kivonat: a(z) {file}

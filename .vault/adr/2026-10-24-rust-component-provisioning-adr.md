@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:0e3c3930b8ed1d1c44831b7702c6eb910399077e154c776bad608be9fe421e7d'
+body_hash: 'sha256:5c147935c1b3efe015c622ceea52ff93ceeeabd444f6b1c284a51118cdbd7844'
 related:
   - "[[2026-10-24-rust-component-provisioning-reference]]"
   - "[[2026-10-18-dependency-provisioning-unified-setup-adr]]"
@@ -120,7 +120,7 @@ Basis: the owner's first-hand answers of 2026-10-26 in conversation, given while
 
 ### Amendment 2026-10-27: downloads from the local model list
 
-Basis: the owner's first-hand rulings of 2026-10-27 in conversation: "there shoudl be be no tickbox for LLMs - privide normal download for the models", and, relayed with the assignment, model roles are not a person's concept; the local provider entry shows a model list of the catalogue's recommended models and the models the person adds by name, each with download and remove, and the role-to-model mapping is internal (`2026-10-25-agent-owned-models-adr` amendment 2026-10-27).
+Basis: the owner's first-hand rulings of 2026-10-27 in conversation: "there shoudl be be no tickbox for LLMs - privide normal download for the models", and, relayed with the assignment, model roles are not a person's concept; the local provider entry shows a model list of the catalogue's recommended models and the models the person adds by name, each with download and remove; documents are read with the one model the person picks in the agent's model picker (`2026-10-25-agent-owned-models-adr` amendment 2026-10-27).
 
 - A desktop download request names one catalogue lane and model. The native host admits it for a turned-on keyless lane when the catalogue recommends the model there or the person's local model list holds it, reading the list from the agent service. It passes the catalogue's positive size when the catalogue states one and an unknown size otherwise; the frontend invents neither a name nor a size. The engine receives that one model for that run, and the plan digest binds the model and its size, known or unknown.
 - A setup, check, verification or removal that names no download admits the program alone and consults no service. Removing a model changes no stored record in the engine; the desktop takes an added model off the list after the engine removed its download.

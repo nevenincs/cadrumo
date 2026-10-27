@@ -1,10 +1,10 @@
-"""A real lookup that no listed model serves reaches the CLI in the requested language.
+"""A real lookup with no picked model reaches the CLI in the requested language.
 
 The portable runtime replaces transport and physical worker custody. Its async
 service port delegates lookup to the production ModelRunService over a fresh
-in-memory model list and a catalogue whose local lane lists no model; no
-refusal result is scripted here. Encrypted list persistence is exercised
-separately by the saved local model list test.
+in-memory record in which the person picked no model; no refusal result is
+scripted here. Encrypted record persistence is exercised separately by the
+saved local model list test.
 """
 
 from __future__ import annotations
@@ -29,9 +29,8 @@ from cadrumo_agent_service.providers.application.tests.memory_store import (
 from cadrumo_agent_service.providers.application.tests.synthetic_catalog import (
     ProvidedProviderCatalogSource,
     StaticLiveModels,
-    synthetic_document,
+    synthetic_catalog,
 )
-from cadrumo_agent_service.providers.domain.catalog import parse_provider_catalog
 from cadrumo_client.contracts.model_runs import ModelRunLane, ModelRunRefusal
 from cadrumo_runtime.host.tests.frontend.cli.cli_runner import invoke_cached_cli
 from cadrumo_runtime.host.tests.frontend.cli.ledger_ux_support import open_ledger_ux_session
@@ -46,21 +45,12 @@ def _open_bucket_session(tmp_path: Path, cli_runtime_lifetime: None) -> Iterator
         yield
 
 
-def _no_local_models() -> ProvidedProviderCatalogSource:
-    """The synthetic catalogue whose local lane lists and recommends no model."""
-    document = json.loads(synthetic_document())
-    for lane in document["providers"]:
-        if lane["id"] == "local_api":
-            lane.update(models=[], recommended={})
-    return ProvidedProviderCatalogSource(parse_provider_catalog(json.dumps(document)))
-
-
 class _UnservedAgent(RecordingModelRuns):
     """Adapt the real service's synchronous lookup to the portable runtime port."""
 
     def __init__(self) -> None:
         super().__init__()
-        catalog = _no_local_models()
+        catalog = ProvidedProviderCatalogSource(synthetic_catalog())
         self.models = ModelRunService(
             model_list=MemoryLocalModelListStore(),
             resolver=ProviderCredentialResolver(store=MemoryProviderSettingsStore(), catalog_source=catalog),
@@ -82,10 +72,10 @@ class _UnservedAgent(RecordingModelRuns):
 @pytest.mark.parametrize(
     ("language", "message"),
     [
-        ("en", "Check the local AI's model list in the Cadrumo desktop app"),
-        ("es", "Revisa la lista de modelos de la IA local en la aplicación de escritorio de Cadrumo"),
-        ("ca", "Revisa la llista de models de la IA local a l'aplicació d'escriptori de Cadrumo"),
-        ("hu", "Ellenőrizd a helyi MI modelllistáját a Cadrumo asztali alkalmazásában"),
+        ("en", "Check the model you picked in the agent's model picker in the Cadrumo desktop app"),
+        ("es", "Revisa el modelo que elegiste en el selector de modelos del agente"),
+        ("ca", "Revisa el model que has triat al selector de models de l'agent a l'aplicació d'escriptori de Cadrumo"),
+        ("hu", "Ellenőrizd a kiválasztott modellt az ügynök modellválasztójában a Cadrumo asztali alkalmazásában"),
     ],
 )
 def test_cli_renders_no_selection_in_the_requested_language(tmp_path: Path, language: str, message: str) -> None:

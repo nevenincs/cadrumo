@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:e63547862058a2c28b763646d35642d3a2d9ecb4742a1993edf68f458f2828f2'
+body_hash: 'sha256:ca280db02253f0fafe2c8b4942622a1cc3a76352bea2b235ee77fb1463369797'
 related:
   - "[[2026-10-13-provider-settings-reference]]"
   - "[[2026-10-11-mcp-parity-full-parity-adr]]"
@@ -232,4 +232,4 @@ Accepted 2026-10-19 on operator directive 2026-10-19 under `2026-10-19-google-ap
 
 Basis: the owner's first-hand rulings of 2026-10-25 in conversation, recorded in `2026-10-25-agent-owned-models-adr`: Cadrumo defines no AI model names, digests, sizes, licences, defaults, candidate lists or rankings; cadrumo-agent's provider catalogue is the sole source of providers and models, local ones included; every tax model call goes through the agent service. The earlier wording above stays as history.
 
-- **Former constraint 11, extraction note (history), and constraint 3.** "Cadrumo's own document reading keeps its existing key handling until the owner rules on it" is closed. The owner ruled: tax model reading, local and hosted, goes through the agent, with providers and models from cadrumo-agent's catalogue. The person's local model list is stored beside the provider records in the service, and the service derives each reading's model from it. Cadrumo holds no model list.
+- **Former constraint 11, extraction note (history), and constraint 3.** "Cadrumo's own document reading keeps its existing key handling until the owner rules on it" is closed. The owner ruled: tax model reading, local and hosted, goes through the agent, with providers and models from cadrumo-agent's catalogue. The person's local model lists and the model the person picks in the agent's model picker, on any lane, are stored beside the provider records in the service, and every reading runs with that picked model. Cadrumo holds no model list.

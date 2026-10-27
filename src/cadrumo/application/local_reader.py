@@ -1,13 +1,13 @@
-"""The local document reader: the local AI program and the models derived from the local model list.
+"""The local document reader: the local AI program and the model the person picked to read with.
 
 Cadrumo defines no model, and nothing here asks the local AI server anything.
-Each role reads with the lane and model the agent service derives from the
-person's local model list; the running operation asks it through its model-run port
+Each role reads with the one model the person picked in the agent's model
+picker, as the agent service answers it; the running operation asks it through its model-run port
 (:func:`read_role_lanes`). A lane whose catalogue entry says it reads off this
 computer needs nothing local. A lane that stays on this computer reads through
 the local AI program: the components role's status row for the local AI says
 whether the program is set up and which version it is, and the lane carries
-whether the program's server holds the derived model, as the agent's live
+whether the program's server holds the picked model, as the agent's live
 catalogue states it.
 
 An on-host role is judged in a fixed order: a program the status row does not
@@ -151,9 +151,8 @@ def judge_local_ai_program(row: ProgramRow) -> LocalAiProgram:
 def probe_local_ai_program(row: ProgramRow) -> DependencyStatus:
     """Report the local AI program's row for a configuration check, from the components role's status row.
 
-    The program's health only. Which model each role reads with is derived
-    by the agent service from the local model list; this row judges no
-    model.
+    The program's health only. Every role reads with the model the person
+    picked, which the agent service answers; this row judges no model.
 
     Returns:
         A :class:`DependencyStatus` on the ``local-ai:program`` row. Never raises.

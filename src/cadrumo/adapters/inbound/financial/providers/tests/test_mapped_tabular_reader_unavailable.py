@@ -86,7 +86,7 @@ def test_the_reason_names_local_ai_and_its_setup_when_setup_repairs_it() -> None
     assert "Set it up in the Cadrumo desktop app, then try again." in reason
 
 
-def test_the_reason_offers_no_setup_for_a_role_this_computer_cannot_run() -> None:
+def test_the_reason_offers_no_setup_and_points_to_the_picked_model() -> None:
     unservable = ColumnRoleReaderUnavailable(
         precondition_verdict=provisioning_no_recovery_verdict(
             ProvisioningPreconditionCondition.SELECTED_MODEL_AVAILABLE,
@@ -97,8 +97,8 @@ def test_the_reason_offers_no_setup_for_a_role_this_computer_cannot_run() -> Non
 
     (reason,) = lane.validate_source(_UNREAD_VOCABULARY).warnings
 
-    assert reason.startswith("Local AI")
+    assert reason.startswith("The model that reads this file's column names")
     assert "set it up" not in reason.lower()
-    assert "Check its model list in the Cadrumo desktop app" in reason
+    assert "Check the model you picked in the agent's model picker in the Cadrumo desktop app" in reason
     with pytest.raises(InvalidFinancialSourceError, match="not available right now"):
         list(lane.ingest(_UNREAD_VOCABULARY))

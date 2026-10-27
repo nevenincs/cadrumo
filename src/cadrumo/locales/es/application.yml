@@ -671,8 +671,8 @@ application:
           a extraer.'
         reader_unavailable: 'El lector automático no ha podido funcionar, así que
           los %{count} campo(s) que las etiquetas no cubrían siguen vacíos: %{fields}.
-          Revisa la lista de modelos de la IA local en la aplicación de escritorio
-          de Cadrumo y vuelve a extraer, o rellénalos tú.'
+          Revisa el modelo que elegiste en el selector de modelos del agente en la
+          aplicación de escritorio de Cadrumo y vuelve a extraer, o rellénalos tú.'
   live:
     borrador:
       errors:
@@ -1980,17 +1980,17 @@ application:
       column_names_local_ai_not_ready: la IA local, que lee los nombres de las columnas
         de este archivo, no está lista, así que no se ha leído el archivo. Configura
         la IA local en la aplicación de escritorio de Cadrumo y vuelve a intentarlo.
-      column_names_local_ai_unavailable: la IA local, que lee los nombres de las columnas
-        de este archivo, no está disponible ahora mismo, así que no se ha leído el
-        archivo. Revisa su lista de modelos en la aplicación de escritorio de Cadrumo
-        y vuelve a intentarlo.
+      column_names_local_ai_unavailable: el modelo que lee los nombres de las columnas
+        de este archivo no está disponible ahora mismo, así que no se ha leído el
+        archivo. Revisa el modelo que elegiste en el selector de modelos del agente
+        en la aplicación de escritorio de Cadrumo y vuelve a intentarlo.
       statement_local_ai_not_ready: la IA local, que lee este extracto bancario en
         PDF, no está lista, así que no se ha leído el extracto. Configura la IA local
         en la aplicación de escritorio de Cadrumo y vuelve a intentarlo.
-      statement_local_ai_unavailable: la IA local, que lee este extracto bancario
-        en PDF, no está disponible ahora mismo, así que no se ha leído el extracto.
-        Revisa su lista de modelos en la aplicación de escritorio de Cadrumo y vuelve
-        a intentarlo.
+      statement_local_ai_unavailable: el modelo que lee este extracto bancario en
+        PDF no está disponible ahora mismo, así que no se ha leído el extracto. Revisa
+        el modelo que elegiste en el selector de modelos del agente en la aplicación
+        de escritorio de Cadrumo y vuelve a intentarlo.
     retry: Problema de conexión. Se volverá a intentar en %{seconds} segundos (intento
       %{attempt}).
     space_needed: La configuración necesita %{required} libres y hay %{free} disponibles.

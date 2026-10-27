@@ -36,7 +36,7 @@ _SENTENCES = {
     _READER_LOCAL_AI: LOCAL_AI_DECLARATION,
     _READER_UNAVAILABLE: None,
     _IMPORT_LOCAL_AI: LOCAL_AI_DECLARATION,
-    _IMPORT_UNSERVABLE: LOCAL_AI_DECLARATION,
+    _IMPORT_UNSERVABLE: None,
     _LABEL_LOCAL_AI: LOCAL_AI_DECLARATION,
     _LABEL_UNAVAILABLE: None,
 }
@@ -85,7 +85,7 @@ def test_a_refusal_setup_cannot_repair_sends_the_person_to_the_desktop_app_to_ch
     for key in _POINTS_TO_THE_MODEL_CHOICE:
         assert "Cadrumo" in _text(key, locale), f"{key} in {locale} does not name the desktop app"
     english = _text(_IMPORT_UNSERVABLE, "en")
-    assert "Check its model list in the Cadrumo desktop app" in english
+    assert "Check the model you picked in the agent's model picker in the Cadrumo desktop app" in english
     for key in _POINTS_TO_THE_MODEL_CHOICE:
         assert "on this computer" not in _text(key, "en"), f"{key} still blames the computer for a missing choice"
 

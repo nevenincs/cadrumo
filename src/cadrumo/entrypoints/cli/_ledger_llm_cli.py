@@ -377,7 +377,7 @@ def _validate_classify_llm_options(
 
     Reader availability is deliberately NOT checked here. With
     ``--read-evidence`` and no ``--llm``, a scanned or image invoice is read
-    by the vision model on the local model list, which needs no subprocess provider
+    by the model the person picked, through the agent, which needs no subprocess provider
     at all; and a text-layer read whose semantic reader is missing is refused by
     :func:`~application.ledger.invoice_draft_extraction._refuse_a_text_read_with_no_reader`,
     which says so instructively and declines to escalate to a heavier engine the

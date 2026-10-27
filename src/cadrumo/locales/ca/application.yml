@@ -668,8 +668,8 @@ application:
           Configura-la a l''aplicació d''escriptori de Cadrumo i torna a extreure.'
         reader_unavailable: 'El lector automàtic no ha pogut funcionar, així que els
           %{count} camps que les etiquetes no cobrien queden buits: %{fields}. Revisa
-          la llista de models de la IA local a l''aplicació d''escriptori de Cadrumo
-          i torna a extreure, o emplena''ls tu.'
+          el model que has triat al selector de models de l''agent a l''aplicació
+          d''escriptori de Cadrumo i torna a extreure, o emplena''ls tu.'
   live:
     borrador:
       errors:
@@ -1977,17 +1977,17 @@ application:
       column_names_local_ai_not_ready: la IA local, que llegeix els noms de les columnes
         d'aquest fitxer, no està a punt, així que no s'ha llegit el fitxer. Configura-la
         a l'aplicació d'escriptori de Cadrumo i torna-ho a provar.
-      column_names_local_ai_unavailable: la IA local, que llegeix els noms de les
-        columnes d'aquest fitxer, no està disponible ara mateix, així que no s'ha
-        llegit el fitxer. Revisa la seva llista de models a l'aplicació d'escriptori
-        de Cadrumo i torna-ho a provar.
+      column_names_local_ai_unavailable: el model que llegeix els noms de les columnes
+        d'aquest fitxer no està disponible ara mateix, així que no s'ha llegit el
+        fitxer. Revisa el model que has triat al selector de models de l'agent a l'aplicació
+        d'escriptori de Cadrumo i torna-ho a provar.
       statement_local_ai_not_ready: la IA local, que llegeix aquest extracte bancari
         en PDF, no està a punt, així que no s'ha llegit l'extracte. Configura-la a
         l'aplicació d'escriptori de Cadrumo i torna-ho a provar.
-      statement_local_ai_unavailable: la IA local, que llegeix aquest extracte bancari
-        en PDF, no està disponible ara mateix, així que no s'ha llegit l'extracte.
-        Revisa la seva llista de models a l'aplicació d'escriptori de Cadrumo i torna-ho
-        a provar.
+      statement_local_ai_unavailable: el model que llegeix aquest extracte bancari
+        en PDF no està disponible ara mateix, així que no s'ha llegit l'extracte.
+        Revisa el model que has triat al selector de models de l'agent a l'aplicació
+        d'escriptori de Cadrumo i torna-ho a provar.
     retry: Problema de connexió. Es tornarà a provar d'aquí a %{seconds} segons (intent
       %{attempt}).
     space_needed: La configuració necessita %{required} lliures i n'hi ha %{free}

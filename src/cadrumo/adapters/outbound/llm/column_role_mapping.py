@@ -507,9 +507,8 @@ class SemanticColumnRoleMapper:
     Binds to :class:`~llm.LLMClient` and nothing lower. Every mapping runs
     through the agent service under
     :attr:`~core.model_roles.ModelRole.COLUMN_ROLE_MAPPING`, so the lane and
-    model are the ones the service derives for that role from the person's local
-    model list. This class names no model and no provider of its own. A role no
-    listed model serves, an unavailable
+    model are the ones the person picked in the agent's model picker. This class
+    names no model and no provider of its own. No picked model, an unavailable
     lane or a model that is not installed refuses with the service's typed
     verdict; nothing here substitutes another lane or model.
 

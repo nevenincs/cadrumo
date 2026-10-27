@@ -1,8 +1,9 @@
 """The jobs a model is chosen for: Cadrumo's model-role vocabulary.
 
 The roles are Cadrumo's internal vocabulary; the models are not. Nobody chooses
-a model per role: the agent service derives each role's model from the
-person's local model list by the capability the role needs.
+a model per role: every role runs with the one model the person picked in the
+agent's model picker, which the agent service refuses for a role that needs a
+capability the model lacks.
 """
 
 from __future__ import annotations

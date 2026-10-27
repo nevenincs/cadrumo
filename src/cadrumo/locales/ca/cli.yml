@@ -109,9 +109,9 @@ cli:
           o pots emplenar-los tu.'
         batch_paused_local_ai_not_ready: La IA local, que llegeix els documents en
           pausa, no està a punt.
-        batch_paused_local_ai_unavailable: La IA local no ha pogut llegir els documents
-          en pausa. Revisa la seva llista de models a l'aplicació d'escriptori de
-          Cadrumo.
+        batch_paused_local_ai_unavailable: El model que has triat no ha pogut llegir
+          els documents en pausa. Revisa'l al selector de models de l'agent a l'aplicació
+          d'escriptori de Cadrumo.
         batch_pending_review_message: Alguns esborranys contenen una incidència que
           has de resoldre tu abans de crear una factura. Estan retinguts, no fallits.
         batch_progress_message: 'processat %{source}: %{status}'
@@ -3388,9 +3388,9 @@ cli:
       file_help: Ruta a l'arxiu de l'extracte bancari o directori
       file_reader_not_ready: 'Extracte no llegit: {file} el llegeix la IA local, que
         no està a punt.'
-      file_reader_unavailable: 'Extracte no llegit: la IA local no està disponible
-        ara mateix per llegir {file}. Revisa la seva llista de models a l''aplicació
-        d''escriptori de Cadrumo i torna-ho a provar.'
+      file_reader_unavailable: 'Extracte no llegit: el model que has triat no està
+        disponible ara mateix per llegir {file}. Revisa''l al selector de models de
+        l''agent a l''aplicació d''escriptori de Cadrumo i torna-ho a provar.'
       file_refused: 'Extracte rebutjat i omès: {file}. La resta de la carpeta s''ha
         importat.'
       file_refused_account_mismatch: 'Extracte rebutjat i omès: {file} indica un compte
