@@ -5,7 +5,7 @@ tags:
 date: '2026-10-27'
 modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:f952ea8eccc57a4e4fc436a2af18ef2d154c245e09805f26903a0addecaab6be'
+body_hash: 'sha256:c677b37e88632b65154498576870c0ad694b25cd42cabb172c5f9c0afaea5d35'
 related:
   - "[[2026-10-27-profile-field-remap-plan]]"
 ---
@@ -219,6 +219,31 @@ related:
 - `S02` `verify:` `cmake --target desktop-frontend-check (tsc, eslint, node tests pass; prettier flags src/dev/fixtures/userProfile.json, not touched)` -> `fail`
 - `S02` `verify:` `dev.operation_contract_manifest.generate (manifest regenerated)` -> `pass`
 - `S02` `by:` `vaultspec-standard-executor`
+- `S03` `M` `dev/desktop_profile_fixture.py`
+- `S03` `M` `dev/tui/harness/profile_fixtures.py`
+- `S03` `M` `dev/tui/harness/surfaces.py`
+- `S03` `M` `native/desktop/frontend/src/dev/fixtures/userProfile.json`
+- `S03` `A` `src/cadrumo/application/user_profile/field_help.py`
+- `S03` `M` `src/cadrumo/application/user_profile/overview.py`
+- `S03` `A` `src/cadrumo/application/user_profile/tests/test_field_help.py`
+- `S03` `M` `src/cadrumo/application/user_profile/view_reader.py`
+- `S03` `M` `src/cadrumo/domain/user_profile/labels.py`
+- `S03` `M` `src/cadrumo/domain/user_profile/tests/test_labels.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/profile/edit_screens.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/profile/tests/test_field_help_text.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/tests/test_manager_onboarding.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/tests/test_manager_screen.py`
+- `S03` `M` `src/cadrumo/locales/ca/flows.yml`
+- `S03` `M` `src/cadrumo/locales/ca/profile.yml`
+- `S03` `M` `src/cadrumo/locales/en/flows.yml`
+- `S03` `M` `src/cadrumo/locales/en/profile.yml`
+- `S03` `M` `src/cadrumo/locales/es/flows.yml`
+- `S03` `M` `src/cadrumo/locales/es/profile.yml`
+- `S03` `M` `src/cadrumo/locales/hu/flows.yml`
+- `S03` `M` `src/cadrumo/locales/hu/profile.yml`
+- `S03` `M` `src/cadrumo_runtime/host/tests/frontend/tui/profile/test_runtime_overview.py`
+- `S03` `verify:` `uv run --no-sync pytest src/cadrumo/application/user_profile/tests/test_field_help.py src/cadrumo/entrypoints/tui/profile/tests/test_field_help_text.py` -> `pass`
+- `S03` `verify:` `python -m dev.desktop_profile_fixture --check` -> `pass`
 
 ## Notes
 
