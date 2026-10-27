@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:d65b4bbcd819ebe96818d7d00b909171cd683a1969993e9557edc50395f5d3bf'
+body_hash: 'sha256:9005e1aeb08c3c2d78da2b82ec0c5a7c3e3987785b963dc3378ce05abdd23f52'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -1429,6 +1429,10 @@ related:
 - `S31` `verify:` `uv run --no-sync pytest src/cadrumo/application/tests/test_local_reader.py -n 0 -q` -> `pass`
 - `S31` `verify:` `uv run --no-sync ruff check src/cadrumo/application/local_reader.py src/cadrumo/application/local_reader_report.py src/cadrumo/application/provisioning.py src/cadrumo/application/provisioning_contracts.py src/cadrumo/application/tests/test_local_reader.py` -> `pass`
 - `S31` `verify:` `uv run --no-sync ruff format --check src/cadrumo/application/local_reader.py src/cadrumo/application/local_reader_report.py src/cadrumo/application/provisioning.py src/cadrumo/application/provisioning_contracts.py src/cadrumo/application/tests/test_local_reader.py` -> `pass`
+- `S31` `verify:` `uv run --no-sync pytest src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_import.py src/cadrumo/application/tests/test_local_reader.py -n 0 -q` -> `pass`
+- `S31` `verify:` `just check-types` -> `pass`
+- `S31` `verify:` `uv run --no-sync ruff check src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_import.py` -> `pass`
+- `S31` `verify:` `uv run --no-sync ruff format --check src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_import.py` -> `pass`
 
 ## Notes
 
@@ -1527,3 +1531,4 @@ related:
 - `S31` The components role bytes are unchanged: the engine never serialised a note, so `PROTOCOL_VERSION` 1 and `PLAN_CONTRACT_VERSION` 3 stay. The desktop wire row drops its always-null note field and is read only by the same-build window.
 - `S31` native/CONTRACT.md names no row field, so it needed no change.
 - `S31` Committed checkpoint 5645a4f9a8 at owner request. TUI fixture migration and its focused test plus just check-types remain pending; foreign `_Controller` hunks were excluded. P05.S31 stays open.
+- `S31` Owner explicitly authorized committing existing `_Controller` refactor. Hardware-floor fixture replaced with missing-selection verdict; 32 focused tests pass at e6a7dcaef0.
