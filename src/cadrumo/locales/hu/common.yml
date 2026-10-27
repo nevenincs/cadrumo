@@ -3745,6 +3745,25 @@ desktop:
     try_again: Újrapróbálás
     unavailable: Az összetevőket most nem lehet ellenőrizni. Próbáld újra egy kicsit
       később.
+  setup_review:
+    answer_unknown: 'A telepítési döntést nem sikerült visszaigazolni. A telepítés
+      már elindulhatott. Újrakezdés előtt ellenőrizd az összetevők állapotát. Művelet:
+      {operation_id}'
+    apply: Alkalmazás
+    authority_lost: A felülvizsgálat jogosultsága megszűnt. Jelentkezz be, és indíts
+      új telepítési műveletet.
+    claim: Felülvizsgálat átvétele
+    claimed: Felülvizsgálat átvéve.
+    claimed_elsewhere: Ezt a felülvizsgálatot más vette át. Nem veheted át tőle.
+    destination_browser: Böngészőfájlok
+    expires_at: Lejárat
+    failed: A felülvizsgálat nem érhető el. A folytatás előtt olvasd be újra.
+    operation_id: Műveletazonosító
+    read: Aktuális felülvizsgálat beolvasása
+    reject: Elutasítás
+    review_digest: A felülvizsgálat lenyomata
+    target_version: 'Verzió: {version}'
+    title: Telepítési művelet áttekintése
   signin:
     checking: A bejelentkezésed ellenőrzése…
     choose_profile: Válassz profilt

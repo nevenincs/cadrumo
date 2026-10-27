@@ -3706,6 +3706,24 @@ desktop:
     toast_not_finished: Setup didn't finish
     try_again: Try again
     unavailable: Components can't be checked right now. Try again in a moment.
+  setup_review:
+    answer_unknown: 'The setup decision could not be confirmed. Setup may have started.
+      Check component status before starting again. Operation: {operation_id}'
+    apply: Apply
+    authority_lost: This review's authority has ended. Sign in and start a new setup
+      operation.
+    claim: Claim this review
+    claimed: Review claimed.
+    claimed_elsewhere: Another person holds this review. It cannot be taken over.
+    destination_browser: Browser files
+    expires_at: Expires
+    failed: The review is unavailable. Read it again before continuing.
+    operation_id: Operation ID
+    read: Read current review
+    reject: Reject
+    review_digest: Review digest
+    target_version: 'Version: {version}'
+    title: Review setup operation
   signin:
     checking: Checking your sign-in…
     choose_profile: Choose a profile

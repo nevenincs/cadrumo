@@ -3767,6 +3767,25 @@ desktop:
     try_again: Torna-ho a provar
     unavailable: Ara no es poden comprovar els components. Torna-ho a provar d'aquí
       a un moment.
+  setup_review:
+    answer_unknown: 'No s''ha pogut confirmar la decisió. La instal·lació pot haver
+      començat. Comprova l''estat dels components abans de tornar a començar. Operació:
+      {operation_id}'
+    apply: Aplicar
+    authority_lost: L'autorització d'aquesta revisió ha acabat. Inicia la sessió i
+      comença una nova operació d'instal·lació.
+    claim: Assumir aquesta revisió
+    claimed: Revisió assumida.
+    claimed_elsewhere: Una altra persona té aquesta revisió. No la pots assumir.
+    destination_browser: Fitxers del navegador
+    expires_at: Caduca
+    failed: La revisió no està disponible. Torna a llegir-la abans de continuar.
+    operation_id: ID de l'operació
+    read: Llegir la revisió actual
+    reject: Rebutjar
+    review_digest: Empremta de la revisió
+    target_version: 'Versió: {version}'
+    title: Revisar l'operació d'instal·lació
   signin:
     checking: S'està comprovant la teva sessió…
     choose_profile: Tria un perfil

@@ -207,6 +207,7 @@ export interface Host {
   /** Component setup, where this host offers it. Without it the shell shows
    * no Components section and no setup actions. */
   readonly setup?: Setup;
+  readonly setupReview?: import("./setupReview").SetupReviewPort;
 }
 
 export class HostUnavailable extends Error {

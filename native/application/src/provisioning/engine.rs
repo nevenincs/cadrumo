@@ -89,6 +89,10 @@ use std::{
     hash::{BuildHasher, Hasher},
     net::SocketAddr,
     path::{Path, PathBuf},
+    sync::{
+        Arc,
+        atomic::{AtomicBool, Ordering},
+    },
     time::{Duration, Instant, SystemTime},
 };
 
@@ -1312,7 +1316,31 @@ impl Engine {
                         failure: Some(FailureCategory::Interrupted),
                     });
                 }
-                Err(_) => return Followed::Unfollowable,
+                Err(error) => {
+                    let Some(run) = followed.as_ref() else {
+                        return Followed::Unfollowable;
+                    };
+                    match recover_activity_after_release(
+                        &self.activity,
+                        item,
+                        run,
+                        &error,
+                        &mut changes,
+                        cancellation,
+                        || self.activity.watch(item),
+                    ) {
+                        Some(Watched::Idle) => break,
+                        Some(Watched::Interrupted) => {
+                            return Followed::Stopped(RunStop {
+                                outcome: EndedOutcome::Failed,
+                                item,
+                                failure: Some(FailureCategory::Interrupted),
+                            });
+                        }
+                        _ if cancellation.is_cancelled() => return Followed::Abandoned,
+                        _ => return Followed::Unfollowable,
+                    }
+                }
             }
             changes.wait(bound);
         }
@@ -1585,6 +1613,50 @@ fn wait_for_server(
     }
 }
 
+/// Re-observes one activity access failure only after its known run has published an end
+/// and released the writer lock. An enduring access failure remains unfollowable.
+fn recover_activity_after_release(
+    activity: &ActivityStore,
+    item: ItemId,
+    run: &RunMark,
+    error: &Error,
+    changes: &mut Changes,
+    cancellation: &Cancellation,
+    reobserve: impl FnOnce() -> Result<Watched, Error>,
+) -> Option<Watched> {
+    if !matches!(error, Error::Io(error) if error.kind() == std::io::ErrorKind::PermissionDenied) {
+        return None;
+    }
+    if !activity
+        .ended(item)
+        .is_some_and(|ended| ended.run == run.id)
+    {
+        return None;
+    }
+    let released = Arc::new(AtomicBool::new(false));
+    let release_flag = released.clone();
+    let wake = changes.waker();
+    if !follow::wake_on_release(
+        activity.lock_path(item),
+        Arc::new(move || {
+            release_flag.store(true, Ordering::Release);
+            wake();
+        }),
+    ) {
+        return None;
+    }
+    while !released.load(Ordering::Acquire) {
+        if cancellation.is_cancelled() {
+            return None;
+        }
+        changes.wait(None);
+    }
+    if cancellation.is_cancelled() {
+        return None;
+    }
+    reobserve().ok()
+}
+
 /// Records how an item's work ended: finished, or failed with its category. A part held
 /// busy by another engine is no failure of this item, so it records none.
 fn finish(writer: ItemWriter<'_>, outcome: Result<(), Stop>) -> Result<(), Stop> {
@@ -1626,5 +1698,131 @@ impl Report {
             failure: Some(FailureCategory::DiskFull),
             ..self
         }
+    }
+}
+
+#[cfg(test)]
+mod follower_access_tests {
+    use super::*;
+    use std::sync::mpsc;
+
+    #[test]
+    fn activity_access_recovery_requires_matching_end_release_and_one_observation() {
+        let directory = tempfile::tempdir().unwrap();
+        let activity = ActivityStore::new(directory.path().join("activity")).unwrap();
+        let item = ItemId::Browser;
+        let run = RunMark {
+            id: "finished-run".into(),
+            plan_digest: Sha256Digest::of(b"plan"),
+        };
+        let observer = |_| {};
+        activity
+            .queue(item, &run, &observer)
+            .unwrap()
+            .failed(FailureCategory::Cancelled)
+            .unwrap();
+        let permission = Error::Io(std::io::Error::from(std::io::ErrorKind::PermissionDenied));
+        let cancellation = Cancellation::default();
+        let mut changes = Changes::new(activity.root().to_path_buf());
+        let other = RunMark {
+            id: "another-run".into(),
+            ..run.clone()
+        };
+        assert_eq!(
+            recover_activity_after_release(
+                &activity,
+                item,
+                &other,
+                &permission,
+                &mut changes,
+                &cancellation,
+                || panic!("an unrelated run must not be observed"),
+            ),
+            None
+        );
+        let other_error = Error::Io(std::io::Error::from(std::io::ErrorKind::InvalidData));
+        assert_eq!(
+            recover_activity_after_release(
+                &activity,
+                item,
+                &run,
+                &other_error,
+                &mut changes,
+                &cancellation,
+                || panic!("other failures must not be retried"),
+            ),
+            None
+        );
+        assert_eq!(
+            recover_activity_after_release(
+                &activity,
+                item,
+                &run,
+                &permission,
+                &mut changes,
+                &cancellation,
+                || Err(Error::Io(std::io::Error::from(
+                    std::io::ErrorKind::PermissionDenied
+                ))),
+            ),
+            None,
+            "a persistent denial is not ignored"
+        );
+        let cancelled = Cancellation::default();
+        cancelled.cancel();
+        assert_eq!(
+            recover_activity_after_release(
+                &activity,
+                item,
+                &run,
+                &permission,
+                &mut changes,
+                &cancelled,
+                || panic!("a cancelled follow must not be observed"),
+            ),
+            None
+        );
+
+        // Hold the real writer lock so the re-observation cannot run before release.
+        let lock = fs::OpenOptions::new()
+            .read(true)
+            .write(true)
+            .open(activity.lock_path(item))
+            .unwrap();
+        lock.try_lock().unwrap();
+        let (ready_tx, ready_rx) = mpsc::channel();
+        let (observed_tx, observed_rx) = mpsc::channel();
+        std::thread::scope(|scope| {
+            let task = scope.spawn(|| {
+                let mut changes = Changes::new(activity.root().to_path_buf());
+                ready_tx.send(()).unwrap();
+                recover_activity_after_release(
+                    &activity,
+                    item,
+                    &run,
+                    &permission,
+                    &mut changes,
+                    &cancellation,
+                    || {
+                        observed_tx.send(()).unwrap();
+                        activity.watch(item)
+                    },
+                )
+            });
+            ready_rx.recv().unwrap();
+            assert!(observed_rx.try_recv().is_err());
+            lock.unlock().unwrap();
+            assert_eq!(task.join().unwrap(), Some(Watched::Idle));
+        });
+        observed_rx.recv().unwrap();
+        let ended = activity.ended(item).unwrap();
+        assert_eq!(
+            (ended.run, ended.outcome, ended.failure),
+            (
+                run.id,
+                EndedOutcome::Cancelled,
+                Some(FailureCategory::Cancelled)
+            )
+        );
     }
 }

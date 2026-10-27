@@ -13,6 +13,7 @@
 pub mod admission;
 pub mod components;
 pub mod google;
+pub mod review;
 pub mod wire;
 
 use super::sign_in::{Presence, SignIn};
@@ -449,6 +450,9 @@ async fn setup_pushed(events: &mut tokio::sync::broadcast::Receiver<PersonEvent>
 
 pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
     crate::app::commands![
+        desktop_setup_review_read,
+        desktop_setup_review_claim,
+        desktop_setup_review_answer,
         desktop_setup_read,
         desktop_setup_check,
         desktop_setup_verify,
@@ -461,6 +465,31 @@ pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
         desktop_setup_observe,
         desktop_setup_unobserve
     ]
+}
+
+#[tauri::command]
+async fn desktop_setup_review_read(
+    host: State<'_, Arc<SetupHost>>,
+    operation_id: String,
+) -> std::result::Result<Value, review::Failure> {
+    review::exchange(&host, review::Action::Read { operation_id }).await
+}
+
+#[tauri::command]
+async fn desktop_setup_review_claim(
+    host: State<'_, Arc<SetupHost>>,
+    review: review::Coordinates,
+) -> std::result::Result<Value, review::Failure> {
+    review::exchange(&host, review::Action::Claim(review)).await
+}
+
+#[tauri::command]
+async fn desktop_setup_review_answer(
+    host: State<'_, Arc<SetupHost>>,
+    review: review::Coordinates,
+    decision: review::Decision,
+) -> std::result::Result<Value, review::Failure> {
+    review::exchange(&host, review::Action::Answer(review, decision)).await
 }
 
 #[tauri::command]

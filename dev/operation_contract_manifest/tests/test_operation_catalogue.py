@@ -598,18 +598,38 @@ def test_aliased_and_qualified_real_ids_reach_the_shared_composition_seam() -> N
     ] == frozenset(_dynamic_definition_ids())
 
 
+def _outbound_adapter_imports(tree: ast.Module) -> tuple[str, ...]:
+    imported: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            imported.update(alias.name for alias in node.names)
+        elif isinstance(node, ast.ImportFrom):
+            module = node.module or ""
+            imported.add(module)
+            imported.update(f"{module}.{alias.name}" for alias in node.names)
+    return tuple(sorted(module for module in imported if "adapters.outbound" in module))
+
+
+@pytest.mark.parametrize(
+    "statement",
+    (
+        "import cadrumo.adapters.outbound.components.client as role",
+        "from cadrumo.adapters.outbound.components.client import ComponentsClient",
+        "from ....adapters.outbound.components import client",
+        "from ....adapters import outbound as transport",
+    ),
+)
+def test_the_full_screen_adapter_gate_detects_direct_and_parent_imports(statement: str) -> None:
+    assert _outbound_adapter_imports(ast.parse(statement))
+    assert not _outbound_adapter_imports(ast.parse("from cadrumo_client.transport import operation_controller"))
+
+
 def test_no_full_screen_surface_reaches_an_outbound_adapter_directly() -> None:
     """The full-screen tier never calls a transport; it goes through the platform."""
     prefix = _FRONTEND_PACKAGES[OperationFrontendProjection.TUI]
     offenders: list[tuple[str, str]] = []
     for path in _paths_under(prefix):
-        for node in ast.walk(production_operation_source_tree().parsed(path)):
-            if (
-                isinstance(node, ast.ImportFrom)
-                and (node.module is not None and node.module)
-                and "adapters.outbound" in node.module
-            ):
-                offenders.append((path, node.module))
-            elif isinstance(node, ast.Import):
-                offenders.extend((path, alias.name) for alias in node.names if "adapters.outbound" in alias.name)
+        offenders.extend(
+            (path, module) for module in _outbound_adapter_imports(production_operation_source_tree().parsed(path))
+        )
     assert not offenders, f"a full-screen surface imports an outbound adapter directly: {offenders}"

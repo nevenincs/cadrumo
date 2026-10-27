@@ -1004,11 +1004,14 @@ fn a_follower_reports_the_cancel_the_person_asked_for_and_a_setup_whose_process_
     let gate = world.gate();
     let owner = world.start(&["setup", "--approve", &digest]);
     owner.until("progress");
-    let (follower, _) = following(&world, &["setup", "--item", "browser"], &digest);
+    let (follower, seen) = following(&world, &["setup", "--item", "browser"], &digest);
+    let activity = world.root().join("components/activity");
+    let observed = fs::read_to_string(activity.join("browser.activity.json"));
     let asked = world.run(&["cancel"]);
     assert_eq!(asked.result["outcome"], "cancel_requested");
     gate.open();
-    assert_eq!(owner.finish().result["outcome"], "cancelled");
+    let owned = owner.finish();
+    assert_eq!(owned.result["outcome"], "cancelled");
     let followed = follower.finish();
     assert_eq!(
         (
@@ -1017,8 +1020,14 @@ fn a_follower_reports_the_cancel_the_person_asked_for_and_a_setup_whose_process_
             &followed.result["failure_category"]
         ),
         (&json!("cancelled"), &json!("browser"), &json!("cancelled")),
-        "{}",
-        followed.result
+        "follower: {}; events before: {seen:?}; events after: {:?}; owner: {}; \
+         initial activity: {observed:?}; final activity: {:?}; end: {:?}; failure: {:?}",
+        followed.result,
+        followed.events,
+        owned.result,
+        fs::read_to_string(activity.join("browser.activity.json")),
+        fs::read_to_string(activity.join("browser.ended.json")),
+        fs::read_to_string(activity.join("browser.failure.json")),
     );
 
     // The partial download would let the next setup resume past the gate.

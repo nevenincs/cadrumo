@@ -40,9 +40,10 @@ uv run aeat --version
 
 ## Confirm the install
 
-No taxpayer profile is needed for these checks; you create one with
-`aeat config profile create` after installing. See
-[Set up a profile](how-to/profile-setup.md).
+Version and capability checks need no taxpayer profile. Component checks use
+your signed-in profile. Create a profile with `aeat config profile create`
+and sign in before checking or changing components from the command line or
+terminal interface. See [Set up a profile](how-to/profile-setup.md).
 
 Confirm the command is on your path and the capability posture is readable.
 Then run the workstation check on your own machine. Its dependency and
@@ -87,7 +88,8 @@ size and checksum.
 
 See where you stand first. `aeat config provision status` reads only what this
 computer already has, so it downloads nothing and works offline. Each row that
-is not ready says how to fix it.
+is not ready says what you can do next. Sign in to a profile first: component
+commands run through the runtime and record their results for that profile.
 
 ### Set up the browser
 
@@ -98,6 +100,22 @@ stored. It asks before it downloads anything. `--yes` approves exactly the plan
 the command prints, without asking. Without `--yes` and without a terminal to
 answer on, nothing is downloaded and the command says it needs your approval.
 A browser that is already set up is left as it is.
+
+The terminal interface offers the same plan and human review. An assistant
+connected through MCP can start browser setup and report its operation ID, but
+cannot approve or reject the review. To answer it yourself, run
+`aeat config provision review OPERATION_ID` while signed in to the same profile,
+or open that operation's review in the terminal interface. Read the current
+plan and choose whether to apply or reject it. The command claims that exact
+review for your answer; the terminal interface has an explicit claim action. A claimed review
+cannot be taken over by another session. If the review expires or either
+session loses its authority, start a new setup run and review its new plan.
+
+In the signed-in desktop app, open **Settings → Review setup operation**, enter
+the operation ID, and choose **Read current review**. After reading the plan,
+choose **Claim this review**, then **Apply** or **Reject**. If an Apply reply
+cannot be confirmed, setup may already have started: check component status
+before starting again.
 
 To set up the browser alone:
 
@@ -125,8 +143,8 @@ existing settings, with its setup status, enable switch, model files and
 document-reading choices. **Models on this computer** in a setup prompt or the
 document model chooser leads to the same controls.
 
-Choose **Download** on a model, choose what it should read in your documents,
-then review and approve the setup plan. **Remove** clears the document-reading
+Choose **Download** on a model, then review and approve the setup plan. Once
+it is available, choose what it should read in your documents. **Remove** clears the document-reading
 choices that use that model before removing its files. Choosing a model for
 chat does not change the models used for document reading.
 
@@ -164,9 +182,10 @@ one-word answer. `--item browser` or `--item local_ai` checks one component.
 The check downloads nothing and exits with status 2 unless each component it
 checks is usable.
 
-These commands work with or without a signed-in profile. A Cadrumo build
-without its native components, such as a source checkout that has not built
-them, reports every component as not included in that version.
+These commands require a signed-in profile. The desktop app can still provision
+components natively before sign-in. A Cadrumo build without its native
+components, such as a source checkout that has not built them, reports every
+component as not included in that version.
 
 Run `aeat config check` again after each change to confirm the gap is closed.
 

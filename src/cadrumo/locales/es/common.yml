@@ -3768,6 +3768,25 @@ desktop:
     try_again: Reintentar
     unavailable: Ahora no se pueden comprobar los componentes. Inténtalo de nuevo
       en un momento.
+  setup_review:
+    answer_unknown: 'No se ha podido confirmar la decisión. La instalación puede haber
+      empezado. Comprueba el estado de los componentes antes de empezar otra vez.
+      Operación: {operation_id}'
+    apply: Aplicar
+    authority_lost: La autorización de esta revisión ha terminado. Inicia sesión y
+      empieza una nueva operación de instalación.
+    claim: Asumir esta revisión
+    claimed: Revisión asumida.
+    claimed_elsewhere: Otra persona tiene esta revisión. No puedes asumirla.
+    destination_browser: Archivos del navegador
+    expires_at: Caduca
+    failed: La revisión no está disponible. Vuelve a leerla antes de continuar.
+    operation_id: ID de operación
+    read: Leer revisión actual
+    reject: Rechazar
+    review_digest: Huella de la revisión
+    target_version: 'Versión: {version}'
+    title: Revisar la operación de instalación
   signin:
     checking: Comprobando tu sesión…
     choose_profile: Elige un perfil

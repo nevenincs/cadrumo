@@ -227,6 +227,12 @@ export function tauriHost(): Host {
         };
       },
     },
+    setupReview: {
+      read: (operationId) => call("desktop_setup_review_read", { operationId }),
+      claim: (review) => call("desktop_setup_review_claim", { review }),
+      answer: (review, decision) =>
+        call("desktop_setup_review_answer", { review, decision }),
+    },
     setup: {
       read: () => call("desktop_setup_read", {}),
       check: (mode) => call("desktop_setup_check", { mode }),

@@ -62,6 +62,7 @@ export function Settings({
   onReset,
   close,
   advisory,
+  setupReview,
   about,
   onLocalAi,
 }: {
@@ -73,6 +74,7 @@ export function Settings({
   /** The setup advisory, first under the title; absent, or rendering
    * nothing, when there is nothing to finish. */
   advisory?: ReactNode;
+  setupReview?: ReactNode;
   /** The installation's version row, which opens the About dialog; absent
    * where the host cannot say what is installed. */
   about?: { state: AboutState | null; onOpen: () => void };
@@ -126,6 +128,7 @@ export function Settings({
       >
         <h2 className="font-serif text-lg">{t("desktop.settings.title")}</h2>
         {advisory}
+        {setupReview}
         {onLocalAi && (
           <Button
             variant="outline"

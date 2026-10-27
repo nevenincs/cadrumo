@@ -617,6 +617,101 @@ mod tests {
     const OTHER: &str = "52345678-1234-4234-8234-123456789abc";
     const OPERATION: &str = "ab00000000000000000000000000000000000000000000000000000000000001";
 
+    /// Driven by the Python runtime lifecycle test while its MCP invocation
+    /// and attendance parent remain live. No scripted SessionExchange is used.
+    #[test]
+    fn native_setup_review_runtime_fixture() {
+        use cadrumo_application::runtime_client::{Cohort, Connection, Endpoint, Frontend};
+        use std::{fs, path::Path};
+
+        let Some(config_path) = std::env::var_os("CADRUMO_DESKTOP_REVIEW_RUNTIME_FIXTURE") else {
+            return;
+        };
+        let bytes = fs::read(config_path).unwrap();
+        assert!(bytes.len() <= 16 * 1024);
+        let config: Value = serde_json::from_slice(&bytes).unwrap();
+        let field = |name: &str| config[name].as_str().unwrap();
+        let endpoint = Endpoint::of(Path::new(field("storage_root"))).unwrap();
+        let deadline = Instant::now() + Duration::from_secs(120);
+        let connection = Arc::new(
+            Connection::open(
+                &endpoint,
+                &Cohort {
+                    product_version: "test".into(),
+                    authority_generation: None,
+                },
+                deadline,
+            )
+            .unwrap(),
+        );
+        let pushed = connection.subscribe_scoped();
+        let admitted = connection
+            .login_password(
+                field("profile_id"),
+                Frontend::Desktop,
+                field("password").as_bytes(),
+                false,
+                deadline,
+            )
+            .unwrap();
+        let (mut session, identity) = NativeSession::start(
+            connection,
+            pushed,
+            admitted,
+            None,
+            Arc::new(Mutex::new(None)),
+        )
+        .unwrap();
+        let operation = field("operation_id");
+        let review = session.exchange(&json!({
+            "request_id": "fixture-review", "action": "operation_review", "operation_id": operation,
+        })).unwrap();
+        assert_eq!(review["kind"], "operation_review", "{review}");
+        assert_eq!(review["operation_id"], operation);
+        assert!(review["document"].is_object());
+        let claimed = session.exchange(&json!({
+            "request_id": "fixture-claim", "action": "operation_review_claim", "operation_id": operation,
+            "interaction_id": review["interaction_id"], "revision": review["revision"],
+            "review_digest": review["review_digest"],
+        })).unwrap();
+        assert_eq!(claimed["kind"], "operation_review_claimed", "{claimed}");
+        assert_eq!(claimed["interaction_id"], review["interaction_id"]);
+        assert_eq!(
+            claimed["revision"].as_u64().unwrap(),
+            review["revision"].as_u64().unwrap() + 1
+        );
+        let responded = session.exchange(&json!({
+            "request_id": "fixture-reject", "action": "operation_respond", "operation_id": operation,
+            "interaction_id": claimed["interaction_id"], "revision": claimed["revision"],
+            "review_digest": claimed["review_digest"], "decision": "reject",
+        })).unwrap();
+        assert_eq!(responded["kind"], "operation_responded", "{responded}");
+        assert_eq!(responded["decision"], "reject");
+        // Keep the verified claimant alive until the real supervisor settles.
+        loop {
+            assert!(Instant::now() < deadline, "setup did not settle");
+            let observed = session
+                .exchange(&json!({
+                    "request_id": "fixture-observe", "action": "operation_observe",
+                    "operation_id": operation, "after_cursor": 0,
+                }))
+                .unwrap();
+            assert_eq!(observed["kind"], "operation_observed", "{observed}");
+            if observed["observation"]["projection"]["lifecycle"] == "terminal" {
+                break;
+            }
+            thread::sleep(Duration::from_millis(20));
+        }
+        fs::write(
+            field("output_file"),
+            serde_json::to_vec(&json!({
+                "identity": identity, "review": review, "claimed": claimed, "responded": responded,
+            }))
+            .unwrap(),
+        )
+        .unwrap();
+    }
+
     /// What the fake runtime answers to the next request.
     enum Answer {
         Reply(Value),

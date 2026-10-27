@@ -75,7 +75,7 @@ function planSize(t: Translate, review: SetupReview, locale: string): string {
     : t("desktop.setup.plan_nothing");
 }
 
-function PlanSummary({
+export function PlanSummary({
   review,
   locale,
 }: {
@@ -107,7 +107,7 @@ function PlanSummary({
   );
 }
 
-function PlanDetail({
+export function PlanDetail({
   review,
   locale,
 }: {

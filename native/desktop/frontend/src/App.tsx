@@ -57,6 +57,8 @@ import {
 } from "./shell/records";
 import { Settings } from "./components/Settings";
 import { GoogleAccount } from "./components/GoogleAccount";
+import { SetupReview } from "./components/setup/SetupReview";
+import { SetupReviewSession } from "./shell/setupReview";
 import { SetupAdvisory } from "./components/setup/SetupAdvisory";
 import { SetupDialog } from "./components/setup/SetupDialog";
 import { SetupPrompt } from "./components/setup/SetupPrompt";
@@ -546,6 +548,19 @@ export function App({ host }: { host: Host }) {
   const gated = account.gated;
   const phase = account.phase;
   const signedIn = phase === "signed-in";
+  // The verified profile owns the review lifetime; opening Settings or the
+  // status dialog only subscribes to it and never abandons an in-flight answer.
+  const setupReviewProfile = signedIn
+    ? (account.status?.active_profile ?? null)
+    : null;
+  const setupReviewSession = useMemo(
+    () =>
+      setupReviewProfile && host.setupReview
+        ? new SetupReviewSession(host.setupReview)
+        : null,
+    [setupReviewProfile, host.setupReview],
+  );
+  useEffect(() => () => setupReviewSession?.clear(), [setupReviewSession]);
   usePersonActivity(host, signedIn);
   const accountRef = useRef(account);
   accountRef.current = account;
@@ -3612,6 +3627,16 @@ export function App({ host }: { host: Host }) {
 
             {settingsOpen && (
               <Settings
+                setupReview={
+                  setupReviewSession ? (
+                    <SetupReview
+                      key={account.status?.active_profile}
+                      session={setupReviewSession}
+                      locale={locale}
+                      onCheckStatus={() => openSetup(null)}
+                    />
+                  ) : undefined
+                }
                 prefs={prefs}
                 setPrefs={setPrefs}
                 language={languageControl}

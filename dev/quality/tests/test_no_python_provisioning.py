@@ -71,6 +71,10 @@ Where each row stops:
   the desktop hands it to the engine, so no product Python passes a model on a
   command line. A longer option name, such as ``--model-file``, is another
   option and passes this row.
+- Components client. Outside the components adapter itself, only the registered
+  components composition module imports the client or its protocol. Absolute,
+  relative and aliased imports are resolved; dynamically constructed import
+  names remain governed by the general import-boundary gate.
 """
 
 from __future__ import annotations
@@ -80,6 +84,7 @@ import itertools
 from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from functools import cached_property
+from importlib.util import resolve_name
 from pathlib import Path
 from typing import Final
 
@@ -196,6 +201,7 @@ class Source:
 
     module: str
     tree: ast.Module
+    is_package: bool = False
 
     @cached_property
     def strings(self) -> tuple[str, ...]:
@@ -290,9 +296,9 @@ def _docstrings(tree: ast.Module) -> Iterator[ast.Constant]:
                 yield first.value
 
 
-def parse_source(module: str, text: str) -> Source:
+def parse_source(module: str, text: str, *, is_package: bool = False) -> Source:
     """Parse ``text`` as the module named ``module``."""
-    return Source(module=module, tree=ast.parse(text))
+    return Source(module=module, tree=ast.parse(text), is_package=is_package)
 
 
 # --------------------------------------------------------------------------
@@ -532,6 +538,31 @@ def model_argument_findings(source: Source) -> list[str]:
     ]
 
 
+def components_client_findings(source: Source) -> list[str]:
+    """Keep the role transport behind its registered-operation composition seam."""
+    adapter = "cadrumo.adapters.outbound.components"
+    if source.module == "cadrumo.entrypoints.components_operation_composition" or source.module.startswith(
+        adapter + "."
+    ):
+        return []
+    package = source.module if source.is_package else source.module.rpartition(".")[0]
+    imports: set[str] = set()
+    for node in ast.walk(source.tree):
+        if isinstance(node, ast.Import):
+            imports.update(alias.name for alias in node.names)
+        elif isinstance(node, ast.ImportFrom):
+            module = node.module or ""
+            if node.level:
+                module = resolve_name("." * node.level + module, package)
+            imports.add(module)
+            imports.update(f"{module}.{alias.name}" for alias in node.names)
+    return [
+        f"{source.module}: imports the components transport {module} outside its composition"
+        for module in sorted(imports)
+        if module in {f"{adapter}.client", f"{adapter}.protocol"}
+    ]
+
+
 def provisioning_findings(source: Source, hosts: Iterable[str]) -> list[str]:
     """Every row's findings for one module."""
     return [
@@ -546,6 +577,7 @@ def provisioning_findings(source: Source, hosts: Iterable[str]) -> list[str]:
         *operation_findings(source),
         *local_ai_request_findings(source),
         *model_argument_findings(source),
+        *components_client_findings(source),
     ]
 
 
@@ -577,7 +609,9 @@ def _module_name(path: Path) -> str:
 
 def _product_sources() -> Mapping[str, Source]:
     return {
-        _module_name(path): parse_source(_module_name(path), path.read_text(encoding="utf-8"))
+        _module_name(path): parse_source(
+            _module_name(path), path.read_text(encoding="utf-8"), is_package=path.name == "__init__.py"
+        )
         for path in _product_files()
     }
 
@@ -770,6 +804,54 @@ def test_a_module_that_asks_for_the_local_ai_to_be_planned_set_up_or_removed_is_
     assert local_ai_request_findings(joined) == ["fixture.joined:1: spells a setup command line naming the local AI"]
     assert local_ai_request_findings(reading) == [], (
         "reading or checking the local AI, and setting up the browser, pass"
+    )
+
+
+@pytest.mark.parametrize(
+    "statement",
+    (
+        "import cadrumo.adapters.outbound.components.client as role",
+        "from cadrumo.adapters.outbound.components.protocol import ComponentsRequest",
+        "from ...adapters.outbound.components.client import ComponentsClient",
+        "from ...adapters.outbound.components import protocol as wire",
+    ),
+)
+def test_another_module_cannot_import_the_components_transport(statement: str) -> None:
+    source = parse_source("cadrumo.entrypoints.cli.bypass", statement)
+    assert len(components_client_findings(source)) == 1
+
+
+def test_the_components_import_gate_resolves_package_initializers() -> None:
+    source = parse_source(
+        "cadrumo.entrypoints.cli", "from ...adapters.outbound.components import client", is_package=True
+    )
+    assert components_client_findings(source) == [
+        "cadrumo.entrypoints.cli: imports the components transport "
+        "cadrumo.adapters.outbound.components.client outside its composition"
+    ]
+
+
+def test_the_components_import_gate_preserves_its_owner_and_unrelated_names() -> None:
+    assert (
+        components_client_findings(
+            parse_source(
+                "cadrumo.entrypoints.components_operation_composition",
+                "from ..adapters.outbound.components import client",
+            )
+        )
+        == []
+    )
+    assert (
+        components_client_findings(
+            parse_source("cadrumo.adapters.outbound.components.client", "from .protocol import ComponentsRequest")
+        )
+        == []
+    )
+    assert (
+        components_client_findings(
+            parse_source("fixture.unrelated", "from another.components import client\nLABEL = 'components.protocol'")
+        )
+        == []
     )
 
 
