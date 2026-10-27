@@ -148,9 +148,27 @@ test("the searchable list has one entry for each connection, with its provider's
       ),
     })),
   );
-  // One row for each lane, in catalog order, with the provider name, the
-  // connection type and any plain availability explanation.
-  expect(rows.map((row) => row.way)).toEqual(lanes.map(wayOf));
+  // Selectable connections precede unavailable ones, preserving catalog
+  // order within each group.
+  expect(rows.map((row) => row.way)).toEqual([
+    ...lanes.filter((lane) => lane.health.selectable).map(wayOf),
+    ...lanes.filter((lane) => !lane.health.selectable).map(wayOf),
+  ]);
+  const separator = list.getByRole("separator");
+  await expect(separator).toHaveCount(1);
+  const beforeSeparator = await separator.evaluate((divider) =>
+    [...divider.parentElement!.parentElement!.querySelectorAll("[role=option]")]
+      .filter(
+        (row) =>
+          row.compareDocumentPosition(divider) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+      )
+      .map((row) => row.getAttribute("aria-disabled")),
+  );
+  expect(beforeSeparator).toHaveLength(
+    lanes.filter((lane) => lane.health.selectable).length,
+  );
+  expect(beforeSeparator).not.toContain("true");
   for (const served of lanes) {
     const row = rows.find((held) => held.way === wayOf(served));
     const why = heldBy(served);
@@ -587,7 +605,13 @@ for (const width of [390, 520]) {
       await scroller.evaluate((node) => {
         node.scrollTop = node.scrollHeight;
       });
-      const last = lanes.map(wayOf).at(-1) ?? "";
+      const last =
+        [
+          ...lanes.filter((lane) => lane.health.selectable),
+          ...lanes.filter((lane) => !lane.health.selectable),
+        ]
+          .map(wayOf)
+          .at(-1) ?? "";
       await expect
         .poll(() =>
           scroller.evaluate((node, way) => {

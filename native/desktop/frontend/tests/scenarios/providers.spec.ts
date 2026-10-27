@@ -790,6 +790,9 @@ test("successful provider sign-in shows completion and returns to settings", asy
     )
     .toHaveLength(1);
 
+  const catalogReadsBefore = (await hostCalls(target)).filter(
+    (call) => call === "agentProviderCatalogResolved",
+  ).length;
   await target.evaluate(() =>
     window.__scenarioProviderSignIn!.succeedCurrentAttempt(),
   );
@@ -798,6 +801,14 @@ test("successful provider sign-in shows completion and returns to settings", asy
   await expect(lane(target, signInCapableLane.id)).toContainText(
     label("desktop.providers.status_not_checked"),
   );
+  await expect
+    .poll(
+      async () =>
+        (await hostCalls(target)).filter(
+          (call) => call === "agentProviderCatalogResolved",
+        ).length,
+    )
+    .toBeGreaterThan(catalogReadsBefore);
 });
 
 test("a late cancel reply cannot replace a retry attempt after polling fails", async ({

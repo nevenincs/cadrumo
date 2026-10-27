@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { cn } from "@/components/ui/cn";
 import {
   Command,
@@ -72,6 +72,10 @@ export function ProviderSelect({
   const [open, setOpen] = useState(false);
   const entries = entriesOf(providers);
   const chosen = entries.find((entry) => entry.way.id === value);
+  const groups = [
+    entries.filter(({ way }) => way.selectable),
+    entries.filter(({ way }) => !way.selectable),
+  ].filter((group) => group.length > 0);
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -127,54 +131,64 @@ export function ProviderSelect({
             className="max-h-(--radix-popover-content-available-height) flex-1"
           >
             <CommandEmpty>{t("desktop.providers.search_empty")}</CommandEmpty>
-            <CommandGroup>
-              {entries.map(({ provider, way }) => {
-                const connection = connectionWords(t, way.transport);
-                const reason = way.selectable
-                  ? null
-                  : (way.unavailableReason ?? t("desktop.agent.unavailable"));
-                return (
-                  <CommandItem
-                    key={way.id}
-                    value={way.id}
-                    keywords={[
-                      provider.name,
-                      connection,
-                      ...(reason ? [reason] : []),
-                    ]}
-                    disabled={!way.selectable}
-                    data-way={way.id}
-                    onSelect={() => {
-                      if (!way.selectable) return;
-                      onChange(way.id);
-                      setOpen(false);
-                    }}
-                    className={cn(
-                      "relative cursor-pointer rounded-sm px-2.5 py-1",
-                      "data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-60",
-                      "data-[selected=true]:bg-selected data-[selected=true]:text-accent-foreground",
-                    )}
-                  >
-                    <ProviderMark provider={provider.id} size="md" />
-                    <span className="grid min-w-0 flex-1">
-                      <span className="flex min-w-0 flex-wrap items-baseline gap-x-2">
-                        <span className="truncate font-medium">
-                          {provider.name}
+            {groups.map((group, index) => (
+              <Fragment
+                key={group[0]?.way.selectable ? "available" : "unavailable"}
+              >
+                {index > 0 && (
+                  <div role="separator" className="my-1 border-t" />
+                )}
+                <CommandGroup>
+                  {group.map(({ provider, way }) => {
+                    const connection = connectionWords(t, way.transport);
+                    const reason = way.selectable
+                      ? null
+                      : (way.unavailableReason ??
+                        t("desktop.agent.unavailable"));
+                    return (
+                      <CommandItem
+                        key={way.id}
+                        value={way.id}
+                        keywords={[
+                          provider.name,
+                          connection,
+                          ...(reason ? [reason] : []),
+                        ]}
+                        disabled={!way.selectable}
+                        data-way={way.id}
+                        onSelect={() => {
+                          if (!way.selectable) return;
+                          onChange(way.id);
+                          setOpen(false);
+                        }}
+                        className={cn(
+                          "relative cursor-pointer rounded-sm px-2.5 py-1",
+                          "data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-60",
+                          "data-[selected=true]:bg-selected data-[selected=true]:text-accent-foreground",
+                        )}
+                      >
+                        <ProviderMark provider={provider.id} size="md" />
+                        <span className="grid min-w-0 flex-1">
+                          <span className="flex min-w-0 flex-wrap items-baseline gap-x-2">
+                            <span className="truncate font-medium">
+                              {provider.name}
+                            </span>
+                            <span className="text-sm text-muted-foreground in-data-[selected=true]:text-accent-foreground">
+                              {connection}
+                            </span>
+                          </span>
+                          {reason && (
+                            <span className="text-sm text-muted-foreground in-data-[selected=true]:text-accent-foreground">
+                              {reason}
+                            </span>
+                          )}
                         </span>
-                        <span className="text-sm text-muted-foreground in-data-[selected=true]:text-accent-foreground">
-                          {connection}
-                        </span>
-                      </span>
-                      {reason && (
-                        <span className="text-sm text-muted-foreground in-data-[selected=true]:text-accent-foreground">
-                          {reason}
-                        </span>
-                      )}
-                    </span>
-                  </CommandItem>
-                );
-              })}
-            </CommandGroup>
+                      </CommandItem>
+                    );
+                  })}
+                </CommandGroup>
+              </Fragment>
+            ))}
           </CommandList>
         </Command>
       </PopoverContent>

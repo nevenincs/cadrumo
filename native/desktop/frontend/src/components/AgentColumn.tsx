@@ -441,6 +441,24 @@ export function AgentColumn({
         : {}),
     };
   }, [session]);
+  // The agent's settings belong to the signed-in profile, and are read only
+  // while they are open: the first time behind one loader, and after that
+  // again behind what was read last, each time they open.
+  const settingsOpen = panel === "settings";
+  const [opens, setOpens] = useState({ open: false, count: 0 });
+  if (opens.open !== settingsOpen)
+    setOpens({
+      open: settingsOpen,
+      count: settingsOpen ? opens.count + 1 : opens.count,
+    });
+  const opened =
+    opens.open !== settingsOpen && settingsOpen ? opens.count + 1 : opens.count;
+  const settings = useProviderSettings(
+    providerSettings,
+    reader,
+    settingsOpen && shown,
+    opened,
+  );
   // What it can run is the agent's own catalog, every lane of it. While the
   // agent starts, the service answers with the lanes the agent declares,
   // which are listed but cannot be chosen; the catalog is read again once the
@@ -451,13 +469,14 @@ export function AgentColumn({
       (ready || starting) && session ? () => session.providerCatalog() : null,
     [ready, starting, session],
   );
-  // Read again after each saved change to the provider settings, so a
-  // provider turned off leaves the list and one turned on comes back.
+  // Setup and provider settings invalidate the catalog independently.
   const [catalogAgain, setCatalogAgain] = useState(0);
-  // Reads asked for while the service was busy, apart from the settings'
-  // count, which `catalogAgain` follows.
+  // Reads asked for while the service was busy.
   const [busyReads, setBusyReads] = useState(0);
-  const catalog = useAgentRead(readCatalog, catalogAgain + busyReads);
+  const catalog = useAgentRead(
+    readCatalog,
+    catalogAgain + settings.changes + busyReads + opened,
+  );
   // A settled setup may have downloaded a model: what the catalog says this
   // computer holds is read again.
   useEffect(() => {
@@ -605,29 +624,10 @@ export function AgentColumn({
   );
   const toggle = (next: Panel) =>
     change({ panel: panel === next ? "none" : next, localFocus: 0 });
-  // The agent's settings belong to the signed-in profile, and are read only
-  // while they are open: the first time behind one loader, and after that
-  // again behind what was read last, each time they open.
-  const settingsOpen = panel === "settings";
-  const [opens, setOpens] = useState({ open: false, count: 0 });
-  if (opens.open !== settingsOpen)
-    setOpens({
-      open: settingsOpen,
-      count: settingsOpen ? opens.count + 1 : opens.count,
-    });
-  const opened =
-    opens.open !== settingsOpen && settingsOpen ? opens.count + 1 : opens.count;
-  const settings = useProviderSettings(
-    providerSettings,
-    reader,
-    settingsOpen && shown,
-    opened,
-  );
   const localProvider =
     settings.read.kind === "ready"
       ? settings.read.value.providers.find((lane) => lane.authKind === "none")
       : undefined;
-  if (catalogAgain !== settings.changes) setCatalogAgain(settings.changes);
   const access = useAgentAccess(
     agentAccess,
     reader,

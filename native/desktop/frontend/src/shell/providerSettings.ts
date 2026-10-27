@@ -175,8 +175,8 @@ export type ProviderSettingsView = {
   turnOn: (providerId: string) => void;
   reset: (providerId: string) => void;
   refresh: () => void;
-  /** How many changes have been saved, so what depends on them (the agent's
-   * provider list) can be read again. */
+  /** Invalidations of the agent's provider list, including authentication
+   * observed by a status refresh or a read made elsewhere. */
   changes: number;
   /** Shows a status read made elsewhere, in place of reading it again. */
   accept: (status: ProviderSettingsAnswer) => void;
@@ -308,7 +308,12 @@ export function useProviderSettings(
 
   const refresh = useCallback(
     () =>
-      setState((held) => ({ ...held, again: held.again + 1, outcomes: {} })),
+      setState((held) => ({
+        ...held,
+        again: held.again + 1,
+        changes: held.changes + 1,
+        outcomes: {},
+      })),
     [],
   );
   return {
@@ -338,6 +343,9 @@ export function useProviderSettings(
       ),
     refresh,
     changes: state.changes,
-    accept: put,
+    accept: (status) => {
+      put(status);
+      setState((held) => ({ ...held, changes: held.changes + 1 }));
+    },
   };
 }
