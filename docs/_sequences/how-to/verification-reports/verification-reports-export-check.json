@@ -286,7 +286,7 @@
           "bucket_id": "<bucket-id>",
           "causante_ccaa": null,
           "created_at": "2026-04-01T09:00:00+00:00",
-          "current_calculation_revision_id": "2d76dc603da7b944a69337c6fdfc8f05f76b420929d3d93fa54a82b626b12732",
+          "current_calculation_revision_id": "a028846bee5dff555275af0c2b7509ec983c54c907eff91fb570b2c004b83f90",
           "current_filing_record_id": null,
           "discard_reason": null,
           "discarded_at": null,
@@ -301,7 +301,7 @@
             "filing_year": 2026
           },
           "revision_id": "2026-hasta-01-y-1t",
-          "short_current_calculation_revision_id": "82b626b12732",
+          "short_current_calculation_revision_id": "b2c004b83f90",
           "short_filed_calculation_revision_id": null,
           "short_work_unit_id": "b7a7592ccc53",
           "state": "borrador",
@@ -372,10 +372,10 @@
           }
         ],
         "result": {
-          "bucket_event_id": "c45597dd67edafc34159242bb0d25ce38ec54a5b723da57c9f346b3831b66b61",
+          "bucket_event_id": "84ffdea0eece7330a27216ddcf20300dad3fa094ee1211a2b63e7b7e047c70fb",
           "bucket_id": "<bucket-id>",
           "byte_size": 2948,
-          "calculation_revision_id": "2d76dc603da7b944a69337c6fdfc8f05f76b420929d3d93fa54a82b626b12732",
+          "calculation_revision_id": "a028846bee5dff555275af0c2b7509ec983c54c907eff91fb570b2c004b83f90",
           "file_sha256": "310281eedac7a2d810c82addcf66519d9a522aad42908c40d9739311bf5fb16a",
           "filing_year": 2026,
           "format": "fichero-boe",
