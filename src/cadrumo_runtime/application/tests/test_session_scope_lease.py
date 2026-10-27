@@ -125,6 +125,7 @@ class _Host:
 
     def __init__(self) -> None:
         self._guard = RLock()
+        self.lost = False
 
     @contextmanager
     def admission_guard(self) -> Generator[None]:

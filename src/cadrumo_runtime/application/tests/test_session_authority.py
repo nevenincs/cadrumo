@@ -139,6 +139,7 @@ class AdmissionOwner:
         self.receipt_events: list[tuple[str, UUID]] = []
         self.after_capture: Callable[[UUID], None] = lambda _session_id: None
         self.facts_failure: AutomationCustodyError | None = None
+        self.lost = False
 
     @contextmanager
     def admission_guard(self) -> Generator[None]:
@@ -2033,8 +2034,30 @@ def test_lost_worker_custody_still_retires_every_session_as_custody_unavailable(
     subject.authority._retired = retired.append
     api, human, child, _ = _attended_tree(subject)
     subject.owner.facts_failure = AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+    subject.owner.lost = True
 
     assert set(subject.authority.revalidate_sessions()) == {api.session_id, human.session_id, child.session_id}
     assert not subject.owner.active
     assert {item.session_id for item in retired} == {api.session_id, human.session_id, child.session_id}
+    assert {item.reason for item in retired} == {AccessDenialCode.CUSTODY_UNAVAILABLE}
+
+
+def test_briefly_unobservable_worker_keeps_every_session_until_it_answers(subject: Subject) -> None:
+    """A busy worker is not lost custody: the sweep keeps the tree, including the attended child, and retries."""
+    retired: list[SessionRetirement] = []
+    subject.authority._retired = retired.append
+    api, human, child, _ = _attended_tree(subject)
+    subject.owner.facts_failure = AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+
+    assert subject.authority.revalidate_sessions() == ()
+    assert not retired
+    assert {api.session_id, human.session_id, child.session_id} <= subject.owner.active
+
+    subject.owner.facts_failure = None
+    assert subject.authority.revalidate_sessions() == ()
+    assert not retired
+
+    subject.owner.facts_failure = AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+    subject.owner.lost = True
+    assert set(subject.authority.revalidate_sessions()) == {api.session_id, human.session_id, child.session_id}
     assert {item.reason for item in retired} == {AccessDenialCode.CUSTODY_UNAVAILABLE}

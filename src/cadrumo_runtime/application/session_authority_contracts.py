@@ -30,6 +30,11 @@ class SessionAuthorityOwner(Protocol):
         """Reobserve the exact live connection, clocks, profile and OS login contexts."""
         ...
 
+    @property
+    def lost(self) -> bool:
+        """Whether custody was irreversibly lost, as opposed to briefly unobservable."""
+        ...
+
     def prepare_api_admission(self, connection_id: UUID) -> AbstractContextManager[float]:
         """Prepare the exact worker without keys or leases; lend its original deadline.
 

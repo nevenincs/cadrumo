@@ -28,7 +28,7 @@ from cadrumo.core.diagnostic_log import diagnostic_event
 from cadrumo.core.logging import get_logger
 from cadrumo.core.time.utc import UtcInstant
 from cadrumo_client.contracts.access_refusals import AccessDecision, AccessDenialCode, AccessDenied
-from cadrumo_client.contracts.automation_codes import AutomationCustodyError
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.session_policy import evaluate_session_authority, session_requires_grant
 
 from .session_authority_contracts import SessionAuthorityFacts, SessionAuthorityOwner
@@ -274,7 +274,11 @@ class SessionAuthorityCore:
         connected = {item.session_id for item in self._sessions.values() if item.connection_id == connection_id}
         try:
             facts = self._facts(connection_id)
-        except AutomationCustodyError:
+        except AutomationCustodyError as error:
+            if error.reason is AutomationCustodyCode.UNAVAILABLE and not self.owner.lost:
+                # A worker that could not be observed in time is busy, not lost. Every use
+                # still refuses until it answers; the next sweep revalidates these leases.
+                return
             self._retire(connected, reason=AccessDenialCode.CUSTODY_UNAVAILABLE)
             return
         if isinstance(facts, AccessDenied):
