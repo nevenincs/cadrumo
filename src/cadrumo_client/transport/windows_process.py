@@ -473,22 +473,12 @@ class WindowsProcessScope:
 
     def active_process_ids(self) -> tuple[int, ...]:
         """Snapshot current job members for health; PIDs confer no authority."""
-        import win32job
-
         with self._lock:
             if self._termination_failure is not None:
                 raise RefusalError(self._termination_failure)
             if self._job is None:
                 return ()
-            query_job = cast("Callable[[int, int], object]", win32job.QueryInformationJobObject)
-            members: object = query_job(self._job, win32job.JobObjectBasicProcessIdList)
-            if not isinstance(members, tuple):
-                raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-            values = cast("tuple[object, ...]", members)
-            if any(not isinstance(pid, int) or pid <= 0 for pid in values):
-                raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-            validated = cast("tuple[int, ...]", values)
-            return tuple(int(pid) for pid in validated)
+            return _job_process_ids(self._job)
 
     def work_done(self) -> tuple[int, ...] | None:
         """The job's accumulated processor time, page faults, processes and I/O, or ``None`` once it is released.
@@ -720,27 +710,55 @@ def _release_job_members(members: tuple[NativeWindowsHandle, ...]) -> None:
         raise failures[0]
 
 
+def _job_process_ids(job: int) -> tuple[int, ...]:
+    """Read only initialized PID slots, with bounded growth while membership changes."""
+    if sys.platform != "win32":
+        raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
+    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+    query = kernel.QueryInformationJobObject
+    query.argtypes = (wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p, wintypes.DWORD, ctypes.c_void_p)
+    query.restype = wintypes.BOOL
+    capacity = 64
+    for _ in range(8):
+        buffer = ctypes.create_string_buffer(8 + ctypes.sizeof(ctypes.c_size_t) * capacity)
+        succeeded = query(job, 3, buffer, ctypes.sizeof(buffer), None)
+        assigned = ctypes.c_uint32.from_buffer(buffer).value
+        written = ctypes.c_uint32.from_buffer(buffer, 4).value
+        if succeeded:
+            if written > capacity:
+                break
+            # pywin32 sizes its tuple from the assigned count but fills only
+            # the returned count. Exiting processes can leave those unequal,
+            # exposing NULL tuple entries that crash ordinary Python iteration.
+            entries = (ctypes.c_size_t * written).from_buffer(buffer, 8)
+            pids = tuple(int(pid) for pid in entries)
+            if any(pid <= 0 for pid in pids):
+                break
+            return pids
+        error = ctypes.get_last_error()
+        if error != 234:  # ERROR_MORE_DATA
+            raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE, check=f"job_process_ids_winerror_{error}")
+        capacity = max(capacity * 2, assigned)
+        if capacity > 65536:
+            break
+    raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE, check="job_process_ids_unavailable")
+
+
 def _retain_job_members(job: int) -> tuple[NativeWindowsHandle, ...]:
     """Open a waitable handle on every current member, confirmed in this Job so a reused PID is never waited on."""
     if sys.platform != "win32":
         raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
     import pywintypes
     import win32api
-    import win32job
 
-    query_job = cast("Callable[[int, int], object]", win32job.QueryInformationJobObject)
-    listed: object = query_job(job, win32job.JobObjectBasicProcessIdList)
-    if not isinstance(listed, tuple):
-        raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
+    listed = _job_process_ids(job)
     kernel = ctypes.WinDLL("kernel32", use_last_error=True)
     observe = kernel.IsProcessInJob
     observe.argtypes = (wintypes.HANDLE, wintypes.HANDLE, ctypes.POINTER(wintypes.BOOL))
     observe.restype = wintypes.BOOL
     retained: list[NativeWindowsHandle] = []
     try:
-        for pid in cast("tuple[object, ...]", listed):
-            if not isinstance(pid, int) or pid <= 0:
-                raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
+        for pid in listed:
             try:
                 # SYNCHRONIZE | PROCESS_QUERY_LIMITED_INFORMATION: wait on it and ask its Job, nothing more.
                 opened = native_windows_call(win32api, "OpenProcess", 0x00100000 | 0x00001000, False, pid)

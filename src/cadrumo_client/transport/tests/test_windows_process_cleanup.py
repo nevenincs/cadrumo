@@ -114,6 +114,7 @@ def native(monkeypatch: pytest.MonkeyPatch) -> _Native:
     monkeypatch.setattr(windows_process, "_launch_in_job", port.launch)
     # The synthetic Job lists PIDs with no process objects behind them; only the active count is observed here.
     monkeypatch.setattr(windows_process, "_retain_job_members", lambda job: ())
+    monkeypatch.setattr(windows_process, "_job_process_ids", lambda job: (101, 102, 103) if port.active else ())
     return port
 
 
@@ -122,6 +123,70 @@ def _children(scope: WindowsProcessScope, tmp_path: Path, count: int = 3) -> lis
         scope.launch(executable=Path(sys.executable), arguments=(), directory=tmp_path, environment={})
         for _ in range(count)
     ]
+
+
+@pytest.mark.parametrize(
+    ("replies", "expected"),
+    [
+        ([(4, (123,), 0)], (123,)),
+        ([(1, (), 0)], ()),
+        ([(70, (), 234), (70, tuple(range(1, 71)), 0)], tuple(range(1, 71))),
+    ],
+)
+def test_job_pid_query_uses_only_returned_slots_and_grows_on_more_data(
+    monkeypatch: pytest.MonkeyPatch,
+    replies: list[tuple[int, tuple[int, ...], int]],
+    expected: tuple[int, ...],
+) -> None:
+    sizes: list[int] = []
+    last_error = [0]
+
+    def query(job: int, information: int, buffer: ctypes.Array[ctypes.c_char], size: int, returned: object) -> bool:
+        assert job == 7 and information == 3 and returned is None
+        sizes.append(size)
+        assigned, pids, error = replies[len(sizes) - 1]
+        ctypes.c_uint32.from_buffer(buffer).value = assigned
+        ctypes.c_uint32.from_buffer(buffer, 4).value = len(pids)
+        entries = (ctypes.c_size_t * len(pids)).from_buffer(buffer, 8)
+        entries[:] = pids
+        last_error[0] = error
+        return error == 0
+
+    monkeypatch.setattr(windows_process, "sys", SimpleNamespace(platform="win32"))
+    monkeypatch.setattr(windows_process, "wintypes", ctypes.wintypes, raising=False)
+    monkeypatch.setattr(ctypes, "get_last_error", lambda: last_error[0], raising=False)
+    monkeypatch.setattr(
+        ctypes, "WinDLL", lambda *args, **kwargs: SimpleNamespace(QueryInformationJobObject=query), raising=False
+    )
+    assert windows_process._job_process_ids(7) == expected
+    assert len(sizes) == len(replies)
+    if len(sizes) > 1:
+        assert sizes[1] > sizes[0]
+
+
+@pytest.mark.parametrize("assigned, written, error", [(0, 65, 0), (1, 1, 0), (1000000, 0, 234), (0, 0, 5), (0, 0, 234)])
+def test_job_pid_query_refuses_invalid_slots_native_failure_and_unbounded_growth(
+    monkeypatch: pytest.MonkeyPatch, assigned: int, written: int, error: int
+) -> None:
+    calls = 0
+
+    def query(job: int, information: int, buffer: ctypes.Array[ctypes.c_char], size: int, returned: object) -> bool:
+        nonlocal calls
+        calls += 1
+        ctypes.c_uint32.from_buffer(buffer).value = assigned
+        ctypes.c_uint32.from_buffer(buffer, 4).value = written
+        return error == 0
+
+    monkeypatch.setattr(windows_process, "sys", SimpleNamespace(platform="win32"))
+    monkeypatch.setattr(windows_process, "wintypes", ctypes.wintypes, raising=False)
+    monkeypatch.setattr(ctypes, "get_last_error", lambda: error, raising=False)
+    monkeypatch.setattr(
+        ctypes, "WinDLL", lambda *args, **kwargs: SimpleNamespace(QueryInformationJobObject=query), raising=False
+    )
+    with pytest.raises(RefusalError) as refused:
+        windows_process._job_process_ids(7)
+    assert refused.value.reason is RefusalCode.CONTAINMENT_UNAVAILABLE
+    assert 1 <= calls <= 8
 
 
 def _cleanup(error: BaseException) -> AsyncResourceCleanupError:

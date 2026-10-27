@@ -31,6 +31,22 @@ pytestmark = [
 _FIXTURE = "cadrumo_client.transport.tests.job_fixture"
 
 
+@pytest.mark.asyncio
+async def test_pid_enumeration_and_cleanup_survive_real_process_churn(tmp_path: Path) -> None:
+    record = tmp_path / "pid-churn.json"
+    process = await launch_fixture(_FIXTURE, "pid-churn", str(record))
+    try:
+        output, errors = await asyncio.wait_for(process.communicate(), timeout=25)
+        assert process.returncode == 0, (output, errors)
+        facts = json.loads(record.read_text())
+        assert facts["launched"] == 48
+        assert facts["queries"] > 0
+    finally:
+        if process.returncode is None:
+            process.kill()
+            await process.wait()
+
+
 class _ProcessFacts(BaseModel):
     parent: int
     child: int

@@ -160,7 +160,9 @@ def main() -> None:
     lifetime.start()
     mode, filename = sys.argv[1:]
     record = Path(filename)
-    if mode == "launch-owner-loss":
+    if mode == "pid-churn":
+        _pid_churn(record)
+    elif mode == "launch-owner-loss":
         _launch_owner_loss(record)
     elif mode in {"owner", "browser-owner"}:
         from ..windows_process import WindowsProcessScope
@@ -188,6 +190,42 @@ def main() -> None:
     else:
         asyncio.run(_tree(record, exit_parent=mode == "exited"))
     lifetime.cancel()
+
+
+def _pid_churn(record: Path) -> None:
+    """Exercise process enumeration and retained-handle cleanup against real exits."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    from ..windows_process import WindowsProcessScope, _release_job_members, _retain_job_members
+
+    scope = WindowsProcessScope()
+    try:
+
+        def churn() -> int:
+            for _ in range(16):
+                process = scope.launch(
+                    executable=native_python(),
+                    arguments=("-c", "pass"),
+                    directory=record.parent,
+                    environment=fixture_environment(),
+                )
+                assert process.wait(timeout=5) == 0
+            return 16
+
+        queries = 0
+        with ThreadPoolExecutor(max_workers=3) as workers:
+            running = [workers.submit(churn) for _ in range(3)]
+            while not all(future.done() for future in running):
+                assert scope._job is not None
+                retained = _retain_job_members(scope._job)
+                _release_job_members(retained)
+                assert all(pid > 0 for pid in scope.active_process_ids())
+                queries += 1
+            launched = sum(future.result() for future in running)
+        record.write_text(json.dumps({"launched": launched, "queries": queries}))
+    finally:
+        scope.terminate()
+    assert scope.active_process_ids() == ()
 
 
 if __name__ == "__main__":
