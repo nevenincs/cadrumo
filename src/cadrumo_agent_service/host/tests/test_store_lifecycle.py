@@ -16,6 +16,9 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core.logging import flush_logging
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+
 from ..controller import AgentHostError, AgentHostRefusal, AgentLaunch
 from ..launcher_protocol import AgentLauncherRefusal, launcher_refusal_for
 from ..store_lifecycle import STORE_OUTPUT_MAX_BYTES, AgentInvocationResult, AgentStoreLifecycle, StoreLifecycleBounds
@@ -234,6 +237,68 @@ def test_a_migrate_that_did_not_succeed_keeps_the_copy_and_is_not_retried(
     # The agent's text and its home's path never reach a diagnostic.
     assert _AGENT_DETAIL not in caplog.text
     assert _HOME not in caplog.text
+
+
+def _not_brought_to_current(caplog: pytest.LogCaptureFixture) -> list[str]:
+    assert flush_logging(timeout=5)
+    return [
+        record.getMessage()
+        for record in caplog.records
+        if record.name == _LOGGER_NAME and record.getMessage().startswith("agent stores not brought to current")
+    ]
+
+
+@pytest.mark.parametrize(
+    ("failure", "labels"),
+    [
+        pytest.param(
+            RefusalError(RefusalCode.DEADLINE_EXCEEDED, check="job_process_ids_winerror_5"),
+            f"error_type=RefusalError reason={RefusalCode.DEADLINE_EXCEEDED.value} check=job_process_ids_winerror_5",
+            id="refusal-with-check",
+        ),
+        pytest.param(
+            RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE),
+            f"error_type=RefusalError reason={RefusalCode.CONTAINMENT_UNAVAILABLE.value} check=none",
+            id="refusal-without-check",
+        ),
+        pytest.param(
+            AgentHostError(AgentHostRefusal.LAUNCH_FAILED),
+            f"error_type=AgentHostError reason={AgentHostRefusal.LAUNCH_FAILED.value} check=none",
+            id="host-refusal",
+        ),
+        pytest.param(OSError(_HOME), "error_type=OSError reason=none check=none", id="os-error"),
+        pytest.param(
+            RefusalError(RefusalCode.UNAVAILABLE, check=f"{_HOME} {_AGENT_DETAIL}"),
+            f"error_type=RefusalError reason={RefusalCode.UNAVAILABLE.value} check=none",
+            id="check-outside-the-closed-shape",
+        ),
+    ],
+)
+def test_a_run_that_could_not_complete_logs_the_type_and_closed_reason_of_its_failure(
+    failure: Exception, labels: str, caplog: pytest.LogCaptureFixture
+) -> None:
+    runner = _Runner({"preflight": failure})
+    aside = _Aside()
+    with caplog.at_level(logging.WARNING, logger=_LOGGER_NAME):
+        error = _refusal(_lifecycle(runner, aside))
+
+    assert error.reason is AgentHostRefusal.STORES_UNPREPARED
+    assert _not_brought_to_current(caplog) == [
+        f"agent stores not brought to current step=preflight outcome=run_failed failed_stage=none {labels}"
+    ]
+    # Neither the failure's message nor a check outside the closed shape is ever logged.
+    assert _HOME not in caplog.text and _AGENT_DETAIL not in caplog.text
+
+
+def test_a_refusal_that_is_not_a_failed_run_names_no_exception(caplog: pytest.LogCaptureFixture) -> None:
+    runner = _Runner({"preflight": [AgentInvocationResult(status=3, standard_output=b"")]})
+    with caplog.at_level(logging.WARNING, logger=_LOGGER_NAME):
+        _refusal(_lifecycle(runner, _Aside()))
+
+    assert _not_brought_to_current(caplog) == [
+        "agent stores not brought to current step=preflight outcome=failed failed_stage=none "
+        "error_type=none reason=none check=none"
+    ]
 
 
 def test_a_kept_copy_over_stores_that_are_not_current_refuses_every_later_start() -> None:

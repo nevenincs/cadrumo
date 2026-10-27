@@ -22,7 +22,8 @@ second ``migrate`` runs over stores whose state is unsettled. It is removed as
 soon as the stores read ``current``.
 
 Diagnostics name a closed step and outcome only: never a path, a revision or the
-agent's own text.
+agent's own text. A run that failed also names the type of the exception that
+stopped it, with its closed reason and refusing check when it carries them.
 """
 
 from __future__ import annotations
@@ -38,6 +39,7 @@ from typing import Final, Literal, Protocol
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from cadrumo.core.logging import get_logger
+from cadrumo_client.contracts.contracts import RefusalError
 
 from .controller import AgentHostError, AgentHostRefusal, AgentLaunch
 
@@ -50,6 +52,9 @@ STORE_OUTPUT_MAX_BYTES: Final = 64 * 1024
 
 _REVISION_PATTERN: Final = r"^[A-Za-z0-9][A-Za-z0-9._+\-]{0,63}$"
 """An opaque revision: a short token that cannot be read as an option when passed back as an argument."""
+
+_CHECK_PATTERN: Final = r"^[a-z][a-z0-9_]{0,63}$"
+"""The shape of a refusing check's name; anything else is not logged."""
 
 type StoreState = Literal["absent", "current", "older", "newer"]
 
@@ -286,7 +291,7 @@ class AgentStoreLifecycle:
                 output_limit=STORE_OUTPUT_MAX_BYTES,
             )
         except Exception as error:
-            raise _refused(step, StoreOutcome.RUN_FAILED) from error
+            raise _refused(step, StoreOutcome.RUN_FAILED, cause=error) from error
         # Each invocation starts the agent's interpreter afresh; on a loaded host
         # that is seconds of every agent start.
         _LOGGER.info("agent store step=%s took_seconds=%.3f", step.value, monotonic() - started)
@@ -327,15 +332,32 @@ def _is_revision(value: str) -> bool:
     return re.fullmatch(_REVISION_PATTERN, value) is not None
 
 
+def _cause_labels(cause: BaseException | None) -> tuple[str, str, str]:
+    """Name the exception that stopped an invocation by its type, typed reason and refusing check, never its message."""
+    if cause is None:
+        return "none", "none", "none"
+    reason = cause.reason.value if isinstance(cause, RefusalError | AgentHostError) else "none"
+    check = cause.check if isinstance(cause, RefusalError) else None
+    return type(cause).__name__, reason, check if check and re.fullmatch(_CHECK_PATTERN, check) else "none"
+
+
 def _refused(
     step: StoreStep,
     outcome: StoreOutcome,
     reason: AgentHostRefusal = AgentHostRefusal.STORES_UNPREPARED,
     *,
     stage: str = "none",
+    cause: BaseException | None = None,
 ) -> AgentHostError:
-    # Closed values only: the step, the outcome and the agent's own closed stage name.
+    # Closed values only: the step, the outcome, the agent's own closed stage name and the cause's type labels.
+    error_type, cause_reason, check = _cause_labels(cause)
     _LOGGER.warning(
-        "agent stores not brought to current step=%s outcome=%s failed_stage=%s", step.value, outcome.value, stage
+        "agent stores not brought to current step=%s outcome=%s failed_stage=%s error_type=%s reason=%s check=%s",
+        step.value,
+        outcome.value,
+        stage,
+        error_type,
+        cause_reason,
+        check,
     )
     return AgentHostError(reason)
