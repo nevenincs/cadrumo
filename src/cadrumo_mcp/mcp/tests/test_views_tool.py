@@ -116,7 +116,7 @@ async def test_a_profile_with_no_language_is_answered_in_the_default_language() 
     found = await _call({"id": "profile/aeat-access"}, language=None)
     assert found["language"] == "es"
     assert found["views"][0]["label"] == lookup_translation("navigation.view.profile.aeat_access.label", locale="es")
-    assert found["views"][0]["surfaces"] == ["tui"]
+    assert found["views"][0]["surfaces"] == ["gui", "tui"]
 
 
 @pytest.mark.anyio
@@ -176,10 +176,10 @@ async def test_a_valid_link_preferring_a_surface_the_view_lacks_opens_on_the_oth
         "notice_due": True,
     }
 
-    terminal = await _call({"link": "cadrumo://view/profile/aeat-access"})
+    terminal = await _call({"link": "cadrumo://view/aeat-sync"})
     assert terminal["opens"] == {
         "surface": "tui",
-        "view": "profile/aeat-access",
+        "view": "aeat-sync",
         "fallback": "other_surface",
         "params_kept": True,
         "notice_due": True,
@@ -187,6 +187,14 @@ async def test_a_valid_link_preferring_a_surface_the_view_lacks_opens_on_the_oth
     both = await _call({"link": "cadrumo://view/ledger?prefer=tui"})
     assert both["opens"]["surface"] == "tui"
     assert both["opens"]["fallback"] == "none"
+    window_first = await _call({"link": "cadrumo://view/profile/aeat-access"})
+    assert window_first["opens"] == {
+        "surface": "gui",
+        "view": "profile/aeat-access",
+        "fallback": "none",
+        "params_kept": True,
+        "notice_due": False,
+    }
 
 
 @pytest.mark.anyio
