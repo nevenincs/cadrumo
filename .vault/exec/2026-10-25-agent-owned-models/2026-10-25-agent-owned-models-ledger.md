@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:d8c3bcaddad41d1aac406cc9fb909c3364e95dab87a1cc2ff02cd1ebcd389c55'
+body_hash: 'sha256:36d6da2e82241c092251e7412c95fafbe702adedcce344891b3af2f61f04f394'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -1506,6 +1506,15 @@ related:
 - `S27` `verify:` `uv run --no-sync python -m dev.docs.sequences check --page how-to/review-calculation-values --timeout 480` -> `pass`
 - `S27` `verify:` `uv run --no-sync python -m dev.docs.sequences check --page how-to/troubleshooting --timeout 480` -> `pass`
 - `S27` `verify:` `uv run --no-sync python -m dev.docs.sequences check --page how-to/verification-reports --timeout 480` -> `pass`
+- `S28` `M` `native/desktop/CMakeLists.txt`
+- `S28` `M` `.vault/plan/2026-10-25-agent-owned-models-plan.md`
+- `S28` `verify:` `cmake --build build/windows-x64 --config Debug --target desktop-frontend-test --parallel 1` -> `pass`
+- `S28` `verify:` `cmake --build build/windows-x64 --config Debug --target desktop-host-unit-test --parallel 1` -> `pass`
+- `S28` `verify:` `cmake --build build/windows-x64 --config Debug --target desktop-host-unit-test desktop-host-unit-clippy desktop-host-build --parallel 1` -> `pass`
+- `S28` `verify:` `uv run --no-sync pytest src/cadrumo/adapters/outbound/components/tests/test_client_drives_the_real_role.py src/cadrumo/entrypoints/cli/tests/test_provision_drives_the_real_role.py src/cadrumo_mcp/mcp/tests/test_setup_tools_drive_the_real_role.py -n 0 -q -m integration` -> `pass`
+- `S28` `M` `.vault/audit/2026-10-25-agent-owned-models-audit.md`
+- `S28` `verify:` `vaultspec-core vault check all --feature agent-owned-models --limit 20 --no-hints` -> `pass`
+- `S28` `verify:` `vaultspec-core vault plan check 2026-10-25-agent-owned-models-plan` -> `pass`
 
 ## Notes
 
@@ -1609,3 +1618,5 @@ related:
 - `S28` 81098fa394 adds optional CMake application test filter; generated CTest argv contains the selected substring. The initial parallel provisioning run reported 142 passed and 1 cancelled-follower failure (busy instead of cancelled). The failing test passes alone and in 10 bounded repeats; diagnostics yielded no cause and were removed. Full provisioning group rerun serially remains pending. Repeat check used full failing-test name as cache filter.
 - `S28` 24a05453f7: 3 operation-frontend acceptance cases pass with notification-based waits; log 20261027T062124.042235Z-pytest-24360-e8068654. Authenticated desktop admin choice is read through real CLI registered runner, TUI controller and MCP SDK execute/observe/result; MCP attendance is approved by password holder, both service and worker authority enforced, encrypted record unchanged. Native CTest provisioning filter with `RUST_TEST_THREADS=1` passes143 tests (93 unrelated filtered out), 246.62s, LastTest.log. Prior concurrent cancellation failure remains unreproduced after10 isolated passes; no speculative product change.
 - `S27` af1b02d498 commits44 goldens across16 changed pages; reviewed JSON changes are215 digest-only scalar replacements. Every changed page passed serially after5645a4f9a8; no additional refresh required. Initial filing-spine180s bound expired and full15-sequence page passed480s. Initial modelo390 attempt hit an inner CLI deadline during native check; isolated rerun passed unchanged. No refusal output accepted as a golden.
+- `S28` 096de63b59 adds optional frontend CMake test selector. Selected ledger-documents-model spec7passed, setup filter56passed, agent filter152passed, desktop backend clippy and fresh Debug image buildpass; compiler/test threads1. Real-role14pytest cases pass8.33s against build/windows-x64/cargo/desktop/debug/cadrumo.exe, log20261027T064747.689316Z-pytest-40288-d5bc717e. Owner forbids full suites/directCargo, recorded in plan Verification. Native tests excluded by filters are not claimed as a full current-tree run. Native test caches restored to empty filters/workers and original docsON after checks.
+- `S28` Plan-close changed-behavior re-review by vaultspec-code-reviewer on owner-selected Terra6.1xhigh returnsPASS; appended through set-body. Owner focusedCMake/CTest override recorded, real-rolepytest runner wording corrected. Remaining vault warning is pre-existing sharedADR unstamped body; PLAN022 reflects intentionally inserted stable Stepids. No unrelated record repairs or full-suite claims.

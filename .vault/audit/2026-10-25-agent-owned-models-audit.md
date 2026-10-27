@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#agent-owned-models'
 date: '2026-10-25'
-modified: '2026-10-26'
+modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:54cdddc2314fb01d416717bcff13ccf980d6bc0de63fa47c8fe2879e96de9714'
+body_hash: 'sha256:e46bbc791f87ad7972139497ae7c010f35f29ae348a1280d3bc58f33e109dd73'
 related:
   - '[[2026-10-25-agent-owned-models-plan]]'
   - '[[2026-10-25-agent-owned-models-adr]]'
@@ -399,3 +399,15 @@ Pending, not code defects:
 - The final native tree is still not built. Rust changed again in `79ff11cdcf`. Owner: the plan's orchestrator. Next action: the CMake targets `desktop-host-unit-test` and `desktop-host-unit-clippy`, plus the application crate's provisioning tests, on a tree that no concurrent build owns.
 - The sequence refresh named in `authority-republish-leaves-sequence-goldens-stale`. Owner: the `P05.S27` executor. Next action: `python -m dev.docs.sequences refresh`, then `check`, for the affected pages.
 - Unchanged from the last review: the real-role tests, and the `NO_SELECTION` rendering and selection read-back items of the plan's Verification.
+
+Plan-close re-review 2026-10-27, by `vaultspec-code-reviewer` on Terra 6.1 xhigh. The review covered changes after `8dfd9671dd` through `096de63b59`, limited to the prior Python hardware-floor finding, its fixes, and the missing verification and interactions. The shared tree's unrelated changes were excluded.
+
+No new findings. `python-hardware-floor-judges-the-selected-model` is resolved by `5645a4f9a8` and `e6a7dcaef0`: local-reader status no longer judges model size against hardware, and the superseded function, condition and fixtures are removed. The selection read-back coverage exercises authenticated administration, encrypted custody and the CLI, TUI and MCP operation paths. It does not automate the visual desktop interface.
+
+Verification reused the executor's focused evidence recorded in `2026-10-25-agent-owned-models-ledger`: 32 local-reader and TUI import tests; four localized CLI refusal cases; three frontend read-back cases; 16 changed sequence pages; 143 serial application provisioning tests; 56 desktop setup tests; 152 desktop agent tests; seven frontend model tests; desktop clippy and a fresh desktop build; and 14 real-role pytest cases against that CMake-built image. The final matrix log is `var/storage/development/.logs/test-runs/2026-10-27/20261027T062124.042235Z-pytest-24360-e8068654/run.log`; the real-role log is `var/storage/development/.logs/test-runs/2026-10-27/20261027T064747.689316Z-pytest-40288-d5bc717e/run.log`. Vault checks exited successfully with the recorded warnings. Native tests excluded by the filters were not run as a full current-tree suite.
+
+The initial parallel provisioning run had one cancelled-follower outcome mismatch; ten isolated repeats and the serial provisioning group passed. Its cause was not established. A pre-existing distinction between follower cancellation paths was identified but is outside this changed-behavior review; it is not established as the cause of that failure. No speculative product change was made.
+
+The plan's verification text now records the owner's 2026-10-27 focused-check instruction and distinguishes native/frontend CMake/CTest checks from real-role pytest checks against the fresh image.
+
+Verdict: PASS under the owner's focused-verification instruction, with the limits above. All 31 Steps are closed.

@@ -15,7 +15,7 @@ related:
   - '[[2026-10-13-agent-attachments-adr]]'
 modified: '2026-10-27'
 body_schema: body-v2
-body_hash: 'sha256:2c1179325287e8cf4c6f873c24d4ee77772bc92f3a2a7da1c392cd5c1abaaf0f'
+body_hash: 'sha256:11639dae54d3246a3f6dac589e87af1e3f30d23815eba44ba45ccc320e966f69'
 ---
 
 # `agent-owned-models` plan
@@ -121,9 +121,11 @@ Phase P05 starts after P03 and P04. `P05.S24` (desktop selection control) follow
 
 The plan is complete when every Step is closed and these checks pass.
 
+Verification scope authorized by the owner on 2026-10-27: use focused checks only, no full test suites or conformance-wide runs, and run native builds and tests only through CMake/CTest. Tests excluded by those filters are not claimed as a full current-tree test run.
+
 - `uv run --no-sync pytest dev/quality/tests/test_no_model_definitions.py` passes with an empty burn-down list, and its isolated fixtures show it fails on a model-name literal, a digest literal and a model table.
 - A search of `src`, `native` and `dev` for the former default model ids, the pinned manifest digests and `local_ai_models.toml` finds nothing outside synthetic test ids.
-- `just check-import-boundaries`, `just check-style`, `just check-format` and `just check-types` pass, and `cargo test` in `native/application` and `native/desktop/src-tauri` passes.
+- `just check-import-boundaries`, `just check-style`, `just check-format` and `just check-types` pass, reusing applicable unchanged evidence. Focused native application provisioning, desktop setup/agent and frontend checks pass through CMake/CTest. The real components-role pytest checks pass against the fresh CMake-built role image.
 - The agent-service tests for the selection store and `ModelRunService.lookup` show: a stored selection is returned per role; a role with no selection refuses `NO_SELECTION`; no other lane is used; a vision role naming a non-vision entry is refused.
 - A tax model call for each role (vision transcription, text extraction, column-role mapping, supply-nature proposal) reaches the agent adapter in a test over the real client, and no code path imports a direct Ollama adapter.
 - A catalogue entry with `reads_off_host` true needs the digest-bound consent token; an entry with it false needs none; an entry without the field is refused.
