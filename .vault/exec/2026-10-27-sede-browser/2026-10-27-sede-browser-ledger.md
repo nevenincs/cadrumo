@@ -5,7 +5,7 @@ tags:
 date: '2026-10-27'
 modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:75ccc2c576bd452a5cef450ea45f76f259243e86eefe580b11eb59eb8470d55a'
+body_hash: 'sha256:3fa13d0fc3c3cb73043240744a53cf245e79d13b7e7486daceb7b2afdb5b6be2'
 related:
   - "[[2026-10-27-sede-browser-plan]]"
 ---
@@ -131,6 +131,42 @@ related:
 - `S15` `verify:` `lint-imports --config .importlinter --no-cache` -> `pass`
 - `S15` `verify:` `uv run --no-sync pytest src/cadrumo_runtime/host/tests/test_view_stream_relay.py -m ''` -> `pass`
 - `S15` `by:` `implementation-engineer-standard`
+- `S07` `A` `src/cadrumo/adapters/outbound/aeat/browser/sede_view.py`
+- `S07` `A` `src/cadrumo/adapters/outbound/aeat/browser/tests/test_sede_view_page.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/aeat/browser/tests/test_view_adapters_no_script.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/aeat/browser/session.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/aeat/browser/view_input.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/aeat/auth/authenticator.py`
+- `S07` `M` `src/cadrumo/application/auth/sessions.py`
+- `S07` `A` `src/cadrumo/application/live/sede_view_ports.py`
+- `S07` `A` `src/cadrumo/application/live/sede_view_operation.py`
+- `S07` `A` `src/cadrumo/application/live/tests/test_sede_view_operation.py`
+- `S07` `M` `src/cadrumo/application/operations/access_facts.py`
+- `S07` `M` `src/cadrumo/application/operations/person_acts.py`
+- `S07` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S07` `M` `src/cadrumo_client/contracts/view_stream.py`
+- `S07` `M` `src/cadrumo_client/contracts/view_transfer.py`
+- `S07` `M` `src/cadrumo_client/contracts/tests/view_stream_vector_source.py`
+- `S07` `M` `src/cadrumo_client/contracts/tests/view_stream_vectors.json`
+- `S07` `M` `src/cadrumo_runtime/host/worker_view_stream.py`
+- `S07` `M` `src/cadrumo_runtime/host/view_stream_relay.py`
+- `S07` `M` `src/cadrumo_runtime/host/operation_host.py`
+- `S07` `M` `src/cadrumo_runtime/host/operation_authority.py`
+- `S07` `M` `src/cadrumo_runtime/host/worker.py`
+- `S07` `M` `src/cadrumo_runtime/host/tests/test_view_stream_relay.py`
+- `S07` `M` `src/cadrumo_runtime/host/tests/test_operation_scope_resolution.py`
+- `S07` `M` `.vault/adr/2026-10-27-sede-browser-adr.md`
+- `S07` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S07` `M` `src/cadrumo_client/contracts/tests/test_view_stream_documents.py`
+- `S07` `verify:` `uv run --no-sync pytest src/cadrumo/application/live/tests -k sede_view` -> `pass`
+- `S07` `verify:` `uv run --no-sync pytest src/cadrumo/adapters/outbound/aeat/browser/tests/test_sede_view_page.py src/cadrumo/adapters/outbound/aeat/browser/tests/test_view_adapters_no_script.py` -> `pass`
+- `S07` `verify:` `uv run --no-sync pytest src/cadrumo_runtime/host/tests/test_view_stream_relay.py src/cadrumo_runtime/host/tests/test_operation_scope_resolution.py` -> `pass`
+- `S07` `verify:` `just check-operation-contract-manifest` -> `pass`
+- `S07` `verify:` `just check-style` -> `pass`
+- `S07` `verify:` `just check-format` -> `pass`
+- `S07` `verify:` `just check-types` -> `pass`
+- `S07` `verify:` `just check-import-boundaries` -> `fail`
+- `S07` `by:` `implementation-engineer-high`
 
 ## Notes
 
@@ -147,3 +183,5 @@ related:
 - `S06` Full import gate (python -m `dev.quality.import_gate)` fails outside this Step: `REEXPORT_OR_ALIAS` at `src/cadrumo_client/transport/view_stream.py:79` and load-target metadata files for `cadrumo_client,` `cadrumo_runtime` and the aggregate hold other Steps' modules and stay uncommitted.
 - `S15` Transfer documents live in the new `contracts/view_transfer.py` because `contracts/view_stream.py` carried uncommitted P01.S02 hunks; every existing symbol and signature of both codec modules is unchanged and the P01.S02 relay tests pass against the extended codec.
 - `S15` `dev.quality.import_gate` reported zero hard findings after the `VIEW_MAX_TRANSFER_ID` alias was removed, then a tool failure from other sessions' concurrent changes (stale cadrumo load-target metadata, source tree changed during the run). The aggregate `dev/quality/metadata/import_load_targets.json` carries the `view_transfer` line beside other sessions' lines and is left for the orchestrator to commit.
+- `S07` `contract_manifest.json` and the import load target sets were regenerated but not committed: they carry other sessions' uncommitted edits
+- `S07` check-import-boundaries ended unavailable only because the shared source tree changed while it ran; 30 of 30 contracts kept, 0 hard findings, 4965 of 4965 modules load

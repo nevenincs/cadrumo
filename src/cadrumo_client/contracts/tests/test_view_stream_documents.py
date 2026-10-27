@@ -96,6 +96,7 @@ def test_the_accepted_vectors_cover_every_document_kind() -> None:
         ("upstream", "view.navigate"),
         ("upstream", "view.resize"),
         ("upstream", "view.dialog"),
+        ("upstream", "view.close"),
         ("downstream", "view.download"),
         ("downstream", "view.file_chooser"),
         ("downstream", "view.transfer_complete"),

@@ -30,8 +30,9 @@ in memory only; they are never logged, persisted, journaled or projected.
 
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Annotated, Literal, Self
+from typing import Annotated, Literal, Protocol, Self
 
 from pydantic import AfterValidator, BaseModel, Field, RootModel, model_validator
 
@@ -256,6 +257,32 @@ type ViewTransferUpstreamDocument = (
 
 type ViewConnectionDownstreamDocument = ViewDownstreamDocument | ViewTransferDownstreamDocument
 type ViewConnectionUpstreamDocument = ViewUpstreamDocument | ViewTransferUpstreamDocument
+
+
+@dataclass(frozen=True, slots=True)
+class ViewUploadedFile:
+    """One file the window supplied for a chooser, received whole and checked against its completion.
+
+    The bytes live in memory only, on their way to the page; they never reach
+    a file, a log or custody.
+    """
+
+    chooser_id: int
+    name: str
+    mime: str | None
+    data: bytes = field(repr=False)
+
+
+type ViewTransferEvent = ViewDownloadAnswer | ViewFileChooserAnswer | ViewUploadedFile | ViewTransferCancel
+"""What a view sink hands its executor about transfers: answers, received files and the window's cancels."""
+
+
+class ViewTransferByteSource(Protocol):
+    """Where a download's bytes are read from, such as a binary file object."""
+
+    def read(self, size: int, /) -> bytes:
+        """Return at most ``size`` bytes, and nothing once the bytes end."""
+        ...
 
 
 class ViewConnectionDownstreamFrame(

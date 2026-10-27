@@ -194,7 +194,10 @@ class BrowserSession:
         The context is built exactly like :meth:`create_context`, from the
         same storage state and provisioner. It is a browser for a person and
         restricts nothing: no route, request guard or WebSocket or service
-        worker block is installed. Before it is returned, while it has no
+        worker block is installed. It is the one context that accepts
+        downloads: Playwright hands a download's bytes over only through the
+        browser's own transient file, which the view streams to the window and
+        deletes when the transfer ends. Before it is returned, while it has no
         page, ``observer`` is attached, so it hears of every page the context
         opens and of every popup, download, file chooser and dialog. The
         observer only learns of these events; nothing is aborted or closed on
@@ -260,6 +263,9 @@ class BrowserSession:
                     storage_state=storage_state,
                     provisioner=provisioner,
                 )
+                if view is not None:
+                    # The person's own downloads; every automated context keeps refusing them.
+                    context_kwargs["accept_downloads"] = True
                 context = await await_cancellation_complete(
                     self._create_playwright_context(browser, context_kwargs),
                     task_name="cadrumo-browser-context-create",
@@ -739,9 +745,9 @@ class ViewPageObserver(Protocol):
     def download_started(self, page: Page, download: Download) -> None:
         """Report a download ``page`` started.
 
-        The context keeps ``accept_downloads=False``, so Chromium stores no
-        bytes; ``download.url`` and ``download.suggested_filename`` remain
-        readable for the observer.
+        The view context accepts downloads, so Chromium writes the bytes to
+        its own transient file; the observer streams them from there to the
+        window and deletes the file when the transfer ends.
         """
         ...
 

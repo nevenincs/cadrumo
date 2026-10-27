@@ -53,6 +53,7 @@ if TYPE_CHECKING:
     from ..application.live.justificante_capture_operation import JustificanteCapturePorts
     from ..application.live.notification_documents import NotificationDocumentService
     from ..application.live.notification_ports import NotificationsPorts
+    from ..application.live.sede_view_ports import SedeViewStreamOpener
     from ..application.live.verify import VerifySurface
     from ..application.live.verify_capture_operation import VerifyLiveObservation
     from ..application.modelo.aggregate_ports import ModeloAggregateOperationPorts, ModeloAggregateOperationPortsFactory
@@ -325,6 +326,7 @@ class OperationCompositionInputs:
     modelo_workbench_read_ports_factory: ModeloWorkbenchReadPortsFactory | None = None
     execution_caller_reader: OperationExecutionCallerReader | None = None
     connectivity_probe: ConnectivityProbePort | None = None
+    sede_view_stream_opener: SedeViewStreamOpener | None = None
 
     @cached_property
     def resolved_settings(self) -> Settings:
@@ -1142,6 +1144,25 @@ def _live_iva_wallet_capture_operation(inputs: OperationCompositionInputs) -> Op
         compose_live_state, BrowserRuntimeResourceScope, preflight_filed_history_provider
     )
     return _built((definition,), (build_iva_wallet_capture_registration(definition),))
+
+
+def _live_sede_view_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    from ..adapters.outbound.aeat.browser.factory import BrowserRuntimeResourceScope, default_browser_session_factory
+    from ..adapters.outbound.aeat.browser.sede_view import open_sede_view
+    from ..adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
+    from ..application.live.sede_view_operation import build_sede_view_definition, build_sede_view_registration
+    from .live_state_composition import preflight_filed_history_provider
+
+    definition = build_sede_view_definition(
+        certificate_secret_backend_factory=build_certificate_secret_backend,
+        browser_session_factory=default_browser_session_factory,
+        operator_scope_ports=inputs.scope,
+        browser_resources_factory=BrowserRuntimeResourceScope,
+        provider_preflight=preflight_filed_history_provider,
+        view_browser_factory=open_sede_view,
+        stream_opener=inputs.sede_view_stream_opener,
+    )
+    return _built((definition,), (build_sede_view_registration(definition),))
 
 
 def _live_iva_remote_state_capture_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
@@ -2877,6 +2898,7 @@ _OPERATION_COMPOSITION_GROUPS: Mapping[str, _GroupComposer] = {
     "application.live.notification_document_read_operation": _live_notification_document_read_operation,
     "application.live.notifications_capture_operation": _live_notifications_capture_operation,
     "application.live.notifications_read_operation": _live_notifications_read_operation,
+    "application.live.sede_view_operation": _live_sede_view_operation,
     "application.live.verify_capture_operation": _live_verify_capture_operation,
     "application.live.verify_read_operation": _live_verify_read_operation,
     "application.modelo.aggregate_operation": _modelo_aggregate_operation,
@@ -3151,6 +3173,7 @@ def compose_operation_dependencies(
     execution_authority_factory: Callable[[OperationRegistry], OperationExecutionAuthority] | None = None,
     modelo_profile_resolver: ModeloWorkVerifyProfileResolver | None = None,
     execution_caller_reader: OperationExecutionCallerReader | None = None,
+    sede_view_stream_opener: SedeViewStreamOpener | None = None,
     journal_committed: Callable[[OperationPersistedSnapshot], None] | None = None,
 ) -> OperationComposedServices:
     """Compose the manifest-backed production registry and all public services.
@@ -3162,6 +3185,8 @@ def compose_operation_dependencies(
     the same graph can own pre-login and post-login execution without retaining
     a stale profile repository. ``journal_committed`` is told each operation
     whose journal commit succeeded, for a host that reports progress.
+    ``sede_view_stream_opener`` is the worker host's view stream; without it
+    the Sede view refuses every run.
     """
     from ..adapters.persistence.operations.durability_router import DurabilityRoutedOperationPersistence
     from ..adapters.persistence.operations.journal import OperationJournalRepository
@@ -3207,6 +3232,7 @@ def compose_operation_dependencies(
         profile_rotation_finalizer=profile_rotation_finalizer,
         modelo_profile_resolver=modelo_profile_resolver,
         execution_caller_reader=execution_caller_reader,
+        sede_view_stream_opener=sede_view_stream_opener,
     )
     resolved_settings = inputs.resolved_settings
     storage_root = effective_storage_root(settings=resolved_settings)

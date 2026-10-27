@@ -8,8 +8,8 @@ whose 16-byte header the transport's view codec owns.
 Downstream, toward the window: ``view.image`` announces the next image and is
 immediately followed by all of that image's chunks, in order; ``view.state``,
 ``view.notice`` and ``view.closed`` report the page. Upstream, from the window:
-``view.credit``, ``view.input``, ``view.navigate``, ``view.resize`` and
-``view.dialog``. Every set is closed: an unknown kind, member or value refuses
+``view.credit``, ``view.input``, ``view.navigate``, ``view.resize``,
+``view.dialog`` and ``view.close``. Every set is closed: an unknown kind, member or value refuses
 the frame, and a refused frame ends the view connection.
 
 The window binds a view connection by asking on its person connection with
@@ -26,7 +26,7 @@ journaled or projected.
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Annotated, Final, Literal, Protocol, Self
+from typing import TYPE_CHECKING, Annotated, Final, Literal, Protocol, Self
 from urllib.parse import urlsplit
 from uuid import UUID
 
@@ -34,6 +34,15 @@ from pydantic import BaseModel, Field, RootModel, model_validator
 
 from cadrumo.application.operations.models import OperationId
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+if TYPE_CHECKING:
+    from .view_transfer import (
+        ViewDownload,
+        ViewFileChooser,
+        ViewTransferByteSource,
+        ViewTransferCancel,
+        ViewTransferEvent,
+    )
 
 VIEW_IMAGE_MAX_BYTES = 2 * 1024 * 1024
 """The largest encoded JPEG one image may carry."""
@@ -449,8 +458,21 @@ class ViewDialog(BaseModel):
         return self
 
 
+class ViewClose(BaseModel):
+    """The person closed the page or the window: end the view and publish its session.
+
+    Closing is not a cancellation. The view stops taking input, publishes its
+    session through the canonical custody path and settles; a view connection
+    that drops without this document is closed the same way.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["view.close"] = "view.close"
+
+
 type ViewDownstreamDocument = ViewImage | ViewState | ViewNotice | ViewClosed
-type ViewUpstreamDocument = ViewCredit | ViewInput | ViewNavigate | ViewResize | ViewDialog
+type ViewUpstreamDocument = ViewCredit | ViewInput | ViewNavigate | ViewResize | ViewDialog | ViewClose
 
 
 class ViewDownstreamFrame(RootModel[Annotated[ViewDownstreamDocument, Field(discriminator="kind")]]):
@@ -559,8 +581,11 @@ class ViewWorkerBind(BaseModel):
     session_id: UUID
 
 
-type ViewPersonInput = ViewInput | ViewNavigate | ViewResize | ViewDialog
+type ViewPersonInput = ViewInput | ViewNavigate | ViewResize | ViewDialog | ViewClose
 """Upstream documents the view's executor acts on; credit is consumed by the sink itself."""
+
+type ViewSinkInput = ViewPersonInput | ViewTransferEvent
+"""Everything ``ViewStreamSink.receive`` returns: person input and the window's transfer answers."""
 
 
 class ViewStreamSink(Protocol):
@@ -578,7 +603,15 @@ class ViewStreamSink(Protocol):
     connects when a window attaches. ``ended`` turns true once the host closed
     the channel, which it does when the submitting session is retired or
     locked, the runtime stops, or a protocol violation occurs; the executor
-    must then end the view. ``close`` ends the view from the worker side: it
+    must then end the view without publishing. A window that closes the view
+    sends ``view.close``, which ``receive`` returns; the host sends the same
+    document when the window's view connection drops without it.
+
+    Transfers travel on the same channel. ``send`` also carries the
+    ``view.download`` and ``view.file_chooser`` requests; ``receive`` returns
+    the window's answers, the files it supplied, received whole and checked
+    against their digest, and its cancels. ``send_download`` streams one
+    accepted download under the window's transfer credit. ``close`` ends the view from the worker side: it
     sends ``view.closed`` with ``reason`` and returns only after the host has
     unbound the window, or after a short bound when the host does not answer,
     so the operation settles only after unbinding.
@@ -598,12 +631,20 @@ class ViewStreamSink(Protocol):
         """Make this the newest pending image, replacing any older one not yet sent."""
         ...
 
-    def send(self, document: ViewState | ViewNotice) -> None:
-        """Queue one page document for the window."""
+    def send(self, document: ViewState | ViewNotice | ViewDownload | ViewFileChooser | ViewTransferCancel) -> None:
+        """Queue one page document, or one transfer request or cancel, for the window."""
         ...
 
-    def receive(self, *, timeout: float) -> ViewPersonInput | None:
-        """Return the next person input, or ``None`` after ``timeout`` seconds or once ended."""
+    def receive(self, *, timeout: float) -> ViewSinkInput | None:
+        """Return the next person input or transfer event, or ``None`` after ``timeout`` seconds or once ended."""
+        ...
+
+    def send_download(self, transfer_id: int, source: ViewTransferByteSource) -> bool:
+        """Stream an accepted download's bytes, blocking until its completion is sent.
+
+        Returns ``False`` when the window cancels the transfer or the view ends
+        first. One download streams at a time; a second call waits its turn.
+        """
         ...
 
     def close(self, reason: ViewClosedReason) -> None:

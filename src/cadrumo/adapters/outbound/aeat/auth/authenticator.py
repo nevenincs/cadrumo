@@ -42,6 +42,7 @@ from pydantic import ValidationError
 
 from .....application.auth.protocols import (
     BrowserContextPort,
+    BrowserContextProvisioner,
     BrowserPagePort,
     BrowserSessionFactoryPort,
     BrowserSessionPort,
@@ -290,6 +291,10 @@ class AeatAuthenticator:
         """Load the configured PKCS#12 bundle and return a :class:`LoadedCertificate`."""
         bundle = self._require_bundle()
         return load_certificate(bundle)
+
+    def view_context_provisioner(self) -> BrowserContextProvisioner:
+        """Return the provisioner that presents this certificate in a person-driven view context."""
+        return CertificateContextProvisioner(self.load_certificate())
 
     def health(self, *, now: datetime | None = None) -> CertificateHealth:
         """Return a :class:`CertificateHealth` for the configured bundle."""

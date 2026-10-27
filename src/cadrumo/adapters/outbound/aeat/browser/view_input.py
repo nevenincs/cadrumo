@@ -36,7 +36,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Final, Self
@@ -205,6 +205,18 @@ class NavigationAvailability:
     can_go_forward: bool
 
 
+@dataclass(frozen=True, slots=True)
+class NavigationEntry:
+    """The page's current history entry, read without evaluating script in the page.
+
+    ``url`` and ``title`` are private taxpayer data and stay in memory.
+    """
+
+    url: str
+    title: str = field(repr=False)
+    availability: NavigationAvailability
+
+
 @dataclass(slots=True)
 class _OpenDialog:
     prompt: ViewDialogPrompt
@@ -330,6 +342,26 @@ class ViewInputAdapter:
         if not isinstance(index, int) or not isinstance(entries, list):
             return NavigationAvailability(can_go_back=False, can_go_forward=False)
         return NavigationAvailability(can_go_back=index > 0, can_go_forward=index < len(entries) - 1)
+
+    async def current_entry(self) -> NavigationEntry | None:
+        """Read the current history entry's URL and title and the history around it, or ``None``."""
+        history = await self._session.send("Page.getNavigationHistory")
+        index = history.get("currentIndex")
+        entries = history.get("entries")
+        if not isinstance(index, int) or not isinstance(entries, list) or not 0 <= index < len(entries):
+            return None
+        entry: object = entries[index]
+        if not isinstance(entry, dict):
+            return None
+        url: object = entry.get("url")
+        title: object = entry.get("title")
+        if not isinstance(url, str):
+            return None
+        return NavigationEntry(
+            url=url,
+            title=title if isinstance(title, str) else "",
+            availability=NavigationAvailability(can_go_back=index > 0, can_go_forward=index < len(entries) - 1),
+        )
 
     async def answer_dialog(self, message: ViewDialog) -> DialogOutcome:
         """Accept or dismiss the open dialog the message names, with the person's answer text."""

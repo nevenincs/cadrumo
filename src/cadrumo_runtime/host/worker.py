@@ -38,7 +38,7 @@ from . import worker_service as _worker_service
 from .operation_host import ProfileWorkerOperationHost
 from .profile_login import ProfileWorkerHumanLogin
 from .worker_stall_watchdog import watch_event_loop
-from .worker_view_stream import require_native_parent
+from .worker_view_stream import WorkerViewStreams, require_native_parent
 
 _LOGGER = get_logger(__name__)
 
@@ -173,6 +173,12 @@ def _serve_connected_worker(
             custody,
             authorization=WorkerAuthorizationClient(
                 identity=identity, root=options.storage_root, parent_pid=options.parent_pid
+            ),
+            view_streams=WorkerViewStreams(
+                storage_root=options.storage_root,
+                identity=identity,
+                parent_pid=options.parent_pid,
+                product_version=options.expected_version,
             ),
         )
         human = ProfileWorkerHumanLogin(custody, decode=operations.profile_decode_context)

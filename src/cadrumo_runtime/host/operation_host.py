@@ -97,6 +97,7 @@ if TYPE_CHECKING:
     from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
     from cadrumo.domain.calculations.registry.authority_artifact import ProfileDecodeContext
     from cadrumo.domain.deadlines.models import TaxpayerProfile
+    from cadrumo_client.contracts.view_stream import ViewStreamSink, ViewStreamSinks
     from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorityRequest
 
     from ..adapters.worker_authorization_client import WorkerAuthorizationClient
@@ -148,9 +149,20 @@ def _refusing_what_its_readers_refuse() -> Generator[None]:
 class ProfileWorkerOperationHost:
     """Own the existing services and publication lease, never a second dispatcher."""
 
-    def __init__(self, custody: ProfileWorkerCustody, *, authorization: WorkerAuthorizationClient) -> None:
-        """Defer publication and backend loading until a governed capability needs it."""
+    def __init__(
+        self,
+        custody: ProfileWorkerCustody,
+        *,
+        authorization: WorkerAuthorizationClient,
+        view_streams: ViewStreamSinks | None = None,
+    ) -> None:
+        """Defer publication and backend loading until a governed capability needs it.
+
+        ``view_streams`` opens the worker's view channel for a running Sede view;
+        without it the view refuses every run.
+        """
         self.custody = custody
+        self._view_streams = view_streams
         self._lifetime = ExitStack()
         self._authority: PinnedAuthorityOperation | None = None
         self._services: OperationComposedServices | None = None
@@ -292,6 +304,7 @@ class ProfileWorkerOperationHost:
                 profile_rotation_finalizer=self._finalize_password_rotation,
                 modelo_profile_resolver=self._modelo_profile,
                 execution_caller_reader=self._execution_caller,
+                sede_view_stream_opener=None if self._view_streams is None else self._open_sede_view,
                 journal_committed=self._journal_committed,
             )
 
@@ -330,6 +343,14 @@ class ProfileWorkerOperationHost:
         if self._execution is None or self._closed:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
         return self._execution.execution_caller(identity)
+
+    def _open_sede_view(self, identity: OperationIdentity) -> ViewStreamSink:
+        """Open the view stream bound to the desktop session that admitted this exact view."""
+        streams = self._view_streams
+        if streams is None or self._execution is None or self._closed:
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+        session_id = self._execution.sede_view_session(identity)
+        return streams.open_view(operation_id=identity.operation_id, session_id=session_id)
 
     def _modelo_profile(self, operation: PinnedAuthorityOperation) -> TaxpayerProfile:
         """Read filing facts only from this worker's immutable profile custody."""

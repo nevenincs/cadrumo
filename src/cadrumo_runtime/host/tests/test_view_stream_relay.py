@@ -8,6 +8,7 @@ another native peer comes from a child process.
 
 from __future__ import annotations
 
+import io
 import os
 import subprocess
 import sys
@@ -30,6 +31,7 @@ from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.contracts.view_stream import (
     ViewAttachGranted,
     ViewAttachRequest,
+    ViewClose,
     ViewClosed,
     ViewClosedReason,
     ViewConnect,
@@ -42,13 +44,32 @@ from cadrumo_client.contracts.view_stream import (
     ViewStreamSinks,
     ViewWorkerBind,
 )
+from cadrumo_client.contracts.view_transfer import (
+    ViewDownload,
+    ViewDownloadAnswer,
+    ViewDownloadOutcome,
+    ViewFileChooser,
+    ViewFileChooserAnswer,
+    ViewFileChooserOutcome,
+    ViewTransferComplete,
+    ViewTransferCredit,
+    ViewTransferDirection,
+    ViewTransferUpstreamDocument,
+    ViewUpload,
+    ViewUploadedFile,
+)
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.frame_io import read_document, write_document
 from cadrumo_client.transport.view_stream import (
     AssembledViewImage,
     ViewDownstreamReader,
+    ViewTransferChunk,
+    ViewTransferReceiver,
+    ViewTransferSender,
     view_image_frames,
     write_view_document,
+    write_view_transfer_chunk,
+    write_view_transfer_document,
 )
 
 from ...adapters.connection_handshake import accept_connection_handshake
@@ -551,3 +572,82 @@ def test_view_attach_documents_travel_the_public_request_door() -> None:
         ViewConnect(request_id=uuid4(), operation_id=operation_id, attach_token=token.upper())
     with pytest.raises(ValueError, match="attach_token"):
         ViewConnect(request_id=uuid4(), operation_id=operation_id, attach_token=token[:62])
+
+
+def _transfer_window(window: _Window) -> tuple[ViewDownstreamReader, ViewTransferReceiver]:
+    receiver = ViewTransferReceiver(ViewTransferDirection.DOWNLOAD)
+    return ViewDownstreamReader(window.client, transfers=receiver), receiver
+
+
+def _write_upstream(window: _Window, document: ViewTransferUpstreamDocument) -> None:
+    write_view_transfer_document(window.client, document, deadline=time.monotonic() + 5)
+
+
+def test_view_download_bytes_reach_the_window_under_its_transfer_credit(lane: _Lane) -> None:
+    window = lane.attach()
+    reader, receiver = _transfer_window(window)
+    payload = os.urandom(5 * 65_520 + 1_234)
+    lane.sink.send(ViewDownload(transfer_id=1, filename="justificante.pdf"))
+    offer = reader.read(deadline=time.monotonic() + 5)
+    assert offer == ViewDownload(transfer_id=1, filename="justificante.pdf")
+    receiver.expect(1)
+    _write_upstream(window, ViewDownloadAnswer(transfer_id=1, outcome=ViewDownloadOutcome.ACCEPTED))
+    # The window grants credit at once; the worker holds it until its bytes are ready.
+    _write_upstream(window, receiver.grant(1, 2))
+    assert lane.sink.receive(timeout=5) == ViewDownloadAnswer(transfer_id=1, outcome=ViewDownloadOutcome.ACCEPTED)
+    delivered: list[bool] = []
+    sending = Thread(target=lambda: delivered.append(lane.sink.send_download(1, io.BytesIO(payload))), daemon=True)
+    sending.start()
+    received = bytearray()
+    while True:
+        item = reader.read(deadline=time.monotonic() + 5)
+        if isinstance(item, ViewTransferChunk):
+            received += item.data
+            if not item.last:
+                _write_upstream(window, receiver.grant(1, 1))
+            continue
+        assert isinstance(item, ViewTransferComplete)
+        break
+    sending.join(timeout=5)
+    assert bytes(received) == payload and delivered == [True]
+
+
+def test_view_upload_reaches_the_worker_whole_and_checked(lane: _Lane) -> None:
+    window = lane.attach()
+    reader, _ = _transfer_window(window)
+    upload = os.urandom(2 * 65_520 + 77)
+    lane.sink.send(ViewFileChooser(chooser_id=1, accept=(), multiple=False))
+    assert reader.read(deadline=time.monotonic() + 5) == ViewFileChooser(chooser_id=1, accept=(), multiple=False)
+    _write_upstream(window, ViewFileChooserAnswer(chooser_id=1, outcome=ViewFileChooserOutcome.SUPPLIED, file_count=1))
+    _write_upstream(window, ViewUpload(chooser_id=1, transfer_id=1, name="a.bin", size=len(upload)))
+    credit = reader.read(deadline=time.monotonic() + 5)
+    assert isinstance(credit, ViewTransferCredit) and credit.transfer_id == 1
+    sender = ViewTransferSender(1, io.BytesIO(upload))
+    sender.grant(credit.chunks)
+    while (chunk := sender.next_payload()) is not None:
+        write_view_transfer_chunk(window.client, chunk, deadline=time.monotonic() + 5)
+    _write_upstream(window, sender.completion())
+    assert lane.sink.receive(timeout=5) == ViewFileChooserAnswer(
+        chooser_id=1, outcome=ViewFileChooserOutcome.SUPPLIED, file_count=1
+    )
+    uploaded = lane.sink.receive(timeout=5)
+    assert isinstance(uploaded, ViewUploadedFile)
+    assert (uploaded.chooser_id, uploaded.name, uploaded.data) == (1, "a.bin", upload)
+
+
+def test_view_close_from_the_window_reaches_the_worker(lane: _Lane) -> None:
+    window = lane.attach()
+    write_view_document(window.client, ViewClose(), deadline=time.monotonic() + 5)
+    assert lane.sink.receive(timeout=5) == ViewClose()
+    assert not lane.sink.ended
+
+
+def test_view_window_connection_drop_closes_the_view_like_its_close(lane: _Lane) -> None:
+    window = lane.attach()
+    window.client.close()
+    assert lane.sink.receive(timeout=5) == ViewClose()
+    # A window the host unbinds is not a close: the view keeps running for the next window.
+    second = lane.attach()
+    lane.relay.disconnect(lane.person_id)
+    assert second.read() == ViewClosed(reason=ViewClosedReason.SESSION_RETIRED)
+    assert lane.sink.receive(timeout=0.5) is None

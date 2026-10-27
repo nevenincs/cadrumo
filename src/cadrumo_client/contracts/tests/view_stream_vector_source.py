@@ -941,6 +941,7 @@ def _documents() -> dict[str, list[dict[str, Any]]]:
         ("resize", "upstream", {"kind": "view.resize", "css_width": 4096, "css_height": 1, "scale": 0.5}),
         ("dialog_accept", "upstream", {"kind": "view.dialog", "dialog_id": 1, "accept": True, "prompt_text": "sí"}),
         ("dialog_dismiss", "upstream", {"kind": "view.dialog", "dialog_id": 4294967295, "accept": False}),
+        ("close", "upstream", {"kind": "view.close"}),
         *_transfer_documents_accepted(),
     ]
     refused = [
@@ -1013,6 +1014,8 @@ def _documents() -> dict[str, list[dict[str, Any]]]:
             {"kind": "view.dialog", "dialog_id": 1, "accept": False, "prompt_text": "x"},
         ),
         ("dialog_id_zero", "upstream", {"kind": "view.dialog", "dialog_id": 0, "accept": True}),
+        ("close_on_downstream", "downstream", {"kind": "view.close"}),
+        ("close_with_reason", "upstream", {"kind": "view.close", "reason": "cancelled"}),
         *_transfer_documents_refused(),
     ]
     return {

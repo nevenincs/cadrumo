@@ -14,6 +14,15 @@ image arriving while the window has no credit is dropped as it is read, so
 the host buffers no image. Credit beyond two images on either leg, and any
 frame the view codec refuses, is a protocol violation.
 
+Transfer documents and transfer chunks pass through unchanged in both
+directions, each chunk checked for a well-formed header and never inside an
+image's chunk run; their credit is end to end, between the bytes' sender and
+receiver. A transfer frame for a window that is not attached is dropped. The
+window's ``view.close`` passes to the worker, which then publishes and ends
+the view; a window leg that drops without it, rather than being unbound by
+the host or replaced, is closed the same way, the host sending ``view.close``
+in its stead.
+
 The host unbinds at once, without waiting for the worker to settle: when the
 operation ends (the worker's ``view.closed``, whose acknowledgement is the
 host closing the worker leg), when the submitting session is retired or
@@ -47,16 +56,20 @@ from cadrumo_client.contracts.view_stream import (
     VIEW_ATTACH_TOKEN_BYTES,
     VIEW_ATTACH_TOKEN_SECONDS,
     VIEW_CREDIT_MAX_IMAGES,
+    ViewClose,
     ViewClosed,
     ViewClosedReason,
     ViewConnected,
     ViewCredit,
-    ViewDownstreamFrame,
     ViewImage,
-    ViewNotice,
     ViewState,
-    ViewUpstreamDocument,
     ViewWorkerBind,
+)
+from cadrumo_client.contracts.view_transfer import (
+    ViewConnectionDownstreamDocument,
+    ViewConnectionDownstreamFrame,
+    ViewConnectionUpstreamDocument,
+    ViewConnectionUpstreamFrame,
 )
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.frame_io import (
@@ -72,7 +85,8 @@ from cadrumo_client.transport.native_wake import NativeWake
 from cadrumo_client.transport.view_stream import (
     VIEW_CHUNK_FRAME_KIND,
     ViewChunkHeader,
-    read_view_upstream,
+    ViewTransferChunkHeader,
+    is_view_transfer_chunk,
     write_view_document,
 )
 
@@ -172,6 +186,7 @@ class _WindowLeg:
     credit: int = 0
     ready: bool = False
     unbound: bool = False
+    close_sent: bool = False
 
 
 @dataclass(slots=True)
@@ -322,6 +337,7 @@ class ViewStreamRelay:
         try:
             self._relay_window(leg, worker)
         finally:
+            self._close_dropped_window(leg, worker)
             self._end_window(leg)
 
     def unbind_sessions(self, session_ids: tuple[UUID, ...]) -> None:
@@ -433,27 +449,39 @@ class ViewStreamRelay:
     def _end_window(self, leg: _WindowLeg) -> None:
         self._unbind_window(leg, None)
 
+    @staticmethod
+    def _read_window_frame(leg: _WindowLeg) -> ViewConnectionUpstreamDocument | bytes:
+        """Read one upstream document, or the payload of one well-formed upload chunk."""
+        kind, payload = read_frame_of_kinds(
+            leg.channel, kinds=_WORKER_KINDS, deadline=time.monotonic() + _FRAME_SECONDS
+        )
+        if kind == VIEW_CHUNK_FRAME_KIND:
+            if not is_view_transfer_chunk(payload):
+                raise _violation("view_image_chunk_upstream")
+            ViewTransferChunkHeader.decode(payload)
+            return payload
+        return decode_document(payload, ViewConnectionUpstreamFrame).root
+
     def _relay_window(self, leg: _WindowLeg, worker: _WorkerLeg | None) -> None:
-        """Turn window credit into worker credit and forward person input, refusing violations."""
+        """Turn window credit into worker credit and forward input, uploads and close, refusing violations."""
         if worker is None:
             return
         while not leg.unbound:
             try:
                 if not leg.channel.wait_readable(leg.stopping):
                     return
-                document = read_view_upstream(leg.channel, deadline=time.monotonic() + _FRAME_SECONDS)
+                item = self._read_window_frame(leg)
             except RefusalError as error:
                 if error.reason is RefusalCode.INVALID_FRAME:
                     diagnostic_event(_LOGGER, "view_window_violation", fields={"check": error.check or "-"}, level=30)
                 return
-            grant = 0
-            if isinstance(document, ViewCredit):
+            forwarded: ViewConnectionUpstreamDocument | bytes
+            if isinstance(item, ViewCredit):
                 with self._guard:
-                    if leg.credit + document.images > VIEW_CREDIT_MAX_IMAGES:
-                        violated = True
-                    else:
-                        violated = False
-                        leg.credit += document.images
+                    violated = leg.credit + item.images > VIEW_CREDIT_MAX_IMAGES
+                    grant = 0
+                    if not violated:
+                        leg.credit += item.images
                         grant = max(0, leg.credit - worker.credit)
                         worker.credit += grant
                 if violated:
@@ -461,15 +489,40 @@ class ViewStreamRelay:
                     return
                 if grant == 0:
                     continue
-                forwarded: ViewUpstreamDocument = ViewCredit(images=grant)
+                forwarded = ViewCredit(images=grant)
             else:
-                forwarded = document
-            try:
-                with worker.write_lock:
-                    write_view_document(worker.channel, forwarded, deadline=time.monotonic() + _FRAME_SECONDS)
-            except RefusalError:
-                self._end_worker(worker, ViewClosedReason.FAILED)
+                if isinstance(item, ViewClose):
+                    with self._guard:
+                        leg.close_sent = True
+                forwarded = item
+            if not self._write_worker(worker, forwarded):
                 return
+
+    def _write_worker(self, worker: _WorkerLeg, item: ViewConnectionUpstreamDocument | bytes) -> bool:
+        """Write one document or upload chunk to the worker; a failure ends the view."""
+        frame = encode_frame(VIEW_CHUNK_FRAME_KIND, item) if isinstance(item, bytes) else document_frame(item)
+        try:
+            with worker.write_lock:
+                worker.channel.write_all(frame, deadline=time.monotonic() + _FRAME_SECONDS)
+        except RefusalError:
+            self._end_worker(worker, ViewClosedReason.FAILED)
+            return False
+        return True
+
+    def _close_dropped_window(self, leg: _WindowLeg, worker: _WorkerLeg | None) -> None:
+        """Close the view for a window leg that dropped on its own without sending ``view.close``.
+
+        A leg the host unbound or replaced, or whose worker already ended, is
+        not a close: those end, or keep, the view on their own terms.
+        """
+        if worker is None:
+            return
+        with self._guard:
+            dropped = not leg.unbound and not leg.close_sent and worker.window is leg and not worker.ended
+            if dropped:
+                leg.close_sent = True
+        if dropped:
+            self._write_worker(worker, ViewClose())
 
     def _relay_worker(self, worker: _WorkerLeg) -> None:
         """Forward the worker's documents and credited images; drop images the window has no credit for."""
@@ -482,8 +535,12 @@ class ViewStreamRelay:
                     worker.channel, kinds=_WORKER_KINDS, deadline=time.monotonic() + _FRAME_SECONDS
                 )
                 if kind == VIEW_CHUNK_FRAME_KIND:
-                    raise _violation("view_chunk_unannounced")
-                document = decode_document(payload, ViewDownstreamFrame).root
+                    if not is_view_transfer_chunk(payload):
+                        raise _violation("view_chunk_unannounced")
+                    ViewTransferChunkHeader.decode(payload)
+                    self._forward_frame(worker, encode_frame(VIEW_CHUNK_FRAME_KIND, payload))
+                    continue
+                document = decode_document(payload, ViewConnectionDownstreamFrame).root
                 if isinstance(document, ViewClosed):
                     reason = document.reason
                     return
@@ -501,14 +558,18 @@ class ViewStreamRelay:
         finally:
             self._end_worker(worker, reason)
 
-    def _forward_document(self, worker: _WorkerLeg, document: ViewState | ViewNotice) -> None:
+    def _forward_document(self, worker: _WorkerLeg, document: ViewConnectionDownstreamDocument) -> None:
+        self._forward_frame(worker, document_frame(document))
+
+    def _forward_frame(self, worker: _WorkerLeg, frame: bytes) -> None:
+        """Pass one document or transfer chunk to an attached window; without one it is dropped."""
         with self._guard:
             leg = worker.window if worker.window is not None and worker.window.ready else None
         if leg is None:
             return
         with leg.write_lock:
             try:
-                write_view_document(leg.channel, document, deadline=time.monotonic() + _FRAME_SECONDS)
+                leg.channel.write_all(frame, deadline=time.monotonic() + _FRAME_SECONDS)
             except RefusalError:
                 failed = True
             else:

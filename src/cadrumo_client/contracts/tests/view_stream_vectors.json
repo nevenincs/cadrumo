@@ -1122,6 +1122,13 @@
         }
       },
       {
+        "name": "close",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.close"
+        }
+      },
+      {
         "name": "download_bare",
         "direction": "downstream",
         "document": {
@@ -1989,6 +1996,21 @@
           "kind": "view.dialog",
           "dialog_id": 0,
           "accept": true
+        }
+      },
+      {
+        "name": "close_on_downstream",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.close"
+        }
+      },
+      {
+        "name": "close_with_reason",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.close",
+          "reason": "cancelled"
         }
       },
       {

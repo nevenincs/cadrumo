@@ -65,6 +65,7 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunRoleSelection,
     encode_model_run_body,
 )
+from cadrumo_client.contracts.view_stream import SEDE_VIEW_DEFINITION_ID
 from cadrumo_runtime.contracts.worker_authorization import (
     RuntimeHumanReviewClaimAttestation,
     WorkerAuthorityRequest,
@@ -139,6 +140,21 @@ class ProfileWorkerOperationAuthority:
         if lease.kind is not SessionKind.HUMAN:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
         return lease
+
+    def sede_view_session(self, identity: OperationIdentity) -> UUID:
+        """Name the person's desktop session that admitted this exact Sede view, or refuse.
+
+        The view stream binds to this session: retiring or locking it ends the view.
+        """
+        binding = self._bindings.get(identity.operation_id)
+        if binding is None or identity.definition_id != SEDE_VIEW_DEFINITION_ID:
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+        self._require_binding_identity(identity, binding.request)
+        if binding.frontend is not OperationFrontendProjection.DESKTOP:
+            raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
+        if self.custody.require(binding.session_id).kind is not SessionKind.HUMAN:
+            raise ProfileAccessRefusedError(AccessDenialCode.HUMAN_AUTHORITY_REQUIRED)
+        return binding.session_id
 
     def execution_caller(self, identity: OperationIdentity) -> OperationExecutionCaller:
         """Name the frontend and live session that admitted this exact invocation.

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Final
 
+from cadrumo_client.contracts.view_stream import SEDE_VIEW_DEFINITION_ID
+
 from .registry import OperationFrontendProjection
 
 ACCESS_ADMINISTRATION_OPERATIONS: Final = frozenset(
@@ -19,10 +21,20 @@ ACCESS_ADMINISTRATION_OPERATIONS: Final = frozenset(
 )
 """The registered operations that administer who may reach the profile, by definition id."""
 
+PERSON_DRIVEN_OPERATIONS: Final = frozenset({SEDE_VIEW_DEFINITION_ID})
+"""The registered operations the person drives with their own hands, by definition id.
+
+No delegated client discovers, submits or runs them: the person's input is the operation.
+"""
+
 
 def operation_is_persons_act(definition_id: str, *, ephemeral_secret_required: bool) -> bool:
     """Tell whether a registered operation is the person's own act and not an delegated client operation."""
-    return ephemeral_secret_required or definition_id in ACCESS_ADMINISTRATION_OPERATIONS
+    return (
+        ephemeral_secret_required
+        or definition_id in ACCESS_ADMINISTRATION_OPERATIONS
+        or definition_id in PERSON_DRIVEN_OPERATIONS
+    )
 
 
 PERSONS_FRONTENDS: Final = frozenset(
@@ -43,6 +55,7 @@ def is_persons_frontend(frontend: OperationFrontendProjection) -> bool:
 __all__ = [
     "ACCESS_ADMINISTRATION_OPERATIONS",
     "PERSONS_FRONTENDS",
+    "PERSON_DRIVEN_OPERATIONS",
     "is_persons_frontend",
     "operation_is_persons_act",
 ]

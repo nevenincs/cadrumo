@@ -60,6 +60,7 @@ from cadrumo.tests.log_records import delivered_records
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, Availability
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+from cadrumo_client.contracts.view_stream import SEDE_VIEW_DEFINITION_ID
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorityRequest
 
@@ -490,3 +491,32 @@ def test_the_execution_caller_refuses_an_invocation_this_worker_did_not_admit(ha
     with pytest.raises(AutomationCustodyError) as retired:
         harness.authority.execution_caller(harness.identity)
     assert retired.value.reason is AutomationCustodyCode.CREDENTIAL_REJECTED
+
+
+def test_the_sede_view_stream_binds_only_to_the_desktop_session_that_admitted_the_view(harness: _Harness) -> None:
+    """The view stream follows the person's desktop session; any other admission gets no stream."""
+    session = harness.custody.session
+    request = harness.request.model_copy(update={"definition_id": SEDE_VIEW_DEFINITION_ID})
+
+    def bound(frontend: OperationFrontendProjection) -> OperationIdentity:
+        identity = OperationIdentity(
+            operation_id=new_operation_id(), definition_id=SEDE_VIEW_DEFINITION_ID, subject_ref=request.subject_ref
+        )
+        asyncio.run(
+            harness.authority.bind(identity.operation_id, WorkerOperationBinding(session.session_id, frontend, request))
+        )
+        return identity
+
+    assert harness.authority.sede_view_session(bound(OperationFrontendProjection.DESKTOP)) == session.session_id
+    for frontend in (OperationFrontendProjection.CLI, OperationFrontendProjection.EXTERNAL_CLIENT):
+        with pytest.raises(ProfileAccessRefusedError) as refused:
+            harness.authority.sede_view_session(bound(frontend))
+        assert refused.value.reason is AccessDenialCode.FRONTEND_DENIED
+    # An invocation of another definition, or one this worker never bound, opens no view stream.
+    with pytest.raises(ProfileAccessRefusedError):
+        harness.authority.sede_view_session(harness.identity)
+    unbound = OperationIdentity(
+        operation_id=new_operation_id(), definition_id=SEDE_VIEW_DEFINITION_ID, subject_ref=request.subject_ref
+    )
+    with pytest.raises(ProfileAccessRefusedError):
+        harness.authority.sede_view_session(unbound)

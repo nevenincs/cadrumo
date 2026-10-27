@@ -64,6 +64,7 @@ from .operator_scope import (
 from .operator_scope_ports import OperatorScopePorts
 from .protocols import (
     BrowserContextPort,
+    BrowserContextProvisioner,
     BrowserSessionFactoryPort,
     SessionStoreProtocol,
     session_store,
@@ -106,6 +107,13 @@ class _PersistedTargetProbeProvider(_TargetedAuthProvider, Protocol):
         *,
         target_url: str | None = None,
     ) -> tuple[AeatSession, AeatLoginAssertion]: ...
+
+
+@runtime_checkable
+class _ViewContextProvisioningProvider(Protocol):
+    """Provider whose login credential a view context presents from its construction."""
+
+    def view_context_provisioner(self) -> BrowserContextProvisioner: ...
 
 
 @runtime_checkable
@@ -1338,6 +1346,40 @@ def load_view_session_seed(
     )
 
 
+def view_context_provisioner(
+    settings: Settings,
+    *,
+    baseline: ViewSessionBaseline,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    browser_session_factory: BrowserSessionFactoryPort,
+    operator_scope_ports: OperatorScopePorts,
+) -> BrowserContextProvisioner | None:
+    """Return what a view context must present at construction for the seeded provider, if anything.
+
+    A certificate session is valid only while the browser presents the same
+    client certificate, so the view context carries it exactly as the
+    provider's own contexts do. Cl@ve sessions live in the storage state alone.
+    """
+    if baseline.provider_kind is not AuthProviderKind.CERTIFICATE:
+        return None
+    with active_profile_storage_span(settings, operator_scope_ports=operator_scope_ports) as bucket_id:
+        if bucket_id is None:
+            raise AuthSessionUnavailableError(
+                translated_message="application.auth.sessions.errors.no_session",
+            )
+        provider = _build_provider(
+            settings,
+            baseline.provider_kind,
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            browser_session_factory=browser_session_factory,
+            certificate_credentials=None,
+            operator_scope_ports=operator_scope_ports,
+        )
+        if not isinstance(provider, _ViewContextProvisioningProvider):
+            raise InternalInvariantError("the certificate provider cannot provision a view context")
+        return provider.view_context_provisioner()
+
+
 async def publish_view_session_state(
     settings: Settings,
     *,
@@ -1549,4 +1591,5 @@ __all__ = [
     "publish_view_session_state",
     "resolve_clave_credentials",
     "storage_state_paths",
+    "view_context_provisioner",
 ]

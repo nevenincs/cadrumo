@@ -338,6 +338,8 @@ _NETWORK_WRITES: Final = (
     "live.justificante.capture",
     "live.notifications.capture",
     "live.notifications.document.capture",
+    # The person browses the Sede and the view publishes the session it ends with.
+    "live.sede.view",
     "live.verify.nif-iva",
     "live.verify.tgvi",
     # A calculation that values foreign assets looks exchange rates up at the

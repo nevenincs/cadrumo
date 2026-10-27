@@ -17,7 +17,7 @@ from typing import Final
 
 import pytest
 
-from .. import screencast, view_input
+from .. import screencast, sede_view, view_input
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -72,6 +72,8 @@ def _call_findings(call: ast.Call) -> list[str]:
     if isinstance(function, ast.Name) and function.id in {"getattr", "setattr", "__import__"}:
         return [f"line {call.lineno}: dynamic {function.id}"]
     if isinstance(function, ast.Attribute) and function.attr in _CDP_CALLS and call.args:
+        if _is_view_stream(function.value):
+            return []
         method = call.args[0]
         # A literal, or the one forwarding parameter named ``method`` whose callers pass literals.
         literal = isinstance(method, ast.Constant) and isinstance(method.value, str)
@@ -79,6 +81,16 @@ def _call_findings(call: ast.Call) -> list[str]:
         if not (literal or forwarded):
             return [f"line {call.lineno}: CDP method name is not a literal"]
     return []
+
+
+def _is_view_stream(receiver: ast.expr) -> bool:
+    """Whether ``receiver`` is the driver's view stream, ``self._sink``, whose ``send`` writes to the window."""
+    return (
+        isinstance(receiver, ast.Attribute)
+        and receiver.attr == "_sink"
+        and isinstance(receiver.value, ast.Name)
+        and receiver.value.id == "self"
+    )
 
 
 def _source(module: object) -> str:
@@ -149,3 +161,18 @@ def test_screencast_and_input_adapters_name_every_cdp_method_they_are_allowed() 
             if isinstance(node, ast.Constant) and isinstance(node.value, str) and _CDP_METHOD_NAME.match(node.value)
         }
         assert named == allowed
+
+
+def test_scanner_accepts_the_view_stream_send_and_still_refuses_a_cdp_send_by_name() -> None:
+    accepted = "def f(self, document):\n    self._sink.send(document)\n"
+    refused = "async def f(self, name):\n    await self._session.send(name, {})\n"
+    stream_elsewhere = "def f(other, document):\n    other._sink.send(document)\n"
+
+    assert _script_findings(accepted, frozenset()) == []
+    assert any("not a literal" in finding for finding in _script_findings(refused, frozenset()))
+    assert any("not a literal" in finding for finding in _script_findings(stream_elsewhere, frozenset()))
+
+
+def test_sede_view_driver_evaluates_no_script_and_names_no_cdp_method() -> None:
+    # The driver reaches the page through Playwright's own events and the two adapters, never through CDP itself.
+    assert _script_findings(_source(sede_view), frozenset()) == []
