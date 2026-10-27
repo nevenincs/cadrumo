@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import threading
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import cast
@@ -32,7 +33,11 @@ from cadrumo.application.operations.frontend_projection import (
 )
 from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1, OperationPublicEventPageV1
 from cadrumo.application.operations.persistence.replay import OperationReplayStatus
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import (
+    OperationFrontendProjection,
+    OperationPublicDefinitionContractV1,
+    OperationRegistry,
+)
 from cadrumo.application.operator_actions.models import PreconditionVerdict
 from cadrumo.application.operator_actions.projection import PreconditionVerdictSnapshot
 from cadrumo.application.provisioning_contracts import (
@@ -77,14 +82,17 @@ class _Client:
         self.session_id = _SESSION_ID
 
 
+@dataclass
 class _Controller:
     operation_id = _OPERATION_ID
-    # The client it was submitted through, as the real controller keeps it.
-    client: _Client
+    observation: OperationObservationSuccessV1
+    result: LedgerImportResultProjection
+    client: _Client = field(default_factory=_Client)
+    deadline: float | None = None
 
-    def __init__(self, observation: OperationObservationSuccessV1, result: LedgerImportResultProjection) -> None:
-        self.observation = observation
-        self.result = result
+    @property
+    def definition_contract(self) -> OperationPublicDefinitionContractV1:
+        return self.observation.projection.definition_contract
 
     async def start(self) -> str:
         return self.operation_id
@@ -257,12 +265,16 @@ def test_preview_runs_a_dry_run_of_the_planned_files_and_keeps_each_parsed_diges
     assert [item.reason for item in outcome.refused_files] == [tr("tui.ledger.import.refusal.own_account_mismatch")]
 
 
-def _reader_verdict(*, below_floor: bool) -> PreconditionVerdict:
-    """The verdict the column mapper meets: no local AI answering, or a model too large for this computer."""
-    if below_floor:
+def _reader_verdict(*, no_selection: bool) -> PreconditionVerdict:
+    """The column mapper has no local AI answering or no model selected for its role."""
+    if no_selection:
         return provisioning_no_recovery_verdict(
-            ProvisioningPreconditionCondition.HARDWARE_FLOOR_MET,
-            facts={"role": ModelRole.COLUMN_ROLE_MAPPING.value, "model": "synthetic-mapper", "required_bytes": 2**31},
+            ProvisioningPreconditionCondition.SELECTED_MODEL_AVAILABLE,
+            facts={
+                "role": ModelRole.COLUMN_ROLE_MAPPING.value,
+                "model_run_refusal": "no_selection",
+                "role_selection_required": True,
+            },
         )
     status = probe_local_ai_program(recorded_absent_row("local_ai"))
     verdict = status.precondition_verdict
@@ -279,7 +291,7 @@ def _reader_refused(name: str, verdict: PreconditionVerdict) -> LedgerImportFile
     )
 
 
-def test_a_file_only_the_local_ai_reads_keeps_its_setup_action_and_one_it_cannot_read_here_names_none(
+def test_a_file_needing_local_ai_keeps_its_setup_action_and_one_without_a_model_selection_names_none(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     client = _Client()
@@ -289,8 +301,8 @@ def test_a_file_only_the_local_ai_reads_keeps_its_setup_action_and_one_it_cannot
         imported=0,
         valid_files=0,
         refused=(
-            _reader_refused("april.csv", _reader_verdict(below_floor=False)),
-            _reader_refused("may.csv", _reader_verdict(below_floor=True)),
+            _reader_refused("april.csv", _reader_verdict(no_selection=False)),
+            _reader_refused("may.csv", _reader_verdict(no_selection=True)),
         ),
     )
     _install(monkeypatch, client, [(OperationEffect.NONE, preview)])
@@ -298,16 +310,16 @@ def test_a_file_only_the_local_ai_reads_keeps_its_setup_action_and_one_it_cannot
 
     outcome = asyncio.run(_door(client).preview(request))
 
-    not_ready, cannot_here = outcome.refused_files
+    not_ready, no_selection = outcome.refused_files
     assert not_ready.reason == tr("tui.ledger.import.refusal.reader_unavailable")
     assert not_ready.recovery_action_id == LOCAL_AI_PROVISION_ACTION_ID
-    assert cannot_here.reason == tr("tui.ledger.import.refusal.reader_unavailable_here")
-    assert cannot_here.reason != not_ready.reason
-    assert cannot_here.recovery_action_id is None
+    assert no_selection.reason == tr("tui.ledger.import.refusal.reader_unavailable_here")
+    assert no_selection.reason != not_ready.reason
+    assert no_selection.recovery_action_id is None
     assert outcome.recovery_action_id == LOCAL_AI_PROVISION_ACTION_ID
 
 
-def test_a_folder_whose_reader_this_computer_cannot_run_offers_no_setup(
+def test_a_folder_whose_reader_has_no_model_selection_offers_no_setup(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     client = _Client()
@@ -317,7 +329,7 @@ def test_a_folder_whose_reader_this_computer_cannot_run_offers_no_setup(
         imported=2,
         valid_files=1,
         digests=(LedgerImportSourceDigest(file_index=0, sha256="b" * 64),),
-        refused=(_reader_refused("may.csv", _reader_verdict(below_floor=True)),),
+        refused=(_reader_refused("may.csv", _reader_verdict(no_selection=True)),),
     )
     _install(monkeypatch, client, [(OperationEffect.NONE, preview)])
     request = LedgerImportRequestV1(path=folder, source_kind=LedgerImportSourceKind.BANK_STATEMENT)
