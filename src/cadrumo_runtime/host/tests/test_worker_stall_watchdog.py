@@ -48,7 +48,7 @@ def _dump_path(directory: Path) -> Path:
 def _block_the_loop(seconds: float) -> None:
     private_local = _PRIVATE_LOCAL
     time.sleep(seconds)
-    assert private_local
+    del private_local
 
 
 def _hold_the_interpreter_lock(seconds: float) -> None:

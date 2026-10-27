@@ -338,7 +338,7 @@ def _cause_labels(cause: BaseException | None) -> tuple[str, str, str]:
         return "none", "none", "none"
     reason = cause.reason.value if isinstance(cause, RefusalError | AgentHostError) else "none"
     check = cause.check if isinstance(cause, RefusalError) else None
-    return type(cause).__name__, reason, check if check and re.fullmatch(_CHECK_PATTERN, check) else "none"
+    return type(cause).__name__, reason, check if check is not None and re.fullmatch(_CHECK_PATTERN, check) else "none"
 
 
 def _refused(
