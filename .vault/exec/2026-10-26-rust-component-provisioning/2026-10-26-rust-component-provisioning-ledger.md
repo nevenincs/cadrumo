@@ -5,7 +5,7 @@ tags:
 date: '2026-10-26'
 modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:e2fb9c93167cd82851c44669619d6ffcd5eb3c9bee4b31ea097cb99cafef2a37'
+body_hash: 'sha256:59e6d164b170e18c00723167d1f3f1727098d6f007022056010215914475c864'
 related:
   - "[[2026-10-26-rust-component-provisioning-plan]]"
 ---
@@ -208,6 +208,56 @@ related:
 - `S04` `verify:` `just check-style` -> `pass`
 - `S04` `verify:` `just check-format` -> `pass`
 - `S04` `verify:` `just check-operation-contract-manifest` -> `pass`
+- `S02` `verify:` `just check-import-boundaries` -> `pass`
+- `S03` `verify:` `just check-import-boundaries` -> `pass`
+- `S04` `verify:` `just check-import-boundaries` -> `pass`
+- `S05` `M` `dev/locales/desktop_chrome.py`
+- `S05` `M` `dev/operation_contract_manifest/tests/test_operation_catalogue.py`
+- `S05` `M` `dev/quality/tests/test_no_python_provisioning.py`
+- `S05` `A` `dev/runtime_lifecycle/tests/test_components_desktop_review.py`
+- `S05` `A` `dev/runtime_lifecycle/tests/test_components_frontend_review.py`
+- `S05` `A` `dev/runtime_lifecycle/tests/test_components_mcp_status_gate.py`
+- `S05` `M` `docs/workstation-setup.md`
+- `S05` `M` `native/application/CMakeLists.txt`
+- `S05` `M` `native/application/src/person_operations.rs`
+- `S05` `M` `native/application/src/provisioning/engine.rs`
+- `S05` `M` `native/application/src/provisioning/protocol/tests.rs`
+- `S05` `M` `native/desktop/frontend/src/App.tsx`
+- `S05` `M` `native/desktop/frontend/src/components/Settings.tsx`
+- `S05` `M` `native/desktop/frontend/src/components/setup/SetupDialog.tsx`
+- `S05` `A` `native/desktop/frontend/src/components/setup/SetupReview.tsx`
+- `S05` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S05` `M` `native/desktop/frontend/src/shell/host.ts`
+- `S05` `A` `native/desktop/frontend/src/shell/setupReview.ts`
+- `S05` `M` `native/desktop/frontend/src/shell/tauriHost.ts`
+- `S05` `A` `native/desktop/frontend/tests/setup-review.spec.ts`
+- `S05` `M` `native/desktop/src-tauri/src/agent/person.rs`
+- `S05` `M` `native/desktop/src-tauri/src/agent/person/native.rs`
+- `S05` `M` `native/desktop/src-tauri/src/shell/setup/mod.rs`
+- `S05` `A` `native/desktop/src-tauri/src/shell/setup/review.rs`
+- `S05` `M` `src/cadrumo_runtime/host/session_hold_operations.py`
+- `S05` `A` `src/cadrumo_runtime/host/tests/test_session_hold_review_claim.py`
+- `S05` `M` `src/cadrumo/locales/ca/common.yml`
+- `S05` `M` `src/cadrumo/locales/en/common.yml`
+- `S05` `M` `src/cadrumo/locales/es/common.yml`
+- `S05` `M` `src/cadrumo/locales/hu/common.yml`
+- `S05` `M` `docs/cli/config/provision.rst`
+- `S05` `verify:` `just check-import-boundaries` -> `pass`
+- `S05` `verify:` `just check-types` -> `pass`
+- `S05` `verify:` `just check-style` -> `pass`
+- `S05` `verify:` `just check-format` -> `pass`
+- `S05` `verify:` `just check-operation-contract-manifest` -> `pass`
+- `S05` `verify:` `uv run --no-sync pytest -n0 -q -m unit --timeout=180 dev/quality/tests/test_no_python_provisioning.py dev/operation_contract_manifest/tests/test_operation_catalogue.py::test_no_full_screen_surface_reaches_an_outbound_adapter_directly dev/operation_contract_manifest/tests/test_operation_catalogue.py::test_the_full_screen_adapter_gate_detects_direct_and_parent_imports` -> `pass`
+- `S05` `verify:` `uv run --no-sync pytest -n0 -q -m integration --timeout=240 dev/runtime_lifecycle/tests/test_components_desktop_review.py` -> `pass`
+- `S05` `verify:` `uv run --no-sync pytest -n0 -q -m integration dev/runtime_lifecycle/tests/test_components_frontend_review.py` -> `pass`
+- `S05` `verify:` `uv run --no-sync pytest -n0 -q -m integration dev/runtime_lifecycle/tests/test_components_mcp_status_gate.py` -> `pass`
+- `S05` `verify:` `uv run --no-sync pytest -n0 -q -m integration --timeout=180 dev/runtime_lifecycle/tests/test_model_role_selection_acceptance.py dev/runtime_lifecycle/tests/test_saved_model_role_selection.py` -> `pass`
+- `S05` `verify:` `cmake --build build/windows-x64 --config Debug --target desktop-frontend-chrome desktop-frontend-check desktop-frontend-test` -> `pass`
+- `S05` `verify:` `ctest --test-dir build/windows-x64 -C Debug -R '^application[.]rust$' --output-on-failure --timeout 240` -> `pass`
+- `S05` `verify:` `ctest --test-dir build/windows-x64 -C Debug -R '^application[.]rust$' --output-on-failure --timeout 120 --repeat until-fail:5` -> `pass`
+- `S05` `verify:` `ctest --test-dir build/windows-x64 -C Debug -R '^(application[.]fmt|desktop[.]fmt|desktop[.]clippy)$' --output-on-failure --timeout 240` -> `pass`
+- `S05` `verify:` `ctest --test-dir build/windows-x64 -C Debug -R '^application[.]features[.]clippy$' --output-on-failure --timeout 240` -> `pass`
+- `S05` `verify:` `uv run --no-sync python -m dev.docs.sequences check --page workstation-setup` -> `pass`
 
 ## Notes
 
@@ -218,3 +268,9 @@ related:
 - `S02` Source checkpoint f3bb2c7cf7 and 02435c91e9; final configured import gate and integrated S05 verification remain pending. Steps stay open. Shared-tree evidence is not an isolated commit export.
 - `S03` Source checkpoint f3bb2c7cf7 and 02435c91e9; final configured import gate and integrated S05 verification remain pending. Steps stay open. Shared-tree evidence is not an isolated commit export.
 - `S04` Source checkpoint f3bb2c7cf7 and 02435c91e9; final configured import gate and integrated S05 verification remain pending. Steps stay open. Shared-tree evidence is not an isolated commit export.
+- `S02` Final configured import verdict is PASS on the frozen source snapshot; all required frontend checks are complete. S05 integrated review is PASS and closure follows through the owning plan verb.
+- `S03` Final configured import verdict is PASS on the frozen source snapshot; all required frontend checks are complete. S05 integrated review is PASS and closure follows through the owning plan verb.
+- `S04` Final configured import verdict is PASS on the frozen source snapshot; all required frontend checks are complete. S05 integrated review is PASS and closure follows through the owning plan verb.
+- `S05` d1f9dd3326 isolates feature source and locale hunks. Desktop E2E uses the actual native connection, password identity, NativeSession and supervisor on a canonical marked development root with controlled OS login/custody fixtures; installed descriptor and installer packaging were not tested. Public CLI-reference generator refreshed its ignored output locally.
+- `S05` Application library-only filters selected `person_operations::tests` (31 passed), `activity_access_recovery_requires_matching_end_release_and_one_observation` (passed) and the cancellation-follower protocol case (five consecutive passes). All CMake filters and library-only selection were restored to defaults. No full or conformance-wide suite ran.
+- `S05` Final import gate 20261027T141350.843976Z-check-import-boundaries-11440-bdad8f59 passed 4951 loads with zero hard findings/debt and stable snapshot b8d09c68caa5799ddd2340c199bd5ffdac664d874ebc2d3d24837929b3edce48. Native desktop E2E log 20261027T141333.862256Z-pytest-30648-8020c11a; model-selection regression log 20261027T141730.995179Z-pytest-2420-1c76e91c. Terra 6.1 xhigh final review PASS; previously recorded S01 coverage limits remain.

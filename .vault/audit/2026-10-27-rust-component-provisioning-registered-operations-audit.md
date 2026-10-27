@@ -5,7 +5,7 @@ tags:
 date: '2026-10-27'
 modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:523ad27ad379c051d7544d75623db6127740965629dbb36375a52f175bdb0915'
+body_hash: 'sha256:ac7d74bfdeb431c9f11e6d92839024f5d971a47eff8d0aeb8e10fed91494e375'
 related:
   - "[[2026-10-26-rust-component-provisioning-plan]]"
   - "[[2026-10-27-rust-component-provisioning-human-review-authority-adr]]"
@@ -115,3 +115,32 @@ A lost answer originally appeared as an unavailable review, and view closure cou
 ### native-follower | high | Reproduced cancellation follower can report busy after an activity read fails
 
 The focused native protocol case reproduced a follower returning busy after its owner's cancelled result. Test-only instrumentation identifies Windows PermissionDenied while reading the activity record with the writer lock observed held. The matching cancelled end record exists afterward. The precise filesystem stage and safe correction remain under investigation; passing repetitions do not establish that the defect is fixed. Temporary trace code is not a production correction.
+
+## Integrated plan-close re-review
+
+Terra 6.1 xhigh reviewed the completed S01 through S05 behavior and confirmed unconditional PASS after the final application features Clippy result. Source checkpoint: `d1f9dd3326`, following `02435c91e9` and the earlier frontend implementation. No remaining source finding or required verification is pending. The checks cover the unchanged shared source snapshot; the commits isolate feature-owned paths and locale hunks and do not claim an isolated package export was tested.
+
+### desktop-lifetime | high | Corrected every uncertain answer survives view transitions
+
+The App owns the exact active profile's review session. Closing Settings and opening component status only unsubscribe the view, so late answer uncertainty survives. An immutable collection retains every unresolved operation ID; a second uncertain answer cannot erase the first warning or its local replay fence. The canonical document remains internal, the person sees the existing plan presentation, and only an acknowledged explicit claim enables Apply or Reject. Stale, another-holder and retired refusals retain different guidance. All 12 focused frontend cases and the configured frontend check passed through CMake.
+
+### activity-read | high | Corrected access failure recovers only the matching finished run
+
+The original process-level cancellation case reproduced File::open returning Windows PermissionDenied while reading an activity record, followed by a matching cancelled end record. The implementation does not assume a particular deletion mechanism. Recovery requires an actually followed run, that error class and a matching published end; it awaits a fresh kernel writer-release signal with cancellation support and makes one normal re-observation. An enduring access failure or another run remains unfollowable, and settlement independently correlates the end record. The deterministic I/O-boundary regression uses a real end record and kernel lock with only the final read injected; it covers other errors, mismatched runs, persistent denial, cancellation and the post-release observation. That regression and five consecutive executions of the original process-level case passed through CTest. Temporary tracing and the unsupported deletion-mechanism tests were removed.
+
+### native-desktop-proof | low | Verified development admission and the production native relay
+
+The real MCP-started review was claimed and rejected through the production native Connection, Desktop password admission, NativeSession and OperationRelay, reaching the real supervisor over its Windows pipe. The proof asserts the exact displayed digest and successor revision, unchanged MCP admission provenance, separately journaled native desktop claimant and decision coordinates, one setup and consumed rejection, terminal SUCCEEDED/NONE, MCP inspect/apply/reject refusal and zero download connections. It passed in 189.45 seconds, log `20261027T141333.862256Z-pytest-30648-8020c11a`.
+
+This proof uses the canonical marked development-root admission with controlled OS login observation and custody ports. Native process identity and password verification still execute. Installed desktop-descriptor and installer/package acceptance are outside its evidence. No proxy replaces the Rust runtime transport. The CMake child is contained in a hidden-window Windows Job with bounded pipe draining and tree cleanup.
+
+Final passing evidence:
+
+- Configured types, style, format and operation manifest checks passed. The final import gate passed in 215.941 seconds, loading all 4,951 governed modules with zero hard findings, architectural debt or operational failures. Before and after snapshot: `b8d09c68caa5799ddd2340c199bd5ffdac664d874ebc2d3d24837929b3edce48`. Log `20261027T141350.843976Z-check-import-boundaries-11440-bdad8f59`.
+- The provisioning boundary and full-screen adapter gates passed 24 focused cases, including isolated absolute, relative, aliased and package-initializer bypasses. Log `20261027T132802.290698Z-pytest-56392-eb149eff`.
+- The holder and unchanged relay/bridge cases passed 21; native person-operation library cases passed 31. The TUI proof displays, claims and rejects the existing MCP operation without another setup or modal lifecycle ownership. The MCP proof records one status operation while reading an actual missing-browser result, with no extra status entry when reading that status result.
+- Both native formatting gates and desktop Clippy passed together in 46.59 seconds; application features Clippy passed in 6.48 seconds. Every native build and check used CMake/CTest. Library-only and name filters were restored to their defaults.
+- All four NO_SELECTION language cases and the CLI/TUI/MCP saved-selection read-back cases passed, seven tests in 22.30 seconds. Log `20261027T141730.995179Z-pytest-2420-1c76e91c`.
+- The workstation guide includes sign-in prerequisites, desktop-native provisioning before sign-in, human claim actions and uncertain-Apply recovery. Its focused CLI-sequence golden check passed. The provision CLI reference was regenerated through its owning public generator into its ignored output path.
+
+The existing S01 cached-cleanup limitation and API-key-origin end-to-end coverage boundary remain as previously recorded. No full suite, conformance-wide run, model download, push or PR was performed. All five Steps are ready for closure through the owning plan verbs.
