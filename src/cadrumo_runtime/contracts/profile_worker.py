@@ -7,6 +7,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, JsonValue, RootModel, model_validator
 
+from cadrumo.application.operations.frontend_projection import OperationReviewProjectionReferenceV1
 from cadrumo.application.operations.frontend_requests import (
     OperationObservationRequestV1,
     OperationObservationResultV1,
@@ -14,6 +15,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationReviewProjectionRequestV1,
     OperationSubmissionReceiptV1,
 )
+from cadrumo.application.operations.interactions import OperationResponseIntentValue
 from cadrumo.application.operations.models import (
     OperationDefinitionId,
     OperationId,
@@ -40,7 +42,7 @@ from cadrumo_client.contracts.submission_payload import (
 )
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity as _ProfileWorkerIdentity
 
-from .worker_authorization import WorkerAuthorityRequest
+from .worker_authorization import RuntimeHumanReviewClaimAttestation, WorkerAuthorityRequest
 
 
 class ProfileWorkerLeaseRequest(BaseModel):
@@ -283,6 +285,17 @@ class ProfileWorkerManageRequest(BaseModel):
     management: OperationManagementRequest
 
 
+class ProfileWorkerReviewClaimRequest(BaseModel):
+    """Only the verified runtime parent may attest a person claiming a review."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    action: Literal["operation_review_claim"] = "operation_review_claim"
+    request_id: UUID
+    attestation: RuntimeHumanReviewClaimAttestation
+    reference: OperationReviewProjectionReferenceV1
+    reviewed_document_digest: ContentDigest
+
+
 class ProfileWorkerRequest(
     RootModel[
         Annotated[
@@ -305,6 +318,7 @@ class ProfileWorkerRequest(
             | ProfileWorkerProjectRequest
             | ProfileWorkerProjectPageRequest
             | ProfileWorkerManageRequest
+            | ProfileWorkerReviewClaimRequest
             | ProfileWorkerObserveRequest
             | ProfileWorkerExtensionRecordRequest,
             Field(discriminator="action"),
@@ -489,6 +503,19 @@ class ProfileWorkerProjectionPage(BaseModel):
     release: WorkerAuthorityRequest
 
 
+class ProfileWorkerReviewClaimed(BaseModel):
+    """Credential-free claim receipt; its response capability remains in this worker."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    kind: Literal["operation_review_claimed"] = "operation_review_claimed"
+    identity: _ProfileWorkerIdentity
+    request_id: UUID
+    reference: OperationReviewProjectionReferenceV1
+    reviewed_document_digest: ContentDigest
+    allowed_intents: frozenset[OperationResponseIntentValue]
+    release: WorkerAuthorityRequest
+
+
 class ProfileWorkerExtensionRecordReply(BaseModel):
     """Return an extension-record operation result from the profile worker."""
 
@@ -516,6 +543,7 @@ class ProfileWorkerReply(
             | ProfileWorkerObservation
             | ProfileWorkerProjection
             | ProfileWorkerProjectionPage
+            | ProfileWorkerReviewClaimed
             | ProfileWorkerExtensionRecordReply,
             Field(discriminator="kind"),
         ]

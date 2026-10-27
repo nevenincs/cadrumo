@@ -49,6 +49,8 @@ from cadrumo_runtime.contracts.profile_worker import (
     ProfileWorkerRefusal,
     ProfileWorkerRequest,
     ProfileWorkerResumeRequest,
+    ProfileWorkerReviewClaimed,
+    ProfileWorkerReviewClaimRequest,
     ProfileWorkerSecretRequest,
     ProfileWorkerSubmission,
     ProfileWorkerSubmissionAbortRequest,
@@ -169,6 +171,23 @@ async def _dispatch_request(
     request: object,
     uploads: WorkerSubmissionStaging,
 ) -> None:
+    if isinstance(request, ProfileWorkerReviewClaimRequest):
+        async with operations.claim_review(
+            request.attestation, request.reference, request.reviewed_document_digest
+        ) as (reference, digest, intents, release):
+            write_document(
+                channel,
+                ProfileWorkerReviewClaimed(
+                    identity=operations.custody.identity,
+                    request_id=request.request_id,
+                    reference=reference,
+                    reviewed_document_digest=digest,
+                    allowed_intents=intents,
+                    release=release,
+                ),
+                deadline=time.monotonic() + 5,
+            )
+        return
     if isinstance(
         request,
         ProfileWorkerSubmitRequest

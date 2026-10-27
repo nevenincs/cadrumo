@@ -7,6 +7,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, JsonValue
 
+from cadrumo.application.operations.frontend_projection import OperationReviewProjectionReferenceV1
 from cadrumo.application.operations.frontend_requests import (
     OperationCancellationRequestV1,
     OperationDetachRequestV1,
@@ -19,9 +20,11 @@ from cadrumo.application.operations.frontend_requests import (
     OperationReviewProjectionRequestV1,
     OperationSubmissionReceiptV1,
 )
+from cadrumo.application.operations.interactions import OperationResponseIntentValue
 from cadrumo.application.operations.models import OperationDefinitionId, OperationId, OperationReference
 from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
 from cadrumo.application.operations.secret_submission import OperationSecretRequirement
+from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
 from .access_vocabulary import AccessAction
@@ -146,6 +149,15 @@ class OperationManage(OperationTarget):
     management: OperationManagementRequest
 
 
+class OperationReviewClaim(OperationTarget):
+    """Explicitly claim a displayed provisioning review through verified person admission."""
+
+    action: Literal["operation_review_claim"] = "operation_review_claim"
+    review_claim_version: Literal[1] = 1
+    reference: OperationReviewProjectionReferenceV1
+    reviewed_document_digest: ContentDigest
+
+
 type OperationRequest = (
     OperationSubmit
     | OperationFinancialInput
@@ -158,6 +170,7 @@ type OperationRequest = (
     | OperationResultPage
     | OperationReview
     | OperationManage
+    | OperationReviewClaim
 )
 
 
@@ -235,6 +248,16 @@ class OperationPage(OperationReplyIdentity):
     page: ProjectionPage
 
 
+class OperationReviewClaimed(OperationReplyIdentity):
+    """Current claimant's successor coordinates; no response bearer crosses IPC."""
+
+    kind: Literal["operation_review_claimed"] = "operation_review_claimed"
+    review_claim_version: Literal[1] = 1
+    reference: OperationReviewProjectionReferenceV1
+    reviewed_document_digest: ContentDigest
+    allowed_intents: frozenset[OperationResponseIntentValue]
+
+
 type OperationReply = (
     OperationSubmitted
     | OperationPayloadReady
@@ -244,4 +267,5 @@ type OperationReply = (
     | OperationProjected
     | OperationManaged
     | OperationPage
+    | OperationReviewClaimed
 )

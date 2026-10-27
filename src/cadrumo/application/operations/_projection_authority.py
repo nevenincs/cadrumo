@@ -163,6 +163,48 @@ class OperationResponseAuthorityBrokerMixin(_AuthorityHost):
                 raise ValueError("response authority is unavailable")
             return frozenset({OperationResponseIntent.APPLY, OperationResponseIntent.REJECT})
 
+    def require_claimable(self, pending: OperationPendingInteraction, *, clock: Callable[[], datetime]) -> None:
+        """Refuse reconstruction when the exact live checkpoint bearer is absent."""
+        with self._lock:
+            entry = self._entries.get(pending.request.identity.operation_id)
+            if (
+                entry is None
+                or entry[2] != pending
+                or entry[3] is None
+                or (pending.request.expires_at is not None and clock() > pending.request.expires_at)
+                or not compare_digest(content_hash_hex(entry[3].decode("ascii")), pending.response_token_digest)
+            ):
+                raise ValueError("response authority is unavailable")
+
+    def assign_actor(
+        self,
+        pending: OperationPendingInteraction,
+        successor: OperationPendingInteraction,
+        *,
+        clock: Callable[[], datetime],
+    ) -> OperationResponseCapability:
+        """Rotate the local handle only after the exact successor checkpoint committed."""
+        from .projection_services import OperationResponseCapability
+
+        claim = successor.review_claim
+        if (
+            claim is None
+            or pending.review_claim is not None
+            or successor.request != pending.request.model_copy(update={"revision": pending.request.revision + 1})
+            or successor.model_copy(update={"request": pending.request, "review_claim": None}) != pending
+        ):
+            raise ValueError("review claim does not match the successor checkpoint")
+        operation_id = pending.request.identity.operation_id
+        with self._lock:
+            self.require_claimable(pending, clock=clock)
+            entry = self._entries[operation_id]
+            handle = bytearray(secrets.token_bytes(32))
+            capability = OperationResponseCapability(
+                operation_id, claim.actor_ref, handle, _issuer=self._capability_issuer
+            )
+            self._entries[operation_id] = (claim.actor_ref, content_hash_hex(handle.hex()), successor, entry[3])
+            return capability
+
     def bind(
         self,
         request: OperationResponseControlRequestV1,
@@ -213,6 +255,13 @@ class OperationResponseAuthorityBrokerMixin(_AuthorityHost):
         for _actor_ref, _capability_digest, _pending, token in entries:
             if token is not None:
                 zeroize_secret_buffer(token)
+
+    def discard(self, operation_id: OperationId) -> None:
+        """Wipe a retired or terminal operation's retained bearer without reissuing it."""
+        with self._lock:
+            entry = self._entries.pop(operation_id, None)
+        if entry is not None and entry[3] is not None:
+            zeroize_secret_buffer(entry[3])
 
 
 __all__ = [

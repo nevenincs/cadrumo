@@ -122,6 +122,7 @@ _CONTROL_ACTIONS = frozenset(
         "operation_project",
         "operation_project_page",
         "operation_manage",
+        "operation_review_claim",
         "extension_record",
     }
 )
@@ -162,6 +163,7 @@ async def _expire_custody(
     uploads: WorkerSubmissionStaging,
     human: ProfileWorkerHumanLogin,
     changed: asyncio.Event,
+    operations: ProfileWorkerOperationHost,
 ) -> None:
     """Release custody at each lease, login and upload deadline; every handled command wakes it early."""
     # A new worker holds nothing until a command arrives, so it starts by waiting.
@@ -173,6 +175,7 @@ async def _expire_custody(
         changed.clear()
         try:
             live_sessions = await asyncio.to_thread(custody.live_sessions)
+            operations.retire_review_claims(live_sessions)
             uploads.expire(live_sessions=live_sessions)
             await asyncio.to_thread(human.expire)
             deadlines = [
@@ -228,6 +231,7 @@ async def _handle_custody_control(context: _WorkerControl, request: object) -> _
             asyncio.to_thread(context.custody.retire, request.session_id), task_name="worker-lease-retire"
         )
         live_sessions = await asyncio.to_thread(context.custody.live_sessions)
+        context.operations.retire_review_claims(live_sessions)
         context.uploads.expire(live_sessions=live_sessions)
         if not live_sessions:
             # Locking or signing out ends the last session but not this worker.
@@ -594,7 +598,7 @@ async def _serve(
         changed=changed,
     )
     expiry = asyncio.create_task(
-        _expire_custody(stop, failed, custody, uploads, human, changed), name="profile-custody-expiry"
+        _expire_custody(stop, failed, custody, uploads, human, changed, operations), name="profile-custody-expiry"
     )
     executing = asyncio.create_task(
         _worker_requests.operate(operation_channel, operations, failed, uploads, changed),

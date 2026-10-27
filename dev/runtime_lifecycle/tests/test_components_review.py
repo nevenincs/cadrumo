@@ -13,6 +13,7 @@ import time
 from collections.abc import Awaitable, Callable
 from contextlib import ExitStack
 from pathlib import Path
+from uuid import uuid4
 
 import pytest
 
@@ -21,6 +22,7 @@ from cadrumo.application.components_operations import (
     COMPONENTS_SETUP_OPERATION_ID,
     ProvisionMutationRequest,
     ProvisionResult,
+    ProvisionReviewProjection,
 )
 from cadrumo.application.operations.frontend_projection import (
     OperationPublicProjectionV1,
@@ -32,6 +34,7 @@ from cadrumo.application.operations.frontend_requests import (
 )
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
+from cadrumo.core.hashing import content_hash_hex
 from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from cadrumo.core.time.clock import now
 from cadrumo.tests.components_role_package import (
@@ -43,6 +46,7 @@ from cadrumo.tests.components_role_package import (
 from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope
 from cadrumo_client.contracts.attendance import AttendancePending
 from cadrumo_client.contracts.contracts import ClientHello
+from cadrumo_client.contracts.operation_access import OperationReviewClaim, OperationReviewClaimed
 from cadrumo_client.contracts.profile_access import ProfileStatus
 from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -215,16 +219,39 @@ def test_mcp_review_answers_are_refused_and_a_human_uses_only_their_own_issued_c
                     waiting_human = await _waiting(human, read_human)
                     pending_human = waiting_human.pending_interaction
                     assert isinstance(pending_human, OperationReviewAvailableInteractionV1)
-                    own_control = await controller.response_control(
+                    unclaimed = await controller.response_control(
                         interaction_id=pending_human.interaction_id, revision=pending_human.revision
+                    )
+                    with pytest.raises(FrontendRefusedError) as missing_authority:
+                        await unclaimed.inspect()
+                    assert missing_authority.value.reason == "response_authority_required"
+                    review = await controller.resolve_review(pending_human.review_reference, ProvisionReviewProjection)
+                    assert review.outcome == "success"
+                    claimed = await asyncio.to_thread(
+                        human.operation,
+                        OperationReviewClaim(
+                            request_id=uuid4(),
+                            profile_id=human.profile_id,
+                            session_id=controller.session_id,
+                            reference=pending_human.review_reference,
+                            reviewed_document_digest=content_hash_hex(
+                                review.model_dump(mode="json", serialize_as_any=True)
+                            ),
+                        ),
+                        deadline=time.monotonic() + 30,
+                    )
+                    assert isinstance(claimed, OperationReviewClaimed)
+                    assert claimed.reference.revision == pending_human.revision + 1
+                    own_control = await controller.response_control(
+                        interaction_id=claimed.reference.interaction_id, revision=claimed.reference.revision
                     )
                     available = await own_control.inspect()
                     assert available.outcome == "success"
                     rejected = await own_control.reject(
                         OperationResponseRejectRequestV1(
                             operation_id=controller.operation_id,
-                            interaction_id=pending_human.interaction_id,
-                            revision=pending_human.revision,
+                            interaction_id=claimed.reference.interaction_id,
+                            revision=claimed.reference.revision,
                             actor_ref=controller.actor_ref,
                             responded_at=now(),
                         )

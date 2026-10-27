@@ -54,7 +54,12 @@ from ...application.components_operations import (
 from ...application.dependency_contracts import DependencyItemKind
 from ...application.operations.access_resolution import OperationAccessContext
 from ...application.operations.error_detail import OperationErrorDetailV1
-from ...application.operations.interactions import OperationApplyResponse, OperationRejectResponse
+from ...application.operations.interactions import (
+    OperationApplyResponse,
+    OperationPendingInteraction,
+    OperationRejectResponse,
+    OperationReviewClaimAttribution,
+)
 from ...application.operations.models import OperationRequest
 from ...application.operations.persistence.events import OperationNoticeEvent, OperationProgressEvent
 from ...application.operations.persistence.journal import OperationPersistedSnapshot
@@ -275,6 +280,27 @@ def _owner(
     )
 
 
+async def _claim_review(
+    owner: OperationSupervisor, pending: OperationPendingInteraction
+) -> OperationPendingInteraction:
+    """Supply trusted attribution at the supervisor seam, not native admission."""
+    session_id = uuid4()
+    claim = OperationReviewClaimAttribution(
+        actor_ref=f"session:{session_id}",
+        connection_id=uuid4(),
+        session_id=session_id,
+        profile_id=uuid4(),
+        runtime_boot_id=uuid4(),
+        authority_generation="a" * 64,
+        frontend="cli",
+        source_ref="login:verified",
+        claimed_at=now(),
+        displayed_revision=pending.request.revision,
+        reviewed_document_digest="d" * 64,
+    )
+    return await owner.claim_review(pending, claim)
+
+
 @pytest.mark.parametrize(
     ("intent", "outcome", "effect", "condition"),
     [
@@ -321,13 +347,15 @@ def test_setup_reviews_the_role_digest_once_and_accounts_for_the_actual_outcome(
             reviewed = await operands.resolve(pending.reviewed_proposal_digest, ProvisionReviewedOperand)
             assert reviewed.plan_digest == role.plan["plan_digest"]
             assert pending.proposed_effect_digest == reviewed.plan_digest
+            pending = await _claim_review(owner, pending)
+            assert pending.review_claim is not None
             common = dict(
                 interaction_id=pending.request.interaction_id,
                 operation_id=operation,
                 revision=pending.request.revision,
                 continuation_digest=pending.request.continuation_digest,
                 reviewed_proposal_digest=pending.reviewed_proposal_digest,
-                actor_ref="operator:person",
+                actor_ref=pending.review_claim.actor_ref,
                 responded_at=now(),
             )
             # Visible checkpoint coordinates do not confer response authority.
@@ -387,6 +415,135 @@ def test_setup_reviews_the_role_digest_once_and_accounts_for_the_actual_outcome(
                     await operands.resolve(terminal.terminal_receipt.result_ref, ProvisionResult)
                 ).outcome.value == "rejected"
             assert all(launch.ended and launch.input_closed for launch in role.launches)
+            await owner.shutdown()
+
+        asyncio.run(scenario())
+
+
+def test_setup_consumed_without_verified_claim_is_refused(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    role = _WireRole()
+    _bind_wire(monkeypatch, tmp_path, role)
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        owner = _owner(tmp_path / "operations", profile.repository, authority_operation)
+
+        async def scenario() -> None:
+            operation = await owner.submit(
+                OperationRequest(
+                    definition_id=COMPONENTS_SETUP_OPERATION_ID,
+                    subject_ref=COMPONENTS_OPERATION_SUBJECT,
+                    payload=ProvisionMutationRequest(),
+                )
+            )
+            waiting = await run_to_settlement(owner, operation)
+            pending = waiting.pending_interaction
+            assert pending is not None
+            assert pending.baseline_digest is not None and pending.proposed_effect_digest is not None
+            await owner.respond(
+                OperationApplyResponse(
+                    interaction_id=pending.request.interaction_id,
+                    operation_id=operation,
+                    revision=pending.request.revision,
+                    response_token=_BEARER,
+                    continuation_digest=pending.request.continuation_digest,
+                    reviewed_proposal_digest=pending.reviewed_proposal_digest,
+                    actor_ref="operator:unverified",
+                    responded_at=now(),
+                    baseline_digest=pending.baseline_digest,
+                    proposed_effect_digest=pending.proposed_effect_digest,
+                )
+            )
+            terminal = await owner.await_terminal(operation)
+            assert terminal.terminal_condition is OperationTerminalCondition.REFUSED
+            assert terminal.effect is OperationEffect.NONE
+            assert [arguments[2] for arguments in role.arguments] == ["plan"]
+            await owner.shutdown()
+
+        asyncio.run(scenario())
+
+
+@pytest.mark.parametrize("intent", ["apply", "reject"])
+def test_claimed_setup_review_consumes_exact_decision(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    authority_operation: PinnedAuthorityOperation,
+    intent: str,
+) -> None:
+    # Runtime admission is tested at the host boundary; this fixture supplies
+    # an already verified attribution to exercise the real supervisor seam.
+    role = _WireRole()
+    _bind_wire(monkeypatch, tmp_path, role)
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        owner = _owner(tmp_path / "operations", profile.repository, authority_operation)
+        operands = operation_secure_reference_repository(objects=profile.repository)
+
+        async def scenario() -> None:
+            operation = await owner.submit(
+                OperationRequest(
+                    definition_id=COMPONENTS_SETUP_OPERATION_ID,
+                    subject_ref=COMPONENTS_OPERATION_SUBJECT,
+                    payload=ProvisionMutationRequest(),
+                )
+            )
+            waiting = await run_to_settlement(owner, operation)
+            pending = waiting.pending_interaction
+            assert pending is not None
+            reviewed = await operands.resolve(pending.reviewed_proposal_digest, ProvisionReviewedOperand)
+            session_id = uuid4()
+            claim = OperationReviewClaimAttribution(
+                actor_ref=f"session:{session_id}",
+                connection_id=uuid4(),
+                session_id=session_id,
+                profile_id=uuid4(),
+                runtime_boot_id=uuid4(),
+                authority_generation="a" * 64,
+                frontend="tui",
+                source_ref="login:verified",
+                claimed_at=now(),
+                displayed_revision=pending.request.revision,
+                reviewed_document_digest="d" * 64,
+            )
+            successor = await owner.claim_review(pending, claim)
+            assert successor.request.revision == pending.request.revision + 1
+            assert successor.reviewed_proposal_digest == pending.reviewed_proposal_digest
+            assert successor.request.continuation_digest == pending.request.continuation_digest
+            common = dict(
+                interaction_id=successor.request.interaction_id,
+                operation_id=operation,
+                revision=successor.request.revision,
+                response_token=_BEARER,
+                continuation_digest=successor.request.continuation_digest,
+                reviewed_proposal_digest=successor.reviewed_proposal_digest,
+                actor_ref=claim.actor_ref,
+                responded_at=now(),
+            )
+            foreign = OperationRejectResponse.model_validate({**common, "actor_ref": "operator:foreign"})
+            with pytest.raises(ValueError, match="claimant"):
+                successor.consume(foreign)
+            if intent == "apply":
+                response = OperationApplyResponse.model_validate(
+                    {
+                        **common,
+                        "baseline_digest": reviewed.plan_digest,
+                        "proposed_effect_digest": reviewed.plan_digest,
+                    }
+                )
+            else:
+                response = OperationRejectResponse.model_validate(common)
+            await owner.respond(response)
+            terminal = await owner.await_terminal(operation)
+            assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
+            assert terminal.effect is (OperationEffect.UPDATED if intent == "apply" else OperationEffect.NONE)
+            assert len(terminal.consumed_interactions) == 1
+            assert terminal.consumed_interactions[0].checkpoint.review_claim == claim
+            assert [arguments[2] for arguments in role.arguments] == (
+                ["plan", "setup"] if intent == "apply" else ["plan"]
+            )
+            if intent == "apply":
+                assert role.arguments[1][-2:] == ("--approve", reviewed.plan_digest)
             await owner.shutdown()
 
         asyncio.run(scenario())
@@ -515,6 +672,8 @@ def test_foreign_follow_cleanup_failure_retains_launch_and_prevents_terminal_rec
             waiting = await run_to_settlement(owner, operation)
             pending = waiting.pending_interaction
             assert pending is not None
+            pending = await _claim_review(owner, pending)
+            assert pending.review_claim is not None
             assert pending.baseline_digest is not None and pending.proposed_effect_digest is not None
             await owner.respond(
                 OperationApplyResponse(
@@ -524,7 +683,7 @@ def test_foreign_follow_cleanup_failure_retains_launch_and_prevents_terminal_rec
                     response_token=_BEARER,
                     continuation_digest=pending.request.continuation_digest,
                     reviewed_proposal_digest=pending.reviewed_proposal_digest,
-                    actor_ref="operator:person",
+                    actor_ref=pending.review_claim.actor_ref,
                     responded_at=now(),
                     baseline_digest=pending.baseline_digest,
                     proposed_effect_digest=pending.proposed_effect_digest,
@@ -646,6 +805,8 @@ def test_recovery_preserves_effect_and_never_replays_an_apply_whose_result_was_l
             waiting = await run_to_settlement(owner, operation)
             pending = waiting.pending_interaction
             assert pending is not None
+            pending = await _claim_review(owner, pending)
+            assert pending.review_claim is not None
             assert pending.baseline_digest is not None and pending.proposed_effect_digest is not None
             await owner.respond(
                 OperationApplyResponse(
@@ -655,8 +816,8 @@ def test_recovery_preserves_effect_and_never_replays_an_apply_whose_result_was_l
                     response_token=_BEARER,
                     continuation_digest=pending.request.continuation_digest,
                     reviewed_proposal_digest=pending.reviewed_proposal_digest,
-                    actor_ref="operator:person",
-                    responded_at=started,
+                    actor_ref=pending.review_claim.actor_ref,
+                    responded_at=now(),
                     baseline_digest=pending.baseline_digest,
                     proposed_effect_digest=pending.proposed_effect_digest,
                 )

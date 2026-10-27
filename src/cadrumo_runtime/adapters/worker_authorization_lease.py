@@ -36,6 +36,7 @@ from cadrumo_runtime.contracts.worker_authorization import (
     WorkerAutomationInventoryPermit,
     WorkerAutomationInventoryRequest,
     WorkerAutomationInventoryTransfer,
+    WorkerHumanReviewScopeRequest,
     WorkerModelRun,
     WorkerModelRunResult,
     WorkerResponseScopePermit,
@@ -367,7 +368,8 @@ def _validated_authority_permit(
     ):
         raise RefusalError(RefusalCode.INVALID_FRAME)
     if (
-        isinstance(request, WorkerResponseScopeRequest) != isinstance(reply, WorkerResponseScopePermit)
+        isinstance(request, WorkerResponseScopeRequest | WorkerHumanReviewScopeRequest)
+        != isinstance(reply, WorkerResponseScopePermit)
         or isinstance(request, WorkerAutomationInventoryRequest) != isinstance(reply, WorkerAutomationInventoryPermit)
         or isinstance(request, WorkerAuthorizationRequest) != isinstance(reply, WorkerAuthorizationPermit)
     ):

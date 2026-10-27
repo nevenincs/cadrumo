@@ -18,6 +18,7 @@ from ...core.operations import (
     OperationCancellation,
     OperationDurability,
     OperationEffect,
+    OperationInteractionKind,
     OperationLifecycle,
     OperationTerminalCondition,
 )
@@ -41,7 +42,9 @@ from .financial_operand_contract import (
 from .interactions import (
     OperationApplyResponse,
     OperationConsumedInteraction,
+    OperationPendingInteraction,
     OperationRejectResponse,
+    OperationReviewClaimAttribution,
 )
 from .models import (
     OperationId,
@@ -114,6 +117,33 @@ class OperationSupervisor(
     OperationSupervisorLeaseMixin,
 ):
     """Coordinate durable execution, interactions, recovery, and settlement."""
+
+    async def claim_review(
+        self, pending: OperationPendingInteraction, attribution: OperationReviewClaimAttribution
+    ) -> OperationPendingInteraction:
+        """Journal one exact successor checkpoint before process-local authority moves."""
+        snapshot = await self.inspect(pending.request.identity.operation_id)
+        if (
+            snapshot.identity.definition_id != "config.provision.setup"
+            or snapshot.lifecycle is not OperationLifecycle.WAITING_FOR_INTERACTION
+            or snapshot.pending_interaction != pending
+            or pending.review_claim is not None
+            or pending.request.kind is not OperationInteractionKind.REVIEW
+            or pending.request.revision != snapshot.revision
+            or attribution.displayed_revision != snapshot.revision
+        ):
+            raise ValueError("provisioning review is no longer claimable")
+        successor_pending = pending.model_copy(
+            update={
+                "request": pending.request.model_copy(update={"revision": snapshot.revision + 1}),
+                "review_claim": attribution,
+            }
+        )
+        await self._advance(
+            snapshot,
+            SnapshotAdvance(lifecycle=snapshot.lifecycle, pending=successor_pending),
+        )
+        return successor_pending
 
     def __init__(
         self,

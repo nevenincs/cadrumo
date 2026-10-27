@@ -33,6 +33,8 @@ from cadrumo_client.contracts.operation_access import (
     OperationResult,
     OperationResultPage,
     OperationReview,
+    OperationReviewClaim,
+    OperationReviewClaimed,
     OperationSecret,
     OperationSubmit,
     OperationSubmitPayload,
@@ -70,6 +72,7 @@ type _RuntimeOperationReplyRequest = (
     | OperationResultPage
     | OperationReview
     | OperationManage
+    | OperationReviewClaim
 )
 
 
@@ -161,6 +164,10 @@ class ProfileConnectionOperationMixin:
             try:
                 release_guard.enter_context(self.operation_admission())
                 connection, host = self._operation_target(context, channel, request)
+                if isinstance(request, OperationReviewClaim) and self._refused_as_persons_act(
+                    context, channel, request_id=request.request_id, frontend=connection.frontend
+                ):
+                    return
                 if isinstance(request, OperationFinancialInput):
                     raise RefusalError(RefusalCode.INVALID_FRAME)
                 if isinstance(request, OperationSecret):
@@ -312,6 +319,30 @@ class ProfileConnectionOperationMixin:
         *,
         release_guard: ExitStack,
     ) -> tuple[OperationReply, datetime | None]:
+        if isinstance(request, OperationReviewClaim):
+            proof = host.review_person_attestation(connection)
+            claimed = host.owner.operation_worker().claim_review(
+                proof, request.reference, request.reviewed_document_digest
+            )
+            from .operation_projection import validate_operation_release
+
+            validate_operation_release(
+                claimed.release,
+                connection=connection,
+                profile_id=request.profile_id,
+                session_id=request.session_id,
+                action=AccessAction.RESPOND,
+                operation_id=request.reference.operation_id,
+            )
+            allowed = release_guard.enter_context(host.authorize(claimed.release))
+            return OperationReviewClaimed(
+                request_id=request.request_id,
+                runtime_boot_id=self.boot,
+                connection_id=context.connection_id,
+                reference=claimed.reference,
+                reviewed_document_digest=claimed.reviewed_document_digest,
+                allowed_intents=claimed.allowed_intents,
+            ), allowed.expires_at
         if isinstance(request, OperationContract):
             return self._contract_reply(connection, host, context, request, release_guard=release_guard)
         if isinstance(request, OperationSubmitPayload):

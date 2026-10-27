@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from enum import StrEnum
 from typing import Annotated, Literal
+from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -109,6 +110,32 @@ type OperationInteractionResponse = Annotated[
 ]
 
 
+class OperationReviewClaimAttribution(BaseModel):
+    """Verified person who claimed one displayed review, separately from its invocation."""
+
+    model_config = STRICT_FROZEN_CONFIG
+    actor_ref: OperationActorReference
+    connection_id: UUID
+    session_id: UUID
+    profile_id: UUID
+    runtime_boot_id: UUID
+    authority_generation: ContentDigest
+    frontend: Literal["cli", "tui", "desktop"]
+    source: Literal["runtime_verified_person"] = "runtime_verified_person"
+    source_ref: Annotated[str, Field(min_length=1, max_length=256)]
+    claimed_at: datetime
+    displayed_revision: OperationRevision
+    reviewed_document_digest: ContentDigest
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_claim(self) -> OperationReviewClaimAttribution:
+        validate_utc_aware(self.claimed_at)
+        if self.actor_ref != f"session:{self.session_id}":
+            raise ValueError("review claimant actor must match its verified session")
+        return self
+
+
 class OperationPendingInteraction(BaseModel):
     """Credential-free durable checkpoint for one exact single-use response."""
 
@@ -119,6 +146,7 @@ class OperationPendingInteraction(BaseModel):
     reviewed_proposal_digest: ContentDigest
     baseline_digest: ContentDigest | None = None
     proposed_effect_digest: ContentDigest | None = None
+    review_claim: OperationReviewClaimAttribution | None = None
 
     @property
     def consumed(self) -> bool:
@@ -155,6 +183,8 @@ class OperationPendingInteraction(BaseModel):
         _validate_response_content(self, response)
         _validate_response_expiry(self.request, response)
         _validate_apply_response(self, response)
+        if self.review_claim is not None and response.actor_ref != self.review_claim.actor_ref:
+            raise ValueError("response actor does not match the verified review claimant")
         response_digest = content_hash_hex(response.model_dump(mode="json"))
         return OperationConsumedInteraction(
             interaction_id=self.request.interaction_id,
@@ -275,7 +305,9 @@ def _continuation_proof_digest(
             "intent": intent,
             "response_digest": response_digest,
             "consumed_at": consumed_at.isoformat(),
-            "checkpoint": checkpoint.model_dump(mode="json"),
+            "checkpoint": checkpoint.model_dump(
+                mode="json", exclude={"review_claim"} if checkpoint.review_claim is None else set()
+            ),
         }
     )
 
@@ -291,4 +323,5 @@ __all__ = [
     "OperationRejectResponse",
     "OperationResponseIntent",
     "OperationResponseToken",
+    "OperationReviewClaimAttribution",
 ]

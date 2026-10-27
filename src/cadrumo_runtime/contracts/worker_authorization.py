@@ -10,6 +10,8 @@ from uuid import UUID
 from pydantic import BaseModel, Field, NonNegativeInt, RootModel, SecretBytes, model_validator
 
 from cadrumo.application.operations.models import OperationId
+from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
 from cadrumo.application.user_profile.automation_enrollment import AutomationInventory, EnrollmentTransition
 from cadrumo.application.user_profile.automation_operations import AUTOMATION_INVENTORY_OPERATION_DEFINITION_ID
 from cadrumo.core.identity.digest import ContentDigest
@@ -90,6 +92,60 @@ class WorkerAutomationInventoryRequest(BaseModel):
         return self
 
 
+class RuntimeHumanReviewClaimAttestation(BaseModel):
+    """Parent-issued person evidence carried only on its verified worker transport."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    worker_id: UUID
+    profile_binding: ProfileAccessBinding
+    runtime_boot_id: UUID
+    connection_id: UUID
+    session_id: UUID
+    frontend: OperationFrontendProjection
+    source_ref: Annotated[str, Field(min_length=1, max_length=256)]
+    verified_at: UtcInstant
+
+
+class WorkerHumanReviewScopeRequest(BaseModel):
+    """One held fence for both the original invocation and its verified human responder."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    kind: Literal["human_review_scope"] = "human_review_scope"
+    request_id: UUID
+    connection_id: UUID
+    session_id: UUID
+    operation_id: OperationId
+    request: OperationAccessRequest
+    policy: OperationAccessPolicy
+    invocation: WorkerAuthorizationRequest
+    review: WorkerAuthorizationRequest
+    attestation: RuntimeHumanReviewClaimAttestation
+
+    @model_validator(mode="after")
+    def _require_provisioning_review(self) -> WorkerHumanReviewScopeRequest:
+        if (
+            self.request.action is not AccessAction.RESPOND
+            or self.request.definition_id != "config.provision.setup"
+            or self.invocation.request.action is not AccessAction.START
+            or self.invocation.request.definition_id != self.request.definition_id
+            or self.invocation.operation_id != self.operation_id
+            or self.invocation.request.profile_id != self.request.profile_id
+            or self.review.request.action is not AccessAction.REVIEW
+            or self.review.operation_id != self.operation_id
+            or self.review.request.definition_id != self.request.definition_id
+            or self.review.request.profile_id != self.request.profile_id
+            or self.review.session_id != self.session_id
+            or self.review.connection_id != self.connection_id
+            or self.review.request.frontend != self.request.frontend
+            or self.request.frontend != self.attestation.frontend
+            or self.review.request.destination_id != self.request.destination_id
+            or self.attestation.connection_id != self.connection_id
+            or self.attestation.session_id != self.session_id
+        ):
+            raise ValueError("human review requires exact claimant and original provisioning invocation")
+        return self
+
+
 WORKER_OPERATIONS_ADVANCED_MAX = 64
 """Operations one progress report may name; a busier worker sends another."""
 
@@ -110,7 +166,7 @@ class WorkerOperationsAdvanced(BaseModel):
 
 
 type WorkerAuthorityRequest = Annotated[
-    WorkerAuthorizationRequest | WorkerResponseScopeRequest, Field(discriminator="kind")
+    WorkerAuthorizationRequest | WorkerResponseScopeRequest | WorkerHumanReviewScopeRequest, Field(discriminator="kind")
 ]
 
 
@@ -136,6 +192,7 @@ class WorkerAuthorityCheck(BaseModel):
 type WorkerAuthorityEnvelopeRequest = Annotated[
     WorkerAuthorizationRequest
     | WorkerResponseScopeRequest
+    | WorkerHumanReviewScopeRequest
     | WorkerAutomationInventoryRequest
     | WorkerApprovalRequest
     | WorkerOperationsAdvanced

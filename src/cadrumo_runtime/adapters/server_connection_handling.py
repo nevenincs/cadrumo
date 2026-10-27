@@ -47,6 +47,7 @@ from cadrumo_client.contracts.operation_access import (
     OperationResult,
     OperationResultPage,
     OperationReview,
+    OperationReviewClaim,
     OperationSecret,
     OperationSubmit,
     OperationSubmitPayload,
@@ -312,6 +313,7 @@ class RuntimeConnectionHandling:
             | OperationResult
             | OperationResultPage
             | OperationReview
+            | OperationReviewClaim
             | OperationManage
             | OperationFinancialInput
             | OperationSecret,

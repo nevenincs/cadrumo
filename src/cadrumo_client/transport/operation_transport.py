@@ -16,6 +16,7 @@ from ..contracts.operation_access import (
     OperationProjected,
     OperationReply,
     OperationRequest,
+    OperationReviewClaimed,
     OperationSecret,
     OperationSubmit,
     OperationSubmitPayload,
@@ -63,6 +64,7 @@ class OperationTransport(EnrollmentTransport):
                     | OperationProjected
                     | OperationPage
                     | OperationManaged
+                    | OperationReviewClaimed
                     | AccessRefusal,
                 ):
                     raise RefusalError(RefusalCode.INVALID_FRAME)

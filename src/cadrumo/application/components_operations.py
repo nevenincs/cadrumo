@@ -60,7 +60,7 @@ from .operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
-from .operations.interactions import OperationResponseIntentValue
+from .operations.interactions import OperationConsumedInteraction, OperationResponseIntentValue
 from .operations.models import CredentialFreeOperationRequest, OperationRequest
 from .operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from .operations.owner import OperationExecutorContext, OperationResumeCheckpoint
@@ -381,7 +381,23 @@ class ComponentsSetupExecutor:
             return None
         if context.effect is not OperationEffect.NONE:
             raise ComponentsOperationRefusedError(ProvisionOutcome.FAILED)
+        if not isinstance(checkpoint, OperationConsumedInteraction):
+            raise ComponentsOperationRefusedError(ProvisionOutcome.REFUSED)
+        pending = checkpoint.checkpoint
+        claim = pending.review_claim
+        if (
+            claim is None
+            or pending.request.identity != context.identity
+            or pending.request.revision != claim.displayed_revision + 1
+        ):
+            raise ComponentsOperationRefusedError(ProvisionOutcome.REFUSED)
         operand = await context.operands.resolve(checkpoint.reviewed_proposal_digest, ProvisionReviewedOperand)
+        if (
+            pending.request.continuation_digest != sha256_hex(serialize_operation_operand(operand))
+            or pending.baseline_digest != operand.plan_digest
+            or pending.proposed_effect_digest != operand.plan_digest
+        ):
+            raise ComponentsOperationRefusedError(ProvisionOutcome.REFUSED)
         if checkpoint.response_action == "reject":
             await context.events.effect(OperationEffect.NONE)
             return await _result(

@@ -27,6 +27,7 @@ from pydantic import BaseModel, JsonValue, TypeAdapter, ValidationError
 from cadrumo.adapters.persistence.storage.errors import RepositoryError
 from cadrumo.application.operations.drain import OperationDrainResult
 from cadrumo.application.operations.errors import OperationSubjectBusyError, OperationUnsettledError
+from cadrumo.application.operations.frontend_projection import OperationReviewProjectionReferenceV1
 from cadrumo.application.operations.frontend_requests import (
     OperationCancellationRequestV1,
     OperationDetachRequestV1,
@@ -38,6 +39,10 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationReviewProjectionRequestV1,
 )
+from cadrumo.application.operations.interactions import (
+    OperationResponseIntent,
+    OperationReviewClaimAttribution,
+)
 from cadrumo.application.operations.models import (
     OperationId,
     OperationIdentity,
@@ -46,11 +51,14 @@ from cadrumo.application.operations.models import (
     new_operation_id,
 )
 from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
+from cadrumo.application.operations.person_acts import is_persons_frontend
 from cadrumo.application.operations.secret_submission import OperationSecretRequirement, zeroize_secret_buffer
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.async_cleanup import await_cancellation_complete
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.hierarchy import CadrumoError
+from cadrumo.core.hashing import content_hash_hex
+from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.logging import get_logger
 from cadrumo.core.operations import OperationDurability, OperationEffect, OperationLifecycle
 from cadrumo.core.request_faults import registered_error_fault, request_faults
@@ -61,6 +69,7 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.operation_access import OperationManagementRequest, operation_management_action
 from cadrumo_client.contracts.projection_pages import ProjectionPageRequest
+from cadrumo_runtime.contracts.worker_authorization import RuntimeHumanReviewClaimAttestation
 
 from .operation_progress_reporter import OperationProgressReporter
 
@@ -68,6 +77,8 @@ if TYPE_CHECKING:
     from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
     from cadrumo.application.operations.composition import OperationComposedServices, OperationSubmission
     from cadrumo.application.operations.execution_actor import OperationExecutionCaller
+    from cadrumo.application.operations.interactions import OperationResponseIntentValue
+    from cadrumo.application.operations.projection_services import OperationResponseCapability
     from cadrumo.application.operations.registry import (
         OperationFrontendProjection,
         OperationPublicDefinitionContractV1,
@@ -149,6 +160,16 @@ class ProfileWorkerOperationHost:
         self._drain_result: OperationDrainResult | None = None
         self._output_tasks: dict[asyncio.Task[object], OperationId] = {}
         self._submissions: dict[OperationId, tuple[UUID, OperationSubmission]] = {}
+        self._review_locks: dict[OperationId, tuple[asyncio.Lock, int]] = {}
+        self._review_claims: dict[
+            OperationId,
+            tuple[
+                RuntimeHumanReviewClaimAttestation,
+                OperationReviewProjectionReferenceV1,
+                ContentDigest,
+                OperationResponseCapability,
+            ],
+        ] = {}
         self._inventory_lock = asyncio.Lock()
         self._inventory_verified = False
         # Every operation that may still be unsettled: the journal's unsettled
@@ -172,10 +193,41 @@ class ProfileWorkerOperationHost:
 
     def _journal_committed(self, snapshot: OperationPersistedSnapshot) -> None:
         """Queue progress and a value-free invalidation after a settled record effect."""
+        if snapshot.lifecycle is OperationLifecycle.TERMINAL:
+            self._discard_review_claim(snapshot.operation_id)
         if snapshot.lifecycle is OperationLifecycle.TERMINAL and snapshot.effect is not OperationEffect.NONE:
             with self._record_effects_guard:
                 self._record_effects.add(snapshot.operation_id)
         self._progress.committed(snapshot.operation_id)
+
+    def _discard_review_claim(self, operation_id: OperationId) -> None:
+        claim = self._review_claims.pop(operation_id, None)
+        if claim is not None:
+            claim[3].close()
+            if self._services is not None:
+                self._services.discard_review_actor(operation_id)
+
+    def retire_review_claims(self, live_sessions: tuple[UUID, ...]) -> None:
+        """Close claims after either exact principal's custody lease retires."""
+        live = set(live_sessions)
+        for operation_id, claim in tuple(self._review_claims.items()):
+            original = self._submissions.get(operation_id)
+            if claim[0].session_id not in live or original is None or original[0] not in live:
+                self._discard_review_claim(operation_id)
+
+    @asynccontextmanager
+    async def _serialize_review(self, operation_id: OperationId) -> AsyncGenerator[None]:
+        lock, users = self._review_locks.get(operation_id, (asyncio.Lock(), 0))
+        self._review_locks[operation_id] = lock, users + 1
+        try:
+            async with lock:
+                yield
+        finally:
+            remaining = self._review_locks[operation_id][1] - 1
+            if remaining:
+                self._review_locks[operation_id] = lock, remaining
+            else:
+                self._review_locks.pop(operation_id)
 
     def _bind_execution(self, registry: OperationRegistry) -> ProfileWorkerOperationAuthority:
         from .operation_authority import ProfileWorkerOperationAuthority
@@ -801,13 +853,55 @@ class ProfileWorkerOperationHost:
         *,
         frontend: OperationFrontendProjection,
     ) -> AsyncGenerator[tuple[dict[str, JsonValue], WorkerAuthorityRequest]]:
+        """Serialize each exact response against a simultaneous human claim."""
+        invocation = await self._stored_invocation(request.operation_id)
+        if invocation.identity.definition_id == "config.provision.setup" and isinstance(
+            request, OperationResponseControlRequestV1
+        ):
+            async with (
+                self._serialize_review(request.operation_id),
+                self._manage(session_id, request, frontend=frontend) as result,
+            ):
+                yield result
+        else:
+            async with self._manage(session_id, request, frontend=frontend) as result:
+                yield result
+
+    @asynccontextmanager
+    async def _manage(
+        self,
+        session_id: UUID,
+        request: OperationManagementRequest,
+        *,
+        frontend: OperationFrontendProjection,
+    ) -> AsyncGenerator[tuple[dict[str, JsonValue], WorkerAuthorityRequest]]:
         """Use canonical controls without recovering an earlier session's response proof."""
         submission = self._submissions.get(request.operation_id)
+        capability = None if submission is None else submission[1].response_capability
+        claim = self._review_claims.get(request.operation_id)
+        invocation = await self._stored_invocation(request.operation_id)
+        provisioning_response = (
+            isinstance(request, OperationResponseControlRequestV1)
+            and invocation.identity.definition_id == "config.provision.setup"
+        )
+        if provisioning_response:
+            if not is_persons_frontend(frontend):
+                raise ProfileAccessRefusedError(AccessDenialCode.PERSON_ACT_REQUIRED)
+            if (
+                claim is None
+                or claim[0].session_id != session_id
+                or claim[0].frontend != frontend
+                or request.actor_ref != f"session:{session_id}"
+                or request.revision != claim[1].revision
+                or request.interaction_id != claim[1].interaction_id
+            ):
+                raise ProfileAccessRefusedError(AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED)
+            capability = claim[3]
         if isinstance(request, OperationResponseControlRequestV1) and (
             request.actor_ref != f"session:{session_id}"
             or submission is None
-            or submission[0] != session_id
-            or submission[1].response_capability is None
+            or (not provisioning_response and submission[0] != session_id)
+            or capability is None
         ):
             raise ProfileAccessRefusedError(AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED)
 
@@ -822,20 +916,145 @@ class ProfileWorkerOperationHost:
             if submission is None:
                 raise ProfileAccessRefusedError(AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED)
             if isinstance(request, OperationResponseApplyRequestV1):
-                response = await services.response(request, submission[1].response_capability)
+                response = await services.response(request, capability)
                 return await response.apply(request)
             if isinstance(request, OperationResponseRejectRequestV1):
-                response = await services.response(request, submission[1].response_capability)
+                response = await services.response(request, capability)
                 return await response.reject(request)
-            response = await services.inspect_response(request, submission[1].response_capability)
+            response = await services.inspect_response(request, capability)
             return await response.inspect(request)
 
-        async with self.release(
-            session_id, request.operation_id, frontend, operation_management_action(request)
-        ) as authorization:
+        if provisioning_response:
+            if claim is None or self._execution is None or submission is None:
+                raise ProfileAccessRefusedError(AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED)
+            guard = self._execution.human_review_guard(invocation.identity, claim[0], submission[0])
+        else:
+            guard = self.release(session_id, request.operation_id, frontend, operation_management_action(request))
+        async with guard as authorization:
+            if provisioning_response and isinstance(
+                request, OperationResponseApplyRequestV1 | OperationResponseRejectRequestV1
+            ):
+                request = request.model_copy(update={"responded_at": now()})
             result = await await_cancellation_complete(control(), task_name="profile-operation-control")
             document = _PROJECTION_DOCUMENT.validate_python(result.model_dump(mode="json", serialize_as_any=True))
             yield document, authorization
+
+    @asynccontextmanager
+    async def claim_review(
+        self,
+        proof: RuntimeHumanReviewClaimAttestation,
+        reference: OperationReviewProjectionReferenceV1,
+        reviewed_document_digest: ContentDigest,
+    ) -> AsyncGenerator[
+        tuple[
+            OperationReviewProjectionReferenceV1,
+            ContentDigest,
+            frozenset[OperationResponseIntentValue],
+            WorkerAuthorityRequest,
+        ]
+    ]:
+        """Commit attribution before rotating a live provisioning review's local bearer."""
+        operation_id = reference.operation_id
+        self.custody.require(proof.session_id)
+        await self._require_current_inventory()
+        services = self._composed()
+        invocation = await self._stored_invocation(operation_id)
+        if invocation.identity.definition_id != "config.provision.setup" or self._execution is None:
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+        submission = self._submissions.get(operation_id)
+        if submission is None:
+            raise ProfileAccessRefusedError(AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED)
+        async with (
+            self._serialize_review(operation_id),
+            self._execution.human_review_guard(invocation.identity, proof, submission[0]) as authorization,
+        ):
+            current = await services.submission.supervisor.inspect(operation_id)
+            pending = current.pending_interaction
+            if current.lifecycle is not OperationLifecycle.WAITING_FOR_INTERACTION or pending is None:
+                raise ProfileAccessRefusedError(AccessDenialCode.REVIEW_CLAIM_STALE)
+            existing = self._review_claims.get(operation_id)
+            if existing is not None:
+                holder, held_reference, digest, _capability = existing
+                # verified_at is an observation time, not a new login coordinate.
+                if holder.model_copy(update={"verified_at": proof.verified_at}) != proof:
+                    raise ProfileAccessRefusedError(AccessDenialCode.REVIEW_ALREADY_CLAIMED)
+                attribution = pending.review_claim
+                if attribution is None:
+                    raise ProfileAccessRefusedError(AccessDenialCode.REVIEW_CLAIM_STALE)
+                source_reference = held_reference.model_copy(update={"revision": attribution.displayed_revision})
+                if reference not in (held_reference, source_reference) or reviewed_document_digest != digest:
+                    raise ProfileAccessRefusedError(AccessDenialCode.REVIEW_CLAIM_STALE)
+                current_review = await services.review.resolve(
+                    OperationReviewProjectionRequestV1(reference=held_reference), BaseModel
+                )
+                if (
+                    current_review.outcome != "success"
+                    or content_hash_hex(current_review.model_dump(mode="json", serialize_as_any=True)) != digest
+                ):
+                    raise ProfileAccessRefusedError(AccessDenialCode.REVIEW_CLAIM_STALE)
+                try:
+                    services.require_review_claimable(pending)
+                except ValueError:
+                    raise ProfileAccessRefusedError(AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED) from None
+                yield (
+                    held_reference,
+                    digest,
+                    frozenset({OperationResponseIntent.APPLY, OperationResponseIntent.REJECT}),
+                    authorization,
+                )
+                return
+            if pending.review_claim is not None:
+                raise ProfileAccessRefusedError(AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED)
+            rendered = await services.review.resolve(OperationReviewProjectionRequestV1(reference=reference), BaseModel)
+            document = rendered.model_dump(mode="json", serialize_as_any=True)
+            if rendered.outcome != "success" or content_hash_hex(document) != reviewed_document_digest:
+                raise ProfileAccessRefusedError(AccessDenialCode.REVIEW_CLAIM_STALE)
+            if (
+                pending.request.revision != reference.revision
+                or pending.request.interaction_id != reference.interaction_id
+            ):
+                raise ProfileAccessRefusedError(AccessDenialCode.REVIEW_CLAIM_STALE)
+            try:
+                services.require_review_claimable(pending)
+            except ValueError:
+                raise ProfileAccessRefusedError(AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED) from None
+            attribution = OperationReviewClaimAttribution.model_validate(
+                {
+                    "actor_ref": f"session:{proof.session_id}",
+                    "connection_id": proof.connection_id,
+                    "session_id": proof.session_id,
+                    "profile_id": proof.profile_binding.profile_id,
+                    "runtime_boot_id": proof.runtime_boot_id,
+                    "authority_generation": self._pinned().generation.logical_generation,
+                    "frontend": proof.frontend.value,
+                    "source_ref": proof.source_ref,
+                    "claimed_at": proof.verified_at,
+                    "displayed_revision": reference.revision,
+                    "reviewed_document_digest": reviewed_document_digest,
+                }
+            )
+            try:
+                successor = await await_cancellation_complete(
+                    services.submission.supervisor.claim_review(pending, attribution),
+                    task_name="profile-operation-review-claim",
+                )
+            except (RepositoryError, ValueError):
+                raise ProfileAccessRefusedError(AccessDenialCode.REVIEW_CLAIM_STALE) from None
+            try:
+                capability = services.assign_review_actor(pending, successor)
+            except ValueError:
+                raise ProfileAccessRefusedError(AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED) from None
+            original = self._submissions.get(operation_id)
+            if original is not None and original[1].response_capability is not None:
+                original[1].response_capability.close()
+            next_reference = reference.model_copy(update={"revision": successor.request.revision})
+            self._review_claims[operation_id] = proof, next_reference, reviewed_document_digest, capability
+            yield (
+                next_reference,
+                reviewed_document_digest,
+                frozenset({OperationResponseIntent.APPLY, OperationResponseIntent.REJECT}),
+                authorization,
+            )
 
     async def submit_financial_input(
         self,
@@ -927,6 +1146,8 @@ class ProfileWorkerOperationHost:
         if self._drain_result is not None:
             return self._drain_result
         self._closed = True
+        for operation_id in tuple(self._review_claims):
+            self._discard_review_claim(operation_id)
         # A composition an operation already started finishes, off the loop, and
         # is drained like any other; none can start once the host is closed.
         await await_cancellation_complete(

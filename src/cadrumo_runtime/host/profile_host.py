@@ -33,6 +33,7 @@ from cadrumo.application.auth.operation_definitions import PROFILE_ROTATION_OPER
 from cadrumo.application.operations.disclosure_projections import registered_disclosure_projections
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.operations.models import OperationId, OperationIdentity
+from cadrumo.application.operations.person_acts import is_persons_frontend
 from cadrumo.application.operations.registry import (
     OperationFrontendProjection,
     OperationPublicContractSetV1,
@@ -84,10 +85,12 @@ from cadrumo_client.contracts.session_events import SessionEvent
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_runtime.contracts.worker_authorization import (
+    RuntimeHumanReviewClaimAttestation,
     WorkerAuthorityRequest,
     WorkerAuthorizationRequest,
     WorkerAutomationInventoryAllowed,
     WorkerAutomationInventoryRequest,
+    WorkerHumanReviewScopeRequest,
     WorkerModelRun,
     WorkerResponseScopeRequest,
 )
@@ -414,6 +417,30 @@ class RuntimeProfileHost:
     @contextmanager
     def authorize(self, request: WorkerAuthorityRequest) -> Generator[AccessAllowed | OperationResponseScopeAllowed]:
         """Retain fresh profile authority for a kernel-verified owned worker."""
+        if isinstance(request, WorkerHumanReviewScopeRequest):
+            with self.guard:
+                self._require_review_person(request.attestation)
+                with (
+                    self.authorize(request.invocation) as original,
+                    self.authorize(request.review) as reviewed,
+                    self.authorize(
+                        WorkerResponseScopeRequest(
+                            request_id=request.request_id,
+                            connection_id=request.connection_id,
+                            session_id=request.session_id,
+                            operation_id=request.operation_id,
+                            request=request.request,
+                            policy=request.policy,
+                        )
+                    ) as claimant,
+                ):
+                    self._require_review_person(request.attestation)
+                    yield OperationResponseScopeAllowed(
+                        profile_id=claimant.profile_id,
+                        session_id=claimant.session_id,
+                        expires_at=min(original.expires_at, reviewed.expires_at, claimant.expires_at),
+                    )
+            return
         guard = (
             self.authority.response_scope_guard
             if isinstance(request, WorkerResponseScopeRequest)
@@ -437,6 +464,48 @@ class RuntimeProfileHost:
                     subject_ref=profile_operation_subject(str(self.store.binding.profile_id)),
                 )
             yield allowed
+
+    def _require_review_person(self, proof: RuntimeHumanReviewClaimAttestation) -> None:
+        """Reobserve both native admission coordinates and the live HUMAN login."""
+        connection = self._connected(proof.connection_id)
+        if (
+            proof.worker_id != self.owner.identity.worker_id
+            or proof.runtime_boot_id != self.owner.identity.runtime_boot_id
+            or proof.profile_binding != self.store.binding
+            or connection.context.runtime_boot_id != proof.runtime_boot_id
+            or connection.session_id != proof.session_id
+            or connection.profile_id != self.store.binding.profile_id
+            or connection.frontend != proof.frontend
+            or not is_persons_frontend(connection.frontend)
+            or connection.method == "api_key"
+        ):
+            raise ProfileAccessRefusedError(AccessDenialCode.HUMAN_AUTHORITY_REQUIRED)
+        facts = self.authority.human_administration_facts(
+            connection_id=proof.connection_id, session_id=proof.session_id
+        )
+        if facts.originating_login_id != proof.source_ref:
+            raise ProfileAccessRefusedError(AccessDenialCode.HUMAN_AUTHORITY_REQUIRED)
+
+    def review_person_attestation(self, connection: ProfileConnection) -> RuntimeHumanReviewClaimAttestation:
+        """Issue only parent-observed identity; it cannot be requested as client provenance."""
+        if connection.session_id is None:
+            raise ProfileAccessRefusedError(AccessDenialCode.AUTHENTICATION_REQUIRED)
+        with self.guard:
+            facts = self.authority.human_administration_facts(
+                connection_id=connection.context.connection_id, session_id=connection.session_id
+            )
+            proof = RuntimeHumanReviewClaimAttestation(
+                worker_id=self.owner.identity.worker_id,
+                profile_binding=self.store.binding,
+                runtime_boot_id=self.owner.identity.runtime_boot_id,
+                connection_id=connection.context.connection_id,
+                session_id=connection.session_id,
+                frontend=connection.frontend,
+                source_ref=facts.originating_login_id,
+                verified_at=self._wall_clock(),
+            )
+            self._require_review_person(proof)
+            return proof
 
     @contextmanager
     def automation_inventory(

@@ -66,9 +66,11 @@ from cadrumo_client.contracts.model_runs import (
     encode_model_run_body,
 )
 from cadrumo_runtime.contracts.worker_authorization import (
+    RuntimeHumanReviewClaimAttestation,
     WorkerAuthorityRequest,
     WorkerAuthorizationRequest,
     WorkerAutomationInventoryRequest,
+    WorkerHumanReviewScopeRequest,
     WorkerResponseScopeRequest,
 )
 from cadrumo_runtime.contracts.worker_enrollment import WorkerApprovalPublicationPhase, WorkerApprovalRequest
@@ -483,6 +485,79 @@ class ProfileWorkerOperationAuthority:
             raise ProfileAccessRefusedError(AccessDenialCode.AUTHENTICATION_REQUIRED)
         async with self.guard_binding(identity, action, binding):
             yield
+
+    @asynccontextmanager
+    async def human_review_guard(
+        self, identity: OperationIdentity, proof: RuntimeHumanReviewClaimAttestation, original_session_id: UUID
+    ) -> AsyncGenerator[WorkerHumanReviewScopeRequest]:
+        """Fence original START and separate verified HUMAN response without rebinding execution."""
+        worker = self.custody.identity
+        if (
+            identity.definition_id != "config.provision.setup"
+            or proof.worker_id != worker.worker_id
+            or proof.runtime_boot_id != worker.runtime_boot_id
+            or proof.profile_binding != worker.binding
+            or not is_persons_frontend(proof.frontend)
+        ):
+            raise ProfileAccessRefusedError(AccessDenialCode.HUMAN_AUTHORITY_REQUIRED)
+        original = self._bindings.get(identity.operation_id)
+        if original is None or original.session_id != original_session_id:
+            raise ProfileAccessRefusedError(AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED)
+        claimant = self.custody.require(proof.session_id)
+        if (
+            claimant.kind is not SessionKind.HUMAN
+            or claimant.connection_id != proof.connection_id
+            or claimant.originating_login_id != proof.source_ref
+        ):
+            raise ProfileAccessRefusedError(AccessDenialCode.HUMAN_AUTHORITY_REQUIRED)
+        invocation = await self._resolve_binding_off_loop(identity, AccessAction.START, original)
+        # The original START fence retains its admitted scope. The separate
+        # human's disclosure destination must instead use that human's current
+        # scope; it is never compared to the MCP client's destination grant.
+        response = await await_cancellation_complete(
+            asyncio.to_thread(self._resolve_review_claimant, identity, proof, original, AccessAction.RESPOND),
+            task_name="worker-human-review-scope",
+        )
+        review = await await_cancellation_complete(
+            asyncio.to_thread(self._resolve_review_claimant, identity, proof, original, AccessAction.REVIEW),
+            task_name="worker-human-review-disclosure",
+        )
+        if not isinstance(invocation, WorkerAuthorizationRequest) or not isinstance(review, WorkerAuthorizationRequest):
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+        request = WorkerHumanReviewScopeRequest(
+            request_id=uuid4(),
+            connection_id=proof.connection_id,
+            session_id=proof.session_id,
+            operation_id=identity.operation_id,
+            request=response.request,
+            policy=response.policy,
+            invocation=invocation,
+            review=review,
+            attestation=proof,
+        )
+        async with self.client.guard(request):
+            with self.custody.section(original.session_id), self.custody.section(proof.session_id):
+                yield request
+
+    def _resolve_review_claimant(
+        self,
+        identity: OperationIdentity,
+        proof: RuntimeHumanReviewClaimAttestation,
+        original: WorkerOperationBinding,
+        action: AccessAction,
+    ) -> WorkerAuthorityRequest:
+        binding = WorkerOperationBinding(proof.session_id, proof.frontend, original.request, original.provenance)
+        lease = self.custody.require(proof.session_id)
+        provenance = self._require_invocation_provenance(identity, original.request, action, original.provenance)
+        resolution = self._resolve_access(
+            original.request,
+            action,
+            binding,
+            lease,
+            self._public_contract(identity.definition_id),
+            provenance,
+        )
+        return self._authorization_request(identity, action, lease, resolution)
 
     @asynccontextmanager
     async def guard_binding(
