@@ -51,6 +51,7 @@ from .common import (
     resolve_cli_precondition_action,
     resolve_notice_action,
 )
+from .component_recovery_text import component_recovery_notice
 from .config.status_rendering import precondition_action_lines
 from .ledger_evidence_batch_results import EvidenceBatchResult
 
@@ -243,19 +244,24 @@ def _run_notices(run: BatchRunResult) -> list[Notice]:
         )
     pause = run.inference_pause
     if run.any_deferred and pause is not None:
+        action = resolve_cli_precondition_action(pause.precondition_verdict)
+        recovery = component_recovery_notice(action)
+        message = tr("cli.app.ledger.evidence.batch_work_deferred_message")
+        if recovery is not None:
+            message = f"{message} {recovery.message}"
         notices.append(
             Notice(
                 severity=NoticeSeverity.WARNING,
                 code="ledger.evidence.batch.work_deferred",
-                message=tr(
-                    "cli.app.ledger.evidence.batch_work_deferred_message",
-                ),
-                action=resolve_cli_precondition_action(pause.precondition_verdict),
+                message=message,
+                action=action,
                 context={
                     "paused": str(run.count_of("paused")),
                 },
             ),
         )
+        if recovery is not None and recovery.action is not None:
+            notices.append(recovery)
     held = run.count_of("pending_review")
     if held:
         notices.append(

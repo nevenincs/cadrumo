@@ -33,6 +33,7 @@ from cadrumo_client.commands.registered_operation_contracts import (
 )
 from cadrumo_client.commands.registered_operation_deadlines import (
     RegisteredOperationDeadline,
+    RegisteredOperationSettlement,
     operation_settlement_deadline,
 )
 from cadrumo_client.commands.registered_operation_errors import map_registered_transport_failure
@@ -61,7 +62,7 @@ def run_registered_operation[ResultT: BaseModel](
     allow_refusal_detail: bool = False,
     secret: bytearray | None = None,
     review: None = None,
-    settlement_timeout: float | None = None,
+    settlement_timeout: float | RegisteredOperationSettlement | None = None,
     pending_check_command: str | None = None,
     on_events: Callable[[OperationPublicEventPageV1], None] | None = None,
 ) -> RegisteredOperationCompletion[ResultT]: ...
@@ -81,7 +82,7 @@ def run_registered_operation[ResultT: BaseModel, ReviewT: BaseModel](
     review: RegisteredOperationReviewHandler[ReviewT],
     allow_refusal_detail: bool = False,
     secret: bytearray | None = None,
-    settlement_timeout: float | None = None,
+    settlement_timeout: float | RegisteredOperationSettlement | None = None,
     pending_check_command: str | None = None,
     on_events: Callable[[OperationPublicEventPageV1], None] | None = None,
 ) -> RegisteredOperationCompletion[ResultT] | RegisteredOperationReviewCompletion[ReviewT]: ...
@@ -100,7 +101,7 @@ def run_registered_operation[ResultT: BaseModel, ReviewT: BaseModel](
     allow_refusal_detail: bool = False,
     secret: bytearray | None = None,
     review: RegisteredOperationReviewHandler[ReviewT] | None = None,
-    settlement_timeout: float | None = None,
+    settlement_timeout: float | RegisteredOperationSettlement | None = None,
     pending_check_command: str | None = None,
     on_events: Callable[[OperationPublicEventPageV1], None] | None = None,
 ) -> RegisteredOperationCompletion[ResultT] | RegisteredOperationReviewCompletion[ReviewT]:
@@ -108,6 +109,8 @@ def run_registered_operation[ResultT: BaseModel, ReviewT: BaseModel](
 
     ``timeout`` bounds contract, submission, control and observation exchanges;
     ``settlement_timeout`` bounds how long the command waits for settlement.
+    Its default ``None`` uses ``timeout``; explicit ``UNBOUNDED`` keeps the
+    invocation owned through human review and settlement, with finite exchanges.
     With an explicit settlement wait, settled result/error documents and their
     page exchanges use the later of its deadline or a fresh ``timeout``.
     When settlement waiting ends first, the operation is reported still running

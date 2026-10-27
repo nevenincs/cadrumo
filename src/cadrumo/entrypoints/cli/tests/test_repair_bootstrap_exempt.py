@@ -25,8 +25,10 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.outbound.aeat.browser.site_health_records import SiteHealthStatus
 from ....adapters.persistence.storage.master_key.active_session import has_active_bucket_session
 from ....adapters.persistence.storage.tests.secure_sql import isolated_sessionless_storage_root
+from ..config import repair_commands
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -63,10 +65,19 @@ def _fresh_storage_root(tmp_path: Path) -> Iterator[Path]:
 
 
 @pytest.mark.parametrize("verb", _FAST_REPAIR_VERBS, ids=lambda v: " ".join(v))
-def test_repair_verb_runs_clean_without_session_on_fresh_root(verb: tuple[str, ...], _fresh_storage_root: Path) -> None:
+def test_repair_verb_runs_clean_without_session_on_fresh_root(
+    verb: tuple[str, ...], _fresh_storage_root: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Each fast repair verb exits 0 on a fresh root with no active session."""
 
     assert not has_active_bucket_session(), "fixture must leave no session active"
+
+    if verb == ("config", "repair", "connectivity"):
+        status = SiteHealthStatus.model_validate_json(
+            '{"state":"ok","evidence":{"url":"https://probe.example.org/","http_status":200,'
+            '"html_fragment":"","detected_markers":[]},"observed_at":"2026-01-01T00:00:00Z"}'
+        )
+        monkeypatch.setattr(repair_commands, "_probe_browser_connectivity", lambda: status)
 
     result = invoke_cached_cli(list(verb))
 

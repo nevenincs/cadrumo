@@ -12,6 +12,7 @@ import typer.main
 
 from cadrumo.tests.english_locale_fixture import english_locale_fixture
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
+from cadrumo_client.commands.registered_operation_deadlines import RegisteredOperationSettlement
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.failure_categories import DependencyFailureCategory
 
@@ -160,6 +161,7 @@ def test_setup_uses_browser_only_and_prompts_or_rejects(
     assert document["outcome"] == expected and document["approved"] is yes
     payload, options = submitted[0]
     assert payload == ProvisionMutationRequest() and options["definition_id"] == COMPONENTS_SETUP_OPERATION_ID
+    assert options["settlement_timeout"] is RegisteredOperationSettlement.UNBOUNDED
     assert options["review"].claim is provision_cli._claim_review
     assert options["review"].present_document is not None
 

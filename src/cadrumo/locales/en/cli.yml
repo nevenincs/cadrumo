@@ -2488,6 +2488,7 @@ cli:
       browser:
         help: Set up the browser Cadrumo uses for the tax agency website. Shows the
           plan and asks first.
+      check_status: 'Check component status: {command}'
       complete: Cadrumo is set up.
       fix: 'To fix it, run: %{command}'
       following: '%{name}: another setup is already setting this up, so this one follows

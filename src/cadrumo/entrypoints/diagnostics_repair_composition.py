@@ -112,6 +112,8 @@ def _setup_item_check(row: DependencyStatusRow) -> DiagnosticCheck:
     if row.state is DependencyState.READY:
         return DiagnosticCheck(name=name, status=DiagnosticStatus.OK, summary=summary)
     values: dict[str, str | bool | int] = {"item": row.item_id, "state": row.state.value}
+    if row.recovery is not None:
+        values["recovery"] = row.recovery.value
     reason = row.failure_category or row.blocked_reason or row.stale_reason
     if reason is not None:
         values["reason"] = reason.value

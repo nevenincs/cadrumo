@@ -7,6 +7,7 @@ import typer
 import typer.main
 
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
+from cadrumo_client.commands.registered_operation_deadlines import RegisteredOperationSettlement
 from cadrumo_client.contracts.contracts import RefusalError
 from cadrumo_client.contracts.operation_access import OperationReviewClaim, OperationReviewClaimed
 
@@ -77,7 +78,7 @@ def test_claim_binds_the_exact_document_and_refuses_a_mismatched_successor(fault
             allowed_intents=frozenset({OperationResponseIntent.APPLY, OperationResponseIntent.REJECT}),
         )
 
-    if fault:
+    if fault is not None:
         with pytest.raises(RefusalError):
             _claim_review(pending, document, profile, session, exchange)
     else:
@@ -123,3 +124,6 @@ def test_component_reads_submit_typed_registered_requests(
     assert bound is client and payload == ProvisionReadRequest(items=items)
     assert kwargs["definition_id"] == definition
     assert callable(kwargs["on_events"]) is full
+    assert kwargs["settlement_timeout"] == (
+        RegisteredOperationSettlement.UNBOUNDED if full else provision_cli._QUICK_SETTLEMENT_S
+    )

@@ -2657,6 +2657,7 @@ cli:
       browser:
         help: Előkészíti a böngészőt, amelyet a Cadrumo az adóhivatal webhelyéhez
           használ. Előbb megmutatja a tervet és megkérdez.
+      check_status: 'Ellenőrizd az összetevők állapotát: {command}'
       complete: A Cadrumo elő van készítve.
       fix: 'A javításhoz futtasd: %{command}'
       following: '%{name}: egy másik előkészítés már folyamatban van, ez pedig azt

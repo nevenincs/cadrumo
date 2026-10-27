@@ -21,9 +21,9 @@ from ...application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.transactions.errors import TransactionValidationError
-from ._component_setup_rendering import component_setup_lines
 from ._ledger_support import ledger_transaction_validation_no_recovery
 from .common import bad, emit_envelope, resolve_cli_precondition_action
+from .component_recovery_text import component_recovery_lines, component_recovery_notice
 from .ledger_results import LedgerImportPayload
 from .operation_ledger_import import import_ledger_sources_for_cli
 from .period_parsing import _optional_canonical_period
@@ -79,22 +79,6 @@ def _setup_readies_reader(verdict: PreconditionVerdict) -> bool:
     return verdict.action is not None and verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID
 
 
-def _reader_setup_lines(refusals: Sequence[LedgerImportFileRefusal]) -> tuple[str, ...]:
-    """Return the setup lines once for the files refused because their reader was missing.
-
-    The first such file's verdict speaks for all of them: every lane that refuses
-    this way names the one local AI setup item.
-    """
-    for refusal in refusals:
-        verdict = _reader_verdict(refusal)
-        if verdict is None:
-            continue
-        lines = component_setup_lines(resolve_cli_precondition_action(verdict))
-        if lines is not None:
-            return lines
-    return ()
-
-
 class _ImportReport:
     """The text projection and canonical non-blocking notices."""
 
@@ -121,7 +105,18 @@ def _refused_file_report(refusals: Sequence[LedgerImportFileRefusal]) -> _Import
                 context=context,
             ),
         )
-    lines.extend(f"  {line}" for line in _reader_setup_lines(refusals))
+    for refusal in refusals:
+        verdict = _reader_verdict(refusal)
+        if verdict is None:
+            continue
+        action = resolve_cli_precondition_action(verdict)
+        recovery = component_recovery_lines(action)
+        if recovery is not None:
+            lines.extend(f"  {line}" for line in recovery)
+            notice = component_recovery_notice(action)
+            if notice is not None:
+                notices.append(notice)
+            break
     return _ImportReport(lines=lines, notices=notices)
 
 
@@ -197,8 +192,7 @@ def ledger_import(
         verdict = _reader_verdict(refusal)
         if verdict is not None:
             # The one statement named needs a reader that could not be asked.
-            # The refusal carries the probe's verdict, so the error boundary
-            # offers the local AI setup as far as the item's current row allows.
+            # The refusal carries the probe's verdict for the error boundary.
             if _setup_readies_reader(verdict):
                 raise LedgerImportReaderUnavailableError(
                     translated_message="cli.ledger.import.file_reader_not_ready",

@@ -62,12 +62,36 @@ def repair(ctx: typer.Context) -> None:
     report = _build_config_repair_report(ports=diagnostics_ports(ctx), setup_checks=setup_checks or ())
     document = _repair_report_document(report, resolve_action=resolve_cli_precondition_action)
     result = strict_round_trip(ConfigRepairResult, document)
+    lines = _render_config_repair_text(report).splitlines()
+    notices = () if setup_checks is not None else (_setup_status_notice(),)
+    if setup_checks is not None:
+        from ..component_recovery_text import component_recovery_lines, component_recovery_notice
+
+        for check in setup_checks:
+            if check.precondition_verdict is not None:
+                recovery = component_recovery_lines(resolve_cli_precondition_action(check.precondition_verdict))
+                if recovery is not None and recovery[0] not in check.summary:
+                    lines.extend(recovery)
+                    if check.name == "setup.local_ai":
+                        notices += (
+                            Notice(
+                                severity=NoticeSeverity.INFO,
+                                code="config.provision.local_ai_desktop",
+                                message=recovery[0],
+                            ),
+                        )
+                if check.name == "setup.browser":
+                    recovery_notice = component_recovery_notice(
+                        resolve_cli_precondition_action(check.precondition_verdict)
+                    )
+                    if recovery_notice is not None:
+                        notices += (recovery_notice,)
     emit_envelope(
         ctx,
         command="config.repair",
         result=result,
-        lines=_render_config_repair_text(report).splitlines(),
-        notices=() if setup_checks is not None else (_setup_status_notice(),),
+        lines=lines,
+        notices=notices,
     )
 
 

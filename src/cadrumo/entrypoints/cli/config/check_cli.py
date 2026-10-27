@@ -26,7 +26,9 @@ from ....application.provisioning import DependencyStatus
 from ....application.workstation_check_operation import WorkstationCheckProjection
 from ....core.i18n.render import tr
 from ....core.json_contract import Notice, NoticeSeverity, ResolvedPreconditionAction
-from ..common import emit_envelope, resolve_cli_precondition_action
+from ....core.output_rendering import OutputFormat
+from ..common import emit_envelope, format_of, resolve_cli_precondition_action
+from ..component_recovery_text import component_recovery_notice
 from .check_payloads import (
     CheckCapabilityPayload,
     CheckDependencyPayload,
@@ -183,6 +185,17 @@ def config_check(ctx: typer.Context) -> None:
     setup_rows = read_setup_rows(ctx)
     result, lines = _present_report(projection, setup_rows)
     notices = () if setup_rows is not None else (_setup_unavailable_notice(),)
+    if format_of(ctx) is OutputFormat.JSON:
+        for row in result.preflight:
+            if not row.check.startswith("setup:"):
+                continue
+            recovery = component_recovery_notice(row.precondition_action)
+            if recovery is not None:
+                item = row.check.removeprefix("setup:")
+                code = (
+                    "config.provision.local_ai_desktop" if item == "local_ai" else "config.provision.browser_recovery"
+                )
+                notices += (recovery.model_copy(update={"code": code}),)
     emit_envelope(ctx, command="config.check", result=result, lines=lines, notices=notices)
     if not result.ok:
         raise typer.Exit(code=2)

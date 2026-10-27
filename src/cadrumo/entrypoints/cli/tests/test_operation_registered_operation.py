@@ -10,7 +10,7 @@ from contextvars import ContextVar
 from dataclasses import replace
 from datetime import UTC, datetime
 from threading import Thread, get_ident
-from typing import Any, Literal, cast, override
+from typing import Any, Literal, TypedDict, cast, override
 from uuid import UUID, uuid4
 
 import pytest
@@ -87,6 +87,7 @@ from cadrumo_client.commands.registered_operation_contracts import (
     RegisteredOperationReviewCompletion,
     RegisteredOperationReviewHandler,
 )
+from cadrumo_client.commands.registered_operation_deadlines import RegisteredOperationSettlement
 from cadrumo_client.contracts.contracts import (
     ChannelWake,
     ClientHello,
@@ -121,6 +122,12 @@ _SESSION = UUID("bb000000-0000-4000-8000-0000000000bb")
 _OPERATION = "c" * 64
 _INTERACTION = "d" * 64
 _NOW = datetime(2026, 9, 29, tzinfo=UTC)
+
+
+class _ReplyIds(TypedDict):
+    request_id: UUID
+    runtime_boot_id: UUID
+    connection_id: UUID
 
 
 def _contract() -> OperationPublicDefinitionContractV1:
@@ -497,10 +504,12 @@ class ProvisionReviewWire(ReviewWire):
         self.displayed_document: dict[str, Any] | None = None
         self.claimed = False
 
+    @override
     def contract(self, definition_id: str, *, deadline: float) -> OperationPublicDefinitionContractV1:
         assert definition_id == COMPONENTS_SETUP_OPERATION_ID
         return self.public_contract
 
+    @override
     def read_result_document(
         self, request: OperationResultProjectionRequestV1, *, timeout: float, deadline: float
     ) -> dict[str, Any]:
@@ -574,11 +583,12 @@ class ProvisionReviewWire(ReviewWire):
         )
         return OperationObservationSuccessV1(projection=projection, event_page=page)
 
+    @override
     def operation(self, request: OperationRequest, *, deadline: float) -> OperationReply:
         from cadrumo.core.hashing import content_hash_hex
 
         self.requests.append(request)
-        common = {"request_id": request.request_id, "runtime_boot_id": _PROFILE, "connection_id": _SESSION}
+        common: _ReplyIds = {"request_id": request.request_id, "runtime_boot_id": _PROFILE, "connection_id": _SESSION}
         if isinstance(request, OperationSubmit):
             assert request.definition_id == COMPONENTS_SETUP_OPERATION_ID
             assert ProvisionMutationRequest.model_validate_json(request.payload_json) == ProvisionMutationRequest()
@@ -611,8 +621,8 @@ class ProvisionReviewWire(ReviewWire):
             )
         assert isinstance(request, OperationManage) and self.claimed
         management = request.management
-        assert management.revision == 5 and management.interaction_id == _INTERACTION
         if isinstance(management, OperationResponseApplyRequestV1 | OperationResponseRejectRequestV1):
+            assert management.revision == 5 and management.interaction_id == _INTERACTION
             self.action = management.response_action
             document = OperationResponseMutationSuccessV1(
                 operation_id=_OPERATION, interaction_id=_INTERACTION, revision=5, response_action=self.action
@@ -620,6 +630,7 @@ class ProvisionReviewWire(ReviewWire):
             self._cue()
         else:
             assert isinstance(management, OperationResponseControlRequestV1)
+            assert management.revision == 5 and management.interaction_id == _INTERACTION
             document = OperationResponseControlSuccessV1(
                 operation_id=_OPERATION,
                 interaction_id=_INTERACTION,
@@ -691,6 +702,31 @@ def test_existing_setup_review_claims_the_observed_document_before_answering(
         OperationManage,
         OperationManage,
     ]
+
+
+@pytest.mark.parametrize("existing", [False, True])
+def test_provision_review_text_shows_plan_without_raw_json(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], existing: bool
+) -> None:
+    from ..config import provision_cli
+
+    wire = ProvisionReviewWire()
+    monkeypatch.setattr(provision_cli, "bound_profile_client", lambda _ctx: wire)
+    app = typer.Typer()
+
+    @app.command()
+    def noop() -> None: ...
+
+    ctx = typer.Context(typer.main.get_command(app), obj={"format": "text"})
+    if existing:
+        provision_cli.provision_review(ctx, _OPERATION, yes=True)
+    else:
+        provision_cli.provision_setup(ctx, yes=True)
+    stderr = capsys.readouterr().err
+    assert "example.com" in stderr
+    assert "definition_contract_digest" not in stderr
+    assert "review_projection_version" not in stderr
+    assert wire.claimed and wire.action == "apply"
 
 
 @pytest.mark.parametrize("fault", ["review-schema", "reply-id", "session", "control-revision", "no-authority"])
@@ -1068,3 +1104,251 @@ async def test_bound_cli_release_bridge_start_failure_retains_actual_owner_and_p
     assert channel.close_calls == (2 if body == "exchange" else 1)
     await cleanup.retry_cleanup()
     assert channel.close_calls == (2 if body == "exchange" else 1)
+
+
+def _setup_review_from_public_command(
+    monkeypatch: pytest.MonkeyPatch,
+) -> RegisteredOperationReviewHandler[ProvisionReviewProjection]:
+    """Capture the handler configured by the public setup command before transport starts."""
+    from ..config import provision_cli
+
+    class CapturedReviewError(Exception):
+        pass
+
+    handlers: list[RegisteredOperationReviewHandler[ProvisionReviewProjection]] = []
+
+    def capture(*args: object, review: RegisteredOperationReviewHandler[ProvisionReviewProjection], **kwargs: object):
+        handlers.append(review)
+        raise CapturedReviewError
+
+    app = typer.Typer()
+
+    @app.command()
+    def noop() -> None: ...
+
+    ctx = typer.Context(typer.main.get_command(app), obj={"format": "json"})
+    with monkeypatch.context() as scoped:
+        scoped.setattr(provision_cli, "bound_profile_client", lambda _ctx: None)
+        scoped.setattr(provision_cli, "run_registered_operation", capture)
+        with pytest.raises(CapturedReviewError):
+            provision_cli.provision_setup(ctx, yes=True)
+    assert len(handlers) == 1
+    return handlers[0]
+
+
+@pytest.mark.parametrize("unbounded", [False, True])
+def test_setup_wait_preserves_owned_review_and_download_beyond_short_budget(
+    monkeypatch: pytest.MonkeyPatch, unbounded: bool
+) -> None:
+    """Human time and download cues spend no total budget only when explicitly requested."""
+    import math
+
+    from cadrumo_client.transport import operation_changes
+
+    clock = [1000.0]
+    waits: list[float | None] = []
+    call_windows: list[float] = []
+    monkeypatch.setattr(registered_operation_deadlines.time, "monotonic", lambda: clock[0])
+
+    class SlowSetupWire(ProvisionReviewWire):
+        downloads = 0
+
+        @override
+        def contract(self, definition_id: str, *, deadline: float) -> OperationPublicDefinitionContractV1:
+            call_windows.append(deadline - clock[0])
+            return super().contract(definition_id, deadline=deadline)
+
+        @override
+        def operation(self, request: OperationRequest, *, deadline: float) -> OperationReply:
+            call_windows.append(deadline - clock[0])
+            return super().operation(request, deadline=deadline)
+
+        @override
+        def read_result_document(
+            self, request: OperationResultProjectionRequestV1, *, timeout: float, deadline: float
+        ) -> dict[str, Any]:
+            call_windows.append(deadline - clock[0])
+            return super().read_result_document(request, timeout=timeout, deadline=deadline)
+
+        @override
+        def _provision_observation(self) -> OperationObservationSuccessV1:
+            observed = super()._provision_observation()
+            if self.action == "apply" and self.downloads < 1:
+                self.downloads += 1
+                return observed.model_copy(
+                    update={
+                        "projection": observed.projection.model_copy(
+                            update={
+                                "lifecycle": OperationLifecycle.RUNNING,
+                                "terminal_condition": None,
+                                "pending_interaction": OperationNoPendingInteractionV1(),
+                                "result_ref": None,
+                                "effect": OperationEffect.UNKNOWN,
+                            }
+                        )
+                    }
+                )
+            return observed
+
+    wire = SlowSetupWire()
+
+    def decide(_: ProvisionReviewProjection) -> Literal["apply"]:
+        clock[0] += 180.0
+        return "apply"
+
+    class DownloadCue:
+        changed = False
+
+        def clear(self) -> None:
+            self.changed = False
+
+        def set(self) -> None:
+            self.changed = True
+
+        def wait(self, timeout: float | None = None) -> bool:
+            # Exercise the real OperationChanges wrapper: infinity must become
+            # Event.wait(None), never an overflowing OS timeout or periodic poll.
+            assert timeout is None and wire.observers
+            waits.append(timeout)
+            requests_before_cue = len(wire.requests)
+            clock[0] += 180.0
+            assert len(wire.requests) == requests_before_cue
+            wire._cue()
+            assert self.changed
+            return True
+
+    monkeypatch.setattr(operation_changes, "Event", DownloadCue)
+    # The public command configures the actual digest-bound claim.
+    handler = replace(_setup_review_from_public_command(monkeypatch), decide=decide)
+
+    def run() -> (
+        RegisteredOperationCompletion[ProvisionResult] | RegisteredOperationReviewCompletion[ProvisionReviewProjection]
+    ):
+        return run_registered_operation(
+            cast(FrontendClient, wire),
+            ProvisionMutationRequest(),
+            definition_id=COMPONENTS_SETUP_OPERATION_ID,
+            subject_ref=COMPONENTS_OPERATION_SUBJECT,
+            result_type=ProvisionResult,
+            request_version=1,
+            result_version=1,
+            timeout=120,
+            review=handler,
+            settlement_timeout=RegisteredOperationSettlement.UNBOUNDED if unbounded else None,
+        )
+
+    if unbounded:
+        completion = run()
+        assert isinstance(completion, RegisteredOperationCompletion)
+        assert completion.operation_id == _OPERATION
+        assert completion.projection.outcome is ProvisionOutcome.COMPLETED
+        assert wire.action == "apply" and wire.downloads == 1 and waits == [None]
+        assert clock[0] > 1000 + 120
+    else:
+        with pytest.raises(CliRefusedBoundaryError) as caught:
+            run()
+        assert caught.value.context is not None
+        assert caught.value.context["operation_id"] == _OPERATION
+        assert wire.action is None and not waits
+    assert not wire.observers
+    assert all(math.isfinite(window) and 0 < window <= 120 for window in call_windows)
+
+
+def test_unbounded_settlement_preserves_exact_human_interrupt_and_releases_subscription(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    wire = ProvisionReviewWire()
+    interruption = KeyboardInterrupt()
+
+    def decide(_: ProvisionReviewProjection) -> Literal["apply"]:
+        raise interruption
+
+    handler = replace(_setup_review_from_public_command(monkeypatch), decide=decide)
+    with pytest.raises(KeyboardInterrupt) as caught:
+        run_registered_operation(
+            cast(FrontendClient, wire),
+            ProvisionMutationRequest(),
+            definition_id=COMPONENTS_SETUP_OPERATION_ID,
+            subject_ref=COMPONENTS_OPERATION_SUBJECT,
+            result_type=ProvisionResult,
+            request_version=1,
+            result_version=1,
+            timeout=120,
+            review=handler,
+            settlement_timeout=RegisteredOperationSettlement.UNBOUNDED,
+        )
+    assert caught.value is interruption
+    assert wire.action is None and not wire.claimed and not wire.observers
+
+
+@pytest.mark.parametrize("wake", ["disconnect", "interrupt"])
+def test_unbounded_signal_wait_releases_subscription_on_disconnect_or_interrupt(
+    monkeypatch: pytest.MonkeyPatch, wake: str
+) -> None:
+    from cadrumo_client.transport import operation_changes
+
+    class DownloadingWire(ProvisionReviewWire):
+        @override
+        def _provision_observation(self) -> OperationObservationSuccessV1:
+            observed = super()._provision_observation()
+            if self.action is not None:
+                return observed.model_copy(
+                    update={
+                        "projection": observed.projection.model_copy(
+                            update={
+                                "lifecycle": OperationLifecycle.RUNNING,
+                                "terminal_condition": None,
+                                "pending_interaction": OperationNoPendingInteractionV1(),
+                                "result_ref": None,
+                                "effect": OperationEffect.UNKNOWN,
+                            }
+                        )
+                    }
+                )
+            return observed
+
+    wire = DownloadingWire()
+    interruption = KeyboardInterrupt()
+    waits: list[float | None] = []
+
+    class LostConnectionCue:
+        changed = False
+
+        def clear(self) -> None:
+            self.changed = False
+
+        def set(self) -> None:
+            self.changed = True
+
+        def wait(self, timeout: float | None = None) -> bool:
+            assert timeout is None and wire.observers
+            waits.append(timeout)
+            if wake == "interrupt":
+                raise interruption
+            # Native connection loss delivers the same wake as an operation cue;
+            # the next observation must recheck the original session identity.
+            wire.session_id = uuid4()
+            wire._cue()
+            assert self.changed
+            return True
+
+    monkeypatch.setattr(operation_changes, "Event", LostConnectionCue)
+    with pytest.raises(KeyboardInterrupt if wake == "interrupt" else CliRefusedBoundaryError) as caught:
+        run_registered_operation(
+            cast(FrontendClient, wire),
+            ProvisionMutationRequest(),
+            definition_id=COMPONENTS_SETUP_OPERATION_ID,
+            subject_ref=COMPONENTS_OPERATION_SUBJECT,
+            result_type=ProvisionResult,
+            request_version=1,
+            result_version=1,
+            timeout=120,
+            review=_setup_review_from_public_command(monkeypatch),
+            settlement_timeout=RegisteredOperationSettlement.UNBOUNDED,
+        )
+    if wake == "interrupt":
+        assert caught.value is interruption
+    else:
+        assert isinstance(caught.value, CliRefusedBoundaryError)
+        assert caught.value.context is not None and caught.value.context["operation_id"] == _OPERATION
+    assert waits == [None] and not wire.observers

@@ -17,8 +17,7 @@ reads. A selected model that is not installed must carry the verdict naming the
 local AI setup; a role with no selection must carry its typed verdict naming no
 action. No run may be sent first. The CLI then renders each settled
 result through its real error boundary and live action resolver, with the
-local AI's quick-status row the components role reported as absent: the
-file's sentence and the exact setup command.
+file's sentence and the typed facts already carried by the refusal.
 """
 
 from __future__ import annotations
@@ -37,13 +36,10 @@ from cadrumo.tests.english_locale_fixture import english_locale_fixture
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 from cadrumo_client.contracts.model_runs import ModelRunRefusal, ModelRunRefusalCode
 
-from ....adapters.outbound.components.tests.recorded_rows import recorded_absent_row
 from ....adapters.outbound.llm.column_role_mapping import resolve_column_roles
 from ....adapters.outbound.llm.providers.agent import model_run_refusal_verdict
 from ....adapters.outbound.llm.statement_reading import StatementReader
 from ....adapters.outbound.llm.tests.model_run_support import RecordingModelRuns
-from ....application.dependency_contracts import DependencyStatusRow
-from ....application.dependency_registry import dependency_item_declarations
 from ....application.ledger.actions_import import LedgerProviderID
 from ....application.ledger.column_roles import bind_column_role_mapping_resolver
 from ....application.ledger.import_operation import (
@@ -63,7 +59,6 @@ from ....tests.inventory import FIXTURES_DIR
 from ...tests import registered_executor_case_support as conformance
 from ...tests.dependency_operation_gating_support import RecordingRunsAuthority, agent_refusing
 from .. import ledger_import_commands
-from .._component_setup_rendering import setup_status_source
 from ..errors import command_error_boundary
 from .cli_runner import invoke_typer_app, semantic_cli_output
 
@@ -130,14 +125,6 @@ def _settle_import(
     return projection.effect, result
 
 
-_LOCAL_AI_FIX = "Local AI: Not set up yet. Set it up in the Cadrumo desktop app."
-
-
-def _absent_rows() -> tuple[DependencyStatusRow, ...]:
-    """Every item's quick-status row as the components role reported it on a root without the item."""
-    return tuple(recorded_absent_row(declaration.item_id) for declaration in dependency_item_declarations())
-
-
 def _cli_import_text(
     monkeypatch: pytest.MonkeyPatch, projection: LedgerImportResultProjection, effect: OperationEffect, named: Path
 ) -> tuple[int, str]:
@@ -154,8 +141,7 @@ def _cli_import_text(
     def imported(ctx: typer.Context) -> None:
         ledger_import_commands.ledger_import(ctx, named, LedgerProviderID.AUTO)
 
-    with setup_status_source(_absent_rows):
-        result = invoke_typer_app(app, [], catch_exceptions=False)
+    result = invoke_typer_app(app, [], catch_exceptions=False)
     return result.exit_code, semantic_cli_output(result)
 
 
@@ -203,7 +189,7 @@ def test_a_folder_imports_its_readable_statement_and_names_the_local_ai_for_the_
     assert exit_code == 0, text
     lines = text.splitlines()
     assert "  refused\tb_expenses_export.csv\treader_unavailable" in lines
-    assert f"  {_LOCAL_AI_FIX}" in lines
+    assert "  Set it up in the Cadrumo desktop app." in lines
 
 
 def test_a_pdf_statement_whose_reader_model_is_not_installed_settles_with_the_local_ai_setup(
@@ -232,8 +218,8 @@ def test_a_pdf_statement_whose_reader_model_is_not_installed_settles_with_the_lo
     assert exit_code != 0
     lines = text.splitlines()
     assert f"Statement not read: {_PDF_STATEMENT.name} is read by the local AI, which is not ready." in lines[0]
-    assert lines[-1] == f"  {_LOCAL_AI_FIX}", text
-    assert "failed_condition_id" not in text
+    assert lines[-1] == "  Set it up in the Cadrumo desktop app."
+    assert "aeat config provision status" not in text
 
 
 def test_an_export_whose_role_has_no_selection_settles_with_its_typed_refusal(

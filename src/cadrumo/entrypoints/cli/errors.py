@@ -38,7 +38,7 @@ import sys
 from collections.abc import Callable, Mapping, Sequence
 from contextvars import ContextVar
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Final, Never, Protocol, TypeGuard, cast
+from typing import Final, Never, Protocol, TypeGuard, cast
 
 import click
 import typer
@@ -64,10 +64,7 @@ from ...core.json_contract import Notice, ResolvedPreconditionAction
 from ...core.redaction.rules import redact_for_cli_output
 from ...core.terminal_encoding import encode_terminal_field, encode_terminal_text
 from ...domain.user_profile.errors import StoredProfileDriftError
-from ._component_setup_rendering import component_setup_lines, setup_status_source
-
-if TYPE_CHECKING:
-    from ...application.dependency_contracts import DependencyStatusRow
+from .component_recovery_text import component_recovery_lines, component_recovery_notice
 
 _log = logging.getLogger(__name__)
 
@@ -269,20 +266,13 @@ def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
     def _wrapped(*args: P.args, **kwargs: P.kwargs) -> R:
         token = _ACTIVE_COMMAND_ID.set(_resolve_active_command_id(*args, *kwargs.values()))
         try:
-            context = next((value for value in (*args, *kwargs.values()) if isinstance(value, typer.Context)), None)
-            with setup_status_source(lambda: _quick_setup_rows(context)):
-                try:
-                    return callback(*args, **kwargs)
-                except Exception as error:
-                    # Typer/Click control flow (Exit, Abort, BadParameter) propagates
-                    # untouched so the framework can render it; the under-test override
-                    # re-raises the original so tests can assert on the typed exception.
-                    # Everything else routes through the ordered specificity dispatch.
-                    if _is_click_control_flow(error):
-                        raise
-                    if _BOUNDARY_SUSPENDED.get():
-                        raise
-                    emit_error_and_exit(_project_boundary_error(error, callback))
+            try:
+                return callback(*args, **kwargs)
+            except Exception as error:
+                # Typer/Click control flow and the under-test override propagate untouched.
+                if _is_click_control_flow(error) or _BOUNDARY_SUSPENDED.get():
+                    raise
+                emit_error_and_exit(_project_boundary_error(error, callback))
         finally:
             _ACTIVE_COMMAND_ID.reset(token)
 
@@ -487,15 +477,11 @@ def _render_precondition_action_text(
     recovery labels, and nested values use deterministic JSON so condition
     evidence and binding provenance cannot be flattened into ambiguous prose.
 
-    A refusal for a component that is not set up is the exception: the person
-    reads the error's sentence and then what the item's current row allows,
-    the exact setup command the action resolved to or the row's own sentence,
-    never condition identifiers or evidence. JSON still carries the DTO.
     """
     lines = [text.rstrip("\n")]
-    setup_lines = component_setup_lines(action)
-    if setup_lines is not None:
-        lines.extend(f"  {line}" for line in setup_lines)
+    recovery = component_recovery_lines(action)
+    if recovery is not None:
+        lines.extend(f"  {line}" for line in recovery)
         return "\n".join(lines) + "\n"
     if command is not None:
         lines.append(f"  command: {command}")
@@ -539,8 +525,7 @@ def render_error_payload(
     across success and failure. A supplied ``action`` is the already-resolved
     application verdict projection: JSON places it in the canonical error
     member, while text serializes that exact DTO beneath the localized error
-    line without reconstructing a command or recovery sentence, or, for a
-    component setup action, prints the command the DTO resolved.
+    line without reconstructing a command or recovery sentence.
     """
     notice = sandbox_notice_for_error(error)
     from cadrumo_client.commands.profile_authentication_notice import drain_profile_authentication_notices
@@ -559,13 +544,15 @@ def render_error_payload(
     remedy = connection_unavailable_remedy(reason if isinstance(reason, str) else None)
     remedy_context = {"remedy": remedy} if remedy is not None else None
     if as_json:
+        recovery = component_recovery_notice(action)
+        recovery_notices = resolve_notice_actions(() if recovery is None else (recovery,))
         return render_error_json(
             error,
             context=remedy_context,
             action=action,
             active_profile=active_profile_label_for_error(error),
             command=command,
-            notices=(*(() if notice is None else (notice,)), *authentication_notices),
+            notices=(*(() if notice is None else (notice,)), *authentication_notices, *recovery_notices),
         )
     text = render_error_text(error, context=remedy_context)
     if action is not None:
@@ -610,22 +597,6 @@ def _active_command_identifier() -> str | None:
     an argv parse failure raised before any command callback runs.
     """
     return _ACTIVE_COMMAND_ID.get()
-
-
-def _quick_setup_rows(ctx: typer.Context | None) -> tuple[DependencyStatusRow, ...]:
-    """Read every setup item's row from the components role's quick check.
-
-    A component setup line is printed only from the item's current row. The
-    role needs no profile session, so every command reads the same rows; nothing
-    is read until a line needs a row.
-    """
-    from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
-
-    from .config.provision_cli import read_quick_setup_rows
-
-    if ctx is None:
-        raise RefusalError(RefusalCode.UNAVAILABLE)
-    return read_quick_setup_rows(ctx)
 
 
 def _resolve_active_command_id(*values: object) -> str | None:

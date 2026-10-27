@@ -4,17 +4,14 @@ The complete CLI batch journey is exercised through the authenticated profile
 worker in ``test_runtime_ledger_evidence_ingestion_native``. These tests isolate
 the CLI-owned presentation of canonical pause, refusal, review, and unreadable
 source results. A pause's text names the local AI and then what the local AI's
-quick-status row allows, as the components role reports it: the setup command
-for an offerable row, the row's sentence for a blocked one. Its raw facts stay in
-JSON.
+typed action and facts, without probing component status during rendering.
 """
 
 from __future__ import annotations
 
 import pytest
 
-from ....adapters.outbound.components.tests.recorded_rows import not_in_this_build_row, recorded_absent_row
-from ....application.dependency_contracts import DependencyStatusRow
+from ....adapters.outbound.components.tests.recorded_rows import recorded_absent_row
 from ....application.ledger.batch_ingest import (
     BatchItemResult,
     BatchItemStatus,
@@ -32,7 +29,6 @@ from ....core.config import override_settings
 from ....core.json_contract import ResolvedActionReference, ResolvedNoticeAction, ResolvedPreconditionAction
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....domain.iva.schema import InvoiceKind
-from .._component_setup_rendering import setup_status_source
 from ..ledger_evidence_batch_commands import _batch_payload, _batch_text_lines, _run_notices
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -146,32 +142,17 @@ def _local_ai_pause() -> InferencePause:
     )
 
 
-@pytest.mark.parametrize(
-    ("row", "action_line"),
-    [
-        (
-            recorded_absent_row("local_ai"),
-            "paused.precondition_action\tLocal AI: Not set up yet. Set it up in the Cadrumo desktop app.",
-        ),
-        (
-            not_in_this_build_row("local_ai"),
-            "paused.precondition_action\tLocal AI: This version of Cadrumo does not include this.",
-        ),
-    ],
-    ids=["offerable", "not in this build"],
-)
-def test_a_pause_for_the_local_ai_names_it_then_says_what_its_row_allows(
-    row: DependencyStatusRow, action_line: str
-) -> None:
+def test_a_pause_for_the_local_ai_renders_its_supplied_action() -> None:
     pause = _local_ai_pause()
     run = BatchRunResult(items=(_paused_row("scan.pdf"),), inference_pause=pause)
 
-    with override_settings(cadrumo_output_language="en"), setup_status_source(lambda: (row,)):
+    with override_settings(cadrumo_output_language="en"):
         lines = _batch_text_lines(run, bucket_id="bucket", direction=InvoiceKind.RECEIVED)
+        notice = _run_notices(run)[0]
 
     reason = lines.index("paused\tLocal AI, which reads the paused documents, is not ready.")
-    assert lines[reason + 1] == action_line
-    assert not any(line.startswith("paused.precondition_action.") for line in lines)
+    assert any("Set it up in the Cadrumo desktop app." in line for line in lines[reason + 1 :])
+    assert not any("aeat config provision status" in line for line in lines)
     assert not any("runtime_url" in line or "127.0.0.1" in line for line in lines)
     # JSON keeps the raw facts and the typed action.
     payload = _batch_payload(run, bucket_id="bucket", direction=InvoiceKind.RECEIVED)
@@ -180,6 +161,7 @@ def test_a_pause_for_the_local_ai_names_it_then_says_what_its_row_allows(
     action = payload.inference_pause.precondition_action.action
     assert action is not None
     assert action.action_id == LOCAL_AI_PROVISION_ACTION_ID
+    assert "Set it up in the Cadrumo desktop app." in notice.message
 
 
 def test_pending_review_resolves_the_review_queue_action() -> None:

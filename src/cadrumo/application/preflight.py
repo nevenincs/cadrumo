@@ -569,6 +569,8 @@ def dependency_preflight_checks(rows: Iterable[DependencyStatusRow]) -> tuple[Pr
     checks: list[PreflightCheck] = []
     for row in rows:
         facts: dict[str, str | int | bool] = {"item": row.item_id, "state": row.state.value}
+        if row.recovery is not None:
+            facts["recovery"] = row.recovery.value
         reason = row.failure_category or row.blocked_reason or row.stale_reason
         if reason is not None:
             facts["reason"] = reason.value

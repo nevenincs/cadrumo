@@ -2688,6 +2688,7 @@ cli:
       browser:
         help: Prepara el navegador que Cadrumo usa para la web de la Agencia Tributaria.
           Muestra el plan y te pregunta antes.
+      check_status: 'Consulta el estado de los componentes: {command}'
       complete: Cadrumo está preparado.
       fix: 'Para solucionarlo, ejecuta: %{command}'
       following: '%{name}: otra preparación ya lo está preparando, así que esta la

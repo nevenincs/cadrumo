@@ -58,13 +58,16 @@ from cadrumo_client.commands.registered_operation_contracts import (
     RegisteredOperationProgress,
     RegisteredOperationReviewHandler,
 )
+from cadrumo_client.commands.registered_operation_deadlines import (
+    RegisteredOperationDeadline,
+    RegisteredOperationSettlement,
+)
 from cadrumo_client.commands.registered_operation_errors import invalid_completion_error
 from cadrumo_client.commands.registered_operation_exchange import RegisteredOperationExchange
 from cadrumo_client.commands.registered_operation_observations import observe_registered_operation
 from cadrumo_client.commands.registered_operation_reviews import respond_registered_pending_review
 from cadrumo_client.contracts.command_program import CommandProgram
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
-from cadrumo_client.contracts.deadline_budget import bounded_deadline_after
 from cadrumo_client.contracts.failure_categories import DependencyFailureCategory
 from cadrumo_client.contracts.operation_access import (
     OperationReply,
@@ -89,6 +92,7 @@ from ....application.components_operations import (
     ProvisionReviewProjection,
 )
 from ....application.dependency_contracts import (
+    DEPENDENCY_SETUP_RECOVERIES,
     DependencyBlockedReason,
     DependencyCheckMode,
     DependencyItemDeclaration,
@@ -127,6 +131,7 @@ from ....core.storage_taxonomy import StorageCategory
 from ....core.storage_taxonomy_locations import storage_path
 from ....core.tty import stderr_is_tty, stdin_is_tty
 from ..common import emit_envelope, format_of, resolve_cli_precondition_action
+from ..component_recovery_text import component_status_command
 from ..errors import redraw_stderr_line
 from ..errors import write_stderr as draw_stderr
 from .provision_payloads import (
@@ -254,10 +259,18 @@ def _item_payload(row: DependencyStatusRow) -> ProvisionItemPayload:
         size_estimate_bytes=row.size_estimate_bytes,
         recovery=None if row.recovery is None else row.recovery.value,
         recovery_action_id=action_id,
-        command=None
-        if action_id is None or row.recovery is DependencyRecoveryAction.SET_UP_IN_DESKTOP
-        else recovery_command(action_id),
+        command=_row_command(row),
     )
+
+
+def _row_command(row: DependencyStatusRow) -> str | None:
+    if row.kind is DependencyItemKind.LOCAL_AI or row.state is DependencyState.BLOCKED:
+        return None
+    if row.recovery is DependencyRecoveryAction.CHECK_AGAIN:
+        return component_status_command()
+    if row.recovery in DEPENDENCY_SETUP_RECOVERIES and row.recovery_action_id is not None:
+        return recovery_command(row.recovery_action_id)
+    return None
 
 
 def _row_lines(rows: Iterable[DependencyStatusRow]) -> list[str]:
@@ -266,10 +279,15 @@ def _row_lines(rows: Iterable[DependencyStatusRow]) -> list[str]:
         declaration = _declaration(row.item_id)
         wording = dependency_row_wording(row, declaration)
         lines.append(f"{wording.name}\t{wording.sentence}")
-        if row.recovery is DependencyRecoveryAction.SET_UP_IN_DESKTOP:
+        if row.kind is DependencyItemKind.LOCAL_AI and row.state not in {DependencyState.READY, DependencyState.STALE}:
             lines.append("\t" + dependency_desktop_pointer())
-        elif row.recovery_action_id is not None:
-            lines.append("\t" + tr("cli.config.provision.fix", command=recovery_command(row.recovery_action_id)))
+        elif (command := _row_command(row)) is not None:
+            key = (
+                "cli.config.provision.check_status"
+                if row.recovery is DependencyRecoveryAction.CHECK_AGAIN
+                else "cli.config.provision.fix"
+            )
+            lines.append("\t" + tr(key, command=command))
     return lines
 
 
@@ -341,7 +359,7 @@ def _read(ctx: typer.Context, items: tuple[DependencyItemKind, ...] = (), *, ful
             request_version=1,
             result_version=1,
             timeout=_CALL_TIMEOUT_S,
-            settlement_timeout=_QUICK_SETTLEMENT_S,
+            settlement_timeout=RegisteredOperationSettlement.UNBOUNDED if full else _QUICK_SETTLEMENT_S,
             pending_check_command=_PENDING_CHECK_COMMAND,
             on_events=progress.observe if full else None,
         )
@@ -491,7 +509,9 @@ def _review_handler(review: SetupReview) -> RegisteredOperationReviewHandler[Pro
         response_schema=PROVISION_RESPONSE_SCHEMA.identity,
         decide=review.decide,
         claim=_claim_review,
-        present_document=lambda document: write_stderr(json.dumps(document, ensure_ascii=False, sort_keys=True)),
+        present_document=(lambda document: write_stderr(json.dumps(document, ensure_ascii=False, sort_keys=True)))
+        if review.json_mode
+        else None,
     )
 
 
@@ -506,13 +526,13 @@ def provision_review(ctx: typer.Context, operation_id: str, yes: bool = False, r
     except ValidationError:
         raise typer.BadParameter("invalid operation ID", param_hint="OPERATION_ID") from None
     client = bound_profile_client(ctx)
-    deadline = bounded_deadline_after(_CALL_TIMEOUT_S, subject="component setup review")
-    contract = client.contract(COMPONENTS_SETUP_OPERATION_ID, deadline=deadline)
+    budget = RegisteredOperationDeadline(None, _CALL_TIMEOUT_S, RegisteredOperationSettlement.UNBOUNDED)
+    contract = client.contract(COMPONENTS_SETUP_OPERATION_ID, deadline=budget.call_deadline())
     if contract.definition_id != COMPONENTS_SETUP_OPERATION_ID:
         raise RefusalError(RefusalCode.INVALID_FRAME)
     progress = RegisteredOperationProgress()
     exchange = RegisteredOperationExchange(
-        client, client.profile_id, client.session_id, client.frontend, deadline, lambda: deadline, progress
+        client, client.profile_id, client.session_id, client.frontend, None, budget.call_deadline, progress
     )
     observed = observe_registered_operation(
         client,
@@ -522,7 +542,7 @@ def provision_review(ctx: typer.Context, operation_id: str, yes: bool = False, r
         COMPONENTS_SETUP_OPERATION_ID,
         COMPONENTS_OPERATION_SUBJECT,
         contract,
-        deadline,
+        None,
         None,
         progress,
         exchange,
@@ -572,7 +592,7 @@ def _setup(
             request_version=1,
             result_version=1,
             timeout=_CALL_TIMEOUT_S,
-            settlement_timeout=_QUICK_SETTLEMENT_S,
+            settlement_timeout=RegisteredOperationSettlement.UNBOUNDED,
             pending_check_command=_PENDING_CHECK_COMMAND,
             on_events=progress.observe,
             review=_review_handler(review),

@@ -33,13 +33,14 @@ class RegisteredOperationExchange:
     profile_id: UUID
     session_id: UUID
     frontend: OperationFrontendProjection
-    deadline: float
+    deadline: float | None
     call_deadline: Callable[[], float]
     progress: RegisteredOperationProgress
 
     def __call__(self, request: OperationRequest) -> OperationReply:
         """Preserve effect uncertainty and refuse identity drift before and after the exchange."""
-        remaining_budget(self.deadline)
+        if self.deadline is not None:
+            remaining_budget(self.deadline)
         require_registered_frontend_identity(
             self.client, self.profile_id, self.session_id, self.frontend, RefusalCode.CONNECTION_CLOSED
         )
@@ -53,7 +54,8 @@ class RegisteredOperationExchange:
         require_registered_frontend_identity(
             self.client, self.profile_id, self.session_id, self.frontend, RefusalCode.CONNECTION_CLOSED
         )
-        remaining_budget(self.deadline)
+        if self.deadline is not None:
+            remaining_budget(self.deadline)
         return reply
 
 
