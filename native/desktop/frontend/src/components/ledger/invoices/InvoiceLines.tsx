@@ -4,6 +4,7 @@ import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
+import { useTableView, type ViewColumn } from "@/components/ui/table-view";
 import type { CatalogueInvoiceLine, InvoiceKind } from "../../../shell/ledger";
 import {
   SPENDING_CATEGORY_FAMILIES,
@@ -24,8 +25,20 @@ type LineField = (typeof LINE_FIELDS)[number];
 const categoryLabel = (t: Translate, id: string) =>
   isSpendingCategory(id) ? t(`desktop.ledger.category.${id}`) : id;
 
-const HEAD =
-  "h-control-sm px-1.5 text-start text-xs font-medium text-muted-foreground";
+const HEAD_ROW =
+  "h-control-sm border-b border-border-strong text-xs text-muted-foreground";
+/** A column of lines, in the order the document has them: it has no way to
+ * rank its rows. */
+const column = (
+  id: string,
+  label: string,
+  align?: "end",
+): { id: string; label: string; name: string; align?: "end" } => ({
+  id,
+  label,
+  name: label,
+  align,
+});
 const CELL = "px-1.5 py-1 align-middle";
 
 /**
@@ -85,6 +98,27 @@ export function DraftLines({
         : [];
     }),
   );
+  const columns: ViewColumn<LineDraft>[] = [
+    column("description", t("desktop.ledger.invoices.line.description")),
+    column("quantity", t("desktop.ledger.invoices.line.quantity"), "end"),
+    column("unit_price", t("desktop.ledger.invoices.line.unit_price"), "end"),
+    column("subtotal", t("desktop.ledger.invoices.line.subtotal"), "end"),
+    column("rate", t("desktop.ledger.invoices.line.rate")),
+    column("iva", t("desktop.ledger.invoices.line.iva"), "end"),
+    ...(received
+      ? [column("category", t("desktop.ledger.invoices.line.category"))]
+      : []),
+    {
+      ...column("actions", t("desktop.ledger.invoices.line.actions")),
+      hidden: true,
+      resizable: false,
+    },
+  ];
+  const view = useTableView({
+    columns,
+    rows: lines,
+    resizeLabel: (name) => t("desktop.table.resize_column", { column: name }),
+  });
   const described = (line: LineDraft, field: LineField) =>
     problemOf(line, field) ? `${id}-${line.key}-${field}` : undefined;
   return (
@@ -98,41 +132,13 @@ export function DraftLines({
         <table
           className="ledger-invoice-lines w-full border-collapse text-base"
           aria-label={t("desktop.ledger.invoices.lines")}
+          {...view.tableProps}
         >
           <thead>
-            <tr className="border-b border-border-strong">
-              <th scope="col" className={HEAD}>
-                {t("desktop.ledger.invoices.line.description")}
-              </th>
-              <th scope="col" className={`${HEAD} w-20 text-end`}>
-                {t("desktop.ledger.invoices.line.quantity")}
-              </th>
-              <th scope="col" className={`${HEAD} w-24 text-end`}>
-                {t("desktop.ledger.invoices.line.unit_price")}
-              </th>
-              <th scope="col" className={`${HEAD} text-end`}>
-                {t("desktop.ledger.invoices.line.subtotal")}
-              </th>
-              <th scope="col" className={`${HEAD} w-32`}>
-                {t("desktop.ledger.invoices.line.rate")}
-              </th>
-              <th scope="col" className={`${HEAD} text-end`}>
-                {t("desktop.ledger.invoices.line.iva")}
-              </th>
-              {received && (
-                <th scope="col" className={`${HEAD} w-40`}>
-                  {t("desktop.ledger.invoices.line.category")}
-                </th>
-              )}
-              <th scope="col" className={`${HEAD} w-8`}>
-                <span className="sr-only">
-                  {t("desktop.ledger.invoices.line.actions")}
-                </span>
-              </th>
-            </tr>
+            <tr className={HEAD_ROW}>{view.headers}</tr>
           </thead>
           <tbody>
-            {lines.map((line, at) => {
+            {view.rows.map((line, at) => {
               const figure = figures[at];
               const name = (field: string) =>
                 t("desktop.ledger.invoices.line.field", {
@@ -312,6 +318,22 @@ export function StoredLines({
 }) {
   const t = useStrings();
   const received = kind === "received";
+  const columns: ViewColumn<CatalogueInvoiceLine>[] = [
+    column("description", t("desktop.ledger.invoices.line.description")),
+    column("quantity", t("desktop.ledger.invoices.line.quantity"), "end"),
+    column("unit_price", t("desktop.ledger.invoices.line.unit_price"), "end"),
+    column("subtotal", t("desktop.ledger.invoices.line.subtotal"), "end"),
+    column("rate", t("desktop.ledger.invoices.line.rate")),
+    column("iva", t("desktop.ledger.invoices.line.iva"), "end"),
+    ...(received
+      ? [column("category", t("desktop.ledger.invoices.line.category"))]
+      : []),
+  ];
+  const view = useTableView({
+    columns,
+    rows: lines,
+    resizeLabel: (name) => t("desktop.table.resize_column", { column: name }),
+  });
   return (
     <div
       className="overflow-x-auto"
@@ -322,36 +344,13 @@ export function StoredLines({
       <table
         className="ledger-invoice-lines w-full border-collapse text-base"
         aria-label={t("desktop.ledger.invoices.lines")}
+        {...view.tableProps}
       >
         <thead>
-          <tr className="border-b border-border-strong">
-            <th scope="col" className={HEAD}>
-              {t("desktop.ledger.invoices.line.description")}
-            </th>
-            <th scope="col" className={`${HEAD} text-end`}>
-              {t("desktop.ledger.invoices.line.quantity")}
-            </th>
-            <th scope="col" className={`${HEAD} text-end`}>
-              {t("desktop.ledger.invoices.line.unit_price")}
-            </th>
-            <th scope="col" className={`${HEAD} text-end`}>
-              {t("desktop.ledger.invoices.line.subtotal")}
-            </th>
-            <th scope="col" className={HEAD}>
-              {t("desktop.ledger.invoices.line.rate")}
-            </th>
-            <th scope="col" className={`${HEAD} text-end`}>
-              {t("desktop.ledger.invoices.line.iva")}
-            </th>
-            {received && (
-              <th scope="col" className={HEAD}>
-                {t("desktop.ledger.invoices.line.category")}
-              </th>
-            )}
-          </tr>
+          <tr className={HEAD_ROW}>{view.headers}</tr>
         </thead>
         <tbody>
-          {lines.map((line, at) => (
+          {view.rows.map((line, at) => (
             <tr key={at} className="border-b border-border">
               <td className={`${CELL} [overflow-wrap:anywhere]`}>
                 {line.description}

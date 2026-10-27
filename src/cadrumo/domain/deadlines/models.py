@@ -506,9 +506,6 @@ class TaxpayerProfile(BaseModel):
             the operator's behalf.
         pays_professionals_with_retencion: Whether the taxpayer pays
             professional fees subject to retención.
-        professional_income_withholding_ge_70pct: Whether at least 70%
-            of the taxpayer's prior-year professional income was
-            already subject to withholding.
         art109_activity_income_withholding_ge_70pct: Whether the Art. 109
             RIRPF 70% income-coverage exception is met for covered
             professional, agricultural, livestock, or forestry activity
@@ -556,8 +553,6 @@ class TaxpayerProfile(BaseModel):
             rosters let cross-period aggregate modelos prove complete
             member fan-in before verification, filing, or export.
         enrollment: AEAT enrollment facts that can change filing cadence.
-        notes: Free-form notes for the user. Never consumed by the
-            engine.
         irpf_special_regime: The IRPF special regime in effect for
             this taxpayer. ``None`` when undeclared (treated as
             ``GENERAL`` by engine consumers). ``IMPATRIADO`` activates
@@ -578,17 +573,6 @@ class TaxpayerProfile(BaseModel):
         country of fiscal residence. Required when
         ``fiscal_residency`` is ``NON_RESIDENT_IRNR``; ``None`` is
         valid only for IRPF residents.
-        ley_49_2002_special_regime_option_declared: Whether the entity
-            has declared the Modelo 036 option for the Title II Ley
-            49/2002 special fiscal regime. ``None`` means undeclared.
-        ley_49_2002_special_regime_option_date: Date declared for that
-            option on Modelo 036. ``None`` means undeclared.
-        ley_49_2002_special_regime_renunciation_declared: Whether the
-            entity has declared renunciation of the Title II Ley
-            49/2002 special regime. ``None`` means undeclared.
-        ley_49_2002_special_regime_renunciation_date: Date declared
-            for that renunciation on Modelo 036. ``None`` means
-            undeclared.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -604,7 +588,6 @@ class TaxpayerProfile(BaseModel):
     has_employees: bool = False
     colegio_concertado: bool | None = None
     pays_professionals_with_retencion: bool = False
-    professional_income_withholding_ge_70pct: bool = False
     art109_activity_income_withholding_ge_70pct: bool = False
     pays_rent_with_retencion: bool = False
     pays_capital_income_with_retencion: bool = False
@@ -612,14 +595,6 @@ class TaxpayerProfile(BaseModel):
     objective_estimation_prior_year_invoice_gross_income_eur: Decimal | None = None
     objective_estimation_prior_year_agri_livestock_forest_gross_eur: Decimal | None = None
     objective_estimation_prior_year_purchases_eur: Decimal | None = None
-    objective_estimation_modulos_iae_epigraph: str = ""
-    objective_estimation_modulos_module_1_units: Decimal | None = None
-    objective_estimation_modulos_module_2_units: Decimal | None = None
-    objective_estimation_modulos_module_3_units: Decimal | None = None
-    objective_estimation_modulos_module_4_units: Decimal | None = None
-    objective_estimation_modulos_module_5_units: Decimal | None = None
-    objective_estimation_modulos_module_6_units: Decimal | None = None
-    objective_estimation_modulos_module_7_units: Decimal | None = None
     does_intracomunitario: bool = False
     third_party_transactions_above_347_threshold: bool | None = None
     bienes_extranjero_above_threshold: bool | None = None
@@ -630,23 +605,15 @@ class TaxpayerProfile(BaseModel):
     cross_period_group_member_rosters: tuple[CrossPeriodGroupMemberRoster, ...] = Field(default_factory=tuple)
     enrollment: ModeloEnrollment = Field(default_factory=ModeloEnrollment)
     fiscal_address_cadastral_reference: str = ""
-    fiscal_address_is_habitual_vivienda: bool = False
     holiday_territory: CalendarCCAA | None = None
     activity_start_date: date | None = None
     activity_end_date: date | None = None
     incn_prior_12_months: Decimal | None = None
     new_entity_first_two_profit_periods: bool | None = None
-    ley_49_2002_special_regime_option_declared: bool | None = None
-    ley_49_2002_special_regime_option_date: date | None = None
-    ley_49_2002_special_regime_renunciation_declared: bool | None = None
-    ley_49_2002_special_regime_renunciation_date: date | None = None
     tributacion_estado_porcentaje: Decimal | None = None
-    establecimiento_type: str = ""
-    elected_withholding_pct: str = ""
     vivienda_office_total_m2: Decimal | None = None
     vivienda_office_office_m2: Decimal | None = None
     iae_epigraph: str = ""
-    notes: str = ""
     irpf_special_regime: IrpfSpecialRegime | None = None
     special_regime_start_date: date | None = None
     fiscal_residency: FiscalResidency | None = None
@@ -662,9 +629,6 @@ class TaxpayerProfile(BaseModel):
 
     Required together with ``representante_fiscal_nif`` for the same cases.
     """
-    sal_socios_trabajadores_count: int | None = None
-    sal_reserva_especial_dotada: Decimal | None = None
-    sal_capital_social: Decimal | None = None
     irpf_pagadores_count: int | None = None
     """Number of pagadores (income payers) the taxpayer received income from.
 

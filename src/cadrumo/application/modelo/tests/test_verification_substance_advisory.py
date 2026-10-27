@@ -109,26 +109,6 @@ def test_art109_profile_advisory_emits_warning_when_profile_flag_is_enabled() ->
     assert "rd-439-2007:art-109" in findings[0].legal_refs
 
 
-def test_art109_profile_advisory_ignores_professional_only_profile_flag() -> None:
-    """The professional-only compatibility field is not the full Art. 109 fact."""
-    predicate = VerificationPredicateDefinition(
-        id="profile-flag-enabled:art109-exencion-alta-retencion",
-        predicate_id="modelo-130-art109-exencion-alta-retencion",
-        legal_refs=("rd-439-2007:art-109",),
-        expression=_M130_ART109_PROFILE_ADVISORY,
-        finding_kind="ADVISORY",
-    )
-    profile = workflow_profile().model_copy(update={"professional_income_withholding_ge_70pct": True})
-    casilla_values: dict[CasillaId, Decimal] = {
-        _CASILLA_06: Decimal("0"),
-        _CASILLA_01: Decimal("15000"),
-    }
-
-    findings = evaluate_verification_predicates((predicate,), casilla_values, profile)
-
-    assert findings == []
-
-
 def test_art109_profile_advisory_ignores_high_retention_amount_ratio_when_profile_flag_is_disabled() -> None:
     """A high casilla 06 amount alone is not the Art. 109 income-coverage fact."""
     predicate = VerificationPredicateDefinition(

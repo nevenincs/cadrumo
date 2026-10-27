@@ -139,7 +139,7 @@ def test_a_lookup_refusal_reaches_the_consumer_without_a_run(tmp_path: Path) -> 
 
 
 @pytest.mark.parametrize("locale", SUPPORTED_OUTPUT_LANGUAGES)
-def test_a_role_with_no_selection_says_to_choose_a_model_in_the_desktop_app(tmp_path: Path, locale: str) -> None:
+def test_a_role_no_listed_model_can_serve_says_to_add_one_in_the_desktop_app(tmp_path: Path, locale: str) -> None:
     with (
         serving_agent(lookup_refusal=ModelRunRefusalCode.NO_SELECTION),
         pytest.raises(LLMConfigError) as caught,
@@ -151,7 +151,10 @@ def test_a_role_with_no_selection_says_to_choose_a_model_in_the_desktop_app(tmp_
     assert "Cadrumo" in sentence
     assert "aeat" not in sentence
     if locale == "en":
-        assert sentence == "No model is chosen for this task. Choose one in the Cadrumo desktop app, then try again."
+        assert sentence == (
+            "No model on the local AI's list can do this task. Add one to the list in the Cadrumo desktop app, "
+            "then try again."
+        )
 
 
 @pytest.mark.parametrize(
@@ -197,8 +200,8 @@ def test_a_model_the_agent_cannot_fit_names_the_free_memory_condition_and_how_to
     assert "Cadrumo" in sentence
     if locale == "en":
         assert sentence == (
-            "The selected model does not fit in this computer's free memory right now. Close other programs "
-            "or choose a smaller model in the Cadrumo desktop app, then try again."
+            "The model Cadrumo reads with does not fit in this computer's free memory right now. "
+            "Close other programs, then try again."
         )
 
 

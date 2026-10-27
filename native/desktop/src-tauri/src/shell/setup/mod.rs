@@ -10,22 +10,29 @@
 //! The local AI is provisioned from the person's selection of models, which only
 //! this host reads: before each engine command it asks the agent service for the
 //! per-role selection and the catalogue's download sizes (`admission`).
+//!
+//! The window words an `unavailable` refusal and every host failure by a code alone.
+//! The cause behind each is recorded in diagnostics (`reports`), where the Logs
+//! console shows it.
 pub mod admission;
 pub mod components;
 pub mod google;
+pub mod reports;
 pub mod review;
 pub mod wire;
 
-use super::sign_in::{Presence, SignIn};
+use super::sign_in::{Presence, SignIn, wire::SignInStatus};
 use crate::agent::{
     AgentHost,
     person::{HeldPerson, PersonEvent},
 };
 use admission::Admission;
+use cadrumo_application::diagnostics::Diagnostics;
 use cadrumo_application::error::application::{ApplicationError, ErrorCode, Operation, Result};
 use cadrumo_application::provisioning::items::ItemId;
 use components::Components;
-use google::{Act, Relay, Stop, Tracker};
+use google::{Act, Relay, Tracker};
+use reports::Reports;
 use serde::Serialize;
 use serde_json::Value;
 use std::sync::{
@@ -33,14 +40,52 @@ use std::sync::{
     atomic::{AtomicBool, Ordering},
 };
 use tauri::{State, ipc::Channel};
-use wire::{Action, CommandFailure, Google, Refusal, Snapshot};
+use wire::{Action, CommandFailure, Google, Refusal, Snapshot, Stop};
 
-fn failed() -> ApplicationError {
-    ApplicationError::new(ErrorCode::SessionUnavailable, Operation::Cli)
+/// The setup host could not carry on, for the stable `reason` named.
+fn failed(reason: &'static str) -> ApplicationError {
+    ApplicationError::new(ErrorCode::SessionUnavailable, Operation::Cli).with_reason(reason)
 }
 
-fn protocol() -> ApplicationError {
-    ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli).with_reason("setup_reply_shape")
+/// The snapshot the window would be given has a value outside its closed sets.
+fn snapshot_invalid() -> ApplicationError {
+    ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
+        .with_reason("setup_snapshot_invalid")
+}
+
+/// What the signed-in status lets a setup command do.
+enum Standing {
+    /// Nobody is signed in.
+    SignedOut,
+    /// A profile is signed in and its runtime does not answer.
+    Unready,
+    /// The signed-in profile, whose runtime answers.
+    Ready(String),
+}
+
+fn standing(status: &SignInStatus) -> Result<Standing> {
+    if status.state != Presence::Present {
+        if status.supported && status.state == Presence::Unknown {
+            return Err(failed("setup_presence_unknown"));
+        }
+        return Ok(Standing::SignedOut);
+    }
+    let profile = status
+        .active_profile
+        .clone()
+        .ok_or_else(|| failed("setup_profile_missing"))?;
+    Ok(if status.runtime_ready() {
+        Standing::Ready(profile)
+    } else {
+        Standing::Unready
+    })
+}
+
+/// Whether `status` still shows the answering runtime of the signed-in `profile`.
+fn unchanged(status: &SignInStatus, profile: &str) -> bool {
+    status.state == Presence::Present
+        && status.runtime_ready()
+        && status.active_profile.as_deref() == Some(profile)
 }
 
 fn lock<T>(value: &Mutex<T>) -> std::sync::MutexGuard<'_, T> {
@@ -139,6 +184,7 @@ fn item_ids(items: Option<Vec<String>>) -> Option<Vec<ItemId>> {
 pub struct SetupHost {
     sign_in: Arc<SignIn>,
     components: Components,
+    reports: Reports,
     current: Mutex<Current>,
     /// The account as last read, which the engine's own changes are shown beside.
     google: Mutex<Option<Google>>,
@@ -151,13 +197,15 @@ pub struct SetupHost {
 }
 
 impl SetupHost {
-    pub fn new(sign_in: Arc<SignIn>, agent: Arc<AgentHost>) -> Self {
+    pub fn new(sign_in: Arc<SignIn>, agent: Arc<AgentHost>, diagnostics: Arc<Diagnostics>) -> Self {
         Self {
             sign_in,
             components: Components::new(
                 components::installation(),
                 Arc::new(Admission::new(agent)),
+                diagnostics.clone(),
             ),
+            reports: Reports::new(diagnostics),
             current: Mutex::new(Current {
                 value: DesktopSetup {
                     revision: 0,
@@ -188,7 +236,10 @@ impl SetupHost {
         if let (true, Some(google)) = (shown, google) {
             match compose(self.components.view(), google) {
                 Some(snapshot) => self.publish(Availability::Ready, Some(snapshot)),
-                None => self.publish(Availability::Unavailable, None),
+                None => {
+                    self.reports.read(&Stop::Host(snapshot_invalid()));
+                    self.publish(Availability::Unavailable, None)
+                }
             };
         }
     }
@@ -196,7 +247,7 @@ impl SetupHost {
     /// The engine's part of one window action. A setup waits for its review or
     /// its network check here, apart from the held session, so the session and
     /// a cancel stay free meanwhile.
-    async fn act(&self, request: &Action) -> std::result::Result<(), Refusal> {
+    async fn act(&self, request: &Action) -> std::result::Result<(), Stop> {
         match request {
             Action::Observe | Action::GoogleSignIn | Action::GoogleSignOut => {
                 self.components.observe();
@@ -224,11 +275,11 @@ impl SetupHost {
                 operation_id,
                 plan_digest,
                 decision,
-            } => {
-                self.components
-                    .answer(operation_id, plan_digest, *decision)
-                    .await
-            }
+            } => self
+                .components
+                .answer(operation_id, plan_digest, *decision)
+                .await
+                .map_err(Stop::from),
             Action::Cancel { operation_id } => self.components.cancel(operation_id).await,
             Action::RemoveModel { model } => self.components.remove_model(model).await,
         }
@@ -237,37 +288,62 @@ impl SetupHost {
     /// Carry one setup action to the engine and the account's part of it to
     /// the held session of the signed-in profile, then publish the snapshot
     /// after it. Signed out, an action is refused and a read answers the
-    /// signed-out state.
+    /// signed-out state. Whatever lay behind an `unavailable` refusal or a host
+    /// failure the window is told, diagnostics are told as well.
     async fn exchange(
         &self,
         request: Action,
         action: bool,
     ) -> std::result::Result<DesktopSetup, CommandFailure> {
+        match self.carry(request, action).await {
+            Ok(value) => Ok(value),
+            Err(stop) => {
+                if action {
+                    self.reports.command(&stop);
+                } else {
+                    self.reports.read(&stop);
+                }
+                Err(stop.into())
+            }
+        }
+    }
+
+    /// A read the window is told of by the state it is shown rather than by an error,
+    /// which only a command is answered with.
+    fn shown(&self, action: bool, stop: Stop) -> std::result::Result<DesktopSetup, Stop> {
+        if action {
+            return Err(stop);
+        }
+        self.reports.read(&stop);
+        Ok(lock(&self.current).value.clone())
+    }
+
+    async fn carry(
+        &self,
+        request: Action,
+        action: bool,
+    ) -> std::result::Result<DesktopSetup, Stop> {
         if self.closed.load(Ordering::Acquire) {
-            return Err(failed().into());
+            return Err(failed("setup_host_closed").into());
         }
         let status = self.sign_in.read_status().await?;
-        if status.state != Presence::Present {
-            if status.supported && status.state == Presence::Unknown {
-                return Err(failed().into());
+        let profile = match standing(&status)? {
+            Standing::SignedOut => {
+                self.release_person().await?;
+                let value = self.publish(Availability::SignedOut, None);
+                self.reports.recovered();
+                return if action {
+                    Err(Refusal::NotSignedIn.into())
+                } else {
+                    Ok(value)
+                };
             }
-            self.release_person().await?;
-            let value = self.publish(Availability::SignedOut, None);
-            return if action {
-                Err(Refusal::NotSignedIn.into())
-            } else {
-                Ok(value)
-            };
-        }
-        let profile = status.active_profile.clone().ok_or_else(failed)?;
-        if !status.runtime_ready() {
-            let value = self.publish(Availability::Unavailable, None);
-            return if action {
-                Err(Refusal::Unavailable.into())
-            } else {
-                Ok(value)
-            };
-        }
+            Standing::Unready => {
+                self.publish(Availability::Unavailable, None);
+                return self.shown(action, Stop::unavailable("setup_runtime_not_ready"));
+            }
+            Standing::Ready(profile) => profile,
+        };
         let refused = self.act(&request).await.err();
         let account = match request {
             Action::GoogleSignIn => Act::SignIn,
@@ -276,7 +352,7 @@ impl SetupHost {
         };
         let _operation = self.operation.lock().await;
         if self.closed.load(Ordering::Acquire) {
-            return Err(failed().into());
+            return Err(failed("setup_host_closed").into());
         }
         let sign_in = self.sign_in.clone();
         let bridge = self.person.clone();
@@ -308,42 +384,38 @@ impl SetupHost {
             Err(error) => Err(Stop::Host(error)),
         };
         let after = self.sign_in.read_status().await?;
-        if after.state != Presence::Present
-            || !after.runtime_ready()
-            || after.active_profile.as_deref() != Some(&profile)
-        {
+        if !unchanged(&after, &profile) {
             self.release_person().await?;
             self.publish(Availability::Unavailable, None);
-            return Err(failed().into());
+            return Err(failed("setup_session_changed").into());
         }
         let google = match answered {
             Ok(google) => google,
-            Err(Stop::Refused(code)) => return Err(code.into()),
             Err(Stop::Host(error)) => {
                 // A lost bridge keeps no setup on display as if it were current.
                 *lock(&self.google) = None;
                 self.publish(Availability::Unavailable, None);
-                return if action {
-                    Err(error.into())
-                } else {
-                    Ok(lock(&self.current).value.clone())
-                };
+                return self.shown(action, Stop::Host(error));
             }
+            Err(stop) => return Err(stop),
         };
         *lock(&self.google) = Some(google.clone());
         let Some(snapshot) = compose(self.components.view(), google) else {
             self.publish(Availability::Unavailable, None);
-            return if action {
-                Err(protocol().into())
-            } else {
-                Ok(lock(&self.current).value.clone())
-            };
+            return self.shown(action, Stop::Host(snapshot_invalid()));
         };
         let value = self.publish(Availability::Ready, Some(snapshot));
+        self.reports.recovered();
         match refused {
-            Some(code) => Err(code.into()),
+            Some(stop) => Err(stop),
             None => Ok(value),
         }
+    }
+
+    /// A failure of the host itself, recorded as it is returned.
+    fn lost(&self, error: ApplicationError) -> ApplicationError {
+        self.reports.error(&error);
+        error
     }
 
     async fn release_person(&self) -> Result<()> {
@@ -358,11 +430,13 @@ impl SetupHost {
     fn observe(self: &Arc<Self>, updates: Channel<DesktopSetup>) -> Result<u32> {
         let mut worker = lock(&self.worker);
         if self.closed.load(Ordering::Acquire) {
-            return Err(failed());
+            return Err(self.lost(failed("setup_host_closed")));
         }
         let subscription = updates.id();
         let mut current = lock(&self.current);
-        updates.send(current.value.clone()).map_err(|_| failed())?;
+        updates
+            .send(current.value.clone())
+            .map_err(|_| self.lost(failed("setup_observer_closed")))?;
         current.listener = Some(updates);
         drop(current);
         if worker.is_none() {
@@ -382,7 +456,8 @@ impl SetupHost {
                         break;
                     }
                     if read && lock(&owner.current).listener.is_some() {
-                        // A failed read publishes the unavailable state; the next cue reads again.
+                        // A failed read has recorded its cause and published the unavailable
+                        // state; the next cue reads again.
                         let _ = owner.exchange(Action::Observe, false).await;
                     }
                     read = true;
@@ -410,7 +485,9 @@ impl SetupHost {
         self.wake.notify_one();
         let worker = lock(&self.worker).take();
         if let Some(worker) = worker {
-            worker.await.map_err(|_| failed())?;
+            worker
+                .await
+                .map_err(|error| self.lost(failed("setup_worker_join").caused_by(error)))?;
         }
         self.components.close().await;
         let _operation = self.operation.lock().await;
@@ -450,7 +527,7 @@ async fn setup_pushed(events: &mut tokio::sync::broadcast::Receiver<PersonEvent>
 
 pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
     crate::app::commands![
-        desktop_setup_review_read,
+        desktop_setup_review_pending,
         desktop_setup_review_claim,
         desktop_setup_review_answer,
         desktop_setup_read,
@@ -468,11 +545,10 @@ pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
 }
 
 #[tauri::command]
-async fn desktop_setup_review_read(
+async fn desktop_setup_review_pending(
     host: State<'_, Arc<SetupHost>>,
-    operation_id: String,
 ) -> std::result::Result<Value, review::Failure> {
-    review::exchange(&host, review::Action::Read { operation_id }).await
+    review::exchange(&host, review::Action::Pending).await
 }
 
 #[tauri::command]
@@ -729,6 +805,73 @@ mod tests {
         setup_pushed(&mut events).await;
         sender.send(PersonEvent::Retired).unwrap();
         setup_pushed(&mut events).await;
+    }
+
+    fn status(state: Presence, profile: Option<&str>, runtime: bool) -> SignInStatus {
+        SignInStatus {
+            supported: true,
+            state,
+            active_profile: profile.map(str::to_owned),
+            runtime_available: runtime,
+            refusal: None,
+        }
+    }
+
+    #[test]
+    fn a_status_says_what_a_command_may_do_or_names_why_it_may_not() {
+        assert!(matches!(
+            standing(&status(Presence::Absent, None, true)),
+            Ok(Standing::SignedOut)
+        ));
+        assert!(matches!(
+            standing(&SignInStatus::unsupported()),
+            Ok(Standing::SignedOut)
+        ));
+        assert!(matches!(
+            standing(&status(Presence::Present, Some("one"), true)),
+            Ok(Standing::Ready(profile)) if profile == "one"
+        ));
+        assert!(matches!(
+            standing(&status(Presence::Present, Some("one"), false)),
+            Ok(Standing::Unready)
+        ));
+        for (name, status, reason) in [
+            (
+                "a presence the runtime could not read",
+                status(Presence::Unknown, None, true),
+                "setup_presence_unknown",
+            ),
+            (
+                "a signed-in profile with no name",
+                status(Presence::Present, None, true),
+                "setup_profile_missing",
+            ),
+        ] {
+            let error = standing(&status).err().expect(name);
+            assert_eq!(error.reason.as_deref(), Some(reason), "{name}");
+            assert_eq!(error.code, ErrorCode::SessionUnavailable, "{name}");
+        }
+    }
+
+    #[test]
+    fn a_session_is_unchanged_only_while_the_same_profiles_runtime_answers() {
+        assert!(unchanged(
+            &status(Presence::Present, Some("one"), true),
+            "one"
+        ));
+        assert!(!unchanged(
+            &status(Presence::Present, Some("two"), true),
+            "one"
+        ));
+        assert!(!unchanged(
+            &status(Presence::Present, Some("one"), false),
+            "one"
+        ));
+        assert!(!unchanged(
+            &status(Presence::Absent, Some("one"), true),
+            "one"
+        ));
+        assert!(!unchanged(&status(Presence::Present, None, true), "one"));
     }
 
     #[test]

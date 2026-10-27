@@ -43,22 +43,12 @@ profile:
     identity:
       legal_name: Legal or company name for export headers
       name: Display name shown in local reviews
-      notes: Notes for your own records (optional)
       surnames: Surnames or company name for export headers
       tax_id: Tax identifier (NIF/CIF/DNI/NIE) for the active profile
     irpf:
       art109_activity_income_withholding_ge_70pct: Art. 109 70% activity-income coverage
         exception applies
       estimation_regime: IRPF estimation regime
-      objective_estimation_modulos_iae_epigraph: IAE epigraph for objective-estimation
-        modules
-      objective_estimation_modulos_module_1_units: Annual module 1 units
-      objective_estimation_modulos_module_2_units: Annual module 2 units
-      objective_estimation_modulos_module_3_units: Annual module 3 units
-      objective_estimation_modulos_module_4_units: Annual module 4 units
-      objective_estimation_modulos_module_5_units: Annual module 5 units
-      objective_estimation_modulos_module_6_units: Annual module 6 units
-      objective_estimation_modulos_module_7_units: Annual module 7 units
       special_regime: IRPF special regime (Beckham Law / Art. 93 LIRPF)
       special_regime_start_date: Special regime election date (YYYY-MM-DD)
     iva:
@@ -133,14 +123,6 @@ profile:
         euros, optional)
       irpf_income_categories: IRPF income categories
       legal_entity_form: Legal form
-      ley_49_2002_special_regime_option_date: Date declared for the Ley 49/2002 special-regime
-        option
-      ley_49_2002_special_regime_option_declared: Has the entity filed the Modelo
-        036 option for the Title II Ley 49/2002 special fiscal regime?
-      ley_49_2002_special_regime_renunciation_date: Date declared for the Ley 49/2002
-        special-regime renunciation
-      ley_49_2002_special_regime_renunciation_declared: Has the entity filed a Modelo
-        036 renunciation of the Title II Ley 49/2002 special fiscal regime?
       new_entity_first_two_profit_periods: Is this a newly-created legal entity in
         one of its first two profit-making tax periods?
       representante_fiscal_nif: NIF/NIE of fiscal representative in Spain (required
@@ -157,20 +139,10 @@ profile:
   schema:
     field:
       activities:
-        cnae:
-          label: CNAE code
         description:
           label: Activity description
         iae_epigraph:
           label: IAE epigraph
-      attribution_entity:
-        legal_form:
-          choices:
-            comunidad_bienes: Joint ownership (comunidad de bienes)
-            herencia_yacente: Undivided estate (herencia yacente)
-            other: Other
-            sociedad_civil: Civil partnership (sociedad civil)
-          label: Attribution entity legal form
       attribution_entity_socios:
         base_imponible_assigned:
           label: Assigned taxable base
@@ -209,12 +181,6 @@ profile:
           label: Reduced agricultural net yield (estimación objetiva)
         rendimiento_neto_previo_eo:
           label: Prior net yield (estimación objetiva)
-        role:
-          choices:
-            comunero: Co-owner
-            participe: Participant
-            socio: Partner
-          label: Member role
         share_pct:
           label: Participation percentage
         situacion_inmueble:
@@ -257,14 +223,6 @@ profile:
           label: Activity start date
         divergencia:
           label: Censo divergence rows
-        elected_withholding_pct:
-          label: Elected withholding rate
-        establecimiento_type:
-          choices:
-            arrendado: Rented
-            cedido_gratuitamente: Provided free of charge
-            propio: Owned
-          label: Establishment type
         large_company:
           label: Large-company condition
         public_administration_budget_gt_6000000:
@@ -284,8 +242,6 @@ profile:
           label: Fiscal address
         fiscal_address_cadastral_reference:
           label: Cadastral reference of the fiscal address
-        fiscal_address_is_habitual_vivienda:
-          label: Fiscal address is the habitual residence
         postcode:
           label: Postcode
       identity:
@@ -295,8 +251,6 @@ profile:
           label: Legal or company name
         name:
           label: Given name
-        notes:
-          label: Notes
         surnames:
           label: Surnames
         tax_id:
@@ -322,22 +276,6 @@ profile:
             directa_simplificada: Direct assessment, simplified
             objetiva: Objective assessment (módulos)
           label: Estimation regime
-        objective_estimation_modulos_iae_epigraph:
-          label: IAE epigraph (modules)
-        objective_estimation_modulos_module_1_units:
-          label: Module 1 units
-        objective_estimation_modulos_module_2_units:
-          label: Module 2 units
-        objective_estimation_modulos_module_3_units:
-          label: Module 3 units
-        objective_estimation_modulos_module_4_units:
-          label: Module 4 units
-        objective_estimation_modulos_module_5_units:
-          label: Module 5 units
-        objective_estimation_modulos_module_6_units:
-          label: Module 6 units
-        objective_estimation_modulos_module_7_units:
-          label: Module 7 units
         objective_estimation_prior_year_agri_livestock_forest_gross_eur:
           label: Prior-year agricultural, livestock and forestry income
         objective_estimation_prior_year_gross_income_eur:
@@ -354,8 +292,6 @@ profile:
           label: Total work income
         plantilla_media:
           label: Average workforce by calendar year
-        professional_income_withholding_ge_70pct:
-          label: Professional withholding reaches 70%
         special_regime:
           choices:
             general: General regime
@@ -494,17 +430,6 @@ profile:
       preferences:
         output_language:
           label: Output language
-      properties:
-        cadastral_reference:
-          label: Cadastral reference
-        use_type:
-          choices:
-            habitual: Main home
-            imputed_income: Imputed income (not rented out)
-            mixed: Mixed use
-            other: Other
-            rental: Rented out
-          label: Property use
       provenance:
         source:
           choices:
@@ -666,33 +591,14 @@ profile:
             sll: Employee-owned limited company (S.L.L.)
             sociedad_civil_mercantil: Civil partnership with a commercial purpose
           label: Legal form
-        ley_49_2002_special_regime_option_date:
-          label: Ley 49/2002 option date
-        ley_49_2002_special_regime_option_declared:
-          label: Ley 49/2002 regime opted for
-        ley_49_2002_special_regime_renunciation_date:
-          label: Ley 49/2002 renunciation date
-        ley_49_2002_special_regime_renunciation_declared:
-          label: Ley 49/2002 regime renounced
         new_entity_first_two_profit_periods:
           label: In one of the first two profit periods
         representante_fiscal_nif:
           label: Fiscal representative NIF
         representante_fiscal_nombre:
           label: Fiscal representative name
-        sal_capital_social:
-          label: Share capital
-        sal_reserva_especial_dotada:
-          label: Special reserve already provisioned
-        sal_socios_trabajadores_count:
-          label: Worker-shareholder count
         tributacion_estado_porcentaje:
           label: State taxation percentage
-      usage_ratios:
-        business_ratio:
-          label: Business-use ratio
-        category_id:
-          label: Category
       vivienda_office:
         office_m2:
           label: Office floor area (m2)
@@ -717,10 +623,6 @@ profile:
       activities:
         summary: The economic activities you carry out, one row per activity.
         title: Business activities
-      attribution_entity:
-        summary: The legal form of an entity under income attribution (comunidad de
-          bienes, sociedad civil) that you run.
-        title: Attribution entity legal shape
       attribution_entity_socios:
         summary: The partners of that entity and the share of income attributed to
           each.
@@ -761,9 +663,6 @@ profile:
       preferences:
         summary: How the application talks to you, such as the language of every screen.
         title: Operator preferences
-      properties:
-        summary: Properties you own or rent out, one row per property.
-        title: Properties and rental
       provenance:
         summary: Where the profile data came from and from when it applies.
         title: Provenance and effective dating
@@ -789,9 +688,6 @@ profile:
       taxpayer_type:
         summary: What kind of taxpayer you are and which types of income you receive.
         title: Taxpayer entity type and income categories
-      usage_ratios:
-        summary: The business-use share of shared assets such as a car or a phone.
-        title: Usage ratios and deductibility
       vivienda_office:
         summary: Whether part of your main home is used as an office for your activity.
         title: Home-office use of the habitual residence

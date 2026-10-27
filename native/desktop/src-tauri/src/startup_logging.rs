@@ -120,7 +120,7 @@ mod tests {
     use cadrumo_application::diagnostics::EventKind;
     use std::{
         fs,
-        time::{SystemTime, UNIX_EPOCH},
+        time::{Duration, SystemTime, UNIX_EPOCH},
     };
 
     struct Scratch(PathBuf);
@@ -177,6 +177,8 @@ mod tests {
         let diagnostics = Diagnostics::default();
         diagnostics.event(EventKind::HostStarted, None, None);
         configure_for(&host, &parent, &diagnostics);
+        // The writer publishes the file's paths and replays buffered events.
+        assert!(diagnostics.flush_logs(Duration::from_secs(5)));
         let paths = diagnostics.snapshot(u64::MAX).paths.unwrap();
         let expected = location(&host, &parent, &contract()).unwrap().unwrap();
         assert_eq!(paths.current.parent(), Some(expected.as_path()));
@@ -184,10 +186,12 @@ mod tests {
             ApplicationError::new(ErrorCode::EnvironmentFailed, Operation::Environment)
                 .caused_by(std::io::Error::other("synthetic-private-projection-output")),
         );
+        assert!(diagnostics.flush_logs(Duration::from_secs(5)));
         let log = fs::read_to_string(&paths.current).unwrap();
         assert!(log.contains("environment_failed"));
         assert!(!log.contains("synthetic-private-projection-output"));
         configure_for(&host, &parent, &diagnostics);
+        assert!(diagnostics.flush_logs(Duration::from_secs(5)));
         assert_eq!(fs::read_to_string(paths.current).unwrap(), log);
     }
 

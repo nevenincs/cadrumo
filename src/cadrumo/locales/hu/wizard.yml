@@ -374,18 +374,6 @@ wizard:
         help: Elismert jogi forma, ha az entitástípus jogi személy
       legal-name:
         help: Jogi személy cégneve az exportfejlécekhez
-      ley-49-2002-option-date:
-        help: Rögzíti a Modelo 036 653-as mezőjének dátumát a Ley 49/2002 II. címe
-          szerinti választáshoz.
-      ley-49-2002-option-declared:
-        help: Rögzíti, hogy a Modelo 036 651-es mezője bejelenti-e a Ley 49/2002 II.
-          címe szerinti választást.
-      ley-49-2002-renunciation-date:
-        help: Rögzíti a Modelo 036 654-es mezőjének dátumát a Ley 49/2002 II. címe
-          szerinti lemondáshoz.
-      ley-49-2002-renunciation-declared:
-        help: Rögzíti, hogy a Modelo 036 652-es mezője bejelenti-e a Ley 49/2002 II.
-          címe szerinti rendszerről való lemondást.
       llm-vision:
         help: Beolvasott vagy kép alapú dokumentumok olvasásának engedélyezése az
           asztali alkalmazásban kiválasztott képolvasó modellel.
@@ -406,24 +394,6 @@ wizard:
           adóidőszakának egyikében van (LIS 29. cikkely), a 15%-os kedvezményes adókulcs
           igénybevételéhez. Opcionális; jelöletlenül az egyéb alkalmazandó adókulcs
           érvényes.
-      notes:
-        help: Megjegyzések saját nyilvántartáshoz (opcionális)
-      objective-estimation-modulos-iae-epigraph:
-        help: IAE epigrafus objektív becslési modulokhoz, például 972.
-      objective-estimation-modulos-module-1-units:
-        help: Az 1. modul éves egységei objektív becsléshez.
-      objective-estimation-modulos-module-2-units:
-        help: A 2. modul éves egységei objektív becsléshez.
-      objective-estimation-modulos-module-3-units:
-        help: A 3. modul éves egységei objektív becsléshez.
-      objective-estimation-modulos-module-4-units:
-        help: A 4. modul éves egységei objektív becsléshez.
-      objective-estimation-modulos-module-5-units:
-        help: Az 5. modul éves egységei objektív becsléshez.
-      objective-estimation-modulos-module-6-units:
-        help: A 6. modul éves egységei objektív becsléshez.
-      objective-estimation-modulos-module-7-units:
-        help: A 7. modul éves egységei objektív becsléshez.
       output-language:
         help: CLI kimeneti nyelv ehhez a profilhoz
       pays-capital-income-with-retencion:
@@ -438,8 +408,6 @@ wizard:
       premio-loteria-gravamen-especial-trimestres:
         help: Negyedévek, amelyekben a nyereményt felvették, |-jellel elválasztott
           ÉÉÉÉ-nT tokenekként (például 2025-1T|2025-3T)
-      professional-income-withholding-ge-70pct:
-        help: A szakmai jövedelmek legalább 70%-a előzetes forrásadóval terhelt
       representante-fiscal-nif:
         help: A spanyolországi adóügyi képviselő NIF/NIE száma. Kötelező az EU-n/EGT-n
           kívüli nem rezidensek számára (LGT 47. cikkely + TRLIRNR 10. cikkely, RDLeg
@@ -569,10 +537,6 @@ wizard:
             label: Csak egyszerűsített rendszer
         prompt: Melyik Modelo 303 rendszerösszetétel alkalmazandó?
       title: IVA
-    notes:
-      notes:
-        prompt: Megjegyzések saját nyilvántartáshoz (opcionális)
-      title: Megjegyzések saját nyilvántartáshoz
     obligations:
       art109-activity-income-withholding-ge-70pct:
         prompt: Alkalmazandó az Art. 109 szerinti 70%-os tevékenységi jövedelemfedezeti
@@ -626,28 +590,6 @@ wizard:
         prompt: Modelo 115 releváns kifizetés nélküli időszakai
       monedas-virtuales-extranjero-above-threshold:
         prompt: Külföldi virtuális valuták meghaladják a Modelo 721 küszöbértékét
-      objective-estimation-modulos-iae-epigraph:
-        help: Évente egyszer kerül a profilba. Az együtthatók továbbra is a nyomtatványdefiníciókban
-          maradnak.
-        prompt: IAE epigrafus objektív becslési modulokhoz
-      objective-estimation-modulos-module-1-units:
-        prompt: Az 1. modul éves egységei
-      objective-estimation-modulos-module-2-units:
-        prompt: A 2. modul éves egységei
-      objective-estimation-modulos-module-3-units:
-        prompt: A 3. modul éves egységei
-      objective-estimation-modulos-module-4-units:
-        prompt: A 4. modul éves egységei
-      objective-estimation-modulos-module-5-units:
-        prompt: Az 5. modul éves egységei
-      objective-estimation-modulos-module-6-units:
-        prompt: A 6. modul éves egységei
-      objective-estimation-modulos-module-7-units:
-        prompt: A 7. modul éves egységei
-      objective-estimation-modulos-module-units:
-        help: Stabil éves egységszám ehhez a modulhelyhez. A kiválasztott IAE epigrafus
-          határozza meg, hogy alkalmazottat, üzlethelyiség-területet, villamosenergia-fogyasztást
-          vagy más hivatalos modult jelent.
       pays-capital-income-with-retencion:
         prompt: Forrásadóval terhelt tőkejövedelmet fizet
       pays-professionals-with-retencion:
@@ -661,8 +603,6 @@ wizard:
         help: Naptári negyedévenként egy ÉÉÉÉ-nT token, |-jellel elválasztva (például
           2025-1T|2025-3T). Minden negyedév külön 136-os bevallást nyit.
         prompt: Negyedévek, amelyekben a nyereményt felvették
-      professional-income-withholding-ge-70pct:
-        prompt: A szakmai jövedelmek legalább 70%-a előzetes forrásadóval terhelt
       third-party-transactions-above-347-threshold:
         prompt: A Modelo 347 által lefedett naptári évben meghaladták-e az ugyanazzal
           a személlyel vagy szervezettel folytatott ügyleteid a 3 005,06 EUR-t (a
@@ -981,24 +921,6 @@ wizard:
           sociedad-civil-mercantil:
             label: Kereskedelmi célú polgári társaság
         prompt: Jogi forma
-      ley-49-2002-option-date:
-        help: A Modelo 036 653-as mezőjéhez tartozó ISO dátumot használd.
-        prompt: A Ley 49/2002 szerinti különleges rendszer választásának bejelentett
-          dátuma
-      ley-49-2002-option-declared:
-        help: A Modelo 036 651-es mezőjében szereplő bejelentési tényt használd; a
-          jogi alkalmazás továbbra is a törvényi feltételektől és a lemondás hiányától
-          függ.
-        prompt: A szervezet a Modelo 036-on bejelentette a Ley 49/2002 II. címe szerinti
-          különleges adózási rendszer választását?
-      ley-49-2002-renunciation-date:
-        help: A Modelo 036 654-es mezőjéhez tartozó ISO dátumot használd.
-        prompt: A Ley 49/2002 szerinti különleges rendszerről való lemondás bejelentett
-          dátuma
-      ley-49-2002-renunciation-declared:
-        help: A Modelo 036 652-es mezőjében szereplő bejelentési tényt használd.
-        prompt: A szervezet a Modelo 036-on bejelentette a Ley 49/2002 II. címe szerinti
-          különleges adózási rendszerről való lemondást?
       new-entity-first-two-profit-periods:
         help: Csak jogi személyekre vonatkozik. Ha be van jelölve, az entitás 15%-os
           kedvezményes adókulcs szerint adózik az adott két időszakban.

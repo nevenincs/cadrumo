@@ -2,8 +2,8 @@
 
 Cadrumo depends on two outside pieces of software to work: the browser that
 reads the tax agency's website, and the local AI -- the program that runs
-models on this computer together with the models the person selected for local
-roles. Each is one setup item, set up once for the whole installation. The
+models on this computer together with its models. The models are downloaded one
+at a time from the person's local model list. Each is one setup item, set up once for the whole installation. The
 native component engine decides each item's state, plans and performs its
 setup and reports them as closed codes; the Python surfaces decode those codes
 into the types here and word them. Only the desktop sets up or removes the
@@ -49,9 +49,10 @@ __all__ = [
 class DependencyItemKind(StrEnum):
     """The two setup items; each kind is exactly one item.
 
-    ``local_ai`` is the local AI as a whole: the program that runs models and
-    the models the person selected for local roles. It is checked and shown as
-    one item; its program and models are parts of it, never items of their own.
+    ``local_ai`` is the local AI as a whole: the program that runs models and,
+    while one is being downloaded, the model the person asked for from the
+    local model list. It is checked and shown as one item; its program and
+    models are parts of it, never items of their own.
     """
 
     BROWSER = "browser"

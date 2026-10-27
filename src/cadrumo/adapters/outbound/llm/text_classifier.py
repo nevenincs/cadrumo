@@ -1,9 +1,9 @@
 """TEXT evidence reader: classify/split from an extracted text layer.
 
 A document's text layer and a scanned document's pixels reach the model by the
-same route: through the agent service, on the lane and model the person
-selected for the role. Whether the read leaves this computer is the selected
-lane's catalogue flag, never the shape of the document, and a lane that reads
+same route: through the agent service, on the lane and model it derives for
+the role. Whether the read leaves this computer is that lane's catalogue
+flag, never the shape of the document, and a lane that reads
 off the host needs the per-invocation consent this reader's caller supplies.
 
 It is deliberately a sibling of :class:`~llm.vision_classifier.VisionLLMClassifier` rather than a

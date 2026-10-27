@@ -103,7 +103,7 @@ cli:
         batch_paused_local_ai_not_ready: Local AI, which reads the paused documents,
           is not ready.
         batch_paused_local_ai_unavailable: Local AI could not read the paused documents.
-          Choose or check its model in the Cadrumo desktop app.
+          Check its model list in the Cadrumo desktop app.
         batch_pending_review_message: Some drafts carry an issue you must resolve
           before an invoice is created. They are held, not failed.
         batch_progress_message: 'processed %{source}: %{status}'
@@ -3156,8 +3156,8 @@ cli:
       file_reader_not_ready: 'Statement not read: {file} is read by the local AI,
         which is not ready.'
       file_reader_unavailable: 'Statement not read: the local AI is not available
-        right now to read {file}. Choose or check its model in the Cadrumo desktop
-        app, then try again.'
+        right now to read {file}. Check its model list in the Cadrumo desktop app,
+        then try again.'
       file_refused: 'Statement refused and skipped: {file}. The rest of the folder
         was imported.'
       file_refused_account_mismatch: 'Statement refused and skipped: {file} names

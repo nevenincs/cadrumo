@@ -184,17 +184,27 @@ fn an_export_is_shown_in_the_file_manager_only_once_written_and_only_by_its_save
     let files = Files::default();
     let session = json!({"session_id":"one"});
     let target = root.join("ledger-2026-4T.csv");
-    let saved = serde_json::to_value(files.issue_save(&session, "csv", target.clone()).unwrap())
-        .unwrap()["files"][0]["token"]
+    let saved = serde_json::to_value(
+        files
+            .issue_save(&session, Purpose::Export, "csv", target.clone())
+            .unwrap(),
+    )
+    .unwrap()["files"][0]["token"]
         .clone();
     let saved = saved.as_str().unwrap();
     // Not written yet: there is nothing to show.
     assert_eq!(
-        files.saved(&session, saved).unwrap_err().code,
+        files
+            .saved(&session, saved, Purpose::Export)
+            .unwrap_err()
+            .code,
         "file_unavailable"
     );
     std::fs::write(&target, b"x").unwrap();
-    assert_eq!(files.saved(&session, saved).unwrap(), target);
+    assert_eq!(
+        files.saved(&session, saved, Purpose::Export).unwrap(),
+        target
+    );
     // A file picked to be read is never shown through this door.
     let picked = token(
         &files,
@@ -204,7 +214,7 @@ fn an_export_is_shown_in_the_file_manager_only_once_written_and_only_by_its_save
     );
     assert_eq!(
         files
-            .saved(&session, picked.as_str().unwrap())
+            .saved(&session, picked.as_str().unwrap(), Purpose::Export)
             .unwrap_err()
             .code,
         "invalid"
@@ -212,11 +222,17 @@ fn an_export_is_shown_in_the_file_manager_only_once_written_and_only_by_its_save
     // Nor is a save token from another session, or one never issued.
     let other = json!({"session_id":"two"});
     assert_eq!(
-        files.saved(&other, saved).unwrap_err().code,
+        files
+            .saved(&other, saved, Purpose::Export)
+            .unwrap_err()
+            .code,
         "file_unavailable"
     );
     assert_eq!(
-        files.saved(&session, "not-a-token").unwrap_err().code,
+        files
+            .saved(&session, "not-a-token", Purpose::Export)
+            .unwrap_err()
+            .code,
         "invalid"
     );
     std::fs::remove_dir_all(root).unwrap();
@@ -227,8 +243,12 @@ fn an_export_goes_only_where_the_person_saved_its_format() {
     let files = Files::default();
     let session = json!({"session_id":"one"});
     let target = std::env::temp_dir().join("ledger-export.jsonl");
-    let saved =
-        serde_json::to_value(files.issue_save(&session, "jsonl", target.clone()).unwrap()).unwrap();
+    let saved = serde_json::to_value(
+        files
+            .issue_save(&session, Purpose::Export, "jsonl", target.clone())
+            .unwrap(),
+    )
+    .unwrap();
     let saved = saved["files"][0]["token"].clone();
     let mut export = object(json!({"output_path":saved,"export_format":"jsonl"}));
     substitute(&files, &session, definition("ledger.export"), &mut export).unwrap();
@@ -300,18 +320,6 @@ fn an_own_account_change_comes_only_as_a_raw_object_to_add_or_update() {
     let mut kept = own_account_body(&raw(r#"{"action":"add","iban":"ES00"}"#)).unwrap();
     cadrumo_application::person_operations::wipe(&mut kept.0);
     assert_eq!(kept.0["iban"], "");
-}
-
-#[test]
-fn dialog_words_are_bounded_and_a_suggested_name_names_no_folder() {
-    assert!(label_admitted("Extractos bancarios"));
-    assert!(!label_admitted(""));
-    assert!(!label_admitted(&"a".repeat(LABEL_LIMIT + 1)));
-    assert!(!label_admitted("line\nbreak"));
-    assert!(file_name_admitted("libro-2026.csv"));
-    for refused in ["..\\up.csv", "C:\\x.csv", "a/b.csv", ".hidden"] {
-        assert!(!file_name_admitted(refused), "{refused}");
-    }
 }
 
 #[test]

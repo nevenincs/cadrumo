@@ -1,13 +1,13 @@
-"""The local document reader: the local AI program and the models the person selected for it.
+"""The local document reader: the local AI program and the models derived from the local model list.
 
 Cadrumo defines no model, and nothing here asks the local AI server anything.
-Each role reads with the lane and model the person selected, which the agent
-service resolves; the running operation asks it through its model-run port
+Each role reads with the lane and model the agent service derives from the
+person's local model list; the running operation asks it through its model-run port
 (:func:`read_role_lanes`). A lane whose catalogue entry says it reads off this
 computer needs nothing local. A lane that stays on this computer reads through
 the local AI program: the components role's status row for the local AI says
 whether the program is set up and which version it is, and the lane carries
-whether the program's server holds the selected model, as the agent's live
+whether the program's server holds the derived model, as the agent's live
 catalogue states it.
 
 An on-host role is judged in a fixed order: a program the status row does not
@@ -151,9 +151,9 @@ def judge_local_ai_program(row: ProgramRow) -> LocalAiProgram:
 def probe_local_ai_program(row: ProgramRow) -> DependencyStatus:
     """Report the local AI program's row for a configuration check, from the components role's status row.
 
-    The program's health only. Which model each role reads with is the
-    person's selection, which the agent's catalogue and the setup surfaces
-    report; this row judges no model.
+    The program's health only. Which model each role reads with is derived
+    by the agent service from the local model list; this row judges no
+    model.
 
     Returns:
         A :class:`DependencyStatus` on the ``local-ai:program`` row. Never raises.
@@ -230,6 +230,13 @@ class _Judgement:
     verdict: PreconditionVerdict | None = None
 
 
+def selected_model_condition(code: ModelRunRefusalCode) -> ProvisioningPreconditionCondition:
+    """Return the failed condition a refused role reports: a model that cannot read images, or no usable model."""
+    if code is ModelRunRefusalCode.MODEL_CANNOT_READ_IMAGES:
+        return ProvisioningPreconditionCondition.SELECTED_MODEL_READS_IMAGES
+    return ProvisioningPreconditionCondition.SELECTED_MODEL_AVAILABLE
+
+
 def _refusal_judgement(role: ModelRole, refusal: ModelRunRefusal) -> _Judgement:
     facts: dict[str, ProvisioningFactValue] = {
         "role": role.value,
@@ -238,9 +245,7 @@ def _refusal_judgement(role: ModelRole, refusal: ModelRunRefusal) -> _Judgement:
     }
     return _Judgement(
         ready=False,
-        verdict=provisioning_no_recovery_verdict(
-            ProvisioningPreconditionCondition.SELECTED_MODEL_AVAILABLE, facts=facts
-        ),
+        verdict=provisioning_no_recovery_verdict(selected_model_condition(refusal.code), facts=facts),
     )
 
 

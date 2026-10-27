@@ -83,10 +83,11 @@ fn action_reason(action: &str) -> &'static str {
         "connect_status" => "admin_connect_status",
         "connect_cancel" => "admin_connect_cancel",
         "connect_submit_code" => "admin_connect_submit_code",
-        "model_roles" => "admin_model_roles",
-        "model_role_set" => "admin_model_role_set",
-        "model_role_clear" => "admin_model_role_clear",
-        "model_roles_reset" => "admin_model_roles_reset",
+        "local_models" => "admin_local_models",
+        "local_model_add" => "admin_local_model_add",
+        "local_model_remove" => "admin_local_model_remove",
+        "local_models_reset" => "admin_local_models_reset",
+        "reading_model_choose" => "admin_reading_model_choose",
         _ => "admin_undeclared_action",
     }
 }
@@ -441,8 +442,9 @@ mod tests {
             ("status", "admin_status"),
             ("start", "admin_start"),
             ("connect_status", "admin_connect_status"),
-            ("model_roles", "admin_model_roles"),
-            ("model_role_set", "admin_model_role_set"),
+            ("local_models", "admin_local_models"),
+            ("local_model_add", "admin_local_model_add"),
+            ("reading_model_choose", "admin_reading_model_choose"),
             ("unheard_of", "admin_undeclared_action"),
         ] {
             let error = endpoint(port)

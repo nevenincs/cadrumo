@@ -10,7 +10,7 @@ mod admin;
 mod dropping;
 mod gateway;
 mod launcher;
-pub(crate) mod model_roles;
+pub(crate) mod local_models;
 pub(crate) mod person;
 pub(crate) mod runner;
 mod session;
@@ -231,9 +231,11 @@ pub fn commands<R: Runtime>() -> Commands<R> {
         agent_status_subscribe,
         agent_status_unsubscribe,
         agent_provider_catalog,
-        agent_model_roles,
-        agent_model_role_set,
-        agent_model_role_clear,
+        agent_local_models,
+        agent_local_model_add,
+        agent_local_model_remove,
+        agent_local_models_reset,
+        agent_reading_model_choose,
         agent_model_licence,
         agent_skills,
         agent_skill,
@@ -464,78 +466,70 @@ async fn agent_provider_catalog(
     .await
 }
 
-/// The person's model selection for every role, as the agent service stores it.
+/// The models the person added to the local lanes' lists and the model documents
+/// are read with, as the agent service stores them.
 #[tauri::command]
-async fn agent_model_roles(
+async fn agent_local_models(
     host: State<'_, Arc<AgentHost>>,
-) -> std::result::Result<model_roles::ModelRoles, Refused> {
+) -> std::result::Result<local_models::LocalModels, Refused> {
     blocking(&host, |host| {
         let answer = host
-            .administer(serde_json::json!({"action":"model_roles"}), None)
+            .administer(serde_json::json!({"action":"local_models"}), None)
             .map_err(|error| host.refuse(admin_refusal(&error), error))?;
-        if let Some(code) = model_roles::refusal(&answer) {
+        if let Some(code) = local_models::refusal(&answer) {
             return refused(code);
         }
-        model_roles::parse(&answer).ok_or_else(|| {
-            host.refuse(
-                "agent_service_failed",
-                cadrumo_application::error::application::ApplicationError::new(
-                    cadrumo_application::error::application::ErrorCode::ReadFailed,
-                    cadrumo_application::error::application::Operation::Cli,
-                )
-                .with_reason("admin_model_roles_contract"),
-            )
-        })
+        local_models::parse(&answer).ok_or_else(|| local_models_contract(host))
     })
     .await
 }
 
-/// One guarded change to the person's selections, answered with every role's
-/// selection after it or the reason it was not made.
-fn change_model_roles(
+/// A list answer outside the service's contract.
+fn local_models_contract(host: &AgentHost) -> Refused {
+    host.refuse(
+        "agent_service_failed",
+        cadrumo_application::error::application::ApplicationError::new(
+            cadrumo_application::error::application::ErrorCode::ReadFailed,
+            cadrumo_application::error::application::Operation::Cli,
+        )
+        .with_reason("admin_local_models_contract"),
+    )
+}
+
+/// One guarded change to the person's lists, answered with every added model
+/// after it or the reason it was not made.
+fn change_local_models(
     host: &AgentHost,
     request: Value,
-) -> std::result::Result<model_roles::ModelRoles, Refused> {
+) -> std::result::Result<local_models::LocalModels, Refused> {
     let answer = host
         .administer(request, None)
         .map_err(|error| host.refuse(admin_refusal(&error), error))?;
-    if let Some(code) = model_roles::change_refusal(&answer) {
+    if let Some(code) = local_models::change_refusal(&answer) {
         return refused(code);
     }
-    model_roles::parse(&answer).ok_or_else(|| {
-        host.refuse(
-            "agent_service_failed",
-            cadrumo_application::error::application::ApplicationError::new(
-                cadrumo_application::error::application::ErrorCode::ReadFailed,
-                cadrumo_application::error::application::Operation::Cli,
-            )
-            .with_reason("admin_model_roles_contract"),
-        )
-    })
+    local_models::parse(&answer).ok_or_else(|| local_models_contract(host))
 }
 
-/// Selects `lane` and `model` for `role`, at the revision the person read.
+/// Adds `model` to `lane`'s list, at the revision the person read.
 #[tauri::command]
-async fn agent_model_role_set(
+async fn agent_local_model_add(
     host: State<'_, Arc<AgentHost>>,
-    role: String,
     lane: String,
     model: String,
     expected_revision: String,
-) -> std::result::Result<model_roles::ModelRoles, Refused> {
-    if !model_roles::is_role(&role)
-        || !model_roles::is_lane(&lane)
-        || !model_roles::is_model(&model)
-        || !model_roles::is_revision(&expected_revision)
+) -> std::result::Result<local_models::LocalModels, Refused> {
+    if !local_models::is_lane(&lane)
+        || !local_models::is_model(&model)
+        || !local_models::is_revision(&expected_revision)
     {
         return refused("agent_invalid_request");
     }
     blocking(&host, move |host| {
-        change_model_roles(
+        change_local_models(
             host,
             serde_json::json!({
-                "action": "model_role_set",
-                "role": role,
+                "action": "local_model_add",
                 "provider": lane,
                 "model": model,
                 "expected_revision": expected_revision,
@@ -545,27 +539,92 @@ async fn agent_model_role_set(
     .await
 }
 
-/// Clears the selection for `role`, at the revision the person read.
+/// Takes the added `model` off `lane`'s list, at the revision the person read.
 #[tauri::command]
-async fn agent_model_role_clear(
+async fn agent_local_model_remove(
     host: State<'_, Arc<AgentHost>>,
-    role: String,
+    lane: String,
+    model: String,
     expected_revision: String,
-) -> std::result::Result<model_roles::ModelRoles, Refused> {
-    if !model_roles::is_role(&role) || !model_roles::is_revision(&expected_revision) {
+) -> std::result::Result<local_models::LocalModels, Refused> {
+    if !local_models::is_lane(&lane)
+        || !local_models::is_model(&model)
+        || !local_models::is_revision(&expected_revision)
+    {
         return refused("agent_invalid_request");
     }
     blocking(&host, move |host| {
-        change_model_roles(
+        change_local_models(
             host,
             serde_json::json!({
-                "action": "model_role_clear",
-                "role": role,
+                "action": "local_model_remove",
+                "provider": lane,
+                "model": model,
                 "expected_revision": expected_revision,
             }),
         )
     })
     .await
+}
+
+/// Stores `model` on `lane` as the model documents are read with: the one the
+/// person selected in the agent's model picker, at the revision read.
+#[tauri::command]
+async fn agent_reading_model_choose(
+    host: State<'_, Arc<AgentHost>>,
+    lane: String,
+    model: String,
+    expected_revision: String,
+) -> std::result::Result<local_models::LocalModels, Refused> {
+    if !local_models::is_lane(&lane)
+        || !local_models::is_model(&model)
+        || !local_models::is_revision(&expected_revision)
+    {
+        return refused("agent_invalid_request");
+    }
+    blocking(&host, move |host| {
+        change_local_models(
+            host,
+            serde_json::json!({
+                "action": "reading_model_choose",
+                "provider": lane,
+                "model": model,
+                "expected_revision": expected_revision,
+            }),
+        )
+    })
+    .await
+}
+
+/// Removes the list record, readable or not, at the revision the person read.
+#[tauri::command]
+async fn agent_local_models_reset(
+    host: State<'_, Arc<AgentHost>>,
+    expected_revision: String,
+) -> std::result::Result<local_models::LocalModels, Refused> {
+    if !local_models::is_revision(&expected_revision) {
+        return refused("agent_invalid_request");
+    }
+    blocking(&host, move |host| {
+        change_local_models(
+            host,
+            serde_json::json!({
+                "action": "local_models_reset",
+                "expected_revision": expected_revision,
+            }),
+        )
+    })
+    .await
+}
+
+/// Whether `text` has the grammar of an agent provider identity: a lowercase
+/// slug of up to 64 characters.
+fn is_agent_provider(text: &str) -> bool {
+    (1..=64).contains(&text.len())
+        && text.starts_with(|c: char| c.is_ascii_lowercase())
+        && text
+            .bytes()
+            .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'_')
 }
 
 /// The licence text of one model a lane lists, relayed from the ready agent.
@@ -576,10 +635,9 @@ async fn agent_model_licence(
     transport: String,
     model: String,
 ) -> std::result::Result<Value, Refused> {
-    // A provider identity has the grammar of a role: a lowercase slug of up to 64.
-    if !model_roles::is_role(&provider)
+    if !is_agent_provider(&provider)
         || !matches!(transport.as_str(), "api" | "cli")
-        || !model_roles::is_model(&model)
+        || !local_models::is_model(&model)
     {
         return refused("agent_invalid_request");
     }

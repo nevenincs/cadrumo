@@ -9,9 +9,9 @@ from pathlib import Path
 
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import (
     EXTENSION_SETTINGS_NAMESPACE,
-    MODEL_ROLE_SELECTIONS_NAMESPACE,
+    LOCAL_MODEL_LIST_NAMESPACE,
 )
-from cadrumo_agent_service.providers.persistence.store import MODEL_ROLE_SELECTIONS_CAPABILITY
+from cadrumo_agent_service.providers.persistence.store import LOCAL_MODEL_LIST_CAPABILITY
 from cadrumo_client.contracts.extension_records import ExtensionRecordCapability
 
 
@@ -28,11 +28,11 @@ def provider_record_capability() -> ExtensionRecordCapability:
     )
 
 
-def model_role_selections_capability() -> ExtensionRecordCapability:
-    """Bind the synthetic service descriptor to the actual per-role selections record policy."""
-    namespace = MODEL_ROLE_SELECTIONS_NAMESPACE
+def local_model_list_capability() -> ExtensionRecordCapability:
+    """Bind the synthetic service descriptor to the actual local model list record policy."""
+    namespace = LOCAL_MODEL_LIST_NAMESPACE
     return ExtensionRecordCapability(
-        capability=MODEL_ROLE_SELECTIONS_CAPABILITY,
+        capability=LOCAL_MODEL_LIST_CAPABILITY,
         namespace=namespace.namespace,
         schema_version=namespace.schema_version,
         classification=namespace.sensitivity,

@@ -31,6 +31,41 @@ export const worded = (key: string) =>
 
 export const agentColumn = (target: Page) => target.locator(".pane-agent");
 
+/** Opens the composer's model picker and answers it once shown. */
+export async function openModelPicker(target: Page): Promise<Locator> {
+  await agentColumn(target)
+    .getByRole("button", {
+      name: new RegExp(
+        `^${escaped(label("desktop.agent.settings_label", { current: "" }))}`,
+      ),
+    })
+    .first()
+    .click();
+  const picker = target.getByRole("dialog", {
+    name: label("desktop.agent.settings_title"),
+  });
+  await expect(picker).toBeVisible();
+  return picker;
+}
+
+/** Picks the provider way `way` in an open model picker. */
+export async function pickWay(target: Page, picker: Locator, way: string) {
+  await picker
+    .getByRole("button", { name: label("desktop.agent.provider") })
+    .click();
+  await target.locator(`[role=option][data-way="${way}"]`).click();
+  await expect(target.getByRole("listbox")).toBeHidden();
+}
+
+/** The model ids an open model picker offers for its way. */
+export const offeredModels = (picker: Locator) =>
+  picker
+    .getByLabel(label("desktop.agent.model"))
+    .locator("option")
+    .evaluateAll((nodes) =>
+      nodes.map((node) => (node as HTMLOptionElement).value),
+    );
+
 export const messageField = (target: Page) =>
   agentColumn(target).getByRole("textbox", {
     name: label("desktop.agent.message_label"),

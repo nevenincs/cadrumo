@@ -1,4 +1,4 @@
-import type { AgentModelRoles } from "../ipc/contract";
+import type { AgentLocalModels } from "../ipc/contract";
 import type {
   AgentSkillDetail,
   AgentSkillInventory,
@@ -531,23 +531,32 @@ export interface AgentSession {
   /** cadrumo-agent's provider catalog, as it serves it, or its declared
    * catalog while no agent is ready. */
   providerCatalog(): Promise<AgentCatalogAnswer>;
-  /** The person's model selection for every role. Absent where the host
-   * offers none. */
-  modelRoles?(): Promise<AgentModelRoles>;
-  /** Selects `lane` and `model` for `role` at the revision read; answers
-   * every role's selection after it. A refusal carries the service's reason
-   * as `agent_model_role_<reason>`. */
-  setModelRole?(
-    role: string,
+  /** The models the person added to the local lanes' lists and the model
+   * documents are read with. Absent where the host offers none. */
+  localModels?(): Promise<AgentLocalModels>;
+  /** Adds `model` to `lane`'s list at the revision read; answers every added
+   * model after it. A refusal carries the service's reason as
+   * `agent_local_models_<reason>`. */
+  addLocalModel?(
     lane: string,
     model: string,
     expectedRevision: string,
-  ): Promise<AgentModelRoles>;
-  /** Clears the selection for `role` at the revision read. */
-  clearModelRole?(
-    role: string,
+  ): Promise<AgentLocalModels>;
+  /** Takes the added `model` off `lane`'s list at the revision read. */
+  removeLocalModel?(
+    lane: string,
+    model: string,
     expectedRevision: string,
-  ): Promise<AgentModelRoles>;
+  ): Promise<AgentLocalModels>;
+  /** Removes the list record, readable or not, at the revision read. */
+  resetLocalModels?(expectedRevision: string): Promise<AgentLocalModels>;
+  /** Stores `model` on `lane` as the model documents are read with, at the
+   * revision read: the one the person selected in the model picker. */
+  chooseReadingModel?(
+    lane: string,
+    model: string,
+    expectedRevision: string,
+  ): Promise<AgentLocalModels>;
   /** The licence text of one model a lane lists; only a ready agent has it. */
   modelLicence?(
     provider: string,

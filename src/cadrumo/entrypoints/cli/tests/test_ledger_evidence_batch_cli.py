@@ -112,7 +112,7 @@ def test_a_deferred_run_reports_distinctly_from_a_failed_one() -> None:
     with override_settings(cadrumo_output_language="en"):
         lines = _batch_text_lines(deferred, bucket_id="bucket", direction=InvoiceKind.RECEIVED)
     assert (
-        "paused\tLocal AI could not read the paused documents. Choose or check its model in the Cadrumo desktop app."
+        "paused\tLocal AI could not read the paused documents. Check its model list in the Cadrumo desktop app."
         in lines
     )
     assert not any(line.startswith("paused.facts.") for line in lines)

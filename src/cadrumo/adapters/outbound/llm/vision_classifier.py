@@ -1,9 +1,9 @@
 """Vision evidence reader: classify/split from an attached invoice image.
 
-Reads scanned or image evidence with the model the person selected for the
-vision transcription role, through the agent service. The in-memory base64
+Reads scanned or image evidence with the model the agent service derives for
+the vision transcription role. The in-memory base64
 images travel as image attachments of one model run; nothing is written to
-disk. Whether they leave this computer is the selected lane's typed
+disk. Whether they leave this computer is the derived lane's typed
 ``reads_off_host`` flag: a lane that reads off-host is refused unless the
 caller supplies the per-invocation, digest-bound consent token for the
 evidence, and a lane that stays on this computer needs none.
@@ -94,7 +94,7 @@ class VisionLLMClassifier:
 
         Names the lane and model the agent reported for the last read. Before
         any read has been served the model is not known, so the stamp says
-        ``configured``: the person's selection, unresolved here.
+        ``configured``: the service's derived model, unresolved here.
         """
         return build_provenance_stamp(
             provider=LLMProvider.AGENT,

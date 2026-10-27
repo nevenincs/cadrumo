@@ -59,6 +59,7 @@ import { Settings } from "./components/Settings";
 import { GoogleAccount } from "./components/GoogleAccount";
 import { SetupAdvisory } from "./components/setup/SetupAdvisory";
 import { SetupDialog } from "./components/setup/SetupDialog";
+import { SetupApprovals } from "./shell/setupApprovals";
 import { SetupPrompt } from "./components/setup/SetupPrompt";
 import { SetupRowItem } from "./components/setup/SetupRowItem";
 import { canSignInGoogle, outcomeToast } from "./components/setup/setupWords";
@@ -76,7 +77,7 @@ import {
   routeProvisioningRefusals,
   type ProvisioningRecovery,
 } from "./shell/provisioningRecovery";
-import { ModelChoiceContext, type ModelChoice } from "./shell/agentModelChoice";
+import { ModelListContext, type ModelList } from "./shell/agentModelList";
 import { useAbout } from "./shell/about";
 import { accountLabel } from "./components/accountWords";
 import { SignedOut, SignInDialog } from "./components/SignIn";
@@ -554,6 +555,18 @@ export function App({ host }: { host: Host }) {
   const phase = account.phase;
   const signedIn = phase === "signed-in";
   usePersonActivity(host, signedIn);
+  // Setup reviews belong to the verified profile: a new profile starts with
+  // none, and an unconfirmed answer is never offered again while it lasts.
+  const setupApprovalsProfile = signedIn
+    ? (account.status?.active_profile ?? null)
+    : null;
+  const setupApprovals = useMemo(
+    () =>
+      setupApprovalsProfile && host.setupReview
+        ? new SetupApprovals(host.setupReview)
+        : null,
+    [setupApprovalsProfile, host.setupReview],
+  );
   const accountRef = useRef(account);
   accountRef.current = account;
   const signOut = useCallback(() => {
@@ -1459,10 +1472,16 @@ export function App({ host }: { host: Host }) {
   );
 
   const { openView, openLink: openViewLink, resolve: resolveView } = nav;
-  // Where the model of each role is chosen is the agent's settings: a page
-  // beside a role with none chosen leads to the agent column, where the host
-  // lets the person read and change the choices.
+  // The local AI's model lists are kept in the agent's settings, and the model
+  // documents are read with is picked in the agent column's model picker; a
+  // page beside a reading with no model leads to the picker.
   const agentSession = host.agentSession;
+  const localListsOffered = Boolean(
+    agentSession?.localModels &&
+    agentSession.addLocalModel &&
+    agentSession.removeLocalModel &&
+    agentSession.resetLocalModels,
+  );
   const agentControl = useRef<AgentColumnControl>(null);
   const openLocalAi = useCallback(() => {
     setSettingsOpen(false);
@@ -1472,15 +1491,13 @@ export function App({ host }: { host: Host }) {
     agentControl.current?.openLocalAi();
     if (setup.offered) setup.check("quick");
   }, [openView, setup]);
-  const modelChoice = useMemo<ModelChoice | null>(
+  const modelList = useMemo<ModelList | null>(
     () =>
-      agentSession?.modelRoles &&
-      agentSession.setModelRole &&
-      agentSession.clearModelRole
+      agentSession?.localModels && agentSession.chooseReadingModel
         ? {
             open: () => {
               openView("agent");
-              agentControl.current?.openModelRoles();
+              agentControl.current?.openModelPicker();
             },
           }
         : null,
@@ -2293,6 +2310,13 @@ export function App({ host }: { host: Host }) {
       })),
     [setLayout],
   );
+  // The AEAT access editor was asked for: the profile page opens it once it
+  // has the profile. Leaving the page withdraws the ask.
+  const [aeatAsked, setAeatAsked] = useState(false);
+  const aeatHandled = useCallback(() => setAeatAsked(false), []);
+  useEffect(() => {
+    if (layout.page !== "profile") setAeatAsked(false);
+  }, [layout.page]);
   // A register element the navigator let through, applied to the layout
   // store. A page and the agent take the keyboard through the focus
   // register; the terminals and the panel through their own focus wishes.
@@ -2304,6 +2328,7 @@ export function App({ host }: { host: Host }) {
         changeLedgerView((current) => ({ ...current, section }));
       setMaximized((area) => (area === "docs" ? area : null));
       if (view.page === "docs") patch({ docsShown: true });
+      setAeatAsked(view.dialog === "aeat-access");
       showPage(view.page);
     } else if (view.kind === "agent") {
       if (agentFits) setMaximized((area) => (area === "agent" ? area : null));
@@ -2312,11 +2337,6 @@ export function App({ host }: { host: Host }) {
     } else if (view.kind === "terminal") showTui();
     else openTab(view.tab ?? layout.tab, { toggle: false });
   };
-  // AEAT access is set up on its own view of the profile, in the TUI.
-  const openAeatSetup = useCallback(
-    () => openView("profile/aeat-access"),
-    [openView],
-  );
   const runAction = useCallback(
     (id: string) =>
       actionsRef.current.find((action) => action.id === id)?.run(),
@@ -2979,7 +2999,7 @@ export function App({ host }: { host: Host }) {
         />
       ) : ledgerOn && routedLedger ? (
         <ProvisioningRecoveryContext.Provider value={provisioning}>
-          <ModelChoiceContext.Provider value={modelChoice}>
+          <ModelListContext.Provider value={modelList}>
             <LedgerPage
               key={reader ?? ""}
               port={routedLedger}
@@ -3019,7 +3039,7 @@ export function App({ host }: { host: Host }) {
                 ],
               }}
             />
-          </ModelChoiceContext.Provider>
+          </ModelListContext.Provider>
         </ProvisioningRecoveryContext.Provider>
       ) : (
         <PaneHeader
@@ -3085,7 +3105,8 @@ export function App({ host }: { host: Host }) {
             reader={reader}
             language={locale}
             shown={firstPaneShown}
-            onAeatSetup={openAeatSetup}
+            aeatAsked={aeatAsked}
+            onAeatHandled={aeatHandled}
           />
         ) : (
           <SignedOut
@@ -3261,7 +3282,6 @@ export function App({ host }: { host: Host }) {
         onOpenLink={openLink}
         onSetUpLocalAi={setupOffered ? setUpLocalAi : undefined}
         onRemoveLocalModel={setupOffered ? setup.removeModel : undefined}
-        onOpenLocalAi={openLocalAi}
         onShowLocalAiSetup={
           setupOffered ? () => openSetup("local_ai") : undefined
         }
@@ -3284,6 +3304,11 @@ export function App({ host }: { host: Host }) {
         }
         setupSettled={
           setupRun?.stage === "settled" ? setupRun.operation_id : null
+        }
+        setupApprovals={
+          setupApprovals
+            ? { approvals: setupApprovals, onCheckSetup: () => openSetup(null) }
+            : undefined
         }
         onOpenView={(url, opened) =>
           nav.openLink(url, {
@@ -3705,7 +3730,7 @@ export function App({ host }: { host: Host }) {
                 onLocalAi={
                   setupOffered &&
                   signedIn &&
-                  modelChoice &&
+                  localListsOffered &&
                   host.providerSettings
                     ? openLocalAi
                     : undefined
@@ -3764,7 +3789,7 @@ export function App({ host }: { host: Host }) {
                   onAct={actOnSetupRow}
                   onCopyDetails={copy}
                   onLocalAi={
-                    modelChoice && host.providerSettings
+                    localListsOffered && host.providerSettings
                       ? openLocalAi
                       : undefined
                   }
@@ -3776,7 +3801,7 @@ export function App({ host }: { host: Host }) {
                   onClose={() => setSetupPrompt(null)}
                   onSetUp={actOnSetupRow}
                   onLocalAi={
-                    modelChoice && host.providerSettings
+                    localListsOffered && host.providerSettings
                       ? openLocalAi
                       : undefined
                   }

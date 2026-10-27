@@ -42,22 +42,12 @@ profile:
     identity:
       legal_name: Razón social de la entidad para cabeceras de exportación
       name: Nombre visible mostrado en revisiones locales
-      notes: Notas para tus propios registros (opcional)
       surnames: Apellidos o razón social para cabeceras de exportación
       tax_id: Identificador fiscal (NIF/CIF/DNI/NIE) para declaraciones
     irpf:
       art109_activity_income_withholding_ge_70pct: Aplica la excepción Art. 109 por
         cobertura del 70% de ingresos de actividad
       estimation_regime: Régimen de estimación IRPF
-      objective_estimation_modulos_iae_epigraph: Epígrafe IAE para módulos de estimación
-        objetiva
-      objective_estimation_modulos_module_1_units: Unidades anuales del módulo 1
-      objective_estimation_modulos_module_2_units: Unidades anuales del módulo 2
-      objective_estimation_modulos_module_3_units: Unidades anuales del módulo 3
-      objective_estimation_modulos_module_4_units: Unidades anuales del módulo 4
-      objective_estimation_modulos_module_5_units: Unidades anuales del módulo 5
-      objective_estimation_modulos_module_6_units: Unidades anuales del módulo 6
-      objective_estimation_modulos_module_7_units: Unidades anuales del módulo 7
       special_regime: Régimen especial IRPF (Ley Beckham / Art. 93 LIRPF)
       special_regime_start_date: Fecha de inicio del régimen especial (AAAA-MM-DD)
     iva:
@@ -134,16 +124,6 @@ profile:
         últimos 12 meses? (en euros, opcional)
       irpf_income_categories: Categorías de renta IRPF
       legal_entity_form: Forma jurídica
-      ley_49_2002_special_regime_option_date: Fecha declarada de la opción por el
-        régimen especial de la Ley 49/2002
-      ley_49_2002_special_regime_option_declared: ¿La entidad ha presentado en el
-        modelo 036 la opción por el régimen fiscal especial del título II de la Ley
-        49/2002?
-      ley_49_2002_special_regime_renunciation_date: Fecha declarada de la renuncia
-        al régimen especial de la Ley 49/2002
-      ley_49_2002_special_regime_renunciation_declared: ¿La entidad ha presentado
-        en el modelo 036 la renuncia al régimen fiscal especial del título II de la
-        Ley 49/2002?
       new_entity_first_two_profit_periods: ¿Es una entidad de nueva creación en uno
         de sus dos primeros periodos impositivos con beneficios?
       representante_fiscal_nif: NIF/NIE del representante fiscal en España (obligatorio
@@ -159,20 +139,10 @@ profile:
   schema:
     field:
       activities:
-        cnae:
-          label: Código CNAE
         description:
           label: Descripción de la actividad
         iae_epigraph:
           label: Epígrafe IAE
-      attribution_entity:
-        legal_form:
-          choices:
-            comunidad_bienes: Comunidad de bienes
-            herencia_yacente: Herencia yacente
-            other: Otra
-            sociedad_civil: Sociedad civil
-          label: Forma jurídica de la entidad en atribución
       attribution_entity_socios:
         base_imponible_assigned:
           label: Base imponible atribuida al socio
@@ -210,12 +180,6 @@ profile:
           label: Rendimiento neto minorado agrícola (estimación objetiva)
         rendimiento_neto_previo_eo:
           label: Rendimiento neto previo (estimación objetiva)
-        role:
-          choices:
-            comunero: Comunero
-            participe: Partícipe
-            socio: Socio
-          label: Papel del miembro
         share_pct:
           label: Porcentaje de participación
         situacion_inmueble:
@@ -258,14 +222,6 @@ profile:
           label: Fecha de alta de la actividad
         divergencia:
           label: Divergencias del cotejo censal
-        elected_withholding_pct:
-          label: Tipo de retención elegido
-        establecimiento_type:
-          choices:
-            arrendado: Arrendado
-            cedido_gratuitamente: Cedido gratuitamente
-            propio: Propio
-          label: Tipo de establecimiento
         large_company:
           label: Condición de gran empresa
         public_administration_budget_gt_6000000:
@@ -285,8 +241,6 @@ profile:
           label: Domicilio fiscal
         fiscal_address_cadastral_reference:
           label: Referencia catastral del domicilio fiscal
-        fiscal_address_is_habitual_vivienda:
-          label: El domicilio fiscal es la vivienda habitual
         postcode:
           label: Código postal
       identity:
@@ -296,8 +250,6 @@ profile:
           label: Razón social
         name:
           label: Nombre
-        notes:
-          label: Notas
         surnames:
           label: Apellidos
         tax_id:
@@ -324,22 +276,6 @@ profile:
             directa_simplificada: Estimación directa simplificada
             objetiva: Estimación objetiva (módulos)
           label: Régimen de estimación
-        objective_estimation_modulos_iae_epigraph:
-          label: Epígrafe IAE (módulos)
-        objective_estimation_modulos_module_1_units:
-          label: Unidades del módulo 1
-        objective_estimation_modulos_module_2_units:
-          label: Unidades del módulo 2
-        objective_estimation_modulos_module_3_units:
-          label: Unidades del módulo 3
-        objective_estimation_modulos_module_4_units:
-          label: Unidades del módulo 4
-        objective_estimation_modulos_module_5_units:
-          label: Unidades del módulo 5
-        objective_estimation_modulos_module_6_units:
-          label: Unidades del módulo 6
-        objective_estimation_modulos_module_7_units:
-          label: Unidades del módulo 7
         objective_estimation_prior_year_agri_livestock_forest_gross_eur:
           label: Ingresos agrícolas, ganaderos y forestales del año anterior
         objective_estimation_prior_year_gross_income_eur:
@@ -356,8 +292,6 @@ profile:
           label: Rendimientos íntegros del trabajo
         plantilla_media:
           label: Plantilla media por año natural
-        professional_income_withholding_ge_70pct:
-          label: Retención profesional alcanza el 70 %
         special_regime:
           choices:
             general: Régimen general
@@ -495,17 +429,6 @@ profile:
       preferences:
         output_language:
           label: Idioma de salida
-      properties:
-        cadastral_reference:
-          label: Referencia catastral
-        use_type:
-          choices:
-            habitual: Vivienda habitual
-            imputed_income: Imputación de rentas (sin alquilar)
-            mixed: Uso mixto
-            other: Otra
-            rental: Arrendado
-          label: Uso del inmueble
       provenance:
         source:
           choices:
@@ -668,33 +591,14 @@ profile:
             sll: Sociedad limitada laboral (S.L.L.)
             sociedad_civil_mercantil: Sociedad civil con objeto mercantil
           label: Forma jurídica
-        ley_49_2002_special_regime_option_date:
-          label: Fecha de opción por la Ley 49/2002
-        ley_49_2002_special_regime_option_declared:
-          label: Opción por el régimen de la Ley 49/2002
-        ley_49_2002_special_regime_renunciation_date:
-          label: Fecha de renuncia a la Ley 49/2002
-        ley_49_2002_special_regime_renunciation_declared:
-          label: Renuncia al régimen de la Ley 49/2002
         new_entity_first_two_profit_periods:
           label: En uno de los dos primeros períodos con beneficio
         representante_fiscal_nif:
           label: NIF del representante fiscal
         representante_fiscal_nombre:
           label: Nombre del representante fiscal
-        sal_capital_social:
-          label: Capital social
-        sal_reserva_especial_dotada:
-          label: Reserva especial ya dotada
-        sal_socios_trabajadores_count:
-          label: Número de socios trabajadores
         tributacion_estado_porcentaje:
           label: Porcentaje de tributación al Estado
-      usage_ratios:
-        business_ratio:
-          label: Ratio de uso empresarial
-        category_id:
-          label: Categoría
       vivienda_office:
         office_m2:
           label: Superficie destinada a oficina (m2)
@@ -719,10 +623,6 @@ profile:
       activities:
         summary: Las actividades económicas que realizas, una fila por actividad.
         title: Actividades económicas
-      attribution_entity:
-        summary: La forma jurídica de la entidad en atribución de rentas (comunidad
-          de bienes, sociedad civil) que gestionas.
-        title: Forma jurídica de la entidad en atribución
       attribution_entity_socios:
         summary: Los socios de esa entidad y la parte de la renta atribuida a cada
           uno.
@@ -764,9 +664,6 @@ profile:
         summary: Cómo se comunica contigo la aplicación, por ejemplo el idioma de
           cada pantalla.
         title: Preferencias del operador
-      properties:
-        summary: Inmuebles que posees o alquilas, una fila por inmueble.
-        title: Inmuebles y alquiler
       provenance:
         summary: De dónde proceden los datos del perfil y desde cuándo se aplican.
         title: Origen y vigencia
@@ -793,10 +690,6 @@ profile:
       taxpayer_type:
         summary: Qué tipo de contribuyente eres y qué tipos de renta obtienes.
         title: Tipo de contribuyente y categorías de renta
-      usage_ratios:
-        summary: La parte de uso profesional de bienes compartidos, como un coche
-          o un teléfono.
-        title: Ratios de uso y deducibilidad
       vivienda_office:
         summary: Si usas parte de tu vivienda habitual como oficina para tu actividad.
         title: Afectación de la vivienda habitual como oficina

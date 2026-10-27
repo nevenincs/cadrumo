@@ -9,7 +9,7 @@ use cadrumo_application::{
     provisioning::local_ai::models::ModelName,
 };
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeSet;
+use std::{collections::BTreeSet, error::Error};
 
 const MAX_ITEMS: usize = 16;
 const MAX_HOSTS: usize = 8;
@@ -43,14 +43,9 @@ pub enum Refusal {
     NotPending,
     NotCancellable,
     Unavailable,
-    /// The person's selection cannot be handed to the engine: its record is
-    /// unreadable, or a selected role or model is not one the engine can pull.
+    /// The requested model cannot be handed to the engine: it is not on a turned-on
+    /// local lane's model list, or its name is not one the engine can pull.
     ModelSelectionUnusable,
-    /// A selected local model's catalogue entry states no download size, so the
-    /// plan can neither size the download nor check the hardware for it.
-    ModelSizeUnstated,
-    /// A model a role still selects is not removed: setup would pull it again.
-    ModelStillSelected,
     /// The engine did not remove the model; what is stored is unchanged or reads
     /// again on the next check.
     ModelNotRemoved,
@@ -76,6 +71,82 @@ impl From<ApplicationError> for CommandFailure {
 impl From<Refusal> for CommandFailure {
     fn from(code: Refusal) -> Self {
         Self::Refused(Refused { code })
+    }
+}
+
+/// Why a setup command or one of its steps stopped, before the window is told by a
+/// code alone. The window words `unavailable` as "the services are not answering"
+/// whatever lay behind it, so that cause travels here for diagnostics to keep.
+#[derive(Debug)]
+pub enum Stop {
+    /// A refusal the window words and the person can act on.
+    Refused(Refusal),
+    /// The window's `unavailable`, and the failure behind it.
+    Unavailable(ApplicationError),
+    /// A host failure: the window words only its code.
+    Host(ApplicationError),
+}
+
+impl Stop {
+    /// The window's `unavailable` for `reason`, a stable snake_case name of the cause.
+    pub fn unavailable(reason: &'static str) -> Self {
+        Self::Unavailable(
+            ApplicationError::new(ErrorCode::SessionUnavailable, Operation::Cli)
+                .with_reason(reason),
+        )
+    }
+
+    /// This stop with `cause` chained to its failure. A refusal the person can act on
+    /// has no failure to chain to.
+    pub fn because<E: Error + Send + Sync + 'static>(self, cause: E) -> Self {
+        match self {
+            Self::Unavailable(error) => Self::Unavailable(error.caused_by(cause)),
+            Self::Host(error) => Self::Host(error.caused_by(cause)),
+            refused @ Self::Refused(_) => refused,
+        }
+    }
+
+    /// The failure diagnostics keep for this stop, if it is one.
+    pub fn cause(&self) -> Option<&ApplicationError> {
+        match self {
+            Self::Unavailable(error) | Self::Host(error) => Some(error),
+            Self::Refused(_) => None,
+        }
+    }
+
+    /// The refusal the window is told, unless it is told a host failure.
+    pub fn refusal(&self) -> Option<Refusal> {
+        match self {
+            Self::Refused(code) => Some(*code),
+            Self::Unavailable(_) => Some(Refusal::Unavailable),
+            Self::Host(_) => None,
+        }
+    }
+}
+
+impl From<ApplicationError> for Stop {
+    fn from(error: ApplicationError) -> Self {
+        Self::Host(error)
+    }
+}
+
+impl From<Refusal> for Stop {
+    /// An `unavailable` is never left without its cause.
+    fn from(code: Refusal) -> Self {
+        match code {
+            Refusal::Unavailable => Self::unavailable("setup_unavailable_unnamed"),
+            code => Self::Refused(code),
+        }
+    }
+}
+
+impl From<Stop> for CommandFailure {
+    fn from(stop: Stop) -> Self {
+        match stop {
+            Stop::Host(error) => error.into(),
+            Stop::Refused(code) => code.into(),
+            Stop::Unavailable(_) => Refusal::Unavailable.into(),
+        }
     }
 }
 
@@ -979,16 +1050,16 @@ mod tests {
         let refused = |change: fn(&mut Value)| {
             let mut snapshot = snapshot();
             snapshot["check"]["stage"] = json!("failed");
-            snapshot["check"]["refusal"] = json!("model_size_unstated");
+            snapshot["check"]["refusal"] = json!("model_selection_unusable");
             change(&mut snapshot["check"]);
             parsed(snapshot)
         };
         let shown = refused(|_| ()).expect("a valid snapshot");
         assert_eq!(
             shown.check.as_ref().and_then(|check| check.refusal),
-            Some(Refusal::ModelSizeUnstated)
+            Some(Refusal::ModelSelectionUnusable)
         );
-        assert!(refused(|check| check["refusal"] = json!("model_selection_unusable")).is_some());
+        assert!(refused(|check| check["refusal"] = json!("not_signed_in")).is_some());
         assert!(refused(|check| check["failure"] = json!("offline")).is_none());
         assert!(refused(|check| check["stage"] = json!("running")).is_none());
         assert!(refused(|check| check["refusal"] = json!("pigeon")).is_none());
@@ -999,8 +1070,6 @@ mod tests {
         for (refusal, code) in [
             (Refusal::NotCancellable, "not_cancellable"),
             (Refusal::ModelSelectionUnusable, "model_selection_unusable"),
-            (Refusal::ModelSizeUnstated, "model_size_unstated"),
-            (Refusal::ModelStillSelected, "model_still_selected"),
             (Refusal::ModelNotRemoved, "model_not_removed"),
         ] {
             assert_eq!(
@@ -1008,5 +1077,49 @@ mod tests {
                 json!({"code": code})
             );
         }
+    }
+
+    #[test]
+    fn the_window_is_told_a_stops_code_and_its_cause_stays_with_diagnostics() {
+        let unavailable = Stop::unavailable("setup_runtime_not_ready")
+            .because(std::io::Error::from(std::io::ErrorKind::ConnectionRefused));
+        assert_eq!(
+            unavailable.cause().and_then(|error| error.io_kind),
+            Some(std::io::ErrorKind::ConnectionRefused),
+            "the cause is chained for diagnostics"
+        );
+        assert_eq!(
+            serde_json::to_value(CommandFailure::from(unavailable)).unwrap(),
+            json!({"code": "unavailable"})
+        );
+        let contract = Stop::Host(
+            ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
+                .with_reason("setup_local_models_contract"),
+        );
+        assert_eq!(contract.refusal(), None);
+        let shown = serde_json::to_value(CommandFailure::from(contract)).unwrap();
+        assert_eq!(
+            shown["code"], "read_failed",
+            "a host failure crosses as its error code"
+        );
+    }
+
+    #[test]
+    fn a_refusal_the_person_can_act_on_has_no_failure_but_unavailable_is_never_unexplained() {
+        for refusal in [
+            Refusal::NotSignedIn,
+            Refusal::Busy,
+            Refusal::ModelSelectionUnusable,
+        ] {
+            let stop = Stop::from(refusal);
+            assert!(stop.cause().is_none(), "{refusal:?}");
+            assert_eq!(stop.refusal(), Some(refusal));
+        }
+        let stop = Stop::from(Refusal::Unavailable);
+        assert_eq!(stop.refusal(), Some(Refusal::Unavailable));
+        assert_eq!(
+            stop.cause().and_then(|error| error.reason.as_deref()),
+            Some("setup_unavailable_unnamed")
+        );
     }
 }

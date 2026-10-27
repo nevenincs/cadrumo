@@ -502,9 +502,11 @@ manifest member and a startup member. The `desktop-session` descriptor admits
 only the staged native desktop parent image and grants no secret-record
 capabilities. The service's provider-settings capability retains the original
 encrypted namespace and schema; no encryption key leaves runtime custody. Its
-model-role-selections capability keeps the person's model choice per role in a
-separate encrypted namespace under one fixed record key, so a selection change
-never moves the provider-settings generation the running agent was started under.
+model-role-selections capability keeps the models the person added to a local
+lane's model list in a separate encrypted namespace under one fixed record key, so a
+list change never moves the provider-settings generation the running agent was
+started under. The service derives which listed model serves each kind of reading
+from the catalogue's capabilities; the person never chooses it.
 
 The agent image has no default profile. It admits the invocations declared in its
 invocation table in `native/application-environment.toml`, each selecting its own
@@ -680,7 +682,9 @@ same rows, plans and plan digests.
 The item ids are `browser` and `local_ai`. Without `--item`, a setup covers every
 item whose row offers an action. A quick check reads local files only: no network and
 no model load, within 2 s. A full check also runs each item's network preflight, one
-headless launch of the browser, and one generated token for each role's model.
+headless launch of the browser, and one generated token for each model the check
+admits. A check, verification or general setup admits the local AI program alone; only
+a download names a model.
 
 Standard output carries one JSON object per line, each with a `type`: `started`
 (with `protocol` and `command`) first, then the events, then one `result` last. The

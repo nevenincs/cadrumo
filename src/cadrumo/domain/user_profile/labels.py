@@ -60,7 +60,6 @@ _CHOICES_INFIX = "choices"
 
 PROFILE_CODED_CHOICE_PATHS: frozenset[str] = frozenset(
     {
-        "censo.elected_withholding_pct",
         "attribution_entity_socios.participe_clave",
         "attribution_entity_socios.clave",
         "attribution_entity_socios.subclave",

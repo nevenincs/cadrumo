@@ -1,7 +1,8 @@
-"""The per-role selections record in its own capability: absent is none, corrupt refuses, changes are guarded."""
+"""The local model list record in its own capability: absent is empty, corrupt refuses, changes are guarded."""
 
 from __future__ import annotations
 
+import json
 import secrets
 from datetime import UTC, datetime
 from typing import cast
@@ -10,35 +11,34 @@ from uuid import uuid4
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.core.model_roles import ModelRole
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from cadrumo_client.contracts.extension_records import ExtensionRecordRefusal, ExtensionRecordReply
 from cadrumo_client.transport.service_client import InstalledServiceClient
 
 from ...application.ports import (
-    AbsentModelRoleSelections,
-    StoredModelRoleSelections,
+    AbsentLocalModelList,
+    StoredLocalModelList,
     StoreRefusal,
     StoreRefusalCode,
-    UnreadableModelRoleSelections,
+    UnreadableLocalModelList,
 )
 from ...domain.record import (
-    ModelRoleSelection,
-    ModelRoleSelectionsRecord,
-    model_role_selections_record_document,
+    ListedModel,
+    LocalModelListRecord,
+    local_model_list_record_document,
     new_settings_generation,
-    parse_model_role_selections_record,
+    parse_local_model_list_record,
 )
 from ..store import (
-    MODEL_ROLE_SELECTIONS_CAPABILITY,
-    MODEL_ROLE_SELECTIONS_KEY,
+    LOCAL_MODEL_LIST_CAPABILITY,
+    LOCAL_MODEL_LIST_KEY,
     PROVIDER_RECORD_CAPABILITY,
-    SecureModelRoleSelectionsStore,
+    SecureLocalModelListStore,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-_UPDATED_AT = datetime(2026, 10, 25, 9, 0, tzinfo=UTC)
+_UPDATED_AT = datetime(2026, 10, 27, 9, 0, tzinfo=UTC)
 
 
 class _Records:
@@ -113,55 +113,96 @@ class _Records:
         return self._reply("deleted")
 
 
-def _store(records: _Records) -> SecureModelRoleSelectionsStore:
-    return SecureModelRoleSelectionsStore(client=cast(InstalledServiceClient, records))
+def _store(records: _Records) -> SecureLocalModelListStore:
+    return SecureLocalModelListStore(client=cast(InstalledServiceClient, records))
 
 
-def _record(*selections: ModelRoleSelection) -> ModelRoleSelectionsRecord:
-    return ModelRoleSelectionsRecord(
-        schema_version=1, selections=selections, generation=new_settings_generation(), updated_at=_UPDATED_AT
+def _record(*models: ListedModel) -> LocalModelListRecord:
+    return LocalModelListRecord(
+        schema_version=2, models=models, generation=new_settings_generation(), updated_at=_UPDATED_AT
     )
 
 
-_VISION = ModelRoleSelection(role=ModelRole.VISION_TRANSCRIPTION, lane="example_api", model="synthetic-vision-1")
-_TEXT = ModelRoleSelection(role=ModelRole.TEXT_EXTRACTION, lane="other_cli", model="synthetic-text-1")
+_ADDED = ListedModel(lane="local_api", model="custom-model:7b")
+_OTHER = ListedModel(lane="local_api", model="another:1")
 
 
-def test_no_stored_record_reads_as_absent_so_no_role_has_a_selection() -> None:
+def _role_choices(*choices: tuple[str, str, str]) -> bytes:
+    """A schema version 1 document as it was stored: the lane and model chosen per role."""
+    return json.dumps(
+        {
+            "schema_version": 1,
+            "selections": [{"role": role, "lane": lane, "model": model} for role, lane, model in choices],
+            "generation": "e" * 64,
+            "updated_at": "2026-10-25T09:00:00Z",
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+
+
+def test_the_record_keeps_the_capability_and_key_the_runtime_descriptor_declares() -> None:
+    assert (LOCAL_MODEL_LIST_CAPABILITY, LOCAL_MODEL_LIST_KEY) == ("model-role-selections", "selections")
+
+
+def test_no_stored_record_reads_as_absent_so_no_model_was_added() -> None:
     records = _Records()
 
-    assert _store(records).read() == AbsentModelRoleSelections()
-    assert records.keys == [MODEL_ROLE_SELECTIONS_KEY]
+    assert _store(records).read() == AbsentLocalModelList()
+    assert records.keys == [LOCAL_MODEL_LIST_KEY]
 
 
 def test_a_written_record_reads_back_whole_with_its_revision() -> None:
     records = _Records()
     store = _store(records)
-    record = _record(_VISION, _TEXT)
+    record = _record(_ADDED, _OTHER)
 
     assert store.write(record, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID) is None
     read = store.read()
 
-    assert isinstance(read, StoredModelRoleSelections)
+    assert isinstance(read, StoredLocalModelList)
     assert read.record == record
-    assert read.revision == records.rows[MODEL_ROLE_SELECTIONS_KEY][0]
-    assert read.record.selection(ModelRole.VISION_TRANSCRIPTION) == _VISION
-    assert read.record.selection(ModelRole.COLUMN_ROLE_MAPPING) is None
+    assert read.revision == records.rows[LOCAL_MODEL_LIST_KEY][0]
+    assert read.record.lane_models("local_api") == ("custom-model:7b", "another:1")
+    assert read.record.lane_models("other_api") == ()
+
+
+def test_a_stored_per_role_record_reads_as_the_models_it_chose_without_being_rewritten() -> None:
+    records = _Records()
+    stored = _role_choices(
+        ("vision_transcription", "local_api", "custom-vision:1"),
+        ("text_extraction", "local_api", "custom-text:1"),
+        ("column_role_mapping", "local_api", "custom-text:1"),
+        ("supply_nature_proposal", "example_api", "synthetic-text-1"),
+    )
+    records.rows[LOCAL_MODEL_LIST_KEY] = ("a" * 64, stored)
+
+    read = _store(records).read()
+
+    assert isinstance(read, StoredLocalModelList)
+    assert read.revision == "a" * 64
+    assert read.record.models == (
+        ListedModel(lane="local_api", model="custom-vision:1"),
+        ListedModel(lane="local_api", model="custom-text:1"),
+        ListedModel(lane="example_api", model="synthetic-text-1"),
+    )
+    assert read.record.generation == "e" * 64
+    assert records.rows[LOCAL_MODEL_LIST_KEY] == ("a" * 64, stored)
 
 
 def test_a_write_or_delete_against_a_stale_revision_is_refused_and_changes_nothing() -> None:
     records = _Records()
     store = _store(records)
-    assert store.write(_record(_VISION), expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID) is None
-    stored = records.rows[MODEL_ROLE_SELECTIONS_KEY]
+    assert store.write(_record(_ADDED), expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID) is None
+    stored = records.rows[LOCAL_MODEL_LIST_KEY]
 
     conflict = StoreRefusal(code=StoreRefusalCode.REVISION_CONFLICT)
-    assert store.write(_record(_TEXT), expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID) == conflict
+    assert store.write(_record(_OTHER), expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID) == conflict
     assert store.delete(expected_revision="f" * 64) == conflict
-    assert records.rows[MODEL_ROLE_SELECTIONS_KEY] == stored
+    assert records.rows[LOCAL_MODEL_LIST_KEY] == stored
 
     assert store.delete(expected_revision=stored[0]) is None
-    assert store.read() == AbsentModelRoleSelections()
+    assert store.read() == AbsentLocalModelList()
 
 
 @pytest.mark.parametrize(
@@ -169,64 +210,62 @@ def test_a_write_or_delete_against_a_stale_revision_is_refused_and_changes_nothi
     [
         b"not json",
         b"\xff\xfe",
-        model_role_selections_record_document(_record(_VISION)).replace(b"vision_transcription", b"unknown_role"),
-        model_role_selections_record_document(_record(_VISION)).replace(b'"schema_version":1', b'"schema_version":2'),
+        local_model_list_record_document(_record(_ADDED)).replace(b'"schema_version":2', b'"schema_version":3'),
+        local_model_list_record_document(_record(_ADDED)).replace(b"local_api", b"Local API"),
+        _role_choices(("Vision", "local_api", "custom-vision:1")),
     ],
-    ids=["not-json", "not-utf8", "unknown-role", "unknown-schema"],
+    ids=["not-json", "not-utf8", "unknown-schema", "malformed-lane", "malformed-earlier-role"],
 )
 def test_a_stored_record_that_does_not_validate_is_unreadable_never_absent(payload: bytes) -> None:
     records = _Records()
-    records.rows[MODEL_ROLE_SELECTIONS_KEY] = ("a" * 64, payload)
+    records.rows[LOCAL_MODEL_LIST_KEY] = ("a" * 64, payload)
 
-    assert _store(records).read() == UnreadableModelRoleSelections(revision="a" * 64)
+    assert _store(records).read() == UnreadableLocalModelList(revision="a" * 64)
 
 
 def test_a_record_the_runtime_reports_unreadable_stays_unreadable_with_its_revision() -> None:
     records = _Records()
-    records.rows[MODEL_ROLE_SELECTIONS_KEY] = ("b" * 64, b"{}")
-    records.unreadable.add(MODEL_ROLE_SELECTIONS_KEY)
+    records.rows[LOCAL_MODEL_LIST_KEY] = ("b" * 64, b"{}")
+    records.unreadable.add(LOCAL_MODEL_LIST_KEY)
 
-    assert _store(records).read() == UnreadableModelRoleSelections(revision="b" * 64)
+    assert _store(records).read() == UnreadableLocalModelList(revision="b" * 64)
 
 
-def test_a_lapsed_lease_refuses_the_read_rather_than_reading_as_no_selection() -> None:
+def test_a_lapsed_lease_refuses_the_read_rather_than_reading_as_empty() -> None:
     records = _Records()
     records.refusal = ExtensionRecordRefusal.LEASE_INACTIVE
 
     assert _store(records).read() == StoreRefusal(code=StoreRefusalCode.NOT_SIGNED_IN)
 
 
-def test_a_role_carries_at_most_one_selection() -> None:
-    second = ModelRoleSelection(role=ModelRole.VISION_TRANSCRIPTION, lane="other_cli", model="synthetic-vision-2")
+def test_a_lane_lists_a_model_at_most_once() -> None:
     with pytest.raises(ValidationError):
-        _record(_VISION, second)
-    document = model_role_selections_record_document(_record(_VISION, _TEXT)).replace(
-        b"text_extraction", b"vision_transcription"
-    )
+        _record(_ADDED, _ADDED)
+    document = local_model_list_record_document(_record(_ADDED, _OTHER)).replace(b"another:1", b"custom-model:7b")
     with pytest.raises(ValidationError):
-        parse_model_role_selections_record(document)
+        parse_local_model_list_record(document)
 
 
-def test_every_exchange_uses_the_selections_capability_and_never_the_provider_records() -> None:
-    """A selection change must not move the provider-settings generation, so it never writes there."""
+def test_every_exchange_uses_the_list_capability_and_never_the_provider_records() -> None:
+    """A list change must not move the provider-settings generation, so it never writes there."""
     records = _Records()
     store = _store(records)
 
-    assert store.write(_record(_VISION), expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID) is None
+    assert store.write(_record(_ADDED), expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID) is None
     read = store.read()
-    assert isinstance(read, StoredModelRoleSelections)
+    assert isinstance(read, StoredLocalModelList)
     assert store.delete(expected_revision=read.revision) is None
 
-    assert MODEL_ROLE_SELECTIONS_CAPABILITY != PROVIDER_RECORD_CAPABILITY
-    assert records.capabilities == [MODEL_ROLE_SELECTIONS_CAPABILITY] * 3
-    assert records.keys == [MODEL_ROLE_SELECTIONS_KEY] * 3
+    assert LOCAL_MODEL_LIST_CAPABILITY != PROVIDER_RECORD_CAPABILITY
+    assert records.capabilities == [LOCAL_MODEL_LIST_CAPABILITY] * 3
+    assert records.keys == [LOCAL_MODEL_LIST_KEY] * 3
 
 
 def test_a_stored_record_reported_without_a_revision_refuses_rather_than_reading_unguarded() -> None:
     """Every unreadable record the store reports carries the revision its reset is guarded by."""
     records = _Records()
-    records.rows[MODEL_ROLE_SELECTIONS_KEY] = ("c" * 64, b"{}")
-    records.unreadable.add(MODEL_ROLE_SELECTIONS_KEY)
+    records.rows[LOCAL_MODEL_LIST_KEY] = ("c" * 64, b"{}")
+    records.unreadable.add(LOCAL_MODEL_LIST_KEY)
     records.revisionless = True
 
     assert _store(records).read() == StoreRefusal(code=StoreRefusalCode.UNKNOWN)

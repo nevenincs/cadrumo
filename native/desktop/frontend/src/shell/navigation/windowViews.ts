@@ -9,6 +9,9 @@ import type { LedgerSection, PanelTab } from "../layout";
 export type WindowPage =
   "profile" | "calendar" | "ledger" | "declarations" | "docs";
 
+/** A dialog a page opens over itself as a view is shown. */
+export type WindowDialog = "aeat-access";
+
 /** A host port a view needs; without it the window does not implement it. */
 export type WindowPort = "userProfile" | "views" | "ledger" | "modelo";
 
@@ -19,6 +22,9 @@ export type WindowView =
       readonly page: WindowPage;
       /** The Ledger section it shows; null keeps the section saved. */
       readonly section: LedgerSection | null;
+      /** The dialog the page opens as it is shown; absent for the page
+       * itself. */
+      readonly dialog?: WindowDialog;
     }
   /** The agent column, beside the rail. */
   | { readonly kind: "agent" }
@@ -58,6 +64,15 @@ const panel = (tab: PanelTab | null): WindowViewEntry => ({
  * grids reveal the row a `select` names. */
 export const WINDOW_VIEWS: Readonly<Record<string, WindowViewEntry>> = {
   profile: page("profile", null, "userProfile"),
+  "profile/aeat-access": {
+    ...page("profile", null, "userProfile"),
+    view: {
+      kind: "page",
+      page: "profile",
+      section: null,
+      dialog: "aeat-access",
+    },
+  },
   calendar: page("calendar", null, "views"),
   docs: page("docs", null, null),
   ledger: page("ledger", null, "ledger"),
@@ -93,8 +108,8 @@ export function windowView(id: string): WindowViewEntry | undefined {
 }
 
 /** The element of the page shown, the inverse of this table for pages: a
- * Ledger section's own id, otherwise the page's. Undefined for a page no
- * element opens. */
+ * Ledger section's own id, otherwise the page's; a dialog over a page is
+ * not the page. Undefined for a page no element opens. */
 export function pageViewId(
   page: string,
   ledgerSection: LedgerSection,
@@ -103,7 +118,10 @@ export function pageViewId(
   return Object.keys(WINDOW_VIEWS).find((id) => {
     const view = WINDOW_VIEWS[id]?.view;
     return (
-      view?.kind === "page" && view.page === page && view.section === section
+      view?.kind === "page" &&
+      view.page === page &&
+      view.section === section &&
+      view.dialog === undefined
     );
   });
 }

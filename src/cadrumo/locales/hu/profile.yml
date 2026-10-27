@@ -43,22 +43,12 @@ profile:
     identity:
       legal_name: Jogi személy cégneve az exportfejlécekhez
       name: A helyi áttekintésekben megjelenített név
-      notes: Megjegyzések saját nyilvántartáshoz (opcionális)
       surnames: Vezetéknevei vagy cégneve az exportfejlécekhez
       tax_id: Adóazonosító (NIF/CIF/DNI/NIE) a bevallásokhoz
     irpf:
       art109_activity_income_withholding_ge_70pct: Alkalmazandó az Art. 109 szerinti
         70%-os tevékenységi jövedelemfedezeti kivétel
       estimation_regime: IRPF becslési rend
-      objective_estimation_modulos_iae_epigraph: IAE-epigráfus az objektív becslési
-        modulokhoz
-      objective_estimation_modulos_module_1_units: Az 1. modul éves egységei
-      objective_estimation_modulos_module_2_units: A 2. modul éves egységei
-      objective_estimation_modulos_module_3_units: A 3. modul éves egységei
-      objective_estimation_modulos_module_4_units: A 4. modul éves egységei
-      objective_estimation_modulos_module_5_units: Az 5. modul éves egységei
-      objective_estimation_modulos_module_6_units: A 6. modul éves egységei
-      objective_estimation_modulos_module_7_units: A 7. modul éves egységei
       special_regime: IRPF különleges adózási rend (Beckham-törvény / LIRPF 93. cikkely)
       special_regime_start_date: A különleges adózási rend kezdőnapja (ÉÉÉÉ-HH-NN)
     iva:
@@ -132,15 +122,6 @@ profile:
         opcionális)
       irpf_income_categories: IRPF jövedelemkategóriák
       legal_entity_form: Jogi forma
-      ley_49_2002_special_regime_option_date: A Ley 49/2002 szerinti különleges rendszer
-        választásának bejelentett dátuma
-      ley_49_2002_special_regime_option_declared: A szervezet a Modelo 036-on bejelentette
-        a Ley 49/2002 II. címe szerinti különleges adózási rendszer választását?
-      ley_49_2002_special_regime_renunciation_date: A Ley 49/2002 szerinti különleges
-        rendszerről való lemondás bejelentett dátuma
-      ley_49_2002_special_regime_renunciation_declared: A szervezet a Modelo 036-on
-        bejelentette a Ley 49/2002 II. címe szerinti különleges adózási rendszerről
-        való lemondást?
       new_entity_first_two_profit_periods: Ez egy újonnan létrehozott jogi személy
         az első két nyereséges adóidőszakának egyikében?
       representante_fiscal_nif: A spanyolországi adóügyi képviselő NIF/NIE száma (EU-n/EGT-n
@@ -157,20 +138,10 @@ profile:
   schema:
     field:
       activities:
-        cnae:
-          label: CNAE-kód
         description:
           label: Tevékenység leírása
         iae_epigraph:
           label: IAE-epigrafus
-      attribution_entity:
-        legal_form:
-          choices:
-            comunidad_bienes: Közös tulajdon (comunidad de bienes)
-            herencia_yacente: Hagyaték (herencia yacente)
-            other: Egyéb
-            sociedad_civil: Polgári jogi társaság (sociedad civil)
-          label: Hozzárendelő entitás jogi formája
       attribution_entity_socios:
         base_imponible_assigned:
           label: Tagra jutó adóalap
@@ -209,12 +180,6 @@ profile:
           label: Csökkentett nettó mezőgazdasági jövedelem (objektív becslés)
         rendimiento_neto_previo_eo:
           label: Előzetes nettó jövedelem (objektív becslés)
-        role:
-          choices:
-            comunero: Tulajdonostárs
-            participe: Részes
-            socio: Társ
-          label: Tagi szerepkör
         share_pct:
           label: Részesedés aránya
         situacion_inmueble:
@@ -257,14 +222,6 @@ profile:
           label: Tevékenység kezdete
         divergencia:
           label: Censo-eltérések
-        elected_withholding_pct:
-          label: Választott forrásadókulcs
-        establecimiento_type:
-          choices:
-            arrendado: Bérelt
-            cedido_gratuitamente: Ingyenesen átengedett
-            propio: Saját tulajdonú
-          label: Telephely típusa
         large_company:
           label: Nagyvállalati minősítés
         public_administration_budget_gt_6000000:
@@ -284,8 +241,6 @@ profile:
           label: Adóügyi cím
         fiscal_address_cadastral_reference:
           label: Az adóügyi cím kataszteri hivatkozása
-        fiscal_address_is_habitual_vivienda:
-          label: Az adóügyi cím az állandó lakóhely
         postcode:
           label: Irányítószám
       identity:
@@ -295,8 +250,6 @@ profile:
           label: Cégnév
         name:
           label: Utónév
-        notes:
-          label: Megjegyzések
         surnames:
           label: Vezetéknevek
         tax_id:
@@ -322,22 +275,6 @@ profile:
             directa_simplificada: Egyszerűsített közvetlen becslés
             objetiva: Objektív becslés (módulos)
           label: Becslési rendszer
-        objective_estimation_modulos_iae_epigraph:
-          label: IAE-epigrafus (modulok)
-        objective_estimation_modulos_module_1_units:
-          label: 1. modul egységei
-        objective_estimation_modulos_module_2_units:
-          label: 2. modul egységei
-        objective_estimation_modulos_module_3_units:
-          label: 3. modul egységei
-        objective_estimation_modulos_module_4_units:
-          label: 4. modul egységei
-        objective_estimation_modulos_module_5_units:
-          label: 5. modul egységei
-        objective_estimation_modulos_module_6_units:
-          label: 6. modul egységei
-        objective_estimation_modulos_module_7_units:
-          label: 7. modul egységei
         objective_estimation_prior_year_agri_livestock_forest_gross_eur:
           label: Előző évi mezőgazdasági, állattenyésztési és erdészeti bevétel
         objective_estimation_prior_year_gross_income_eur:
@@ -354,8 +291,6 @@ profile:
           label: Munkajövedelem összesen
         plantilla_media:
           label: Átlagos állományi létszám naptári évenként
-        professional_income_withholding_ge_70pct:
-          label: Szakmai forrásadó eléri a 70%-ot
         special_regime:
           choices:
             general: Általános rendszer
@@ -495,17 +430,6 @@ profile:
       preferences:
         output_language:
           label: Kimeneti nyelv
-      properties:
-        cadastral_reference:
-          label: Kataszteri hivatkozás
-        use_type:
-          choices:
-            habitual: Fő lakóhely
-            imputed_income: Vélelmezett jövedelem (nem bérbe adott)
-            mixed: Vegyes használat
-            other: Egyéb
-            rental: Bérbe adott
-          label: Ingatlan hasznosítása
       provenance:
         source:
           choices:
@@ -668,33 +592,14 @@ profile:
             sll: Munkavállalói korlátolt felelősségű társaság (S.L.L.)
             sociedad_civil_mercantil: Kereskedelmi célú polgári jogi társaság
           label: Jogi forma
-        ley_49_2002_special_regime_option_date:
-          label: Ley 49/2002 választásának dátuma
-        ley_49_2002_special_regime_option_declared:
-          label: Ley 49/2002 rendszer választva
-        ley_49_2002_special_regime_renunciation_date:
-          label: Ley 49/2002 lemondásának dátuma
-        ley_49_2002_special_regime_renunciation_declared:
-          label: Ley 49/2002 rendszerről lemondva
         new_entity_first_two_profit_periods:
           label: Az első két nyereséges időszak egyikében
         representante_fiscal_nif:
           label: Adóügyi képviselő NIF-je
         representante_fiscal_nombre:
           label: Adóügyi képviselő neve
-        sal_capital_social:
-          label: Jegyzett tőke
-        sal_reserva_especial_dotada:
-          label: Már képzett különleges tartalék
-        sal_socios_trabajadores_count:
-          label: Dolgozó tagok száma
         tributacion_estado_porcentaje:
           label: Államnak fizetett adó aránya
-      usage_ratios:
-        business_ratio:
-          label: Üzleti használati arány
-        category_id:
-          label: Kategória
       vivienda_office:
         office_m2:
           label: Irodai célra használt alapterület (m2)
@@ -720,10 +625,6 @@ profile:
         summary: Az általad végzett gazdasági tevékenységek, tevékenységenként egy
           sorral.
         title: Gazdasági tevékenységek
-      attribution_entity:
-        summary: Az általad működtetett jövedelem-hozzárendelési jogalany (comunidad
-          de bienes, sociedad civil) jogi formája.
-        title: Jövedelem-hozzárendelő entitás jogi formája
       attribution_entity_socios:
         summary: A jogalany tagjai és az egyes tagoknak hozzárendelt jövedelemrész.
         title: A hozzárendelő entitás tagjai
@@ -768,10 +669,6 @@ profile:
         summary: Hogyan kommunikál veled az alkalmazás, például az egyes képernyők
           nyelve.
         title: Kezelői beállítások
-      properties:
-        summary: A tulajdonodban lévő vagy általad bérbe adott ingatlanok, ingatlanonként
-          egy sorral.
-        title: Ingatlanok és bérbeadás
       provenance:
         summary: Honnan származnak a profil adatai, és mikortól érvényesek.
         title: Eredet és érvényesség
@@ -798,10 +695,6 @@ profile:
       taxpayer_type:
         summary: Milyen típusú adózó vagy, és milyen jövedelemfajtákból van bevételed.
         title: Adózó típusa és jövedelemkategóriák
-      usage_ratios:
-        summary: A közösen használt eszközök, például autó vagy telefon üzleti használatának
-          aránya.
-        title: Használati arányok és levonhatóság
       vivienda_office:
         summary: Használod-e a fő lakóhelyed egy részét irodaként a tevékenységedhez.
         title: Állandó lakás irodai hasznosítása

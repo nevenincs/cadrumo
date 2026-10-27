@@ -362,7 +362,7 @@ def _merged_taxpayer_values(
     most fields at their canonical schema path (which is also the key space
     the wizard's ``project_answers`` resolves questions against), but a
     field family is read at its declared ``model_selectors`` alias instead
-    (``address.cadastral_reference``, ``address.is_habitual_vivienda``, …).
+    (``address.cadastral_reference``, ``address.postcode``, …).
     Feeding only one key space silently blanks the other family, so the
     taxpayer projection carries both: the path projection first, with
     selector aliases layered alongside. The two key spaces are disjoint for

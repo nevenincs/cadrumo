@@ -22,10 +22,15 @@
 //! request, and the window keeps following until that setup ends. Closing the
 //! window stops only its following; the setup it followed goes on.
 //!
-//! Each engine a check or setup builds is admitted with the person's selection
-//! of local models before it runs (`admission`). A selection that cannot be
-//! admitted refuses the command and the engine never runs, so a refused check
-//! or setup changes no row.
+//! Each engine a check or setup builds admits the local AI as its program alone;
+//! a download admits the one model the person asked for from a local lane's
+//! model list before it runs (`admission`). A download that cannot be admitted
+//! refuses the command and the engine never runs, so it changes no row.
+//!
+//! The window words an `unavailable` refusal and a host failure by their code
+//! alone, so what lay behind one reaches diagnostics. A command that returns its
+//! `Stop` leaves recording it to the host that answers the window; a step that no
+//! command returns, such as a check, records its own.
 //!
 //! The engine words nothing; every value here is a code or a locale-neutral
 //! fact, and the window words them. A browser check's process ends with the
@@ -33,17 +38,25 @@
 //! Linux and macOS inside the window's process scope (`installation`).
 use super::{
     admission::Admission,
-    wire::{self, CheckKind, CheckStage, Outcome, Refusal, RunStage},
+    reports::Reports,
+    wire::{self, CheckKind, CheckStage, Outcome, Refusal, RunStage, Stop},
 };
 use cadrumo_application::{
     component::Cancellation,
-    error::Error,
+    diagnostics::Diagnostics,
+    error::{
+        Error,
+        application::{ApplicationError, ErrorCode, Operation},
+    },
     provisioning::{
         browser::failure_category,
         engine::{Answer, Engine, Event, Outcome as Ended, Report, SetupRequest},
         failure::FailureCategory,
         items::{Destination, ItemId, Locations},
-        local_ai::{hardware::Hardware, models::ModelName},
+        local_ai::{
+            hardware::Hardware,
+            models::{LocalModels, ModelName},
+        },
         plan::SetupPlan,
         role_host,
         state::{
@@ -88,26 +101,47 @@ pub fn installation() -> Arc<Engines> {
 
 /// Why a command got no engine to run on.
 enum Unready {
-    /// The installation's own settings could not make an engine.
-    Engine(Error),
-    /// The person's selection of local models could not be admitted.
-    Refused(Refusal),
+    /// The installation's own settings could not make an engine: the category the
+    /// window words, and the failure diagnostics keep.
+    Engine(wire::Failure, ApplicationError),
+    /// The model the person asked to download could not be admitted.
+    Stopped(Stop),
 }
 
-/// An engine of this installation admitted with the local models the person
-/// selected, as the agent service states them now. Every check and setup runs
-/// on one; an explicit download supplies its catalogue model for this run.
+impl Unready {
+    /// The failure diagnostics keep for this, if it is one.
+    fn cause(&self) -> Option<&ApplicationError> {
+        match self {
+            Self::Engine(_, error) => Some(error),
+            Self::Stopped(stop) => stop.cause(),
+        }
+    }
+}
+
+/// The engine of this installation could not be made.
+fn engine_unavailable(error: Error) -> ApplicationError {
+    ApplicationError::new(ErrorCode::SessionUnavailable, Operation::Cli)
+        .with_reason("setup_engine_unavailable")
+        .caused_by(error)
+}
+
+/// An engine of this installation, admitted with the local AI's program alone or,
+/// for an explicit download, with the one model the person asked for from a local
+/// lane's model list, as the agent service states it now. Every check and setup
+/// runs on one.
 fn admitted(
     engines: &Engines,
     admission: &Admission,
     download: Option<&wire::ModelDownload>,
 ) -> Result<Engine, Unready> {
-    let Installation { mut engine } = engines().map_err(Unready::Engine)?;
+    let Installation { mut engine } = engines().map_err(|error| {
+        Unready::Engine(failure(failure_category(&error)), engine_unavailable(error))
+    })?;
     let models = match download {
         Some(request) => admission.download(request),
-        None => admission.local_models(),
+        None => Ok(LocalModels::default()),
     }
-    .map_err(Unready::Refused)?;
+    .map_err(Unready::Stopped)?;
     engine.admit_local_ai(models);
     Ok(engine)
 }
@@ -155,7 +189,7 @@ struct CheckTrack {
     /// The category a refused check carried, which the window words as it words a row's;
     /// `None` for a check that is running, done, or failed with no category at all.
     failure: Option<wire::Failure>,
-    /// The refusal of a check whose engine could not be admitted with the selection.
+    /// The refusal of a check whose engine could not be admitted.
     refusal: Option<Refusal>,
 }
 
@@ -218,7 +252,7 @@ struct Window {
     approved: BTreeSet<String>,
     /// The setup whose engine could not be admitted, by operation id, and why. Its track
     /// is gone: the start that asked for it is refused with this.
-    refused: Option<(String, Refusal)>,
+    refused: Option<(String, Stop)>,
     workers: Vec<JoinHandle<()>>,
     /// Stops a check at its next transfer chunk or browser launch once the window closes.
     checks: Arc<Cancellation>,
@@ -242,6 +276,9 @@ impl Window {
 struct Shared {
     window: Mutex<Window>,
     changed: watch::Sender<u64>,
+    /// Where a check's, a setup's or the worker's own failure is recorded, for the
+    /// causes no command returns.
+    reports: Reports,
 }
 
 impl Shared {
@@ -272,13 +309,18 @@ pub struct Components {
 }
 
 impl Components {
-    pub fn new(engines: Arc<Engines>, admission: Arc<Admission>) -> Self {
+    pub fn new(
+        engines: Arc<Engines>,
+        admission: Arc<Admission>,
+        diagnostics: Arc<Diagnostics>,
+    ) -> Self {
         Self {
             engines,
             admission,
             shared: Arc::new(Shared {
                 window: Mutex::default(),
                 changed: watch::Sender::new(0),
+                reports: Reports::new(diagnostics),
             }),
         }
     }
@@ -297,7 +339,12 @@ impl Components {
         {
             Ok(worker) => window.workers.push(worker),
             // Without a thread the work never starts; its track says it failed.
-            Err(_) => {
+            Err(error) => {
+                self.shared.reports.error(
+                    &ApplicationError::new(ErrorCode::SpawnFailed, Operation::Cli)
+                        .with_reason("setup_worker_spawn")
+                        .caused_by(error),
+                );
                 if let Some(check) = window.check.as_mut().filter(|_| name == "setup-check") {
                     check.stage = CheckStage::Failed;
                 }
@@ -368,6 +415,16 @@ impl Components {
                     CheckKind::Verify => engine.verify(&items, &mut |_| {}, &cancellation),
                 }
             });
+            // No command returns a check's refusal, so its cause is recorded here, once
+            // for as long as every check fails the same way.
+            match &report {
+                Err(unready) => {
+                    if let Some(cause) = unready.cause() {
+                        shared.reports.read_error(cause);
+                    }
+                }
+                Ok(_) => shared.reports.recovered(),
+            }
             shared.update(|window| {
                 let current = window
                     .check
@@ -383,12 +440,13 @@ impl Components {
                         (CheckStage::Done, None, None)
                     }
                     Ok(report) => (CheckStage::Failed, report.failure.map(failure), None),
-                    Err(Unready::Engine(error)) => (
-                        CheckStage::Failed,
-                        Some(failure(failure_category(&error))),
-                        None,
-                    ),
-                    Err(Unready::Refused(refusal)) => (CheckStage::Failed, None, Some(refusal)),
+                    Err(Unready::Engine(category, _)) => (CheckStage::Failed, Some(category), None),
+                    // A host failure has no word of its own for a check, so it is the
+                    // unexpected one; a refusal is the person's to fix or retry.
+                    Err(Unready::Stopped(stop)) => match stop.refusal() {
+                        Some(refusal) => (CheckStage::Failed, None, Some(refusal)),
+                        None => (CheckStage::Failed, Some(wire::Failure::Unexpected), None),
+                    },
                 };
                 if let Some(check) = window.check.as_mut().filter(|_| current) {
                     check.stage = stage;
@@ -408,12 +466,12 @@ impl Components {
         items: Option<Vec<ItemId>>,
         resume: bool,
         download: Option<wire::ModelDownload>,
-    ) -> Result<(), Refusal> {
+    ) -> Result<(), Stop> {
         let mut changes = self.changes();
         let id = {
             let mut window = lock(&self.shared.window);
             if window.closed {
-                return Err(Refusal::Unavailable);
+                return Err(Stop::unavailable("setup_window_closed"));
             }
             if window.setup.as_ref().is_some_and(SetupTrack::live) {
                 // One setup at a time: a second start joins the running one.
@@ -487,7 +545,7 @@ impl Components {
                 match window.setup_of(&id) {
                     None => {
                         let refused = window.refused.take_if(|(refused, _)| *refused == id);
-                        return Err(refused.map_or(Refusal::Busy, |(_, refusal)| refusal));
+                        return Err(refused.map_or(Stop::Refused(Refusal::Busy), |(_, stop)| stop));
                     }
                     Some(track) if track.stage != RunStage::Planning => return Ok(()),
                     Some(_) => {}
@@ -564,7 +622,7 @@ impl Components {
     /// declines the plan it waits on. A setup the window follows is asked to
     /// stop through the engine's cancel request, which is in place when this
     /// returns; the window follows it until it ends.
-    pub async fn cancel(&self, operation_id: &str) -> Result<(), Refusal> {
+    pub async fn cancel(&self, operation_id: &str) -> Result<(), Stop> {
         let followed = self.shared.update(|window| {
             let Some(track) = window.setup_of(operation_id).filter(|track| track.live()) else {
                 return Err(Refusal::NotPending);
@@ -590,53 +648,48 @@ impl Components {
             engines().map(|installation| installation.engine.ask_to_stop(&items))
         })
         .await;
-        match asked {
-            Ok(Ok(_)) => Ok(()),
-            // Nothing was asked of the followed setup, so the person may ask again.
-            _ => self.shared.update(|window| {
-                if let Some(track) = window.setup_of(operation_id) {
-                    track.cancel_requested = false;
-                }
-                Err(Refusal::Unavailable)
-            }),
-        }
+        let unasked = match asked {
+            Ok(Ok(_)) => return Ok(()),
+            Ok(Err(error)) => Stop::Unavailable(engine_unavailable(error)),
+            Err(error) => Stop::unavailable("setup_worker_join").because(error),
+        };
+        // Nothing was asked of the followed setup, so the person may ask again.
+        self.shared.update(|window| {
+            if let Some(track) = window.setup_of(operation_id) {
+                track.cancel_requested = false;
+            }
+        });
+        Err(unasked)
     }
 
-    /// Removes the local model `model`, which no admitted role may still select, and
-    /// takes the rows the removal reads after it. Refused while a setup runs, since
-    /// that setup holds the local AI's writer lock or may pull the model again.
-    pub async fn remove_model(&self, model: &str) -> Result<(), Refusal> {
+    /// Removes the local model `model` and takes the rows the removal reads after it.
+    /// Refused while a setup runs, since that setup holds the local AI's writer lock
+    /// or may pull the model again.
+    pub async fn remove_model(&self, model: &str) -> Result<(), Stop> {
         let name = ModelName::parse(model).map_err(|_| Refusal::ModelSelectionUnusable)?;
         let running = self
             .shared
             .update(|window| window.closed || window.setup.as_ref().is_some_and(SetupTrack::live));
         if running {
-            return Err(Refusal::Busy);
+            return Err(Refusal::Busy.into());
         }
         let engines = self.engines.clone();
-        let admission = self.admission.clone();
-        let removed = tokio::task::spawn_blocking(move || {
-            let selection = admission.local_models()?;
-            if selection
-                .as_slice()
-                .iter()
-                .any(|selected| selected.name.same(&name))
-            {
-                return Err(Refusal::ModelStillSelected);
-            }
-            let Installation { mut engine } = engines().map_err(|_| Refusal::Unavailable)?;
-            engine.admit_local_ai(selection);
+        let removed = tokio::task::spawn_blocking(move || -> Result<Report, Stop> {
+            let Installation { mut engine } =
+                engines().map_err(|error| Stop::Unavailable(engine_unavailable(error)))?;
+            // The local AI is admitted as its program alone: a removal pulls nothing.
+            engine.admit_local_ai(LocalModels::default());
             Ok(engine.remove_model(&name, &mut |_| {}))
         })
         .await
-        .map_err(|_| Refusal::Unavailable)??;
+        .map_err(|error| Stop::unavailable("setup_worker_join").because(error))??;
         self.shared.update(|window| match removed.outcome {
             Ended::Removed => {
                 window.rows = Some((removed.mode, removed.rows));
                 Ok(())
             }
-            Ended::Busy => Err(Refusal::Busy),
-            _ => Err(Refusal::ModelNotRemoved),
+            Ended::Busy => Err(Refusal::Busy.into()),
+            _ => Err(Refusal::ModelNotRemoved.into()),
         })
     }
 
@@ -709,10 +762,11 @@ fn run_setup(
         .and_then(|track| track.download.clone());
     let mut engine = match admitted(engines, admission, download.as_ref()) {
         Ok(engine) => engine,
-        Err(Unready::Engine(error)) => {
+        Err(Unready::Engine(category, cause)) => {
             // A setting the engine cannot use is a classified refusal of its own; the
-            // window words the category it is given, as the role's clients do.
-            let category = failure(failure_category(&error));
+            // window words the category it is given, as the role's clients do. No
+            // command returns this failure, so its cause is recorded here.
+            shared.reports.error(&cause);
             shared.update(|window| {
                 if let Some(track) = window.setup_of(id) {
                     settle_failed(track, category);
@@ -720,13 +774,14 @@ fn run_setup(
             });
             return;
         }
-        Err(Unready::Refused(refusal)) => {
+        Err(Unready::Stopped(stop)) => {
             // Nothing was planned, so there is no setup to settle: the start that asked
-            // for it is refused instead, and the window shows no run.
+            // for it is refused instead, and the window shows no run. That start returns
+            // the stop, so the host that answers the window records its cause.
             shared.update(|window| {
                 if window.setup_of(id).is_some() {
                     window.setup = None;
-                    window.refused = Some((id.to_owned(), refusal));
+                    window.refused = Some((id.to_owned(), stop));
                 }
             });
             return;

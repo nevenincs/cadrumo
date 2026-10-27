@@ -22,6 +22,7 @@ import {
   Panel,
   Reading,
   readLanding,
+  rankDecimal,
   SetupTable,
   TextField,
   useSetupDraft,
@@ -308,11 +309,13 @@ export function ProrrataPane({
       key: "ejercicio",
       label: t("desktop.ledger.prorrata.column.ejercicio"),
       numeric: true,
+      sort: (entry) => entry.ejercicio,
       cell: (entry) => entry.ejercicio,
     },
     {
       key: "sector",
       label: t("desktop.ledger.prorrata.column.sector"),
+      sort: (entry) => entry.sector_id,
       cell: (entry) =>
         entry.sector_id ?? (
           <span className="text-muted-foreground">
@@ -323,17 +326,23 @@ export function ProrrataPane({
     {
       key: "regime",
       label: t("desktop.ledger.prorrata.column.regime"),
+      sort: (entry) => tokenText(t, "prorrata.regime", entry.regime),
       cell: (entry) => tokenText(t, "prorrata.regime", entry.regime),
     },
     {
       key: "provisional",
       label: t("desktop.ledger.prorrata.column.provisional"),
       numeric: true,
+      sort: (entry) => rankDecimal(entry.provisional_percentage?.decimal),
       cell: (entry) => percent(entry.provisional_percentage),
     },
     {
       key: "provenance",
       label: t("desktop.ledger.prorrata.column.provenance"),
+      sort: (entry) =>
+        entry.provisional_provenance
+          ? tokenText(t, "prorrata.provenance", entry.provisional_provenance)
+          : null,
       cell: (entry) =>
         entry.provisional_provenance
           ? tokenText(t, "prorrata.provenance", entry.provisional_provenance)
@@ -343,6 +352,7 @@ export function ProrrataPane({
       key: "definitive",
       label: t("desktop.ledger.prorrata.column.definitive"),
       numeric: true,
+      sort: (entry) => rankDecimal(entry.definitive_percentage?.decimal),
       cell: (entry) =>
         entry.definitive_percentage ? (
           percent(entry.definitive_percentage)
@@ -356,6 +366,8 @@ export function ProrrataPane({
       key: "volumes",
       label: t("desktop.ledger.prorrata.column.volumes"),
       numeric: true,
+      sort: (entry) =>
+        rankDecimal(entry.definitive_volume_con_derecho?.decimal),
       cell: (entry) =>
         entry.definitive_volume_con_derecho &&
         entry.definitive_volume_sin_derecho

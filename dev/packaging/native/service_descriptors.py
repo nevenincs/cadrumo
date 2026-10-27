@@ -9,7 +9,7 @@ from typing import Any
 
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import (
     EXTENSION_SETTINGS_NAMESPACE,
-    MODEL_ROLE_SELECTIONS_NAMESPACE,
+    LOCAL_MODEL_LIST_NAMESPACE,
 )
 from cadrumo.application.operations.person_acts import operation_is_persons_act
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
@@ -62,13 +62,13 @@ def stage_service_descriptors(root: Path, layout: dict[str, Any], images: tuple[
                 "maximum_bytes": 32768,
                 "actions": ["read", "write", "delete", "generation"],
             },
-            # The person's model choice per role, in its own namespace so a
-            # selection change never moves the provider-settings generation.
+            # The person's local model list, in its own namespace so a list
+            # change never moves the provider-settings generation.
             {
                 "capability": "model-role-selections",
-                "namespace": MODEL_ROLE_SELECTIONS_NAMESPACE.namespace,
-                "schema_version": MODEL_ROLE_SELECTIONS_NAMESPACE.schema_version,
-                "classification": MODEL_ROLE_SELECTIONS_NAMESPACE.sensitivity.value,
+                "namespace": LOCAL_MODEL_LIST_NAMESPACE.namespace,
+                "schema_version": LOCAL_MODEL_LIST_NAMESPACE.schema_version,
+                "classification": LOCAL_MODEL_LIST_NAMESPACE.sensitivity.value,
                 "key_pattern": "^selections$",
                 "maximum_bytes": 32768,
                 "actions": ["read", "write", "delete", "generation"],

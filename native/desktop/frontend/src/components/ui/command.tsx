@@ -32,7 +32,7 @@ function CommandInput({
   return (
     <div
       data-slot="command-input-wrapper"
-      className="flex shrink-0 items-center gap-2.5 border-b px-3.5 py-3 text-faint"
+      className="flex shrink-0 items-center gap-2.5 border-b px-3.5 py-3 text-faint focus-within:outline-(length:--focus-ring) focus-within:outline-offset-[calc(-1*var(--focus-ring))] focus-within:outline-ring focus-within:outline-solid"
     >
       <Icon name="search" size="lg" />
       <CommandPrimitive.Input

@@ -30,7 +30,6 @@ from urllib.parse import urlencode
 import pytest
 from pydantic import TypeAdapter
 
-from cadrumo.core.model_roles import ModelRole
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from cadrumo.tests.audited_process import run_audited_process
 from cadrumo_client.contracts.model_runs import (
@@ -44,13 +43,11 @@ from cadrumo_client.contracts.model_runs import (
 
 from ...host.controller import AgentProcess
 from ...host.launch_environment import system_environment
-from ...providers.application.contracts import (
-    ModelRoleSelectionsStatus,
-    ProviderSettingsRefusal,
-    ProviderSettingsRefusalCode,
-)
-from ...providers.application.model_role_selections import ModelRoleSelectionsService
-from ...providers.application.tests.memory_store import MemoryModelRoleSelectionsStore
+from ...providers.application.contracts import LocalModelListStatus
+from ...providers.application.local_model_list import LocalModelListService
+from ...providers.application.model_runs import ModelRunService
+from ...providers.application.resolution import ProviderCredentialResolver
+from ...providers.application.tests.memory_store import MemoryLocalModelListStore, MemoryProviderSettingsStore
 from ...providers.domain.catalog import BackgroundOption
 from ..agent_background_runs import HOST_ADMISSION_HEADER, BackgroundRunEndpoint, HostedBackgroundRuns
 from ..agent_process import WindowsAgentProcessLauncher
@@ -517,8 +514,8 @@ def test_a_model_the_local_server_has_not_installed_is_refused_as_not_installed(
     assert outcome == ModelRunRefusal(code=ModelRunRefusalCode.MODEL_NOT_INSTALLED), outcome
 
 
-def test_a_model_installed_on_the_local_server_is_selectable_through_the_live_catalogue(gateway: _Gateway) -> None:
-    """The running agent's live entries admit a model only its server holds; without them it is not in the catalogue."""
+def test_a_model_installed_on_the_local_server_is_read_with_through_the_live_catalogue(gateway: _Gateway) -> None:
+    """A model only the server holds is used once it is on the list; without live entries nothing states it."""
     live = ServedCatalogModels(gateway.served_catalog)
     interpreter = _agent_checkout() / ".venv" / "Scripts" / "python.exe"
     declared = AgentProviderCatalogSource(received={**os.environ, PACKAGE_AGENT_VARIABLE: str(interpreter)})
@@ -538,29 +535,34 @@ def test_a_model_installed_on_the_local_server_is_selectable_through_the_live_ca
     assert installed.licence.digest == "sha256:" + hashlib.sha256(_INSTALLED_LICENCE.encode()).hexdigest()
     assert installed.licence.spdx is None
 
-    running = ModelRoleSelectionsService(
-        store=MemoryModelRoleSelectionsStore(), catalog_source=declared, live_models=live
+    model_list = MemoryLocalModelListStore()
+    added = LocalModelListService(store=model_list, catalog_source=declared).add(
+        "ollama_api", model=_INSTALLED_MODEL, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
     )
-    selected = running.select(
-        ModelRole.TEXT_EXTRACTION.value,
-        lane="ollama_api",
-        model=_INSTALLED_MODEL,
-        expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID,
-    )
-    assert isinstance(selected, ModelRoleSelectionsStatus), selected
-    assert running.select(
-        ModelRole.VISION_TRANSCRIPTION.value,
-        lane="ollama_api",
-        model=_INSTALLED_MODEL,
-        expected_revision=selected.revision,
-    ) == ProviderSettingsRefusal(code=ProviderSettingsRefusalCode.VISION_REQUIRED)
+    assert isinstance(added, LocalModelListStatus), added
+    live_entries = {entry.id: entry for entry in entries}
+    declared_models = {model.id for model in local.models}
+    usable = [
+        model
+        for model in dict.fromkeys((local.recommended.get("text", _INSTALLED_MODEL), *local.recommended.values()))
+        if (model in live_entries and live_entries[model].installed is not False)
+        or (model not in live_entries and model in declared_models)
+    ]
 
-    stopped = ModelRoleSelectionsService(
-        store=MemoryModelRoleSelectionsStore(), catalog_source=declared, live_models=ServedCatalogModels(lambda: None)
-    )
-    assert stopped.select(
-        ModelRole.TEXT_EXTRACTION.value,
-        lane="ollama_api",
-        model=_INSTALLED_MODEL,
-        expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID,
-    ) == ProviderSettingsRefusal(code=ProviderSettingsRefusalCode.MODEL_NOT_IN_CATALOGUE)
+    def lookup(served: ServedCatalogModels, role: str) -> ModelRunLane | ModelRunRefusal:
+        resolver = ProviderCredentialResolver(store=MemoryProviderSettingsStore(), catalog_source=declared)
+        return ModelRunService(
+            model_list=model_list,
+            resolver=resolver,
+            catalog_source=declared,
+            live_models=served,
+            gateway=gateway.runs(),
+        ).lookup(role)
+
+    text = lookup(live, "text_extraction")
+    assert isinstance(text, ModelRunLane), text
+    assert text.model == (usable[0] if usable else _INSTALLED_MODEL)
+    vision = lookup(live, "vision_transcription")
+    assert not (isinstance(vision, ModelRunLane) and vision.model == _INSTALLED_MODEL)
+    stopped = lookup(ServedCatalogModels(lambda: None), "text_extraction")
+    assert not (isinstance(stopped, ModelRunLane) and stopped.model == _INSTALLED_MODEL)

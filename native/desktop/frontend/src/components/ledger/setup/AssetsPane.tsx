@@ -26,6 +26,7 @@ import {
   ChoiceField,
   FormGrid,
   Panel,
+  rankDecimal,
   SetupTable,
   TextField,
   useSetupDraft,
@@ -271,11 +272,16 @@ export function AssetsPane({ port, locale }: SetupProps) {
               key: "number",
               label: t("desktop.ledger.assets.column.number"),
               numeric: true,
+              sort: (found) => found.revision.revision_number,
               cell: (found) => found.revision.revision_number,
             },
             {
               key: "service",
               label: t("desktop.ledger.assets.column.in_service"),
+              sort: (found) =>
+                typeof found.revision.in_service_date === "string"
+                  ? found.revision.in_service_date
+                  : null,
               cell: (found) =>
                 typeof found.revision.in_service_date === "string"
                   ? dateText(locale, found.revision.in_service_date, true)
@@ -284,6 +290,7 @@ export function AssetsPane({ port, locale }: SetupProps) {
             {
               key: "id",
               label: t("desktop.ledger.assets.column.revision"),
+              sort: (found) => found.revision_id,
               cell: (found) => (
                 <code className="font-mono text-xs">
                   {found.revision_id.slice(0, 12)}
@@ -469,23 +476,27 @@ export function AssetsPane({ port, locale }: SetupProps) {
             {
               key: "target",
               label: t("desktop.ledger.assets.column.target"),
+              sort: (row) => t(`desktop.ledger.assets.target.${row.key}`),
               cell: (row) => t(`desktop.ledger.assets.target.${row.key}`),
             },
             {
               key: "casilla",
               label: t("desktop.ledger.assets.column.casilla"),
+              sort: (row) => row.found.target_casilla_id,
               cell: (row) => row.found.target_casilla_id,
             },
             {
               key: "amount",
               label: t("desktop.ledger.assets.column.amount"),
               numeric: true,
+              sort: (row) => rankDecimal(row.found.amount.decimal),
               cell: (row) => amountText(locale, row.found.amount.decimal),
             },
             {
               key: "claims",
               label: t("desktop.ledger.assets.column.claims"),
               numeric: true,
+              sort: (row) => row.found.claim_ids.length,
               cell: (row) => row.found.claim_ids.length,
             },
           ]}

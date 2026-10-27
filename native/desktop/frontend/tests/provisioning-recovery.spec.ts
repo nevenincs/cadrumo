@@ -26,9 +26,7 @@ const { ledgerFixture } = await import("../src/dev/ledgerFixture");
 const { censoFixture } = await import("../src/dev/censoFixture");
 /** The scenario Censo pull reads the profile only to check readiness and to
  * apply a review, neither of which a start or a status read does. */
-const unreadProfile = {
-  peek: () => null,
-} as unknown as Parameters<typeof censoFixture>[0];
+const unreadProfile = {} as unknown as Parameters<typeof censoFixture>[0];
 
 /** A verdict as the product serializes it, recovered by `action`. */
 const verdict = (action: string | null) => ({

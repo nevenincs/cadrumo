@@ -10,7 +10,7 @@ related:
   - '[[2026-10-17-single-binary-process-tree-adr]]'
 modified: '2026-10-27'
 body_schema: body-v2
-body_hash: 'sha256:f91172baab7520296065c28f0c02e944ab5d0b60298f72eb9393abc6e770adf7'
+body_hash: 'sha256:27d9c0b5295e405e7546d47fc1bf42ac574e8cbeb151076cf5bc13a3c5170a39'
 ---
 
 # `antigravity-sign-in` plan
@@ -20,6 +20,8 @@ body_hash: 'sha256:f91172baab7520296065c28f0c02e944ab5d0b60298f72eb9393abc6e770a
 Approved 2026-10-27
 
 Authorization: the owner's CADRUMO-BRIEF.md explicitly authorizes this app integration in Y:/code/cadrumo-worktrees/tui on feature/tui. Preserve unrelated modifications; no commit, push, reset or cleanup is authorized. Steps are cohesive reviewable changes without commits under this explicit exception.
+
+Repair scope extension 2026-10-27: after reproducing silent code entry in the installed CLI, the user explicitly answered "Extend the repair into cadrumo-agent" for Y:/code/cadrumo-agent-worktrees/main. This authorizes the supplier authentication transport and focused tests as part of this repair, superseding the supplier-untouched constraint only for those changes. Keep unrelated supplier changes intact. The native pseudoconsole retains the existing suspended-root Job admission, private helper protocol, provider-owned OAuth and profile-isolated storage; no dependency, credential-store or public protocol change is introduced. No commit or push is requested. S03 remains open until the required packaged and attended login evidence exists.
 
 Implement isolated Antigravity CLI sign-in through supplier GUI capability schema 3, discovered browser-code and helper protocol version 1, preserving Claude browser and Codex browser/device. Do not implement provider OAuth, use the shared OS account, manipulate its keyring or import token contents.
 

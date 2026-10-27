@@ -95,13 +95,6 @@ _CAPABILITY_QUESTION_IDS: tuple[str, ...] = (
     "google-export",
 )
 
-_LEY_49_2002_QUESTION_IDS: tuple[str, ...] = (
-    "ley-49-2002-option-declared",
-    "ley-49-2002-option-date",
-    "ley-49-2002-renunciation-declared",
-    "ley-49-2002-renunciation-date",
-)
-
 # The `cli.config.google.errors.*` refusal-frame suffixes
 # `_GOOGLE_ERROR_KEY_SUFFIX` (`entrypoints.cli.config.google_errors`) maps
 # each concrete `GoogleAuthError` subclass name to. The map's values are the
@@ -1104,8 +1097,8 @@ def _wizard_question_registrations(*, wizard_flows: Iterable[_FlowLike]) -> tupl
     """Registrations for wizard flow descriptions and per-question prompt/help copy.
 
     Unlike the choice group these expand id tuples declared in this module
-    (the service-capability and Ley 49/2002 question ids) rather than enums,
-    because their sources are catalogue question ids with no enum home.
+    (the service-capability question ids) rather than enums, because their
+    sources are catalogue question ids with no enum home.
     """
     return (
         FStringKeyRegistration(
@@ -1122,21 +1115,6 @@ def _wizard_question_registrations(*, wizard_flows: Iterable[_FlowLike]) -> tupl
             description="wizard.setup.flags.*.help (service-capability CLI flags)",
             key_factory=lambda v: f"wizard.setup.flags.{v}.help",
             values=_CAPABILITY_QUESTION_IDS,
-        ),
-        FStringKeyRegistration(
-            description="wizard.setup.taxpayer-type Ley 49/2002 question prompts",
-            key_factory=lambda v: f"wizard.setup.taxpayer-type.{v}.prompt",
-            values=_LEY_49_2002_QUESTION_IDS,
-        ),
-        FStringKeyRegistration(
-            description="wizard.setup.taxpayer-type Ley 49/2002 question help",
-            key_factory=lambda v: f"wizard.setup.taxpayer-type.{v}.help",
-            values=_LEY_49_2002_QUESTION_IDS,
-        ),
-        FStringKeyRegistration(
-            description="wizard.setup.flags Ley 49/2002 CLI flags",
-            key_factory=lambda v: f"wizard.setup.flags.{v}.help",
-            values=_LEY_49_2002_QUESTION_IDS,
         ),
     )
 

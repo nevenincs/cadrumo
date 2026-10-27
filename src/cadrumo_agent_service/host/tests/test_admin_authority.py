@@ -78,10 +78,11 @@ def _read(stream: socket.socket) -> dict[str, object]:
         "connect_status",
         "connect_cancel",
         "connect_submit_code",
-        "model_roles",
-        "model_role_set",
-        "model_role_clear",
-        "model_roles_reset",
+        "local_models",
+        "local_model_add",
+        "local_model_remove",
+        "local_models_reset",
+        "reading_model_choose",
     ],
 )
 def test_gateway_frame_secret_is_refused_and_parent_admin_secret_dispatches(action: str) -> None:
@@ -107,11 +108,9 @@ def test_gateway_frame_secret_is_refused_and_parent_admin_secret_dispatches(acti
         request["attempt_id"] = str(uuid4())
     if action == "auth":
         request["choice"] = "provider_sign_in"
-    if action in {"model_role_set", "model_role_clear", "model_roles_reset"}:
+    if action in {"local_model_add", "local_model_remove", "local_models_reset", "reading_model_choose"}:
         request["expected_revision"] = "0" * 64
-    if action in {"model_role_set", "model_role_clear"}:
-        request["role"] = "text_extraction"
-    if action == "model_role_set":
+    if action in {"local_model_add", "local_model_remove", "reading_model_choose"}:
         request.update(provider="synthetic_api", model="synthetic-model-1")
     secret = b"synthetic-provider-secret"
     if action in {"set", "connect_submit_code"}:
@@ -158,12 +157,12 @@ def test_startup_refuses_missing_or_shared_authority(document: dict[str, str]) -
 
 
 @pytest.mark.parametrize("model", ["synthetic-vision:1", "synthetic vision/1", "m" * 512, "é" * 512])
-def test_a_role_selection_names_any_model_id_the_catalogues_carry(model: str) -> None:
-    request = AdminRequest(version=1, request_id=uuid4(), action="model_role_set", model=model)
+def test_a_model_added_to_the_list_is_any_model_id_the_catalogues_carry(model: str) -> None:
+    request = AdminRequest(version=1, request_id=uuid4(), action="local_model_add", model=model)
     assert request.model == model
 
 
 @pytest.mark.parametrize("model", ["", "m" * 513, "tab\there", "line\nbreak", "del\x7f"])
 def test_a_model_id_outside_the_shared_rule_is_refused(model: str) -> None:
     with pytest.raises(ValidationError):
-        AdminRequest(version=1, request_id=uuid4(), action="model_role_set", model=model)
+        AdminRequest(version=1, request_id=uuid4(), action="local_model_add", model=model)

@@ -91,6 +91,8 @@ function readParams() {
     ),
     // The shape of the component setup.
     setup: SETUP_SHAPES.find((shape) => shape === params.get("setup")),
+    // Setup reviews an assistant's setup leaves for the person.
+    setupReviews: params.get("setupReviews") === "on",
     // How the made-up ledger answers.
     ledger: LEDGER_SHAPES.find((shape) => shape === params.get("ledger")),
     // How the made-up declarations answer.
@@ -151,6 +153,7 @@ function Scenarios() {
       agentSkills: initial.agentSkills,
       agentCatalog: initial.agentCatalog,
       setup: initial.setup,
+      setupReviews: initial.setupReviews,
       ledger: initial.ledger,
       modelo: initial.modelo,
       window: initial.window,

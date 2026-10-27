@@ -114,8 +114,6 @@ def _registered_modelo_profile() -> UserProfileRecord:
             UserProfileFact(path="taxpayer_type.new_entity_first_two_profit_periods", value=False),
             UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("500000")),
             UserProfileFact(path="taxpayer_type.tributacion_estado_porcentaje", value=Decimal("100")),
-            UserProfileFact(path="taxpayer_type.sal_reserva_especial_dotada", value=Decimal("0")),
-            UserProfileFact(path="taxpayer_type.sal_capital_social", value=Decimal("5000")),
             UserProfileFact(path="taxpayer_type.country_of_fiscal_residence", value="FR"),
             UserProfileFact(path="iva.autoconsumo_promotor_base", value=Decimal("123")),
         ),

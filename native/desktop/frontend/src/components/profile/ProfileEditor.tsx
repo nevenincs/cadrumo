@@ -3,7 +3,7 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
-import { Field, FieldLabel } from "@/components/ui/field";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import {
   Dialog,
   DialogContent,
@@ -15,6 +15,7 @@ import {
 import { useNavigationGuard } from "../../shell/navigation/hooks";
 import { useStrings } from "../../shell/strings";
 import { profileInput } from "../../shell/profileInput";
+import { isEmpty } from "../../shell/profileRows";
 import type {
   ProfileEdit,
   ProfileField,
@@ -28,6 +29,13 @@ export type ProfileDraft = {
   section: ProfileSection;
   kind: "field" | "add_row" | "update_row" | "remove_row";
 };
+
+/** What an input starts as, and what leaving it so leaves of the detail. A
+ * masked detail is write-only: it is never shown, so its input starts empty
+ * and an empty one keeps what is saved. */
+const startOf = (field: ProfileField, kind: ProfileDraft["kind"]) =>
+  kind === "add_row" || field.masked ? "" : (field.value ?? "");
+
 export function ProfileEditor({
   draft,
   busy,
@@ -52,10 +60,7 @@ export function ProfileEditor({
   const [returnFocus] = useState(() => document.activeElement);
   const [values, setValues] = useState(() =>
     Object.fromEntries(
-      draft.fields.map((field) => [
-        field.path,
-        draft.kind === "add_row" ? "" : (field.value ?? ""),
-      ]),
+      draft.fields.map((field) => [field.path, startOf(field, draft.kind)]),
     ),
   );
   const { fields, section, kind } = draft;
@@ -64,11 +69,7 @@ export function ProfileEditor({
   // window as a dialog does. The page itself weighs a save in flight.
   const drafted =
     kind !== "remove_row" &&
-    fields.some(
-      (field) =>
-        (values[field.path] ?? "") !==
-        (kind === "add_row" ? "" : (field.value ?? "")),
-    );
+    fields.some((field) => (values[field.path] ?? "") !== startOf(field, kind));
   useNavigationGuard("profile", drafted ? "dirty" : "clean", {
     discard: onClose,
   });
@@ -79,8 +80,11 @@ export function ProfileEditor({
         (field.row_index === null ? 0 : field.row_index.length + 1),
     );
   const title = kind === "field" ? fields[0]!.label : section.title;
+  // An empty masked input keeps the saved value: there is nothing to save,
+  // and clearing it is the page's own action.
+  const nothing = kind === "field" && fields[0]!.masked && !drafted;
   const submit = async () => {
-    if (busy || changed || blocked) return;
+    if (busy || changed || blocked || nothing) return;
     let edit: ProfileEdit;
     if (kind === "field")
       edit = {
@@ -98,7 +102,7 @@ export function ProfileEditor({
       const supplied = fields.filter((field) =>
         kind === "add_row"
           ? (values[field.path] ?? "").trim() !== ""
-          : (values[field.path] ?? "") !== (field.value ?? ""),
+          : (values[field.path] ?? "") !== startOf(field, kind),
       );
       const entries = supplied
         .filter((field) => (values[field.path] ?? "") !== "")
@@ -198,6 +202,11 @@ export function ProfileEditor({
                     }
                   />
                 )}
+                {field.masked && !isEmpty(field) && (
+                  <FieldDescription>
+                    {t("desktop.profile.aeat.saved_value")}
+                  </FieldDescription>
+                )}
                 {field.help && (
                   <details
                     id={`${id}-${index}-help`}
@@ -240,7 +249,10 @@ export function ProfileEditor({
             >
               {t("desktop.profile.cancel")}
             </Button>
-            <Button type="submit" disabled={busy || changed || blocked}>
+            <Button
+              type="submit"
+              disabled={busy || changed || blocked || nothing}
+            >
               {t(
                 busy
                   ? "desktop.profile.saving"

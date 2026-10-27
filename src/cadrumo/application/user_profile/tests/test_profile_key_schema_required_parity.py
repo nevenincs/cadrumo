@@ -79,8 +79,6 @@ _KNOWN_DIVERGENCES: dict[str, tuple[_Cause, str]] = {
         "One column of a received-attribution row.",
     ),
     "attribution_received.filing_year": (_Cause.REPEATABLE_ROW, "One column of a received-attribution row."),
-    "usage_ratios.category_id": (_Cause.REPEATABLE_ROW, "One column of a declared usage-ratio row."),
-    "usage_ratios.business_ratio": (_Cause.REPEATABLE_ROW, "One column of a declared usage-ratio row."),
 }
 """Schema-required fields the wizard key space does not require, and why.
 

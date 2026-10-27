@@ -1,4 +1,4 @@
-"""The persistence ports the provider-settings and model-role services read and write through.
+"""The persistence ports the provider-settings and local model list services read and write through.
 
 The application owns these contracts; the encrypted secure-object adapters
 implement them for one exact admitted profile. Each port speaks in typed values
@@ -20,7 +20,7 @@ from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG as _STRICT_FRO
 from cadrumo_client.contracts.model_runs import ModelRunMediaKind
 
 from ..domain.catalog import BackgroundOption, LaneId, LiveCatalogModel, ProviderCatalog
-from ..domain.record import ModelRoleSelectionsRecord, ProviderSettingsRecord
+from ..domain.record import LocalModelListRecord, ProviderSettingsRecord
 
 
 class StoredProviderRecord(BaseModel):
@@ -56,28 +56,28 @@ class UnreadableProviderRecord(BaseModel):
 type ProviderRecordRead = StoredProviderRecord | AbsentProviderRecord | UnreadableProviderRecord
 
 
-class StoredModelRoleSelections(BaseModel):
-    """The per-role selections record decrypted and validated, with its row revision."""
+class StoredLocalModelList(BaseModel):
+    """The local model list record decrypted and validated, with its row revision."""
 
     model_config = _STRICT_FROZEN
 
-    record: ModelRoleSelectionsRecord
+    record: LocalModelListRecord
     revision: Hex64Str
 
 
-class AbsentModelRoleSelections(BaseModel):
-    """No selections record is stored: no role has a selection."""
+class AbsentLocalModelList(BaseModel):
+    """No model list record is stored: the person added no model by name."""
 
     model_config = _STRICT_FROZEN
 
 
-class UnreadableModelRoleSelections(BaseModel):
-    """A selections record is stored but cannot be decrypted or validated.
+class UnreadableLocalModelList(BaseModel):
+    """A model list record is stored but cannot be decrypted or validated.
 
-    It fails closed: no role reads as selected or as unselected, and only a
+    It fails closed: no model reads as listed or as unlisted, and only a
     guarded reset may remove it. It always carries the revision that reset is
-    guarded by: every record in the selections capability was written through
-    the secure-object funnel, which stamps a revision on each write.
+    guarded by: every record in the list's capability was written through the
+    secure-object funnel, which stamps a revision on each write.
     """
 
     model_config = _STRICT_FROZEN
@@ -85,7 +85,7 @@ class UnreadableModelRoleSelections(BaseModel):
     revision: Hex64Str
 
 
-type ModelRoleSelectionsRead = StoredModelRoleSelections | AbsentModelRoleSelections | UnreadableModelRoleSelections
+type LocalModelListRead = StoredLocalModelList | AbsentLocalModelList | UnreadableLocalModelList
 
 
 class StoreRefusalCode(StrEnum):
@@ -217,19 +217,19 @@ class ProviderSettingsStore(Protocol):
         ...
 
 
-class ModelRoleSelectionsStore(Protocol):
-    """The encrypted per-role model selections record of one admitted profile.
+class LocalModelListStore(Protocol):
+    """The encrypted local model list record of one admitted profile.
 
     It is a record capability of its own, apart from the provider records, so a
-    selection change never moves the provider-settings generation a running
-    agent tree was started under.
+    list change never moves the provider-settings generation a running agent
+    tree was started under.
     """
 
-    def read(self) -> ModelRoleSelectionsRead | StoreRefusal:
-        """Return the profile's selections record, absent, or unreadable, or a refusal."""
+    def read(self) -> LocalModelListRead | StoreRefusal:
+        """Return the profile's model list record, absent, or unreadable, or a refusal."""
         ...
 
-    def write(self, record: ModelRoleSelectionsRecord, *, expected_revision: str) -> StoreRefusal | None:
+    def write(self, record: LocalModelListRecord, *, expected_revision: str) -> StoreRefusal | None:
         """Commit ``record`` only if the stored revision still equals ``expected_revision``."""
         ...
 
@@ -239,12 +239,12 @@ class ModelRoleSelectionsStore(Protocol):
 
 
 __all__ = [
-    "AbsentModelRoleSelections",
+    "AbsentLocalModelList",
     "AbsentProviderRecord",
     "LiveCatalogModels",
     "LiveLaneBackground",
-    "ModelRoleSelectionsRead",
-    "ModelRoleSelectionsStore",
+    "LocalModelListRead",
+    "LocalModelListStore",
     "ProviderCatalogSource",
     "ProviderCatalogUnavailableError",
     "ProviderCatalogUnavailableReason",
@@ -253,8 +253,8 @@ __all__ = [
     "StoreGenerations",
     "StoreRefusal",
     "StoreRefusalCode",
-    "StoredModelRoleSelections",
+    "StoredLocalModelList",
     "StoredProviderRecord",
-    "UnreadableModelRoleSelections",
+    "UnreadableLocalModelList",
     "UnreadableProviderRecord",
 ]

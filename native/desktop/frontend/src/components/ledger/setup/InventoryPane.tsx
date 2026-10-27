@@ -35,6 +35,7 @@ import {
   Panel,
   Reading,
   readLanding,
+  rankDecimal,
   SetupTable,
   TextField,
   useSetupDraft,
@@ -339,29 +340,34 @@ export function InventoryPane({
     {
       key: "actividad",
       label: t("desktop.ledger.inventory.column.actividad"),
+      sort: (row) => row.actividad_id,
       cell: (row) => <code className="font-mono">{row.actividad_id}</code>,
     },
     {
       key: "method",
       label: t("desktop.ledger.inventory.column.method"),
+      sort: (row) => tokenText(t, "inventory.method", row.valuation_method),
       cell: (row) => tokenText(t, "inventory.method", row.valuation_method),
     },
     {
       key: "opening",
       label: t("desktop.ledger.inventory.column.opening"),
       numeric: true,
+      sort: (row) => rankDecimal(row.opening_stock.decimal),
       cell: (row) => amountText(locale, row.opening_stock.decimal),
     },
     {
       key: "movements",
       label: t("desktop.ledger.inventory.column.movements"),
       numeric: true,
+      sort: (row) => row.movement_count,
       cell: (row) => row.movement_count,
     },
     {
       key: "actions",
       label: t("desktop.ledger.form.actions"),
       hidden: true,
+      resizable: false,
       cell: (row) => (
         <span className="flex justify-end">
           <Button
@@ -452,24 +458,28 @@ export function InventoryPane({
             {
               key: "date",
               label: t("desktop.ledger.inventory.column.date"),
+              sort: (movement) => movement.movement_date,
               cell: (movement) =>
                 dateText(locale, movement.movement_date, true),
             },
             {
               key: "kind",
               label: t("desktop.ledger.inventory.column.kind"),
+              sort: (movement) => tokenText(t, "inventory.kind", movement.kind),
               cell: (movement) => tokenText(t, "inventory.kind", movement.kind),
             },
             {
               key: "quantity",
               label: t("desktop.ledger.inventory.column.quantity"),
               numeric: true,
+              sort: (movement) => rankDecimal(movement.quantity.decimal),
               cell: (movement) => movement.quantity.decimal,
             },
             {
               key: "unit",
               label: t("desktop.ledger.inventory.column.unit_cost"),
               numeric: true,
+              sort: (movement) => rankDecimal(movement.unit_cost?.decimal),
               cell: (movement) => movement.unit_cost?.decimal ?? "—",
             },
           ]}

@@ -306,6 +306,7 @@ fn at_most_two_children_and_eight_pending_reads_are_owned_and_close_wakes_every_
         !read_barrier.directory.join("order").exists()
             && !mutation_barrier.directory.join("order").exists()
     );
+    assert!(diagnostics.flush_logs(Duration::from_secs(5)));
     let snapshot = diagnostics.snapshot(u64::MAX);
     assert_eq!(snapshot.processes.len(), 2);
     assert!(
@@ -703,6 +704,7 @@ fn failed_timing_sink_does_not_change_native_output_or_retry_the_password() {
             .count(),
         1
     );
+    assert!(diagnostics.flush_logs(Duration::from_secs(5)));
     let snapshot = diagnostics.snapshot(u64::MAX);
     assert_eq!(
         snapshot.log_failure.as_ref().unwrap().code,

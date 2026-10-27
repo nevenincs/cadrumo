@@ -63,12 +63,11 @@ export function retryWords(t: Translate, retry: SetupRetry): string {
   });
 }
 
-/** One part of the local AI's plan: its program, or the model selected for one role. */
+/** One part of the local AI's plan: its program, or the one model being downloaded. */
 export function partName(t: Translate, part: string): string {
-  if (part === "download") return t("desktop.setup.part_download");
   return part === "program"
     ? t("desktop.setup.part_program")
-    : t("desktop.setup.part_model", { role: t(`desktop.setup.role.${part}`) });
+    : t("desktop.setup.part_download");
 }
 
 /** How a row's state is marked beside its sentence, which says it in words. */
@@ -186,8 +185,6 @@ export function refusalWords(t: Translate, code: string): string {
       return t("desktop.setup.refused_unavailable");
     case "model_selection_unusable":
       return t("desktop.setup.refused_model_selection_unusable");
-    case "model_size_unstated":
-      return t("desktop.setup.refused_model_size_unstated");
     default:
       return t("desktop.setup.refused_other");
   }

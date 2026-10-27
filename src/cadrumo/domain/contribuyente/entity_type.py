@@ -84,13 +84,6 @@ def entity_type_attribution_entity_token(*, effective_date: date | None = None) 
     return _token(effective_date=effective_date)
 
 
-def legal_entity_form_sin_fines_lucrativos_token(*, effective_date: date | None = None) -> LegalEntityForm:
-    """Return the registry-declared non-profit legal-form token."""
-    from ..calculations.registry.entity_type import legal_entity_form_sin_fines_lucrativos_token as _token
-
-    return _token(effective_date=effective_date)
-
-
 class LegalEntityForm(StrictRegistryToken):
     """The recognised legal form of an Impuesto sobre Sociedades entity.
 

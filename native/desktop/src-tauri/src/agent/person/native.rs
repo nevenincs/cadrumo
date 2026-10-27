@@ -663,6 +663,14 @@ mod tests {
         )
         .unwrap();
         let operation = field("operation_id");
+        let claimable = |session: &mut NativeSession, id: &str| {
+            let listed = session
+                .exchange(&json!({"request_id": id, "action": "operation_review_claimable"}))
+                .unwrap();
+            assert_eq!(listed["kind"], "operation_reviews_claimable", "{listed}");
+            listed["operation_ids"].clone()
+        };
+        let listed_before = claimable(&mut session, "fixture-list-before");
         let review = session.exchange(&json!({
             "request_id": "fixture-review", "action": "operation_review", "operation_id": operation,
         })).unwrap();
@@ -675,6 +683,7 @@ mod tests {
             "review_digest": review["review_digest"],
         })).unwrap();
         assert_eq!(claimed["kind"], "operation_review_claimed", "{claimed}");
+        let listed_claimed = claimable(&mut session, "fixture-list-claimed");
         assert_eq!(claimed["interaction_id"], review["interaction_id"]);
         assert_eq!(
             claimed["revision"].as_u64().unwrap(),
@@ -702,10 +711,13 @@ mod tests {
             }
             thread::sleep(Duration::from_millis(20));
         }
+        let listed_after = claimable(&mut session, "fixture-list-after");
         fs::write(
             field("output_file"),
             serde_json::to_vec(&json!({
                 "identity": identity, "review": review, "claimed": claimed, "responded": responded,
+                "listed_before": listed_before, "listed_claimed": listed_claimed,
+                "listed_after": listed_after,
             }))
             .unwrap(),
         )
@@ -724,6 +736,9 @@ mod tests {
     struct Runtime {
         script: Mutex<VecDeque<Answer>>,
         asked: Mutex<Vec<Value>>,
+        /// What was written on the secret frame, each only after the runtime
+        /// answered a request for it with `secret_ready`.
+        secrets: Mutex<Vec<Vec<u8>>>,
         pushes: Mutex<Option<mpsc::Sender<Pushed>>>,
         closed: AtomicBool,
     }
@@ -756,13 +771,9 @@ mod tests {
         }
     }
 
-    impl SessionExchange for Runtime {
-        fn exchange(
-            &self,
-            request: &Value,
-            _: Instant,
-        ) -> std::result::Result<Map<String, Value>, Refusal> {
-            self.asked.lock().unwrap().push(request.clone());
+    impl Runtime {
+        /// The next scripted answer to `request`.
+        fn answer(&self, request: &Value) -> std::result::Result<Map<String, Value>, Refusal> {
             match self.script.lock().unwrap().pop_front() {
                 Some(Answer::Reply(mut reply)) => {
                     reply["request_id"] = request["request_id"].clone();
@@ -773,6 +784,34 @@ mod tests {
                 Some(Answer::Denied(code)) => Err(Refusal::denied(code)),
                 Some(Answer::Closed) | None => Err(Refusal::ConnectionClosed),
             }
+        }
+    }
+
+    impl SessionExchange for Runtime {
+        fn exchange(
+            &self,
+            request: &Value,
+            _: Instant,
+        ) -> std::result::Result<Map<String, Value>, Refusal> {
+            self.asked.lock().unwrap().push(request.clone());
+            self.answer(request)
+        }
+
+        /// As the connection does: the secret is written only after the
+        /// runtime answers the request with `secret_ready`.
+        fn exchange_with_secret(
+            &self,
+            request: &Value,
+            secret: &[u8],
+            _: Instant,
+        ) -> std::result::Result<Map<String, Value>, Refusal> {
+            self.asked.lock().unwrap().push(request.clone());
+            let ready = self.answer(request)?;
+            if ready.get("kind").and_then(Value::as_str) != Some("secret_ready") {
+                return Err(Refusal::InvalidFrame);
+            }
+            self.secrets.lock().unwrap().push(secret.to_vec());
+            self.answer(request)
         }
 
         /// Records the upload's header with the text it streamed, after
@@ -1246,6 +1285,101 @@ mod tests {
         // An operation this session relayed is unsettled: its cue now reaches the window.
         runtime.push(Event::OperationChanged, SESSION);
         assert_eq!(next(&mut heard), Ok(PersonEvent::OperationChanged));
+    }
+
+    const CREDENTIAL: &str = "auth.credential.save";
+    const SECRET: &str = r#"{"password":"horse-staple-7f3a"}"#;
+    const SECRET_WORD: &str = "horse-staple-7f3a";
+
+    fn secret_submit() -> Value {
+        json!({
+            "action": "operation_secret_submit",
+            "definition_id": CREDENTIAL,
+            "subject_ref": format!("profile:{PROFILE}"),
+            "payload": {"provider": "certificate"},
+            "secret": SECRET,
+        })
+    }
+
+    #[test]
+    fn a_secret_submission_reaches_the_runtime_on_the_secret_frame_and_the_request_keeps_no_text() {
+        let description: Value = serde_json::from_str(include_str!(
+            "../../../../../application/tests/data/auth-credential-save-description.json"
+        ))
+        .unwrap();
+        let wait = json!({
+            "identity": {
+                "operation_id": OPERATION,
+                "definition_id": CREDENTIAL,
+                "subject_ref": format!("profile:{PROFILE}"),
+            },
+            "interaction_id": "d".repeat(64),
+            "revision": 0,
+            "secret_kind": "auth.credential.password",
+            "expires_at": "2026-10-27T10:05:00Z",
+        });
+        let runtime = Runtime::answering([
+            Answer::Reply(description),
+            Answer::Reply(json!({
+                "kind": "operation_submitted",
+                "receipt": {"submission_version": 1, "operation_id": OPERATION, "secret_requirement": wait},
+            })),
+            Answer::Reply(json!({"kind": "secret_ready"})),
+            Answer::Reply(json!({"kind": "operation_acknowledged", "operation_id": OPERATION})),
+            Answer::Reply(json!({"kind": "operation_acknowledged", "operation_id": OPERATION})),
+        ]);
+        let mut held = person(&runtime);
+        let mut request = secret_submit();
+        let reply = held.exchange_wiping(&mut request).unwrap();
+        assert_eq!(reply["kind"], "operation_submitted");
+        assert_eq!(reply["operation_id"], OPERATION);
+        assert_eq!(reply["session_id"], SESSION);
+        assert!(!reply.to_string().contains(SECRET_WORD));
+        // The window's request is overwritten once sent, secret included.
+        assert!(!request.to_string().contains(SECRET_WORD));
+        assert_eq!(request["secret"], "");
+        // Only the secret frame carried it, and the operation started after it.
+        assert_eq!(
+            *runtime.secrets.lock().unwrap(),
+            [SECRET.as_bytes().to_vec()]
+        );
+        let asked = runtime.asked();
+        assert!(!serde_json::to_string(&asked).unwrap().contains(SECRET_WORD));
+        let actions: Vec<_> = asked.iter().map(|sent| sent["action"].clone()).collect();
+        assert_eq!(
+            actions,
+            [
+                "operation_contract",
+                "operation_submit",
+                "operation_secret",
+                "operation_start"
+            ]
+        );
+        assert!(held.is_open());
+    }
+
+    #[test]
+    fn a_refused_secret_submission_is_the_operations_answer_and_sends_no_secret() {
+        let runtime = Runtime::answering([Answer::Denied("operation_denied")]);
+        let mut held = person(&runtime);
+        let mut request = secret_submit();
+        let refused = held.exchange_wiping(&mut request).unwrap();
+        assert_eq!(refused["kind"], "operation_refused");
+        assert_eq!(refused["code"], "operation_denied");
+        assert!(!request.to_string().contains(SECRET_WORD));
+        assert!(runtime.secrets.lock().unwrap().is_empty());
+        assert!(held.is_open());
+    }
+
+    #[test]
+    fn a_secret_submission_naming_other_keys_ends_the_session_unasked() {
+        let runtime = Runtime::answering([]);
+        let mut held = person(&runtime);
+        let mut request = secret_submit();
+        request.as_object_mut().unwrap().remove("secret");
+        held.exchange_wiping(&mut request).unwrap_err();
+        assert!(runtime.asked().is_empty());
+        assert!(!held.is_open());
     }
 
     /// The edit baselines real Modelo 303 and 347 forms admitted, as the

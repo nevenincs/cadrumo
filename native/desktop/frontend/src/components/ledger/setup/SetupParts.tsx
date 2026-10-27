@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useId,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
@@ -21,6 +22,7 @@ import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Spinner } from "@/components/ui/spinner";
+import { useTableView, type SortValue } from "@/components/ui/table-view";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type {
   LedgerDefinitionId,
@@ -170,8 +172,21 @@ export type Column<Row> = {
   /** The header is read, not shown: an actions column. */
   hidden?: boolean;
   numeric?: boolean;
+  /** What ranks a row by this column; leave it out where rows are not
+   * ranked, as in an actions column or free text. Absent values are null. */
+  sort?(row: Row): SortValue;
+  /** False where the column is only buttons and stays as wide as it is. */
+  resizable?: boolean;
   cell(row: Row): ReactNode;
 };
+
+/** A decimal string as a number to rank rows by; null where it is absent or
+ * not a number. */
+export function rankDecimal(value: string | null | undefined): number | null {
+  if (value === null || value === undefined || value.trim() === "") return null;
+  const ranked = Number(value);
+  return Number.isFinite(ranked) ? ranked : null;
+}
 
 /** A small register's rows, with a header a screen reader names. */
 export function SetupTable<Row>({
@@ -189,6 +204,24 @@ export function SetupTable<Row>({
   className?: string;
   selected?: string | null;
 }) {
+  const t = useStrings();
+  const view = useTableView<Row>({
+    columns: useMemo(
+      () =>
+        columns.map((column) => ({
+          id: column.key,
+          label: column.label,
+          name: column.label,
+          align: column.numeric ? ("end" as const) : ("start" as const),
+          sortValue: column.sort,
+          hidden: column.hidden,
+          resizable: column.hidden ? false : column.resizable,
+        })),
+      [columns],
+    ),
+    rows,
+    resizeLabel: (column) => t("desktop.table.resize_column", { column }),
+  });
   return (
     <div
       role="group"
@@ -196,28 +229,13 @@ export function SetupTable<Row>({
       tabIndex={0}
       aria-label={label}
     >
-      <table className={cn("w-full text-sm", className)}>
+      <table {...view.tableProps} className={cn("w-full text-sm", className)}>
         <caption className="sr-only">{label}</caption>
         <thead>
-          <tr className="text-left text-muted-foreground">
-            {columns.map((column) => (
-              <th
-                key={column.key}
-                scope="col"
-                className={cn(
-                  "px-2 py-1 font-normal whitespace-nowrap",
-                  column.numeric && "text-right",
-                )}
-              >
-                <span className={column.hidden ? "sr-only" : undefined}>
-                  {column.label}
-                </span>
-              </th>
-            ))}
-          </tr>
+          <tr className="text-left text-muted-foreground">{view.headers}</tr>
         </thead>
         <tbody>
-          {rows.map((row) => {
+          {view.rows.map((row) => {
             const key = rowKey(row);
             return (
               <tr

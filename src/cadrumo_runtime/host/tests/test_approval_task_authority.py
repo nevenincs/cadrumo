@@ -5,8 +5,8 @@ from __future__ import annotations
 import asyncio
 import os
 import sys
-from collections.abc import AsyncGenerator, Generator
-from contextlib import asynccontextmanager, contextmanager
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 from pathlib import Path
 from threading import Event
 from typing import override
@@ -119,10 +119,10 @@ def _registry() -> OperationRegistry:
     )
 
 
-@contextmanager
-def _authority(
+@asynccontextmanager
+async def _authority(
     tmp_path: Path,
-) -> Generator[
+) -> AsyncGenerator[
     tuple[
         ProfileWorkerOperationAuthority,
         HeldAuthorizationClient,
@@ -172,7 +172,7 @@ def _authority(
                     definition_id=request.definition_id,
                     subject_ref=request.subject_ref,
                 )
-                authority.bind(
+                await authority.bind(
                     identity.operation_id,
                     WorkerOperationBinding(
                         session_id=session.session_id, frontend=OperationFrontendProjection.CLI, request=request
@@ -196,12 +196,12 @@ def _authority(
 
 async def _establish_provenance(authority: ProfileWorkerOperationAuthority, identity: OperationIdentity) -> None:
     async with authority.guard(identity, AccessAction.SUBMIT):
-        provenance = authority.capture_provenance(identity)
+        provenance = await authority.capture_provenance(identity)
         assert provenance.identity == identity
 
 
 async def _exercise(tmp_path: Path) -> None:
-    with _authority(tmp_path) as (authority, client, identity, binding, custody):
+    async with _authority(tmp_path) as (authority, client, identity, binding, custody):
         await _establish_provenance(authority, identity)
         with pytest.raises(ProfileAccessRefusedError, match="operation_denied"):
             await authority.publish_approval(identity, binding, "commit_review")

@@ -349,7 +349,7 @@ async def _handle_submission(
         _write_upload_accepted(channel, operations, request.request_id, request.upload_id)
         return
     if isinstance(request, ProfileWorkerSubmissionChunkRequest):
-        operations.custody.require(request.session_id)
+        await operations.custody.require_off_loop(request.session_id)
         uploads.append(request)
         _write_upload_accepted(channel, operations, request.request_id, request.upload_id)
         return

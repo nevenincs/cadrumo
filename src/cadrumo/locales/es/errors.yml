@@ -1220,8 +1220,8 @@ errors:
     refused_ledger_evidence_page_unsupported_media: Solo los documentos PDF, JPEG
       y PNG se pueden mostrar como página.
     refused_ledger_evidence_reader_unavailable: El lector automático no ha podido
-      funcionar, así que no se ha leído nada. Elige o revisa el modelo que lee los
-      documentos en la aplicación de escritorio de Cadrumo y vuelve a intentarlo.
+      funcionar, así que no se ha leído nada. Revisa la lista de modelos de la IA
+      local en la aplicación de escritorio de Cadrumo y vuelve a intentarlo.
     refused_ledger_evidence_reader_unreadable_answer: El lector de documentos respondió
       en un formato que este comando no ha podido leer, así que no se ha tomado nada
       del documento. No se ha guardado nada; vuelve a ejecutar el comando y, si sigue
@@ -1244,11 +1244,11 @@ errors:
       o está incompleta.
     refused_llm_consent: Se ha rechazado la lectura del documento fuera del equipo
       porque no se ha otorgado el consentimiento para la transmisión externa.
-    refused_llm_contention: El modelo elegido no cabe ahora mismo en la memoria libre
-      de este equipo. Cierra otros programas o elige un modelo más pequeño en la aplicación
-      de escritorio de Cadrumo y vuelve a intentarlo.
-    refused_llm_no_model_selected: No hay ningún modelo elegido para esta tarea. Elige
-      uno en la aplicación de escritorio de Cadrumo y vuelve a intentarlo.
+    refused_llm_contention: El modelo con el que lee Cadrumo no cabe ahora mismo en
+      la memoria libre de este equipo. Cierra otros programas y vuelve a intentarlo.
+    refused_llm_no_model_selected: Ningún modelo de la lista de la IA local puede
+      hacer esta tarea. Añade uno a la lista en la aplicación de escritorio de Cadrumo
+      y vuelve a intentarlo.
     refused_llm_validation: Un objeto del modelo de lenguaje no superó la validación.
     refused_modelo_100_borrador_binding: Los valores del borrador de Modelo 100 no
       se pueden usar para el cálculo.

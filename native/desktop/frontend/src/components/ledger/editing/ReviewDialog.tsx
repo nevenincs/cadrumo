@@ -17,6 +17,7 @@ import { Icon, type IconName } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Spinner } from "@/components/ui/spinner";
+import { useTableView, type ViewColumn } from "@/components/ui/table-view";
 import type {
   CatalogueInvoice,
   LedgerRow,
@@ -60,6 +61,7 @@ import {
   linksReady,
   outcomeTally,
   type AskedConflict,
+  type ChangeGroup,
   type LinkTicks,
   type LinkMismatch,
   type StageTally,
@@ -1355,6 +1357,87 @@ function Outcomes({ items }: { items: readonly OutcomeItem[] }) {
   );
 }
 
+/** The summary by kind of change: the field, what changes and on how many
+ * movements, with its columns sortable by field and by count. */
+function SummaryTable({
+  groups,
+  locale,
+  onShowRows,
+}: {
+  groups: readonly ChangeGroup[];
+  locale: string;
+  onShowRows(ids: string[]): void;
+}) {
+  const t = useStrings();
+  const field = t("desktop.ledger.apply.summary_field");
+  const change = t("desktop.ledger.apply.summary_change");
+  const movements = t("desktop.ledger.apply.summary_movements");
+  const show = t("desktop.ledger.apply.fix.show");
+  const view = useTableView({
+    columns: [
+      {
+        id: "field",
+        label: field,
+        name: field,
+        sortValue: (group) => fieldName(t, group.field),
+      },
+      { id: "change", label: change, name: change },
+      {
+        id: "movements",
+        label: movements,
+        name: movements,
+        align: "end",
+        sortValue: (group) => group.ids.length,
+      },
+      {
+        id: "show",
+        label: show,
+        name: show,
+        hidden: true,
+        resizable: false,
+      },
+    ] satisfies ViewColumn<ChangeGroup>[],
+    rows: groups,
+    resizeLabel: (column) => t("desktop.table.resize_column", { column }),
+  });
+  return (
+    <table className="ledger-summary w-full text-base" {...view.tableProps}>
+      <thead className="text-sm text-muted-foreground">
+        <tr className="border-b border-border">{view.headers}</tr>
+      </thead>
+      <tbody>
+        {view.rows.map((group) => (
+          <tr
+            key={`${group.field}:${group.ids[0]}`}
+            className="border-b border-border"
+          >
+            <td className="py-1.5 pe-3">{fieldName(t, group.field)}</td>
+            <td className="py-1.5 pe-3">
+              <span className="text-muted-foreground">
+                {valueText(t, locale, group.field, group.from)}
+              </span>
+              {" → "}
+              {group.to.kind === "set"
+                ? valueText(t, locale, group.field, group.to.value)
+                : t("desktop.ledger.edit.cleared")}
+            </td>
+            <td className="py-1.5 text-end tabular-nums">{group.ids.length}</td>
+            <td className="py-1.5 text-end">
+              <Button
+                variant="link"
+                size="xs"
+                onClick={() => onShowRows(group.ids)}
+              >
+                {t("desktop.ledger.apply.show_rows")}
+              </Button>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
 // ---- The dialog ------------------------------------------------------------
 
 /**
@@ -1592,60 +1675,14 @@ export function ReviewDialog({
             >
               {t("desktop.ledger.apply.summary")}
             </h3>
-            <table className="ledger-summary w-full text-base">
-              <thead className="text-sm text-muted-foreground">
-                <tr className="border-b border-border">
-                  <th scope="col" className="py-1 text-start font-normal">
-                    {t("desktop.ledger.apply.summary_field")}
-                  </th>
-                  <th scope="col" className="py-1 text-start font-normal">
-                    {t("desktop.ledger.apply.summary_change")}
-                  </th>
-                  <th scope="col" className="py-1 text-end font-normal">
-                    {t("desktop.ledger.apply.summary_movements")}
-                  </th>
-                  <th scope="col" className="py-1">
-                    <span className="sr-only">
-                      {t("desktop.ledger.apply.fix.show")}
-                    </span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {groups.slice(0, 12).map((group) => (
-                  <tr
-                    key={`${group.field}:${group.ids[0]}`}
-                    className="border-b border-border"
-                  >
-                    <td className="py-1.5 pe-3">{fieldName(t, group.field)}</td>
-                    <td className="py-1.5 pe-3">
-                      <span className="text-muted-foreground">
-                        {valueText(t, locale, group.field, group.from)}
-                      </span>
-                      {" → "}
-                      {group.to.kind === "set"
-                        ? valueText(t, locale, group.field, group.to.value)
-                        : t("desktop.ledger.edit.cleared")}
-                    </td>
-                    <td className="py-1.5 text-end tabular-nums">
-                      {group.ids.length}
-                    </td>
-                    <td className="py-1.5 text-end">
-                      <Button
-                        variant="link"
-                        size="xs"
-                        onClick={() => {
-                          setOnly(group.ids);
-                          setListOpen(true);
-                        }}
-                      >
-                        {t("desktop.ledger.apply.show_rows")}
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <SummaryTable
+              groups={groups.slice(0, 12)}
+              locale={locale}
+              onShowRows={(ids) => {
+                setOnly(ids);
+                setListOpen(true);
+              }}
+            />
           </section>
         )}
         <RuleApplies

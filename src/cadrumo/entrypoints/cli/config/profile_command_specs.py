@@ -261,8 +261,6 @@ _WIZARD = "....application.wizard.results"
 _WIZARD_CONFIRM_FIELDS = frozenset(
     {
         "new-entity-first-two-profit-periods",
-        "ley-49-2002-option-declared",
-        "ley-49-2002-renunciation-declared",
         "iva-roi-enrolled",
         "iva-oss-enrolled",
         "iva-group-member-enrolled",
@@ -314,10 +312,6 @@ _WIZARD_FIELDS = (
     "activity-start-date",
     "incn-prior-12-months",
     "new-entity-first-two-profit-periods",
-    "ley-49-2002-option-declared",
-    "ley-49-2002-option-date",
-    "ley-49-2002-renunciation-declared",
-    "ley-49-2002-renunciation-date",
     "iva-regime",
     "iva-m303-regime-composition",
     "iva-roi-enrolled",
@@ -359,14 +353,6 @@ _WIZARD_FIELDS = (
     "modelo-111-no-retenciones-periods",
     "modelo-115-no-relevant-payment-periods",
     "irpf-estimation-regime",
-    "objective-estimation-modulos-iae-epigraph",
-    "objective-estimation-modulos-module-1-units",
-    "objective-estimation-modulos-module-2-units",
-    "objective-estimation-modulos-module-3-units",
-    "objective-estimation-modulos-module-4-units",
-    "objective-estimation-modulos-module-5-units",
-    "objective-estimation-modulos-module-6-units",
-    "objective-estimation-modulos-module-7-units",
     "irpf-special-regime",
     "irpf-special-regime-start-date",
     "does-intracomunitario",
@@ -377,7 +363,6 @@ _WIZARD_FIELDS = (
     "premio-loteria-gravamen-especial-trimestres",
     "llm-vision",
     "google-export",
-    "notes",
 )
 
 

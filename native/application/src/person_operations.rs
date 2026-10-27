@@ -16,6 +16,18 @@
 //! the runtime's `operation_changed` cue for the held session instead of on a
 //! timer.
 //!
+//! A definition whose contract requires an ephemeral secret is submitted only
+//! by `operation_secret_submit`. The relay describes the definition first and
+//! refuses unless its contract asks for a secret, submits the request without
+//! the secret, and requires the receipt's secret requirement to name exactly
+//! the operation, definition and subject it submitted. The secret then
+//! travels only on the runtime's secret frame, once the runtime has said it is
+//! ready for it, and the operation starts only after the runtime acknowledges
+//! it. The secret is the exact text of that frame, which the operation's
+//! executor parses; the relay never parses, copies, logs or answers it. A
+//! plain submission whose receipt asks for a secret is refused, since nothing
+//! would ever deliver it.
+//!
 //! Requests, reply checks and refusal codes follow the Python client. That
 //! client validated each reply against the product's typed models; here the
 //! fields the client relies on and their cross-checks are verified, and a
@@ -25,7 +37,8 @@
 
 use crate::canonical_json::{canonical_json, compact_json, json_string};
 use crate::runtime_client::{
-    Admitted, Event, Pushed, Refusal, SessionExchange, base64_decode, request_id,
+    Admitted, Event, MAXIMUM_SECRET_BYTES, Pushed, Refusal, SessionExchange, base64_decode,
+    request_id,
 };
 use crate::value::Sha256Digest;
 use serde_json::{Map, Number, Value, json};
@@ -77,7 +90,7 @@ const RUNTIME_REFUSAL_CODES: [&str; 12] = [
     "runtime_draining",
     "runtime_containment_unavailable",
 ];
-const REPLY_KINDS: [&str; 8] = [
+const REPLY_KINDS: [&str; 9] = [
     "operation_submitted",
     "operation_acknowledged",
     "operation_observed",
@@ -86,8 +99,17 @@ const REPLY_KINDS: [&str; 8] = [
     "operation_page",
     "operation_managed",
     "operation_review_claimed",
+    "operation_reviews_claimable",
 ];
 const ENVELOPE: [&str; 4] = ["kind", "request_id", "runtime_boot_id", "connection_id"];
+const SECRET_REQUIREMENT_KEYS: [&str; 5] = [
+    "identity",
+    "interaction_id",
+    "revision",
+    "secret_kind",
+    "expires_at",
+];
+const SECRET_IDENTITY_KEYS: [&str; 3] = ["operation_id", "definition_id", "subject_ref"];
 
 const LIFECYCLES: [&str; 8] = [
     "created",
@@ -304,10 +326,16 @@ const PROFILE_VIEW_PAGE_REQUIRED: [&str; 10] = [
 ];
 
 /// Each relay action and the request members it takes beside `request_id` and `action`.
-pub const RELAY_ACTION_KEYS: [(&str, &[&str]); 8] = [
+pub const RELAY_ACTION_KEYS: [(&str, &[&str]); 10] = [
     (
         "operation_submit",
         &["definition_id", "subject_ref", "payload"],
+    ),
+    // `secret` is the exact text of the secret frame, 1 to `MAXIMUM_SECRET_BYTES`
+    // bytes, in the form the definition's executor parses.
+    (
+        "operation_secret_submit",
+        &["definition_id", "subject_ref", "payload", "secret"],
     ),
     (
         "operation_financial_submit",
@@ -316,6 +344,7 @@ pub const RELAY_ACTION_KEYS: [(&str, &[&str]); 8] = [
     ("operation_observe", &["operation_id", "after_cursor"]),
     ("operation_result", &["operation_id"]),
     ("operation_review", &["operation_id"]),
+    ("operation_review_claimable", &[]),
     (
         "operation_review_claim",
         &[
@@ -488,8 +517,14 @@ impl OperationRelay {
         if action == "operation_submit" {
             return self.submit(held, request, deadline);
         }
+        if action == "operation_secret_submit" {
+            return self.submit_secret(held, request, deadline);
+        }
         if action == "operation_financial_submit" {
             return self.submit_financial(held, request, deadline);
+        }
+        if action == "operation_review_claimable" {
+            return claimable_reviews(held, deadline);
         }
         let operation_id = argument_text(request, "operation_id")?;
         match action {
@@ -553,8 +588,53 @@ impl OperationRelay {
         }
         let definition_id = argument_text(request, "definition_id")?;
         let subject_ref = argument_text(request, "subject_ref")?;
-        let operation_id = submit(held, definition_id, subject_ref, &payload_json, deadline)?.0;
-        self.started(held, operation_id, deadline)
+        let submitted = submit(held, definition_id, subject_ref, &payload_json, deadline)?;
+        self.started(held, submitted.without_secret()?, deadline)
+    }
+
+    /// Submits a definition whose contract requires an ephemeral secret and
+    /// hands the runtime `secret` on its secret frame, then starts the
+    /// operation. Nothing is submitted for a definition that takes no secret,
+    /// nothing is sent on the secret frame unless the runtime names exactly
+    /// this submission's wait and says it is ready, and the operation does not
+    /// start unless the runtime acknowledges the secret. A request that
+    /// fails after the secret was written has an unknown outcome.
+    fn submit_secret(
+        &mut self,
+        held: &Held,
+        request: &Map<String, Value>,
+        deadline: Instant,
+    ) -> Outcome<Map<String, Value>> {
+        let payload = request.get("payload").ok_or(Failure::Invalid)?;
+        if !payload.is_object() {
+            return Err(Failure::Invalid);
+        }
+        // The secret is only borrowed from the parent's request, which the
+        // parent overwrites once the exchange ends.
+        let secret = match request.get("secret") {
+            Some(Value::String(secret)) if (1..=MAXIMUM_SECRET_BYTES).contains(&secret.len()) => {
+                secret
+            }
+            _ => return Err(Failure::Invalid),
+        };
+        let payload_json = Zeroizing::new(compact_json(payload));
+        if payload_json.len() > PROJECTION_DOCUMENT_MAX_BYTES {
+            return Err(Failure::Invalid);
+        }
+        let definition = argument_text(request, "definition_id")?;
+        let subject_ref = argument_text(request, "subject_ref")?;
+        let subject_length = subject_ref.chars().count();
+        if !definition_id(definition) || !(1..=SUBJECT_REF_MAX_CHARS).contains(&subject_length) {
+            return Err(Failure::frame());
+        }
+        if !describe(held, definition, deadline)?.ephemeral_secret_required {
+            return Err(Failure::code("secret_not_required"));
+        }
+        let submitted = submit(held, definition, subject_ref, &payload_json, deadline)?;
+        drop(payload_json);
+        let requirement = submitted.requirement_for(definition, subject_ref)?;
+        deliver_secret(held, requirement, &submitted.operation_id, secret, deadline)?;
+        self.started(held, submitted.operation_id, deadline)
     }
 
     /// Hands the parent's input to the runtime once, streamed as its financial
@@ -589,7 +669,7 @@ impl OperationRelay {
             deadline,
         )?;
         drop(input_json);
-        let operation_id = submitted_receipt(&reply)?.0;
+        let operation_id = submitted_receipt(&reply)?.without_secret()?;
         self.started(held, operation_id, deadline)
     }
 
@@ -1206,6 +1286,8 @@ struct Contract {
     interaction_response_schema: Option<Value>,
     refusal_detail_codes: Vec<String>,
     interaction_kinds: Vec<String>,
+    /// Whether a submission waits for a secret before it may start.
+    ephemeral_secret_required: bool,
 }
 
 fn contract(value: &Value) -> Outcome<Contract> {
@@ -1294,6 +1376,8 @@ fn contract(value: &Value) -> Outcome<Contract> {
     if content_hash(&Value::Object(governed)) != digest {
         return Err(Failure::frame());
     }
+    let ephemeral_secret_required =
+        normalized.get("ephemeral_secret_required") == Some(&Value::Bool(true));
     Ok(Contract {
         normalized: Value::Object(normalized),
         definition_id: definition,
@@ -1304,6 +1388,7 @@ fn contract(value: &Value) -> Outcome<Contract> {
         interaction_response_schema,
         refusal_detail_codes,
         interaction_kinds,
+        ephemeral_secret_required,
     })
 }
 
@@ -1583,15 +1668,14 @@ fn observe_once(
     observed(&reply)
 }
 
-/// Submits one registered request; returns the operation id and whether the
-/// receipt asks for no secret.
+/// Submits one registered request and returns what the runtime admitted.
 fn submit(
     held: &Held,
     definition: &str,
     subject_ref: &str,
     payload_json: &str,
     deadline: Instant,
-) -> Outcome<(String, bool)> {
+) -> Outcome<Submitted> {
     let subject_length = subject_ref.chars().count();
     if !definition_id(definition)
         || !(1..=SUBJECT_REF_MAX_CHARS).contains(&subject_length)
@@ -1638,9 +1722,56 @@ enum Upload {
     Financial,
 }
 
-/// The operation id of an `operation_submitted` reply, and whether its receipt
-/// asks for no secret.
-fn submitted_receipt(reply: &Map<String, Value>) -> Outcome<(String, bool)> {
+/// What the runtime admitted for a submission: the operation, and the wait for
+/// a secret that its receipt opened, if any.
+struct Submitted {
+    operation_id: String,
+    secret_requirement: Option<Map<String, Value>>,
+}
+
+impl Submitted {
+    /// The operation's id, when its receipt asks for no secret. A submission
+    /// that cannot deliver one would leave the operation waiting unstarted.
+    fn without_secret(self) -> Outcome<String> {
+        match self.secret_requirement {
+            None => Ok(self.operation_id),
+            Some(_) => Err(Failure::code("secret_required")),
+        }
+    }
+
+    /// The wait the receipt opened, which must be a well-formed requirement
+    /// naming exactly this operation, `definition` and `subject_ref`.
+    fn requirement_for(&self, definition: &str, subject_ref: &str) -> Outcome<&Map<String, Value>> {
+        let requirement = self
+            .secret_requirement
+            .as_ref()
+            .ok_or_else(Failure::frame)?;
+        let identity = requirement
+            .get("identity")
+            .and_then(Value::as_object)
+            .filter(|identity| closed(identity, &SECRET_IDENTITY_KEYS, &SECRET_IDENTITY_KEYS))
+            .ok_or_else(Failure::frame)?;
+        let secret_kind = text(requirement, "secret_kind");
+        let named = text(identity, "operation_id") == Some(self.operation_id.as_str())
+            && text(identity, "definition_id") == Some(definition)
+            && text(identity, "subject_ref") == Some(subject_ref);
+        let shaped = closed(
+            requirement,
+            &SECRET_REQUIREMENT_KEYS,
+            &SECRET_REQUIREMENT_KEYS,
+        ) && hex64(requirement, "interaction_id").is_ok()
+            && count(requirement, "revision").is_ok()
+            && secret_kind.is_some_and(|kind| (3..=64).contains(&kind.len()) && dotted(kind, 0))
+            && matches!(nullable_utc(requirement, "expires_at"), Ok(Some(_)));
+        if !named || !shaped {
+            return Err(Failure::frame());
+        }
+        Ok(requirement)
+    }
+}
+
+/// The operation an `operation_submitted` reply admitted.
+fn submitted_receipt(reply: &Map<String, Value>) -> Outcome<Submitted> {
     envelope(reply, "operation_submitted", &["receipt"])?;
     let receipt = reply
         .get("receipt")
@@ -1653,12 +1784,41 @@ fn submitted_receipt(reply: &Map<String, Value>) -> Outcome<(String, bool)> {
             ) && version_one(receipt, "submission_version")
         })
         .ok_or_else(Failure::frame)?;
-    let secret_free = match receipt.get("secret_requirement") {
-        Some(Value::Null) => true,
-        Some(Value::Object(_)) => false,
+    let secret_requirement = match receipt.get("secret_requirement") {
+        Some(Value::Null) => None,
+        Some(Value::Object(requirement)) => Some(requirement.clone()),
         _ => return Err(Failure::frame()),
     };
-    Ok((hex64(receipt, "operation_id")?.to_owned(), secret_free))
+    Ok(Submitted {
+        operation_id: hex64(receipt, "operation_id")?.to_owned(),
+        secret_requirement,
+    })
+}
+
+/// Hands `secret` to the wait `requirement` names, on the secret frame the
+/// runtime opens once it has accepted exactly that requirement, and requires
+/// it to acknowledge the secret for `operation_id`. A refusal before the
+/// runtime is ready sends nothing.
+fn deliver_secret(
+    held: &Held,
+    requirement: &Map<String, Value>,
+    operation_id: &str,
+    secret: &str,
+    deadline: Instant,
+) -> Outcome<()> {
+    let request = held.request(
+        "operation_secret",
+        json!({"requirement": requirement}),
+        deadline,
+    )?;
+    let reply = held
+        .connection
+        .exchange_with_secret(&request, secret.as_bytes(), deadline)?;
+    envelope(&reply, "operation_acknowledged", &["operation_id"])?;
+    if hex64(&reply, "operation_id")? != operation_id {
+        return Err(Failure::frame());
+    }
+    Ok(())
 }
 
 /// Admits a submitted operation; the acknowledgement is not settlement.
@@ -1779,6 +1939,35 @@ fn response_accepted(
         return Err(Failure::frame());
     }
     Ok(())
+}
+
+/// The most operations one claimable-review listing names, as the runtime bounds it.
+const CLAIMABLE_REVIEWS_MAX: usize = 16;
+
+/// The setup operations whose current review this desktop person may claim.
+/// Naming one grants nothing: each is read and claimed on its own.
+fn claimable_reviews(held: &Held, deadline: Instant) -> Outcome<Map<String, Value>> {
+    let reply = held.exchange("operation_review_claimable", json!({}), deadline)?;
+    let listed = reply
+        .get("operation_ids")
+        .and_then(Value::as_array)
+        .filter(|ids| ids.len() <= CLAIMABLE_REVIEWS_MAX)
+        .ok_or_else(Failure::frame)?;
+    let mut operation_ids = Vec::with_capacity(listed.len());
+    for id in listed {
+        let id = id.as_str().filter(|id| is_hex64(id)).ok_or_else(Failure::frame)?;
+        if operation_ids.contains(&id) {
+            return Err(Failure::frame());
+        }
+        operation_ids.push(id);
+    }
+    if text(&reply, "kind") != Some("operation_reviews_claimable") {
+        return Err(Failure::frame());
+    }
+    Ok(members(json!({
+        "kind": "operation_reviews_claimable",
+        "operation_ids": operation_ids,
+    })))
 }
 
 fn cancel(
@@ -2201,10 +2390,11 @@ fn read_view_page(
     deadline: Instant,
 ) -> Outcome<ViewPage> {
     let subject = held.subject();
-    let (operation_id, secret_free) = submit(held, PROFILE_VIEW, &subject, payload, deadline)?;
-    if !secret_free {
+    let submitted = submit(held, PROFILE_VIEW, &subject, payload, deadline)?;
+    if submitted.secret_requirement.is_some() {
         return Err(Failure::frame());
     }
+    let operation_id = submitted.operation_id;
     start(held, &operation_id, deadline)?;
     let projection = await_terminal(
         held,
@@ -2339,11 +2529,11 @@ fn mutate_language(
         json_string(OUTPUT_LANGUAGE_PATH),
         json_string(language),
     );
-    let (operation_id, secret_free) =
-        submit(held, &contract.definition_id, &subject, &payload, deadline)?;
-    if !secret_free {
+    let submitted = submit(held, &contract.definition_id, &subject, &payload, deadline)?;
+    if submitted.secret_requirement.is_some() {
         return Err(Failure::frame());
     }
+    let operation_id = submitted.operation_id;
     start(held, &operation_id, deadline)?;
     let projection = await_terminal(
         held,
@@ -2598,6 +2788,9 @@ mod tests {
     struct Fake {
         steps: Mutex<VecDeque<Step>>,
         sent: Mutex<Vec<Value>>,
+        /// What was written on the secret frame, each only after the runtime
+        /// answered a request for it with `secret_ready`.
+        secrets: Mutex<Vec<Vec<u8>>>,
         subscribers: Mutex<Vec<mpsc::Sender<Pushed>>>,
     }
 
@@ -2606,8 +2799,21 @@ mod tests {
             Self {
                 steps: Mutex::new(steps.into()),
                 sent: Mutex::new(Vec::new()),
+                secrets: Mutex::new(Vec::new()),
                 subscribers: Mutex::new(Vec::new()),
             }
+        }
+
+        fn answer(&self) -> Result<Map<String, Value>, Refusal> {
+            let Some((reply, pushed)) = self.steps.lock().unwrap().pop_front() else {
+                return Err(Refusal::ConnectionClosed);
+            };
+            if let Some(pushed) = pushed {
+                for subscriber in self.subscribers.lock().unwrap().iter() {
+                    let _ = subscriber.send(pushed.clone());
+                }
+            }
+            reply.map(members)
         }
 
         /// What was sent, each request without its request id, which must be a fresh UUID.
@@ -2640,15 +2846,25 @@ mod tests {
             _deadline: Instant,
         ) -> Result<Map<String, Value>, Refusal> {
             self.sent.lock().unwrap().push(request.clone());
-            let Some((reply, pushed)) = self.steps.lock().unwrap().pop_front() else {
-                return Err(Refusal::ConnectionClosed);
-            };
-            if let Some(pushed) = pushed {
-                for subscriber in self.subscribers.lock().unwrap().iter() {
-                    let _ = subscriber.send(pushed.clone());
-                }
+            self.answer()
+        }
+
+        /// As the connection does: the secret is written only after the
+        /// runtime answers the request with `secret_ready`, and the reply
+        /// that follows it is the final one.
+        fn exchange_with_secret(
+            &self,
+            request: &Value,
+            secret: &[u8],
+            _deadline: Instant,
+        ) -> Result<Map<String, Value>, Refusal> {
+            self.sent.lock().unwrap().push(request.clone());
+            let ready = self.answer()?;
+            if text(&ready, "kind") != Some("secret_ready") {
+                return Err(Refusal::InvalidFrame);
             }
-            reply.map(members)
+            self.secrets.lock().unwrap().push(secret.to_vec());
+            self.answer()
         }
 
         /// Records the upload's header with the bytes it streamed, after
@@ -3337,6 +3553,376 @@ mod tests {
         assert!(!relay.watching());
     }
 
+    /// The product registry's own `auth.credential.save` description, as the
+    /// runtime answers a contract request for it.
+    const CREDENTIAL_DESCRIPTION: &str =
+        include_str!("../tests/data/auth-credential-save-description.json");
+    const CREDENTIAL: &str = "auth.credential.save";
+    /// The exact text of the secret frame the credential operation parses.
+    const SECRET: &str = r#"{"password":"horse-staple-7f3a"}"#;
+    const SECRET_WORD: &str = "horse-staple-7f3a";
+
+    fn credential_contract_reply() -> Value {
+        serde_json::from_str(CREDENTIAL_DESCRIPTION).unwrap()
+    }
+
+    fn subject() -> String {
+        format!("profile:{PROFILE}")
+    }
+
+    /// The wait the runtime opens for a credential submission.
+    fn requirement(id: &str) -> Value {
+        json!({
+            "identity": {"operation_id": id, "definition_id": CREDENTIAL, "subject_ref": subject()},
+            "interaction_id": interaction(),
+            "revision": 0,
+            "secret_kind": "auth.credential.password",
+            "expires_at": "2026-10-27T10:05:00Z",
+        })
+    }
+
+    fn awaiting_secret(id: &str, requirement: Value) -> Value {
+        json!({
+            "kind": "operation_submitted",
+            "receipt": {"submission_version": 1, "operation_id": id, "secret_requirement": requirement},
+        })
+    }
+
+    fn secret_ready() -> Value {
+        json!({"kind": "secret_ready"})
+    }
+
+    fn credential_request() -> Value {
+        json!({
+            "definition_id": CREDENTIAL,
+            "subject_ref": subject(),
+            "payload": {"provider": "certificate"},
+            "secret": SECRET,
+        })
+    }
+
+    fn secret_submit(
+        fake: &Fake,
+        relay: &mut OperationRelay,
+        request: Value,
+    ) -> Result<Map<String, Value>, RelayFailure> {
+        handle(fake, relay, "operation_secret_submit", request)
+    }
+
+    /// The secret is in no document the runtime was sent beside its frame.
+    fn assert_secret_only_on_its_frame(fake: &Fake) {
+        let sent = fake.sent();
+        assert!(!serde_json::to_string(&sent).unwrap().contains(SECRET_WORD));
+        assert!(!format!("{sent:?}").contains(SECRET_WORD));
+    }
+
+    #[test]
+    fn a_secret_travels_only_on_the_secret_frame_after_the_runtime_is_ready() {
+        let fake = Fake::new(vec![
+            reply(credential_contract_reply()),
+            reply(awaiting_secret(&operation(), requirement(&operation()))),
+            reply(secret_ready()),
+            reply(acknowledged(&operation())),
+            reply(acknowledged(&operation())),
+        ]);
+        let mut relay = OperationRelay::new();
+        let answered = secret_submit(&fake, &mut relay, credential_request()).unwrap();
+        assert_eq!(
+            Value::Object(answered.clone()),
+            json!({"kind": "operation_submitted", "operation_id": operation()})
+        );
+        assert!(!format!("{answered:?}").contains(SECRET_WORD));
+        assert!(relay.watching());
+        assert!(fake.finished());
+        // Exactly once, as the frame's own text.
+        assert_eq!(*fake.secrets.lock().unwrap(), [SECRET.as_bytes().to_vec()]);
+        assert_secret_only_on_its_frame(&fake);
+        // The contract is read first; the secret's wait is the one the receipt
+        // opened, passed back unchanged; the operation starts last.
+        assert_eq!(
+            fake.sent(),
+            vec![
+                target(json!({"action": "operation_contract", "definition_id": CREDENTIAL})),
+                target(json!({
+                    "action": "operation_submit",
+                    "definition_id": CREDENTIAL,
+                    "idempotency_key": null,
+                    "payload_json": "{\"provider\":\"certificate\"}",
+                    "subject_ref": subject(),
+                })),
+                target(json!({
+                    "action": "operation_secret",
+                    "requirement": requirement(&operation()),
+                })),
+                target(json!({"action": "operation_start", "operation_id": operation()})),
+            ]
+        );
+    }
+
+    #[test]
+    fn a_secret_at_the_frames_bound_is_delivered_and_one_past_it_never_reaches_the_runtime() {
+        let wide = "a".repeat(MAXIMUM_SECRET_BYTES);
+        let fake = Fake::new(vec![
+            reply(credential_contract_reply()),
+            reply(awaiting_secret(&operation(), requirement(&operation()))),
+            reply(secret_ready()),
+            reply(acknowledged(&operation())),
+            reply(acknowledged(&operation())),
+        ]);
+        let mut request = credential_request();
+        request["secret"] = json!(wide);
+        secret_submit(&fake, &mut OperationRelay::new(), request).unwrap();
+        assert_eq!(fake.secrets.lock().unwrap()[0].len(), MAXIMUM_SECRET_BYTES);
+        for secret in [json!(format!("{wide}a")), json!(""), json!(7), Value::Null] {
+            let fake = Fake::new(Vec::new());
+            let mut request = credential_request();
+            request["secret"] = secret;
+            let refused = secret_submit(&fake, &mut OperationRelay::new(), request);
+            assert!(matches!(refused, Err(RelayFailure::Invalid)), "{refused:?}");
+            assert!(fake.sent().is_empty());
+        }
+    }
+
+    #[test]
+    fn a_malformed_secret_submission_never_reaches_the_runtime() {
+        for (member, value) in [
+            ("payload", json!(["provider"])),
+            ("payload", Value::Null),
+            ("definition_id", json!("")),
+            ("subject_ref", json!(7)),
+        ] {
+            let fake = Fake::new(Vec::new());
+            let mut request = credential_request();
+            request[member] = value;
+            let refused = secret_submit(&fake, &mut OperationRelay::new(), request);
+            assert!(matches!(refused, Err(RelayFailure::Invalid)), "{member}");
+            assert!(fake.sent().is_empty(), "{member}");
+        }
+        // The request model refuses what the relay's own checks admit.
+        for (member, value) in [
+            ("definition_id", json!("Auth.Credential")),
+            ("subject_ref", json!("p".repeat(SUBJECT_REF_MAX_CHARS + 1))),
+        ] {
+            let fake = Fake::new(Vec::new());
+            let mut request = credential_request();
+            request[member] = value;
+            refused_with(
+                secret_submit(&fake, &mut OperationRelay::new(), request),
+                "unavailable",
+            );
+            assert!(fake.sent().is_empty(), "{member}");
+        }
+        let fake = Fake::new(Vec::new());
+        let mut request = credential_request();
+        request.as_object_mut().unwrap().remove("secret");
+        let refused = secret_submit(&fake, &mut OperationRelay::new(), request);
+        assert!(matches!(refused, Err(RelayFailure::Invalid)));
+        assert!(fake.sent().is_empty());
+    }
+
+    #[test]
+    fn a_definition_whose_contract_takes_no_secret_is_refused_before_anything_is_submitted() {
+        let fake = Fake::new(vec![reply(contract_reply(relay_contract()))]);
+        let mut relay = OperationRelay::new();
+        let mut request = credential_request();
+        request["definition_id"] = json!("ledger.example-review");
+        refused_with(
+            secret_submit(&fake, &mut relay, request),
+            "secret_not_required",
+        );
+        assert_eq!(
+            fake.sent(),
+            vec![target(json!({
+                "action": "operation_contract",
+                "definition_id": "ledger.example-review",
+            }))]
+        );
+        assert!(fake.secrets.lock().unwrap().is_empty());
+        assert!(!relay.watching());
+    }
+
+    #[test]
+    fn a_requirement_that_names_another_submission_is_refused_and_no_secret_is_sent() {
+        let other = "e".repeat(64);
+        let tampered = |change: &dyn Fn(&mut Value)| {
+            let mut wait = requirement(&operation());
+            change(&mut wait);
+            wait
+        };
+        for (name, wait) in [
+            (
+                "another operation",
+                tampered(&|wait| wait["identity"]["operation_id"] = json!(other)),
+            ),
+            (
+                "another definition",
+                tampered(&|wait| wait["identity"]["definition_id"] = json!("auth.configure")),
+            ),
+            (
+                "another subject",
+                tampered(&|wait| wait["identity"]["subject_ref"] = json!("profile:x")),
+            ),
+            (
+                "an undeclared member",
+                tampered(&|wait| wait["extra"] = json!(true)),
+            ),
+            (
+                "an undeclared identity member",
+                tampered(&|wait| wait["identity"]["extra"] = json!(true)),
+            ),
+            (
+                "no interaction",
+                tampered(&|wait| {
+                    wait.as_object_mut().unwrap().remove("interaction_id");
+                }),
+            ),
+            (
+                "a short interaction",
+                tampered(&|wait| wait["interaction_id"] = json!("b")),
+            ),
+            (
+                "a fractional revision",
+                tampered(&|wait| wait["revision"] = json!(0.5)),
+            ),
+            (
+                "a malformed kind",
+                tampered(&|wait| wait["secret_kind"] = json!("Auth Credential")),
+            ),
+            (
+                "an expiry that is no UTC instant",
+                tampered(&|wait| wait["expires_at"] = json!("2026-10-27T10:05:00+02:00")),
+            ),
+            ("no identity", json!({})),
+            (
+                "none at all",
+                // The contract asks for a secret, so a receipt without a wait is not this submission's.
+                Value::Null,
+            ),
+        ] {
+            let fake = Fake::new(vec![
+                reply(credential_contract_reply()),
+                reply(awaiting_secret(&operation(), wait)),
+            ]);
+            let mut relay = OperationRelay::new();
+            let refused = secret_submit(&fake, &mut relay, credential_request());
+            assert!(
+                !format!("{refused:?}").contains(SECRET_WORD),
+                "{name}: the failure names the secret"
+            );
+            refused_with(refused, "unavailable");
+            // The wait was never answered: only the contract and the submission were sent.
+            assert_eq!(fake.sent().len(), 2, "{name}");
+            assert!(fake.secrets.lock().unwrap().is_empty(), "{name}");
+            assert_secret_only_on_its_frame(&fake);
+            assert!(!relay.watching(), "{name}");
+        }
+    }
+
+    #[test]
+    fn a_refusal_before_the_runtime_is_ready_sends_no_secret_and_starts_nothing() {
+        for (name, ready) in [
+            (
+                "a refusal of the requirement",
+                refuse(Refusal::denied("operation_denied")),
+            ),
+            (
+                "a reply that is not readiness",
+                reply(acknowledged(&operation())),
+            ),
+            ("a lost connection", refuse(Refusal::ConnectionClosed)),
+        ] {
+            let fake = Fake::new(vec![
+                reply(credential_contract_reply()),
+                reply(awaiting_secret(&operation(), requirement(&operation()))),
+                ready,
+            ]);
+            let mut relay = OperationRelay::new();
+            let refused = secret_submit(&fake, &mut relay, credential_request());
+            let code = if name == "a refusal of the requirement" {
+                "operation_denied"
+            } else {
+                "unavailable"
+            };
+            refused_with(refused, code);
+            assert!(fake.secrets.lock().unwrap().is_empty(), "{name}");
+            assert_secret_only_on_its_frame(&fake);
+            assert!(!relay.watching(), "{name}");
+            let actions: Vec<Value> = fake
+                .sent()
+                .iter()
+                .map(|sent| sent["action"].clone())
+                .collect();
+            assert_eq!(
+                actions,
+                ["operation_contract", "operation_submit", "operation_secret"],
+                "{name}"
+            );
+        }
+    }
+
+    #[test]
+    fn an_acknowledgement_of_another_operation_leaves_the_operation_unstarted() {
+        let fake = Fake::new(vec![
+            reply(credential_contract_reply()),
+            reply(awaiting_secret(&operation(), requirement(&operation()))),
+            reply(secret_ready()),
+            reply(acknowledged(&"e".repeat(64))),
+        ]);
+        let mut relay = OperationRelay::new();
+        refused_with(
+            secret_submit(&fake, &mut relay, credential_request()),
+            "unavailable",
+        );
+        // The secret was delivered, so the outcome is unknown, but nothing started.
+        assert_eq!(fake.secrets.lock().unwrap().len(), 1);
+        assert_eq!(fake.sent().len(), 3);
+        assert!(!relay.watching());
+        assert_secret_only_on_its_frame(&fake);
+    }
+
+    #[test]
+    fn a_plain_submission_refuses_a_receipt_that_asks_for_a_secret() {
+        let waiting = awaiting_secret(&operation(), requirement(&operation()));
+        for (action, member) in [
+            ("operation_submit", "payload"),
+            ("operation_financial_submit", "input"),
+        ] {
+            let fake = Fake::new(vec![reply(waiting.clone())]);
+            let mut relay = OperationRelay::new();
+            let mut request = credential_request();
+            request.as_object_mut().unwrap().remove("secret");
+            request[member] = request["payload"].take();
+            if member == "input" {
+                request.as_object_mut().unwrap().remove("payload");
+            }
+            refused_with(
+                handle(&fake, &mut relay, action, request),
+                "secret_required",
+            );
+            // Never started: nothing would deliver the secret it waits for.
+            assert_eq!(fake.sent().len(), 1, "{action}");
+            assert!(!relay.watching(), "{action}");
+        }
+    }
+
+    #[test]
+    fn a_profile_read_refuses_a_receipt_that_asks_for_a_secret() {
+        let fake = Fake::new(vec![
+            reply(contract_reply(view())),
+            reply(awaiting_secret(&operation(), requirement(&operation()))),
+        ]);
+        let refused =
+            read_profile_language(&fake, &session(), Instant::now() + Duration::from_secs(60));
+        assert!(
+            matches!(
+                refused,
+                Err(RelayFailure::Unavailable(Refusal::InvalidFrame))
+            ),
+            "{refused:?}"
+        );
+        assert_eq!(fake.sent().len(), 2);
+    }
+
     #[test]
     fn the_relay_watches_at_most_sixteen_unsettled_operations() {
         let ids: Vec<String> = (0..17).map(|index| format!("{index:064x}")).collect();
@@ -3951,6 +4537,64 @@ mod tests {
             }))
         );
         assert!(fake.finished());
+    }
+
+    #[test]
+    fn claimable_reviews_pass_only_distinct_operation_ids_and_runtime_refusals() {
+        let fake = Fake::new(vec![reply(json!({
+            "kind": "operation_reviews_claimable", "operation_ids": [operation()],
+        }))]);
+        let result = handle(
+            &fake,
+            &mut OperationRelay::new(),
+            "operation_review_claimable",
+            json!({}),
+        )
+        .unwrap();
+        assert_eq!(
+            Value::Object(result),
+            json!({"kind": "operation_reviews_claimable", "operation_ids": [operation()]})
+        );
+        assert_eq!(
+            fake.sent(),
+            vec![target(json!({"action": "operation_review_claimable"}))]
+        );
+        assert!(fake.finished());
+
+        for listed in [
+            json!([operation(), operation()]),
+            json!(["not-an-operation"]),
+            json!(vec![operation(); CLAIMABLE_REVIEWS_MAX + 1]),
+            json!(null),
+        ] {
+            let fake = Fake::new(vec![reply(json!({
+                "kind": "operation_reviews_claimable", "operation_ids": listed,
+            }))]);
+            refused_with(
+                handle(
+                    &fake,
+                    &mut OperationRelay::new(),
+                    "operation_review_claimable",
+                    json!({}),
+                ),
+                "unavailable",
+            );
+        }
+
+        let refused = Fake::new(vec![refuse(Refusal::Denied {
+            code: "human_authority_required".into(),
+            sign_in: None,
+            holder_operation_id: None,
+        })]);
+        refused_with(
+            handle(
+                &refused,
+                &mut OperationRelay::new(),
+                "operation_review_claimable",
+                json!({}),
+            ),
+            "human_authority_required",
+        );
     }
 
     #[test]

@@ -85,7 +85,7 @@ def test_a_refusal_setup_cannot_repair_sends_the_person_to_the_desktop_app_to_ch
     for key in _POINTS_TO_THE_MODEL_CHOICE:
         assert "Cadrumo" in _text(key, locale), f"{key} in {locale} does not name the desktop app"
     english = _text(_IMPORT_UNSERVABLE, "en")
-    assert "Choose or check its model in the Cadrumo desktop app" in english
+    assert "Check its model list in the Cadrumo desktop app" in english
     for key in _POINTS_TO_THE_MODEL_CHOICE:
         assert "on this computer" not in _text(key, "en"), f"{key} still blames the computer for a missing choice"
 

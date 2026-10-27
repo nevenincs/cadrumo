@@ -108,13 +108,6 @@ required = false
 sensitivity = "identity"
 description = "Operator contact email used by configuration surfaces."
 
-[[sections.fields]]
-key = "notes"
-type = "string"
-required = false
-sensitivity = "identity"
-description = "Operator free-form notes attached to the profile."
-
 [[sections]]
 key = "preferences"
 title = "Operator preferences"
@@ -258,16 +251,6 @@ model_selectors = ["address.cadastral_reference"]
 legal_refs = ["rdleg-1-2004:art-6.3"]
 
 [[sections.fields]]
-key = "fiscal_address_is_habitual_vivienda"
-type = "boolean"
-required = false
-sensitivity = "identity"
-effective_dated = true
-description = "Whether the fiscal address is also the operator's habitual residence. Gates the home-office afectacion-parcial regime per LIRPF Art. 30.2 rule 5."
-model_selectors = ["address.is_habitual_vivienda"]
-legal_refs = ["ley-35-2006:da-23", "ley-35-2006:art-30"]
-
-[[sections.fields]]
 key = "contact_person_phone"
 type = "string"
 required = false
@@ -386,28 +369,6 @@ model_selectors = ["censo.activity_end_date"]
 legal_refs = ["rd-1065-2007:art-11"]
 
 [[sections.fields]]
-key = "establecimiento_type"
-type = "enum"
-required = false
-sensitivity = "identity"
-effective_dated = true
-description = "Form of business establishment declared on the 036 censo. Gates deductibility treatment of rent / amortizacion / suministros under LIRPF estimacion directa."
-enum_values = ["propio", "arrendado", "cedido_gratuitamente"]
-model_selectors = ["censo.establecimiento_type"]
-legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-29", "ley-35-2006:art-30"]
-
-[[sections.fields]]
-key = "elected_withholding_pct"
-type = "enum"
-required = false
-sensitivity = "financial"
-effective_dated = true
-description = "Elected IRPF withholding rate on professional invoices, declared on the 036 censo. 15 percent is the standard; 7 percent is the nuevos-profesionales rate (year of alta plus the two following calendar years); 1 percent is the modulos transport carve-out per the annual Orden de Modulos."
-enum_values = ["15", "7", "1"]
-model_selectors = ["censo.elected_withholding_pct"]
-legal_refs = ["ley-35-2006:art-101", "rd-439-2007:art-95", "orden-hac-1425-2025:art-4"]
-
-[[sections.fields]]
 key = "divergencia"
 type = "object"
 required = false
@@ -465,46 +426,6 @@ model_selectors = ["taxpayer.new_entity_first_two_profit_periods"]
 legal_refs = ["ley-27-2014:art-29"]
 
 [[sections.fields]]
-key = "ley_49_2002_special_regime_option_declared"
-type = "boolean"
-required = false
-sensitivity = "identity"
-effective_dated = true
-description = "Whether Modelo 036 casilla 651 declares exercise of the Title II Ley 49/2002 special fiscal regime option. Captures the declaration fact; art. 14 still conditions application on requirements and no renunciation."
-model_selectors = ["taxpayer.ley_49_2002_special_regime_option_declared"]
-legal_refs = ["ley-49-2002:art-14"]
-
-[[sections.fields]]
-key = "ley_49_2002_special_regime_option_date"
-type = "date"
-required = false
-sensitivity = "identity"
-effective_dated = true
-description = "Date declared in Modelo 036 casilla 653 for exercising the Title II Ley 49/2002 special-regime option."
-model_selectors = ["taxpayer.ley_49_2002_special_regime_option_date"]
-legal_refs = ["ley-49-2002:art-14"]
-
-[[sections.fields]]
-key = "ley_49_2002_special_regime_renunciation_declared"
-type = "boolean"
-required = false
-sensitivity = "identity"
-effective_dated = true
-description = "Whether Modelo 036 casilla 652 declares renunciation of a previously exercised Title II Ley 49/2002 special-regime option."
-model_selectors = ["taxpayer.ley_49_2002_special_regime_renunciation_declared"]
-legal_refs = ["ley-49-2002:art-14"]
-
-[[sections.fields]]
-key = "ley_49_2002_special_regime_renunciation_date"
-type = "date"
-required = false
-sensitivity = "identity"
-effective_dated = true
-description = "Date declared in Modelo 036 casilla 654 for the renunciation of the Title II Ley 49/2002 special-regime option."
-model_selectors = ["taxpayer.ley_49_2002_special_regime_renunciation_date"]
-legal_refs = ["ley-49-2002:art-14"]
-
-[[sections.fields]]
 key = "tributacion_estado_porcentaje"
 type = "decimal"
 required = false
@@ -513,36 +434,6 @@ effective_dated = true
 description = "Porcentaje de tributación al Estado para la casilla DP200026:00625 del Modelo 200. Es 100 % para entidades de régimen común; las entidades forales declaran el porcentaje parcial correspondiente. Si no se indica, se aplica 100 %."
 model_selectors = ["taxpayer.tributacion_estado_porcentaje"]
 legal_refs = ["ley-12-2002:art-15", "ley-28-1990:art-19"]
-
-[[sections.fields]]
-key = "sal_socios_trabajadores_count"
-type = "integer"
-required = false
-sensitivity = "identity"
-effective_dated = true
-description = "Number of worker-shareholders (socios trabajadores) in a Sociedad Laboral (SAL/SLL). Must constitute a majority of the share capital under Ley 44/2015 Art. 1. Used together with sal_reserva_especial_dotada and sal_capital_social to gate the reserva especial dotacion."
-model_selectors = ["taxpayer.sal_socios_trabajadores_count"]
-legal_refs = ["ley-44-2015:art-1", "ley-44-2015:art-2"]
-
-[[sections.fields]]
-key = "sal_reserva_especial_dotada"
-type = "decimal"
-required = false
-sensitivity = "financial"
-effective_dated = true
-description = "Accumulated reserva especial balance already dotada in prior periods (Ley 44/2015 Art. 14). Used to test the strict twice-capital threshold: dotacion = 0 once reserva_dotada reaches at least 2 * capital_social + 0.01."
-model_selectors = ["taxpayer.sal_reserva_especial_dotada"]
-legal_refs = ["ley-44-2015:art-14"]
-
-[[sections.fields]]
-key = "sal_capital_social"
-type = "decimal"
-required = false
-sensitivity = "financial"
-effective_dated = true
-description = "Capital social of the Sociedad Laboral. Basis for the strict twice-capital reserve threshold under Ley 44/2015 Art. 14. Dotacion is capped once accumulated reserva reaches the first euro cent above twice capital social."
-model_selectors = ["taxpayer.sal_capital_social"]
-legal_refs = ["ley-44-2015:art-14"]
 
 [[sections.fields]]
 key = "irpf_income_categories"
@@ -610,23 +501,6 @@ effective_dated = true
 description = "Full name of the representante fiscal designated in Spain when fiscal_residency is non_resident_irnr. Required together with representante_fiscal_nif by TRLIRNR Art. 10 for non-EU/EEE residents."
 model_selectors = ["taxpayer.representante_fiscal_nombre"]
 legal_refs = ["trlirnr-rdleg-5-2004:art-10"]
-
-[[sections]]
-key = "attribution_entity"
-title = "Attribution entity legal shape"
-sensitivity = "identity"
-effective_dated = true
-
-[[sections.fields]]
-key = "legal_form"
-type = "enum"
-required = false
-sensitivity = "identity"
-effective_dated = true
-description = "Legal form of an entity in regimen de atribucion de rentas, such as a sociedad civil or comunidad de bienes."
-enum_values = ["sociedad_civil", "comunidad_bienes", "herencia_yacente", "other"]
-model_selectors = ["attribution_entity.legal_form"]
-legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "orden-hap-2250-2015:art-2"]
 
 [[sections]]
 key = "attribution_entity_socios"
@@ -703,26 +577,6 @@ effective_dated = true
 description = "Código del país de residencia del socio, comunero o partícipe, consignado en las posiciones 79-80 del registro de declarado del Modelo 184. Sólo se consigna cuando la clave tipo de partícipe es 2 (no residente sin establecimiento permanente); en las claves 1 y 3 el campo va en BLANCOS."
 model_selectors = ["attribution_entity_socios.country_of_residence"]
 legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "orden-hap-2250-2015:art-3"]
-
-# NOT required, deliberately. Modelo 184's socio record carries no per-member
-# legal role: its "clave tipo de partícipe" is residency (residente, no
-# residente sin establecimiento permanente, con establecimiento permanente),
-# and the socio/comunero/partícipe distinction sits at entity level in the
-# declaration, following from the entity's own type. Nothing in this tree reads
-# this field. Requiring it made every socio row carry an answer no form asks
-# for. The field is kept rather than retired because its legal grounding points
-# at an attribution treatment that has not been built; requiring it again needs
-# a consumer first.
-[[sections.fields]]
-key = "role"
-type = "enum"
-required = false
-sensitivity = "identity"
-effective_dated = true
-description = "Legal member role inside the attribution entity."
-enum_values = ["socio", "comunero", "participe"]
-model_selectors = ["attribution_entity_socios.role"]
-legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89"]
 
 # The following fields widen the socio row to carry the (member, clave,
 # subclave) repetition axis the Modelo 184 socio record's own diseño
@@ -1023,14 +877,6 @@ effective_dated = true
 description = "Censo activity description."
 
 [[sections.fields]]
-key = "cnae"
-type = "string"
-required = false
-sensitivity = "identity"
-effective_dated = true
-description = "CNAE activity code where applicable."
-
-[[sections.fields]]
 key = "iae_epigraph"
 type = "string"
 required = false
@@ -1045,15 +891,6 @@ key = "irpf"
 title = "IRPF and withholding"
 sensitivity = "financial"
 effective_dated = true
-
-[[sections.fields]]
-key = "professional_income_withholding_ge_70pct"
-type = "boolean"
-required = false
-sensitivity = "financial"
-effective_dated = true
-description = "Whether professional income withholding reaches the 70 percent threshold."
-model_selectors = ["professional_income_withholding_ge_70pct"]
 
 [[sections.fields]]
 key = "art109_activity_income_withholding_ge_70pct"
@@ -1098,29 +935,9 @@ legal_refs = [
     "rd-439-2007:art-95",
 ]
 
-# THE TWELVE objective_estimation_* FIELDS BELOW MIX TWO SCOPES WHILE LOOKING
-# UNIFORM. Do not reshape them as one group.
-#
-# The four prior_year_* fields are per-TAXPAYER: they carry the exclusion
+# The four prior_year_* fields below are per-TAXPAYER: they carry the exclusion
 # limits, which the law computes over the conjunto de actividades, so a single
 # flat value is correct for them.
-#
-# The eight modulos_* fields are per-ACTIVITY. Orden HFP/1359/2023
-# (Instrucciones, Rendimiento anual) defines the figure as the sum of the
-# rendimientos of each activity, each obtained by running the Fases procedure
-# for that activity, and the M036 diseño records several activities with their
-# own epígrafes. One flat set can therefore hold one activity's módulos, and a
-# taxpayer with two módulos activities cannot be represented here.
-#
-# That is a modelling gap rather than a live defect today, on this evidence: no
-# registry file references these paths or their model selectors, the M131
-# módulos casillas carry no binding and are operator input, and the only
-# production readers are the setup wizard. That was established by literal
-# search, which would not see a consumer that reaches profile facts generically
-# without naming a path — so read it as "no declared consumer found", not as a
-# proof that none exists. The precondition that keeps it harmless is recorded at
-# the M131 divergence-advisory predicate, which is where a change would make it
-# matter.
 
 [[sections.fields]]
 key = "objective_estimation_prior_year_gross_income_eur"
@@ -1161,86 +978,6 @@ effective_dated = true
 description = "Prior-year purchase volume for goods and services, excluding fixed-asset acquisitions. Used to advise when a declared objective-estimation profile exceeds the settled official exclusion magnitude."
 model_selectors = ["irpf.objective_estimation_prior_year_purchases_eur"]
 legal_refs = ["ley-35-2006:art-31", "ley-35-2006:dt-32"]
-
-[[sections.fields]]
-key = "objective_estimation_modulos_iae_epigraph"
-type = "string"
-required = false
-sensitivity = "financial"
-effective_dated = true
-description = "Epígrafe IAE anual de la actividad acogida a estimación objetiva por módulos, utilizado en el Modelo 131."
-model_selectors = ["irpf.objective_estimation_modulos_iae_epigraph"]
-legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"]
-
-[[sections.fields]]
-key = "objective_estimation_modulos_module_1_units"
-type = "decimal"
-required = false
-sensitivity = "financial"
-effective_dated = true
-description = "Annual declared units for estimacion objetiva module slot 1. For many activities this slot is personal asalariado; the activity-specific meaning stays in the official modulos table, not in the profile schema."
-model_selectors = ["irpf.objective_estimation_modulos_module_1_units"]
-legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"]
-
-[[sections.fields]]
-key = "objective_estimation_modulos_module_2_units"
-type = "decimal"
-required = false
-sensitivity = "financial"
-effective_dated = true
-description = "Unidades anuales declaradas para el segundo módulo de la actividad en estimación objetiva."
-model_selectors = ["irpf.objective_estimation_modulos_module_2_units"]
-legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"]
-
-[[sections.fields]]
-key = "objective_estimation_modulos_module_3_units"
-type = "decimal"
-required = false
-sensitivity = "financial"
-effective_dated = true
-description = "Annual declared units for estimacion objetiva module slot 3, such as local surface or power consumption where the selected IAE epigraph defines that slot."
-model_selectors = ["irpf.objective_estimation_modulos_module_3_units"]
-legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"]
-
-[[sections.fields]]
-key = "objective_estimation_modulos_module_4_units"
-type = "decimal"
-required = false
-sensitivity = "financial"
-effective_dated = true
-description = "Annual declared units for estimacion objetiva module slot 4. The profile stores the annual operator fact, not the legal coefficient."
-model_selectors = ["irpf.objective_estimation_modulos_module_4_units"]
-legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"]
-
-[[sections.fields]]
-key = "objective_estimation_modulos_module_5_units"
-type = "decimal"
-required = false
-sensitivity = "financial"
-effective_dated = true
-description = "Annual declared units for estimacion objetiva module slot 5. Empty means undeclared, not zero."
-model_selectors = ["irpf.objective_estimation_modulos_module_5_units"]
-legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"]
-
-[[sections.fields]]
-key = "objective_estimation_modulos_module_6_units"
-type = "decimal"
-required = false
-sensitivity = "financial"
-effective_dated = true
-description = "Annual declared units for estimacion objetiva module slot 6. Empty means undeclared, not zero."
-model_selectors = ["irpf.objective_estimation_modulos_module_6_units"]
-legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"]
-
-[[sections.fields]]
-key = "objective_estimation_modulos_module_7_units"
-type = "decimal"
-required = false
-sensitivity = "financial"
-effective_dated = true
-description = "Annual declared units for estimacion objetiva module slot 7. Empty means undeclared, not zero."
-model_selectors = ["irpf.objective_estimation_modulos_module_7_units"]
-legal_refs = ["ley-35-2006:art-31", "orden-hac-1425-2025:art-4"]
 
 [[sections.fields]]
 key = "special_regime"
@@ -1974,53 +1711,6 @@ model_selectors = [
   "RentaFamilyProfile.ascendants.cohabiting_descendant_count",
   "RentaFamilyProfile.ascendants.death_date",
 ]
-
-[[sections]]
-key = "properties"
-title = "Properties and rental"
-sensitivity = "financial"
-effective_dated = true
-repeatable = true
-
-[[sections.fields]]
-key = "cadastral_reference"
-type = "string"
-required = false
-sensitivity = "financial"
-effective_dated = true
-description = "Property cadastral reference."
-
-[[sections.fields]]
-key = "use_type"
-type = "enum"
-required = false
-sensitivity = "financial"
-effective_dated = true
-description = "Property use classification."
-enum_values = ["habitual", "rental", "mixed", "imputed_income", "other"]
-
-[[sections]]
-key = "usage_ratios"
-title = "Usage ratios and deductibility"
-sensitivity = "financial"
-effective_dated = true
-repeatable = true
-
-[[sections.fields]]
-key = "category_id"
-type = "string"
-required = true
-sensitivity = "financial"
-effective_dated = true
-description = "Category profile id the ratio applies to."
-
-[[sections.fields]]
-key = "business_ratio"
-type = "decimal"
-required = true
-sensitivity = "financial"
-effective_dated = true
-description = "Business-use ratio in the closed interval 0..1."
 
 [[sections]]
 key = "maritime_worker"

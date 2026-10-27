@@ -38,7 +38,8 @@ use zeroize::Zeroizing;
 
 const PROTOCOL_VERSION: u64 = 3;
 const MAXIMUM_FRAME_BYTES: usize = 64 * 1024;
-const MAXIMUM_SECRET_BYTES: usize = 64 * 1024;
+/// The longest secret one secret frame carries, and so the longest the runtime takes.
+pub const MAXIMUM_SECRET_BYTES: usize = 64 * 1024;
 /// The runtime stages a streamed submission in chunks of exactly this many
 /// bytes, the last one excepted.
 const SUBMISSION_PAYLOAD_CHUNK_BYTES: usize = 16_384;
@@ -947,6 +948,13 @@ pub trait SessionExchange: Send + Sync {
         payload: &[u8],
         deadline: Instant,
     ) -> Result<Map<String, Value>, Refusal>;
+    /// As [`Connection::exchange_with_secret`].
+    fn exchange_with_secret(
+        &self,
+        request: &Value,
+        secret: &[u8],
+        deadline: Instant,
+    ) -> Result<Map<String, Value>, Refusal>;
     /// As [`Connection::subscribe_scoped`].
     fn subscribe_scoped(&self) -> mpsc::Receiver<Pushed>;
     /// As [`Connection::close`]: for a peer that broke the protocol.
@@ -965,6 +973,15 @@ impl SessionExchange for Connection {
         deadline: Instant,
     ) -> Result<Map<String, Value>, Refusal> {
         Connection::exchange_streamed(self, request, payload, deadline)
+    }
+
+    fn exchange_with_secret(
+        &self,
+        request: &Value,
+        secret: &[u8],
+        deadline: Instant,
+    ) -> Result<Map<String, Value>, Refusal> {
+        Connection::exchange_with_secret(self, request, secret, deadline)
     }
 
     fn subscribe_scoped(&self) -> mpsc::Receiver<Pushed> {
@@ -2168,6 +2185,16 @@ mod live_tests {
                     .push(definition.unwrap_or_default().to_owned());
             }
             Ok(answered)
+        }
+
+        fn exchange_with_secret(
+            &self,
+            request: &Value,
+            secret: &[u8],
+            deadline: Instant,
+        ) -> Result<Map<String, Value>, Refusal> {
+            self.connection
+                .exchange_with_secret(request, secret, deadline)
         }
 
         fn subscribe_scoped(&self) -> mpsc::Receiver<Pushed> {

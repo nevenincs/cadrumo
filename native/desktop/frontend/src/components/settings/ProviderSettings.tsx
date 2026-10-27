@@ -6,10 +6,10 @@ import {
   type FormEvent,
   type ReactNode,
 } from "react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/components/ui/cn";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
-import { Icon } from "@/components/ui/icon";
+import { Icon, type IconName } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import iconArtwork from "virtual:desktop-provider-icons";
@@ -73,10 +73,38 @@ function statusWords(t: Translate, status: ConnectionStatus): string {
   return t(STATUS_WORDS[status]);
 }
 
-/** Only a connection the agent can use stands out; one that is not set up,
- * not signed in or off is said quietly, since nothing is wrong with it. */
-function statusVariant(status: ConnectionStatus): "success" | "neutral" {
-  return status === "ready" ? "success" : "neutral";
+/**
+ * The two statuses worth a glyph: a connection the agent can use, and one that
+ * waits on the person. Any other -- not set up, saved, not checked, off -- is
+ * only its name in secondary text, since nothing is wrong with it.
+ */
+const GLYPHS: Partial<
+  Record<ConnectionStatus, { icon: IconName; tone: string }>
+> = {
+  ready: { icon: "check", tone: "text-success" },
+  sign_in_needed: { icon: "alert", tone: "text-warning" },
+};
+
+/** The text colour of a connection's name. */
+function nameTone(status: ConnectionStatus): string {
+  return GLYPHS[status] ? "text-foreground" : "text-muted-foreground";
+}
+
+/** A connection's status: a glyph where it means something, and always its
+ * words for a screen reader. */
+function StatusMark({ status }: { status: ConnectionStatus }) {
+  const t = useStrings();
+  const glyph = GLYPHS[status];
+  return (
+    <span
+      data-slot="provider-status"
+      data-status={status}
+      className={glyph ? cn("inline-flex shrink-0", glyph.tone) : "sr-only"}
+    >
+      {glyph && <Icon name={glyph.icon} />}
+      <span className="sr-only">{statusWords(t, status)}</span>
+    </span>
+  );
 }
 
 function connectionWords(
@@ -260,6 +288,7 @@ function SecretForm({
  */
 function WayRow({
   provider,
+  hidden = false,
   busy,
   outcome,
   onSave,
@@ -272,6 +301,7 @@ function WayRow({
   models,
 }: {
   provider: ProviderStatus;
+  hidden?: boolean;
   busy: boolean;
   outcome?: ProviderOutcome;
   onSave: (secret: ProviderSecret) => void;
@@ -304,18 +334,19 @@ function WayRow({
   return (
     <li
       data-lane={provider.id}
+      hidden={hidden}
       aria-labelledby={headingId}
-      className="way grid gap-2 rounded-lg bg-accent p-3"
+      className={`way ${hidden ? "hidden" : "grid"} gap-2 rounded-lg bg-accent p-3`}
     >
       <div className="flex min-w-0 items-center justify-between gap-2">
         <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
           <h5
             id={headingId}
-            className="min-w-0 font-medium wrap-anywhere text-foreground"
+            className={cn("min-w-0 font-medium wrap-anywhere", nameTone(state))}
           >
             {connection}
           </h5>
-          <Badge variant={statusVariant(state)}>{statusWords(t, state)}</Badge>
+          <StatusMark status={state} />
           {busy && (
             <span className="text-sm text-muted-foreground">
               {t("desktop.providers.saving")}
@@ -437,14 +468,20 @@ function providerGroups(providers: readonly ProviderStatus[]): ProviderGroup[] {
 
 function ProviderGroupRow({
   group,
+  shownLanes,
   t,
   renderLane,
   focus = false,
+  searchMatch = true,
+  searching = false,
 }: {
   group: ProviderGroup;
+  shownLanes: readonly ProviderStatus[];
   t: Translate;
   renderLane: (lane: ProviderStatus) => ReactNode;
   focus?: boolean;
+  searchMatch?: boolean;
+  searching?: boolean;
 }) {
   const details = useRef<HTMLDetailsElement>(null);
   useEffect(() => {
@@ -453,8 +490,16 @@ function ProviderGroupRow({
     details.current.querySelector("summary")?.focus();
     details.current.scrollIntoView({ block: "nearest" });
   }, [focus]);
+  useEffect(() => {
+    if (searching && searchMatch && details.current)
+      details.current.open = true;
+  }, [searching, searchMatch]);
   return (
-    <li data-provider={group.provider} className="rounded-lg bg-card">
+    <li
+      hidden={!searchMatch}
+      data-provider={group.provider}
+      className="rounded-lg bg-card"
+    >
       <details ref={details} className="group/provider">
         <summary className="flex min-h-control-lg cursor-pointer list-none flex-wrap items-center gap-x-2 gap-y-2 rounded-lg px-3 py-2.5 outline-none hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
           <span className="flex min-w-0 flex-1 items-center gap-2">
@@ -467,16 +512,21 @@ function ProviderGroupRow({
             name="chevronDown"
             className="shrink-0 text-faint transition-transform group-open/provider:rotate-180"
           />
-          <span className="flex w-full basis-full flex-wrap gap-1.5">
-            {group.lanes.map((lane) => {
+          <span className="flex w-full basis-full flex-wrap gap-x-3 gap-y-1">
+            {shownLanes.map((lane) => {
               const state = connectionStatus(lane);
               return (
-                <Badge key={lane.id} variant={statusVariant(state)}>
-                  {t("desktop.providers.summary", {
-                    connection: connectionWords(t, lane.transport),
-                    status: statusWords(t, state),
-                  })}
-                </Badge>
+                <span
+                  key={lane.id}
+                  data-lane-summary={lane.id}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 text-sm",
+                    nameTone(state),
+                  )}
+                >
+                  {connectionWords(t, lane.transport)}
+                  <StatusMark status={state} />
+                </span>
               );
             })}
           </span>
@@ -524,6 +574,10 @@ export function ProviderSettings({
   identity = null,
   localModels,
   focusLane,
+  query = "",
+  searching = false,
+  embedded = false,
+  onMatch,
 }: {
   providers: readonly ProviderStatus[];
   /** The way whose change is on its way. */
@@ -556,11 +610,13 @@ export function ProviderSettings({
   localModels?: (lane: ProviderStatus) => ReactNode;
   /** Opens the existing provider group when reached from setup. */
   focusLane?: string;
+  query?: string;
+  searching?: boolean;
+  embedded?: boolean;
+  onMatch?: (matches: boolean) => void;
 }) {
   const t = useStrings();
   const titleId = useId();
-  const searchId = useId();
-  const [query, setQuery] = useState("");
   const [selection, setSelection] = useState<{
     laneId: string;
     identity: string | null;
@@ -583,55 +639,49 @@ export function ProviderSettings({
     ? (signInMethods[selectedProvider.provider] ?? [])
     : [];
   const normalizedQuery = query.trim().toLocaleLowerCase();
-  const visibleGroups = providerGroups(providers)
-    .map((group) => ({
-      ...group,
-      lanes: group.lanes.filter((lane) => {
-        if (!normalizedQuery) return true;
-        const searchable = [
-          group.name,
-          connectionWords(t, lane.transport),
-          statusWords(t, connectionStatus(lane)),
-        ]
-          .join(" ")
-          .toLocaleLowerCase();
-        return searchable.includes(normalizedQuery);
-      }),
-    }))
-    .filter((group) => group.lanes.length > 0);
+  const groups = providerGroups(providers);
+  const laneMatches = (group: ProviderGroup, lane: ProviderStatus) =>
+    !normalizedQuery ||
+    [
+      group.name,
+      connectionWords(t, lane.transport),
+      statusWords(t, connectionStatus(lane)),
+    ]
+      .join(" ")
+      .toLocaleLowerCase()
+      .includes(normalizedQuery);
+  const groupMatches = (group: ProviderGroup) =>
+    group.lanes.some((lane) => laneMatches(group, lane));
+  const matches = groups.some(groupMatches);
+  useEffect(() => onMatch?.(matches), [matches, onMatch]);
   return (
     <section aria-labelledby={titleId} className="provider-settings grid gap-2">
       <div className="grid gap-1">
-        <h3 id={titleId} className="font-medium text-foreground">
+        <h3
+          id={titleId}
+          className={embedded ? "sr-only" : "font-medium text-foreground"}
+        >
           {t("desktop.providers.title")}
         </h3>
         <p className="text-sm text-muted-foreground">
           {t("desktop.providers.group_intro")}
         </p>
       </div>
-      <Field>
-        <FieldLabel htmlFor={searchId}>
-          {t("desktop.providers.search_label")}
-        </FieldLabel>
-        <Input
-          id={searchId}
-          type="search"
-          value={query}
-          placeholder={t("desktop.providers.search_placeholder")}
-          onChange={(event) => setQuery(event.currentTarget.value)}
-        />
-      </Field>
       <ul className="grid gap-2">
-        {visibleGroups.map((group) => (
+        {groups.map((group) => (
           <ProviderGroupRow
             key={group.provider}
             group={group}
+            shownLanes={group.lanes.filter((lane) => laneMatches(group, lane))}
+            searchMatch={groupMatches(group)}
+            searching={searching || Boolean(normalizedQuery)}
             focus={group.lanes.some((lane) => lane.id === focusLane)}
             t={t}
             renderLane={(lane) => (
               <WayRow
                 key={lane.id}
                 provider={lane}
+                hidden={!laneMatches(group, lane)}
                 busy={busyId === lane.id}
                 outcome={outcomes[lane.id]}
                 signInSupported={Boolean(
@@ -654,14 +704,6 @@ export function ProviderSettings({
           />
         ))}
       </ul>
-      {visibleGroups.length === 0 && (
-        <p
-          role="status"
-          className="rounded-lg bg-accent p-3 text-sm text-muted-foreground"
-        >
-          {t("desktop.providers.search_empty")}
-        </p>
-      )}
       <details className="text-sm text-muted-foreground">
         <summary className="w-fit cursor-pointer rounded-sm py-1 outline-none focus-visible:ring-2 focus-visible:ring-ring">
           {t("desktop.providers.icon_credits")}

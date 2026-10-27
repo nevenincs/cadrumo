@@ -129,13 +129,11 @@ _ATTRIBUTION_PROFILE_FACTS = (
     UserProfileFact(path="iva.voluntary_sii_enrolled", value="false"),
     UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value="false"),
     UserProfileFact(path="taxpayer_type.entity_type", value="attribution_entity"),
-    UserProfileFact(path="attribution_entity.legal_form", value="comunidad_bienes"),
     UserProfileFact(path="attribution_entity_socios.0.nif", value="22222222B"),
     UserProfileFact(path="attribution_entity_socios.0.name", value="Member Two"),
     UserProfileFact(path="attribution_entity_socios.0.share_pct", value=Decimal("40")),
     UserProfileFact(path="attribution_entity_socios.0.base_imponible_assigned", value=Decimal("4000")),
     UserProfileFact(path="attribution_entity_socios.0.participe_clave", value="1"),
-    UserProfileFact(path="attribution_entity_socios.0.role", value="comunero"),
     # Clave del rendimiento is a REQUIRED schema field (Orden HAP/2250/2015
     # art. 3, LIRPF arts. 86-87), so the readiness gate refuses M184 work
     # without it. "D" is actividades economicas, which is what this fixture
@@ -146,7 +144,6 @@ _ATTRIBUTION_PROFILE_FACTS = (
     UserProfileFact(path="attribution_entity_socios.1.share_pct", value=Decimal("60")),
     UserProfileFact(path="attribution_entity_socios.1.base_imponible_assigned", value=Decimal("6000")),
     UserProfileFact(path="attribution_entity_socios.1.participe_clave", value="1"),
-    UserProfileFact(path="attribution_entity_socios.1.role", value="comunero"),
     UserProfileFact(path="attribution_entity_socios.1.clave", value="D"),
     UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
     # Modelo 111 refuses a defaulted colegio-concertado declaration: the fichero

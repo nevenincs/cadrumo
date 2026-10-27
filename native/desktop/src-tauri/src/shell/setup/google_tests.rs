@@ -1,6 +1,7 @@
 //! The account tracker against a held session that relays like the hold does
 //! and answers with documents shaped like the product's.
 use super::*;
+use cadrumo_application::error::application::Cause;
 
 const PROFILE: &str = "12345678-1234-4234-8234-123456789abc";
 const SESSION: &str = "22345678-1234-4234-8234-123456789abc";
@@ -459,8 +460,126 @@ fn a_reply_outside_the_runtimes_shape_is_a_host_failure() {
     assert_eq!(google.state, Some(GoogleState::Unknown));
     let mut broken = FakeHold::new(settle_status);
     broken.account = ("succeeded", json!({"outcome": 7}));
+    let failed = tracker().handle(&mut broken, Act::Observe).unwrap_err();
+    assert!(
+        matches!(&failed, Stop::Host(error)
+            if error.reason.as_deref() == Some("setup_reply_shape")
+                && matches!(error.causes.first(), Some(Cause::Json { .. }))),
+        "the host failure names the shape and keeps what the parser found: {failed:?}"
+    );
+}
+
+/// A relay that answers each call with the next scripted reply.
+struct Scripted(std::collections::VecDeque<Value>);
+
+impl Scripted {
+    fn of<const N: usize>(replies: [Value; N]) -> Self {
+        Self(replies.into())
+    }
+}
+
+impl Relay for Scripted {
+    fn call(&mut self, _: Value) -> std::result::Result<Value, ApplicationError> {
+        Ok(self.0.pop_front().expect("a scripted reply"))
+    }
+}
+
+fn runtime_refused(code: &str) -> Value {
+    json!({"kind": "operation_refused", "code": code})
+}
+
+fn runtime_submitted() -> Value {
+    json!({"kind": "operation_submitted", "operation_id": "1".repeat(64)})
+}
+
+/// The `unavailable` an act stopped at: its reason, and the runtime refusal code chained to it.
+fn unavailable(result: std::result::Result<Google, Stop>) -> (Option<String>, Option<String>) {
+    let Err(Stop::Unavailable(error)) = result else {
+        panic!("an unavailable stop, not {result:?}");
+    };
+    let code = error.causes.iter().find_map(|cause| match cause {
+        Cause::Child(refusal) => refusal.code.clone(),
+        _ => None,
+    });
+    (error.reason.as_deref().map(str::to_owned), code)
+}
+
+#[test]
+fn a_sign_in_the_runtime_will_not_start_is_unavailable_and_names_the_refusal() {
+    let mut relay = Scripted::of([runtime_refused("operation_denied")]);
+    assert_eq!(
+        unavailable(tracker().handle(&mut relay, Act::SignIn)),
+        (
+            Some("setup_google_submit_refused".into()),
+            Some("operation_denied".into())
+        )
+    );
+}
+
+#[test]
+fn a_read_the_runtime_refuses_is_unavailable_and_names_the_refusal() {
+    let mut relay = Scripted::of([runtime_submitted(), runtime_refused("operation_denied")]);
+    assert_eq!(
+        unavailable(tracker().handle(&mut relay, Act::SignIn)),
+        (
+            Some("setup_google_relay_refused".into()),
+            Some("operation_denied".into())
+        )
+    );
+}
+
+/// The sign-in the relay submitted, observed while it waits for its consent review.
+fn runtime_waiting() -> Value {
+    json!({
+        "kind": "operation_observed",
+        "observation": {"projection": {
+            "operation_id": "1".repeat(64), "definition_id": GOOGLE_SIGN_IN,
+            "subject_ref": format!("profile:{PROFILE}"), "lifecycle": "waiting_for_interaction",
+            "terminal_condition": null,
+            "pending_interaction": {"disposition": "review_available",
+                                    "interaction_id": "1".repeat(64), "revision": 2},
+        }},
+    })
+}
+
+#[test]
+fn a_review_the_runtime_will_not_show_is_unavailable_and_names_the_refusal() {
+    let mut relay = Scripted::of([
+        runtime_submitted(),
+        runtime_waiting(),
+        runtime_refused("operation_denied"),
+    ]);
+    assert_eq!(
+        unavailable(tracker().handle(&mut relay, Act::SignIn)),
+        (
+            Some("setup_google_review_refused".into()),
+            Some("operation_denied".into())
+        )
+    );
+}
+
+#[test]
+fn an_operation_the_relay_answers_for_another_subject_is_unavailable_and_named() {
+    let mut hold = FakeHold::new(|operation| {
+        if operation.definition == GOOGLE_SIGN_IN {
+            operation.subject = "profile:another".into();
+        }
+    });
+    assert_eq!(
+        unavailable(tracker().handle(&mut hold, Act::SignIn)),
+        (Some("setup_google_operation_mismatch".into()), None)
+    );
+}
+
+#[test]
+fn a_review_that_moved_on_meanwhile_is_a_refusal_to_word_and_not_an_unavailable_service() {
+    let mut relay = Scripted::of([
+        runtime_submitted(),
+        runtime_waiting(),
+        runtime_refused("not_pending"),
+    ]);
     assert!(matches!(
-        tracker().handle(&mut broken, Act::Observe),
-        Err(Stop::Host(_))
+        tracker().handle(&mut relay, Act::SignIn),
+        Err(Stop::Refused(Refusal::NotPending))
     ));
 }

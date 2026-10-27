@@ -42,7 +42,7 @@ from .scenario import (
     build_profile_row_lifecycle_scenario,
 )
 
-_SCHEMA_VERSION = "profile-01-installed-cross-entrypoint-v1"
+_SCHEMA_VERSION = "profile-01-installed-cross-entrypoint-v2"
 _CHILD_MODULE = "dev.acceptance.profile.installed_tui_child"
 _ProfilePath = Literal["cli_only", "tui_only", "cli_to_tui", "tui_to_cli"]
 _ProfileTuiOperation = Literal["create-add", "add", "edit", "no-op", "clear", "remove", "assert-clear", "assert-absent"]
@@ -66,7 +66,7 @@ class ProfileTuiOperationEvidence:
     row_key: str | None
     row_visible: bool
     clear_visible_absent: bool
-    selector_fact_visible: bool
+    required_fact_visible: bool
     no_op_observed: bool
     product_origin: str
     product_init_sha256: str
@@ -83,7 +83,7 @@ class ProfileJourneyEvidence:
     storage_root: str
     row_key: str
     explicit_clear_survived_fresh_reopen: bool
-    selector_fact_survived_clear: bool
+    required_fact_survived_clear: bool
     removal_survived_fresh_reopen: bool
     retired_identifier_refused: bool
     archive_consumer: ProfileArchiveConsumerEvidence
@@ -265,7 +265,7 @@ def _run_cli_only(
         storage_root=str((root / "storage").resolve()),
         row_key=evidence.row_key,
         explicit_clear_survived_fresh_reopen=evidence.explicit_clear_survived_reopen,
-        selector_fact_survived_clear=evidence.selector_fact_survived_clear,
+        required_fact_survived_clear=evidence.required_fact_survived_clear,
         removal_survived_fresh_reopen=evidence.removal_survived_reopen,
         retired_identifier_refused=evidence.retired_identifier_refused,
         archive_consumer=evidence.archive_consumer,
@@ -379,7 +379,7 @@ def _run_tui_only(
         raise ProfileInstalledAcceptanceError(stage="tui_only", diagnostic_code="TUI_CLEAR_OUTCOME_MISMATCH")
     if not no_op.no_op_observed:
         raise ProfileInstalledAcceptanceError(stage="tui_only", diagnostic_code="TUI_NO_OP_OUTCOME_MISMATCH")
-    if not cleared.selector_fact_visible or not reopened_clear.selector_fact_visible:
+    if not cleared.required_fact_visible or not reopened_clear.required_fact_visible:
         raise ProfileInstalledAcceptanceError(stage="tui_only", diagnostic_code="TUI_SELECTOR_OUTCOME_MISMATCH")
     if removed.row_visible or reopened_removed.row_visible:
         raise ProfileInstalledAcceptanceError(stage="tui_only", diagnostic_code="TUI_REMOVE_OUTCOME_MISMATCH")
@@ -389,7 +389,7 @@ def _run_tui_only(
         storage_root=str(storage.resolve()),
         row_key=row_key,
         explicit_clear_survived_fresh_reopen=True,
-        selector_fact_survived_clear=True,
+        required_fact_survived_clear=True,
         removal_survived_fresh_reopen=True,
         # The TUI deliberately has no command that lets an absent row be
         # targeted.  CLI-only and both cross paths prove the actual refusal.
@@ -496,7 +496,7 @@ def _run_cli_to_tui(
         raise ProfileInstalledAcceptanceError(stage="cli_to_tui", diagnostic_code="TUI_CLEAR_OUTCOME_MISMATCH")
     if not no_op.no_op_observed:
         raise ProfileInstalledAcceptanceError(stage="cli_to_tui", diagnostic_code="TUI_NO_OP_OUTCOME_MISMATCH")
-    if not cleared.selector_fact_visible or not reopened_clear.selector_fact_visible:
+    if not cleared.required_fact_visible or not reopened_clear.required_fact_visible:
         raise ProfileInstalledAcceptanceError(stage="cli_to_tui", diagnostic_code="TUI_SELECTOR_OUTCOME_MISMATCH")
     if removed.row_visible or not retired_refused:
         raise ProfileInstalledAcceptanceError(stage="cli_to_tui", diagnostic_code="TUI_REMOVE_OR_RETIREMENT_MISMATCH")
@@ -506,7 +506,7 @@ def _run_cli_to_tui(
         storage_root=str(storage.resolve()),
         row_key=row_key,
         explicit_clear_survived_fresh_reopen=True,
-        selector_fact_survived_clear=True,
+        required_fact_survived_clear=True,
         removal_survived_fresh_reopen=True,
         retired_identifier_refused=True,
         archive_consumer=archive,
@@ -554,7 +554,7 @@ def _run_tui_to_cli(
             scenario=scenario,
             row_key=row_key,
             field=scenario.clearable_field,
-            value=scenario.amended_cnae,
+            value=scenario.amended_epigraph,
         )
         is not True
     ):
@@ -563,8 +563,8 @@ def _run_tui_to_cli(
     after_clear = cli.visible_fact_paths()
     if scenario.path(row_key, scenario.clearable_field) in after_clear:
         raise ProfileInstalledAcceptanceError(stage="tui_to_cli_fresh_view", diagnostic_code="CLEARED_FACT_REAPPEARED")
-    if scenario.path(row_key, scenario.selector_field) not in after_clear:
-        raise ProfileInstalledAcceptanceError(stage="tui_to_cli_fresh_view", diagnostic_code="SELECTOR_FACT_LOST")
+    if scenario.path(row_key, scenario.required_field) not in after_clear:
+        raise ProfileInstalledAcceptanceError(stage="tui_to_cli_fresh_view", diagnostic_code="REQUIRED_FACT_LOST")
     cli.remove_row(scenario=scenario, row_key=row_key)
     retired_refused = cli.removed_row_is_refused(scenario=scenario, row_key=row_key)
     reopened_removed = _run_tui_child(
@@ -587,7 +587,7 @@ def _run_tui_to_cli(
         storage_root=str(storage.resolve()),
         row_key=row_key,
         explicit_clear_survived_fresh_reopen=True,
-        selector_fact_survived_clear=True,
+        required_fact_survived_clear=True,
         removal_survived_fresh_reopen=True,
         retired_identifier_refused=True,
         archive_consumer=archive,
@@ -694,7 +694,7 @@ def _parse_tui_child_evidence(
         row_key=cast("str | None", observed_row),
         row_visible=_required_bool(payload, key="row_visible", stage=operation),
         clear_visible_absent=_required_bool(payload, key="clear_visible_absent", stage=operation),
-        selector_fact_visible=_required_bool(payload, key="selector_fact_visible", stage=operation),
+        required_fact_visible=_required_bool(payload, key="required_fact_visible", stage=operation),
         no_op_observed=_required_bool(payload, key="no_op_observed", stage=operation),
         product_origin=product_origin,
         product_init_sha256=product_hash,
@@ -729,10 +729,7 @@ def _assert_row_absent(
     scenario: ProfileRowLifecycleScenario,
     stage: str,
 ) -> None:
-    if any(
-        scenario.path(row_key, field) in paths
-        for field in (scenario.required_field, scenario.clearable_field, scenario.selector_field)
-    ):
+    if any(scenario.path(row_key, field) in paths for field in (scenario.required_field, scenario.clearable_field)):
         raise ProfileInstalledAcceptanceError(stage=stage, diagnostic_code="REMOVED_ROW_REAPPEARED")
 
 

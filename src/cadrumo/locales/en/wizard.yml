@@ -350,18 +350,6 @@ wizard:
         help: Recognised legal form when the entity type is a legal entity
       legal-name:
         help: Legal or company name for legal-entity export headers
-      ley-49-2002-option-date:
-        help: Record the Modelo 036 casilla 653 date for the Ley 49/2002 Title II
-          option.
-      ley-49-2002-option-declared:
-        help: Record whether Modelo 036 casilla 651 declares the Ley 49/2002 Title
-          II option.
-      ley-49-2002-renunciation-date:
-        help: Record the Modelo 036 casilla 654 date for the Ley 49/2002 Title II
-          renunciation.
-      ley-49-2002-renunciation-declared:
-        help: Record whether Modelo 036 casilla 652 declares renunciation of the Ley
-          49/2002 Title II regime.
       llm-vision:
         help: Allow reading scanned or image documents with the image-reading model
           selected in the desktop app.
@@ -380,24 +368,6 @@ wizard:
         help: Mark this when a newly-created legal entity is in one of its first two
           profit-making tax periods (LIS Art. 29) to opt into the 15 percent reduced
           rate. Optional; unset leaves the entity on its otherwise-applicable rate.
-      notes:
-        help: Notes for your own records (optional)
-      objective-estimation-modulos-iae-epigraph:
-        help: IAE epigraph for objective-estimation modules, such as 972.
-      objective-estimation-modulos-module-1-units:
-        help: Annual module 1 units for objective-estimation modules.
-      objective-estimation-modulos-module-2-units:
-        help: Annual module 2 units for objective-estimation modules.
-      objective-estimation-modulos-module-3-units:
-        help: Annual module 3 units for objective-estimation modules.
-      objective-estimation-modulos-module-4-units:
-        help: Annual module 4 units for objective-estimation modules.
-      objective-estimation-modulos-module-5-units:
-        help: Annual module 5 units for objective-estimation modules.
-      objective-estimation-modulos-module-6-units:
-        help: Annual module 6 units for objective-estimation modules.
-      objective-estimation-modulos-module-7-units:
-        help: Annual module 7 units for objective-estimation modules.
       output-language:
         help: CLI output language for this profile
       pays-capital-income-with-retencion:
@@ -412,8 +382,6 @@ wizard:
       premio-loteria-gravamen-especial-trimestres:
         help: Quarters in which the prize was cashed, as YYYY-nT tokens separated
           by | (for example 2025-1T|2025-3T)
-      professional-income-withholding-ge-70pct:
-        help: At least 70% of professional income with prior retención
       representante-fiscal-nif:
         help: NIF/NIE of the fiscal representative in Spain. Required for non-EU/EEA
           non-residents (Art. 47 LGT + Art. 10 TRLIRNR RDLeg 5/2004).
@@ -541,10 +509,6 @@ wizard:
             label: Simplified regime only
         prompt: Which Modelo 303 regime composition applies?
       title: IVA
-    notes:
-      notes:
-        prompt: Notes for your own records (optional)
-      title: Notes for your own records
     obligations:
       art109-activity-income-withholding-ge-70pct:
         prompt: Art. 109 70% activity-income coverage exception applies
@@ -597,27 +561,6 @@ wizard:
         prompt: Modelo 115 no-relevant-payment periods
       monedas-virtuales-extranjero-above-threshold:
         prompt: Virtual currencies held abroad above Modelo 721 threshold
-      objective-estimation-modulos-iae-epigraph:
-        help: Stored once per annual profile. Coefficients remain in the modelo registry.
-        prompt: IAE epigraph for objective-estimation modules
-      objective-estimation-modulos-module-1-units:
-        prompt: Annual module 1 units
-      objective-estimation-modulos-module-2-units:
-        prompt: Annual module 2 units
-      objective-estimation-modulos-module-3-units:
-        prompt: Annual module 3 units
-      objective-estimation-modulos-module-4-units:
-        prompt: Annual module 4 units
-      objective-estimation-modulos-module-5-units:
-        prompt: Annual module 5 units
-      objective-estimation-modulos-module-6-units:
-        prompt: Annual module 6 units
-      objective-estimation-modulos-module-7-units:
-        prompt: Annual module 7 units
-      objective-estimation-modulos-module-units:
-        help: Stable annual unit count for this module slot. The selected IAE epigraph
-          defines whether the slot means employees, local surface, electricity consumption,
-          or another official module.
       pays-capital-income-with-retencion:
         prompt: Pays capital income with retención
       pays-professionals-with-retencion:
@@ -631,8 +574,6 @@ wizard:
         help: One YYYY-nT token per natural quarter, separated by | (for example 2025-1T|2025-3T).
           Each quarter opens its own Modelo 136 filing.
         prompt: Quarters in which the prize was cashed
-      professional-income-withholding-ge-70pct:
-        prompt: At least 70% of professional income with prior retención
       third-party-transactions-above-347-threshold:
         prompt: In the calendar year the Modelo 347 covers, did your operations with
           any one person or entity exceed EUR 3,005.06 (EUR 300.51 for amounts you
@@ -942,21 +883,6 @@ wizard:
           sociedad-civil-mercantil:
             label: Civil partnership with commercial object
         prompt: Legal form
-      ley-49-2002-option-date:
-        help: Use the ISO date corresponding to Modelo 036 casilla 653.
-        prompt: Date declared for the Ley 49/2002 special-regime option
-      ley-49-2002-option-declared:
-        help: Use the declaration fact from Modelo 036 casilla 651; legal application
-          still depends on the statutory requirements and no renunciation.
-        prompt: Has the entity filed the Modelo 036 option for the Title II Ley 49/2002
-          special fiscal regime?
-      ley-49-2002-renunciation-date:
-        help: Use the ISO date corresponding to Modelo 036 casilla 654.
-        prompt: Date declared for the Ley 49/2002 special-regime renunciation
-      ley-49-2002-renunciation-declared:
-        help: Use the declaration fact from Modelo 036 casilla 652.
-        prompt: Has the entity filed a Modelo 036 renunciation of the Title II Ley
-          49/2002 special fiscal regime?
       new-entity-first-two-profit-periods:
         help: Applies only to legal entities. When set, the entity is taxed at the
           15 percent reduced rate during those two periods.

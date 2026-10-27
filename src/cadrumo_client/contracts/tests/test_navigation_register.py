@@ -200,7 +200,7 @@ def test_the_shipped_register_declares_the_initial_elements() -> None:
         "setup": {tui},
         "reference": {tui},
         "profile": {gui, tui},
-        "profile/aeat-access": {tui},
+        "profile/aeat-access": {gui, tui},
         "calendar": {gui},
         "docs": {gui},
         "agent": {gui},

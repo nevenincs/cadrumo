@@ -3,8 +3,8 @@
 A vision request crosses a provider boundary that may demand the format be
 *declared*, not sniffed: a provider can validate an image block's
 ``media_type`` against the actual bytes and refuse the pair when they disagree.
-The declaration travels with every image so the lane the person selected
-never has to sniff it.
+The declaration travels with every image so the lane that reads it never
+has to sniff it.
 
 Members carry the exact IANA media-type string as their value, so a member is
 usable directly as a wire value without a lookup table. The set is the

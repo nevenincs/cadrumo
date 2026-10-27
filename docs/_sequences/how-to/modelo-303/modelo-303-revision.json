@@ -217,7 +217,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "operation\tmodelo.work.revisions\nwork_unit_id_filter\tce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53\nrevision_count\t1\nshort_calculation_revision_id\tcalculation_revision_id\tshort_work_unit_id\twork_unit_id\tstate\tcreated_at\ncf8909eded47\t0a9ffd6d82b1208e4b5bc3b1720a47daa095b2068605c89e28edcf8909eded47\tb7a7592ccc53\tce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53\tborrador\t2026-04-01T09:00:00+00:00\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
+      "text": "operation\tmodelo.work.revisions\nwork_unit_id_filter\tce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53\nrevision_count\t1\nshort_calculation_revision_id\tcalculation_revision_id\tshort_work_unit_id\twork_unit_id\tstate\tcreated_at\nf21d24ec1d11\t6f5785b20e808312a13334bd55c2d28b0951d17366adc5ab3d7ef21d24ec1d11\tb7a7592ccc53\tce44ceded7f852543f4936913f99424f2306cf1cb6a4a03251e1b7a7592ccc53\tborrador\t2026-04-01T09:00:00+00:00\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -302,7 +302,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "0a9ffd6d82b1208e4b5bc3b1720a47daa095b2068605c89e28edcf8909eded47",
+          "calculation_revision_id": "6f5785b20e808312a13334bd55c2d28b0951d17366adc5ab3d7ef21d24ec1d11",
           "casilla_values": {
             "01": "0.00",
             "02": "0",

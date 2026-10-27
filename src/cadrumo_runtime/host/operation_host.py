@@ -351,7 +351,7 @@ class ProfileWorkerOperationHost:
         """Retire original custody after encrypted result persistence in COMMIT."""
         if self._execution is None or self._closed:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        self._execution.retire_password_successor(identity, outcome)
+        await self._execution.retire_password_successor(identity, outcome)
 
     async def _workbench_generation(
         self, identity: OperationIdentity, payload: WorkbenchGenerationOperationRequest
@@ -539,7 +539,7 @@ class ProfileWorkerOperationHost:
         self, *, session_id: UUID, frontend: OperationFrontendProjection, request: OperationRequest[BaseModel]
     ) -> OperationSubmission:
         """Admit a fresh invocation through the canonical supervisor and live authority."""
-        self.custody.require(session_id)
+        await self.custody.require_off_loop(session_id)
         await self._require_current_inventory()
         services = self._composed()
         execution = self._execution
@@ -548,7 +548,7 @@ class ProfileWorkerOperationHost:
         from .operation_authority import WorkerOperationBinding
 
         operation_id = new_operation_id()
-        execution.bind(operation_id, WorkerOperationBinding(session_id, frontend, request))
+        await execution.bind(operation_id, WorkerOperationBinding(session_id, frontend, request))
 
         async def admit() -> OperationSubmission:
             # Guard and canonical admission execute in the same retained task.
@@ -563,7 +563,7 @@ class ProfileWorkerOperationHost:
                         request,
                         actor_ref=f"session:{session_id}",
                         operation_id=operation_id,
-                        provenance=execution.capture_provenance(identity),
+                        provenance=await execution.capture_provenance(identity),
                     )
                     if submitted.receipt.operation_id == operation_id:
                         self._submissions[operation_id] = session_id, submitted
@@ -594,7 +594,7 @@ class ProfileWorkerOperationHost:
 
     async def start(self, operation_id: OperationId, session_id: UUID) -> OperationId:
         """Start only an invocation already bound by this worker's admission door."""
-        self._require_owner(operation_id, session_id)
+        await self._require_owner(operation_id, session_id)
         await self._require_current_inventory()
         try:
             with self._governed():
@@ -662,7 +662,7 @@ class ProfileWorkerOperationHost:
         """Authorize only the original submitter's exact one-use secret requirement."""
         try:
             operation_id = requirement.identity.operation_id
-            self._require_owner(operation_id, session_id)
+            await self._require_owner(operation_id, session_id)
             original = self._submissions.get(operation_id)
             if (
                 original is None
@@ -691,7 +691,7 @@ class ProfileWorkerOperationHost:
         self, operation_id: OperationId, session_id: UUID, *, frontend: OperationFrontendProjection
     ) -> OperationId:
         """Reauthorize stored intent and let its existing owner reconcile before entry."""
-        self.custody.require(session_id)
+        await self.custody.require_off_loop(session_id)
         await self._require_current_inventory()
         services = self._composed()
         invocation = await self._stored_invocation(operation_id, require_idle=True)
@@ -702,7 +702,7 @@ class ProfileWorkerOperationHost:
 
         binding = WorkerOperationBinding(session_id, frontend, invocation.request, invocation.provenance)
         async with execution.guard_binding(invocation.identity, AccessAction.RESUME, binding):
-            execution.bind_reentry(operation_id, binding)
+            await execution.bind_reentry(operation_id, binding)
         try:
             # START/RESUME at actual entry and COMMIT each acquire fresh guards.
             with self._governed():
@@ -727,7 +727,7 @@ class ProfileWorkerOperationHost:
         self, session_id: UUID, operation_id: OperationId, frontend: OperationFrontendProjection, action: AccessAction
     ) -> AsyncGenerator[WorkerAuthorityRequest]:
         """Bind each internal projection to policy the runtime must recheck on final output."""
-        self.custody.require(session_id)
+        await self.custody.require_off_loop(session_id)
         await self._require_current_inventory()
         self._composed()
         execution = self._execution
@@ -752,7 +752,7 @@ class ProfileWorkerOperationHost:
                     action in _PRIVATE_RESULT_RELEASE_ACTIONS
                     and invocation.identity.definition_id == WORKBENCH_GENERATION_OPERATION_DEFINITION_ID
                 ):
-                    execution.require_owner(operation_id, session_id)
+                    await execution.require_owner(operation_id, session_id)
                 yield authorization
         finally:
             self._output_tasks.pop(task, None)
@@ -844,10 +844,10 @@ class ProfileWorkerOperationHost:
             document = _PROJECTION_DOCUMENT.validate_python(result.model_dump(mode="json", serialize_as_any=True))
             yield document, authorization
 
-    def _require_owner(self, operation_id: OperationId, session_id: UUID) -> None:
+    async def _require_owner(self, operation_id: OperationId, session_id: UUID) -> None:
         if self._execution is None:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-        self._execution.require_owner(operation_id, session_id)
+        await self._execution.require_owner(operation_id, session_id)
 
     @asynccontextmanager
     async def manage(
@@ -953,7 +953,7 @@ class ProfileWorkerOperationHost:
         """
         if proof.frontend.value != "desktop":
             raise ProfileAccessRefusedError(AccessDenialCode.HUMAN_AUTHORITY_REQUIRED)
-        self.custody.require(proof.session_id)
+        await self.custody.require_off_loop(proof.session_id)
         await self._require_current_inventory()
         if self._execution is None:
             return ()
@@ -967,7 +967,7 @@ class ProfileWorkerOperationHost:
                 if invocation.identity.definition_id != "config.provision.setup":
                     continue
                 # A review whose original invocation lease retired can no longer be claimed.
-                self.custody.require(original_session)
+                await self.custody.require_off_loop(original_session)
             except (AutomationCustodyError, ProfileAccessRefusedError):
                 continue
             current = await services.submission.supervisor.inspect(operation_id)
@@ -1004,7 +1004,7 @@ class ProfileWorkerOperationHost:
     ]:
         """Commit attribution before rotating a live provisioning review's local bearer."""
         operation_id = reference.operation_id
-        self.custody.require(proof.session_id)
+        await self.custody.require_off_loop(proof.session_id)
         await self._require_current_inventory()
         services = self._composed()
         invocation = await self._stored_invocation(operation_id)
@@ -1115,21 +1115,32 @@ class ProfileWorkerOperationHost:
         input_json: str,
     ) -> OperationSubmission:
         """Convert volatile human input before binding or journaling the safe request."""
-        from cadrumo.application.modelo.edit_operator_input import prepare_modelo_edit_operand
+        from cadrumo.application.modelo.edit_operator_input import (
+            PreparedModeloEditOperand,
+            prepare_modelo_edit_operand,
+        )
         from cadrumo.application.operations.financial_operand_contract import OperationFinancialOperandRefusedError
 
         await self._composed_off_loop()
-        contract = self.contract(session_id, definition_id)
+        contract = await await_cancellation_complete(
+            asyncio.to_thread(self.contract, session_id, definition_id), task_name="profile-financial-input-contract"
+        )
         if contract.transient_financial_operand is None:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-        # A fault of the operand is a validator's message and never the operand itself.
-        with _refusing_what_its_readers_refuse(), self._governed():
-            prepared = prepare_modelo_edit_operand(
-                definition_id=definition_id,
-                profile_id=self.custody.identity.binding.profile_id,
-                subject_ref=subject_ref,
-                input_json=input_json,
-            )
+
+        def prepare() -> PreparedModeloEditOperand:
+            # A fault of the operand is a validator's message and never the operand itself.
+            with _refusing_what_its_readers_refuse(), self._governed():
+                return prepare_modelo_edit_operand(
+                    definition_id=definition_id,
+                    profile_id=self.custody.identity.binding.profile_id,
+                    subject_ref=subject_ref,
+                    input_json=input_json,
+                )
+
+        prepared = await await_cancellation_complete(
+            asyncio.to_thread(prepare), task_name="profile-financial-input-prepare"
+        )
         input_json = ""
 
         async def transfer() -> OperationSubmission:
@@ -1174,11 +1185,17 @@ class ProfileWorkerOperationHost:
     ) -> OperationSubmission:
         """Decode through the exact registered model after exact-profile custody."""
         await self._composed_off_loop()
-        self.contract(session_id, definition_id)
-        if self._execution is None:
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        with _refusing_what_its_readers_refuse(), self._governed():
-            payload = self._execution.registry.decode_request_payload(definition_id, payload_json)
+
+        def decode() -> BaseModel:
+            # Custody and a registered model's validators both run here, never on the service loop.
+            self.contract(session_id, definition_id)
+            execution = self._execution
+            if execution is None:
+                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+            with _refusing_what_its_readers_refuse(), self._governed():
+                return execution.registry.decode_request_payload(definition_id, payload_json)
+
+        payload = await await_cancellation_complete(asyncio.to_thread(decode), task_name="profile-payload-decode")
         return await self.submit(
             session_id=session_id,
             frontend=frontend,

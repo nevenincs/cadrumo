@@ -103,55 +103,6 @@ desktop:
     message_label: Missatge
     message_placeholder: Pregunta per un model, un termini o els teus registres
     model: Model
-    model_role_capability_text: text
-    model_role_capability_vision: imatges
-    model_role_choose_lane: Tria un proveïdor
-    model_role_choose_model: Tria un model
-    model_role_clear: Treu
-    model_role_current: 'Triat: {model} a {lane}'
-    model_role_heading: Model {role}
-    model_role_lane: Proveïdor {role}
-    model_role_licence: 'Llicència: {licence}'
-    model_role_licence_show: Mostra el text de la llicència
-    model_role_licence_unavailable: Podràs llegir el text de la llicència quan l'agent
-      estigui a punt.
-    model_role_licence_unknown: 'Llicència: no indicada'
-    model_role_model: Model {role}
-    model_role_none: No hi ha res triat
-    model_role_recommended: 'Fes servir la recomanació de l''agent per a {capability}:
-      {model}'
-    model_role_refused_catalog_unavailable: No s'ha pogut llegir la llista de proveïdors
-      de l'agent. Torna-ho a provar.
-    model_role_refused_committed_readback_failed: La teva tria s'ha desat, però no
-      s'ha pogut tornar a llegir. Obre-ho de nou per comprovar-la.
-    model_role_refused_lane_not_runnable: Aquest proveïdor no pot llegir documents
-      en segon pla. Tria'n un altre.
-    model_role_refused_model_not_in_catalogue: El proveïdor ja no ofereix aquest model.
-      Tria'n un altre.
-    model_role_refused_revision_conflict: Les teves tries han canviat en un altre
-      lloc. S'han tornat a llegir; torna-ho a provar.
-    model_role_refused_unknown: No s'ha pogut desar la teva tria. Torna-ho a provar.
-    model_role_refused_unknown_role: Cadrumo no coneix aquesta tasca. Actualitza Cadrumo
-      i torna-ho a provar.
-    model_role_refused_vision_required: Aquesta tasca llegeix imatges. Tria un model
-      que llegeixi imatges.
-    model_role_save: Desa
-    model_role_saved: Desat.
-    model_role_size: 'Mida de la baixada: {size}'
-    model_role_vision_no: No llegeix imatges
-    model_role_vision_unknown: No s'indica si llegeix imatges
-    model_role_vision_yes: Llegeix imatges
-    model_roles_close: Tanca
-    model_roles_failed: No s'han pogut llegir les teves tries de model. Torna-ho a
-      provar.
-    model_roles_lead: 'Tria el proveïdor i el model que llegeixen els teus documents
-      per a cada tasca. No es tria res per tu: es mostra la llicència de cada model
-      perquè decideixis.'
-    model_roles_loading: S'estan llegint les teves tries…
-    model_roles_no_lanes: L'agent encara no ofereix cap model per triar.
-    model_roles_open: Models per llegir documents
-    model_roles_title: Models per llegir documents
-    model_roles_unreadable: No es poden llegir les tries de model que tens desades.
     model_written: Aquest proveïdor no llista els seus models. Escriu el nom del model
       tal com l'escriu el proveïdor.
     more_files: +{count} més
@@ -323,17 +274,37 @@ desktop:
     key_note: Es desa xifrada en aquest ordinador i no es torna a mostrar.
     load_failed: No s’han pogut carregar els proveïdors. Torna-ho a provar.
     local_model_absent: Sense baixar
+    local_model_add: Afegeix
+    local_model_add_label: Afegeix un model pel nom
     local_model_download: Baixa
     local_model_installed: Baixat
-    local_model_recommended: Recomanat per llegir {capability}
+    local_model_licence: 'Llicència: {licence}'
+    local_model_licence_unknown: 'Llicència: no indicada'
     local_model_remove: Treu
     local_model_remove_failed: Cadrumo no ha pogut treure el model. Torna-ho a provar.
-    local_model_remove_still_selected: Cadrumo encara llegeix documents amb aquest
-      model. Tria'n un altre per a aquesta lectura i després treu aquest.
-    local_models_lead: Descarrega models en aquest ordinador. Tria quins llegeixen
-      els teus documents a Models per llegir documents.
+    local_model_size: 'Mida de la baixada: {size}'
+    local_models_failed: No s'ha pogut llegir la teva llista de models. Torna-ho a
+      provar.
+    local_models_lead: Els models amb què la IA local pot llegir els teus documents.
+      L'agent recomana els primers; afegeix qualsevol altre model pel nom amb què
+      el coneix la IA local. Baixa un model per fer-lo servir.
+    local_models_loading: S'està llegint la teva llista de models…
     local_models_none: L'agent encara no ofereix models per a aquesta connexió.
+    local_models_refused_catalog_unavailable: No s'ha pogut llegir la llista de proveïdors
+      de l'agent. Torna-ho a provar.
+    local_models_refused_committed_readback_failed: El canvi s'ha desat, però no s'ha
+      pogut tornar a llegir. Torna a obrir això per comprovar-ho.
+    local_models_refused_full: La llista és plena. Treu-ne abans un model.
+    local_models_refused_invalid_name: Aquest no és un nom de model que la IA local
+      pugui fer servir.
+    local_models_refused_revision_conflict: La teva llista ha canviat en un altre
+      lloc. S'ha tornat a llegir, així que torna-ho a provar.
+    local_models_refused_unknown: No s'ha pogut canviar la teva llista. Torna-ho a
+      provar.
+    local_models_reset: Restableix la llista
     local_models_title: Models en aquest ordinador
+    local_models_unreadable: La teva llista de models desada no es pot llegir. Restableix-la
+      per tornar a començar amb els models recomanats.
     reason_check_settings: Revisa aquesta configuració i torna-ho a provar.
     reason_record_unreadable: No es pot llegir la clau API desada. Torna-la a afegir.
     refresh: Torna-ho a provar
@@ -363,6 +334,7 @@ desktop:
     sign_in_cancelled: S'ha cancel·lat l'inici de sessió.
     sign_in_cleanup_failed: Reinicia Cadrumo abans de tornar a iniciar la sessió.
     sign_in_close: Tanca l'inici de sessió
+    sign_in_code_checking: Comprovant el codi d’autorització…
     sign_in_code_label: Codi d’autorització
     sign_in_code_prompt: Introdueix el codi d’autorització que apareix a la pàgina
       del proveïdor.
@@ -406,7 +378,6 @@ desktop:
     status_saved: Desat
     status_setup_needed: Sense configurar
     status_sign_in_needed: Sense sessió iniciada
-    summary: '{connection}: {status}'
     title: Proveïdors d'IA
     use_in_agent: Fes servir {provider} ({connection}) a l'agent
   rail:

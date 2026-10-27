@@ -1,5 +1,4 @@
 import { useId, useState, type ReactElement } from "react";
-import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -20,29 +19,33 @@ import type { AgentSelection, ModelOption, ProviderOption } from "./types";
  * efforts of the model chosen. A provider reached more than one way is more
  * than one entry of the first list, and choosing an entry chooses the way.
  * It holds no choice of its own: every change is handed to `onChange`, and
- * what it shows is `selection`. Where `onModelRoles` is given, it also opens
- * the person's model choice for each role that reads documents, which is
- * separate from the conversation's.
+ * what it shows is `selection`.
  */
 export function AgentSettingsPopover({
   providers,
   models,
   selection,
   onChange,
-  onModelRoles,
   children,
+  openRequests = 0,
 }: {
   providers: readonly ProviderOption[];
   /** Each way's models, by way id. */
   models: Readonly<Record<string, readonly ModelOption[]>>;
   selection: AgentSelection;
   onChange: (selection: AgentSelection) => void;
-  onModelRoles?: () => void;
   /** The one element that opens the popover. */
   children: ReactElement;
+  /** Counts the asks from elsewhere to open the popover; each new one opens it. */
+  openRequests?: number;
 }) {
   const t = useStrings();
   const [open, setOpen] = useState(false);
+  const [requestsSeen, setRequestsSeen] = useState(openRequests);
+  if (requestsSeen !== openRequests) {
+    setRequestsSeen(openRequests);
+    if (openRequests > 0) setOpen(true);
+  }
   const providerId = useId();
   const modelId = useId();
   const effortId = useId();
@@ -189,20 +192,6 @@ export function AgentSettingsPopover({
               ))}
             </NativeSelect>
           </Field>
-        )}
-        {onModelRoles && (
-          <Button
-            type="button"
-            variant="link"
-            size="xs"
-            className="justify-self-start"
-            onClick={() => {
-              setOpen(false);
-              onModelRoles();
-            }}
-          >
-            {t("desktop.agent.model_roles_open")}
-          </Button>
         )}
       </PopoverContent>
     </Popover>

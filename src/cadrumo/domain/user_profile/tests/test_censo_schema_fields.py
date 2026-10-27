@@ -19,11 +19,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 CENSO_DERIVED_FIELDS: tuple[tuple[str, str], ...] = (
     ("contact", "fiscal_address_cadastral_reference"),
-    ("contact", "fiscal_address_is_habitual_vivienda"),
     ("censo", "activity_start_date"),
     ("censo", "activity_end_date"),
-    ("censo", "establecimiento_type"),
-    ("censo", "elected_withholding_pct"),
     ("vivienda_office", "total_m2"),
     ("vivienda_office", "office_m2"),
     ("activities", "iae_epigraph"),
@@ -79,7 +76,6 @@ def test_selected_censo_profile_refs_resolve_against_catalogue(
     """Selected censo-derived profile fields carry canonical LegalReference ids."""
     expected = {
         "contact.fiscal_address_cadastral_reference": {"rdleg-1-2004:art-6.3"},
-        "contact.fiscal_address_is_habitual_vivienda": {"ley-35-2006:da-23", "ley-35-2006:art-30"},
         "censo.activity_start_date": {"rd-1065-2007:art-9"},
         "censo.activity_end_date": {"rd-1065-2007:art-11"},
     }
@@ -88,33 +84,6 @@ def test_selected_censo_profile_refs_resolve_against_catalogue(
         refs = set(schema.field(field_path).legal_refs)
         assert refs == expected_refs
         assert refs <= _published_legal_ids(refs)
-
-
-def test_censo_elected_withholding_enum_covers_15_7_1_pct(
-    schema: ProfileSchemaDefinition,
-) -> None:
-    """The IRPF withholding rate enum on the 036 censo carries the
-    three legally-defined values: 15 percent standard, 7 percent
-    nuevos-profesionales, 1 percent modulos transport."""
-
-    field = _field(schema, ("censo", "elected_withholding_pct"))
-    assert set(field.enum_values) == {"15", "7", "1"}
-    expected_refs = {"ley-35-2006:art-101", "rd-439-2007:art-95", "orden-hac-1425-2025:art-4"}
-    assert set(field.legal_refs) == expected_refs
-    assert expected_refs <= _published_legal_ids(expected_refs)
-
-
-def test_censo_establecimiento_type_enum_covers_propio_arrendado_cedido(
-    schema: ProfileSchemaDefinition,
-) -> None:
-    """The establecimiento type enum carries the three forms the 036
-    censo declares for the business establishment."""
-
-    field = _field(schema, ("censo", "establecimiento_type"))
-    assert set(field.enum_values) == {"propio", "arrendado", "cedido_gratuitamente"}
-    expected_refs = {"ley-35-2006:art-28", "ley-35-2006:art-29", "ley-35-2006:art-30"}
-    assert set(field.legal_refs) == expected_refs
-    assert expected_refs <= _published_legal_ids(expected_refs)
 
 
 def test_iae_epigraph_is_wired_to_model_selectors(

@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { useId, type ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
 import type {
@@ -97,6 +97,7 @@ export function ApprovalPrompt({
   options,
   onDecide,
   title,
+  children,
 }: {
   source: AgentApproval["source"];
   /** What would run, as the agent names it. */
@@ -110,6 +111,9 @@ export function ApprovalPrompt({
    * available. */
   onDecide?: (optionId: string) => void;
   title?: string;
+  /** What a Cadrumo review would do, in the product's own words, under the
+   * description. */
+  children?: ReactNode;
 }) {
   const t = useStrings();
   const headingId = useId();
@@ -162,6 +166,7 @@ export function ApprovalPrompt({
           )}
         </div>
       </div>
+      {children}
       <div className="flex flex-wrap justify-end gap-2">
         {ordered.map((option) => (
           <AgentTextAction

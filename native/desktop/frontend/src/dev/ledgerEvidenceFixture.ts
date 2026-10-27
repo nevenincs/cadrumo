@@ -65,8 +65,10 @@ type Tools = {
   seed: boolean;
   /** Whether the local AI is missing on this computer. */
   readerMissing: boolean;
-  /** Whether the vision role has no model chosen. */
+  /** Whether no model is picked to read with. */
   readerUnselected: boolean;
+  /** Whether the model picked reads text but not images. */
+  readerNoImages: boolean;
 };
 
 type Reading = {
@@ -97,9 +99,12 @@ const LOCAL_AI_SETUP = "operator.provision.local_ai";
 /** What the reader check found missing: the program that runs the models. */
 const RUNTIME_INSTALLED = "provisioning.runtime.installed";
 /** What the reader check found missing for a role the agent resolves no model
- * for: none is chosen, or the one chosen cannot run. The person chooses it in
- * the agent's settings, which no setup replaces. */
+ * for: none is picked, or the one picked cannot run. The person picks it in
+ * the agent's model picker, which no setup replaces. */
 const SELECTED_MODEL_AVAILABLE = "provisioning.selected_model.available";
+/** What the reader check found missing for reading images: the model picked
+ * is not stated to read them. */
+const SELECTED_MODEL_READS_IMAGES = "provisioning.selected_model.reads_images";
 
 /** A label reading that stood without the model fill the local AI gives. */
 const withoutReader = (unread: string[]): LabelReadingFallback => ({
@@ -1415,36 +1420,47 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
         available: true,
         failed_condition_id: null,
       },
-      roles: [
-        {
-          role: "text_extraction",
-          model: "reader-text-small",
-          installed: true,
-          ready: true,
-          failed_condition_id: null,
-        },
-        tools.readerUnselected
-          ? {
-              role: "vision_transcription",
-              model: null,
-              installed: null,
-              ready: false,
-              failed_condition_id: SELECTED_MODEL_AVAILABLE,
-              // Setup cannot choose a model for the person: the check names none.
-              recovery_action_id: null,
-            }
-          : {
-              role: "vision_transcription",
-              model: "reader-vision-medium",
+      // Every reading runs with the one model the person picked.
+      roles: tools.readerUnselected
+        ? ["text_extraction", "vision_transcription"].map((role) => ({
+            role,
+            model: null,
+            installed: null,
+            ready: false,
+            failed_condition_id: SELECTED_MODEL_AVAILABLE,
+            // Setup cannot pick a model for the person: the check names none.
+            recovery_action_id: null,
+          }))
+        : [
+            {
+              role: "text_extraction",
+              model: "reader-text-small",
               installed: true,
               ready: true,
               failed_condition_id: null,
             },
-      ],
+            tools.readerNoImages
+              ? {
+                  role: "vision_transcription",
+                  model: null,
+                  installed: null,
+                  ready: false,
+                  failed_condition_id: SELECTED_MODEL_READS_IMAGES,
+                  recovery_action_id: null,
+                }
+              : {
+                  role: "vision_transcription",
+                  model: "reader-text-small",
+                  installed: true,
+                  ready: true,
+                  failed_condition_id: null,
+                },
+          ],
       extraction_ready: !tools.readerUnselected,
-      document_readiness: tools.readerUnselected
-        ? "text_layer_only"
-        : "all_documents",
+      document_readiness:
+        tools.readerUnselected || tools.readerNoImages
+          ? "text_layer_only"
+          : "all_documents",
       text_layer_model_fill_available: true,
     };
   }

@@ -18,7 +18,6 @@ from pydantic import BaseModel, Field, StringConstraints, model_validator
 from cadrumo.core.errors.hierarchy import pydantic_validation_boundary
 from cadrumo.core.hex import is_hex64
 from cadrumo.core.json_contract import OutputSchema
-from cadrumo.core.model_roles import ModelRole
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 from ..domain.catalog import LaneId, ProviderAuthKind, ProviderConsumer, ProviderId, ProviderTransport
@@ -136,12 +135,8 @@ class ProviderSettingsRefusalCode(StrEnum):
     """No runtime took the request, so nothing was read or changed; produced at the frontend, never by the service."""
     PERSON_ACT_REQUIRED = "person_act_required"
     """Produced at dispatch for a frontend that may not change credentials, never by the service."""
-    MODEL_NOT_IN_CATALOGUE = "model_not_in_catalogue"
-    """A role selection names a model the lane's catalogue does not list now; a catalogue that lists it admits it."""
-    LANE_NOT_RUNNABLE = "lane_not_runnable"
-    """A role selection names a lane the agent declares runs no background request."""
-    VISION_REQUIRED = "vision_required"
-    """A role that reads images names a lane that takes no image or a model the catalogue does not mark as vision."""
+    MODEL_LIST_FULL = "model_list_full"
+    """The local model list already holds as many added models as it keeps."""
     UNKNOWN = "unknown"
 
 
@@ -164,51 +159,50 @@ class ProviderSettingsActionAccepted(BaseModel):
 type ProviderSettingsActionResult = ProviderSettingsActionAccepted | ProviderSettingsRefusal
 
 
-class ModelRoleSelectionEntry(OutputSchema):
-    """One role and the lane and model the person selected for it; both ``None`` when there is none."""
+class LocalModelListEntry(OutputSchema):
+    """One lane and one of its models: a model added to a local lane's list, or the model read with."""
 
-    role: ModelRole
-    lane: LaneId | None
-    """The catalogue lane id the selection names."""
-    model: ModelId | None
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _selected_or_not(self) -> Self:
-        if (self.lane is None) != (self.model is None):
-            raise ValueError("a role names a lane and a model together, or neither")
-        return self
+    lane: LaneId
+    """The catalogue lane id the model is listed on."""
+    model: ModelId
 
 
-class ModelRoleSelectionsStatus(OutputSchema):
-    """Every role and its selection, in role-vocabulary order, with the record's guard.
+class LocalModelListStatus(OutputSchema):
+    """The models the person added to local lanes' lists, in the order added, with the record's guard.
 
-    ``unreadable`` means a stored selections record cannot be read. Then no
-    role is listed, because none is known to be selected or unselected, and
-    ``revision`` guards the reset that removes the record. Every state carries
-    a revision, so an unreadable record always has a reset route.
+    A lane's recommended models are the catalogue's and are not listed here.
+    ``reading`` is the lane and model the person selected to read documents
+    with, or ``None`` when none is stored. ``local_lanes`` are the catalogue's
+    local lane ids, whose models a picker offers from their lists; none when
+    the catalogue cannot be read. ``unreadable`` means a stored list
+    record cannot be read. Then no model is listed or selected, because
+    nothing is known, and ``revision`` guards the reset that removes the
+    record. Every state carries a revision, so an unreadable record always
+    has a reset route.
     """
 
     unreadable: bool
-    roles: tuple[ModelRoleSelectionEntry, ...]
+    models: tuple[LocalModelListEntry, ...]
+    reading: LocalModelListEntry | None
+    local_lanes: tuple[LaneId, ...]
     revision: ProviderSettingsRevision
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
-    def _roles_follow_readability(self) -> Self:
-        if self.unreadable == bool(self.roles):
-            raise ValueError("a readable record lists every role and an unreadable one lists none")
+    def _models_follow_readability(self) -> Self:
+        if self.unreadable and (self.models or self.reading is not None):
+            raise ValueError("an unreadable record lists and selects no model")
         return self
 
 
-type ModelRoleSelectionsResult = ModelRoleSelectionsStatus | ProviderSettingsRefusal
+type LocalModelListResult = LocalModelListStatus | ProviderSettingsRefusal
 
 
 __all__ = [
     "CliState",
-    "ModelRoleSelectionEntry",
-    "ModelRoleSelectionsResult",
-    "ModelRoleSelectionsStatus",
+    "LocalModelListEntry",
+    "LocalModelListResult",
+    "LocalModelListStatus",
     "ProviderCredentialSource",
     "ProviderReadiness",
     "ProviderSettingsActionAccepted",

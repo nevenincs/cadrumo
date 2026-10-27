@@ -45,7 +45,7 @@
         "cadrumo_agent_service.providers.application.agent_credentials",
         "cadrumo_agent_service.providers.application.contracts",
         "cadrumo_agent_service.providers.application.lane_entries",
-        "cadrumo_agent_service.providers.application.model_role_selections",
+        "cadrumo_agent_service.providers.application.local_model_list",
         "cadrumo_agent_service.providers.application.model_runs",
         "cadrumo_agent_service.providers.application.ports",
         "cadrumo_agent_service.providers.application.resolution",

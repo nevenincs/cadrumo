@@ -743,7 +743,6 @@ desktop:
     view: View
     view_list: List
     view_months: Calendar
-    warnings: Some profile details are missing, so these dates use defaults.
     window_unknown: Opening date not reported
   canvas:
     lead: Choose a work area below, or open one from the sidebar. You can open the
@@ -1516,8 +1515,8 @@ desktop:
         vision: Read from the image
       paused_local_ai: Local AI, which reads the paused documents, is not ready. Add
         them again once it is ready to finish them.
-      paused_unavailable: Local AI could not read the paused documents. Choose or
-        check its model in the agent settings, then add them again to finish them.
+      paused_unavailable: Local AI could not read the paused documents. Check its
+        model list in the agent settings, then add them again to finish them.
       printed_differs: The document prints {printed}; the invoice records {recorded}.
       provenance: '{origin}, {grounding}'
       queue: Readings to review
@@ -1532,11 +1531,16 @@ desktop:
         choose_model: Open the agent
         extraction: Reading documents
         host: Local model host
-        no_model: No usable model is chosen. Choose or check the model in the agent
-          settings.
+        no_model: No model on the local AI's list can read this. Check the model list
+          in the agent settings.
         not_ready: Not ready
         off_host: Reading off this computer
         off_host_note: Only with your acknowledgement, each time
+        reads:
+          column_role_mapping: Reads table columns
+          supply_nature_proposal: Proposes the kind of sale or purchase
+          text_extraction: Reads document text
+          vision_transcription: Reads scanned pages
         ready: Ready
         text_only: Documents with a text layer only
         unavailable: Not available
@@ -2073,8 +2077,8 @@ desktop:
         other: 'Not imported: {code}'
         own_account_mismatch: Its rows name a different account.
         reader_unavailable: 'Not read: Local AI, which reads this file, is not ready.'
-        reader_unavailable_here: 'Not read: Local AI is not available right now. Choose
-          or check its model in the agent settings.'
+        reader_unavailable_here: 'Not read: Local AI is not available right now. Check
+          its model list in the agent settings.'
         result_limit: 'More than 4,096 rows: import it in parts.'
         source_changed: 'Changed after the preview: preview it again.'
         transaction_validation: Couldn't be read as a bank statement.
@@ -3386,6 +3390,33 @@ desktop:
       menu: Profile actions
       refresh: Refresh profile
     add: Add entry
+    aeat:
+      certificate: Certificate file
+      certificate_choose: Choose file
+      certificate_failed: The file dialog could not be opened.
+      certificate_none: No file chosen
+      certificate_replace: Choose another file
+      certificate_saved: A file is saved
+      credential_failed: '{item} was not saved. Check the requirements below and try
+        again.'
+      credential_unavailable: '{item} was not saved: the service is not available.
+        Try again when it is.'
+      credential_unknown: We could not confirm whether {item} was saved. Check the
+        requirements below before entering the value again.
+      description: Choose how this profile signs in to AEAT and see what is still
+        needed.
+      document_hint: For an app request, enter the DNI validity date or the NIE support
+        number, according to your identity document.
+      done: Done
+      failed: Could not save {item}. Check it and try again.
+      passphrase: Certificate passphrase
+      password: '{method} password'
+      readiness: Requirements
+      saved: Saved. The requirements below reflect what is stored.
+      saved_value: A value is saved but not shown. Type a new one to replace it, or
+        leave this empty to keep it.
+      secret_help: Saved apart from your profile and never shown again. Leave empty
+        to keep the one already saved.
     cancel: Cancel
     censo:
       absent: AEAT did not supply this value. No change.
@@ -3540,6 +3571,8 @@ desktop:
     exited: exited {code}
     failed: The session couldn't start.
   settings:
+    agent_search: Search settings
+    agent_search_empty: No matching settings. Try another search.
     always_dark: Always dark
     appearance: Appearance
     dark: Dark
@@ -3575,6 +3608,12 @@ desktop:
       needs_person: Waiting for you to approve it, or to install it yourself.
       not_in_this_build: This version of Cadrumo does not include this.
       offline: You are offline. Connect to the internet to set this up.
+    browser_lead: Cadrumo uses its own browser to sign in to the tax agency website
+      and read your data there.
+    browser_open: Open browser setup
+    browser_other_running: Another setup is running. Once it finishes, you can set
+      up the browser here.
+    browser_title: Browser setup
     cancel: Cancel setup
     cancelling: Stopping after the current step…
     checking: Checking components…
@@ -3631,7 +3670,6 @@ desktop:
     palette_open: Set up components
     palette_retry: Retry setup
     part_download: Model download
-    part_model: Model {role}
     part_program: The program that runs the models
     plan_destination: 'Saved in: {folder}'
     plan_from: 'From: {hosts}'
@@ -3648,11 +3686,8 @@ desktop:
     rail_busy: Setting up components
     rail_incomplete: Setup isn't finished
     refused_busy: Setup is already running elsewhere. Wait for it to finish.
-    refused_model_selection_unusable: Cadrumo can't use the models you chose. Choose
-      them again in the agent settings, then try again.
-    refused_model_size_unstated: Cadrumo can't plan the download because the agent
-      doesn't say how big one of the models you chose is. Choose another model in
-      the agent settings, then try again.
+    refused_model_selection_unusable: Cadrumo can't download that model. Check the
+      local AI's model list in the agent settings, then try again.
     refused_not_cancellable: Setup can't be stopped right now. It will finish shortly.
     refused_not_pending: That plan is no longer waiting for an answer.
     refused_not_signed_in: Sign in to your profile first.
@@ -3666,12 +3701,8 @@ desktop:
     result_not_finished: Didn't finish
     resume: Resume
     retry: Connection problem. Trying again in {seconds} seconds (attempt {attempt}).
-    role:
-      column_role_mapping: for table columns
-      supply_nature_proposal: for the kind of sale or purchase
-      text_extraction: for document text
-      vision_transcription: for scanned pages
     show_new_plan: Show the new plan
+    show_running: Show that setup
     size_unknown: Size known once it starts
     space: Needs {required} of free space; {free} is free.
     space_short: There isn't enough free space. Free some up, then try again.
@@ -3707,23 +3738,20 @@ desktop:
     try_again: Try again
     unavailable: Components can't be checked right now. Try again in a moment.
   setup_review:
-    answer_unknown: 'The setup decision could not be confirmed. Setup may have started.
-      Check component status before starting again. Operation: {operation_id}'
-    apply: Apply
-    authority_lost: This review's authority has ended. Sign in and start a new setup
-      operation.
-    claim: Claim this review
-    claimed: Review claimed.
-    claimed_elsewhere: Another person holds this review. It cannot be taken over.
-    destination_browser: Browser files
-    expires_at: Expires
-    failed: The review is unavailable. Read it again before continuing.
-    operation_id: Operation ID
-    read: Read current review
-    reject: Reject
-    review_digest: Review digest
-    target_version: 'Version: {version}'
-    title: Review setup operation
+    changed: This setup request changed or ended. Ask the assistant to start setup
+      again.
+    check_setup: Check setup
+    destination_browser: Cadrumo's browser folder
+    held_elsewhere: Someone else signed in to this profile is already answering this
+      setup request.
+    lead: Setup is waiting for your approval. Nothing is downloaded until you approve.
+    reject: Don't set up
+    title: Set up the browser for the tax agency website?
+    unavailable: Cadrumo couldn't answer this setup request. Try again.
+    uncertain: Cadrumo couldn't confirm your answer, so setup may have started. Check
+      setup before asking for it again.
+    unreadable: Cadrumo can't show what this setup would download, so you can't approve
+      it here.
   signin:
     checking: Checking your sign-in…
     choose_profile: Choose a profile
@@ -3779,6 +3807,8 @@ desktop:
     side_by_side: Put documentation and workspace side by side
     stack: Stack documentation and workspace
     swap: Swap documentation and workspace
+  table:
+    resize_column: Resize column {column}
   titlebar:
     close: Close window
     failed: The window action could not be completed.
@@ -5790,8 +5820,8 @@ tui:
             again.'
           reader_unavailable: 'The automatic reader could not start. {count} field(s)
             the labels did not cover have not been read yet and stay empty: {fields}.
-            Choose or check the model that reads documents in the Cadrumo desktop
-            app, then read the document again.'
+            Check the local AI''s model list in the Cadrumo desktop app, then read
+            the document again.'
         line: '{index}. {description} · quantity: {quantity} · unit price: {unit_price}
           · base: {base} · rate: {rate} · IVA: {iva} · surcharge rate: {recargo_rate}
           · surcharge: {recargo}'
@@ -5908,8 +5938,8 @@ tui:
           partial: 'This batch was partial: some documents were stored and others
             were not. Run it again after fixing the refused ones; stored documents
             are not stored twice.'
-          paused: Local AI could not read the paused documents. Choose or check its
-            model in the Cadrumo desktop app, then run the batch again to finish them.
+          paused: Local AI could not read the paused documents. Check its model list
+            in the Cadrumo desktop app, then run the batch again to finish them.
           paused_local_ai_not_ready: Local AI, which reads the paused documents, is
             not ready. Run the batch again once it is ready to finish them.
           writes: 'Records written: {count}.'
@@ -6144,7 +6174,7 @@ tui:
         reader_unavailable: the local AI, which reads this file, is not ready, so
           the file was not read
         reader_unavailable_here: the local AI is not available right now, so the file
-          was not read; choose or check its model in the Cadrumo desktop app
+          was not read; check its model list in the Cadrumo desktop app
         result_limit: the import reached its row limit before this file
         source_changed: the file changed after its preview, so nothing from it was
           imported; preview it again
@@ -7422,8 +7452,6 @@ workspace:
     hub:
       holidays_national_only: Deadlines count national holidays; regional ones are
         not checked.
-      lead: Prepare each modelo, export the file you upload at the AEAT, and record
-        that you filed it.
     lifecycle:
       amended: Correction started
       calculated: Calculation completed
@@ -7532,6 +7560,7 @@ workspace:
         amount: Amount
         by: Sort by
         deadline: Deadline
+        declaration: Declaration
         modelo: Modelo
         result: Result
         state: State

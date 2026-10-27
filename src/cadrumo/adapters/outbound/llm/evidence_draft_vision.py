@@ -34,8 +34,8 @@ one too, since the fabrication would be in the transcription the check runs
 against.
 
 **One dispatch path, and consent follows the lane.** Every read goes to the
-agent service for the vision transcription role, and the person's selection
-for that role decides the lane and model. Whether the lane reads off-host is the
+agent service for the vision transcription role, which derives the lane and
+model from the person's local model list. Whether the lane reads off-host is the
 catalogue entry's typed flag, never this module's guess. A lane that reads
 off-host needs the per-invocation, digest-bound consent token, and every
 request built here is marked evidence-derived unless the caller names the

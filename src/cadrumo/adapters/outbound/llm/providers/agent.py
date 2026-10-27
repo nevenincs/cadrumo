@@ -46,6 +46,9 @@ JSON_REASK_INSTRUCTION = (
 _NO_SELECTION_LOCALE_KEY: Final = "errors.refused.refused_llm_no_model_selected"
 """The refusal sentence for a role with no selected model: the person chooses one in the desktop app."""
 
+_CANNOT_READ_IMAGES_LOCALE_KEY: Final = "errors.refused.refused_llm_model_cannot_read_images"
+"""The refusal sentence for a selected model not stated to read images: the person picks one that can."""
+
 _CONFIGURATION_REFUSALS = frozenset(
     {
         ModelRunRefusalCode.SERVICE_UNAVAILABLE,
@@ -54,6 +57,7 @@ _CONFIGURATION_REFUSALS = frozenset(
         ModelRunRefusalCode.NO_SELECTION,
         ModelRunRefusalCode.LANE_UNAVAILABLE,
         ModelRunRefusalCode.MODEL_NOT_INSTALLED,
+        ModelRunRefusalCode.MODEL_CANNOT_READ_IMAGES,
         ModelRunRefusalCode.INPUT_NOT_SUPPORTED,
     }
 )
@@ -106,6 +110,10 @@ def model_run_refusal_error(refusal: ModelRunRefusal, *, role: ModelRole) -> LLM
     if refusal.code is ModelRunRefusalCode.NO_SELECTION:
         return LLMConfigError(
             context=context, precondition_verdict=verdict, translated_message=_NO_SELECTION_LOCALE_KEY
+        )
+    if refusal.code is ModelRunRefusalCode.MODEL_CANNOT_READ_IMAGES:
+        return LLMConfigError(
+            context=context, precondition_verdict=verdict, translated_message=_CANNOT_READ_IMAGES_LOCALE_KEY
         )
     if refusal.code in _CONFIGURATION_REFUSALS:
         return LLMConfigError(context=context, precondition_verdict=verdict)

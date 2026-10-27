@@ -618,10 +618,23 @@ export const fileName = (path: string) => path.split(/[\\/]/).pop() || path;
 /** The reader check's condition for a role the agent resolves no model
  * for. */
 const NO_USABLE_MODEL = "provisioning.selected_model.available";
+const READS_NO_IMAGES = "provisioning.selected_model.reads_images";
 
-/** Whether a role is not ready because it has no model to run: the person
- * chose none, or the agent cannot use the one chosen. The choice is made in
- * the agent's settings; no setup supplies it. */
-export function roleNeedsModel(role: ReaderRole): boolean {
-  return !role.ready && role.failed_condition_id === NO_USABLE_MODEL;
+/** What keeps documents from being read that the person settles by picking
+ * another model in the agent's model picker; no setup supplies either. */
+export type ReaderProblems = {
+  /** No model is picked, or the agent cannot use the one picked. */
+  noModel: boolean;
+  /** The model picked is not stated to read images, which scanned pages need. */
+  cannotReadImages: boolean;
+};
+
+/** The model problems behind `roles` that are not ready, each said once. */
+export function readerProblems(roles: readonly ReaderRole[]): ReaderProblems {
+  const held = (condition: string) =>
+    roles.some((role) => !role.ready && role.failed_condition_id === condition);
+  return {
+    noModel: held(NO_USABLE_MODEL),
+    cannotReadImages: held(READS_NO_IMAGES),
+  };
 }

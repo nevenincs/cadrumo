@@ -10,8 +10,8 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
-from collections.abc import AsyncGenerator, Generator
-from contextlib import asynccontextmanager, contextmanager
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -56,6 +56,7 @@ from cadrumo.core.period import Period, PeriodError
 from cadrumo.core.request_faults import RequestFault
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
+from cadrumo.tests.log_records import delivered_records
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, Availability
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
@@ -64,6 +65,7 @@ from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorityReques
 
 from ...adapters.worker_authorization_client import WorkerAuthorizationClient
 from ...adapters.worker_authorization_lease import WorkerAuthorizationLease
+from .. import operation_authority
 from ..operation_authority import ProfileWorkerOperationAuthority, WorkerOperationBinding
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -100,8 +102,8 @@ class _CustodyWitness(ProfileWorkerCustody):
             return self.session
 
     @override
-    @contextmanager
-    def section(self, session_id: UUID) -> Generator[None]:
+    @asynccontextmanager
+    async def section_off_loop(self, session_id: UUID) -> AsyncGenerator[None]:
         self.require(session_id)
         self.section_tasks.append(asyncio.current_task())
         yield
@@ -278,9 +280,11 @@ def harness(authority_operation: PinnedAuthorityOperation, tmp_path: Path) -> _H
     operation_identity = OperationIdentity(
         operation_id=new_operation_id(), definition_id=_DEFINITION, subject_ref=request.subject_ref
     )
-    authority.bind(
-        operation_identity.operation_id,
-        WorkerOperationBinding(session.session_id, OperationFrontendProjection.CLI, request),
+    asyncio.run(
+        authority.bind(
+            operation_identity.operation_id,
+            WorkerOperationBinding(session.session_id, OperationFrontendProjection.CLI, request),
+        )
     )
     return _Harness(authority, custody, client, reader, operation_identity, request)
 
@@ -368,7 +372,7 @@ async def test_every_action_and_held_require_resolves_freshly_without_lending_pe
     harness: _Harness, action: AccessAction
 ) -> None:
     async with harness.authority.guard(harness.identity, AccessAction.SUBMIT):
-        harness.authority.capture_provenance(harness.identity)
+        await harness.authority.capture_provenance(harness.identity)
     caller = asyncio.current_task()
     async with harness.authority.guard(harness.identity, action):
         await harness.authority.require(identity=harness.identity, request=harness.request, action=action)
@@ -404,7 +408,7 @@ async def test_an_unregistered_fault_of_a_fresh_submissions_resolver_refuses_the
 
     assert (refused.value.reason, refused.value.request_faults) == (AutomationCustodyCode.INVALID, ())
     assert refused.value.__cause__ is None and refused.value.__suppress_context__
-    logged = [record.getMessage() for record in caplog.records]
+    logged = [record.getMessage() for record in delivered_records(caplog, operation_authority.__name__)]
     assert logged == [f"fresh submission stopped by an unexpected fault exception_type={fault_type.__name__}"]
     assert not harness.client.requests and not harness.custody.section_tasks
 
@@ -433,7 +437,7 @@ async def test_a_fault_of_an_admitted_operations_resolver_is_not_answered_as_a_r
 ) -> None:
     """Once admitted, an act may already have taken effect, so its fault is never turned into a refusal here."""
     async with harness.authority.guard(harness.identity, AccessAction.SUBMIT):
-        harness.authority.capture_provenance(harness.identity)
+        await harness.authority.capture_provenance(harness.identity)
     harness.reader.stopped_by = fault
 
     with pytest.raises(type(fault)) as raised:
@@ -455,9 +459,11 @@ def test_the_execution_caller_is_the_frontend_and_live_session_that_admitted_the
     agent_identity = OperationIdentity(
         operation_id=new_operation_id(), definition_id=_DEFINITION, subject_ref=harness.request.subject_ref
     )
-    harness.authority.bind(
-        agent_identity.operation_id,
-        WorkerOperationBinding(session.session_id, OperationFrontendProjection.EXTERNAL_CLIENT, harness.request),
+    asyncio.run(
+        harness.authority.bind(
+            agent_identity.operation_id,
+            WorkerOperationBinding(session.session_id, OperationFrontendProjection.EXTERNAL_CLIENT, harness.request),
+        )
     )
 
     assert harness.authority.execution_caller(agent_identity) == OperationExecutionCaller(

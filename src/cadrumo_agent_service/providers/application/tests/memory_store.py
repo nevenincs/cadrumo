@@ -1,4 +1,4 @@
-"""In-memory provider-settings and selections stores that keep the ports' revision contract.
+"""In-memory provider-settings and model list stores that keep the ports' revision contract.
 
 It stands in for encrypted custody so service tests isolate the service's own
 decisions: every write gets a fresh revision, and a write or delete whose guard
@@ -12,20 +12,20 @@ from typing import override
 
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 
-from ...domain.record import ModelRoleSelectionsRecord, ProviderSettingsRecord
+from ...domain.record import LocalModelListRecord, ProviderSettingsRecord
 from ..ports import (
-    AbsentModelRoleSelections,
+    AbsentLocalModelList,
     AbsentProviderRecord,
-    ModelRoleSelectionsRead,
-    ModelRoleSelectionsStore,
+    LocalModelListRead,
+    LocalModelListStore,
     ProviderRecordRead,
     ProviderSettingsStore,
-    StoredModelRoleSelections,
+    StoredLocalModelList,
     StoredProviderRecord,
     StoreGenerations,
     StoreRefusal,
     StoreRefusalCode,
-    UnreadableModelRoleSelections,
+    UnreadableLocalModelList,
     UnreadableProviderRecord,
 )
 
@@ -86,22 +86,22 @@ class MemoryProviderSettingsStore(ProviderSettingsStore):
         return None
 
 
-class MemoryModelRoleSelectionsStore(ModelRoleSelectionsStore):
-    """The selections record held in memory, guarded by per-write revisions."""
+class MemoryLocalModelListStore(LocalModelListStore):
+    """The model list record held in memory, guarded by per-write revisions."""
 
     def __init__(self) -> None:
         """Start with no record."""
-        self.stored: StoredModelRoleSelections | None = None
+        self.stored: StoredLocalModelList | None = None
         self.unreadable: str | None = None
         self.refusal: StoreRefusal | None = None
 
     @override
-    def read(self) -> ModelRoleSelectionsRead | StoreRefusal:
+    def read(self) -> LocalModelListRead | StoreRefusal:
         if self.refusal is not None:
             return self.refusal
         if self.unreadable is not None:
-            return UnreadableModelRoleSelections(revision=self.unreadable)
-        return self.stored if self.stored is not None else AbsentModelRoleSelections()
+            return UnreadableLocalModelList(revision=self.unreadable)
+        return self.stored if self.stored is not None else AbsentLocalModelList()
 
     def _revision(self) -> str:
         if self.unreadable is not None:
@@ -109,13 +109,13 @@ class MemoryModelRoleSelectionsStore(ModelRoleSelectionsStore):
         return self.stored.revision if self.stored is not None else ABSENT_SECURE_OBJECT_REVISION_ID
 
     @override
-    def write(self, record: ModelRoleSelectionsRecord, *, expected_revision: str) -> StoreRefusal | None:
+    def write(self, record: LocalModelListRecord, *, expected_revision: str) -> StoreRefusal | None:
         if self.refusal is not None:
             return self.refusal
         if self._revision() != expected_revision:
             return StoreRefusal(code=StoreRefusalCode.REVISION_CONFLICT)
         self.unreadable = None
-        self.stored = StoredModelRoleSelections(record=record, revision=secrets.token_hex(32))
+        self.stored = StoredLocalModelList(record=record, revision=secrets.token_hex(32))
         return None
 
     @override

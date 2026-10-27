@@ -778,7 +778,6 @@ desktop:
     view: Vista
     view_list: Lista
     view_months: Calendario
-    warnings: Faltan datos del perfil; estas fechas usan valores por defecto.
     window_unknown: Fecha de apertura no indicada
   canvas:
     lead: Elige un área de trabajo a continuación o ábrela desde la barra lateral.
@@ -1548,8 +1547,8 @@ desktop:
         vision: Leído de la imagen
       paused_local_ai: La IA local, que lee los documentos en pausa, no está lista.
         Vuelve a añadirlos cuando esté lista para terminarlos.
-      paused_unavailable: La IA local no ha podido leer los documentos en pausa. Elige
-        o revisa su modelo en los ajustes del agente y vuelve a añadirlos para terminarlos.
+      paused_unavailable: La IA local no ha podido leer los documentos en pausa. Revisa
+        su lista de modelos en los ajustes del agente y vuelve a añadirlos para terminarlos.
       printed_differs: El documento indica {printed}; la factura registra {recorded}.
       provenance: '{origin}, {grounding}'
       queue: Lecturas por revisar
@@ -1564,11 +1563,16 @@ desktop:
         choose_model: Abrir el agente
         extraction: Lectura de documentos
         host: Servidor local de modelos
-        no_model: No hay ningún modelo utilizable elegido. Elige o revisa el modelo
-          en los ajustes del agente.
+        no_model: Ningún modelo de la lista de la IA local puede leer esto. Revisa
+          la lista de modelos en los ajustes del agente.
         not_ready: No disponible
         off_host: Lectura fuera de este equipo
         off_host_note: Solo con tu conformidad, cada vez
+        reads:
+          column_role_mapping: Lee columnas de tablas
+          supply_nature_proposal: Propone el tipo de venta o compra
+          text_extraction: Lee el texto de los documentos
+          vision_transcription: Lee páginas escaneadas
         ready: Listo
         text_only: Solo documentos con capa de texto
         unavailable: No disponible
@@ -2110,7 +2114,7 @@ desktop:
         reader_unavailable: 'No se ha leído: la IA local, que lee este archivo, no
           está lista.'
         reader_unavailable_here: 'No se ha leído: la IA local no está disponible ahora
-          mismo. Elige o revisa su modelo en los ajustes del agente.'
+          mismo. Revisa su lista de modelos en los ajustes del agente.'
         result_limit: 'Más de 4.096 filas: impórtalo por partes.'
         source_changed: 'Ha cambiado tras la vista previa: vuelve a previsualizarlo.'
         transaction_validation: No se ha podido leer como extracto bancario.
@@ -3435,6 +3439,32 @@ desktop:
       menu: Acciones del perfil
       refresh: Actualizar el perfil
     add: Añadir registro
+    aeat:
+      certificate: Archivo del certificado
+      certificate_choose: Elegir archivo
+      certificate_failed: No se pudo abrir el selector de archivos.
+      certificate_none: Ningún archivo elegido
+      certificate_replace: Elegir otro archivo
+      certificate_saved: Hay un archivo guardado
+      credential_failed: '{item}: no se guardó. Revisa los requisitos de abajo y vuelve
+        a intentarlo.'
+      credential_unavailable: '{item}: no se guardó porque el servicio no está disponible.
+        Vuelve a intentarlo cuando lo esté.'
+      credential_unknown: '{item}: no pudimos confirmar si se guardó. Mira los requisitos
+        de abajo antes de volver a introducir el valor.'
+      description: Elige cómo accede este perfil a la AEAT y mira qué falta todavía.
+      document_hint: Para solicitar el acceso en la aplicación, introduce la fecha
+        de validez del DNI o el número de soporte del NIE, según tu documento.
+      done: Hecho
+      failed: 'No se pudo guardar: {item}. Revisa el valor y vuelve a intentarlo.'
+      passphrase: Contraseña del certificado
+      password: Contraseña de {method}
+      readiness: Requisitos
+      saved: Guardado. Los requisitos de abajo reflejan lo almacenado.
+      saved_value: Hay un valor guardado que no se muestra. Escribe uno nuevo para
+        sustituirlo o déjalo en blanco para conservarlo.
+      secret_help: Se guarda aparte de tu perfil y no vuelve a mostrarse. Déjala en
+        blanco para conservar la que ya está guardada.
     cancel: Cancelar
     censo:
       absent: La AEAT no ha proporcionado este dato. Sin cambios.
@@ -3593,6 +3623,8 @@ desktop:
     exited: terminó ({code})
     failed: No se ha podido iniciar la sesión.
   settings:
+    agent_search: Buscar en ajustes
+    agent_search_empty: No hay ajustes que coincidan. Prueba otra búsqueda.
     always_dark: Siempre oscuro
     appearance: Apariencia
     dark: Oscuro
@@ -3630,6 +3662,12 @@ desktop:
       needs_person: Espera a que lo apruebes o lo instales tú.
       not_in_this_build: Esta versión de Cadrumo no lo incluye.
       offline: No tienes conexión. Conéctate a internet para configurarlo.
+    browser_lead: Cadrumo usa su propio navegador para identificarse en la web de
+      la Agencia Tributaria y leer allí tus datos.
+    browser_open: Abrir la configuración del navegador
+    browser_other_running: Hay otra configuración en curso. Cuando termine, podrás
+      configurar el navegador aquí.
+    browser_title: Configuración del navegador
     cancel: Cancelar la configuración
     cancelling: Se detendrá tras el paso actual…
     checking: Comprobando los componentes…
@@ -3687,7 +3725,6 @@ desktop:
     palette_open: Configurar los componentes
     palette_retry: Reintentar la configuración
     part_download: Descarga del modelo
-    part_model: Modelo {role}
     part_program: El programa que ejecuta los modelos
     plan_destination: 'Se guarda en: {folder}'
     plan_from: 'Desde: {hosts}'
@@ -3704,11 +3741,8 @@ desktop:
     rail_busy: Configurando los componentes
     rail_incomplete: La configuración no ha terminado
     refused_busy: Ya hay una configuración en curso en otro sitio. Espera a que termine.
-    refused_model_selection_unusable: Cadrumo no puede usar los modelos que has elegido.
-      Elígelos de nuevo en los ajustes del agente y vuelve a intentarlo.
-    refused_model_size_unstated: Cadrumo no puede planificar la descarga porque el
-      agente no indica el tamaño de uno de los modelos que has elegido. Elige otro
-      modelo en los ajustes del agente y vuelve a intentarlo.
+    refused_model_selection_unusable: Cadrumo no puede descargar ese modelo. Revisa
+      la lista de modelos de la IA local en los ajustes del agente y vuelve a intentarlo.
     refused_not_cancellable: Ahora no se puede detener la configuración. Terminará
       en breve.
     refused_not_pending: Ese plan ya no espera respuesta.
@@ -3726,12 +3760,8 @@ desktop:
     resume: Reanudar
     retry: Problema de conexión. Se volverá a intentar en {seconds} segundos (intento
       {attempt}).
-    role:
-      column_role_mapping: para columnas de tablas
-      supply_nature_proposal: para el tipo de venta o compra
-      text_extraction: para el texto de documentos
-      vision_transcription: para páginas escaneadas
     show_new_plan: Ver el nuevo plan
+    show_running: Ver esa configuración
     size_unknown: Tamaño conocido al empezar
     space: Necesita {required} de espacio libre; hay {free} libres.
     space_short: No hay suficiente espacio libre. Libera algo y vuelve a intentarlo.
@@ -3769,24 +3799,22 @@ desktop:
     unavailable: Ahora no se pueden comprobar los componentes. Inténtalo de nuevo
       en un momento.
   setup_review:
-    answer_unknown: 'No se ha podido confirmar la decisión. La instalación puede haber
-      empezado. Comprueba el estado de los componentes antes de empezar otra vez.
-      Operación: {operation_id}'
-    apply: Aplicar
-    authority_lost: La autorización de esta revisión ha terminado. Inicia sesión y
-      empieza una nueva operación de instalación.
-    claim: Asumir esta revisión
-    claimed: Revisión asumida.
-    claimed_elsewhere: Otra persona tiene esta revisión. No puedes asumirla.
-    destination_browser: Archivos del navegador
-    expires_at: Caduca
-    failed: La revisión no está disponible. Vuelve a leerla antes de continuar.
-    operation_id: ID de operación
-    read: Leer revisión actual
-    reject: Rechazar
-    review_digest: Huella de la revisión
-    target_version: 'Versión: {version}'
-    title: Revisar la operación de instalación
+    changed: Esta solicitud de configuración ha cambiado o ha terminado. Pide al asistente
+      que vuelva a iniciar la configuración.
+    check_setup: Revisar la configuración
+    destination_browser: La carpeta del navegador de Cadrumo
+    held_elsewhere: Otra persona con sesión en este perfil ya está respondiendo a
+      esta solicitud de configuración.
+    lead: La configuración espera tu aprobación. No se descarga nada hasta que la
+      apruebes.
+    reject: No configurar
+    title: ¿Configurar el navegador para la web de la Agencia Tributaria?
+    unavailable: Cadrumo no ha podido responder a esta solicitud de configuración.
+      Inténtalo de nuevo.
+    uncertain: Cadrumo no ha podido confirmar tu respuesta, así que la configuración
+      puede haber empezado. Revisa la configuración antes de volver a pedirla.
+    unreadable: Cadrumo no puede mostrar qué descargaría esta configuración, así que
+      no puedes aprobarla aquí.
   signin:
     checking: Comprobando tu sesión…
     choose_profile: Elige un perfil
@@ -3845,6 +3873,8 @@ desktop:
     side_by_side: Poner documentación y espacio de trabajo lado a lado
     stack: Apilar documentación y espacio de trabajo
     swap: Intercambiar documentación y espacio de trabajo
+  table:
+    resize_column: Cambiar el ancho de la columna {column}
   titlebar:
     close: Cerrar ventana
     failed: No se ha podido completar la acción de la ventana.
@@ -5905,7 +5935,7 @@ tui:
             leer el documento.'
           reader_unavailable: 'El lector automático no pudo iniciarse. {count} campo(s)
             que las etiquetas no cubrían aún no se han leído y siguen vacíos: {fields}.
-            Elige o revisa el modelo que lee los documentos en la aplicación de escritorio
+            Revisa la lista de modelos de la IA local en la aplicación de escritorio
             de Cadrumo y vuelve a leer el documento.'
         line: '{index}. {description} · cantidad: {quantity} · precio unitario: {unit_price}
           · base: {base} · tipo: {rate} · IVA: {iva} · tipo de recargo: {recargo_rate}
@@ -6028,9 +6058,9 @@ tui:
           partial: 'Este lote fue parcial: algunos documentos se guardaron y otros
             no. Vuelve a lanzarlo después de corregir los rechazados; los documentos
             guardados no se guardan dos veces.'
-          paused: La IA local no ha podido leer los documentos en pausa. Elige o revisa
-            su modelo en la aplicación de escritorio de Cadrumo y vuelve a lanzar
-            el lote para terminarlos.
+          paused: La IA local no ha podido leer los documentos en pausa. Revisa su
+            lista de modelos en la aplicación de escritorio de Cadrumo y vuelve a
+            lanzar el lote para terminarlos.
           paused_local_ai_not_ready: La IA local, que lee los documentos en pausa,
             no está lista. Vuelve a lanzar el lote cuando esté lista para terminarlos.
           writes: 'Registros escritos: {count}.'
@@ -6273,7 +6303,7 @@ tui:
         reader_unavailable: la IA local, que lee este fichero, no está lista, así
           que no se leyó el fichero
         reader_unavailable_here: la IA local no está disponible ahora mismo, así que
-          no se leyó el fichero; elige o revisa su modelo en la aplicación de escritorio
+          no se leyó el fichero; revisa su lista de modelos en la aplicación de escritorio
           de Cadrumo
         result_limit: la importación alcanzó su límite de filas antes de este fichero
         source_changed: el fichero cambió después de la previsualización y no se importó
@@ -7571,8 +7601,6 @@ workspace:
     hub:
       holidays_national_only: Los plazos tienen en cuenta los festivos nacionales;
         los autonómicos no se comprueban.
-      lead: Prepara cada modelo, exporta el fichero que presentas en la AEAT y registra
-        que lo has presentado.
     lifecycle:
       amended: Corrección iniciada
       calculated: Cálculo completado
@@ -7683,6 +7711,7 @@ workspace:
         amount: Importe
         by: Ordenar por
         deadline: Plazo
+        declaration: Declaración
         modelo: Modelo
         result: Resultado
         state: Estado

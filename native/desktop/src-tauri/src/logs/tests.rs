@@ -505,6 +505,8 @@ fn native_loss_and_persistence_health_reach_the_real_log_channel() {
     for _ in 0..600 {
         diagnostics.event(EventKind::HostStarted, None, None);
     }
+    // Persistence health is published by the writer after it attempts the file.
+    assert!(diagnostics.flush_logs(Duration::from_secs(5)));
     let (hub, mut poller) = hub(scratch.log(), diagnostics.clone());
     let (_, frames) = subscribe(&hub);
     let now = Instant::now();
@@ -525,6 +527,7 @@ fn native_loss_and_persistence_health_reach_the_real_log_channel() {
     }
     fs::remove_file(&blocked).unwrap();
     diagnostics.event(EventKind::HostStarted, None, None);
+    assert!(diagnostics.flush_logs(Duration::from_secs(5)));
     poller.tick(now + TICK);
     let frames = frames.lock().unwrap();
     assert_eq!(

@@ -74,18 +74,6 @@
             "help": null,
             "about": "Operator contact email used by configuration surfaces.",
             "row_index": null
-          },
-          {
-            "path": "identity.notes",
-            "label": "Notes",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "string",
-            "choices": [],
-            "help": null,
-            "about": "Operator free-form notes attached to the profile.",
-            "row_index": null
           }
         ]
       },
@@ -330,27 +318,6 @@
             "row_index": null
           },
           {
-            "path": "contact.fiscal_address_is_habitual_vivienda",
-            "label": "Fiscal address is the habitual residence",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "boolean",
-            "choices": [
-              {
-                "value": "true",
-                "label": "Yes"
-              },
-              {
-                "value": "false",
-                "label": "No"
-              }
-            ],
-            "help": null,
-            "about": "Whether the fiscal address is also the operator's habitual residence. Gates the home-office afectacion-parcial regime per LIRPF Art. 30.2 rule 5.",
-            "row_index": null
-          },
-          {
             "path": "contact.contact_person_phone",
             "label": "Contact person telephone",
             "value": "952000000",
@@ -578,56 +545,6 @@
             "help": null,
             "about": "AEAT censo baja date for the economic activity. Caps obligation calendar after baja.",
             "row_index": null
-          },
-          {
-            "path": "censo.establecimiento_type",
-            "label": "Establishment type",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "enum",
-            "choices": [
-              {
-                "value": "propio",
-                "label": "Owned"
-              },
-              {
-                "value": "arrendado",
-                "label": "Rented"
-              },
-              {
-                "value": "cedido_gratuitamente",
-                "label": "Provided free of charge"
-              }
-            ],
-            "help": null,
-            "about": "Form of business establishment declared on the 036 censo. Gates deductibility treatment of rent / amortizacion / suministros under LIRPF estimacion directa.",
-            "row_index": null
-          },
-          {
-            "path": "censo.elected_withholding_pct",
-            "label": "Elected withholding rate",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "enum",
-            "choices": [
-              {
-                "value": "15",
-                "label": "15"
-              },
-              {
-                "value": "7",
-                "label": "7"
-              },
-              {
-                "value": "1",
-                "label": "1"
-              }
-            ],
-            "help": null,
-            "about": "Elected IRPF withholding rate on professional invoices, declared on the 036 censo. 15 percent is the standard; 7 percent is the nuevos-profesionales rate (year of alta plus the two following calendar years); 1 percent is the modulos transport carve-out per the annual Orden de Modulos.",
-            "row_index": null
           }
         ]
       },
@@ -741,72 +658,6 @@
             "row_index": null
           },
           {
-            "path": "taxpayer_type.ley_49_2002_special_regime_option_declared",
-            "label": "Ley 49/2002 regime opted for",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "boolean",
-            "choices": [
-              {
-                "value": "true",
-                "label": "Yes"
-              },
-              {
-                "value": "false",
-                "label": "No"
-              }
-            ],
-            "help": null,
-            "about": "Whether Modelo 036 casilla 651 declares exercise of the Title II Ley 49/2002 special fiscal regime option. Captures the declaration fact; art. 14 still conditions application on requirements and no renunciation.",
-            "row_index": null
-          },
-          {
-            "path": "taxpayer_type.ley_49_2002_special_regime_option_date",
-            "label": "Ley 49/2002 option date",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "date",
-            "choices": [],
-            "help": null,
-            "about": "Date declared in Modelo 036 casilla 653 for exercising the Title II Ley 49/2002 special-regime option.",
-            "row_index": null
-          },
-          {
-            "path": "taxpayer_type.ley_49_2002_special_regime_renunciation_declared",
-            "label": "Ley 49/2002 regime renounced",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "boolean",
-            "choices": [
-              {
-                "value": "true",
-                "label": "Yes"
-              },
-              {
-                "value": "false",
-                "label": "No"
-              }
-            ],
-            "help": null,
-            "about": "Whether Modelo 036 casilla 652 declares renunciation of a previously exercised Title II Ley 49/2002 special-regime option.",
-            "row_index": null
-          },
-          {
-            "path": "taxpayer_type.ley_49_2002_special_regime_renunciation_date",
-            "label": "Ley 49/2002 renunciation date",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "date",
-            "choices": [],
-            "help": null,
-            "about": "Date declared in Modelo 036 casilla 654 for the renunciation of the Title II Ley 49/2002 special-regime option.",
-            "row_index": null
-          },
-          {
             "path": "taxpayer_type.tributacion_estado_porcentaje",
             "label": "State taxation percentage",
             "value": null,
@@ -816,42 +667,6 @@
             "choices": [],
             "help": null,
             "about": "Porcentaje de tributación al Estado para la casilla DP200026:00625 del Modelo 200. Es 100 % para entidades de régimen común; las entidades forales declaran el porcentaje parcial correspondiente. Si no se indica, se aplica 100 %.",
-            "row_index": null
-          },
-          {
-            "path": "taxpayer_type.sal_socios_trabajadores_count",
-            "label": "Worker-shareholder count",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "integer",
-            "choices": [],
-            "help": null,
-            "about": "Number of worker-shareholders (socios trabajadores) in a Sociedad Laboral (SAL/SLL). Must constitute a majority of the share capital under Ley 44/2015 Art. 1. Used together with sal_reserva_especial_dotada and sal_capital_social to gate the reserva especial dotacion.",
-            "row_index": null
-          },
-          {
-            "path": "taxpayer_type.sal_reserva_especial_dotada",
-            "label": "Special reserve already provisioned",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "decimal",
-            "choices": [],
-            "help": null,
-            "about": "Accumulated reserva especial balance already dotada in prior periods (Ley 44/2015 Art. 14). Used to test the strict twice-capital threshold: dotacion = 0 once reserva_dotada reaches at least 2 * capital_social + 0.01.",
-            "row_index": null
-          },
-          {
-            "path": "taxpayer_type.sal_capital_social",
-            "label": "Share capital",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "decimal",
-            "choices": [],
-            "help": null,
-            "about": "Capital social of the Sociedad Laboral. Basis for the strict twice-capital reserve threshold under Ley 44/2015 Art. 14. Dotacion is capped once accumulated reserva reaches the first euro cent above twice capital social.",
             "row_index": null
           },
           {
@@ -933,43 +748,6 @@
             "choices": [],
             "help": null,
             "about": "Full name of the representante fiscal designated in Spain when fiscal_residency is non_resident_irnr. Required together with representante_fiscal_nif by TRLIRNR Art. 10 for non-EU/EEE residents.",
-            "row_index": null
-          }
-        ]
-      },
-      {
-        "key": "attribution_entity",
-        "title": "Attribution entity legal shape",
-        "summary": "The legal form of an entity under income attribution (comunidad de bienes, sociedad civil) that you run.",
-        "repeatable": false,
-        "fields": [
-          {
-            "path": "attribution_entity.legal_form",
-            "label": "Attribution entity legal form",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "enum",
-            "choices": [
-              {
-                "value": "sociedad_civil",
-                "label": "Civil partnership (sociedad civil)"
-              },
-              {
-                "value": "comunidad_bienes",
-                "label": "Joint ownership (comunidad de bienes)"
-              },
-              {
-                "value": "herencia_yacente",
-                "label": "Undivided estate (herencia yacente)"
-              },
-              {
-                "value": "other",
-                "label": "Other"
-              }
-            ],
-            "help": null,
-            "about": "Legal form of an entity in regimen de atribucion de rentas, such as a sociedad civil or comunidad de bienes.",
             "row_index": null
           }
         ]
@@ -1063,31 +841,6 @@
             "choices": [],
             "help": null,
             "about": "Código del país de residencia del socio, comunero o partícipe, consignado en las posiciones 79-80 del registro de declarado del Modelo 184. Sólo se consigna cuando la clave tipo de partícipe es 2 (no residente sin establecimiento permanente); en las claves 1 y 3 el campo va en BLANCOS.",
-            "row_index": null
-          },
-          {
-            "path": "attribution_entity_socios.role",
-            "label": "Member role",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "enum",
-            "choices": [
-              {
-                "value": "socio",
-                "label": "Partner"
-              },
-              {
-                "value": "comunero",
-                "label": "Co-owner"
-              },
-              {
-                "value": "participe",
-                "label": "Participant"
-              }
-            ],
-            "help": null,
-            "about": "Legal member role inside the attribution entity.",
             "row_index": null
           },
           {
@@ -1722,18 +1475,6 @@
             "row_index": null
           },
           {
-            "path": "activities.cnae",
-            "label": "CNAE code",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "string",
-            "choices": [],
-            "help": null,
-            "about": "CNAE activity code where applicable.",
-            "row_index": null
-          },
-          {
             "path": "activities.iae_epigraph",
             "label": "IAE epigraph",
             "value": null,
@@ -1753,27 +1494,6 @@
         "summary": "How your personal income tax is calculated and how much tax is withheld from your income.",
         "repeatable": false,
         "fields": [
-          {
-            "path": "irpf.professional_income_withholding_ge_70pct",
-            "label": "Professional withholding reaches 70%",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "boolean",
-            "choices": [
-              {
-                "value": "true",
-                "label": "Yes"
-              },
-              {
-                "value": "false",
-                "label": "No"
-              }
-            ],
-            "help": null,
-            "about": "Whether professional income withholding reaches the 70 percent threshold.",
-            "row_index": null
-          },
           {
             "path": "irpf.art109_activity_income_withholding_ge_70pct",
             "label": "Meets Art. 109 RIRPF 70% exception",
@@ -1887,102 +1607,6 @@
             "choices": [],
             "help": null,
             "about": "Prior-year purchase volume for goods and services, excluding fixed-asset acquisitions. Used to advise when a declared objective-estimation profile exceeds the settled official exclusion magnitude.",
-            "row_index": null
-          },
-          {
-            "path": "irpf.objective_estimation_modulos_iae_epigraph",
-            "label": "IAE epigraph (modules)",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "string",
-            "choices": [],
-            "help": null,
-            "about": "Epígrafe IAE anual de la actividad acogida a estimación objetiva por módulos, utilizado en el Modelo 131.",
-            "row_index": null
-          },
-          {
-            "path": "irpf.objective_estimation_modulos_module_1_units",
-            "label": "Module 1 units",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "decimal",
-            "choices": [],
-            "help": null,
-            "about": "Annual declared units for estimacion objetiva module slot 1. For many activities this slot is personal asalariado; the activity-specific meaning stays in the official modulos table, not in the profile schema.",
-            "row_index": null
-          },
-          {
-            "path": "irpf.objective_estimation_modulos_module_2_units",
-            "label": "Module 2 units",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "decimal",
-            "choices": [],
-            "help": null,
-            "about": "Unidades anuales declaradas para el segundo módulo de la actividad en estimación objetiva.",
-            "row_index": null
-          },
-          {
-            "path": "irpf.objective_estimation_modulos_module_3_units",
-            "label": "Module 3 units",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "decimal",
-            "choices": [],
-            "help": null,
-            "about": "Annual declared units for estimacion objetiva module slot 3, such as local surface or power consumption where the selected IAE epigraph defines that slot.",
-            "row_index": null
-          },
-          {
-            "path": "irpf.objective_estimation_modulos_module_4_units",
-            "label": "Module 4 units",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "decimal",
-            "choices": [],
-            "help": null,
-            "about": "Annual declared units for estimacion objetiva module slot 4. The profile stores the annual operator fact, not the legal coefficient.",
-            "row_index": null
-          },
-          {
-            "path": "irpf.objective_estimation_modulos_module_5_units",
-            "label": "Module 5 units",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "decimal",
-            "choices": [],
-            "help": null,
-            "about": "Annual declared units for estimacion objetiva module slot 5. Empty means undeclared, not zero.",
-            "row_index": null
-          },
-          {
-            "path": "irpf.objective_estimation_modulos_module_6_units",
-            "label": "Module 6 units",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "decimal",
-            "choices": [],
-            "help": null,
-            "about": "Annual declared units for estimacion objetiva module slot 6. Empty means undeclared, not zero.",
-            "row_index": null
-          },
-          {
-            "path": "irpf.objective_estimation_modulos_module_7_units",
-            "label": "Module 7 units",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "decimal",
-            "choices": [],
-            "help": null,
-            "about": "Annual declared units for estimacion objetiva module slot 7. Empty means undeclared, not zero.",
             "row_index": null
           },
           {
@@ -3129,91 +2753,6 @@
         ]
       },
       {
-        "key": "properties",
-        "title": "Properties and rental",
-        "summary": "Properties you own or rent out, one row per property.",
-        "repeatable": true,
-        "fields": [
-          {
-            "path": "properties.cadastral_reference",
-            "label": "Cadastral reference",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "string",
-            "choices": [],
-            "help": null,
-            "about": "Property cadastral reference.",
-            "row_index": null
-          },
-          {
-            "path": "properties.use_type",
-            "label": "Property use",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "enum",
-            "choices": [
-              {
-                "value": "habitual",
-                "label": "Main home"
-              },
-              {
-                "value": "rental",
-                "label": "Rented out"
-              },
-              {
-                "value": "mixed",
-                "label": "Mixed use"
-              },
-              {
-                "value": "imputed_income",
-                "label": "Imputed income (not rented out)"
-              },
-              {
-                "value": "other",
-                "label": "Other"
-              }
-            ],
-            "help": null,
-            "about": "Property use classification.",
-            "row_index": null
-          }
-        ]
-      },
-      {
-        "key": "usage_ratios",
-        "title": "Usage ratios and deductibility",
-        "summary": "The business-use share of shared assets such as a car or a phone.",
-        "repeatable": true,
-        "fields": [
-          {
-            "path": "usage_ratios.category_id",
-            "label": "Category",
-            "value": null,
-            "masked": false,
-            "required": true,
-            "field_type": "string",
-            "choices": [],
-            "help": null,
-            "about": "Category profile id the ratio applies to.",
-            "row_index": null
-          },
-          {
-            "path": "usage_ratios.business_ratio",
-            "label": "Business-use ratio",
-            "value": null,
-            "masked": false,
-            "required": true,
-            "field_type": "decimal",
-            "choices": [],
-            "help": null,
-            "about": "Business-use ratio in the closed interval 0..1.",
-            "row_index": null
-          }
-        ]
-      },
-      {
         "key": "maritime_worker",
         "title": "Maritime worker classification",
         "summary": "Only for seafarers: the classification that decides special deductions.",
@@ -3583,18 +3122,6 @@
             "help": null,
             "about": "Operator contact email used by configuration surfaces.",
             "row_index": null
-          },
-          {
-            "path": "identity.notes",
-            "label": "Notas",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "string",
-            "choices": [],
-            "help": null,
-            "about": "Operator free-form notes attached to the profile.",
-            "row_index": null
           }
         ]
       },
@@ -3839,27 +3366,6 @@
             "row_index": null
           },
           {
-            "path": "contact.fiscal_address_is_habitual_vivienda",
-            "label": "El domicilio fiscal es la vivienda habitual",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "boolean",
-            "choices": [
-              {
-                "value": "true",
-                "label": "Sí"
-              },
-              {
-                "value": "false",
-                "label": "No"
-              }
-            ],
-            "help": null,
-            "about": "Whether the fiscal address is also the operator's habitual residence. Gates the home-office afectacion-parcial regime per LIRPF Art. 30.2 rule 5.",
-            "row_index": null
-          },
-          {
             "path": "contact.contact_person_phone",
             "label": "Teléfono de la persona con quien relacionarse",
             "value": "952000000",
@@ -4087,56 +3593,6 @@
             "help": null,
             "about": "AEAT censo baja date for the economic activity. Caps obligation calendar after baja.",
             "row_index": null
-          },
-          {
-            "path": "censo.establecimiento_type",
-            "label": "Tipo de establecimiento",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "enum",
-            "choices": [
-              {
-                "value": "propio",
-                "label": "Propio"
-              },
-              {
-                "value": "arrendado",
-                "label": "Arrendado"
-              },
-              {
-                "value": "cedido_gratuitamente",
-                "label": "Cedido gratuitamente"
-              }
-            ],
-            "help": null,
-            "about": "Form of business establishment declared on the 036 censo. Gates deductibility treatment of rent / amortizacion / suministros under LIRPF estimacion directa.",
-            "row_index": null
-          },
-          {
-            "path": "censo.elected_withholding_pct",
-            "label": "Tipo de retención elegido",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "enum",
-            "choices": [
-              {
-                "value": "15",
-                "label": "15"
-              },
-              {
-                "value": "7",
-                "label": "7"
-              },
-              {
-                "value": "1",
-                "label": "1"
-              }
-            ],
-            "help": null,
-            "about": "Elected IRPF withholding rate on professional invoices, declared on the 036 censo. 15 percent is the standard; 7 percent is the nuevos-profesionales rate (year of alta plus the two following calendar years); 1 percent is the modulos transport carve-out per the annual Orden de Modulos.",
-            "row_index": null
           }
         ]
       },
@@ -4250,72 +3706,6 @@
             "row_index": null
           },
           {
-            "path": "taxpayer_type.ley_49_2002_special_regime_option_declared",
-            "label": "Opción por el régimen de la Ley 49/2002",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "boolean",
-            "choices": [
-              {
-                "value": "true",
-                "label": "Sí"
-              },
-              {
-                "value": "false",
-                "label": "No"
-              }
-            ],
-            "help": null,
-            "about": "Whether Modelo 036 casilla 651 declares exercise of the Title II Ley 49/2002 special fiscal regime option. Captures the declaration fact; art. 14 still conditions application on requirements and no renunciation.",
-            "row_index": null
-          },
-          {
-            "path": "taxpayer_type.ley_49_2002_special_regime_option_date",
-            "label": "Fecha de opción por la Ley 49/2002",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "date",
-            "choices": [],
-            "help": null,
-            "about": "Date declared in Modelo 036 casilla 653 for exercising the Title II Ley 49/2002 special-regime option.",
-            "row_index": null
-          },
-          {
-            "path": "taxpayer_type.ley_49_2002_special_regime_renunciation_declared",
-            "label": "Renuncia al régimen de la Ley 49/2002",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "boolean",
-            "choices": [
-              {
-                "value": "true",
-                "label": "Sí"
-              },
-              {
-                "value": "false",
-                "label": "No"
-              }
-            ],
-            "help": null,
-            "about": "Whether Modelo 036 casilla 652 declares renunciation of a previously exercised Title II Ley 49/2002 special-regime option.",
-            "row_index": null
-          },
-          {
-            "path": "taxpayer_type.ley_49_2002_special_regime_renunciation_date",
-            "label": "Fecha de renuncia a la Ley 49/2002",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "date",
-            "choices": [],
-            "help": null,
-            "about": "Date declared in Modelo 036 casilla 654 for the renunciation of the Title II Ley 49/2002 special-regime option.",
-            "row_index": null
-          },
-          {
             "path": "taxpayer_type.tributacion_estado_porcentaje",
             "label": "Porcentaje de tributación al Estado",
             "value": null,
@@ -4325,42 +3715,6 @@
             "choices": [],
             "help": null,
             "about": "Porcentaje de tributación al Estado para la casilla DP200026:00625 del Modelo 200. Es 100 % para entidades de régimen común; las entidades forales declaran el porcentaje parcial correspondiente. Si no se indica, se aplica 100 %.",
-            "row_index": null
-          },
-          {
-            "path": "taxpayer_type.sal_socios_trabajadores_count",
-            "label": "Número de socios trabajadores",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "integer",
-            "choices": [],
-            "help": null,
-            "about": "Number of worker-shareholders (socios trabajadores) in a Sociedad Laboral (SAL/SLL). Must constitute a majority of the share capital under Ley 44/2015 Art. 1. Used together with sal_reserva_especial_dotada and sal_capital_social to gate the reserva especial dotacion.",
-            "row_index": null
-          },
-          {
-            "path": "taxpayer_type.sal_reserva_especial_dotada",
-            "label": "Reserva especial ya dotada",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "decimal",
-            "choices": [],
-            "help": null,
-            "about": "Accumulated reserva especial balance already dotada in prior periods (Ley 44/2015 Art. 14). Used to test the strict twice-capital threshold: dotacion = 0 once reserva_dotada reaches at least 2 * capital_social + 0.01.",
-            "row_index": null
-          },
-          {
-            "path": "taxpayer_type.sal_capital_social",
-            "label": "Capital social",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "decimal",
-            "choices": [],
-            "help": null,
-            "about": "Capital social of the Sociedad Laboral. Basis for the strict twice-capital reserve threshold under Ley 44/2015 Art. 14. Dotacion is capped once accumulated reserva reaches the first euro cent above twice capital social.",
             "row_index": null
           },
           {
@@ -4442,43 +3796,6 @@
             "choices": [],
             "help": null,
             "about": "Full name of the representante fiscal designated in Spain when fiscal_residency is non_resident_irnr. Required together with representante_fiscal_nif by TRLIRNR Art. 10 for non-EU/EEE residents.",
-            "row_index": null
-          }
-        ]
-      },
-      {
-        "key": "attribution_entity",
-        "title": "Forma jurídica de la entidad en atribución",
-        "summary": "La forma jurídica de la entidad en atribución de rentas (comunidad de bienes, sociedad civil) que gestionas.",
-        "repeatable": false,
-        "fields": [
-          {
-            "path": "attribution_entity.legal_form",
-            "label": "Forma jurídica de la entidad en atribución",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "enum",
-            "choices": [
-              {
-                "value": "sociedad_civil",
-                "label": "Sociedad civil"
-              },
-              {
-                "value": "comunidad_bienes",
-                "label": "Comunidad de bienes"
-              },
-              {
-                "value": "herencia_yacente",
-                "label": "Herencia yacente"
-              },
-              {
-                "value": "other",
-                "label": "Otra"
-              }
-            ],
-            "help": null,
-            "about": "Legal form of an entity in regimen de atribucion de rentas, such as a sociedad civil or comunidad de bienes.",
             "row_index": null
           }
         ]
@@ -4572,31 +3889,6 @@
             "choices": [],
             "help": null,
             "about": "Código del país de residencia del socio, comunero o partícipe, consignado en las posiciones 79-80 del registro de declarado del Modelo 184. Sólo se consigna cuando la clave tipo de partícipe es 2 (no residente sin establecimiento permanente); en las claves 1 y 3 el campo va en BLANCOS.",
-            "row_index": null
-          },
-          {
-            "path": "attribution_entity_socios.role",
-            "label": "Papel del miembro",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "enum",
-            "choices": [
-              {
-                "value": "socio",
-                "label": "Socio"
-              },
-              {
-                "value": "comunero",
-                "label": "Comunero"
-              },
-              {
-                "value": "participe",
-                "label": "Partícipe"
-              }
-            ],
-            "help": null,
-            "about": "Legal member role inside the attribution entity.",
             "row_index": null
           },
           {
@@ -5231,18 +4523,6 @@
             "row_index": null
           },
           {
-            "path": "activities.cnae",
-            "label": "Código CNAE",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "string",
-            "choices": [],
-            "help": null,
-            "about": "CNAE activity code where applicable.",
-            "row_index": null
-          },
-          {
             "path": "activities.iae_epigraph",
             "label": "Epígrafe IAE",
             "value": null,
@@ -5262,27 +4542,6 @@
         "summary": "Cómo se calcula tu IRPF y qué retenciones soportas.",
         "repeatable": false,
         "fields": [
-          {
-            "path": "irpf.professional_income_withholding_ge_70pct",
-            "label": "Retención profesional alcanza el 70 %",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "boolean",
-            "choices": [
-              {
-                "value": "true",
-                "label": "Sí"
-              },
-              {
-                "value": "false",
-                "label": "No"
-              }
-            ],
-            "help": null,
-            "about": "Whether professional income withholding reaches the 70 percent threshold.",
-            "row_index": null
-          },
           {
             "path": "irpf.art109_activity_income_withholding_ge_70pct",
             "label": "Cumple la excepción del 70 % del art. 109 RIRPF",
@@ -5396,102 +4655,6 @@
             "choices": [],
             "help": null,
             "about": "Prior-year purchase volume for goods and services, excluding fixed-asset acquisitions. Used to advise when a declared objective-estimation profile exceeds the settled official exclusion magnitude.",
-            "row_index": null
-          },
-          {
-            "path": "irpf.objective_estimation_modulos_iae_epigraph",
-            "label": "Epígrafe IAE (módulos)",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "string",
-            "choices": [],
-            "help": null,
-            "about": "Epígrafe IAE anual de la actividad acogida a estimación objetiva por módulos, utilizado en el Modelo 131.",
-            "row_index": null
-          },
-          {
-            "path": "irpf.objective_estimation_modulos_module_1_units",
-            "label": "Unidades del módulo 1",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "decimal",
-            "choices": [],
-            "help": null,
-            "about": "Annual declared units for estimacion objetiva module slot 1. For many activities this slot is personal asalariado; the activity-specific meaning stays in the official modulos table, not in the profile schema.",
-            "row_index": null
-          },
-          {
-            "path": "irpf.objective_estimation_modulos_module_2_units",
-            "label": "Unidades del módulo 2",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "decimal",
-            "choices": [],
-            "help": null,
-            "about": "Unidades anuales declaradas para el segundo módulo de la actividad en estimación objetiva.",
-            "row_index": null
-          },
-          {
-            "path": "irpf.objective_estimation_modulos_module_3_units",
-            "label": "Unidades del módulo 3",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "decimal",
-            "choices": [],
-            "help": null,
-            "about": "Annual declared units for estimacion objetiva module slot 3, such as local surface or power consumption where the selected IAE epigraph defines that slot.",
-            "row_index": null
-          },
-          {
-            "path": "irpf.objective_estimation_modulos_module_4_units",
-            "label": "Unidades del módulo 4",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "decimal",
-            "choices": [],
-            "help": null,
-            "about": "Annual declared units for estimacion objetiva module slot 4. The profile stores the annual operator fact, not the legal coefficient.",
-            "row_index": null
-          },
-          {
-            "path": "irpf.objective_estimation_modulos_module_5_units",
-            "label": "Unidades del módulo 5",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "decimal",
-            "choices": [],
-            "help": null,
-            "about": "Annual declared units for estimacion objetiva module slot 5. Empty means undeclared, not zero.",
-            "row_index": null
-          },
-          {
-            "path": "irpf.objective_estimation_modulos_module_6_units",
-            "label": "Unidades del módulo 6",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "decimal",
-            "choices": [],
-            "help": null,
-            "about": "Annual declared units for estimacion objetiva module slot 6. Empty means undeclared, not zero.",
-            "row_index": null
-          },
-          {
-            "path": "irpf.objective_estimation_modulos_module_7_units",
-            "label": "Unidades del módulo 7",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "decimal",
-            "choices": [],
-            "help": null,
-            "about": "Annual declared units for estimacion objetiva module slot 7. Empty means undeclared, not zero.",
             "row_index": null
           },
           {
@@ -6638,91 +5801,6 @@
         ]
       },
       {
-        "key": "properties",
-        "title": "Inmuebles y alquiler",
-        "summary": "Inmuebles que posees o alquilas, una fila por inmueble.",
-        "repeatable": true,
-        "fields": [
-          {
-            "path": "properties.cadastral_reference",
-            "label": "Referencia catastral",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "string",
-            "choices": [],
-            "help": null,
-            "about": "Property cadastral reference.",
-            "row_index": null
-          },
-          {
-            "path": "properties.use_type",
-            "label": "Uso del inmueble",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "enum",
-            "choices": [
-              {
-                "value": "habitual",
-                "label": "Vivienda habitual"
-              },
-              {
-                "value": "rental",
-                "label": "Arrendado"
-              },
-              {
-                "value": "mixed",
-                "label": "Uso mixto"
-              },
-              {
-                "value": "imputed_income",
-                "label": "Imputación de rentas (sin alquilar)"
-              },
-              {
-                "value": "other",
-                "label": "Otra"
-              }
-            ],
-            "help": null,
-            "about": "Property use classification.",
-            "row_index": null
-          }
-        ]
-      },
-      {
-        "key": "usage_ratios",
-        "title": "Ratios de uso y deducibilidad",
-        "summary": "La parte de uso profesional de bienes compartidos, como un coche o un teléfono.",
-        "repeatable": true,
-        "fields": [
-          {
-            "path": "usage_ratios.category_id",
-            "label": "Categoría",
-            "value": null,
-            "masked": false,
-            "required": true,
-            "field_type": "string",
-            "choices": [],
-            "help": null,
-            "about": "Category profile id the ratio applies to.",
-            "row_index": null
-          },
-          {
-            "path": "usage_ratios.business_ratio",
-            "label": "Ratio de uso empresarial",
-            "value": null,
-            "masked": false,
-            "required": true,
-            "field_type": "decimal",
-            "choices": [],
-            "help": null,
-            "about": "Business-use ratio in the closed interval 0..1.",
-            "row_index": null
-          }
-        ]
-      },
-      {
         "key": "maritime_worker",
         "title": "Clasificación de trabajador del mar",
         "summary": "Solo para trabajadores del mar: la clasificación que decide deducciones especiales.",
@@ -7092,18 +6170,6 @@
             "help": null,
             "about": "Operator contact email used by configuration surfaces.",
             "row_index": null
-          },
-          {
-            "path": "identity.notes",
-            "label": "Anotacions",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "string",
-            "choices": [],
-            "help": null,
-            "about": "Operator free-form notes attached to the profile.",
-            "row_index": null
           }
         ]
       },
@@ -7348,27 +6414,6 @@
             "row_index": null
           },
           {
-            "path": "contact.fiscal_address_is_habitual_vivienda",
-            "label": "El domicili fiscal és l'habitatge habitual",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "boolean",
-            "choices": [
-              {
-                "value": "true",
-                "label": "Sí"
-              },
-              {
-                "value": "false",
-                "label": "No"
-              }
-            ],
-            "help": null,
-            "about": "Whether the fiscal address is also the operator's habitual residence. Gates the home-office afectacion-parcial regime per LIRPF Art. 30.2 rule 5.",
-            "row_index": null
-          },
-          {
             "path": "contact.contact_person_phone",
             "label": "Telèfon de la persona amb qui relacionar-se",
             "value": "952000000",
@@ -7596,56 +6641,6 @@
             "help": null,
             "about": "AEAT censo baja date for the economic activity. Caps obligation calendar after baja.",
             "row_index": null
-          },
-          {
-            "path": "censo.establecimiento_type",
-            "label": "Tipus d'establiment",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "enum",
-            "choices": [
-              {
-                "value": "propio",
-                "label": "Propi"
-              },
-              {
-                "value": "arrendado",
-                "label": "Arrendat"
-              },
-              {
-                "value": "cedido_gratuitamente",
-                "label": "Cedit gratuïtament"
-              }
-            ],
-            "help": null,
-            "about": "Form of business establishment declared on the 036 censo. Gates deductibility treatment of rent / amortizacion / suministros under LIRPF estimacion directa.",
-            "row_index": null
-          },
-          {
-            "path": "censo.elected_withholding_pct",
-            "label": "Tipus de retenció triat",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "enum",
-            "choices": [
-              {
-                "value": "15",
-                "label": "15"
-              },
-              {
-                "value": "7",
-                "label": "7"
-              },
-              {
-                "value": "1",
-                "label": "1"
-              }
-            ],
-            "help": null,
-            "about": "Elected IRPF withholding rate on professional invoices, declared on the 036 censo. 15 percent is the standard; 7 percent is the nuevos-profesionales rate (year of alta plus the two following calendar years); 1 percent is the modulos transport carve-out per the annual Orden de Modulos.",
-            "row_index": null
           }
         ]
       },
@@ -7759,72 +6754,6 @@
             "row_index": null
           },
           {
-            "path": "taxpayer_type.ley_49_2002_special_regime_option_declared",
-            "label": "Opció pel règim de la Llei 49/2002",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "boolean",
-            "choices": [
-              {
-                "value": "true",
-                "label": "Sí"
-              },
-              {
-                "value": "false",
-                "label": "No"
-              }
-            ],
-            "help": null,
-            "about": "Whether Modelo 036 casilla 651 declares exercise of the Title II Ley 49/2002 special fiscal regime option. Captures the declaration fact; art. 14 still conditions application on requirements and no renunciation.",
-            "row_index": null
-          },
-          {
-            "path": "taxpayer_type.ley_49_2002_special_regime_option_date",
-            "label": "Data d'opció pel règim de la Llei 49/2002",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "date",
-            "choices": [],
-            "help": null,
-            "about": "Date declared in Modelo 036 casilla 653 for exercising the Title II Ley 49/2002 special-regime option.",
-            "row_index": null
-          },
-          {
-            "path": "taxpayer_type.ley_49_2002_special_regime_renunciation_declared",
-            "label": "Renúncia al règim de la Llei 49/2002",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "boolean",
-            "choices": [
-              {
-                "value": "true",
-                "label": "Sí"
-              },
-              {
-                "value": "false",
-                "label": "No"
-              }
-            ],
-            "help": null,
-            "about": "Whether Modelo 036 casilla 652 declares renunciation of a previously exercised Title II Ley 49/2002 special-regime option.",
-            "row_index": null
-          },
-          {
-            "path": "taxpayer_type.ley_49_2002_special_regime_renunciation_date",
-            "label": "Data de renúncia al règim de la Llei 49/2002",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "date",
-            "choices": [],
-            "help": null,
-            "about": "Date declared in Modelo 036 casilla 654 for the renunciation of the Title II Ley 49/2002 special-regime option.",
-            "row_index": null
-          },
-          {
             "path": "taxpayer_type.tributacion_estado_porcentaje",
             "label": "Percentatge de tributació a l'Estat",
             "value": null,
@@ -7834,42 +6763,6 @@
             "choices": [],
             "help": null,
             "about": "Porcentaje de tributación al Estado para la casilla DP200026:00625 del Modelo 200. Es 100 % para entidades de régimen común; las entidades forales declaran el porcentaje parcial correspondiente. Si no se indica, se aplica 100 %.",
-            "row_index": null
-          },
-          {
-            "path": "taxpayer_type.sal_socios_trabajadores_count",
-            "label": "Nombre de socis treballadors",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "integer",
-            "choices": [],
-            "help": null,
-            "about": "Number of worker-shareholders (socios trabajadores) in a Sociedad Laboral (SAL/SLL). Must constitute a majority of the share capital under Ley 44/2015 Art. 1. Used together with sal_reserva_especial_dotada and sal_capital_social to gate the reserva especial dotacion.",
-            "row_index": null
-          },
-          {
-            "path": "taxpayer_type.sal_reserva_especial_dotada",
-            "label": "Reserva especial ja dotada",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "decimal",
-            "choices": [],
-            "help": null,
-            "about": "Accumulated reserva especial balance already dotada in prior periods (Ley 44/2015 Art. 14). Used to test the strict twice-capital threshold: dotacion = 0 once reserva_dotada reaches at least 2 * capital_social + 0.01.",
-            "row_index": null
-          },
-          {
-            "path": "taxpayer_type.sal_capital_social",
-            "label": "Capital social de la societat",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "decimal",
-            "choices": [],
-            "help": null,
-            "about": "Capital social of the Sociedad Laboral. Basis for the strict twice-capital reserve threshold under Ley 44/2015 Art. 14. Dotacion is capped once accumulated reserva reaches the first euro cent above twice capital social.",
             "row_index": null
           },
           {
@@ -7951,43 +6844,6 @@
             "choices": [],
             "help": null,
             "about": "Full name of the representante fiscal designated in Spain when fiscal_residency is non_resident_irnr. Required together with representante_fiscal_nif by TRLIRNR Art. 10 for non-EU/EEE residents.",
-            "row_index": null
-          }
-        ]
-      },
-      {
-        "key": "attribution_entity",
-        "title": "Forma jurídica de l'entitat en atribució",
-        "summary": "La forma jurídica de l'entitat en atribució de rendes (comunitat de béns, societat civil) que gestiones.",
-        "repeatable": false,
-        "fields": [
-          {
-            "path": "attribution_entity.legal_form",
-            "label": "Forma jurídica de l'entitat en atribució",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "enum",
-            "choices": [
-              {
-                "value": "sociedad_civil",
-                "label": "Societat civil"
-              },
-              {
-                "value": "comunidad_bienes",
-                "label": "Comunitat de béns"
-              },
-              {
-                "value": "herencia_yacente",
-                "label": "Herència jacent"
-              },
-              {
-                "value": "other",
-                "label": "Una altra"
-              }
-            ],
-            "help": null,
-            "about": "Legal form of an entity in regimen de atribucion de rentas, such as a sociedad civil or comunidad de bienes.",
             "row_index": null
           }
         ]
@@ -8081,31 +6937,6 @@
             "choices": [],
             "help": null,
             "about": "Código del país de residencia del socio, comunero o partícipe, consignado en las posiciones 79-80 del registro de declarado del Modelo 184. Sólo se consigna cuando la clave tipo de partícipe es 2 (no residente sin establecimiento permanente); en las claves 1 y 3 el campo va en BLANCOS.",
-            "row_index": null
-          },
-          {
-            "path": "attribution_entity_socios.role",
-            "label": "Paper del membre",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "enum",
-            "choices": [
-              {
-                "value": "socio",
-                "label": "Soci"
-              },
-              {
-                "value": "comunero",
-                "label": "Comuner"
-              },
-              {
-                "value": "participe",
-                "label": "Partícip"
-              }
-            ],
-            "help": null,
-            "about": "Legal member role inside the attribution entity.",
             "row_index": null
           },
           {
@@ -8740,18 +7571,6 @@
             "row_index": null
           },
           {
-            "path": "activities.cnae",
-            "label": "Codi CNAE",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "string",
-            "choices": [],
-            "help": null,
-            "about": "CNAE activity code where applicable.",
-            "row_index": null
-          },
-          {
             "path": "activities.iae_epigraph",
             "label": "Epígraf IAE",
             "value": null,
@@ -8771,27 +7590,6 @@
         "summary": "Com es calcula el teu IRPF i quines retencions suportes.",
         "repeatable": false,
         "fields": [
-          {
-            "path": "irpf.professional_income_withholding_ge_70pct",
-            "label": "Retenció professional arriba al 70 %",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "boolean",
-            "choices": [
-              {
-                "value": "true",
-                "label": "Sí"
-              },
-              {
-                "value": "false",
-                "label": "No"
-              }
-            ],
-            "help": null,
-            "about": "Whether professional income withholding reaches the 70 percent threshold.",
-            "row_index": null
-          },
           {
             "path": "irpf.art109_activity_income_withholding_ge_70pct",
             "label": "Compleix l'excepció del 70 % de l'art. 109 RIRPF",
@@ -8905,102 +7703,6 @@
             "choices": [],
             "help": null,
             "about": "Prior-year purchase volume for goods and services, excluding fixed-asset acquisitions. Used to advise when a declared objective-estimation profile exceeds the settled official exclusion magnitude.",
-            "row_index": null
-          },
-          {
-            "path": "irpf.objective_estimation_modulos_iae_epigraph",
-            "label": "Epígraf IAE (mòduls)",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "string",
-            "choices": [],
-            "help": null,
-            "about": "Epígrafe IAE anual de la actividad acogida a estimación objetiva por módulos, utilizado en el Modelo 131.",
-            "row_index": null
-          },
-          {
-            "path": "irpf.objective_estimation_modulos_module_1_units",
-            "label": "Unitats del mòdul 1",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "decimal",
-            "choices": [],
-            "help": null,
-            "about": "Annual declared units for estimacion objetiva module slot 1. For many activities this slot is personal asalariado; the activity-specific meaning stays in the official modulos table, not in the profile schema.",
-            "row_index": null
-          },
-          {
-            "path": "irpf.objective_estimation_modulos_module_2_units",
-            "label": "Unitats del mòdul 2",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "decimal",
-            "choices": [],
-            "help": null,
-            "about": "Unidades anuales declaradas para el segundo módulo de la actividad en estimación objetiva.",
-            "row_index": null
-          },
-          {
-            "path": "irpf.objective_estimation_modulos_module_3_units",
-            "label": "Unitats del mòdul 3",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "decimal",
-            "choices": [],
-            "help": null,
-            "about": "Annual declared units for estimacion objetiva module slot 3, such as local surface or power consumption where the selected IAE epigraph defines that slot.",
-            "row_index": null
-          },
-          {
-            "path": "irpf.objective_estimation_modulos_module_4_units",
-            "label": "Unitats del mòdul 4",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "decimal",
-            "choices": [],
-            "help": null,
-            "about": "Annual declared units for estimacion objetiva module slot 4. The profile stores the annual operator fact, not the legal coefficient.",
-            "row_index": null
-          },
-          {
-            "path": "irpf.objective_estimation_modulos_module_5_units",
-            "label": "Unitats del mòdul 5",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "decimal",
-            "choices": [],
-            "help": null,
-            "about": "Annual declared units for estimacion objetiva module slot 5. Empty means undeclared, not zero.",
-            "row_index": null
-          },
-          {
-            "path": "irpf.objective_estimation_modulos_module_6_units",
-            "label": "Unitats del mòdul 6",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "decimal",
-            "choices": [],
-            "help": null,
-            "about": "Annual declared units for estimacion objetiva module slot 6. Empty means undeclared, not zero.",
-            "row_index": null
-          },
-          {
-            "path": "irpf.objective_estimation_modulos_module_7_units",
-            "label": "Unitats del mòdul 7",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "decimal",
-            "choices": [],
-            "help": null,
-            "about": "Annual declared units for estimacion objetiva module slot 7. Empty means undeclared, not zero.",
             "row_index": null
           },
           {
@@ -10147,91 +8849,6 @@
         ]
       },
       {
-        "key": "properties",
-        "title": "Immobles i lloguer",
-        "summary": "Immobles que tens o llogues, una fila per immoble.",
-        "repeatable": true,
-        "fields": [
-          {
-            "path": "properties.cadastral_reference",
-            "label": "Referència cadastral",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "string",
-            "choices": [],
-            "help": null,
-            "about": "Property cadastral reference.",
-            "row_index": null
-          },
-          {
-            "path": "properties.use_type",
-            "label": "Ús de l'immoble",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "enum",
-            "choices": [
-              {
-                "value": "habitual",
-                "label": "Habitatge habitual"
-              },
-              {
-                "value": "rental",
-                "label": "Llogat"
-              },
-              {
-                "value": "mixed",
-                "label": "Ús mixt"
-              },
-              {
-                "value": "imputed_income",
-                "label": "Imputació de rendes (sense llogar)"
-              },
-              {
-                "value": "other",
-                "label": "Una altra"
-              }
-            ],
-            "help": null,
-            "about": "Property use classification.",
-            "row_index": null
-          }
-        ]
-      },
-      {
-        "key": "usage_ratios",
-        "title": "Ràtios d'ús i deduïbilitat",
-        "summary": "La part d'ús professional de béns compartits, com un cotxe o un telèfon.",
-        "repeatable": true,
-        "fields": [
-          {
-            "path": "usage_ratios.category_id",
-            "label": "Categoria",
-            "value": null,
-            "masked": false,
-            "required": true,
-            "field_type": "string",
-            "choices": [],
-            "help": null,
-            "about": "Category profile id the ratio applies to.",
-            "row_index": null
-          },
-          {
-            "path": "usage_ratios.business_ratio",
-            "label": "Ràtio d'ús empresarial",
-            "value": null,
-            "masked": false,
-            "required": true,
-            "field_type": "decimal",
-            "choices": [],
-            "help": null,
-            "about": "Business-use ratio in the closed interval 0..1.",
-            "row_index": null
-          }
-        ]
-      },
-      {
         "key": "maritime_worker",
         "title": "Classificació de treballador del mar",
         "summary": "Només per a treballadors del mar: la classificació que decideix deduccions especials.",
@@ -10601,18 +9218,6 @@
             "help": null,
             "about": "Operator contact email used by configuration surfaces.",
             "row_index": null
-          },
-          {
-            "path": "identity.notes",
-            "label": "Megjegyzések",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "string",
-            "choices": [],
-            "help": null,
-            "about": "Operator free-form notes attached to the profile.",
-            "row_index": null
           }
         ]
       },
@@ -10857,27 +9462,6 @@
             "row_index": null
           },
           {
-            "path": "contact.fiscal_address_is_habitual_vivienda",
-            "label": "Az adóügyi cím az állandó lakóhely",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "boolean",
-            "choices": [
-              {
-                "value": "true",
-                "label": "Igen"
-              },
-              {
-                "value": "false",
-                "label": "Nem"
-              }
-            ],
-            "help": null,
-            "about": "Whether the fiscal address is also the operator's habitual residence. Gates the home-office afectacion-parcial regime per LIRPF Art. 30.2 rule 5.",
-            "row_index": null
-          },
-          {
             "path": "contact.contact_person_phone",
             "label": "Kapcsolattartó telefonszáma",
             "value": "952000000",
@@ -11105,56 +9689,6 @@
             "help": null,
             "about": "AEAT censo baja date for the economic activity. Caps obligation calendar after baja.",
             "row_index": null
-          },
-          {
-            "path": "censo.establecimiento_type",
-            "label": "Telephely típusa",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "enum",
-            "choices": [
-              {
-                "value": "propio",
-                "label": "Saját tulajdonú"
-              },
-              {
-                "value": "arrendado",
-                "label": "Bérelt"
-              },
-              {
-                "value": "cedido_gratuitamente",
-                "label": "Ingyenesen átengedett"
-              }
-            ],
-            "help": null,
-            "about": "Form of business establishment declared on the 036 censo. Gates deductibility treatment of rent / amortizacion / suministros under LIRPF estimacion directa.",
-            "row_index": null
-          },
-          {
-            "path": "censo.elected_withholding_pct",
-            "label": "Választott forrásadókulcs",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "enum",
-            "choices": [
-              {
-                "value": "15",
-                "label": "15"
-              },
-              {
-                "value": "7",
-                "label": "7"
-              },
-              {
-                "value": "1",
-                "label": "1"
-              }
-            ],
-            "help": null,
-            "about": "Elected IRPF withholding rate on professional invoices, declared on the 036 censo. 15 percent is the standard; 7 percent is the nuevos-profesionales rate (year of alta plus the two following calendar years); 1 percent is the modulos transport carve-out per the annual Orden de Modulos.",
-            "row_index": null
           }
         ]
       },
@@ -11268,72 +9802,6 @@
             "row_index": null
           },
           {
-            "path": "taxpayer_type.ley_49_2002_special_regime_option_declared",
-            "label": "Ley 49/2002 rendszer választva",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "boolean",
-            "choices": [
-              {
-                "value": "true",
-                "label": "Igen"
-              },
-              {
-                "value": "false",
-                "label": "Nem"
-              }
-            ],
-            "help": null,
-            "about": "Whether Modelo 036 casilla 651 declares exercise of the Title II Ley 49/2002 special fiscal regime option. Captures the declaration fact; art. 14 still conditions application on requirements and no renunciation.",
-            "row_index": null
-          },
-          {
-            "path": "taxpayer_type.ley_49_2002_special_regime_option_date",
-            "label": "Ley 49/2002 választásának dátuma",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "date",
-            "choices": [],
-            "help": null,
-            "about": "Date declared in Modelo 036 casilla 653 for exercising the Title II Ley 49/2002 special-regime option.",
-            "row_index": null
-          },
-          {
-            "path": "taxpayer_type.ley_49_2002_special_regime_renunciation_declared",
-            "label": "Ley 49/2002 rendszerről lemondva",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "boolean",
-            "choices": [
-              {
-                "value": "true",
-                "label": "Igen"
-              },
-              {
-                "value": "false",
-                "label": "Nem"
-              }
-            ],
-            "help": null,
-            "about": "Whether Modelo 036 casilla 652 declares renunciation of a previously exercised Title II Ley 49/2002 special-regime option.",
-            "row_index": null
-          },
-          {
-            "path": "taxpayer_type.ley_49_2002_special_regime_renunciation_date",
-            "label": "Ley 49/2002 lemondásának dátuma",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "date",
-            "choices": [],
-            "help": null,
-            "about": "Date declared in Modelo 036 casilla 654 for the renunciation of the Title II Ley 49/2002 special-regime option.",
-            "row_index": null
-          },
-          {
             "path": "taxpayer_type.tributacion_estado_porcentaje",
             "label": "Államnak fizetett adó aránya",
             "value": null,
@@ -11343,42 +9811,6 @@
             "choices": [],
             "help": null,
             "about": "Porcentaje de tributación al Estado para la casilla DP200026:00625 del Modelo 200. Es 100 % para entidades de régimen común; las entidades forales declaran el porcentaje parcial correspondiente. Si no se indica, se aplica 100 %.",
-            "row_index": null
-          },
-          {
-            "path": "taxpayer_type.sal_socios_trabajadores_count",
-            "label": "Dolgozó tagok száma",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "integer",
-            "choices": [],
-            "help": null,
-            "about": "Number of worker-shareholders (socios trabajadores) in a Sociedad Laboral (SAL/SLL). Must constitute a majority of the share capital under Ley 44/2015 Art. 1. Used together with sal_reserva_especial_dotada and sal_capital_social to gate the reserva especial dotacion.",
-            "row_index": null
-          },
-          {
-            "path": "taxpayer_type.sal_reserva_especial_dotada",
-            "label": "Már képzett különleges tartalék",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "decimal",
-            "choices": [],
-            "help": null,
-            "about": "Accumulated reserva especial balance already dotada in prior periods (Ley 44/2015 Art. 14). Used to test the strict twice-capital threshold: dotacion = 0 once reserva_dotada reaches at least 2 * capital_social + 0.01.",
-            "row_index": null
-          },
-          {
-            "path": "taxpayer_type.sal_capital_social",
-            "label": "Jegyzett tőke",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "decimal",
-            "choices": [],
-            "help": null,
-            "about": "Capital social of the Sociedad Laboral. Basis for the strict twice-capital reserve threshold under Ley 44/2015 Art. 14. Dotacion is capped once accumulated reserva reaches the first euro cent above twice capital social.",
             "row_index": null
           },
           {
@@ -11460,43 +9892,6 @@
             "choices": [],
             "help": null,
             "about": "Full name of the representante fiscal designated in Spain when fiscal_residency is non_resident_irnr. Required together with representante_fiscal_nif by TRLIRNR Art. 10 for non-EU/EEE residents.",
-            "row_index": null
-          }
-        ]
-      },
-      {
-        "key": "attribution_entity",
-        "title": "Jövedelem-hozzárendelő entitás jogi formája",
-        "summary": "Az általad működtetett jövedelem-hozzárendelési jogalany (comunidad de bienes, sociedad civil) jogi formája.",
-        "repeatable": false,
-        "fields": [
-          {
-            "path": "attribution_entity.legal_form",
-            "label": "Hozzárendelő entitás jogi formája",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "enum",
-            "choices": [
-              {
-                "value": "sociedad_civil",
-                "label": "Polgári jogi társaság (sociedad civil)"
-              },
-              {
-                "value": "comunidad_bienes",
-                "label": "Közös tulajdon (comunidad de bienes)"
-              },
-              {
-                "value": "herencia_yacente",
-                "label": "Hagyaték (herencia yacente)"
-              },
-              {
-                "value": "other",
-                "label": "Egyéb"
-              }
-            ],
-            "help": null,
-            "about": "Legal form of an entity in regimen de atribucion de rentas, such as a sociedad civil or comunidad de bienes.",
             "row_index": null
           }
         ]
@@ -11590,31 +9985,6 @@
             "choices": [],
             "help": null,
             "about": "Código del país de residencia del socio, comunero o partícipe, consignado en las posiciones 79-80 del registro de declarado del Modelo 184. Sólo se consigna cuando la clave tipo de partícipe es 2 (no residente sin establecimiento permanente); en las claves 1 y 3 el campo va en BLANCOS.",
-            "row_index": null
-          },
-          {
-            "path": "attribution_entity_socios.role",
-            "label": "Tagi szerepkör",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "enum",
-            "choices": [
-              {
-                "value": "socio",
-                "label": "Társ"
-              },
-              {
-                "value": "comunero",
-                "label": "Tulajdonostárs"
-              },
-              {
-                "value": "participe",
-                "label": "Részes"
-              }
-            ],
-            "help": null,
-            "about": "Legal member role inside the attribution entity.",
             "row_index": null
           },
           {
@@ -12249,18 +10619,6 @@
             "row_index": null
           },
           {
-            "path": "activities.cnae",
-            "label": "CNAE-kód",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "string",
-            "choices": [],
-            "help": null,
-            "about": "CNAE activity code where applicable.",
-            "row_index": null
-          },
-          {
             "path": "activities.iae_epigraph",
             "label": "IAE-epigrafus",
             "value": null,
@@ -12280,27 +10638,6 @@
         "summary": "Hogyan számítják a személyi jövedelemadóját (IRPF), és milyen levonások terhelik.",
         "repeatable": false,
         "fields": [
-          {
-            "path": "irpf.professional_income_withholding_ge_70pct",
-            "label": "Szakmai forrásadó eléri a 70%-ot",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "boolean",
-            "choices": [
-              {
-                "value": "true",
-                "label": "Igen"
-              },
-              {
-                "value": "false",
-                "label": "Nem"
-              }
-            ],
-            "help": null,
-            "about": "Whether professional income withholding reaches the 70 percent threshold.",
-            "row_index": null
-          },
           {
             "path": "irpf.art109_activity_income_withholding_ge_70pct",
             "label": "Megfelel a RIRPF 109. cikk 70%-os kivételének",
@@ -12414,102 +10751,6 @@
             "choices": [],
             "help": null,
             "about": "Prior-year purchase volume for goods and services, excluding fixed-asset acquisitions. Used to advise when a declared objective-estimation profile exceeds the settled official exclusion magnitude.",
-            "row_index": null
-          },
-          {
-            "path": "irpf.objective_estimation_modulos_iae_epigraph",
-            "label": "IAE-epigrafus (modulok)",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "string",
-            "choices": [],
-            "help": null,
-            "about": "Epígrafe IAE anual de la actividad acogida a estimación objetiva por módulos, utilizado en el Modelo 131.",
-            "row_index": null
-          },
-          {
-            "path": "irpf.objective_estimation_modulos_module_1_units",
-            "label": "1. modul egységei",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "decimal",
-            "choices": [],
-            "help": null,
-            "about": "Annual declared units for estimacion objetiva module slot 1. For many activities this slot is personal asalariado; the activity-specific meaning stays in the official modulos table, not in the profile schema.",
-            "row_index": null
-          },
-          {
-            "path": "irpf.objective_estimation_modulos_module_2_units",
-            "label": "2. modul egységei",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "decimal",
-            "choices": [],
-            "help": null,
-            "about": "Unidades anuales declaradas para el segundo módulo de la actividad en estimación objetiva.",
-            "row_index": null
-          },
-          {
-            "path": "irpf.objective_estimation_modulos_module_3_units",
-            "label": "3. modul egységei",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "decimal",
-            "choices": [],
-            "help": null,
-            "about": "Annual declared units for estimacion objetiva module slot 3, such as local surface or power consumption where the selected IAE epigraph defines that slot.",
-            "row_index": null
-          },
-          {
-            "path": "irpf.objective_estimation_modulos_module_4_units",
-            "label": "4. modul egységei",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "decimal",
-            "choices": [],
-            "help": null,
-            "about": "Annual declared units for estimacion objetiva module slot 4. The profile stores the annual operator fact, not the legal coefficient.",
-            "row_index": null
-          },
-          {
-            "path": "irpf.objective_estimation_modulos_module_5_units",
-            "label": "5. modul egységei",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "decimal",
-            "choices": [],
-            "help": null,
-            "about": "Annual declared units for estimacion objetiva module slot 5. Empty means undeclared, not zero.",
-            "row_index": null
-          },
-          {
-            "path": "irpf.objective_estimation_modulos_module_6_units",
-            "label": "6. modul egységei",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "decimal",
-            "choices": [],
-            "help": null,
-            "about": "Annual declared units for estimacion objetiva module slot 6. Empty means undeclared, not zero.",
-            "row_index": null
-          },
-          {
-            "path": "irpf.objective_estimation_modulos_module_7_units",
-            "label": "7. modul egységei",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "decimal",
-            "choices": [],
-            "help": null,
-            "about": "Annual declared units for estimacion objetiva module slot 7. Empty means undeclared, not zero.",
             "row_index": null
           },
           {
@@ -13651,91 +11892,6 @@
             "choices": [],
             "help": null,
             "about": "Mother's Social Security cotizaciones paid in 2024 (Art. 81.2 LIRPF cap term).",
-            "row_index": null
-          }
-        ]
-      },
-      {
-        "key": "properties",
-        "title": "Ingatlanok és bérbeadás",
-        "summary": "A tulajdonodban lévő vagy általad bérbe adott ingatlanok, ingatlanonként egy sorral.",
-        "repeatable": true,
-        "fields": [
-          {
-            "path": "properties.cadastral_reference",
-            "label": "Kataszteri hivatkozás",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "string",
-            "choices": [],
-            "help": null,
-            "about": "Property cadastral reference.",
-            "row_index": null
-          },
-          {
-            "path": "properties.use_type",
-            "label": "Ingatlan hasznosítása",
-            "value": null,
-            "masked": false,
-            "required": false,
-            "field_type": "enum",
-            "choices": [
-              {
-                "value": "habitual",
-                "label": "Fő lakóhely"
-              },
-              {
-                "value": "rental",
-                "label": "Bérbe adott"
-              },
-              {
-                "value": "mixed",
-                "label": "Vegyes használat"
-              },
-              {
-                "value": "imputed_income",
-                "label": "Vélelmezett jövedelem (nem bérbe adott)"
-              },
-              {
-                "value": "other",
-                "label": "Egyéb"
-              }
-            ],
-            "help": null,
-            "about": "Property use classification.",
-            "row_index": null
-          }
-        ]
-      },
-      {
-        "key": "usage_ratios",
-        "title": "Használati arányok és levonhatóság",
-        "summary": "A közösen használt eszközök, például autó vagy telefon üzleti használatának aránya.",
-        "repeatable": true,
-        "fields": [
-          {
-            "path": "usage_ratios.category_id",
-            "label": "Kategória",
-            "value": null,
-            "masked": false,
-            "required": true,
-            "field_type": "string",
-            "choices": [],
-            "help": null,
-            "about": "Category profile id the ratio applies to.",
-            "row_index": null
-          },
-          {
-            "path": "usage_ratios.business_ratio",
-            "label": "Üzleti használati arány",
-            "value": null,
-            "masked": false,
-            "required": true,
-            "field_type": "decimal",
-            "choices": [],
-            "help": null,
-            "about": "Business-use ratio in the closed interval 0..1.",
             "row_index": null
           }
         ]

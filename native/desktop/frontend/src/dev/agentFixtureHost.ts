@@ -29,9 +29,8 @@ import {
   type AgentToolStatus,
   type AgentViews,
 } from "../shell/agentViews";
-import type { AgentModelRoles } from "../ipc/contract";
+import type { AgentLocalModels } from "../ipc/contract";
 import {
-  FIXTURE_BACKGROUND_LANES,
   FIXTURE_CATALOG,
   FIXTURE_DECLARED_CATALOG,
 } from "./fixtures/agentCatalog";
@@ -84,15 +83,10 @@ export type FixtureDocuments = "stored" | "none" | "unavailable" | "failed";
  * agent's declared catalog until the scenario publishes it ready. */
 export type FixtureCatalog = "served" | "busy" | "declared";
 
-/** The roles the made-up service keeps a selection for, in its order, and the
- * one whose runs read images. The desktop is told them by the service. */
-const FIXTURE_ROLES = [
-  "vision_transcription",
-  "text_extraction",
-  "column_role_mapping",
-  "supply_nature_proposal",
-] as const;
-const IMAGE_ROLE = "vision_transcription";
+/** The lane whose model list the made-up service keeps: its one keyless
+ * lane, and the most models the lists hold. */
+const FIXTURE_LOCAL_LANE = "local_api";
+const FIXTURE_LIST_LIMIT = 64;
 
 const revisionOf = (count: number) => count.toString(16).padStart(64, "0");
 
@@ -505,32 +499,40 @@ export function fixtureAgent({
   session: AgentSession;
   /** Publishes the agent's status, as the service does once it is ready. */
   publishStatus: (status?: AgentServiceStatus) => void;
-  /** Changes the stored selections from elsewhere. */
-  changeRolesElsewhere: () => void;
+  /** Changes the stored model list from elsewhere. */
+  changeListElsewhere: () => void;
 } {
   let catalogBusy = catalog === "busy";
   let catalogDeclared = catalog === "declared";
   let publishedStatus: AgentServiceStatus | null = catalogDeclared
     ? { state: "starting", lane: "development" }
     : null;
-  // The person's selection per role, as the made-up service stores it, and
-  // how many changes it has committed, which its revision names.
-  const selections = new Map<string, { lane: string; model: string }>();
+  // The models the person added to the local lane's list, as the made-up
+  // service stores them, and how many changes it has committed, which its
+  // revision names.
+  const added: { lane: string; model: string }[] = [];
+  let reading: { lane: string; model: string } | null = null;
   let committed = 0;
-  const roleSnapshot = (): AgentModelRoles => ({
+  const listSnapshot = (): AgentLocalModels => ({
     state: "readable",
-    roles: FIXTURE_ROLES.map((role) => ({
-      role,
-      lane: selections.get(role)?.lane ?? null,
-      model: selections.get(role)?.model ?? null,
-    })),
+    models: added.map((entry) => ({ ...entry })),
+    reading: reading ? { ...reading } : null,
+    local_lanes: [FIXTURE_LOCAL_LANE],
     revision: revisionOf(committed),
   });
   const guarded = async (expectedRevision: string) => {
     await check();
     if (expectedRevision !== revisionOf(committed))
-      throw coded("agent_model_role_revision_conflict");
+      throw coded("agent_local_models_revision_conflict");
   };
+  /** The models the catalog recommends for the local lane. */
+  const recommendedLocal = (): string[] =>
+    Object.values(
+      (FIXTURE_CATALOG.providers ?? []).find(
+        (held) =>
+          `${held.provider_id}_${held.transport}` === FIXTURE_LOCAL_LANE,
+      )?.catalog.recommended ?? {},
+    );
   /** The models of a lane of the catalog the service would answer now, by
    * catalogue lane id, as a run names them. */
   const laneModels = (laneId: string) => {
@@ -1142,36 +1144,59 @@ export function fixtureAgent({
         ),
       };
     },
-    async modelRoles() {
-      say("agentModelRoles");
+    async localModels() {
+      say("agentLocalModels");
       await check();
-      return roleSnapshot();
+      return listSnapshot();
     },
-    async setModelRole(role, lane, model, expectedRevision) {
-      say(`agentModelRoleSet ${role}`);
+    async addLocalModel(lane, model, expectedRevision) {
+      say(`agentLocalModelAdd ${model}`);
       await guarded(expectedRevision);
-      if (!(FIXTURE_ROLES as readonly string[]).includes(role))
-        throw coded("agent_model_role_unknown_role");
-      const models = laneModels(lane);
-      if (!models) throw coded("agent_model_role_unknown");
-      if (!FIXTURE_BACKGROUND_LANES.has(lane))
-        throw coded("agent_model_role_lane_not_runnable");
-      const entry = models.find((held) => held.id === model);
-      if (!entry) throw coded("agent_model_role_model_not_in_catalogue");
-      if (role === IMAGE_ROLE && entry.vision !== true)
-        throw coded("agent_model_role_vision_required");
-      selections.set(role, { lane, model });
+      // Only the keyless lane on this computer keeps a list.
+      if (lane !== FIXTURE_LOCAL_LANE || !laneModels(lane))
+        throw coded("agent_local_models_unknown");
+      const listed =
+        recommendedLocal().includes(model) ||
+        added.some((entry) => entry.lane === lane && entry.model === model);
+      if (listed) return listSnapshot();
+      if (added.length >= FIXTURE_LIST_LIMIT)
+        throw coded("agent_local_models_full");
+      added.push({ lane, model });
       committed += 1;
-      return roleSnapshot();
+      return listSnapshot();
     },
-    async clearModelRole(role, expectedRevision) {
-      say(`agentModelRoleClear ${role}`);
+    async removeLocalModel(lane, model, expectedRevision) {
+      say(`agentLocalModelRemove ${model}`);
       await guarded(expectedRevision);
-      if (!(FIXTURE_ROLES as readonly string[]).includes(role))
-        throw coded("agent_model_role_unknown_role");
-      selections.delete(role);
+      const index = added.findIndex(
+        (entry) => entry.lane === lane && entry.model === model,
+      );
+      if (index < 0) throw coded("agent_local_models_unknown");
+      added.splice(index, 1);
       committed += 1;
-      return roleSnapshot();
+      return listSnapshot();
+    },
+    async resetLocalModels(expectedRevision) {
+      say("agentLocalModelsReset");
+      await guarded(expectedRevision);
+      added.splice(0, added.length);
+      reading = null;
+      committed += 1;
+      return listSnapshot();
+    },
+    async chooseReadingModel(lane, model, expectedRevision) {
+      say(`agentReadingModelChoose ${lane} ${model}`);
+      await guarded(expectedRevision);
+      // Any lane the catalogue reports, local or not.
+      const reported = (FIXTURE_CATALOG.providers ?? []).some(
+        (held) => `${held.provider_id}_${held.transport}` === lane,
+      );
+      if (!reported) throw coded("agent_local_models_unknown");
+      if (reading?.lane === lane && reading.model === model)
+        return listSnapshot();
+      reading = { lane, model };
+      committed += 1;
+      return listSnapshot();
     },
     async modelLicence(provider, transport, model) {
       say(`agentModelLicence ${model}`);
@@ -1552,10 +1577,10 @@ export function fixtureAgent({
     if (next === undefined || next.state === "ready") catalogDeclared = false;
     for (const listener of statusListeners) listener(status());
   };
-  /** Commits a change to the selections as another window would, so the
+  /** Commits a change to the list as another window would, so the
    * revision this one read is out of date. */
-  const changeRolesElsewhere = () => {
+  const changeListElsewhere = () => {
     committed += 1;
   };
-  return { agent, session, publishStatus, changeRolesElsewhere };
+  return { agent, session, publishStatus, changeListElsewhere };
 }

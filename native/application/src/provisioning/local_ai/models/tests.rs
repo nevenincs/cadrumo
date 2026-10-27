@@ -69,7 +69,7 @@ impl Stored {
 }
 
 fn selected(role: &str, name: &str, size_bytes: u64) -> SelectedModel {
-    SelectedModel::new(role, name, size_bytes).unwrap()
+    SelectedModel::new(role, name, Some(size_bytes)).unwrap()
 }
 
 /// The vision role reads with one model and two text roles share another.
@@ -136,7 +136,7 @@ fn a_selection_takes_well_formed_triples_only_and_orders_them_by_role() {
         ("text_extraction", "synthetic-text:", 1),
     ] {
         assert!(
-            SelectedModel::new(role, name, size).is_err(),
+            SelectedModel::new(role, name, Some(size)).is_err(),
             "{role} {name} {size}"
         );
     }
@@ -718,6 +718,71 @@ fn a_synthetic_model_from_any_registry_is_pulled_listed_and_checked_by_its_name(
         models.plan_parts()[0].source_hosts[0].as_str(),
         "models.example.com"
     );
+}
+
+/// A model no catalogue sizes, as one the person names: planned with an unknown download,
+/// never held back by a floor it has no size for, and pulled with progress against the
+/// layer totals the program streams.
+#[test]
+fn a_model_of_unknown_size_is_planned_unsized_and_pulled_against_the_streamed_totals() {
+    let root = tempfile::tempdir().unwrap();
+    let models_root = root.path().join("models");
+    let stored = Stored::new(5);
+    assert!(SelectedModel::new("download", TEXT, Some(0)).is_err());
+    let models = Models::new(
+        LocalModels::new(vec![SelectedModel::new("download", TEXT, None).unwrap()]).unwrap(),
+        models_root.clone(),
+    );
+    let model = &models.selection().as_slice()[0];
+    assert_eq!(models.plan_parts()[0].download_bytes, None);
+    assert_eq!(models.download_bytes(model), None);
+    let tiny = Hardware {
+        total_memory_bytes: Some(1),
+        nvidia_vram_bytes: None,
+    };
+    assert_eq!(models.observe_quick(model, &tiny), Observation::Absent);
+    let fake = FakeOllama::start("1.0.0");
+    {
+        let mut state = fake.state.lock().unwrap();
+        let mut lines = vec![json!({ "status": "pulling manifest" })];
+        for (digest, bytes) in &stored.blobs {
+            lines.push(progress(digest, bytes.len(), bytes.len() / 2));
+        }
+        for (digest, bytes) in &stored.blobs {
+            lines.push(progress(digest, bytes.len(), bytes.len()));
+        }
+        lines.push(json!({ "status": "success" }));
+        state.pulls.push_back(lines);
+        state
+            .installs
+            .insert(TEXT.into(), stored.files(&models_root, TEXT));
+    }
+    let server = Server::attached(fake.address(), "1.0.0");
+    let mut pacing = RecordedPacing::default();
+    let mut events = Vec::new();
+    let pulled = models
+        .pull(
+            &server,
+            model,
+            &mut Pull {
+                policy: RetryPolicy::default(),
+                pacing: &mut pacing,
+                events: &mut |event| events.push(event),
+                cancellation: &Cancellation::default(),
+            },
+        )
+        .unwrap();
+    assert_eq!(pulled, PRESENT);
+    let progress: Vec<(u64, u64)> = events
+        .iter()
+        .filter_map(|event| match event {
+            TransferEvent::Progress { completed, total } => Some((*completed, *total)),
+            _ => None,
+        })
+        .collect();
+    assert!(progress.iter().all(|(completed, total)| completed <= total), "{progress:?}");
+    assert_eq!(progress.last(), Some(&(stored.size(), stored.size())));
+    assert_eq!(models.download_bytes(model), Some(stored.size()));
 }
 
 #[test]

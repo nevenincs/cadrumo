@@ -101,7 +101,7 @@ export function Composer({
   onStop,
   onAddFiles,
   onSelectionChange,
-  onModelRoles,
+  pickerRequests,
   onRemoveAttachment,
   onRemoveAllAttachments,
   onShowAllAttachments,
@@ -123,8 +123,8 @@ export function Composer({
   onStop?: () => void;
   onAddFiles?: () => void;
   onSelectionChange?: (selection: AgentSelection) => void;
-  /** Opens the person's model choice for each role that reads documents. */
-  onModelRoles?: () => void;
+  /** Counts the asks from elsewhere to open the model picker. */
+  pickerRequests?: number;
   onRemoveAttachment?: (id: string) => void;
   onRemoveAllAttachments?: () => void;
   onShowAllAttachments?: () => void;
@@ -293,7 +293,7 @@ export function Composer({
               models={models}
               selection={selection}
               onChange={onSelectionChange}
-              onModelRoles={onModelRoles}
+              openRequests={pickerRequests}
             >
               {settingsButton}
             </AgentSettingsPopover>

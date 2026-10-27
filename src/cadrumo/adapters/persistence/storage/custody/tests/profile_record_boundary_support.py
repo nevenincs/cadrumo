@@ -101,8 +101,8 @@ def populated_facts() -> tuple[UserProfileFact, ...]:
     """
     return (
         UserProfileFact(
-            path="activities.cnae",
-            value="6201",
+            path="activities.iae_epigraph",
+            value="765",
             source="setup_wizard",
             valid_from=date(2024, 1, 1),
             valid_to=date(2024, 12, 31),
@@ -115,8 +115,8 @@ def populated_facts() -> tuple[UserProfileFact, ...]:
             valid_to=date(2025, 6, 30),
         ),
         UserProfileFact(
-            path="attribution_entity.legal_form",
-            value="comunidad_de_bienes",
+            path="censo.status",
+            value="alta",
             source="registry_inference",
             valid_from=date(2022, 4, 15),
             valid_to=date(2026, 3, 31),

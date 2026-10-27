@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Dialog,
   DialogContent,
@@ -754,6 +755,8 @@ export function ProviderSignInDialog({
   };
 
   const active = snapshot !== null && ACTIVE.has(snapshot.event);
+  const checkingCode =
+    active && submittedAttempt.current === snapshot.attempt_id;
   const terminalSuccess = snapshot?.event === "succeeded";
   const terminalCancelled = snapshot?.event === "cancelled";
   const terminalFailure = snapshot?.event === "failed";
@@ -787,16 +790,19 @@ export function ProviderSignInDialog({
               ? ""
               : starting
                 ? t("desktop.providers.sign_in_starting")
-                : active && snapshot
-                  ? activeWords(t, snapshot, method)
-                  : failure || terminalCancelled || terminalFailure
-                    ? ""
-                    : t("desktop.providers.sign_in_starting")}
+                : checkingCode
+                  ? t("desktop.providers.sign_in_code_checking")
+                  : active && snapshot
+                    ? activeWords(t, snapshot, method)
+                    : failure || terminalCancelled || terminalFailure
+                      ? ""
+                      : t("desktop.providers.sign_in_starting")}
           </DialogDescription>
         </DialogHeader>
 
         {active && snapshot && (
           <div className="grid gap-2">
+            {checkingCode && <Spinner className="size-4" />}
             {method === "browser-code" &&
               snapshot.event === "authorization_code_required" &&
               submittedAttempt.current !== snapshot.attempt_id &&

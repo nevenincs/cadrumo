@@ -183,14 +183,6 @@ class SetupAnswers(BaseModel):
     """Optional INCN as a canonical decimal string."""
     new_entity_first_two_profit_periods: OptionalWizardBool = ""
     """Optional three-state bool for LIS Art. 29 new-entity rate."""
-    ley_49_2002_option_declared: OptionalWizardBool = ""
-    """Optional three-state bool for the governed special-regime option."""
-    ley_49_2002_option_date: str = ""
-    """ISO-8601 date declared for the governed special-regime option."""
-    ley_49_2002_renunciation_declared: OptionalWizardBool = ""
-    """Optional three-state bool for governed special-regime renunciation."""
-    ley_49_2002_renunciation_date: str = ""
-    """ISO-8601 date declared for governed special-regime renunciation."""
     irpf_income_categories: str = ""
     """Comma-separated set of IrpfIncomeCategory tokens."""
     declaration_roles: str = ""
@@ -246,7 +238,6 @@ class SetupAnswers(BaseModel):
     has_employees: bool = False
     colegio_concertado: OptionalWizardBool = ""
     pays_professionals_with_retencion: bool = False
-    professional_income_withholding_ge_70pct: bool = False
     art109_activity_income_withholding_ge_70pct: bool = False
     pays_rent_with_retencion: bool = False
     pays_capital_income_with_retencion: bool = False
@@ -254,14 +245,6 @@ class SetupAnswers(BaseModel):
     modelo_115_no_relevant_payment_periods: str = ""
     irpf_estimation_regime: OptionalIrpfEstimationRegime = ""
     irpf_activity_kind: OptionalIrpfActivityKind = ""
-    objective_estimation_modulos_iae_epigraph: str = ""
-    objective_estimation_modulos_module_1_units: str = ""
-    objective_estimation_modulos_module_2_units: str = ""
-    objective_estimation_modulos_module_3_units: str = ""
-    objective_estimation_modulos_module_4_units: str = ""
-    objective_estimation_modulos_module_5_units: str = ""
-    objective_estimation_modulos_module_6_units: str = ""
-    objective_estimation_modulos_module_7_units: str = ""
     irpf_special_regime: OptionalIrpfSpecialRegime = ""
     """IRPF special-regime axis. Blank for the general regime."""
     irpf_special_regime_start_date: str = ""
@@ -295,9 +278,6 @@ class SetupAnswers(BaseModel):
     # ── capabilities ─────────────────────────────────────────────────────
     llm_vision: bool = True
     google_export: bool = True
-
-    # ── notes ────────────────────────────────────────────────────────────
-    notes: str = ""
 
     # ------------------------------------------------------------------
     # Validators — taxonomy classes are imported from their defining modules
@@ -606,28 +586,6 @@ class SetupAnswers(BaseModel):
             raise ValueError(f"incn_prior_12_months must be a decimal number, got {value!r}") from exc
         return value
 
-    @field_validator(
-        "objective_estimation_modulos_module_1_units",
-        "objective_estimation_modulos_module_2_units",
-        "objective_estimation_modulos_module_3_units",
-        "objective_estimation_modulos_module_4_units",
-        "objective_estimation_modulos_module_5_units",
-        "objective_estimation_modulos_module_6_units",
-        "objective_estimation_modulos_module_7_units",
-    )
-    @classmethod
-    @pydantic_validation_boundary
-    def _validate_objective_estimation_modulos_units(cls, value: str) -> str:
-        from decimal import Decimal, InvalidOperation
-
-        if value == "":
-            return value
-        try:
-            Decimal(value)
-        except InvalidOperation as exc:
-            raise ValueError(f"objective-estimation modulos units must be decimal numbers, got {value!r}") from exc
-        return value
-
     @field_validator("new_entity_first_two_profit_periods", mode="before")
     @classmethod
     @pydantic_validation_boundary
@@ -639,19 +597,6 @@ class SetupAnswers(BaseModel):
             value,
             field_name="new_entity_first_two_profit_periods",
         )
-
-    @field_validator(
-        "ley_49_2002_option_declared",
-        "ley_49_2002_renunciation_declared",
-        mode="before",
-    )
-    @classmethod
-    @pydantic_validation_boundary
-    def _parse_ley_49_2002_optional_bool(
-        cls,
-        value: object,
-    ) -> OptionalWizardBool:
-        return _parse_optional_bool_token(value, field_name="ley_49_2002_optional_bool")
 
     @field_validator("activity_start_date")
     @classmethod
@@ -665,20 +610,6 @@ class SetupAnswers(BaseModel):
             date.fromisoformat(value)
         except ValueError as exc:
             raise ValueError(f"activity_start_date must be an ISO-8601 date (YYYY-MM-DD), got {value!r}") from exc
-        return value
-
-    @field_validator("ley_49_2002_option_date", "ley_49_2002_renunciation_date")
-    @classmethod
-    @pydantic_validation_boundary
-    def _validate_ley_49_2002_dates(cls, value: str) -> str:
-        from datetime import date
-
-        if value == "":
-            return value
-        try:
-            date.fromisoformat(value)
-        except ValueError as exc:
-            raise ValueError(f"Ley 49/2002 dates must be ISO-8601 (YYYY-MM-DD), got {value!r}") from exc
         return value
 
     @field_validator("irpf_special_regime_start_date")

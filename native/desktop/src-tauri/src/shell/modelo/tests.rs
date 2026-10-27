@@ -198,7 +198,12 @@ fn token(files: &Files, identity: &Value, purpose: Purpose, path: std::path::Pat
     picks["files"][0]["token"].clone()
 }
 fn saved(files: &Files, identity: &Value, format: Format, path: std::path::PathBuf) -> Value {
-    let picks = serde_json::to_value(files.issue_save(identity, format, path).unwrap()).unwrap();
+    let picks = serde_json::to_value(
+        files
+            .issue_save(identity, Purpose::ModeloExport, format.extension(), path)
+            .unwrap(),
+    )
+    .unwrap();
     picks["files"][0]["token"].clone()
 }
 
@@ -211,14 +216,19 @@ fn file_tokens_become_paths_only_where_the_definition_reads_or_writes_a_file() {
     let justificante = token(
         &files,
         &session,
-        Purpose::Evidence,
+        Purpose::ModeloEvidence,
         root.join("justificante.pdf"),
     );
-    let package = token(&files, &session, Purpose::Package, root.join("review.zip"));
+    let package = token(
+        &files,
+        &session,
+        Purpose::ModeloPackage,
+        root.join("review.zip"),
+    );
     let signature = token(
         &files,
         &session,
-        Purpose::Signature,
+        Purpose::ModeloSignature,
         root.join("review.sig"),
     );
     let out_sig = saved(&files, &session, Format::Sig, root.join("counter.sig"));
@@ -498,15 +508,7 @@ fn a_named_read_is_passed_on_only_for_this_profile_declaration_and_language() {
 }
 
 #[test]
-fn dialog_words_and_read_references_are_bounded() {
-    assert!(label_admitted("Fichero BOE"));
-    assert!(!label_admitted(""));
-    assert!(!label_admitted(&"a".repeat(LABEL_LIMIT + 1)));
-    assert!(!label_admitted("a\nb"));
-    assert!(file_name_admitted("modelo-303-2026-3T.txt"));
-    for name in ["..\\x.txt", "a/b.txt", "C:x.txt", ".hidden"] {
-        assert!(!file_name_admitted(name), "{name}");
-    }
+fn read_references_and_work_units_are_bounded() {
     assert!(reference_admitted("01"));
     assert!(!reference_admitted(" "));
     assert!(!reference_admitted(&"a".repeat(REFERENCE_LIMIT + 1)));

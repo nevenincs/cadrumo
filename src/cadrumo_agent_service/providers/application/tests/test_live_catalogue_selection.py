@@ -1,27 +1,28 @@
-"""Selections and lookups read the running agent's live entries beside the declared ones.
+"""Lookups read the running agent's live entries beside the declared ones.
 
-While an agent runs, a lane's live catalogue adds the models installed on a
-local server. A role may select one of those, its facts are the live entry's,
-and without a running agent only declared models are selectable or resolvable.
+While an agent runs, a lane's live catalogue states the models its local server
+holds and what each can read. A selected model added to the list resolves with
+the live entry's facts, a live entry decides vision over the declared one, and
+without a running agent an added model nothing declares states nothing, so it
+reads text with no facts and never images.
 """
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from typing import Final
 
 import pytest
 
-from cadrumo.core.model_roles import ModelRole
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from cadrumo_client.contracts.model_runs import ModelRunLane, ModelRunLicence, ModelRunRefusal, ModelRunRefusalCode
 
 from ...domain.catalog import LiveCatalogModel
-from ..contracts import ModelRoleSelectionsStatus, ProviderSettingsRefusal, ProviderSettingsRefusalCode
+from ...domain.record import ListedModel, LocalModelListRecord, new_settings_generation
 from ..lane_entries import merged_entries
-from ..model_role_selections import ModelRoleSelectionsService
 from ..model_runs import ModelRunService
 from ..resolution import ProviderCredentialResolver
-from .memory_store import MemoryModelRoleSelectionsStore, MemoryProviderSettingsStore
+from .memory_store import MemoryLocalModelListStore, MemoryProviderSettingsStore
 from .synthetic_catalog import (
     KEYLESS_LANE,
     KEYLESS_TEXT_MODEL,
@@ -42,44 +43,24 @@ _INSTALLED_UNSTATED: Final = "synthetic-installed-unstated:1"
 _SUPPLIED_DIGEST: Final = "sha256:" + "1" * 64
 
 
-def _installed() -> tuple[LiveCatalogModel, ...]:
+def _held(*extra: LiveCatalogModel) -> tuple[LiveCatalogModel, ...]:
+    """The recommended models the server does not hold, then ``extra``."""
     return (
-        live_model(
-            _INSTALLED_TEXT,
-            vision=False,
-            size_bytes=2_000,
-            context_length=8192,
-            licence={"spdx": None, "name": "Licence supplied with the model", "digest": _SUPPLIED_DIGEST},
-            installed=True,
-        ),
-        live_model(_INSTALLED_VISION, vision=True, size_bytes=3_000, context_length=None, licence=None),
-        live_model(_INSTALLED_UNSTATED),
+        live_model(KEYLESS_TEXT_MODEL, vision=False, installed=False),
+        live_model(KEYLESS_VISION_MODEL, vision=True, installed=False),
+        *extra,
     )
 
 
-class _Harness:
-    """One profile's selections and lookups over the synthetic catalog and the live entries ``live`` serves."""
-
-    def __init__(self, live: StaticLiveModels) -> None:
-        self.live = live
-        self.store = MemoryModelRoleSelectionsStore()
-        self._source = ProvidedProviderCatalogSource(synthetic_catalog())
-
-    def selections(self) -> ModelRoleSelectionsService:
-        return ModelRoleSelectionsService(store=self.store, catalog_source=self._source, live_models=self.live)
-
-    def runs(self) -> ModelRunService:
-        return ModelRunService(
-            selections=self.store,
-            resolver=ProviderCredentialResolver(store=MemoryProviderSettingsStore(), catalog_source=self._source),
-            catalog_source=self._source,
-            live_models=self.live,
-            gateway=_NoMediaGateway(),
-        )
-
-    def select(self, role: ModelRole, model: str) -> ModelRoleSelectionsStatus | ProviderSettingsRefusal:
-        revision = ABSENT_SECURE_OBJECT_REVISION_ID if self.store.stored is None else self.store.stored.revision
-        return self.selections().select(role.value, lane=KEYLESS_LANE, model=model, expected_revision=revision)
+def _installed_text() -> LiveCatalogModel:
+    return live_model(
+        _INSTALLED_TEXT,
+        vision=False,
+        size_bytes=2_000,
+        context_length=8192,
+        licence={"spdx": None, "name": "Licence supplied with the model", "digest": _SUPPLIED_DIGEST},
+        installed=True,
+    )
 
 
 class _NoMediaGateway:
@@ -88,16 +69,31 @@ class _NoMediaGateway:
         return ModelRunRefusal(code=ModelRunRefusalCode.RUN_FAILED)
 
 
-def _running() -> StaticLiveModels:
-    return StaticLiveModels({_LOCAL: _installed()})
+def _runs(live: StaticLiveModels, reading: str, *added: str) -> ModelRunService:
+    """A service whose person selected ``reading`` on the keyless lane and added ``added`` to its list."""
+    store = MemoryLocalModelListStore()
+    record = LocalModelListRecord(
+        schema_version=2,
+        models=tuple(ListedModel(lane=KEYLESS_LANE, model=model) for model in added),
+        reading=ListedModel(lane=KEYLESS_LANE, model=reading),
+        generation=new_settings_generation(),
+        updated_at=datetime(2026, 10, 27, 9, 0, tzinfo=UTC),
+    )
+    assert store.write(record, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID) is None
+    source = ProvidedProviderCatalogSource(synthetic_catalog())
+    return ModelRunService(
+        model_list=store,
+        resolver=ProviderCredentialResolver(store=MemoryProviderSettingsStore(), catalog_source=source),
+        catalog_source=source,
+        live_models=live,
+        gateway=_NoMediaGateway(),
+    )
 
 
-def test_a_model_only_the_running_agent_lists_is_selectable_and_resolves_with_its_live_facts() -> None:
-    harness = _Harness(_running())
+def test_an_added_model_only_the_running_agent_lists_resolves_with_its_live_facts() -> None:
+    runs = _runs(StaticLiveModels({_LOCAL: _held(_installed_text())}), _INSTALLED_TEXT, _INSTALLED_TEXT)
 
-    assert isinstance(harness.select(ModelRole.TEXT_EXTRACTION, _INSTALLED_TEXT), ModelRoleSelectionsStatus)
-
-    assert harness.runs().lookup("text_extraction") == ModelRunLane(
+    assert runs.lookup("text_extraction") == ModelRunLane(
         provider_id="local",
         transport="api",
         model=_INSTALLED_TEXT,
@@ -111,57 +107,63 @@ def test_a_model_only_the_running_agent_lists_is_selectable_and_resolves_with_it
 
 
 def test_a_declared_model_the_running_agent_does_not_list_resolves_with_its_installed_state_unknown() -> None:
-    harness = _Harness(_running())
+    runs = _runs(StaticLiveModels({_LOCAL: ()}), KEYLESS_TEXT_MODEL)
 
-    assert isinstance(harness.select(ModelRole.TEXT_EXTRACTION, KEYLESS_TEXT_MODEL), ModelRoleSelectionsStatus)
+    lane = runs.lookup("text_extraction")
 
-    lane = harness.runs().lookup("text_extraction")
     assert isinstance(lane, ModelRunLane)
-    assert lane.installed is None
+    assert (lane.model, lane.installed) == (KEYLESS_TEXT_MODEL, None)
 
 
-def test_without_a_running_agent_a_model_only_the_live_catalogue_lists_is_not_in_the_catalogue() -> None:
-    harness = _Harness(StaticLiveModels(None))
+def test_without_a_running_agent_an_added_model_nothing_declares_reads_text_with_no_facts_and_never_images() -> None:
+    runs = _runs(StaticLiveModels(None), _INSTALLED_TEXT, _INSTALLED_TEXT)
 
-    refused = harness.select(ModelRole.TEXT_EXTRACTION, _INSTALLED_TEXT)
+    lane = runs.lookup("text_extraction")
 
-    assert refused == ProviderSettingsRefusal(code=ProviderSettingsRefusalCode.MODEL_NOT_IN_CATALOGUE)
-    assert harness.store.stored is None
-    assert isinstance(harness.select(ModelRole.TEXT_EXTRACTION, KEYLESS_TEXT_MODEL), ModelRoleSelectionsStatus)
+    assert isinstance(lane, ModelRunLane)
+    assert (lane.model, lane.vision, lane.size_bytes, lane.installed) == (_INSTALLED_TEXT, None, None, None)
+    assert runs.lookup("vision_transcription") == ModelRunRefusal(code=ModelRunRefusalCode.MODEL_CANNOT_READ_IMAGES)
 
 
 @pytest.mark.parametrize(
-    ("model", "admitted"),
+    ("vision", "admitted"),
     [
-        pytest.param(_INSTALLED_VISION, True, id="live-vision-true"),
-        pytest.param(_INSTALLED_TEXT, False, id="live-vision-false"),
-        pytest.param(_INSTALLED_UNSTATED, False, id="live-vision-unknown"),
+        pytest.param(True, True, id="live-vision-true"),
+        pytest.param(False, False, id="live-vision-false"),
+        pytest.param(None, False, id="live-vision-unknown"),
     ],
 )
-def test_the_vision_role_admits_a_live_entry_only_when_it_is_marked_vision(model: str, admitted: bool) -> None:
-    harness = _Harness(_running())
+def test_the_vision_role_reads_with_a_live_entry_only_when_it_is_marked_vision(
+    vision: bool | None, admitted: bool
+) -> None:
+    held = live_model(_INSTALLED_VISION, vision=vision, installed=True)
+    runs = _runs(StaticLiveModels({_LOCAL: _held(held)}), _INSTALLED_VISION, _INSTALLED_VISION)
 
-    answer = harness.select(ModelRole.VISION_TRANSCRIPTION, model)
+    answer = runs.lookup("vision_transcription")
 
     if admitted:
-        assert isinstance(answer, ModelRoleSelectionsStatus), answer
+        assert isinstance(answer, ModelRunLane) and answer.model == _INSTALLED_VISION
     else:
-        assert answer == ProviderSettingsRefusal(code=ProviderSettingsRefusalCode.VISION_REQUIRED)
-        assert harness.store.stored is None
+        assert answer == ModelRunRefusal(code=ModelRunRefusalCode.MODEL_CANNOT_READ_IMAGES)
 
 
 def test_a_live_entry_for_a_declared_model_supplies_the_facts_and_the_vision_decision() -> None:
     """The running agent's entry describes what this computer holds, so it wins over the declared one."""
-    live = StaticLiveModels({_LOCAL: (live_model(KEYLESS_VISION_MODEL, vision=None, size_bytes=5_000),)})
-    harness = _Harness(live)
+    live = StaticLiveModels(
+        {
+            _LOCAL: (
+                live_model(KEYLESS_TEXT_MODEL, vision=False, installed=False),
+                live_model(KEYLESS_VISION_MODEL, vision=None, size_bytes=5_000, installed=True),
+            )
+        }
+    )
+    runs = _runs(live, KEYLESS_VISION_MODEL)
 
-    refused = harness.select(ModelRole.VISION_TRANSCRIPTION, KEYLESS_VISION_MODEL)
-    assert isinstance(harness.select(ModelRole.TEXT_EXTRACTION, KEYLESS_VISION_MODEL), ModelRoleSelectionsStatus)
-    answered = harness.runs().lookup("text_extraction")
-
-    assert refused == ProviderSettingsRefusal(code=ProviderSettingsRefusalCode.VISION_REQUIRED)
+    assert runs.lookup("vision_transcription") == ModelRunRefusal(code=ModelRunRefusalCode.MODEL_CANNOT_READ_IMAGES)
+    answered = runs.lookup("text_extraction")
     assert isinstance(answered, ModelRunLane)
-    assert (answered.size_bytes, answered.vision, answered.context_length, answered.licence) == (
+    assert (answered.model, answered.size_bytes, answered.vision, answered.context_length, answered.licence) == (
+        KEYLESS_VISION_MODEL,
         5_000,
         None,
         None,
@@ -169,56 +171,24 @@ def test_a_live_entry_for_a_declared_model_supplies_the_facts_and_the_vision_dec
     )
 
 
-def test_a_selected_model_the_current_entries_no_longer_list_refuses_at_lookup_as_unavailable() -> None:
-    harness = _Harness(_running())
-    assert isinstance(harness.select(ModelRole.TEXT_EXTRACTION, _INSTALLED_TEXT), ModelRoleSelectionsStatus)
-    assert isinstance(harness.select(ModelRole.COLUMN_ROLE_MAPPING, KEYLESS_TEXT_MODEL), ModelRoleSelectionsStatus)
+def test_an_entry_whose_installed_state_is_unstated_is_used_as_unknown_never_as_absent() -> None:
+    held = live_model(_INSTALLED_UNSTATED, vision=False)
+    runs = _runs(StaticLiveModels({_LOCAL: _held(held)}), _INSTALLED_UNSTATED, _INSTALLED_UNSTATED)
 
-    harness.live = StaticLiveModels(None)
-    runs = harness.runs()
+    lane = runs.lookup("column_role_mapping")
 
-    assert runs.lookup("text_extraction") == ModelRunRefusal(code=ModelRunRefusalCode.LANE_UNAVAILABLE)
-    resolved = runs.lookup("column_role_mapping")
-    assert isinstance(resolved, ModelRunLane) and resolved.model == KEYLESS_TEXT_MODEL
-    read = runs.selections()
-    assert isinstance(read, tuple)
-    states = {state.role: state for state in read}
-    assert states["text_extraction"].refusal is ModelRunRefusalCode.LANE_UNAVAILABLE
-    assert states["text_extraction"].selected is not None
-    assert states["column_role_mapping"].lane == resolved
+    assert isinstance(lane, ModelRunLane)
+    assert (lane.model, lane.installed) == (_INSTALLED_UNSTATED, None)
 
 
-def test_a_vision_selection_the_live_entry_no_longer_marks_vision_refuses_at_lookup_as_unavailable() -> None:
-    """Selected against the declared entry; the running agent's entry for the same model states no vision."""
-    harness = _Harness(StaticLiveModels(None))
-    assert isinstance(harness.select(ModelRole.VISION_TRANSCRIPTION, KEYLESS_VISION_MODEL), ModelRoleSelectionsStatus)
-    assert isinstance(harness.select(ModelRole.TEXT_EXTRACTION, KEYLESS_VISION_MODEL), ModelRoleSelectionsStatus)
-    declared = harness.runs().lookup("vision_transcription")
-    assert isinstance(declared, ModelRunLane) and declared.vision is True
+def test_a_selections_read_reads_the_lanes_live_entries_once() -> None:
+    live = StaticLiveModels({_LOCAL: _held(_installed_text())})
+    runs = _runs(live, _INSTALLED_TEXT, _INSTALLED_TEXT)
+    before = live.reads
 
-    for stated in (None, False):
-        harness.live = StaticLiveModels({_LOCAL: (live_model(KEYLESS_VISION_MODEL, vision=stated),)})
-        runs = harness.runs()
+    runs.selections()
 
-        assert runs.lookup("vision_transcription") == ModelRunRefusal(code=ModelRunRefusalCode.LANE_UNAVAILABLE)
-        text = runs.lookup("text_extraction")
-        assert isinstance(text, ModelRunLane) and text.vision is stated
-        read = runs.selections()
-        assert isinstance(read, tuple)
-        assert {state.role: state.refusal for state in read}["vision_transcription"] is (
-            ModelRunRefusalCode.LANE_UNAVAILABLE
-        )
-
-
-def test_a_selections_read_reads_each_lanes_live_entries_once() -> None:
-    harness = _Harness(_running())
-    assert isinstance(harness.select(ModelRole.TEXT_EXTRACTION, _INSTALLED_TEXT), ModelRoleSelectionsStatus)
-    assert isinstance(harness.select(ModelRole.COLUMN_ROLE_MAPPING, KEYLESS_TEXT_MODEL), ModelRoleSelectionsStatus)
-    before = harness.live.reads
-
-    harness.runs().selections()
-
-    assert harness.live.reads - before == 1
+    assert live.reads - before == 1
 
 
 def test_live_entries_come_first_and_win_over_declared_ones_of_the_same_model() -> None:

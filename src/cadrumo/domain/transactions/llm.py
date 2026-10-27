@@ -3,7 +3,7 @@
 Defines the :class:`LLMClassifier` and :class:`LLMSplitProposer` protocols and
 the allow-list-guarded response parsing every classifier answer passes through.
 Concrete transports live outside this module: the readers in the LLM adapter
-package, which send each request to the lane the person selected, and a
+package, which send each request to the lane the agent service derives, and a
 subprocess harness on the test side.
 
 This module keeps the part that is a SAFETY contract rather than a transport --

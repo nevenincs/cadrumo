@@ -326,7 +326,7 @@ _FIELD_PATHS = (
     # The fact writer trims the path, so a padded one stores the same capability.
     f"  {ServiceCapability.CLOUD_EVIDENCE_UPLOAD.schema_path}	",
     "preferences.output_language",
-    "identity.notes",
+    "identity.legal_name",
 )
 _FRONTENDS = tuple(OperationFrontendProjection)
 
@@ -378,7 +378,7 @@ def test_every_frontend_resolves_the_same_access_for_a_field_change(
 
 _KNOWN_CAPABILITY_QUESTIONS = ("llm-vision", "google-export")
 """The capability questions the setup catalogue asks today, named here independently of it."""
-_OTHER_QUESTION = "notes"
+_OTHER_QUESTION = "legal-name"
 
 
 def _patch(*answers: tuple[str, str], colegio_concertado: bool | None = None) -> OperationRequest[BaseModel]:
@@ -417,13 +417,13 @@ def test_the_setup_catalogue_asks_the_known_capability_questions(operation: Pinn
     assert {questions[question_id] for question_id in _KNOWN_CAPABILITY_QUESTIONS} <= {
         item.schema_path for item in ServiceCapability
     }
-    assert questions[_OTHER_QUESTION] == "identity.notes"
+    assert questions[_OTHER_QUESTION] == "identity.legal_name"
 
 
 _PATCHES = (
     *(((question_id, value),) for question_id in _KNOWN_CAPABILITY_QUESTIONS for value in ("true", "false", "")),
-    ((_OTHER_QUESTION, "synthetic note"), (_KNOWN_CAPABILITY_QUESTIONS[0], "false")),
-    ((_OTHER_QUESTION, "synthetic note"),),
+    ((_OTHER_QUESTION, "synthetic name"), (_KNOWN_CAPABILITY_QUESTIONS[0], "false")),
+    ((_OTHER_QUESTION, "synthetic name"),),
     (),
 )
 

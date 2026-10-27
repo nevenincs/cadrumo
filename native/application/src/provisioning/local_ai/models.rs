@@ -1,10 +1,11 @@
-//! The local AI's models: the model the person selected for each local role, pulled
-//! through the server the engine's manager runs and checked against what that server
-//! holds.
+//! The local AI's models: the models its caller admits, pulled through the server the
+//! engine's manager runs and checked against what that server holds.
 //!
-//! The engine defines no model. Its caller supplies the selection as role, model name and
-//! download size triples, the size as the selected catalogue entry states it, and the
-//! engine plans, pulls and checks exactly those. Integrity is the program's: it verifies
+//! The engine defines no model. Its caller supplies the admitted models as part, model
+//! name and download size triples, the size as a catalogue entry states it or unknown
+//! when none does, and the engine plans, pulls and checks exactly those. A model of
+//! unknown size is planned with an unknown download, passes no hardware floor check
+//! before it is pulled, and reports progress against the totals the program streams. Integrity is the program's: it verifies
 //! every layer it pulls against the model's content-addressed manifest, so the engine
 //! compares no digest of its own.
 //!
@@ -159,19 +160,19 @@ impl fmt::Display for ModelName {
     }
 }
 
-/// One local model the person selected: the role it reads for, its name and its download
-/// size as the selected catalogue entry states it.
+/// One admitted local model: the plan part it is pulled as, its name and its download
+/// size as its catalogue entry states it, or `None` when no entry states one.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SelectedModel {
     pub role: String,
     pub name: ModelName,
-    pub size_bytes: u64,
+    pub size_bytes: Option<u64>,
 }
 
 impl SelectedModel {
-    /// One selection triple; refuses a role that is not a plain identifier, an empty or
-    /// malformed name, and a zero size.
-    pub fn new(role: &str, name: &str, size_bytes: u64) -> Result<Self, Error> {
+    /// One admitted triple; refuses a part that is not a plain identifier, an empty or
+    /// malformed name, and a stated zero size.
+    pub fn new(role: &str, name: &str, size_bytes: Option<u64>) -> Result<Self, Error> {
         let mut bytes = role.bytes();
         let identifier = role.len() <= ROLE_LIMIT
             && bytes.next().is_some_and(|c| c.is_ascii_lowercase())
@@ -179,7 +180,7 @@ impl SelectedModel {
         if !identifier || role == PROGRAM_PART {
             return Err(invalid("role"));
         }
-        if size_bytes == 0 {
+        if size_bytes == Some(0) {
             return Err(invalid("model size"));
         }
         Ok(Self {
@@ -276,7 +277,7 @@ impl Models {
             .iter()
             .map(|model| PlanPart {
                 part_id: model.role.clone(),
-                download_bytes: Some(model.size_bytes),
+                download_bytes: model.size_bytes,
                 source_hosts: vec![model.name.host().clone()],
                 destination: Some(Destination::OllamaModels),
                 installs_outside_program: false,
@@ -286,9 +287,13 @@ impl Models {
     }
 
     /// The quick check of `model`: its manifest and layers on disk, no server. A
-    /// computer whose memory cannot hold the model's stated size is held back first.
+    /// computer whose memory cannot hold the model's stated size is held back first;
+    /// a model of unknown size has nothing to hold it back by.
     pub fn observe_quick(&self, model: &SelectedModel, hardware: &Hardware) -> Observation {
-        if hardware.below_floor(model.size_bytes) {
+        if model
+            .size_bytes
+            .is_some_and(|size| hardware.below_floor(size))
+        {
             return Observation::Blocked(BlockedReason::Hardware);
         }
         self.installed(&model.name)
@@ -327,10 +332,12 @@ impl Models {
         pull: &mut Pull<'_>,
     ) -> Result<Observation, LocalAiError> {
         if self.installed(&model.name) == Observation::Present {
-            (pull.events)(TransferEvent::Progress {
-                completed: model.size_bytes,
-                total: model.size_bytes,
-            });
+            if let Some(size) = self.download_bytes(model) {
+                (pull.events)(TransferEvent::Progress {
+                    completed: size,
+                    total: size,
+                });
+            }
             return Ok(Observation::Present);
         }
         for attempt in 1..=pull.policy.max_attempts {
@@ -445,6 +452,21 @@ impl Models {
         Ok(())
     }
 
+    /// The bytes `model` downloads: the size its caller stated, else the layers the
+    /// models folder holds for it; `None` when neither says.
+    pub fn download_bytes(&self, model: &SelectedModel) -> Option<u64> {
+        model.size_bytes.or_else(|| {
+            let path = model.name.manifest_path(&self.root);
+            let bytes = filesystem::bounded_bytes(&path, MANIFEST_BYTES_LIMIT).ok()?;
+            let manifest = serde_json::from_slice::<Manifest>(&bytes).ok()?;
+            Some(
+                std::iter::once(&manifest.config)
+                    .chain(&manifest.layers)
+                    .fold(0u64, |sum, layer| sum.saturating_add(layer.size)),
+            )
+        })
+    }
+
     /// What the models folder holds for `name`.
     fn installed(&self, name: &ModelName) -> Observation {
         let path = name.manifest_path(&self.root);
@@ -498,6 +520,9 @@ fn pull_once(
 ) -> Result<Attempt, LocalAiError> {
     let request = serde_json::json!({ "model": model.name.to_string(), "stream": true });
     let mut layers: BTreeMap<String, u64> = BTreeMap::new();
+    // The size of each layer as the program streams it, the whole model's download when
+    // the caller stated none.
+    let mut totals: BTreeMap<String, u64> = BTreeMap::new();
     let mut succeeded = false;
     let mut failed = None;
     let cancellation = pull.cancellation;
@@ -521,6 +546,11 @@ fn pull_once(
                 if value["status"] == "success" {
                     succeeded = true;
                 }
+                if let (Some(digest), Some(total)) =
+                    (value["digest"].as_str(), value["total"].as_u64())
+                {
+                    totals.insert(digest.to_owned(), total);
+                }
                 if let (Some(digest), Some(completed)) =
                     (value["digest"].as_str(), value["completed"].as_u64())
                 {
@@ -528,11 +558,15 @@ fn pull_once(
                     *held = (*held).max(completed);
                     let completed = layers
                         .values()
-                        .fold(0u64, |sum, bytes| sum.saturating_add(*bytes))
-                        .min(model.size_bytes);
+                        .fold(0u64, |sum, bytes| sum.saturating_add(*bytes));
+                    let total = model.size_bytes.unwrap_or_else(|| {
+                        totals
+                            .values()
+                            .fold(0u64, |sum, bytes| sum.saturating_add(*bytes))
+                    });
                     events(TransferEvent::Progress {
-                        completed,
-                        total: model.size_bytes,
+                        completed: completed.min(total),
+                        total,
                     });
                 }
                 Ok(())
@@ -556,9 +590,14 @@ fn pull_once(
     Ok(match (succeeded, failed) {
         (_, Some(category)) => Attempt::Failed(category),
         (true, None) => {
+            let total = model.size_bytes.unwrap_or_else(|| {
+                totals
+                    .values()
+                    .fold(0u64, |sum, bytes| sum.saturating_add(*bytes))
+            });
             events(TransferEvent::Progress {
-                completed: model.size_bytes,
-                total: model.size_bytes,
+                completed: total,
+                total,
             });
             Attempt::Done
         }

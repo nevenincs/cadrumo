@@ -819,7 +819,7 @@ _COLD_LEAVES: tuple[tuple[str, tuple[str, ...], str | None], ...] = (
     ("validate", ("--profile-secrets-stdin", "config", "profile", "validate"), _PROFILE_AUTHENTICATION),
     (
         "edit",
-        ("--profile-secrets-stdin", "config", "profile", "edit", "--quiet", "--notes", "cold"),
+        ("--profile-secrets-stdin", "config", "profile", "edit", "--quiet", "--legal-name", "cold"),
         _PROFILE_AUTHENTICATION,
     ),
     ("complete-setup", ("--profile-secrets-stdin", "config", "profile", "complete-setup"), _PROFILE_AUTHENTICATION),

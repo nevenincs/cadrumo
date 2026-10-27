@@ -11,7 +11,7 @@ ledger, so a value the page does not print is dropped there, whatever the model
 said.
 
 **One dispatch path.** Every request names its model role and goes to the agent
-service, which runs it on the lane and model the person selected for that role.
+service, which runs it on the lane and model it derives for that role.
 Every request is marked as derived from taxpayer evidence, and ledger import
 offers no off-host consent step, so a request carries no consent: a lane whose
 catalogue entry reads off the host refuses it at the client's consent gate

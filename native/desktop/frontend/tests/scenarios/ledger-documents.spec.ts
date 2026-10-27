@@ -757,52 +757,56 @@ test("a confirmed ticket no movement settles offers the movements near its day, 
   await expect(target.locator(".ledger-tray")).toBeVisible();
 });
 
-test("a reader with no model chosen is named in words, says so and leads to the agent", async ({
+test("with no model picked the readers say so, name no reading task and lead to the model picker", async ({
   page: target,
 }) => {
   await seedLayout(target, { layout: { agentShown: false } });
   await openDocuments(target, undefined, "reader_unselected");
   await tab(target, "readers").click();
   const readers = section(target).locator(".ledger-readers");
-  const roles = readers.locator(".ledger-reader-role");
-  await expect(roles).toHaveCount(2);
-  // Each role is named in words, never by the id the service uses.
-  const served = ["text_extraction", "vision_transcription"];
-  for (const [index, role] of served.entries()) {
-    await expect(roles.nth(index)).toContainText(
-      label("desktop.agent.model_role_heading", {
-        role: label(`desktop.setup.role.${role}`),
-      }),
-    );
-    await expect(roles.nth(index)).not.toContainText(role);
-  }
-  // The role that reads asks for nothing.
-  await expect(roles.first()).toContainText(
-    label("desktop.ledger.documents.reader.ready"),
-  );
-  await expect(roles.first().locator(".ledger-reader-no-model")).toHaveCount(0);
-  await expect(roles.first().getByRole("button")).toHaveCount(0);
-  // The role with no model says so, and setup, which cannot choose one, is
-  // not what it offers.
-  const vision = roles.nth(1);
-  await expect(vision).toContainText(
-    label("desktop.ledger.documents.reader.not_ready"),
-  );
-  await expect(vision.locator(".ledger-reader-no-model")).toHaveText(
+  // Every reading runs with the one model picked, so the problem is said once.
+  const problems = readers.locator(".ledger-reader-problem");
+  await expect(problems).toHaveCount(1);
+  await expect(problems).toContainText(
     label("desktop.ledger.documents.reader.no_model"),
   );
+  // No reading task is named, in words or by the id the service uses.
+  for (const role of ["text_extraction", "vision_transcription"])
+    await expect(readers).not.toContainText(role);
+  // Setup cannot pick a model, so it is not what the readers offer.
   await expect(readers.locator(".setup-offer")).toHaveCount(0);
-  // It leads to the agent, where the model of each role is chosen.
   await expect(agentColumn(target)).toBeHidden();
-  await vision
+  await problems
     .getByRole("button", {
       name: label("desktop.ledger.documents.reader.choose_model"),
     })
     .click();
   await expect(agentColumn(target)).toBeVisible();
   await expect(
-    target.getByRole("dialog", {
-      name: label("desktop.agent.model_roles_title"),
-    }),
+    target.getByRole("dialog", { name: label("desktop.agent.settings_title") }),
   ).toBeVisible();
+});
+
+test("a model picked that cannot read images says so in plain words", async ({
+  page: target,
+}) => {
+  await openDocuments(target, undefined, "reader_no_images");
+  await tab(target, "readers").click();
+  const readers = section(target).locator(".ledger-readers");
+  const problems = readers.locator(".ledger-reader-problem");
+  await expect(problems).toHaveCount(1);
+  await expect(problems).toContainText(
+    label("desktop.ledger.documents.reader.cannot_read_images"),
+  );
+  await expect(problems.getByRole("button")).toHaveText(
+    label("desktop.ledger.documents.reader.choose_model"),
+  );
+});
+
+test("readers that can read say no problem", async ({ page: target }) => {
+  await openDocuments(target);
+  await tab(target, "readers").click();
+  const readers = section(target).locator(".ledger-readers");
+  await expect(readers).toBeVisible();
+  await expect(readers.locator(".ledger-reader-problem")).toHaveCount(0);
 });

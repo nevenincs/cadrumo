@@ -40,7 +40,7 @@ class ProvisionReportResult(OutputSchema):
     """JSON envelope for ``aeat config provision report``.
 
     The doctor rows for local inference in one place: what the machine measures
-    and the lane the person selected for each role. Read-only -- it pulls
+    and the lane the agent service derives for each role. Read-only -- it pulls
     nothing, loads nothing and asks the local AI server nothing.
     """
 

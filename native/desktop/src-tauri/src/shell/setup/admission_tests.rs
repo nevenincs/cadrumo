@@ -1,21 +1,17 @@
 //! Admission against the replies of the agent service. The service's administration
 //! channel is the only thing stood in for: a script of the replies it gives, which the
-//! real readers of the selection, the provider status and the catalogue then parse.
+//! real readers of the provider status, the catalogue and the list of added models then
+//! parse.
 use super::*;
-use cadrumo_application::error::application::{ErrorCode, Operation};
+use cadrumo_application::error::application::{Cause, ErrorCode, Operation};
 use std::{collections::BTreeMap, sync::Mutex};
 
 pub const LOCAL: &str = "synthetic_local_api";
 pub const HOSTED: &str = "synthetic_hosted_api";
 pub const TEXT: &str = "synthetic-text:test";
 pub const VISION: &str = "synthetic-vision:test";
+pub const ADDED: &str = "synthetic-added:test";
 pub const HOSTED_MODEL: &str = "synthetic-hosted-1";
-const ROLES: [&str; 4] = [
-    "vision_transcription",
-    "text_extraction",
-    "column_role_mapping",
-    "supply_nature_proposal",
-];
 pub const GB: u64 = 1_000_000_000;
 
 /// The replies a service gives by action, and the actions it was asked, in order. An
@@ -32,18 +28,14 @@ impl Replies {
         self
     }
 
-    /// The service when nobody selected a model for any role.
-    pub fn without_selection() -> Self {
-        Self::default().answering("model_roles", roles(&[]))
-    }
-
-    /// The service with `picks` selected, the provider status of the two synthetic
-    /// lanes and the served catalogue listing `models` on the local one.
-    pub fn selecting(picks: &[(&str, &str, &str)], models: &[Card]) -> Self {
+    /// The service with the provider status of the two synthetic lanes, a served
+    /// catalogue recommending `recommended` and listing `cards` on the local lane, and
+    /// `added` on the local lane's list.
+    pub fn serving(recommended: &[&str], added: &[&str], cards: &[Card]) -> Self {
         Self::default()
-            .answering("model_roles", roles(picks))
             .answering("status", status())
-            .answering("catalog", served(models))
+            .answering("catalog", served(recommended, cards))
+            .answering("local_models", list(added))
     }
 
     pub fn asked(&self) -> Vec<String> {
@@ -72,18 +64,13 @@ fn revision() -> String {
     "a".repeat(64)
 }
 
-/// Every role's selection, with none for the roles `picks` leaves out.
-pub fn roles(picks: &[(&str, &str, &str)]) -> Value {
-    let roles: Vec<Value> = ROLES
+/// The models the person added to the local lane's list.
+pub fn list(added: &[&str]) -> Value {
+    let models: Vec<Value> = added
         .iter()
-        .map(
-            |role| match picks.iter().find(|(named, _, _)| named == role) {
-                Some((_, lane, model)) => json!({"role": role, "lane": lane, "model": model}),
-                None => json!({"role": role, "lane": null, "model": null}),
-            },
-        )
+        .map(|model| json!({"lane": LOCAL, "model": model}))
         .collect();
-    json!({"unreadable": false, "roles": roles, "revision": revision()})
+    json!({"unreadable": false, "models": models, "reading": null, "local_lanes": [LOCAL], "revision": revision()})
 }
 
 fn lane(id: &str, provider: &str, auth_kind: &str, mode: &str, saved: bool) -> Value {
@@ -107,39 +94,70 @@ pub fn status() -> Value {
 }
 
 /// A model and the download size its catalogue entry states, if it states one.
-type Card<'a> = (&'a str, Option<u64>);
+pub type Card<'a> = (&'a str, Option<u64>);
 
-fn listed(key: &str, models: &[Card]) -> Vec<Value> {
+fn cards(key: &str, models: &[Card]) -> Vec<Value> {
     models
         .iter()
         .map(|(model, size)| json!({key: model, "size_bytes": size}))
         .collect()
 }
 
+/// A catalogue's recommendations, one capability per model.
+fn recommendations(models: &[&str]) -> Value {
+    let capabilities = ["vision", "text"];
+    Value::Object(
+        models
+            .iter()
+            .zip(capabilities)
+            .map(|(model, capability)| (capability.to_owned(), json!(model)))
+            .collect(),
+    )
+}
+
 /// The catalogue a running agent serves: lane records by provider and transport.
-pub fn served(models: &[Card]) -> Value {
+pub fn served(recommended: &[&str], models: &[Card]) -> Value {
     json!({
         "api_version": "v1",
         "providers": [
             {"provider_id": "synthetic_hosted", "transport": "api",
-             "catalog": {"models": listed("model", &[(HOSTED_MODEL, None)])}},
+             "catalog": {"recommended": {"text": HOSTED_MODEL},
+                         "models": cards("model", &[(HOSTED_MODEL, Some(GB))])}},
             {"provider_id": "synthetic_local", "transport": "api",
-             "catalog": {"models": listed("model", models)}},
+             "catalog": {"recommended": recommendations(recommended),
+                         "models": cards("model", models)}},
         ],
     })
 }
 
 /// The declared catalogue the service relays while no agent is ready, in its envelope.
-pub fn declared(models: &[Card]) -> Value {
+pub fn declared(recommended: &[&str], models: &[Card]) -> Value {
     json!({
         "kind": "declared",
         "catalog": {"schema_version": 5, "providers": [
             {"id": HOSTED, "provider": "synthetic_hosted", "transport": "api",
-             "models": listed("id", &[(HOSTED_MODEL, None)])},
+             "recommended": {"text": HOSTED_MODEL},
+             "models": cards("id", &[(HOSTED_MODEL, Some(GB))])},
             {"id": LOCAL, "provider": "synthetic_local", "transport": "api",
-             "models": listed("id", models)},
+             "recommended": recommendations(recommended),
+             "models": cards("id", models)},
         ]},
     })
+}
+
+/// The refusal a stop tells the window, so a result reads as it did before a stop could
+/// also be a host failure; a host failure is no refusal and fails the test.
+pub fn refusal<T>(result: Result<T, Stop>) -> Result<T, Refusal> {
+    result.map_err(|stop| stop.refusal().expect("a refusal, not a host failure"))
+}
+
+/// The failure diagnostics keep for a stop the window words by its code alone.
+pub fn cause<T: std::fmt::Debug>(result: Result<T, Stop>) -> ApplicationError {
+    result
+        .expect_err("a stop")
+        .cause()
+        .cloned()
+        .expect("a stop that carries its cause")
 }
 
 /// An admission over `replies`, and the replies to ask what it read.
@@ -152,193 +170,169 @@ fn admission_of(replies: Replies) -> Admission {
     watched(replies).0
 }
 
-fn models(triples: &[(&str, &str, u64)]) -> LocalModels {
-    LocalModels::new(
-        triples
-            .iter()
-            .map(|(role, name, size)| SelectedModel::new(role, name, *size).unwrap())
-            .collect(),
-    )
-    .unwrap()
+/// A download of `model` from `lane`.
+pub fn requested(lane: &str, model: &str) -> ModelDownload {
+    ModelDownload {
+        lane: lane.into(),
+        model: model.into(),
+    }
+}
+
+fn admitted(model: &str, size: Option<u64>) -> LocalModels {
+    LocalModels::new(vec![SelectedModel::new("download", model, size).unwrap()]).unwrap()
 }
 
 #[test]
-fn a_local_lane_selection_is_admitted_with_the_size_its_catalogue_entry_states() {
-    let (admission, replies) = watched(Replies::selecting(
-        &[
-            ("vision_transcription", LOCAL, VISION),
-            ("text_extraction", LOCAL, TEXT),
-            ("column_role_mapping", HOSTED, HOSTED_MODEL),
-        ],
-        &[(TEXT, Some(2 * GB)), (VISION, Some(3 * GB))],
-    ));
-    assert_eq!(
-        admission.local_models().unwrap(),
-        models(&[
-            ("text_extraction", TEXT, 2 * GB),
-            ("vision_transcription", VISION, 3 * GB),
-        ])
-    );
-    assert_eq!(replies.asked(), ["model_roles", "status", "catalog"]);
-}
-
-#[test]
-fn the_declared_catalogue_states_the_same_sizes_while_no_agent_is_ready() {
-    let replies = Replies::selecting(&[("text_extraction", LOCAL, TEXT)], &[]).answering(
-        "catalog",
-        declared(&[(VISION, Some(3 * GB)), (TEXT, Some(2 * GB))]),
-    );
-    let (admission, _) = watched(replies);
-    assert_eq!(
-        admission.local_models().unwrap(),
-        models(&[("text_extraction", TEXT, 2 * GB)])
-    );
-}
-
-#[test]
-fn two_roles_selecting_one_model_are_admitted_under_its_one_size() {
-    let (admission, _) = watched(Replies::selecting(
-        &[
-            ("text_extraction", LOCAL, TEXT),
-            ("column_role_mapping", LOCAL, TEXT),
-        ],
-        &[(TEXT, Some(2 * GB))],
-    ));
-    assert_eq!(
-        admission.local_models().unwrap(),
-        models(&[
-            ("column_role_mapping", TEXT, 2 * GB),
-            ("text_extraction", TEXT, 2 * GB),
-        ])
-    );
-}
-
-#[test]
-fn a_hosted_lane_is_not_admitted_and_its_catalogue_is_not_read() {
-    let (admission, replies) = watched(Replies::selecting(
-        &[("text_extraction", HOSTED, HOSTED_MODEL)],
-        &[],
-    ));
-    assert!(admission.local_models().unwrap().is_empty());
-    assert_eq!(replies.asked(), ["model_roles", "status"]);
-}
-
-#[test]
-fn a_local_lane_the_person_turned_off_is_not_admitted_and_its_catalogue_is_not_read() {
-    let turned_off = json!({
-        "development": false,
-        "providers": [lane(LOCAL, "synthetic_local", "none", "disabled", false)],
-    });
-    let (admission, replies) = watched(
-        Replies::selecting(
-            &[("vision_transcription", LOCAL, VISION)],
-            &[(VISION, Some(3 * GB))],
-        )
-        .answering("status", turned_off),
-    );
-    assert!(admission.local_models().unwrap().is_empty());
-    assert_eq!(replies.asked(), ["model_roles", "status"]);
-}
-
-#[test]
-fn a_lane_the_status_does_not_list_is_not_admitted() {
-    let (admission, replies) = watched(Replies::selecting(
-        &[("text_extraction", "synthetic_gone_api", TEXT)],
-        &[(TEXT, Some(2 * GB))],
-    ));
-    assert!(admission.local_models().unwrap().is_empty());
-    assert_eq!(replies.asked(), ["model_roles", "status"]);
-}
-
-#[test]
-fn no_selection_admits_the_program_alone_and_reads_nothing_else() {
-    let (admission, replies) = watched(Replies::without_selection());
-    assert_eq!(admission.local_models().unwrap(), LocalModels::default());
-    assert_eq!(replies.asked(), ["model_roles"]);
-}
-
-#[test]
-fn a_model_whose_entry_states_no_size_is_refused_whole_and_never_dropped() {
-    let picks = [
-        ("vision_transcription", LOCAL, VISION),
-        ("text_extraction", LOCAL, TEXT),
-    ];
-    let cases: [(&str, &[Card]); 4] = [
-        ("size null", &[(VISION, Some(3 * GB)), (TEXT, None)]),
-        ("size zero", &[(VISION, Some(3 * GB)), (TEXT, Some(0))]),
-        ("model unlisted", &[(VISION, Some(3 * GB))]),
-        ("catalogue lists nothing", &[]),
-    ];
-    for (name, listed) in cases {
-        let (admission, _) = watched(Replies::selecting(&picks, listed));
+fn a_recommended_model_is_admitted_with_the_size_its_catalogue_entry_states() {
+    let cards = [(TEXT, Some(2 * GB)), (VISION, Some(3 * GB))];
+    for catalogue in [
+        served(&[VISION, TEXT], &cards),
+        declared(&[VISION, TEXT], &cards),
+    ] {
+        let (admission, replies) =
+            watched(Replies::serving(&[VISION, TEXT], &[], &cards).answering("catalog", catalogue));
         assert_eq!(
-            admission.local_models(),
-            Err(Refusal::ModelSizeUnstated),
+            admission.download(&requested(LOCAL, VISION)).unwrap(),
+            admitted(VISION, Some(3 * GB))
+        );
+        // A recommended model is on the list without the person adding it.
+        assert_eq!(replies.asked(), ["status", "catalog"]);
+    }
+}
+
+#[test]
+fn an_added_model_is_admitted_with_its_stated_size_or_an_unknown_one() {
+    for catalogue in [served(&[TEXT], &[]), declared(&[TEXT], &[])] {
+        let (admission, replies) =
+            watched(Replies::serving(&[TEXT], &[ADDED], &[]).answering("catalog", catalogue));
+        assert_eq!(
+            admission.download(&requested(LOCAL, ADDED)).unwrap(),
+            admitted(ADDED, None)
+        );
+        assert_eq!(replies.asked(), ["status", "catalog", "local_models"]);
+    }
+    // A size the catalogue states for an added model is used; a zero one says nothing.
+    for (stated, expected) in [(Some(GB), Some(GB)), (Some(0), None), (None, None)] {
+        let replies = Replies::serving(&[TEXT], &[ADDED], &[(ADDED, stated)]);
+        assert_eq!(
+            admission_of(replies)
+                .download(&requested(LOCAL, ADDED))
+                .unwrap(),
+            admitted(ADDED, expected),
+            "{stated:?}"
+        );
+    }
+}
+
+#[test]
+fn a_download_off_a_local_lanes_list_is_refused() {
+    let mut disabled = status();
+    disabled["providers"][0]["mode"] = json!("disabled");
+    let cards = [(TEXT, Some(GB)), (VISION, Some(GB))];
+    let elsewhere = "synthetic-elsewhere:test";
+    for (name, lanes, lane, model) in [
+        ("a hosted lane", status(), HOSTED, HOSTED_MODEL),
+        ("a lane turned off", disabled, LOCAL, TEXT),
+        ("an unknown lane", status(), "synthetic_gone_api", TEXT),
+        ("a catalogue model nobody listed", status(), LOCAL, VISION),
+        ("a model added to another lane", status(), LOCAL, elsewhere),
+    ] {
+        let replies = Replies::serving(&[TEXT], &[ADDED], &cards)
+            .answering("status", lanes)
+            .answering(
+                "local_models",
+                json!({"unreadable": false, "models": [
+                    {"lane": LOCAL, "model": ADDED},
+                    {"lane": HOSTED, "model": elsewhere},
+                ], "reading": null, "local_lanes": [LOCAL], "revision": revision()}),
+            );
+        assert_eq!(
+            refusal(admission_of(replies).download(&requested(lane, model))),
+            Err(Refusal::ModelSelectionUnusable),
             "{name}"
         );
     }
-    // The declared catalogue is held to the same.
-    let replies = Replies::selecting(&picks, &[]).answering(
-        "catalog",
-        declared(&[(VISION, Some(3 * GB)), (TEXT, Some(0))]),
-    );
-    assert_eq!(
-        admission_of(replies).local_models(),
-        Err(Refusal::ModelSizeUnstated)
-    );
 }
 
 #[test]
-fn an_unreadable_record_is_refused_and_never_read_as_no_selection() {
-    let replies = Replies::default().answering(
-        "model_roles",
-        json!({"unreadable": true, "roles": [], "revision": null}),
+fn an_unreadable_list_admits_no_added_model_but_keeps_the_recommended_ones() {
+    let unreadable = json!({
+        "unreadable": true, "models": [], "reading": null, "local_lanes": [LOCAL], "revision": revision(),
+    });
+    let replies = || {
+        Replies::serving(&[TEXT], &[], &[(TEXT, Some(GB))])
+            .answering("local_models", unreadable.clone())
+    };
+    assert_eq!(
+        refusal(admission_of(replies()).download(&requested(LOCAL, ADDED))),
+        Err(Refusal::ModelSelectionUnusable)
     );
     assert_eq!(
-        admission_of(replies).local_models(),
-        Err(Refusal::ModelSelectionUnusable)
+        admission_of(replies())
+            .download(&requested(LOCAL, TEXT))
+            .unwrap(),
+        admitted(TEXT, Some(GB))
     );
 }
 
 #[test]
 fn a_model_name_the_engine_cannot_pull_is_refused() {
-    let replies = Replies::selecting(
-        &[("text_extraction", LOCAL, "has space")],
-        &[("has space", Some(GB))],
-    );
+    let replies = Replies::serving(&[], &["has space"], &[]);
     assert_eq!(
-        admission_of(replies).local_models(),
+        refusal(admission_of(replies).download(&requested(LOCAL, "has space"))),
         Err(Refusal::ModelSelectionUnusable)
     );
 }
 
+/// The first link of a cause chain, as the Logs console shows it.
+fn first_link(error: &ApplicationError) -> &Cause {
+    error.causes.first().expect("a chained cause")
+}
+
 #[test]
-fn a_service_that_does_not_answer_is_unavailable_and_no_selection_is_invented() {
-    let picks = [("text_extraction", LOCAL, TEXT)];
-    let listed = [(TEXT, Some(GB))];
-    let reachable = || Replies::selecting(&picks, &listed);
-    let cases = [
-        ("no selection reply", Replies::default()),
+fn a_service_that_does_not_answer_or_refuses_is_unavailable_and_names_what_it_did() {
+    let reachable = || Replies::serving(&[], &[ADDED], &[]);
+    type Chained = Box<dyn Fn(&Cause) -> bool>;
+    let unanswered = |reason: &'static str| -> Chained {
+        Box::new(move |cause| {
+            matches!(cause, Cause::Application { code: ErrorCode::ReadFailed, reason: Some(named), .. }
+                if named == reason)
+        })
+    };
+    let refused = |code: &'static str| -> Chained {
+        Box::new(
+            move |cause| matches!(cause, Cause::Child(refusal) if refusal.code.as_deref() == Some(code)),
+        )
+    };
+    let cases: Vec<(&str, Replies, &str, Chained)> = vec![
         (
             "no status reply",
-            Replies::default().answering("model_roles", roles(&picks)),
+            Replies::default(),
+            "setup_provider_status_unanswered",
+            unanswered("agent_admin_unavailable"),
         ),
         (
             "no catalogue reply",
+            Replies::default().answering("status", status()),
+            "setup_catalogue_unanswered",
+            unanswered("agent_admin_unavailable"),
+        ),
+        (
+            "no list reply",
             Replies::default()
-                .answering("model_roles", roles(&picks))
-                .answering("status", status()),
+                .answering("status", status())
+                .answering("catalog", served(&[], &[])),
+            "setup_local_models_unanswered",
+            unanswered("agent_admin_unavailable"),
         ),
         (
-            "a selection outside the contract",
-            reachable().answering("model_roles", json!({"roles": "none"})),
-        ),
-        (
-            "a service stopping",
+            "a provider status the service refused",
             reachable().answering(
-                "model_roles",
+                "status",
                 json!({"kind": "refused", "code": "service_stopping"}),
             ),
+            "setup_provider_status_refused",
+            refused("runtime_unavailable"),
         ),
         (
             "a catalogue the service refused",
@@ -346,90 +340,83 @@ fn a_service_that_does_not_answer_is_unavailable_and_no_selection_is_invented() 
                 "catalog",
                 json!({"kind": "refused", "code": "catalog_unavailable"}),
             ),
+            "setup_catalogue_refused",
+            refused("catalog_unavailable"),
+        ),
+        (
+            "a list the service refused",
+            reachable().answering(
+                "local_models",
+                json!({"kind": "refused", "code": "service_stopping"}),
+            ),
+            "setup_local_models_refused",
+            refused("service_stopping"),
         ),
     ];
-    for (name, replies) in cases {
+    for (name, replies, reason, chained) in cases {
+        let result = admission_of(replies).download(&requested(LOCAL, ADDED));
         assert_eq!(
-            admission_of(replies).local_models(),
-            Err(Refusal::Unavailable),
+            result.as_ref().err().and_then(Stop::refusal),
+            Some(Refusal::Unavailable),
             "{name}"
         );
+        let error = cause(result);
+        assert_eq!(error.reason.as_deref(), Some(reason), "{name}");
+        assert!(chained(first_link(&error)), "{name}: {error}");
+    }
+}
+
+#[test]
+fn a_list_outside_the_services_contract_is_a_host_failure_and_not_a_silent_service() {
+    let mut duplicate = list(&[ADDED]);
+    duplicate["models"] = json!([
+        duplicate["models"][0].clone(),
+        duplicate["models"][0].clone()
+    ]);
+    let cases = [
+        ("models that are no list", json!({"models": "none"})),
+        ("a revision of no digest", {
+            let mut reply = list(&[ADDED]);
+            reply["revision"] = json!("not-a-digest");
+            reply
+        }),
+        ("a model twice", duplicate),
+    ];
+    for (name, reply) in cases {
+        let replies = Replies::serving(&[], &[], &[]).answering("local_models", reply);
+        let result = admission_of(replies).download(&requested(LOCAL, ADDED));
+        assert!(
+            matches!(&result, Err(Stop::Host(error))
+                if error.code == ErrorCode::ReadFailed
+                    && error.reason.as_deref() == Some("setup_local_models_contract")),
+            "{name}: {result:?}"
+        );
+        assert_eq!(result.unwrap_err().refusal(), None, "{name}");
     }
 }
 
 #[test]
 fn a_profile_that_is_signed_out_is_told_so() {
     let signed_out = || json!({"kind": "refused", "code": "signed_out"});
-    let picks = [("text_extraction", LOCAL, TEXT)];
     let cases = [
         (
-            "selection",
-            Replies::default().answering("model_roles", signed_out()),
-        ),
-        (
             "status",
-            Replies::default()
-                .answering("model_roles", roles(&picks))
-                .answering("status", signed_out()),
+            Replies::serving(&[], &[ADDED], &[]).answering("status", signed_out()),
         ),
         (
             "catalogue",
-            Replies::selecting(&picks, &[(TEXT, Some(GB))]).answering("catalog", signed_out()),
+            Replies::serving(&[], &[ADDED], &[]).answering("catalog", signed_out()),
+        ),
+        (
+            "list",
+            Replies::serving(&[], &[ADDED], &[]).answering("local_models", signed_out()),
         ),
     ];
     for (name, replies) in cases {
         assert_eq!(
-            admission_of(replies).local_models(),
+            refusal(admission_of(replies).download(&requested(LOCAL, ADDED))),
             Err(Refusal::NotSignedIn),
             "{name}"
         );
-    }
-}
-
-#[test]
-fn explicit_download_uses_catalogue_size_without_reading_document_roles() {
-    for catalogue in [
-        served(&[(VISION, Some(3 * GB))]),
-        declared(&[(VISION, Some(3 * GB))]),
-    ] {
-        let (admission, replies) = watched(
-            Replies::default()
-                .answering("status", status())
-                .answering("catalog", catalogue),
-        );
-        let requested = super::super::wire::ModelDownload {
-            lane: LOCAL.into(),
-            model: VISION.into(),
-        };
-        assert_eq!(
-            admission.download(&requested).unwrap(),
-            models(&[("download", VISION, 3 * GB)])
-        );
-        assert_eq!(replies.asked(), vec!["status", "catalog"]);
-    }
-}
-
-#[test]
-fn explicit_download_refuses_hosted_disabled_unknown_lanes_and_unlisted_or_unsized_models() {
-    let mut disabled = status();
-    disabled["providers"][0]["mode"] = json!("disabled");
-    for (lanes, lane, name, cards) in [
-        (status(), HOSTED, VISION, vec![(VISION, Some(GB))]),
-        (disabled, LOCAL, VISION, vec![(VISION, Some(GB))]),
-        (status(), "unknown", VISION, vec![(VISION, Some(GB))]),
-        (status(), LOCAL, TEXT, vec![(VISION, Some(GB))]),
-        (status(), LOCAL, VISION, vec![(VISION, None)]),
-        (status(), LOCAL, VISION, vec![(VISION, Some(0))]),
-    ] {
-        let admission = admission_of(
-            Replies::default()
-                .answering("status", lanes)
-                .answering("catalog", served(&cards)),
-        );
-        let requested = super::super::wire::ModelDownload {
-            lane: lane.into(),
-            model: name.into(),
-        };
-        assert!(admission.download(&requested).is_err(), "{lane}/{name}");
     }
 }

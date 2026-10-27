@@ -28,6 +28,7 @@ from .....core.external_constants import load_external_constants
 from .....core.remote_authority import (
     REMOTE_READ_SCHEME,
     aeat_host_suffixes,
+    aeat_origin_hosts,
     canonical_remote_hostname,
     first_aeat_host,
     host_is_under_suffixes,
@@ -261,6 +262,20 @@ def test_the_current_apex_scope_is_narrower_than_aeat_ownership() -> None:
     assert not is_current_aeat_host(f"sede.{domains.legacy_host_suffix}")
     assert is_aeat_host(f"sede.{domains.legacy_host_suffix}")
     assert not is_current_aeat_host(f"evil{domains.host_suffix}")
+
+
+def test_view_guard_origin_hosts_are_the_exact_declared_aeat_origins() -> None:
+    """Only ``[aeat.domains]`` origins under an AEAT suffix are origin hosts, once each."""
+    domains = load_external_constants().aeat.domains
+    hosts = aeat_origin_hosts()
+
+    numbered = (domains.sede, domains.www1, domains.www2, domains.www3, domains.www6, domains.www12)
+    assert hosts == (*(canonical_remote_hostname(origin) for origin in numbered), domains.host_suffix)
+    assert all(is_aeat_host(host) for host in hosts)
+    assert canonical_remote_hostname(domains.legacy_www) not in hosts
+    assert canonical_remote_hostname(domains.clave) not in hosts
+    assert canonical_remote_hostname(domains.boe) not in hosts
+    assert len(set(hosts)) == len(hosts)
 
 
 def test_sanctioned_idp_is_separate_from_aeat_authority() -> None:

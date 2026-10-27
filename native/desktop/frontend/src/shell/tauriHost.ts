@@ -54,11 +54,16 @@ export function tauriHost(): Host {
   const call = hostCall(token);
   const openExternal = (url: string) =>
     call("open_external", { url }).then(() => undefined);
-  // A command whose body is a password and nothing else. The token travels
-  // as a header, and so does the label of the profile it names,
-  // percent-encoded, since a header carries no other text.
+  // A command whose body is a password, or one JSON object holding it, and
+  // nothing else. The token travels as a header, and so does the label of
+  // the profile it names, percent-encoded, since a header carries no other
+  // text.
   const submit = <Result>(
-    command: "sign_in_submit" | "profile_create" | "profile_password_change",
+    command:
+      | "sign_in_submit"
+      | "profile_create"
+      | "profile_password_change"
+      | "profile_aeat_credential_save",
     password: Uint8Array,
     profile?: string,
   ): Promise<Result> =>
@@ -118,6 +123,17 @@ export function tauriHost(): Host {
             () => undefined,
           );
         };
+      },
+      aeat: {
+        pickCertificate: () => call("profile_aeat_certificate_pick", {}),
+        async saveCredential(credential) {
+          const body = new TextEncoder().encode(JSON.stringify(credential));
+          try {
+            await submit("profile_aeat_credential_save", body);
+          } finally {
+            body.fill(0);
+          }
+        },
       },
     },
     views: {
@@ -228,7 +244,7 @@ export function tauriHost(): Host {
       },
     },
     setupReview: {
-      read: (operationId) => call("desktop_setup_review_read", { operationId }),
+      pending: () => call("desktop_setup_review_pending", {}),
       claim: (review) => call("desktop_setup_review_claim", { review }),
       answer: (review, decision) =>
         call("desktop_setup_review_answer", { review, decision }),
@@ -497,11 +513,15 @@ function tauriAgent(call: HostCall): {
         };
       },
       providerCatalog: () => call("agent_provider_catalog", {}),
-      modelRoles: () => call("agent_model_roles", {}),
-      setModelRole: (role, lane, model, expectedRevision) =>
-        call("agent_model_role_set", { role, lane, model, expectedRevision }),
-      clearModelRole: (role, expectedRevision) =>
-        call("agent_model_role_clear", { role, expectedRevision }),
+      localModels: () => call("agent_local_models", {}),
+      addLocalModel: (lane, model, expectedRevision) =>
+        call("agent_local_model_add", { lane, model, expectedRevision }),
+      removeLocalModel: (lane, model, expectedRevision) =>
+        call("agent_local_model_remove", { lane, model, expectedRevision }),
+      resetLocalModels: (expectedRevision) =>
+        call("agent_local_models_reset", { expectedRevision }),
+      chooseReadingModel: (lane, model, expectedRevision) =>
+        call("agent_reading_model_choose", { lane, model, expectedRevision }),
       modelLicence: (provider, transport, model) =>
         call("agent_model_licence", { provider, transport, model }),
       skills: () =>

@@ -5,25 +5,25 @@ import { FIXTURE_CATALOG } from "@/dev/fixtures/agentCatalog";
 import { setupFixture } from "@/dev/setupFixture";
 import { useSetup } from "../../shell/setup";
 import { SetupDialog } from "../setup/SetupDialog";
-import { roleLanes } from "../../shell/agentModelRoles";
-import type { ModelRoleHost } from "../../shell/modelRoles";
-import { ModelRolesDialog } from "../agent/ModelRolesDialog";
+import { catalogLanes } from "../../shell/localModelLanes";
+import type { LocalModelHost } from "../../shell/localModels";
 import { LocalModels } from "./LocalModels";
 import { ProviderSettings } from "./ProviderSettings";
 import { PROVIDERS } from "./ProviderSettings.stories";
 import type { ProviderStatus } from "./types";
 
 // The real provider settings of the made-up lane that runs on this computer,
-// opened, with the real model list. The switch turns the lane off and on;
-// document configuration is separate; Download opens the
-// shared setup review and marks the model as here only after approved setup, and
-// Remove takes it off again. Everything is kept in memory and forgotten on
-// reload, and nothing is downloaded. Every lane and model is made up.
+// opened, with the real model list: the agent's recommended models and the
+// ones added by name. The switch turns the lane off and on; Download opens
+// the shared setup review and marks the model as here only after approved
+// setup, and Remove takes it off again. Everything is kept in memory and
+// forgotten on reload, and nothing is downloaded. Every lane and model is
+// made up.
 
 const LANE = "local_api";
 
 const LOCAL_LANE =
-  roleLanes(FIXTURE_CATALOG).find((held) => held.id === LANE) ?? null;
+  catalogLanes(FIXTURE_CATALOG).find((held) => held.id === LANE) ?? null;
 
 /** The lane on this computer, turned on and ready. */
 const LOCAL_PROVIDER: ProviderStatus = {
@@ -34,18 +34,18 @@ const LOCAL_PROVIDER: ProviderStatus = {
 };
 
 type Scene = {
-  /** A role that already selects a model of the lane. */
-  selected?: { role: string; model: string };
-  /** Another window changes the roles once they are read, so the next change
+  /** A model already added to the list by name. */
+  added?: string;
+  /** Another window changes the list once it is read, so the next change
    * made here is refused as out of date. */
   staleAfterRead?: boolean;
   /** What a removal answers: null removes the model. */
   removal?: string | null;
 };
 
-/** The made-up agent's own model roles, as the settings read and change them. */
-function roleHost({ selected, staleAfterRead }: Scene): ModelRoleHost {
-  const { session, changeRolesElsewhere } = fixtureAgent({
+/** The made-up agent's own model list, as the settings read and change it. */
+function listHost({ added, staleAfterRead }: Scene): LocalModelHost {
+  const { session, changeListElsewhere } = fixtureAgent({
     say: () => undefined,
     wait: () => Promise.resolve(),
     signedIn: () => true,
@@ -55,36 +55,30 @@ function roleHost({ selected, staleAfterRead }: Scene): ModelRoleHost {
     asks: null,
     refused: () => new Error("refused"),
   });
-  const { modelRoles, setModelRole, clearModelRole } = session;
-  if (!modelRoles || !setModelRole || !clearModelRole)
-    throw new Error("The made-up agent offers no model roles.");
-  const seeded = selected
-    ? modelRoles.call(session).then((held) => {
-        if (held.state !== "readable")
-          throw new Error("The made-up roles are unreadable.");
-        return setModelRole.call(
-          session,
-          selected.role,
-          LANE,
-          selected.model,
-          held.revision,
-        );
-      })
+  const { localModels, addLocalModel, removeLocalModel, resetLocalModels } =
+    session;
+  if (!localModels || !addLocalModel || !removeLocalModel || !resetLocalModels)
+    throw new Error("The made-up agent offers no model list.");
+  const seeded = added
+    ? localModels
+        .call(session)
+        .then((held) => addLocalModel.call(session, LANE, added, held.revision))
     : Promise.resolve();
   return {
     read: async () => {
       await seeded;
-      const held = await modelRoles.call(session);
-      if (staleAfterRead) changeRolesElsewhere();
+      const held = await localModels.call(session);
+      if (staleAfterRead) changeListElsewhere();
       return held;
     },
-    set: setModelRole.bind(session),
-    clear: clearModelRole.bind(session),
+    add: addLocalModel.bind(session),
+    remove: removeLocalModel.bind(session),
+    reset: resetLocalModels.bind(session),
   };
 }
 
 function Settings(scene: Scene) {
-  const host = useMemo(() => roleHost(scene), [scene]);
+  const host = useMemo(() => listHost(scene), [scene]);
   const root = useRef<HTMLDivElement>(null);
   const [on, setOn] = useState(true);
   // Which models this computer holds, as setup and removal leave them.
@@ -101,7 +95,6 @@ function Settings(scene: Scene) {
   );
   const setup = useSetup(setupHost, "Demo profile", true);
   const [setupOpen, setSetupOpen] = useState(false);
-  const [rolesOpen, setRolesOpen] = useState(false);
   const requested = useRef<string | null>(null);
   const run = setup.snapshot?.setup;
   useEffect(() => {
@@ -136,11 +129,9 @@ function Settings(scene: Scene) {
         onRefresh={() => undefined}
         localModels={() => (
           <LocalModels
-            key={`${rolesOpen}`}
             lane={lane}
             host={host}
             locale="en"
-            onConfigure={() => setRolesOpen(true)}
             onSetUp={(model) => {
               requested.current = model;
               setSetupOpen(true);
@@ -154,14 +145,6 @@ function Settings(scene: Scene) {
           />
         )}
       />
-      {rolesOpen && (
-        <ModelRolesDialog
-          host={host}
-          catalog={FIXTURE_CATALOG}
-          locale="en"
-          onClose={() => setRolesOpen(false)}
-        />
-      )}
       <SetupDialog
         open={setupOpen}
         onOpenChange={setSetupOpen}
@@ -182,21 +165,19 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const NONE: Scene = {};
-const TEXT_SELECTED: Scene = {
-  selected: { role: "text_extraction", model: "synthetic-text:1" },
-};
+const RECOMMENDED: Scene = {};
+const ADDED: Scene = { added: "synthetic-named:test" };
 const STALE: Scene = { staleAfterRead: true };
 const REMOVAL_FAILS: Scene = { removal: "model_not_removed" };
 
 export const Default: Story = {
-  name: "Nothing selected",
-  render: () => <Settings {...NONE} />,
+  name: "The recommended models",
+  render: () => <Settings {...RECOMMENDED} />,
 };
 
-export const RoleSelected: Story = {
-  name: "A role selects a model",
-  render: () => <Settings {...TEXT_SELECTED} />,
+export const Added: Story = {
+  name: "A model added by name",
+  render: () => <Settings {...ADDED} />,
 };
 
 export const Refused: Story = {

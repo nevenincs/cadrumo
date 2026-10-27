@@ -280,18 +280,6 @@ def entity_type_attribution_entity_token(
     return _entity_type_token("attribution_entity", effective_date=effective_date, authority=authority)
 
 
-def legal_entity_form_sin_fines_lucrativos_token(
-    *,
-    effective_date: date | None = None,
-    authority: GovernedFactSource | None = None,
-) -> LegalEntityForm:
-    """Return the registry-declared non-profit legal-form token."""
-    return resolve_entity_vocabulary(
-        effective_date=effective_date,
-        authority=authority,
-    ).require_legal_entity_form("sin_fines_lucrativos")
-
-
 __all__ = [
     "EntityTypeDefinition",
     "EntityVocabulary",
@@ -301,7 +289,6 @@ __all__ = [
     "entity_type_natural_person_token",
     "entity_type_tokens",
     "legal_entity_form_choice_description_tokens",
-    "legal_entity_form_sin_fines_lucrativos_token",
     "legal_entity_form_tokens",
     "require_entity_type",
     "require_legal_entity_form",

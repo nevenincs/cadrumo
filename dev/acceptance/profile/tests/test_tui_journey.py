@@ -38,7 +38,7 @@ def test_tui_child_receipt_keeps_only_public_operation_identity(tmp_path: Path) 
     receipt.write_text(
         json.dumps(
             {
-                "schema_version": "profile-01-installed-tui-row-child-v1",
+                "schema_version": "profile-01-installed-tui-row-child-v2",
                 "status": "proven",
                 "operation": "assert-clear",
                 "product_origin": "site-packages",
@@ -46,7 +46,7 @@ def test_tui_child_receipt_keeps_only_public_operation_identity(tmp_path: Path) 
                 "row_key": "4",
                 "row_visible": True,
                 "clear_visible_absent": True,
-                "selector_fact_visible": True,
+                "required_fact_visible": True,
                 "no_op_observed": False,
             }
         ),
@@ -57,7 +57,7 @@ def test_tui_child_receipt_keeps_only_public_operation_identity(tmp_path: Path) 
 
     assert evidence.row_key == "4"
     assert evidence.clear_visible_absent is True
-    assert evidence.selector_fact_visible is True
+    assert evidence.required_fact_visible is True
     assert evidence.no_op_observed is False
 
 
@@ -67,7 +67,7 @@ def test_tui_no_op_receipt_is_typed_and_preserved(tmp_path: Path) -> None:
     receipt.write_text(
         json.dumps(
             {
-                "schema_version": "profile-01-installed-tui-row-child-v1",
+                "schema_version": "profile-01-installed-tui-row-child-v2",
                 "status": "proven",
                 "operation": "no-op",
                 "product_origin": "site-packages",
@@ -75,7 +75,7 @@ def test_tui_no_op_receipt_is_typed_and_preserved(tmp_path: Path) -> None:
                 "row_key": "4",
                 "row_visible": True,
                 "clear_visible_absent": False,
-                "selector_fact_visible": True,
+                "required_fact_visible": True,
                 "no_op_observed": True,
             }
         ),

@@ -95,7 +95,7 @@
           }
         ],
         "result": {
-          "authority_generation": "1c28cf7fd38adcbd19af19c9106adbebe7d557d3dcf3abe8230057019544590e",
+          "authority_generation": "3605aa3609a433a039df2154a8f21a1811679b38a0f31f98b32c3d9707399b08",
           "binding_ready": false,
           "filing_year": 2026,
           "ledger_checked_transaction_count": 0,

@@ -16,8 +16,8 @@ understanding stage, and it makes any already-transcribed text -- a PDF text
 layer, an OCR result, an EN16931 payload rendered back to prose -- usable.
 
 **One dispatch path.** Every read names the text extraction role and goes to the
-agent service, which runs it on the lane and model the person selected for that
-role. Whether the read leaves this computer is that lane's catalogue flag. The
+agent service, which runs it on the lane and model it derives for that role from
+the person's local model list. Whether the read leaves this computer is that lane's catalogue flag. The
 reader marks every request it builds as evidence-derived unless the caller
 names the public corpus, and :class:`LLMClient`'s per-invocation
 evidence-consent check refuses a marked request on a lane that reads off the

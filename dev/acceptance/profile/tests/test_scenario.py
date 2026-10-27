@@ -9,16 +9,15 @@ from ..scenario import build_profile_row_lifecycle_scenario
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
-def test_repeatable_row_scenario_has_a_clearable_fact_and_a_selector_backed_survivor() -> None:
+def test_repeatable_row_scenario_has_a_clearable_fact_and_a_required_survivor() -> None:
     """The one shared input is sufficient to distinguish clear from removal."""
     scenario = build_profile_row_lifecycle_scenario()
 
     assert scenario.section == "activities"
     assert scenario.required_field == "description"
-    assert scenario.clearable_field == "cnae"
-    assert scenario.selector_field == "iae_epigraph"
-    assert [field for field, _value in scenario.add_values()] == ["description", "cnae", "iae_epigraph"]
-    assert scenario.path("7", scenario.selector_field) == "activities.7.iae_epigraph"
+    assert scenario.clearable_field == "iae_epigraph"
+    assert [field for field, _value in scenario.add_values()] == ["description", "iae_epigraph"]
+    assert scenario.path("7", scenario.clearable_field) == "activities.7.iae_epigraph"
 
 
 @pytest.mark.parametrize("row_key", ("", "base", "-1", "one"))

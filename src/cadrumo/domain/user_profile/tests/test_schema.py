@@ -34,7 +34,6 @@ def test_committed_user_profile_schema_loads_with_canonical_sections() -> None:
         "identity",
         "tax_residence",
         "censo",
-        "attribution_entity",
         "attribution_entity_socios",
         "activities",
         "irpf",
@@ -45,8 +44,6 @@ def test_committed_user_profile_schema_loads_with_canonical_sections() -> None:
         "renta_taxpayer",
         "renta_spouse",
         "renta_family",
-        "properties",
-        "usage_ratios",
         "provenance",
     } <= {section.key for section in schema.sections}
 

@@ -26,7 +26,7 @@ Where this build has no Cadrumo binary, every component reads as not in this
 build. The local AI's server is the runtime manager's to start and stop, so
 no command here starts it. **report** is the local reader's read, submitted
 as a registered operation in the signed-in profile: it reports the measured
-hardware and the lane the person selected for each role.
+hardware and the lane the agent service derives for each role.
 
 While a setup runs, text mode draws one progress line on standard error and
 JSON mode writes public operation events there as JSON objects, so

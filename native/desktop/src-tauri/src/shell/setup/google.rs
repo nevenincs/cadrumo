@@ -6,8 +6,10 @@
 //! shows them together. What only this window knows stays here: the sign-in
 //! or sign-out it started, the consent review it answered, and the stored
 //! sign-in as last read.
-use super::wire::{Failure, Google, GoogleStage, GoogleState, Refusal, is_hex64};
-use cadrumo_application::error::application::{ApplicationError, ErrorCode, Operation};
+use super::wire::{Failure, Google, GoogleStage, GoogleState, Refusal, Stop, is_hex64};
+use cadrumo_application::error::application::{
+    ApplicationError, ChildRefusal, ErrorCode, Operation,
+};
 use serde::Deserialize;
 use serde::de::DeserializeOwned;
 use serde_json::{Value, json};
@@ -27,25 +29,6 @@ pub trait Relay {
     fn call(&mut self, request: Value) -> Result<Value, ApplicationError>;
 }
 
-/// Why an act stopped: a closed refusal the window words, or a host failure.
-#[derive(Debug)]
-pub enum Stop {
-    Refused(Refusal),
-    Host(ApplicationError),
-}
-
-impl From<ApplicationError> for Stop {
-    fn from(error: ApplicationError) -> Self {
-        Self::Host(error)
-    }
-}
-
-impl From<Refusal> for Stop {
-    fn from(code: Refusal) -> Self {
-        Self::Refused(code)
-    }
-}
-
 /// What the window asked of the account.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Act {
@@ -59,7 +42,12 @@ fn protocol() -> ApplicationError {
 }
 
 fn parse<T: DeserializeOwned>(value: &Value) -> Result<T, Stop> {
-    serde_json::from_value(value.clone()).map_err(|_| Stop::Host(protocol()))
+    serde_json::from_value(value.clone()).map_err(|error| Stop::Host(protocol().caused_by(error)))
+}
+
+/// The relay's refusal code as a cause: the code is the runtime's, never the person's.
+fn refusal_of(code: &str) -> ChildRefusal {
+    ChildRefusal::answered(&json!({"code": code}))
 }
 
 // ── The runtime's generic documents ─────────────────────────────────────────
@@ -122,7 +110,9 @@ fn relay(bridge: &mut dyn Relay, request: Value, expected: &str) -> Result<Relay
 fn replied(relayed: Relayed) -> Result<Value, Stop> {
     match relayed {
         Relayed::Reply(reply) => Ok(reply),
-        Relayed::Refused { .. } => Err(Refusal::Unavailable.into()),
+        Relayed::Refused { code, .. } => {
+            Err(Stop::unavailable("setup_google_relay_refused").because(refusal_of(&code)))
+        }
     }
 }
 
@@ -165,7 +155,7 @@ fn observe(
         || projection.definition_id != definition_id
         || projection.subject_ref != subject
     {
-        return Err(Refusal::Unavailable.into());
+        return Err(Stop::unavailable("setup_google_operation_mismatch"));
     }
     Ok(projection)
 }
@@ -197,7 +187,9 @@ fn pending_review(bridge: &mut dyn Relay, operation_id: &str) -> Result<PendingR
         Relayed::Refused { code, .. } if code == "not_pending" => {
             return Err(Refusal::NotPending.into());
         }
-        Relayed::Refused { .. } => return Err(Refusal::Unavailable.into()),
+        Relayed::Refused { code, .. } => {
+            return Err(Stop::unavailable("setup_google_review_refused").because(refusal_of(&code)));
+        }
     };
     let text = |key: &str| reply[key].as_str().map(str::to_owned);
     let (Some(interaction_id), Some(revision), Some(review_digest)) = (
@@ -375,11 +367,13 @@ impl Tracker {
             Err((code, Some(holder))) if code == "subject_busy" && is_hex64(&holder) => {
                 match observe(bridge, &holder, definition_id, &subject) {
                     Ok(_) => Ok(holder),
-                    Err(Stop::Refused(_)) => Err(Refusal::Busy.into()),
+                    Err(Stop::Refused(_) | Stop::Unavailable(_)) => Err(Refusal::Busy.into()),
                     Err(error) => Err(error),
                 }
             }
-            Err(_) => Err(Refusal::Unavailable.into()),
+            Err((code, _)) => {
+                Err(Stop::unavailable("setup_google_submit_refused").because(refusal_of(&code)))
+            }
         }
     }
 
@@ -459,7 +453,7 @@ impl Tracker {
         let settled: GoogleOutcome = match result(bridge, operation_id, definition_id) {
             Ok(settled) => settled,
             // A refusal that carries no detail has no closer word than unexpected.
-            Err(Stop::Refused(_)) => return Ok(Some(Failure::Unexpected)),
+            Err(Stop::Refused(_) | Stop::Unavailable(_)) => return Ok(Some(Failure::Unexpected)),
             Err(error) => return Err(error),
         };
         if settled.outcome == "succeeded" && projection.condition() == Some("succeeded") {
@@ -482,7 +476,7 @@ impl Tracker {
             let subject = self.subject()?;
             let projection = match observe(bridge, &operation_id, GOOGLE_STATUS, &subject) {
                 Ok(projection) => projection,
-                Err(Stop::Refused(_)) => {
+                Err(Stop::Refused(_) | Stop::Unavailable(_)) => {
                     self.account.reading = None;
                     self.account.state = Some(GoogleState::Unknown);
                     self.account.email = None;
@@ -509,7 +503,7 @@ impl Tracker {
                     self.account.reading = Some(operation_id);
                     return self.follow_account(bridge);
                 }
-                Err(Stop::Refused(_)) => {
+                Err(Stop::Refused(_) | Stop::Unavailable(_)) => {
                     self.account.state = Some(GoogleState::Unknown);
                     self.account.email = None;
                     self.account.drive_folder_id = None;
@@ -533,7 +527,7 @@ impl Tracker {
         }
         let settled: GoogleOutcome = match result(bridge, operation_id, GOOGLE_STATUS) {
             Ok(settled) => settled,
-            Err(Stop::Refused(_)) => return unknown,
+            Err(Stop::Refused(_) | Stop::Unavailable(_)) => return unknown,
             Err(error) => return Err(error),
         };
         if settled.outcome == "succeeded" {
@@ -567,7 +561,7 @@ impl Tracker {
             self.account.folder_needed = false;
             match self.submit(bridge, GOOGLE_FOLDER) {
                 Ok(id) => self.account.folder_reading = Some(id),
-                Err(Stop::Refused(_)) => return Ok(()),
+                Err(Stop::Refused(_) | Stop::Unavailable(_)) => return Ok(()),
                 Err(error) => return Err(error),
             }
         }
@@ -577,7 +571,7 @@ impl Tracker {
         let subject = self.subject()?;
         let projection = match observe(bridge, &id, GOOGLE_FOLDER, &subject) {
             Ok(projection) => projection,
-            Err(Stop::Refused(_)) => {
+            Err(Stop::Refused(_) | Stop::Unavailable(_)) => {
                 self.account.folder_reading = None;
                 return Ok(());
             }
@@ -592,7 +586,7 @@ impl Tracker {
         }
         let settled: GoogleFolderOutcome = match result(bridge, &id, GOOGLE_FOLDER) {
             Ok(settled) => settled,
-            Err(Stop::Refused(_)) => return Ok(()),
+            Err(Stop::Refused(_) | Stop::Unavailable(_)) => return Ok(()),
             Err(error) => return Err(error),
         };
         if settled.outcome == "succeeded" {

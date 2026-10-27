@@ -89,7 +89,7 @@ def _probe_dependency_statuses(
     from .provisioning_browser import probe_playwright_browser
 
     # The local AI program's health only. Which model each role reads with is
-    # the person's selection, which the agent's catalogue reports; whether a
+    # derived by the agent service from the local model list; whether a
     # load fits is the agent's answer when it loads the model. The hardware row
     # reports what was measured and judges nothing.
     program = probe_local_ai_program(program_row)

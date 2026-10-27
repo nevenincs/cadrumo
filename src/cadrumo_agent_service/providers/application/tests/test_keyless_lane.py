@@ -7,7 +7,6 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import SecretStr
 
-from cadrumo.core.model_roles import ModelRole
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from cadrumo.core.storage_environment import StorageMode
 from cadrumo_client.contracts.model_runs import (
@@ -24,8 +23,8 @@ from ...domain.record import (
     AssistantAuth,
     CredentialKind,
     CredentialState,
-    ModelRoleSelection,
-    ModelRoleSelectionsRecord,
+    ListedModel,
+    LocalModelListRecord,
     ProviderCredential,
     ProviderSettingsRecord,
     new_settings_generation,
@@ -50,7 +49,7 @@ from ..resolution import (
     ResolvedKeyless,
 )
 from ..service import AssistantAuthChoice, BaseUrlChange, ProviderSettingsService
-from .memory_store import MemoryModelRoleSelectionsStore, MemoryProviderSettingsStore
+from .memory_store import MemoryLocalModelListStore, MemoryProviderSettingsStore
 from .synthetic_catalog import (
     KEYLESS_DEFAULT_URL,
     KEYLESS_LANE,
@@ -228,25 +227,26 @@ def test_an_older_record_that_turns_a_keyless_lane_off_keeps_it_off(fields: dict
     )
 
 
-def test_a_role_selected_on_a_keyless_lane_is_answered_without_any_stored_record() -> None:
-    selections = MemoryModelRoleSelectionsStore()
-    record = ModelRoleSelectionsRecord(
-        schema_version=1,
-        selections=(ModelRoleSelection(role=ModelRole.TEXT_EXTRACTION, lane=KEYLESS_LANE, model=KEYLESS_TEXT_MODEL),),
-        generation=new_settings_generation(),
-        updated_at=datetime(2026, 10, 25, 9, 0, tzinfo=UTC),
-    )
-    assert selections.write(record, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID) is None
+def test_a_keyless_lane_reads_nothing_until_the_person_selects_a_model_and_needs_no_stored_credential() -> None:
     store = MemoryProviderSettingsStore()
     source = StaticCatalogSource()
-
+    model_list = MemoryLocalModelListStore()
     runs = ModelRunService(
-        selections=selections,
+        model_list=model_list,
         resolver=ProviderCredentialResolver(store=store, catalog_source=source),
         catalog_source=source,
         live_models=StaticLiveModels(),
         gateway=_UnreachableGateway(),
     )
+    assert runs.lookup("text_extraction") == ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
+    record = LocalModelListRecord(
+        schema_version=2,
+        models=(),
+        reading=ListedModel(lane=KEYLESS_LANE, model=KEYLESS_TEXT_MODEL),
+        generation=new_settings_generation(),
+        updated_at=datetime(2026, 10, 27, 9, 0, tzinfo=UTC),
+    )
+    assert model_list.write(record, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID) is None
 
     assert runs.lookup("text_extraction") == ModelRunLane(
         provider_id="local",

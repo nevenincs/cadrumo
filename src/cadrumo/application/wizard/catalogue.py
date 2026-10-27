@@ -147,11 +147,9 @@ def _build_irpf_choices(
     tuple[WizardChoice, ...],
     tuple[WizardChoice, ...],
     WizardCondition,
-    WizardCondition,
 ]:
     from ...domain.calculations.registry.irpf_income_categories import irpf_income_category_choices
     from ...domain.calculations.registry.irpf_regimes import (
-        irpf_estimation_regime_objetiva_token,
         irpf_estimation_regime_tokens,
         irpf_special_regime_impatriado_token,
         irpf_special_regime_tokens,
@@ -194,17 +192,12 @@ def _build_irpf_choices(
         question_id="irpf-special-regime",
         equals=irpf_special_regime_impatriado_token(authority=operation).value,
     )
-    _irpf_objective_estimation = WizardCondition(
-        question_id="irpf-estimation-regime",
-        equals=irpf_estimation_regime_objetiva_token(authority=operation).value,
-    )
     return (
         wizard_irpf_income_category_choices,
         wizard_third_party_declaration_role_choices,
         wizard_irpf_estimation_regime_choices,
         wizard_irpf_special_regime_choices,
         _impatriado_regime,
-        _irpf_objective_estimation,
     )
 
 
@@ -354,9 +347,6 @@ def build_setup_flow(operation: PinnedAuthorityOperation) -> WizardFlow:
     from ...domain.calculations.registry.entity_type import (
         entity_type_natural_person_token as _entity_type_natural_person_token,
     )
-    from ...domain.calculations.registry.entity_type import (
-        legal_entity_form_sin_fines_lucrativos_token as _legal_entity_form_sin_fines_lucrativos_token,
-    )
     from ...domain.calculations.registry.irpf_income_categories import (
         irpf_income_category_actividad_economica_token as _irpf_income_category_actividad_economica_token,
     )
@@ -380,9 +370,6 @@ def build_setup_flow(operation: PinnedAuthorityOperation) -> WizardFlow:
     entity_type_attribution_entity_token = partial(_entity_type_attribution_entity_token, authority=operation)
     entity_type_legal_entity_token = partial(_entity_type_legal_entity_token, authority=operation)
     entity_type_natural_person_token = partial(_entity_type_natural_person_token, authority=operation)
-    legal_entity_form_sin_fines_lucrativos_token = partial(
-        _legal_entity_form_sin_fines_lucrativos_token, authority=operation
-    )
     _natural_person = WizardCondition(question_id="entity-type", equals=entity_type_natural_person_token().value)
 
     _joint_declaration = WizardCondition(question_id="taxation-type", equals="2")
@@ -412,7 +399,6 @@ def build_setup_flow(operation: PinnedAuthorityOperation) -> WizardFlow:
         wizard_irpf_estimation_regime_choices,
         wizard_irpf_special_regime_choices,
         _impatriado_regime,
-        _irpf_objective_estimation,
     ) = _build_irpf_choices(operation)
     (
         wizard_fiscal_residency_choices,
@@ -432,15 +418,6 @@ def build_setup_flow(operation: PinnedAuthorityOperation) -> WizardFlow:
     _entity_legal = WizardCondition(question_id="entity-type", equals=entity_type_legal_entity_token().value)
     _entity_attribution = WizardCondition(
         question_id="entity-type", equals=entity_type_attribution_entity_token().value
-    )
-    _ley_49_2002_form = WizardCondition(
-        question_id="legal-entity-form",
-        equals=legal_entity_form_sin_fines_lucrativos_token().value,
-    )
-    _ley_49_2002_option_declared = WizardCondition(question_id="ley-49-2002-option-declared", equals="true")
-    _ley_49_2002_renunciation_declared = WizardCondition(
-        question_id="ley-49-2002-renunciation-declared",
-        equals="true",
     )
 
     # `activity` (the actividad económica / epígrafe IAE free-text field)
@@ -713,46 +690,6 @@ def build_setup_flow(operation: PinnedAuthorityOperation) -> WizardFlow:
                 required=False,
                 visible_when=_entity_legal,
                 answer_type=bool,
-            ),
-            WizardQuestion(
-                id="ley-49-2002-option-declared",
-                profile_key="taxpayer_type.ley_49_2002_special_regime_option_declared",
-                widget=WizardWidget.CONFIRM,
-                prompt=tr("wizard.setup.taxpayer-type.ley-49-2002-option-declared.prompt"),
-                help=tr("wizard.setup.taxpayer-type.ley-49-2002-option-declared.help"),
-                required=False,
-                visible_when=_ley_49_2002_form,
-                answer_type=bool,
-            ),
-            WizardQuestion(
-                id="ley-49-2002-option-date",
-                profile_key="taxpayer_type.ley_49_2002_special_regime_option_date",
-                widget=WizardWidget.TEXT,
-                prompt=tr("wizard.setup.taxpayer-type.ley-49-2002-option-date.prompt"),
-                help=tr("wizard.setup.taxpayer-type.ley-49-2002-option-date.help"),
-                required=False,
-                visible_when=_ley_49_2002_option_declared,
-                answer_type=str,
-            ),
-            WizardQuestion(
-                id="ley-49-2002-renunciation-declared",
-                profile_key="taxpayer_type.ley_49_2002_special_regime_renunciation_declared",
-                widget=WizardWidget.CONFIRM,
-                prompt=tr("wizard.setup.taxpayer-type.ley-49-2002-renunciation-declared.prompt"),
-                help=tr("wizard.setup.taxpayer-type.ley-49-2002-renunciation-declared.help"),
-                required=False,
-                visible_when=_ley_49_2002_form,
-                answer_type=bool,
-            ),
-            WizardQuestion(
-                id="ley-49-2002-renunciation-date",
-                profile_key="taxpayer_type.ley_49_2002_special_regime_renunciation_date",
-                widget=WizardWidget.TEXT,
-                prompt=tr("wizard.setup.taxpayer-type.ley-49-2002-renunciation-date.prompt"),
-                help=tr("wizard.setup.taxpayer-type.ley-49-2002-renunciation-date.help"),
-                required=False,
-                visible_when=_ley_49_2002_renunciation_declared,
-                answer_type=str,
             ),
         ),
     )
@@ -1124,86 +1061,6 @@ def build_setup_flow(operation: PinnedAuthorityOperation) -> WizardFlow:
                 answer_type=str,
             ),
             WizardQuestion(
-                id="objective-estimation-modulos-iae-epigraph",
-                profile_key="irpf.objective_estimation_modulos_iae_epigraph",
-                widget=WizardWidget.TEXT,
-                prompt=tr("wizard.setup.obligations.objective-estimation-modulos-iae-epigraph.prompt"),
-                help=tr("wizard.setup.obligations.objective-estimation-modulos-iae-epigraph.help"),
-                required=False,
-                visible_when=_irpf_objective_estimation,
-                answer_type=str,
-            ),
-            WizardQuestion(
-                id="objective-estimation-modulos-module-1-units",
-                profile_key="irpf.objective_estimation_modulos_module_1_units",
-                widget=WizardWidget.TEXT,
-                prompt=tr("wizard.setup.obligations.objective-estimation-modulos-module-1-units.prompt"),
-                help=tr("wizard.setup.obligations.objective-estimation-modulos-module-units.help"),
-                required=False,
-                visible_when=_irpf_objective_estimation,
-                answer_type=str,
-            ),
-            WizardQuestion(
-                id="objective-estimation-modulos-module-2-units",
-                profile_key="irpf.objective_estimation_modulos_module_2_units",
-                widget=WizardWidget.TEXT,
-                prompt=tr("wizard.setup.obligations.objective-estimation-modulos-module-2-units.prompt"),
-                help=tr("wizard.setup.obligations.objective-estimation-modulos-module-units.help"),
-                required=False,
-                visible_when=_irpf_objective_estimation,
-                answer_type=str,
-            ),
-            WizardQuestion(
-                id="objective-estimation-modulos-module-3-units",
-                profile_key="irpf.objective_estimation_modulos_module_3_units",
-                widget=WizardWidget.TEXT,
-                prompt=tr("wizard.setup.obligations.objective-estimation-modulos-module-3-units.prompt"),
-                help=tr("wizard.setup.obligations.objective-estimation-modulos-module-units.help"),
-                required=False,
-                visible_when=_irpf_objective_estimation,
-                answer_type=str,
-            ),
-            WizardQuestion(
-                id="objective-estimation-modulos-module-4-units",
-                profile_key="irpf.objective_estimation_modulos_module_4_units",
-                widget=WizardWidget.TEXT,
-                prompt=tr("wizard.setup.obligations.objective-estimation-modulos-module-4-units.prompt"),
-                help=tr("wizard.setup.obligations.objective-estimation-modulos-module-units.help"),
-                required=False,
-                visible_when=_irpf_objective_estimation,
-                answer_type=str,
-            ),
-            WizardQuestion(
-                id="objective-estimation-modulos-module-5-units",
-                profile_key="irpf.objective_estimation_modulos_module_5_units",
-                widget=WizardWidget.TEXT,
-                prompt=tr("wizard.setup.obligations.objective-estimation-modulos-module-5-units.prompt"),
-                help=tr("wizard.setup.obligations.objective-estimation-modulos-module-units.help"),
-                required=False,
-                visible_when=_irpf_objective_estimation,
-                answer_type=str,
-            ),
-            WizardQuestion(
-                id="objective-estimation-modulos-module-6-units",
-                profile_key="irpf.objective_estimation_modulos_module_6_units",
-                widget=WizardWidget.TEXT,
-                prompt=tr("wizard.setup.obligations.objective-estimation-modulos-module-6-units.prompt"),
-                help=tr("wizard.setup.obligations.objective-estimation-modulos-module-units.help"),
-                required=False,
-                visible_when=_irpf_objective_estimation,
-                answer_type=str,
-            ),
-            WizardQuestion(
-                id="objective-estimation-modulos-module-7-units",
-                profile_key="irpf.objective_estimation_modulos_module_7_units",
-                widget=WizardWidget.TEXT,
-                prompt=tr("wizard.setup.obligations.objective-estimation-modulos-module-7-units.prompt"),
-                help=tr("wizard.setup.obligations.objective-estimation-modulos-module-units.help"),
-                required=False,
-                visible_when=_irpf_objective_estimation,
-                answer_type=str,
-            ),
-            WizardQuestion(
                 id="irpf-special-regime",
                 profile_key="irpf.special_regime",
                 widget=WizardWidget.SELECT,
@@ -1271,14 +1128,6 @@ def build_setup_flow(operation: PinnedAuthorityOperation) -> WizardFlow:
         questions=(
             _confirm("llm-vision", "capabilities.llm_vision", suffix="capabilities", default="true"),
             _confirm("google-export", "capabilities.google_export", suffix="capabilities", default="true"),
-            WizardQuestion(
-                id="notes",
-                profile_key="identity.notes",
-                widget=WizardWidget.TEXT,
-                prompt=tr("wizard.setup.notes.notes.prompt"),
-                required=False,
-                answer_type=str,
-            ),
         ),
     )
 

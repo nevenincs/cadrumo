@@ -119,8 +119,8 @@ def test_view_publishes_the_identity_its_spec_declares() -> None:
 @pytest.mark.usefixtures("native_cli_profile_view")
 def test_cli_edit_is_read_back_through_native_runtime_view() -> None:
     """The runtime view reflects a CLI mutation without borrowing local custody."""
-    edited = profile_cli("edit", "--quiet", "--notes", "Native readback")
+    edited = profile_cli("edit", "--quiet", "--legal-name", "Native readback")
     assert edited.exit_code == 0, edited.output
     result = profile_view_document()["result"]
     assert isinstance(result, dict)
-    assert any(fact["path"] == "identity.notes" and fact["value"] == "Native readback" for fact in result["facts"])
+    assert any(fact["path"] == "identity.legal_name" and fact["value"] == "Native readback" for fact in result["facts"])

@@ -82,11 +82,14 @@ class ModelRunRefusalCode(StrEnum):
     NOT_SIGNED_IN = "not_signed_in"
     PROFILE_LOCKED = "profile_locked"
     NO_SELECTION = "no_selection"
+    """No model is selected to read with, or a local one is no longer on its lane's list: the person picks one."""
     UNKNOWN_ROLE = "unknown_role"
     """The request named a role outside the role vocabulary: a caller defect, not a missing selection."""
     LANE_UNAVAILABLE = "lane_unavailable"
     MODEL_NOT_INSTALLED = "model_not_installed"
-    """The selected model is not installed on the lane's local server: the person installs it or selects another."""
+    """The selected model is not on the lane's local server: the person downloads it."""
+    MODEL_CANNOT_READ_IMAGES = "model_cannot_read_images"
+    """The role reads images and the catalogue does not state that the selected model can: the person picks another."""
     MODEL_DOES_NOT_FIT = "model_does_not_fit"
     """The lane's local server could not load the model with the memory this computer has free.
 
@@ -131,7 +134,7 @@ class ModelRunLicence(BaseModel):
 
 
 class ModelRunLane(BaseModel):
-    """The lane and model the service resolved for one role; nothing here is secret.
+    """The lane and model a role runs with: the person's selected model; nothing here is secret.
 
     ``reads_off_host`` is the lane's catalogue declaration of whether a run on
     it sends material off this computer. It has no default: a lane whose
@@ -167,7 +170,7 @@ class ModelRunLane(BaseModel):
 
 
 class ModelRunSelectedModel(BaseModel):
-    """The lane and model the person stored for one role, as stored; nothing here is secret."""
+    """The model the person selected to read with, and the lane it is on; nothing here is secret."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -176,11 +179,11 @@ class ModelRunSelectedModel(BaseModel):
 
 
 class ModelRunRoleSelection(BaseModel):
-    """One role's selection state: what is selected, and the lane a run would use or why it would refuse.
+    """One role's state: the selected model, and the lane a run would use or why it would refuse.
 
-    ``selected`` is ``None`` when the role has no selection or the selection
-    could not be read. Exactly one of ``lane`` and ``refusal`` is present, and
-    a usable ``lane`` always comes from a selection.
+    ``selected`` is ``None`` when no model is selected or the record could not
+    be read. Exactly one of ``lane`` and ``refusal`` is present, and a usable
+    ``lane`` always carries the selected model.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -195,7 +198,7 @@ class ModelRunRoleSelection(BaseModel):
         if (self.lane is None) == (self.refusal is None):
             raise ValueError("a role's state carries exactly one of a lane or a refusal")
         if self.lane is not None and self.selected is None:
-            raise ValueError("a usable lane comes only from a selection")
+            raise ValueError("a usable lane comes only from a listed model")
         return self
 
 

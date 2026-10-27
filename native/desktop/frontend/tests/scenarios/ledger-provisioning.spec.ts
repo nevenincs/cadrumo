@@ -76,10 +76,8 @@ test("the Readers tab offers the local AI's setup and its prompt leads into it",
   await openDocuments(target, "fresh");
   await tab(target, "readers").click();
   const readers = section(target).locator(".ledger-readers");
-  await expect(readers.locator(".ledger-reader-role")).toHaveCount(2);
-  await expect(readers.locator(".ledger-reader-role").first()).toContainText(
-    label("desktop.ledger.documents.reader.not_ready"),
-  );
+  // A missing program is setup's to supply, not a model the person picks.
+  await expect(readers.locator(".ledger-reader-problem")).toHaveCount(0);
   const offer = readers.locator(".ledger-readers-set-up");
   await expect(offer).toContainText(LOCAL_AI);
   // The tab does not say the setup's state; the prompt does, once.
@@ -146,7 +144,7 @@ test("where setup cannot change what is missing, nothing is offered", async ({
   await expect(unread).toBeVisible();
   await expect(unread.locator(".setup-offer")).toHaveCount(0);
   await tab(target, "readers").click();
-  await expect(section(target).locator(".ledger-reader-role")).toHaveCount(2);
+  await expect(section(target).locator(".ledger-readers")).toBeVisible();
   await expect(section(target).locator(".setup-offer")).toHaveCount(0);
 });
 
@@ -323,27 +321,22 @@ test("a PDF statement while the setup status cannot be read offers nothing", asy
   await expect(setupDialog(target)).toHaveCount(0);
 });
 
-test("a reader without a chosen model offers model settings, not setup", async ({
+test("a reading with no model picked offers the model picker, not setup", async ({
   page: target,
 }) => {
   await openDocuments(target, "fresh", "reader_unselected");
   await tab(target, "readers").click();
   const readers = section(target).locator(".ledger-readers");
-  await expect(readers.locator(".ledger-reader-role")).toHaveCount(2);
-  const vision = readers.locator(".ledger-reader-role").nth(1);
-  await expect(vision).toContainText(
-    label("desktop.ledger.documents.reader.not_ready"),
-  );
+  const problem = readers.locator(".ledger-reader-problem");
+  await expect(problem).toHaveCount(1);
   await expect(readers.locator(".setup-offer")).toHaveCount(0);
-  await vision
+  await problem
     .getByRole("button", {
       name: label("desktop.ledger.documents.reader.choose_model"),
     })
     .click();
   await expect(
-    target.getByRole("dialog", {
-      name: label("desktop.agent.model_roles_title"),
-    }),
+    target.getByRole("dialog", { name: label("desktop.agent.settings_title") }),
   ).toBeVisible();
 });
 

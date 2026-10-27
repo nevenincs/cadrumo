@@ -1,18 +1,27 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { FIXTURE_CATALOG } from "../../src/dev/fixtures/agentCatalog";
-import { localModelOrder, roleLanes } from "../../src/shell/agentModelRoles";
-import { scenarioOnly } from "../support/agent";
+import { catalogLanes } from "../../src/shell/localModelLanes";
+import {
+  offeredModels,
+  openModelPicker,
+  pickWay,
+  scenarioOnly,
+} from "../support/agent";
 import { label } from "../support/strings";
 
-// Presentation evidence for catalogue downloads independent of document-task
-// configuration. The scenario host performs no real transfer.
+// The local lane's model list: the catalog's recommended models, the ones the
+// person adds by name, and a download and removal on each. The scenario host
+// performs no real transfer.
 
 test.beforeEach(() => {
   scenarioOnly("The scenario host stands in for the agent service.");
 });
 
 const LOCAL = "local_api";
-const localLane = roleLanes(FIXTURE_CATALOG).find((lane) => lane.id === LOCAL)!;
+const ADDED = "synthetic-named:test";
+const localLane = catalogLanes(FIXTURE_CATALOG).find(
+  (lane) => lane.id === LOCAL,
+)!;
 
 const open = (target: Page, setup = "ready") =>
   target.goto(
@@ -36,56 +45,113 @@ async function openLane(target: Page) {
   return settings(target).locator(`[data-lane="${LOCAL}"]`);
 }
 
-const storedRoles = (target: Page) =>
+/** The models the made-up service holds on the person's list. */
+const storedList = (target: Page) =>
   target.evaluate(async () => {
-    const roles = await window.__fixtureAgentSession?.modelRoles?.();
-    return roles?.state === "readable"
-      ? roles.roles.filter((held) => held.model !== null)
-      : [];
+    const list = await window.__fixtureAgentSession?.localModels?.();
+    return list?.state === "readable" ? list.models : null;
   });
 
-test("the lane's models are listed with the agent's recommendations leading, vision first", async ({
+const calls = (target: Page) =>
+  target.evaluate(() => window.__scenarioHostCalls ?? []);
+
+/** Adds `model` to the open lane's list by name. */
+async function addByName(lane: Locator, model: string) {
+  await lane
+    .getByLabel(label("desktop.providers.local_model_add_label"))
+    .fill(model);
+  await lane
+    .getByRole("button", {
+      name: label("desktop.providers.local_model_add"),
+      exact: true,
+    })
+    .click();
+}
+
+test("the list holds the catalog's recommended models alone, with no capability labels", async ({
   page: target,
 }) => {
   await open(target);
   const lane = await openLane(target);
   const models = lane.locator("[data-slot=local-models] li[data-model]");
-  const expected = localModelOrder(localLane).map(({ model }) => model.id);
-  await expect(models).toHaveCount(expected.length);
+  expect(localLane.recommended).toEqual([
+    "synthetic-vision:1",
+    "synthetic-text:1",
+  ]);
+  await expect(models).toHaveCount(localLane.recommended.length);
   expect(
     await models.evaluateAll((nodes) =>
       nodes.map((node) => node.getAttribute("data-model")),
     ),
-  ).toEqual(expected);
-  // The recommended vision model leads, then the recommended text model.
-  expect(expected.slice(0, 2)).toEqual([
-    "synthetic-vision:1",
-    "synthetic-text:1",
-  ]);
-  const vision = models.first();
-  await expect(vision).toHaveAttribute("data-recommended", "vision");
-  await expect(vision).toContainText(
-    label("desktop.providers.local_model_recommended", {
-      capability: label("desktop.agent.model_role_capability_vision"),
-    }),
-  );
-  await expect(vision).toContainText(
+  ).toEqual(localLane.recommended);
+  await expect(models.first()).toContainText(
     label("desktop.providers.local_model_absent"),
   );
   await expect(models.nth(1)).toContainText(
     label("desktop.providers.local_model_installed"),
   );
-  // Nothing is selected for the person.
-  expect(await storedRoles(target)).toEqual([]);
+  // No model is said to be for one kind of reading, and no task picker shows.
+  await expect(lane.locator("[data-recommended]")).toHaveCount(0);
+  await expect(lane.getByRole("combobox")).toHaveCount(0);
+  await expect(lane.getByRole("checkbox")).toHaveCount(0);
+  await expect(
+    target.locator(".pane-agent").getByText(/reading (images|text)/i),
+  ).toHaveCount(0);
+  expect(await storedList(target)).toEqual([]);
 });
 
-test("Download opens model setup directly without changing document configuration", async ({
+test("a model added by name joins the list after the recommended ones and is stored", async ({
   page: target,
 }) => {
   await open(target);
   const lane = await openLane(target);
-  const vision = lane.locator('li[data-model="synthetic-vision:1"]');
-  await vision
+  await addByName(lane, ADDED);
+  const models = lane.locator("[data-slot=local-models] li[data-model]");
+  await expect(models).toHaveCount(localLane.recommended.length + 1);
+  const added = models.last();
+  await expect(added).toHaveAttribute("data-model", ADDED);
+  await expect(added).toHaveAttribute("data-added", "true");
+  await expect(
+    lane.getByLabel(label("desktop.providers.local_model_add_label")),
+  ).toHaveValue("");
+  await expect
+    .poll(() => storedList(target))
+    .toEqual([{ lane: LOCAL, model: ADDED }]);
+  // Adding a recommended model changes nothing.
+  await addByName(lane, "synthetic-text:1");
+  await expect(models).toHaveCount(localLane.recommended.length + 1);
+  expect(await storedList(target)).toEqual([{ lane: LOCAL, model: ADDED }]);
+});
+
+test("the model picker offers the local lane's list, and a model added to it joins the picker", async ({
+  page: target,
+}) => {
+  await open(target);
+  let picker = await openModelPicker(target);
+  await pickWay(target, picker, "local/api");
+  // The lane serves a model nobody put on its list: the picker leaves it out.
+  expect(await offeredModels(picker)).toEqual([
+    "synthetic-text:1",
+    "synthetic-vision:1",
+  ]);
+  await target.keyboard.press("Escape");
+  await expect(picker).toBeHidden();
+  const lane = await openLane(target);
+  await addByName(lane, "synthetic-plain:1");
+  await expect(
+    lane.locator('[data-slot=local-models] li[data-model="synthetic-plain:1"]'),
+  ).toBeVisible();
+  picker = await openModelPicker(target);
+  expect(await offeredModels(picker)).toContain("synthetic-plain:1");
+});
+
+test("Download opens model setup for that model, sized by the catalog where it states one", async ({
+  page: target,
+}) => {
+  await open(target);
+  const lane = await openLane(target);
+  await lane
+    .locator('li[data-model="synthetic-vision:1"]')
     .getByRole("button", {
       name: label("desktop.providers.local_model_download"),
     })
@@ -100,15 +166,9 @@ test("Download opens model setup directly without changing document configuratio
   await expect(review.locator('[data-setup-plan="local_ai"]')).toHaveCount(1);
   await expect(review.locator('[data-setup-plan="browser"]')).toHaveCount(0);
   await expect
-    .poll(() => target.evaluate(() => window.__scenarioHostCalls ?? []))
-    .toContain("setup.start local_ai");
-  expect(
-    await target.evaluate(() => window.__scenarioHostCalls ?? []),
-  ).not.toContain("setup.answer apply");
-  expect(await storedRoles(target)).toEqual([]);
-  expect(
-    await target.evaluate(() => window.__scenarioHostCalls ?? []),
-  ).toContain("setup.download local_api synthetic-vision:1");
+    .poll(() => calls(target))
+    .toContain("setup.download local_api synthetic-vision:1");
+  expect(await calls(target)).not.toContain("setup.answer apply");
   await expect(review).toContainText(label("desktop.setup.part_download"));
   await expect(review).toContainText("synthetic-vision:1");
   await review
@@ -119,7 +179,106 @@ test("Download opens model setup directly without changing document configuratio
   await expect(review).toContainText(label("desktop.setup.lead_running"));
 });
 
-test("window settings opens the existing local provider with setup status and model controls", async ({
+test("an added model downloads with its size unknown", async ({
+  page: target,
+}) => {
+  await open(target);
+  const lane = await openLane(target);
+  await addByName(lane, ADDED);
+  await lane
+    .locator(`li[data-model="${ADDED}"]`)
+    .getByRole("button", {
+      name: label("desktop.providers.local_model_download"),
+    })
+    .click();
+  const review = target.getByRole("dialog", {
+    name: label("desktop.setup.title"),
+  });
+  await expect
+    .poll(() => calls(target))
+    .toContain(`setup.download local_api ${ADDED}`);
+  await review
+    .getByText(label("desktop.setup.details"), { exact: true })
+    .click();
+  await expect(review).toContainText(ADDED);
+  await expect(review).not.toContainText(
+    label("desktop.setup.plan_size", { size: "3.2 GB" }),
+  );
+});
+
+test("removing an added model deletes its download, then takes it off the list", async ({
+  page: target,
+}) => {
+  await open(target);
+  const lane = await openLane(target);
+  await addByName(lane, ADDED);
+  const entry = lane.locator(`li[data-model="${ADDED}"]`);
+  await entry
+    .getByRole("button", {
+      name: label("desktop.providers.local_model_remove"),
+    })
+    .click();
+  await expect(entry).toHaveCount(0);
+  await expect.poll(() => storedList(target)).toEqual([]);
+  // A model that is only listed, not downloaded, has nothing to delete here.
+  expect(await calls(target)).not.toContain(`setup.removeModel ${ADDED}`);
+});
+
+test("removing a recommended model deletes its download and keeps it listed", async ({
+  page: target,
+}) => {
+  await open(target);
+  const lane = await openLane(target);
+  const text = lane.locator('li[data-model="synthetic-text:1"]');
+  await text
+    .getByRole("button", {
+      name: label("desktop.providers.local_model_remove"),
+    })
+    .click();
+  await expect
+    .poll(() => calls(target))
+    .toContain("setup.removeModel synthetic-text:1");
+  await expect(text).toHaveCount(1);
+  expect(await storedList(target)).toEqual([]);
+});
+
+test("a recommended model not on this computer offers no removal", async ({
+  page: target,
+}) => {
+  await open(target);
+  const lane = await openLane(target);
+  await expect(
+    lane.locator('li[data-model="synthetic-vision:1"]').getByRole("button", {
+      name: label("desktop.providers.local_model_remove"),
+    }),
+  ).toHaveCount(0);
+});
+
+test("a change made against an out-of-date list is refused and the list read again", async ({
+  page: target,
+}) => {
+  await open(target);
+  const lane = await openLane(target);
+  await expect(
+    lane.locator("[data-slot=local-models] li[data-model]"),
+  ).toHaveCount(localLane.recommended.length);
+  await target.evaluate(() => window.__scenarioLocalModelsChangeElsewhere?.());
+  await lane
+    .getByLabel(label("desktop.providers.local_model_add_label"))
+    .fill(ADDED);
+  await lane
+    .getByRole("button", {
+      name: label("desktop.providers.local_model_add"),
+      exact: true,
+    })
+    .click();
+  await expect(lane.getByRole("alert")).toContainText(
+    label("desktop.providers.local_models_refused_revision_conflict"),
+  );
+  expect(await storedList(target)).toEqual([]);
+});
+
+test("window settings opens the local provider with setup status and the model list", async ({
   page: target,
 }) => {
   await open(target);
@@ -140,13 +299,10 @@ test("window settings opens the existing local provider with setup status and mo
     label("desktop.setup.state.ready"),
   );
   await expect(provider.locator('[data-slot="local-models"]')).toBeVisible();
-  expect(await storedRoles(target)).toEqual([]);
-  expect(
-    await target.evaluate(() => window.__scenarioHostCalls ?? []),
-  ).not.toContain("setup.start local_ai");
+  expect(await calls(target)).not.toContain("setup.start local_ai");
 });
 
-test("setup leads to the same local model controls without starting a download", async ({
+test("setup leads to the same model list without starting a download", async ({
   page: target,
 }) => {
   await open(target, "partial");
@@ -165,29 +321,7 @@ test("setup leads to the same local model controls without starting a download",
   await expect(
     settings(target).locator('[data-setup-row="local_ai"]'),
   ).toContainText(label("desktop.setup.failure.damaged_download"));
-  expect(
-    await target.evaluate(() => window.__scenarioHostCalls ?? []),
-  ).not.toContain("setup.start local_ai");
-});
-
-test("download settings have no task checkboxes and open document model configuration", async ({
-  page: target,
-}) => {
-  await open(target);
-  const lane = await openLane(target);
-  await expect(lane.getByRole("checkbox")).toHaveCount(0);
-  await lane
-    .getByRole("button", { name: label("desktop.agent.model_roles_title") })
-    .click();
-  const dialog = target.getByRole("dialog", {
-    name: label("desktop.agent.model_roles_title"),
-  });
-  await expect(dialog).toBeVisible();
-  await expect(dialog.getByRole("combobox")).not.toHaveCount(0);
-  expect(await storedRoles(target)).toEqual([]);
-  expect(
-    await target.evaluate(() => window.__scenarioHostCalls ?? []),
-  ).not.toContain("setup.start local_ai");
+  expect(await calls(target)).not.toContain("setup.start local_ai");
 });
 
 test("a lane turned off shows no models", async ({ page: target }) => {
@@ -196,56 +330,6 @@ test("a lane turned off shows no models", async ({ page: target }) => {
   await expect(lane.locator("[data-slot=local-models]")).toBeVisible();
   await lane.getByRole("switch").click();
   await expect(lane.locator("[data-slot=local-models]")).toHaveCount(0);
-});
-
-test("removing a model clears the roles that read with it first, then removes it from this computer", async ({
-  page: target,
-}) => {
-  await open(target);
-  const lane = await openLane(target);
-  const text = lane.locator('li[data-model="synthetic-text:1"]');
-  await lane
-    .getByRole("button", { name: label("desktop.agent.model_roles_title") })
-    .click();
-  const dialog = target.getByRole("dialog", {
-    name: label("desktop.agent.model_roles_title"),
-  });
-  const section = dialog.locator('section[data-role="text_extraction"]');
-  await section.getByRole("combobox").first().selectOption(LOCAL);
-  await section.getByRole("combobox").nth(1).selectOption("synthetic-text:1");
-  await section
-    .getByRole("button", { name: label("desktop.agent.model_role_save") })
-    .click();
-  await expect(section.getByRole("status")).toContainText(
-    label("desktop.agent.model_role_saved"),
-  );
-  await dialog
-    .getByRole("button", {
-      name: label("desktop.agent.model_roles_close"),
-      exact: true,
-    })
-    .click();
-  await text
-    .getByRole("button", {
-      name: label("desktop.providers.local_model_remove"),
-    })
-    .click();
-  await expect.poll(() => storedRoles(target)).toEqual([]);
-  await expect
-    .poll(() => target.evaluate(() => window.__scenarioHostCalls ?? []))
-    .toContain("setup.removeModel synthetic-text:1");
-});
-
-test("a model not on this computer offers no removal", async ({
-  page: target,
-}) => {
-  await open(target);
-  const lane = await openLane(target);
-  await expect(
-    lane.locator('li[data-model="synthetic-vision:1"]').getByRole("button", {
-      name: label("desktop.providers.local_model_remove"),
-    }),
-  ).toHaveCount(0);
 });
 
 test("a host without setup cannot offer a model download", async ({
@@ -265,5 +349,4 @@ test("a host without setup cannot offer a model download", async ({
       exact: true,
     }),
   ).toHaveCount(0);
-  expect(await storedRoles(target)).toEqual([]);
 });

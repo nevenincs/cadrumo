@@ -227,6 +227,18 @@ class ProviderCatalogModel(CatalogModelFacts):
     """The agent's effort control for the model, carried as declared."""
 
 
+class ModelCapability(StrEnum):
+    """A capability the catalogue recommends a lane's model for: the keys of an entry's ``recommended`` map.
+
+    ``VISION`` reads images as well as text; ``TEXT`` reads text. A
+    recommended key outside this vocabulary is carried as the agent states it
+    and recommends nothing Cadrumo reads.
+    """
+
+    VISION = "vision"
+    TEXT = "text"
+
+
 class BackgroundInput(StrEnum):
     """An input family a background run on a lane may carry, in the agent's declared order."""
 
@@ -420,6 +432,7 @@ __all__ = [
     "LaneId",
     "LicenceDigest",
     "LiveCatalogModel",
+    "ModelCapability",
     "ModelLicence",
     "ProviderAuthKind",
     "ProviderCatalog",

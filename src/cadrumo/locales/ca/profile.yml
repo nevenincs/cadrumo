@@ -42,22 +42,12 @@ profile:
     identity:
       legal_name: Raó social de l'entitat per a capçaleres d'exportació
       name: Nom visible mostrat en revisions locals
-      notes: Notes per als teus propis registres (opcional)
       surnames: Cognoms o raó social per a capçaleres d'exportació
       tax_id: Identificador fiscal (NIF/NIE) per a declaracions
     irpf:
       art109_activity_income_withholding_ge_70pct: Aplica l'excepció Art. 109 per
         cobertura del 70% dels ingressos d'activitat
       estimation_regime: Règim d'estimació IRPF
-      objective_estimation_modulos_iae_epigraph: Epígraf IAE per a mòduls d'estimació
-        objectiva
-      objective_estimation_modulos_module_1_units: Unitats anuals del mòdul 1
-      objective_estimation_modulos_module_2_units: Unitats anuals del mòdul 2
-      objective_estimation_modulos_module_3_units: Unitats anuals del mòdul 3
-      objective_estimation_modulos_module_4_units: Unitats anuals del mòdul 4
-      objective_estimation_modulos_module_5_units: Unitats anuals del mòdul 5
-      objective_estimation_modulos_module_6_units: Unitats anuals del mòdul 6
-      objective_estimation_modulos_module_7_units: Unitats anuals del mòdul 7
       special_regime: Règim especial IRPF (Llei Beckham / Art. 93 LIRPF)
       special_regime_start_date: Data d'inici del règim especial (AAAA-MM-DD)
     iva:
@@ -133,14 +123,6 @@ profile:
         els darrers 12 mesos? (en euros, opcional)
       irpf_income_categories: Categories de renda IRPF
       legal_entity_form: Forma jurídica
-      ley_49_2002_special_regime_option_date: Data declarada de l'opció pel règim
-        especial de la Llei 49/2002
-      ley_49_2002_special_regime_option_declared: L'entitat ha presentat al model
-        036 l'opció pel règim fiscal especial del títol II de la Llei 49/2002?
-      ley_49_2002_special_regime_renunciation_date: Data declarada de la renúncia
-        al règim especial de la Llei 49/2002
-      ley_49_2002_special_regime_renunciation_declared: L'entitat ha presentat al
-        model 036 la renúncia al règim fiscal especial del títol II de la Llei 49/2002?
       new_entity_first_two_profit_periods: És una entitat de nova creació en un dels
         seus dos primers períodes impositius amb beneficis?
       representante_fiscal_nif: NIF/NIE del representant fiscal a Espanya (obligatori
@@ -156,20 +138,10 @@ profile:
   schema:
     field:
       activities:
-        cnae:
-          label: Codi CNAE
         description:
           label: Descripció de l'activitat
         iae_epigraph:
           label: Epígraf IAE
-      attribution_entity:
-        legal_form:
-          choices:
-            comunidad_bienes: Comunitat de béns
-            herencia_yacente: Herència jacent
-            other: Una altra
-            sociedad_civil: Societat civil
-          label: Forma jurídica de l'entitat en atribució
       attribution_entity_socios:
         base_imponible_assigned:
           label: Base imposable atribuïda al soci
@@ -207,12 +179,6 @@ profile:
           label: Rendiment net minorat agrícola (estimació objectiva)
         rendimiento_neto_previo_eo:
           label: Rendiment net previ (estimació objectiva)
-        role:
-          choices:
-            comunero: Comuner
-            participe: Partícip
-            socio: Soci
-          label: Paper del membre
         share_pct:
           label: Percentatge de participació
         situacion_inmueble:
@@ -255,14 +221,6 @@ profile:
           label: Data d'alta de l'activitat
         divergencia:
           label: Divergències de l'acarament censal
-        elected_withholding_pct:
-          label: Tipus de retenció triat
-        establecimiento_type:
-          choices:
-            arrendado: Arrendat
-            cedido_gratuitamente: Cedit gratuïtament
-            propio: Propi
-          label: Tipus d'establiment
         large_company:
           label: Condició de gran empresa
         public_administration_budget_gt_6000000:
@@ -282,8 +240,6 @@ profile:
           label: Domicili fiscal
         fiscal_address_cadastral_reference:
           label: Referència cadastral del domicili fiscal
-        fiscal_address_is_habitual_vivienda:
-          label: El domicili fiscal és l'habitatge habitual
         postcode:
           label: Codi postal
       identity:
@@ -293,8 +249,6 @@ profile:
           label: Raó social
         name:
           label: Nom
-        notes:
-          label: Anotacions
         surnames:
           label: Cognoms
         tax_id:
@@ -320,22 +274,6 @@ profile:
             directa_simplificada: Estimació directa simplificada
             objetiva: Estimació objectiva (mòduls)
           label: Règim d'estimació
-        objective_estimation_modulos_iae_epigraph:
-          label: Epígraf IAE (mòduls)
-        objective_estimation_modulos_module_1_units:
-          label: Unitats del mòdul 1
-        objective_estimation_modulos_module_2_units:
-          label: Unitats del mòdul 2
-        objective_estimation_modulos_module_3_units:
-          label: Unitats del mòdul 3
-        objective_estimation_modulos_module_4_units:
-          label: Unitats del mòdul 4
-        objective_estimation_modulos_module_5_units:
-          label: Unitats del mòdul 5
-        objective_estimation_modulos_module_6_units:
-          label: Unitats del mòdul 6
-        objective_estimation_modulos_module_7_units:
-          label: Unitats del mòdul 7
         objective_estimation_prior_year_agri_livestock_forest_gross_eur:
           label: Ingressos agrícoles, ramaders i forestals de l'any anterior
         objective_estimation_prior_year_gross_income_eur:
@@ -352,8 +290,6 @@ profile:
           label: Rendiments íntegres del treball
         plantilla_media:
           label: Plantilla mitjana per any natural
-        professional_income_withholding_ge_70pct:
-          label: Retenció professional arriba al 70 %
         special_regime:
           choices:
             general: Règim general
@@ -491,17 +427,6 @@ profile:
       preferences:
         output_language:
           label: Idioma de sortida
-      properties:
-        cadastral_reference:
-          label: Referència cadastral
-        use_type:
-          choices:
-            habitual: Habitatge habitual
-            imputed_income: Imputació de rendes (sense llogar)
-            mixed: Ús mixt
-            other: Una altra
-            rental: Llogat
-          label: Ús de l'immoble
       provenance:
         source:
           choices:
@@ -664,33 +589,14 @@ profile:
             sll: Societat limitada laboral (S.L.L.)
             sociedad_civil_mercantil: Societat civil amb objecte mercantil
           label: Forma jurídica de l'entitat
-        ley_49_2002_special_regime_option_date:
-          label: Data d'opció pel règim de la Llei 49/2002
-        ley_49_2002_special_regime_option_declared:
-          label: Opció pel règim de la Llei 49/2002
-        ley_49_2002_special_regime_renunciation_date:
-          label: Data de renúncia al règim de la Llei 49/2002
-        ley_49_2002_special_regime_renunciation_declared:
-          label: Renúncia al règim de la Llei 49/2002
         new_entity_first_two_profit_periods:
           label: En un dels dos primers períodes amb benefici
         representante_fiscal_nif:
           label: NIF del representant fiscal
         representante_fiscal_nombre:
           label: Nom del representant fiscal
-        sal_capital_social:
-          label: Capital social de la societat
-        sal_reserva_especial_dotada:
-          label: Reserva especial ja dotada
-        sal_socios_trabajadores_count:
-          label: Nombre de socis treballadors
         tributacion_estado_porcentaje:
           label: Percentatge de tributació a l'Estat
-      usage_ratios:
-        business_ratio:
-          label: Ràtio d'ús empresarial
-        category_id:
-          label: Categoria
       vivienda_office:
         office_m2:
           label: Superfície destinada a oficina (m2)
@@ -715,10 +621,6 @@ profile:
       activities:
         summary: Les activitats econòmiques que fas, una fila per activitat.
         title: Activitats econòmiques
-      attribution_entity:
-        summary: La forma jurídica de l'entitat en atribució de rendes (comunitat
-          de béns, societat civil) que gestiones.
-        title: Forma jurídica de l'entitat en atribució
       attribution_entity_socios:
         summary: Els socis d'aquesta entitat i la part de la renda atribuïda a cadascun.
         title: Socis de l'entitat en atribució
@@ -759,9 +661,6 @@ profile:
         summary: Com es comunica amb tu l'aplicació, per exemple l'idioma de cada
           pantalla.
         title: Preferències de l'operador
-      properties:
-        summary: Immobles que tens o llogues, una fila per immoble.
-        title: Immobles i lloguer
       provenance:
         summary: D'on procedeixen les dades del perfil i des de quan s'apliquen.
         title: Origen i vigència
@@ -788,9 +687,6 @@ profile:
       taxpayer_type:
         summary: Quin tipus de contribuent ets i quins tipus de renda obtens.
         title: Tipus de contribuent i categories de renda
-      usage_ratios:
-        summary: La part d'ús professional de béns compartits, com un cotxe o un telèfon.
-        title: Ràtios d'ús i deduïbilitat
       vivienda_office:
         summary: Si fas servir part del teu habitatge habitual com a oficina per a
           la teva activitat.

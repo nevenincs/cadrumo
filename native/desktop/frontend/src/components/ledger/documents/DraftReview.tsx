@@ -1,4 +1,5 @@
 import {
+  Fragment,
   useEffect,
   useId,
   useMemo,
@@ -26,6 +27,7 @@ import {
   SegmentedControlItem,
 } from "@/components/ui/segmented-control";
 import { Spinner } from "@/components/ui/spinner";
+import { useTableView } from "@/components/ui/table-view";
 import {
   Tooltip,
   TooltipContent,
@@ -73,6 +75,7 @@ import {
   readValue,
   readingFieldOf,
   readingRows,
+  type ReadingRow,
   referenceFields,
   resolutionOf,
   sameAsRead,
@@ -152,6 +155,45 @@ function ReviewColumns({
         {children}
       </div>
     </div>
+  );
+}
+
+/** The reading table: what was read from the document, its provenance and
+ * its value, in the document's own order. Its columns can be dragged to a
+ * width. */
+function ReadingTable({
+  rows,
+  renderRow,
+}: {
+  rows: readonly ReadingRow[];
+  renderRow(row: ReadingRow): ReactNode;
+}) {
+  const t = useStrings();
+  const field = t("desktop.ledger.documents.column.field");
+  const source = t("desktop.ledger.documents.column.source");
+  const value = t("desktop.ledger.documents.column.value");
+  const table = useTableView({
+    columns: [
+      { id: "field", label: field, name: field },
+      { id: "source", label: source, name: source, resizable: false },
+      { id: "value", label: value, name: value },
+    ],
+    rows,
+    resizeLabel: (column) => t("desktop.table.resize_column", { column }),
+  });
+  return (
+    <table className="ledger-draft-fields w-full text-sm" {...table.tableProps}>
+      <thead>
+        <tr className="border-b border-border text-muted-foreground">
+          {table.headers}
+        </tr>
+      </thead>
+      <tbody>
+        {table.rows.map((row) => (
+          <Fragment key={row.field}>{renderRow(row)}</Fragment>
+        ))}
+      </tbody>
+    </table>
   );
 }
 
@@ -1065,46 +1107,13 @@ export function DraftReview({
         <h4 id={`${countryId}-read`} className="text-sm font-semibold">
           {t("desktop.ledger.documents.what_was_read")}
         </h4>
-        <table className="ledger-draft-fields w-full text-sm">
-          <thead className="sr-only">
-            <tr>
-              <th scope="col">{t("desktop.ledger.documents.column.field")}</th>
-              <th scope="col">{t("desktop.ledger.documents.column.source")}</th>
-              <th scope="col">{t("desktop.ledger.documents.column.value")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {readingRows(kind).map((row) => {
-              if (row.kind === "read") {
-                const value = readValue(draft, row.field);
-                return (
-                  <tr key={row.field} data-field={row.field}>
-                    <th
-                      scope="row"
-                      className="w-1/4 py-1 pr-2 text-left font-normal text-muted-foreground"
-                    >
-                      {fieldLabel(t, row.field)}
-                    </th>
-                    <td className="w-6 py-1 pr-2 text-center">
-                      <Provenance
-                        t={t}
-                        draft={draft}
-                        field={row.field}
-                        edited={false}
-                        question={questionOf(row.field)}
-                      />
-                    </td>
-                    <td className="py-1 pr-2 tabular-nums">
-                      {shownValue(locale, row.field, value) ?? "—"}
-                    </td>
-                  </tr>
-                );
-              }
-              const facts = correctable(row.field);
-              const refused =
-                facts.parsed?.kind === "refused" ? facts.parsed.refusal : null;
+        <ReadingTable
+          rows={readingRows(kind)}
+          renderRow={(row) => {
+            if (row.kind === "read") {
+              const value = readValue(draft, row.field);
               return (
-                <tr key={row.field} data-field={row.field}>
+                <tr data-field={row.field}>
                   <th
                     scope="row"
                     className="w-1/4 py-1 pr-2 text-left font-normal text-muted-foreground"
@@ -1115,40 +1124,65 @@ export function DraftReview({
                     <Provenance
                       t={t}
                       draft={draft}
-                      field={facts.readField}
-                      edited={facts.edited}
-                      question={questionOf(facts.readField)}
+                      field={row.field}
+                      edited={false}
+                      question={questionOf(row.field)}
                     />
                   </td>
-                  <td className="py-1 pr-2">
-                    <Input
-                      controlSize="sm"
-                      className={`ledger-draft-input tabular-nums ${fieldWidth(
-                        CORRECTION_SHAPES[row.field],
-                        row.field === "counterparty_name",
-                      )}`}
-                      aria-label={fieldLabel(t, row.field)}
-                      aria-invalid={refused ? true : undefined}
-                      maxLength={1024}
-                      value={facts.typed ?? facts.read ?? ""}
-                      onChange={(event) =>
-                        setCorrections((held) => ({
-                          ...held,
-                          [row.field]: event.target.value,
-                        }))
-                      }
-                    />
-                    {refused && (
-                      <FieldError>
-                        {problemText(t, { kind: "grammar", refusal: refused })}
-                      </FieldError>
-                    )}
+                  <td className="py-1 pr-2 tabular-nums">
+                    {shownValue(locale, row.field, value) ?? "—"}
                   </td>
                 </tr>
               );
-            })}
-          </tbody>
-        </table>
+            }
+            const facts = correctable(row.field);
+            const refused =
+              facts.parsed?.kind === "refused" ? facts.parsed.refusal : null;
+            return (
+              <tr data-field={row.field}>
+                <th
+                  scope="row"
+                  className="w-1/4 py-1 pr-2 text-left font-normal text-muted-foreground"
+                >
+                  {fieldLabel(t, row.field)}
+                </th>
+                <td className="w-6 py-1 pr-2 text-center">
+                  <Provenance
+                    t={t}
+                    draft={draft}
+                    field={facts.readField}
+                    edited={facts.edited}
+                    question={questionOf(facts.readField)}
+                  />
+                </td>
+                <td className="py-1 pr-2">
+                  <Input
+                    controlSize="sm"
+                    className={`ledger-draft-input tabular-nums ${fieldWidth(
+                      CORRECTION_SHAPES[row.field],
+                      row.field === "counterparty_name",
+                    )}`}
+                    aria-label={fieldLabel(t, row.field)}
+                    aria-invalid={refused ? true : undefined}
+                    maxLength={1024}
+                    value={facts.typed ?? facts.read ?? ""}
+                    onChange={(event) =>
+                      setCorrections((held) => ({
+                        ...held,
+                        [row.field]: event.target.value,
+                      }))
+                    }
+                  />
+                  {refused && (
+                    <FieldError>
+                      {problemText(t, { kind: "grammar", refusal: refused })}
+                    </FieldError>
+                  )}
+                </td>
+              </tr>
+            );
+          }}
+        />
       </section>
 
       {blockers.length > 0 && (

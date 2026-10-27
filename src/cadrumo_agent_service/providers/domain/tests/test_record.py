@@ -8,14 +8,12 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import SecretStr, ValidationError
 
-from cadrumo.core.model_roles import ModelRole
-
 from ..record import (
     AssistantAuth,
     CredentialKind,
     CredentialSecretRefusal,
     CredentialState,
-    ModelRoleSelection,
+    ListedModel,
     ProviderCredential,
     ProviderSettingsRecord,
     credential_secret_refusal,
@@ -131,10 +129,10 @@ _AGENT_MODEL_ID_LENGTH = 512
         pytest.param("!" + "~" * 255, id="printable-ascii-stored-before"),
     ],
 )
-def test_a_selection_names_any_model_id_the_catalogue_carries(model: str) -> None:
-    selection = ModelRoleSelection(role=ModelRole.TEXT_EXTRACTION, lane="example_api", model=model)
+def test_a_listed_model_names_any_model_id_the_catalogue_carries(model: str) -> None:
+    listed = ListedModel(lane="local_api", model=model)
 
-    assert selection.model == model
+    assert listed.model == model
 
 
 @pytest.mark.parametrize(
@@ -146,9 +144,9 @@ def test_a_selection_names_any_model_id_the_catalogue_carries(model: str) -> Non
         pytest.param("synthetic\x7fmodel", id="delete-character"),
     ],
 )
-def test_a_selection_refuses_a_model_id_no_catalogue_carries(model: str) -> None:
+def test_a_listed_model_refuses_a_model_id_no_catalogue_carries(model: str) -> None:
     with pytest.raises(ValidationError):
-        ModelRoleSelection(role=ModelRole.TEXT_EXTRACTION, lane="example_api", model=model)
+        ListedModel(lane="local_api", model=model)
 
 
 _AGENT_LANE_ID_LENGTH = 68
@@ -162,15 +160,15 @@ _AGENT_LANE_ID_LENGTH = 68
         pytest.param("o" * 36 + "_cli", id="forty-characters-stored-before"),
     ],
 )
-def test_a_record_and_a_selection_are_keyed_by_any_lane_id_the_catalogue_carries(lane: str) -> None:
+def test_a_record_and_a_listed_model_are_keyed_by_any_lane_id_the_catalogue_carries(lane: str) -> None:
     document = json.loads(provider_settings_record_document(_record()))
     document["provider"] = lane
 
     assert parse_provider_settings_record(json.dumps(document).encode()).provider == lane
-    assert ModelRoleSelection(role=ModelRole.TEXT_EXTRACTION, lane=lane, model="example-model-1").lane == lane
+    assert ListedModel(lane=lane, model="example-model-1").lane == lane
 
 
-def test_a_record_and_a_selection_refuse_a_lane_id_one_past_the_agent_s_bound() -> None:
+def test_a_record_and_a_listed_model_refuse_a_lane_id_one_past_the_agent_s_bound() -> None:
     lane = "l" * (_AGENT_LANE_ID_LENGTH - 3) + "_api"
     document = json.loads(provider_settings_record_document(_record()))
     document["provider"] = lane
@@ -178,4 +176,4 @@ def test_a_record_and_a_selection_refuse_a_lane_id_one_past_the_agent_s_bound() 
     with pytest.raises(ValidationError):
         parse_provider_settings_record(json.dumps(document).encode())
     with pytest.raises(ValidationError):
-        ModelRoleSelection(role=ModelRole.TEXT_EXTRACTION, lane=lane, model="example-model-1")
+        ListedModel(lane=lane, model="example-model-1")

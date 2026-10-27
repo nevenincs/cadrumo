@@ -14,7 +14,7 @@ import {
   holdsUpdate,
   recordUpdate,
   resolutionOf,
-  roleNeedsModel,
+  readerProblems,
   sameReading,
 } from "../src/components/ledger/documents/documentsModel";
 import { hexId } from "./support/ledger";
@@ -278,7 +278,7 @@ test("a record's correction sends only what changed and clears with a blank", ()
   ).toBe(true);
 });
 
-test("a role asks for a model only when it has none to run", () => {
+test("model problems are said once, and only for roles held back by the model", () => {
   const held: ReaderRole = {
     role: "vision_transcription",
     model: null,
@@ -287,20 +287,27 @@ test("a role asks for a model only when it has none to run", () => {
     failed_condition_id: "provisioning.selected_model.available",
     recovery_action_id: null,
   };
-  expect(roleNeedsModel(held)).toBe(true);
-  // A role that reads, or is held back for another reason, is not told that
-  // it has no model.
+  expect(readerProblems([held, { ...held, role: "text_extraction" }])).toEqual({
+    noModel: true,
+    cannotReadImages: false,
+  });
   expect(
-    roleNeedsModel({ ...held, ready: true, failed_condition_id: null }),
-  ).toBe(false);
-  for (const condition of [
-    "provisioning.role_model.installed",
-    "provisioning.runtime.installed",
+    readerProblems([
+      {
+        ...held,
+        failed_condition_id: "provisioning.selected_model.reads_images",
+      },
+    ]),
+  ).toEqual({ noModel: false, cannotReadImages: true });
+  // A role that reads, or is held back for another reason, says no model problem.
+  for (const role of [
+    { ...held, ready: true, failed_condition_id: null },
+    { ...held, failed_condition_id: "provisioning.role_model.installed" },
+    { ...held, failed_condition_id: "provisioning.runtime.installed" },
+    { role: "vision_transcription", ready: false },
   ])
-    expect(roleNeedsModel({ ...held, failed_condition_id: condition })).toBe(
-      false,
-    );
-  expect(roleNeedsModel({ role: "vision_transcription", ready: false })).toBe(
-    false,
-  );
+    expect(readerProblems([role])).toEqual({
+      noModel: false,
+      cannotReadImages: false,
+    });
 });

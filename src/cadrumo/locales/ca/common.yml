@@ -771,7 +771,6 @@ desktop:
     view: Vista
     view_list: Llista
     view_months: Calendari
-    warnings: Falten dades del perfil; aquestes dates fan servir valors per defecte.
     window_unknown: Data d'obertura no indicada
   canvas:
     lead: Tria una àrea de treball a continuació o obre-la des de la barra lateral.
@@ -1544,9 +1543,9 @@ desktop:
         vision: Llegit de la imatge
       paused_local_ai: La IA local, que llegeix els documents en pausa, no està a
         punt. Torna-los a afegir quan estigui a punt per acabar-los.
-      paused_unavailable: La IA local no ha pogut llegir els documents en pausa. Tria
-        o revisa el seu model a la configuració de l'agent i torna-los a afegir per
-        acabar-los.
+      paused_unavailable: La IA local no ha pogut llegir els documents en pausa. Revisa
+        la seva llista de models a la configuració de l'agent i torna-los a afegir
+        per acabar-los.
       printed_differs: El document indica {printed}; la factura registra {recorded}.
       provenance: '{origin}, {grounding}'
       queue: Lectures per revisar
@@ -1561,11 +1560,16 @@ desktop:
         choose_model: Obre l'agent
         extraction: Lectura de documents
         host: Servidor local de models
-        no_model: No hi ha cap model utilitzable triat. Tria o revisa el model a la
-          configuració de l'agent.
+        no_model: Cap model de la llista de la IA local pot llegir això. Revisa la
+          llista de models a la configuració de l'agent.
         not_ready: No disponible
         off_host: Lectura fora d'aquest ordinador
         off_host_note: Només amb la teva conformitat, cada vegada
+        reads:
+          column_role_mapping: Llegeix columnes de taules
+          supply_nature_proposal: Proposa el tipus de venda o compra
+          text_extraction: Llegeix el text dels documents
+          vision_transcription: Llegeix pàgines escanejades
         ready: A punt
         text_only: Només documents amb capa de text
         unavailable: No disponible
@@ -2106,7 +2110,7 @@ desktop:
         reader_unavailable: 'No s''ha llegit: la IA local, que llegeix aquest fitxer,
           no està a punt.'
         reader_unavailable_here: 'No s''ha llegit: la IA local no està disponible
-          ara mateix. Tria o revisa el seu model a la configuració de l''agent.'
+          ara mateix. Revisa la seva llista de models a la configuració de l''agent.'
         result_limit: 'Més de 4.096 files: importa''l per parts.'
         source_changed: 'Ha canviat després de la previsualització: torna a previsualitzar-lo.'
         transaction_validation: No s'ha pogut llegir com a extracte bancari.
@@ -3433,6 +3437,32 @@ desktop:
       menu: Accions del perfil
       refresh: Actualitza el perfil
     add: Afegeix un registre
+    aeat:
+      certificate: Fitxer del certificat
+      certificate_choose: Tria un fitxer
+      certificate_failed: No s’ha pogut obrir el selector de fitxers.
+      certificate_none: Cap fitxer triat
+      certificate_replace: Tria un altre fitxer
+      certificate_saved: Hi ha un fitxer desat
+      credential_failed: '{item}: no s’ha desat. Revisa els requisits de sota i torna-ho
+        a provar.'
+      credential_unavailable: '{item}: no s’ha desat perquè el servei no està disponible.
+        Torna-ho a provar quan ho estigui.'
+      credential_unknown: '{item}: no hem pogut confirmar si s’ha desat. Mira els
+        requisits de sota abans de tornar a introduir el valor.'
+      description: Tria com accedeix aquest perfil a l’AEAT i mira què falta encara.
+      document_hint: Per sol·licitar l’accés a l’app, introdueix la data de validesa
+        del DNI o el número de suport del NIE, segons el teu document.
+      done: Fet
+      failed: 'No s’ha pogut desar: {item}. Revisa-ho i torna-ho a provar.'
+      passphrase: Contrasenya del certificat
+      password: Contrasenya de {method}
+      readiness: Requisits
+      saved: Desat. Els requisits de sota reflecteixen el que hi ha emmagatzemat.
+      saved_value: Hi ha un valor desat que no es mostra. Escriu-ne un de nou per
+        substituir-lo o deixa-ho en blanc per conservar-lo.
+      secret_help: Es desa a part del teu perfil i no es torna a mostrar. Deixa-la
+        en blanc per conservar la que ja està desada.
     cancel: Cancel·la
     censo:
       absent: L’AEAT no ha proporcionat aquesta dada. Sense canvis.
@@ -3593,6 +3623,8 @@ desktop:
     exited: ha acabat ({code})
     failed: No s'ha pogut iniciar la sessió.
   settings:
+    agent_search: Cerca als ajustos
+    agent_search_empty: No hi ha ajustos coincidents. Prova una altra cerca.
     always_dark: Sempre fosc
     appearance: Aparença
     dark: Fosc
@@ -3630,6 +3662,12 @@ desktop:
       needs_person: Espera que ho aprovis o que ho instal·lis tu.
       not_in_this_build: Aquesta versió de Cadrumo no ho inclou.
       offline: No tens connexió. Connecta't a internet per configurar-ho.
+    browser_lead: Cadrumo fa servir el seu propi navegador per identificar-se al web
+      de l'Agència Tributària i llegir-hi les teves dades.
+    browser_open: Obre la configuració del navegador
+    browser_other_running: Hi ha una altra configuració en curs. Quan acabi, podràs
+      configurar el navegador aquí.
+    browser_title: Configuració del navegador
     cancel: Cancel·la la configuració
     cancelling: S'aturarà després del pas actual…
     checking: S'estan comprovant els components…
@@ -3688,7 +3726,6 @@ desktop:
     palette_open: Configura els components
     palette_retry: Torna a provar la configuració
     part_download: Descàrrega del model
-    part_model: Model {role}
     part_program: El programa que executa els models
     plan_destination: 'Es desa a: {folder}'
     plan_from: 'Des de: {hosts}'
@@ -3705,11 +3742,8 @@ desktop:
     rail_busy: S'estan configurant els components
     rail_incomplete: La configuració no ha acabat
     refused_busy: Ja hi ha una configuració en curs en un altre lloc. Espera que acabi.
-    refused_model_selection_unusable: Cadrumo no pot fer servir els models que has
-      triat. Tria'ls de nou a la configuració de l'agent i torna-ho a provar.
-    refused_model_size_unstated: Cadrumo no pot planificar la baixada perquè l'agent
-      no indica la mida d'un dels models que has triat. Tria un altre model a la configuració
-      de l'agent i torna-ho a provar.
+    refused_model_selection_unusable: Cadrumo no pot baixar aquest model. Revisa la
+      llista de models de la IA local a la configuració de l'agent i torna-ho a provar.
     refused_not_cancellable: Ara no es pot aturar la configuració. Acabarà aviat.
     refused_not_pending: Aquest pla ja no espera resposta.
     refused_not_signed_in: Primer inicia la sessió al teu perfil.
@@ -3725,12 +3759,8 @@ desktop:
     resume: Reprèn
     retry: Problema de connexió. Es tornarà a provar d'aquí a {seconds} segons (intent
       {attempt}).
-    role:
-      column_role_mapping: per a columnes de taules
-      supply_nature_proposal: per al tipus de venda o compra
-      text_extraction: per al text de documents
-      vision_transcription: per a pàgines escanejades
     show_new_plan: Mostra el nou pla
+    show_running: Mostra aquella configuració
     size_unknown: Mida coneguda en començar
     space: Necessita {required} d'espai lliure; n'hi ha {free} de lliures.
     space_short: No hi ha prou espai lliure. Allibera'n una mica i torna-ho a provar.
@@ -3768,24 +3798,21 @@ desktop:
     unavailable: Ara no es poden comprovar els components. Torna-ho a provar d'aquí
       a un moment.
   setup_review:
-    answer_unknown: 'No s''ha pogut confirmar la decisió. La instal·lació pot haver
-      començat. Comprova l''estat dels components abans de tornar a començar. Operació:
-      {operation_id}'
-    apply: Aplicar
-    authority_lost: L'autorització d'aquesta revisió ha acabat. Inicia la sessió i
-      comença una nova operació d'instal·lació.
-    claim: Assumir aquesta revisió
-    claimed: Revisió assumida.
-    claimed_elsewhere: Una altra persona té aquesta revisió. No la pots assumir.
-    destination_browser: Fitxers del navegador
-    expires_at: Caduca
-    failed: La revisió no està disponible. Torna a llegir-la abans de continuar.
-    operation_id: ID de l'operació
-    read: Llegir la revisió actual
-    reject: Rebutjar
-    review_digest: Empremta de la revisió
-    target_version: 'Versió: {version}'
-    title: Revisar l'operació d'instal·lació
+    changed: Aquesta sol·licitud de configuració ha canviat o ha acabat. Demana a
+      l'assistent que torni a iniciar la configuració.
+    check_setup: Revisa la configuració
+    destination_browser: La carpeta del navegador de Cadrumo
+    held_elsewhere: Una altra persona amb sessió en aquest perfil ja està responent
+      aquesta sol·licitud de configuració.
+    lead: La configuració espera la teva aprovació. No es baixa res fins que l'aprovis.
+    reject: No configuris
+    title: Vols configurar el navegador per al web de l'Agència Tributària?
+    unavailable: Cadrumo no ha pogut respondre aquesta sol·licitud de configuració.
+      Torna-ho a provar.
+    uncertain: Cadrumo no ha pogut confirmar la teva resposta, així que la configuració
+      pot haver començat. Revisa la configuració abans de tornar-la a demanar.
+    unreadable: Cadrumo no pot mostrar què baixaria aquesta configuració, així que
+      no la pots aprovar aquí.
   signin:
     checking: S'està comprovant la teva sessió…
     choose_profile: Tria un perfil
@@ -3844,6 +3871,8 @@ desktop:
     side_by_side: Posa la documentació i l'espai de treball de costat
     stack: Apila la documentació i l'espai de treball
     swap: Intercanvia la documentació i l'espai de treball
+  table:
+    resize_column: Canvia l'amplada de la columna {column}
   titlebar:
     close: Tanca la finestra
     failed: No s’ha pogut completar l’acció de la finestra.
@@ -5890,8 +5919,8 @@ tui:
             a llegir el document.'
           reader_unavailable: 'El lector automàtic no s''ha pogut iniciar. {count}
             camps que les etiquetes no cobrien encara no s''han llegit i queden buits:
-            {fields}. Tria o revisa el model que llegeix els documents a l''aplicació
-            d''escriptori de Cadrumo i torna a llegir el document.'
+            {fields}. Revisa la llista de models de la IA local a l''aplicació d''escriptori
+            de Cadrumo i torna a llegir el document.'
         line: '{index}. {description} · quantitat: {quantity} · preu unitari: {unit_price}
           · base: {base} · tipus: {rate} · IVA: {iva} · tipus de recàrrec: {recargo_rate}
           · recàrrec: {recargo}'
@@ -6012,9 +6041,9 @@ tui:
           partial: 'Aquest lot ha estat parcial: alguns documents s''han desat i d''altres
             no. Torna a llançar-lo després de corregir els rebutjats; els documents
             desats no es desen dues vegades.'
-          paused: La IA local no ha pogut llegir els documents en pausa. Tria o revisa
-            el seu model a l'aplicació d'escriptori de Cadrumo i torna a llançar el
-            lot per acabar-los.
+          paused: La IA local no ha pogut llegir els documents en pausa. Revisa la
+            seva llista de models a l'aplicació d'escriptori de Cadrumo i torna a
+            llançar el lot per acabar-los.
           paused_local_ai_not_ready: La IA local, que llegeix els documents en pausa,
             no està a punt. Torna a llançar el lot quan estigui a punt per acabar-los.
           writes: 'Registres escrits: {count}.'
@@ -6254,8 +6283,8 @@ tui:
         reader_unavailable: la IA local, que llegeix aquest fitxer, no està a punt,
           així que no s'ha llegit el fitxer
         reader_unavailable_here: la IA local no està disponible ara mateix, així que
-          no s'ha llegit el fitxer; tria o revisa el seu model a l'aplicació d'escriptori
-          de Cadrumo
+          no s'ha llegit el fitxer; revisa la seva llista de models a l'aplicació
+          d'escriptori de Cadrumo
         result_limit: la importació ha arribat al límit de files abans d'aquest fitxer
         source_changed: el fitxer ha canviat després de la previsualització i no se
           n'ha importat res; torna a previsualitzar-lo
@@ -7549,8 +7578,6 @@ workspace:
     hub:
       holidays_national_only: Els terminis tenen en compte els festius estatals; els
         autonòmics no es comproven.
-      lead: Prepara cada model, exporta el fitxer que presentes a l'AEAT i registra
-        que l'has presentat.
     lifecycle:
       amended: Correcció iniciada
       calculated: Càlcul completat
@@ -7662,6 +7689,7 @@ workspace:
         amount: Import
         by: Ordena per
         deadline: Termini
+        declaration: Declaració
         modelo: Model
         result: Resultat
         state: Estat

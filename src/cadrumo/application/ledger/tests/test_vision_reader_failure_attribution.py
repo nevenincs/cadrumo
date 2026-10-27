@@ -4,7 +4,7 @@ Every vision read goes through the agent service, whose refusal carries the
 verdict the person needs: the selection to make or the setup to run. The router
 reports that verdict unchanged. A failure that carries no verdict is a reader
 that did not answer; the router names the unavailable reader and points at no
-setup, because nothing it could probe knows which lane the person selected.
+setup, because nothing it could probe knows which lane the agent service derived.
 The transcription port is the input under test.
 """
 

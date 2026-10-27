@@ -1,7 +1,7 @@
 """Read operation for the local document reader's status, from any frontend.
 
 ``local-reader.status`` judges the local AI program from the components role's
-status row and the lane the person selected for every reader role into one
+status row and the lane the agent service derives for every reader role into one
 projection. Nothing is started, pulled, loaded or installed, and the local AI
 server is not asked anything.
 """

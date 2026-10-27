@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.resources.bundled_data import bundled_path
 from ..schema import ProfileSchemaDefinition
 from ._schema_loader_fixtures import legal_ids_fixture, module_scoped_schema
 
@@ -102,11 +101,6 @@ def test_art109_activity_income_coverage_is_the_schedule_predicate(
     schema: ProfileSchemaDefinition,
     legal_ids: frozenset[str],
 ) -> None:
-    old_field = schema.field("irpf.professional_income_withholding_ge_70pct")
-    assert old_field.type.value == "boolean"
-    assert old_field.model_selectors == ("professional_income_withholding_ge_70pct",)
-    assert old_field.schedule_predicates == ()
-
     field = schema.field("irpf.art109_activity_income_withholding_ge_70pct")
     assert field.type.value == "boolean"
     assert field.model_selectors == ("art109_activity_income_withholding_ge_70pct",)
@@ -146,36 +140,6 @@ def test_objective_estimation_threshold_refs_resolve_against_catalogue(
         assert refs <= legal_ids
 
 
-def test_objective_estimation_modulos_profile_facts_are_stable_annual_inputs(
-    schema: ProfileSchemaDefinition,
-    legal_ids: frozenset[str],
-) -> None:
-    """Módulos profile facts store operator-declared annual inputs, not coefficients."""
-    epigraph = schema.field("irpf.objective_estimation_modulos_iae_epigraph")
-    assert epigraph.type.value == "string"
-    assert epigraph.model_selectors == ("irpf.objective_estimation_modulos_iae_epigraph",)
-
-    expected_modulos_paths = {
-        "irpf.objective_estimation_modulos_iae_epigraph",
-        *(f"irpf.objective_estimation_modulos_module_{slot}_units" for slot in range(1, 8)),
-    }
-    assert {path for path in schema.field_paths if path.startswith("irpf.objective_estimation_modulos_")} == (
-        expected_modulos_paths
-    )
-
-    expected_refs = {"ley-35-2006:art-31", "orden-hac-1425-2025:art-4"}
-    assert set(epigraph.legal_refs) == expected_refs
-    assert expected_refs <= legal_ids
-
-    for slot in range(1, 8):
-        field = schema.field(f"irpf.objective_estimation_modulos_module_{slot}_units")
-        assert field.type.value == "decimal"
-        assert field.model_selectors == (f"irpf.objective_estimation_modulos_module_{slot}_units",)
-        assert field.required is False
-        assert set(field.legal_refs) == expected_refs
-        assert set(field.legal_refs) <= legal_ids
-
-
 def test_selected_irpf_and_irnr_profile_refs_resolve_against_catalogue(
     schema: ProfileSchemaDefinition,
     legal_ids: frozenset[str],
@@ -212,93 +176,13 @@ def test_selected_sociedades_profile_refs_resolve_against_catalogue(
         "taxpayer_type.legal_entity_form": {"ley-27-2014:art-29", "ley-44-2015:art-1"},
         "taxpayer_type.incn_prior_12_months": {"ley-27-2014:art-40-3"},
         "taxpayer_type.new_entity_first_two_profit_periods": {"ley-27-2014:art-29"},
-        "taxpayer_type.ley_49_2002_special_regime_option_declared": {"ley-49-2002:art-14"},
-        "taxpayer_type.ley_49_2002_special_regime_option_date": {"ley-49-2002:art-14"},
-        "taxpayer_type.ley_49_2002_special_regime_renunciation_declared": {"ley-49-2002:art-14"},
-        "taxpayer_type.ley_49_2002_special_regime_renunciation_date": {"ley-49-2002:art-14"},
         "taxpayer_type.tributacion_estado_porcentaje": {"ley-12-2002:art-15", "ley-28-1990:art-19"},
-        "taxpayer_type.sal_socios_trabajadores_count": {"ley-44-2015:art-1", "ley-44-2015:art-2"},
-        "taxpayer_type.sal_reserva_especial_dotada": {"ley-44-2015:art-14"},
-        "taxpayer_type.sal_capital_social": {"ley-44-2015:art-14"},
     }
 
     for field_path, expected_refs in expected.items():
         refs = set(schema.field(field_path).legal_refs)
         assert refs == expected_refs
         assert refs <= legal_ids
-
-
-def test_ley_49_2002_special_regime_fields_match_modelo_036_record_design(
-    schema: ProfileSchemaDefinition,
-) -> None:
-    """The Ley 49/2002 profile axis mirrors the current Modelo 036 censo fields."""
-    expected = {
-        "taxpayer_type.ley_49_2002_special_regime_option_declared": (
-            "boolean",
-            "taxpayer.ley_49_2002_special_regime_option_declared",
-            "casilla 651",
-        ),
-        "taxpayer_type.ley_49_2002_special_regime_option_date": (
-            "date",
-            "taxpayer.ley_49_2002_special_regime_option_date",
-            "casilla 653",
-        ),
-        "taxpayer_type.ley_49_2002_special_regime_renunciation_declared": (
-            "boolean",
-            "taxpayer.ley_49_2002_special_regime_renunciation_declared",
-            "casilla 652",
-        ),
-        "taxpayer_type.ley_49_2002_special_regime_renunciation_date": (
-            "date",
-            "taxpayer.ley_49_2002_special_regime_renunciation_date",
-            "casilla 654",
-        ),
-    }
-
-    for field_path, (field_type, selector, description_anchor) in expected.items():
-        field = schema.field(field_path)
-        assert field.type.value == field_type
-        assert field.model_selectors == (selector,)
-        assert field.legal_refs == ("ley-49-2002:art-14",)
-        assert description_anchor in field.description
-
-    record_design = bundled_path(
-        "corpus",
-        "aeat_official",
-        "disenos_registro",
-        "modelo_036",
-        "files",
-        "01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md",
-    ).read_text(encoding="utf-8")
-    assert "Opción/renuncia por el Regimen fiscal especial del Título II de la Ley 49/2002" in record_design
-    assert "Ejerce la opción por el Régimen fiscal especial del Tit. II Ley 49/2002" in record_design
-    assert "Ejercitada la opción por el Régimen fiscal especial del Tit. II Ley 49/2002, renuncia" in record_design
-    assert "[651]" in record_design
-    assert "[653]" in record_design
-    assert "[652]" in record_design
-    assert "[654]" in record_design
-
-
-def test_sal_reserva_profile_description_uses_twice_capital_threshold(
-    schema: ProfileSchemaDefinition,
-) -> None:
-    """The registry schema must not preserve obsolete SAL cap prose."""
-    descriptions = " ".join(
-        schema.field(field_path).description
-        for field_path in (
-            "taxpayer_type.sal_reserva_especial_dotada",
-            "taxpayer_type.sal_capital_social",
-        )
-    ).casefold()
-
-    assert "50 percent" not in descriptions
-    assert "0.50" not in descriptions
-    assert "does not exceed twice" not in descriptions
-    assert "reaches at least 2 * capital_social." not in descriptions
-    assert "twice" in descriptions
-    assert "2 * capital_social + 0.01" in descriptions
-    assert "first euro cent above twice capital social" in descriptions
-    assert "ley 44/2015 art. 14" in descriptions
 
 
 def test_iva_regime_enum_includes_reagp(schema: ProfileSchemaDefinition) -> None:

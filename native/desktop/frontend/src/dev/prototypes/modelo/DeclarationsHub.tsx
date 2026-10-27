@@ -305,19 +305,14 @@ export function DeclarationsHub({
           <h1 className="font-serif text-lg">
             {w("workspace.declarations.destination.overview", locale)}
           </h1>
-          <p className="text-base text-muted-foreground">
-            {w("workspace.declarations.hub.lead", locale)}
-            {rows.some(
-              (r) =>
-                r.calendar &&
-                coverageWords(r.calendar.holiday_coverage, locale),
-            ) && (
-              <span className="text-faint">
-                {" "}
-                {w("workspace.declarations.hub.holidays_national_only", locale)}
-              </span>
-            )}
-          </p>
+          {rows.some(
+            (r) =>
+              r.calendar && coverageWords(r.calendar.holiday_coverage, locale),
+          ) && (
+            <p className="text-base text-faint">
+              {w("workspace.declarations.hub.holidays_national_only", locale)}
+            </p>
+          )}
         </div>
         <div className="ml-auto flex items-center gap-2">
           <div className="relative w-64">

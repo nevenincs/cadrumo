@@ -319,10 +319,6 @@ SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo | None] = {
         "--pays-professionals-with-retencion/--no-pays-professionals-with-retencion",
         help=tr("wizard.setup.flags.pays-professionals-with-retencion.help"),
     ),
-    "professional-income-withholding-ge-70pct": typer.Option(
-        "--professional-income-withholding-ge-70pct/--no-professional-income-withholding-ge-70pct",
-        help=tr("wizard.setup.flags.professional-income-withholding-ge-70pct.help"),
-    ),
     "art109-activity-income-withholding-ge-70pct": typer.Option(
         "--art109-activity-income-withholding-ge-70pct/--no-art109-activity-income-withholding-ge-70pct",
         help=tr("wizard.setup.flags.art109-activity-income-withholding-ge-70pct.help"),
@@ -411,7 +407,6 @@ SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo | None] = {
         "--google-export/--no-google-export",
         help=tr("wizard.setup.flags.google-export.help"),
     ),
-    "notes": typer.Option("--notes", help=tr("wizard.setup.flags.notes.help")),
     "entity-type": typer.Option(
         "--entity-type",
         click_type=_choice(_ENTITY_TYPE_CHOICE_VALUES),
@@ -449,38 +444,6 @@ SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo | None] = {
         click_type=_choice(_IRPF_ESTIMATION_REGIME_CHOICE_VALUES),
         metavar=_choice_metavar(_IRPF_ESTIMATION_REGIME_CHOICE_VALUES),
         help=tr("wizard.setup.flags.irpf-estimation-regime.help"),
-    ),
-    "objective-estimation-modulos-iae-epigraph": typer.Option(
-        "--objective-estimation-modulos-iae-epigraph",
-        help=tr("wizard.setup.flags.objective-estimation-modulos-iae-epigraph.help"),
-    ),
-    "objective-estimation-modulos-module-1-units": typer.Option(
-        "--objective-estimation-modulos-module-1-units",
-        help=tr("wizard.setup.flags.objective-estimation-modulos-module-1-units.help"),
-    ),
-    "objective-estimation-modulos-module-2-units": typer.Option(
-        "--objective-estimation-modulos-module-2-units",
-        help=tr("wizard.setup.flags.objective-estimation-modulos-module-2-units.help"),
-    ),
-    "objective-estimation-modulos-module-3-units": typer.Option(
-        "--objective-estimation-modulos-module-3-units",
-        help=tr("wizard.setup.flags.objective-estimation-modulos-module-3-units.help"),
-    ),
-    "objective-estimation-modulos-module-4-units": typer.Option(
-        "--objective-estimation-modulos-module-4-units",
-        help=tr("wizard.setup.flags.objective-estimation-modulos-module-4-units.help"),
-    ),
-    "objective-estimation-modulos-module-5-units": typer.Option(
-        "--objective-estimation-modulos-module-5-units",
-        help=tr("wizard.setup.flags.objective-estimation-modulos-module-5-units.help"),
-    ),
-    "objective-estimation-modulos-module-6-units": typer.Option(
-        "--objective-estimation-modulos-module-6-units",
-        help=tr("wizard.setup.flags.objective-estimation-modulos-module-6-units.help"),
-    ),
-    "objective-estimation-modulos-module-7-units": typer.Option(
-        "--objective-estimation-modulos-module-7-units",
-        help=tr("wizard.setup.flags.objective-estimation-modulos-module-7-units.help"),
     ),
     "irpf-special-regime": typer.Option(
         "--irpf-special-regime",
@@ -1359,21 +1322,12 @@ _WIZARD_INVALID_DATE_FIELDS: frozenset[str] = frozenset(
     {
         "taxpayer_marriage_date",
         "activity_start_date",
-        "ley_49_2002_option_date",
-        "ley_49_2002_renunciation_date",
         "irpf_special_regime_start_date",
     }
 )
 _WIZARD_INVALID_DECIMAL_FIELDS: frozenset[str] = frozenset(
     {
         "incn_prior_12_months",
-        "objective_estimation_modulos_module_1_units",
-        "objective_estimation_modulos_module_2_units",
-        "objective_estimation_modulos_module_3_units",
-        "objective_estimation_modulos_module_4_units",
-        "objective_estimation_modulos_module_5_units",
-        "objective_estimation_modulos_module_6_units",
-        "objective_estimation_modulos_module_7_units",
     }
 )
 _WIZARD_ERROR_FIELD_KEYS: dict[str, str] = {

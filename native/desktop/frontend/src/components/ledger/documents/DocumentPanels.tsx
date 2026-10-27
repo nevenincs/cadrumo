@@ -1,4 +1,4 @@
-import { useId, useState, type ReactNode } from "react";
+import { Fragment, useId, useState, type ReactNode } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty";
@@ -9,8 +9,8 @@ import {
   SegmentedControlItem,
 } from "@/components/ui/segmented-control";
 import { Spinner } from "@/components/ui/spinner";
-import { useModelChoice } from "../../../shell/agentModelChoice";
-import { roleWords } from "../../../shell/agentModelRoles";
+import { useTableView, type ViewColumn } from "@/components/ui/table-view";
+import { useModelList } from "../../../shell/agentModelList";
 import { provisionActionOf } from "../../../shell/provisioningRecovery";
 import type {
   AttachmentReviewItem,
@@ -33,7 +33,7 @@ import { write } from "../invoices/invoiceWrites";
 import { landingSettle, useWritePause, WriteHold } from "../WritePause";
 import { batchStatusLabel, sourceLabel } from "./documentWords";
 import { extractionLanding } from "./documentLanding";
-import { fileName, roleNeedsModel } from "./documentsModel";
+import { fileName, readerProblems } from "./documentsModel";
 import type { Read } from "./useLedgerRead";
 
 function Failed({
@@ -74,28 +74,39 @@ function Reading({ t }: { t: Translate }) {
   );
 }
 
-/** A table with its column names, for a panel's rows. */
-function Table({
+/** A table with its column names, for a panel's rows. Its columns can be
+ * dragged to a width, and sorted where they have a way to rank a row. */
+function Table<R>({
   label,
   columns,
-  children,
+  rows,
+  rowKey,
+  renderRow,
 }: {
   label: string;
-  columns: string[];
-  children: ReactNode;
+  columns: readonly ViewColumn<R>[];
+  rows: readonly R[];
+  rowKey(row: R): string;
+  renderRow(row: R): ReactNode;
 }) {
+  const t = useStrings();
+  const view = useTableView({
+    columns,
+    rows,
+    resizeLabel: (column) => t("desktop.table.resize_column", { column }),
+  });
   return (
-    <table aria-label={label} className="w-full text-sm">
+    <table aria-label={label} className="w-full text-sm" {...view.tableProps}>
       <thead>
         <tr className="border-b border-border text-left text-muted-foreground">
-          {columns.map((column) => (
-            <th key={column} scope="col" className="px-2 py-1 font-medium">
-              {column}
-            </th>
-          ))}
+          {view.headers}
         </tr>
       </thead>
-      <tbody>{children}</tbody>
+      <tbody>
+        {view.rows.map((row) => (
+          <Fragment key={rowKey(row)}>{renderRow(row)}</Fragment>
+        ))}
+      </tbody>
     </table>
   );
 }
@@ -176,21 +187,65 @@ export function AttachmentQueue({
         description={t("desktop.ledger.documents.attachments_none")}
       />
     );
+  const state = (item: AttachmentReviewItem) =>
+    item.pending_review
+      ? t("desktop.ledger.documents.attachment_waiting")
+      : t("desktop.ledger.documents.attachment_linked", {
+          count: item.linked_invoice_ids.length,
+        });
+  const source = t("desktop.ledger.documents.column.source");
+  const kind = t("desktop.ledger.documents.column.kind");
+  const size = t("desktop.ledger.documents.column.size");
+  const captured = t("desktop.ledger.documents.column.captured");
+  const stateName = t("desktop.ledger.documents.column.state");
+  const action = t("desktop.ledger.documents.column.action");
+  const attachmentColumns: ViewColumn<AttachmentReviewItem>[] = [
+    {
+      id: "source",
+      label: source,
+      name: source,
+      sortValue: (item) => sourceLabel(t, item.source),
+    },
+    {
+      id: "kind",
+      label: kind,
+      name: kind,
+      sortValue: (item) => item.mime_type,
+    },
+    {
+      id: "size",
+      label: size,
+      name: size,
+      sortValue: (item) => item.bytes_size,
+    },
+    {
+      id: "captured",
+      label: captured,
+      name: captured,
+      sortValue: (item) => item.captured_at,
+    },
+    {
+      id: "state",
+      label: stateName,
+      name: stateName,
+      sortValue: state,
+    },
+    {
+      id: "action",
+      label: action,
+      name: action,
+      resizable: false,
+    },
+  ];
   return (
     <div className="ledger-attachments p-3">
       <Table
         label={t("desktop.ledger.documents.tab.attachments")}
-        columns={[
-          t("desktop.ledger.documents.column.source"),
-          t("desktop.ledger.documents.column.kind"),
-          t("desktop.ledger.documents.column.size"),
-          t("desktop.ledger.documents.column.captured"),
-          t("desktop.ledger.documents.column.state"),
-          t("desktop.ledger.documents.column.action"),
-        ]}
-      >
-        {rows.map((item) => (
-          <tr key={item.attachment_id} className="ledger-attachment">
+        columns={attachmentColumns}
+        rows={rows}
+        rowKey={(item) => item.attachment_id}
+        renderRow={(item) => (
+          <tr className="ledger-attachment">
             <td className={cell}>{sourceLabel(t, item.source)}</td>
             <td className={cell}>{item.mime_type}</td>
             <td className={`${cell} tabular-nums`}>
@@ -200,11 +255,7 @@ export function AttachmentQueue({
               {stampText(locale, item.captured_at)}
             </td>
             <td className={cell}>
-              {item.pending_review
-                ? t("desktop.ledger.documents.attachment_waiting")
-                : t("desktop.ledger.documents.attachment_linked", {
-                    count: item.linked_invoice_ids.length,
-                  })}
+              {state(item)}
               {failed?.id === item.attachment_id && (
                 <span role="alert" className="block text-destructive">
                   <code className="font-mono text-xs">{failed.code}</code>
@@ -230,8 +281,8 @@ export function AttachmentQueue({
               </WriteHold>
             </td>
           </tr>
-        ))}
-      </Table>
+        )}
+      />
     </div>
   );
 }
@@ -250,6 +301,56 @@ const BATCH_ICONS: Record<string, IconName> = {
   pending_review: "pending",
   paused: "pause",
 };
+
+/** One line of a batch's results: a document and what became of it. */
+type BatchRow = {
+  key: string;
+  status: string;
+  name: string;
+  /** What the outcome is called, to rank the rows by. */
+  label: string;
+  outcome: ReactNode;
+};
+
+function batchRows(t: Translate, applied: DocumentsApplied): BatchRow[] {
+  return [
+    ...applied.items.map((item) => ({
+      key: item.identity,
+      status: item.status,
+      name: item.source_name,
+      label: batchStatusLabel(t, item.status),
+      outcome: (
+        <span className="inline-flex items-center gap-1">
+          <Icon name={BATCH_ICONS[item.status] ?? "info"} size="xs" />
+          {batchStatusLabel(t, item.status)}
+          {item.refusal_code && (
+            <code className="font-mono text-xs">{item.refusal_code}</code>
+          )}
+        </span>
+      ),
+    })),
+    ...applied.unresolved.map((item) => ({
+      key: `${item.source_name}:${item.refusal_code}`,
+      status: "refused",
+      name: item.source_name,
+      label: batchStatusLabel(t, "refused"),
+      outcome: (
+        <span className="inline-flex items-center gap-1">
+          <Icon name="refused" size="xs" />
+          {batchStatusLabel(t, "refused")}
+          <code className="font-mono text-xs">{item.refusal_code}</code>
+        </span>
+      ),
+    })),
+    ...applied.notSent.map((file) => ({
+      key: file.token,
+      status: "not_sent",
+      name: file.name,
+      label: t("desktop.ledger.documents.not_sent"),
+      outcome: t("desktop.ledger.documents.not_sent"),
+    })),
+  ];
+}
 
 /**
  * Every document in a folder, or several files, added as evidence in one
@@ -272,6 +373,21 @@ export function FolderIntake({
   const [busy, setBusy] = useState<"picking" | "adding" | null>(null);
   const [progress, setProgress] = useState(0);
   const [applied, setApplied] = useState<DocumentsApplied | null>(null);
+
+  const batchColumns: ViewColumn<BatchRow>[] = [
+    {
+      id: "document",
+      label: t("desktop.ledger.documents.column.document"),
+      name: t("desktop.ledger.documents.column.document"),
+      sortValue: (row) => row.name,
+    },
+    {
+      id: "outcome",
+      label: t("desktop.ledger.documents.column.outcome"),
+      name: t("desktop.ledger.documents.column.outcome"),
+      sortValue: (row) => row.label,
+    },
+  ];
 
   async function pick(how: FilePick) {
     setBusy("picking");
@@ -460,62 +576,16 @@ export function FolderIntake({
           )}
           <Table
             label={t("desktop.ledger.documents.batch_results")}
-            columns={[
-              t("desktop.ledger.documents.column.document"),
-              t("desktop.ledger.documents.column.outcome"),
-            ]}
-          >
-            {applied.items.map((item) => (
-              <tr
-                key={item.identity}
-                className="ledger-batch-item"
-                data-status={item.status}
-              >
-                <td className={cell}>{item.source_name}</td>
-                <td className={cell}>
-                  <span className="inline-flex items-center gap-1">
-                    <Icon name={BATCH_ICONS[item.status] ?? "info"} size="xs" />
-                    {batchStatusLabel(t, item.status)}
-                    {item.refusal_code && (
-                      <code className="font-mono text-xs">
-                        {item.refusal_code}
-                      </code>
-                    )}
-                  </span>
-                </td>
+            columns={batchColumns}
+            rows={batchRows(t, applied)}
+            rowKey={(row) => row.key}
+            renderRow={(row) => (
+              <tr className="ledger-batch-item" data-status={row.status}>
+                <td className={cell}>{row.name}</td>
+                <td className={cell}>{row.outcome}</td>
               </tr>
-            ))}
-            {applied.unresolved.map((item) => (
-              <tr
-                key={`${item.source_name}:${item.refusal_code}`}
-                className="ledger-batch-item"
-                data-status="refused"
-              >
-                <td className={cell}>{item.source_name}</td>
-                <td className={cell}>
-                  <span className="inline-flex items-center gap-1">
-                    <Icon name="refused" size="xs" />
-                    {batchStatusLabel(t, "refused")}
-                    <code className="font-mono text-xs">
-                      {item.refusal_code}
-                    </code>
-                  </span>
-                </td>
-              </tr>
-            ))}
-            {applied.notSent.map((file) => (
-              <tr
-                key={file.token}
-                className="ledger-batch-item"
-                data-status="not_sent"
-              >
-                <td className={cell}>{file.name}</td>
-                <td className={cell}>
-                  {t("desktop.ledger.documents.not_sent")}
-                </td>
-              </tr>
-            ))}
-          </Table>
+            )}
+          />
         </div>
       )}
     </div>
@@ -553,6 +623,54 @@ export function ConsentHistory({
     );
     return found ? fileName(found.source_path) : address.slice(0, 12);
   };
+  const when = t("desktop.ledger.documents.column.when");
+  const documentName = t("desktop.ledger.documents.column.document");
+  const dispatchColumns: ViewColumn<(typeof dispatches)[number]>[] = [
+    {
+      id: "when",
+      label: when,
+      name: when,
+      sortValue: (dispatch) => dispatch.recorded_at,
+    },
+    {
+      id: "document",
+      label: documentName,
+      name: documentName,
+      sortValue: (dispatch) => named(dispatch.evidence_content_address),
+    },
+    {
+      id: "provider",
+      label: t("desktop.ledger.documents.column.provider"),
+      name: t("desktop.ledger.documents.column.provider"),
+      sortValue: (dispatch) => dispatch.provider,
+    },
+    {
+      id: "model",
+      label: t("desktop.ledger.documents.column.model"),
+      name: t("desktop.ledger.documents.column.model"),
+      sortValue: (dispatch) => dispatch.model,
+    },
+  ];
+  const artefactColumns: ViewColumn<(typeof artefacts)[number]>[] = [
+    {
+      id: "when",
+      label: when,
+      name: when,
+      sortValue: (artefact) => artefact.drafted_at,
+    },
+    {
+      id: "document",
+      label: documentName,
+      name: documentName,
+      sortValue: (artefact) => named(artefact.evidence_reference),
+    },
+    {
+      id: "stamp",
+      label: t("desktop.ledger.documents.column.stamp"),
+      name: t("desktop.ledger.documents.column.stamp"),
+      sortValue: (artefact) => artefact.provenance_stamp,
+    },
+  ];
   return (
     <div className="ledger-consent grid gap-4 p-3">
       <p className="text-sm text-muted-foreground">
@@ -565,18 +683,13 @@ export function ConsentHistory({
       ) : (
         <Table
           label={t("desktop.ledger.documents.tab.sent")}
-          columns={[
-            t("desktop.ledger.documents.column.when"),
-            t("desktop.ledger.documents.column.document"),
-            t("desktop.ledger.documents.column.provider"),
-            t("desktop.ledger.documents.column.model"),
-          ]}
-        >
-          {dispatches.map((dispatch) => (
-            <tr
-              key={`${dispatch.recorded_at}:${dispatch.evidence_content_address}`}
-              className="ledger-consent-dispatch"
-            >
+          columns={dispatchColumns}
+          rows={dispatches}
+          rowKey={(dispatch) =>
+            `${dispatch.recorded_at}:${dispatch.evidence_content_address}`
+          }
+          renderRow={(dispatch) => (
+            <tr className="ledger-consent-dispatch">
               <td className={`${cell} tabular-nums`}>
                 {stampText(locale, dispatch.recorded_at)}
               </td>
@@ -586,8 +699,8 @@ export function ConsentHistory({
               <td className={cell}>{dispatch.provider}</td>
               <td className={cell}>{dispatch.model}</td>
             </tr>
-          ))}
-        </Table>
+          )}
+        />
       )}
       {artefacts.length > 0 && (
         <section className="grid gap-2">
@@ -596,14 +709,13 @@ export function ConsentHistory({
           </h3>
           <Table
             label={t("desktop.ledger.documents.derived")}
-            columns={[
-              t("desktop.ledger.documents.column.when"),
-              t("desktop.ledger.documents.column.document"),
-              t("desktop.ledger.documents.column.stamp"),
-            ]}
-          >
-            {artefacts.map((artefact) => (
-              <tr key={`${artefact.drafted_at}:${artefact.evidence_reference}`}>
+            columns={artefactColumns}
+            rows={artefacts}
+            rowKey={(artefact) =>
+              `${artefact.drafted_at}:${artefact.evidence_reference}`
+            }
+            renderRow={(artefact) => (
+              <tr>
                 <td className={`${cell} tabular-nums`}>
                   {stampText(locale, artefact.drafted_at)}
                 </td>
@@ -612,8 +724,8 @@ export function ConsentHistory({
                   {artefact.provenance_stamp}
                 </td>
               </tr>
-            ))}
-          </Table>
+            )}
+          />
         </section>
       )}
     </div>
@@ -622,7 +734,8 @@ export function ConsentHistory({
 
 // ---- What can read documents here ---------------------------------------------------
 
-/** What can read documents on this computer, role by role. */
+/** What can read documents on this computer, and what keeps them from being
+ * read: no reading task is named, only what is wrong. */
 export function ReaderReadiness({
   read,
   onRetry,
@@ -631,7 +744,7 @@ export function ReaderReadiness({
   onRetry(): void;
 }) {
   const t = useStrings();
-  const modelChoice = useModelChoice();
+  const modelList = useModelList();
   if (read.phase === "failed")
     return <Failed t={t} read={read} onRetry={onRetry} />;
   if (!read.value) return <Reading t={t} />;
@@ -647,6 +760,27 @@ export function ReaderReadiness({
         .filter((action): action is string => action !== null),
     ),
   ];
+  const problems = readerProblems(ready.roles);
+  // A problem the person settles by picking another model leads to the picker.
+  const problem = (words: string) => (
+    <li className="ledger-reader-problem flex items-start gap-2 border-b border-border py-2">
+      <Icon name="unplug" size="sm" className="text-warning" />
+      <span className="grid min-w-0 flex-1 gap-1">
+        <span className="text-sm">{words}</span>
+        {modelList && (
+          <Button
+            size="xs"
+            variant="outline"
+            className="ledger-reader-choose-model justify-self-start"
+            onClick={modelList.open}
+          >
+            <Icon name="agent" />
+            {t("desktop.ledger.documents.reader.choose_model")}
+          </Button>
+        )}
+      </span>
+    </li>
+  );
   const line = (ok: boolean, label: string, detail: string) => (
     <li className="flex items-start gap-2 border-b border-border py-2">
       <Icon
@@ -686,54 +820,10 @@ export function ReaderReadiness({
                 })
             : t("desktop.ledger.documents.reader.unavailable"),
         )}
-        {ready.roles.map((role) => {
-          const needsModel = roleNeedsModel(role);
-          return (
-            <li
-              key={role.role}
-              className="ledger-reader-role flex items-start gap-2 border-b border-border py-2"
-            >
-              <Icon
-                name={role.ready ? "check" : "unplug"}
-                size="sm"
-                className={role.ready ? "text-success" : "text-warning"}
-              />
-              <span className="grid min-w-0 flex-1 gap-1">
-                <span className="font-medium">
-                  {t("desktop.agent.model_role_heading", {
-                    role: roleWords(t, role.role),
-                  })}
-                </span>
-                {role.model && (
-                  <span className="text-sm text-muted-foreground">
-                    {role.model}
-                  </span>
-                )}
-                {needsModel && (
-                  <span className="ledger-reader-no-model text-sm text-muted-foreground">
-                    {t("desktop.ledger.documents.reader.no_model")}
-                  </span>
-                )}
-                {needsModel && modelChoice && (
-                  <Button
-                    size="xs"
-                    variant="outline"
-                    className="ledger-reader-choose-model justify-self-start"
-                    onClick={modelChoice.open}
-                  >
-                    <Icon name="agent" />
-                    {t("desktop.ledger.documents.reader.choose_model")}
-                  </Button>
-                )}
-              </span>
-              <span className="flex flex-wrap items-center gap-1 text-sm text-muted-foreground">
-                {role.ready
-                  ? t("desktop.ledger.documents.reader.ready")
-                  : t("desktop.ledger.documents.reader.not_ready")}
-              </span>
-            </li>
-          );
-        })}
+        {problems.noModel &&
+          problem(t("desktop.ledger.documents.reader.no_model"))}
+        {problems.cannotReadImages &&
+          problem(t("desktop.ledger.documents.reader.cannot_read_images"))}
         <li className="flex items-start gap-2 border-b border-border py-2">
           <Icon name="lock" size="sm" className="text-muted-foreground" />
           <span className="min-w-0 flex-1 font-medium">

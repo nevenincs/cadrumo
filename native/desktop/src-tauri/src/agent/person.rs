@@ -331,10 +331,12 @@ impl Person {
                 "present_destination" => Some("person_action_present_destination"),
                 "observe_events" => Some("person_action_observe_events"),
                 "operation_submit" => Some("person_action_operation_submit"),
+                "operation_secret_submit" => Some("person_action_operation_secret_submit"),
                 "operation_financial_submit" => Some("person_action_operation_financial_submit"),
                 "operation_observe" => Some("person_action_operation_observe"),
                 "operation_result" => Some("person_action_operation_result"),
                 "operation_review" => Some("person_action_operation_review"),
+                "operation_review_claimable" => Some("person_action_operation_review_claimable"),
                 "operation_review_claim" => Some("person_action_operation_review_claim"),
                 "operation_respond" => Some("person_action_operation_respond"),
                 "operation_cancel" => Some("person_action_operation_cancel"),
@@ -446,12 +448,14 @@ impl Person {
 pub type HeldPerson = std::sync::Arc<Mutex<Person>>;
 
 /// The generic relay actions of the held session and the reply each answers with.
-const RELAY_REPLIES: [(&str, &str); 8] = [
+const RELAY_REPLIES: [(&str, &str); 10] = [
     ("operation_submit", "operation_submitted"),
+    ("operation_secret_submit", "operation_submitted"),
     ("operation_financial_submit", "operation_submitted"),
     ("operation_observe", "operation_observed"),
     ("operation_result", "operation_result"),
     ("operation_review", "operation_review"),
+    ("operation_review_claimable", "operation_reviews_claimable"),
     ("operation_review_claim", "operation_review_claimed"),
     ("operation_respond", "operation_responded"),
     ("operation_cancel", "operation_cancel_requested"),
@@ -527,6 +531,7 @@ mod language_tests {
         let reply =
             json!({"kind":"operation_submitted", "profile_id":"profile", "session_id":"session"});
         assert!(relay_reply(&identity, "operation_submit", &reply));
+        assert!(relay_reply(&identity, "operation_secret_submit", &reply));
         assert!(!relay_reply(&identity, "operation_observe", &reply));
         assert!(!relay_reply(&identity, "setup_start", &reply));
         let refused = json!({"kind":"operation_refused", "profile_id":"profile", "session_id":"session", "code":"subject_busy"});

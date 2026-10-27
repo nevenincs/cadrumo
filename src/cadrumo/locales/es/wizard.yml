@@ -360,18 +360,6 @@ wizard:
         help: Forma jurídica reconocida cuando el tipo de entidad es persona jurídica
       legal-name:
         help: Razón social de la persona jurídica para cabeceras de exportación
-      ley-49-2002-option-date:
-        help: Registra la fecha de la casilla 653 del modelo 036 para la opción del
-          título II de la Ley 49/2002.
-      ley-49-2002-option-declared:
-        help: Registra si la casilla 651 del modelo 036 declara la opción por el título
-          II de la Ley 49/2002.
-      ley-49-2002-renunciation-date:
-        help: Registra la fecha de la casilla 654 del modelo 036 para la renuncia
-          al título II de la Ley 49/2002.
-      ley-49-2002-renunciation-declared:
-        help: Registra si la casilla 652 del modelo 036 declara la renuncia al régimen
-          del título II de la Ley 49/2002.
       llm-vision:
         help: Permitir leer documentos escaneados o en imagen con el modelo de lectura
           de imágenes elegido en la aplicación de escritorio.
@@ -391,24 +379,6 @@ wizard:
           primeros periodos impositivos con beneficios (art. 29 LIS), para aplicar
           el tipo reducido del 15 por ciento. Opcional; sin marcar no se aplica el
           tipo reducido.
-      notes:
-        help: Notas para tu propio recuerdo (opcional)
-      objective-estimation-modulos-iae-epigraph:
-        help: Epígrafe IAE para módulos de estimación objetiva, por ejemplo 972.
-      objective-estimation-modulos-module-1-units:
-        help: Unidades anuales del módulo 1 para estimación objetiva.
-      objective-estimation-modulos-module-2-units:
-        help: Unidades anuales del módulo 2 para estimación objetiva.
-      objective-estimation-modulos-module-3-units:
-        help: Unidades anuales del módulo 3 para estimación objetiva.
-      objective-estimation-modulos-module-4-units:
-        help: Unidades anuales del módulo 4 para estimación objetiva.
-      objective-estimation-modulos-module-5-units:
-        help: Unidades anuales del módulo 5 para estimación objetiva.
-      objective-estimation-modulos-module-6-units:
-        help: Unidades anuales del módulo 6 para estimación objetiva.
-      objective-estimation-modulos-module-7-units:
-        help: Unidades anuales del módulo 7 para estimación objetiva.
       output-language:
         help: Idioma de salida de la CLI para este perfil
       pays-capital-income-with-retencion:
@@ -423,8 +393,6 @@ wizard:
       premio-loteria-gravamen-especial-trimestres:
         help: Trimestres en que se cobró el premio, como tokens AAAA-nT separados
           por | (por ejemplo 2025-1T|2025-3T)
-      professional-income-withholding-ge-70pct:
-        help: Al menos 70% de los ingresos profesionales con retención previa
       representante-fiscal-nif:
         help: NIF/NIE del representante fiscal en España. Obligatorio para no residentes
           fuera de la UE/EEE (art. 47 LGT + art. 10 TRLIRNR RDLeg 5/2004).
@@ -560,10 +528,6 @@ wizard:
             label: Solo régimen simplificado
         prompt: ¿Qué composición de regímenes se aplica al Modelo 303?
       title: IVA
-    notes:
-      notes:
-        prompt: Notas para tu propio recuerdo (opcional)
-      title: Notas para tu propio recuerdo
     obligations:
       art109-activity-income-withholding-ge-70pct:
         prompt: Aplica la excepción Art. 109 por cobertura del 70% de ingresos de
@@ -618,28 +582,6 @@ wizard:
         prompt: Periodos Modelo 115 sin pago relevante
       monedas-virtuales-extranjero-above-threshold:
         prompt: Monedas virtuales en el extranjero superan el umbral del Modelo 721
-      objective-estimation-modulos-iae-epigraph:
-        help: Se guarda una vez en el perfil anual. Los coeficientes siguen en el
-          registro del modelo.
-        prompt: Epígrafe IAE para módulos de estimación objetiva
-      objective-estimation-modulos-module-1-units:
-        prompt: Unidades anuales del módulo 1
-      objective-estimation-modulos-module-2-units:
-        prompt: Unidades anuales del módulo 2
-      objective-estimation-modulos-module-3-units:
-        prompt: Unidades anuales del módulo 3
-      objective-estimation-modulos-module-4-units:
-        prompt: Unidades anuales del módulo 4
-      objective-estimation-modulos-module-5-units:
-        prompt: Unidades anuales del módulo 5
-      objective-estimation-modulos-module-6-units:
-        prompt: Unidades anuales del módulo 6
-      objective-estimation-modulos-module-7-units:
-        prompt: Unidades anuales del módulo 7
-      objective-estimation-modulos-module-units:
-        help: Recuento anual estable para esta casilla de módulo. El epígrafe IAE
-          seleccionado define si significa personal, superficie del local, consumo
-          eléctrico u otro módulo oficial.
       pays-capital-income-with-retencion:
         prompt: Paga rentas de capital con retención
       pays-professionals-with-retencion:
@@ -654,8 +596,6 @@ wizard:
           2025-1T|2025-3T). Cada trimestre abre su propia presentación del Modelo
           136.
         prompt: Trimestres en que se cobró el premio
-      professional-income-withholding-ge-70pct:
-        prompt: Al menos 70% de los ingresos profesionales con retención previa
       third-party-transactions-above-347-threshold:
         prompt: En el año natural que cubre el Modelo 347, ¿tus operaciones con una
           misma persona o entidad superaron 3.005,06 € (300,51 € en los cobros que
@@ -973,21 +913,6 @@ wizard:
           sociedad-civil-mercantil:
             label: Sociedad civil con objeto mercantil
         prompt: Forma jurídica
-      ley-49-2002-option-date:
-        help: Usa la fecha ISO correspondiente a la casilla 653 del modelo 036.
-        prompt: Fecha declarada de la opción por el régimen especial de la Ley 49/2002
-      ley-49-2002-option-declared:
-        help: Usa el hecho declarado en la casilla 651 del modelo 036; la aplicación
-          legal sigue condicionada a los requisitos legales y a que no exista renuncia.
-        prompt: La entidad ha presentado en el modelo 036 la opción por el régimen
-          fiscal especial del título II de la Ley 49/2002?
-      ley-49-2002-renunciation-date:
-        help: Usa la fecha ISO correspondiente a la casilla 654 del modelo 036.
-        prompt: Fecha declarada de la renuncia al régimen especial de la Ley 49/2002
-      ley-49-2002-renunciation-declared:
-        help: Usa el hecho declarado en la casilla 652 del modelo 036.
-        prompt: La entidad ha presentado en el modelo 036 la renuncia al régimen fiscal
-          especial del título II de la Ley 49/2002?
       new-entity-first-two-profit-periods:
         help: Aplica solo a personas jurídicas. Si lo marca, la entidad tributa al
           tipo reducido del 15 por ciento durante esos dos periodos.

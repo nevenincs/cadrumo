@@ -31,8 +31,8 @@ stored MIME type:
   model confirming itself.
 - A **scan-only PDF or image** has nothing to transcribe, so it falls back to the
   vision reader (:mod:`~llm.evidence_draft_vision`): a PDF is rasterised to page
-  images on this computer, and the images go to the model the person selected
-  for the vision transcription role, the same route
+  images on this computer, and the images go to the model the agent service
+  derives for the vision transcription role, the same route
   :class:`~llm.vision_classifier.VisionLLMClassifier` uses for classification.
   Gated by :attr:`~core.capabilities.ServiceCapability.LLM_VISION`.
 

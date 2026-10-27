@@ -282,7 +282,7 @@ def test_a_refused_committing_submission_stores_nothing_and_leaves_its_subject_f
 
         async def submit(caller: _Caller) -> OperationId:
             operation_id = new_operation_id()
-            authority.bind(
+            await authority.bind(
                 operation_id,
                 WorkerOperationBinding(caller.session.session_id, OperationFrontendProjection.EXTERNAL_CLIENT, request),
             )

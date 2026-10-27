@@ -70,7 +70,6 @@ def _profile(operation: PinnedAuthorityOperation) -> TaxpayerProfile:
                     voluntary_sii_enrolled=False,
                     hydrocarbon_deposit_advance_payment_deduction_entitled=False,
                 ),
-                "professional_income_withholding_ge_70pct": False,
                 "art109_activity_income_withholding_ge_70pct": False,
             },
         )

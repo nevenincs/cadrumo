@@ -182,6 +182,21 @@ class SessionStoreProtocol(Protocol):
         """Stage provider writes until an authorized caller publishes them."""
         ...
 
+    def storage_state_sha256(self, storage_state: Mapping[str, object]) -> str:
+        """Return the canonical digest the store records for ``storage_state``."""
+        ...
+
+    def durable_storage_state_sha256(self, path: Path) -> str | None:
+        """Return the digest held in durable custody at ``path``, ignoring staged writes."""
+        ...
+
+    def stage_captured_storage_state(self, path: Path, *, storage_state: Mapping[str, object]) -> bool:
+        """Stage a running context's capture over the stored record at ``path`` for verification.
+
+        Returns ``False``, staging nothing, when no usable record is stored.
+        """
+        ...
+
 
 class SessionWriteStage(Protocol):
     """Transient provider state awaiting one guarded publication."""

@@ -74,6 +74,15 @@ const effortBox = (settings: Locator) =>
 const pickerList = (target: Page) => target.getByRole("listbox");
 const pickerOptions = (target: Page) => pickerList(target).getByRole("option");
 
+/** Waits out the transitions of a popover that is arriving: it grows as it
+ * opens, so what is measured of it is only real once they have ended. */
+const arrived = (popover: Locator) =>
+  popover.evaluate(async (node) => {
+    await Promise.all(
+      node.getAnimations({ subtree: true }).map((motion) => motion.finished),
+    );
+  });
+
 /** The entry of the list for the lane `way`, once the list is open. */
 const entry = (target: Page, way: string) =>
   target.locator(`[role=option][data-way="${way}"]`);
@@ -554,6 +563,7 @@ for (const width of [390, 520]) {
           return box ? box.x >= 0 && box.x + box.width <= width : false;
         })
         .toBe(true);
+      await arrived(settings);
       expect(await overflowing(target)).toBe(false);
       expect(
         await settings.evaluate((node) => node.scrollWidth > node.clientWidth),
@@ -569,6 +579,7 @@ for (const width of [390, 520]) {
       const list = target.getByRole("listbox");
       await expect(list).toBeVisible();
       await expect(pickerOptions(target)).toHaveCount(lanes.length);
+      await arrived(list);
       const edge = (await list.boundingBox())!;
       expect(edge.x).toBeGreaterThanOrEqual(0);
       expect(edge.x + edge.width).toBeLessThanOrEqual(width);

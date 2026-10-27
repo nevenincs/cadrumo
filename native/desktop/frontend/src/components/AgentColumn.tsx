@@ -2,6 +2,7 @@ import {
   useCallback,
   useEffect,
   useImperativeHandle,
+  useId,
   useMemo,
   useRef,
   useState,
@@ -9,6 +10,8 @@ import {
   type Ref,
 } from "react";
 import { Button } from "@/components/ui/button";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import { isCadrumoLink } from "../shell/navigation/links";
 import { EmptyState } from "@/components/ui/empty";
 import { Icon, type IconName } from "@/components/ui/icon";
@@ -21,6 +24,7 @@ import {
   selectionRecord,
 } from "../shell/agentCatalog";
 import { useRememberedChoice } from "../shell/agentChoice";
+import { useReadingModel, type ReadingModelHost } from "../shell/readingModel";
 import {
   DocumentLister,
   documentRefs,
@@ -71,15 +75,16 @@ import type { OpenMenu } from "./ContextMenu";
 import { AgentHeader } from "./agent/AgentHeader";
 import { AgentWelcome } from "./agent/AgentWelcome";
 import { ApprovalPrompt } from "./agent/ApprovalPrompt";
+import { SetupApprovalPrompts } from "./agent/SetupApprovalPrompts";
+import type { SetupApprovals } from "../shell/setupApprovals";
 import { Composer, type ComposerReferences } from "./agent/Composer";
 import { documentSource } from "./agent/DocumentMentions";
 import { HistoryList } from "./agent/HistoryList";
 import { QuestionsPrompt } from "./agent/QuestionsPrompt";
-import { ModelRolesDialog } from "./agent/ModelRolesDialog";
 import { SkillDialog } from "./agent/SkillDialog";
 import { useSkillInventory } from "./agent/SlashSuggestions";
-import { roleLanes } from "../shell/agentModelRoles";
-import type { ModelRoleHost } from "../shell/modelRoles";
+import { catalogLanes } from "../shell/localModelLanes";
+import type { LocalModelHost } from "../shell/localModels";
 import type { SkillCommand } from "../shell/agentSkills";
 import { AgentAccess as AgentAccessSection } from "./settings/AgentAccess";
 import { LocalModels } from "./settings/LocalModels";
@@ -90,6 +95,49 @@ import type {
   ModelOption,
   ProviderOption,
 } from "./agent/types";
+
+function SettingsDisclosure({
+  title,
+  visible,
+  searching,
+  focus,
+  children,
+}: {
+  title: string;
+  visible: boolean;
+  searching: boolean;
+  focus: number;
+  children: ReactNode;
+}) {
+  const details = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    if (searching && visible && details.current) details.current.open = true;
+  }, [searching, visible]);
+  useEffect(() => {
+    if (!focus || !details.current) return;
+    details.current.open = true;
+    if (!details.current.contains(document.activeElement))
+      details.current.querySelector("summary")?.focus();
+    details.current.scrollIntoView({ block: "nearest" });
+  }, [focus]);
+  return (
+    <details
+      ref={details}
+      open
+      hidden={!visible}
+      className="group/settings rounded-lg bg-card p-3"
+    >
+      <summary className="flex min-h-control-lg cursor-pointer items-center justify-between gap-2 rounded-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring">
+        {title}
+        <Icon
+          name="chevronDown"
+          className="shrink-0 transition-transform group-open/settings:rotate-180"
+        />
+      </summary>
+      <div className="pt-3">{children}</div>
+    </details>
+  );
+}
 
 // What the composer is given while nothing serves it: nothing. Sending,
 // adding files and choosing a model each say they are not available yet.
@@ -108,7 +156,8 @@ type Panel = "none" | "history" | "settings" | "documents";
 
 export type AgentColumnControl = {
   openLocalAi(): void;
-  openModelRoles(): void;
+  /** Shows the conversation with the model picker open. */
+  openModelPicker(): void;
 };
 
 type PendingSend = {
@@ -197,11 +246,11 @@ export function AgentColumn({
   onOpenView,
   onSetUpLocalAi,
   onRemoveLocalModel,
-  onOpenLocalAi,
   control,
   localAiSetup,
   onShowLocalAiSetup,
   setupSettled = null,
+  setupApprovals,
 }: {
   agent: AgentViews | undefined;
   /** Sending and the live stream, where the host offers them. */
@@ -237,19 +286,22 @@ export function AgentColumn({
   onOpenView?: (url: string, opened?: (view: string) => void) => void;
   /** Opens setup on the local AI, where this window offers setup. */
   onSetUpLocalAi?: (lane: string, model: string) => void;
-  /** Removes one local model no role selects, answering the refusal's code
-   * or null, where this window offers setup. */
+  /** Removes one local model from this computer, answering the refusal's
+   * code or null, where this window offers setup. */
   onRemoveLocalModel?: (model: string) => Promise<string | null>;
-  onOpenLocalAi?: () => void;
   /** The last setup that settled, by operation: what this computer holds may
    * have changed, so the catalog is read again. */
   setupSettled?: string | null;
+  /** Setup reviews waiting on this person, answered beside the agent's own
+   * approvals, and where to check setup after an unconfirmed answer. */
+  setupApprovals?: { approvals: SetupApprovals; onCheckSetup: () => void };
   control?: Ref<AgentColumnControl>;
   /** The existing component status and recovery beside its local models. */
   localAiSetup?: ReactNode;
   onShowLocalAiSetup?: () => void;
 }) {
   const t = useStrings();
+  const searchId = useId();
   const [setupCheck, setSetupCheck] = useState<{
     reader: string;
     conversation: string | null;
@@ -387,6 +439,20 @@ export function AgentColumn({
   }, [live.read, pending, locale, t, projectTranscript]);
   // What the agent served of the conversation's replies beside their words: the
   // state of the newest, what they ran with, and the tokens they used.
+  // A finished tool call or reply can leave setup waiting on the person:
+  // read the waiting reviews again whenever one does.
+  const toolsSettled =
+    live.read.kind === "ready"
+      ? live.read.value.filter(
+          (record) =>
+            record.kind === "tool" &&
+            (record.status === "completed" || record.status === "failed"),
+        ).length
+      : 0;
+  const waitingSetup = setupApprovals?.approvals;
+  useEffect(() => {
+    if (shown) void waitingSetup?.refresh();
+  }, [waitingSetup, shown, conversationId, toolsSettled, view.revision]);
   const newest =
     live.read.kind === "ready" ? newestReply(live.read.value) : undefined;
   const facts = useMemo(
@@ -404,41 +470,62 @@ export function AgentColumn({
     [session],
   );
   const [skillShown, setSkillShown] = useState<SkillCommand | null>(null);
-  // The person's model for each role that reads documents, where the host
-  // offers reading and changing it.
-  const [rolesShown, setRolesShown] = useState(false);
+  const [settingsQuery, setSettingsQuery] = useState("");
+  const [providerMatches, setProviderMatches] = useState(true);
+  const [accessMatches, setAccessMatches] = useState(true);
   const openLocalAi = useCallback(() => {
-    setRolesShown(false);
+    setSettingsQuery("");
     setView((held) => ({
       ...held,
       panel: "settings",
       localFocus: held.localFocus + 1,
     }));
   }, []);
+  const [pickerRequests, setPickerRequests] = useState(0);
+  const openModelPicker = useCallback(() => {
+    setView((held) => ({ ...held, panel: "none" }));
+    setPickerRequests((count) => count + 1);
+  }, []);
   useImperativeHandle(
     control,
     () => ({
       openLocalAi,
-      openModelRoles() {
-        setRolesShown(true);
-      },
+      openModelPicker,
     }),
-    [openLocalAi],
+    [openLocalAi, openModelPicker],
   );
-  const roleHost = useMemo((): ModelRoleHost | null => {
+  // The models the person added to the local lanes' lists, where the host
+  // offers reading and changing them.
+  const localModelHost = useMemo((): LocalModelHost | null => {
     if (
-      !session?.modelRoles ||
-      !session.setModelRole ||
-      !session.clearModelRole
+      !session?.localModels ||
+      !session.addLocalModel ||
+      !session.removeLocalModel ||
+      !session.resetLocalModels
     )
       return null;
+    const changed = <T,>(made: Promise<T>) =>
+      made.then((value) => {
+        setListChanges((count) => count + 1);
+        return value;
+      });
+    const add = session.addLocalModel.bind(session);
+    const remove = session.removeLocalModel.bind(session);
+    const reset = session.resetLocalModels.bind(session);
     return {
-      read: session.modelRoles.bind(session),
-      set: session.setModelRole.bind(session),
-      clear: session.clearModelRole.bind(session),
-      ...(session.modelLicence
-        ? { licence: session.modelLicence.bind(session) }
-        : {}),
+      read: session.localModels.bind(session),
+      add: (lane, model, revision) => changed(add(lane, model, revision)),
+      remove: (lane, model, revision) => changed(remove(lane, model, revision)),
+      reset: (revision) => changed(reset(revision)),
+    };
+  }, [session]);
+  // Changes made to the lists in the settings, which the picker reads again.
+  const [listChanges, setListChanges] = useState(0);
+  const readingHost = useMemo((): ReadingModelHost | null => {
+    if (!session?.localModels || !session.chooseReadingModel) return null;
+    return {
+      read: session.localModels.bind(session),
+      choose: session.chooseReadingModel.bind(session),
     };
   }, [session]);
   // The agent's settings belong to the signed-in profile, and are read only
@@ -482,10 +569,10 @@ export function AgentColumn({
   useEffect(() => {
     if (setupSettled) setCatalogAgain((count) => count + 1);
   }, [setupSettled]);
-  // The lanes whose models the person chooses, which a lane on this computer
-  // lists in its provider settings.
+  // The catalog's lanes with their models, whose list a lane on this computer
+  // shows in its provider settings.
   const localLanes = useMemo(
-    () => (catalog.kind === "ready" ? roleLanes(catalog.value) : []),
+    () => (catalog.kind === "ready" ? catalogLanes(catalog.value) : []),
     [catalog],
   );
   // A service still busy starting the agent answers the catalog late. The
@@ -513,14 +600,62 @@ export function AgentColumn({
     );
     return () => window.clearTimeout(again);
   }, [catalog, catalogBusy, status]);
-  const offer = useMemo(
-    () => (catalog.kind === "ready" ? catalogChoices(t, catalog.value) : null),
-    [catalog, t],
-  );
   // What the next message runs with: what the person chose while this
   // conversation is shown, else what the conversation last ran with, else the
   // profile's last choice, each only where the catalog still offers it.
   const { remembered, remember } = useRememberedChoice(reader);
+  // The person's last choice is also the model documents are read with. The
+  // service keeps it beside the local lists, which are also what the picker
+  // offers of a lane on this computer.
+  const [rememberedRecord, setRememberedRecord] = useState<{
+    lane: string;
+    model: string;
+  } | null>(null);
+  const stored = useReadingModel(
+    readingHost,
+    rememberedRecord,
+    catalogAgain + settings.changes + opened + listChanges,
+  );
+  const offer = useMemo(() => {
+    if (catalog.kind !== "ready") return null;
+    const lists =
+      stored === null
+        ? null
+        : {
+            lanes: stored.local_lanes,
+            added: (lane: string) =>
+              stored.state === "readable"
+                ? stored.models
+                    .filter((entry) => entry.lane === lane)
+                    .map((entry) => entry.model)
+                : [],
+          };
+    return catalogChoices(t, catalog.value, lists);
+  }, [catalog, t, stored]);
+  // Only a choice the picker still offers is the one documents are read
+  // with; one it no longer offers, such as a model taken off its list, is not.
+  const restoredRemembered =
+    offer && remembered ? restoredSelection(offer, [remembered]) : null;
+  const offeredRemembered =
+    remembered &&
+    restoredRemembered?.wayId === remembered.wayId &&
+    restoredRemembered.modelId === remembered.modelId &&
+    catalog.kind === "ready"
+      ? selectionRecord(catalog.value, remembered)
+      : null;
+  const wantedLane = offeredRemembered
+    ? `${offeredRemembered.provider}_${offeredRemembered.transport}`
+    : null;
+  const wantedModel = offeredRemembered?.model ?? null;
+  if (
+    (rememberedRecord?.lane ?? null) !== wantedLane ||
+    (rememberedRecord?.model ?? null) !== wantedModel
+  )
+    setRememberedRecord(
+      wantedLane !== null && wantedModel !== null
+        ? { lane: wantedLane, model: wantedModel }
+        : null,
+    );
   const ranWith =
     conversationId !== null && live.read.kind === "ready"
       ? newestRanWith(live.read.value)
@@ -672,8 +807,21 @@ export function AgentColumn({
     (agentAccess !== undefined && access.read.kind === "loading");
   const openSettings =
     (providerSettings || agentAccess) && reader !== null
-      ? () => change({ panel: "settings" })
+      ? () => {
+          change({ panel: "settings", localFocus: 0 });
+        }
       : undefined;
+
+  const query = settingsQuery.trim().toLocaleLowerCase();
+  const titleMatches = (title: string) =>
+    Boolean(query) && title.toLocaleLowerCase().includes(query);
+  const providerTitleMatches = titleMatches(t("desktop.providers.title"));
+  const accessTitleMatches = titleMatches(t("desktop.automation_access.title"));
+  const providerVisible =
+    Boolean(providerSettings) &&
+    (!query || providerTitleMatches || providerMatches);
+  const accessVisible =
+    Boolean(agentAccess) && (!query || accessTitleMatches || accessMatches);
 
   // The stored documents the next message names: chosen with `@`, or
   // attached and stored first. A send that does not go keeps them.
@@ -1067,114 +1215,158 @@ export function AgentColumn({
             // own: provider settings and sign-in, plus keys for agents outside
             // Cadrumo.
             <div className="grid gap-6 p-3">
-              {view.localFocus > 0 &&
-                settings.read.kind === "ready" &&
-                !localProvider && (
-                  <div className="grid gap-2">
-                    {localAiSetup}
-                    <p className="text-sm text-muted-foreground">
-                      {t("desktop.providers.local_models_none")}
-                    </p>
-                    {onShowLocalAiSetup && (
-                      <Button variant="outline" onClick={onShowLocalAiSetup}>
-                        {t("desktop.setup.open")}
-                      </Button>
+              <Field>
+                <FieldLabel htmlFor={searchId}>
+                  {t("desktop.settings.agent_search")}
+                </FieldLabel>
+                <Input
+                  id={searchId}
+                  type="search"
+                  value={settingsQuery}
+                  onChange={(event) =>
+                    setSettingsQuery(event.currentTarget.value)
+                  }
+                />
+              </Field>
+              {providerSettings && (
+                <SettingsDisclosure
+                  title={t("desktop.providers.title")}
+                  visible={providerVisible}
+                  searching={Boolean(query)}
+                  focus={view.localFocus}
+                >
+                  {view.localFocus > 0 &&
+                    settings.read.kind === "ready" &&
+                    !localProvider && (
+                      <div className="grid gap-2">
+                        {localAiSetup}
+                        <p className="text-sm text-muted-foreground">
+                          {t("desktop.providers.local_models_none")}
+                        </p>
+                        {onShowLocalAiSetup && (
+                          <Button
+                            variant="outline"
+                            onClick={onShowLocalAiSetup}
+                          >
+                            {t("desktop.setup.open")}
+                          </Button>
+                        )}
+                      </div>
                     )}
-                  </div>
-                )}
-              {providerSettings &&
-                (settings.read.kind === "ready" ? (
-                  <ProviderSettingsSection
-                    key={view.localFocus}
-                    focusLane={
-                      view.localFocus > 0 ? localProvider?.id : undefined
-                    }
-                    providers={settings.read.value.providers}
-                    signIn={providerSettings.signIn}
-                    signInProviders={settings.read.value.signInProviders}
-                    signInMethods={settings.read.value.signInMethods}
-                    revisions={settings.read.value.revisions}
-                    identity={reader}
-                    busyId={settings.busyId}
-                    outcomes={settings.outcomes}
-                    onSave={settings.save}
-                    onTurnOff={settings.turnOff}
-                    onTurnOn={settings.turnOn}
-                    onReset={settings.reset}
-                    onRefresh={settings.refresh}
-                    onSignInTerminal={refreshProviderAfterSignIn}
-                    localModels={
-                      roleHost
-                        ? (lane) => (
-                            <div className="grid gap-3">
-                              {lane.id === localProvider?.id && localAiSetup}
-                              <LocalModels
-                                key={`${lane.id}/${rolesShown}`}
-                                lane={
-                                  localLanes.find(
-                                    (held) => held.id === lane.id,
-                                  ) ?? null
-                                }
-                                host={roleHost}
-                                locale={locale}
-                                onConfigure={() => setRolesShown(true)}
-                                onSetUp={
-                                  onSetUpLocalAi
-                                    ? (model) => onSetUpLocalAi(lane.id, model)
-                                    : undefined
-                                }
-                                onRemove={
-                                  onRemoveLocalModel
-                                    ? (model) =>
-                                        onRemoveLocalModel(model).then(
-                                          (code) => {
-                                            if (code === null)
-                                              setCatalogAgain(
-                                                (count) => count + 1,
-                                              );
-                                            return code;
-                                          },
-                                        )
-                                    : undefined
-                                }
-                              />
-                            </div>
-                          )
-                        : undefined
-                    }
-                  />
-                ) : settings.read.kind === "failed" ? (
-                  <SectionFailure
-                    words={t("desktop.providers.load_failed")}
-                    onRetry={settings.refresh}
-                  />
-                ) : (
-                  <ReadState read={settings.read} icon="settings" />
-                ))}
-              {agentAccess &&
-                (access.read.kind === "ready" ? (
-                  <AgentAccessSection
-                    credentials={access.read.value.credentials}
-                    locale={locale}
-                    busyId={access.busyId}
-                    outcomes={access.outcomes}
-                    issuing={access.issuing}
-                    issueRefusal={access.issueRefusal}
-                    issued={access.issued}
-                    onIssue={access.issue}
-                    onCloseIssue={access.closeIssue}
-                    onRevoke={access.revoke}
-                    onRefresh={access.refresh}
-                    onCopy={writeClipboard}
-                  />
-                ) : access.read.kind === "failed" ? (
-                  <SectionFailure
-                    words={t("desktop.agent.read_failed")}
-                    onRetry={access.refresh}
-                  />
-                ) : (
-                  <ReadState read={access.read} icon="settings" />
-                ))}
+                  {providerSettings &&
+                    (settings.read.kind === "ready" ? (
+                      <ProviderSettingsSection
+                        query={providerTitleMatches ? "" : query}
+                        searching={Boolean(query)}
+                        embedded
+                        onMatch={setProviderMatches}
+                        focusLane={
+                          view.localFocus > 0 ? localProvider?.id : undefined
+                        }
+                        providers={settings.read.value.providers}
+                        signIn={providerSettings.signIn}
+                        signInProviders={settings.read.value.signInProviders}
+                        signInMethods={settings.read.value.signInMethods}
+                        revisions={settings.read.value.revisions}
+                        identity={reader}
+                        busyId={settings.busyId}
+                        outcomes={settings.outcomes}
+                        onSave={settings.save}
+                        onTurnOff={settings.turnOff}
+                        onTurnOn={settings.turnOn}
+                        onReset={settings.reset}
+                        onRefresh={settings.refresh}
+                        onSignInTerminal={refreshProviderAfterSignIn}
+                        localModels={
+                          localModelHost
+                            ? (lane) => (
+                                <div className="grid gap-3">
+                                  {lane.id === localProvider?.id &&
+                                    localAiSetup}
+                                  <LocalModels
+                                    key={`${lane.id}/${view.localFocus}`}
+                                    lane={
+                                      localLanes.find(
+                                        (held) => held.id === lane.id,
+                                      ) ?? null
+                                    }
+                                    host={localModelHost}
+                                    locale={locale}
+                                    onSetUp={
+                                      onSetUpLocalAi
+                                        ? (model) =>
+                                            onSetUpLocalAi(lane.id, model)
+                                        : undefined
+                                    }
+                                    onRemove={
+                                      onRemoveLocalModel
+                                        ? (model) =>
+                                            onRemoveLocalModel(model).then(
+                                              (code) => {
+                                                if (code === null)
+                                                  setCatalogAgain(
+                                                    (count) => count + 1,
+                                                  );
+                                                return code;
+                                              },
+                                            )
+                                        : undefined
+                                    }
+                                  />
+                                </div>
+                              )
+                            : undefined
+                        }
+                      />
+                    ) : settings.read.kind === "failed" ? (
+                      <SectionFailure
+                        words={t("desktop.providers.load_failed")}
+                        onRetry={settings.refresh}
+                      />
+                    ) : (
+                      <ReadState read={settings.read} icon="settings" />
+                    ))}
+                </SettingsDisclosure>
+              )}
+              {agentAccess && (
+                <SettingsDisclosure
+                  title={t("desktop.automation_access.title")}
+                  visible={accessVisible}
+                  searching={Boolean(query)}
+                  focus={0}
+                >
+                  {agentAccess &&
+                    (access.read.kind === "ready" ? (
+                      <AgentAccessSection
+                        query={accessTitleMatches ? "" : query}
+                        embedded
+                        onMatch={setAccessMatches}
+                        credentials={access.read.value.credentials}
+                        locale={locale}
+                        busyId={access.busyId}
+                        outcomes={access.outcomes}
+                        issuing={access.issuing}
+                        issueRefusal={access.issueRefusal}
+                        issued={access.issued}
+                        onIssue={access.issue}
+                        onCloseIssue={access.closeIssue}
+                        onRevoke={access.revoke}
+                        onRefresh={access.refresh}
+                        onCopy={writeClipboard}
+                      />
+                    ) : access.read.kind === "failed" ? (
+                      <SectionFailure
+                        words={t("desktop.agent.read_failed")}
+                        onRetry={access.refresh}
+                      />
+                    ) : (
+                      <ReadState read={access.read} icon="settings" />
+                    ))}
+                </SettingsDisclosure>
+              )}
+              {query && !providerVisible && !accessVisible && (
+                <p role="status">{t("desktop.settings.agent_search_empty")}</p>
+              )}
             </div>
           )
         ) : documentsOpen ? (
@@ -1328,6 +1520,13 @@ export function AgentColumn({
                 {t("desktop.agent.aeat_setup_check")}
               </Button>
             )}
+          {setupApprovals && (
+            <SetupApprovalPrompts
+              approvals={setupApprovals.approvals}
+              locale={locale}
+              onCheckSetup={setupApprovals.onCheckSetup}
+            />
+          )}
           {live.approvals.map((approval) => (
             <ApprovalPrompt
               key={approval.request_id}
@@ -1442,20 +1641,9 @@ export function AgentColumn({
                   }
                 : undefined
             }
-            onModelRoles={roleHost ? () => setRolesShown(true) : undefined}
+            pickerRequests={pickerRequests}
           />
         </div>
-      )}
-      {rolesShown && roleHost && (
-        <ModelRolesDialog
-          host={roleHost}
-          catalog={catalog.kind === "ready" ? catalog.value : null}
-          locale={locale}
-          onClose={() => setRolesShown(false)}
-          onLocalAi={
-            providerSettings ? (onOpenLocalAi ?? openLocalAi) : undefined
-          }
-        />
       )}
       {skillShown && (
         <SkillDialog

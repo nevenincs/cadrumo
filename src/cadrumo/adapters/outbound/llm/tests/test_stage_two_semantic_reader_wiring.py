@@ -15,7 +15,7 @@ Four properties, each of which has failed somewhere in this repository before:
   now that a vision transcription can, it would launder a rasterised read into
   an exact-looking one.
 * The read names the text extraction role and no model, so the agent service
-  runs it on the lane and model the person selected for that role.
+  runs it on the lane and model it derives for that role.
 * A taxpayer's document is marked as evidence unless the caller names the
   public corpus, so a lane that reads off the host refuses it without consent.
 

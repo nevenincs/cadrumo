@@ -205,7 +205,7 @@ def resolve_llm_evidence(
     text layer yields ``text``, which the text-extraction role reads. A scan-only
     PDF or an image yields base64 ``images``, which the vision-transcription role
     reads, and only while the profile's ``llm_vision`` capability is on. Each
-    role is read by an agent run on the lane the person selected for it; a lane
+    role is read by an agent run on the lane the service derives for it; a lane
     whose catalogue entry reads off the host refuses without the per-call
     consent. Bytes are read from secure storage into memory only; nothing is
     written to disk (``sensitive-financial-data-secure-storage-only``).

@@ -1,8 +1,8 @@
 """The jobs a model is chosen for: Cadrumo's model-role vocabulary.
 
-The roles are Cadrumo's; the models are not. The person selects a lane and a
-model for each role from the agent's provider catalogue, and the agent service
-stores and resolves that selection.
+The roles are Cadrumo's internal vocabulary; the models are not. Nobody chooses
+a model per role: the agent service derives each role's model from the
+person's local model list by the capability the role needs.
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ class ModelRole(StrEnum):
     Kept as roles rather than as one "the model" axis because the capability
     bars differ: only vision transcription needs image input, and the text
     roles must be satisfiable by a lane that reads no image at all. Each role
-    has its own selection.
+    resolves to its own model.
 
     ``VISION_TRANSCRIPTION`` reads a scanned or photographed page;
     ``TEXT_EXTRACTION`` classifies an already-extracted text layer;

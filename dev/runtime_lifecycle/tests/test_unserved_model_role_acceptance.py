@@ -1,9 +1,10 @@
-"""A real absent-selection lookup reaches the CLI in the requested language.
+"""A real lookup that no listed model serves reaches the CLI in the requested language.
 
 The portable runtime replaces transport and physical worker custody. Its async
 service port delegates lookup to the production ModelRunService over a fresh
-in-memory selections store; no refusal result is scripted here. Encrypted
-selection persistence is exercised separately by the saved-selection test.
+in-memory model list and a catalogue whose local lane lists no model; no
+refusal result is scripted here. Encrypted list persistence is exercised
+separately by the saved local model list test.
 """
 
 from __future__ import annotations
@@ -22,10 +23,15 @@ from cadrumo_agent_service.adapters.agent_background_runs import HostedBackgroun
 from cadrumo_agent_service.providers.application.model_runs import ModelRunService
 from cadrumo_agent_service.providers.application.resolution import ProviderCredentialResolver
 from cadrumo_agent_service.providers.application.tests.memory_store import (
-    MemoryModelRoleSelectionsStore,
+    MemoryLocalModelListStore,
     MemoryProviderSettingsStore,
 )
-from cadrumo_agent_service.providers.application.tests.synthetic_catalog import StaticCatalogSource, StaticLiveModels
+from cadrumo_agent_service.providers.application.tests.synthetic_catalog import (
+    ProvidedProviderCatalogSource,
+    StaticLiveModels,
+    synthetic_document,
+)
+from cadrumo_agent_service.providers.domain.catalog import parse_provider_catalog
 from cadrumo_client.contracts.model_runs import ModelRunLane, ModelRunRefusal
 from cadrumo_runtime.host.tests.frontend.cli.cli_runner import invoke_cached_cli
 from cadrumo_runtime.host.tests.frontend.cli.ledger_ux_support import open_ledger_ux_session
@@ -40,14 +46,23 @@ def _open_bucket_session(tmp_path: Path, cli_runtime_lifetime: None) -> Iterator
         yield
 
 
-class _UnselectedAgent(RecordingModelRuns):
+def _no_local_models() -> ProvidedProviderCatalogSource:
+    """The synthetic catalogue whose local lane lists and recommends no model."""
+    document = json.loads(synthetic_document())
+    for lane in document["providers"]:
+        if lane["id"] == "local_api":
+            lane.update(models=[], recommended={})
+    return ProvidedProviderCatalogSource(parse_provider_catalog(json.dumps(document)))
+
+
+class _UnservedAgent(RecordingModelRuns):
     """Adapt the real service's synchronous lookup to the portable runtime port."""
 
     def __init__(self) -> None:
         super().__init__()
-        catalog = StaticCatalogSource()
+        catalog = _no_local_models()
         self.models = ModelRunService(
-            selections=MemoryModelRoleSelectionsStore(),
+            model_list=MemoryLocalModelListStore(),
             resolver=ProviderCredentialResolver(store=MemoryProviderSettingsStore(), catalog_source=catalog),
             catalog_source=catalog,
             live_models=StaticLiveModels(),
@@ -67,10 +82,10 @@ class _UnselectedAgent(RecordingModelRuns):
 @pytest.mark.parametrize(
     ("language", "message"),
     [
-        ("en", "Choose or check the model that reads documents in the Cadrumo desktop app"),
-        ("es", "Elige o revisa el modelo que lee los documentos en la aplicación de escritorio de Cadrumo"),
-        ("ca", "Tria o revisa el model que llegeix els documents a l'aplicació d'escriptori de Cadrumo"),
-        ("hu", "Válaszd ki vagy ellenőrizd a dokumentumokat olvasó modellt a Cadrumo asztali alkalmazásában"),
+        ("en", "Check the local AI's model list in the Cadrumo desktop app"),
+        ("es", "Revisa la lista de modelos de la IA local en la aplicación de escritorio de Cadrumo"),
+        ("ca", "Revisa la llista de models de la IA local a l'aplicació d'escriptori de Cadrumo"),
+        ("hu", "Ellenőrizd a helyi MI modelllistáját a Cadrumo asztali alkalmazásában"),
     ],
 )
 def test_cli_renders_no_selection_in_the_requested_language(tmp_path: Path, language: str, message: str) -> None:
@@ -81,7 +96,7 @@ def test_cli_renders_no_selection_in_the_requested_language(tmp_path: Path, lang
     )
     assert added.exit_code == 0, added.output
     evidence = json.loads(added.output)["result"]["evidence_id"]
-    service = _UnselectedAgent()
+    service = _UnservedAgent()
     with serving_portable_agent(service):
         result = invoke_cached_cli(
             [

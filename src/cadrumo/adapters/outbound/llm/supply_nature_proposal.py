@@ -265,7 +265,7 @@ class SupplyNatureProposer:
     Binds to :class:`~llm.LLMClient` and nothing lower. Every proposal runs
     through the agent service under
     :attr:`~core.model_roles.ModelRole.SUPPLY_NATURE_PROPOSAL`, so the lane
-    and model are the ones the person selected for that role. This class names
+    and model are the ones the service derives for that role. This class names
     no model and no provider of its own, and a refused run is never retried on
     another lane or model.
 
@@ -302,8 +302,8 @@ class SupplyNatureProposer:
     def decided_by(self) -> str:
         """Provenance stamp naming the transport a proposal was reached with.
 
-        The model segment is ``configured``: the lane and model are the
-        person's role selection, resolved by the service at dispatch.
+        The model segment is ``configured``: the lane and model are derived
+        by the service at dispatch.
         """
         return build_provenance_stamp(
             provider=LLMProvider.AGENT,
@@ -325,7 +325,7 @@ class SupplyNatureProposer:
             The proposal. Empty whenever nothing was asked, the model declined,
             or its reply did not survive containment -- all of which leave the
             operator asked exactly as they were. When the agent service refused
-            the run -- no selection for the role, an unavailable lane, a model
+            the run -- no listed model for the role, an unavailable lane, a model
             that is not installed, an off-host lane without consent -- the
             proposal carries that typed verdict on ``reader_unavailable``.
         """

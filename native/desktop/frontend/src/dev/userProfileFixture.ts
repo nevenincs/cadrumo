@@ -1,5 +1,6 @@
 import fixtures from "./fixtures/userProfile.json";
 import type { CensoMode } from "./censoFixture";
+import type { CensoReadiness } from "../shell/profileCenso";
 import type {
   ProfileChange,
   UserProfile,
@@ -22,16 +23,44 @@ declare global {
       complete(): void;
       completeWithMissing(): void;
       changeIdentity(): void;
+      /** The providers whose passphrase or password was saved. */
+      credentials(): string[];
+      /** How many times a credential save was sent, whatever came of it. */
+      credentialAttempts(): number;
+      /** The next credential save is refused, or ends unconfirmed. */
+      failCredential(outcome: CredentialFailure): void;
+      /** The next file dialog picks a file that is not a certificate. */
+      failPick(): void;
+      /** The certificate file the profile was configured with, by name. */
+      certificate(): string | null;
+      /** How many times the file dialog was opened. */
+      picks(): number;
     };
   }
 }
 
+/** How a credential save may end other than saved, as the host words it. */
+type CredentialFailure = "refused" | "unknown" | "saved_unread" | "unavailable";
+
+export type ProfileFixture = UserProfilePort & {
+  /** What the saved profile and credentials satisfy, as the product reads
+   * them for a Censo sync: never a call to AEAT. */
+  readiness(profile: string): Promise<CensoReadiness>;
+};
+
+/** The facts of the authentication section the host takes as field edits. */
+const AUTH_FACTS = [
+  "auth.dni_nie",
+  "auth.numero_soporte",
+  "auth.fecha_validez",
+];
+
+/** The certificate file the scenario's dialog picks. */
+const PICKED = { token: "c".repeat(64), name: "firma-ana-soler.p12" };
+
 /** Synthetic values, but the complete production schema and localized projection.
  * Regenerate with dev.desktop_profile_fixture; never invent fields here. */
-export function userProfileFixture(censoSetup?: CensoMode): UserProfilePort & {
-  /** A saved value, as the fixture's other ports read it: not a page read. */
-  peek(path: string): string | null;
-} {
+export function userProfileFixture(censoSetup?: CensoMode): ProfileFixture {
   const data = structuredClone(fixtures.en) as UserProfile;
   if (censoSetup) {
     const values: Record<string, string> = {
@@ -62,6 +91,16 @@ export function userProfileFixture(censoSetup?: CensoMode): UserProfilePort & {
   let deferred = false;
   let release: (() => void) | undefined;
   let reject: (() => void) | undefined;
+  const credentials = new Set<string>();
+  let certificate: string | null = null;
+  let picks = 0;
+  let attempts = 0;
+  let credentialFailure: CredentialFailure | null = null;
+  let pickFailure = false;
+  const fieldOf = (path: string) =>
+    data.sections
+      .flatMap((section) => section.fields)
+      .find((entry) => entry.path === path);
   const changed = () => {
     data.record_revision++;
     data.content_digest = String(data.record_revision).padStart(64, "0");
@@ -114,6 +153,16 @@ export function userProfileFixture(censoSetup?: CensoMode): UserProfilePort & {
     rejectRead() {
       reject?.();
     },
+    credentials: () => [...credentials],
+    credentialAttempts: () => attempts,
+    failCredential(outcome: CredentialFailure) {
+      credentialFailure = outcome;
+    },
+    failPick() {
+      pickFailure = true;
+    },
+    certificate: () => certificate,
+    picks: () => picks,
     reads: () => reads,
     writes: () => writes,
     burst() {
@@ -121,10 +170,6 @@ export function userProfileFixture(censoSetup?: CensoMode): UserProfilePort & {
     },
   };
   return {
-    peek: (path) =>
-      data.sections
-        .flatMap((section) => section.fields)
-        .find((field) => field.path === path)?.value ?? null,
     async read(language) {
       window.__scenarioProfile = controls;
       reads++;
@@ -187,11 +232,30 @@ export function userProfileFixture(censoSetup?: CensoMode): UserProfilePort & {
         throw { code: "conflict" };
       const edit = change.edit;
       if (edit.kind === "field") {
-        const target = data.sections
-          .flatMap((section) => section.fields)
-          .find((entry) => entry.path === edit.path);
-        if (!target) throw { code: "refused" };
-        target.value = edit.value || null;
+        const target = fieldOf(edit.path);
+        // The host takes the method only as one sign-in method: of the
+        // authentication section, only its facts are field edits.
+        if (
+          !target ||
+          (edit.path.startsWith("auth.") && !AUTH_FACTS.includes(edit.path))
+        )
+          throw { code: "refused" };
+        // A masked detail is read back masked, as the host reads it.
+        target.value = edit.value
+          ? target.masked
+            ? "••••"
+            : edit.value
+          : null;
+      } else if (edit.kind === "auth_method") {
+        const provider = fieldOf("auth.provider")!;
+        if (
+          !provider.choices.some((choice) => choice.value === edit.provider) ||
+          (edit.certificate !== null && edit.certificate !== PICKED.token)
+        )
+          throw { code: "refused" };
+        provider.value = edit.provider;
+        fieldOf("auth.clave_movil_route")!.value = edit.clave_movil_route;
+        if (edit.certificate !== null) certificate = PICKED.name;
       } else if (edit.kind === "complete") data.setup_state = "complete";
       else {
         const section = data.sections.find(
@@ -240,6 +304,105 @@ export function userProfileFixture(censoSetup?: CensoMode): UserProfilePort & {
         }
       }
       changed();
+    },
+    aeat: {
+      async pickCertificate() {
+        window.__scenarioProfile = controls;
+        picks++;
+        if (pickFailure) {
+          pickFailure = false;
+          throw { code: "invalid" };
+        }
+        return { ...PICKED };
+      },
+      async saveCredential(credential) {
+        attempts++;
+        if (credentialFailure) {
+          const code = credentialFailure;
+          credentialFailure = null;
+          throw { code };
+        }
+        if (credential.profile_id !== data.profile_id || !credential.password)
+          throw { code: "refused" };
+        credentials.add(credential.provider);
+      },
+    },
+    async readiness(profile) {
+      if (profile !== data.profile_id) throw { code: "refused" };
+      const value = (path: string) => fieldOf(path)?.value ?? "";
+      const provider = value("auth.provider");
+      const route =
+        provider === "clave_movil"
+          ? value("auth.clave_movil_route") || "app_request"
+          : "";
+      const need = (
+        field: string,
+        satisfied: boolean,
+        reason: string,
+        secret = false,
+      ) => ({ field, satisfied, reason, secret });
+      const requirements = [
+        need(
+          "identity.tax_id",
+          !!value("identity.tax_id"),
+          "profile_tax_id_required",
+        ),
+        need("auth.provider", !!provider, "auth_method_required"),
+      ];
+      if (provider === "certificate")
+        requirements.push(
+          need(
+            "certificate.file",
+            certificate !== null,
+            "certificate_file_required",
+          ),
+          need(
+            "certificate.passphrase",
+            credentials.has("certificate"),
+            "certificate_passphrase_required",
+            true,
+          ),
+        );
+      else if (provider === "clave_movil" || provider === "clave_permanente") {
+        requirements.push(
+          need(
+            "auth.dni_nie",
+            !!value("auth.dni_nie"),
+            "clave_identity_required",
+          ),
+        );
+        if (route === "app_request") {
+          const nie = /^[XYZ]/i.test(value("identity.tax_id"));
+          requirements.push(
+            nie
+              ? need(
+                  "auth.numero_soporte",
+                  !!value("auth.numero_soporte"),
+                  "nie_support_required",
+                )
+              : need(
+                  "auth.fecha_validez",
+                  !!value("auth.fecha_validez"),
+                  "dni_validity_required",
+                ),
+          );
+        }
+        if (provider === "clave_permanente")
+          requirements.push(
+            need(
+              "auth.password",
+              credentials.has("clave_permanente"),
+              "clave_password_required",
+              true,
+            ),
+          );
+      }
+      return {
+        provider,
+        route,
+        ready: requirements.every((item) => item.satisfied),
+        requirements,
+      };
     },
   };
 }

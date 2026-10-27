@@ -11,8 +11,8 @@ from __future__ import annotations
 
 import asyncio
 import os
-from collections.abc import AsyncGenerator, Generator
-from contextlib import asynccontextmanager, contextmanager
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -22,7 +22,10 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel
 
-from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
+from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import (
+    ProfileWorkerCustody,
+    ProfileWorkerCustodySection,
+)
 from cadrumo.application.operations.access_resolution import (
     OperationAccessContext,
     ResolvedOperationAccess,
@@ -112,10 +115,9 @@ class _CustodyWitness(ProfileWorkerCustody):
         return self.session
 
     @override
-    @contextmanager
-    def section(self, session_id: UUID) -> Generator[None]:
+    def section(self, session_id: UUID) -> ProfileWorkerCustodySection:
         self.require(session_id)
-        yield
+        return ProfileWorkerCustodySection(lambda: None)
 
     @override
     def live_sessions(self) -> tuple[UUID, ...]:
@@ -252,8 +254,10 @@ def _harness(definition_id: str, authority_operation: PinnedAuthorityOperation, 
     operation = OperationIdentity(
         operation_id=new_operation_id(), definition_id=definition_id, subject_ref=request.subject_ref
     )
-    authority.bind(
-        operation.operation_id, WorkerOperationBinding(session.session_id, OperationFrontendProjection.CLI, request)
+    asyncio.run(
+        authority.bind(
+            operation.operation_id, WorkerOperationBinding(session.session_id, OperationFrontendProjection.CLI, request)
+        )
     )
     return _Harness(authority, client, operation)
 
@@ -262,7 +266,7 @@ async def _submitted(harness: _Harness) -> None:
     # The invocation's provenance is captured at submission, as the host does,
     # before its execution asks for any model run under START.
     async with harness.authority.guard(harness.identity, AccessAction.SUBMIT):
-        harness.authority.capture_provenance(harness.identity)
+        await harness.authority.capture_provenance(harness.identity)
 
 
 async def _lookup(harness: _Harness, role: str) -> ModelRunLane | ModelRunRefusal:

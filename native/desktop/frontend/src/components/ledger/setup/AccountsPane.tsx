@@ -364,11 +364,13 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
     {
       key: "label",
       label: t("desktop.ledger.accounts.column.label"),
+      sort: (account) => account.label,
       cell: (account) => <span className="font-medium">{account.label}</span>,
     },
     {
       key: "iban",
       label: t("desktop.ledger.accounts.column.iban"),
+      sort: (account) => account.masked_iban,
       cell: (account) => (
         <span className="font-mono whitespace-nowrap">
           {account.masked_iban}
@@ -378,11 +380,13 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
     {
       key: "currency",
       label: t("desktop.ledger.accounts.column.currency"),
+      sort: (account) => account.currency,
       cell: (account) => account.currency,
     },
     {
       key: "opened",
       label: t("desktop.ledger.accounts.column.opened"),
+      sort: (account) => account.opened_on,
       cell: (account) =>
         day(account.opened_on) ?? (
           <span className="text-muted-foreground">
@@ -393,6 +397,7 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
     {
       key: "closed",
       label: t("desktop.ledger.accounts.column.closed"),
+      sort: (account) => account.closed_on,
       cell: (account) =>
         day(account.closed_on) ?? (
           <span className="text-muted-foreground">
@@ -406,6 +411,8 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
     {
       key: "holding",
       label: t("desktop.ledger.accounts.column.holding"),
+      sort: (account) =>
+        t(`desktop.ledger.accounts.holding.${account.holding}`),
       cell: (account) =>
         t(`desktop.ledger.accounts.holding.${account.holding}`),
     },
@@ -447,6 +454,7 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
       key: "actions",
       label: t("desktop.ledger.form.actions"),
       hidden: true,
+      resizable: false,
       cell: (account) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

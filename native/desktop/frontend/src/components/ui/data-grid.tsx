@@ -414,7 +414,7 @@ function rangeShadow(
 function DataGrid<R>({
   ref,
   label,
-  columns,
+  columns: columnsProp,
   rows,
   positionLabel,
   rowHeight,
@@ -431,7 +431,7 @@ function DataGrid<R>({
   onCopy,
   onPaste,
   onFill,
-  onColumnResize,
+  onColumnResize: onColumnResizeProp,
   onColumnOrder,
   rowState,
   describeRow,
@@ -470,6 +470,28 @@ function DataGrid<R>({
   const rowMode = React.useRef(false);
   const suppressClick = React.useRef(false);
 
+  // A caller that does not keep the widths leaves them to the grid: what
+  // the person drags a column to lasts as long as the grid does.
+  const [dragged, setDragged] = React.useState<
+    Readonly<Record<string, number>>
+  >({});
+  const columns = React.useMemo(
+    () =>
+      onColumnResizeProp || Object.keys(dragged).length === 0
+        ? columnsProp
+        : columnsProp.map((column) => {
+            const width = dragged[column.id];
+            return width === undefined ? column : { ...column, width };
+          }),
+    [columnsProp, dragged, onColumnResizeProp],
+  );
+  const onColumnResize = React.useCallback(
+    (column: string, width: number) => {
+      if (onColumnResizeProp) onColumnResizeProp(column, width);
+      else setDragged((held) => ({ ...held, [column]: width }));
+    },
+    [onColumnResizeProp],
+  );
   const ordered = React.useMemo(() => displayOrder(columns), [columns]);
   const index = React.useMemo(
     () => new Map(rows.map((row, at) => [row.key, at])),
@@ -1060,7 +1082,7 @@ function DataGrid<R>({
       (key === "ArrowLeft" || key === "ArrowRight") &&
       exactly(event, { alt: true })
     ) {
-      if (!onColumnResize || named.resizable === false) return false;
+      if (named.resizable === false) return false;
       const box = layout.byId.get(column);
       const width = (box?.width ?? named.width * remPx) / remPx;
       const step = resizeStep() * (key === "ArrowLeft" ? -1 : 1);
@@ -1340,7 +1362,7 @@ function DataGrid<R>({
     event: React.PointerEvent<HTMLDivElement>,
     column: GridColumn<R>,
   ) => {
-    if (event.button !== 0 || !onColumnResize) return;
+    if (event.button !== 0) return;
     event.preventDefault();
     event.stopPropagation();
     const handle = event.currentTarget;
@@ -1368,7 +1390,7 @@ function DataGrid<R>({
   // Double click on a column's edge fits it to the widest of what is drawn.
   const fitColumn = (column: GridColumn<R>) => {
     const element = scroller.current;
-    if (!element || !onColumnResize) return;
+    if (!element) return;
     let widest = 0;
     for (const cell of element.querySelectorAll<HTMLElement>(
       `[data-column="${CSS.escape(column.id)}"]`,
@@ -1621,7 +1643,7 @@ function DataGrid<R>({
                   size="xs"
                 />
               )}
-              {onColumnResize && column.resizable !== false && (
+              {column.resizable !== false && (
                 <div
                   role="separator"
                   aria-orientation="vertical"

@@ -30,7 +30,7 @@ class _PublicCliFixture:
         self._next_row = 1
         self._retired: set[str] = set()
         self._fields: set[str] = set()
-        self._cnae = ""
+        self._epigraph = ""
 
     def create_profile(self, *, year: int) -> None:
         self.commands.append(CommandEvidence("config profile create", 0, "success", ()))
@@ -52,11 +52,10 @@ class _PublicCliFixture:
             self._fields.update(
                 {
                     f"activities.{row}.description",
-                    f"activities.{row}.cnae",
                     f"activities.{row}.iae_epigraph",
                 }
             )
-            self._cnae = "6201"
+            self._epigraph = "765"
             result: dict[str, object] = {"row_index": int(row)}
             return self._record(command, 0, "success", result)
         if operation == "edit-row":
@@ -66,11 +65,11 @@ class _PublicCliFixture:
                     raise RuntimeError("retired row must be invoked with allow_error")
                 return self._record(command, 2, "error", {})
             if "--clear" in tokens:
-                self._fields.discard(f"activities.{row}.cnae")
+                self._fields.discard(f"activities.{row}.iae_epigraph")
                 return self._record(command, 0, "success", {"changed": True})
             value = tokens[-1].partition("=")[2]
-            changed = value != self._cnae
-            self._cnae = value
+            changed = value != self._epigraph
+            self._epigraph = value
             return self._record(command, 0, "success", {"changed": changed})
         if operation == "remove-row":
             row = tokens[4]

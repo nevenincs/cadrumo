@@ -19,7 +19,7 @@ from dev.acceptance.installed_cli import CommandEvidence, InstalledCli
 
 from .scenario import ProfileRowLifecycleScenario
 
-_SCHEMA_VERSION = "profile-01-installed-cli-lifecycle-v1"
+_SCHEMA_VERSION = "profile-01-installed-cli-lifecycle-v2"
 _ARCHIVE_SUFFIX = ".cadrumo-bucket.tar.gz"
 
 
@@ -32,7 +32,7 @@ def _observe_profile_edit_and_no_op(
             scenario=scenario,
             row_key=row_key,
             field=scenario.clearable_field,
-            value=scenario.amended_cnae,
+            value=scenario.amended_epigraph,
         )
         is not True
     ):
@@ -42,7 +42,7 @@ def _observe_profile_edit_and_no_op(
             scenario=scenario,
             row_key=row_key,
             field=scenario.clearable_field,
-            value=scenario.amended_cnae,
+            value=scenario.amended_epigraph,
         )
         is False
     )
@@ -55,11 +55,10 @@ def _observe_profile_clear(cli: ProfileInstalledCli, scenario: ProfileRowLifecyc
     cli.clear_row_field(scenario=scenario, row_key=row_key, field=scenario.clearable_field)
     after_clear = cli.visible_fact_paths()
     clear_path = scenario.path(row_key, scenario.clearable_field)
-    selector_path = scenario.path(row_key, scenario.selector_field)
     required_path = scenario.path(row_key, scenario.required_field)
     if clear_path in after_clear:
         raise ProfileCliAcceptanceError(stage="fresh_reopen_after_clear", diagnostic_code="cleared_fact_reappeared")
-    if selector_path not in after_clear or required_path not in after_clear:
+    if required_path not in after_clear:
         raise ProfileCliAcceptanceError(stage="fresh_reopen_after_clear", diagnostic_code="row_state_not_preserved")
 
 
@@ -78,7 +77,7 @@ def _observe_profile_retired_identity(
     if any(
         scenario.path(candidate, field) in final_paths
         for candidate in (row_key, replacement_row_key)
-        for field in (scenario.required_field, scenario.clearable_field, scenario.selector_field)
+        for field in (scenario.required_field, scenario.clearable_field)
     ):
         raise ProfileCliAcceptanceError(stage="final_reopen", diagnostic_code="removed_row_reappeared")
     return replacement_row_key
@@ -113,7 +112,7 @@ class ProfileCliLifecycleEvidence:
     replacement_row_key: str
     no_op_reported: bool
     explicit_clear_survived_reopen: bool
-    selector_fact_survived_clear: bool
+    required_fact_survived_clear: bool
     removal_survived_reopen: bool
     retired_identifier_refused: bool
     archive_consumer: ProfileArchiveConsumerEvidence
@@ -224,7 +223,7 @@ class ProfileInstalledCli:
                     scenario.section,
                     row_key,
                     "--value",
-                    f"{scenario.clearable_field}={scenario.amended_cnae}",
+                    f"{scenario.clearable_field}={scenario.amended_epigraph}",
                 ),
                 allow_error=True,
             )
@@ -330,8 +329,7 @@ def run_cli_only_lifecycle(
     cli.remove_row(scenario=scenario, row_key=row_key)
     after_remove = cli.visible_fact_paths()
     if any(
-        scenario.path(row_key, field) in after_remove
-        for field in (scenario.required_field, scenario.clearable_field, scenario.selector_field)
+        scenario.path(row_key, field) in after_remove for field in (scenario.required_field, scenario.clearable_field)
     ):
         raise ProfileCliAcceptanceError(stage="fresh_reopen_after_remove", diagnostic_code="removed_row_reappeared")
 
@@ -345,7 +343,7 @@ def run_cli_only_lifecycle(
         replacement_row_key=replacement_row_key,
         no_op_reported=True,
         explicit_clear_survived_reopen=True,
-        selector_fact_survived_clear=True,
+        required_fact_survived_clear=True,
         removal_survived_reopen=True,
         retired_identifier_refused=True,
         archive_consumer=archive,

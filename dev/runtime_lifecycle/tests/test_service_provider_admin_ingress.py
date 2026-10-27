@@ -16,10 +16,14 @@ from pydantic import JsonValue, TypeAdapter
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from cadrumo_agent_service.adapters.agent_programs import PACKAGE_AGENT_VARIABLE
 from cadrumo_agent_service.admin import AdminAction, AdminServer
-from cadrumo_agent_service.providers.application.tests.synthetic_catalog import KEY_LANE, synthetic_document
+from cadrumo_agent_service.providers.application.tests.synthetic_catalog import (
+    KEY_LANE,
+    KEYLESS_LANE,
+    synthetic_document,
+)
 from cadrumo_agent_service.providers.persistence.store import (
-    MODEL_ROLE_SELECTIONS_CAPABILITY,
-    MODEL_ROLE_SELECTIONS_KEY,
+    LOCAL_MODEL_LIST_CAPABILITY,
+    LOCAL_MODEL_LIST_KEY,
     SecureProviderSettingsStore,
 )
 from cadrumo_agent_service.service import AgentService
@@ -27,7 +31,7 @@ from cadrumo_client.contracts.service_access import ServiceConnected
 from cadrumo_runtime.host.tests.test_service_records import service_record_runtime
 
 from .provider_catalog_support import (
-    model_role_selections_capability,
+    local_model_list_capability,
     provider_record_capability,
     stand_in_agent_image,
 )
@@ -53,7 +57,6 @@ class _AdminRecorder:
         choice: Literal["direct_api", "provider_sign_in"] | None = None,
         method: Literal["browser", "browser-code", "device"] | None = None,
         attempt_id: str | None = None,
-        role: str | None = None,
         model: str | None = None,
         secret: bytearray | None = None,
     ) -> dict[str, JsonValue]:
@@ -64,7 +67,6 @@ class _AdminRecorder:
             "choice": choice,
             "method": method,
             "attempt_id": attempt_id,
-            "role": role,
             "model": model,
             "secret": secret,
         }
@@ -216,13 +218,13 @@ def test_actual_service_provider_actions_require_parent_authority_and_live_encry
             admin[:] = bytes(len(admin))
 
 
-def _selection_request(action: str, revision: str, **fields: str) -> dict[str, JsonValue]:
+def _list_request(action: str, revision: str, **fields: str) -> dict[str, JsonValue]:
     request = _request(action)
     request.update(expected_revision=revision, **fields)
     return request
 
 
-def _selections(answer: dict[str, JsonValue]) -> dict[str, JsonValue]:
+def _model_list(answer: dict[str, JsonValue]) -> dict[str, JsonValue]:
     result = answer["result"]
     assert isinstance(result, dict) and result.get("unreadable") is False, result
     return result
@@ -231,14 +233,14 @@ def _selections(answer: dict[str, JsonValue]) -> dict[str, JsonValue]:
 @pytest.mark.windows_only
 @pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows worker custody")
 @pytest.mark.usefixtures("authority_operation")
-def test_a_role_selection_lives_in_its_own_capability_and_never_moves_the_provider_settings_generation(
+def test_the_model_list_lives_in_its_own_capability_and_never_moves_the_provider_settings_generation(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """The agent tree is bound to the provider-settings generation, so a model choice must leave it as it is."""
+    """The agent tree is bound to the provider-settings generation, so a model list change must leave it as it is."""
     image, _record = stand_in_agent_image(tmp_path, catalog_document=synthetic_document())
     monkeypatch.setenv(PACKAGE_AGENT_VARIABLE, str(image))
     admin = bytearray(b"synthetic-parent-admin-authority")
-    capabilities = (provider_record_capability(), model_role_selections_capability())
+    capabilities = (provider_record_capability(), local_model_list_capability())
     with service_record_runtime(tmp_path, record_capabilities=capabilities) as runtime:
         client = runtime.connect_service()
         service = AgentService(
@@ -260,32 +262,39 @@ def test_a_role_selection_lives_in_its_own_capability_and_never_moves_the_provid
                 return observed.provider_settings
 
             before = provider_generation()
-            initial = _selections(_exchange(server.port, bytes(admin), _request("model_roles")))
+            initial = _model_list(_exchange(server.port, bytes(admin), _request("local_models")))
             assert initial["revision"] == ABSENT_SECURE_OBJECT_REVISION_ID
-            selected = _selections(
+            added = _model_list(
                 _exchange(
                     server.port,
                     bytes(admin),
-                    _selection_request(
-                        "model_role_set",
+                    _list_request(
+                        "local_model_add",
                         ABSENT_SECURE_OBJECT_REVISION_ID,
-                        role="text_extraction",
-                        provider=KEY_LANE,
-                        model="synthetic-text-1",
+                        provider=KEYLESS_LANE,
+                        model="custom-model:test",
                     ),
                 )
             )
-            revision = selected["revision"]
+            revision = added["revision"]
             assert isinstance(revision, str) and revision != ABSENT_SECURE_OBJECT_REVISION_ID
-            roles = selected["roles"]
-            assert isinstance(roles, list)
-            assert {"role": "text_extraction", "lane": KEY_LANE, "model": "synthetic-text-1"} in roles
-            assert _selections(_exchange(server.port, bytes(admin), _request("model_roles"))) == selected
+            assert added["models"] == [{"lane": KEYLESS_LANE, "model": "custom-model:test"}]
+            assert added["reading"] is None
+            assert _model_list(_exchange(server.port, bytes(admin), _request("local_models"))) == added
+            chosen = _model_list(
+                _exchange(
+                    server.port,
+                    bytes(admin),
+                    _list_request("reading_model_choose", revision, provider=KEYLESS_LANE, model="custom-model:test"),
+                )
+            )
+            revision = chosen["revision"]
+            assert isinstance(revision, str) and revision != added["revision"]
+            assert chosen["reading"] == {"lane": KEYLESS_LANE, "model": "custom-model:test"}
+            assert chosen["models"] == added["models"]
             assert provider_generation() == before
 
-            cleared = _selections(
-                _exchange(server.port, bytes(admin), _selection_request("model_roles_reset", revision))
-            )
+            cleared = _model_list(_exchange(server.port, bytes(admin), _list_request("local_models_reset", revision)))
             assert cleared["revision"] == ABSENT_SECURE_OBJECT_REVISION_ID
             assert provider_generation() == before
 
@@ -307,14 +316,14 @@ def test_a_role_selection_lives_in_its_own_capability_and_never_moves_the_provid
 @pytest.mark.windows_only
 @pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows worker custody")
 @pytest.mark.usefixtures("authority_operation")
-def test_an_unreadable_selections_record_reports_its_guard_and_a_guarded_reset_clears_it(
+def test_an_unreadable_model_list_record_reports_its_guard_and_a_guarded_reset_clears_it(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """A record that does not validate is never read as no selection, and its reset is always reachable."""
+    """A record that does not validate is never read as an empty list, and its reset is always reachable."""
     image, _record = stand_in_agent_image(tmp_path, catalog_document=synthetic_document())
     monkeypatch.setenv(PACKAGE_AGENT_VARIABLE, str(image))
     admin = bytearray(b"synthetic-parent-admin-authority")
-    capabilities = (provider_record_capability(), model_role_selections_capability())
+    capabilities = (provider_record_capability(), local_model_list_capability())
     with service_record_runtime(tmp_path, record_capabilities=capabilities) as runtime:
         client = runtime.connect_service()
         service = AgentService(
@@ -328,36 +337,34 @@ def test_an_unreadable_selections_record_reports_its_guard_and_a_guarded_reset_c
             assert isinstance(runtime.admit(client), ServiceConnected)
             assert client.claim() is not None
             written = client.record_write(
-                MODEL_ROLE_SELECTIONS_CAPABILITY,
-                MODEL_ROLE_SELECTIONS_KEY,
+                LOCAL_MODEL_LIST_CAPABILITY,
+                LOCAL_MODEL_LIST_KEY,
                 payload=bytearray(b'{"schema_version":99}'),
                 expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID,
             )
             assert written.state == "written"
 
-            unreadable = _exchange(server.port, bytes(admin), _request("model_roles"))["result"]
+            unreadable = _exchange(server.port, bytes(admin), _request("local_models"))["result"]
             assert isinstance(unreadable, dict)
-            assert unreadable["unreadable"] is True and unreadable["roles"] == []
+            assert unreadable["unreadable"] is True and unreadable["models"] == []
             assert unreadable["revision"] == written.revision
             refused = _exchange(
                 server.port,
                 bytes(admin),
-                _selection_request(
-                    "model_role_set",
-                    written.revision,
-                    role="text_extraction",
-                    provider=KEY_LANE,
-                    model="synthetic-text-1",
-                ),
+                _list_request("local_model_add", written.revision, provider=KEYLESS_LANE, model="custom-model:test"),
             )
             assert refused["result"] == {"code": "unknown"}
 
-            reset = _selections(
-                _exchange(server.port, bytes(admin), _selection_request("model_roles_reset", written.revision))
+            reset = _model_list(
+                _exchange(server.port, bytes(admin), _list_request("local_models_reset", written.revision))
             )
-            assert reset["revision"] == ABSENT_SECURE_OBJECT_REVISION_ID
-            roles = reset["roles"]
-            assert isinstance(roles, list) and all(isinstance(role, dict) and role["lane"] is None for role in roles)
+            assert reset == {
+                "unreadable": False,
+                "models": [],
+                "reading": None,
+                "local_lanes": [KEYLESS_LANE],
+                "revision": ABSENT_SECURE_OBJECT_REVISION_ID,
+            }
         finally:
             server.close()
             service.close()

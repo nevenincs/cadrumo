@@ -53,7 +53,7 @@ _BUCKET_ID = _PROFILE_ID
 _YEAR = 2025
 _PERIOD = "0A"
 _CCAA_BINDING: BindingId = "renta-profile-tax-residence-ccaa"
-_SYNTHETIC_DECIMAL_PROFILE_BINDING: BindingId = "test-profile-business-ratio-decimal-binding"
+_SYNTHETIC_DECIMAL_PROFILE_BINDING: BindingId = "test-profile-incn-decimal-binding"
 _CLOCK = datetime(2026, 5, 21, 10, 0, 0, tzinfo=UTC)
 
 
@@ -204,7 +204,7 @@ def test_profile_numeric_fact_resolves_into_the_decimal_binding_channel(
         profile_id=_PROFILE_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            UserProfileFact(path="usage_ratios.business_ratio", value=Decimal("0.37")),
+            UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("0.37")),
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
@@ -227,14 +227,14 @@ def _snapshot_with_decimal_profile_binding(snapshot: RegistrySnapshot) -> Regist
     binding = BindingDefinition.model_validate(
         {
             "id": _SYNTHETIC_DECIMAL_PROFILE_BINDING,
-            "provider": {"kind": BindingSourceKind.PROFILE, "profile_key": "usage_ratios.business_ratio"},
+            "provider": {"kind": BindingSourceKind.PROFILE, "profile_key": "taxpayer_type.incn_prior_12_months"},
             "value": {"data_type": "money", "channel": "decimal"},
             "legal_refs": snapshot.revision.legal_refs,
             "source_refs": snapshot.revision.source_refs,
         },
     )
     formula = FormulaDefinition(
-        id="test-profile-business-ratio-decimal-formula",
+        id="test-profile-incn-decimal-formula",
         target_casilla_id=snapshot.revision.casillas[0].id,
         expression=FormulaExpression(binding=_SYNTHETIC_DECIMAL_PROFILE_BINDING),
         legal_refs=snapshot.revision.legal_refs,
@@ -419,7 +419,7 @@ def test_string_decimal_profile_raises_type_invalid_error_without_leaking_value(
         profile_id=_PROFILE_ID,
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            UserProfileFact(path="usage_ratios.business_ratio", value="not-a-decimal-secret"),
+            UserProfileFact(path="taxpayer_type.incn_prior_12_months", value="not-a-decimal-secret"),
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,

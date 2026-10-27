@@ -40,6 +40,8 @@ class ProvisioningPreconditionCondition(StrEnum):
     """The components role reports the local AI program set up and usable."""
     ROLE_MODEL_INSTALLED = "provisioning.role_model.installed"
     SELECTED_MODEL_AVAILABLE = "provisioning.selected_model.available"
+    SELECTED_MODEL_READS_IMAGES = "provisioning.selected_model.reads_images"
+    """The selected model is stated to read images, which reading a scanned page needs."""
     LOAD_CAPACITY_AVAILABLE = "provisioning.load_capacity.available"
     """The agent loaded the selected model with the memory this computer had free."""
 

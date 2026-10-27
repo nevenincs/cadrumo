@@ -291,7 +291,6 @@ def _corporate_profile() -> TaxpayerProfile:
         iva_regime=IVARegime("GENERAL"),
         incn_prior_12_months=Decimal("7500000.00"),
         new_entity_first_two_profit_periods=False,
-        notes="overview-calendar corporate test profile",
     )
 
 

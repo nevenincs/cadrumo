@@ -184,3 +184,38 @@ test("returning from a declaration keeps the list as it was, unread", async ({
   // Nothing was written: the list is the one read before.
   expect(await reads()).toBe(before);
 });
+
+test("a column header sorts the list and the sort menu follows it", async ({
+  page: target,
+}) => {
+  await openDeclarations(target);
+  const header = (name: string) =>
+    grid(target).getByRole("columnheader", { name });
+  const modelo = header(label("workspace.declarations.list.column.modelo"));
+  const sort = target.locator(".declarations-sort");
+  await modelo.click();
+  await expect(modelo).toHaveAttribute("aria-sort", "ascending");
+  await expect(sort).toHaveValue("modelo");
+  await modelo.click();
+  await expect(modelo).toHaveAttribute("aria-sort", "descending");
+  // The menu stays: choosing the work order drops the column sort.
+  await sort.selectOption("work_order");
+  await expect(modelo).toHaveAttribute("aria-sort", "none");
+  await expect(sections(target).first()).toBeVisible();
+});
+
+test("a column is dragged to a width of the person's choosing", async ({
+  page: target,
+}) => {
+  await openDeclarations(target);
+  const header = grid(target).getByRole("columnheader", {
+    name: label("workspace.declarations.list.column.deadline"),
+  });
+  const edge = header.getByRole("separator");
+  const before = Number(await edge.getAttribute("aria-valuenow"));
+  await header.click();
+  await header.press("Alt+ArrowRight");
+  await expect
+    .poll(async () => Number(await edge.getAttribute("aria-valuenow")))
+    .toBeGreaterThan(before);
+});

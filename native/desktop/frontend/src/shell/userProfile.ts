@@ -45,17 +45,46 @@ export type ProfileEdit =
       clear_fields: string[];
     }
   | { kind: "remove_row"; section_key: string; row_key: string }
-  | { kind: "complete" };
+  | { kind: "complete" }
+  /** The sign-in method, the host's only way to change `auth.provider` and
+   * `auth.clave_movil_route`. `certificate` is a picker token, never a path. */
+  | {
+      kind: "auth_method";
+      provider: string;
+      clave_movil_route: string | null;
+      certificate: string | null;
+    };
 export type ProfileChange = {
   profile_id: string;
   expected_revision: number;
   expected_content_digest: string;
   edit: ProfileEdit;
 };
+/** A certificate file chosen in the native dialog: a token the host
+ * resolves, and the file's name; the path never reaches the window. */
+export type AeatCertificate = { token: string; name: string };
+/** The providers that keep a secret apart from the profile. */
+export type AeatCredentialProvider = "certificate" | "clave_permanente";
+export type AeatCredential = {
+  profile_id: string;
+  provider: AeatCredentialProvider;
+  password: string;
+};
+/** The profile's AEAT access beyond its plain facts. */
+export type AeatAccessPort = {
+  /** Null when the person closes the dialog without choosing; rejects with
+   * `{ code: "invalid" }` for a file that is not a PKCS#12 certificate. */
+  pickCertificate(): Promise<AeatCertificate | null>;
+  /** Saves the passphrase or password apart from the profile. A rejection
+   * is read by `credentialFailure`; nothing is retried after one that
+   * leaves the outcome unknown. */
+  saveCredential(credential: AeatCredential): Promise<void>;
+};
 export type UserProfilePort = {
   read(language: string): Promise<UserProfile>;
   change(change: ProfileChange): Promise<void>;
   observe(changed: () => void): Promise<() => void>;
+  readonly aeat: AeatAccessPort;
 };
 export type ProfileFailure =
   | "unavailable"
@@ -74,6 +103,27 @@ function failure(error: unknown): ProfileFailure {
     ? code
     : "unavailable";
 }
+/** Codes after which a credential save is known not to have happened. */
+const SETTLED_CREDENTIAL_FAILURES = [
+  "invalid",
+  "refused",
+  "conflict",
+  "not_signed_in",
+];
+
+/** How a rejected credential save is read. The host rejects with
+ * `{ code }`: after a settled code nothing happened; `unavailable` is the
+ * runtime being out of reach; any other code, `unknown` and `saved_unread`
+ * among them, leaves the outcome unconfirmed. */
+export function credentialFailure(
+  error: unknown,
+): "refused" | "unavailable" | "unconfirmed" {
+  const code = (error as { code?: unknown } | null)?.code;
+  if (typeof code !== "string") return "unconfirmed";
+  if (SETTLED_CREDENTIAL_FAILURES.includes(code)) return "refused";
+  return code === "unavailable" ? "unavailable" : "unconfirmed";
+}
+
 type State = {
   data: UserProfile | null;
   loading: boolean;
@@ -105,6 +155,7 @@ export function useUserProfile(
   const control = useRef<{
     refresh(): Promise<void>;
     save(base: UserProfile, edit: ProfileEdit): Promise<boolean>;
+    latest(): UserProfile | null;
   } | null>(null);
   useEffect(() => {
     control.current = null;
@@ -155,6 +206,7 @@ export function useUserProfile(
         update({ error: null, saved: false });
         await refresh();
       },
+      latest: () => state.data,
       async save(base, edit) {
         if (
           !alive ||
@@ -241,11 +293,14 @@ export function useUserProfile(
       control.current?.save(base, edit) ?? Promise.resolve(false),
     [],
   );
+  /** The profile as last read, which a render may not have drawn yet: the
+   * base of the next edit in a sequence of saves. */
+  const latest = useCallback(() => control.current?.latest() ?? null, []);
   const state =
     stored.identity === identity && reader !== null && shown
       ? stored.state
       : EMPTY;
-  return { ...state, refresh, save };
+  return { ...state, refresh, save, latest };
 }
 
 export const profileText = (value: string) =>

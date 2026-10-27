@@ -239,9 +239,9 @@ class ProfileWorkerOperationAuthority:
             asyncio.to_thread(lease.publish_approval, binding, phase), task_name="worker-approval-publication"
         )
 
-    def bind(self, operation_id: OperationId, binding: WorkerOperationBinding) -> None:
+    async def bind(self, operation_id: OperationId, binding: WorkerOperationBinding) -> None:
         """Record a validated session's invocation; refuse cross-session ID adoption."""
-        self.custody.require(binding.session_id)
+        await self.custody.require_off_loop(binding.session_id)
         current = self._bindings.get(operation_id)
         if current is not None and current != binding:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
@@ -266,10 +266,10 @@ class ProfileWorkerOperationAuthority:
         )
         # The parent holds its denial fence through receipt. Subsequent result
         # disclosure obtains its own fresh human and destination authorization.
-        with self.custody.section(request.session_id):
+        async with self.custody.section_off_loop(request.session_id):
             return await self.client.inventory(request)
 
-    def capture_provenance(self, identity: OperationIdentity) -> OperationAdmissionProvenance:
+    async def capture_provenance(self, identity: OperationIdentity) -> OperationAdmissionProvenance:
         """Capture original intent only within this task's current SUBMIT fence."""
         task = asyncio.current_task()
         if task is None or self._held.get(task) != (identity, AccessAction.SUBMIT):
@@ -278,7 +278,9 @@ class ProfileWorkerOperationAuthority:
         if held is None or not isinstance(held.request, WorkerAuthorizationRequest):
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
         binding = self._bindings[identity.operation_id]
-        lease = self.custody.require(binding.session_id)
+        lease = await self.custody.require_off_loop(binding.session_id)
+        if self._bindings.get(identity.operation_id) is not binding:
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
         provenance = OperationAdmissionProvenance(
             identity=identity,
             profile_binding=self.custody.identity.binding,
@@ -290,13 +292,13 @@ class ProfileWorkerOperationAuthority:
         self._bindings[identity.operation_id] = replace(binding, provenance=provenance)
         return provenance
 
-    def bind_reentry(self, operation_id: OperationId, binding: WorkerOperationBinding) -> None:
+    async def bind_reentry(self, operation_id: OperationId, binding: WorkerOperationBinding) -> None:
         """Bind owner-loaded idle intent after the host's fresh RESUME guard.
 
         The host must first exclude live execution through the canonical owner.
         This does not reconstruct or transfer the original response capability.
         """
-        self.custody.require(binding.session_id)
+        await self.custody.require_off_loop(binding.session_id)
         previous = self._bindings.get(operation_id)
         if previous is not None and (
             previous.request.model_copy(update={"idempotency_key": None}) != binding.request
@@ -336,7 +338,7 @@ class ProfileWorkerOperationAuthority:
         request = await await_cancellation_complete(
             asyncio.to_thread(self._resolve_binding, identity, action, binding), task_name="worker-authority-scope-read"
         )
-        self.custody.require(binding.session_id)
+        await self.custody.require_off_loop(binding.session_id)
         return request
 
     @staticmethod
@@ -503,7 +505,7 @@ class ProfileWorkerOperationAuthority:
         original = self._bindings.get(identity.operation_id)
         if original is None or original.session_id != original_session_id:
             raise ProfileAccessRefusedError(AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED)
-        claimant = self.custody.require(proof.session_id)
+        claimant = await self.custody.require_off_loop(proof.session_id)
         if (
             claimant.kind is not SessionKind.HUMAN
             or claimant.connection_id != proof.connection_id
@@ -535,9 +537,12 @@ class ProfileWorkerOperationAuthority:
             review=review,
             attestation=proof,
         )
-        async with self.client.guard(request):
-            with self.custody.section(original.session_id), self.custody.section(proof.session_id):
-                yield request
+        async with (
+            self.client.guard(request),
+            self.custody.section_off_loop(original.session_id),
+            self.custody.section_off_loop(proof.session_id),
+        ):
+            yield request
 
     def _resolve_review_claimant(
         self,
@@ -578,29 +583,30 @@ class ProfileWorkerOperationAuthority:
                         fields={"stage": "custody_enter_begin", "transition": action.value},
                         primary_error=sys.exception(),
                     )
-                with self.custody.section(request.session_id), validating_governed_facts(self._authority_operation):
-                    self._held[task] = (identity, action)
-                    self._held_leases[task] = lease
-                    try:
-                        if action is AccessAction.COMMIT:
-                            diagnostic_timing_event(
-                                _LOGGER,
-                                "worker_commit_phase",
-                                fields={"stage": "custody_enter_end", "transition": action.value},
-                                primary_error=sys.exception(),
-                            )
-                        yield request
-                    finally:
-                        del self._held[task]
-                        del self._held_leases[task]
-                        custody_exit_started = action is AccessAction.COMMIT
-                        if action is AccessAction.COMMIT:
-                            diagnostic_timing_event(
-                                _LOGGER,
-                                "worker_commit_phase",
-                                fields={"stage": "custody_exit_begin", "transition": action.value},
-                                primary_error=sys.exception(),
-                            )
+                async with self.custody.section_off_loop(request.session_id):
+                    with validating_governed_facts(self._authority_operation):
+                        self._held[task] = (identity, action)
+                        self._held_leases[task] = lease
+                        try:
+                            if action is AccessAction.COMMIT:
+                                diagnostic_timing_event(
+                                    _LOGGER,
+                                    "worker_commit_phase",
+                                    fields={"stage": "custody_enter_end", "transition": action.value},
+                                    primary_error=sys.exception(),
+                                )
+                            yield request
+                        finally:
+                            del self._held[task]
+                            del self._held_leases[task]
+                            custody_exit_started = action is AccessAction.COMMIT
+                            if action is AccessAction.COMMIT:
+                                diagnostic_timing_event(
+                                    _LOGGER,
+                                    "worker_commit_phase",
+                                    fields={"stage": "custody_exit_begin", "transition": action.value},
+                                    primary_error=sys.exception(),
+                                )
             finally:
                 if custody_exit_started:
                     diagnostic_timing_event(
@@ -678,7 +684,9 @@ class ProfileWorkerOperationAuthority:
         finally:
             body[:] = bytes(len(body))
 
-    def retire_password_successor(self, identity: OperationIdentity, outcome: ProfilePassphraseRotationOutcome) -> None:
+    async def retire_password_successor(
+        self, identity: OperationIdentity, outcome: ProfilePassphraseRotationOutcome
+    ) -> None:
         """Retire a proven replacement only within its original task's COMMIT.
 
         Ordinary access checks intentionally reject the replaced generation.
@@ -692,7 +700,10 @@ class ProfileWorkerOperationAuthority:
         payload = self._password_retirement_payload(identity, binding)
         if payload is None or not self._preserves_password_profile(payload, outcome):
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-        self.custody.retire_password_successor(password_generation=outcome.password_generation)
+        await await_cancellation_complete(
+            asyncio.to_thread(self.custody.retire_password_successor, password_generation=outcome.password_generation),
+            task_name="worker-password-successor-retirement",
+        )
 
     def _owns_password_rotation_commit(self, task: asyncio.Task[object] | None, identity: OperationIdentity) -> bool:
         return (
@@ -722,20 +733,12 @@ class ProfileWorkerOperationAuthority:
             and outcome.dek_epoch_preserved
         )
 
-    def require_owner(self, operation_id: OperationId, session_id: UUID) -> None:
+    async def require_owner(self, operation_id: OperationId, session_id: UUID) -> None:
         """Refuse ID-only adoption even by another admitted same-profile session."""
         binding = self._bindings.get(operation_id)
         if binding is None or binding.session_id != session_id:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-        self.custody.require(session_id)
-
-    def identity(self, operation_id: OperationId, session_id: UUID) -> OperationIdentity:
-        """Resolve a previously admitted identity only for its exact session owner."""
-        self.require_owner(operation_id, session_id)
-        request = self._bindings[operation_id].request
-        return OperationIdentity(
-            operation_id=operation_id, definition_id=request.definition_id, subject_ref=request.subject_ref
-        )
+        await self.custody.require_off_loop(session_id)
 
 
 def _model_run_output(outcome: ModelRunOutcome, text: bytearray) -> ModelRunOutput | ModelRunRefusal:

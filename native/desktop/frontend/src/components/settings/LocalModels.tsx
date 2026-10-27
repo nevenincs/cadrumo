@@ -1,45 +1,70 @@
-import { useId, useState } from "react";
+import { useId, useState, type FormEvent } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Icon } from "@/components/ui/icon";
+import { Input } from "@/components/ui/input";
 import {
-  capabilityWords,
-  localModelOrder,
-  roleRefusalWords,
-  rolesOf,
-  type RoleLane,
-  type RoleModel,
-} from "../../shell/agentModelRoles";
-import type { AgentRecommendedCapability } from "../../shell/agentSession";
-import { useModelRoles, type ModelRoleHost } from "../../shell/modelRoles";
+  addedTo,
+  laneModelList,
+  listRefusalWords,
+  sizeWords,
+  type CatalogLane,
+  type LaneModel,
+} from "../../shell/localModelLanes";
+import type { AgentModelLicenceFacts } from "../../shell/agentSession";
+import { useLocalModels, type LocalModelHost } from "../../shell/localModels";
 import { useStrings, type Translate } from "../../shell/strings";
-import { ModelFacts } from "../agent/ModelRolesDialog";
 import { refusalWords } from "../setup/setupWords";
 
-/** Why a model was not removed, in words. */
+const licenceWords = (licence: AgentModelLicenceFacts) =>
+  licence.spdx && licence.spdx !== licence.name
+    ? `${licence.name} (${licence.spdx})`
+    : licence.name;
+
+/** Why a model was not removed from this computer, in words. */
 function removalWords(t: Translate, code: string): string {
-  switch (code) {
-    case "model_still_selected":
-      return t("desktop.providers.local_model_remove_still_selected");
-    case "model_not_removed":
-      return t("desktop.providers.local_model_remove_failed");
-    default:
-      return refusalWords(t, code);
-  }
+  return code === "model_not_removed"
+    ? t("desktop.providers.local_model_remove_failed")
+    : refusalWords(t, code);
 }
 
-/** A catalogue model and its download or removal action. */
+/** What the catalog states of one model: its licence, said even where it is
+ * not known, and its download size where it is. */
+function ModelFacts({ model, locale }: { model: LaneModel; locale: string }) {
+  const t = useStrings();
+  return (
+    <ul data-slot="model-facts" className="grid gap-0.5 text-sm">
+      <li data-fact="licence">
+        {model.licence
+          ? t("desktop.providers.local_model_licence", {
+              licence: licenceWords(model.licence),
+            })
+          : t("desktop.providers.local_model_licence_unknown")}
+      </li>
+      {model.sizeBytes !== null && (
+        <li data-fact="size">
+          {t("desktop.providers.local_model_size", {
+            size: sizeWords(locale, model.sizeBytes),
+          })}
+        </li>
+      )}
+    </ul>
+  );
+}
+
+/** One listed model and its download or removal action. */
 function LocalModelRow({
   model,
-  recommended,
+  added,
   locale,
   busy,
   refusal,
   onDownload,
   onRemove,
 }: {
-  model: RoleModel;
-  recommended: AgentRecommendedCapability[];
+  model: LaneModel;
+  added: boolean;
   locale: string;
   busy: boolean;
   refusal: string | null;
@@ -51,7 +76,7 @@ function LocalModelRow({
   return (
     <li
       data-model={model.id}
-      data-recommended={recommended.join(" ") || undefined}
+      data-added={added || undefined}
       data-installed={model.installed ?? undefined}
       aria-labelledby={headingId}
       className="grid gap-1.5 rounded-md bg-background p-2"
@@ -63,13 +88,6 @@ function LocalModelRow({
         >
           {model.name}
         </h6>
-        {recommended.map((capability) => (
-          <Badge key={capability} variant="inverse">
-            {t("desktop.providers.local_model_recommended", {
-              capability: capabilityWords(t, capability),
-            })}
-          </Badge>
-        ))}
         {model.installed !== null && (
           <Badge variant={model.installed ? "success" : "neutral"}>
             {t(
@@ -92,7 +110,7 @@ function LocalModelRow({
             {t("desktop.providers.local_model_download")}
           </Button>
         )}
-        {model.installed === true && onRemove && (
+        {onRemove && (
           <Button variant="ghost" size="sm" disabled={busy} onClick={onRemove}>
             {t("desktop.providers.local_model_remove")}
           </Button>
@@ -108,35 +126,92 @@ function LocalModelRow({
   );
 }
 
-/** Local model downloads; document-task configuration opens separately. */
+/** Adds a model to the lane's list by the name the local AI pulls it by. */
+function AddModel({
+  busy,
+  onAdd,
+}: {
+  busy: boolean;
+  onAdd: (model: string) => Promise<boolean>;
+}) {
+  const t = useStrings();
+  const nameId = useId();
+  const [name, setName] = useState("");
+  const submit = (event: FormEvent) => {
+    event.preventDefault();
+    const model = name.trim();
+    if (!model) return;
+    void onAdd(model).then((added) => {
+      if (added) setName("");
+    });
+  };
+  return (
+    <form
+      data-slot="local-model-add"
+      className="flex flex-wrap items-end gap-2"
+      onSubmit={submit}
+    >
+      <Field className="min-w-0 flex-1">
+        <FieldLabel htmlFor={nameId}>
+          {t("desktop.providers.local_model_add_label")}
+        </FieldLabel>
+        <Input
+          id={nameId}
+          value={name}
+          autoComplete="off"
+          spellCheck={false}
+          autoCapitalize="off"
+          autoCorrect="off"
+          onChange={(event) => setName(event.currentTarget.value)}
+        />
+      </Field>
+      <Button
+        type="submit"
+        variant="outline"
+        size="sm"
+        disabled={busy || name.trim() === ""}
+      >
+        {t("desktop.providers.local_model_add")}
+      </Button>
+    </form>
+  );
+}
+
+/** A local lane's model list: what the agent recommends and what the person
+ * added by name, each downloaded and removed here. The list is what the
+ * agent's model picker offers of the lane; the model the person picks there is
+ * the one the agent and document reading run with. */
 export function LocalModels({
   lane,
   host,
   locale,
   onSetUp,
   onRemove,
-  onConfigure,
 }: {
-  lane: RoleLane | null;
-  host: ModelRoleHost;
+  lane: CatalogLane | null;
+  host: LocalModelHost;
   locale: string;
-  /** Opens setup's review of the local AI; absent where this window offers
-   * no setup. */
+  /** Opens setup's review of the local AI downloading one model; absent
+   * where this window offers no setup. */
   onSetUp?: (model: string) => void;
-  onConfigure: () => void;
-  /** Removes one model no role selects, answering the refusal's code or
+  /** Removes one model from this computer, answering the refusal's code or
    * null; absent where this window offers no setup. */
   onRemove?: (model: string) => Promise<string | null>;
 }) {
   const t = useStrings();
-  const selections = useModelRoles(host);
-  const { snapshot, busy, outcomes, change } = selections;
+  const { snapshot, busy, outcomes, change } = useLocalModels(host);
   const [removing, setRemoving] = useState<string | null>(null);
   const [removals, setRemovals] = useState<Record<string, string>>({});
-  // The roles that use a model are cleared first, so setup does not pull it
-  // again; the model is removed only once none does.
-  const remove = async (key: string, model: string, usedBy: string[]) => {
-    if (!onRemove) return;
+  const readable =
+    snapshot.kind === "ready" && snapshot.value.state === "readable";
+  const listed =
+    lane && snapshot.kind === "ready"
+      ? laneModelList(lane, addedTo(snapshot.value, lane.id))
+      : [];
+  // Removing deletes the download first, then takes a model the person added
+  // off the list; a recommended model stays listed.
+  const remove = async (key: string, model: LaneModel, added: boolean) => {
+    if (!lane) return;
     setRemoving(key);
     setRemovals((held) => {
       const next = { ...held };
@@ -144,23 +219,23 @@ export function LocalModels({
       return next;
     });
     try {
-      const cleared = await change(
-        key,
-        usedBy.map((role) => ({
-          role,
-          act: (revision: string) => selections.clear(role, revision),
-        })),
-      );
-      if (!cleared) return;
-      const code = await onRemove(model);
-      if (code) setRemovals((held) => ({ ...held, [key]: code }));
+      if (model.installed === true) {
+        if (!onRemove) return;
+        const code = await onRemove(model.id);
+        if (code) {
+          setRemovals((held) => ({ ...held, [key]: code }));
+          return;
+        }
+      }
+      if (added)
+        await change(key, (revision) =>
+          host.remove(lane.id, model.id, revision),
+        );
     } finally {
       setRemoving(null);
     }
   };
-  const readable =
-    snapshot.kind === "ready" && snapshot.value.state === "readable";
-  const selected = readable ? rolesOf(snapshot.value) : [];
+  const working = busy !== null || removing !== null;
   return (
     <section data-slot="local-models" className="grid gap-2 pt-1">
       <h6 className="text-sm font-medium text-foreground">
@@ -169,48 +244,98 @@ export function LocalModels({
       <p className="text-sm text-muted-foreground">
         {t("desktop.providers.local_models_lead")}
       </p>
-      <Button variant="outline" size="sm" onClick={onConfigure}>
-        {t("desktop.agent.model_roles_title")}
-      </Button>
       {!lane ? (
         <p className="text-sm text-muted-foreground">
           {t("desktop.providers.local_models_none")}
         </p>
+      ) : snapshot.kind === "loading" ? (
+        <p className="text-sm text-muted-foreground">
+          {t("desktop.providers.local_models_loading")}
+        </p>
+      ) : snapshot.kind === "failed" ? (
+        <p role="alert" className="flex items-start gap-2 text-sm">
+          <Icon name="alert" className="mt-0.5 text-destructive" />
+          <span>{t("desktop.providers.local_models_failed")}</span>
+        </p>
       ) : (
-        <ul className="grid gap-2">
-          {localModelOrder(lane).map(({ model, recommended }) => {
-            const key = `${lane.id}/${model.id}`;
-            const outcome = outcomes[key];
-            const usedBy = selected
-              .filter(
-                (selection) =>
-                  selection.lane === lane.id && selection.model === model.id,
-              )
-              .map((selection) => selection.role);
-            return (
-              <LocalModelRow
-                key={model.id}
-                model={model}
-                recommended={recommended}
-                locale={locale}
-                busy={busy !== null || removing !== null}
-                refusal={
-                  outcome?.kind === "refused"
-                    ? roleRefusalWords(t, outcome.code)
-                    : removals[key]
-                      ? removalWords(t, removals[key])
-                      : null
+        <>
+          {!readable && (
+            <div
+              data-slot="local-models-unreadable"
+              className="grid gap-2 text-sm"
+            >
+              <p role="alert" className="flex items-start gap-2">
+                <Icon name="alert" className="mt-0.5 text-destructive" />
+                <span>{t("desktop.providers.local_models_unreadable")}</span>
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="justify-self-start"
+                disabled={working}
+                onClick={() =>
+                  void change("reset", (revision) => host.reset(revision))
                 }
-                onDownload={onSetUp ? () => onSetUp(model.id) : undefined}
-                onRemove={
-                  onRemove && readable
-                    ? () => void remove(key, model.id, usedBy)
-                    : undefined
+              >
+                {t("desktop.providers.local_models_reset")}
+              </Button>
+              {outcomes.reset?.kind === "refused" && (
+                <p role="alert">{listRefusalWords(t, outcomes.reset.code)}</p>
+              )}
+            </div>
+          )}
+          {listed.length > 0 && (
+            <ul className="grid gap-2">
+              {listed.map(({ model, added }) => {
+                const key = `${lane.id}/${model.id}`;
+                const outcome = outcomes[key];
+                const removable =
+                  (model.installed === true && onRemove !== undefined) ||
+                  (added && readable);
+                return (
+                  <LocalModelRow
+                    key={model.id}
+                    model={model}
+                    added={added}
+                    locale={locale}
+                    busy={working}
+                    refusal={
+                      removals[key]
+                        ? removalWords(t, removals[key])
+                        : outcome?.kind === "refused"
+                          ? listRefusalWords(t, outcome.code)
+                          : null
+                    }
+                    onDownload={onSetUp ? () => onSetUp(model.id) : undefined}
+                    onRemove={
+                      removable
+                        ? () => void remove(key, model, added)
+                        : undefined
+                    }
+                  />
+                );
+              })}
+            </ul>
+          )}
+          {readable && (
+            <>
+              <AddModel
+                busy={working}
+                onAdd={(model) =>
+                  change("add", (revision) =>
+                    host.add(lane.id, model, revision),
+                  )
                 }
               />
-            );
-          })}
-        </ul>
+              {outcomes.add?.kind === "refused" && (
+                <p role="alert" className="flex items-start gap-2 text-sm">
+                  <Icon name="alert" className="mt-0.5 text-destructive" />
+                  <span>{listRefusalWords(t, outcomes.add.code)}</span>
+                </p>
+              )}
+            </>
+          )}
+        </>
       )}
     </section>
   );

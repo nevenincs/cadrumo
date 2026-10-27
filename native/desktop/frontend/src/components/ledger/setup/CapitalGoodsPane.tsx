@@ -20,6 +20,7 @@ import {
   Panel,
   Reading,
   readLanding,
+  rankDecimal,
   SetupTable,
   TextField,
   useSetupDraft,
@@ -136,45 +137,53 @@ export function CapitalGoodsPane({ port, reader, locale }: SetupProps) {
     {
       key: "identifier",
       label: t("desktop.ledger.capital.column.identifier"),
+      sort: (good) => good.identifier,
       cell: (good) => <code className="font-mono">{good.identifier}</code>,
     },
     {
       key: "description",
       label: t("desktop.ledger.capital.column.description"),
+      sort: (good) => good.description,
       cell: (good) => good.description,
     },
     {
       key: "kind",
       label: t("desktop.ledger.capital.column.kind"),
+      sort: (good) => tokenText(t, "capital.kind", good.kind),
       cell: (good) => tokenText(t, "capital.kind", good.kind),
     },
     {
       key: "year",
       label: t("desktop.ledger.capital.column.year"),
       numeric: true,
+      sort: (good) => good.acquisition_year,
       cell: (good) => good.acquisition_year,
     },
     {
       key: "cuota",
       label: t("desktop.ledger.capital.column.cuota"),
       numeric: true,
+      sort: (good) => rankDecimal(good.cuota_soportada.decimal),
       cell: (good) => amountText(locale, good.cuota_soportada.decimal),
     },
     {
       key: "pct",
       label: t("desktop.ledger.capital.column.prorrata"),
       numeric: true,
+      sort: (good) => rankDecimal(good.prorrata_inicial_pct.decimal),
       cell: (good) => `${good.prorrata_inicial_pct.decimal}%`,
     },
     {
       key: "deducted",
       label: t("desktop.ledger.capital.column.deducted"),
       numeric: true,
+      sort: (good) => rankDecimal(good.deduccion_efectuada.decimal),
       cell: (good) => amountText(locale, good.deduccion_efectuada.decimal),
     },
     {
       key: "disposal",
       label: t("desktop.ledger.capital.column.disposal"),
+      sort: (good) => good.disposal?.year ?? null,
       cell: (good) =>
         good.disposal
           ? `${good.disposal.year} · ${tokenText(t, "capital.disposal", good.disposal.regime)}`

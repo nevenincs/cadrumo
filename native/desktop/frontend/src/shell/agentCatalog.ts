@@ -245,10 +245,34 @@ function declaredChoices(
   };
 }
 
-/** The providers and models the column offers, as the catalog has them. */
+/** The person's model lists of the lanes on this computer: which lanes those
+ * are, by catalogue lane id, and the models the person added to each. */
+export type LocalLists = {
+  lanes: readonly string[];
+  added(lane: string): readonly string[];
+};
+
+/** Whether a local lane's list holds `entry`: a model the lane recommends or
+ * one the person added. */
+function listedOn(
+  lane: AgentProviderLane,
+  lists: LocalLists,
+  entry: AgentCatalogEntry,
+): boolean {
+  const recommended = Object.values(lane.catalog.recommended ?? {});
+  return (
+    recommended.includes(entry.model) ||
+    lists.added(`${lane.provider_id}_${lane.transport}`).includes(entry.model)
+  );
+}
+
+/** The providers and models the column offers, as the catalog has them. A
+ * lane on this computer offers the models of its list, where `lists` says
+ * which those are. */
 export function catalogChoices(
   t: Translate,
   catalog: AgentCatalogAnswer,
+  lists: LocalLists | null = null,
 ): CatalogChoices {
   if (isDeclared(catalog)) return declaredChoices(t, catalog);
   const served = catalog.providers ?? [];
@@ -273,9 +297,16 @@ export function catalogChoices(
       )
       .map((lane): ProviderWay => {
         const capabilities = provenCapabilities(t, lane);
+        const local = lists?.lanes.includes(
+          `${lane.provider_id}_${lane.transport}`,
+        )
+          ? lists
+          : null;
         const listed = writesModel(lane)
           ? []
-          : (lane.catalog.models ?? []).map((entry) => modelOption(t, entry));
+          : (lane.catalog.models ?? [])
+              .filter((entry) => !local || listedOn(lane, local, entry))
+              .map((entry) => modelOption(t, entry));
         models[wayId(lane)] = listed;
         const usable =
           lane.health.selectable &&

@@ -45,10 +45,11 @@ type AdminAction = Literal[
     "connect_status",
     "connect_cancel",
     "connect_submit_code",
-    "model_roles",
-    "model_role_set",
-    "model_role_clear",
-    "model_roles_reset",
+    "local_models",
+    "local_model_add",
+    "local_model_remove",
+    "local_models_reset",
+    "reading_model_choose",
 ]
 
 
@@ -65,7 +66,6 @@ class AdminTarget(Protocol):
         choice: Literal["direct_api", "provider_sign_in"] | None = None,
         method: Literal["browser", "browser-code", "device"] | None = None,
         attempt_id: str | None = None,
-        role: str | None = None,
         model: str | None = None,
         secret: bytearray | None = None,
     ) -> JsonValue:
@@ -86,7 +86,6 @@ class AdminRequest(BaseModel):
     choice: Literal["direct_api", "provider_sign_in"] | None = None
     method: Literal["browser", "browser-code", "device"] | None = None
     attempt_id: UUID | None = None
-    role: Annotated[str, Field(pattern=r"^[a-z][a-z0-9_]{0,63}$")] | None = None
     model: Annotated[str, Field(pattern=MODEL_RUN_MODEL_ID_PATTERN)] | None = None
     secret_bytes: Annotated[int, Field(ge=1, le=ADMIN_SECRET_MAX_BYTES)] | None = None
 
@@ -256,7 +255,6 @@ class AdminServer:
                 choice=request.choice,
                 method=request.method,
                 attempt_id=str(request.attempt_id) if request.attempt_id is not None else None,
-                role=request.role,
                 model=request.model,
                 secret=secret,
             )

@@ -1,7 +1,7 @@
-"""The measured machine and per-role selection report for local inference, and its read operation.
+"""The measured machine and per-role derived model report for local inference, and its read operation.
 
 :func:`read_local_reader_report` measures this computer's memory and
-accelerator and reports the lane the person selected for each role.
+accelerator and reports the lane the agent service derives for each role.
 ``local-reader.report`` serves that measurement to every frontend. It reads
 only: nothing is pulled, loaded or started, and the local AI server is not
 asked anything. Whether a model fits the memory free is the agent's answer
@@ -27,7 +27,7 @@ from ..core.model_roles import ModelRole
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.operations import OperationEffect
 from ..core.time.clock import now
-from .local_reader import RoleLane, read_role_lanes
+from .local_reader import RoleLane, read_role_lanes, selected_model_condition
 from .local_reader_contracts import (
     LOCAL_READER_OPERATION_SUBJECT,
     LocalReaderFactV1,
@@ -47,7 +47,6 @@ from .operator_actions.models import PreconditionVerdict
 from .provisioning import probe_hardware_profile
 from .provisioning_contracts import (
     ProvisioningFactValue,
-    ProvisioningPreconditionCondition,
     provisioning_no_recovery_verdict,
 )
 
@@ -131,9 +130,7 @@ def _report_model(role: ModelRole, answer: RoleLane | None) -> LocalReaderReport
             role=role,
             selected=False,
             facts=facts,
-            precondition_verdict=provisioning_no_recovery_verdict(
-                ProvisioningPreconditionCondition.SELECTED_MODEL_AVAILABLE, facts=facts
-            ),
+            precondition_verdict=provisioning_no_recovery_verdict(selected_model_condition(code), facts=facts),
         )
     if answer.reads_off_host:
         return LocalReaderReportModel(role=role, selected=True, facts={"role": role.value, "reads_off_host": True})

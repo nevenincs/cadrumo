@@ -366,10 +366,3 @@ export const FIXTURE_DECLARED_CATALOG: AgentDeclaredCatalog = {
     })),
   },
 };
-
-/** The lanes on which the made-up agent runs a document reading in the
- * background, by catalogue lane id; a role on any other is refused. */
-export const FIXTURE_BACKGROUND_LANES: ReadonlySet<string> = new Set([
-  "alpha_api",
-  "local_api",
-]);

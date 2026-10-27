@@ -167,14 +167,6 @@ class _ObjectiveEstimationFields(TypedDict):
     objective_estimation_prior_year_invoice_gross_income_eur: Decimal | None
     objective_estimation_prior_year_agri_livestock_forest_gross_eur: Decimal | None
     objective_estimation_prior_year_purchases_eur: Decimal | None
-    objective_estimation_modulos_iae_epigraph: str
-    objective_estimation_modulos_module_1_units: Decimal | None
-    objective_estimation_modulos_module_2_units: Decimal | None
-    objective_estimation_modulos_module_3_units: Decimal | None
-    objective_estimation_modulos_module_4_units: Decimal | None
-    objective_estimation_modulos_module_5_units: Decimal | None
-    objective_estimation_modulos_module_6_units: Decimal | None
-    objective_estimation_modulos_module_7_units: Decimal | None
 
 
 class _ProfileAxisFields(TypedDict):
@@ -192,7 +184,6 @@ class _ProfileWithholdingFields(TypedDict):
     has_employees: bool
     colegio_concertado: bool | None
     pays_professionals_with_retencion: bool
-    professional_income_withholding_ge_70pct: bool
     art109_activity_income_withholding_ge_70pct: bool
     pays_rent_with_retencion: bool
     pays_capital_income_with_retencion: bool
@@ -215,7 +206,6 @@ class _ProfileRelationshipFields(TypedDict):
 
 class _ProfileAddressFields(TypedDict):
     fiscal_address_cadastral_reference: str
-    fiscal_address_is_habitual_vivienda: bool
     holiday_territory: CalendarCCAA | None
 
 
@@ -227,19 +217,12 @@ class _ProfileActivityFields(TypedDict):
 
 class _ProfileCorporateFields(TypedDict):
     new_entity_first_two_profit_periods: bool | None
-    ley_49_2002_special_regime_option_declared: bool | None
-    ley_49_2002_special_regime_option_date: date | None
-    ley_49_2002_special_regime_renunciation_declared: bool | None
-    ley_49_2002_special_regime_renunciation_date: date | None
 
 
 class _ProfileEstablishmentFields(TypedDict):
-    establecimiento_type: str
-    elected_withholding_pct: str
     vivienda_office_total_m2: Decimal | None
     vivienda_office_office_m2: Decimal | None
     iae_epigraph: str
-    notes: str
 
 
 class _ProfileRegimeFields(TypedDict):
@@ -261,11 +244,11 @@ class _ProfilePagadoresFields(TypedDict):
 
 
 def _objective_estimation_fields(canonical: Mapping[str, str]) -> _ObjectiveEstimationFields:
-    """Return the estimación objetiva (módulos) ``TaxpayerProfile`` kwargs.
+    """Return the estimación objetiva ``TaxpayerProfile`` kwargs.
 
-    Groups the prior-year gross-income figures and the seven módulos unit
-    counts the M131/M303 régimen de módulos formulas consume, keeping this
-    cohesive field family out of the main constructor call.
+    Groups the prior-year gross-income and purchase figures that bound the
+    régimen de módulos exclusion limits, keeping this cohesive field family
+    out of the main constructor call.
     """
     return _ObjectiveEstimationFields(
         objective_estimation_prior_year_gross_income_eur=_parse_decimal(
@@ -279,31 +262,6 @@ def _objective_estimation_fields(canonical: Mapping[str, str]) -> _ObjectiveEsti
         ),
         objective_estimation_prior_year_purchases_eur=_parse_decimal(
             canonical.get("irpf.objective_estimation_prior_year_purchases_eur"),
-        ),
-        objective_estimation_modulos_iae_epigraph=canonical.get(
-            "irpf.objective_estimation_modulos_iae_epigraph",
-            "",
-        ),
-        objective_estimation_modulos_module_1_units=_parse_decimal(
-            canonical.get("irpf.objective_estimation_modulos_module_1_units"),
-        ),
-        objective_estimation_modulos_module_2_units=_parse_decimal(
-            canonical.get("irpf.objective_estimation_modulos_module_2_units"),
-        ),
-        objective_estimation_modulos_module_3_units=_parse_decimal(
-            canonical.get("irpf.objective_estimation_modulos_module_3_units"),
-        ),
-        objective_estimation_modulos_module_4_units=_parse_decimal(
-            canonical.get("irpf.objective_estimation_modulos_module_4_units"),
-        ),
-        objective_estimation_modulos_module_5_units=_parse_decimal(
-            canonical.get("irpf.objective_estimation_modulos_module_5_units"),
-        ),
-        objective_estimation_modulos_module_6_units=_parse_decimal(
-            canonical.get("irpf.objective_estimation_modulos_module_6_units"),
-        ),
-        objective_estimation_modulos_module_7_units=_parse_decimal(
-            canonical.get("irpf.objective_estimation_modulos_module_7_units"),
         ),
     )
 
@@ -330,7 +288,7 @@ def _build_taxpayer_profile(
         **_resolve_profile_address_fields(canonical, typed),
         **_resolve_profile_activity_fields(canonical),
         **_resolve_profile_corporate_fields(canonical),
-        **_resolve_profile_establishment_fields(canonical, typed),
+        **_resolve_profile_establishment_fields(canonical),
         **_resolve_profile_regime_fields(canonical, typed),
         **_resolve_profile_representative_fields(canonical),
         **_resolve_profile_pagadores_fields(canonical),
@@ -379,7 +337,6 @@ def _resolve_profile_withholding_fields(typed: SetupAnswers) -> _ProfileWithhold
         "has_employees": typed.has_employees,
         "colegio_concertado": colegio_concertado,
         "pays_professionals_with_retencion": typed.pays_professionals_with_retencion,
-        "professional_income_withholding_ge_70pct": typed.professional_income_withholding_ge_70pct,
         "art109_activity_income_withholding_ge_70pct": typed.art109_activity_income_withholding_ge_70pct,
         "pays_rent_with_retencion": typed.pays_rent_with_retencion,
         "pays_capital_income_with_retencion": typed.pays_capital_income_with_retencion,
@@ -427,10 +384,9 @@ def _resolve_profile_relationship_fields(
 
 
 def _resolve_profile_address_fields(canonical: Mapping[str, str], typed: SetupAnswers) -> _ProfileAddressFields:
-    """Resolve fiscal-address facts and preserve the explicit bool parser."""
+    """Resolve the fiscal-address cadastral reference and the holiday territory."""
     return {
         "fiscal_address_cadastral_reference": canonical.get("address.cadastral_reference", ""),
-        "fiscal_address_is_habitual_vivienda": _parse_bool(canonical.get("address.is_habitual_vivienda")) or False,
         "holiday_territory": _resolve_holiday_territory(canonical, typed),
     }
 
@@ -472,16 +428,11 @@ def _resolve_profile_activity_fields(canonical: Mapping[str, str]) -> _ProfileAc
 
 
 def _resolve_profile_corporate_fields(canonical: Mapping[str, str]) -> _ProfileCorporateFields:
-    """Resolve corporate option declarations and their dates."""
+    """Resolve the corporate declarations the registry binds to profile paths."""
     from ..calculations.registry.setup_profile_bindings import profile_field_bindings
 
-    corporate_bindings = {
-        field: path
-        for field, path in profile_field_bindings().items()
-        if field == "new_entity_first_two_profit_periods" or field.endswith("_declared") or field.endswith("_date")
-    }
-    expected = set(_ProfileCorporateFields.__annotations__)
-    if set(corporate_bindings) != expected:
+    corporate_bindings = profile_field_bindings()
+    if set(corporate_bindings) != set(_ProfileCorporateFields.__annotations__):
         raise ProfileError(
             "registry setup profile catalogue does not declare the complete corporate field set",
         )
@@ -489,33 +440,15 @@ def _resolve_profile_corporate_fields(canonical: Mapping[str, str]) -> _ProfileC
         new_entity_first_two_profit_periods=_parse_optional_bool(
             canonical.get(corporate_bindings["new_entity_first_two_profit_periods"]),
         ),
-        ley_49_2002_special_regime_option_declared=_parse_optional_bool(
-            canonical.get(corporate_bindings["ley_49_2002_special_regime_option_declared"]),
-        ),
-        ley_49_2002_special_regime_option_date=_parse_date(
-            canonical.get(corporate_bindings["ley_49_2002_special_regime_option_date"]),
-        ),
-        ley_49_2002_special_regime_renunciation_declared=_parse_optional_bool(
-            canonical.get(corporate_bindings["ley_49_2002_special_regime_renunciation_declared"]),
-        ),
-        ley_49_2002_special_regime_renunciation_date=_parse_date(
-            canonical.get(corporate_bindings["ley_49_2002_special_regime_renunciation_date"]),
-        ),
     )
 
 
-def _resolve_profile_establishment_fields(
-    canonical: Mapping[str, str],
-    typed: SetupAnswers,
-) -> _ProfileEstablishmentFields:
-    """Resolve establishment, office, activity, and user-note fields."""
+def _resolve_profile_establishment_fields(canonical: Mapping[str, str]) -> _ProfileEstablishmentFields:
+    """Resolve the home-office measurements and the activity epigraph."""
     return {
-        "establecimiento_type": canonical.get("censo.establecimiento_type", ""),
-        "elected_withholding_pct": canonical.get("censo.elected_withholding_pct", ""),
         "vivienda_office_total_m2": _parse_decimal(canonical.get("vivienda_office.total_m2")),
         "vivienda_office_office_m2": _parse_decimal(canonical.get("vivienda_office.office_m2")),
         "iae_epigraph": canonical.get("activities.iae_epigraph", ""),
-        "notes": typed.notes,
     }
 
 

@@ -1,6 +1,6 @@
 """The ledger LLM commands take no model option.
 
-A role reads with the model the person selected for it, so a command that named
+A role reads with the model the agent service derives for it, so a command that named
 a model would offer a choice the service does not honour. The real command
 parser must not know the option on either command that once carried it.
 """

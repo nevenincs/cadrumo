@@ -29,9 +29,17 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation, 
 from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
 from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ..auth.operator_scope_ports import OperatorScopePorts
-from ..auth.protocols import BrowserSessionFactoryPort, session_store
+from ..auth.protocols import BrowserContextPort, BrowserSessionFactoryPort, session_store
 from ..auth.session_types import AeatSession
-from ..auth.sessions import AuthenticatedAeatSessionResult, ensure_authenticated_aeat_session
+from ..auth.sessions import (
+    AuthenticatedAeatSessionResult,
+    ViewSessionBaseline,
+    ViewSessionPublication,
+    ViewSessionSeed,
+    ensure_authenticated_aeat_session,
+    load_view_session_seed,
+    publish_view_session_state,
+)
 
 type SessionWriteReporter = Callable[[OperationEffect], Awaitable[None]]
 
@@ -141,4 +149,73 @@ async def active_verified_session(
     return session, settings
 
 
-__all__ = ["active_verified_session"]
+async def open_live_view_session(
+    *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    browser_session_factory: BrowserSessionFactoryPort,
+    operator_scope_ports: OperatorScopePorts,
+    authority_operation: PinnedAuthorityOperation,
+    effect_guard: Callable[[], AbstractAsyncContextManager[None]],
+    on_session_write: SessionWriteReporter,
+    operation: str = "live-sede-view",
+) -> tuple[ViewSessionSeed, Settings]:
+    """Resume or acquire the profile's AEAT session and return the seed for a view context.
+
+    The read gate applies first. The session is resumed or acquired through the
+    one canonical path, with any provider write published under ``effect_guard``
+    exactly as a sync publishes it, and the seed is then read from that same
+    encrypted custody. Both the acquisition lock and the auth mutation span are
+    released before this returns, so the view browses without holding either.
+    """
+    settings = load_settings()
+    AeatAccessGate(settings).require_live_read()
+    result = await ensure_live_authenticated_session(
+        settings,
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        browser_session_factory=browser_session_factory,
+        operation=operation,
+        target_url=None,
+        operator_scope_ports=operator_scope_ports,
+        profile_decode_context=authority_operation.profile_decode_context(),
+        effect_guard=effect_guard,
+        on_session_write=on_session_write,
+    )
+    seed = load_view_session_seed(settings, result=result, operator_scope_ports=operator_scope_ports)
+    return seed, settings
+
+
+async def close_live_view_session(
+    settings: Settings,
+    *,
+    baseline: ViewSessionBaseline,
+    view_context: BrowserContextPort,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    browser_session_factory: BrowserSessionFactoryPort,
+    operator_scope_ports: OperatorScopePorts,
+    authority_operation: PinnedAuthorityOperation,
+    effect_guard: Callable[[], AbstractAsyncContextManager[None]],
+    on_session_write: SessionWriteReporter,
+    operation: str = "live-sede-view-close",
+) -> ViewSessionPublication:
+    """Publish a closing view's storage state through the canonical custody path.
+
+    Call with the view context still open, before it is closed. The read gate
+    is checked again, then :func:`~cadrumo.application.auth.sessions.publish_view_session_state`
+    captures, verifies and publishes under its digest precondition.
+    """
+    AeatAccessGate(settings).require_live_read()
+    return await publish_view_session_state(
+        settings,
+        baseline=baseline,
+        view_context=view_context,
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        browser_session_factory=browser_session_factory,
+        operator_scope_ports=operator_scope_ports,
+        profile_decode_context=authority_operation.profile_decode_context(),
+        effect_guard=effect_guard,
+        on_session_write=on_session_write,
+        operation=operation,
+    )
+
+
+__all__ = ["active_verified_session", "close_live_view_session", "open_live_view_session"]

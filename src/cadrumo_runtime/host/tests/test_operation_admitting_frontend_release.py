@@ -27,7 +27,10 @@ from pydantic import BaseModel, JsonValue
 from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
-from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
+from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import (
+    ProfileWorkerCustody,
+    ProfileWorkerCustodySection,
+)
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.errors import AggregationUnsupportedModeloError
 from cadrumo.application.operations.access_resolution import (
@@ -190,10 +193,9 @@ class _SessionsWitness(ProfileWorkerCustody):
         return session
 
     @override
-    @contextmanager
-    def section(self, session_id: UUID) -> Generator[None]:
+    def section(self, session_id: UUID) -> ProfileWorkerCustodySection:
         self.require(session_id)
-        yield
+        return ProfileWorkerCustodySection(lambda: None)
 
     @override
     def retire(self, session_id: UUID) -> frozenset[UUID]:
@@ -583,7 +585,7 @@ def test_an_operation_stored_without_an_admission_releases_nothing_on_any_fronte
         assert execution is not None
         request = worker.request()
         operation_id = new_operation_id()
-        execution.bind(operation_id, WorkerOperationBinding(worker.key.session_id, _EXTERNAL_CLIENT, request))
+        await execution.bind(operation_id, WorkerOperationBinding(worker.key.session_id, _EXTERNAL_CLIENT, request))
         submitted = await services.submission.submit(
             request, actor_ref=f"session:{worker.key.session_id}", operation_id=operation_id
         )

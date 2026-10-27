@@ -70,13 +70,13 @@ from .host.launcher_protocol import launcher_refusal_for, runtime_launcher_refus
 from .host.store_lifecycle import AgentStoreLifecycle
 from .providers.application.agent_credentials import ProviderSettingsAgentCredentialSource
 from .providers.application.contracts import ProviderSettingsRefusal
-from .providers.application.model_role_selections import ModelRoleSelectionsService
+from .providers.application.local_model_list import LocalModelListService
 from .providers.application.model_runs import ModelRunService
 from .providers.application.ports import ProviderCatalogUnavailableError, ProviderCatalogUnavailableReason
 from .providers.application.resolution import ProviderCredentialResolver
 from .providers.application.service import AssistantAuthChoice, BaseUrlChange, ProviderSettingsService
 from .providers.domain.catalog import MAX_CATALOG_LANES
-from .providers.persistence.store import SecureModelRoleSelectionsStore, SecureProviderSettingsStore
+from .providers.persistence.store import SecureLocalModelListStore, SecureProviderSettingsStore
 
 _LOGGER = get_logger(__name__)
 HOSTED_CERTIFICATION_CACHE_SECONDS = 5.0
@@ -191,10 +191,10 @@ class AgentService:
             self._host_token,
             self._closing,
         )
-        selections = SecureModelRoleSelectionsStore(client=client)
+        model_list = SecureLocalModelListStore(client=client)
         live_models = ServedCatalogModels(self._live_catalog)
         self._model_runs = ModelRunService(
-            selections=selections,
+            model_list=model_list,
             resolver=resolver,
             catalog_source=self._catalog,
             live_models=live_models,
@@ -209,9 +209,7 @@ class AgentService:
             storage_mode=storage_mode().mode,
             cli_state_probe=self._login_status.probe,
         )
-        self._model_roles_service = ModelRoleSelectionsService(
-            store=selections, catalog_source=self._catalog, live_models=live_models
-        )
+        self._local_models = LocalModelListService(store=model_list, catalog_source=self._catalog)
         self._controller: AgentHostController | None = None
         self._auth_attempt: AuthAttempt | None = None
         self._auth_resume_valid: Callable[[], bool] | None = None
@@ -251,7 +249,6 @@ class AgentService:
         choice: str | None = None,
         method: str | None = None,
         attempt_id: str | None = None,
-        role: str | None = None,
         model: str | None = None,
         secret: bytearray | None = None,
     ) -> Any:
@@ -270,8 +267,8 @@ class AgentService:
                 return {"kind": "refused", "code": "invalid_request"}
         if action in {"connect_status", "connect_cancel"}:
             return self._observe_sign_in(attempt_id, cancel=action == "connect_cancel")
-        if action == "model_roles":
-            return self._model_roles()
+        if action == "local_models":
+            return self._local_model_list()
         if action in {"catalog", "status"}:
             if self._closing.is_set():
                 return {"kind": "refused", "code": "service_stopping"}
@@ -287,7 +284,6 @@ class AgentService:
             "choice": choice,
             "method": method,
             "attempt_id": attempt_id,
-            "role": role,
             "model": model,
             "secret": secret,
         }
@@ -338,7 +334,6 @@ class AgentService:
         choice: str | None,
         method: str | None,
         attempt_id: str | None,
-        role: str | None,
         model: str | None,
         secret: bytearray | None,
     ) -> Any:
@@ -352,10 +347,8 @@ class AgentService:
             if not self._schedule_start():
                 return {"kind": "refused", "code": "service_stopping"}
             return {"kind": "starting"}
-        if action in {"model_role_set", "model_role_clear", "model_roles_reset"}:
-            return self._change_model_roles(
-                action, role=role, lane=provider, model=model, expected_revision=expected_revision
-            )
+        if action in {"local_model_add", "local_model_remove", "local_models_reset", "reading_model_choose"}:
+            return self._change_local_models(action, lane=provider, model=model, expected_revision=expected_revision)
         if provider is None or expected_revision is None:
             return {"kind": "refused", "code": "invalid_request"}
         if action == "sign_in":
@@ -391,39 +384,40 @@ class AgentService:
         self._replace_superseded()
         return result.model_dump(mode="json")
 
-    def _model_roles(self) -> dict[str, Any]:
-        """Read every role's selection; a plain store read that never waits on the agent tree."""
+    def _local_model_list(self) -> dict[str, Any]:
+        """Read the models added to the local model lists; a plain store read that never waits on the agent tree."""
         if self._closing.is_set():
             return {"kind": "refused", "code": "service_stopping"}
         lease = self.client.lease
         if lease is None:
             return {"kind": "refused", "code": "signed_out"}
-        observed = self._model_roles_service.status().model_dump(mode="json")
+        observed = self._local_models.status().model_dump(mode="json")
         if self.client.lease != lease:
             return {"kind": "refused", "code": "signed_out"}
         return observed
 
-    def _change_model_roles(
+    def _change_local_models(
         self,
         action: str,
         *,
-        role: str | None,
         lane: str | None,
         model: str | None,
         expected_revision: str | None,
     ) -> dict[str, Any]:
         if expected_revision is None:
             return {"kind": "refused", "code": "invalid_request"}
-        selections = self._model_roles_service
-        if action == "model_role_set" and role is not None and lane is not None and model is not None:
-            result = selections.select(role, lane=lane, model=model, expected_revision=expected_revision)
-        elif action == "model_role_clear" and role is not None and lane is None and model is None:
-            result = selections.clear(role, expected_revision=expected_revision)
-        elif action == "model_roles_reset" and role is None and lane is None and model is None:
-            result = selections.reset(expected_revision=expected_revision)
+        models = self._local_models
+        if action == "local_model_add" and lane is not None and model is not None:
+            result = models.add(lane, model=model, expected_revision=expected_revision)
+        elif action == "local_model_remove" and lane is not None and model is not None:
+            result = models.remove(lane, model=model, expected_revision=expected_revision)
+        elif action == "local_models_reset" and lane is None and model is None:
+            result = models.reset(expected_revision=expected_revision)
+        elif action == "reading_model_choose" and lane is not None and model is not None:
+            result = models.choose_reading(lane, model=model, expected_revision=expected_revision)
         else:
             return {"kind": "refused", "code": "invalid_request"}
-        # The selections have a capability of their own: a change leaves the
+        # The list has a capability of its own: a change leaves the
         # provider-settings generation, the kept reads and the running tree as they are.
         return result.model_dump(mode="json")
 
@@ -802,7 +796,7 @@ class AgentService:
     def _live_catalog(self) -> dict[str, Any] | None:
         """Return the ready agent's served catalogue, or ``None`` when no agent is ready or it does not answer.
 
-        A role selection and a lane lookup read it beside the declared
+        A model list change and a lane lookup read it beside the declared
         catalogue; without it they read the declared catalogue alone. The read
         is bound to the generation it was asked of, as every served read is.
         """

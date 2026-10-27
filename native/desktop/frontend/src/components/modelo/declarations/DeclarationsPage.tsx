@@ -43,7 +43,7 @@ import { useDeclarationsList, type ListMemory } from "./useDeclarationsList";
  * the list as read, and how it was looked at. Held in memory only. */
 export type DeclarationsMemory = ListMemory & {
   view?: View;
-  sort?: Sort;
+  sort?: SortState;
   query?: string;
   collapsed?: ReadonlySet<string>;
 };
@@ -73,10 +73,35 @@ function useKept<K extends "view" | "sort" | "query" | "collapsed">(
 }
 
 type View = "todo" | "recorded" | "all";
-/** Work order is the read model's own, in its groups; the others are flat. */
-type Sort = "work_order" | "deadline" | "modelo";
+/** Work order is the read model's own, in its groups; the others are flat
+ * and are the page's columns. */
+type Sort = "work_order" | (typeof SORT_COLUMNS)[number];
+type SortState = { key: Sort; direction: "asc" | "desc" };
 const VIEWS = ["todo", "recorded", "all"] as const;
-const SORTS = ["work_order", "deadline", "modelo"] as const;
+const SORT_COLUMNS = [
+  "modelo",
+  "declaration",
+  "deadline",
+  "state",
+  "result",
+] as const;
+const SORTS = ["work_order", ...SORT_COLUMNS] as const;
+const isSortColumn = (id: string): id is (typeof SORT_COLUMNS)[number] =>
+  (SORT_COLUMNS as readonly string[]).includes(id);
+
+const collator = new Intl.Collator(undefined, { numeric: true });
+/** What a row is ranked by under a column; a row without one goes last,
+ * whichever way the column is sorted. */
+const SORT_VALUES: Record<
+  (typeof SORT_COLUMNS)[number],
+  (row: Row) => string | null
+> = {
+  modelo: (row) => row.modelo,
+  declaration: (row) => row.modelo_title,
+  deadline: (row) => row.deadline,
+  state: (row) => row.state_words,
+  result: (row) => row.result_words,
+};
 
 const VIEW_KEYS: Record<View, string> = {
   todo: "workspace.declarations.list.filter.todo",
@@ -107,7 +132,7 @@ function columns(t: Translate): GridColumn<Row>[] {
       id: "modelo",
       header: t("workspace.declarations.list.column.modelo"),
       width: 5.5,
-      resizable: false,
+      sortable: true,
       cell: (row) => (
         <span className="flex h-8 w-12 items-center justify-center rounded-md border border-border-strong font-mono text-base font-semibold">
           {row.modelo}
@@ -119,6 +144,7 @@ function columns(t: Translate): GridColumn<Row>[] {
       header: t("workspace.declarations.list.column.declaration"),
       width: 18,
       grow: 1,
+      sortable: true,
       cell: (row) => (
         <span className="flex min-w-0 flex-col py-2">
           <DataGridText className="text-base font-medium">
@@ -136,6 +162,7 @@ function columns(t: Translate): GridColumn<Row>[] {
       id: "deadline",
       header: t("workspace.declarations.list.column.deadline"),
       width: 18,
+      sortable: true,
       cell: (row) => (
         // The read model's deadline sentence already names the date; a row
         // it does not word keeps the bare deadline.
@@ -162,6 +189,7 @@ function columns(t: Translate): GridColumn<Row>[] {
       header: t("workspace.declarations.list.column.state"),
       width: 16,
       grow: 1,
+      sortable: true,
       cell: (row) => <StateCell row={row} t={t} />,
     },
     {
@@ -169,6 +197,7 @@ function columns(t: Translate): GridColumn<Row>[] {
       header: t("workspace.declarations.list.column.result"),
       width: 10,
       align: "end",
+      sortable: true,
       cell: (row) =>
         row.result_words ? (
           <DataGridText className="text-sm text-muted-foreground">
@@ -266,7 +295,10 @@ export function DeclarationsPage({
     memory,
   );
   const [view, setView] = useKept(memory, "view", "todo" as View);
-  const [sort, setSort] = useKept(memory, "sort", "work_order" as Sort);
+  const [sort, setSort] = useKept(memory, "sort", {
+    key: "work_order",
+    direction: "asc",
+  } as SortState);
   const [query, setQuery] = useKept(memory, "query", "");
   const [collapsed, setCollapsed] = useKept(
     memory,
@@ -298,16 +330,17 @@ export function DeclarationsPage({
           row.modelo.includes(q) ||
           row.modelo_title.toLowerCase().includes(q)),
     );
-    if (sort === "modelo")
-      return [...found].sort((a, b) => a.modelo.localeCompare(b.modelo));
-    if (sort === "deadline")
-      // A row without a deadline goes last: it is not due first.
-      return [...found].sort((a, b) =>
-        a.deadline === null || b.deadline === null
-          ? Number(a.deadline === null) - Number(b.deadline === null)
-          : a.deadline.localeCompare(b.deadline),
-      );
-    return found;
+    if (sort.key === "work_order") return found;
+    const value = SORT_VALUES[sort.key];
+    const sign = sort.direction === "asc" ? 1 : -1;
+    // A row without a value goes last: a row without a deadline is not due
+    // first.
+    return [...found].sort((a, b) => {
+      const [x, y] = [value(a), value(b)];
+      return x === null || y === null
+        ? Number(x === null) - Number(y === null)
+        : sign * collator.compare(x, y);
+    });
   }, [rows, view, sort, query]);
 
   const gridRows = useMemo(() => {
@@ -316,7 +349,7 @@ export function DeclarationsPage({
       key: row.key,
       data: row,
     });
-    if (sort !== "work_order") return shownRows.map(data);
+    if (sort.key !== "work_order") return shownRows.map(data);
     // Groups in the order the read model lists their first row.
     const groups = new Map<DeclarationListGroup, Row[]>();
     for (const row of shownRows)
@@ -402,11 +435,8 @@ export function DeclarationsPage({
     body = (
       <>
         <div className="declarations-toolbar flex flex-wrap items-center gap-3 px-5 pt-4 pb-3">
-          <p className="min-w-0 flex-1 text-base text-muted-foreground">
-            {t("workspace.declarations.hub.lead")}
-            {list.deadline_note_words && (
-              <span className="text-faint"> {list.deadline_note_words}</span>
-            )}
+          <p className="min-w-0 flex-1 text-base text-faint">
+            {list.deadline_note_words}
           </p>
           <div className="relative w-64 max-w-full">
             <Icon
@@ -455,8 +485,10 @@ export function DeclarationsPage({
             <NativeSelect
               controlSize="sm"
               className="declarations-sort w-36"
-              value={sort}
-              onChange={(event) => setSort(event.target.value as Sort)}
+              value={sort.key}
+              onChange={(event) =>
+                setSort({ key: event.target.value as Sort, direction: "asc" })
+              }
             >
               {SORTS.map((s) => (
                 <option key={s} value={s}>
@@ -491,6 +523,21 @@ export function DeclarationsPage({
             label={t("workspace.declarations.destination.overview")}
             columns={cols}
             rows={gridRows}
+            sort={
+              sort.key === "work_order"
+                ? null
+                : { column: sort.key, direction: sort.direction }
+            }
+            onSort={(column) => {
+              if (!isSortColumn(column)) return;
+              setSort((held) => ({
+                key: column,
+                direction:
+                  held.key === column && held.direction === "asc"
+                    ? "desc"
+                    : "asc",
+              }));
+            }}
             density="comfortable"
             // Fixed heights, so every cell spans its row: two lines, or three
             // where the AEAT side is said too.

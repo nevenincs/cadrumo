@@ -363,6 +363,18 @@ test("F6 reaches the calendar where the documentation would be", async ({
   await expect(
     page.getByRole("button", { name: label("desktop.calendar.refresh") }),
   ).toBeFocused();
+  // The profile notice sits between the refresh and the obligations: its
+  // details toggle, then the way to the profile.
+  const details = page.getByRole("button", {
+    name: label("desktop.profile.notice.show_details"),
+  });
+  const profile = page.getByRole("link", {
+    name: label("desktop.profile.notice.open_profile"),
+  });
+  await target.keyboard.press("Tab");
+  await expect(details).toBeFocused();
+  await target.keyboard.press("Tab");
+  await expect(profile).toBeFocused();
   // Each obligation is one stop among the months, however many weeks it
   // crosses: the fixture's nine, and no more.
   await expect(page.locator(".calendar-bar:not([tabindex='-1'])")).toHaveCount(
@@ -376,9 +388,7 @@ test("F6 reaches the calendar where the documentation would be", async ({
   await expect(first).toHaveAttribute("aria-pressed", "true");
   // The arrow keys move the choice of face, and the list comes with what
   // was chosen among the months marked in it.
-  await target.keyboard.press("Shift+Tab");
-  await target.keyboard.press("Shift+Tab");
-  await target.keyboard.press("Shift+Tab");
+  for (let back = 0; back < 5; back++) await target.keyboard.press("Shift+Tab");
   await target.keyboard.press("ArrowRight");
   await expect(
     page.getByRole("radio", { name: label("desktop.calendar.view_list") }),

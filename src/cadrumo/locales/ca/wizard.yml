@@ -360,18 +360,6 @@ wizard:
         help: Forma jurídica reconeguda quan el tipus d'entitat és persona jurídica
       legal-name:
         help: Raó social de la persona jurídica per a capçaleres d'exportació
-      ley-49-2002-option-date:
-        help: Registra la data de la casella 653 del model 036 per a l opció del títol
-          II de la Llei 49/2002.
-      ley-49-2002-option-declared:
-        help: Registra si la casella 651 del model 036 declara l opció pel títol II
-          de la Llei 49/2002.
-      ley-49-2002-renunciation-date:
-        help: Registra la data de la casella 654 del model 036 per a la renúncia al
-          títol II de la Llei 49/2002.
-      ley-49-2002-renunciation-declared:
-        help: Registra si la casella 652 del model 036 declara la renúncia al règim
-          del títol II de la Llei 49/2002.
       llm-vision:
         help: Permetre llegir documents escanejats o en imatge amb el model de lectura
           d'imatges triat a l'aplicació d'escriptori.
@@ -391,24 +379,6 @@ wizard:
         help: Marca-ho si l'entitat de nova creació es troba en un dels dos primers
           períodes impositius amb beneficis (art. 29 LIS), per aplicar el tipus reduït
           del 15 per cent. Opcional; sense marcar no s'aplica el tipus reduït.
-      notes:
-        help: Notes per al teu propi record (opcional)
-      objective-estimation-modulos-iae-epigraph:
-        help: Epígraf IAE per a mòduls d'estimació objectiva, per exemple 972.
-      objective-estimation-modulos-module-1-units:
-        help: Unitats anuals del mòdul 1 per a estimació objectiva.
-      objective-estimation-modulos-module-2-units:
-        help: Unitats anuals del mòdul 2 per a estimació objectiva.
-      objective-estimation-modulos-module-3-units:
-        help: Unitats anuals del mòdul 3 per a estimació objectiva.
-      objective-estimation-modulos-module-4-units:
-        help: Unitats anuals del mòdul 4 per a estimació objectiva.
-      objective-estimation-modulos-module-5-units:
-        help: Unitats anuals del mòdul 5 per a estimació objectiva.
-      objective-estimation-modulos-module-6-units:
-        help: Unitats anuals del mòdul 6 per a estimació objectiva.
-      objective-estimation-modulos-module-7-units:
-        help: Unitats anuals del mòdul 7 per a estimació objectiva.
       output-language:
         help: Idioma de sortida de la CLI per a aquest perfil
       pays-capital-income-with-retencion:
@@ -423,8 +393,6 @@ wizard:
       premio-loteria-gravamen-especial-trimestres:
         help: Trimestres en què es va cobrar el premi, com a tokens AAAA-nT separats
           per | (per exemple 2025-1T|2025-3T)
-      professional-income-withholding-ge-70pct:
-        help: Almenys 70% dels ingressos professionals amb retenció prèvia
       representante-fiscal-nif:
         help: NIF/NIE del representant fiscal a Espanya. Obligatori per a no residents
           fora de la UE/EEE (art. 47 LGT + art. 10 TRLIRNR RDLeg 5/2004).
@@ -556,10 +524,6 @@ wizard:
             label: Només règim simplificat
         prompt: Quina composició de règims s'aplica al Model 303?
       title: IVA configuració
-    notes:
-      notes:
-        prompt: Notes per al teu propi record (opcional)
-      title: Notes per al teu propi record
     obligations:
       art109-activity-income-withholding-ge-70pct:
         prompt: Aplica l'excepció Art. 109 per cobertura del 70% dels ingressos d'activitat
@@ -612,28 +576,6 @@ wizard:
         prompt: Períodes Model 115 sense pagament rellevant
       monedas-virtuales-extranjero-above-threshold:
         prompt: Monedes virtuals a l'estranger superen el llindar del Model 721
-      objective-estimation-modulos-iae-epigraph:
-        help: Es desa una vegada al perfil anual. Els coeficients continuen al registre
-          del model.
-        prompt: Epígraf IAE per a mòduls d'estimació objectiva
-      objective-estimation-modulos-module-1-units:
-        prompt: Unitats anuals del mòdul 1
-      objective-estimation-modulos-module-2-units:
-        prompt: Unitats anuals del mòdul 2
-      objective-estimation-modulos-module-3-units:
-        prompt: Unitats anuals del mòdul 3
-      objective-estimation-modulos-module-4-units:
-        prompt: Unitats anuals del mòdul 4
-      objective-estimation-modulos-module-5-units:
-        prompt: Unitats anuals del mòdul 5
-      objective-estimation-modulos-module-6-units:
-        prompt: Unitats anuals del mòdul 6
-      objective-estimation-modulos-module-7-units:
-        prompt: Unitats anuals del mòdul 7
-      objective-estimation-modulos-module-units:
-        help: Recompte anual estable per a aquesta casella de mòdul. L'epígraf IAE
-          seleccionat defineix si significa personal, superfície del local, consum
-          elèctric o un altre mòdul oficial.
       pays-capital-income-with-retencion:
         prompt: Paga rendes de capital amb retenció
       pays-professionals-with-retencion:
@@ -648,8 +590,6 @@ wizard:
           2025-1T|2025-3T). Cada trimestre obre la seva pròpia presentació del Model
           136.
         prompt: Trimestres en què es va cobrar el premi
-      professional-income-withholding-ge-70pct:
-        prompt: Almenys 70% dels ingressos professionals amb retenció prèvia
       third-party-transactions-above-347-threshold:
         prompt: A l'any natural que cobreix el Model 347, les teves operacions amb
           una mateixa persona o entitat van superar 3.005,06 € (300,51 € en els cobraments
@@ -966,21 +906,6 @@ wizard:
           sociedad-civil-mercantil:
             label: Societat civil amb objecte mercantil
         prompt: Forma jurídica
-      ley-49-2002-option-date:
-        help: Usa la data ISO corresponent a la casella 653 del model 036.
-        prompt: Data declarada de l'opció pel règim especial de la Llei 49/2002
-      ley-49-2002-option-declared:
-        help: Usa el fet declarat a la casella 651 del model 036; l aplicació legal
-          continua condicionada als requisits legals i al fet que no hi hagi renúncia.
-        prompt: L entitat ha presentat al model 036 l opció pel règim fiscal especial
-          del títol II de la Llei 49/2002?
-      ley-49-2002-renunciation-date:
-        help: Usa la data ISO corresponent a la casella 654 del model 036.
-        prompt: Data declarada de la renúncia al règim especial de la Llei 49/2002
-      ley-49-2002-renunciation-declared:
-        help: Usa el fet declarat a la casella 652 del model 036.
-        prompt: L entitat ha presentat al model 036 la renúncia al règim fiscal especial
-          del títol II de la Llei 49/2002?
       new-entity-first-two-profit-periods:
         help: S'aplica només a persones jurídiques. Si ho marques, l'entitat tributa
           al tipus reduït del 15 per cent durant aquests dos períodes.

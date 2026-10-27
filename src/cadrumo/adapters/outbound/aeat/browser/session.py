@@ -20,7 +20,8 @@ from __future__ import annotations
 
 import asyncio
 import os
-from collections.abc import Mapping
+from collections import deque
+from collections.abc import Coroutine, Mapping
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, Any
@@ -35,10 +36,13 @@ if TYPE_CHECKING:
     from playwright.async_api import (
         Browser,
         BrowserContext,
+        Download,
+        FileChooser,
         Page,
         Playwright,
         ProxySettings,
         Response,
+        WebSocketRoute,
     )
 
 from .....application.auth.protocols import BrowserContextProvisioner
@@ -61,6 +65,16 @@ from .errors import (
 )
 from .evasion import EvasionStrategy, PlaywrightStealthEvasion
 from .profile import Profile
+from .request_guard import (
+    ContextRequestGuard,
+    RequestRefusal,
+    ViewNotice,
+    ViewNoticeCode,
+    ViewPageObserver,
+    install_request_guard,
+    log_safe_host,
+    offerable_url,
+)
 from .site_health_records import (
     SiteHealthEvidence,
     SiteHealthStatus,
@@ -177,6 +191,62 @@ class BrowserSession:
                 be created, evasion setup fails, or this session already owns a
                 live browser.
         """
+        return await self._create_context(provisioner=provisioner, storage_state=storage_state, view=None)
+
+    async def create_view_context(
+        self,
+        *,
+        request_guard: ContextRequestGuard,
+        observer: ViewPageObserver,
+        provisioner: BrowserContextProvisioner | None = None,
+        storage_state: Mapping[str, object] | None = None,
+    ) -> BrowserContext:
+        """Create the person-driven Sede view's context behind the request guard.
+
+        The context is built like :meth:`create_context` and additionally
+        blocks service workers. Before it is returned, while it has no page,
+        every WebSocket it opens is closed and ``request_guard`` is installed
+        as its last route, so every page request passes the guard first. Only
+        the view context is guarded this way; every other context is
+        unchanged.
+
+        ``observer`` receives every page opened in the context by code, and a
+        notice for each refused request, popup, download and file chooser. A
+        popup is closed. A refused redirect hop of a view page's navigation,
+        which was already sent, stops that page at ``about:blank``. The owner
+        registers no further route on the context or its pages and issues no
+        Playwright API request from it.
+
+        Args:
+            request_guard: The policy union the context is guarded by, from
+                :func:`~adapters.outbound.aeat.browser.request_guard.operator_view_request_guard`.
+            observer: The page-observer hook.
+            provisioner: Optional :class:`BrowserContextProvisioner` used to
+                decorate the new context call.
+            storage_state: Optional in-memory storage state mapping passed
+                directly to ``browser.new_context``.
+
+        Returns:
+            The guarded BrowserContext, with no page.
+
+        Raises:
+            BrowserError: As :meth:`create_context`, including when the guard
+                cannot be installed.
+        """
+        return await self._create_context(
+            provisioner=provisioner,
+            storage_state=storage_state,
+            view=_ViewContextWatch(request_guard, observer),
+        )
+
+    async def _create_context(
+        self,
+        *,
+        provisioner: BrowserContextProvisioner | None,
+        storage_state: Mapping[str, object] | None,
+        view: _ViewContextWatch | None,
+    ) -> BrowserContext:
+        """Launch the owned browser and build one context, guarded when ``view`` is set."""
         async with self._lifecycle_lock:
             if self._browser is not None:
                 raise BrowserError(
@@ -208,11 +278,17 @@ class BrowserSession:
                     storage_state=storage_state,
                     provisioner=provisioner,
                 )
+                if view is not None:
+                    context_kwargs["service_workers"] = "block"
                 context = await await_cancellation_complete(
                     self._create_playwright_context(browser, context_kwargs),
                     task_name="cadrumo-browser-context-create",
                 )
                 await self._apply_evasion(context)
+                if view is not None:
+                    # After evasion, so the guard is the context's last route
+                    # and runs first; before any page exists.
+                    await view.install(context)
                 logger.info("browser context create succeeded profile=%s", self.profile.name)
                 return context
             except asyncio.CancelledError as cancellation:
@@ -656,6 +732,120 @@ class BrowserSession:
         if self._working_directory is not None:
             self._working_directory.cleanup()
             self._working_directory = None
+
+
+#: The page a view page is stopped at after a refused redirect hop.
+_VIEW_STOP_URL = "about:blank"
+#: Refused popup navigations held for the popup watch; older ones are dropped.
+_UNCLAIMED_POPUP_OFFERS = 4
+
+
+class _ViewContextWatch:
+    """Wire one Sede view context to its request guard and page observer."""
+
+    def __init__(self, request_guard: ContextRequestGuard, observer: ViewPageObserver) -> None:
+        self._request_guard = request_guard
+        self._observer = observer
+        self._tasks: set[asyncio.Task[None]] = set()
+        # A popup's first navigation is routed before Playwright names its
+        # page, and a refused one leaves the popup on an error page. Its offer
+        # is held here until the popup watch claims it.
+        self._unclaimed_popup_offers: deque[str] = deque(maxlen=_UNCLAIMED_POPUP_OFFERS)
+
+    async def install(self, context: BrowserContext) -> None:
+        """Install the WebSocket refusal, the page watch and, last, the request guard."""
+        context.on("page", self._on_page)
+        await context.route_web_socket("**/*", self._refuse_web_socket)
+        await install_request_guard(context, self._request_guard, on_refusal=self._on_refusal)
+
+    async def _on_page(self, page: Page) -> None:
+        # A popup is known by its opener, which Playwright fixes when the page
+        # is created, so this cannot race the page's own requests.
+        if await page.opener() is None:
+            page.on("download", self._on_download)
+            page.on("filechooser", self._on_file_chooser)
+            self._expose(page)
+            return
+        offer = offerable_url(page.url)
+        if offer is None and self._unclaimed_popup_offers:
+            offer = self._unclaimed_popup_offers.popleft()
+        try:
+            await page.close()
+        except PlaywrightError as exc:
+            logger.warning("aeat view popup close failed exc_type=%s", type(exc).__name__)
+        logger.info("aeat view popup closed offered=%s", offer is not None)
+        self._notify(ViewNotice(code=ViewNoticeCode.POPUP_REFUSED, offer_url=offer))
+
+    async def _refuse_web_socket(self, web_socket: WebSocketRoute) -> None:
+        # Not connecting to the server and closing keeps the socket local.
+        await web_socket.close()
+        logger.warning("aeat view websocket refused host=%s", log_safe_host(web_socket.url))
+        self._notify(ViewNotice(code=ViewNoticeCode.REQUEST_REFUSED))
+
+    def _on_refusal(self, refusal: RequestRefusal) -> None:
+        if refusal.navigation and refusal.page is None:
+            # Only a popup's first navigation has no page yet; the popup watch
+            # reports it once, with this offer.
+            offer = offerable_url(refusal.url)
+            if offer is not None:
+                self._unclaimed_popup_offers.append(offer)
+            return
+        if refusal.navigation and refusal.main_frame and refusal.page is not None:
+            self._spawn(self._report_refused_navigation(refusal, refusal.page))
+            return
+        self._notify(ViewNotice(code=ViewNoticeCode.REQUEST_REFUSED))
+
+    async def _report_refused_navigation(self, refusal: RequestRefusal, page: Page) -> None:
+        if await page.opener() is not None:
+            # The popup watch closes the popup and reports it once.
+            return
+        if refusal.redirect:
+            try:
+                await page.goto(_VIEW_STOP_URL)
+            except PlaywrightError as exc:
+                logger.warning("aeat view stop after refused redirect failed exc_type=%s", type(exc).__name__)
+        self._notify(ViewNotice(code=ViewNoticeCode.NAVIGATION_REFUSED, offer_url=offerable_url(refusal.url)))
+
+    async def _on_download(self, download: Download) -> None:
+        offer = offerable_url(download.url)
+        try:
+            await download.cancel()
+        except PlaywrightError as exc:
+            logger.warning("aeat view download cancel failed exc_type=%s", type(exc).__name__)
+        logger.info("aeat view download refused offered=%s", offer is not None)
+        self._notify(ViewNotice(code=ViewNoticeCode.DOWNLOAD_REFUSED, offer_url=offer))
+
+    def _on_file_chooser(self, file_chooser: FileChooser) -> None:
+        # No file is ever set; the chooser is left unanswered.
+        logger.info("aeat view file chooser refused")
+        self._notify(
+            ViewNotice(code=ViewNoticeCode.FILE_CHOOSER_REFUSED, offer_url=offerable_url(file_chooser.page.url))
+        )
+
+    def _expose(self, page: Page) -> None:
+        try:
+            self._observer.page_opened(page)
+        except Exception as exc:
+            logger.error("aeat view page observer failed exc_type=%s", type(exc).__name__)
+
+    def _notify(self, notice: ViewNotice) -> None:
+        try:
+            self._observer.notice(notice)
+        except Exception as exc:
+            logger.error("aeat view notice observer failed code=%s exc_type=%s", notice.code, type(exc).__name__)
+
+    def _spawn(self, work: Coroutine[object, object, None]) -> None:
+        task = asyncio.get_running_loop().create_task(work)
+        self._tasks.add(task)
+        task.add_done_callback(self._settle_task)
+
+    def _settle_task(self, task: asyncio.Task[None]) -> None:
+        self._tasks.discard(task)
+        if task.cancelled():
+            return
+        exc = task.exception()
+        if exc is not None:
+            logger.error("aeat view notice task failed exc_type=%s", type(exc).__name__)
 
 
 def _storage_state_source(context_kwargs: Mapping[str, object]) -> str:

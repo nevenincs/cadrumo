@@ -307,7 +307,11 @@ function mainAction(
   }
 }
 
-function approveLabel(t: Translate, review: SetupReview, locale: string) {
+export function approveLabel(
+  t: Translate,
+  review: SetupReview,
+  locale: string,
+) {
   if (review.known_download_bytes <= 0) return t("desktop.setup.approve");
   const size = formatSize(locale, review.known_download_bytes);
   return review.has_unknown_size

@@ -165,8 +165,8 @@ def restore_profile_fact_value(value: object) -> object:
     as strings. On re-parse the union ``str | bool | int | Decimal | date``
     would otherwise resolve to ``str`` first under pydantic's smart-union
     matcher, silently dropping numeric / temporal semantics on persisted
-    facts (e.g. ``usage_ratios.business_ratio`` or
-    ``irpf.minimum_personal_amount``). This validator inspects strings
+    facts (e.g. ``taxpayer_type.incn_prior_12_months`` or
+    ``irpf.pagadores_secondary_income``). This validator inspects strings
     against the canonical Decimal and ISO date shapes and promotes them
     back to the original Python type before the union resolves.
     """

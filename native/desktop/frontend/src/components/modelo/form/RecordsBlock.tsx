@@ -1,4 +1,5 @@
 import { Icon } from "@/components/ui/icon";
+import { useTableView, type ViewColumn } from "@/components/ui/table-view";
 import type {
   PublicModeloFormContextFieldBlock,
   PublicModeloFormRepeatingBlock,
@@ -20,6 +21,30 @@ export function RepeatingBlock({
   const t = useStrings();
   const shown = block.columns.slice(0, SHOWN_COLUMNS);
   const hidden = block.columns.length - shown.length;
+  const columns: ViewColumn<PublicModeloFormRepeatingBlock["rows"][number]>[] =
+    [
+      ...shown.map((column) => ({
+        id: column.key,
+        label: <Label text={column.heading} />,
+        name: calm(column.heading.text),
+      })),
+      ...(hidden > 0
+        ? [
+            {
+              id: "more",
+              label: <span className="text-faint">+{hidden}</span>,
+              name: `+${hidden}`,
+              align: "end" as const,
+              resizable: false,
+            },
+          ]
+        : []),
+    ];
+  const view = useTableView({
+    columns,
+    rows: block.rows,
+    resizeLabel: (column) => t("desktop.table.resize_column", { column }),
+  });
   return (
     <div className="rounded-lg border border-border">
       <div className="flex items-center gap-2 border-b border-border bg-muted px-3 py-2 text-sm">
@@ -31,28 +56,13 @@ export function RepeatingBlock({
         </span>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full">
+        <table className="w-full" {...view.tableProps}>
           <thead>
-            <tr>
-              {shown.map((column) => (
-                <th
-                  key={column.key}
-                  scope="col"
-                  className="px-3 py-2 text-left text-sm font-medium text-muted-foreground"
-                >
-                  <Label text={column.heading} />
-                </th>
-              ))}
-              {hidden > 0 && (
-                <td className="px-3 py-2 text-right text-sm text-faint">
-                  +{hidden}
-                </td>
-              )}
-            </tr>
+            <tr className="text-sm text-muted-foreground">{view.headers}</tr>
           </thead>
           {block.rows_known && (
             <tbody>
-              {block.rows.map((row) => {
+              {view.rows.map((row) => {
                 const texts = row.value_texts;
                 return (
                   <tr key={row.index} className="border-t border-border">

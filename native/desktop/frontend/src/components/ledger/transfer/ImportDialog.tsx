@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/segmented-control";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
+import { useTableView, type ViewColumn } from "@/components/ui/table-view";
 import type {
   FilePick,
   FilePurpose,
@@ -1508,6 +1509,64 @@ function PlainPreview({
   );
 }
 
+type RefusedRow = InvoiceImportResult["refused"][number];
+
+/** The rows an import refused, each with the field and the reason; the
+ * columns can be sorted and dragged to a width. */
+function RefusedRows({
+  t,
+  count,
+  refused,
+}: {
+  t: Translate;
+  count(value: number): string;
+  refused: readonly RefusedRow[];
+}) {
+  const row = t("desktop.ledger.import.row");
+  const field = t("desktop.ledger.import.field");
+  const reason = t("desktop.ledger.import.reason");
+  const columns: ViewColumn<RefusedRow>[] = [
+    { id: "row", label: row, name: row, sortValue: (item) => item.row_number },
+    { id: "field", label: field, name: field, sortValue: (item) => item.field },
+    {
+      id: "reason",
+      label: reason,
+      name: reason,
+      sortValue: (item) => item.reason,
+    },
+  ];
+  const view = useTableView({
+    columns,
+    rows: refused,
+    resizeLabel: (column) => t("desktop.table.resize_column", { column }),
+  });
+  return (
+    <table
+      className="ledger-import-refused w-full text-sm"
+      {...view.tableProps}
+    >
+      <caption className="text-left font-medium">
+        {t("desktop.ledger.import.refused_rows")}
+      </caption>
+      <thead>
+        <tr className="text-left text-muted-foreground">{view.headers}</tr>
+      </thead>
+      <tbody>
+        {view.rows.map((item) => (
+          <tr
+            key={`${item.row_number}:${item.field}`}
+            className="border-t border-border align-top"
+          >
+            <td className="py-1 pr-3 tabular-nums">{count(item.row_number)}</td>
+            <td className="py-1 pr-3 font-mono text-xs">{item.field}</td>
+            <td className="py-1 [overflow-wrap:anywhere]">{item.reason}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
 function ResultStep({
   t,
   locale,
@@ -1689,40 +1748,7 @@ function ResultStep({
           </AlertDescription>
         </Alert>
         {result.refused.length > 0 && (
-          <table className="ledger-import-refused w-full text-sm">
-            <caption className="text-left font-medium">
-              {t("desktop.ledger.import.refused_rows")}
-            </caption>
-            <thead>
-              <tr className="text-left text-muted-foreground">
-                <th scope="col" className="py-1 pr-3 font-normal">
-                  {t("desktop.ledger.import.row")}
-                </th>
-                <th scope="col" className="py-1 pr-3 font-normal">
-                  {t("desktop.ledger.import.field")}
-                </th>
-                <th scope="col" className="py-1 font-normal">
-                  {t("desktop.ledger.import.reason")}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {result.refused.map((row) => (
-                <tr
-                  key={`${row.row_number}:${row.field}`}
-                  className="border-t border-border align-top"
-                >
-                  <td className="py-1 pr-3 tabular-nums">
-                    {count(row.row_number)}
-                  </td>
-                  <td className="py-1 pr-3 font-mono text-xs">{row.field}</td>
-                  <td className="py-1 [overflow-wrap:anywhere]">
-                    {row.reason}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <RefusedRows t={t} count={count} refused={result.refused} />
         )}
         {result.unmapped_column_headers.length > 0 && (
           <p className="text-sm text-muted-foreground">

@@ -369,11 +369,9 @@ def profile() -> TaxpayerProfile:
         iva_regime=IVARegime("GENERAL"),
         has_employees=False,
         pays_professionals_with_retencion=False,
-        professional_income_withholding_ge_70pct=False,
         art109_activity_income_withholding_ge_70pct=False,
         pays_rent_with_retencion=False,
         does_intracomunitario=False,
         third_party_transactions_above_347_threshold=False,
         bienes_extranjero_above_threshold=False,
-        notes="overview-calendar test profile",
     )

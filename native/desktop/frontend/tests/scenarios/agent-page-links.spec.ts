@@ -33,19 +33,27 @@ async function noLinkLeftTheWindow(page: Page) {
   );
 }
 
-test("a setup link shows the TUI with the keyboard on its view and offers a fresh check", async ({
+test("a setup link opens the AEAT access editor in the window, asks the TUI for nothing and offers a fresh check", async ({
   page,
 }) => {
   await page.goto("/scenarios.html?scenario=aeat-setup&latency=0&bar=off");
   await ask(page, "Respóndeme con formato");
   await settled(page);
+  const terminals = async () =>
+    (await calls(page)).filter((call) => call.startsWith("openTerminal tui "))
+      .length;
+  const before = await terminals();
   await link(page, "Set up AEAT access").click();
-  await expect
-    .poll(() => calls(page))
-    .toContain("presentView profile/aeat-access presented");
-  const tui = page.locator('[data-terminal="tui"]');
-  await expect(tui).toBeVisible();
-  await expect(tui.locator(".xterm-helper-textarea")).toBeFocused();
+  // The profile page, with its editor over it: opened as asked, so no notice.
+  const editor = page.getByRole("dialog", {
+    name: label("desktop.profile.action.aeat_access"),
+    exact: true,
+  });
+  await expect(editor).toBeVisible();
+  await expect(page.locator(".user-profile-page")).toBeVisible();
+  await expect(windowToast(page)).toHaveText("");
+  await page.keyboard.press("Escape");
+  await expect(editor).toHaveCount(0);
   await agentColumn(page)
     .getByRole("button", { name: label("desktop.agent.aeat_setup_check") })
     .click();
@@ -53,9 +61,8 @@ test("a setup link shows the TUI with the keyboard on its view and offers a fres
     label("desktop.agent.aeat_setup_resume_message"),
   );
   const made = await calls(page);
-  expect(
-    made.filter((call) => call.startsWith("openTerminal tui ")),
-  ).toHaveLength(1);
+  expect(made.some((call) => call.startsWith("presentView "))).toBe(false);
+  expect(await terminals()).toBe(before);
   await noLinkLeftTheWindow(page);
 });
 

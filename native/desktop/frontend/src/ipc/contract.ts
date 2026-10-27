@@ -1042,14 +1042,10 @@ export type SetupRefusalCode =
   | "not_cancellable"
   /** The runtime could not carry the request. */
   | "unavailable"
-  /** The person's selection of local models cannot be handed to the engine:
-   * its record is unreadable, or a selected role or model is not one the
-   * engine can pull. */
+  /** The requested model cannot be handed to the engine: it is not on a
+   * turned-on local lane's model list, or its name is not one the engine
+   * can pull. */
   | "model_selection_unusable"
-  /** A selected local model's catalogue entry states no download size. */
-  | "model_size_unstated"
-  /** A role still selects the model asked to be removed. */
-  | "model_still_selected"
   /** The engine did not remove the model. */
   | "model_not_removed";
 
@@ -1062,20 +1058,27 @@ export type StartupProgress = {
   failure: HostFailure | null;
 };
 
-/** One role and the lane and model the person selected for it; both null when none is. */
-export type AgentModelRoleSelection = {
-  role: string;
-  lane: string | null;
-  model: string | null;
-};
+/** One model the person added by name to a local lane's model list. */
+export type AgentListedModel = { lane: string; model: string };
 
 /**
- * Every role's selection with the revision a change sends back, or a stored
- * record nobody can read, which lists no role and carries its reset guard.
+ * The models the person added to the local lanes' lists, in the order added,
+ * and the model documents are read with, the one the person selected in the
+ * agent's model picker on any lane, with the revision a change sends back; or
+ * a stored record nobody can read, which lists and selects no model and
+ * carries its reset guard. A lane's recommended models are its catalogue's
+ * and are not listed here. `local_lanes` are the catalogue's lanes on this
+ * computer, whose models the picker offers from their lists.
  */
-export type AgentModelRoles =
-  | { state: "readable"; roles: AgentModelRoleSelection[]; revision: string }
-  | { state: "unreadable"; revision: string | null };
+export type AgentLocalModels =
+  | {
+      state: "readable";
+      models: AgentListedModel[];
+      reading: AgentListedModel | null;
+      local_lanes: string[];
+      revision: string;
+    }
+  | { state: "unreadable"; local_lanes: string[]; revision: string };
 
 export interface HostCommands {
   user_profile_read: {
@@ -1111,6 +1114,22 @@ export interface HostCommands {
   };
   user_profile_observe: { args: { updates: Channel<null> }; result: number };
   user_profile_unobserve: { args: { subscription: number }; result: null };
+  /** A token and the name of the certificate file picked in the native
+   * dialog, never its path; null when the dialog is closed unchosen. A file
+   * that is not a PKCS#12 certificate (.p12 or .pfx) rejects with `invalid`. */
+  profile_aeat_certificate_pick: {
+    args: Authorized;
+    result: import("../shell/userProfile").AeatCertificate | null;
+  };
+  /**
+   * Raw body only: one UTF-8 JSON object with `profile_id`, `provider` and
+   * `password`, which the host sends to the runtime on its secret frame and
+   * keeps nowhere. A refusal rejects with `{ code }`, one of `invalid`,
+   * `not_signed_in`, `refused`, `conflict`, `unknown`, `saved_unread` and
+   * `unavailable`. `unknown` and `saved_unread` mean the save was submitted
+   * and its outcome was not confirmed, and it is never retried.
+   */
+  profile_aeat_credential_save: { args: Authorized; result: null };
   /** Counts of the last notifications capture; no row reaches the window. */
   profile_views_notifications: {
     args: Authorized;
@@ -1416,9 +1435,10 @@ export interface HostCommands {
   };
   about_info: { args: Authorized; result: AboutInfo };
   /** Each setup command refuses with `SetupRefusal` or a `HostFailure`. */
-  desktop_setup_review_read: {
-    args: Authorized<{ operationId: string }>;
-    result: SetupOperationReview;
+  /** The setup reviews this desktop person may claim now, each as shown. */
+  desktop_setup_review_pending: {
+    args: Authorized;
+    result: SetupOperationReview[];
   };
   desktop_setup_review_claim: {
     args: Authorized<{ review: SetupReviewCoordinates }>;
@@ -1593,24 +1613,31 @@ export interface HostCommands {
   /** cadrumo-agent's catalog, unchanged, less the lanes the profile turned
    * off; while no agent is ready, its declared catalog in an envelope. */
   agent_provider_catalog: { args: Authorized; result: AgentCatalogAnswer };
-  /** The person's model selection for every role, as the agent service stores it. */
-  agent_model_roles: { args: Authorized; result: AgentModelRoles };
-  /** Selects a lane and model for one role at the revision read. A refusal is
-   * `agent_model_role_<reason>` for the service's reasons, such as
-   * `agent_model_role_vision_required`, or a column code. */
-  agent_model_role_set: {
-    args: Authorized<{
-      role: string;
-      lane: string;
-      model: string;
-      expectedRevision: string;
-    }>;
-    result: AgentModelRoles;
+  /** The models the person added to the local lanes' lists, as the agent
+   * service stores them. */
+  agent_local_models: { args: Authorized; result: AgentLocalModels };
+  /** Adds a model by name to a local lane's list at the revision read. A
+   * refusal is `agent_local_models_<reason>` for the service's reasons, such
+   * as `agent_local_models_full`, or a column code. */
+  agent_local_model_add: {
+    args: Authorized<{ lane: string; model: string; expectedRevision: string }>;
+    result: AgentLocalModels;
   };
-  /** Clears one role's selection at the revision read. */
-  agent_model_role_clear: {
-    args: Authorized<{ role: string; expectedRevision: string }>;
-    result: AgentModelRoles;
+  /** Takes an added model off a local lane's list at the revision read. */
+  agent_local_model_remove: {
+    args: Authorized<{ lane: string; model: string; expectedRevision: string }>;
+    result: AgentLocalModels;
+  };
+  /** Removes the list record, readable or not, at the revision read. */
+  agent_local_models_reset: {
+    args: Authorized<{ expectedRevision: string }>;
+    result: AgentLocalModels;
+  };
+  /** Stores the model documents are read with, on any lane the catalogue
+   * reports, at the revision read. */
+  agent_reading_model_choose: {
+    args: Authorized<{ lane: string; model: string; expectedRevision: string }>;
+    result: AgentLocalModels;
   };
   /** One model's licence text, from the ready agent's licence route. */
   agent_model_licence: {

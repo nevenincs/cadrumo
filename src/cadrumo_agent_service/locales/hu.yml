@@ -103,53 +103,6 @@ desktop:
     message_label: Üzenet
     message_placeholder: Kérdezz egy Modelóról, egy határidőről vagy a nyilvántartásaidról
     model: Modell
-    model_role_capability_text: szöveg
-    model_role_capability_vision: képek
-    model_role_choose_lane: Válassz szolgáltatót
-    model_role_choose_model: Válassz modellt
-    model_role_clear: Törlés
-    model_role_current: 'Kiválasztva: {model}, itt: {lane}'
-    model_role_heading: Modell {role}
-    model_role_lane: Szolgáltató {role}
-    model_role_licence: 'Licenc: {licence}'
-    model_role_licence_show: A licenc szövegének megjelenítése
-    model_role_licence_unavailable: A licenc szövegét akkor olvashatod el, amikor
-      az ügynök készen áll.
-    model_role_licence_unknown: 'Licenc: nincs megadva'
-    model_role_model: Modell {role}
-    model_role_none: Nincs kiválasztva
-    model_role_recommended: 'Használd az ügynök ajánlását ({capability}): {model}'
-    model_role_refused_catalog_unavailable: Nem sikerült beolvasni az ügynök szolgáltatólistáját.
-      Próbáld újra.
-    model_role_refused_committed_readback_failed: A választásodat elmentettük, de
-      nem sikerült visszaolvasni. Nyisd meg újra, és ellenőrizd.
-    model_role_refused_lane_not_runnable: Ez a szolgáltató nem tud a háttérben dokumentumokat
-      olvasni. Válassz egy másikat.
-    model_role_refused_model_not_in_catalogue: A szolgáltató most nem kínálja ezt
-      a modellt. Válassz egy másikat.
-    model_role_refused_revision_conflict: A választásaid máshol megváltoztak. Újra
-      beolvastuk őket, próbáld meg még egyszer.
-    model_role_refused_unknown: Nem sikerült menteni a választásodat. Próbáld újra.
-    model_role_refused_unknown_role: A Cadrumo nem ismeri ezt a feladatot. Frissítsd
-      a Cadrumót, és próbáld újra.
-    model_role_refused_vision_required: Ez a feladat képeket olvas. Válassz olyan
-      modellt, amely képeket is olvas.
-    model_role_save: Mentés
-    model_role_saved: Mentve.
-    model_role_size: 'Letöltési méret: {size}'
-    model_role_vision_no: Képeket nem olvas
-    model_role_vision_unknown: Nincs megadva, hogy olvas-e képeket
-    model_role_vision_yes: Képeket is olvas
-    model_roles_close: Bezárás
-    model_roles_failed: Nem sikerült beolvasni a modellválasztásaidat. Próbáld újra.
-    model_roles_lead: 'Válaszd ki, melyik szolgáltató és modell olvassa a dokumentumaidat
-      az egyes feladatokhoz. Semmit nem választunk helyetted: minden modell licence
-      látható, hogy te dönthess.'
-    model_roles_loading: A választásaid beolvasása…
-    model_roles_no_lanes: Az ügynök még nem kínál választható modellt.
-    model_roles_open: Modellek a dokumentumok olvasásához
-    model_roles_title: Modellek a dokumentumok olvasásához
-    model_roles_unreadable: A mentett modellválasztásaid nem olvashatók.
     model_written: Ez a szolgáltató nem sorolja fel a modelljeit. Írd be a modell
       nevét pontosan úgy, ahogy a szolgáltató írja.
     more_files: +{count} további
@@ -320,18 +273,36 @@ desktop:
     key_note: Titkosítva mentjük ezen a gépen, és többé nem jelenik meg.
     load_failed: Nem sikerült betölteni a szolgáltatókat. Próbáld újra.
     local_model_absent: Nincs letöltve
+    local_model_add: Hozzáadás
+    local_model_add_label: Modell hozzáadása név szerint
     local_model_download: Letöltés
     local_model_installed: Letöltve
-    local_model_recommended: Ajánlott {capability} olvasásához
+    local_model_licence: 'Licenc: {licence}'
+    local_model_licence_unknown: 'Licenc: nincs megadva'
     local_model_remove: Eltávolítás
     local_model_remove_failed: A Cadrumo nem tudta eltávolítani a modellt. Próbáld
       újra.
-    local_model_remove_still_selected: A Cadrumo még ezzel a modellel olvas dokumentumokat.
-      Válassz másik modellt ehhez az olvasáshoz, aztán távolítsd el ezt.
-    local_models_lead: Tölts le modelleket erre a számítógépre. A dokumentumolvasáshoz
-      használt modelleket a Dokumentumolvasó modellek alatt választhatod ki.
+    local_model_size: 'Letöltési méret: {size}'
+    local_models_failed: Nem sikerült beolvasni a modelllistádat. Próbáld újra.
+    local_models_lead: A modellek, amelyekkel a helyi MI a dokumentumaidat olvashatja.
+      Az ügynök az elsőket ajánlja; bármely más modellt hozzáadhatsz azon a néven,
+      amelyen a helyi MI ismeri. A használatához tölts le egy modellt.
+    local_models_loading: A modelllistád beolvasása…
     local_models_none: Az ügynök még nem kínál modellt ehhez a kapcsolathoz.
+    local_models_refused_catalog_unavailable: Nem sikerült beolvasni az ügynök szolgáltatólistáját.
+      Próbáld újra.
+    local_models_refused_committed_readback_failed: A módosítás mentve, de nem sikerült
+      visszaolvasni. Nyisd meg újra, hogy ellenőrizd.
+    local_models_refused_full: A lista megtelt. Előbb vegyél le róla egy modellt.
+    local_models_refused_invalid_name: Ez nem olyan modellnév, amelyet a helyi MI
+      használni tud.
+    local_models_refused_revision_conflict: A listád máshol megváltozott. Újra beolvastuk,
+      ezért próbáld meg még egyszer.
+    local_models_refused_unknown: Nem sikerült módosítani a listádat. Próbáld újra.
+    local_models_reset: Lista visszaállítása
     local_models_title: Modellek ezen a számítógépen
+    local_models_unreadable: A mentett modelllistád nem olvasható. Állítsd vissza,
+      hogy újra az ajánlott modellekkel kezdhess.
     reason_check_settings: Ellenőrizd a beállításokat, és próbáld újra.
     reason_record_unreadable: A mentett API-kulcs nem olvasható. Add hozzá újra.
     refresh: Újrapróbálkozás
@@ -361,6 +332,7 @@ desktop:
     sign_in_cancelled: A bejelentkezés megszakadt.
     sign_in_cleanup_failed: Indítsd újra a Cadrumót, mielőtt ismét bejelentkezel.
     sign_in_close: Bejelentkezés bezárása
+    sign_in_code_checking: Az engedélyezési kód ellenőrzése…
     sign_in_code_label: Engedélyezési kód
     sign_in_code_prompt: Add meg a szolgáltató oldalán látható engedélyezési kódot.
     sign_in_code_submit: Kód elküldése
@@ -402,7 +374,6 @@ desktop:
     status_saved: Mentve
     status_setup_needed: Nincs beállítva
     status_sign_in_needed: Nincs bejelentkezve
-    summary: '{connection}: {status}'
     title: MI-szolgáltatók
     use_in_agent: '{provider} ({connection}) használata az ügynökben'
   rail:

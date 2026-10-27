@@ -30,7 +30,7 @@ from dev.acceptance.income_tax.installed_tui_child import (
 
 from .scenario import ProfileRowLifecycleScenario, build_profile_row_lifecycle_scenario
 
-_SCHEMA_VERSION = "profile-01-installed-tui-row-child-v1"
+_SCHEMA_VERSION = "profile-01-installed-tui-row-child-v2"
 _OPERATION_CHOICES = ("create-add", "add", "edit", "no-op", "clear", "remove", "assert-clear", "assert-absent")
 ProfileTuiOperation = Literal["create-add", "add", "edit", "no-op", "clear", "remove", "assert-clear", "assert-absent"]
 
@@ -56,7 +56,7 @@ class ProfileTuiChildEvidence:
     row_key: str | None
     row_visible: bool
     clear_visible_absent: bool
-    selector_fact_visible: bool
+    required_fact_visible: bool
     no_op_observed: bool
 
     def to_dict(self) -> dict[str, object]:
@@ -71,7 +71,7 @@ class _VisibleProfileState:
     row_key: str | None
     clear_absent: bool = False
     row_visible: bool = False
-    selector_visible: bool = False
+    required_visible: bool = False
     no_op_observed: bool = False
 
 
@@ -82,12 +82,12 @@ async def _drive_added_profile_row(
     state.row_key = await _add_activity_row(pilot=pilot, scenario=scenario)
     added_row = _required_row_key(state.row_key)
     state.row_visible = True
-    state.selector_visible = _field_is_present(
+    state.required_visible = _field_is_present(
         pilot=pilot,
-        path=scenario.path(added_row, scenario.selector_field),
+        path=scenario.path(added_row, scenario.required_field),
     )
-    if not state.selector_visible:
-        raise ProfileTuiChildAcceptanceError("added_selector_fact_not_visible")
+    if not state.required_visible:
+        raise ProfileTuiChildAcceptanceError("added_required_fact_not_visible")
 
 
 async def _drive_edited_profile_row(
@@ -97,9 +97,9 @@ async def _drive_edited_profile_row(
     target_row = _required_row_key(row_key)
     await _edit_clearable_field(pilot=pilot, row_key=target_row, scenario=scenario)
     state.row_visible = _row_is_visible(pilot=pilot, row_key=target_row, scenario=scenario)
-    state.selector_visible = _field_is_present(
+    state.required_visible = _field_is_present(
         pilot=pilot,
-        path=scenario.path(target_row, scenario.selector_field),
+        path=scenario.path(target_row, scenario.required_field),
     )
 
 
@@ -110,11 +110,11 @@ async def _drive_profile_no_op(
     target_row = _required_row_key(row_key)
     state.no_op_observed = await _submit_visible_no_op(pilot=pilot, row_key=target_row, scenario=scenario)
     state.row_visible = _row_is_visible(pilot=pilot, row_key=target_row, scenario=scenario)
-    state.selector_visible = _field_is_present(
+    state.required_visible = _field_is_present(
         pilot=pilot,
-        path=scenario.path(target_row, scenario.selector_field),
+        path=scenario.path(target_row, scenario.required_field),
     )
-    if not state.no_op_observed or not state.row_visible or not state.selector_visible:
+    if not state.no_op_observed or not state.row_visible or not state.required_visible:
         raise ProfileTuiChildAcceptanceError("visible_no_op_outcome_mismatch")
 
 
@@ -129,14 +129,14 @@ async def _drive_cleared_profile_row(
         pilot=pilot,
         path=scenario.path(target_row, scenario.clearable_field),
     )
-    state.selector_visible = _field_is_present(
+    state.required_visible = _field_is_present(
         pilot=pilot,
-        path=scenario.path(target_row, scenario.selector_field),
+        path=scenario.path(target_row, scenario.required_field),
     )
     if not state.clear_absent:
         raise ProfileTuiChildAcceptanceError("cleared_field_still_visible")
-    if not state.selector_visible:
-        raise ProfileTuiChildAcceptanceError("clear_lost_selector_fact")
+    if not state.required_visible:
+        raise ProfileTuiChildAcceptanceError("clear_lost_required_fact")
 
 
 async def _drive_removed_profile_row(
@@ -160,11 +160,11 @@ async def _observe_reopened_profile_clear(
         pilot=pilot,
         path=scenario.path(target_row, scenario.clearable_field),
     )
-    state.selector_visible = _field_is_present(
+    state.required_visible = _field_is_present(
         pilot=pilot,
-        path=scenario.path(target_row, scenario.selector_field),
+        path=scenario.path(target_row, scenario.required_field),
     )
-    if not state.row_visible or not state.clear_absent or not state.selector_visible:
+    if not state.row_visible or not state.clear_absent or not state.required_visible:
         raise ProfileTuiChildAcceptanceError("fresh_reopen_clear_state_mismatch")
 
 
@@ -237,7 +237,7 @@ def run_profile_tui_operation(
         row_key=state.row_key,
         row_visible=state.row_visible,
         clear_visible_absent=state.clear_absent,
-        selector_fact_visible=state.selector_visible,
+        required_fact_visible=state.required_visible,
         no_op_observed=state.no_op_observed,
     )
 
@@ -277,7 +277,7 @@ async def _edit_clearable_field(*, pilot: Any, row_key: str, scenario: ProfileRo
     await open_profile_manager_field(pilot=pilot, path=path)
     await wait_for_public_selector(pilot, "#edit-input")
     input_widget = query_public_selector(pilot, "#edit-input", Input)
-    input_widget.value = scenario.amended_cnae
+    input_widget.value = scenario.amended_epigraph
     await pilot.click("#btn-edit-save")
     await pilot.app.workers.wait_for_complete()
     if not _field_is_present(pilot=pilot, path=path):
@@ -314,7 +314,7 @@ async def _submit_visible_no_op(*, pilot: Any, row_key: str, scenario: ProfileRo
     await open_profile_manager_field(pilot=pilot, path=path)
     await wait_for_public_selector(pilot, "#edit-input")
     input_widget = query_public_selector(pilot, "#edit-input", Input)
-    if input_widget.value != scenario.amended_cnae:
+    if input_widget.value != scenario.amended_epigraph:
         raise ProfileTuiChildAcceptanceError("visible_no_op_value_mismatch")
     await pilot.click("#btn-edit-save")
     await pilot.app.workers.wait_for_complete()

@@ -43,6 +43,53 @@ const nameOf = (id: string) =>
   FIXTURE_SETTINGS_LANES.find((declared) => declared.id === id)?.display_name ??
   id;
 
+type Status =
+  "ready" | "saved" | "not_checked" | "setup_needed" | "sign_in_needed" | "off";
+
+const STATUS_WORDS = {
+  ready: "desktop.providers.status_ready",
+  saved: "desktop.providers.status_saved",
+  not_checked: "desktop.providers.status_not_checked",
+  setup_needed: "desktop.providers.status_setup_needed",
+  sign_in_needed: "desktop.providers.status_sign_in_needed",
+  off: "desktop.providers.status_off",
+} as const satisfies Record<Status, string>;
+
+/** The only statuses drawn: a connection in use, and one that waits on the
+ * person. Every other is its name in secondary text, with no glyph. */
+const GLYPH: Partial<Record<Status, string>> = {
+  ready: "check",
+  sign_in_needed: "alert",
+};
+
+const statusMark = (scope: Locator) =>
+  scope.locator('[data-slot="provider-status"]');
+
+const colourOf = (node: Locator) =>
+  node.evaluate((element) => getComputedStyle(element).color);
+
+/** `card` shows `status`: its glyph where the status has one and none where
+ * it has not, with the status in words kept for a screen reader and never
+ * laid out to be read. */
+async function expectStatus(card: Locator, status: Status) {
+  const words = label(STATUS_WORDS[status]);
+  const mark = statusMark(card);
+  await expect(mark).toHaveCount(1);
+  await expect(mark).toHaveAttribute("data-status", status);
+  await expect(mark).toHaveText(words);
+  const glyph = GLYPH[status];
+  if (glyph) {
+    const drawn = mark.locator("[data-icon]");
+    await expect(drawn).toHaveAttribute("data-icon", glyph);
+    await expect(drawn).toBeVisible();
+  } else {
+    await expect(mark.locator("[data-icon]")).toHaveCount(0);
+  }
+  const spoken = await mark.getByText(words, { exact: true }).boundingBox();
+  expect(spoken?.width).toBeLessThanOrEqual(1);
+  expect(spoken?.height).toBeLessThanOrEqual(1);
+}
+
 const signInCapableLane = FIXTURE_SETTINGS_LANES.find(
   (declared) =>
     declared.auth_kind === "provider_sign_in_only" &&
@@ -213,32 +260,123 @@ test("providers start collapsed and keep each connection separately accessible",
   await expect(credits).toContainText("trademarks of their respective holders");
 });
 
-test("provider settings search filters connections and has an empty state", async ({
+test("a connection is drawn only when ready or waiting on the person, and is quiet text otherwise", async ({
+  page: target,
+}) => {
+  await open(target);
+  await openSettings(target);
+  const intro = settings(target).getByText(
+    label("desktop.providers.group_intro"),
+  );
+  const secondary = await colourOf(intro);
+  const name = (card: Locator) => card.getByRole("heading", { level: 5 });
+
+  const ready = lane(target, "local_api");
+  const unset = lane(target, "alpha_api");
+  const signIn = lane(target, "beta_cli");
+  await expectStatus(ready, "ready");
+  await expectStatus(unset, "setup_needed");
+  await expectStatus(signIn, "sign_in_needed");
+
+  // Ready is the ordinary text with a green glyph; a connection that waits on
+  // the person has a glyph of another colour; one not set up is its name in
+  // the secondary text colour and nothing more.
+  const green = await colourOf(statusMark(ready));
+  const warning = await colourOf(statusMark(signIn));
+  expect(await colourOf(name(ready))).not.toBe(secondary);
+  expect(await colourOf(name(signIn))).not.toBe(secondary);
+  expect(await colourOf(name(unset))).toBe(secondary);
+  expect(new Set([green, warning, secondary]).size).toBe(3);
+
+  // The collapsed group says the same for each of its connections: the
+  // connection's name, the same glyph or none, and the status in words only
+  // for a screen reader.
+  for (const declared of FIXTURE_SETTINGS_LANES) {
+    const chip = providerGroup(target, declared.provider).locator(
+      `summary [data-lane-summary="${declared.id}"]`,
+    );
+    const status = await statusMark(lane(target, declared.id)).getAttribute(
+      "data-status",
+    );
+    expect(status, declared.id).toBeTruthy();
+    await expect(statusMark(chip)).toHaveAttribute("data-status", status ?? "");
+    await expect(chip).toHaveText(
+      label(
+        declared.transport === "api"
+          ? "desktop.providers.connection_api"
+          : "desktop.providers.connection_app",
+      ) + (await statusMark(chip).textContent()),
+    );
+    await expect(chip.locator("[data-icon]")).toHaveCount(
+      GLYPH[status as Status] ? 1 : 0,
+    );
+  }
+  const quietChip = providerGroup(target, "alpha").locator(
+    'summary [data-lane-summary="alpha_api"]',
+  );
+  const readyChip = providerGroup(target, "local").locator(
+    'summary [data-lane-summary="local_api"]',
+  );
+  expect(await colourOf(quietChip)).toBe(secondary);
+  expect(await colourOf(readyChip)).not.toBe(secondary);
+
+  // A saved key is not ready, so it stays quiet text with no glyph.
+  await saveKey(target, "alpha_api", FAKE_KEY);
+  await expectStatus(unset, "saved");
+  await expect(statusMark(quietChip)).toHaveAttribute("data-status", "saved");
+  await expect(quietChip.locator("[data-icon]")).toHaveCount(0);
+  expect(await colourOf(quietChip)).toBe(secondary);
+  expect(await colourOf(name(unset))).toBe(secondary);
+});
+
+test("settings search finds providers and agent keys", async ({
   page: target,
 }) => {
   await open(target);
   await openSettings(target, false);
-  const providerSettings = settings(target);
-  const search = providerSettings.getByLabel(
-    label("desktop.providers.search_label"),
-  );
+  const pane = target.locator(".pane-agent");
+  const search = pane.getByLabel(label("desktop.settings.agent_search"));
+  const access = pane.getByRole("region", {
+    name: label("desktop.automation_access.title"),
+  });
+
+  const keyName = await access.locator(".agent-key h4").first().innerText();
+  await expect(search).toBeVisible();
+  await expect(pane.locator('input[type="search"]')).toHaveCount(1);
+  await expect(settings(target)).toBeVisible();
+  await expect(access).toBeVisible();
 
   await search.fill("Codex");
-  await expect(providerSettings.locator("li[data-provider]")).toHaveCount(1);
   await expect(providerGroup(target, "codex")).toBeVisible();
+  await expect(providerGroup(target, "alpha")).toBeHidden();
 
   await search.fill(label("desktop.providers.connection_api"));
-  await expect(providerSettings.locator("[data-lane]")).toHaveCount(
-    FIXTURE_SETTINGS_LANES.filter((declared) => declared.transport === "api")
-      .length,
-  );
-  await expect(providerSettings.locator('[data-lane$="_cli"]')).toHaveCount(0);
+  for (const declared of FIXTURE_SETTINGS_LANES) {
+    const connection = lane(target, declared.id);
+    await expect(connection).toHaveCount(1);
+    if (declared.transport === "api") await expect(connection).toBeVisible();
+    else await expect(connection).toBeHidden();
+  }
 
-  await search.fill("no matching provider");
-  await expect(providerSettings.locator("li[data-provider]")).toHaveCount(0);
-  await expect(providerSettings.getByRole("status")).toHaveText(
-    label("desktop.providers.search_empty"),
+  await search.fill(keyName);
+  await expect(access).toBeVisible();
+  await expect(
+    access.getByRole("heading", { name: keyName, exact: true }),
+  ).toBeVisible();
+
+  await search.fill(label("desktop.automation_access.standing_suspended"));
+  await expect(access).toBeVisible();
+  await expect(
+    access.getByText(label("desktop.automation_access.standing_suspended")),
+  ).toBeVisible();
+  await expect(settings(target)).toBeHidden();
+
+  await search.fill("no matching setting 918273");
+  await expect(pane.getByRole("status")).toHaveText(
+    label("desktop.settings.agent_search_empty"),
   );
+  await expect(settings(target)).toBeHidden();
+  await expect(access).toBeHidden();
 });
 
 test("the settings load once, and reopen at once while they are read again", async ({
@@ -290,7 +428,7 @@ test("provider settings read errors give a refresh action without exposing a cod
 });
 
 for (const language of ["es", "hu"] as const) {
-  test(`provider group names and connection badges fit a narrow ${language} panel`, async ({
+  test(`provider group names and connection marks fit a narrow ${language} panel`, async ({
     page: target,
   }) => {
     await target.setViewportSize({ width: 390, height: 844 });
@@ -333,8 +471,8 @@ for (const language of ["es", "hu"] as const) {
             lineHeight: Number.parseFloat(getComputedStyle(name).lineHeight),
             chevron: box(chevron),
             statuses: box(statuses),
-            badges: [...statuses.children].map((badge) =>
-              box(badge as HTMLElement),
+            chips: [...statuses.children].map((chip) =>
+              box(chip as HTMLElement),
             ),
           };
         });
@@ -360,9 +498,9 @@ for (const language of ["es", "hu"] as const) {
       expect(metrics.statuses.top).toBeGreaterThanOrEqual(
         metrics.header.bottom - 1,
       );
-      for (const badge of metrics.badges) {
-        expect(badge.left).toBeGreaterThanOrEqual(metrics.statuses.left - 1);
-        expect(badge.right).toBeLessThanOrEqual(metrics.statuses.right + 1);
+      for (const chip of metrics.chips) {
+        expect(chip.left).toBeGreaterThanOrEqual(metrics.statuses.left - 1);
+        expect(chip.right).toBeLessThanOrEqual(metrics.statuses.right + 1);
       }
     }
     expect(
@@ -416,9 +554,7 @@ test("a key is saved from the agent's settings and never kept anywhere", async (
   await open(target);
   await openSettings(target);
   const alpha = lane(target, "alpha_api");
-  await expect(alpha).toContainText(
-    label("desktop.providers.status_setup_needed"),
-  );
+  await expectStatus(alpha, "setup_needed");
   // Save waits for a key, and the field offers none of its own.
   await alpha
     .getByRole("button", { name: label("desktop.providers.add_key") })
@@ -434,16 +570,14 @@ test("a key is saved from the agent's settings and never kept anywhere", async (
     .getByRole("button", { name: label("desktop.providers.save") })
     .click();
 
-  await expect(alpha).toContainText(label("desktop.providers.status_saved"));
+  await expectStatus(alpha, "saved");
   await expect(
     alpha.getByRole("button", {
       name: label("desktop.providers.replace_key"),
     }),
   ).toBeVisible();
   // The other lane of the same provider is not changed by it.
-  await expect(lane(target, "alpha_cli")).not.toContainText(
-    label("desktop.providers.status_saved"),
-  );
+  await expectStatus(lane(target, "alpha_cli"), "setup_needed");
   // Nowhere a key could be left behind holds it.
   expect(await traces(target, FAKE_KEY)).toEqual(NO_TRACE);
 });
@@ -458,15 +592,11 @@ test("a key that is refused or replaced is not kept either", async ({
   await expect(lane(target, "beta_api").getByRole("alert")).toHaveText(
     label("desktop.providers.refused_invalid_key_format"),
   );
-  await expect(lane(target, "beta_api")).toContainText(
-    label("desktop.providers.status_setup_needed"),
-  );
+  await expectStatus(lane(target, "beta_api"), "setup_needed");
   expect(await traces(target, refused)).toEqual(NO_TRACE);
 
   await saveKey(target, "beta_api", FAKE_KEY);
-  await expect(lane(target, "beta_api")).toContainText(
-    label("desktop.providers.status_saved"),
-  );
+  await expectStatus(lane(target, "beta_api"), "saved");
   const replacement = "FAKE-KEY-replacement-0001";
   await saveKey(target, "beta_api", replacement);
   await expect(
@@ -567,7 +697,7 @@ test("every connection has one switch, apart from its setup, and one turned off 
   await expect(toggle).toBeChecked();
   await toggle.click();
   await expect(toggle).not.toBeChecked();
-  await expect(alpha).toContainText(label("desktop.providers.status_off"));
+  await expectStatus(alpha, "off");
   // Off keeps the key, and setting it up waits until it is on again.
   await expect(alpha).toContainText(label("desktop.providers.detail_off_kept"));
   await expect(alpha.getByRole("button")).toHaveCount(0);
@@ -578,7 +708,7 @@ test("every connection has one switch, apart from its setup, and one turned off 
   await openSettings(target);
   await toggle.click();
   await expect(toggle).toBeChecked();
-  await expect(alpha).toContainText(label("desktop.providers.status_saved"));
+  await expectStatus(alpha, "saved");
   await expect(
     alpha.getByRole("button", { name: label("desktop.providers.replace_key") }),
   ).toBeVisible();
@@ -594,12 +724,10 @@ test("a connection that signs in through its app turns off and on like any other
   await openSettings(target);
   const beta = lane(target, "beta_cli");
   await beta.getByRole("switch").click();
-  await expect(beta).toContainText(label("desktop.providers.status_off"));
+  await expectStatus(beta, "off");
   await expect(beta).toContainText(label("desktop.providers.detail_off"));
   await beta.getByRole("switch").click();
-  await expect(beta).toContainText(
-    label("desktop.providers.status_sign_in_needed"),
-  );
+  await expectStatus(beta, "sign_in_needed");
   // It has no key to change.
   await expect(
     beta.getByRole("button", { name: label("desktop.providers.add_key") }),
@@ -798,9 +926,7 @@ test("successful provider sign-in shows completion and returns to settings", asy
   );
   await expect(dialog).toHaveCount(0);
   await expect(settings(target)).toBeVisible();
-  await expect(lane(target, signInCapableLane.id)).toContainText(
-    label("desktop.providers.status_not_checked"),
-  );
+  await expectStatus(lane(target, signInCapableLane.id), "not_checked");
   await expect
     .poll(
       async () =>
@@ -1015,10 +1141,7 @@ test("closing during active sign-in refreshes the committed provider revision", 
     )
     .toBeGreaterThan(previousReads);
 
-  await expect(card).toContainText(
-    label("desktop.providers.status_not_checked"),
-  );
-  await expect(card).not.toContainText(label("desktop.providers.status_ready"));
+  await expectStatus(card, "not_checked");
 
   // Starting again succeeds only with the revision returned by that refresh.
   await card
@@ -1155,7 +1278,7 @@ test("browser-code sign-in opens the coalesced URL and submits a transient code 
     )
     .toBe(1);
   await expect(dialog).toContainText(
-    label("desktop.providers.sign_in_waiting"),
+    label("desktop.providers.sign_in_code_checking"),
   );
   expect((await hostCalls(target)).join("\n")).not.toContain(secret);
   expect(
@@ -1171,6 +1294,47 @@ test("browser-code sign-in opens the coalesced URL and submits a transient code 
     window.__scenarioProviderSignIn!.succeedCurrentAttempt(),
   );
   await expect(dialog).toHaveCount(0);
+});
+
+test("a provider failure after accepting a code replaces checking with an error and retry", async ({
+  page: target,
+}) => {
+  await open(target);
+  await target.evaluate(() =>
+    window.__scenarioProviderSignIn!.setMethods(["browser-code"]),
+  );
+  await openSettings(target);
+  await lane(target, signInCapableLane.id)
+    .getByRole("button", { name: label("desktop.providers.sign_in_action") })
+    .click();
+  const dialog = target.getByRole("dialog");
+  await dialog
+    .getByLabel(label("desktop.providers.sign_in_code_label"))
+    .fill("FAKE-rejected-code-123");
+  await dialog
+    .getByRole("button", {
+      name: label("desktop.providers.sign_in_code_submit"),
+    })
+    .click();
+  await expect(dialog).toContainText(
+    label("desktop.providers.sign_in_code_checking"),
+  );
+  await target.evaluate(() =>
+    window.__scenarioProviderSignIn!.failCurrentAttempt(),
+  );
+  await expect(dialog.getByRole("alert")).toContainText(
+    label("desktop.providers.sign_in_provider_unavailable", {
+      provider: nameOf(signInCapableLane.id),
+    }),
+  );
+  await expect(dialog).not.toContainText(
+    label("desktop.providers.sign_in_code_checking"),
+  );
+  await expect(
+    dialog.getByRole("button", {
+      name: label("desktop.providers.sign_in_retry"),
+    }),
+  ).toBeVisible();
 });
 
 test("cancelling browser-code sign-in clears an unsubmitted code", async ({

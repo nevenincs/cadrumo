@@ -1,4 +1,4 @@
-import { useId, useState, type FormEvent } from "react";
+import { useEffect, useId, useState, type FormEvent } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -438,6 +438,9 @@ export function AgentAccess({
   onRevoke,
   onRefresh,
   onCopy,
+  query = "",
+  embedded = false,
+  onMatch,
 }: {
   credentials: readonly AgentCredential[];
   /** The language dates are written in. */
@@ -460,13 +463,35 @@ export function AgentAccess({
   onRefresh: () => void;
   /** Puts text on the clipboard; without it the reference is only shown. */
   onCopy?: (text: string) => Promise<void>;
+  query?: string;
+  embedded?: boolean;
+  onMatch?: (matches: boolean) => void;
 }) {
   const t = useStrings();
   const titleId = useId();
+  const matches =
+    !query ||
+    credentials.some((credential) => {
+      const issued = when(locale, credential.issuedAt, false);
+      return [
+        issued
+          ? t("desktop.automation_access.key_title", { date: issued })
+          : t("desktop.automation_access.key_title_undated"),
+        standingWords(t, credential.standing),
+        ...credential.categories.map((category) => categoryWords(t, category)),
+      ]
+        .join(" ")
+        .toLocaleLowerCase()
+        .includes(query);
+    });
+  useEffect(() => onMatch?.(matches), [matches, onMatch]);
   return (
     <section aria-labelledby={titleId} className="agent-access grid gap-2">
       <div className="grid gap-1">
-        <h3 id={titleId} className="font-medium text-foreground">
+        <h3
+          id={titleId}
+          className={embedded ? "sr-only" : "font-medium text-foreground"}
+        >
           {t("desktop.automation_access.title")}
         </h3>
         <p className="text-sm text-muted-foreground">

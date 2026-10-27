@@ -99,6 +99,6 @@ def test_the_reason_offers_no_setup_for_a_role_this_computer_cannot_run() -> Non
 
     assert reason.startswith("Local AI")
     assert "set it up" not in reason.lower()
-    assert "Choose or check its model in the Cadrumo desktop app" in reason
+    assert "Check its model list in the Cadrumo desktop app" in reason
     with pytest.raises(InvalidFinancialSourceError, match="not available right now"):
         list(lane.ingest(_UNREAD_VOCABULARY))

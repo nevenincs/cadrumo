@@ -11,7 +11,7 @@ import type {
   SetupSnapshot,
 } from "../ipc/contract";
 import type { Setup } from "../shell/host";
-import { roleLanes } from "../shell/agentModelRoles";
+import { catalogLanes } from "../shell/localModelLanes";
 import { FIXTURE_CATALOG } from "./fixtures/agentCatalog";
 
 // The scenario host's component setup: a made-up computer with the browser
@@ -619,13 +619,22 @@ export function setupFixture({
       if (shape === "busy") return refuse("busy");
       if (run && run.stage !== "settled") return Promise.resolve(state());
       const download = options?.download;
+      // A model the catalog does not size, such as one the person named, is
+      // planned with an unknown download.
+      const lane = download
+        ? catalogLanes(FIXTURE_CATALOG).find(
+            (held) => held.id === download.lane,
+          )
+        : undefined;
+      if (download && !lane) return refuse("model_selection_unusable");
       const model = download
-        ? roleLanes(FIXTURE_CATALOG)
-            .find((lane) => lane.id === download.lane)
-            ?.models.find((model) => model.id === download.model)
+        ? {
+            id: download.model,
+            sizeBytes:
+              lane?.models.find((held) => held.id === download.model)
+                ?.sizeBytes ?? null,
+          }
         : null;
-      if (download && (!model || !model.sizeBytes))
-        return refuse("model_size_unstated");
       const chosen = items
         .filter((seed) =>
           download

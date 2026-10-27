@@ -118,7 +118,7 @@ fn child_engine(config: &ChildConfig) -> Result<Engine, Error> {
     if let Some(admitted) = &config.admitted {
         let models = admitted
             .iter()
-            .map(|(role, name, size)| SelectedModel::new(role, name, *size))
+            .map(|(role, name, size)| SelectedModel::new(role, name, Some(*size)))
             .collect::<Result<_, _>>()?;
         engine.admit_local_ai(LocalModels::new(models)?);
     }

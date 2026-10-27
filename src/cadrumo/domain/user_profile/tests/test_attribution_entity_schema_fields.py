@@ -1,4 +1,4 @@
-"""Schema coverage for attribution-entity legal form and socio facts."""
+"""Schema coverage for attribution-entity socio facts."""
 
 from __future__ import annotations
 
@@ -15,19 +15,6 @@ __all__ = ["legal_ids_fixture", "module_scoped_schema"]
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def test_attribution_entity_legal_form_declares_sc_and_cb(
-    schema: ProfileSchemaDefinition,
-    legal_ids: frozenset[str],
-) -> None:
-    field = schema.field("attribution_entity.legal_form")
-
-    assert field.type is ProfileFieldType.ENUM
-    assert {"sociedad_civil", "comunidad_bienes"}.issubset(set(field.enum_values))
-    expected_refs = {"ley-35-2006:art-86", "ley-35-2006:art-87", "orden-hap-2250-2015:art-2"}
-    assert set(field.legal_refs) == expected_refs
-    assert expected_refs <= legal_ids
-
-
 def test_attribution_entity_socios_section_uses_repeatable_profile_pattern(
     schema: ProfileSchemaDefinition,
 ) -> None:
@@ -41,7 +28,6 @@ def test_attribution_entity_socios_section_uses_repeatable_profile_pattern(
         "base_imponible_assigned",
         "participe_clave",
         "country_of_residence",
-        "role",
         # (member, clave, subclave) facts added per the governing M184 socio
         # row-shape decision; see test_m184_socio_clave_subclave_schema_fields.py
         # for their own dedicated coverage.
@@ -68,26 +54,7 @@ def test_attribution_entity_socios_section_uses_repeatable_profile_pattern(
         "attribution_entity_socios.base_imponible_assigned",
         "attribution_entity_socios.participe_clave",
         "attribution_entity_socios.country_of_residence",
-        "attribution_entity_socios.role",
     } <= set(schema.field_paths)
-
-
-def test_attribution_entity_socios_role_enum_covers_member_roles(
-    schema: ProfileSchemaDefinition,
-    legal_ids: frozenset[str],
-) -> None:
-    field = schema.field("attribution_entity_socios.role")
-
-    assert field.type is ProfileFieldType.ENUM
-    assert set(field.enum_values) == {"socio", "comunero", "participe"}
-    expected_refs = {
-        "ley-35-2006:art-86",
-        "ley-35-2006:art-87",
-        "ley-35-2006:art-88",
-        "ley-35-2006:art-89",
-    }
-    assert set(field.legal_refs) == expected_refs
-    assert expected_refs <= legal_ids
 
 
 def test_attribution_entity_socios_share_pct_is_decimal_percentage(

@@ -198,11 +198,13 @@ function RulesPane({
       key: "order",
       label: t("desktop.ledger.rules.column.order"),
       numeric: true,
+      sort: (rule) => (rules ?? []).indexOf(rule) + 1,
       cell: (rule) => (rules ?? []).indexOf(rule) + 1,
     },
     {
       key: "rule",
       label: t("desktop.ledger.rules.column.rule"),
+      sort: (rule) => ruleMatchText(t, rule.description_pattern),
       cell: (rule) => (
         <span className="flex flex-col gap-0.5">
           <span>{ruleMatchText(t, rule.description_pattern)}</span>
@@ -220,11 +222,14 @@ function RulesPane({
     {
       key: "classification",
       label: t("desktop.ledger.rules.column.classification"),
+      sort: (rule) => classificationLabel(t, rule.classification),
       cell: (rule) => classificationLabel(t, rule.classification),
     },
     {
       key: "category",
       label: t("desktop.ledger.rules.column.category"),
+      sort: (rule) =>
+        rule.category_id ? categoryLabel(t, rule.category_id) : null,
       cell: (rule) =>
         rule.category_id ? (
           categoryLabel(t, rule.category_id)
@@ -235,12 +240,14 @@ function RulesPane({
     {
       key: "added",
       label: t("desktop.ledger.rules.column.added"),
+      sort: (rule) => rule.created_at,
       cell: (rule) => stampText(locale, rule.created_at),
     },
     {
       key: "actions",
       label: t("desktop.ledger.form.actions"),
       hidden: true,
+      resizable: false,
       cell: (rule) => {
         const at = (rules ?? []).indexOf(rule);
         const name = ruleMatchText(t, rule.description_pattern);

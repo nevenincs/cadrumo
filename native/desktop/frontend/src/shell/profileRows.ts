@@ -171,7 +171,9 @@ export function initials(name: string) {
     .join("");
 }
 
-/** Details whose value the product guards: edited in the AEAT sign-in
- * settings of the workspace, never in the page. */
-export const guarded = (field: ProfileField) =>
-  field.masked || field.path.startsWith("auth.");
+/** The sign-in method and the Cl@ve Móvil route: the host takes them only
+ * as one sign-in method, never as plain field edits. */
+export const AEAT_PROVIDER = "auth.provider";
+export const AEAT_ROUTE = "auth.clave_movil_route";
+export const aeatMethod = (field: ProfileField) =>
+  field.path === AEAT_PROVIDER || field.path === AEAT_ROUTE;

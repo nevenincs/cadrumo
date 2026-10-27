@@ -27,6 +27,7 @@ import {
   Panel,
   Reading,
   readLanding,
+  rankDecimal,
   SetupTable,
   useSetupDraft,
   useSetupRead,
@@ -148,17 +149,20 @@ export function RatiosPane({
     {
       key: "category",
       label: t("desktop.ledger.ratios.column.category"),
+      sort: (row) => categoryLabel(t, row.category),
       cell: (row) => categoryLabel(t, row.category),
     },
     {
       key: "kind",
       label: t("desktop.ledger.ratios.column.kind"),
+      sort: (row) => tokenText(t, "ratios.kind", row.proportionality_kind),
       cell: (row) => tokenText(t, "ratios.kind", row.proportionality_kind),
     },
     {
       key: "standard",
       label: t("desktop.ledger.ratios.column.standard"),
       numeric: true,
+      sort: (row) => rankDecimal(row.default_ratio),
       cell: (row) =>
         row.default_ratio ? percentText(locale, row.default_ratio) : "—",
     },
@@ -166,6 +170,7 @@ export function RatiosPane({
       key: "ratio",
       label: t("desktop.ledger.ratios.column.ratio"),
       numeric: true,
+      sort: (row) => rankDecimal(overrides.get(row.category)),
       cell: (row) => {
         const name = categoryLabel(t, row.category);
         if (row.category in editing)
@@ -220,6 +225,7 @@ export function RatiosPane({
       key: "actions",
       label: t("desktop.ledger.form.actions"),
       hidden: true,
+      resizable: false,
       cell: (row) => {
         const name = categoryLabel(t, row.category);
         if (row.category in editing)

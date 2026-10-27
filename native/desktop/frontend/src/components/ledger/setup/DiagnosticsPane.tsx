@@ -4,7 +4,14 @@ import { parseIsoDate, parsePercent } from "../../../shell/ledgerGrammar";
 import type { LedgerLlmDiagnosticsResult } from "../../../shell/ledgerSetup";
 import { useStrings } from "../../../shell/strings";
 import { percentText } from "../movements/movementWords";
-import { CallLine, FormGrid, Panel, SetupTable, TextField } from "./SetupParts";
+import {
+  CallLine,
+  FormGrid,
+  Panel,
+  rankDecimal,
+  SetupTable,
+  TextField,
+} from "./SetupParts";
 import type { SetupProps } from "./setupProps";
 import { setupCall, type SetupCall } from "./setupModel";
 import { grammarText } from "./setupWords";
@@ -128,6 +135,7 @@ export function DiagnosticsPane({ port, locale }: SetupProps) {
               {
                 key: "provider",
                 label: t("desktop.ledger.diagnostics.provider"),
+                sort: (row) => row.provider,
                 cell: (row) => (
                   <code className="font-mono">{row.provider}</code>
                 ),
@@ -136,18 +144,21 @@ export function DiagnosticsPane({ port, locale }: SetupProps) {
                 key: "classified",
                 label: t("desktop.ledger.diagnostics.classified"),
                 numeric: true,
+                sort: (row) => row.classified_count,
                 cell: (row) => numbers.format(row.classified_count),
               },
               {
                 key: "low",
                 label: t("desktop.ledger.diagnostics.low"),
                 numeric: true,
+                sort: (row) => row.low_confidence_count,
                 cell: (row) => numbers.format(row.low_confidence_count),
               },
               {
                 key: "mean",
                 label: t("desktop.ledger.diagnostics.mean"),
                 numeric: true,
+                sort: (row) => rankDecimal(row.mean_confidence?.decimal),
                 cell: (row) => decimalPercent(row.mean_confidence),
               },
             ]}
@@ -160,6 +171,7 @@ export function DiagnosticsPane({ port, locale }: SetupProps) {
               {
                 key: "provider",
                 label: t("desktop.ledger.diagnostics.provider"),
+                sort: (row) => row.provider,
                 cell: (row) => (
                   <code className="font-mono">{row.provider}</code>
                 ),
@@ -168,12 +180,14 @@ export function DiagnosticsPane({ port, locale }: SetupProps) {
                 key: "calls",
                 label: t("desktop.ledger.diagnostics.calls"),
                 numeric: true,
+                sort: (row) => row.calls,
                 cell: (row) => numbers.format(row.calls),
               },
               {
                 key: "tokens",
                 label: t("desktop.ledger.diagnostics.tokens"),
                 numeric: true,
+                sort: (row) => row.total_tokens,
                 cell: (row) => numbers.format(row.total_tokens),
               },
             ]}

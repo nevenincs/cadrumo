@@ -563,10 +563,6 @@ def test_modelo_202_uses_canonical_taxpayer_profile_without_scalarising_repeatab
             iva=_m303_profile(),
             iva_regime=IVARegime("GENERAL"),
             incn_prior_12_months=Decimal("999999.99"),
-            ley_49_2002_special_regime_option_declared=True,
-            ley_49_2002_special_regime_option_date=date(2025, 1, 1),
-            ley_49_2002_special_regime_renunciation_declared=False,
-            ley_49_2002_special_regime_renunciation_date=date(2026, 1, 1),
         )
         facts = Modelo202ProducerProfile(
             taxpayer_profile=taxpayer_profile,

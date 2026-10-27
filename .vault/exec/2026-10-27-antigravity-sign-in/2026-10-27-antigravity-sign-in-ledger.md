@@ -5,7 +5,7 @@ tags:
 date: '2026-10-27'
 modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:edbf835cad71eb931aa880e369cd41f9a43e108b91f71f9928bdf51acf1ab284'
+body_hash: 'sha256:ce42eea978c3fc73de4a3dc312c935a79d6a1beec7ea847e867f6710d7da9111'
 related:
   - "[[2026-10-27-antigravity-sign-in-plan]]"
 ---
@@ -98,6 +98,17 @@ related:
 - `S03` `verify:` `uv run just --set pytest_workers 2 test-gate .tmp/antigravity-parity/changed-files.txt (1172 passed,three unrelated CI failures)` -> `fail`
 - `S03` `verify:` `cmake --preset windows-x64 -DCADRUMO_PACKAGE_USER_DOCS=ON (restored original shared setting)` -> `pass`
 - `S03` `by:` `root`
+- `S03` `M` `native/desktop/frontend/src/components/settings/ProviderSignInDialog.tsx`
+- `S03` `M` `native/desktop/frontend/tests/scenarios/providers.spec.ts`
+- `S03` `M` `dev/locales/desktop_chrome.py`
+- `S03` `M` `src/cadrumo_agent_service/locales/en.yml`
+- `S03` `M` `src/cadrumo_agent_service/locales/es.yml`
+- `S03` `M` `src/cadrumo_agent_service/locales/ca.yml`
+- `S03` `M` `src/cadrumo_agent_service/locales/hu.yml`
+- `S03` `verify:` `focused browser-code provider scenarios (4 tests)` -> `pass`
+- `S03` `verify:` `private code service tests (39 tests)` -> `pass`
+- `S03` `verify:` `npm run check (unrelated formatting)` -> `fail`
+- `S03` `verify:` `desktop chrome locale tests (22 pass, unrelated unused desktop.calendar.warnings)` -> `fail`
 
 ## Notes
 
@@ -106,3 +117,5 @@ related:
 - `S03` S03 remains open: completed fresh app OAuth, a same-profile model turn and original broader supplier parity evidence remain unavailable; no real account credentials requested or used.
 - `S03` The wider bundle target was intentionally interrupted during MSI generation; only the application payload is claimed built. The selected development payload omits bundled user docs.
 - `S03` Supplier main advanced into additional uncommitted work during verification. The tested payload is pinned to published source 74bcf66c3bd054ff6067cdc21ebc779f927af387, with all491 packaged Python files compared against that commit and source-owner confirmation.
+- `S03` User authorized supplier repair in cadrumo-agent main; source regression corrected. S03 remains open for rebuilt package, completed attended OAuth/persistence and model-turn evidence. No commit or push.
+- `S03` Final supplier regression passed 62 tests; supplier scoped Ruff/ty/format passed. Debug package not rebuilt and no successful account login/persistence claim.

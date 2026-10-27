@@ -182,7 +182,7 @@ function Disclosure({
       <button
         type="button"
         aria-expanded={open}
-        aria-controls={region}
+        aria-controls={open ? region : undefined}
         onClick={() => setOpen((was) => !was)}
         className={cn(
           "group flex min-w-0 items-start gap-2 rounded-sm text-left hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2",

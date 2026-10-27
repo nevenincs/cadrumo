@@ -8,8 +8,8 @@ from __future__ import annotations
 
 import asyncio
 import os
-from collections.abc import AsyncGenerator, Generator
-from contextlib import asynccontextmanager, contextmanager
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import override
 from uuid import uuid4
@@ -147,10 +147,10 @@ def _registry() -> OperationRegistry:
     return OperationRegistry(definitions=(definition,), public_registrations=(registration,))
 
 
-@contextmanager
-def _authority(
+@asynccontextmanager
+async def _authority(
     tmp_path: Path,
-) -> Generator[tuple[ProfileWorkerOperationAuthority, HeldPermitClient, OperationIdentity, WitnessCustody]]:
+) -> AsyncGenerator[tuple[ProfileWorkerOperationAuthority, HeldPermitClient, OperationIdentity, WitnessCustody]]:
     with profile_adapter_composition(), worker_profiles(tmp_path) as profiles, pytest.MonkeyPatch.context() as patch:
         root, ((worker, key), _) = profiles
         # The worker's binding is single-assignment for its process, and this test's process lives on.
@@ -193,7 +193,7 @@ def _authority(
                     definition_id=request.definition_id,
                     subject_ref=request.subject_ref,
                 )
-                authority.bind(
+                await authority.bind(
                     identity.operation_id,
                     WorkerOperationBinding(
                         session_id=session.session_id, frontend=OperationFrontendProjection.CLI, request=request
@@ -207,9 +207,9 @@ def _authority(
 
 @pytest.mark.asyncio
 async def test_rotation_retirement_requires_the_exact_held_commit_task_and_outcome(tmp_path: Path) -> None:
-    with _authority(tmp_path) as (authority, client, identity, custody):
+    async with _authority(tmp_path) as (authority, client, identity, custody):
         async with authority.guard(identity, AccessAction.SUBMIT):
-            authority.capture_provenance(identity)
+            await authority.capture_provenance(identity)
         outcome = ProfilePassphraseRotationOutcome(
             profile_id=str(custody.identity.binding.profile_id),
             password_generation=custody.identity.binding.custody_generation + 1,
@@ -218,33 +218,33 @@ async def test_rotation_retirement_requires_the_exact_held_commit_task_and_outco
         )
 
         with pytest.raises(ProfileAccessRefusedError, match="operation_denied"):
-            authority.retire_password_successor(identity, outcome)
+            await authority.retire_password_successor(identity, outcome)
         async with authority.commit_guard(identity):
 
             async def child() -> None:
-                authority.retire_password_successor(identity, outcome)
+                await authority.retire_password_successor(identity, outcome)
 
             with pytest.raises(ProfileAccessRefusedError, match="operation_denied"):
                 await asyncio.create_task(child())
             wrong_operation = identity.model_copy(update={"operation_id": new_operation_id()})
             with pytest.raises(ProfileAccessRefusedError, match="operation_denied"):
-                authority.retire_password_successor(wrong_operation, outcome)
+                await authority.retire_password_successor(wrong_operation, outcome)
             wrong_definition = identity.model_copy(update={"definition_id": "auth.session.logout"})
             with pytest.raises(ProfileAccessRefusedError, match="operation_denied"):
-                authority.retire_password_successor(wrong_definition, outcome)
+                await authority.retire_password_successor(wrong_definition, outcome)
             wrong_profile = outcome.model_copy(update={"profile_id": str(uuid4())})
             with pytest.raises(ProfileAccessRefusedError, match="operation_denied"):
-                authority.retire_password_successor(identity, wrong_profile)
+                await authority.retire_password_successor(identity, wrong_profile)
             false_preservation = outcome.model_copy(update={"dek_epoch_preserved": False})
             with pytest.raises(ProfileAccessRefusedError, match="operation_denied"):
-                authority.retire_password_successor(identity, false_preservation)
+                await authority.retire_password_successor(identity, false_preservation)
             assert custody.retirement_generations == []
-            authority.retire_password_successor(identity, outcome)
+            await authority.retire_password_successor(identity, outcome)
             assert custody.retirement_generations == [outcome.password_generation]
         async with authority.guard(identity, AccessAction.START):
             with pytest.raises(ProfileAccessRefusedError, match="operation_denied"):
-                authority.retire_password_successor(identity, outcome)
+                await authority.retire_password_successor(identity, outcome)
         with pytest.raises(ProfileAccessRefusedError, match="operation_denied"):
-            authority.retire_password_successor(identity, outcome)
+            await authority.retire_password_successor(identity, outcome)
         assert custody.retirement_generations == [outcome.password_generation]
         assert client.released == 3

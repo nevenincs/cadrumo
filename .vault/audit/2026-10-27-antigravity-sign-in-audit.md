@@ -5,7 +5,7 @@ tags:
 date: '2026-10-27'
 modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:f3ab877dc86e9b90d3dc4518191731cb5601d2519b1d034e320e21334f83e986'
+body_hash: 'sha256:f2fda1208a78d4c08c70d4c802648a227a66748b7ad3bd25df586ad30226701d'
 related:
   - "[[2026-10-27-antigravity-sign-in-plan]]"
 ---
@@ -55,6 +55,12 @@ Real Antigravity CLI 1.4.8 packaged smoke passed two independent fresh signed-ou
 ### final-review-verdict | low | No remaining implementation finding; overall evidence pending
 
 Independent final review found no remaining issue in terminal/malformed/EOF submission invalidation or the narrow native launch authorization. Source verification includes Python 137 passed, frontend provider scenarios 26 passed and complete frontend check, native backend unit tests 594 passed, declaration/image 68 passed, vectors 111 passed, native Clippy, scoped formatting/types, registry validity/runtime-load/integrity, and the actual packaged checks above. The latest full type rerun reports three missing-argument diagnostics in unrelated runtime cleanup tests; earlier transient feature typing diagnostics are resolved and scoped final checks pass. Broader test/locales/import-authority failures recorded above remain outstanding. Overall PENDING and S03 stays open for completed fresh OAuth, same-profile model turn, remaining supplier parity proofs, and clean broader gates. Cadrumo main was not edited by this work; no app commit, push, reset or unrelated cleanup was performed.
+
+### silent-code-entry-repair | high | Source transport corrected; packaged successful login remains pending
+
+The user's live report invalidated initiation-and-cancel evidence as proof of usable code submission. Installed agy 1.4.8, SHA256 074c7b99b7727dcd2c7437973454d0856181a1006c97a4fad91a1ed23c10ad44, stayed silent after synthetic invalid input through a pipe; the same isolated invocation through a pseudoconsole immediately returned a provider error. The user authorized extending the repair into Y:/code/cadrumo-agent-worktrees/main. Its private authentication adapter now uses native Windows ConPTY, with suspended creation, exact retained-handle Job admission before resume, bounded private output and terminal Enter input. Explicit null standard handles prevent redirected helper streams being duplicated into the provider; cursor-row transitions are preserved before escape removal. Provider result errors terminate the helper rather than remaining progress. The profile status probe recognizes the absent isolated credential source without a cold CLI launch and recognizes the current code prompt as signed-out evidence.
+
+The app dialog now shows localized checking-code progress, including after stale code-required observations, and the new scenario checks transition to explicit failure and retry. Supplier focused regression run passed 60 tests, including the real installed invalid-code and cancellation cases plus containment; the final terminal/installed regression rerun passed four tests after constructor-failure and cleanup review. Scoped supplier Ruff, formatting and ty passed. App service private-code tests passed 39; four browser-code UI scenarios passed. Frontend TypeScript, ESLint and 23 node checks passed as part of npm run check, which exited 1 on four unrelated formatting files. The broader provider scenario run was invalidated by concurrent removal of generated chrome strings; the focused rerun passed after regeneration. No new code or account credentials were entered through chat, no model turn was made, and neither a rebuilt Debug application nor successful OAuth/token persistence is claimed. Verdict PENDING for S03 live/package evidence; the source transport regression is resolved.
 
 ## Recommendations
 

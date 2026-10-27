@@ -143,7 +143,7 @@ id = "profile/aeat-access"
 parent = "profile"
 label = "navigation.view.profile.aeat_access.label"
 keywords = "aeat access sign-in certificate clave acceso"
-surfaces = ["tui"]
+surfaces = ["gui", "tui"]
 
 [[element]]
 id = "calendar"

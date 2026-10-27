@@ -16,8 +16,8 @@ and string rendering masks it. Only :func:`provider_settings_record_document`
 reveals it, for the one caller that encrypts the record at rest.
 
 A separate per-profile record, kept in a record capability of its own, holds
-the person's model choice per role: a lane and a model for each role they
-configured. It holds no secret, and a role it does not name has no selection.
+the models the person added by name to a local lane's model list. It holds no
+secret.
 """
 
 from __future__ import annotations
@@ -33,6 +33,7 @@ from pydantic import (
     FieldSerializationInfo,
     SecretStr,
     StringConstraints,
+    ValidationError,
     field_serializer,
     field_validator,
     model_validator,
@@ -40,7 +41,6 @@ from pydantic import (
 
 from cadrumo.core.errors.hierarchy import pydantic_validation_boundary
 from cadrumo.core.hex import Hex64Str
-from cadrumo.core.model_roles import ModelRole
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG as _STRICT_FROZEN_HIDDEN_INPUT
 from cadrumo.core.time.utc import UtcInstant
@@ -175,64 +175,111 @@ class ProviderSettingsRecord(BaseModel):
         return self
 
 
-MODEL_ROLE_SELECTIONS_RECORD_SCHEMA_VERSION: Final[Literal[1]] = 1
+LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION: Final[Literal[2]] = 2
+
+LOCAL_MODEL_LIST_MAX_MODELS: Final[int] = 64
+"""The most models a person adds to the local model list."""
 
 ModelId = Annotated[str, StringConstraints(pattern=MODEL_RUN_MODEL_ID_PATTERN)]
-"""A model id exactly as the lane's catalogue entry names it, under the catalogue's own id rule."""
+"""A model id exactly as the lane names it, under the catalogue's own id rule."""
 
 
-class ModelRoleSelection(BaseModel):
-    """The lane and model the person chose for one role; nothing here is secret."""
+class ListedModel(BaseModel):
+    """One lane and one of its models, as the person named them; nothing here is secret."""
 
     model_config = _STRICT_FROZEN
 
-    role: ModelRole
     lane: LaneId
     """The catalogue lane id, never the provider identity alone."""
     model: ModelId
 
 
-class ModelRoleSelectionsRecord(BaseModel):
-    """One profile's per-role model selections, at most one per role.
+class LocalModelListRecord(BaseModel):
+    """The models one profile added to its local lanes' model lists, and the model it reads documents with.
 
-    A role missing from ``selections`` has no selection. Nothing stands in for
-    it: there is no default, no recommended entry and no other role's choice.
+    ``models`` holds the models added by name, in the order they were added.
+    The lane's recommended models are listed by cadrumo-agent's catalogue and
+    are not stored here; a model the record does not name was not added.
+    ``reading`` is the lane and model the person selected in the agent's model
+    picker, on any lane, local or not; ``None`` when none is stored.
     """
 
     model_config = _STRICT_FROZEN
 
-    schema_version: Literal[1]
-    selections: tuple[ModelRoleSelection, ...] = Field(max_length=len(ModelRole))
+    schema_version: Literal[2]
+    models: tuple[ListedModel, ...] = Field(max_length=LOCAL_MODEL_LIST_MAX_MODELS)
+    reading: ListedModel | None = None
     generation: Hex64Str
     updated_at: UtcInstant
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
-    def _one_selection_per_role(self) -> Self:
-        roles = [selection.role for selection in self.selections]
-        if len(roles) != len(set(roles)):
-            raise ValueError("a role carries at most one selection")
+    def _one_entry_per_model(self) -> Self:
+        pairs = [(entry.lane, entry.model) for entry in self.models]
+        if len(pairs) != len(set(pairs)):
+            raise ValueError("a lane lists a model at most once")
         return self
 
-    def selection(self, role: ModelRole) -> ModelRoleSelection | None:
-        """Return the person's selection for ``role``, or ``None`` when there is none."""
-        return next((selection for selection in self.selections if selection.role is role), None)
+    def lane_models(self, lane: str) -> tuple[str, ...]:
+        """Return the models added to ``lane``'s list, in the order they were added."""
+        return tuple(entry.model for entry in self.models if entry.lane == lane)
 
 
-def model_role_selections_record_document(record: ModelRoleSelectionsRecord) -> bytes:
-    """Return the selections record's at-rest JSON; it carries no secret."""
+class _RoleChoice(BaseModel):
+    """One entry of the per-role record schema version 1 stored before the model list."""
+
+    model_config = _STRICT_FROZEN
+
+    role: Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_]{0,63}$")]
+    lane: LaneId
+    model: ModelId
+
+
+class _RoleChoicesRecord(BaseModel):
+    """Schema version 1 of the record: the lane and model the person chose per role."""
+
+    model_config = _STRICT_FROZEN
+
+    schema_version: Literal[1]
+    selections: tuple[_RoleChoice, ...] = Field(max_length=LOCAL_MODEL_LIST_MAX_MODELS)
+    generation: Hex64Str
+    updated_at: UtcInstant
+
+
+def local_model_list_record_document(record: LocalModelListRecord) -> bytes:
+    """Return the model list record's at-rest JSON; it carries no secret."""
     document = record.model_dump(mode="json")
     return json.dumps(document, sort_keys=True, separators=(",", ":")).encode("utf-8")
 
 
-def parse_model_role_selections_record(payload: bytes) -> ModelRoleSelectionsRecord:
-    """Parse at-rest JSON back into a selections record.
+def parse_local_model_list_record(payload: bytes) -> LocalModelListRecord:
+    """Parse at-rest JSON back into a model list record.
+
+    A schema version 1 record names a lane and a model per role. Each model it
+    names is one the person chose, so it is read as a model on that lane's
+    list, in the order stored and once per lane. It names no single model to
+    read with, so none is read as selected; the desktop stores the picker's
+    model on its next change. The stored bytes are not rewritten here; the
+    next change writes version 2 under the revision read.
 
     Raises:
-        pydantic.ValidationError: When the payload is not a valid record.
+        pydantic.ValidationError: When the payload is not a valid record of either version.
         UnicodeDecodeError: When the payload is not UTF-8.
     """
-    return ModelRoleSelectionsRecord.model_validate_json(payload.decode("utf-8"))
+    text = payload.decode("utf-8")
+    try:
+        return LocalModelListRecord.model_validate_json(text)
+    except ValidationError:
+        earlier = _RoleChoicesRecord.model_validate_json(text)
+    listed: dict[tuple[str, str], ListedModel] = {}
+    for choice in earlier.selections:
+        listed.setdefault((choice.lane, choice.model), ListedModel(lane=choice.lane, model=choice.model))
+    return LocalModelListRecord(
+        schema_version=LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION,
+        models=tuple(listed.values()),
+        generation=earlier.generation,
+        updated_at=earlier.updated_at,
+    )
 
 
 def provider_settings_record_document(record: ProviderSettingsRecord) -> bytes:
@@ -255,22 +302,23 @@ def parse_provider_settings_record(payload: bytes) -> ProviderSettingsRecord:
 __all__ = [
     "CREDENTIAL_SECRET_MAX_LENGTH",
     "CREDENTIAL_SECRET_MIN_LENGTH",
-    "MODEL_ROLE_SELECTIONS_RECORD_SCHEMA_VERSION",
+    "LOCAL_MODEL_LIST_MAX_MODELS",
+    "LOCAL_MODEL_LIST_RECORD_SCHEMA_VERSION",
     "PROVIDER_SETTINGS_RECORD_SCHEMA_VERSION",
     "AssistantAuth",
     "CredentialKind",
     "CredentialSecretRefusal",
     "CredentialState",
+    "ListedModel",
+    "LocalModelListRecord",
     "ModelId",
-    "ModelRoleSelection",
-    "ModelRoleSelectionsRecord",
     "ProviderCredential",
     "ProviderPreferences",
     "ProviderSettingsRecord",
     "credential_secret_refusal",
-    "model_role_selections_record_document",
+    "local_model_list_record_document",
     "new_settings_generation",
-    "parse_model_role_selections_record",
+    "parse_local_model_list_record",
     "parse_provider_settings_record",
     "provider_settings_record_document",
 ]

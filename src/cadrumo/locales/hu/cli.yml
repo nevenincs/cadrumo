@@ -107,8 +107,7 @@ cli:
         batch_paused_local_ai_not_ready: A helyi MI, amely a szüneteltetett dokumentumokat
           olvassa, nem áll készen.
         batch_paused_local_ai_unavailable: A helyi MI nem tudta beolvasni a szüneteltetett
-          dokumentumokat. Válaszd ki vagy ellenőrizd a modelljét a Cadrumo asztali
-          alkalmazásában.
+          dokumentumokat. Ellenőrizd a modelllistáját a Cadrumo asztali alkalmazásában.
         batch_pending_review_message: Néhány piszkozat olyan problémát hordoz, amelyet
           neked kell rendezned a számla létrehozása előtt. Ezek visszatartva vannak,
           nem hiúsultak meg.
@@ -3354,8 +3353,8 @@ cli:
       file_reader_not_ready: 'A kivonat nem lett beolvasva: a(z) {file} fájlt a helyi
         MI olvassa, amely nem áll készen.'
       file_reader_unavailable: 'A kivonat nem lett beolvasva: a helyi MI jelenleg
-        nem érhető el a(z) {file} fájl olvasásához. Válaszd ki vagy ellenőrizd a modelljét
-        a Cadrumo asztali alkalmazásában, majd próbáld újra.'
+        nem érhető el a(z) {file} fájl olvasásához. Ellenőrizd a modelllistáját a
+        Cadrumo asztali alkalmazásában, majd próbáld újra.'
       file_refused: 'Elutasított és kihagyott kivonat: {file}. A mappa többi része
         importálva lett.'
       file_refused_account_mismatch: 'Elutasított és kihagyott kivonat: a(z) {file}

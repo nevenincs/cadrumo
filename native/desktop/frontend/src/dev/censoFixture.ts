@@ -1,10 +1,9 @@
 import type { CensoPort, CensoSnapshot } from "../shell/profileCenso";
-import type { UserProfilePort } from "../shell/userProfile";
+import type { ProfileFixture } from "./userProfileFixture";
 
 declare global {
   interface Window {
     __scenarioCenso?: {
-      ready(): void;
       fail(): void;
       starts(): number;
       answers(): number;
@@ -31,16 +30,10 @@ export type CensoMode =
 
 /** Browser-only Censo outcomes. Never contacts AEAT. */
 export function censoFixture(
-  profile: UserProfilePort & { peek(path: string): string | null },
+  profile: ProfileFixture,
   mode?: CensoMode,
 ): CensoPort {
-  let ready =
-      mode === "ready" ||
-      mode === "uncertain" ||
-      mode === "refused" ||
-      mode === "initial_unknown" ||
-      mode === "browser_missing",
-    failure = mode === "uncertain",
+  let failure = mode === "uncertain",
     starts = 0,
     answers = 0;
   let snapshot: CensoSnapshot | null = null;
@@ -60,9 +53,6 @@ export function censoFixture(
   let readinessHeld: Promise<void> | null = null;
   let releaseReadiness = () => {};
   const controls = {
-    ready() {
-      ready = true;
-    },
     fail() {
       failure = true;
     },
@@ -100,41 +90,13 @@ export function censoFixture(
         listeners.delete(changed);
       };
     },
-    async readiness() {
+    async readiness(id) {
       window.__scenarioCenso = controls;
       await readinessHeld;
       readinessChecks++;
-      const taxId = profile.peek("identity.tax_id");
-      const requirements = [
-        {
-          field: "identity.tax_id",
-          satisfied: ready || mode === "nie" || !!taxId,
-          reason: "profile_tax_id_required",
-          secret: false,
-        },
-        {
-          field: "auth.provider",
-          satisfied: ready || mode === "nie",
-          reason: "auth_method_required",
-          secret: false,
-        },
-        ...(mode !== "nie"
-          ? []
-          : [
-              {
-                field: "auth.numero_soporte",
-                satisfied: false,
-                reason: "nie_support_required",
-                secret: false,
-              },
-            ]),
-      ];
-      return {
-        provider: ready || mode === "nie" ? "clave_movil" : "",
-        route: "app_request",
-        ready: requirements.every((r) => r.satisfied),
-        requirements,
-      };
+      // What the profile saved satisfies: the setup the scenario seeded, and
+      // whatever the person has entered since.
+      return profile.readiness(id);
     },
     async start() {
       starts++;

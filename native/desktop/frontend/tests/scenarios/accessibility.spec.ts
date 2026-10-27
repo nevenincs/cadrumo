@@ -142,6 +142,44 @@ const SURFACES: {
     },
   })),
   {
+    name: "the AEAT access editor",
+    scenario: "aeat-setup",
+    reach: async (target: Page) => {
+      await target
+        .locator(".rail")
+        .getByRole("button", {
+          name: label("desktop.profile.title"),
+          exact: true,
+        })
+        .click();
+      await expect(target.locator(".user-profile-page")).toContainText(
+        "Soler Vidal",
+      );
+      await target
+        .locator(".user-profile-page")
+        .getByRole("button", {
+          name: label("desktop.profile.edit_field", {
+            field: "Authentication method",
+          }),
+          exact: true,
+        })
+        .click();
+      const editor = target.getByRole("dialog", {
+        name: label("desktop.profile.action.aeat_access"),
+        exact: true,
+      });
+      await editor
+        .getByLabel("Authentication method", { exact: true })
+        .selectOption("certificate");
+      await editor
+        .getByRole("button", {
+          name: label("desktop.profile.aeat.certificate_choose"),
+        })
+        .click();
+      await expect(editor).toContainText("firma-ana-soler.p12");
+    },
+  },
+  {
     name: "a refused sign-in",
     scenario: "wrong-password",
     reach: async (target) => {

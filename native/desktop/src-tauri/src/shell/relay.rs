@@ -4,6 +4,7 @@
 //! its own words. No operation's meaning lives here.
 use crate::agent::person::{HeldPerson, PersonEvent};
 use cadrumo_application::error::application::ApplicationError;
+use cadrumo_application::runtime_client::MAXIMUM_SECRET_BYTES;
 use serde::Serialize;
 use serde_json::{Value, json};
 use std::{sync::Mutex, time::Duration};
@@ -145,6 +146,50 @@ pub(crate) fn submission(definition: &str, subject: &str, payload: Value) -> Wip
     request
 }
 
+/// The secret submission request for `payload`, with `secret` moved into it,
+/// not copied: its text is overwritten when the request is dropped. `secret`
+/// is the exact text of the runtime's secret frame, in the form the
+/// definition's executor parses, and is refused here, before it reaches the
+/// relay, unless it fits one frame: the relay ends the held session for a
+/// request it cannot take.
+pub(crate) fn secret_submission(
+    definition: &str,
+    subject: &str,
+    payload: Value,
+    secret: String,
+) -> Result<Wiped> {
+    let mut request = Wiped(
+        json!({"action":"operation_secret_submit", "definition_id":definition,
+        "subject_ref":subject, "payload":null, "secret":null}),
+    );
+    request.0["payload"] = payload;
+    request.0["secret"] = Value::String(secret);
+    let bytes = request.0["secret"].as_str().map_or(0, str::len);
+    if !(1..=MAXIMUM_SECRET_BYTES).contains(&bytes) {
+        return Err(Failure::new("invalid"));
+    }
+    admit_size(&request.0)?;
+    Ok(request)
+}
+
+/// Submits `payload` for `definition`, whose contract requires an ephemeral
+/// secret, and hands the runtime `secret` on its secret frame; answers the
+/// operation id once the operation is started. A refusal is `refused` with the
+/// relay's code, and nothing was sent on the secret frame unless the runtime
+/// had said it was ready for it. A lost answer is `unknown`: the secret may
+/// have been taken, and nothing is retried. The request, `secret` included,
+/// is overwritten once it is sent.
+pub(crate) async fn submit_secret(
+    person: &HeldPerson,
+    definition: &str,
+    subject: &str,
+    payload: Value,
+    secret: String,
+) -> Result<String> {
+    let request = secret_submission(definition, subject, payload, secret)?;
+    submit_wiping(person, request, true).await
+}
+
 /// The relay ends the held session for a payload over its own bound, so the
 /// host refuses one well before it: number spellings can differ between the
 /// two JSON encoders by a character or two.
@@ -283,6 +328,57 @@ mod tests {
         let mut read = read;
         cadrumo_application::person_operations::wipe(&mut read.0);
         assert_eq!(read.0, json!({"amount": 0, "iban": ""}));
+    }
+
+    #[test]
+    fn a_secret_submission_names_the_relays_members_and_keeps_no_text_once_dropped() {
+        let request = secret_submission(
+            "auth.credential.save",
+            "profile:00000000-0000-4000-8000-000000000000",
+            json!({"provider": "certificate"}),
+            r#"{"password":"horse-staple"}"#.to_owned(),
+        )
+        .unwrap();
+        let (_, members) = cadrumo_application::person_operations::RELAY_ACTION_KEYS
+            .iter()
+            .find(|(action, _)| *action == "operation_secret_submit")
+            .unwrap();
+        let mut named: Vec<&str> = request
+            .0
+            .as_object()
+            .unwrap()
+            .keys()
+            .map(String::as_str)
+            .collect();
+        named.sort_unstable();
+        let mut relay: Vec<&str> = members.iter().copied().chain(["action"]).collect();
+        relay.sort_unstable();
+        assert_eq!(named, relay);
+        assert_eq!(request.0["action"], "operation_secret_submit");
+        assert_eq!(request.0["secret"], r#"{"password":"horse-staple"}"#);
+        assert!(!format!("{request:?}").contains("horse-staple"));
+        let mut request = request;
+        cadrumo_application::person_operations::wipe(&mut request.0);
+        assert_eq!(request.0["secret"], "");
+    }
+
+    #[test]
+    fn a_secret_beyond_one_frame_or_empty_is_refused_before_it_reaches_the_relay() {
+        let submit = |secret: String| {
+            secret_submission(
+                "auth.credential.save",
+                "profile:00000000-0000-4000-8000-000000000000",
+                json!({"provider": "certificate"}),
+                secret,
+            )
+        };
+        assert!(submit("a".repeat(MAXIMUM_SECRET_BYTES)).is_ok());
+        for refused in [String::new(), "a".repeat(MAXIMUM_SECRET_BYTES + 1)] {
+            assert_eq!(submit(refused).unwrap_err().code, "invalid");
+        }
+        // The bound counts bytes: each of these characters takes three.
+        let wide = "\u{20ac}".repeat(MAXIMUM_SECRET_BYTES / 3 + 1);
+        assert_eq!(submit(wide).unwrap_err().code, "invalid");
     }
 
     #[test]

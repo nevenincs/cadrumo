@@ -38,6 +38,7 @@ import {
   type FixtureStream,
 } from "./agentFixtureHost";
 import { agentAccessFixture } from "./agentAccessFixture";
+import { setupApprovalsFixture } from "./setupApprovalsFixture";
 import { ABOUT_FIXTURE } from "./fixtures/about";
 import type { FixtureSkills } from "./fixtures/agentSkills";
 import { BUSY_CALENDAR } from "./fixtures/calendarBusy";
@@ -108,6 +109,8 @@ export type ScenarioHostOptions = {
   /** The shape of the made-up computer's component setup; where neither
    * this nor the scenario names one, the host offers no setup. */
   setup?: SetupShape | null;
+  /** Offer setup reviews that an assistant's setup leaves for the person. */
+  setupReviews?: boolean;
   /** How the made-up ledger answers, over the scenario's own shape. */
   ledger?: LedgerShape | null;
   /** How the made-up declarations answer. */
@@ -156,8 +159,8 @@ declare global {
     __scenarioProviderSignIn?: ProviderSignInFixtureControls;
     /** Publishes the fixture agent's status, as its service does when ready. */
     __scenarioAgentPublishStatus?: (status?: AgentServiceStatus) => void;
-    /** Commits a change to the fixture agent's role selections elsewhere. */
-    __scenarioModelRolesChangeElsewhere?: () => void;
+    /** Commits a change to the fixture agent's local model list elsewhere. */
+    __scenarioLocalModelsChangeElsewhere?: () => void;
     /** The next password change is answered as unconfirmed. */
     __scenarioPassword?: { uncertain(): void; changes(): number };
     /** The made-up window port, where the scenario offers one. */
@@ -467,7 +470,7 @@ export function scenarioHost(
     agent,
     session: agentSession,
     publishStatus,
-    changeRolesElsewhere,
+    changeListElsewhere,
   } = fixtureAgent({
     say,
     wait: () => wait(options.latencyMs),
@@ -488,10 +491,10 @@ export function scenarioHost(
     publishedBefore?.(status);
     publishStatus(status);
   };
-  const changedBefore = window.__scenarioModelRolesChangeElsewhere;
-  window.__scenarioModelRolesChangeElsewhere = () => {
+  const changedBefore = window.__scenarioLocalModelsChangeElsewhere;
+  window.__scenarioLocalModelsChangeElsewhere = () => {
     changedBefore?.();
-    changeRolesElsewhere();
+    changeListElsewhere();
   };
 
   const providerSettings = providerFixture.settings;
@@ -650,6 +653,9 @@ export function scenarioHost(
           agentAccess,
         }),
     ...(setup ? { setup } : {}),
+    ...(options.setupReviews
+      ? { setupReview: setupApprovalsFixture(say) }
+      : {}),
     ...(scenario.profiles === "absent" ? {} : { profiles }),
     ...managerCommand,
     ...(supervision

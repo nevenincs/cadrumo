@@ -171,7 +171,6 @@ def _individual_declaration_canonical() -> dict[str, str]:
         "cloud-evidence-upload": "false",
         "llm-vision": "true",
         "google-export": "true",
-        "notes": "",
     }
 
 
@@ -394,57 +393,6 @@ def test_landlord_without_activity_flag_is_not_asked_for_activity(*, registry_se
     answers, committed = _drive_scripted(canonical, force_visible=explicit, registry_setup_flow=registry_setup_flow)
     assert "activity" not in committed
     assert answers.activity == ""
-
-
-def test_direct_estimation_profile_is_not_asked_for_modulos_annual_facts(*, registry_setup_flow: WizardFlow) -> None:
-    """The módulos annual facts are gated to estimación objetiva only."""
-
-    flags = {
-        "entity-type": "natural_person",
-        "irpf-income-categories": "actividad_economica",
-        "tax-id": "12345678Z",
-        "activity": "direct activity",
-        "irpf-estimation-regime": "directa_normal",
-        "tax-residence-jurisdiction-scope": "common_regime",
-    }
-    canonical = _non_interactive_canonical(flags, registry_setup_flow=registry_setup_flow)
-    explicit = frozenset(flags)
-    answers, committed = _drive_scripted(canonical, force_visible=explicit, registry_setup_flow=registry_setup_flow)
-    assert "objective-estimation-modulos-iae-epigraph" not in committed
-    assert "objective-estimation-modulos-module-1-units" not in committed
-    assert answers.objective_estimation_modulos_iae_epigraph == ""
-    assert answers.objective_estimation_modulos_module_1_units == ""
-
-
-def test_objetiva_profile_collects_modulos_annual_facts(*, registry_setup_flow: WizardFlow) -> None:
-    """Objective-estimation profiles collect stable annual módulo facts once."""
-
-    flags = {
-        "entity-type": "natural_person",
-        "irpf-income-categories": "actividad_economica",
-        "tax-id": "12345678Z",
-        "activity": "barber shop",
-        "irpf-estimation-regime": "objetiva",
-        "objective-estimation-modulos-iae-epigraph": "972.1",
-        "objective-estimation-modulos-module-1-units": "2.50",
-        "objective-estimation-modulos-module-2-units": "85",
-        "objective-estimation-modulos-module-3-units": "12000.75",
-        "tax-residence-jurisdiction-scope": "common_regime",
-    }
-    canonical = _non_interactive_canonical(flags, registry_setup_flow=registry_setup_flow)
-    explicit = frozenset(flags)
-    answers, committed = _drive_scripted(canonical, force_visible=explicit, registry_setup_flow=registry_setup_flow)
-
-    assert "objective-estimation-modulos-iae-epigraph" in committed
-    assert "objective-estimation-modulos-module-1-units" in committed
-    assert answers.objective_estimation_modulos_iae_epigraph == "972.1"
-    assert answers.objective_estimation_modulos_module_1_units == "2.50"
-    assert answers.objective_estimation_modulos_module_2_units == "85"
-    assert answers.objective_estimation_modulos_module_3_units == "12000.75"
-
-    canonical_profile = serialise_answers(registry_setup_flow, answers)
-    assert canonical_profile["irpf.objective_estimation_modulos_iae_epigraph"] == "972.1"
-    assert canonical_profile["irpf.objective_estimation_modulos_module_1_units"] == "2.50"
 
 
 def test_payer_fact_questions_carry_no_default_so_an_unanswered_walk_stays_undeclared(

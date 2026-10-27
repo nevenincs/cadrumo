@@ -44,8 +44,8 @@ import {
   columns,
   counts,
   entries,
+  aeatMethod,
   fieldAt,
-  guarded,
   initials,
   marked,
   matches,
@@ -67,8 +67,10 @@ import {
   useUserProfile,
   type ProfileField,
   type ProfileSection,
+  type UserProfile,
 } from "../../shell/userProfile";
 import type { MenuEntry, OpenMenu } from "../ContextMenu";
+import { AeatAccessEditor } from "./AeatAccessEditor";
 import { PasswordChange, ProfileShortcuts } from "./ProfileDialogs";
 import { ProfileEditor, type ProfileDraft } from "./ProfileEditor";
 import { PROFILE_KEYS } from "./profileKeys";
@@ -94,7 +96,8 @@ export const UserProfilePage = memo(function UserProfilePage({
   maximizeChord,
   view,
   onViewChange,
-  onAeatSetup,
+  aeatAsked,
+  onAeatHandled,
   contribute,
   openMenu,
   accountActions,
@@ -113,8 +116,10 @@ export const UserProfilePage = memo(function UserProfilePage({
   maximizeChord?: Chord;
   view: ProfileView;
   onViewChange(update: (current: ProfileView) => ProfileView): void;
-  /** Opens the profile's AEAT access page in the workspace. */
-  onAeatSetup?: (profile: string) => void;
+  /** The AEAT access editor was asked for, by a link or the palette: the
+   * page opens it once it has the profile, then says it did. */
+  aeatAsked: boolean;
+  onAeatHandled(): void;
   /** Hands the window's palette what the page offers, read when it opens. */
   contribute(actions: (() => Action[]) | null): void;
   openMenu: OpenMenu;
@@ -132,6 +137,8 @@ export const UserProfilePage = memo(function UserProfilePage({
   const [active, setActive] = useState<string | null>(null);
   const [current, setCurrent] = useState("");
   const [draft, setDraft] = useState<ProfileDraft | null>(null);
+  // The profile the AEAT access editor opened on.
+  const [aeat, setAeat] = useState<UserProfile | null>(null);
   const [password, setPassword] = useState(false);
   const [shortcuts, setShortcuts] = useState(false);
   const [fromAeat, setFromAeat] = useState<ReadonlySet<string>>(new Set());
@@ -291,8 +298,9 @@ export const UserProfilePage = memo(function UserProfilePage({
     kind: ProfileDraft["kind"],
   ) => {
     if (!data || !fields.length) return;
-    if (kind === "field" && guarded(fields[0]!)) {
-      onAeatSetup?.(data.profile_id);
+    // The method is one edit of its own, with its route and certificate.
+    if (kind === "field" && aeatMethod(fields[0]!)) {
+      setAeat(data);
       return;
     }
     setDraft({ base: data, section, fields, kind });
@@ -314,6 +322,13 @@ export const UserProfilePage = memo(function UserProfilePage({
     );
 
   const writable = !!data && !busy && profile.error !== "unknown";
+  // Asked for from outside the page, the editor opens on the profile read,
+  // and an editor already open keeps the one it has.
+  useEffect(() => {
+    if (!aeatAsked || !data) return;
+    setAeat((open) => open ?? data);
+    onAeatHandled();
+  }, [aeatAsked, data, onAeatHandled]);
   const rowById = (id: string | null) =>
     allRows.find((row) => row.id === id) ?? null;
   const entryOf = (id: string | null) => {
@@ -376,7 +391,7 @@ export const UserProfilePage = memo(function UserProfilePage({
             writable &&
             row.state === "filled" &&
             !marked(row) &&
-            !guarded(field),
+            !aeatMethod(field),
         },
       ),
       action(
@@ -444,13 +459,14 @@ export const UserProfilePage = memo(function UserProfilePage({
           ),
         ]
       : []),
-    ...(onAeatSetup && data
+    ...(host.userProfile && data
       ? [
           action(
             "aeatAccess",
             t("desktop.profile.action.aeat_access"),
             "shield",
-            () => onAeatSetup(data.profile_id),
+            () => setAeat(data),
+            { enabled: () => writable },
           ),
         ]
       : []),
@@ -1401,7 +1417,9 @@ export const UserProfilePage = memo(function UserProfilePage({
             const row = rowById("identity.tax_id");
             if (row && writable) editRow(row);
           }}
-          onSetup={() => onAeatSetup?.(data.profile_id)}
+          onSetup={() => {
+            if (writable) setAeat(data);
+          }}
           onReview={() => {
             const first = review?.fields.find((field) =>
               allRows.some((row) => row.id === field.path),
@@ -1469,6 +1487,22 @@ export const UserProfilePage = memo(function UserProfilePage({
           error={error}
           onSave={(edit) => profile.save(draft.base, edit)}
           onClose={() => setDraft(null)}
+        />
+      )}
+      {aeat && host.userProfile && (
+        <AeatAccessEditor
+          base={aeat}
+          current={data}
+          port={host.userProfile.aeat}
+          censo={host.censo}
+          busy={profile.saving}
+          blocked={profile.error === "unknown"}
+          error={error}
+          latest={profile.latest}
+          onRefresh={profile.refresh}
+          onSave={profile.save}
+          onSettled={sync.retry}
+          onClose={() => setAeat(null)}
         />
       )}
       <ProfileShortcuts open={shortcuts} onClose={() => setShortcuts(false)} />

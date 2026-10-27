@@ -245,7 +245,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "d948d8f0a93c43a9ed732ec4cd3196b792017ed6bacf656177fb7f0d3edfbdfc"
+          "value": "ab623b3340b7cb18f69473c02a33120454e587b97cd965acf049dd60eb664ae4"
         }
       ],
       "envelope": {
@@ -285,7 +285,7 @@
             "modelo-130-pagos-fraccionados-anteriores": "0",
             "modelo-130-resultados-negativos-anteriores": "0"
           },
-          "calculation_revision_id": "d948d8f0a93c43a9ed732ec4cd3196b792017ed6bacf656177fb7f0d3edfbdfc",
+          "calculation_revision_id": "ab623b3340b7cb18f69473c02a33120454e587b97cd965acf049dd60eb664ae4",
           "casilla_values": {
             "01": "1000",
             "02": "500",
@@ -421,7 +421,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision d948d8f0a93c43a9ed732ec4cd3196b792017ed6bacf656177fb7f0d3edfbdfc (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision ab623b3340b7cb18f69473c02a33120454e587b97cd965acf049dd60eb664ae4 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_renta_income_aggregation",
@@ -482,7 +482,7 @@
         "modelo",
         "work",
         "revision",
-        "d948d8f0a93c43a9ed732ec4cd3196b792017ed6bacf656177fb7f0d3edfbdfc"
+        "ab623b3340b7cb18f69473c02a33120454e587b97cd965acf049dd60eb664ae4"
       ],
       "captures": [],
       "envelope": {
@@ -506,7 +506,7 @@
             "modelo-130-pagos-fraccionados-anteriores": "0",
             "modelo-130-resultados-negativos-anteriores": "0"
           },
-          "calculation_revision_id": "d948d8f0a93c43a9ed732ec4cd3196b792017ed6bacf656177fb7f0d3edfbdfc",
+          "calculation_revision_id": "ab623b3340b7cb18f69473c02a33120454e587b97cd965acf049dd60eb664ae4",
           "casilla_values": {
             "01": "1000",
             "02": "500",

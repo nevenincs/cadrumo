@@ -759,7 +759,6 @@ desktop:
     view: Nézet
     view_list: Lista
     view_months: Naptár
-    warnings: Hiányoznak profiladatok, ezért ezek a dátumok alapértékeket használnak.
     window_unknown: A kezdő dátum nincs megadva
   canvas:
     lead: Válassz munkaterületet alább, vagy nyisd meg az oldalsávból. A dokumentációt
@@ -1529,7 +1528,7 @@ desktop:
         nem áll készen. A befejezésükhöz add hozzá újra a dokumentumokat, amint készen
         áll.
       paused_unavailable: A helyi MI nem tudta beolvasni a szüneteltetett dokumentumokat.
-        Válaszd ki vagy ellenőrizd a modelljét az ügynök beállításaiban, majd a befejezésükhöz
+        Ellenőrizd a modelllistáját az ügynök beállításaiban, majd a befejezésükhöz
         add hozzá újra a dokumentumokat.
       printed_differs: A dokumentumon {printed} áll; a számla {recorded} összeget
         rögzít.
@@ -1546,11 +1545,16 @@ desktop:
         choose_model: Az ügynök megnyitása
         extraction: Dokumentumok beolvasása
         host: Helyi modellkiszolgáló
-        no_model: Nincs használható modell kiválasztva. Válaszd ki vagy ellenőrizd
-          a modellt az ügynök beállításaiban.
+        no_model: A helyi MI listáján egyik modell sem tudja ezt beolvasni. Ellenőrizd
+          a modelllistát az ügynök beállításaiban.
         not_ready: Nem kész
         off_host: Beolvasás a gépen kívül
         off_host_note: Csak a jóváhagyásoddal, minden alkalommal
+        reads:
+          column_role_mapping: Beolvassa a táblázatok oszlopait
+          supply_nature_proposal: Javaslatot tesz az eladás vagy vásárlás típusára
+          text_extraction: Beolvassa a dokumentumok szövegét
+          vision_transcription: Beolvassa a szkennelt oldalakat
         ready: Kész
         text_only: Csak szövegréteggel rendelkező dokumentumok
         unavailable: Nem elérhető
@@ -2091,7 +2095,7 @@ desktop:
         reader_unavailable: 'Nincs beolvasva: a helyi MI, amely ezt a fájlt olvassa,
           nem áll készen.'
         reader_unavailable_here: 'Nincs beolvasva: a helyi MI jelenleg nem érhető
-          el. Válaszd ki vagy ellenőrizd a modelljét az ügynök beállításaiban.'
+          el. Ellenőrizd a modelllistáját az ügynök beállításaiban.'
         result_limit: 'Több mint 4096 sor: importáld részletekben.'
         source_changed: 'Az előnézet óta megváltozott: nézd meg újra.'
         transaction_validation: Nem olvasható be bankszámlakivonatként.
@@ -3415,6 +3419,33 @@ desktop:
       menu: Profilműveletek
       refresh: Profil frissítése
     add: Bejegyzés hozzáadása
+    aeat:
+      certificate: Tanúsítványfájl
+      certificate_choose: Fájl kiválasztása
+      certificate_failed: A fájlválasztó nem nyitható meg.
+      certificate_none: Nincs fájl kiválasztva
+      certificate_replace: Másik fájl kiválasztása
+      certificate_saved: Van mentett fájl
+      credential_failed: '{item}: nem lett mentve. Nézd át az alábbi feltételeket,
+        és próbáld újra.'
+      credential_unavailable: '{item}: nem lett mentve, mert a szolgáltatás nem érhető
+        el. Próbáld újra, amikor újra elérhető.'
+      credential_unknown: '{item}: nem tudtuk megerősíteni, hogy a mentés megtörtént-e.
+        Nézd meg az alábbi feltételeket, mielőtt újra megadod az értéket.'
+      description: Válaszd ki, hogyan jelentkezik be ez a profil az AEAT rendszerébe,
+        és nézd meg, mi hiányzik még.
+      document_hint: Alkalmazáskéréshez add meg a DNI érvényességi dátumát vagy a
+        NIE támogatási számát az okmányod szerint.
+      done: Kész
+      failed: 'Nem sikerült menteni: {item}. Ellenőrizd, és próbáld újra.'
+      passphrase: Tanúsítvány jelszava
+      password: '{method} jelszó'
+      readiness: Feltételek
+      saved: Mentve. Az alábbi feltételek a tárolt állapotot tükrözik.
+      saved_value: Van mentett érték, de nem jelenítjük meg. Írj be újat a cseréhez,
+        vagy hagyd üresen, ha meg akarod tartani.
+      secret_help: A profilodtól külön tároljuk, és többé nem jelenítjük meg. Hagyd
+        üresen, ha a már mentett értéket meg akarod tartani.
     cancel: Mégse
     censo:
       absent: Az AEAT nem adott meg értéket. Nincs változás.
@@ -3573,6 +3604,8 @@ desktop:
     exited: kilépett ({code})
     failed: A munkamenet nem tudott elindulni.
   settings:
+    agent_search: Keresés a beállításokban
+    agent_search_empty: Nincs találat a beállításokban. Próbálj más keresést.
     always_dark: Mindig sötét
     appearance: Megjelenés
     dark: Sötét
@@ -3609,6 +3642,12 @@ desktop:
       needs_person: Arra vár, hogy jóváhagyd, vagy magad telepítsd.
       not_in_this_build: A Cadrumo ezen verziója ezt nem tartalmazza.
       offline: Nincs internetkapcsolatod. Csatlakozz az internethez a beállításhoz.
+    browser_lead: A Cadrumo saját böngészőjével jelentkezik be az adóhivatal webhelyére,
+      és ott olvassa el az adataidat.
+    browser_open: Böngésző beállításának megnyitása
+    browser_other_running: Egy másik beállítás fut. Ha befejeződik, itt beállíthatod
+      a böngészőt.
+    browser_title: A böngésző beállítása
     cancel: Beállítás megszakítása
     cancelling: Leáll a mostani lépés után…
     checking: Az összetevők ellenőrzése…
@@ -3666,7 +3705,6 @@ desktop:
     palette_open: Összetevők beállítása
     palette_retry: Beállítás újrapróbálása
     part_download: Modell letöltése
-    part_model: Modell {role}
     part_program: A modelleket futtató program
     plan_destination: 'Hely: {folder}'
     plan_from: 'Forrás: {hosts}'
@@ -3683,11 +3721,9 @@ desktop:
     rail_busy: Az összetevők beállítása folyamatban
     rail_incomplete: A beállítás nem fejeződött be
     refused_busy: Máshol már fut egy beállítás. Várd meg, amíg befejeződik.
-    refused_model_selection_unusable: A Cadrumo nem tudja használni a kiválasztott
-      modelleket. Válaszd ki őket újra az ügynök beállításaiban, majd próbáld újra.
-    refused_model_size_unstated: A Cadrumo nem tudja megtervezni a letöltést, mert
-      az ügynök nem közli az egyik kiválasztott modell méretét. Válassz másik modellt
-      az ügynök beállításaiban, majd próbáld újra.
+    refused_model_selection_unusable: A Cadrumo nem tudja letölteni ezt a modellt.
+      Ellenőrizd a helyi MI modelllistáját az ügynök beállításaiban, majd próbáld
+      újra.
     refused_not_cancellable: A beállítás most nem állítható le. Hamarosan befejeződik.
     refused_not_pending: Ez a terv már nem vár válaszra.
     refused_not_signed_in: Előbb jelentkezz be a profilodba.
@@ -3703,12 +3739,8 @@ desktop:
     resume: Folytatás
     retry: Kapcsolati hiba. Újrapróbálkozás {seconds} másodperc múlva ({attempt}.
       próbálkozás).
-    role:
-      column_role_mapping: táblázatoszlopokhoz
-      supply_nature_proposal: az eladás vagy vásárlás típusához
-      text_extraction: dokumentumszöveghez
-      vision_transcription: beolvasott oldalakhoz
     show_new_plan: Az új terv megjelenítése
+    show_running: A futó beállítás megjelenítése
     size_unknown: A méret induláskor derül ki
     space: '{required} szabad hely kell hozzá; {free} szabad.'
     space_short: Nincs elég szabad hely. Szabadíts fel valamennyit, majd próbáld újra.
@@ -3746,24 +3778,22 @@ desktop:
     unavailable: Az összetevőket most nem lehet ellenőrizni. Próbáld újra egy kicsit
       később.
   setup_review:
-    answer_unknown: 'A telepítési döntést nem sikerült visszaigazolni. A telepítés
-      már elindulhatott. Újrakezdés előtt ellenőrizd az összetevők állapotát. Művelet:
-      {operation_id}'
-    apply: Alkalmazás
-    authority_lost: A felülvizsgálat jogosultsága megszűnt. Jelentkezz be, és indíts
-      új telepítési műveletet.
-    claim: Felülvizsgálat átvétele
-    claimed: Felülvizsgálat átvéve.
-    claimed_elsewhere: Ezt a felülvizsgálatot más vette át. Nem veheted át tőle.
-    destination_browser: Böngészőfájlok
-    expires_at: Lejárat
-    failed: A felülvizsgálat nem érhető el. A folytatás előtt olvasd be újra.
-    operation_id: Műveletazonosító
-    read: Aktuális felülvizsgálat beolvasása
-    reject: Elutasítás
-    review_digest: A felülvizsgálat lenyomata
-    target_version: 'Verzió: {version}'
-    title: Telepítési művelet áttekintése
+    changed: Ez a beállítási kérés megváltozott vagy véget ért. Kérd meg az asszisztenst,
+      hogy indítsa újra a beállítást.
+    check_setup: Beállítás ellenőrzése
+    destination_browser: A Cadrumo böngészőmappája
+    held_elsewhere: Ebbe a profilba bejelentkezett másik személy már válaszol erre
+      a beállítási kérésre.
+    lead: A beállítás a jóváhagyásodra vár. Amíg nem hagyod jóvá, semmi sem töltődik
+      le.
+    reject: Ne állítsd be
+    title: Beállítod a böngészőt az adóhivatal webhelyéhez?
+    unavailable: A Cadrumo nem tudott válaszolni erre a beállítási kérésre. Próbáld
+      újra.
+    uncertain: A Cadrumo nem tudta megerősíteni a válaszodat, ezért a beállítás elindulhatott.
+      Mielőtt újra kérnéd, ellenőrizd a beállítást.
+    unreadable: A Cadrumo nem tudja megmutatni, mit töltene le ez a beállítás, ezért
+      itt nem hagyhatod jóvá.
   signin:
     checking: A bejelentkezésed ellenőrzése…
     choose_profile: Válassz profilt
@@ -3819,6 +3849,8 @@ desktop:
     side_by_side: Dokumentáció és munkaterület egymás mellé
     stack: Dokumentáció és munkaterület egymás alá
     swap: Dokumentáció és munkaterület felcserélése
+  table:
+    resize_column: '{column} oszlop szélességének módosítása'
   titlebar:
     close: Ablak bezárása
     failed: Az ablakműveletet nem sikerült végrehajtani.
@@ -5866,8 +5898,8 @@ tui:
             a dokumentumot.'
           reader_unavailable: 'Az automatikus olvasó nem indult el. A címkék által
             nem lefedett {count} mező még nem lett beolvasva, ezért üres marad: {fields}.
-            Válaszd ki vagy ellenőrizd a dokumentumokat olvasó modellt a Cadrumo asztali
-            alkalmazásában, majd olvasd be újra a dokumentumot.'
+            Ellenőrizd a helyi MI modelllistáját a Cadrumo asztali alkalmazásában,
+            majd olvasd be újra a dokumentumot.'
         line: '{index}. {description} · mennyiség: {quantity} · egységár: {unit_price}
           · adóalap: {base} · adókulcs: {rate} · áfa: {iva} · áfapótlék kulcsa: {recargo_rate}
           · áfapótlék: {recargo}'
@@ -5989,8 +6021,8 @@ tui:
             Az elutasítottak javítása után futtasd újra; a tárolt dokumentumok nem
             kerülnek kétszer tárolásra.'
           paused: A helyi MI nem tudta beolvasni a szüneteltetett dokumentumokat.
-            Válaszd ki vagy ellenőrizd a modelljét a Cadrumo asztali alkalmazásában,
-            majd a befejezésükhöz futtasd újra a beolvasást.
+            Ellenőrizd a modelllistáját a Cadrumo asztali alkalmazásában, majd a befejezésükhöz
+            futtasd újra a beolvasást.
           paused_local_ai_not_ready: A helyi MI, amely a szüneteltetett dokumentumokat
             olvassa, nem áll készen. A befejezésükhöz futtasd újra a beolvasást, amint
             készen áll.
@@ -6232,8 +6264,7 @@ tui:
         reader_unavailable: a helyi MI, amely ezt a fájlt olvassa, nem áll készen,
           ezért a fájl nem lett beolvasva
         reader_unavailable_here: a helyi MI jelenleg nem érhető el, ezért a fájl nem
-          lett beolvasva; válaszd ki vagy ellenőrizd a modelljét a Cadrumo asztali
-          alkalmazásában
+          lett beolvasva; ellenőrizd a modelllistáját a Cadrumo asztali alkalmazásában
         result_limit: az importálás e fájl előtt elérte a sorkorlátot
         source_changed: a fájl az előnézet után megváltozott, ezért semmi sem került
           importálásra belőle; nézd meg újra az előnézetet
@@ -7520,8 +7551,6 @@ workspace:
     hub:
       holidays_national_only: A határidők az országos ünnepnapokkal számolnak; a regionálisakat
         nem ellenőrizzük.
-      lead: Készítsd el az egyes modelókat, exportáld a fájlt, amelyet az AEAT-nál
-        nyújtasz be, és rögzítsd, hogy benyújtottad.
     lifecycle:
       amended: Helyesbítés elindítva
       calculated: Számítás elkészült
@@ -7632,6 +7661,7 @@ workspace:
         amount: Összeg
         by: Rendezés szerint
         deadline: Határidő
+        declaration: Nyilatkozat
         modelo: Nyomtatvány
         result: Eredmény
         state: Állapot

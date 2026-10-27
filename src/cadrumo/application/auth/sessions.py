@@ -20,9 +20,10 @@ See Also:
 from __future__ import annotations
 
 import json
-from collections.abc import AsyncGenerator, Callable, Mapping
-from contextlib import AbstractAsyncContextManager, asynccontextmanager, nullcontext
+from collections.abc import AsyncGenerator, Awaitable, Callable, Mapping
+from contextlib import AbstractAsyncContextManager, ExitStack, asynccontextmanager, nullcontext
 from datetime import datetime
+from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 from urllib.parse import urlsplit
@@ -31,7 +32,7 @@ from pydantic import BaseModel, ConfigDict, Field, SecretStr, SkipValidation, Ty
 
 from ...core.async_cleanup import close_async_resources
 from ...core.auth_provider import AuthProviderKind, ClaveMovilRoute
-from ...core.errors.hierarchy import AeatLoginAssertionError, CadrumoError
+from ...core.errors.hierarchy import AeatLoginAssertionError, CadrumoError, InternalInvariantError
 from ...core.identity.documents import IdentityError
 from ...core.identity.tax_id import (
     same_tax_identifier,
@@ -39,12 +40,14 @@ from ...core.identity.tax_id import (
 )
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.operations import OperationEffect
 from ...core.time.utc import parse_iso_datetime, validate_utc_aware
 from ...domain.calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
 from ...domain.user_profile.values import ProfileSetupState
 from ..auth_credentials import ActiveCertificateCredentials
 from ..workflow.persistence import workflow_state_repository
 from .acquisition_lock import (
+    AuthAcquisitionLockedError,
     AuthAcquisitionLockRecord,
     AuthAcquisitionLockStatus,
     acquire_auth_acquisition_lock,
@@ -60,6 +63,7 @@ from .operator_scope import (
 )
 from .operator_scope_ports import OperatorScopePorts
 from .protocols import (
+    BrowserContextPort,
     BrowserSessionFactoryPort,
     SessionStoreProtocol,
     session_store,
@@ -96,6 +100,17 @@ class _TargetedAuthProvider(Protocol):
 @runtime_checkable
 class _PersistedTargetProbeProvider(_TargetedAuthProvider, Protocol):
     """Cl@ve provider extension with a direct persisted-session probe."""
+
+    async def probe_persisted_session(
+        self,
+        *,
+        target_url: str | None = None,
+    ) -> tuple[AeatSession, AeatLoginAssertion]: ...
+
+
+@runtime_checkable
+class _PersistedSessionProbeProvider(Protocol):
+    """Provider that proves its stored session without a fresh-login fallback."""
 
     async def probe_persisted_session(
         self,
@@ -1238,6 +1253,277 @@ async def _provider_lifecycle(provider: AuthProvider) -> AsyncGenerator[None]:
         )
 
 
+class ViewSessionBaseline(BaseModel):
+    """The stored session a running view was seeded from or last published.
+
+    A close-time publication overwrites custody only while the stored digest
+    still equals ``storage_state_sha256``.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    provider_kind: AuthProviderKind
+    storage_state_sha256: str = Field(min_length=1)
+
+
+class ViewSessionSeed(BaseModel):
+    """Encrypted-custody storage state a view context is constructed from.
+
+    ``storage_state`` holds browser cookies and local storage. It is passed only
+    to ``new_context(storage_state=...)`` and is excluded from ``repr``.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    baseline: ViewSessionBaseline
+    storage_state: SkipValidation[Mapping[str, object]] = Field(repr=False)
+
+
+class ViewSessionPublicationOutcome(StrEnum):
+    """Closed outcomes of publishing a view's storage state back to custody."""
+
+    PUBLISHED = "published"
+    UNCHANGED = "unchanged"
+    KEPT_NEWER = "kept-newer"
+    VERIFICATION_FAILED = "verification-failed"
+    UNKNOWN = "unknown"
+
+
+class ViewSessionPublication(BaseModel):
+    """Result of one close-time publication.
+
+    ``baseline`` is the precondition for any later publication by the same
+    view: the new stored digest after ``PUBLISHED``, otherwise the baseline the
+    view already held.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    outcome: ViewSessionPublicationOutcome
+    baseline: ViewSessionBaseline
+
+
+def load_view_session_seed(
+    settings: Settings,
+    *,
+    result: AuthenticatedAeatSessionResult,
+    operator_scope_ports: OperatorScopePorts,
+) -> ViewSessionSeed:
+    """Read the encrypted storage state a view seeds its context from.
+
+    ``result`` comes from :func:`ensure_authenticated_aeat_session` after its
+    staged writes were published, so custody holds the state that call verified,
+    or a newer one another acquisition published since; both were verified for
+    this profile. No lock is taken: the view browses without holding the
+    acquisition lock.
+    """
+    store = _get_session_store()
+    with active_profile_storage_span(settings, operator_scope_ports=operator_scope_ports) as bucket_id:
+        if bucket_id is None:
+            raise AuthSessionUnavailableError(
+                translated_message="application.auth.sessions.errors.no_session",
+            )
+        persisted = store.load(storage_state_paths(result.provider_kind).storage_state)
+    if persisted is None:
+        raise AuthSessionUnavailableError(
+            translated_message="application.auth.sessions.errors.no_session",
+        )
+    storage_state = persisted.storage_state
+    return ViewSessionSeed(
+        baseline=ViewSessionBaseline(
+            provider_kind=result.provider_kind,
+            storage_state_sha256=store.storage_state_sha256(storage_state),
+        ),
+        storage_state=storage_state,
+    )
+
+
+async def publish_view_session_state(
+    settings: Settings,
+    *,
+    baseline: ViewSessionBaseline,
+    view_context: BrowserContextPort,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    browser_session_factory: BrowserSessionFactoryPort,
+    operator_scope_ports: OperatorScopePorts,
+    profile_decode_context: ProfileDecodeContext,
+    effect_guard: Callable[[], AbstractAsyncContextManager[None]],
+    on_session_write: Callable[[OperationEffect], Awaitable[None]],
+    certificate_credentials: ActiveCertificateCredentials | None = None,
+    operation: str = "live-sede-view-close",
+) -> ViewSessionPublication:
+    """Capture a view's storage state and publish it to custody after provider verification.
+
+    The view context is captured first. Publication then requires, in order:
+    the stored digest still equals ``baseline``; the capture differs from it;
+    the acquisition lock is free; the provider's own persisted-session probe
+    accepts the capture staged over the stored record, including its identity
+    gates; the session identity aligns with the active profile; and the stored
+    digest is still unchanged under the lock. Only then are the staged writes
+    published under ``effect_guard``, between the ``UNKNOWN`` and ``UPDATED``
+    effect reports.
+
+    A refused verification publishes and deletes nothing. A lock held by a
+    live acquisition defers to it, as does any stored digest other than the
+    baseline. A failure between the two effect reports returns ``UNKNOWN``;
+    the journal keeps the ``UNKNOWN`` report as the authority on that write.
+    Cancellation in that window propagates with the same report standing.
+    """
+    captured = await view_context.storage_state()
+    with active_profile_storage_span(settings, operator_scope_ports=operator_scope_ports) as bucket_id:
+        if bucket_id is None:
+            raise AuthSessionUnavailableError(
+                translated_message="application.auth.sessions.errors.no_session",
+            )
+        with auth_mutation_span(
+            settings=settings,
+            bucket_id=bucket_id,
+            operator_scope_ports=operator_scope_ports,
+        ):
+            assert_auth_recovery_not_in_progress(workflow_state_repository().load())
+            return await _publish_view_session_state_locked(
+                settings,
+                baseline=baseline,
+                captured=captured,
+                certificate_secret_backend_factory=certificate_secret_backend_factory,
+                browser_session_factory=browser_session_factory,
+                operator_scope_ports=operator_scope_ports,
+                profile_decode_context=profile_decode_context,
+                effect_guard=effect_guard,
+                on_session_write=on_session_write,
+                certificate_credentials=certificate_credentials,
+                operation=operation,
+            )
+
+
+async def _publish_view_session_state_locked(
+    settings: Settings,
+    *,
+    baseline: ViewSessionBaseline,
+    captured: Mapping[str, object],
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    browser_session_factory: BrowserSessionFactoryPort,
+    operator_scope_ports: OperatorScopePorts,
+    profile_decode_context: ProfileDecodeContext,
+    effect_guard: Callable[[], AbstractAsyncContextManager[None]],
+    on_session_write: Callable[[OperationEffect], Awaitable[None]],
+    certificate_credentials: ActiveCertificateCredentials | None,
+    operation: str,
+) -> ViewSessionPublication:
+    kind = baseline.provider_kind
+    store = _get_session_store()
+    path = storage_state_paths(kind).storage_state
+
+    def standing(value: ViewSessionPublicationOutcome) -> ViewSessionPublication:
+        return ViewSessionPublication(outcome=value, baseline=baseline)
+
+    if store.durable_storage_state_sha256(path) != baseline.storage_state_sha256:
+        return standing(ViewSessionPublicationOutcome.KEPT_NEWER)
+    if store.storage_state_sha256(captured) == baseline.storage_state_sha256:
+        return standing(ViewSessionPublicationOutcome.UNCHANGED)
+    try:
+        settings, expected_identity = _prepare_clave_auth(
+            settings,
+            kind,
+            operator_scope_ports=operator_scope_ports,
+            profile_decode_context=profile_decode_context,
+        )
+    except (AuthProfileIdentityMismatchError, ClaveCredentialsIncompleteError):
+        return standing(ViewSessionPublicationOutcome.VERIFICATION_FAILED)
+    with ExitStack() as held:
+        try:
+            held.enter_context(
+                acquire_auth_acquisition_lock(
+                    settings,
+                    kind,
+                    ttl_seconds=auth_lock_ttl_seconds(settings, kind),
+                    operation=operation,
+                )
+            )
+        except AuthAcquisitionLockedError:
+            # A live acquisition publishes what it proves; the view's capture yields to it.
+            return standing(ViewSessionPublicationOutcome.KEPT_NEWER)
+        with store.defer_writes() as staged:
+            if not store.stage_captured_storage_state(path, storage_state=captured):
+                return standing(ViewSessionPublicationOutcome.KEPT_NEWER)
+            verified = await _verify_staged_view_session(
+                settings,
+                kind,
+                expected_identity=expected_identity,
+                certificate_secret_backend_factory=certificate_secret_backend_factory,
+                browser_session_factory=browser_session_factory,
+                certificate_credentials=certificate_credentials,
+                operator_scope_ports=operator_scope_ports,
+            )
+            if not verified:
+                return standing(ViewSessionPublicationOutcome.VERIFICATION_FAILED)
+            if store.durable_storage_state_sha256(path) != baseline.storage_state_sha256:
+                return standing(ViewSessionPublicationOutcome.KEPT_NEWER)
+            async with effect_guard():
+                await on_session_write(OperationEffect.UNKNOWN)
+                try:
+                    staged.publish()
+                    await on_session_write(OperationEffect.UPDATED)
+                except Exception as exc:
+                    _logger.warning(
+                        "publish_view_session_state: session publication interrupted failure=%s",
+                        type(exc).__name__,
+                        exc_info=True,
+                    )
+                    return standing(ViewSessionPublicationOutcome.UNKNOWN)
+        published = store.durable_storage_state_sha256(path)
+    if published is None:
+        raise InternalInvariantError("a published view session left no stored storage state")
+    return ViewSessionPublication(
+        outcome=ViewSessionPublicationOutcome.PUBLISHED,
+        baseline=ViewSessionBaseline(provider_kind=kind, storage_state_sha256=published),
+    )
+
+
+async def _verify_staged_view_session(
+    settings: Settings,
+    kind: AuthProviderKind,
+    *,
+    expected_identity: str | None,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    browser_session_factory: BrowserSessionFactoryPort,
+    certificate_credentials: ActiveCertificateCredentials | None,
+    operator_scope_ports: OperatorScopePorts,
+) -> bool:
+    """Run the provider's persisted-session probe over the staged capture.
+
+    A provider without a probe that never falls back to a fresh login cannot
+    verify a capture, so its view state is never published.
+    """
+    provider = _build_provider(
+        settings,
+        kind,
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        browser_session_factory=browser_session_factory,
+        certificate_credentials=certificate_credentials,
+        operator_scope_ports=operator_scope_ports,
+    )
+    async with _provider_lifecycle(provider):
+        if not isinstance(provider, _PersistedSessionProbeProvider):
+            return False
+        try:
+            session, assertion = await provider.probe_persisted_session(target_url=None)
+        except Exception as exc:
+            _logger.debug(
+                "publish_view_session_state: provider refused the captured state failure=%s",
+                type(exc).__name__,
+                exc_info=True,
+            )
+            return False
+    if not bool(getattr(assertion, "is_valid", False)):
+        return False
+    try:
+        _assert_session_identity_matches_expected(session.identity_nif, expected_identity)
+    except AuthProfileIdentityMismatchError:
+        return False
+    return True
+
+
 __all__ = [
     "AuthProfileIdentityMismatchError",
     "AuthSessionUnavailableError",
@@ -1249,12 +1535,18 @@ __all__ = [
     "PersistedAuthSession",
     "SessionDeserializationError",
     "StorageStatePaths",
+    "ViewSessionBaseline",
+    "ViewSessionPublication",
+    "ViewSessionPublicationOutcome",
+    "ViewSessionSeed",
     "bind_clave_credentials_to_settings",
     "clave_auth_facts_from_profile_values",
     "delete_persisted_session",
     "ensure_authenticated_aeat_session",
     "load_persisted_session",
+    "load_view_session_seed",
     "persisted_session_exists",
+    "publish_view_session_state",
     "resolve_clave_credentials",
     "storage_state_paths",
 ]

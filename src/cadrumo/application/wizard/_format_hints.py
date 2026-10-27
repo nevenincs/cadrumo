@@ -56,20 +56,12 @@ PAGE_FORMAT_HINTS: Mapping[str, str] = {
     "address-postcode": _FORMAT_POSTCODE_LOCALE_KEY,
     "modelo-111-no-retenciones-periods": FORMAT_UNITS_LOCALE_KEY,
     "modelo-115-no-relevant-payment-periods": FORMAT_UNITS_LOCALE_KEY,
-    "objective-estimation-modulos-module-1-units": FORMAT_UNITS_LOCALE_KEY,
-    "objective-estimation-modulos-module-2-units": FORMAT_UNITS_LOCALE_KEY,
-    "objective-estimation-modulos-module-3-units": FORMAT_UNITS_LOCALE_KEY,
-    "objective-estimation-modulos-module-4-units": FORMAT_UNITS_LOCALE_KEY,
-    "objective-estimation-modulos-module-5-units": FORMAT_UNITS_LOCALE_KEY,
-    "objective-estimation-modulos-module-6-units": FORMAT_UNITS_LOCALE_KEY,
-    "objective-estimation-modulos-module-7-units": FORMAT_UNITS_LOCALE_KEY,
 }
 
 #: Shape-bearing free-text pages upgraded from the projected ``TEXT``
 #: default to a first-class shape-validated widget kind. The DATE pages
-#: are ISO-8601 calendar dates; the DECIMAL pages are Decimal quantities
-#: (the INCN euro amount and the módulos unit counts, which are
-#: fractional). Each carries ``answer_type = str`` after projection and
+#: are ISO-8601 calendar dates; the DECIMAL page is the INCN euro amount,
+#: a Decimal quantity. Each carries ``answer_type = str`` after projection and
 #: no choices, so the override yields a valid non-choice page.
 PAGE_WIDGET_KINDS: Mapping[str, FlowWidgetKind] = {
     "activity-start-date": FlowWidgetKind.DATE,
@@ -79,13 +71,6 @@ PAGE_WIDGET_KINDS: Mapping[str, FlowWidgetKind] = {
     "spouse-birth-date": FlowWidgetKind.DATE,
     "irpf-special-regime-start-date": FlowWidgetKind.DATE,
     "incn-prior-12-months": FlowWidgetKind.DECIMAL,
-    "objective-estimation-modulos-module-1-units": FlowWidgetKind.DECIMAL,
-    "objective-estimation-modulos-module-2-units": FlowWidgetKind.DECIMAL,
-    "objective-estimation-modulos-module-3-units": FlowWidgetKind.DECIMAL,
-    "objective-estimation-modulos-module-4-units": FlowWidgetKind.DECIMAL,
-    "objective-estimation-modulos-module-5-units": FlowWidgetKind.DECIMAL,
-    "objective-estimation-modulos-module-6-units": FlowWidgetKind.DECIMAL,
-    "objective-estimation-modulos-module-7-units": FlowWidgetKind.DECIMAL,
 }
 
 

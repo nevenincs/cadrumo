@@ -1513,7 +1513,7 @@ impl Engine {
                 if !observation.usable() {
                     return Err(Stop::Failed(failure_of(observation)));
                 }
-                reporter.offset += model.size_bytes;
+                reporter.offset += models.download_bytes(model).unwrap_or(0);
             }
             writer.step(SetupStep::Verify)?;
             for model in models.selection().as_slice() {

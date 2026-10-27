@@ -11,22 +11,18 @@
 //! own picks, and an own account's number only in a raw body that is wiped
 //! once sent.
 mod admitted;
-mod files;
 
+use super::picked_files::{self, Files, Pick, Picks, Purpose};
 use super::relay::{self, Failure, Result, Wiped, lock, protocol};
 use super::settle::{self, Decision, Operations, Outcome, ReviewDocument, Tracked};
 use super::user_profile::ProfileHost;
 use crate::agent::person::{HeldPerson, PersonEvent};
 use admitted::{Definition, Subject, admitted};
-use files::{Files, Pick, Picks, Purpose};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value, json};
-use std::{
-    path::Path,
-    sync::{
-        Arc, Mutex,
-        atomic::{AtomicBool, Ordering},
-    },
+use std::sync::{
+    Arc, Mutex,
+    atomic::{AtomicBool, Ordering},
 };
 use tauri::{
     State,
@@ -95,8 +91,6 @@ const SOURCE_DIRECTORY: [&str; 2] = ["ledger.evidence.add", "ledger.evidence.bat
 const EXPORT: &str = "ledger.export";
 /// An own account's change, JSON-escaped, within its contract's bounds.
 const SECRET_BODY_LIMIT: usize = 8 * 1024;
-/// A dialog's filter name or a suggested file name, as the window words it.
-const LABEL_LIMIT: usize = 128;
 /// An own account's number and bank block: private input that travels only
 /// in a raw request body.
 const OWN_ACCOUNT_SECRETS: [&str; 6] = [
@@ -127,12 +121,6 @@ fn admit_fields(definition: Definition, payload: &Map<String, Value>) -> Result<
     Ok(())
 }
 
-fn path_text(path: &Path) -> Result<Value> {
-    path.to_str()
-        .map(|text| json!(text))
-        .ok_or_else(|| failure("file_unavailable"))
-}
-
 /// Puts the path behind each token where the definition reads a file, and
 /// fills the directory those files are under where it reads one. Anything
 /// but a token this session issued for that purpose is refused. Answers the
@@ -155,7 +143,7 @@ fn substitute(
         let mut resolve = |token: &Value| -> Result<Value> {
             let token = token.as_str().ok_or_else(|| failure("invalid"))?;
             let path = files.path(identity, token, field.purpose, field.shape == Shape::Save)?;
-            let text = path_text(&path)?;
+            let text = picked_files::path_text(&path)?;
             let folder = if path.is_dir() {
                 Some(path.as_path())
             } else {
@@ -192,7 +180,10 @@ fn substitute(
         } else {
             first.parent().ok_or_else(|| failure("file_unavailable"))?
         };
-        payload.insert("source_directory".into(), path_text(directory)?);
+        payload.insert(
+            "source_directory".into(),
+            picked_files::path_text(directory)?,
+        );
     }
     if let Some(first) = &first
         && definition.id == EXPORT
@@ -202,7 +193,7 @@ fn substitute(
             None => "csv",
             Some(format) => format.as_str().ok_or_else(|| failure("invalid"))?,
         };
-        if files::extension(first).as_deref() != Some(format) {
+        if picked_files::extension(first).as_deref() != Some(format) {
             return Err(failure("invalid"));
         }
     }
@@ -308,16 +299,6 @@ impl ExportFormat {
             Self::Xlsx => "xlsx",
         }
     }
-}
-
-/// Words the window shows in a native dialog: a filter's name or a file name.
-fn label_admitted(label: &str) -> bool {
-    !label.is_empty()
-        && label.chars().count() <= LABEL_LIMIT
-        && !label.chars().any(char::is_control)
-}
-fn file_name_admitted(name: &str) -> bool {
-    label_admitted(name) && !name.contains(['/', '\\', ':']) && !name.starts_with('.')
 }
 
 /// The own account's change from its raw body: the complete registered
@@ -520,31 +501,15 @@ async fn ledger_files_pick<R: tauri::Runtime>(
     pick: Pick,
     filter_label: String,
 ) -> Result<Picks> {
-    use tauri_plugin_dialog::DialogExt;
-    if purpose == Purpose::Export || !label_admitted(&filter_label) {
+    // An export is saved, not picked, and a certificate is the profile
+    // page's, with its own tokens.
+    if matches!(purpose, Purpose::Export | Purpose::Certificate)
+        || !picked_files::label_admitted(&filter_label)
+    {
         return Err(failure("invalid"));
     }
     let identity = host.identity().await?;
-    let paths = super::blocking(move || {
-        let dialog = window.dialog().file().set_parent(&window);
-        let chosen: Vec<_> = match pick {
-            Pick::File => dialog
-                .add_filter(filter_label, purpose.extensions())
-                .blocking_pick_file()
-                .into_iter()
-                .collect(),
-            Pick::Files => dialog
-                .add_filter(filter_label, purpose.extensions())
-                .blocking_pick_files()
-                .unwrap_or_default(),
-            Pick::Folder => dialog.blocking_pick_folder().into_iter().collect(),
-        };
-        Ok(chosen
-            .into_iter()
-            .filter_map(|picked| picked.into_path().ok())
-            .collect())
-    })
-    .await?;
+    let paths = picked_files::choose(window, pick, purpose, filter_label).await?;
     // The person may have signed out while the dialog was open.
     if host.identity().await? != identity {
         return Err(failure("not_signed_in"));
@@ -561,34 +526,23 @@ async fn ledger_files_save<R: tauri::Runtime>(
     filter_label: String,
     suggested_name: Option<String>,
 ) -> Result<Picks> {
-    use tauri_plugin_dialog::DialogExt;
-    if !label_admitted(&filter_label)
+    if !picked_files::label_admitted(&filter_label)
         || suggested_name
             .as_deref()
-            .is_some_and(|name| !file_name_admitted(name))
+            .is_some_and(|name| !picked_files::file_name_admitted(name))
     {
         return Err(failure("invalid"));
     }
     let identity = host.identity().await?;
-    let path = super::blocking(move || {
-        let mut dialog = window
-            .dialog()
-            .file()
-            .set_parent(&window)
-            .add_filter(filter_label, &[format.extension()]);
-        if let Some(name) = suggested_name {
-            dialog = dialog.set_file_name(name);
-        }
-        Ok(dialog
-            .blocking_save_file()
-            .and_then(|picked| picked.into_path().ok()))
-    })
-    .await?;
+    let path =
+        picked_files::choose_save(window, format.extension(), filter_label, suggested_name).await?;
     if host.identity().await? != identity {
         return Err(failure("not_signed_in"));
     }
     match path {
-        Some(path) => host.files.issue_save(&identity, format.extension(), path),
+        Some(path) => host
+            .files
+            .issue_save(&identity, Purpose::Export, format.extension(), path),
         None => Ok(Picks::none(0)),
     }
 }
@@ -598,7 +552,7 @@ async fn ledger_files_save<R: tauri::Runtime>(
 #[tauri::command]
 async fn ledger_files_reveal(host: State<'_, Arc<LedgerHost>>, token: String) -> Result<()> {
     let identity = host.identity().await?;
-    let path = host.files.saved(&identity, &token)?;
+    let path = host.files.saved(&identity, &token, Purpose::Export)?;
     super::blocking(move || Ok(super::external::reveal(&path)))
         .await?
         .map_err(|_| failure("unavailable"))

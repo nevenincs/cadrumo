@@ -15,16 +15,16 @@
 //! to the AEAT: an export writes a local file and a filing is recorded
 //! locally.
 mod admitted;
-mod files;
 
+use super::picked_files::{self, Files, Pick, Picks, Purpose};
 use super::relay::{self, Failure, Result, Wiped, protocol};
 use super::settle::{self, Decision, Operations, Outcome, ReviewDocument, Tracked};
 use super::user_profile::ProfileHost;
 use crate::agent::person::{self, HeldPerson, PersonEvent};
 use admitted::{Definition, Subject, admitted};
-use files::{Files, Format, Picks, Purpose};
+use serde::Deserialize;
 use serde_json::{Map, Value, json};
-use std::{path::Path, sync::Arc, time::Duration};
+use std::{sync::Arc, time::Duration};
 use tauri::{
     State,
     ipc::{InvokeBody, Request},
@@ -33,8 +33,6 @@ use tokio::sync::broadcast::Receiver;
 
 /// Bounds a whole read, including admission and queueing, beyond following.
 const READ_LIMIT: Duration = Duration::from_secs(140);
-/// A dialog's filter name or a suggested file name, as the window words it.
-const LABEL_LIMIT: usize = 128;
 /// The longest identifier the window names in a read: a box, a registry
 /// revision or a calculation revision.
 const REFERENCE_LIMIT: usize = 128;
@@ -42,6 +40,64 @@ const REFERENCE_LIMIT: usize = 128;
 /// Fields that name a profile. The host fills `profile_id` where the request
 /// declares it, and the window never names either.
 const HOST_FIELDS: [&str; 2] = ["profile_id", "bucket_id"];
+
+/// What the window says a file it picks to read is for. The purposes are the
+/// declarations workspace's own, so no ledger or certificate token serves a
+/// field here, nor one of these a field there.
+#[derive(Clone, Copy, Debug, Deserialize)]
+#[serde(rename_all = "snake_case")]
+enum FilePurpose {
+    /// An AEAT justificante, register or declaration file, or a receipt.
+    Evidence,
+    /// A calculation report whose signature is checked.
+    Report,
+    /// A review package.
+    Package,
+    /// A review package's signature.
+    Signature,
+    /// A sealed review envelope.
+    Envelope,
+}
+impl FilePurpose {
+    fn purpose(self) -> Purpose {
+        match self {
+            Self::Evidence => Purpose::ModeloEvidence,
+            Self::Report => Purpose::ModeloReport,
+            Self::Package => Purpose::ModeloPackage,
+            Self::Signature => Purpose::ModeloSignature,
+            Self::Envelope => Purpose::ModeloEnvelope,
+        }
+    }
+}
+
+/// The kind of file an export is written as, which the save dialog offers.
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+enum Format {
+    /// The fichero BOE: a filing laid out by its fixed-width design.
+    Boe,
+    Xml,
+    Csv,
+    Pdf,
+    Xlsx,
+    Zip,
+    Sig,
+    Sealed,
+}
+impl Format {
+    fn extension(self) -> &'static str {
+        match self {
+            Self::Boe => "boe",
+            Self::Xml => "xml",
+            Self::Csv => "csv",
+            Self::Pdf => "pdf",
+            Self::Xlsx => "xlsx",
+            Self::Zip => "zip",
+            Self::Sig => "sig",
+            Self::Sealed => "sealed",
+        }
+    }
+}
 
 /// How a request field names a local file.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -99,7 +155,7 @@ const PATH_FIELDS: [PathField; 22] = [
     optional(read(
         "modelo.filing_record.import",
         "source_path",
-        Purpose::Evidence,
+        Purpose::ModeloEvidence,
     )),
     write("modelo.quickfile", "output_path", FILING_FILE),
     write(
@@ -107,7 +163,11 @@ const PATH_FIELDS: [PathField; 22] = [
         "output_path",
         &[Format::Xlsx],
     ),
-    read("modelo.reconcile.import", "source_path", Purpose::Evidence),
+    read(
+        "modelo.reconcile.import",
+        "source_path",
+        Purpose::ModeloEvidence,
+    ),
     write("modelo.review_package.build", "output_path", &[Format::Zip]),
     write(
         "modelo.review_package.counter_sign",
@@ -117,17 +177,17 @@ const PATH_FIELDS: [PathField; 22] = [
     read(
         "modelo.review_package.counter_sign",
         "package",
-        Purpose::Package,
+        Purpose::ModeloPackage,
     ),
     read(
         "modelo.review_package.counter_sign",
         "signature",
-        Purpose::Signature,
+        Purpose::ModeloSignature,
     ),
     read(
         "modelo.review_package.decrypt",
         "envelope_path",
-        Purpose::Envelope,
+        Purpose::ModeloEnvelope,
     ),
     write("modelo.review_package.decrypt", "output", &[Format::Zip]),
     write(
@@ -138,7 +198,7 @@ const PATH_FIELDS: [PathField; 22] = [
     optional(read(
         "modelo.review_package.encrypt_feedback",
         "receipt",
-        Purpose::Evidence,
+        Purpose::ModeloEvidence,
     )),
     write(
         "modelo.review_package.encrypt_for_recipient",
@@ -148,22 +208,30 @@ const PATH_FIELDS: [PathField; 22] = [
     read(
         "modelo.review_package.encrypt_for_recipient",
         "package",
-        Purpose::Package,
+        Purpose::ModeloPackage,
     ),
     read(
         "modelo.review_package.import_feedback",
         "envelope_path",
-        Purpose::Envelope,
+        Purpose::ModeloEnvelope,
     ),
     read(
         "modelo.review_package.import_feedback",
         "package",
-        Purpose::Package,
+        Purpose::ModeloPackage,
     ),
     write("modelo.review_package.sign", "output", &[Format::Sig]),
-    read("modelo.review_package.sign", "package", Purpose::Package),
+    read(
+        "modelo.review_package.sign",
+        "package",
+        Purpose::ModeloPackage,
+    ),
     write("modelo.spreadsheet.export", "output_path", &[Format::Xlsx]),
-    read("modelo.work.report_verify", "source_path", Purpose::Report),
+    read(
+        "modelo.work.report_verify",
+        "source_path",
+        Purpose::ModeloReport,
+    ),
 ];
 const EXPORT: &str = "modelo.export";
 /// Each artefact an export writes, as the formats the person may save it as.
@@ -249,12 +317,6 @@ fn subject(
     }
 }
 
-fn path_text(path: &Path) -> Result<Value> {
-    path.to_str()
-        .map(|text| json!(text))
-        .ok_or_else(|| failure("file_unavailable"))
-}
-
 /// Puts the path behind each token where the definition reads or writes a
 /// file. Anything but a token this session issued for that use is refused,
 /// and a file to write must have been saved as a format the field takes.
@@ -283,9 +345,9 @@ fn substitute(
         let path = match field.file {
             FileUse::Read(purpose) => files.path(identity, token, purpose, false)?,
             FileUse::Write(formats) => {
-                let path = files.path(identity, token, Purpose::Export, true)?;
+                let path = files.path(identity, token, Purpose::ModeloExport, true)?;
                 let formats = export.unwrap_or(formats);
-                let kind = files::extension(&path);
+                let kind = picked_files::extension(&path);
                 if !formats
                     .iter()
                     .any(|format| kind.as_deref() == Some(format.extension()))
@@ -295,7 +357,7 @@ fn substitute(
                 path
             }
         };
-        *value = path_text(&path)?;
+        *value = picked_files::path_text(&path)?;
     }
     Ok(())
 }
@@ -337,15 +399,6 @@ fn financial_submission(definition: &str, subject: &str, mut input: Wiped) -> Re
     Ok(request)
 }
 
-/// Words the window shows in a native dialog: a filter's name or a file name.
-fn label_admitted(label: &str) -> bool {
-    !label.is_empty()
-        && label.chars().count() <= LABEL_LIMIT
-        && !label.chars().any(char::is_control)
-}
-fn file_name_admitted(name: &str) -> bool {
-    label_admitted(name) && !name.contains(['/', '\\', ':']) && !name.starts_with('.')
-}
 /// An identifier the window read from a form and names back in a read.
 fn reference_admitted(reference: &str) -> bool {
     !reference.trim().is_empty()
@@ -730,26 +783,15 @@ async fn modelo_cancel(
 async fn modelo_files_pick<R: tauri::Runtime>(
     host: State<'_, Arc<ModeloHost>>,
     window: tauri::WebviewWindow<R>,
-    purpose: Purpose,
+    purpose: FilePurpose,
     filter_label: String,
 ) -> Result<Picks> {
-    use tauri_plugin_dialog::DialogExt;
-    if purpose == Purpose::Export || !label_admitted(&filter_label) {
+    if !picked_files::label_admitted(&filter_label) {
         return Err(failure("invalid"));
     }
+    let purpose = purpose.purpose();
     let identity = host.identity().await?;
-    let paths = super::blocking(move || {
-        Ok(window
-            .dialog()
-            .file()
-            .set_parent(&window)
-            .add_filter(filter_label, purpose.extensions())
-            .blocking_pick_file()
-            .and_then(|picked| picked.into_path().ok())
-            .into_iter()
-            .collect())
-    })
-    .await?;
+    let paths = picked_files::choose(window, Pick::File, purpose, filter_label).await?;
     // The person may have signed out while the dialog was open.
     if host.identity().await? != identity {
         return Err(failure("not_signed_in"));
@@ -766,34 +808,24 @@ async fn modelo_files_save<R: tauri::Runtime>(
     filter_label: String,
     suggested_name: Option<String>,
 ) -> Result<Picks> {
-    use tauri_plugin_dialog::DialogExt;
-    if !label_admitted(&filter_label)
+    if !picked_files::label_admitted(&filter_label)
         || suggested_name
             .as_deref()
-            .is_some_and(|name| !file_name_admitted(name))
+            .is_some_and(|name| !picked_files::file_name_admitted(name))
     {
         return Err(failure("invalid"));
     }
     let identity = host.identity().await?;
-    let path = super::blocking(move || {
-        let mut dialog = window
-            .dialog()
-            .file()
-            .set_parent(&window)
-            .add_filter(filter_label, &[format.extension()]);
-        if let Some(name) = suggested_name {
-            dialog = dialog.set_file_name(name);
-        }
-        Ok(dialog
-            .blocking_save_file()
-            .and_then(|picked| picked.into_path().ok()))
-    })
-    .await?;
+    let path =
+        picked_files::choose_save(window, format.extension(), filter_label, suggested_name).await?;
     if host.identity().await? != identity {
         return Err(failure("not_signed_in"));
     }
     match path {
-        Some(path) => host.files.issue_save(&identity, format, path),
+        Some(path) => {
+            host.files
+                .issue_save(&identity, Purpose::ModeloExport, format.extension(), path)
+        }
         None => Ok(Picks::none(0)),
     }
 }
@@ -802,7 +834,7 @@ async fn modelo_files_save<R: tauri::Runtime>(
 #[tauri::command]
 async fn modelo_files_reveal(host: State<'_, Arc<ModeloHost>>, token: String) -> Result<()> {
     let identity = host.identity().await?;
-    let path = host.files.saved(&identity, &token)?;
+    let path = host.files.saved(&identity, &token, Purpose::ModeloExport)?;
     super::blocking(move || Ok(super::external::reveal(&path)))
         .await?
         .map_err(|_| failure("unavailable"))

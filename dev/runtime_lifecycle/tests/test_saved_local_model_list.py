@@ -1,4 +1,4 @@
-"""Desktop administration persists the choice CLI, TUI and MCP operations read.
+"""Desktop administration persists the local model list whose derived models CLI, TUI and MCP operations read.
 
 This joins the authenticated desktop admin protocol, agent service, encrypted
 runtime custody and both production relays. Installed-image verification and
@@ -24,7 +24,7 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import (
     EXTENSION_SETTINGS_NAMESPACE,
-    MODEL_ROLE_SELECTIONS_NAMESPACE,
+    LOCAL_MODEL_LIST_NAMESPACE,
 )
 from cadrumo.application.local_reader_contracts import LOCAL_READER_OPERATION_SUBJECT
 from cadrumo.application.local_reader_report import (
@@ -39,13 +39,14 @@ from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from cadrumo_agent_service.adapters.agent_provider_catalog import AgentProviderCatalogSource
 from cadrumo_agent_service.admin import AdminServer
 from cadrumo_agent_service.host.model_run_relay import ModelRunRelay
-from cadrumo_agent_service.providers.application.ports import StoredModelRoleSelections
-from cadrumo_agent_service.providers.application.tests.synthetic_catalog import synthetic_catalog
-from cadrumo_agent_service.providers.domain.catalog import ProviderCatalog
+from cadrumo_agent_service.providers.application.ports import StoredLocalModelList
+from cadrumo_agent_service.providers.application.tests.synthetic_catalog import synthetic_document
+from cadrumo_agent_service.providers.domain.catalog import ProviderCatalog, parse_provider_catalog
+from cadrumo_agent_service.providers.domain.record import ListedModel
 from cadrumo_agent_service.providers.persistence.store import (
-    MODEL_ROLE_SELECTIONS_CAPABILITY,
+    LOCAL_MODEL_LIST_CAPABILITY,
     PROVIDER_RECORD_CAPABILITY,
-    SecureModelRoleSelectionsStore,
+    SecureLocalModelListStore,
 )
 from cadrumo_agent_service.service import AgentService
 from cadrumo_client.commands.registered_operation import run_registered_operation
@@ -77,8 +78,8 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.w
 
 
 def _capability(name: str) -> ExtensionRecordCapability:
-    selections = name == MODEL_ROLE_SELECTIONS_CAPABILITY
-    namespace = MODEL_ROLE_SELECTIONS_NAMESPACE if selections else EXTENSION_SETTINGS_NAMESPACE
+    selections = name == LOCAL_MODEL_LIST_CAPABILITY
+    namespace = LOCAL_MODEL_LIST_NAMESPACE if selections else EXTENSION_SETTINGS_NAMESPACE
     return ExtensionRecordCapability(
         capability=name,
         namespace=namespace.namespace,
@@ -179,20 +180,29 @@ async def _mcp_report(adapter: RuntimeMcpAdapter, frontend: FrontendClient) -> L
         return LocalReaderReportPublicResultV1.model_validate_json(json.dumps(result["document"]["projection"]))
 
 
+def _unrecommended_catalog() -> ProviderCatalog:
+    """The synthetic catalogue with no recommended local model, so the local list holds only what the person adds."""
+    document = json.loads(synthetic_document())
+    for lane in document["providers"]:
+        if lane["id"] == "local_api":
+            lane["recommended"] = {}
+    return parse_provider_catalog(json.dumps(document))
+
+
 @pytest.mark.parametrize(
     "projection",
     [OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.EXTERNAL_CLIENT],
 )
-def test_authenticated_desktop_choice_survives_new_store_and_runtime_lookup(
+def test_authenticated_desktop_model_list_survives_new_store_and_runtime_lookup(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     projection: OperationFrontendProjection,
 ) -> None:
     def declared_catalog(self: AgentProviderCatalogSource) -> ProviderCatalog:
-        return synthetic_catalog()
+        return _unrecommended_catalog()
 
     monkeypatch.setattr(AgentProviderCatalogSource, "catalog", declared_catalog)
-    capabilities = tuple(_capability(name) for name in (MODEL_ROLE_SELECTIONS_CAPABILITY, PROVIDER_RECORD_CAPABILITY))
+    capabilities = tuple(_capability(name) for name in (LOCAL_MODEL_LIST_CAPABILITY, PROVIDER_RECORD_CAPABILITY))
     with (
         service_record_runtime(tmp_path, record_capabilities=capabilities, model_runs=True) as runtime,
         ExitStack() as scope,
@@ -228,23 +238,30 @@ def test_authenticated_desktop_choice_survives_new_store_and_runtime_lookup(
         changed = _admin(
             admin,
             bearer,
-            "model_role_set",
-            role="text_extraction",
+            "local_model_add",
             provider="local_api",
             model="synthetic-text:1",
             expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID,
         )
         assert changed["unreadable"] is False, changed
-        revision = changed["revision"]
-        assert revision != ABSENT_SECURE_OBJECT_REVISION_ID
+        chosen = _admin(
+            admin,
+            bearer,
+            "reading_model_choose",
+            provider="local_api",
+            model="synthetic-text:1",
+            expected_revision=changed["revision"],
+        )
+        assert chosen["reading"] == {"lane": "local_api", "model": "synthetic-text:1"}, chosen
+        revision = chosen["revision"]
+        assert revision not in {ABSENT_SECURE_OBJECT_REVISION_ID, changed["revision"]}
 
         # A newly composed reader must obtain the committed record, not admin state.
-        read = SecureModelRoleSelectionsStore(client=client).read()
-        assert isinstance(read, StoredModelRoleSelections), read
+        read = SecureLocalModelListStore(client=client).read()
+        assert isinstance(read, StoredLocalModelList), read
         assert read.revision == revision
-        assert [(entry.role.value, entry.lane, entry.model) for entry in read.record.selections] == [
-            ("text_extraction", "local_api", "synthetic-text:1"),
-        ]
+        assert read.record.models == (ListedModel(lane="local_api", model="synthetic-text:1"),)
+        assert read.record.reading == ListedModel(lane="local_api", model="synthetic-text:1")
         relay = ModelRunRelay(client=client, runs=service.model_runs)
         scope.callback(relay.close)
         scope.callback(client.subscribe_model_runs(relay.announce))
@@ -260,12 +277,14 @@ def test_authenticated_desktop_choice_survives_new_store_and_runtime_lookup(
         assert (lane.provider_id, lane.transport, lane.model) == ("local", "api", "synthetic-text:1")
         states = lookup(None).selections
         assert states is not None
-        selected = next(state for state in states if state.role == "text_extraction")
-        assert selected.selected == ModelRunSelectedModel(lane_id="local_api", model="synthetic-text:1")
-        assert selected.lane == lane
-        assert all(
-            state.refusal is ModelRunRefusalCode.NO_SELECTION for state in states if state.role != "text_extraction"
-        )
+        text_roles = {"text_extraction", "column_role_mapping", "supply_nature_proposal"}
+        for state in states:
+            assert state.selected == ModelRunSelectedModel(lane_id="local_api", model="synthetic-text:1")
+            if state.role in text_roles:
+                assert state.lane == lane
+            else:
+                # Nothing states the added model reads images, so the image role refuses rather than substitutes.
+                assert (state.lane, state.refusal) == (None, ModelRunRefusalCode.MODEL_CANNOT_READ_IMAGES)
         if projection is OperationFrontendProjection.CLI:
             completion = run_registered_operation(
                 frontend,
@@ -316,6 +335,6 @@ def test_authenticated_desktop_choice_survives_new_store_and_runtime_lookup(
         model = next(row for row in report.models if row.role.value == "text_extraction")
         assert model.selected is True
         assert model.model == "synthetic-text:1"
-        assert _admin(admin, bearer, "model_roles")["revision"] == revision
-        reread = SecureModelRoleSelectionsStore(client=client).read()
+        assert _admin(admin, bearer, "local_models")["revision"] == revision
+        reread = SecureLocalModelListStore(client=client).read()
         assert reread == read

@@ -47,7 +47,7 @@ def test_every_entry_is_sorted_union_shape(index: dict[str, ProfileKeyGrounding]
 
 def test_unconsumed_keys_are_absent_not_empty(index: dict[str, ProfileKeyGrounding]) -> None:
     """A key no profile binding consumes renders no legal zone — absent, never invented."""
-    assert "identity.notes" not in index
+    assert "identity.email" not in index
     assert all(grounding.legal_refs or grounding.source_refs for grounding in index.values())
 
 

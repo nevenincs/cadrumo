@@ -109,11 +109,11 @@ def test_leading_zero_identifier_stays_a_string() -> None:
     ("payload_json", "expected"),
     (
         (
-            UserProfileFact(path="usage_ratios.business_ratio", value=Decimal("0.50")).model_dump_json(),
+            UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("0.50")).model_dump_json(),
             Decimal("0.50"),
         ),
         (
-            '{"path": "usage_ratios.business_ratio", "value": "0"}',
+            '{"path": "taxpayer_type.incn_prior_12_months", "value": "0"}',
             Decimal("0"),
         ),
     ),
@@ -142,7 +142,7 @@ def test_snapshot_is_canonical_and_rejects_incomplete_profiles() -> None:
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
-            UserProfileFact(path="usage_ratios.business_ratio", value=Decimal("0.50")),
+            UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("0.50")),
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
         ),
         created_at=created_at,
@@ -163,7 +163,7 @@ def test_snapshot_is_canonical_and_rejects_incomplete_profiles() -> None:
     )
 
     assert first.canonical_hash == second.canonical_hash
-    assert [fact.path for fact in first.facts] == ["identity.tax_id", "usage_ratios.business_ratio"]
+    assert [fact.path for fact in first.facts] == ["identity.tax_id", "taxpayer_type.incn_prior_12_months"]
 
     with pytest.raises(UserProfileValidationError, match="cannot snapshot an incomplete profile record"):
         create_user_profile_snapshot(

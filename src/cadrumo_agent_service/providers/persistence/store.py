@@ -1,4 +1,4 @@
-"""Provider and model-role record decoding over an admitted runtime's opaque encrypted custody."""
+"""Provider and local model list record decoding over an admitted runtime's opaque encrypted custody."""
 
 from __future__ import annotations
 
@@ -15,38 +15,40 @@ from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedEr
 from cadrumo_client.transport.service_client import InstalledServiceClient
 
 from ..application.ports import (
-    AbsentModelRoleSelections,
+    AbsentLocalModelList,
     AbsentProviderRecord,
-    ModelRoleSelectionsRead,
+    LocalModelListRead,
     ProviderRecordRead,
-    StoredModelRoleSelections,
+    StoredLocalModelList,
     StoredProviderRecord,
     StoreGenerations,
     StoreRefusal,
     StoreRefusalCode,
-    UnreadableModelRoleSelections,
+    UnreadableLocalModelList,
     UnreadableProviderRecord,
 )
 from ..domain.record import (
-    ModelRoleSelectionsRecord,
+    LocalModelListRecord,
     ProviderSettingsRecord,
-    model_role_selections_record_document,
-    parse_model_role_selections_record,
+    local_model_list_record_document,
+    parse_local_model_list_record,
     parse_provider_settings_record,
     provider_settings_record_document,
 )
 
 PROVIDER_RECORD_CAPABILITY: Final = "provider-settings"
 
-MODEL_ROLE_SELECTIONS_CAPABILITY: Final = "model-role-selections"
-"""The selections record's own capability, apart from the provider records.
+LOCAL_MODEL_LIST_CAPABILITY: Final = "model-role-selections"
+"""The model list record's own capability, apart from the provider records.
 
-Its records generation is not the provider-settings generation, so a selection
-change never supersedes an agent tree started under the provider records.
+The value is the capability identity the runtime descriptor declares and the
+stored records were written under. Its records generation is not the
+provider-settings generation, so a list change never supersedes an agent tree
+started under the provider records.
 """
 
-MODEL_ROLE_SELECTIONS_KEY: Final = "selections"
-"""The one record the selections capability holds per profile."""
+LOCAL_MODEL_LIST_KEY: Final = "selections"
+"""The one record the model list capability holds per profile, under its stored key."""
 
 
 class SecureProviderSettingsStore:
@@ -158,53 +160,51 @@ class SecureProviderSettingsStore:
             return None
 
 
-class SecureModelRoleSelectionsStore:
-    """Keep the per-role selections in their own descriptor capability; never open a profile repository."""
+class SecureLocalModelListStore:
+    """Keep the local model list in its own descriptor capability; never open a profile repository."""
 
     def __init__(self, *, client: InstalledServiceClient) -> None:
         """Bind the store to one runtime-issued service lease."""
         self._client = client
 
-    def read(self) -> ModelRoleSelectionsRead | StoreRefusal:
-        """Decode the selections record, keeping absent and unreadable apart."""
+    def read(self) -> LocalModelListRead | StoreRefusal:
+        """Decode the model list record, keeping absent and unreadable apart."""
         try:
-            reply, material = self._client.record_read(MODEL_ROLE_SELECTIONS_CAPABILITY, MODEL_ROLE_SELECTIONS_KEY)
+            reply, material = self._client.record_read(LOCAL_MODEL_LIST_CAPABILITY, LOCAL_MODEL_LIST_KEY)
             try:
                 refusal = _refusal(reply)
                 if refusal is not None:
                     return refusal
                 if reply.state == "absent":
-                    return AbsentModelRoleSelections()
+                    return AbsentLocalModelList()
                 if reply.revision is None:
                     # Every write stamps a revision, so a stored record without
                     # one is a runtime answer outside the contract, and no reset
                     # could be guarded by it.
                     return _unknown()
-                unreadable = UnreadableModelRoleSelections(revision=reply.revision)
+                unreadable = UnreadableLocalModelList(revision=reply.revision)
                 if reply.state != "present":
                     return unreadable
                 try:
-                    record = parse_model_role_selections_record(bytes(material))
+                    record = parse_local_model_list_record(bytes(material))
                 except (ValidationError, UnicodeDecodeError):
                     return unreadable
-                return StoredModelRoleSelections(record=record, revision=reply.revision)
+                return StoredLocalModelList(record=record, revision=reply.revision)
             finally:
                 material[:] = b"\0" * len(material)
         except (RefusalError, FrontendRefusedError, OSError):
             return StoreRefusal(code=StoreRefusalCode.UNKNOWN)
 
-    def write(self, record: ModelRoleSelectionsRecord, *, expected_revision: str) -> StoreRefusal | None:
-        """Commit the selections record through runtime repository CAS."""
-        document = model_role_selections_record_document(record)
+    def write(self, record: LocalModelListRecord, *, expected_revision: str) -> StoreRefusal | None:
+        """Commit the model list record through runtime repository CAS."""
+        document = local_model_list_record_document(record)
         return _record_write(
-            self._client, MODEL_ROLE_SELECTIONS_CAPABILITY, MODEL_ROLE_SELECTIONS_KEY, document, expected_revision
+            self._client, LOCAL_MODEL_LIST_CAPABILITY, LOCAL_MODEL_LIST_KEY, document, expected_revision
         )
 
     def delete(self, *, expected_revision: str) -> StoreRefusal | None:
-        """Delete the selections record only at the exact revision the caller observed."""
-        return _record_delete(
-            self._client, MODEL_ROLE_SELECTIONS_CAPABILITY, MODEL_ROLE_SELECTIONS_KEY, expected_revision
-        )
+        """Delete the model list record only at the exact revision the caller observed."""
+        return _record_delete(self._client, LOCAL_MODEL_LIST_CAPABILITY, LOCAL_MODEL_LIST_KEY, expected_revision)
 
 
 def _record_write(

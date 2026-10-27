@@ -62,6 +62,13 @@ test.beforeEach(async ({ page: target }) => {
 test("the view shown is the element its page or Ledger section opens", () => {
   for (const [id, entry] of Object.entries(WINDOW_VIEWS)) {
     if (entry.view.kind !== "page") continue;
+    // A dialog over a page is not the page shown: the page is its element.
+    if (entry.view.dialog !== undefined) {
+      expect(pageViewId(entry.view.page, "movements"), id).toBe(
+        entry.view.page,
+      );
+      continue;
+    }
     const section = entry.view.section;
     // A page that keeps its saved section is shown as that section.
     if (entry.view.page === "ledger" && section === null) continue;

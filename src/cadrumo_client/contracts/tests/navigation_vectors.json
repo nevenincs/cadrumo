@@ -638,9 +638,9 @@
       "implemented": null,
       "expect": {
         "opened": "profile/aeat-access",
-        "surface": "tui",
-        "fallback": "other_surface",
-        "notice": true,
+        "surface": "gui",
+        "fallback": "none",
+        "notice": false,
         "params": {}
       }
     },

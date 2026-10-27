@@ -349,6 +349,7 @@ pub(crate) async fn assemble<R: Runtime>(
     app.manage(Arc::new(shell::setup::SetupHost::new(
         sign_in.clone(),
         agent,
+        diagnostics.clone(),
     )));
     let profile = Arc::new(shell::user_profile::ProfileHost::new(sign_in.clone()));
     app.manage(profile.clone());
