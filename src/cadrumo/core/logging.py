@@ -47,11 +47,13 @@ import os
 import re
 import sys
 import time
+from codecs import getincrementalencoder
 from collections import deque
 from collections.abc import Callable, Generator, Iterable, Iterator, Mapping
 from contextlib import contextmanager
 from contextvars import Context, ContextVar, copy_context
 from enum import Enum
+from io import BufferedRandom, BufferedWriter, RawIOBase, TextIOWrapper
 from itertools import islice
 from pathlib import Path
 from threading import Event, Lock, Thread
@@ -1372,10 +1374,62 @@ class _AsyncDiagnosticHandler(logging.Handler):
 
 
 class _DiagnosticStreamHandler(logging.StreamHandler[TextIO]):
+    def __init__(self, stream: TextIO, *, follow_stderr: bool = False) -> None:
+        super().__init__(stream)
+        self._follow_stderr = follow_stderr
+        self._raw: RawIOBase | None = None
+        self._encoder = getincrementalencoder("utf-8")("backslashreplace")
+        self._prepare_stream()
+
+    def _prepare_stream(self) -> None:
+        self._raw = None
+        if type(self.stream) is TextIOWrapper:
+            buffer = self.stream.buffer
+            raw = (
+                cast("BufferedWriter[RawIOBase] | BufferedRandom", buffer).raw
+                if isinstance(buffer, BufferedWriter | BufferedRandom)
+                else buffer
+            )
+            if isinstance(raw, RawIOBase):
+                self._raw = raw
+                self._encoder = getincrementalencoder(self.stream.encoding)(self.stream.errors or "backslashreplace")
+
+    @override
+    def emit(self, record: logging.LogRecord) -> None:
+        if self._follow_stderr and sys.stderr is not self.stream and sys.stderr is not None:
+            # setStream flushes the old stream, which can itself be blocked.
+            self.stream = sys.stderr
+            self._prepare_stream()
+        if self._raw is None:
+            super().emit(record)
+            return
+        # A daemon must never hold stderr's BufferedWriter lock: CPython takes
+        # that lock again during finalization, beyond our bounded shutdown.
+        data = self._encoder.encode((self.format(record) + self.terminator).replace("\n", os.linesep))
+        with _stderr_write_guard:
+            remaining = memoryview(data)
+            while remaining:
+                written = self._raw.write(remaining)
+                if written is None or written <= 0:
+                    raise OSError("diagnostic stream delivery failed")
+                remaining = remaining[written:]
+
     @override
     def handleError(self, record: logging.LogRecord) -> None:
         # The stdlib fallback prints the unsanitized record and arguments.
         raise OSError("diagnostic stream delivery failed") from None
+
+
+_stderr_write_guard = Lock()
+
+
+def _reset_stderr_write_guard() -> None:
+    global _stderr_write_guard
+    _stderr_write_guard = Lock()
+
+
+if hasattr(os, "register_at_fork"):
+    os.register_at_fork(after_in_child=_reset_stderr_write_guard)
 
 
 _dispatch = DiagnosticDispatch[logging.LogRecord | Callable[[], None]](
@@ -1447,3 +1501,14 @@ def shutdown_logging(*, timeout: float = 2.0) -> None:
 
 atexit.unregister(_stdlib_shutdown)
 atexit.register(shutdown_logging)
+
+# Preserve caller-installed fallback handlers. The stdlib default must use the
+# same isolated sink as configured diagnostics, including before configuration.
+if type(logging.lastResort) is getattr(logging, "_StderrHandler", None):
+    _fallback_sink = _DiagnosticStreamHandler(sys.stderr, follow_stderr=True)
+    _fallback_sink.addFilter(DropOperatorDocumentEchoFilter())
+    _fallback_sink.addFilter(DropRunEventFilter())
+    _fallback_sink.addFilter(_ThirdPartyDebugFilter())
+    _fallback_handler = _AsyncDiagnosticHandler(_fallback_sink)
+    _fallback_handler.setLevel(logging.WARNING)
+    logging.lastResort = _fallback_handler

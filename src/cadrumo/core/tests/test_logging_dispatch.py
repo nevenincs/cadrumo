@@ -47,6 +47,52 @@ def _probe(tmp_path: Path, body: str) -> dict[str, float | int]:
     return result
 
 
+@pytest.mark.parametrize("fallback", (False, True))
+def test_unread_stderr_pipe_does_not_freeze_interpreter_exit(tmp_path: Path, fallback: bool) -> None:
+    script = f"""
+import sys
+sys.path.insert(0, {str(Path(__file__).parents[3])!r})
+import json, logging, os, time
+from cadrumo.core import logging as project
+read_end, write_end = os.pipe()
+os.dup2(write_end, 2)
+os.close(write_end)
+assert type(sys.stderr.buffer).__name__ == 'BufferedWriter'
+project.configure_logging()
+assert project.flush_logging(timeout=10)
+logger = project.get_logger('cadrumo.tests.unread_stderr')
+if {fallback!r}:
+    logger.propagate = False
+for index in range(128):
+    logger.warning('unread stderr %d %s', index, 'x' * 800)
+deadline = time.monotonic() + 5
+while time.monotonic() < deadline:
+    if any(status.pending > 5 and status.active_seconds > .1
+           for name, status in project.diagnostic_delivery_status().items() if name != 'records'):
+        break
+    time.sleep(.01)
+else:
+    raise AssertionError('stderr sink did not block')
+started = time.monotonic()
+project.shutdown_logging(timeout=.05)
+print(json.dumps({{'shutdown_seconds': time.monotonic() - started}}), flush=True)
+"""
+    completed = run_audited_process(
+        [sys.executable, "-I", "-c", script],
+        env={
+            **os.environ,
+            "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "root"),
+            "CADRUMO_LOG_DIR": str(tmp_path / "logs"),
+            "CADRUMO_LOG_STDERR_LEVEL": "WARNING",
+        },
+        capture_output=True,
+        text=True,
+        timeout=20,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert json.loads(str(completed.stdout))["shutdown_seconds"] < 0.5
+
+
 @pytest.mark.parametrize("foreign", (False, True))
 def test_blocked_redaction_does_not_block_logging_or_grow_the_queue(tmp_path: Path, foreign: bool) -> None:
     result = _probe(

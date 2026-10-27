@@ -94,6 +94,8 @@ class JsonlRunSink(logging.Handler):
         handler failure.
         """
         event = getattr(record, "run_event", None)
+        if isinstance(event, dict):
+            event = RunEvent.model_validate_json(json.dumps(event))
         if not isinstance(event, RunEvent):
             return
         if event.run_id != self._run_id:

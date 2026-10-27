@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from ...logging import SecretScrubbingFilter, _ThirdPartyDebugFilter
+from ...logging import SecretScrubbingFilter, _ThirdPartyDebugFilter, flush_logging
 
 
 def attach_run_sink(sink: logging.Handler) -> None:
@@ -44,6 +44,7 @@ def detach_run_sink(sink: logging.Handler) -> None:
         sink: The :class:`logging.Handler` previously attached by
             :func:`attach_run_sink`.
     """
+    assert flush_logging(timeout=10), "recording-test diagnostics did not drain"
     logging.getLogger().removeHandler(sink)
     sink.filters = [f for f in sink.filters if not isinstance(f, SecretScrubbingFilter | _ThirdPartyDebugFilter)]
     sink.flush()

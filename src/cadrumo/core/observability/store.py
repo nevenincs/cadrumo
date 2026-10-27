@@ -425,10 +425,10 @@ def _is_listable_run_directory(entry: Path) -> bool:
     try:
         is_dir = entry.is_dir()
     except OSError:
-        _logger.warning("iter_runs: skipping unreadable entry %s", entry, exc_info=True)
+        _logger.warning("iter_runs: skipping unreadable entry %s", entry.name, exc_info=True)
         return False
     if not is_dir:
-        _logger.debug("iter_runs: skipping non-directory entry %s", entry)
+        _logger.debug("iter_runs: skipping non-directory entry %s", entry.name)
         return False
     if re.fullmatch(RUN_ID_PATTERN, entry.name) is None:
         _logger.debug("iter_runs: skipping non-run directory %s", entry.name)
@@ -459,8 +459,8 @@ def _load_listable_run_trace(entry: Path) -> RunTrace | None:
             entry.name,
             exc_info=True,
         )
-    except RunTraceValidationError as exc:
-        _logger.warning("iter_runs: skipping run directory %s — %s", entry.name, exc)
+    except RunTraceValidationError:
+        _logger.warning("iter_runs: skipping run directory %s — trace identity mismatch", entry.name, exc_info=True)
     return None
 
 

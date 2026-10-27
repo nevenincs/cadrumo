@@ -99,7 +99,8 @@ def record_event(
     # extra). Keeping the emission at INFO here means other
     # subpackages that attach their own INFO-level handlers still see
     # the observability record.
-    _logger.info("run.event %s", kind.value, extra={"run_event": event})
+    # The diagnostic boundary accepts builtin snapshots, not live model objects.
+    _logger.info("run.event %s", kind.value, extra={"run_event": event.model_dump(mode="json")})
     return event
 
 

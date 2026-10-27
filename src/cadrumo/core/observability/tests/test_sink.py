@@ -33,6 +33,7 @@ from ....tests.path_obstruction import obstructed_path
 from ....tests.storage_scope import storage_overrides
 from ...config import override_settings
 from ...directory_scan import iter_directory
+from ...logging import flush_logging
 from ...storage_taxonomy import StorageCategory
 from ...storage_taxonomy_locations import storage_path
 from ..errors import RunTracePersistenceError, RunTraceValidationError
@@ -337,8 +338,9 @@ class TestStorePersistenceErrors:
 
             caplog.set_level(logging.WARNING, logger="cadrumo.core.observability.store")
             assert list(iter_runs()) == [(run_b, trace_b)]
+            assert flush_logging(timeout=10)
 
-        messages = [record.getMessage() for record in caplog.records]
+        messages = [record.getMessage() + (record.exc_text or "") for record in caplog.records]
         assert any(
             "skipping run directory 0123456789abcdef" in message and "embedded run_id 'abcdef0123456789'" in message
             for message in messages
@@ -355,6 +357,7 @@ class TestStorePersistenceErrors:
             caplog.set_level(logging.DEBUG, logger="cadrumo.core.observability.store")
 
             assert list(iter_runs(settings=settings)) == []
+            assert flush_logging(timeout=10)
         messages = [record.getMessage() for record in caplog.records]
         assert any("skipping non-directory entry" in message and "plain.txt" in message for message in messages)
         assert any("skipping non-run directory not-a-run" in message for message in messages)
@@ -495,6 +498,7 @@ class TestSinkEmitFailureWarningIsScrubbed:
 
                 with caplog.at_level(logging.WARNING, logger="cadrumo.core.observability.tests.sink"):
                     sink.emit(record)
+                    assert flush_logging(timeout=10)
             finally:
                 sink.close()
 
@@ -503,10 +507,9 @@ class TestSinkEmitFailureWarningIsScrubbed:
         warn = warning_records[0]
         assert warn.name == "cadrumo.core.observability.tests.sink"
         # The record must have been processed by SecretScrubbingFilter:
-        # exc_text is set by the filter (it formats exc_info into text and
-        # scrubs it).  We assert the raw bearer/token placeholder is absent
-        # and that the filter has at minimum formatted the exc_text field.
-        assert warn.exc_info is not None, "exc_info must be attached to the warning"
+        # Snapshot exception text is scrubbed without retaining live frames.
+        assert warn.exc_info is None, "live traceback frames must not cross the diagnostic boundary"
+        assert warn.exc_text is not None and "PermissionError" in warn.exc_text
         # If SecretScrubbingFilter ran, it converts exc_info → exc_text.
         # A raw bearer token injected into the traceback would appear as
         # "Bearer <redacted>" not "Bearer <raw-value>".
