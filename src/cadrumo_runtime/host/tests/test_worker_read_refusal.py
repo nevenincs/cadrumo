@@ -37,6 +37,7 @@ from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from cadrumo.core.period import Period, PeriodError
 from cadrumo.core.request_faults import RequestFault
 from cadrumo.core.time.clock import now
+from cadrumo.tests.log_records import delivered_records
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
@@ -190,7 +191,7 @@ def test_an_unregistered_fault_is_answered_with_the_generic_refusal_and_only_its
     assert isinstance(refusal, ProfileAccessRefusedError)
     assert refusal.reason is AccessDenialCode.OPERATION_UNAVAILABLE
     assert _PRIVATE_TEXT not in str(refusal)
-    logged = [record.getMessage() for record in caplog.records]
+    logged = [record.getMessage() for record in delivered_records(caplog, worker_operation_requests.__name__)]
     assert logged == [f"worker read stopped by an unexpected fault exception_type={fault_type.__name__}"]
 
 
