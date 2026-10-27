@@ -33,7 +33,7 @@ import pytest
 
 from cadrumo.core import logging as _logging_mod
 from cadrumo.core.config import override_settings
-from cadrumo.core.logging import configure_logging, register_first_party_logger
+from cadrumo.core.logging import configure_logging, flush_logging, register_first_party_logger
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -82,7 +82,8 @@ def log_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Path]:
 
 
 def _written_log_text(log_file: Path) -> str:
-    """Flush every handler and return what actually reached the disk."""
+    """Drain the asynchronous dispatch, flush every handler and return what actually reached the disk."""
+    assert flush_logging(timeout=5)
     for handler in logging.getLogger().handlers:
         handler.flush()
     if not log_file.exists():

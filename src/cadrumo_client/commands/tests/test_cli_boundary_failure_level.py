@@ -6,6 +6,7 @@ import logging
 
 import pytest
 
+from cadrumo.tests.log_records import delivered_records
 from cadrumo_client.commands.errors import CliUnexpectedBoundaryError, log_cli_boundary_failure
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
@@ -39,6 +40,8 @@ def test_terminal_failure_level_follows_its_kind(
     with caplog.at_level(logging.DEBUG):
         trace_id = log_cli_boundary_failure("unit_cli", error, durable=False)
 
-    (record,) = [record for record in caplog.records if getattr(record, "failure_boundary", None) == "unit_cli"]
+    (record,) = [
+        record for record in delivered_records(caplog) if getattr(record, "failure_boundary", None) == "unit_cli"
+    ]
     assert record.levelno == level
     assert record.__dict__["trace_id"] == trace_id
