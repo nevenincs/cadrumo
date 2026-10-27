@@ -211,6 +211,11 @@ class OperationExecutorContext(Protocol):
     """Narrow capabilities available to one running operation executor."""
 
     @property
+    def effect(self) -> OperationEffect:
+        """The durable effect already recorded, including an earlier owner's uncertain apply."""
+        ...
+
+    @property
     def identity(self) -> OperationIdentity:
         """Identity of the invocation receiving emitted facts and resources."""
         ...

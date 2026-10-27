@@ -55,7 +55,6 @@ from cadrumo.adapters.outbound.components.protocol import (
     answer_line,
     decode_components_line,
 )
-from cadrumo.adapters.outbound.components.role_image import DEVELOPMENT_ROLE_IMAGE_VARIABLE
 from cadrumo.application.dependency_contracts import (
     DependencyBlockedReason,
     DependencyCheckMode,
@@ -67,6 +66,7 @@ from cadrumo.application.dependency_contracts import (
 from cadrumo.application.dependency_wording import dependency_failure_key
 from cadrumo.core.config import override_settings
 from cadrumo.core.i18n.render import tr
+from cadrumo.core.storage_environment import DEVELOPMENT_ROLE_IMAGE_VARIABLE
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli, semantic_cli_text
 from cadrumo.entrypoints.tui.components.dialogs import ConfirmScreen
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp

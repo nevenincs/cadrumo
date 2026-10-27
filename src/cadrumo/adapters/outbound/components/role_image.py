@@ -19,12 +19,9 @@ from pathlib import Path
 from typing import Final
 
 from ....core.package_interpreter import ROLE_IMAGE_OPTION
-from ....core.storage_environment import StorageMode, storage_mode
+from ....core.storage_environment import DEVELOPMENT_ROLE_IMAGE_VARIABLE, StorageMode, storage_mode
 
-__all__ = ["DEVELOPMENT_ROLE_IMAGE_VARIABLE", "components_role_image"]
-
-DEVELOPMENT_ROLE_IMAGE_VARIABLE: Final = "CADRUMO_DEVELOPMENT_ROLE_IMAGE"
-"""The built Cadrumo binary a source checkout runs its native roles with; no packaged image admits it."""
+__all__ = ["components_role_image"]
 
 _PACKAGE_MANIFEST: Final = ("data", "package-manifest.json")
 _MANIFEST_BYTES_LIMIT: Final = 64 * 1024 * 1024

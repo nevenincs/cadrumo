@@ -350,9 +350,9 @@ profile_variable = "CADRUMO_PROFILE_ROOT"
 local_ai_address = "127.0.0.1:23743"
 # The built Cadrumo binary a source checkout runs its native roles with, such as the
 # components role the command line, the TUI and the MCP service start. Only a checkout
-# reads it: no profile admits it, so a packaged image never sees it and finds its own
-# binary through the package. The command line's components client states the same
-# name; a package-side test keeps them equal.
+# reads it: no installed launch profile admits it, so a packaged image never sees
+# it and finds its own binary through the package. Checkout operator workers relay
+# the name through core.storage_environment; a package-side test keeps them equal.
 development_role_image_variable = "CADRUMO_DEVELOPMENT_ROLE_IMAGE"
 
 # ---------------------------------------------------------------------------

@@ -9,8 +9,8 @@ server: the program's state comes from the components role's quick status.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Final
 
+from ..application.components_operations import ProvisionOutcome
 from ..application.dependency_contracts import DependencyItemKind
 from ..application.local_reader import ProgramRow
 from ..application.local_reader_report import (
@@ -25,10 +25,6 @@ from ..application.operations.operation_definition import OperationDefinition
 from ..application.operations.registry import OperationPublicDefinitionRegistrationV1
 
 __all__ = ["LocalReaderOperations", "build_local_reader_operations", "read_local_ai_program"]
-
-#: The quick status reads local facts only, bounded at 2 s per item inside the
-#: role; this covers starting the role's process as well.
-_QUICK_STATUS_TIMEOUT_S: Final = 30.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -48,17 +44,15 @@ def read_local_ai_program() -> ProgramRow:
     # The component client loads only when a read asks for the program, not when operations are composed.
     from cadrumo_client.contracts.contracts import RefusalError
 
-    from ..adapters.outbound.components.client import ComponentsRequest, run_components_role
-    from ..adapters.outbound.components.protocol import ComponentsCommand, ComponentsOutcome
+    from .components_operation_composition import read_component_status
 
-    request = ComponentsRequest(ComponentsCommand.STATUS, items=(DependencyItemKind.LOCAL_AI,))
     try:
-        result = run_components_role(request, timeout=_QUICK_STATUS_TIMEOUT_S)
+        result = read_component_status((DependencyItemKind.LOCAL_AI,))
     except RefusalError:
         return None
-    if result.outcome is not ComponentsOutcome.OK:
+    if result.outcome is not ProvisionOutcome.OK:
         return None
-    return next((row for row in result.status_rows() if row.kind is DependencyItemKind.LOCAL_AI), None)
+    return next((row for row in result.rows if row.kind is DependencyItemKind.LOCAL_AI), None)
 
 
 def build_local_reader_operations() -> LocalReaderOperations:

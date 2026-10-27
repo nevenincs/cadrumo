@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
-from ...core.operations import OperationInteractionKind
+from ...core.operations import OperationEffect, OperationInteractionKind
 from ._execution_context import DefinitionBoundContext
 from .interactions import OperationInteractionRequest, OperationPendingInteraction
 from .models import OperationIdentity
@@ -133,6 +133,11 @@ class SupervisorExecutorContext:
         if self._operands is None:
             raise ValueError("operation definition has no secure operand store")
         return self._operands
+
+    @property
+    def effect(self) -> OperationEffect:
+        """Expose the current journal effect without giving executors journal mutation."""
+        return self._context.snapshot.effect
 
     @property
     def revision(self) -> int:

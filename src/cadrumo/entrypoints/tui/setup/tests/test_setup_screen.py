@@ -30,7 +30,6 @@ from .....adapters.outbound.components.protocol import (
     answer_line,
     decode_components_line,
 )
-from .....adapters.outbound.components.role_image import DEVELOPMENT_ROLE_IMAGE_VARIABLE
 from .....application.dependency_contracts import (
     DependencyBlockedReason,
     DependencyItemKind,
@@ -39,6 +38,7 @@ from .....application.dependency_contracts import (
 from .....application.dependency_registry import dependency_item_declarations
 from .....application.dependency_wording import dependency_row_wording
 from .....core.config import override_settings
+from .....core.storage_environment import DEVELOPMENT_ROLE_IMAGE_VARIABLE
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_path
 from ...components.dialogs import ConfirmScreen

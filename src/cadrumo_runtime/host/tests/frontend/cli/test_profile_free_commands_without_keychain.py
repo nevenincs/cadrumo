@@ -15,9 +15,9 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.outbound.components.role_image import DEVELOPMENT_ROLE_IMAGE_VARIABLE
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from cadrumo.core.config import load_settings, override_settings
+from cadrumo.core.storage_environment import DEVELOPMENT_ROLE_IMAGE_VARIABLE
 
 from .config.tests.isolated_storage_fixture import native_profile_view_server
 from .fresh_process import run_fresh_cli

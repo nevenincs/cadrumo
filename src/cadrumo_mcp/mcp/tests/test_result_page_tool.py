@@ -13,7 +13,6 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import JsonValue
 
-from cadrumo.adapters.outbound.components.role_image import DEVELOPMENT_ROLE_IMAGE_VARIABLE
 from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
 from cadrumo.application.auth.read_operation import build_auth_read_definition, build_auth_read_registration
 from cadrumo.application.operations.error_detail import (
@@ -57,6 +56,7 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
+from cadrumo.core.storage_environment import DEVELOPMENT_ROLE_IMAGE_VARIABLE
 from cadrumo.tests.components_role_dispatch import RoleReplay
 from cadrumo_client.contracts.operation_access import OperationObserve, OperationObserved
 from cadrumo_client.contracts.projection_pages import (

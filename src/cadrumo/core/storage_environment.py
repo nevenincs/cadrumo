@@ -36,6 +36,9 @@ from typing import TYPE_CHECKING, Final, NamedTuple, NoReturn
 
 from .product_identity import PRODUCT_IDENTITY
 
+DEVELOPMENT_ROLE_IMAGE_VARIABLE: Final = "CADRUMO_DEVELOPMENT_ROLE_IMAGE"
+"""A checkout's built native-role image; installed launch profiles never admit it."""
+
 if TYPE_CHECKING:
     from uuid import UUID
 
@@ -680,6 +683,10 @@ def child_environment(
         if name in authority:
             _normalized_absolute(_host_path_type()(_checked_path_value(value)))
         environment[name] = value
+    if profile is ChildEnvironmentProfile.OPERATOR and storage_mode().mode is StorageMode.DEVELOPMENT:
+        development_image = environment_in.get(DEVELOPMENT_ROLE_IMAGE_VARIABLE)
+        if development_image is not None:
+            environment[DEVELOPMENT_ROLE_IMAGE_VARIABLE] = development_image
     temporary = storage_location(StorageCategory.TEMPORARY_FILES)
     temporary_value = temporary.relative_path().as_posix()
     if temporary.settings_field is not None and profile is ChildEnvironmentProfile.OPERATOR:

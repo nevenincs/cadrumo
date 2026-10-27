@@ -13,9 +13,10 @@ quick check, which needs no profile session.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING
 from uuid import UUID
 
+from ..application.components_operations import ProvisionOutcome
 from ..application.diagnostics_repair_operations import (
     build_connectivity_probe_definition,
     build_connectivity_probe_registration,
@@ -46,9 +47,6 @@ __all__ = [
     "read_component_setup_checks",
     "read_session_profile_record",
 ]
-
-_QUICK_SETUP_TIMEOUT_S: Final = 30.0
-"""A quick check answers within its 2 s bound; this only stops a role that hangs."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -144,16 +142,15 @@ def read_component_setup_checks() -> tuple[DiagnosticCheck, ...] | None:
     # The component client loads only when a report reads setup, not when operations are composed.
     from cadrumo_client.contracts.contracts import RefusalError
 
-    from ..adapters.outbound.components.client import ComponentsRequest, run_components_role
-    from ..adapters.outbound.components.protocol import ComponentsCommand, ComponentsOutcome
+    from .components_operation_composition import read_component_status
 
     try:
-        result = run_components_role(ComponentsRequest(ComponentsCommand.STATUS), timeout=_QUICK_SETUP_TIMEOUT_S)
+        result = read_component_status()
     except RefusalError:
         return None
-    if result.outcome is not ComponentsOutcome.OK:
+    if result.outcome is not ProvisionOutcome.OK:
         return None
-    return tuple(_setup_item_check(row) for row in result.status_rows())
+    return tuple(_setup_item_check(row) for row in result.rows)
 
 
 def build_diagnostics_repair_operations(

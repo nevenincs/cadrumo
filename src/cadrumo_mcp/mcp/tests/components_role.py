@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.outbound.components import client as components_client
-from cadrumo.adapters.outbound.components.role_image import DEVELOPMENT_ROLE_IMAGE_VARIABLE
+from cadrumo.core.storage_environment import DEVELOPMENT_ROLE_IMAGE_VARIABLE
 from cadrumo.tests.components_role_dispatch import RoleReplay
 
 __all__ = ["role_replay_fixture"]

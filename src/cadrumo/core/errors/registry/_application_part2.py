@@ -9,6 +9,16 @@ from ._application_profile_bundle import PROFILE_BUNDLE_ERROR_CODES
 
 DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
+        "cadrumo.application.components_operations.ComponentsOperationRefusedError",
+        ErrorCode(
+            code="REFUSED_COMPONENT_PROVISIONING",
+            category=ErrorCategory.REFUSED,
+            message_key="cli.config.provision.incomplete",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.user_profile.google_configuration_operation_refusal.GoogleConfigurationRefusedError",
         ErrorCode(
             code="REFUSED_GOOGLE_CONFIGURATION",

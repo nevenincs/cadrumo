@@ -28,6 +28,7 @@ build cannot set up.
 
 from __future__ import annotations
 
+import asyncio
 import contextlib
 import os
 import queue
@@ -49,6 +50,7 @@ from ....application.dependency_contracts import (
     DependencyItemKind,
     DependencyState,
 )
+from ....core.async_cleanup import AsyncResourceCleanupError
 from ....core.storage_environment import ChildEnvironmentProfile, child_environment, configured_storage_root
 from .protocol import (
     CANCEL_LINE,
@@ -91,6 +93,7 @@ _EXIT_GRACE_S: Final = 30.0
 """How long a role that wrote its result, or lost its input, is given to exit before it is ended."""
 
 _POLL_S: Final = 0.2
+_CANCEL_GRACE_S: Final = 5.0
 
 _BROWSER_ONLY_COMMANDS: Final = frozenset({ComponentsCommand.PLAN, ComponentsCommand.SETUP, ComponentsCommand.REMOVE})
 """The commands that change what is installed or plan to; the local AI is outside them."""
@@ -148,7 +151,9 @@ class ComponentsCancellation:
         """Start with no stop asked for and no running role to tell."""
         self._lock = threading.Lock()
         self._requested = False
+        self._deadline: float | None = None
         self._send: Callable[[], None] | None = None
+        self._sent = False
 
     @property
     def requested(self) -> bool:
@@ -159,18 +164,30 @@ class ComponentsCancellation:
     def cancel(self) -> None:
         """Ask the role to stop at its next transfer chunk, or a following setup to stop following."""
         with self._lock:
+            if self._requested:
+                return
             self._requested = True
+            if self._deadline is None:
+                self._deadline = time.monotonic() + _CANCEL_GRACE_S
             send = self._send
+            self._sent = send is not None
         if send is not None:
-            send()
+            threading.Thread(target=send, name="components-role-cancel", daemon=True).start()
+
+    @property
+    def deadline(self) -> float | None:
+        """The fixed grace deadline after the first cancellation request."""
+        with self._lock:
+            return self._deadline
 
     def attach_sender(self, send: Callable[[], None]) -> None:
         """Bind the call that delivers a stop to the running role; a stop already asked for is sent at once."""
         with self._lock:
             self._send = send
-            requested = self._requested
+            requested = self._requested and not self._sent
+            self._sent = self._sent or requested
         if requested:
-            send()
+            threading.Thread(target=send, name="components-role-cancel", daemon=True).start()
 
 
 class ComponentsLaunch(Protocol):
@@ -191,7 +208,7 @@ class ComponentsLaunch(Protocol):
         ...
 
     def end(self) -> None:
-        """End the role and everything it started, and release the launch."""
+        """End the role tree, verify its exit, and release the launch including wait handles."""
         ...
 
 
@@ -230,13 +247,13 @@ class _WindowsLaunch:
             raise
 
     def end(self) -> None:
-        try:
-            self._scope.terminate()
-        finally:
-            self._process.close()
-            for stream in (self.standard_input, self.standard_output):
-                with contextlib.suppress(OSError):
-                    stream.close()
+        # On failure the scope retains its job and child handles for retry.
+        # Keep this launch's streams too until containment is proven.
+        self._scope.terminate()
+        self._process.close()
+        for stream in (self.standard_input, self.standard_output):
+            with contextlib.suppress(OSError):
+                stream.close()
 
 
 class _PosixLaunch:
@@ -283,6 +300,28 @@ def _drain(stream: IO[bytes]) -> None:
             pass
     with contextlib.suppress(OSError):
         stream.close()
+
+
+class _LaunchCleanup:
+    """Retain the exact contained launch when ending it cannot prove release."""
+
+    def __init__(self, launch: ComponentsLaunch) -> None:
+        self._launch = launch
+
+    async def close(self) -> None:
+        await asyncio.to_thread(self._launch.end)
+
+
+def _end_launch(launch: ComponentsLaunch) -> None:
+    try:
+        launch.end()
+    except BaseException as error:
+        raise AsyncResourceCleanupError(
+            (_LaunchCleanup(launch),),
+            (error,),
+            retry_task_name="components-role-release",
+            close_attempts=1,
+        ) from error
 
 
 def launch_components_role(
@@ -370,9 +409,13 @@ class _Reader:
         except BaseException as error:  # the stream's failure is the caller's to judge
             self.lines.put(error)
 
-    def next(self, deadline: float | None) -> bytes | None:
+    def next(self, deadline: float | None, cancellation: ComponentsCancellation | None = None) -> bytes | None:
         """Return the next line, or ``None`` at the end of output."""
         while True:
+            if cancellation is not None:
+                cancel_deadline = cancellation.deadline
+                if cancel_deadline is not None and time.monotonic() >= cancel_deadline:
+                    raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
             wait = _POLL_S if deadline is None else min(_POLL_S, deadline - time.monotonic())
             if wait <= 0:
                 raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
@@ -440,13 +483,14 @@ def _converse(
     started = False
     reviewed = False
     while True:
-        raw = reader.next(deadline)
+        raw = reader.next(deadline, cancellation)
         if raw is None:
             # The output ended without a result: the role failed or was ended.
             raise RefusalError(RefusalCode.UNAVAILABLE)
         line: ComponentsLine = decode_components_line(raw)
         if isinstance(line, ComponentsResultLine):
-            answers.close()
+            if cancellation is None or not cancellation.requested:
+                answers.close()
             if line.command is not (request.command if started else None):
                 raise RefusalError(RefusalCode.INVALID_FRAME)
             return _settle(launch, line, reader)
@@ -511,10 +555,15 @@ def run_components_role(
         # A role of another build: its plans cannot be read here, so none is approved.
         return not_in_this_build_result(request)
     finally:
-        try:
-            with contextlib.suppress(OSError, ValueError):
-                launch.standard_input.close()
-            # Closing the input cancels a running setup, which then writes its result and exits.
-            launch.wait(_EXIT_GRACE_S)
-        finally:
-            launch.end()
+        if cancellation is not None and cancellation.requested:
+            # Cooperative input may be ignored. The owner ends and verifies
+            # the tree before releasing wait handles or blocked pipes.
+            _end_launch(launch)
+        else:
+            try:
+                with contextlib.suppress(OSError, ValueError):
+                    launch.standard_input.close()
+                # Closing input requests safe cancellation before force ending.
+                launch.wait(_EXIT_GRACE_S)
+            finally:
+                _end_launch(launch)

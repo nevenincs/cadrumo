@@ -25,7 +25,7 @@ from .....application.dependency_contracts import (
     DependencyState,
 )
 from .....core.package_interpreter import ROLE_IMAGE_OPTION
-from .....core.storage_environment import StorageMode, StorageModeEvidence
+from .....core.storage_environment import DEVELOPMENT_ROLE_IMAGE_VARIABLE, StorageMode, StorageModeEvidence
 from .....tests.components_role_replay import ReplayLauncher, transcript_lines
 from .. import role_image as role_image_module
 from ..client import (
@@ -47,7 +47,7 @@ from ..protocol import (
     ComponentsProgressLine,
     ComponentsReviewLine,
 )
-from ..role_image import DEVELOPMENT_ROLE_IMAGE_VARIABLE, components_role_image
+from ..role_image import components_role_image
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

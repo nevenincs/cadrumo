@@ -2670,6 +2670,8 @@ cli:
         busy: Egy másik előkészítés éppen ezt módosítja. Próbáld újra, ha befejeződött.
         cancelled: Megszakítottad az előkészítést.
         completed: Az előkészítés befejeződött.
+        followed_plan_mismatch: Egy másik beállítás eltérő jóváhagyott tervet használ.
+          Az eredmény bizonytalan. Indíts új beállítást, és ellenőrizd a tervét.
         nothing_to_do: Már minden elő van készítve.
         plan_changed: A terv megváltozott, miután jóváhagytad, ezért semmi sem töltődött
           le. Futtasd újra a parancsot az új terv megtekintéséhez.

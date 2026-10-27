@@ -69,10 +69,9 @@ from cadrumo_mcp.mcp.runtime_adapter import RuntimeMcpAdapter
 from cadrumo_mcp.mcp.server import build_server
 from cadrumo_mcp.mcp.tests.agent_key_reads import tool_document
 from cadrumo_mcp.mcp.tests.session import connected_server_and_client_session
-
-from ....adapters.tests.profile_worker_support import PROFILE_INPUT
-from ....contracts.worker_authorization import WorkerModelRun
-from ..test_service_records import service_record_runtime
+from cadrumo_runtime.adapters.tests.profile_worker_support import PROFILE_INPUT
+from cadrumo_runtime.contracts.worker_authorization import WorkerModelRun
+from cadrumo_runtime.host.tests.test_service_records import service_record_runtime
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.windows_only]
 

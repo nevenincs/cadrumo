@@ -184,6 +184,17 @@ class _DefinitionBoundEvents:
     def __init__(self, context: DefinitionBoundContext) -> None:
         self._context = context
 
+    def _event_lifecycle(self) -> OperationLifecycle:
+        # A contained process can still report progress and its safe-stop
+        # notice after cancellation was requested. Those facts do not reopen
+        # RUNNING or erase the supervisor's durable cancellation state.
+        current = self._context.snapshot.lifecycle
+        return (
+            current
+            if current in {OperationLifecycle.CANCELLATION_REQUESTED, OperationLifecycle.SETTLING}
+            else OperationLifecycle.RUNNING
+        )
+
     async def phase(self, phase_code: OperationEventCode) -> None:
         definition = self._context.registry.lookup(self._context.identity.definition_id)
         if phase_code not in definition.phase_codes:
@@ -196,7 +207,7 @@ class _DefinitionBoundEvents:
             code=phase_code,
             phase_code=phase_code,
         )
-        await self._context.advance(lifecycle=OperationLifecycle.RUNNING, events=(event,))
+        await self._context.advance(lifecycle=self._event_lifecycle(), events=(event,))
 
     async def progress(
         self,
@@ -217,7 +228,7 @@ class _DefinitionBoundEvents:
             unit_code=unit_code,
             subject_code=subject_code,
         )
-        await self._context.advance(lifecycle=OperationLifecycle.RUNNING, events=(event,))
+        await self._context.advance(lifecycle=self._event_lifecycle(), events=(event,))
 
     async def log(
         self,
@@ -235,7 +246,7 @@ class _DefinitionBoundEvents:
             severity=severity,
             diagnostic_ref=diagnostic_ref,
         )
-        await self._context.advance(lifecycle=OperationLifecycle.RUNNING, events=(event,))
+        await self._context.advance(lifecycle=self._event_lifecycle(), events=(event,))
 
     async def effect(self, effect: OperationEffect) -> None:
         definition = self._context.registry.lookup(self._context.identity.definition_id)
@@ -249,7 +260,7 @@ class _DefinitionBoundEvents:
             code="operation.effect",
             effect=effect,
         )
-        await self._context.advance(lifecycle=OperationLifecycle.RUNNING, events=(event,), effect=effect)
+        await self._context.advance(lifecycle=self._event_lifecycle(), events=(event,), effect=effect)
 
     async def notice(
         self,
@@ -266,7 +277,7 @@ class _DefinitionBoundEvents:
             notice_code=notice_code,
             display_code=display_code,
         )
-        await self._context.advance(lifecycle=OperationLifecycle.RUNNING, events=(event,))
+        await self._context.advance(lifecycle=self._event_lifecycle(), events=(event,))
 
     async def diagnostic(self, diagnostic_ref: OperationDiagnosticReference) -> None:
         event = OperationDiagnosticEvent(
@@ -277,7 +288,7 @@ class _DefinitionBoundEvents:
             code="operation.diagnostic",
             diagnostic_ref=diagnostic_ref,
         )
-        await self._context.advance(lifecycle=OperationLifecycle.RUNNING, events=(event,))
+        await self._context.advance(lifecycle=self._event_lifecycle(), events=(event,))
 
 
 class _DefinitionBoundCleanup:

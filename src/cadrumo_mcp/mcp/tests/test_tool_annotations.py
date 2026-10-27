@@ -15,7 +15,6 @@ from uuid import UUID, uuid4
 
 import pytest
 
-from cadrumo.adapters.outbound.components.role_image import DEVELOPMENT_ROLE_IMAGE_VARIABLE
 from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
 from cadrumo.application.operations.frontend_projection import OperationReviewProjectionReferenceV1
 from cadrumo.application.operations.frontend_requests import (
@@ -25,6 +24,7 @@ from cadrumo.application.operations.frontend_requests import (
 from cadrumo.application.operations.registry import OperationPublicDefinitionDescriptionV1
 from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
 from cadrumo.core.hashing import sha256_hex
+from cadrumo.core.storage_environment import DEVELOPMENT_ROLE_IMAGE_VARIABLE
 from cadrumo_client.contracts.operation_access import OperationObserve, OperationReview
 from cadrumo_client.contracts.projection_pages import ProjectionPageRequest
 from cadrumo_client.transport.frontend_client import FrontendClient

@@ -28,7 +28,6 @@ from cadrumo_client.commands.registered_operation_errors import detailed_registe
 
 from ....adapters.outbound.aeat.browser.errors import BrowserError
 from ....adapters.outbound.aeat.browser.session import require_browser_ready
-from ....adapters.outbound.components.role_image import DEVELOPMENT_ROLE_IMAGE_VARIABLE
 from ....adapters.outbound.components.tests.recorded_rows import not_in_this_build_row, recorded_absent_row
 from ....application.dependency_contracts import DependencyStatusRow
 from ....application.dependency_registry import dependency_item_declarations
@@ -42,6 +41,7 @@ from ....core.config import Settings
 from ....core.errors.error_codes import resolve_error_message
 from ....core.errors.hierarchy import CadrumoError
 from ....core.model_roles import ModelRole
+from ....core.storage_environment import DEVELOPMENT_ROLE_IMAGE_VARIABLE
 from .._component_setup_rendering import setup_status_source
 from ..common import resolve_cli_precondition_action
 from ..config.check_cli import dependency_payload, dependency_text_lines

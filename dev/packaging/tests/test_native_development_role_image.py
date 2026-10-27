@@ -6,7 +6,7 @@ import re
 
 import pytest
 
-from cadrumo.adapters.outbound.components.role_image import DEVELOPMENT_ROLE_IMAGE_VARIABLE
+from cadrumo.core.storage_environment import DEVELOPMENT_ROLE_IMAGE_VARIABLE
 from dev._paths import REPO_ROOT
 from dev.packaging.native.application_environment import DECLARATION, ApplicationEnvironmentError, load, parse
 

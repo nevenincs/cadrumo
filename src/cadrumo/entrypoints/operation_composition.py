@@ -639,6 +639,14 @@ def _local_reader_operation_composition(inputs: OperationCompositionInputs) -> O
     return _built(operations.definitions, operations.registrations)
 
 
+def _components_operation_composition(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    from .components_operation_composition import build_components_operations
+
+    del inputs
+    operations = build_components_operations()
+    return _built(operations.definitions, operations.registrations)
+
+
 def _workbench_generation_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
     from ..application.workbench_generation_operation import (
         build_workbench_generation_operation_definition,
@@ -2942,6 +2950,7 @@ _OPERATION_COMPOSITION_GROUPS: Mapping[str, _GroupComposer] = {
     "application.workstation_check_operation": _workstation_check_operation,
     "entrypoints.diagnostics_repair_composition": _diagnostics_repair_composition,
     "entrypoints.local_reader_operation_composition": _local_reader_operation_composition,
+    "entrypoints.components_operation_composition": _components_operation_composition,
 }
 
 

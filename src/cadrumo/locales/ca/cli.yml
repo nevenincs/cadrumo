@@ -2680,6 +2680,9 @@ cli:
           quan acabi.
         cancelled: Has cancel·lat la preparació.
         completed: La preparació ha acabat.
+        followed_plan_mismatch: Una altra configuració està fent servir un pla aprovat
+          diferent. El resultat és incert. Inicia una configuració nova i revisa’n
+          el pla.
         nothing_to_do: Tot ja està preparat.
         plan_changed: El pla va canviar després que l'aprovessis, així que no s'ha
           baixat res. Torna a executar l'ordre per veure el pla nou.

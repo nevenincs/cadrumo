@@ -27,10 +27,10 @@ from cadrumo.tests.english_locale_fixture import english_locale_fixture
 
 from .....adapters.outbound.components import client as components_client
 from .....adapters.outbound.components.client import ComponentsLaunch
-from .....adapters.outbound.components.role_image import DEVELOPMENT_ROLE_IMAGE_VARIABLE
 from .....application.workstation_check import WorkstationCheckReport
 from .....application.workstation_check_operation import WorkstationCheckProjection
 from .....core.json_contract import ResolvedNoticeAction
+from .....core.storage_environment import DEVELOPMENT_ROLE_IMAGE_VARIABLE
 from ...tests.cli_runner import invoke_cached_cli
 from .. import check_cli, repair_commands
 

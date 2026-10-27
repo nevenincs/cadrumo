@@ -21,7 +21,7 @@ from uuid import UUID, uuid4
 import pytest
 
 from cadrumo.adapters.outbound.components.protocol import CANCEL_LINE
-from cadrumo.adapters.outbound.components.role_image import DEVELOPMENT_ROLE_IMAGE_VARIABLE
+from cadrumo.core.storage_environment import DEVELOPMENT_ROLE_IMAGE_VARIABLE
 from cadrumo.tests.components_role_dispatch import RoleReplay
 from cadrumo.tests.components_role_replay import transcript_lines
 from cadrumo_client.transport.frontend_client import FrontendClient

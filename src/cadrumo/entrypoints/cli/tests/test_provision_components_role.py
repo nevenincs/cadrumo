@@ -24,9 +24,9 @@ from cadrumo.tests.english_locale_fixture import english_locale_fixture
 
 from ....adapters.outbound.components import client as components_client
 from ....adapters.outbound.components.protocol import ComponentsNoticeCode, ComponentsNoticeLine
-from ....adapters.outbound.components.role_image import DEVELOPMENT_ROLE_IMAGE_VARIABLE
 from ....application.dependency_registry import dependency_item_declarations
 from ....application.local_reader_report import LocalReaderReportRequest
+from ....core.storage_environment import DEVELOPMENT_ROLE_IMAGE_VARIABLE
 from ..command_operation_table import COMMAND_OPERATION_ROWS
 from ..config import provision_cli
 from .cli_runner import invoke_cached_cli, semantic_cli_text

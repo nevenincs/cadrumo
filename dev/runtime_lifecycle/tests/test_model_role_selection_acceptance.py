@@ -9,6 +9,7 @@ selection persistence is exercised separately by the saved-selection test.
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
 from pathlib import Path
 from typing import override
 
@@ -16,6 +17,7 @@ import pytest
 
 from cadrumo.adapters.outbound.llm.tests.model_run_support import RecordingModelRuns
 from cadrumo.core.model_roles import ModelRole
+from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 from cadrumo_agent_service.adapters.agent_background_runs import HostedBackgroundRuns
 from cadrumo_agent_service.providers.application.model_runs import ModelRunService
 from cadrumo_agent_service.providers.application.resolution import ProviderCredentialResolver
@@ -25,12 +27,17 @@ from cadrumo_agent_service.providers.application.tests.memory_store import (
 )
 from cadrumo_agent_service.providers.application.tests.synthetic_catalog import StaticCatalogSource, StaticLiveModels
 from cadrumo_client.contracts.model_runs import ModelRunLane, ModelRunRefusal
-
-from .ledger_ux_support import _add_evidence, _invoke, _open_bucket_session
-from .portable_human_cli_runtime import serving_portable_agent
+from cadrumo_runtime.host.tests.frontend.cli.cli_runner import invoke_cached_cli
+from cadrumo_runtime.host.tests.frontend.cli.ledger_ux_support import open_ledger_ux_session
+from cadrumo_runtime.host.tests.frontend.cli.portable_human_cli_runtime import serving_portable_agent
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-__all__ = ["_open_bucket_session"]
+
+
+@pytest.fixture(autouse=True)
+def _open_bucket_session(tmp_path: Path, cli_runtime_lifetime: None) -> Iterator[None]:
+    with open_ledger_ux_session(tmp_path):
+        yield
 
 
 class _UnselectedAgent(RecordingModelRuns):
@@ -67,10 +74,16 @@ class _UnselectedAgent(RecordingModelRuns):
     ],
 )
 def test_cli_renders_no_selection_in_the_requested_language(tmp_path: Path, language: str, message: str) -> None:
-    evidence = _add_evidence(tmp_path, ("B1234567X B17283946 766,30",), filename="unlabelled.pdf")
+    pdf = tmp_path / "unlabelled.pdf"
+    pdf.write_bytes(text_pdf_bytes(("B1234567X B17283946 766,30",)))
+    added = invoke_cached_cli(
+        ["--format", "json", "app", "ledger", "evidence", "add", str(pdf), "--supplier", "Acme SL"]
+    )
+    assert added.exit_code == 0, added.output
+    evidence = json.loads(added.output)["result"]["evidence_id"]
     service = _UnselectedAgent()
     with serving_portable_agent(service):
-        result = _invoke(
+        result = invoke_cached_cli(
             [
                 "--language",
                 language,

@@ -16,7 +16,7 @@ import pytest
 from cadrumo.tests.components_role_dispatch import RoleReplay
 
 from .....adapters.outbound.components import client as components_client
-from .....adapters.outbound.components.role_image import DEVELOPMENT_ROLE_IMAGE_VARIABLE
+from .....core.storage_environment import DEVELOPMENT_ROLE_IMAGE_VARIABLE
 
 __all__ = ["role_replay_fixture"]
 

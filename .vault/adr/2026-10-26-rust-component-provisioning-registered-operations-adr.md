@@ -5,7 +5,7 @@ tags:
 date: '2026-10-26'
 modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:e134b310641efc8a72233ad2b181e3d0cbdb165cef81e0e4d69fe883b36695c6'
+body_hash: 'sha256:373fa25c859c5d53d6bf9ffdcaa2986b9ded3fb5e8a19de96c32ef8b52ab4d76'
 related:
   - "[[2026-10-24-rust-component-provisioning-adr]]"
   - '[[2026-10-24-rust-component-provisioning-audit]]'
@@ -15,8 +15,8 @@ related:
   - '[[2026-10-04-application-sign-in-adr]]'
   - '[[2026-08-11-tui-architecture-adr]]'
   - '[[2026-10-10-mcp-parity-parity-mechanism-adr]]'
+  - '[[2026-10-27-rust-component-provisioning-human-review-authority-adr]]'
 ---
-
 # `rust-component-provisioning` adr: `Component setup as registered operations` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -41,14 +41,14 @@ Basis: the owner's first-hand rulings require registered operations in a signed-
 
 ## Constraints
 
-1. The operations are `config.provision.status` (journaled read, local), `config.provision.verify` (full check with progress, network read), `config.provision.setup` (resumable, one REVIEW, exact approval, effects NONE, UPDATED and UNKNOWN, owns the role process, network write) and `config.provision.remove` (recorded update, local write). Browser setup is `setup` naming the browser; the full status is `status` with the full check. Cancelling is the supervisor's operation cancellation.
+1. The operations are `config.provision.status` (journaled read, local), `config.provision.verify` (full check with progress, network read), `config.provision.setup` (resumable, one REVIEW, exact approval, effects NONE, UPDATED and UNKNOWN, owns the role process, network write) and `config.provision.remove` (recorded update, local write). Browser setup is `setup` naming the browser. The local status operation always requests the quick check. Full status and verify use `config.provision.verify` for network-read admission and invoke the native role as `status --full`; both native full-check commands share the same engine behavior. CLI probe and verify retain their distinct rendering and exit rules. Cancelling is the supervisor's operation cancellation.
 2. The setup executor plans through the role and publishes the plan as its review operand. The reviewed digest is the role's `plan_digest`. Apply runs the role's setup approving exactly that digest. Reject settles NONE. A plan that changed between review and apply is a refusal that asks for a new run.
 3. The executor marks the effect UNKNOWN before it approves the role's setup and settles from the role's outcome. An undeterminable outcome stays UNKNOWN.
 4. Role phases, byte progress and notices relay as operation phase, progress and notice events. Progress is throttled.
 5. The local AI stays read-only on every Python surface, as amendment 2026-10-26 of `2026-10-24-rust-component-provisioning-adr` rules.
 6. The components client and protocol are reached only through one entrypoints composition module. No frontend imports them.
-7. `config.provision.status`, `config.provision.verify`, `config.provision.setup` and `config.provision.remove` bind the signed-in profile's session and journal. A review remains bound to that admitted profile session; only an authenticated human surface holding current runtime-issued response authority may apply or reject it. Before sign-in, the CLI and TUI tell the person to sign in first. The desktop keeps provisioning through its in-process Rust engine without a signed-in profile.
-8. The setup review requires a human answer. An MCP session is always an agent's provider run, and the MCP service has no knowledge of which provider runs it, so no MCP session answers the review: MCP may start and observe a setup, and a person approves its download from the desktop, TUI or CLI.
+7. `config.provision.status`, `config.provision.verify`, `config.provision.setup` and `config.provision.remove` bind the signed-in profile's session and journal. A review remains bound to that admitted invocation; only an authenticated human surface holding current runtime-issued response authority may apply or reject it. For `config.provision.setup` only, a separately authenticated HUMAN session on the same exact active profile may explicitly claim the current REVIEW through the runtime while its original invocation admission and execution lease remain live, under the exact bindings and retirement rules of `2026-10-27-rust-component-provisioning-human-review-authority-adr`. This grants only current REVIEW response authority and does not transfer the operation's admission or ownership. Before sign-in, the CLI and TUI tell the person to sign in first. The desktop keeps provisioning through its in-process Rust engine without a signed-in profile.
+8. The setup review requires a human answer. An MCP session is always an agent's provider run, and the MCP service has no knowledge of which provider runs it, so no MCP session answers the review: MCP may start and observe a setup, and a person explicitly claims and answers its current review from the desktop, TUI or CLI. Runtime admission verifies the human responder separately from MCP invocation provenance and refuses every MCP claim, response-authority inspection, APPLY and REJECT, including the original MCP submitter. The claim is bound to the exact current operation, interaction, revision, proposal, human connection/session, profile, boot and authority generation; observation and reattachment grant nothing. The journal separately attributes the verified human claim and decision.
 
 ## Implementation
 
@@ -57,7 +57,8 @@ We will register the four profile-bound operations in one entrypoints compositio
 - The TUI uses the operation modal, which gains a progress row, and the setup door is deleted.
 - MCP drops its four setup tools for the generic execute and observe tools; it never responds to the setup review.
 - The repair report and the MCP setup gate read status through the status operation.
-- The desktop retains its native provisioning path before sign-in.
+- The desktop retains its native provisioning path before sign-in. For a profile-bound setup started elsewhere, its verified person relay exposes the same explicit current-review claim and answer action.
+- CLI and TUI also expose an explicit human review/claim/answer action for a known setup operation. The provisioning-only runtime claim and broker actor assignment follow `2026-10-27-rust-component-provisioning-human-review-authority-adr`; other operation response guards remain unchanged.
 
 ## Rationale
 

@@ -2702,6 +2702,8 @@ cli:
           cuando termine.
         cancelled: Has cancelado la preparación.
         completed: La preparación ha terminado.
+        followed_plan_mismatch: Otra configuración está usando un plan aprobado diferente.
+          El resultado es incierto. Inicia una nueva configuración y revisa su plan.
         nothing_to_do: Todo está ya preparado.
         plan_changed: El plan cambió después de que lo aprobaras, así que no se ha
           descargado nada. Vuelve a ejecutar la orden para ver el plan nuevo.

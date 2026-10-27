@@ -24,6 +24,7 @@ from cadrumo.tests.components_role_package import (
 from cadrumo_client.contracts.failure_categories import DependencyFailureCategory
 
 from .....application.dependency_contracts import DependencyItemKind, DependencyRecoveryAction, DependencyState
+from .....core.storage_environment import DEVELOPMENT_ROLE_IMAGE_VARIABLE
 from ..client import ComponentsCancellation, ComponentsRequest, run_components_role
 from ..protocol import (
     ComponentsCommand,
@@ -35,7 +36,6 @@ from ..protocol import (
     ComponentsPhaseLine,
     ComponentsReviewLine,
 )
-from ..role_image import DEVELOPMENT_ROLE_IMAGE_VARIABLE
 
 __all__ = [
     "components_role_fixture",

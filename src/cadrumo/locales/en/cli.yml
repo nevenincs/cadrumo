@@ -2501,6 +2501,8 @@ cli:
         busy: Another setup is changing this right now. Try again when it has finished.
         cancelled: You cancelled the setup.
         completed: Setup finished.
+        followed_plan_mismatch: Another setup is using a different approved plan.
+          The outcome is uncertain. Start a new setup and review its plan.
         nothing_to_do: Everything is already set up.
         plan_changed: The plan changed after you approved it, so nothing was downloaded.
           Run the command again to see the new plan.

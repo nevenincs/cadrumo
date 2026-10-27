@@ -13,6 +13,7 @@ from ..config import Settings
 from ..config_state_root import default_storage_root, live_state_root_inputs, platform_user_data_root
 from ..errors.hierarchy import CoreValidationError
 from ..storage_environment import (
+    DEVELOPMENT_ROLE_IMAGE_VARIABLE,
     STORAGE_ROOT,
     TEMPORARY_VARIABLES,
     TOOL_STORAGE_LOCATIONS,
@@ -227,6 +228,35 @@ def test_operator_child_keeps_its_location_settings_and_pins_the_root(tmp_path: 
         "TMPDIR": temporary,
     }
     assert (root / "worker-temp").is_dir()
+
+
+@pytest.mark.parametrize("mode", list(StorageMode))
+@pytest.mark.parametrize("profile", list(ChildEnvironmentProfile))
+@pytest.mark.parametrize("platform", ["win32", "linux"])
+def test_only_checkout_operator_children_receive_the_development_role_image(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    mode: StorageMode,
+    profile: ChildEnvironmentProfile,
+    platform: str,
+) -> None:
+    image = str(tmp_path / "built-cadrumo.exe")
+    monkeypatch.setattr(
+        storage_environment_module,
+        "storage_mode",
+        lambda: StorageModeEvidence(mode, tmp_path if mode is StorageMode.DEVELOPMENT else None),
+    )
+    environment = child_environment(
+        profile,
+        tmp_path / "root",
+        received={DEVELOPMENT_ROLE_IMAGE_VARIABLE: image},
+        base={DEVELOPMENT_ROLE_IMAGE_VARIABLE: "ambient-value-must-not-survive"},
+        sys_platform=platform,
+    )
+    if mode is StorageMode.DEVELOPMENT and profile is ChildEnvironmentProfile.OPERATOR:
+        assert environment[DEVELOPMENT_ROLE_IMAGE_VARIABLE] == image
+    else:
+        assert DEVELOPMENT_ROLE_IMAGE_VARIABLE not in environment
 
 
 def test_strict_child_carries_only_pins_and_the_authority_root(tmp_path: Path) -> None:

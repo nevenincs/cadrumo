@@ -73,14 +73,13 @@ from cadrumo.adapters.outbound.components.protocol import (
     ComponentsResultLine,
     ComponentsReviewLine,
 )
-from cadrumo.adapters.outbound.components.role_image import DEVELOPMENT_ROLE_IMAGE_VARIABLE
 from cadrumo.application.dependency_contracts import (
     DependencyItemKind,
     DependencyRecoveryAction,
     DependencyState,
     DependencyStatusRow,
 )
-from cadrumo.core.storage_environment import ChildEnvironmentProfile, child_environment
+from cadrumo.core.storage_environment import DEVELOPMENT_ROLE_IMAGE_VARIABLE, ChildEnvironmentProfile, child_environment
 from cadrumo_client.contracts.contracts import RefusalError
 from cadrumo_client.contracts.failure_categories import DependencyFailureCategory
 
