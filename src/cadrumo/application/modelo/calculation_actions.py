@@ -910,6 +910,7 @@ def resolve_bucket_source_mesh(
                 LedgerRentaGastosPagoFraccionadoAggregationSourceResolver(
                     transaction_repository=memoized_transaction_repository,
                     prorrata_register_repository=prorrata_register_repository,
+                    usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
                     activity_asset_history_repository=ports.activity_asset_history_repository,
                 )
             ),

@@ -18,15 +18,18 @@ from pydantic import ValidationError
 from cadrumo.domain.calculations.registry.tests.published_authority import published_revision
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.ledger_renta_gastos_pago_fraccionado_bindings import (
     resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values,
 )
 from ....domain.calculations.registry.schema_input_kind import InputKind
+from ....domain.categories.spending_category import SpendingCategory
 from ....domain.invoices.models import InvoiceCatalogue
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..renta_gasto_ledger import (
+    RentaGastoLedgerAggregation,
     RentaGastoLedgerAggregationIssueReason,
     RentaGastoObservation,
     aggregate_renta_gasto_ledger,
@@ -36,6 +39,12 @@ from ..renta_ledger import (
     aggregate_renta_ledger_expenses,
 )
 from .renta_income_aggregation_support import _period
+from .usage_ratio_support import (
+    HOME_OFFICE_SUMINISTRO_RATIO,
+    dwelling_classify_share,
+    dwelling_profile,
+    dwelling_usage_ratios,
+)
 
 SECURE_OBJECTS_BUCKET_ID = "78804f92-b6f7-4daf-9ddf-a8ce3829dbb1"
 
@@ -88,6 +97,8 @@ def _gasto_transaction(
     irpf_category: str | None = None,
     business_classification: BusinessClassification = BusinessClassification.BUSINESS,
     business_pct: Decimal | None = None,
+    category_id: str = "asesoria_fiscal",
+    usage_ratio_id: str | None = None,
     direction: TransactionDirection = TransactionDirection.OUTGOING,
     lifecycle_state: TransactionLifecycleState = TransactionLifecycleState.ACTIVE,
 ) -> Transaction:
@@ -106,7 +117,8 @@ def _gasto_transaction(
             "business_classification": business_classification,
             "business_pct": business_pct,
             "purchase_invoice_evidence_id": None,
-            "category_id": "asesoria_fiscal",
+            "category_id": category_id,
+            "usage_ratio_id": usage_ratio_id,
             "taxable_base": taxable_base,
             "iva_rate": None,
             "iva_amount": iva_amount,
@@ -588,3 +600,219 @@ def test_unmarked_unclassified_row_still_reports_the_generic_state() -> None:
     assert [issue.reason for issue in annual.issues] == [
         RentaLedgerAggregationIssueReason.UNCLASSIFIED_BUSINESS_STATE,
     ]
+
+
+# ---------------------------------------------------------------------------
+# The category rule apportions a usage-ratio row once, as it does annually.
+# ---------------------------------------------------------------------------
+
+_HOME_OFFICE_LUZ = "suministros_home_office_luz"
+_DWELLING_BASE = Decimal("100.00")
+#: Worked by hand from the dwelling profile: 20 / 100 = 0.20, and 0.30 * 0.20 = 0.06 of a 100.00 base.
+_DWELLING_DEDUCTION = Decimal("6.00")
+
+
+def _quarterly(
+    *rows: Transaction,
+    usage_ratios: dict[SpendingCategory, Decimal] | None = None,
+    operation: PinnedAuthorityOperation,
+) -> RentaGastoLedgerAggregation:
+    return aggregate_renta_gasto_ledger(
+        TransactionCatalogue.from_transactions(rows),
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_Q1_2024,
+        modelo="130",
+        target_casilla_id=_M130_GASTOS_CASILLA,
+        accept_activity_marker=True,
+        usage_ratios=usage_ratios,
+        profile_record=dwelling_profile(),
+        operation=operation,
+    )
+
+
+def _dwelling_row(
+    provider_id: str,
+    classification: BusinessClassification,
+    *,
+    operation: PinnedAuthorityOperation,
+    irpf_category: str | None = None,
+) -> Transaction:
+    """Return a 100.00 home-office luz bill classified as the classify path stamps it."""
+    category = SpendingCategory.from_registry(_HOME_OFFICE_LUZ)
+    mixed = classification is BusinessClassification.MIXED
+    return _gasto_transaction(
+        provider_id,
+        value_date=date(2025, 2, 1),
+        amount=Decimal("121.00"),
+        taxable_base=_DWELLING_BASE,
+        category_id=category.value,
+        business_classification=classification,
+        business_pct=dwelling_classify_share(dwelling_profile(), category, operation=operation) if mixed else None,
+        usage_ratio_id=category.value if mixed else None,
+        irpf_category=irpf_category,
+    )
+
+
+@pytest.mark.parametrize(
+    "classification",
+    [BusinessClassification.BUSINESS, BusinessClassification.MIXED],
+    ids=["business", "mixed"],
+)
+def test_home_office_gasto_deducts_the_statutory_share_once(
+    classification: BusinessClassification,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """LIRPF art. 30.2.5.b reaches casilla 02 as it reaches the annual return: once.
+
+    A BUSINESS row used to deduct its whole base here, because the quarterly path
+    never consulted the usage ratio; a MIXED row deducted its stored share, which is
+    the same 0.06. Both now come out of the category rule: 100.00 * 0.06 = 6.00.
+    """
+    profile = dwelling_profile()
+    ratios = dwelling_usage_ratios(profile, bucket_id=SECURE_OBJECTS_BUCKET_ID, operation=operation)
+    assert ratios[SpendingCategory.from_registry(_HOME_OFFICE_LUZ)] == HOME_OFFICE_SUMINISTRO_RATIO
+    row = _dwelling_row("home-office", classification, operation=operation)
+
+    result = _quarterly(row, usage_ratios=ratios, operation=operation)
+
+    assert result.issues == ()
+    deducted = result.observations[0].deductible_amount
+    assert deducted == _DWELLING_DEDUCTION, f"{classification.value} gasto deducted {deducted}, expected 6.00"
+    assert result.casilla_aggregation.casilla_values[_M130_GASTOS_CASILLA] == _DWELLING_DEDUCTION
+
+
+def test_activity_marker_does_not_lift_a_mixed_home_office_row_past_its_category_rule(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """A MIXED row carrying the actividad marker still deducts 6.00, not its whole base.
+
+    The marker used to return full attribution before the classification was read,
+    so the row deducted 100.00 whatever its share and whatever its category rule.
+    """
+    profile = dwelling_profile()
+    ratios = dwelling_usage_ratios(profile, bucket_id=SECURE_OBJECTS_BUCKET_ID, operation=operation)
+    row = _dwelling_row(
+        "marked-mixed",
+        BusinessClassification.MIXED,
+        operation=operation,
+        irpf_category="actividad_economica",
+    )
+
+    result = _quarterly(row, usage_ratios=ratios, operation=operation)
+
+    assert result.issues == ()
+    assert result.observations[0].deductible_amount == _DWELLING_DEDUCTION
+
+
+def test_activity_marker_admits_an_unclassified_home_office_row_but_the_category_rule_apportions_it(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """The marker supplies eligibility only; the usage ratio still decides the amount."""
+    profile = dwelling_profile()
+    ratios = dwelling_usage_ratios(profile, bucket_id=SECURE_OBJECTS_BUCKET_ID, operation=operation)
+    row = _dwelling_row(
+        "marked-unclassified",
+        BusinessClassification.NOT_YET_PROCESSED,
+        operation=operation,
+        irpf_category="actividad_economica",
+    )
+
+    result = _quarterly(row, usage_ratios=ratios, operation=operation)
+
+    assert result.issues == ()
+    assert result.observations[0].deductible_amount == _DWELLING_DEDUCTION
+
+
+def test_activity_marker_does_not_lift_a_mixed_row_in_a_plain_category_past_its_share(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Outside the usage-ratio categories the MIXED share is the apportionment: 0.50 of 200.00.
+
+    The marker used to return full attribution ahead of the classification, so this
+    row deducted its whole 200.00.
+    """
+    row = _gasto_transaction(
+        "marked-mixed-plain",
+        value_date=date(2025, 2, 1),
+        taxable_base=Decimal("200.00"),
+        business_classification=BusinessClassification.MIXED,
+        business_pct=Decimal("0.50"),
+        irpf_category="actividad_economica",
+    )
+
+    result = _quarterly(row, operation=operation)
+
+    assert result.issues == ()
+    assert result.observations[0].deductible_amount == Decimal("100.00")
+
+
+def test_home_office_gasto_without_a_ratio_is_surfaced_not_deducted_in_full(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """With no afectacion ratio the rule refuses the row; it is never summed at full value."""
+    row = _dwelling_row("no-ratio", BusinessClassification.BUSINESS, operation=operation)
+
+    result = _quarterly(row, usage_ratios={}, operation=operation)
+
+    assert result.observations == ()
+    assert [issue.reason for issue in result.issues] == [
+        RentaGastoLedgerAggregationIssueReason.INELIGIBLE_DEDUCTIBILITY
+    ]
+    assert "missing usage ratio" in result.issues[0].detail
+    assert _M130_GASTOS_CASILLA not in result.casilla_aggregation.casilla_values
+
+
+@pytest.mark.parametrize(
+    "classification",
+    [BusinessClassification.BUSINESS, BusinessClassification.MIXED],
+    ids=["business", "mixed"],
+)
+def test_operator_usage_ratio_on_a_phone_gasto_applies_once(
+    classification: BusinessClassification,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """A stored 25 per cent mobile-phone ratio deducts 25.00 of a 100.00 base, not 100.00 or 6.25."""
+    category = SpendingCategory.from_registry("telefonia_movil")
+    mixed = classification is BusinessClassification.MIXED
+    row = _gasto_transaction(
+        "phone",
+        value_date=date(2025, 2, 1),
+        taxable_base=_DWELLING_BASE,
+        category_id=category.value,
+        business_classification=classification,
+        business_pct=Decimal("0.25") if mixed else None,
+        usage_ratio_id=category.value if mixed else None,
+    )
+
+    result = _quarterly(row, usage_ratios={category: Decimal("0.25")}, operation=operation)
+
+    assert result.issues == ()
+    deducted = result.observations[0].deductible_amount
+    assert deducted == Decimal("25.00"), f"{classification.value} phone gasto deducted {deducted}, expected 25.00"
+
+
+def test_quarterly_and_annual_deduct_the_same_home_office_rows(operation: PinnedAuthorityOperation) -> None:
+    """The two filings cannot diverge on a usage-ratio row: both total 12.00 for two 100.00 bills."""
+    profile = dwelling_profile()
+    ratios = dwelling_usage_ratios(profile, bucket_id=SECURE_OBJECTS_BUCKET_ID, operation=operation)
+    rows = (
+        _dwelling_row("parity-business", BusinessClassification.BUSINESS, operation=operation),
+        _dwelling_row("parity-mixed", BusinessClassification.MIXED, operation=operation),
+    )
+    catalogue = TransactionCatalogue.from_transactions(rows)
+
+    quarterly = _quarterly(*rows, usage_ratios=ratios, operation=operation)
+    annual = aggregate_renta_ledger_expenses(
+        catalogue,
+        InvoiceCatalogue(),
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_period(2025, "0A"),
+        profile_year=2025,
+        usage_ratios=ratios,
+        profile_record=profile,
+        operation=operation,
+    )
+
+    assert annual.issues == quarterly.issues == ()
+    assert sum(o.deductible_amount for o in quarterly.observations) == Decimal("12.00")
+    assert sum(annual.casilla_values.values()) == Decimal("12.00")

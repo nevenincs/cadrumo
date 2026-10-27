@@ -20,6 +20,7 @@ from cadrumo.domain.user_profile.values import create_user_profile_record as _cr
 from ....core.aggregation import BindingAggregation, BindingAggregationOp
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.i18n.translatable import Translatable as tr
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
 from ....domain.categories.profile import CategoryProfile
@@ -44,6 +45,12 @@ from ..renta_ledger import (
     aggregate_renta_ledger_expenses,
 )
 from .renta_income_aggregation_support import _period
+from .usage_ratio_support import (
+    HOME_OFFICE_SUMINISTRO_RATIO,
+    dwelling_classify_share,
+    dwelling_profile,
+    dwelling_usage_ratios,
+)
 
 SECURE_OBJECTS_BUCKET_ID = "78804f92-b6f7-4daf-9ddf-a8ce3829dbb1"
 _DEFAULT_SPENDING_CATEGORY = SpendingCategory.from_registry("asesoria_fiscal")
@@ -145,6 +152,7 @@ def _transaction(
     taxable_base: Decimal | None = None,
     iva_rate: Decimal | None = None,
     iva_amount: Decimal | None = None,
+    usage_ratio_id: str | None = None,
     lifecycle_state: TransactionLifecycleState = TransactionLifecycleState.ACTIVE,
 ) -> Transaction:
     return Transaction.model_validate(
@@ -161,6 +169,7 @@ def _transaction(
             "source_jurisdiction": "ES",
             "business_classification": business_classification,
             "business_pct": business_pct,
+            "usage_ratio_id": usage_ratio_id,
             "purchase_invoice_evidence_id": purchase_invoice_evidence_id,
             "category_id": category.value,
             "taxable_base": taxable_base,
@@ -675,3 +684,100 @@ def _profile_with_ccaa(ccaa_value: str | None) -> UserProfileRecord:
         facts=facts,
         context=_profile_creation_context_for_test(),
     )
+
+
+# ---------------------------------------------------------------------------
+# One proportion, one application: a row's business share and the category's
+# usage ratio are the same fact for a home-office or usage-ratio expense.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "classification",
+    [BusinessClassification.BUSINESS, BusinessClassification.MIXED],
+    ids=["business", "mixed"],
+)
+def test_home_office_utility_bill_deducts_the_statutory_share_once(
+    classification: BusinessClassification,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """LIRPF art. 30.2.5.b: 30 per cent of office m2 over total m2, applied one time.
+
+    Expected figure, worked by hand: 20 / 100 = 0.20; 0.30 * 0.20 = 0.06; the bill
+    is a 100.00 EUR base, so 100.00 * 0.06 = 6.00. The row's stored share and the
+    category's usage ratio both come out of the real resolvers for the same
+    profile, and both are 0.06. Applying each of them to the base gives 0.36, not
+    6.00, which is the double application this guards against.
+    """
+    category = SpendingCategory.from_registry("suministros_home_office_luz")
+    profile = dwelling_profile()
+    usage_ratios = dwelling_usage_ratios(profile, bucket_id=SECURE_OBJECTS_BUCKET_ID, operation=operation)
+    stamped_share = dwelling_classify_share(profile, category, operation=operation)
+    assert usage_ratios[category] == HOME_OFFICE_SUMINISTRO_RATIO
+    assert stamped_share == HOME_OFFICE_SUMINISTRO_RATIO
+
+    bill = _transaction(
+        "home-office-luz",
+        amount=Decimal("121.00"),
+        category=category,
+        business_classification=classification,
+        business_pct=stamped_share if classification is BusinessClassification.MIXED else None,
+        usage_ratio_id=category.value if classification is BusinessClassification.MIXED else None,
+        taxable_base=Decimal("100.00"),
+        iva_rate=Decimal("0.21"),
+        iva_amount=Decimal("21.00"),
+    )
+
+    result = aggregate_renta_ledger_expenses(
+        TransactionCatalogue.from_transactions((bill,)),
+        InvoiceCatalogue(),
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_ANNUAL_2025,
+        profile_year=2025,
+        usage_ratios=usage_ratios,
+        profile_record=profile,
+        operation=operation,
+    )
+
+    assert result.issues == ()
+    deducted = result.observations[0].deductible_amount
+    assert deducted == Decimal("6.00"), f"{classification.value} home-office bill deducted {deducted}, expected 6.00"
+    assert sum(result.casilla_values.values()) == Decimal("6.00")
+
+
+@pytest.mark.parametrize(
+    "classification",
+    [BusinessClassification.BUSINESS, BusinessClassification.MIXED],
+    ids=["business", "mixed"],
+)
+def test_operator_usage_ratio_on_a_phone_bill_applies_once(
+    classification: BusinessClassification,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """A stored 25 per cent mobile-phone ratio deducts 25.00 of a 100.00 base, not 6.25."""
+    category = SpendingCategory.from_registry("telefonia_movil")
+    bill = _transaction(
+        "phone-bill",
+        amount=Decimal("121.00"),
+        category=category,
+        business_classification=classification,
+        business_pct=Decimal("0.25") if classification is BusinessClassification.MIXED else None,
+        usage_ratio_id=category.value if classification is BusinessClassification.MIXED else None,
+        taxable_base=Decimal("100.00"),
+        iva_rate=Decimal("0.21"),
+        iva_amount=Decimal("21.00"),
+    )
+
+    result = aggregate_renta_ledger_expenses(
+        TransactionCatalogue.from_transactions((bill,)),
+        InvoiceCatalogue(),
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_ANNUAL_2025,
+        profile_year=2025,
+        usage_ratios={category: Decimal("0.25")},
+        operation=operation,
+    )
+
+    assert result.issues == ()
+    deducted = result.observations[0].deductible_amount
+    assert deducted == Decimal("25.00"), f"{classification.value} phone bill deducted {deducted}, expected 25.00"

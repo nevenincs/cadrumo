@@ -81,6 +81,7 @@ from ..source_mesh import (
 )
 from .iva_authority_support import aggregate_iva_ledger_observations
 from .ledger_transaction_support import iva_transaction, ledger_raw_transaction
+from .usage_ratio_support import no_stored_usage_ratios
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -1341,6 +1342,7 @@ def test_renta_gasto_keeps_only_in_window_held_back_identity_as_durable_evidence
     resolution = LedgerRentaGastosPagoFraccionadoAggregationSourceResolver(
         transaction_repository=tx_repo,
         prorrata_register_repository=_empty_prorrata_repository(),
+        usage_ratio_profile_loader=no_stored_usage_ratios,
         activity_asset_history_repository=_EmptyActivityAssetHistoryRepository(),
     ).resolve(
         CalculationSourceContext(
@@ -1372,6 +1374,7 @@ def test_renta_gasto_source_mesh_declares_only_the_claim_for_a_register_owned_ac
     resolution = LedgerRentaGastosPagoFraccionadoAggregationSourceResolver(
         transaction_repository=tx_repo,
         prorrata_register_repository=_empty_prorrata_repository(),
+        usage_ratio_profile_loader=no_stored_usage_ratios,
         activity_asset_history_repository=_StaticActivityAssetHistoryRepository(
             ActivityAssetHistory(revisions=(asset,), claims=(claim,)),
         ),
@@ -1420,6 +1423,7 @@ def test_renta_gasto_source_mesh_still_refuses_a_separate_depreciation_row() -> 
         LedgerRentaGastosPagoFraccionadoAggregationSourceResolver(
             transaction_repository=tx_repo,
             prorrata_register_repository=_empty_prorrata_repository(),
+            usage_ratio_profile_loader=no_stored_usage_ratios,
             activity_asset_history_repository=_StaticActivityAssetHistoryRepository(
                 ActivityAssetHistory(revisions=(asset,), claims=(claim,)),
             ),
@@ -1481,6 +1485,7 @@ def test_m130_source_mesh_adds_recorded_claim_through_existing_expense_owner() -
     resolution = LedgerRentaGastosPagoFraccionadoAggregationSourceResolver(
         transaction_repository=_InMemoryTransactionCatalogueRepository(bucket_id=_BUCKET_ID),
         prorrata_register_repository=_empty_prorrata_repository(),
+        usage_ratio_profile_loader=no_stored_usage_ratios,
         activity_asset_history_repository=_StaticActivityAssetHistoryRepository(history),
     ).resolve(
         CalculationSourceContext(

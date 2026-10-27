@@ -12,6 +12,7 @@ import pytest
 
 from .. import _shared_issue_reasons
 from ..iva_ledger import IvaLedgerAggregationIssueReason
+from ..renta_gasto_ledger import RentaGastoLedgerAggregationIssueReason
 from ..renta_ledger import RentaLedgerAggregationIssueReason
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -56,6 +57,23 @@ def test_renta_ledger_carries_its_domain_specific_reasons() -> None:
     }
     iva_values = {member.value for member in IvaLedgerAggregationIssueReason}
     assert renta_only.isdisjoint(iva_values)
+
+
+def test_annual_and_quarterly_expense_ledgers_spell_category_rule_refusals_alike() -> None:
+    """A row refused by its category rule reads the same in M100 and M130 reporting."""
+    names = (
+        "UNKNOWN_CATEGORY",
+        "MISSING_CATEGORY_PROFILE",
+        "REGION_UNDECLARED_FOR_OVERRIDE",
+        "INVALID_LEDGER_FACT",
+        "INELIGIBLE_DEDUCTIBILITY",
+    )
+
+    for name in names:
+        annual_value = RentaLedgerAggregationIssueReason[name].value
+        quarterly_value = RentaGastoLedgerAggregationIssueReason[name].value
+        shared = getattr(_shared_issue_reasons, name)
+        assert annual_value == quarterly_value == shared, name
 
 
 def test_two_enums_remain_distinct_types() -> None:

@@ -13,7 +13,9 @@ The source-mesh resolver in :mod:`~.modelo_bindings` applies the target
 :class:`~domain.calculations.registry.schema.ModeloRevision`, resolves registry
 bindings, and reports source issues or unrouted expenses on its
 :class:`~.source_mesh.CalculationSourceResolution`. The M130 quarterly gasto
-projection is intentionally separate in :mod:`~.renta_gasto_ledger`.
+projection is separate in :mod:`~.renta_gasto_ledger` (no invoice evidence, a
+cumulative window) but evaluates each categorised row through the same
+category rules built here by :func:`resolve_category_deduction_rules`.
 
 Related: :mod:`~.iva_ledger` and :mod:`~.renta_income_ledger` for sibling
 ledger projections.
@@ -22,6 +24,7 @@ ledger projections.
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
@@ -83,6 +86,7 @@ from ._models import CasillaAggregation, CasillaProvenance, LedgerAggregationRes
 from ._renta_business_eligibility import (
     relies_on_activity_marker,
     renta_expense_business_proportion,
+    row_scaling_proportion,
 )
 from .catalogue_read_binding import require_catalogue_reads_bound_to
 from .currency_predicates import (
@@ -190,8 +194,8 @@ class RentaLedgerAggregationIssueReason(StrEnum):
     """
     PERSONAL_TRANSACTION = _shared_issue_reasons.PERSONAL_TRANSACTION
     MISSING_CATEGORY = "missing_category"
-    UNKNOWN_CATEGORY = "unknown_category"
-    MISSING_CATEGORY_PROFILE = "missing_category_profile"
+    UNKNOWN_CATEGORY = _shared_issue_reasons.UNKNOWN_CATEGORY
+    MISSING_CATEGORY_PROFILE = _shared_issue_reasons.MISSING_CATEGORY_PROFILE
     OUTSIDE_PERIOD = _shared_issue_reasons.OUTSIDE_PERIOD
     MISSING_PURCHASE_INVOICE_EVIDENCE = "missing_purchase_invoice_evidence"
     UNSUPPORTED_PURCHASE_INVOICE_EVIDENCE_KIND = "unsupported_purchase_invoice_evidence_kind"
@@ -199,9 +203,9 @@ class RentaLedgerAggregationIssueReason(StrEnum):
     PURCHASE_INVOICE_EVIDENCE_LINK_MISMATCH = "purchase_invoice_evidence_link_mismatch"
     PARTIAL_OR_MULTI_TRANSACTION_PURCHASE_INVOICE_EVIDENCE = "partial_or_multi_transaction_purchase_invoice_evidence"
     AMOUNT_MISMATCH = "amount_mismatch"
-    INVALID_LEDGER_FACT = "invalid_ledger_fact"
-    INELIGIBLE_DEDUCTIBILITY = "ineligible_deductibility"
-    REGION_UNDECLARED_FOR_OVERRIDE = "region_undeclared_for_override"
+    INVALID_LEDGER_FACT = _shared_issue_reasons.INVALID_LEDGER_FACT
+    INELIGIBLE_DEDUCTIBILITY = _shared_issue_reasons.INELIGIBLE_DEDUCTIBILITY
+    REGION_UNDECLARED_FOR_OVERRIDE = _shared_issue_reasons.REGION_UNDECLARED_FOR_OVERRIDE
 
 
 #: The traceable-exclusion ``detail`` annotation: elides rather than refusing.
@@ -296,7 +300,7 @@ def _seguro_enfermedad_person_counts(
     }
 
 
-def _resolve_residence_ccaa(
+def resolve_residence_ccaa(
     *,
     bucket_id: str,
     profile_record: UserProfileRecord | None = None,
@@ -440,6 +444,137 @@ def _profile_exempt_iva_ratio(
     return None
 
 
+@dataclass(frozen=True, slots=True)
+class RentaCategoryDeductionRules:
+    """The category rules and evaluation context one Renta expense pipeline runs its rows through.
+
+    The annual Modelo 100 expense pipeline and the Modelo 130 quarterly gasto
+    pipeline both decide a row's deductible amount with
+    :func:`~cadrumo.domain.renta.ledger_expenses.evaluate_renta_deductibility`
+    against these, so the usage ratio, the insured-person counts of the statutory
+    cap and the recoverable-IVA share reach both from one construction.
+    """
+
+    profile_year: int
+    profiles: Mapping[SpendingCategory, CategoryProfile]
+    region_overrides: Mapping[CCAA, Mapping[SpendingCategory, CategoryProfile]]
+    context: RentaDeductibilityContext
+
+
+def resolve_category_deduction_rules(
+    *,
+    bucket_id: str,
+    profile_year: int,
+    modelo: str,
+    usage_ratios: Mapping[SpendingCategory, Decimal] | None,
+    residence_ccaa: CCAA | None,
+    region_category_overrides: Mapping[CCAA, Mapping[SpendingCategory, CategoryProfile]] | None,
+    iva_deduction_ratio: Decimal | None,
+    profile_record: UserProfileRecord | None,
+    profile_decode_context: ProfileDecodeContext | None,
+    operation: PinnedAuthorityOperation,
+) -> RentaCategoryDeductionRules:
+    """Resolve the category profiles and the deductibility context for one filing year.
+
+    Args:
+        bucket_id: Stable bucket identifier used to load the profile when
+            ``profile_record`` is absent.
+        profile_year: Filing year whose category profiles govern the rows.
+        modelo: Modelo identifier receiving the aggregation; it selects the registry
+            revision that declares the insured-person count fields.
+        usage_ratios: Per-category business-use ratios; the effective ratio the
+            usage-ratio rule multiplies by, statutory multiplier included.
+        residence_ccaa: Ordinary-residence comunidad, selecting a territorial override.
+        region_category_overrides: Per-comunidad override layer; defaults to the
+            registry-provisioned (empty) layer.
+        iva_deduction_ratio: Activity-wide IVA-deduction fraction, or ``None``.
+        profile_record: Profile supplying the insured-person counts; loaded from
+            the bucket when absent.
+        profile_decode_context: Decode context of the caller-held authority operation.
+        operation: Generation-pinned authority operation.
+
+    Returns:
+        The rules, ready for :func:`resolve_category_rule` and the evaluator.
+    """
+    return RentaCategoryDeductionRules(
+        profile_year=profile_year,
+        profiles=resolve_category_profiles(profile_year, operation=operation),
+        region_overrides=(
+            region_category_overrides
+            if region_category_overrides is not None
+            else resolve_region_category_profiles(profile_year)
+        ),
+        context=RentaDeductibilityContext(
+            profile_year=profile_year,
+            usage_ratios=dict(usage_ratios or {}),
+            residence_ccaa=residence_ccaa,
+            iva_deduction_ratio=iva_deduction_ratio,
+            statutory_cap_variant_person_counts=_seguro_enfermedad_person_counts(
+                bucket_id=bucket_id,
+                profile_record=profile_record,
+                filing_year=profile_year,
+                modelo=modelo,
+                profile_decode_context=profile_decode_context,
+                operation=operation,
+            ),
+        ),
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class CategoryRuleRefusal:
+    """Why a ledger category cannot be evaluated; ``reason`` is a shared issue-reason string."""
+
+    reason: str
+    detail: str
+
+
+def resolve_category_rule(
+    category_id: str,
+    *,
+    profiles: Mapping[SpendingCategory, CategoryProfile],
+    region_overrides: Mapping[CCAA, Mapping[SpendingCategory, CategoryProfile]],
+    context: RentaDeductibilityContext,
+    profile_year: int,
+) -> tuple[SpendingCategory, CategoryProfile] | CategoryRuleRefusal:
+    """Resolve a ledger category and the profile selected for the taxpayer's residence.
+
+    Returns:
+        The category with its selected profile, or the refusal naming why the
+        taxonomy, the year's profiles or the residence comunidad cannot supply one.
+    """
+    try:
+        category = normalize_spending_category(category_id)
+    except ValueError:
+        return CategoryRuleRefusal(
+            _shared_issue_reasons.UNKNOWN_CATEGORY,
+            f"ledger category {category_id!r} is not in the spending taxonomy",
+        )
+    profile = profiles.get(category)
+    if profile is None:
+        return CategoryRuleRefusal(
+            _shared_issue_reasons.MISSING_CATEGORY_PROFILE,
+            f"category {category.value!r} has no profile for {profile_year}",
+        )
+    category_region_overrides = {
+        ccaa: overrides[category] for ccaa, overrides in region_overrides.items() if category in overrides
+    }
+    selected_profile = select_deductibility_profile(
+        state_profile=profile,
+        region_override_profiles=category_region_overrides,
+        context=context,
+    )
+    if selected_profile is None:
+        return CategoryRuleRefusal(
+            _shared_issue_reasons.REGION_UNDECLARED_FOR_OVERRIDE,
+            (
+                f"category {category.value!r} carries a territorial-regime deductibility override for "
+                f"{profile_year} but the residence comunidad autonoma is undeclared"
+            ),
+        )
+    return category, selected_profile
+
+
 def aggregate_renta_ledger_expenses_from_repositories(
     *,
     bucket_id: str,
@@ -509,7 +644,7 @@ def aggregate_renta_ledger_expenses_from_repositories(
     require_catalogue_reads_bound_to(ports, bucket_id=bucket_id)
     transactions = ports.transaction_reader.load()
     invoices = ports.invoice_reader.load()
-    residence_ccaa = _resolve_residence_ccaa(
+    residence_ccaa = resolve_residence_ccaa(
         bucket_id=bucket_id,
         profile_record=profile_record,
         profile_decode_context=profile_decode_context,
@@ -619,25 +754,17 @@ def aggregate_renta_ledger_expenses(
         profile_decode_context = operation.profile_decode_context()
     resolved_period = _resolve_annual_period(period)
     resolved_profile_year = profile_year if profile_year is not None else resolved_period.filing_year
-    profiles = resolve_category_profiles(resolved_profile_year, operation=operation)
-    region_overrides = (
-        region_category_overrides
-        if region_category_overrides is not None
-        else resolve_region_category_profiles(resolved_profile_year)
-    )
-    context = RentaDeductibilityContext(
+    rules = resolve_category_deduction_rules(
+        bucket_id=bucket_id,
         profile_year=resolved_profile_year,
-        usage_ratios=dict(usage_ratios or {}),
+        modelo=modelo,
+        usage_ratios=usage_ratios,
         residence_ccaa=residence_ccaa,
+        region_category_overrides=region_category_overrides,
         iva_deduction_ratio=iva_deduction_ratio,
-        statutory_cap_variant_person_counts=_seguro_enfermedad_person_counts(
-            bucket_id=bucket_id,
-            profile_record=profile_record,
-            filing_year=resolved_profile_year,
-            modelo=modelo,
-            profile_decode_context=profile_decode_context,
-            operation=operation,
-        ),
+        profile_record=profile_record,
+        profile_decode_context=profile_decode_context,
+        operation=operation,
     )
     observations: list[RentaDeductibleExpenseObservation] = []
     issues: list[RentaLedgerAggregationIssue] = []
@@ -655,9 +782,9 @@ def aggregate_renta_ledger_expenses(
             bucket_id=bucket_id,
             resolved_period=resolved_period,
             resolved_profile_year=resolved_profile_year,
-            profiles=profiles,
-            region_overrides=region_overrides,
-            context=context,
+            profiles=rules.profiles,
+            region_overrides=rules.region_overrides,
+            context=rules.context,
             activity_key=activity_key,
         )
         if isinstance(outcome, RentaLedgerAggregationIssue):
@@ -726,6 +853,7 @@ def _classify_renta_transaction(
     if isinstance(category_profile, RentaLedgerAggregationIssue):
         return category_profile
     category, profile = category_profile
+    proportion = row_scaling_proportion(transaction, proportion, profile.proportionality)
     fact = _renta_expense_fact_or_issue(
         transaction,
         invoices=invoices,
@@ -790,39 +918,20 @@ def _renta_category_profile_or_issue(
             RentaLedgerAggregationIssueReason.MISSING_CATEGORY,
             "classified expense transaction has no ledger category",
         )
-    try:
-        category = normalize_spending_category(category_id)
-    except ValueError:
-        return _renta_transaction_issue(
-            transaction,
-            RentaLedgerAggregationIssueReason.UNKNOWN_CATEGORY,
-            f"ledger category {category_id!r} is not in the spending taxonomy",
-        )
-    profile = profiles.get(category)
-    if profile is None:
-        return _renta_transaction_issue(
-            transaction,
-            RentaLedgerAggregationIssueReason.MISSING_CATEGORY_PROFILE,
-            f"category {category.value!r} has no profile for {profile_year}",
-        )
-    category_region_overrides = {
-        ccaa: overrides[category] for ccaa, overrides in region_overrides.items() if category in overrides
-    }
-    selected_profile = select_deductibility_profile(
-        state_profile=profile,
-        region_override_profiles=category_region_overrides,
+    resolved = resolve_category_rule(
+        category_id,
+        profiles=profiles,
+        region_overrides=region_overrides,
         context=context,
+        profile_year=profile_year,
     )
-    if selected_profile is None:
+    if isinstance(resolved, CategoryRuleRefusal):
         return _renta_transaction_issue(
             transaction,
-            RentaLedgerAggregationIssueReason.REGION_UNDECLARED_FOR_OVERRIDE,
-            (
-                f"category {category.value!r} carries a territorial-regime deductibility override for "
-                f"{profile_year} but the residence comunidad autonoma is undeclared"
-            ),
+            RentaLedgerAggregationIssueReason(resolved.reason),
+            resolved.detail,
         )
-    return category, selected_profile
+    return resolved
 
 
 def _renta_expense_fact_or_issue(
@@ -1157,9 +1266,14 @@ def _casilla_aggregation(
 
 
 __all__ = [
+    "CategoryRuleRefusal",
+    "RentaCategoryDeductionRules",
     "RentaLedgerAggregationIssue",
     "RentaLedgerAggregationIssueReason",
     "RentaLedgerExpenseAggregation",
     "aggregate_renta_ledger_expenses",
     "aggregate_renta_ledger_expenses_from_repositories",
+    "resolve_category_deduction_rules",
+    "resolve_category_rule",
+    "resolve_residence_ccaa",
 ]

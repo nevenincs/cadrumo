@@ -121,7 +121,7 @@ from ..iva_ledger import IvaLedgerAggregationIssueReason
 from ..oss_ioss import _candidate_for_invoice_line
 from ..renta_gasto_ledger import RentaGastoLedgerAggregationIssue, _classify_gasto_transaction
 from ..renta_income_ledger import RentaIncomeLedgerAggregationIssue, _classify_income_transaction
-from ..renta_ledger import RentaLedgerAggregationIssue, _classify_renta_transaction
+from ..renta_ledger import RentaCategoryDeductionRules, RentaLedgerAggregationIssue, _classify_renta_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -369,7 +369,7 @@ def test_renta_income_ledger_reads_converted_eur_amount() -> None:
     assert result.gross_amount != _NATIVE_AMOUNT
 
 
-def test_renta_gasto_ledger_reads_converted_eur_substrate() -> None:
+def test_renta_gasto_ledger_reads_converted_eur_substrate(operation: PinnedAuthorityOperation) -> None:
     """FIXED: deductible_amount derives from the EUR-converted substrate."""
     tx = _converted_transaction(
         direction=TransactionDirection.OUTGOING,
@@ -383,6 +383,12 @@ def test_renta_gasto_ledger_reads_converted_eur_substrate() -> None:
         cumulative_end=date(2025, 3, 31),
         target_casilla_id=validated_casilla_id("02", surface="currency parity gasto target"),
         accept_activity_marker=True,
+        rules=RentaCategoryDeductionRules(
+            profile_year=2025,
+            profiles=resolve_category_profiles(2025, operation=operation),
+            region_overrides={},
+            context=RentaDeductibilityContext(profile_year=2025),
+        ),
     )
     assert not isinstance(result, RentaGastoLedgerAggregationIssue), result
     assert result is not None

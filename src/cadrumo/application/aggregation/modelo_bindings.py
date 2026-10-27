@@ -95,6 +95,8 @@ from ...domain.transactions.protocols import TransactionCatalogueRepositoryProto
 from ...domain.transactions.tipo_actividad_partitions import tipo_actividad_code_set
 from ..actividad_asset.ports import ActivityAssetHistoryRepository
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPersistenceError, InvoiceCatalogueReadPorts
+from ..ledger.usage_ratio_repository import UsageRatioProfileLoader
+from ..user_profile.usage_ratio_resolution import resolve_effective_usage_ratios
 from ._modelo_bindings_invoice_iva import (
     category_counterparty_mismatch_diagnostics,
     missing_invoice_deduction_authority_diagnostics,
@@ -1364,11 +1366,13 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
         *,
         transaction_repository: TransactionCatalogueRepositoryProtocol,
         prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
+        usage_ratio_profile_loader: UsageRatioProfileLoader,
         activity_asset_history_repository: ActivityAssetHistoryRepository,
     ) -> None:
         """Bind repositories used to resolve Renta expense sources."""
         self._transaction_repository = transaction_repository
         self._prorrata_register_repository = prorrata_register_repository
+        self._usage_ratio_profile_loader = usage_ratio_profile_loader
         self._activity_asset_history_repository = activity_asset_history_repository
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
@@ -1381,18 +1385,27 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
             code=context.period.registry_token,
         )
         target_casilla_id = _renta_gasto_target_casilla(context)
+        profile_record = context.profile.record if context.profile is not None else None
         try:
-            aggregation = aggregate_renta_gasto_ledger_from_repositories(
-                bucket_id=context.bucket_id,
-                period=aggregation_period,
-                modelo=context.modelo,
-                target_casilla_id=target_casilla_id,
-                accept_activity_marker=context.modelo == Modelo("130").value,
-                transaction_repository=self._transaction_repository,
-                profile_record=context.profile.record if context.profile is not None else None,
-                prorrata_register_repository=self._prorrata_register_repository,
-                operation=context.operation,
-            )
+            with source_context_operation(context) as operation:
+                aggregation = aggregate_renta_gasto_ledger_from_repositories(
+                    bucket_id=context.bucket_id,
+                    period=aggregation_period,
+                    modelo=context.modelo,
+                    target_casilla_id=target_casilla_id,
+                    accept_activity_marker=context.modelo == Modelo("130").value,
+                    transaction_repository=self._transaction_repository,
+                    usage_ratios=resolve_effective_usage_ratios(
+                        bucket_id=context.bucket_id,
+                        year=context.filing_year,
+                        usage_ratio_profile_loader=self._usage_ratio_profile_loader,
+                        operation=operation,
+                        profile_record=profile_record,
+                    ),
+                    profile_record=profile_record,
+                    prorrata_register_repository=self._prorrata_register_repository,
+                    operation=operation,
+                )
         except STORAGE_DEGRADATION_ERRORS as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,

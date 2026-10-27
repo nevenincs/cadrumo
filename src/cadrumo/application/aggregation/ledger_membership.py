@@ -175,6 +175,7 @@ def _collect_ledger_membership(
         LedgerRentaGastosPagoFraccionadoAggregationSourceResolver(
             transaction_repository=ports.transaction_repository,
             prorrata_register_repository=ports.prorrata_register_repository,
+            usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
             activity_asset_history_repository=ports.activity_asset_history_repository,
         ),
         LedgerImpatriadoIncomeAggregationSourceResolver(transaction_repository=ports.transaction_repository),

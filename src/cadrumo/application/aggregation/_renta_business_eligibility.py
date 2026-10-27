@@ -20,18 +20,28 @@ could not tell that the row WAS activity-marked and needed only review.
 This module is the one predicate. The annual gate is now a declared argument
 of it, and :func:`relies_on_activity_marker` names the state the annual
 pipeline reports specifically.
+
+It also owns the one rule for WHO apportions a row once its category is known.
+A usage-ratio category (home-office suministros, mobile phone, and the like) is
+apportioned by its category rule: the ledger usage-ratio store supplies the
+operator's ratio and the registry rule its statutory multiplier, and the
+deductibility evaluator applies the product once. A MIXED row's stored
+``business_pct`` for such a category is the same number held on the row, so
+scaling the row's amounts by it as well would apply the ratio twice
+(:func:`row_scaling_proportion`).
 """
 
 from __future__ import annotations
 
 from decimal import Decimal
 
+from ...domain.categories.proportionality import ProportionalityRule
 from ...domain.transactions.enums import BusinessClassification
 from ...domain.transactions.irpf_categories import has_activity_irpf_category
 from ...domain.transactions.models import Transaction
 from .business_proportion import business_proportion
 
-__all__ = ["relies_on_activity_marker", "renta_expense_business_proportion"]
+__all__ = ["relies_on_activity_marker", "renta_expense_business_proportion", "row_scaling_proportion"]
 
 _FULL_BUSINESS_PROPORTION = Decimal("1")
 
@@ -65,20 +75,54 @@ def renta_expense_business_proportion(
     Args:
         transaction: The ledger row under consideration.
         accept_activity_marker: Whether an explicit ``actividad_economica``
-            IRPF category alone establishes full business attribution. The
-            Modelo 130 quarterly pago fraccionado passes ``True`` (provisional
-            self-assessment); the annual Modelo 100 first-slice projection
-            passes ``False`` (filing-grade, so it requires the
-            business-classification review to have resolved the row).
+            IRPF category establishes full business attribution for a row
+            whose classification states none. The Modelo 130 quarterly pago
+            fraccionado passes ``True`` (provisional self-assessment); the
+            annual Modelo 100 first-slice projection passes ``False``
+            (filing-grade, so it requires the business-classification review
+            to have resolved the row). A classification that states a
+            proportion is never overridden by the marker.
 
     Returns:
         The proportion of the row attributable to the business, or ``None``
         when the row is not an eligible business expense under the requested
         policy.
     """
+    classified = business_proportion(transaction.business_classification, transaction.business_pct)
+    if classified is not None:
+        # The operator's classification is the specific claim about this row.
+        # The marker only stands in for it when the classification gives none,
+        # so it cannot lift a MIXED row's share to full attribution.
+        return classified
     if accept_activity_marker and has_activity_irpf_category(
         transaction.irpf_category,
         direction=transaction.direction,
     ):
         return _FULL_BUSINESS_PROPORTION
-    return business_proportion(transaction.business_classification, transaction.business_pct)
+    return None
+
+
+def row_scaling_proportion(
+    transaction: Transaction,
+    proportion: Decimal,
+    rule: ProportionalityRule,
+) -> Decimal:
+    """Return the proportion that scales a row's amounts before its category rule runs.
+
+    ``proportion`` is the eligibility result of :func:`renta_expense_business_proportion`.
+    It scales the row's amounts, except for a MIXED row in a usage-ratio category:
+    that category rule is the one place the ratio is applied, so the row's amounts
+    pass through whole and its stored ``business_pct`` is not multiplied in again.
+
+    Args:
+        transaction: The ledger row under consideration.
+        proportion: The row's business proportion from the eligibility predicate.
+        rule: The proportionality rule of the row's resolved category.
+
+    Returns:
+        ``1`` for a MIXED row whose category rule is a usage ratio; otherwise
+        ``proportion`` unchanged.
+    """
+    if transaction.business_classification is BusinessClassification.MIXED and rule.kind.is_usage_ratio:
+        return _FULL_BUSINESS_PROPORTION
+    return proportion
