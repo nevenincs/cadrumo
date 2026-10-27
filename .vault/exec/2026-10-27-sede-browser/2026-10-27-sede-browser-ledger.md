@@ -5,7 +5,7 @@ tags:
 date: '2026-10-27'
 modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:3396abf34149acdb975bed37aff0c3c80eb3df08aec347bd67282aefd41182ce'
+body_hash: 'sha256:1dad7883f124d745f37e50cbb0e8d181a3251d1de72bf44ef2f49b71d1eb1d0c'
 related:
   - "[[2026-10-27-sede-browser-plan]]"
 ---
@@ -181,6 +181,8 @@ related:
 - `S03` `verify:` `ctest --preset debug -R ^application.rust$ (cargo test of cadrumo-application, 56 view_stream tests over the shared vectors)` -> `pass`
 - `S03` `verify:` `just test-native-bundle Debug` -> `fail`
 - `S03` `by:` `vaultspec-standard-executor`
+- `S07` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_command_aeat_capability_probe.py`
+- `S07` `verify:` `uv run --no-sync pytest src/cadrumo_runtime/host/tests -k 'view or sede'` -> `pass`
 
 ## Notes
 

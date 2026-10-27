@@ -112,6 +112,7 @@ _SEDE_CLIENT_FACTORY: Final = "default_browser_session_factory"
 _SEDE_CLIENT_MODULES: Final = (
     "cadrumo.adapters.outbound.aeat.browser.connectivity",
     "cadrumo.adapters.outbound.aeat.browser.factory",
+    "cadrumo.adapters.outbound.aeat.browser.sede_view",
     "cadrumo.adapters.outbound.aeat.sede.censal_datos",
     "cadrumo.adapters.outbound.aeat.sede.groi_check",
     "cadrumo.adapters.outbound.aeat.sede.iva_compensation_wallet",
