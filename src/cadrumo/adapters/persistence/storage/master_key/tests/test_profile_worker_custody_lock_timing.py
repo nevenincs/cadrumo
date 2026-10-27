@@ -19,6 +19,7 @@ from uuid import UUID, uuid4
 import pytest
 
 from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
+from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.core.time.clock import now
 from cadrumo.core.time.utc import UtcInstant
 from cadrumo.tests.log_records import delivered_records
@@ -246,11 +247,20 @@ def _acquired_then_released(lock: RLock | TimedRLock) -> bool:
     return acquired
 
 
-@pytest.mark.parametrize("make_lock", [RLock, TimedRLock], ids=["rlock", "timed"])
-def test_acquire_and_release_follow_the_rlock_contract(make_lock: Callable[[], RLock | TimedRLock]) -> None:
-    """The same expectations hold for ``RLock`` itself, so they are not derived from the timed lock."""
+@pytest.mark.parametrize(
+    ("make_lock", "misuse"),
+    [(RLock, RuntimeError), (TimedRLock, InternalInvariantError)],
+    ids=["rlock", "timed"],
+)
+def test_acquire_and_release_follow_the_rlock_contract(
+    make_lock: Callable[[], RLock | TimedRLock], misuse: type[Exception]
+) -> None:
+    """The same expectations hold for ``RLock`` itself, so they are not derived from the timed lock.
+
+    Only the misuse type differs: the timed lock raises the registered invariant failure.
+    """
     lock = make_lock()
-    unheld = ("RuntimeError", "cannot release un-acquired lock")
+    unheld = (misuse.__name__, "cannot release un-acquired lock")
     assert _described(_on_another_thread(lock.release)) == unheld
     with pytest.raises(ValueError, match="non-blocking"):
         lock.acquire(blocking=False, timeout=1)
@@ -269,7 +279,7 @@ def test_acquire_and_release_follow_the_rlock_contract(make_lock: Callable[[], R
     assert _on_another_thread(lambda: lock.acquire(blocking=False)) is False, "one level is still held"
     lock.release()
     assert _on_another_thread(lambda: _acquired_then_released(lock)) is True
-    with pytest.raises(RuntimeError, match="un-acquired"):
+    with pytest.raises(misuse, match="un-acquired"):
         lock.release()
 
 

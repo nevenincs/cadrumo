@@ -14,6 +14,7 @@ from types import TracebackType
 from typing import Final
 
 from .....core.diagnostic_log import diagnostic_event
+from .....core.errors.hierarchy import InternalInvariantError
 from .....core.logging import get_logger
 
 _log = get_logger(__name__)
@@ -96,7 +97,7 @@ class TimedRLock:
         """Release one level; the thread's last level reports a slow wait or hold."""
         entry = self._holder
         if entry is None or entry.owner != get_ident():
-            raise RuntimeError("cannot release un-acquired lock")
+            raise InternalInvariantError("cannot release un-acquired lock")
         if self._depth > 1:
             self._depth -= 1
             self._lock.release()
