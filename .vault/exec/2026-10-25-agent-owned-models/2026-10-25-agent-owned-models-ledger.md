@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:1213bba91d75e2fce5a1ca0821f1aac2dc8a5c4c022fe1824b01f22523900327'
+body_hash: 'sha256:a8c5896f29856419cb2eb7187516f38b3ac79e08a227669f9c75d511029110d1'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -1442,6 +1442,10 @@ related:
 - `S28` `M` `native/application/CMakeLists.txt`
 - `S28` `verify:` `cmake --preset windows-x64 -DCADRUMO_PACKAGE_USER_DOCS=OFF -DCADRUMO_APPLICATION_TEST_FILTER=provisioning -DCADRUMO_DESKTOP_HOST_TEST_FILTER=setup` -> `pass`
 - `S28` `verify:` `ctest --test-dir build/windows-x64 -C Debug -R '^application\.rust$' --repeat until-fail:10 --output-on-failure` -> `pass`
+- `S28` `M` `src/cadrumo_runtime/host/tests/frontend/test_saved_model_role_selection.py`
+- `S28` `verify:` `uv run --no-sync pytest src/cadrumo_runtime/host/tests/frontend/test_saved_model_role_selection.py -n 0 -q -m integration` -> `pass`
+- `S28` `verify:` `uv run --no-sync ty check src/cadrumo_runtime/host/tests/frontend/test_saved_model_role_selection.py` -> `pass`
+- `S28` `verify:` `ctest --test-dir build/windows-x64 -C Debug -R '^application\.rust$' --output-on-failure` -> `pass`
 
 ## Notes
 
@@ -1543,3 +1547,4 @@ related:
 - `S31` Owner explicitly authorized committing existing `_Controller` refactor. Hardware-floor fixture replaced with missing-selection verdict; 32 focused tests pass at e6a7dcaef0.
 - `S28` 91e8fc23f3: 5 acceptance cases pass, log 20261027T060257.547036Z-pytest-48860-d68ee754. CLI covers all four locales using production absent-selection lookup. Authenticated admin-to-encrypted-store-to-runtime-relay read-back passes; desktop UI and separate CLI/TUI/MCP submission/START fences remain pending.
 - `S28` 81098fa394 adds optional CMake application test filter; generated CTest argv contains the selected substring. The initial parallel provisioning run reported 142 passed and 1 cancelled-follower failure (busy instead of cancelled). The failing test passes alone and in 10 bounded repeats; diagnostics yielded no cause and were removed. Full provisioning group rerun serially remains pending. Repeat check used full failing-test name as cache filter.
+- `S28` 24a05453f7: 3 operation-frontend acceptance cases pass with notification-based waits; log 20261027T062124.042235Z-pytest-24360-e8068654. Authenticated desktop admin choice is read through real CLI registered runner, TUI controller and MCP SDK execute/observe/result; MCP attendance is approved by password holder, both service and worker authority enforced, encrypted record unchanged. Native CTest provisioning filter with `RUST_TEST_THREADS=1` passes143 tests (93 unrelated filtered out), 246.62s, LastTest.log. Prior concurrent cancellation failure remains unreproduced after10 isolated passes; no speculative product change.
