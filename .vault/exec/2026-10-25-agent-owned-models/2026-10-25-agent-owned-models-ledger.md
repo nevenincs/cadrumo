@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:f6951e7792c9c7beab8ea16e63bf770ffe1e36c8dfb62b289e2f6876b3a189d4'
+body_hash: 'sha256:1213bba91d75e2fce5a1ca0821f1aac2dc8a5c4c022fe1824b01f22523900327'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -1439,6 +1439,9 @@ related:
 - `S28` `verify:` `just check-types` -> `pass`
 - `S28` `verify:` `uv run --no-sync ruff check src/cadrumo_runtime/host/tests/frontend/cli/test_model_role_selection_acceptance.py src/cadrumo_runtime/host/tests/frontend/test_saved_model_role_selection.py` -> `pass`
 - `S28` `verify:` `uv run --no-sync ruff format --check src/cadrumo_runtime/host/tests/frontend/cli/test_model_role_selection_acceptance.py src/cadrumo_runtime/host/tests/frontend/test_saved_model_role_selection.py` -> `pass`
+- `S28` `M` `native/application/CMakeLists.txt`
+- `S28` `verify:` `cmake --preset windows-x64 -DCADRUMO_PACKAGE_USER_DOCS=OFF -DCADRUMO_APPLICATION_TEST_FILTER=provisioning -DCADRUMO_DESKTOP_HOST_TEST_FILTER=setup` -> `pass`
+- `S28` `verify:` `ctest --test-dir build/windows-x64 -C Debug -R '^application\.rust$' --repeat until-fail:10 --output-on-failure` -> `pass`
 
 ## Notes
 
@@ -1539,3 +1542,4 @@ related:
 - `S31` Committed checkpoint 5645a4f9a8 at owner request. TUI fixture migration and its focused test plus just check-types remain pending; foreign `_Controller` hunks were excluded. P05.S31 stays open.
 - `S31` Owner explicitly authorized committing existing `_Controller` refactor. Hardware-floor fixture replaced with missing-selection verdict; 32 focused tests pass at e6a7dcaef0.
 - `S28` 91e8fc23f3: 5 acceptance cases pass, log 20261027T060257.547036Z-pytest-48860-d68ee754. CLI covers all four locales using production absent-selection lookup. Authenticated admin-to-encrypted-store-to-runtime-relay read-back passes; desktop UI and separate CLI/TUI/MCP submission/START fences remain pending.
+- `S28` 81098fa394 adds optional CMake application test filter; generated CTest argv contains the selected substring. The initial parallel provisioning run reported 142 passed and 1 cancelled-follower failure (busy instead of cancelled). The failing test passes alone and in 10 bounded repeats; diagnostics yielded no cause and were removed. Full provisioning group rerun serially remains pending. Repeat check used full failing-test name as cache filter.
