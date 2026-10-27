@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import threading
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -149,30 +150,38 @@ class _Client:
         """The thread of each blocking session read: at composition, then around each operation."""
 
 
+@dataclass
 class _Controller:
     """One submitted operation that succeeds with ``result``, or refuses when ``result`` is its recorded detail."""
 
     operation_id = _OPERATION_ID
+    request: BaseModel
+    definition_id: str
+    result: BaseModel
+    effect: OperationEffect
     # The client it was submitted through, as the real controller keeps it.
     client: _Client
+    # The observation bound the waiter narrows, as the real controller carries it.
+    deadline: float | None = None
+    started: bool = False
+    projection: SimpleNamespace = field(init=False)
 
-    def __init__(self, request: BaseModel, *, definition_id: str, result: BaseModel, effect: OperationEffect) -> None:
-        self.request = request
-        self.definition_id = definition_id
-        self.result = result
-        self.started = False
-        self.definition_contract = _CONTRACTS[definition_id]
-        refused = result.error_code if isinstance(result, OperationErrorDetailV1) else None
+    @property
+    def definition_contract(self) -> OperationPublicDefinitionContractV1:
+        return _CONTRACTS[self.definition_id]
+
+    def __post_init__(self) -> None:
+        refused = self.result.error_code if isinstance(self.result, OperationErrorDetailV1) else None
         self.projection = SimpleNamespace(
             operation_id=self.operation_id,
-            definition_id=definition_id,
+            definition_id=self.definition_id,
             subject_ref=profile_operation_subject(str(_PROFILE_ID)),
             definition_contract=self.definition_contract,
             lifecycle=OperationLifecycle.TERMINAL,
             terminal_condition=OperationTerminalCondition.SUCCEEDED
             if refused is None
             else OperationTerminalCondition.REFUSED,
-            effect=effect,
+            effect=self.effect,
             refusal_ref=refused,
             failure_error_code=None,
             diagnostic_ref=None,
@@ -360,8 +369,7 @@ def _install_runtime(
         definition_id, result, effect = results.pop(0)
         assert kwargs["definition_id"] == definition_id
         request = cast(BaseModel, kwargs["payload"])
-        controller = _Controller(request, definition_id=definition_id, result=result, effect=effect)
-        controller.client = client
+        controller = _Controller(request, definition_id, result, effect, client)
         submissions.append(kwargs)
         controllers.append(controller)
         return controller
