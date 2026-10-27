@@ -392,6 +392,45 @@ class AeatAuthenticator:
                 )
             return await self._resume_from_storage_state_locked(self._resolve_storage_state_path())
 
+    async def adopt_view_capture(self, storage_state: Mapping[str, object]) -> AeatSession:
+        """Record a Sede view's captured state as this certificate's session and prove it.
+
+        The person's view presents this certificate, so the capture is written
+        with this certificate's thumbprint, subject and NIF/NIE, anchored at the
+        capture instant, and then resumed exactly as a stored session is: every
+        persisted-session gate and the canonical protected-resource probe run
+        in a browser of this provider's own. The caller stages the writes and
+        publishes them only after this returns; a refusal raises
+        :class:`PersistedSessionInvalidError` after staging the record's
+        invalidation.
+        """
+        async with self._lifecycle.work(), self._lock:
+            if self.active_session is not None:
+                raise AeatLoginAssertionError(
+                    "AeatAuthenticator already has an active session; call close() before adopting a capture",
+                    translated_message="adapters.auth.authenticator.errors.already_active",
+                )
+            if self._browser_session is not None or self._context is not None:
+                raise AuthProviderCleanupError(
+                    "AeatAuthenticator still owns browser resources whose close did not complete; "
+                    "call close() again before adopting a capture",
+                    translated_message="errors.auth.auth_auth_provider_cleanup",
+                )
+            cert = self.load_certificate()
+            captured_at = now()
+            path = self._resolve_storage_state_path()
+            metadata = PersistedSessionMetadata(
+                certificate_thumbprint=cert.sha256_thumbprint,
+                certificate_subject=cert.subject,
+                certificate_nif=extract_nif_from_subject(cert),
+                authenticated_at=captured_at,
+                idle_deadline=captured_at + AEAT_SESSION_IDLE_TTL,
+                storage_state_sha256=session_store.storage_state_sha256(storage_state),
+            )
+            session_store.save(path, storage_state=storage_state, metadata=metadata.model_dump(mode="json"))
+            session, _assertion = await self._resume_from_storage_state_locked(path)
+            return session
+
     async def _fresh_login_locked(self) -> AeatSession:
         """Run the fresh certificate-backed browser login under the held lock.
 

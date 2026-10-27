@@ -9,9 +9,17 @@ window through the view stream. A popup takes over the panel; when it closes,
 its opener returns. The view sets no idle or absolute bound: it browses until
 the person closes it, the stream ends or the operation is asked to stop.
 
-Cadrumo issues no request in the view: the only navigation it starts is the
-Sede home page, which the person's ``home`` verb also opens. It evaluates no
-script; the toolbar's URL and title come from ``Page.getNavigationHistory``
+Signing in happens in the view too. When the shown page loads an AEAT page the
+view tells the application, which checks through the provider's own
+verification whether the person has signed in and publishes the session. The
+view also lends its context to the configured provider's assisted login
+through :attr:`SedeViewPage.login_session_factory`: the provider's pages open
+in the panel, headless, and the person's press, key, text or navigation
+cancels that login at once and then reaches the page.
+
+Outside an assisted login Cadrumo issues no request in the view: the only
+navigation it starts is the Sede home page, which the person's ``home`` verb
+also opens. It evaluates no script; the toolbar's URL and title come from ``Page.getNavigationHistory``
 through the input adapter. A download's bytes pass from the browser's own
 transient file straight to the stream, and the file is deleted when the
 transfer ends; an upload reaches the page from memory. URLs, titles, images,
@@ -21,7 +29,7 @@ input and file bytes are never logged, persisted or journaled.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable, Coroutine, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, Self
@@ -32,6 +40,8 @@ from pydantic import ValidationError
 from cadrumo_client.contracts.view_stream import (
     VIEW_MAX_PATH_LENGTH,
     VIEW_MAX_TITLE_LENGTH,
+    PointerAction,
+    PointerInput,
     ViewClose,
     ViewDialog,
     ViewImage,
@@ -42,6 +52,7 @@ from cadrumo_client.contracts.view_stream import (
     ViewSinkInput,
     ViewState,
     ViewStreamSink,
+    WheelInput,
 )
 from cadrumo_client.contracts.view_transfer import (
     VIEW_MAX_FILENAME_LENGTH,
@@ -57,10 +68,13 @@ from cadrumo_client.contracts.view_transfer import (
     ViewUploadedFile,
 )
 
-from .....application.live.sede_view_ports import SedeViewEnd, SedeViewOpening
+from .....application.auth.protocols import BrowserContextProvisioner
+from .....application.live.sede_view_ports import SedeViewEnd, SedeViewOpening, SedeViewSignIn
 from .....core.async_cleanup import AsyncCloseable, close_async_resources
 from .....core.config import Settings
+from .....core.errors.hierarchy import InternalInvariantError
 from .....core.logging import get_logger
+from .....core.remote_authority import canonical_remote_hostname, is_current_aeat_host
 from .._playwright import BrowserContext, Page, PlaywrightError
 from .factory import default_browser_session_factory
 from .screencast import ScreencastImage, ScreencastProfile, ViewScreencast
@@ -89,6 +103,21 @@ def safe_filename(suggested: str) -> str:
     ).strip()
     name = name[:VIEW_MAX_FILENAME_LENGTH]
     return _FALLBACK_FILENAME if name in {"", ".", ".."} else name
+
+
+def interrupts_assisted_login(item: ViewSinkInput) -> bool:
+    """Whether the person's ``item`` stops an assisted login: anything but a pointer move, a wheel or a resize."""
+    if isinstance(item, ViewInput):
+        event = item.event
+        if isinstance(event, WheelInput):
+            return False
+        return not (isinstance(event, PointerInput) and event.action is PointerAction.MOVE)
+    return isinstance(item, ViewNavigate | ViewClose)
+
+
+def _is_aeat_page(url: str) -> bool:
+    host = canonical_remote_hostname(url)
+    return host is not None and is_current_aeat_host(host)
 
 
 def view_state(url: str, title: str, *, back: bool, forward: bool, loading: bool, phase: ViewPhase) -> ViewState | None:
@@ -151,6 +180,10 @@ class SedeViewPage:
         self._downloads: dict[int, Download] = {}
         self._choosers: dict[int, _Chooser] = {}
         self._background: set[asyncio.Task[None]] = set()
+        self._sign_in: SedeViewSignIn | None = None
+        self._assist: asyncio.Task[None] | None = None
+        self._sign_in_check: asyncio.Task[None] | None = None
+        self._sign_in_loads = 0
         self._lost = False
         self._closed = False
 
@@ -185,22 +218,39 @@ class SedeViewPage:
             raise PlaywrightError("the Sede view has no context")
         return self._context
 
-    async def browse(self, *, stop_requested: Callable[[], bool]) -> SedeViewEnd:
-        """Relay the page and the person's input until the view ends."""
+    @property
+    def login_session_factory(self) -> ViewLoginSessionFactory:
+        """Browser sessions that lend a provider's assisted login this view's context and panel."""
+        return ViewLoginSessionFactory(self)
+
+    async def browse(self, *, stop_requested: Callable[[], bool], sign_in: SedeViewSignIn | None = None) -> SedeViewEnd:
+        """Relay the page and the person's input until the view ends.
+
+        ``sign_in`` is started at once and told of every AEAT page the shown
+        page loads; any assisted login it runs is cancelled by the person's
+        input while it is interruptible. Before this returns, an interruptible
+        login is cancelled and any sign-in work still running is awaited.
+        """
         await self.announce_phase(ViewPhase.BROWSING)
-        while True:
-            if stop_requested():
-                return SedeViewEnd.STOPPED
-            if self._lost:
-                return SedeViewEnd.PAGE_LOST
-            item = await asyncio.to_thread(self._sink.receive, timeout=_RECEIVE_SECONDS)
-            if item is None:
-                if self._sink.ended:
-                    return SedeViewEnd.STREAM_ENDED
-                continue
-            end = await self._apply(item)
-            if end is not None:
-                return end
+        self._sign_in = sign_in
+        if sign_in is not None:
+            self._assist = self._track(sign_in.assist())
+        try:
+            while True:
+                if stop_requested():
+                    return SedeViewEnd.STOPPED
+                if self._lost:
+                    return SedeViewEnd.PAGE_LOST
+                item = await asyncio.to_thread(self._sink.receive, timeout=_RECEIVE_SECONDS)
+                if item is None:
+                    if self._sink.ended:
+                        return SedeViewEnd.STREAM_ENDED
+                    continue
+                end = await self._apply(item)
+                if end is not None:
+                    return end
+        finally:
+            await self._settle_sign_in()
 
     async def announce_phase(self, phase: ViewPhase) -> None:
         """Send the window the current page's state in ``phase``."""
@@ -283,6 +333,8 @@ class SedeViewPage:
             return None
 
     async def _dispatch(self, item: ViewSinkInput) -> SedeViewEnd | None:
+        if interrupts_assisted_login(item):
+            await self._interrupt_assist()
         if isinstance(item, ViewClose):
             return SedeViewEnd.CLOSED
         if isinstance(item, ViewInput):
@@ -384,6 +436,43 @@ class SedeViewPage:
         except PlaywrightError as exc:
             logger.debug("aeat view download discard skipped exc_type=%s", type(exc).__name__)
 
+    # -- signing in ------------------------------------------------------------------------------------------------
+
+    async def _interrupt_assist(self) -> None:
+        """Cancel an interruptible assisted login and wait until it has let go of the page."""
+        task, sign_in = self._assist, self._sign_in
+        if task is None or task.done() or sign_in is None or not sign_in.interruptible:
+            return
+        task.cancel()
+        await asyncio.gather(task, return_exceptions=True)
+
+    async def _settle_sign_in(self) -> None:
+        await self._interrupt_assist()
+        running = [task for task in (self._assist, self._sign_in_check) if task is not None and not task.done()]
+        await asyncio.gather(*running, return_exceptions=True)
+        self._sign_in = None
+
+    def _watch_sign_in(self, page: Page) -> None:
+        """Ask the application whether the person has signed in once an AEAT page has loaded."""
+        sign_in = self._sign_in
+        if sign_in is None or self._closed or (self._assist is not None and not self._assist.done()):
+            return
+        if not _is_aeat_page(page.url):
+            return
+        check = self._sign_in_check
+        if check is not None and not check.done():
+            self._sign_in_loads += 1
+            return
+        self._sign_in_check = self._track(self._check_sign_in(sign_in))
+
+    async def _check_sign_in(self, sign_in: SedeViewSignIn) -> None:
+        """Run the application's check, once more if another page loaded while it ran."""
+        while True:
+            checked = self._sign_in_loads
+            await sign_in.page_loaded()
+            if self._sign_in_loads == checked:
+                return
+
     @staticmethod
     async def _dismiss(dialog: Dialog) -> None:
         try:
@@ -418,6 +507,7 @@ class SedeViewPage:
         if page is self._shown:
             self._loading = False
             self._spawn(self._send_state())
+            self._watch_sign_in(page)
 
     def _mark_lost(self) -> None:
         self._lost = True
@@ -429,13 +519,29 @@ class SedeViewPage:
                 return
             await self._detach()
             context = self.context
-            self._input = await ViewInputAdapter.attach(context, page, settings=self._settings, notices=self._sink.send)
-            self._screencast = await ViewScreencast.start(
-                context, page, self._viewport, self._offer, profile=ScreencastProfile()
-            )
-            self._screencast.grant_credit(_SCREENCAST_CREDIT)
-            self._shown = page
+            try:
+                self._input = await ViewInputAdapter.attach(
+                    context, page, settings=self._settings, notices=self._sink.send
+                )
+                self._screencast = await ViewScreencast.start(
+                    context, page, self._viewport, self._offer, profile=ScreencastProfile()
+                )
+            except PlaywrightError:
+                if not page.is_closed():
+                    raise
+            else:
+                self._screencast.grant_credit(_SCREENCAST_CREDIT)
+                self._shown = page
+        if page.is_closed():
+            # The page closed while it was being shown, before its close could move the panel on.
+            await self._show_newest()
+            return
         await self._send_state()
+
+    async def _show_newest(self) -> None:
+        newest = next((page for page in reversed(self._pages) if not page.is_closed()), None)
+        if newest is not None:
+            await self._show(newest)
 
     async def _detach(self) -> None:
         screencast, self._screencast = self._screencast, None
@@ -486,9 +592,78 @@ class SedeViewPage:
             self._sink.send(state)
 
     def _spawn(self, work: Coroutine[object, object, None]) -> None:
+        self._track(work)
+
+    def _track(self, work: Coroutine[object, object, None]) -> asyncio.Task[None]:
         task = asyncio.get_running_loop().create_task(_settle(work))
         self._background.add(task)
         task.add_done_callback(self._background.discard)
+        return task
+
+
+class _LentViewContext:
+    """The view context as a provider's login sees it: its pages open in the panel, and closing it is a no-op.
+
+    The view owns its context; the login only borrows it. Every page the
+    provider opens reaches the view's page observer and is shown, and a page
+    the provider leaves open when the person interrupts it stays for the person.
+    """
+
+    def __init__(self, context: BrowserContext) -> None:
+        self._context = context
+
+    async def new_page(self) -> Page:
+        """Open a page in the view; the panel shows it."""
+        return await self._context.new_page()
+
+    async def storage_state(self) -> Mapping[str, object]:
+        """Capture the view's cookies and local storage."""
+        return await self._context.storage_state()
+
+    async def close(self) -> None:
+        """Leave the view's context open: the view closes it."""
+        return
+
+
+class _LentViewSession:
+    """A browser session whose one context is the open view's own."""
+
+    def __init__(self, view: SedeViewPage) -> None:
+        self._view = view
+
+    async def create_context(
+        self,
+        *,
+        provisioner: BrowserContextProvisioner | None = None,
+        storage_state: Mapping[str, object] | None = None,
+    ) -> _LentViewContext:
+        """Lend the view's context; it already presents the configured provider's credential."""
+        del provisioner
+        if storage_state is not None:
+            raise InternalInvariantError("a running Sede view is never re-seeded")
+        return _LentViewContext(self._view.context)
+
+    async def close(self) -> None:
+        """Leave the view's browser running: the view closes it."""
+        return
+
+
+class ViewLoginSessionFactory:
+    """Lend a provider's login the Sede view, so its headless pages show in the person's panel."""
+
+    def __init__(self, view: SedeViewPage) -> None:
+        """Bind the factory to the open ``view``."""
+        self._view = view
+
+    @property
+    def lends_view(self) -> bool:
+        """Always ``True``: the provider never opens a browser or window of its own."""
+        return True
+
+    async def __call__(self, settings: Settings) -> _LentViewSession:
+        """Return a session over the view; ``settings`` cannot make it headed."""
+        del settings
+        return _LentViewSession(self._view)
 
 
 async def _settle(work: Coroutine[object, object, None]) -> None:
@@ -506,4 +681,11 @@ async def open_sede_view(opening: SedeViewOpening) -> SedeViewPage:
     return await SedeViewPage.open(owner.session, owner, opening)
 
 
-__all__ = ["SedeViewPage", "open_sede_view", "safe_filename", "view_state"]
+__all__ = [
+    "SedeViewPage",
+    "ViewLoginSessionFactory",
+    "interrupts_assisted_login",
+    "open_sede_view",
+    "safe_filename",
+    "view_state",
+]

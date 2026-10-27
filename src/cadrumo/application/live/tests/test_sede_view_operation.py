@@ -46,7 +46,7 @@ from ....core.operations import (
 )
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...auth.certificate_secret_backend import CertificateSecretBackendFactory
-from ...auth.protocols import BrowserContextPort
+from ...auth.protocols import BrowserContextPort, ViewLoginSessionFactoryPort
 from ...auth.sessions import (
     ViewSessionBaseline,
     ViewSessionPublication,
@@ -61,7 +61,7 @@ from ...operations.person_acts import operation_is_persons_act
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import sede_view_operation as module
-from ..sede_view_ports import SedeViewBrowser, SedeViewEnd, SedeViewOpening
+from ..sede_view_ports import SedeViewBrowser, SedeViewEnd, SedeViewOpening, SedeViewSignIn
 from .borrador_100_operation_support import PROFILE_ID, policy_decision
 from .operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 from .unopened_live_ports import unopened_browser_session_factory
@@ -116,13 +116,19 @@ class _Browser:
         self.stop_checks = 0
         self.before_browse: Callable[[], None] | None = None
         self.context_value = cast(BrowserContextPort, SimpleNamespace())
+        self.sign_in: SedeViewSignIn | None = None
 
     @property
     def context(self) -> BrowserContextPort:
         return self.context_value
 
-    async def browse(self, *, stop_requested: Callable[[], bool]) -> SedeViewEnd:
+    @property
+    def login_session_factory(self) -> ViewLoginSessionFactoryPort:
+        raise AssertionError("a view seeded with a verified session runs no assisted login")
+
+    async def browse(self, *, stop_requested: Callable[[], bool], sign_in: SedeViewSignIn | None) -> SedeViewEnd:
         self._journal.append("browse")
+        self.sign_in = sign_in
         if self.before_browse is not None:
             self.before_browse()
         for _ in range(self._polls):
@@ -339,7 +345,7 @@ def run(monkeypatch: pytest.MonkeyPatch, authority_operation: PinnedAuthorityOpe
         subject = _Subject(authority_operation, end, cancel=cancel, polls=polls, publication=publication)
         monkeypatch.setattr(module, "require_active_bucket_id", lambda: str(PROFILE_ID))
         monkeypatch.setattr(module, "open_live_view_session", subject.open_session)
-        monkeypatch.setattr(module, "close_live_view_session", subject.close_session)
+        monkeypatch.setattr(module, "publish_live_view_session", subject.close_session)
         monkeypatch.setattr(module, "view_context_provisioner", subject.provisioner)
         return subject
 

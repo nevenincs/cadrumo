@@ -16,7 +16,7 @@ from typing import Protocol
 from cadrumo_client.contracts.view_stream import ViewPhase, ViewResize, ViewStreamSink
 
 from ...core.config import Settings
-from ..auth.protocols import BrowserContextPort, BrowserContextProvisioner
+from ..auth.protocols import BrowserContextPort, BrowserContextProvisioner, ViewLoginSessionFactoryPort
 from ..operations.models import OperationIdentity
 
 
@@ -46,8 +46,32 @@ class SedeViewOpening:
     settings: Settings
     sink: ViewStreamSink
     viewport: ViewResize
-    storage_state: Mapping[str, object] = field(repr=False)
+    storage_state: Mapping[str, object] | None = field(repr=False)
+    """The verified session the view opens with, or ``None`` to open it signed out."""
     provisioner: BrowserContextProvisioner | None = field(repr=False)
+
+
+class SedeViewSignIn(Protocol):
+    """The application's side of signing in inside the view.
+
+    The browser starts :meth:`assist` when browsing starts and tells
+    :meth:`page_loaded` when the shown page has loaded an AEAT page. While
+    :attr:`interruptible` holds, the person's press, key, text or navigation
+    cancels the assisted step at once and then reaches the page.
+    """
+
+    @property
+    def interruptible(self) -> bool:
+        """Whether an assisted login step runs that the person's input stops."""
+        ...
+
+    async def assist(self) -> None:
+        """Run the configured provider's assisted login in the view and publish it, if one applies."""
+        ...
+
+    async def page_loaded(self) -> None:
+        """Publish the view's session if the person has just signed in, by the provider's own verification."""
+        ...
 
 
 class SedeViewBrowser(Protocol):
@@ -55,11 +79,21 @@ class SedeViewBrowser(Protocol):
 
     @property
     def context(self) -> BrowserContextPort:
-        """The view context, open until :meth:`close`; close-time publication captures it."""
+        """The view context, open until :meth:`close`; every view publication captures it."""
         ...
 
-    async def browse(self, *, stop_requested: Callable[[], bool]) -> SedeViewEnd:
-        """Relay the page and the person's input until the view ends, with no idle or absolute bound."""
+    @property
+    def login_session_factory(self) -> ViewLoginSessionFactoryPort:
+        """Browser sessions that lend a provider's assisted login this view's context and panel."""
+        ...
+
+    async def browse(self, *, stop_requested: Callable[[], bool], sign_in: SedeViewSignIn | None) -> SedeViewEnd:
+        """Relay the page and the person's input until the view ends, with no idle or absolute bound.
+
+        ``sign_in``, when given, is started, told of AEAT page loads and
+        interrupted by the person's input as :class:`SedeViewSignIn` says; it
+        has settled when this returns.
+        """
         ...
 
     async def announce_phase(self, phase: ViewPhase) -> None:
@@ -84,5 +118,6 @@ __all__ = [
     "SedeViewBrowserFactory",
     "SedeViewEnd",
     "SedeViewOpening",
+    "SedeViewSignIn",
     "SedeViewStreamOpener",
 ]

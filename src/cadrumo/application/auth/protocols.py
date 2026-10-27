@@ -131,6 +131,22 @@ class BrowserSessionFactoryPort(Protocol):
         ...
 
 
+@runtime_checkable
+class ViewLoginSessionFactoryPort(BrowserSessionFactoryPort, Protocol):
+    """Browser sessions that lend a provider's login the person's open Sede view.
+
+    Its sessions create no browser and no context: each context they return is
+    the view's own, already built with the provider's credential, and closing it
+    leaves the view open. A provider's pages then appear in the person's panel,
+    so a login that needs a person to see it runs headless there.
+    """
+
+    @property
+    def lends_view(self) -> bool:
+        """Always ``True``: the login runs inside the view the person watches."""
+        ...
+
+
 class BrowserReadinessPort(Protocol):
     """Refusal check run when browser-backed auth work starts."""
 
@@ -190,13 +206,6 @@ class SessionStoreProtocol(Protocol):
         """Return the digest held in durable custody at ``path``, ignoring staged writes."""
         ...
 
-    def stage_captured_storage_state(self, path: Path, *, storage_state: Mapping[str, object]) -> bool:
-        """Stage a running context's capture over the stored record at ``path`` for verification.
-
-        Returns ``False``, staging nothing, when no usable record is stored.
-        """
-        ...
-
 
 class SessionWriteStage(Protocol):
     """Transient provider state awaiting one guarded publication."""
@@ -244,6 +253,7 @@ __all__ = [
     "PersistedSessionDataProtocol",
     "SessionStoreProtocol",
     "SessionWriteStage",
+    "ViewLoginSessionFactoryPort",
     "bind_session_store",
     "session_store",
 ]

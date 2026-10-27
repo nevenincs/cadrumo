@@ -178,7 +178,7 @@ class ClavePermanenteAuthProvider:
             resume_path = self._storage_state_path()
             if session_store.exists(resume_path):
                 try:
-                    return await self._resume_locked(
+                    session, _assertion = await self._resume_locked(
                         resume_path,
                         target_url=target_url,
                     )
@@ -188,12 +188,71 @@ class ClavePermanenteAuthProvider:
                         exc,
                     )
                     self._invalidate_persisted(resume_path)
+                else:
+                    return session
 
             return await self._fresh_login_locked(
                 dni_nie=dni_nie,
                 password=password,
                 storage_state_path=resume_path,
                 target_url=target_url,
+            )
+
+    async def probe_persisted_session(
+        self,
+        *,
+        target_url: str | None = None,
+    ) -> tuple[AeatSession, AeatLoginAssertion]:
+        """Resume the stored Cl@ve Permanente session and prove it, with no fresh-login fallback.
+
+        The stored record passes the same deadline and digest gates as
+        :meth:`authenticate`, then the landing probe. A valid probe refreshes
+        the record; a refusal raises :class:`AeatLoginAssertionError` and
+        deletes nothing.
+        """
+        async with self._lifecycle.work():
+            self._require_idle()
+            return await self._resume_locked(self._storage_state_path(), target_url=target_url)
+
+    async def adopt_view_capture(self, storage_state: Mapping[str, object]) -> AeatSession:
+        """Record a Sede view's captured state as this identity's session and prove it.
+
+        The person signed in inside the view by hand; Cadrumo never submits the
+        Cl@ve Permanente form there. The capture is written with the configured
+        DNI/NIE and the default authenticated Sede page as its landing, anchored
+        at the capture instant, and then resumed exactly as a stored session is,
+        in a browser of this provider's own. The caller stages the writes and
+        publishes them only after this returns; a refusal raises
+        :class:`AeatLoginAssertionError`.
+        """
+        async with self._lifecycle.work():
+            self._require_idle()
+            dni_nie = self._require_identity()
+            path = self._storage_state_path()
+            captured_at = now()
+            self._persist_session(
+                path,
+                storage_state=storage_state,
+                metadata=ClavePermanenteSessionMetadata(
+                    identity_nif=dni_nie,
+                    authenticated_at=captured_at,
+                    idle_deadline=captured_at + AEAT_SESSION_IDLE_TTL,
+                    storage_state_sha256=session_store.storage_state_sha256(storage_state),
+                    landing_url=self._default_target_url(),
+                ),
+            )
+            session, _assertion = await self._resume_locked(path, target_url=None)
+            return session
+
+    def _require_idle(self) -> None:
+        if self.active_session is not None:
+            raise AeatLoginAssertionError(
+                "ClavePermanenteAuthProvider already has an active session; call close() first",
+            )
+        if self._context is not None or self._browser_session is not None:
+            raise AuthProviderCleanupError(
+                "ClavePermanenteAuthProvider retained browser resources after close",
+                translated_message="errors.auth.auth_auth_provider_cleanup",
             )
 
     async def verify(self, session: AeatSession) -> AeatLoginAssertion:
@@ -728,7 +787,7 @@ class ClavePermanenteAuthProvider:
         storage_state_path: Path,
         *,
         target_url: str | None,
-    ) -> AeatSession:
+    ) -> tuple[AeatSession, AeatLoginAssertion]:
         persisted = self._load_persisted(storage_state_path)
         metadata = self._load_metadata(storage_state_path, persisted)
         if metadata.idle_deadline <= now():
@@ -793,7 +852,7 @@ class ClavePermanenteAuthProvider:
                 if isinstance(assertion.assertion_detail, ClavePermanenteLoginAssertionDetail)
                 else None,
             )
-            return refreshed
+            return refreshed, assertion
         except Exception:
             context_closed = await self._close_context(context, reason="resume cleanup")
             self._browser_session = None

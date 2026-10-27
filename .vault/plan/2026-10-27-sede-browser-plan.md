@@ -12,7 +12,7 @@ related:
   - '[[2026-06-04-live-auth-decomposition-adr]]'
 modified: '2026-10-27'
 body_schema: body-v2
-body_hash: 'sha256:89c19b24495c428bdf2a6fdc9560ef7de4548899b158523792c46055817944df'
+body_hash: 'sha256:b4046b78bbbbdc1039fd8cc99bc465ce4899c8f18636cf287d6f75f33dbdaa27'
 ---
 
 # `sede-browser` plan
@@ -63,7 +63,7 @@ Deliver the Browser page, the Browser and AEAT rail items with the AEAT context 
 
 Deliver in-panel login: manual login with any provider including Cl@ve Permanente, captured and published after provider verification, plus interruptible certificate and Cl@ve Movil assistance inside the view's own headless Chromium, shown through the stream.
 
-- [ ] `P05.S12` - support in-panel login: the person logs in by hand with any provider including Cl@ve Permanente and the view captures and publishes after provider verification; run certificate and Cl@ve Movil assistance inside the view's headless Chromium shown through the stream, skip the forced headed browser only when a view is attached, let the person always interrupt an assisted step, and publish at once on success; `src/cadrumo/adapters/outbound/aeat/auth/clave_movil.py, src/cadrumo/adapters/outbound/aeat/auth/providers.py, src/cadrumo/adapters/outbound/aeat/auth/authenticator.py, src/cadrumo/application/live/sede_view_operation.py, auth tests`.
+- [x] `P05.S12` - support in-panel login: the person logs in by hand with any provider including Cl@ve Permanente and the view captures and publishes after provider verification; run certificate and Cl@ve Movil assistance inside the view's headless Chromium shown through the stream, skip the forced headed browser only when a view is attached, let the person always interrupt an assisted step, and publish at once on success; `src/cadrumo/adapters/outbound/aeat/auth/clave_movil.py, src/cadrumo/adapters/outbound/aeat/auth/providers.py, src/cadrumo/adapters/outbound/aeat/auth/authenticator.py, src/cadrumo/application/live/sede_view_operation.py, auth tests`.
 
 ### Phase `P06` - integrated verification
 

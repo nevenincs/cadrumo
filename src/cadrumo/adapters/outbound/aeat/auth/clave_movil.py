@@ -19,8 +19,10 @@ Design summary:
   app request was accepted; diagnostics record that transition directly
   and never ask the operator to restate it.
 * The provider opens a headed Playwright window on fresh login so the
-  operator can scan the QR visually. Resume-from-storage-state runs
-  headlessly because no human interaction is required.
+  operator can scan the QR visually, unless its login runs inside the
+  person's Sede view, whose headless page the person already watches.
+  Resume-from-storage-state runs headlessly because no human interaction
+  is required.
 * The persisted session stores Playwright state and provider metadata
   together in the encrypted session object. Kind-namespaced logical
   storage keys keep the Cl@ve and certificate sessions separate. Each
@@ -50,6 +52,7 @@ from .....application.auth.protocols import (
     BrowserPagePort,
     BrowserSessionFactoryPort,
     BrowserSessionPort,
+    ViewLoginSessionFactoryPort,
 )
 from .....application.auth.session_types import (
     AeatLoginAssertion,
@@ -339,6 +342,46 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
                 self.active_session = None
                 raise
 
+    async def adopt_view_capture(self, storage_state: Mapping[str, object]) -> AeatSession:
+        """Record a Sede view's captured state as this identity's session and prove it.
+
+        The person signed in inside the view, by any Cl@ve route. The capture is
+        written with the configured DNI/NIE and the default authenticated Sede
+        page as its landing, anchored at the capture instant, and then resumed
+        exactly as a stored session is, in a browser of this provider's own.
+        The proof navigates to that landing only: it never clicks through the
+        Cl@ve selector, so verifying a capture never sends a request to the
+        person's phone. The caller stages the writes and publishes them only
+        after this returns; a refusal raises :class:`AeatLoginAssertionError`.
+        """
+        async with self._lifecycle.work():
+            if self.active_session is not None:
+                raise AeatLoginAssertionError(
+                    "ClaveMovilAuthProvider already has an active session; call close() first",
+                    translated_message="adapters.auth.clave_movil.errors.already_active",
+                )
+            if self._context is not None or self._browser_session is not None:
+                raise AuthProviderCleanupError(
+                    "ClaveMovilAuthProvider retained browser resources after close",
+                    translated_message="errors.auth.auth_auth_provider_cleanup",
+                )
+            dni_nie = self._require_identity()
+            path = self._storage_state_path()
+            captured_at = now()
+            self._persist_session(
+                path,
+                storage_state=storage_state,
+                metadata=ClaveMovilSessionMetadata(
+                    identity_nif=dni_nie,
+                    authenticated_at=captured_at,
+                    idle_deadline=captured_at + AEAT_SESSION_IDLE_TTL,
+                    storage_state_sha256=session_store.storage_state_sha256(storage_state),
+                    used_non_qr_fallback=self._settings.cadrumo_clave_prefer_non_qr,
+                    landing_url=self._default_target_url(),
+                ),
+            )
+            return await self._resume_locked(path, target_url=None, dispatch_selector=False)
+
     def _finalize_probe_result(
         self,
         session: AeatSession,
@@ -420,8 +463,13 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         session: AeatSession,
         *,
         target_url: str | None,
+        dispatch_selector: bool = True,
     ) -> AeatLoginAssertion:
-        """Verify a session while the caller holds the provider work lease."""
+        """Verify a session while the caller holds the provider work lease.
+
+        With ``dispatch_selector`` off, a probe that lands on the Cl@ve selector
+        stays there and fails rather than requesting a new Cl@ve Movil login.
+        """
         context = self._context
         if context is None:
             raise AeatLoginAssertionError(
@@ -460,7 +508,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
             target_path=target_path,
             navigation_timeout_ms=self._navigation_timeout_ms,
             is_authenticated_landing=self._authenticated_landing_predicate,
-            on_landing=self._dispatch_clave_selector_on_landing,
+            on_landing=self._dispatch_clave_selector_on_landing if dispatch_selector else None,
             log_label="ClaveMovilAuthProvider.verify",
         )
         is_valid = outcome.session_cookie_present and bool(session.identity_nif)
@@ -705,14 +753,25 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
 
     # ── Lifecycle helpers ───────────────────────────────────────────────────
 
+    def _lends_view(self) -> bool:
+        """Whether this provider's login runs inside the person's Sede view."""
+        factory = self._browser_session_factory
+        return isinstance(factory, ViewLoginSessionFactoryPort) and factory.lends_view
+
     def _fresh_login_settings(self) -> Settings:
         """Return browser settings suitable for operator-mediated authentication.
 
         The QR branch needs a visible page for scanning. The non-QR branch
         uses the configured identity and contrast data, so it can keep the
-        operator's headless setting while waiting for phone approval.
+        operator's headless setting while waiting for phone approval. A login
+        the Sede view lends its page to keeps the view's headless browser: the
+        person sees the QR in the panel.
         """
-        if self._settings.cadrumo_clave_prefer_non_qr or not self._settings.cadrumo_browser_headless:
+        if (
+            self._settings.cadrumo_clave_prefer_non_qr
+            or not self._settings.cadrumo_browser_headless
+            or self._lends_view()
+        ):
             return self._settings
         return self._settings.model_copy(update={"cadrumo_browser_headless": False})
 
@@ -831,7 +890,11 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         target = target_url or self._default_target_url()
         target_path = self._target_path_from_url(target)
         selector_url = self._selector_url(target_path)
-        if not self._settings.cadrumo_clave_prefer_non_qr and not interactive_desktop_available():
+        if (
+            not self._settings.cadrumo_clave_prefer_non_qr
+            and not self._lends_view()
+            and not interactive_desktop_available()
+        ):
             # Publish only the public entry point, never a live challenge URL,
             # cookies, target query parameters, or a claimed authenticated state.
             authentication_url = aeat_authentication_url()
@@ -1094,6 +1157,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         storage_state_path: Path,
         *,
         target_url: str | None,
+        dispatch_selector: bool = True,
     ) -> AeatSession:
         persisted = self._load_persisted(storage_state_path)
         metadata = self._load_metadata(storage_state_path, persisted)
@@ -1133,7 +1197,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
             self._context = context
             self.active_session = session
 
-            assertion = await self._verify_in_work(session, target_url=target_url)
+            assertion = await self._verify_in_work(session, target_url=target_url, dispatch_selector=dispatch_selector)
             if not assertion.is_valid:
                 raise AeatLoginAssertionError(
                     "Cl@ve Móvil resume failed live verification: "

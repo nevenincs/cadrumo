@@ -10,8 +10,6 @@ stand-in: its relay to the window has its own runtime tests.
 from __future__ import annotations
 
 import asyncio
-import threading
-from collections import deque
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
@@ -23,12 +21,8 @@ from playwright.async_api import BrowserContext, Page, Route, async_playwright
 
 from cadrumo_client.contracts.view_stream import (
     ViewClose,
-    ViewClosedReason,
-    ViewImage,
-    ViewNotice,
     ViewPhase,
     ViewResize,
-    ViewSinkInput,
     ViewState,
 )
 from cadrumo_client.contracts.view_transfer import (
@@ -38,8 +32,6 @@ from cadrumo_client.contracts.view_transfer import (
     ViewFileChooser,
     ViewFileChooserAnswer,
     ViewFileChooserOutcome,
-    ViewTransferByteSource,
-    ViewTransferCancel,
     ViewUploadedFile,
 )
 
@@ -49,7 +41,7 @@ from ......tests.component_record_support import record_shared_browser
 from ..profile import Profile
 from ..sede_view import SedeViewPage, safe_filename, view_state
 from ..session import BrowserSession
-from .view_page_support import until
+from .view_page_support import RecordingViewSink, until
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -86,65 +78,10 @@ class _Site:
         await route.fulfill(status=200, content_type=content_type, body=body, headers=headers)
 
 
-class _Sink:
-    """Records what the driver sends the window and hands it the window's input."""
-
-    def __init__(self) -> None:
-        self._lock = threading.Lock()
-        self._inbox: deque[ViewSinkInput] = deque()
-        self.images: list[ViewImage] = []
-        self.documents: list[ViewState | ViewNotice | ViewDownload | ViewFileChooser | ViewTransferCancel] = []
-        self.downloaded: dict[int, bytes] = {}
-        self.closed: list[ViewClosedReason] = []
-
-    @property
-    def connected(self) -> bool:
-        return True
-
-    @property
-    def ended(self) -> bool:
-        return bool(self.closed)
-
-    def offer_image(self, announcement: ViewImage, image: bytes) -> None:
-        assert announcement.byte_length == len(image)
-        with self._lock:
-            self.images.append(announcement)
-
-    def send(self, document: ViewState | ViewNotice | ViewDownload | ViewFileChooser | ViewTransferCancel) -> None:
-        with self._lock:
-            self.documents.append(document)
-
-    def put(self, item: ViewSinkInput) -> None:
-        with self._lock:
-            self._inbox.append(item)
-
-    def receive(self, *, timeout: float) -> ViewSinkInput | None:
-        with self._lock:
-            if self._inbox:
-                return self._inbox.popleft()
-        threading.Event().wait(min(timeout, 0.02))
-        return None
-
-    def send_download(self, transfer_id: int, source: ViewTransferByteSource) -> bool:
-        chunks: list[bytes] = []
-        while chunk := source.read(4096):
-            chunks.append(chunk)
-        with self._lock:
-            self.downloaded[transfer_id] = b"".join(chunks)
-        return True
-
-    def close(self, reason: ViewClosedReason) -> None:
-        self.closed.append(reason)
-
-    def of[DocumentT](self, kind: type[DocumentT]) -> list[DocumentT]:
-        with self._lock:
-            return [document for document in self.documents if isinstance(document, kind)]
-
-
 @dataclass
 class _Running:
     view: SedeViewPage
-    sink: _Sink
+    sink: RecordingViewSink
     browsing: asyncio.Task[SedeViewEnd]
     stop: list[bool]
 
@@ -159,7 +96,7 @@ async def _view(tmp_path: Path, site: _Site) -> AsyncGenerator[_Running]:
         cadrumo_local_storage_root=tmp_path, cadrumo_browser_headless=True, cadrumo_proxy_url=_CLOSED_PROXY
     )
     record_shared_browser(settings)
-    sink = _Sink()
+    sink = RecordingViewSink()
     opening = SedeViewOpening(
         settings=settings,
         sink=sink,

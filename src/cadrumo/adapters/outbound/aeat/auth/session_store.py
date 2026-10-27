@@ -20,7 +20,7 @@ from __future__ import annotations
 from collections.abc import Generator, Mapping
 from contextlib import AbstractContextManager, contextmanager
 from contextvars import ContextVar
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -32,7 +32,6 @@ from .....core.auth_session_keys import (
 )
 from .....core.errors.hierarchy import (
     AuthError,
-    CoreValidationError,
     InternalInvariantError,
     pydantic_validation_boundary,
 )
@@ -40,7 +39,6 @@ from .....core.external_constants import UTF_8_ENCODING
 from .....core.hashing import content_hash_hex
 from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.time.clock import now
-from .....core.time.utc import parse_iso_datetime, validate_utc_aware
 from ....persistence.storage.secure_object_namespaces import AEAT_BROWSER_SESSION_NAMESPACE
 
 if TYPE_CHECKING:
@@ -279,55 +277,6 @@ def durable_storage_state_sha256(path: Path) -> str | None:
     return None if persisted is None else persisted.storage_state_sha256
 
 
-_SHARED_METADATA_DIGEST = "storage_state_sha256"
-_SHARED_METADATA_AUTHENTICATED_AT = "authenticated_at"
-_SHARED_METADATA_IDLE_DEADLINE = "idle_deadline"
-
-
-def stage_captured_storage_state(path: Path, *, storage_state: Mapping[str, object]) -> bool:
-    """Stage a running context's capture over the stored record for provider verification.
-
-    Every provider's metadata carries ``authenticated_at``, ``idle_deadline`` and
-    ``storage_state_sha256``. The capture replaces the stored storage state, its
-    digest is rebound, and the provider's own idle window is re-anchored at the
-    capture instant, because the context that produced it was in use until then.
-    The staged record is provisional: only the provider's persisted-session probe,
-    run against it inside the same stage, can make it publishable, and that probe
-    rewrites the deadline from its own live proof.
-
-    Returns ``False`` when no record is stored or its shared metadata is not the
-    shape this rebinding needs; nothing is staged then.
-    """
-    if _DEFERRED_WRITES.get() is None:
-        raise InternalInvariantError("a captured browser state is staged only inside deferred session writes")
-    current = load(path)
-    if current is None:
-        return False
-    metadata = dict(current.metadata)
-    try:
-        authenticated_at = _metadata_instant(metadata[_SHARED_METADATA_AUTHENTICATED_AT])
-        idle_deadline = _metadata_instant(metadata[_SHARED_METADATA_IDLE_DEADLINE])
-    except (KeyError, TypeError, ValueError, CoreValidationError):
-        return False
-    idle_window = idle_deadline - authenticated_at
-    if _SHARED_METADATA_DIGEST not in metadata or idle_window <= timedelta(0):
-        return False
-    captured_at = now()
-    metadata[_SHARED_METADATA_AUTHENTICATED_AT] = captured_at.isoformat()
-    metadata[_SHARED_METADATA_IDLE_DEADLINE] = (captured_at + idle_window).isoformat()
-    metadata[_SHARED_METADATA_DIGEST] = _storage_state_sha256(storage_state)
-    save(path, storage_state=storage_state, metadata=metadata)
-    return True
-
-
-def _metadata_instant(value: object) -> datetime:
-    if isinstance(value, datetime):
-        return validate_utc_aware(value)
-    if isinstance(value, str):
-        return validate_utc_aware(parse_iso_datetime(value.strip()))
-    raise TypeError("session metadata instant is not a timestamp")
-
-
 def _key(path: Path) -> str:
     return Path(path).as_posix()
 
@@ -387,10 +336,6 @@ class AeatSessionStoreAdapter:
         """Return the durable digest at ``path``, ignoring staged writes."""
         return durable_storage_state_sha256(path)
 
-    def stage_captured_storage_state(self, path: Path, *, storage_state: Mapping[str, object]) -> bool:
-        """Stage a captured storage state over the stored record at ``path``."""
-        return stage_captured_storage_state(path, storage_state=storage_state)
-
 
 def build_session_store() -> AeatSessionStoreAdapter:
     """Build the stateless concrete application-port adapter."""
@@ -407,6 +352,5 @@ __all__ = [
     "exists",
     "load",
     "save",
-    "stage_captured_storage_state",
     "storage_state_sha256",
 ]

@@ -9,12 +9,22 @@ test stands in for the Sede.
 from __future__ import annotations
 
 import asyncio
+import threading
+from collections import deque
 from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from typing import Final
 
 from playwright.async_api import BrowserContext, Page, Route, async_playwright
+
+from cadrumo_client.contracts.view_stream import ViewClosedReason, ViewImage, ViewNotice, ViewSinkInput, ViewState
+from cadrumo_client.contracts.view_transfer import (
+    ViewDownload,
+    ViewFileChooser,
+    ViewTransferByteSource,
+    ViewTransferCancel,
+)
 
 EVENT_TIMEOUT_SECONDS: Final[float] = 10.0
 _POLL_SECONDS: Final[float] = 0.02
@@ -48,6 +58,61 @@ class SyntheticSite:
     def requests_for(self, url: str) -> int:
         """How many times the browser asked for ``url``."""
         return sum(1 for received in self.received if received == url)
+
+
+class RecordingViewSink:
+    """Record what a view driver sends the window and hand it the window's input."""
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._inbox: deque[ViewSinkInput] = deque()
+        self.images: list[ViewImage] = []
+        self.documents: list[ViewState | ViewNotice | ViewDownload | ViewFileChooser | ViewTransferCancel] = []
+        self.downloaded: dict[int, bytes] = {}
+        self.closed: list[ViewClosedReason] = []
+
+    @property
+    def connected(self) -> bool:
+        return True
+
+    @property
+    def ended(self) -> bool:
+        return bool(self.closed)
+
+    def offer_image(self, announcement: ViewImage, image: bytes) -> None:
+        assert announcement.byte_length == len(image)
+        with self._lock:
+            self.images.append(announcement)
+
+    def send(self, document: ViewState | ViewNotice | ViewDownload | ViewFileChooser | ViewTransferCancel) -> None:
+        with self._lock:
+            self.documents.append(document)
+
+    def put(self, item: ViewSinkInput) -> None:
+        with self._lock:
+            self._inbox.append(item)
+
+    def receive(self, *, timeout: float) -> ViewSinkInput | None:
+        with self._lock:
+            if self._inbox:
+                return self._inbox.popleft()
+        threading.Event().wait(min(timeout, 0.02))
+        return None
+
+    def send_download(self, transfer_id: int, source: ViewTransferByteSource) -> bool:
+        chunks: list[bytes] = []
+        while chunk := source.read(4096):
+            chunks.append(chunk)
+        with self._lock:
+            self.downloaded[transfer_id] = b"".join(chunks)
+        return True
+
+    def close(self, reason: ViewClosedReason) -> None:
+        self.closed.append(reason)
+
+    def of[DocumentT](self, kind: type[DocumentT]) -> list[DocumentT]:
+        with self._lock:
+            return [document for document in self.documents if isinstance(document, kind)]
 
 
 @asynccontextmanager

@@ -5,7 +5,14 @@ path, seeds an unrestricted browser context from custody and relays it to the
 desktop window over the view stream. It has no idle or absolute bound: it runs
 while the window holds it open and the person's session is held.
 
-How the view ends decides whether it publishes. The window's ``view.close``,
+The person signs in inside the view. With no valid stored session the view
+opens signed out; the configured certificate or Cl@ve Movil login then runs
+inside it as assistance the person watches and may interrupt, and a login the
+person makes by hand, with any provider, is detected after each AEAT page load
+through the provider's own verification. Either publishes at once through the
+canonical custody path, so every sync reuses it.
+
+How the view ends decides whether it publishes again. The window's ``view.close``,
 or its view connection dropping without one, and the last page closing, end
 it gracefully: the view captures the context's session and publishes it
 through the canonical custody path under the effect guard, then settles as
@@ -21,6 +28,8 @@ the journal, the result or a log.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, Callable
+from contextlib import AbstractAsyncContextManager
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -40,7 +49,9 @@ from cadrumo_client.contracts.view_stream import (
 
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.config import Settings
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.identity.bucket import BucketId
+from ...core.logging import get_logger
 from ...core.operations import (
     OperationCancellation,
     OperationClosePolicy,
@@ -50,10 +61,18 @@ from ...core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ..auth.operator_scope_ports import OperatorScopePorts
-from ..auth.protocols import BrowserSessionFactoryPort
-from ..auth.sessions import ViewSessionBaseline, ViewSessionPublicationOutcome, view_context_provisioner
+from ..auth.protocols import BrowserSessionFactoryPort, session_store
+from ..auth.sessions import (
+    VIEW_ASSISTED_PROVIDERS,
+    ViewSessionBaseline,
+    ViewSessionPublication,
+    ViewSessionPublicationOutcome,
+    ViewSessionSeed,
+    view_context_provisioner,
+)
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import (
     OperationBaselinePolicy,
@@ -92,14 +111,30 @@ from .sede_view_ports import (
     SedeViewOpening,
     SedeViewStreamOpener,
 )
-from .session import LiveSessionWriteReceipt, close_live_view_session, open_live_view_session
+from .session import (
+    LiveSessionWriteReceipt,
+    SessionWriteReporter,
+    assist_live_view_login,
+    open_live_view_session,
+    publish_live_view_session,
+)
+
+logger = get_logger(__name__)
 
 _PUBLIC_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 SEDE_VIEW_ACQUIRE_PHASE = "sede-view.acquire"
 SEDE_VIEW_BROWSE_PHASE = "sede-view.browse"
+SEDE_VIEW_SIGN_IN_PHASE = "sede-view.sign-in"
 SEDE_VIEW_CLOSING_PHASE = "sede-view.closing"
 SEDE_VIEW_RESULT_PHASE = "sede-view.result"
-_PHASES = (SEDE_VIEW_ACQUIRE_PHASE, SEDE_VIEW_BROWSE_PHASE, SEDE_VIEW_CLOSING_PHASE, SEDE_VIEW_RESULT_PHASE)
+_PHASES = (
+    SEDE_VIEW_ACQUIRE_PHASE,
+    SEDE_VIEW_BROWSE_PHASE,
+    SEDE_VIEW_SIGN_IN_PHASE,
+    SEDE_VIEW_CLOSING_PHASE,
+    SEDE_VIEW_RESULT_PHASE,
+)
+_SIGN_IN_OPERATION = "live-sede-view-sign-in"
 
 #: The view's own policy: it runs until the person closes it, so it declares no execution deadline, and the
 #: supervisor's cancel stops it cooperatively. One view per profile; its browser is a supervisor-owned process.
@@ -157,6 +192,165 @@ class SedeViewPublicResultV1(BaseModel):
 def _unavailable_stream(identity: object) -> ViewStreamSink:
     del identity
     raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
+
+
+type EffectGuardFor = Callable[[str], Callable[[], AbstractAsyncContextManager[None]]]
+"""The operation's effect guard for a publication announced in one phase."""
+
+
+class SedeViewSessionSignIn:
+    """The view's session, from its seed to its last publication.
+
+    It implements :class:`~cadrumo.application.live.sede_view_ports.SedeViewSignIn`:
+    a signed-out view runs the configured certificate or Cl@ve Movil login as
+    assistance the person may interrupt, and checks after each AEAT page load
+    whether the person has signed in by hand, through the provider's own
+    verification. A sign-in publishes at once. Publications never overlap, and
+    each one's baseline is the digest the view was seeded from or last
+    published, so the close-time publication follows the latest sign-in.
+
+    Each refused capture is remembered by digest and not verified again. After
+    a sign-in publishes, page loads are no longer checked: the close-time
+    publication covers what follows. A sign-in publication interrupted between
+    its ``UNKNOWN`` and ``UPDATED`` reports sets :attr:`unknown`, which ends
+    the view.
+    """
+
+    def __init__(
+        self,
+        *,
+        settings: Settings,
+        seed: ViewSessionSeed,
+        browser: SedeViewBrowser,
+        certificate_secret_backend_factory: CertificateSecretBackendFactory,
+        browser_session_factory: BrowserSessionFactoryPort,
+        operator_scope_ports: OperatorScopePorts,
+        authority_operation: PinnedAuthorityOperation,
+        effect_guard_for: EffectGuardFor,
+        on_session_write: SessionWriteReporter,
+        resume_browsing: Callable[[], Awaitable[None]],
+        stop_requested: Callable[[], bool],
+    ) -> None:
+        """Hold the seed's baseline and the ports every view publication goes through."""
+        self._settings = settings
+        self._baseline = seed.baseline
+        self._signed_in = seed.signed_in
+        self._browser = browser
+        self._certificate_secret_backend_factory = certificate_secret_backend_factory
+        self._browser_session_factory = browser_session_factory
+        self._operator_scope_ports = operator_scope_ports
+        self._authority_operation = authority_operation
+        self._effect_guard_for = effect_guard_for
+        self._on_session_write = on_session_write
+        self._resume_browsing = resume_browsing
+        self._stop_requested = stop_requested
+        self._publishing = asyncio.Lock()
+        self._interruptible = False
+        self._refused: set[str] = set()
+        self._unknown = False
+
+    @property
+    def baseline(self) -> ViewSessionBaseline:
+        """The digest the next publication requires custody to still hold."""
+        return self._baseline
+
+    @property
+    def signed_in(self) -> bool:
+        """Whether the view holds a session the provider verified, seeded or published."""
+        return self._signed_in
+
+    @property
+    def unknown(self) -> bool:
+        """Whether a sign-in publication was interrupted with its write unknown."""
+        return self._unknown
+
+    @property
+    def interruptible(self) -> bool:
+        """Whether the assisted login runs and has not yet been verified."""
+        return self._interruptible
+
+    async def assist(self) -> None:
+        """Run the configured provider's login in a signed-out view and publish it at once.
+
+        Only the certificate and Cl@ve Movil logins run in the view; Cadrumo
+        never drives a Cl@ve Permanente login. A login that fails, or that the
+        person interrupts, leaves the view to the person.
+        """
+        if self._signed_in or self._baseline.provider_kind not in VIEW_ASSISTED_PROVIDERS:
+            return
+        self._interruptible = True
+        await self._browser.announce_phase(ViewPhase.ACQUIRING)
+        try:
+            async with self._publishing:
+                publication = await assist_live_view_login(
+                    self._settings,
+                    baseline=self._baseline,
+                    login_session_factory=self._browser.login_session_factory,
+                    certificate_secret_backend_factory=self._certificate_secret_backend_factory,
+                    operator_scope_ports=self._operator_scope_ports,
+                    authority_operation=self._authority_operation,
+                    effect_guard=self._effect_guard_for(SEDE_VIEW_SIGN_IN_PHASE),
+                    on_session_write=self._on_session_write,
+                    on_login_verified=self._login_verified,
+                )
+                await self._settle(publication)
+        except Exception as exc:
+            # The provider's own failure: the person can still sign in by hand.
+            logger.info("aeat view assisted login ended exc_type=%s", type(exc).__name__)
+        finally:
+            self._interruptible = False
+            await self._browser.announce_phase(ViewPhase.BROWSING)
+
+    async def page_loaded(self) -> None:
+        """Publish the view's session if the person has signed in since the last check."""
+        if self._watch_ended():
+            return
+        async with self._publishing:
+            if self._watch_ended():
+                return
+            captured = await self._browser.context.storage_state()
+            digest = session_store().storage_state_sha256(captured)
+            if digest in self._refused or digest == self._baseline.storage_state_sha256:
+                return
+            publication = await self._publish(SEDE_VIEW_SIGN_IN_PHASE, operation=_SIGN_IN_OPERATION)
+            if publication.outcome is ViewSessionPublicationOutcome.VERIFICATION_FAILED:
+                self._refused.add(digest)
+            await self._settle(publication)
+
+    async def close(self) -> ViewSessionPublicationOutcome:
+        """Publish the closing view's session after any sign-in still publishing."""
+        async with self._publishing:
+            publication = await self._publish(SEDE_VIEW_CLOSING_PHASE, operation="live-sede-view-close")
+            self._baseline = publication.baseline
+            return publication.outcome
+
+    def _watch_ended(self) -> bool:
+        return self._signed_in or self._unknown or self._stop_requested()
+
+    def _login_verified(self) -> None:
+        self._interruptible = False
+
+    async def _publish(self, phase: str, *, operation: str) -> ViewSessionPublication:
+        return await publish_live_view_session(
+            self._settings,
+            baseline=self._baseline,
+            view_context=self._browser.context,
+            certificate_secret_backend_factory=self._certificate_secret_backend_factory,
+            browser_session_factory=self._browser_session_factory,
+            operator_scope_ports=self._operator_scope_ports,
+            authority_operation=self._authority_operation,
+            effect_guard=self._effect_guard_for(phase),
+            on_session_write=self._on_session_write,
+            operation=operation,
+        )
+
+    async def _settle(self, publication: ViewSessionPublication) -> None:
+        if publication.outcome is ViewSessionPublicationOutcome.PUBLISHED:
+            self._baseline = publication.baseline
+            self._signed_in = True
+            await self._resume_browsing()
+        elif publication.outcome is ViewSessionPublicationOutcome.UNKNOWN:
+            self._unknown = True
 
 
 class SedeViewExecutor:
@@ -221,6 +415,10 @@ class SedeViewExecutor:
         self, payload: SedeViewRequest, sink: ViewStreamSink, context: OperationExecutorContext
     ) -> tuple[SedeViewEnd, ViewSessionPublicationOutcome | None, LiveSessionWriteReceipt]:
         receipt = LiveSessionWriteReceipt(context.events.effect)
+
+        def stop_requested() -> bool:
+            return context.cancellation.cancellation_requested
+
         seed, settings = await open_live_view_session(
             certificate_secret_backend_factory=self._certificate_secret_backend_factory,
             browser_session_factory=self._browser_session_factory,
@@ -246,37 +444,30 @@ class SedeViewExecutor:
             )
         )
         try:
+            sign_in = SedeViewSessionSignIn(
+                settings=settings,
+                seed=seed,
+                browser=browser,
+                certificate_secret_backend_factory=self._certificate_secret_backend_factory,
+                browser_session_factory=self._browser_session_factory,
+                operator_scope_ports=self._operator_scope_ports,
+                authority_operation=context.authority_operation,
+                effect_guard_for=lambda phase: fenced_persistence_guard(context, persist_phase=phase),
+                on_session_write=receipt,
+                resume_browsing=lambda: context.events.phase(SEDE_VIEW_BROWSE_PHASE),
+                stop_requested=stop_requested,
+            )
             await context.events.phase(SEDE_VIEW_BROWSE_PHASE)
-            end = await browser.browse(stop_requested=lambda: context.cancellation.cancellation_requested)
-            if end not in PUBLISHING_ENDS or context.cancellation.cancellation_requested:
+            end = await browser.browse(stop_requested=lambda: stop_requested() or sign_in.unknown, sign_in=sign_in)
+            if sign_in.unknown:
+                raise InternalInvariantError("the Sede view's sign-in publication was interrupted")
+            if end not in PUBLISHING_ENDS or stop_requested():
                 return end, None, receipt
-            publication = await self._publish(browser, settings, seed.baseline, context, receipt)
-            return end, publication, receipt
+            await context.events.phase(SEDE_VIEW_CLOSING_PHASE)
+            await browser.announce_phase(ViewPhase.CLOSING)
+            return end, await sign_in.close(), receipt
         finally:
             await browser.close()
-
-    async def _publish(
-        self,
-        browser: SedeViewBrowser,
-        settings: Settings,
-        baseline: ViewSessionBaseline,
-        context: OperationExecutorContext,
-        receipt: LiveSessionWriteReceipt,
-    ) -> ViewSessionPublicationOutcome:
-        await context.events.phase(SEDE_VIEW_CLOSING_PHASE)
-        await browser.announce_phase(ViewPhase.CLOSING)
-        publication = await close_live_view_session(
-            settings,
-            baseline=baseline,
-            view_context=browser.context,
-            certificate_secret_backend_factory=self._certificate_secret_backend_factory,
-            browser_session_factory=self._browser_session_factory,
-            operator_scope_ports=self._operator_scope_ports,
-            authority_operation=context.authority_operation,
-            effect_guard=fenced_persistence_guard(context, persist_phase=SEDE_VIEW_CLOSING_PHASE),
-            on_session_write=receipt,
-        )
-        return publication.outcome
 
 
 def build_sede_view_definition(
@@ -368,10 +559,13 @@ __all__ = [
     "SEDE_VIEW_CAPABILITIES",
     "SEDE_VIEW_CLOSING_PHASE",
     "SEDE_VIEW_RESULT_PHASE",
+    "SEDE_VIEW_SIGN_IN_PHASE",
+    "EffectGuardFor",
     "SedeViewExecutor",
     "SedeViewPublicResultV1",
     "SedeViewReport",
     "SedeViewRequest",
+    "SedeViewSessionSignIn",
     "build_sede_view_definition",
     "build_sede_view_registration",
     "resolve_sede_view_access",
