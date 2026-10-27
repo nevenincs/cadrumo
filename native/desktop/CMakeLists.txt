@@ -96,6 +96,8 @@ add_custom_target(clean-desktop-frontend-install
   VERBATIM)
 set(CADRUMO_DESKTOP_FRONTEND_TEST_WORKERS "" CACHE STRING
   "Optional Playwright worker count for desktop-frontend-test")
+set(CADRUMO_DESKTOP_FRONTEND_TEST_FILTER "" CACHE STRING
+  "Optional Playwright test filter for desktop-frontend-test")
 option(CADRUMO_DESKTOP_FRONTEND_TEST_LAST_FAILED "Rerun only the last failed frontend tests" OFF)
 if(NOT CADRUMO_DESKTOP_FRONTEND_TEST_WORKERS STREQUAL ""
     AND NOT CADRUMO_DESKTOP_FRONTEND_TEST_WORKERS MATCHES "^[1-9][0-9]*$")
@@ -109,6 +111,9 @@ foreach(action IN ITEMS check test)
     endif()
     if(CADRUMO_DESKTOP_FRONTEND_TEST_LAST_FAILED)
       list(APPEND desktop_frontend_script_arguments --last-failed)
+    endif()
+    if(NOT CADRUMO_DESKTOP_FRONTEND_TEST_FILTER STREQUAL "")
+      list(APPEND desktop_frontend_script_arguments "${CADRUMO_DESKTOP_FRONTEND_TEST_FILTER}")
     endif()
     if(desktop_frontend_script_arguments)
       list(PREPEND desktop_frontend_script_arguments --)
