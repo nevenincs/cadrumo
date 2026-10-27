@@ -1,4 +1,4 @@
-"""A native desktop person answers an MCP setup over the real Windows pipe.
+"""A native desktop person finds and answers an MCP setup over the real Windows pipe.
 
 The desktop host test uses production NativeSession and runtime_client.Connection,
 with canonical password admission on a marked disposable development root.
@@ -11,11 +11,12 @@ import asyncio
 import json
 import os
 import shutil
+import time
 from contextlib import ExitStack
 from pathlib import Path
 from threading import Thread
 from typing import BinaryIO
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import pytest
 
@@ -34,8 +35,11 @@ from cadrumo.tests.components_role_package import (
     counting_proxy_fixture,
     staged_components_role_fixture,
 )
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.attendance import AttendancePending
+from cadrumo_client.contracts.operation_access import OperationClaimableReviews
 from cadrumo_client.contracts.profile_access import ProfileStatus
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.windows_process import WindowsProcessScope
 from cadrumo_mcp.mcp.runtime_adapter import RuntimeMcpAdapter
 from cadrumo_mcp.mcp.server import build_server
@@ -161,6 +165,20 @@ def test_native_desktop_claims_and_rejects_existing_mcp_setup(tmp_path: Path, co
                         assert refused.structured_content is not None
                         assert refused.structured_content["code"] == "person_act_required"
 
+                    # Only a desktop person learns which setup reviews it may claim: the TUI
+                    # person and the MCP client asking for the same listing are refused.
+                    for client, code in (
+                        (parent, AccessDenialCode.HUMAN_AUTHORITY_REQUIRED),
+                        (external, AccessDenialCode.PERSON_ACT_REQUIRED),
+                    ):
+                        with pytest.raises(FrontendRefusedError) as refusal:
+                            client.operation(
+                                OperationClaimableReviews(
+                                    request_id=uuid4(), profile_id=runtime.profile_id, session_id=client.session_id
+                                ),
+                                deadline=time.monotonic() + 10,
+                            )
+                        assert refusal.value.reason == code.value
                     journal = OperationJournalRepository(storage_root=runtime.root)
                     before = await journal.load(operation_id)
                     assert before.admission_provenance_reference is not None
@@ -196,6 +214,10 @@ def test_native_desktop_claims_and_rejects_existing_mcp_setup(tmp_path: Path, co
                     assert review["review_digest"] == content_hash_hex(review["document"])
                     assert claimed["review_digest"] == content_hash_hex(claimed["document"])
                     assert result["responded"]["decision"] == "reject"
+                    # Listed while claimable and while this person holds it; gone once answered.
+                    assert result["listed_before"] == [operation_id]
+                    assert result["listed_claimed"] == [operation_id]
+                    assert result["listed_after"] == []
                     terminal = await _waiting(external, read, target=OperationLifecycle.TERMINAL)
                     assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
                     assert terminal.effect is OperationEffect.NONE

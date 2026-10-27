@@ -38,6 +38,7 @@ from cadrumo_client.contracts.extension_records import ExtensionRecordRequest
 from cadrumo_client.contracts.installation_requests import InstallationActRequest
 from cadrumo_client.contracts.model_runs import ModelRunCompleteRequest, ModelRunFetchRequest
 from cadrumo_client.contracts.operation_access import (
+    OperationClaimableReviews,
     OperationContract,
     OperationControl,
     OperationFinancialInput,
@@ -314,6 +315,7 @@ class RuntimeConnectionHandling:
             | OperationResultPage
             | OperationReview
             | OperationReviewClaim
+            | OperationClaimableReviews
             | OperationManage
             | OperationFinancialInput
             | OperationSecret,

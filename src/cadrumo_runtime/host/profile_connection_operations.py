@@ -12,6 +12,7 @@ from uuid import UUID
 from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1
 from cadrumo.application.operations.models import OperationId
 from cadrumo.application.operations.person_acts import operation_is_persons_act
+from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.logging import get_logger
 from cadrumo.core.operations import OperationLifecycle
@@ -21,6 +22,8 @@ from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, Aut
 from cadrumo_client.contracts.contracts import ByteChannel, RefusalCode, RefusalError
 from cadrumo_client.contracts.operation_access import (
     OperationAcknowledged,
+    OperationClaimableReviews,
+    OperationClaimableReviewsListed,
     OperationContract,
     OperationContractReply,
     OperationControl,
@@ -73,6 +76,7 @@ type _RuntimeOperationReplyRequest = (
     | OperationReview
     | OperationManage
     | OperationReviewClaim
+    | OperationClaimableReviews
 )
 
 
@@ -164,7 +168,9 @@ class ProfileConnectionOperationMixin:
             try:
                 release_guard.enter_context(self.operation_admission())
                 connection, host = self._operation_target(context, channel, request)
-                if isinstance(request, OperationReviewClaim) and self._refused_as_persons_act(
+                if isinstance(
+                    request, OperationReviewClaim | OperationClaimableReviews
+                ) and self._refused_as_persons_act(
                     context, channel, request_id=request.request_id, frontend=connection.frontend
                 ):
                     return
@@ -319,6 +325,17 @@ class ProfileConnectionOperationMixin:
         *,
         release_guard: ExitStack,
     ) -> tuple[OperationReply, datetime | None]:
+        if isinstance(request, OperationClaimableReviews):
+            # Only the desktop surfaces these reviews; the claim itself stays open to every person frontend.
+            if connection.frontend is not OperationFrontendProjection.DESKTOP:
+                raise ProfileAccessRefusedError(AccessDenialCode.HUMAN_AUTHORITY_REQUIRED)
+            listed = host.owner.operation_worker().claimable_reviews(host.review_person_attestation(connection))
+            return OperationClaimableReviewsListed(
+                request_id=request.request_id,
+                runtime_boot_id=self.boot,
+                connection_id=context.connection_id,
+                operation_ids=listed.operation_ids,
+            ), None
         if isinstance(request, OperationReviewClaim):
             proof = host.review_person_attestation(connection)
             claimed = host.owner.operation_worker().claim_review(

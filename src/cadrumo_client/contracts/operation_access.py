@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Final, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field, JsonValue
@@ -158,6 +158,12 @@ class OperationReviewClaim(OperationTarget):
     reviewed_document_digest: ContentDigest
 
 
+class OperationClaimableReviews(OperationTarget):
+    """Ask which provisioning reviews this verified desktop person may claim now."""
+
+    action: Literal["operation_review_claimable"] = "operation_review_claimable"
+
+
 type OperationRequest = (
     OperationSubmit
     | OperationFinancialInput
@@ -171,6 +177,7 @@ type OperationRequest = (
     | OperationReview
     | OperationManage
     | OperationReviewClaim
+    | OperationClaimableReviews
 )
 
 
@@ -258,6 +265,17 @@ class OperationReviewClaimed(OperationReplyIdentity):
     allowed_intents: frozenset[OperationResponseIntentValue]
 
 
+CLAIMABLE_REVIEWS_MAX: Final = 16
+"""The most claimable provisioning reviews one listing names."""
+
+
+class OperationClaimableReviewsListed(OperationReplyIdentity):
+    """Operations whose current review the person may claim; naming one grants no authority."""
+
+    kind: Literal["operation_reviews_claimable"] = "operation_reviews_claimable"
+    operation_ids: tuple[OperationId, ...] = Field(max_length=CLAIMABLE_REVIEWS_MAX)
+
+
 type OperationReply = (
     OperationSubmitted
     | OperationPayloadReady
@@ -268,4 +286,5 @@ type OperationReply = (
     | OperationManaged
     | OperationPage
     | OperationReviewClaimed
+    | OperationClaimableReviewsListed
 )

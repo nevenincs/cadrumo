@@ -67,7 +67,11 @@ from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
-from cadrumo_client.contracts.operation_access import OperationManagementRequest, operation_management_action
+from cadrumo_client.contracts.operation_access import (
+    CLAIMABLE_REVIEWS_MAX,
+    OperationManagementRequest,
+    operation_management_action,
+)
 from cadrumo_client.contracts.projection_pages import ProjectionPageRequest
 from cadrumo_runtime.contracts.worker_authorization import RuntimeHumanReviewClaimAttestation
 
@@ -938,6 +942,51 @@ class ProfileWorkerOperationHost:
             result = await await_cancellation_complete(control(), task_name="profile-operation-control")
             document = _PROJECTION_DOCUMENT.validate_python(result.model_dump(mode="json", serialize_as_any=True))
             yield document, authorization
+
+    async def claimable_reviews(self, proof: RuntimeHumanReviewClaimAttestation) -> tuple[OperationId, ...]:
+        """Name the live setup reviews the attested desktop person may claim now.
+
+        Naming one grants nothing: the person still reads the review and
+        claims it through the guarded claim, which rechecks every coordinate.
+        A review another person holds is left out; one this person holds is
+        named again so an interrupted answer can still be given.
+        """
+        if proof.frontend.value != "desktop":
+            raise ProfileAccessRefusedError(AccessDenialCode.HUMAN_AUTHORITY_REQUIRED)
+        self.custody.require(proof.session_id)
+        await self._require_current_inventory()
+        if self._execution is None:
+            return ()
+        services = self._composed()
+        named: list[OperationId] = []
+        for operation_id, (original_session, _submission) in tuple(self._submissions.items()):
+            if len(named) == CLAIMABLE_REVIEWS_MAX:
+                break
+            try:
+                invocation = await self._stored_invocation(operation_id)
+                if invocation.identity.definition_id != "config.provision.setup":
+                    continue
+                # A review whose original invocation lease retired can no longer be claimed.
+                self.custody.require(original_session)
+            except (AutomationCustodyError, ProfileAccessRefusedError):
+                continue
+            current = await services.submission.supervisor.inspect(operation_id)
+            pending = current.pending_interaction
+            if current.lifecycle is not OperationLifecycle.WAITING_FOR_INTERACTION or pending is None:
+                continue
+            held = self._review_claims.get(operation_id)
+            if held is not None:
+                if held[0].model_copy(update={"verified_at": proof.verified_at}) == proof:
+                    named.append(operation_id)
+                continue
+            if pending.review_claim is not None:
+                continue
+            try:
+                services.require_review_claimable(pending)
+            except ValueError:
+                continue
+            named.append(operation_id)
+        return tuple(named)
 
     @asynccontextmanager
     async def claim_review(

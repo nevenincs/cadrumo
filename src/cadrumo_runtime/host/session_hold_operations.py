@@ -62,6 +62,8 @@ from cadrumo_client.contracts.deadline_budget import (
 )
 from cadrumo_client.contracts.operation_access import (
     OperationAcknowledged,
+    OperationClaimableReviews,
+    OperationClaimableReviewsListed,
     OperationControl,
     OperationFinancialInput,
     OperationManage,
@@ -87,6 +89,7 @@ RELAY_ACTION_KEYS: Final[Mapping[str, frozenset[str]]] = {
     "operation_observe": frozenset({"operation_id", "after_cursor"}),
     "operation_result": frozenset({"operation_id"}),
     "operation_review": frozenset({"operation_id"}),
+    "operation_review_claimable": frozenset[str](),
     "operation_review_claim": frozenset({"operation_id", "interaction_id", "revision", "review_digest"}),
     "operation_respond": frozenset({"operation_id", "interaction_id", "revision", "review_digest", "decision"}),
     "operation_cancel": frozenset({"operation_id", "expected_revision"}),
@@ -150,6 +153,8 @@ class OperationRelay:
                 return self._submit(request, deadline=deadline)
             if action == "operation_financial_submit":
                 return self._submit_financial(request, deadline=deadline)
+            if action == "operation_review_claimable":
+                return self._claimable_reviews(deadline=deadline)
             operation_id = _text(request["operation_id"])
             if action == "operation_observe":
                 observation = self._observe(operation_id, _count(request["after_cursor"]), deadline=deadline)
@@ -356,6 +361,17 @@ class OperationRelay:
         if not isinstance(document, dict):
             raise RelayRefusedError("unavailable")
         return pending, {str(key): value for key, value in document.items()}
+
+    def _claimable_reviews(self, *, deadline: float) -> dict[str, object]:
+        reply = self._exchange(
+            OperationClaimableReviews(
+                request_id=uuid4(), profile_id=self._client.profile_id, session_id=self._client.session_id
+            ),
+            deadline=deadline,
+        )
+        if not isinstance(reply, OperationClaimableReviewsListed):
+            raise RelayRefusedError("unavailable")
+        return {"kind": "operation_reviews_claimable", "operation_ids": list(reply.operation_ids)}
 
     def _claim_review(self, operation_id: str, request: Mapping[str, object], *, deadline: float) -> dict[str, object]:
         pending, document = self._review(operation_id, deadline=deadline)

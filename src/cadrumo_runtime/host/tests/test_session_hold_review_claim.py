@@ -16,6 +16,8 @@ from cadrumo.application.operations.frontend_projection import (
 from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
 from cadrumo.core.hashing import content_hash_hex
 from cadrumo_client.contracts.operation_access import (
+    OperationClaimableReviews,
+    OperationClaimableReviewsListed,
     OperationReply,
     OperationRequest,
     OperationReviewClaim,
@@ -133,3 +135,37 @@ def test_changed_display_never_claims(
                 "review_digest": digest or content_hash_hex(document),
             },
         )
+
+
+def test_holder_lists_claimable_reviews_and_refuses_any_other_reply(monkeypatch: pytest.MonkeyPatch) -> None:
+    relay = OperationRelay(cast(FrontendClient, _Client()))
+    replies: Iterator[OperationReply] = iter(
+        (
+            OperationClaimableReviewsListed(
+                request_id=uuid4(), runtime_boot_id=uuid4(), connection_id=uuid4(), operation_ids=("a" * 64,)
+            ),
+            OperationReviewClaimed(
+                request_id=uuid4(),
+                runtime_boot_id=uuid4(),
+                connection_id=uuid4(),
+                reference=_pending(3).review_reference,
+                reviewed_document_digest="d" * 64,
+                allowed_intents=frozenset({"apply", "reject"}),
+            ),
+        )
+    )
+    sent: list[OperationRequest] = []
+
+    def exchange(request: OperationRequest, *, deadline: float) -> OperationReply:
+        sent.append(request)
+        return next(replies)
+
+    monkeypatch.setattr(relay, "_exchange", exchange)
+    assert relay.handle("operation_review_claimable", {}) == {
+        "kind": "operation_reviews_claimable",
+        "operation_ids": ["a" * 64],
+    }
+    assert isinstance(sent[0], OperationClaimableReviews)
+    assert (sent[0].profile_id, sent[0].session_id) == (_Client.profile_id, _Client.session_id)
+    with pytest.raises(RelayRefusedError, match="unavailable"):
+        relay.handle("operation_review_claimable", {})

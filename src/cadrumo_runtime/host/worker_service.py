@@ -126,6 +126,7 @@ _CONTROL_ACTIONS = frozenset(
         "operation_project_page",
         "operation_manage",
         "operation_review_claim",
+        "operation_review_claimable",
         "extension_record",
     }
 )

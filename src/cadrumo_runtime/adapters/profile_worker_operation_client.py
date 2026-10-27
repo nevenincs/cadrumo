@@ -26,6 +26,8 @@ from cadrumo_client.contracts.submission_payload import (
     SubmissionPayloadDescriptor,
 )
 from cadrumo_runtime.contracts.profile_worker import (
+    ProfileWorkerClaimableReviews,
+    ProfileWorkerClaimableReviewsRequest,
     ProfileWorkerContractRequest,
     ProfileWorkerManageRequest,
     ProfileWorkerObservation,
@@ -75,6 +77,14 @@ class ProfileWorkerOperationClient(ProfileWorkerTransport):
                 )
             ),
             ProfileWorkerReviewClaimed,
+            operation=True,
+        )
+
+    def claimable_reviews(self, proof: RuntimeHumanReviewClaimAttestation) -> ProfileWorkerClaimableReviews:
+        """Ask which setup reviews the runtime parent's verified desktop person may claim."""
+        return self._exchange(
+            ProfileWorkerRequest(ProfileWorkerClaimableReviewsRequest(request_id=uuid4(), attestation=proof)),
+            ProfileWorkerClaimableReviews,
             operation=True,
         )
 

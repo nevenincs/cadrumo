@@ -111,8 +111,14 @@ review for your answer; the terminal interface has an explicit claim action. A c
 cannot be taken over by another session. If the review expires or either
 session loses its authority, start a new setup run and review its new plan.
 
-The desktop app does not yet show a setup review that an assistant started.
-Answer it with the command or the terminal interface described above.
+In the desktop app, a setup that an assistant started waits in the assistant
+panel, beside the assistant's other approval requests. It shows the plan in
+plain words: what it downloads, how large it is, which server it comes from and
+where it is stored. Choose Approve or Reject. If the plan changed before you
+chose, nothing is answered and the new plan is shown for you to read. If your
+answer was sent but its outcome could not be confirmed, the panel says that
+setup may have started and does not send the answer again; open setup to see
+where it stands.
 
 To set up the browser alone:
 

@@ -32,7 +32,7 @@ from cadrumo.core.request_faults import MAX_REQUEST_FAULTS, RequestFault
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
 from cadrumo_client.contracts.extension_records import ExtensionRecordReply, ProfileWorkerExtensionRecordRequest
-from cadrumo_client.contracts.operation_access import OperationManagementRequest
+from cadrumo_client.contracts.operation_access import CLAIMABLE_REVIEWS_MAX, OperationManagementRequest
 from cadrumo_client.contracts.projection_pages import ProjectionPage, ProjectionPageRequest
 from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginOutcome, SignInRefusal
 from cadrumo_client.contracts.submission_payload import (
@@ -296,6 +296,15 @@ class ProfileWorkerReviewClaimRequest(BaseModel):
     reviewed_document_digest: ContentDigest
 
 
+class ProfileWorkerClaimableReviewsRequest(BaseModel):
+    """Only the verified runtime parent may attest the desktop person asking what it may claim."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    action: Literal["operation_review_claimable"] = "operation_review_claimable"
+    request_id: UUID
+    attestation: RuntimeHumanReviewClaimAttestation
+
+
 class ProfileWorkerRequest(
     RootModel[
         Annotated[
@@ -319,6 +328,7 @@ class ProfileWorkerRequest(
             | ProfileWorkerProjectPageRequest
             | ProfileWorkerManageRequest
             | ProfileWorkerReviewClaimRequest
+            | ProfileWorkerClaimableReviewsRequest
             | ProfileWorkerObserveRequest
             | ProfileWorkerExtensionRecordRequest,
             Field(discriminator="action"),
@@ -516,6 +526,16 @@ class ProfileWorkerReviewClaimed(BaseModel):
     release: WorkerAuthorityRequest
 
 
+class ProfileWorkerClaimableReviews(BaseModel):
+    """Operations whose current setup review the attested person may claim; no authority crosses."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    kind: Literal["operation_reviews_claimable"] = "operation_reviews_claimable"
+    identity: _ProfileWorkerIdentity
+    request_id: UUID
+    operation_ids: tuple[OperationId, ...] = Field(max_length=CLAIMABLE_REVIEWS_MAX)
+
+
 class ProfileWorkerExtensionRecordReply(BaseModel):
     """Return an extension-record operation result from the profile worker."""
 
@@ -544,6 +564,7 @@ class ProfileWorkerReply(
             | ProfileWorkerProjection
             | ProfileWorkerProjectionPage
             | ProfileWorkerReviewClaimed
+            | ProfileWorkerClaimableReviews
             | ProfileWorkerExtensionRecordReply,
             Field(discriminator="kind"),
         ]
