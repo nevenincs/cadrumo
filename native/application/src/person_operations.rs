@@ -448,6 +448,7 @@ impl Failure {
                 code,
                 sign_in: None,
                 holder_operation_id,
+                recovery_remaining_seconds: None,
             }),
             Self::Runtime(refusal) => RelayFailure::Unavailable(refusal),
             Self::Invalid => RelayFailure::Invalid,
@@ -3512,6 +3513,7 @@ mod tests {
             code: "subject_busy".into(),
             sign_in: None,
             holder_operation_id: Some(HOLDER.into()),
+            recovery_remaining_seconds: None,
         })]);
         match handle(
             &busy,
@@ -4588,6 +4590,7 @@ mod tests {
             code: "human_authority_required".into(),
             sign_in: None,
             holder_operation_id: None,
+            recovery_remaining_seconds: None,
         })]);
         refused_with(
             handle(

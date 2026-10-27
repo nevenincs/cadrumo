@@ -55,6 +55,9 @@ const RECEIPT_FILENAME: &str = "session.v2.json";
 const KEYSTORE_DIRECTORY: &str = "keystore";
 const RECEIPT_KEYCHAIN_SERVICE: &str = "cadrumo:profile-session:v2";
 const RECEIPT_KEY_BYTES: usize = 32;
+/// The denial of a session a lost worker suspended: it grants nothing until a
+/// fresh proof on the connection that holds it rebinds it.
+pub const CUSTODY_RECOVERING: &str = "custody_recovering";
 
 /// Why a connection or exchange did not answer. `code` spells it as the
 /// runtime's Python clients do, so one refusal vocabulary reaches a window.
@@ -70,12 +73,14 @@ pub enum Refusal {
     ConnectionClosed,
     DeadlineExceeded,
     /// The runtime answered with its typed refusal: an access denial code,
-    /// for a sign-in the reason it was refused, and for a busy subject the
-    /// operation that holds it.
+    /// for a sign-in the reason it was refused, for a busy subject the
+    /// operation that holds it, and for a suspended session the whole seconds
+    /// left in its recovery window.
     Denied {
         code: String,
         sign_in: Option<Value>,
         holder_operation_id: Option<String>,
+        recovery_remaining_seconds: Option<u64>,
     },
     Io(io::Error),
 }
@@ -87,6 +92,23 @@ impl Refusal {
             code: code.into(),
             sign_in: None,
             holder_operation_id: None,
+            recovery_remaining_seconds: None,
+        }
+    }
+
+    /// Whether the session waits for a fresh proof after the profile's worker was lost.
+    pub fn is_custody_recovering(&self) -> bool {
+        matches!(self, Self::Denied { code, .. } if code == CUSTODY_RECOVERING)
+    }
+
+    /// The whole seconds left in a suspended session's recovery window, when the runtime said.
+    pub fn recovery_remaining_seconds(&self) -> Option<u64> {
+        match self {
+            Self::Denied {
+                recovery_remaining_seconds,
+                ..
+            } => *recovery_remaining_seconds,
+            _ => None,
         }
     }
 
@@ -807,14 +829,7 @@ impl Connection {
             reply = self.assemble_transfer(replies, &reply, request_id, deadline)?;
         }
         if text(&reply, "kind") == Some("access_refusal") {
-            return Err(Refusal::Denied {
-                code: text(&reply, "code").unwrap_or_default().to_owned(),
-                sign_in: reply
-                    .get("sign_in")
-                    .filter(|value| !value.is_null())
-                    .cloned(),
-                holder_operation_id: text(&reply, "holder_operation_id").map(str::to_owned),
-            });
+            return Err(access_refusal(&reply));
         }
         Ok(reply)
     }
@@ -1085,6 +1100,62 @@ fn uuid_list(value: Option<&Value>) -> Vec<String> {
         .unwrap_or_default()
 }
 
+/// The runtime's typed refusal as its `access_refusal` document spells it.
+fn access_refusal(reply: &Map<String, Value>) -> Refusal {
+    Refusal::Denied {
+        code: text(reply, "code").unwrap_or_default().to_owned(),
+        sign_in: reply
+            .get("sign_in")
+            .filter(|value| !value.is_null())
+            .cloned(),
+        holder_operation_id: text(reply, "holder_operation_id").map(str::to_owned),
+        recovery_remaining_seconds: recovery_window(reply),
+    }
+}
+
+/// The whole seconds a document names as left in a suspended session's recovery window.
+fn recovery_window(document: &Map<String, Value>) -> Option<u64> {
+    document
+        .get("recovery_remaining_seconds")
+        .and_then(Value::as_u64)
+}
+
+/// The refusal a status's `denial` stands for, with the window a suspended session names.
+fn denial(status: &Map<String, Value>) -> Option<Refusal> {
+    text(status, "denial").map(|code| Refusal::Denied {
+        code: code.to_owned(),
+        sign_in: None,
+        holder_operation_id: None,
+        recovery_remaining_seconds: recovery_window(status),
+    })
+}
+
+/// Where a session stands, as the runtime's status for it reads.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Standing {
+    /// The lease grants access.
+    Held,
+    /// A lost worker suspended it: it grants nothing until a fresh proof on
+    /// its own connection rebinds it, or its window ends.
+    Recovering { remaining_seconds: Option<u64> },
+    /// The runtime refuses it for the denial's own reason; it is not coming back by itself.
+    Refused(String),
+}
+
+impl Standing {
+    /// Reads the status object the runtime answered for `session`.
+    pub fn of(status: &Map<String, Value>, session: &Admitted) -> Self {
+        match text(status, "denial") {
+            Some(CUSTODY_RECOVERING) => Self::Recovering {
+                remaining_seconds: recovery_window(status),
+            },
+            Some(code) => Self::Refused(code.to_owned()),
+            None if text(status, "session_id") == Some(session.session_id.as_str()) => Self::Held,
+            None => Self::Refused("profile_mismatch".to_owned()),
+        }
+    }
+}
+
 fn admitted(reply: &Map<String, Value>, profile_id: &str) -> Result<Admitted, Refusal> {
     if text(reply, "kind") != Some("profile_status") {
         return Err(Refusal::InvalidFrame);
@@ -1094,8 +1165,8 @@ fn admitted(reply: &Map<String, Value>, profile_id: &str) -> Result<Admitted, Re
         .and_then(Value::as_object)
         .ok_or(Refusal::InvalidFrame)?;
     let flag = |key: &str| status.get(key).and_then(Value::as_bool).unwrap_or(false);
-    if let Some(denial) = text(status, "denial") {
-        return Err(Refusal::denied(denial));
+    if let Some(refusal) = denial(status) {
+        return Err(refusal);
     }
     let session_id = text(status, "session_id");
     if !flag("connected")
@@ -1207,16 +1278,16 @@ impl Connection {
         persist_receipt: bool,
         deadline: Instant,
     ) -> Result<Admitted, Refusal> {
-        let request = json!({
-            "action": "profile_login",
-            "request_id": request_id(),
-            "profile_id": profile_id,
-            "frontend": frontend.as_str(),
-            "method": method,
-            "persist_receipt": persist_receipt,
-        });
-        let reply = self.exchange_with_secret(&request, secret, deadline)?;
-        admitted(&reply, profile_id).map_err(|refusal| self.fail(refusal))
+        present_login(
+            self,
+            profile_id,
+            frontend,
+            method,
+            secret,
+            persist_receipt,
+            deadline,
+        )
+        .map_err(|refusal| self.fail(refusal))
     }
 
     /// Signs `profile_id` in with `password`. With `persist_receipt`, the
@@ -1265,50 +1336,12 @@ impl Connection {
         frontend: Frontend,
         deadline: Instant,
     ) -> Result<Admitted, ResumeRefusal> {
-        let mut presented: Option<Zeroizing<Vec<u8>>> = None;
-        for attempt in 1..=RECEIPT_PROOF_ATTEMPTS {
-            let proof = stored_sign_in_proof(storage_root, profile_id)
-                .map_err(|refusal| ResumeRefusal::Receipt(refusal.code().to_owned()))?;
-            if presented
-                .as_ref()
-                .is_some_and(|refused| **refused == *proof)
-            {
-                // No sign-in replaced the receipt: the proof was refused for itself.
-                return Err(ResumeRefusal::Receipt("tampered".to_owned()));
-            }
-            let refusal = match self.login_receipt(profile_id, frontend, &proof, deadline) {
-                Ok(admitted) => return Ok(admitted),
-                Err(refusal) => refusal,
-            };
-            let Some(reason) = receipt_refusal(&refusal) else {
-                return Err(ResumeRefusal::Runtime(refusal));
-            };
-            if reason != "tampered"
-                || attempt == RECEIPT_PROOF_ATTEMPTS
-                || Instant::now() >= deadline
-                || self.closed()
-            {
-                return Err(ResumeRefusal::Receipt(reason.to_owned()));
-            }
-            presented = Some(proof);
-        }
-        Err(ResumeRefusal::Receipt("tampered".to_owned()))
-    }
-
-    fn session(
-        &self,
-        action: &str,
-        session: &Admitted,
-        deadline: Instant,
-    ) -> Result<Map<String, Value>, Refusal> {
-        self.exchange(
-            &json!({
-                "action": action,
-                "request_id": request_id(),
-                "profile_id": session.profile_id,
-                "session_id": session.session_id,
-            }),
+        present_stored_proof(
+            storage_root,
+            profile_id,
             deadline,
+            || self.closed(),
+            |proof| self.login_receipt(profile_id, frontend, proof, deadline),
         )
     }
 
@@ -1318,23 +1351,18 @@ impl Connection {
         session: &Admitted,
         deadline: Instant,
     ) -> Result<Map<String, Value>, Refusal> {
-        let reply = self.session("session_status", session, deadline)?;
-        reply
-            .get("status")
-            .and_then(Value::as_object)
-            .cloned()
-            .ok_or_else(|| self.fail(Refusal::InvalidFrame))
+        session_status(self, session, deadline).map_err(|refusal| self.fail(refusal))
     }
 
     /// Reports the person's own input on `session`, which may extend it.
     pub fn note_activity(&self, session: &Admitted, deadline: Instant) -> Result<(), Refusal> {
-        let reply = self.session("session_activity", session, deadline)?;
+        let reply = session_exchange(self, "session_activity", session, deadline)?;
         match reply
             .get("status")
             .and_then(Value::as_object)
-            .and_then(|status| text(status, "denial"))
+            .and_then(denial)
         {
-            Some(denial) => Err(Refusal::denied(denial)),
+            Some(refusal) => Err(refusal),
             None => Ok(()),
         }
     }
@@ -1344,6 +1372,149 @@ impl Connection {
     pub fn sign_out(&self, session: &Admitted, deadline: Instant) -> Result<SignedOut, Refusal> {
         human_sign_out(self, session, deadline).map_err(|refusal| self.fail(refusal))
     }
+}
+
+/// Asks the runtime for one of `session`'s own actions, which names no more than its identity.
+fn session_exchange(
+    exchange: &dyn SessionExchange,
+    action: &str,
+    session: &Admitted,
+    deadline: Instant,
+) -> Result<Map<String, Value>, Refusal> {
+    exchange.exchange(
+        &json!({
+            "action": action,
+            "request_id": request_id(),
+            "profile_id": session.profile_id,
+            "session_id": session.session_id,
+        }),
+        deadline,
+    )
+}
+
+/// Rechecks `session` without extending it, through whatever carries its
+/// exchanges: the runtime's status object.
+pub fn session_status(
+    exchange: &dyn SessionExchange,
+    session: &Admitted,
+    deadline: Instant,
+) -> Result<Map<String, Value>, Refusal> {
+    session_exchange(exchange, "session_status", session, deadline)?
+        .get("status")
+        .and_then(Value::as_object)
+        .cloned()
+        .ok_or(Refusal::InvalidFrame)
+}
+
+/// Where `session` stands now. A refusal the runtime answers in place of a
+/// status is a standing too; a lost or failed exchange is not.
+pub fn session_standing(
+    exchange: &dyn SessionExchange,
+    session: &Admitted,
+    deadline: Instant,
+) -> Result<Standing, Refusal> {
+    match session_status(exchange, session, deadline) {
+        Ok(status) => Ok(Standing::of(&status, session)),
+        Err(Refusal::Denied {
+            code,
+            recovery_remaining_seconds,
+            ..
+        }) => Ok(if code == CUSTODY_RECOVERING {
+            Standing::Recovering {
+                remaining_seconds: recovery_remaining_seconds,
+            }
+        } else {
+            Standing::Refused(code)
+        }),
+        Err(refusal) => Err(refusal),
+    }
+}
+
+/// Sends one `profile_login` with its `secret` and reads the session it admits.
+fn present_login(
+    exchange: &dyn SessionExchange,
+    profile_id: &str,
+    frontend: Frontend,
+    method: &str,
+    secret: &[u8],
+    persist_receipt: bool,
+    deadline: Instant,
+) -> Result<Admitted, Refusal> {
+    let request = json!({
+        "action": "profile_login",
+        "request_id": request_id(),
+        "profile_id": profile_id,
+        "frontend": frontend.as_str(),
+        "method": method,
+        "persist_receipt": persist_receipt,
+    });
+    let reply = exchange.exchange_with_secret(&request, secret, deadline)?;
+    admitted(&reply, profile_id)
+}
+
+/// Presents a fresh proof for `session` on the connection that holds it. A
+/// suspended session returns under its own identity; a login that admits
+/// another one is no rebind.
+fn rebind(
+    exchange: &dyn SessionExchange,
+    session: &Admitted,
+    frontend: Frontend,
+    method: &str,
+    secret: &[u8],
+    persist_receipt: bool,
+    deadline: Instant,
+) -> Result<Admitted, Refusal> {
+    let rebound = present_login(
+        exchange,
+        &session.profile_id,
+        frontend,
+        method,
+        secret,
+        persist_receipt,
+        deadline,
+    )?;
+    if rebound.session_id != session.session_id {
+        return Err(Refusal::denied("session_mismatch"));
+    }
+    Ok(rebound)
+}
+
+/// Rebinds a suspended `session` on the connection that holds it, by the
+/// profile's `password`. The sign-in is stored for the person's other
+/// frontends, as the window's own password sign-in stores it.
+pub fn rebind_password(
+    exchange: &dyn SessionExchange,
+    session: &Admitted,
+    frontend: Frontend,
+    password: &[u8],
+    deadline: Instant,
+) -> Result<Admitted, Refusal> {
+    rebind(
+        exchange, session, frontend, "password", password, true, deadline,
+    )
+}
+
+/// Rebinds a suspended `session` on the connection that holds it, by the
+/// proof of the stored sign-in under `storage_root`, read fresh as every
+/// presentation of it is.
+pub fn rebind_receipt(
+    exchange: &dyn SessionExchange,
+    storage_root: &Path,
+    session: &Admitted,
+    frontend: Frontend,
+    deadline: Instant,
+) -> Result<Admitted, ResumeRefusal> {
+    present_stored_proof(
+        storage_root,
+        &session.profile_id,
+        deadline,
+        || false,
+        |proof| {
+            rebind(
+                exchange, session, frontend, "receipt", proof, false, deadline,
+            )
+        },
+    )
 }
 
 /// Signs the person out of `session`'s profile everywhere, through whatever
@@ -1394,6 +1565,49 @@ const RECEIPT_REFUSAL_REASONS: [&str; 9] = [
     "custody_changed",
     "tampered",
 ];
+
+/// Reads the stored sign-in's proof and has `present` offer it to the runtime.
+///
+/// A sign-in that completes between reading the proof and the runtime's check
+/// replaces the receipt, so the proof read before it no longer unwraps the one
+/// the runtime reads. Such a refusal is retried with a fresh read, a bounded
+/// number of times and only while the proof differs from the one refused.
+fn present_stored_proof<T>(
+    storage_root: &Path,
+    profile_id: &str,
+    deadline: Instant,
+    closed: impl Fn() -> bool,
+    present: impl Fn(&[u8]) -> Result<T, Refusal>,
+) -> Result<T, ResumeRefusal> {
+    let mut presented: Option<Zeroizing<Vec<u8>>> = None;
+    for attempt in 1..=RECEIPT_PROOF_ATTEMPTS {
+        let proof = stored_sign_in_proof(storage_root, profile_id)
+            .map_err(|refusal| ResumeRefusal::Receipt(refusal.code().to_owned()))?;
+        if presented
+            .as_ref()
+            .is_some_and(|refused| **refused == *proof)
+        {
+            // No sign-in replaced the receipt: the proof was refused for itself.
+            return Err(ResumeRefusal::Receipt("tampered".to_owned()));
+        }
+        let refusal = match present(&proof) {
+            Ok(admitted) => return Ok(admitted),
+            Err(refusal) => refusal,
+        };
+        let Some(reason) = receipt_refusal(&refusal) else {
+            return Err(ResumeRefusal::Runtime(refusal));
+        };
+        if reason != "tampered"
+            || attempt == RECEIPT_PROOF_ATTEMPTS
+            || Instant::now() >= deadline
+            || closed()
+        {
+            return Err(ResumeRefusal::Receipt(reason.to_owned()));
+        }
+        presented = Some(proof);
+    }
+    Err(ResumeRefusal::Receipt("tampered".to_owned()))
+}
 
 /// Why a stored sign-in was not resumed.
 #[derive(Debug)]
@@ -1778,6 +1992,7 @@ mod tests {
             code: "authentication_required".into(),
             sign_in: Some(json!({"reason": "expired_absolute"})),
             holder_operation_id: None,
+            recovery_remaining_seconds: None,
         };
         assert_eq!(receipt_refusal(&named), Some("expired_absolute"));
         for (code, reason) in [
@@ -1796,6 +2011,7 @@ mod tests {
             code: "credential_rejected".into(),
             sign_in: Some(json!({"reason": "throttled", "remaining_seconds": 30})),
             holder_operation_id: None,
+            recovery_remaining_seconds: None,
         };
         assert_eq!(receipt_refusal(&throttled), Some("tampered"));
         assert_eq!(receipt_refusal(&Refusal::denied("profile_locked")), None);
@@ -1808,6 +2024,7 @@ mod tests {
             code: "subject_busy".into(),
             sign_in: None,
             holder_operation_id: Some("0f0f0f0f-0000-4000-8000-000000000000".into()),
+            recovery_remaining_seconds: None,
         };
         assert_eq!(
             busy.holder_operation_id(),
@@ -1815,6 +2032,116 @@ mod tests {
         );
         assert_eq!(Refusal::denied("subject_busy").holder_operation_id(), None);
         assert_eq!(Refusal::InvalidFrame.holder_operation_id(), None);
+    }
+
+    #[test]
+    fn a_refusal_of_a_suspended_session_carries_its_recovery_window() {
+        let document = |code: &str, window: Value| {
+            json!({
+                "kind": "access_refusal", "code": code, "sign_in": null,
+                "recovery_remaining_seconds": window,
+            })
+            .as_object()
+            .unwrap()
+            .clone()
+        };
+        let waiting = access_refusal(&document("custody_recovering", json!(87)));
+        assert!(waiting.is_custody_recovering());
+        assert_eq!(waiting.recovery_remaining_seconds(), Some(87));
+        assert_eq!(waiting.code(), CUSTODY_RECOVERING);
+        // The window is the runtime's to name: none given is none known, not zero.
+        let unnamed = access_refusal(&document("custody_recovering", Value::Null));
+        assert!(unnamed.is_custody_recovering());
+        assert_eq!(unnamed.recovery_remaining_seconds(), None);
+        let ended = access_refusal(&document("custody_unavailable", Value::Null));
+        assert!(!ended.is_custody_recovering());
+        assert_eq!(ended.code(), "custody_unavailable");
+        assert_eq!(Refusal::ConnectionClosed.recovery_remaining_seconds(), None);
+        assert!(!Refusal::ConnectionClosed.is_custody_recovering());
+    }
+
+    fn held() -> Admitted {
+        Admitted {
+            profile_id: "0a1b2c3d-4e5f-4a6b-9c7d-8e9f0a1b2c3d".into(),
+            session_id: "1a1b2c3d-4e5f-4a6b-9c7d-8e9f0a1b2c3d".into(),
+            connection_id: "2a1b2c3d-4e5f-4a6b-9c7d-8e9f0a1b2c3d".into(),
+            runtime_boot_id: "3a1b2c3d-4e5f-4a6b-9c7d-8e9f0a1b2c3d".into(),
+            expires_at: None,
+            session_persisted: None,
+            signed_out_profile_ids: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn a_status_reads_as_held_recovering_or_refused_for_the_session_it_names() {
+        let status = |value: Value| value.as_object().unwrap().clone();
+        let session = held();
+        assert_eq!(
+            Standing::of(
+                &status(json!({"session_id": session.session_id, "denial": null})),
+                &session
+            ),
+            Standing::Held
+        );
+        // Whole seconds, rounded up by the runtime; the session keeps its identity.
+        assert_eq!(
+            Standing::of(
+                &status(json!({
+                    "session_id": session.session_id, "denial": "custody_recovering",
+                    "recovery_remaining_seconds": 119, "credential_authenticated": false,
+                })),
+                &session
+            ),
+            Standing::Recovering {
+                remaining_seconds: Some(119)
+            }
+        );
+        assert_eq!(
+            Standing::of(
+                &status(json!({"session_id": session.session_id, "denial": "custody_recovering"})),
+                &session
+            ),
+            Standing::Recovering {
+                remaining_seconds: None
+            }
+        );
+        assert_eq!(
+            Standing::of(
+                &status(json!({"session_id": session.session_id, "denial": "custody_unavailable"})),
+                &session
+            ),
+            Standing::Refused("custody_unavailable".into())
+        );
+        // A status that names another session, or none, is no standing of this one.
+        for other in [
+            json!({"session_id": "4a1b2c3d-4e5f-4a6b-9c7d-8e9f0a1b2c3d", "denial": null}),
+            json!({"session_id": null, "denial": null}),
+        ] {
+            assert_eq!(
+                Standing::of(&status(other), &session),
+                Standing::Refused("profile_mismatch".into())
+            );
+        }
+    }
+
+    #[test]
+    fn an_admitted_status_of_a_suspended_session_is_refused_with_its_window() {
+        let reply = json!({
+            "kind": "profile_status",
+            "status": {
+                "connected": true, "credential_authenticated": false, "profile_bound": true,
+                "profile_id": "0a1b2c3d-4e5f-4a6b-9c7d-8e9f0a1b2c3d",
+                "session_id": "1a1b2c3d-4e5f-4a6b-9c7d-8e9f0a1b2c3d",
+                "denial": "custody_recovering", "recovery_remaining_seconds": 42,
+            },
+        });
+        let refused = admitted(
+            reply.as_object().unwrap(),
+            "0a1b2c3d-4e5f-4a6b-9c7d-8e9f0a1b2c3d",
+        )
+        .unwrap_err();
+        assert!(refused.is_custody_recovering());
+        assert_eq!(refused.recovery_remaining_seconds(), Some(42));
     }
 
     #[test]
