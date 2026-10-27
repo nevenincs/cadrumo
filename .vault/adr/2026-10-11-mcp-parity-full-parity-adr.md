@@ -8,13 +8,13 @@ related:
   - "[[2026-10-10-mcp-parity-surfaces-and-registry-reference]]"
   - "[[2026-10-10-mcp-parity-parity-mechanism-adr]]"
   - '[[2026-07-08-mcp-protocol-hardening-adr]]'
+  - '[[2026-10-26-rust-component-provisioning-registered-operations-adr]]'
 supersedes:
   - '2026-10-10-mcp-parity-admission-rulings-adr'
-modified: '2026-10-18'
+modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:c23f63caac4a647c9b79d7c91d2ee80bdb10a09baf032789d411e3489fd92eff'
+body_hash: 'sha256:922d49b8b0c6ca262f34c94c3c56892c9f811465f7c6e9c89e23e0aeb3d1e6b7'
 ---
-
 # `mcp-parity` adr: `The command line, the terminal interface and MCP are at parity, and no frontend is refused what another can do` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -37,16 +37,16 @@ The work to make the MCP server a full interface was built on a wrong reading of
 
 ## Constraints
 
-Binding:
+Binding, with the narrow `config.provision.setup` review exception in `2026-10-26-rust-component-provisioning-registered-operations-adr`: MCP may submit, start, observe and read results, but cannot answer its review. A human answers through CLI, TUI or desktop using a current runtime-issued secure response bearer. Desktop native provisioning without a profile is separate from this profile operation contract.
 
 1. Every registered operation the command line can submit inside a signed-in or key-admitted profile can be submitted from the terminal interface and from MCP. Authentication, session and access administration, acts outside the bound profile and operations that require a secret are not agent operations, and MCP does not serve them (`2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`). (Amended 2026-10-12 under `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`; before that every operation the command line could submit was to be submittable on MCP.) Setting, replacing, removing or resetting a model-provider credential is a person's act and is refused at application dispatch on MCP and generic `execute`. Its masked status remains an ordinary read on every frontend. (Amended 2026-10-13 under `2026-10-13-provider-settings-adr`; before that only operations that require a secret were named, so removing a credential, which needs none, was not.)
-2. No access resolver, executor, action, guard or runtime check refuses, narrows or changes what an operation does because of the frontend that submitted it. The same request gets the same decision and the same effect on every frontend.
+2. Subject to the setup review exception above, no access resolver, executor, action, guard or runtime check refuses, narrows or changes what an operation does because of the frontend that submitted it. The same request gets the same decision and the same effect on every frontend.
 3. A result is the same on every frontend. A session reads on MCP whatever it could read on the command line.
-4. Where MCP lacked a way to carry something the command line carries inside the profile, an answer to an interaction or a host file path, MCP is given that way. The operation is not refused. No secret is ever carried: MCP has no argument that takes a secret or names one, and an operation that requires a secret is the person's credential act. (Amended 2026-10-12 under `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`; before that a typed secret was among the things MCP was given a way to carry.)
-5. No operation inside the profile is held back from a frontend for being sensitive, destructive, an election, an attestation, a local filing act, a file input or output, or for want of an approval step, a file-exchange folder, a replay identity or a provenance mark. Withholding authentication, session and access administration, installation acts and acts outside the bound profile from MCP is not holding an operation back: they are not agent operations. (Amended 2026-10-12 under `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`; before that the rule reached every operation, those acts included.)
-6. What remains is the same on every frontend: input validation, profile and subject checks, the finalised-revision guard, handle-level path checks, the session's lease and scope, and the surface a person may choose to narrow when starting the MCP server. The default surface is every operation inside the bound profile. (Amended 2026-10-12 under `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`; before that it was everything.)
+4. Where MCP lacked a way to carry something the command line carries inside the profile, an answer to an interaction or a host file path, MCP is given that way, except for the `config.provision.setup` review answer. The operation is not refused. No secret is ever carried: MCP has no argument that takes a secret or names one, and an operation that requires a secret is the person's credential act. (Amended 2026-10-12 under `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`; before that a typed secret was among the things MCP was given a way to carry.)
+5. No operation inside the profile is held back from a frontend for being sensitive, destructive, an election, an attestation, a local filing act, a file input or output, or for want of an approval step, a file-exchange folder, a replay identity or a provenance mark, subject to the setup review exception above. Withholding authentication, session and access administration, installation acts and acts outside the bound profile from MCP is not holding an operation back: they are not agent operations. (Amended 2026-10-12 under `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`; before that the rule reached every operation, those acts included.)
+6. Subject to the setup review exception above, what remains is the same on every frontend: input validation, profile and subject checks, the finalised-revision guard, handle-level path checks, the session's lease and scope, and the surface a person may choose to narrow when starting the MCP server. The default surface is every operation inside the bound profile. (Amended 2026-10-12 under `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`; before that it was everything.)
 7. Attribution is not a limit: an execution admitted on MCP records an actor derived from its session, and a row records whose decision its classification is. No refusal is built on either.
-8. Good conduct for an agent, such as telling the person before a destructive act, is guidance in the packaged agent text. It is never a product gate.
+8. Good conduct for an agent, such as telling the person before a destructive act, is guidance in the packaged agent text. It is not a product gate; the setup review exception above requires a human answer.
 
 Fixed boundary, not open to any decision: nothing on any frontend sends anything to the tax agency. Export writes a local file and the filed marker writes a local record.
 
@@ -64,7 +64,7 @@ Reconciled 2026-10-12: the wording of the accepted records that still described 
 
 ## Implementation
 
-We will make every definition submittable from every frontend, remove every frontend-specific refusal and result difference from resolvers, executors, guards and the runtime's release of results, give the MCP harness the means to answer every interaction kind, and never to carry a secret (amended 2026-10-12 under `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`; before that it was also to carry a typed secret), and replace the tests that held rulings with tests that hold parity: every operation on every frontend, the same resolver decision for the same request, and no comparison of a frontend inside an access path outside a short allow-list.
+We will make every definition submittable from every frontend, remove every frontend-specific refusal and result difference from resolvers, executors, guards and the runtime's release of results, give the MCP harness the means to answer every interaction kind except the `config.provision.setup` review, and never to carry a secret (amended 2026-10-12 under `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`; before that it was also to carry a typed secret), and replace the tests that held rulings with tests that hold parity: every operation on every frontend, the same resolver decision for the same request, and no comparison of a frontend inside an access path outside a short allow-list.
 
 Hypotheses, free to change within the constraints: whether the definition keeps a per-operation list of frontends at all. (Amended 2026-10-12 under `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`; the form of a secret-carrying tool argument and whether session acts get tools of their own are no longer open, because MCP has neither.)
 
@@ -79,10 +79,10 @@ As built by 2026-10-12, recorded here as implementation and not as commitments o
 
 ## Rationale
 
-The owner ruled it, twice, in terms that leave no exception. The earlier reading produced a server that could not do what the command line does, which defeats the purpose of the feature: an agent operating the application.
+The owner ruled parity twice; the `config.provision.setup` review exception above is the later approved boundary. The earlier reading produced a server that could not do what the command line does, which defeats the purpose of the feature: an agent operating the application.
 
 ## Consequences
 
-- Inside its profile an agent can remove, reset, merge, export, record the filed marker, amend, import and classify exactly as the command line can, with no approval gate in the product. It cannot sign in, sign out, lock, administer access or act outside its profile (amended 2026-10-12 under `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`).
+- Inside its profile an agent can remove, reset, merge, export, record the filed marker, amend, import and classify exactly as the command line can, with no approval gate in the product for those acts; `config.provision.setup` has the human review exception above. It cannot sign in, sign out, lock, administer access or act outside its profile (amended 2026-10-12 under `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`).
 - The safeguards that remain for those acts are the ones the command line has inside the operations, and the agent's own conduct as its packaged rules describe it.
 - The refusals, reduced results and their tests built between 2026-10-10 and 2026-10-11 are removed. The review findings that motivated them, recorded in `2026-10-11-mcp-parity-audit`, are closed as not applicable under this record, except those about defects on every frontend.

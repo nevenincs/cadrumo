@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#dependency-provisioning'
 date: '2026-10-18'
-modified: '2026-10-26'
+modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:bb0363ddc81b07024eb8dbbeeb472fa94f4a5e1a2d99030b5d8d6e6338842857'
+body_hash: 'sha256:577766eaa13bfc3165f5d6cd3206f7e58cf397aff6a6be796f0befd1ec1cf32e'
 related:
   - "[[2026-10-18-dependency-provisioning-mechanisms-reference]]"
   - "[[2026-06-15-dependency-provisioning-adr]]"
@@ -18,8 +18,8 @@ related:
   - "[[2026-10-17-idle-churn-operation-observation-adr]]"
   - "[[2026-10-13-application-distribution-native-bundle-llm-extra-adr]]"
   - "[[2026-10-17-single-binary-process-tree-adr]]"
+  - '[[2026-10-26-rust-component-provisioning-registered-operations-adr]]'
 ---
-
 # `dependency-provisioning` adr: `One setup system for the local model, the browser and Google` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -32,7 +32,7 @@ Pieces exist for each dependency, but they do not form one system (`2026-10-18-d
 
 - The doctor contract is accepted: probes are read-only, return a typed status, and missing dependencies are typed refusals with remediation (`2026-06-15-dependency-provisioning-adr`). The model catalogue, contention admission and lifecycle verbs are implemented (`2026-08-07-unstructured-document-ingestion-provisioning-adr`, still `proposed`).
 - Registered operations already provide the journal, `UNKNOWN` effects, digest-bound single-use REVIEW interactions and progress events. Clients wait on the `operation_changed` cue and never poll on a fixed interval (`2026-10-17-idle-churn-operation-observation-adr`).
-- The CLI, TUI and MCP are at parity. MCP refuses nothing the CLI can do inside the profile, and the product has no approval gate of its own. Authentication and installation acts are person acts, not agent operations (`2026-10-11-mcp-parity-full-parity-adr`). In the desktop, every agent tool call already waits on the person's approval (`2026-10-12-desktop-agent-host-adr`).
+- The CLI, TUI and MCP are at parity inside the profile, with a narrow human-only exception for the `config.provision.setup` review (`2026-10-11-mcp-parity-full-parity-adr`, `2026-10-26-rust-component-provisioning-registered-operations-adr`). Authentication and installation acts outside that profile operation are person acts, not agent operations. In the desktop, every agent tool call already waits on the person's approval (`2026-10-12-desktop-agent-host-adr`).
 - The shell holds no runtime connection. Its narrow exceptions run through token-checked host commands and the held person bridge (`2026-10-04-desktop-shell-adr`, language amendment of 2026-10-15).
 - The Google client is a fixed package fact with `drive.file` only, and a token is bound to its client (`2026-10-04-google-app-identity-adr`).
 - Browsers, models and the model runtime are not package data. The model runtime is an external program with its own process tree (`2026-10-13-application-distribution-native-bundle-llm-extra-adr`, `2026-10-17-single-binary-process-tree-adr` constraint 7). Playwright's Python package and driver are being added to the native bundle in a parallel lane; this record assumes they are present.
@@ -81,10 +81,10 @@ Accepted 2026-10-18 on the owner's advance authorization, relayed by the coordin
 
 - Before any byte moves, setup computes a plan: items, bytes, source hosts, destination folder, free space, and whether an outside program will be installed. It raises one REVIEW interaction carrying the plan digest. Applying it approves exactly that plan. A changed plan needs a new approval. The `consent` boolean is removed.
 - The CLI prints the plan and asks. `--yes` answers the review after printing it. Non-interactive use without `--yes` refuses with "needs your approval".
-- The TUI and desktop show the plan in a dialog. MCP answers through its interaction tool, as for any review, so MCP refuses nothing the CLI does. When the agent column starts setup, the desktop's tool-call approval is the person's gesture.
+- The TUI and desktop show the plan in a dialog. For `config.provision.setup`, MCP may submit and observe but cannot answer the review; a person answers through CLI, TUI or desktop using a current runtime-issued secure response bearer (`2026-10-26-rust-component-provisioning-registered-operations-adr`).
 - Google sign-in stays a person act: it is an authentication act, it is not served on MCP, and Google's own consent page is the approval. Installing the model runtime program goes through the same plan review. Its system installer may ask for elevation, which is the operating system's own approval.
 - Status reads and reachability checks need no approval. They move no taxpayer data and download nothing.
-- Resume after an interruption is a new submit. When the plan digest is unchanged, the desktop's Resume click is itself the person's act and no second dialog appears. The CLI needs `--yes` again.
+- Resume after an interruption is a new submit. When the plan digest is unchanged, the desktop's native Resume click is itself the person's act and no second dialog appears. The CLI needs `--yes` again.
 - Reason: digest binding is the existing interaction contract, so approval works the same way on every front end. A boolean could approve something other than what is downloaded.
 
 ### D5. Progress and signal contract
@@ -120,7 +120,7 @@ Accepted 2026-10-18 on the owner's advance authorization, relayed by the coordin
 
 ### D8. Front-end parity
 
-- Every component command is available from the CLI, TUI and MCP with the same decision and the same result, except that only the desktop sets up or removes the local AI (amendment 2026-10-26). Those surfaces report the local AI and route `operator.provision.local_ai` to the desktop.
+- The CLI, TUI and MCP submit the same profile-bound component operations and observe the same results. The setup review requires a human answer and MCP cannot answer it (`2026-10-26-rust-component-provisioning-registered-operations-adr`). Only the desktop sets up or removes the local AI (amendment 2026-10-26); the other surfaces report it and route `operator.provision.local_ai` to the desktop.
 - The operator-action catalogue gains `operator.provision.setup`, `operator.provision.model`, `operator.provision.runtime` and `operator.provision.google_sign_in`, beside the existing browser entry. Every dependency refusal names one of them as its recovery. (Amended 2026-10-19 by the operator-review amendment below.)
 - Google sign-in is the product's registered `config.google.login` operation, which admits only a person's session. The CLI submits it and keeps its controlling-terminal check before answering the consent review. The TUI submits the same operation on its own connection. The desktop host submits it through the held person bridge's generic relay and answers its consent review, because the person's click is the gesture and Google's consent page is the approval. MCP does not serve it. (Amended 2026-10-18 under the runtime-boundary ruling recorded in the amendment below. This line first said that sign-in runs as the runtime's authentication command, reached from the desktop by a closed person-bridge action, and that the interactive-terminal gate also admits a kernel-verified person connection.)
 
@@ -157,7 +157,7 @@ Amended 2026-10-19 by the operator-review amendment below; the bullets that foll
 - **First run and blocked features.** After sign-in, when setup is incomplete, the dialog opens once per launch; "Not now" closes it. When an operation is refused for a dependency whose recovery is an `operator.provision.*` action, a short prompt names what is needed and opens the dialog on that item.
 - **Status.** The Settings rail item carries a badge while setup is incomplete, and a busy badge while setup runs. Rail order and stable hooks are unchanged. One toast reports completion or failure.
 - **Palette.** Cmd+K gains "Set up components", "Check components", "Set up the browser", "Set up the local AI model", "Sign in to Google", "Retry setup" (enabled after a failure) and "Cancel setup" (enabled while running). They are declared once in the action registry and hidden while signed out.
-- The surfaces appear only while signed in, because every act runs in the signed-in profile. Signed out, only the sign-in view stays.
+- CLI and TUI component operations require a signed-in profile. Desktop native component provisioning remains available without one (`2026-10-26-rust-component-provisioning-registered-operations-adr`).
 - The browser scenario host gains synthetic scenarios for every state, category and phase.
 
 ### D11. Hard requirements
@@ -194,7 +194,7 @@ Out of scope:
 - `2026-10-05-desktop-design-system-adr`: Settings gains the Components section and the scenario host gains setup scenarios.
 - `2026-10-04-google-app-identity-adr`: "the desktop Connect interface" leaves its out-of-scope list, governed here, and status checks the token as well as the metadata.
 - `2026-08-07-unstructured-document-ingestion-provisioning-adr` is `proposed`. It receives a note that its lifecycle, retry and verification commitments are decided here, and that the shipped install and start actions replace its "never a spawn" sentence.
-- `2026-10-11-mcp-parity-full-parity-adr` needs no change. Setup is inside the profile and served on MCP, and Google sign-in is the authentication act it already withholds.
+- `2026-10-11-mcp-parity-full-parity-adr` has a narrow exception for the human answer to `config.provision.setup` review: MCP can submit and observe the profile operation but cannot answer that review. Google sign-in remains an authentication act withheld from MCP.
 - `2026-10-12-desktop-agent-host-adr` needs no change. Its "nothing is downloaded at runtime" governs the bundled agent only.
 
 ### Amendment 2026-10-18: the person bridge stays generic
@@ -266,8 +266,8 @@ Basis: the owner's approval of 2026-10-24, "all approved, implemnet", answering 
 `2026-10-24-rust-component-provisioning-adr` moves component provisioning out of Python into the Rust engine of `native/application`, run as the single binary's `components` role and linked in process by the desktop. The wording above stays as history; these clauses are replaced:
 
 - D1: the registry lives in `native/application`, not `src/cadrumo/application`. Pins are declarative package data both languages read.
-- D3: the `dependencies.status`, `dependencies.setup` and `dependencies.verify` registered operations, and the provisioning actions of `local-reader.provision`, are replaced by the role's status, plan, setup, verify, cancel and remove commands. The CLI, TUI and MCP become thin clients of the role.
-- D5: delivery is the role's event stream, not the journal commit and `operation_changed` cue. The event vocabulary and the throttling stay.
+- D3: the `dependencies.status`, `dependencies.setup` and `dependencies.verify` registered operations, and the provisioning actions of `local-reader.provision`, are replaced by the role's status, plan, setup, verify, cancel and remove commands. The profile-bound `config.provision.status`, `config.provision.verify`, `config.provision.setup` and `config.provision.remove` operations wrap the role for CLI, TUI and MCP through one entrypoints composition (`2026-10-26-rust-component-provisioning-registered-operations-adr`). Python does not own component state or provisioning; the desktop retains its in-process Rust path without a profile.
+- D5: the role emits an event stream; the profile-bound operation wrapper relays its events through the journal and `operation_changed` cue. The event vocabulary and the throttling stay.
 - D6: preflight, proxy handling, retry and resume run in Rust with the same classification and limits.
 - D7: role fitness leaves component state, and Cadrumo keeps no consumer admission check; cadrumo-agent admits model loads. The one-token generation stays the model's full check.
 - D12: the local AI program lives at `components/ollama/<version>`, installed from a pinned portable archive.

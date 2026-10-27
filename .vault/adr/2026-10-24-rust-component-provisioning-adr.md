@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#rust-component-provisioning'
 date: '2026-10-24'
-modified: '2026-10-26'
+modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:dbd0098a74baaf13c60f4f1e9c97114e8fbf6542faeae187e4bc229daddad547'
+body_hash: 'sha256:9af29a0ca0a5f84bdeb012ccad996ebf01c21b039ec0a7df18b6534a3dbdf90c'
 related:
   - "[[2026-10-24-rust-component-provisioning-reference]]"
   - "[[2026-10-18-dependency-provisioning-unified-setup-adr]]"
@@ -13,8 +13,8 @@ related:
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
   - "[[2026-10-13-application-distribution-native-bundle-llm-extra-adr]]"
   - "[[2026-10-04-desktop-shell-adr]]"
+  - '[[2026-10-26-rust-component-provisioning-registered-operations-adr]]'
 ---
-
 # `rust-component-provisioning` adr: `Rust owns component provisioning` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -25,7 +25,7 @@ The owner's requirement, 2026-10-24: "Verify and ensure that product component p
 
 ## Considerations
 
-- Components are installation-wide public artifacts outside encrypted custody (unified-setup ADR D12). Acquiring them needs the storage root, not profile authority, so it does not have to run inside the profile runtime.
+- Components are installation-wide public artifacts outside encrypted custody (unified-setup ADR D12). The Rust engine uses the storage root, not profile custody. The CLI, TUI and MCP access it through registered operations bound to a signed-in profile session, journal, review and human checks; the desktop uses the native engine without a signed-in profile (`2026-10-26-rust-component-provisioning-registered-operations-adr`).
 - Rust already has a bounded, locked, receipt-keeping component store with no caller (`native/application/src/component.rs`). It also has a native runtime client and operation relay (`native/application/src/runtime_client.rs`, `person_operations.rs`). The single binary selects roles by `--role` (`native/application/src/role.rs`).
 - Python stays the consumer. Playwright launches Chromium for the tax agency reads, and the readers call Ollama over loopback HTTP. The layout each consumer expects is the interface Rust must produce (reference, "Interfaces a Rust provisioner must honour").
 - Parity across CLI, TUI, MCP and the desktop is an accepted ruling (unified-setup D8, `2026-10-11-mcp-parity-full-parity-adr`), so a desktop-only engine is not enough.
@@ -34,7 +34,7 @@ The owner's requirement, 2026-10-24: "Verify and ensure that product component p
 
 ## Considered options
 
-- **A Rust provisioning engine in the application library, linked in-process by the desktop, which alone sets up the local AI, and exposed as a native `components` role of the one binary through which the Python CLI, TUI and MCP set up the browser and read every item.** Chosen.
+- **A Rust provisioning engine in the application library, linked in-process by the desktop, which alone sets up the local AI, and exposed as a native `components` role of the one binary. The CLI, TUI and MCP use profile-bound registered operations and one entrypoints composition to set up the browser and read every item.** Chosen (`2026-10-26-rust-component-provisioning-registered-operations-adr`).
 - **Rust only inside the desktop host, Python keeping its own path for the CLI, TUI and MCP.** Rejected: two provisioners break the one-registry rule.
 - **The Python CLI, TUI and MCP as full thin clients that also set up the local AI.** Rejected by the owner on 2026-10-26: no Python module may be able to download or install the local AI program or pull a model, even by starting the role.
 - **Keep Python provisioning and move only the desktop relay to Rust.** Rejected: it does not meet the requirement.
@@ -46,7 +46,7 @@ The owner's requirement, 2026-10-24: "Verify and ensure that product component p
 Accepted 2026-10-24. The principal proposed it on the recommended options when the owner's answers to the scope, Ollama and sequencing questions did not arrive; the owner then replied "all approved, implemnet", accepting this record, its amendments to prior rulings and both plans.
 
 1. **Ownership.** `native/application` owns component provisioning: the item declarations, derived states, the plan and its digest, approval binding, network preflight, transfer, retry and resume, extraction, installation, quick and full checks, receipts, locks, cancellation, progress, and cleanup of superseded versions. No Python process downloads, installs, extracts, verifies, removes, or decides the state of a component. Neither Python nor cadrumo-agent can download or install the local AI program or pull, remove or select a model.
-2. **Exposure.** The desktop host links the engine in process and is the only surface that sets up or removes the local AI. Only the desktop hands the engine the person's local model selection, through the engine's local AI admission; an engine without it serves the local AI read-only. The engine also runs as `cadrumo --role components <status|plan|setup|verify|cancel|remove>`, with a line-delimited JSON protocol carrying rows, the plan and its digest, phase, progress and notice events, and the result. It is the first role that hosts no interpreter. The role never admits local AI provisioning and takes no model on its command line: it reports and fully checks the local AI program, plans, sets up and removes only the browser, refuses a plan, setup or removal that names `local_ai` as an invalid request, and gives the local AI row the recovery `set_up_in_desktop` wherever a set-up, update, retry or resume would be offered. The Python CLI (`aeat config provision`, `aeat config check`), the TUI setup screen and the MCP service start this role and render its codes; they make no decision and hold no second state, and a Python request cannot name `local_ai` for a plan, setup or removal. Where no built `cadrumo` binary exists, as in a source checkout without a native build, every Python surface reads the item as blocked `not_in_this_build`.
+2. **Exposure.** The desktop host links the engine in process and is the only surface that sets up or removes the local AI. Only the desktop hands the engine the person's local model selection, through the engine's `admit_local_ai` admission; an engine without it serves the local AI read-only. The engine also runs as `cadrumo --role components <status|plan|setup|verify|cancel|remove>`, with a line-delimited JSON protocol carrying rows, the plan and its digest, phase, progress and notice events, and the result. It is the first role that hosts no interpreter. The role never admits local AI provisioning and takes no model on its command line: it reports and fully checks the local AI program, plans, sets up and removes only the browser, refuses a plan, setup or removal that names `local_ai` as an invalid request, and gives the local AI row the recovery `set_up_in_desktop` wherever a set-up, update, retry or resume would be offered. The Python CLI (`aeat config provision`, `aeat config check`), the TUI setup screen and the MCP service submit `config.provision.status`, `config.provision.verify`, `config.provision.setup` and `config.provision.remove` in a signed-in profile session. The operations reach the role through one entrypoints composition, and the surfaces render its codes; Python makes no component decision and holds no second state, and a Python request cannot name `local_ai` for a plan, setup or removal. Setup review requires a human answer through a current runtime-issued secure response bearer; MCP can start and observe setup but cannot answer its review (`2026-10-26-rust-component-provisioning-registered-operations-adr`). Where no built `cadrumo` binary exists, as in a source checkout without a native build, every Python surface reads the item as blocked `not_in_this_build`.
 3. **Unchanged contracts.** States and blocked reasons (unified-setup D2), the approval bound to a plan digest (D4), and the phase, progress and retry vocabulary and its limits (D5, D6) are kept. So are the closed failure categories (D9), the desktop experience (D10 as amended 2026-10-19), and hard requirements (D11). The item ids are `browser` and `local_ai`, and the recovery actions are `operator.provision.browser` and `operator.provision.local_ai`; every surface routes `operator.provision.local_ai` to the desktop. The `local_ai` item is the Ollama program plus the models the person selected for local roles; with no local selection it is the program alone.
 4. **Wording.** The engine emits only closed codes and locale-neutral facts. Each surface words them from the canonical locale catalogues, in four languages and the informal singular. The desktop uses the `desktop.setup` subtree; the CLI, TUI and MCP use the provisioning subtree. This replaces the 2026-10-18 amendment's "operations carry their own words".
 5. **Pins are data.** The browser archive pins (`src/cadrumo/_data/dependencies/browser_archives.toml`) and the local AI program pins (`src/cadrumo/_data/dependencies/local_ai_program.toml`) are declarative data staged into the package, which Rust reads at run time. The local AI pins cover the program archive per platform only. They carry no model name, digest, size or licence. Regenerating program pins stays a developer tool under `dev/`.
@@ -68,7 +68,7 @@ Affected prior rulings, amended in place on acceptance 2026-10-24:
 
 ## Implementation
 
-We will extend `native/application` with a provisioning module built on `component.rs`, add the `components` role to the single binary, point the desktop setup host at it in process, make the Python surfaces thin clients of the role, and delete the Python provisioning path. The sequence is in `2026-10-24-rust-component-provisioning-plan`. The consumer on-demand fixes run first and separately in `2026-10-24-component-on-demand-plan`.
+We will extend `native/application` with a provisioning module built on `component.rs`, add the `components` role to the single binary, point the desktop setup host at it in process, make the Python surfaces clients of the profile-bound operations, which reach the role through one entrypoints composition, and delete the Python provisioning path. The sequence is in `2026-10-24-rust-component-provisioning-plan`. The consumer on-demand fixes run first and separately in `2026-10-24-component-on-demand-plan`.
 
 Hypotheses, free to change within the constraints:
 
@@ -81,16 +81,16 @@ Hypotheses, free to change within the constraints:
 
 ## Rationale
 
-Components need no profile authority, so the profile runtime's operation journal adds a Python hop without adding a guarantee. The Rust store already provides the hard parts: locking, staging, bounded extraction, receipts and cutover. Running the engine as a role of the one binary gives every surface the same decisions with no second state. That satisfies "no Python" and parity together. Pinning the Ollama archive gives the local AI the integrity and approval guarantees the browser already has. Dropping the vendor installer removes the Node driver and the loopback server from a path whose bytes Cadrumo already verifies.
+Component files need no profile custody. The profile-bound operation wrapper adds runtime admission, a journal, review and human checks for CLI, TUI and MCP without giving Python component authority (`2026-10-26-rust-component-provisioning-registered-operations-adr`). The Rust store already provides the hard parts: locking, staging, bounded extraction, receipts and cutover. Running the engine as a role of the one binary gives every surface the same decisions with no second state. That satisfies "no Python" and parity together. Pinning the Ollama archive gives the local AI the integrity and approval guarantees the browser already has. Dropping the vendor installer removes the Node driver and the loopback server from a path whose bytes Cadrumo already verifies.
 
 ## Consequences
 
-- Provisioning no longer depends on a running profile runtime or a signed-in session. Status and setup work before sign-in, if the window chooses to offer them there.
+- The desktop provisions through its native Rust engine without a signed-in profile. CLI and TUI component operations require sign-in; MCP submits them in the signed-in profile session.
 - The Python CLI, TUI and MCP gain a dependency on the built native binary for browser setup and for every status read. Setting up the local AI needs the desktop. A source checkout without a native build reads `not_in_this_build`, and developer recipes must build the application crate first.
-- Setup leaves the profile runtime's operation journal. Durability rests on the engine's lock, activity record and receipt, which must be crash-tested on all three platforms.
+- CLI, TUI and MCP component operations use the profile runtime journal. The engine also retains its installation-wide lock, activity record and receipt, which must be crash-tested on all three platforms.
 - The local AI program archive is large (CUDA libraries on Windows and Linux). The plan size and free-space rule decide what the person approves.
 - Upgrading Playwright or Ollama needs new pins, as the browser does today.
-- Reconsider if Ollama stops publishing standalone archives, if Playwright's layout or marker contract changes beyond what pins can track, or if setup ever needs profile authority.
+- Reconsider if Ollama stops publishing standalone archives, if Playwright's layout or marker contract changes beyond what pins can track, or if the profile-bound operation wrapper needs a different admission boundary.
 
 ### Amendment 2026-10-24: the runtime manager hosts the local AI server
 
