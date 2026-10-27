@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+import os
+import signal
 import sys
 import time
 from collections.abc import Generator
@@ -19,6 +21,7 @@ from cadrumo.adapters.persistence.storage.custody.tests.automation_support impor
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import EXTENSION_SETTINGS_NAMESPACE
 from cadrumo.core.async_cleanup import close_async_resources
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessScope
 from cadrumo_client.contracts.contracts import ByteChannel, RefusalCode, RefusalError
 from cadrumo_client.contracts.extension_records import (
@@ -513,3 +516,44 @@ def test_service_record_write_input_is_bounded_and_waited_for_outside_the_profil
                     held.reply()
         assert closed.value.reason is RefusalCode.CONNECTION_CLOSED
         assert time.monotonic() - waiting_since < 20
+
+
+def test_service_claim_during_custody_recovery_keeps_its_lease_for_the_parents_rebind(tmp_path: Path) -> None:
+    with service_record_runtime(tmp_path) as runtime:
+        service = runtime.connect_service()
+        assert isinstance(runtime.admit(service), ServiceConnected)
+        lease = service.claim()
+        assert lease is not None
+
+        def person_status() -> object:
+            return runtime.human.session(
+                SessionRequest(
+                    action="session_status",
+                    request_id=uuid4(),
+                    profile_id=runtime.profile_id,
+                    session_id=runtime.person_session_id,
+                ),
+                deadline=time.monotonic() + 10,
+            )
+
+        worker = runtime.profiles._profiles[runtime.profile_id].owner._worker
+        assert worker is not None
+        os.kill(worker._process.pid, signal.SIGTERM)
+        deadline = time.monotonic() + 30
+        while not (
+            isinstance(status := person_status(), ProfileStatus)
+            and status.status.denial is AccessDenialCode.CUSTODY_RECOVERING
+        ):
+            assert time.monotonic() < deadline, f"the runtime never suspended the person's lease: {status!r}"
+            time.sleep(0.05)
+
+        # A claim inside the window must neither re-approve nor withdraw the suspended child lease.
+        assert service.claim() == lease
+        assert service.connected is not None and service.connected.lease == lease
+
+        rebound = login(runtime.human, runtime.profile_id, "password", PROFILE_INPUT.encode())
+        assert isinstance(rebound, ProfileStatus) and rebound.status.denial is None, rebound
+        assert rebound.status.session_id == runtime.person_session_id
+        assert service.claim() == lease
+        absent, material = service.record_read(RECORD_CAPABILITY, "synthetic-record")
+        assert absent.state == "absent" and material == bytearray()

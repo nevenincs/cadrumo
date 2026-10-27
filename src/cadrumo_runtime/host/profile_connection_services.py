@@ -162,8 +162,12 @@ class ProfileConnectionServicesMixin:
                 lease = existing.lease
                 if lease is not None:
                     status = self._status(connection, host, request.request_id, lease.session_id)
-                    if existing.lease is lease and (
-                        isinstance(status, AccessDenied) or status.status.denial is not None
+                    denial = status.code if isinstance(status, AccessDenied) else status.status.denial
+                    # A suspended lease is restored with its parent's rebind; re-approval would withdraw it.
+                    if (
+                        existing.lease is lease
+                        and denial is not None
+                        and denial is not AccessDenialCode.CUSTODY_RECOVERING
                     ):
                         approved = lease
                         try:
