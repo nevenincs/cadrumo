@@ -7,9 +7,15 @@ The port speaks application contracts; native wire types stay in composition.
 
 from __future__ import annotations
 
+import asyncio
 import secrets
+import time
+from collections import deque
+from collections.abc import Callable
+from dataclasses import dataclass
 from enum import StrEnum
-from typing import Literal, Protocol
+from threading import Lock
+from typing import Final, Literal, Protocol, override
 
 from pydantic import BaseModel, Field, NonNegativeInt
 
@@ -20,8 +26,10 @@ from cadrumo_client.contracts.access_vocabulary import (
     DisclosureCategory,
     DisclosurePermission,
 )
+from cadrumo_client.contracts.contracts import RefusalError
 from cadrumo_client.contracts.failure_categories import DependencyFailureCategory
 
+from ..core.async_cleanup import AsyncResourceCleanupError, await_cancellation_complete, has_async_cleanup_failure
 from ..core.errors.hierarchy import CadrumoError
 from ..core.hashing import sha256_hex
 from ..core.hex import Hex64Str
@@ -60,10 +68,15 @@ from .operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
+from .operations.events import OperationEventCode
 from .operations.interactions import OperationConsumedInteraction, OperationResponseIntentValue
 from .operations.models import CredentialFreeOperationRequest, OperationRequest
 from .operations.operation_definition import OperationDefinition, OperationExecutorFactory
-from .operations.owner import OperationExecutorContext, OperationResumeCheckpoint
+from .operations.owner import (
+    OperationExecutorContext,
+    OperationResumeCheckpoint,
+    retain_failed_operation_resources,
+)
 from .operations.persistence.journal import serialize_operation_operand
 from .operations.person_acts import is_persons_frontend
 from .operations.registry import (
@@ -263,6 +276,204 @@ class ComponentsOperationPort(Protocol):
     ) -> ProvisionResult:
         """Own one role until terminal/safe cleanup, relaying its events to the context."""
         ...
+
+
+_PROGRESS_INTERVAL: Final = 0.25
+_CANCELLATION_POLL: Final = 0.2
+
+
+@dataclass(frozen=True, slots=True)
+class ComponentsRolePhase:
+    """The role reached a declared step of an item."""
+
+    phase_code: OperationEventCode
+
+
+@dataclass(frozen=True, slots=True)
+class ComponentsRoleProgress:
+    """Units of one subject the role has handled so far."""
+
+    completed: int
+    total: int
+    unit_code: OperationEventCode
+    subject_code: OperationEventCode
+
+
+@dataclass(frozen=True, slots=True)
+class ComponentsRoleNotice:
+    """A stable notice identity; ``followed_other_plan`` marks a follower of an unapproved plan."""
+
+    notice_code: OperationEventCode
+    followed_other_plan: bool = False
+
+
+type ComponentsRoleEvent = ComponentsRolePhase | ComponentsRoleProgress | ComponentsRoleNotice
+type ComponentsRoleEventSink = Callable[[ComponentsRoleEvent], None]
+
+
+class ComponentsRoleRun(Protocol):
+    """One started role: its terminal result and a thread-safe request to stop it."""
+
+    @property
+    def task(self) -> asyncio.Task[ProvisionResult]:
+        """Settles when the role has ended and its result is known."""
+        ...
+
+    def cancel(self) -> None:
+        """Ask the role to stop; safe to call from any thread."""
+        ...
+
+
+class ComponentsRoleLauncher(Protocol):
+    """Start the contained role off the event loop; its events arrive on the role's thread."""
+
+    def start(
+        self,
+        command: ProvisionCommand,
+        items: tuple[DependencyItemKind, ...],
+        *,
+        approve: str | None,
+        on_event: ComponentsRoleEventSink,
+    ) -> ComponentsRoleRun:
+        """Begin one command inside the running event loop and return its handle."""
+        ...
+
+
+class _RoleOwner:
+    def __init__(self, run: ComponentsRoleRun) -> None:
+        """Bind the declared collaborators without starting any work."""
+        self.run = run
+
+    async def close(self) -> None:
+        if not self.run.task.done():
+            self.run.cancel()
+        # The contained client's finally block ends the complete role process
+        # tree. Settlement must wait for that ownership, not abandon a thread.
+        try:
+            await asyncio.shield(self.run.task)
+        except AsyncResourceCleanupError as error:
+            resources = error.resources
+            await error.retry_cleanup()
+            error.discard_released_resources(*resources)
+        except RefusalError as error:
+            if has_async_cleanup_failure(error):
+                raise
+            # This is the client's execution result, already reported to the
+            # executor. Its contract ends the contained role before refusing;
+            # replaying that refusal here would invent a cleanup failure.
+            return
+
+
+class LaunchedComponentsOperationPort(ComponentsOperationPort):
+    """Run the contained role off-loop while journaling bounded progress."""
+
+    def __init__(self, launcher: ComponentsRoleLauncher) -> None:
+        """Bind the declared collaborators without starting any work."""
+        self.launcher = launcher
+
+    @override
+    async def run(
+        self,
+        command: ProvisionCommand,
+        items: tuple[DependencyItemKind, ...],
+        context: OperationExecutorContext,
+        *,
+        approve: str | None = None,
+    ) -> ProvisionResult:
+        """Hold role ownership, relay events and cancellation, and await terminal cleanup."""
+        loop = asyncio.get_running_loop()
+        changed = asyncio.Event()
+        pending: deque[ComponentsRoleEvent] = deque()
+        guard = Lock()
+        last_progress: dict[str, tuple[float, int, int]] = {}
+        latest_progress: dict[str, ComponentsRoleProgress] = {}
+        followed_other_plan = False
+
+        def emit(event: ComponentsRoleEvent) -> None:
+            nonlocal followed_other_plan
+            if isinstance(event, ComponentsRoleNotice) and event.followed_other_plan:
+                followed_other_plan = True
+            with guard:
+                if isinstance(event, ComponentsRolePhase):
+                    pending.extend(latest_progress.values())
+                    latest_progress.clear()
+                if isinstance(event, ComponentsRoleProgress):
+                    previous = last_progress.get(event.subject_code)
+                    instant = time.monotonic()
+                    if previous is not None and previous[1:] == (event.completed, event.total):
+                        return
+                    latest_progress[event.subject_code] = event
+                    if (
+                        previous is not None
+                        and instant - previous[0] < _PROGRESS_INTERVAL
+                        and event.completed != event.total
+                    ):
+                        return
+                    last_progress[event.subject_code] = (instant, event.completed, event.total)
+                    latest_progress.pop(event.subject_code, None)
+                pending.append(event)
+            loop.call_soon_threadsafe(changed.set)
+
+        async def drain() -> None:
+            with guard:
+                events = tuple(pending)
+                pending.clear()
+            for event in events:
+                if isinstance(event, ComponentsRolePhase):
+                    await context.events.phase(event.phase_code)
+                elif isinstance(event, ComponentsRoleProgress):
+                    await context.events.progress(
+                        completed=event.completed,
+                        total=event.total,
+                        unit_code=event.unit_code,
+                        subject_code=event.subject_code,
+                    )
+                else:
+                    await context.events.notice(event.notice_code)
+
+        started = self.launcher.start(command, items, approve=approve, on_event=emit)
+        task = started.task
+        owner = _RoleOwner(started)
+        context.cleanup.own(owner, family=OperationOwnedResource.PROCESS)
+        try:
+            while not task.done():
+                changed.clear()
+                await drain()
+                if context.cancellation.cancellation_requested or (
+                    context.deadlines.execution_deadline is not None and now() >= context.deadlines.execution_deadline
+                ):
+                    started.cancel()
+                waiter = asyncio.create_task(changed.wait())
+                try:
+                    await asyncio.wait((task, waiter), timeout=_CANCELLATION_POLL, return_when=asyncio.FIRST_COMPLETED)
+                finally:
+                    waiter.cancel()
+                    await asyncio.gather(waiter, return_exceptions=True)
+            with guard:
+                pending.extend(latest_progress.values())
+                latest_progress.clear()
+            await drain()
+            try:
+                result = await task
+            except RefusalError as error:
+                if has_async_cleanup_failure(error):
+                    raise
+                if followed_other_plan:
+                    # The client has already ended the contained role. A
+                    # follower that ignored cancellation still needs a fresh
+                    # reviewed plan; its timeout must not erase that reason.
+                    return ProvisionResult(outcome=ProvisionOutcome.FOLLOWED_PLAN_MISMATCH)
+                raise
+            if followed_other_plan:
+                # The role may already have emitted another owner's successful
+                # result. It cannot establish this approved invocation's effect.
+                return ProvisionResult(outcome=ProvisionOutcome.FOLLOWED_PLAN_MISMATCH)
+            return result
+        except BaseException:
+            with retain_failed_operation_resources(context.cleanup, family=OperationOwnedResource.PROCESS):
+                started.cancel()
+                await await_cancellation_complete(owner.close(), task_name="components-role-cleanup")
+                raise
 
 
 async def _cancelled(context: OperationExecutorContext) -> bool:
