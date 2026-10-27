@@ -71,9 +71,6 @@ flows:
     field_unavailable: Nem elérhető profilmező
     help:
       about: 'Erről a beállításról:'
-      what: 'Mi ez:'
-      where: 'Hol találod:'
-      why: 'Miért kell:'
     language:
       unavailable: Ez a profil nem kínál nyelvi beállítást.
     namespace_detail: '{number}. részlet'

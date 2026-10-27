@@ -10,6 +10,7 @@ import json
 from pathlib import Path
 
 from cadrumo.application.user_profile.overview import build_profile_overview
+from cadrumo.application.wizard.catalogue import build_setup_flow
 from cadrumo.core.config import override_settings
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
@@ -36,9 +37,10 @@ def render_fixture() -> str:
                 }.items()
             ),
         )
+        flow = build_setup_flow(operation)
         for language in ("en", "es", "ca", "hu"):
             with override_settings(cadrumo_output_language=language):
-                data = build_profile_overview(record, schema=context.schema).model_dump(mode="json")
+                data = build_profile_overview(record, schema=context.schema, flow=flow).model_dump(mode="json")
                 data.pop("label")
                 data.update(valid=True, pages=1, content_digest="a" * 64)
                 fixtures[language] = data

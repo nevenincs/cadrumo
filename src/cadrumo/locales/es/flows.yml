@@ -70,9 +70,6 @@ flows:
     field_unavailable: Campo de perfil no disponible
     help:
       about: 'Sobre este ajuste:'
-      what: 'Qué es:'
-      where: 'Dónde encontrarlo:'
-      why: 'Por qué se pide:'
     language:
       unavailable: Este perfil no ofrece un ajuste de idioma.
     namespace_detail: detalle {number}

@@ -27,6 +27,7 @@ from ....application.user_profile.fact_write import apply_manager_profile_field_
 from ....application.user_profile.login_session import authenticate_profile_for_invocation
 from ....application.user_profile.overview import build_profile_overview
 from ....application.user_profile.registration import register_profile_with_credentials
+from ....application.wizard.catalogue import build_setup_flow
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.i18n.render import tr
 from ....domain.calculations.registry.authority import bundled_indexed_authority
@@ -49,7 +50,7 @@ _EDITED_PATH = "identity.name"
 
 def _live_overview(label: str = "Manager Subject"):
     # Building the overview validates facts against registry authority; lease it here, on whatever thread runs this.
-    with bundled_indexed_authority().operation():
+    with bundled_indexed_authority().operation() as operation:
         _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         # Registration closes its own session, so a freshly registered profile is
         # LOCKED and the capsule -- the sole profile authority -- will not yield its
@@ -62,13 +63,15 @@ def _live_overview(label: str = "Manager Subject"):
             profile_decode_context=_profile_decode_context_for_test,
         )
         record = load_test_profile_record(require_active_bucket_id())
-        return build_profile_overview(record, label=label, schema=_profile_contexts_for_test()[1].schema)
+        return build_profile_overview(
+            record, label=label, schema=_profile_contexts_for_test()[1].schema, flow=build_setup_flow(operation)
+        )
 
 
 def _persist(path: str, value: str, _expected_revision: int, _expected_content_digest: str):
     """The production write door, so an edit here travels the real path."""
     # Building the overview validates facts against registry authority; lease it here, on whatever thread runs this.
-    with bundled_indexed_authority().operation():
+    with bundled_indexed_authority().operation() as operation:
         _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         record = apply_manager_profile_field_mutation(
             profile_id=require_active_bucket_id(),
@@ -76,7 +79,12 @@ def _persist(path: str, value: str, _expected_revision: int, _expected_content_d
             value=value,
             profile_decode_context=_profile_decode_context_for_test,
         )
-        return build_profile_overview(record, label="Manager Subject", schema=_profile_contexts_for_test()[1].schema)
+        return build_profile_overview(
+            record,
+            label="Manager Subject",
+            schema=_profile_contexts_for_test()[1].schema,
+            flow=build_setup_flow(operation),
+        )
 
 
 def _notice(app: ProfileManagerScreen) -> str:

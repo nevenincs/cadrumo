@@ -39,6 +39,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Callable
+from types import MappingProxyType
 from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel, Field
@@ -52,7 +53,6 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.redaction.rules import ALWAYS_REDACT_KEY_TERMS
 from ...domain.user_profile.labels import (
     profile_choice_label,
-    profile_field_help,
     profile_field_label,
     profile_field_label_key,
     profile_section_summary,
@@ -72,6 +72,7 @@ from .completeness import (
     profile_section_rows,
     profile_value_is_present,
 )
+from .field_help import profile_field_help
 from .projections import profile_schema_for_record, record_to_path_values
 
 if TYPE_CHECKING:
@@ -84,7 +85,11 @@ if TYPE_CHECKING:
         ProfileSectionDefinition,
     )
     from ...domain.user_profile.values import UserProfileRecord
+    from ..wizard.models import WizardFlow
 
+
+_NO_FIELD_HELP: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType[str, tuple[str, ...]]({})
+"""The help of a projection built without a setup flow: no field has any."""
 
 MASKED_PLACEHOLDER: Final[str] = "••••••••"
 """Rendered in place of a secret-classed value.
@@ -276,10 +281,13 @@ class ProfileFieldView(BaseModel):
     declaration.
     """
     help: tuple[str, ...] | None = Field(default=None)
-    """What the field is, why it is asked and where to find it, or ``None``.
+    """The setup wizard's copy for this field, one paragraph per entry, or ``None``.
 
-    Present only for fields the catalogue explains in those three parts;
-    :attr:`about` explains every other field."""
+    Its prompt, its help text when it has one, and a ``label: description``
+    line for each choice that carries a description, exactly as
+    :func:`~cadrumo.application.user_profile.field_help.profile_field_help`
+    remaps them. ``None`` for a field no wizard question writes;
+    :attr:`about` explains that field instead."""
     about: str = Field(default="")
     """The schema's own description of the field, the explanation of last resort."""
     row_index: str | None = Field(default=None)
@@ -318,6 +326,9 @@ def relocalize_profile_field(view: ProfileFieldView) -> ProfileFieldView:
     Indexed repeatable paths retain their instance identity; the declared
     field is the section's final path component, as the overview writer uses.
     Unknown supplied views keep their original label rather than inventing one.
+    The help is the backend's served copy and is replaced when the overview is
+    read again; this function holds it rather than re-deriving it, because the
+    wizard flow it comes from exists only inside a leased authority operation.
     """
     section, separator, remainder = view.path.partition(".")
     if not separator:
@@ -337,7 +348,7 @@ def relocalize_profile_field(view: ProfileFieldView) -> ProfileFieldView:
         )
     elif view.field_type is ProfileFieldType.ENUM:
         choices = _enum_field_choices(tuple(item.value for item in choices), path=f"{section}.{field_key}")
-    return view.model_copy(update={"label": label, "help": profile_field_help(section, field_key), "choices": choices})
+    return view.model_copy(update={"label": label, "choices": choices})
 
 
 class ProfileSectionView(BaseModel):
@@ -456,6 +467,7 @@ def _field_view(
     section_key: str,
     field: ProfileFieldDefinition,
     values: Mapping[str, str],
+    help_lines: tuple[str, ...] | None = None,
     label_suffix: str = "",
     row_index: str | None = None,
     conditionally_required: frozenset[str] = frozenset(),
@@ -491,7 +503,7 @@ def _field_view(
         required=field.required or path in conditionally_required,
         field_type=field.type,
         choices=profile_field_choices(field, path=f"{section_key}.{field.key}"),
-        help=profile_field_help(section_key, field.key),
+        help=help_lines,
         about=field.description,
         row_index=row_index,
     )
@@ -501,6 +513,7 @@ def _repeatable_section_views(
     section: ProfileSectionDefinition,
     values: Mapping[str, str],
     present: frozenset[str],
+    field_help: Mapping[str, tuple[str, ...]],
 ) -> list[ProfileFieldView]:
     """Expand one repeatable section into a row group per instance it holds.
 
@@ -523,6 +536,7 @@ def _repeatable_section_views(
             section_key=section.key,
             field=field,
             values=values,
+            help_lines=field_help.get(f"{section.key}.{field.key}"),
             row_index=row or None,
         )
         for row in rows
@@ -690,6 +704,7 @@ def _section_field_views(
     values: Mapping[str, str],
     present: frozenset[str],
     schema: ProfileSchemaDefinition,
+    field_help: Mapping[str, tuple[str, ...]],
     derived_selectors: Iterable[ProfileDerivedSelectorDefinition] = (),
     conditionally_required: frozenset[str] = frozenset(),
 ) -> list[ProfileFieldView]:
@@ -703,7 +718,7 @@ def _section_field_views(
     becomes vacuous rather than wrong.
     """
     if section.repeatable:
-        return _repeatable_section_views(section, values, present)
+        return _repeatable_section_views(section, values, present, field_help)
     views: list[ProfileFieldView] = []
     for field in section.fields:
         if derived_selector_for_path(f"{section.key}.{field.key}", derived_selectors) is not None:
@@ -717,6 +732,7 @@ def _section_field_views(
                 section_key=section.key,
                 field=field,
                 values=values,
+                help_lines=field_help.get(f"{section.key}.{field.key}"),
                 conditionally_required=conditionally_required,
             ),
         )
@@ -728,6 +744,7 @@ def build_profile_overview(
     *,
     label: str = "",
     schema: ProfileSchemaDefinition | None = None,
+    flow: WizardFlow | None = None,
 ) -> ProfileOverview:
     """Project ``record`` into the manager's landing-page view.
 
@@ -750,6 +767,10 @@ def build_profile_overview(
         record: The :class:`UserProfileRecord` whose values populate the view.
         label: Operator-facing display name from the committed capsule projection.
         schema: Optional schema override; the canonical schema when omitted.
+        flow: The setup flow built for the caller's pinned authority. Its
+            question copy becomes each field's help, so a surface shows the
+            words the wizard asks with. Without it no field carries help and
+            :attr:`ProfileFieldView.about` explains every field.
 
     Returns:
         A :class:`ProfileOverview` covering every declared section and field.
@@ -763,6 +784,7 @@ def build_profile_overview(
     """
     resolved_schema = profile_schema_for_record(record, schema=schema)
     values = record_to_path_values(record)
+    field_help = _NO_FIELD_HELP if flow is None else profile_field_help(flow)
 
     sections: list[ProfileSectionView] = []
     # Row-aware, and it has to be: a repeatable section's rows live at
@@ -796,6 +818,7 @@ def build_profile_overview(
                         values,
                         present,
                         resolved_schema,
+                        field_help,
                         resolved_schema.derived_selectors,
                         conditionally_required,
                     ),

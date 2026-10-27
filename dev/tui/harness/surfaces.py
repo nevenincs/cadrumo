@@ -118,6 +118,7 @@ def _manager() -> App[Any]:
     from cadrumo.application.user_profile.overview import build_profile_overview
     from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
     from cadrumo.application.user_profile.profile_summary import summary_inventory
+    from cadrumo.application.wizard.catalogue import build_setup_flow
     from cadrumo.core.bucket_pointer import require_active_bucket_id
     from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
     from cadrumo.entrypoints.tui.components.host import ScreenHostApp
@@ -141,7 +142,12 @@ def _manager() -> App[Any]:
             profile_id,
             profile_decode_context=profile_decode_context,
         )
-        overview = build_profile_overview(profiles.load(profile_id), label=label, schema=profile_decode_context.schema)
+        overview = build_profile_overview(
+            profiles.load(profile_id),
+            label=label,
+            schema=profile_decode_context.schema,
+            flow=build_setup_flow(operation),
+        )
 
     def _persist(path: str, value: str, expected_revision: int, expected_content_digest: str):
         with bundled_indexed_authority().operation() as operation:
@@ -153,7 +159,12 @@ def _manager() -> App[Any]:
                 expected_content_digest=expected_content_digest,
                 profile_decode_context=operation.profile_decode_context(),
             )
-            return build_profile_overview(record, label=label, schema=operation.profile_decode_context().schema)
+            return build_profile_overview(
+                record,
+                label=label,
+                schema=operation.profile_decode_context().schema,
+                flow=build_setup_flow(operation),
+            )
 
     return ScreenHostApp(
         ProfileManagerScreen(

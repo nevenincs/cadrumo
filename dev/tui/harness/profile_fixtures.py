@@ -34,6 +34,7 @@ from cadrumo.application.user_profile.section_rows import (
     remove_profile_repeatable_section_row,
     update_profile_repeatable_section_row,
 )
+from cadrumo.application.wizard.catalogue import build_setup_flow
 from cadrumo.core.bucket_pointer import require_active_bucket_id
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.user_profile.plantilla_media import PlantillaMediaState, PlantillaMediaYear
@@ -78,7 +79,12 @@ class ProfileReviewDoors:
     operation: PinnedAuthorityOperation
 
     def _project(self, record: UserProfileRecord) -> ProfileOverview:
-        return build_profile_overview(record, label=self.label, schema=self.operation.profile_decode_context().schema)
+        return build_profile_overview(
+            record,
+            label=self.label,
+            schema=self.operation.profile_decode_context().schema,
+            flow=build_setup_flow(self.operation),
+        )
 
     def overview(self) -> ProfileOverview:
         """Project the record as storage holds it now."""

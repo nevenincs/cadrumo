@@ -19,11 +19,7 @@
             "required": true,
             "field_type": "string",
             "choices": [],
-            "help": [
-              "Your tax identification number: the NIF of your DNI, your NIE if you are a foreign national, or the NIF of an entity.",
-              "Every declaration is filed under this number; it is how the AEAT identifies you.",
-              "On your DNI or NIE card, or on the NIF card issued by the AEAT. It also appears on any past declaration or AEAT letter."
-            ],
+            "help": ["Tax identifier (NIF/CIF/DNI/NIE) for the active profile"],
             "about": "NIF/NIE/CIF used as filing identity.",
             "row_index": null
           },
@@ -35,7 +31,7 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": ["Display name shown in local reviews"],
             "about": "Declarant given name or display name.",
             "row_index": null
           },
@@ -47,7 +43,7 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": ["Surnames or company name for export headers"],
             "about": "Declarant surnames for person filings.",
             "row_index": null
           },
@@ -59,7 +55,10 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "Legal or company name for export headers",
+              "For legal entities this is the filing name used in entity-style export headers. It is separate from the local display name."
+            ],
             "about": "Legal or company name for entity-style export headers.",
             "row_index": null
           },
@@ -108,7 +107,7 @@
                 "label": "Hungarian"
               }
             ],
-            "help": null,
+            "help": ["CLI output language for this profile"],
             "about": "Output language used by CLI rendering and notification copy.",
             "row_index": null
           }
@@ -137,7 +136,9 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": [
+              "Allow reading scanned or image documents with the image-reading model you selected?"
+            ],
             "about": "Whether this profile may read scanned or image evidence with the image-reading model the person selected. Default on; opting out disables the image read. This flag does not decide where the read runs: an off-host read also needs the cloud_evidence_upload capability and the per-read consent.",
             "row_index": null
           },
@@ -158,7 +159,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Enable Google Sheets export?"],
             "about": "Whether this profile may export modelo workbooks to Google Sheets or Drive. Default on; opting out keeps exports offline-only.",
             "row_index": null
           },
@@ -301,7 +302,7 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": ["Tax address postcode"],
             "about": "Fiscal-address postcode.",
             "row_index": null
           },
@@ -418,7 +419,7 @@
                 "label": "Murcia"
               }
             ],
-            "help": null,
+            "help": ["Tax-residence autonomous community"],
             "about": "Comunidad autónoma de residencia fiscal en territorio común para el Modelo 100.",
             "row_index": null
           },
@@ -439,11 +440,7 @@
                 "label": "Foral territory (Basque Country or Navarre) - not supported yet"
               }
             ],
-            "help": [
-              "Whether your taxes follow the common territory or a foral territory (Basque Country or Navarre).",
-              "It decides which tax administration and rules apply. Foral territories file with their own tax office, which is not supported yet.",
-              "It follows from your fiscal address: an address in Álava, Bizkaia, Gipuzkoa or Navarre is foral; elsewhere in Spain it is common territory."
-            ],
+            "help": ["Which territorial regime applies to your tax residence?"],
             "about": "Régimen territorial aplicable declarado explícitamente: territorio común o territorio foral aún no soportado.",
             "row_index": null
           }
@@ -497,7 +494,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Large-company enrollment"],
             "about": "Large-company condition used by filing cadence. Applies when operation volume, calculated under LIVA Art. 121, exceeded 6.010.121,04 EUR during the immediately prior calendar year; RIVA Art. 71 then switches IVA liquidation to monthly.",
             "row_index": null
           },
@@ -518,7 +515,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Public administration budget over 6,000,000"],
             "about": "Public-administration budget threshold used by Modelo 111 filing cadence. Applies when the last approved annual public-administration budget before the start of the tax year exceeds 6 million EUR; the Modelo 111 official instructions then route the withholding self-assessment to monthly.",
             "row_index": null
           },
@@ -530,7 +527,10 @@
             "required": false,
             "field_type": "date",
             "choices": [],
-            "help": null,
+            "help": [
+              "From what date do you have filing obligations / when did you register? (YYYY-MM-DD, optional)",
+              "When set, returns for periods before this date are not shown as overdue. Leave blank if you do not know it."
+            ],
             "about": "AEAT censo alta date for the economic activity. Drives obligation start year and pago-fraccionado eligibility.",
             "row_index": null
           },
@@ -575,7 +575,13 @@
                 "label": "Entity under income attribution"
               }
             ],
-            "help": null,
+            "help": [
+              "Entity type",
+              "Natural person (IRPF), legal entity (Impuesto sobre Sociedades), or attribution entity",
+              "Natural person: An individual taxpayer (autónomo or private person) filing under IRPF.",
+              "Legal entity (company): A company or organisation (SL, SA, association…) filing under Impuesto sobre Sociedades.",
+              "Attribution entity: An income-attribution entity (comunidad de bienes, sociedad civil): income is attributed to its members."
+            ],
             "about": "Taxpayer entity type. natural_person is an IRPF contribuyente; legal_entity is an Impuesto sobre Sociedades contribuyente; attribution_entity is an entity without legal personality under the regimen de atribucion de rentas. The entity type selects the tax and therefore the modelos, calendar, and rate schedule.",
             "row_index": null
           },
@@ -620,7 +626,11 @@
                 "label": "Other"
               }
             ],
-            "help": null,
+            "help": [
+              "Legal form",
+              "Limited liability company (S.L.): Sociedad Limitada: the standard small-company form, minimum capital 3.000 EUR.",
+              "Non-profit entity: Non-profit under Ley 49/2002: may opt into the special tax regime asked about below."
+            ],
             "about": "Recognised legal form when entity_type is legal_entity. Drives the Impuesto sobre Sociedades rate schedule per LIS Art. 29.",
             "row_index": null
           },
@@ -632,7 +642,10 @@
             "required": false,
             "field_type": "decimal",
             "choices": [],
-            "help": null,
+            "help": [
+              "What was your net turnover over the past 12 months? (in euros, optional)",
+              "We need this to decide whether Modelo 202 forces the Art. 40.3 LIS modality (above 6,000,000 EUR). Leave it blank if you do not know."
+            ],
             "about": "Importe neto de la cifra de negocios (INCN) de los 12 meses anteriores. Determina la modalidad del pago fraccionado del Modelo 202 en el umbral de 6.000.000 EUR (art. 40.3 LIS): por encima es obligatorio el art. 40.3 y por debajo pueden resultar aplicables los arts. 40.2 o 40.3. Si no se declara, Cadrumo solicita completar la información en lugar de elegir una modalidad.",
             "row_index": null
           },
@@ -653,7 +666,10 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": [
+              "Is this a newly-created legal entity in one of its first two profit-making tax periods?",
+              "Applies only to legal entities. When set, the entity is taxed at the 15 percent reduced rate during those two periods."
+            ],
             "about": "Whether a newly-created legal entity is in one of its first two profit-making tax periods. Opts the entity into the LIS Art. 29 15 percent micro-empresa-style rate override. The override is opt-in: an undeclared value leaves the entity on the otherwise-applicable sub-form rate.",
             "row_index": null
           },
@@ -677,7 +693,16 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "IRPF income categories",
+              "Select every IRPF income category you have; only economic activity triggers Modelo 130/131",
+              "Economic activity: Self-employed business or professional activity - enables quarterly Modelo 130 and IVA obligations.",
+              "Employment income: Salary or pension income from an employer or Social Security.",
+              "Immovable capital income (rental): Rental income from real estate you own.",
+              "Movable capital income: Interest, dividends and other financial investment income.",
+              "Capital gains: Capital gains or losses from selling assets (shares, property, crypto).",
+              "Pension: Pension income - treated as employment income under IRPF."
+            ],
             "about": "Categorías de renta IRPF declaradas por la persona: actividad económica, trabajo, capital inmobiliario, capital mobiliario, ganancias patrimoniales o pensión. Solo la actividad económica puede originar pagos fraccionados en los Modelos 130 o 131.",
             "row_index": null
           },
@@ -689,7 +714,15 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "Does the declaring entity hold any of these institutional roles for Modelo 347 (third-party operations) purposes?",
+              "Institutional roles that unlock Modelo 347 claves C, D or E: collecting professional fees on behalf of third parties (art. 31.3), a propiedad horizontal community (Ley 49/1960), a carácter social entity (LIVA art. 20.tres), an entity subject to the general information duty (LGT art. 94), or an entity integrated in a public administration. Leave blank if none apply.",
+              "Collects fees on behalf of third parties: A sociedad, asociación, colegio profesional or other entity that collects professional fees or intellectual/industrial/authorship-rights income on behalf of its socios, asociados or colegiados (RD 1065/2007 art. 31.3).",
+              "Propiedad horizontal community: An entity to which Ley 49/1960 on propiedad horizontal applies.",
+              "Carácter social entity: A private entity or establishment of carácter social under LIVA (Ley 37/1992) art. 20.tres.",
+              "Entity subject to the general information duty: An authority, public body, cámara or corporación, colegio or asociación profesional, mutualidad de previsión social, partido político, sindicato or asociación empresarial subject to the duty to supply tax information (LGT art. 94.1 and 94.2).",
+              "Entity integrated in a public administration: An entity integrated in a public administration, additionally subject to declaring the subvenciones, auxilios or ayudas it grants (RD 1065/2007 art. 31.2, second paragraph)."
+            ],
             "about": "Papeles institucionales del declarante a efectos del Modelo 347 (claves C, D y E): cobro de honorarios por cuenta de terceros, comunidad de propietarios, entidad de carácter social, entidad sometida al deber general de informar, o entidad integrada en una Administración pública. Eje independiente del tipo de entidad a efectos fiscales.",
             "row_index": null
           },
@@ -710,7 +743,11 @@
                 "label": "Non-resident (IRNR)"
               }
             ],
-            "help": null,
+            "help": [
+              "Fiscal residency category",
+              "Habitual resident in Spain - IRPF: Tax resident in Spain (183+ days or centre of interests): worldwide income under IRPF.",
+              "Non-resident - IRNR (RDLeg 5/2004): Non-resident: only Spanish-source income is taxed, under IRNR (Modelo 210), and a fiscal representative may be required."
+            ],
             "about": "Whether the taxpayer has habitual residence in Spain (resident_irpf, subject to IRPF) or not (non_resident_irnr, subject to IRNR under TRLIRNR). Drives which tax and therefore which calendar/modelos apply.",
             "row_index": null
           },
@@ -722,7 +759,9 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "Country of fiscal residence (ISO 3166-1 alpha-2 code, e.g. GB, DE, FR)"
+            ],
             "about": "ISO 3166-1 alpha-2 country code of the taxpayer's fiscal residence when fiscal_residency is non_resident_irnr. Drives the UE/EEE classification for the IRNR rate split (Art. 25.1.a vs Art. 25.1.f TRLIRNR).",
             "row_index": null
           },
@@ -734,7 +773,9 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "NIF/NIE of fiscal representative in Spain (required outside EU/EEA)"
+            ],
             "about": "NIF of the representante fiscal designated in Spain when fiscal_residency is non_resident_irnr. Required by TRLIRNR Art. 10 for non-EU/EEE residents and recommended for EU/EEE residents.",
             "row_index": null
           },
@@ -746,7 +787,7 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": ["Name of fiscal representative in Spain"],
             "about": "Full name of the representante fiscal designated in Spain when fiscal_residency is non_resident_irnr. Required together with representante_fiscal_nif by TRLIRNR Art. 10 for non-EU/EEE residents.",
             "row_index": null
           }
@@ -1470,7 +1511,9 @@
             "required": true,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "Business activity (plain text is fine; use the IAE heading if you know it)"
+            ],
             "about": "Censo activity description.",
             "row_index": null
           },
@@ -1511,7 +1554,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Art. 109 70% activity-income coverage exception applies"],
             "about": "Whether the Art. 109 RIRPF 70 percent income-coverage exception is met for covered professional, agricultural, livestock, or forestry activity income. For activity-start cases this is the current payment-period coverage fact, not a prior-year fact.",
             "row_index": null
           },
@@ -1536,7 +1579,13 @@
                 "label": "Objective assessment (módulos)"
               }
             ],
-            "help": null,
+            "help": [
+              "IRPF estimation regime",
+              "How economic-activity net income is determined; selects Modelo 130 vs 131",
+              "Direct estimation, normal: Real-income accounting, full books - required above 600.000 EUR turnover.",
+              "Direct estimation, simplified: Real-income accounting with simplified books - the usual choice for most autónomos.",
+              "Objective estimation (módulos): Module-based (signos, índices, módulos): tax computed from activity indicators, only for listed activities."
+            ],
             "about": "IRPF estimation regime for economic-activity income: directa_normal (estimacion directa normal), directa_simplificada (estimacion directa simplificada), objetiva (estimacion objetiva / modulos). The regime selects Modelo 130 vs Modelo 131 and the deductible-expense computation.",
             "row_index": null
           },
@@ -1626,7 +1675,12 @@
                 "label": "Inbound expatriate regime (art. 93 LIRPF)"
               }
             ],
-            "help": null,
+            "help": [
+              "IRPF special regime (Beckham Law / Art. 93 LIRPF)",
+              "The inpatriate (Beckham Law) regime applies for the first 6 tax years after relocation. Most taxpayers are on the general regime.",
+              "General regime: You are taxed under the general IRPF regime (Modelo 100).",
+              "Inbound expatriate - Beckham Law (Art. 93 LIRPF): You have opted for the Article 93 LIRPF special regime (Modelo 151)."
+            ],
             "about": "Régimen especial de IRPF. El régimen general aplica la tarifa progresiva y el Modelo 100. El régimen de impatriados del art. 93 LIRPF aplica el Modelo 151 y la tarifa correspondiente de IRNR durante seis ejercicios desde la opción; indique también la fecha de inicio.",
             "row_index": null
           },
@@ -1638,7 +1692,10 @@
             "required": false,
             "field_type": "date",
             "choices": [],
-            "help": null,
+            "help": [
+              "Special regime election date (YYYY-MM-DD)",
+              "Date the worker opted into the inpatriate regime (RIRPF Art. 116). The regime expires at the end of the 6th calendar year."
+            ],
             "about": "Opt-in election date for the IRPF special regime (RIRPF Art. 116). Required to compute the six-year impatriado window. Blank when no special regime is in effect.",
             "row_index": null
           },
@@ -1703,7 +1760,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Has employees and pays salaries with retención"],
             "about": "Whether the taxpayer pays employees with withholding.",
             "row_index": null
           },
@@ -1745,7 +1802,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Pays professionals with retención"],
             "about": "Whether the taxpayer pays professionals with withholding.",
             "row_index": null
           },
@@ -1766,7 +1823,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Pays local rent with retención"],
             "about": "Whether the taxpayer pays rent with withholding.",
             "row_index": null
           },
@@ -1787,7 +1844,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Pays capital income with retención"],
             "about": "Whether the taxpayer pays capital income with withholding.",
             "row_index": null
           },
@@ -1799,7 +1856,10 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "Modelo 111 no-retenciones periods",
+              "Comma-separated YYYY:PERIOD periods where no rentas subject to retención or ingreso a cuenta were paid, so no all-blank Modelo 111 is filed."
+            ],
             "about": "Comma-separated YYYY:PERIOD Modelo 111 periods where no rentas subject to retencion or ingreso a cuenta were paid, so no all-blank Modelo 111 filing obligation existed.",
             "row_index": null
           },
@@ -1811,7 +1871,10 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "Modelo 115 no-relevant-payment periods",
+              "Comma-separated YYYY:PERIOD periods where no relevant urban-rent payment subject to withholding occurred, permitting a local zero Modelo 115 calculation."
+            ],
             "about": "Comma-separated YYYY:PERIOD Modelo 115 quarters explicitly attested as having no relevant urban-rent payment subject to withholding; only these facts permit a local zero materialization.",
             "row_index": null
           }
@@ -1853,9 +1916,12 @@
               }
             ],
             "help": [
-              "The IVA (VAT) regime your activity is registered under.",
-              "It decides which IVA declarations you file and how IVA is calculated on your sales and purchases.",
-              "On your census registration (modelo 036 or 037), or in your census details at the AEAT electronic office."
+              "Which IVA regime applies?",
+              "General regime: Standard IVA: charge IVA on sales, deduct IVA on purchases, file Modelo 303 quarterly.",
+              "Simplified regime: Module-based simplified IVA for eligible activities (linked to estimación objetiva).",
+              "Equivalence surcharge: For retailers: your supplier charges an extra surcharge and you file no IVA returns for that activity.",
+              "Agriculture, livestock and fishing special regime (REAGP): Special regime for agriculture, livestock and fishing (REAGP): flat-rate compensation instead of IVA returns.",
+              "Exempt: IVA-exempt activity (education, healthcare, insurance…): no IVA charged, none deducted."
             ],
             "about": "IVA regime used by obligation and classification projections. REAGP is the regimen especial de la agricultura, ganaderia y pesca.",
             "row_index": null
@@ -1877,7 +1943,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Conducts intracomunitario operations"],
             "about": "Whether the taxpayer conducts intracommunity operations.",
             "row_index": null
           },
@@ -1898,7 +1964,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Intra-community operations exceed 50,000 EUR"],
             "about": "Modelo 349 cadence threshold.",
             "row_index": null
           },
@@ -1919,7 +1985,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Enrolled in ROI"],
             "about": "Indica si el contribuyente figura en el Registro de Operadores Intracomunitarios (ROI/VIES), mediante la casilla 582 de los Modelos 036/037. Es distinto de realizar operaciones intracomunitarias y determina el acceso a comprobaciones reservadas a operadores inscritos.",
             "row_index": null
           },
@@ -1940,7 +2006,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Enrolled in OSS"],
             "about": "Whether the taxpayer is enrolled in the OSS / IOSS one-stop-shop regime for declaring intra-EU B2C sales (Modelo 369). Live cross-references that consult OSS-only AEAT surfaces (e.g. modelo-369-exterior-filed-declarations-read) gate applicability on this field.",
             "row_index": null
           },
@@ -1961,7 +2027,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Enrolled as an IVA group member entity"],
             "about": "Whether the taxpayer is a member entity in the IVA group-of-entities special regime and files Modelo 322 as the individual monthly self-assessment.",
             "row_index": null
           },
@@ -1982,7 +2048,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Enrolled as an IVA group dominant entity"],
             "about": "Whether the taxpayer is the dominant entity of an IVA group-of-entities regime and files Modelo 353 as the aggregate monthly self-assessment.",
             "row_index": null
           },
@@ -2003,7 +2069,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Enrolled in the SII (immediate information supply)"],
             "about": "Whether the taxpayer is enrolled in the SII (Suministro Inmediato de Informacion), the near-real-time IVA Libros registro submission system. Mandatory for the monthly IVA collective (grandes empresas, REDEME, grupos de IVA); voluntary opt-in via Modelo 036 for everyone else.",
             "row_index": null
           },
@@ -2024,11 +2090,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Whether you are registered in REDEME, the register for monthly IVA refunds.",
-              "Registration makes your IVA declaration monthly instead of quarterly and makes SII mandatory.",
-              "It is requested on modelo 036 and shows in your census details. If you never requested it, the answer is No."
-            ],
+            "help": ["Registered in REDEME (monthly IVA refund register)"],
             "about": "Whether the taxpayer is registered in REDEME (Registro de Devolucion Mensual del IVA). REDEME registration switches the IVA self-assessment period to monthly and is one of the mandatory-SII triggers.",
             "row_index": null
           },
@@ -2053,11 +2115,7 @@
                 "label": "General and simplified together"
               }
             ],
-            "help": [
-              "Which IVA regimes your modelo 303 combines: general only, simplified only, or both.",
-              "Modelo 303 has a separate part for each regime; this decides which parts are filled in.",
-              "It follows from the IVA regime of each of your activities in your census registration."
-            ],
+            "help": ["Which Modelo 303 regime composition applies?"],
             "about": "Explicit Modelo 303 regime composition. Required when any IVA profile fact claims the IVA block; mixed is distinct from either single-regime arm.",
             "row_index": null
           },
@@ -2079,9 +2137,7 @@
               }
             ],
             "help": [
-              "Whether you opted into the special cash-accounting IVA regime (criterio de caja).",
-              "Under it, IVA is due when invoices are paid rather than when they are issued, which changes each period's figures.",
-              "It is chosen on modelo 036 and shows in your census details. If you did not opt in, the answer is No."
+              "Are you enrolled in the special IVA cash-accounting regime?"
             ],
             "about": "Explicit enrolment in the special cash-accounting IVA regime. Required when the IVA profile block is present.",
             "row_index": null
@@ -2103,11 +2159,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Whether you voluntarily joined SII, the immediate electronic supply of your IVA record books to the AEAT.",
-              "SII members keep their IVA books online with the AEAT, which changes some obligations and deadlines.",
-              "Voluntary membership is requested on modelo 036 and shows in your census details. If you never requested it, the answer is No."
-            ],
+            "help": ["Are you voluntarily enrolled in SII?"],
             "about": "Explicit voluntary SII membership, distinct from generic SII membership and mandatory-SII triggers. Required when the IVA profile block is present.",
             "row_index": null
           },
@@ -2129,9 +2181,7 @@
               }
             ],
             "help": [
-              "Whether you may deduct IVA advance payments made when taking hydrocarbons out of a tax-deposit regime.",
-              "Those advance payments are deducted in the IVA declaration, so the entitlement changes the amount due.",
-              "It only concerns businesses that take fuel out of a tax warehouse (depósito fiscal). Most taxpayers answer No."
+              "Are you entitled to deduct advance payments under the hydrocarbon tax-deposit regime?"
             ],
             "about": "Explicit entitlement to deduct advance payments made under the hydrocarbon tax-deposit regime. Required when the IVA profile block is present.",
             "row_index": null
@@ -2173,7 +2223,9 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": [
+              "In the calendar year the Modelo 347 covers, did your operations with any one person or entity exceed EUR 3,005.06 (EUR 300.51 for amounts you collect on behalf of third parties), counting sales and purchases separately?"
+            ],
             "about": "Modelo 347 eligibility: declared yearly transactions with a single counterpart exceed the legal threshold.",
             "row_index": null
           },
@@ -2194,7 +2246,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Foreign-held assets above legal threshold"],
             "about": "Modelo 720 eligibility: foreign assets/rights declared above the legal threshold.",
             "row_index": null
           },
@@ -2215,7 +2267,9 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": [
+              "Virtual currencies held abroad above Modelo 721 threshold"
+            ],
             "about": "Modelo 721 eligibility: virtual currencies held abroad declared above the legal threshold.",
             "row_index": null
           },
@@ -2236,7 +2290,9 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": [
+              "Obtained a lottery or betting prize subject to the gravamen especial without retención or ingreso a cuenta"
+            ],
             "about": "Modelo 136 eligibility: a lottery or betting prize subject to the gravamen especial was obtained without retencion or ingreso a cuenta.",
             "row_index": null
           },
@@ -2248,7 +2304,10 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "Quarters in which the prize was cashed",
+              "One YYYY-nT token per natural quarter, separated by | (for example 2025-1T|2025-3T). Each quarter opens its own Modelo 136 filing."
+            ],
             "about": "Modelo 136 quarters: pipe-separated YYYY-nT quarter codes naming each natural quarter in which such a prize was cashed, for example 2025-1T|2025-3T.",
             "row_index": null
           }
@@ -2268,7 +2327,11 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "Taxation type code",
+              "1 - individual: Use when you are filing only your own individual return",
+              "2 - joint: Use only for joint family-unit taxation"
+            ],
             "about": "Modelo 100 declaration type.",
             "row_index": null
           }
@@ -2334,7 +2397,7 @@
                 "label": "Woman"
               }
             ],
-            "help": null,
+            "help": ["First taxpayer sex code"],
             "about": "Sexo del contribuyente para el Modelo 100. Toma los valores del tipo tipo_Sexo del diseno de registro: H (hombre) y M (mujer).",
             "row_index": null
           },
@@ -2367,7 +2430,7 @@
                 "label": "5"
               }
             ],
-            "help": null,
+            "help": ["First taxpayer marital status"],
             "about": "Taxpayer marital or registered-partnership status used by Renta profile decisions.",
             "row_index": null
           },
@@ -2379,7 +2442,7 @@
             "required": false,
             "field_type": "date",
             "choices": [],
-            "help": null,
+            "help": ["First taxpayer birth date"],
             "about": "Taxpayer birth date.",
             "row_index": null
           },
@@ -2391,7 +2454,13 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "First taxpayer disability code",
+              "Disability grade 33% to 64%: Recognised disability of 33% to 64% - increases the personal minimum.",
+              "Disability grade 65% or higher: Recognised disability of 65% or more - higher increase to the personal minimum.",
+              "Judicial incapacity or equivalent: Judicially declared incapacity - treated as 65%+ regardless of the certified grade.",
+              "Third-party assistance or reduced mobility: Certified need of third-party assistance or reduced mobility - adds the assistance increase."
+            ],
             "about": "Taxpayer disability grade code for Modelo 100.",
             "row_index": null
           },
@@ -2403,7 +2472,7 @@
             "required": false,
             "field_type": "date",
             "choices": [],
-            "help": null,
+            "help": ["First taxpayer death date"],
             "about": "Taxpayer death date when Modelo 100 requires it.",
             "row_index": null
           },
@@ -2415,7 +2484,7 @@
             "required": false,
             "field_type": "date",
             "choices": [],
-            "help": null,
+            "help": ["Marriage start date (YYYY-MM-DD)"],
             "about": "Fecha de inicio del matrimonio actual. Permite determinar si estuvo vigente todo el ejercicio y los meses inicial y final para las casillas 0245, 0246 y 0247.",
             "row_index": null
           },
@@ -2480,7 +2549,7 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": ["Spouse NIF/NIE"],
             "about": "Spouse NIF/NIE for joint filing.",
             "row_index": null
           },
@@ -2492,7 +2561,7 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": ["Spouse given name"],
             "about": "Spouse given name.",
             "row_index": null
           },
@@ -2504,7 +2573,7 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": ["Spouse surnames"],
             "about": "Spouse surnames.",
             "row_index": null
           },
@@ -2516,7 +2585,7 @@
             "required": false,
             "field_type": "date",
             "choices": [],
-            "help": null,
+            "help": ["Spouse birth date"],
             "about": "Spouse birth date.",
             "row_index": null
           },
@@ -2537,7 +2606,7 @@
                 "label": "Woman"
               }
             ],
-            "help": null,
+            "help": ["Spouse sex code"],
             "about": "Sexo del conyuge para el Modelo 100. Toma los valores del tipo tipo_Sexo del diseno de registro: H (hombre) y M (mujer).",
             "row_index": null
           },
@@ -2549,7 +2618,13 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "Spouse disability grade (if applicable)",
+              "Disability grade 33% to 64%: Recognised disability of 33% to 64% - increases the personal minimum.",
+              "Disability grade 65% or higher: Recognised disability of 65% or more - higher increase to the personal minimum.",
+              "Judicial incapacity or equivalent: Judicially declared incapacity - treated as 65%+ regardless of the certified grade.",
+              "Third-party assistance or reduced mobility: Certified need of third-party assistance or reduced mobility - adds the assistance increase."
+            ],
             "about": "Spouse disability grade code for Modelo 100.",
             "row_index": null
           },
@@ -2570,7 +2645,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Spouse is non-resident IRPF"],
             "about": "Whether the spouse is non-resident and not an IRPF taxpayer.",
             "row_index": null
           },
@@ -2591,7 +2666,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Spouse is EU/EEA resident"],
             "about": "Whether the non-resident spouse is resident in the EU or EEA.",
             "row_index": null
           },
@@ -2603,7 +2678,7 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": ["Spouse EU/EEA country"],
             "about": "EU or EEA country of residence for the spouse.",
             "row_index": null
           }
@@ -2632,7 +2707,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Minor children in family unit"],
             "about": "Minor children in the family unit.",
             "row_index": null
           },
@@ -2653,7 +2728,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["EU/EEA descendants in family-unit deduction"],
             "about": "EU/EEA descendant deduction flag for Modelo 100.",
             "row_index": null
           },
@@ -2686,7 +2761,15 @@
                 "label": "Separated or divorced"
               }
             ],
-            "help": null,
+            "help": [
+              "Family situation (Art. 82 LIRPF)",
+              "Family situation under Art. 82 LIRPF: determines whether joint taxation is available and which family unit variant applies.",
+              "Married: Valid marriage - joint taxation available (Art. 82.1.1°)",
+              "Registered civil partnership: Registered in the corresponding autonomic registry - joint taxation available (Art. 82.1.2°)",
+              "Unregistered civil partnership: De-facto couple without registration - joint taxation NOT available",
+              "Single: Single, widowed, or divorced without a registered partner - individual taxation, or joint only as a single parent with children.",
+              "Separated or divorced: Legally separated or divorced - joint taxation is only possible with children in your family unit."
+            ],
             "about": "Art. 82 LIRPF family situation used to validate joint taxation eligibility.",
             "row_index": null
           },
@@ -3068,9 +3151,7 @@
             "field_type": "string",
             "choices": [],
             "help": [
-              "Tu número de identificación fiscal: el NIF de tu DNI, tu NIE si eres extranjero, o el NIF de una entidad.",
-              "Todas las declaraciones se presentan con este número; es como te identifica la AEAT.",
-              "En tu DNI o tarjeta de NIE, o en la tarjeta de NIF emitida por la AEAT. También aparece en cualquier declaración anterior o carta de la AEAT."
+              "Identificador fiscal (NIF/CIF/DNI/NIE) para declaraciones"
             ],
             "about": "NIF/NIE/CIF used as filing identity.",
             "row_index": null
@@ -3083,7 +3164,7 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": ["Nombre visible mostrado en revisiones locales"],
             "about": "Declarant given name or display name.",
             "row_index": null
           },
@@ -3095,7 +3176,7 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": ["Apellidos o razón social para cabeceras de exportación"],
             "about": "Declarant surnames for person filings.",
             "row_index": null
           },
@@ -3107,7 +3188,10 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "Razón social de la entidad para cabeceras de exportación",
+              "Para personas jurídicas, este es el nombre fiscal usado en cabeceras de exportación. Es distinto del nombre visible local."
+            ],
             "about": "Legal or company name for entity-style export headers.",
             "row_index": null
           },
@@ -3156,7 +3240,7 @@
                 "label": "Húngaro"
               }
             ],
-            "help": null,
+            "help": ["Idioma de salida de la CLI para este perfil"],
             "about": "Output language used by CLI rendering and notification copy.",
             "row_index": null
           }
@@ -3185,7 +3269,9 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": [
+              "¿Permitir leer documentos escaneados o en imagen con el modelo de lectura de imágenes que elegiste?"
+            ],
             "about": "Whether this profile may read scanned or image evidence with the image-reading model the person selected. Default on; opting out disables the image read. This flag does not decide where the read runs: an off-host read also needs the cloud_evidence_upload capability and the per-read consent.",
             "row_index": null
           },
@@ -3206,7 +3292,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["¿Activar la exportación a Google Sheets?"],
             "about": "Whether this profile may export modelo workbooks to Google Sheets or Drive. Default on; opting out keeps exports offline-only.",
             "row_index": null
           },
@@ -3349,7 +3435,7 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": ["Código postal del domicilio fiscal"],
             "about": "Fiscal-address postcode.",
             "row_index": null
           },
@@ -3466,7 +3552,7 @@
                 "label": "Región de Murcia"
               }
             ],
-            "help": null,
+            "help": ["Comunidad autónoma de residencia fiscal"],
             "about": "Comunidad autónoma de residencia fiscal en territorio común para el Modelo 100.",
             "row_index": null
           },
@@ -3488,9 +3574,7 @@
               }
             ],
             "help": [
-              "Si tus impuestos se rigen por el territorio común o por un territorio foral (País Vasco o Navarra).",
-              "Decide qué administración tributaria y qué normas se aplican. Los territorios forales presentan ante su propia Hacienda, algo que aún no se admite.",
-              "Se deduce de tu domicilio fiscal: un domicilio en Álava, Bizkaia, Gipuzkoa o Navarra es foral; en el resto de España es territorio común."
+              "¿Qué régimen territorial se aplica a tu residencia fiscal?"
             ],
             "about": "Régimen territorial aplicable declarado explícitamente: territorio común o territorio foral aún no soportado.",
             "row_index": null
@@ -3545,7 +3629,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Empresa de gran volumen"],
             "about": "Large-company condition used by filing cadence. Applies when operation volume, calculated under LIVA Art. 121, exceeded 6.010.121,04 EUR during the immediately prior calendar year; RIVA Art. 71 then switches IVA liquidation to monthly.",
             "row_index": null
           },
@@ -3566,7 +3650,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Presupuesto administración pública superior a 6.000.000"],
             "about": "Public-administration budget threshold used by Modelo 111 filing cadence. Applies when the last approved annual public-administration budget before the start of the tax year exceeds 6 million EUR; the Modelo 111 official instructions then route the withholding self-assessment to monthly.",
             "row_index": null
           },
@@ -3578,7 +3662,10 @@
             "required": false,
             "field_type": "date",
             "choices": [],
-            "help": null,
+            "help": [
+              "¿Desde qué fecha tienes obligaciones de declaración / cuándo te diste de alta? (AAAA-MM-DD, opcional)",
+              "Si la indicas, no se muestran como vencidas las declaraciones de periodos anteriores a esa fecha. Déjala en blanco si no la conoces."
+            ],
             "about": "AEAT censo alta date for the economic activity. Drives obligation start year and pago-fraccionado eligibility.",
             "row_index": null
           },
@@ -3623,7 +3710,13 @@
                 "label": "Entidad en atribución de rentas"
               }
             ],
-            "help": null,
+            "help": [
+              "Tipo de entidad",
+              "Persona física (IRPF), persona jurídica (Impuesto sobre Sociedades) o entidad en atribución de rentas",
+              "Persona física: Una persona física (autónomo o particular) que tributa por IRPF.",
+              "Persona jurídica (sociedad): Una sociedad u organización (SL, SA, asociación…) que tributa por el Impuesto sobre Sociedades.",
+              "Entidad en atribución de rentas: Una entidad en atribución de rentas (comunidad de bienes, sociedad civil): las rentas se atribuyen a sus miembros."
+            ],
             "about": "Taxpayer entity type. natural_person is an IRPF contribuyente; legal_entity is an Impuesto sobre Sociedades contribuyente; attribution_entity is an entity without legal personality under the regimen de atribucion de rentas. The entity type selects the tax and therefore the modelos, calendar, and rate schedule.",
             "row_index": null
           },
@@ -3668,7 +3761,11 @@
                 "label": "Otra"
               }
             ],
-            "help": null,
+            "help": [
+              "Forma jurídica",
+              "Sociedad de responsabilidad limitada (S.L.): Sociedad Limitada: la forma societaria habitual para pymes, capital mínimo 3.000 EUR.",
+              "Entidad sin fines lucrativos: Entidad sin fines lucrativos (Ley 49/2002): puede optar al régimen fiscal especial que se pregunta más abajo."
+            ],
             "about": "Recognised legal form when entity_type is legal_entity. Drives the Impuesto sobre Sociedades rate schedule per LIS Art. 29.",
             "row_index": null
           },
@@ -3680,7 +3777,10 @@
             "required": false,
             "field_type": "decimal",
             "choices": [],
-            "help": null,
+            "help": [
+              "¿Cuál fue su importe neto de la cifra de negocios en los últimos 12 meses? (en euros, opcional)",
+              "Lo necesitamos para saber si el Modelo 202 te obliga a la modalidad del artículo 40.3 LIS (a partir de 6.000.000 EUR). Déjalo en blanco si no lo conoces."
+            ],
             "about": "Importe neto de la cifra de negocios (INCN) de los 12 meses anteriores. Determina la modalidad del pago fraccionado del Modelo 202 en el umbral de 6.000.000 EUR (art. 40.3 LIS): por encima es obligatorio el art. 40.3 y por debajo pueden resultar aplicables los arts. 40.2 o 40.3. Si no se declara, Cadrumo solicita completar la información en lugar de elegir una modalidad.",
             "row_index": null
           },
@@ -3701,7 +3801,10 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": [
+              "¿Es una entidad de nueva creación en uno de sus dos primeros periodos impositivos con beneficios?",
+              "Aplica solo a personas jurídicas. Si lo marca, la entidad tributa al tipo reducido del 15 por ciento durante esos dos periodos."
+            ],
             "about": "Whether a newly-created legal entity is in one of its first two profit-making tax periods. Opts the entity into the LIS Art. 29 15 percent micro-empresa-style rate override. The override is opt-in: an undeclared value leaves the entity on the otherwise-applicable sub-form rate.",
             "row_index": null
           },
@@ -3725,7 +3828,16 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "Categorías de renta IRPF",
+              "Selecciona cada categoría de renta IRPF que tengas; solo la actividad económica obliga al Modelo 130/131",
+              "Actividad económica: Actividad económica o profesional por cuenta propia - activa el Modelo 130 trimestral y las obligaciones de IVA.",
+              "Rendimientos del trabajo: Rendimientos del trabajo: salario o pensión de un empleador o de la Seguridad Social.",
+              "Rendimientos del capital inmobiliario: Rendimientos del capital inmobiliario: alquileres de inmuebles de su propiedad.",
+              "Rendimientos del capital mobiliario: Rendimientos del capital mobiliario: intereses, dividendos y otras rentas de inversiones.",
+              "Ganancias patrimoniales: Ganancias o pérdidas patrimoniales por venta de activos (acciones, inmuebles, criptomonedas).",
+              "Pensión: Pensiones - tributan como rendimientos del trabajo en el IRPF."
+            ],
             "about": "Categorías de renta IRPF declaradas por la persona: actividad económica, trabajo, capital inmobiliario, capital mobiliario, ganancias patrimoniales o pensión. Solo la actividad económica puede originar pagos fraccionados en los Modelos 130 o 131.",
             "row_index": null
           },
@@ -3737,7 +3849,15 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "¿La entidad declarante desempeña alguno de estos papeles frente a la declaración de operaciones con terceros (Modelo 347)?",
+              "Papeles institucionales que activan las claves C, D o E del Modelo 347: cobro de honorarios por cuenta de terceros (art. 31.3), comunidad de propietarios (Ley 49/1960), entidad de carácter social (art. 20.tres LIVA), entidad sometida al deber de informar (art. 94 LGT) o administración pública integrada. Déjalo en blanco si no corresponde.",
+              "Cobro de honorarios por cuenta de terceros: Sociedad, asociación, colegio profesional u otra entidad que cobra honorarios profesionales o derechos de propiedad intelectual, industrial o de autor por cuenta de sus socios, asociados o colegiados (art. 31.3 RD 1065/2007).",
+              "Comunidad de propietarios: Entidad a la que resulta de aplicación la Ley 49/1960 sobre propiedad horizontal.",
+              "Entidad o establecimiento de carácter social: Entidad o establecimiento privado de carácter social conforme al artículo 20.tres de la Ley 37/1992 del IVA.",
+              "Entidad sometida al deber general de informar: Autoridad, organismo público, cámara o corporación, colegio o asociación profesional, mutualidad de previsión social, partido político, sindicato o asociación empresarial sujetos al deber de suministrar información tributaria (art. 94.1 y 94.2 de la Ley 58/2003 General Tributaria).",
+              "Entidad integrada en una Administración pública: Entidad integrada en las distintas Administraciones públicas, sujeta además al deber de declarar las subvenciones, auxilios o ayudas que conceda (art. 31.2, segundo párrafo, RD 1065/2007)."
+            ],
             "about": "Papeles institucionales del declarante a efectos del Modelo 347 (claves C, D y E): cobro de honorarios por cuenta de terceros, comunidad de propietarios, entidad de carácter social, entidad sometida al deber general de informar, o entidad integrada en una Administración pública. Eje independiente del tipo de entidad a efectos fiscales.",
             "row_index": null
           },
@@ -3758,7 +3878,11 @@
                 "label": "No residente (IRNR)"
               }
             ],
-            "help": null,
+            "help": [
+              "Categoría de residencia fiscal",
+              "Residente habitual en España - IRPF: Residente fiscal en España (183+ días o centro de intereses): renta mundial por IRPF.",
+              "No residente - IRNR (RDLeg 5/2004): No residente: solo tributa la renta de fuente española, por IRNR (Modelo 210), y puede requerirse representante fiscal."
+            ],
             "about": "Whether the taxpayer has habitual residence in Spain (resident_irpf, subject to IRPF) or not (non_resident_irnr, subject to IRNR under TRLIRNR). Drives which tax and therefore which calendar/modelos apply.",
             "row_index": null
           },
@@ -3770,7 +3894,9 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "País de residencia fiscal (código ISO 3166-1 alfa-2, p.ej. GB, DE, FR)"
+            ],
             "about": "ISO 3166-1 alpha-2 country code of the taxpayer's fiscal residence when fiscal_residency is non_resident_irnr. Drives the UE/EEE classification for the IRNR rate split (Art. 25.1.a vs Art. 25.1.f TRLIRNR).",
             "row_index": null
           },
@@ -3782,7 +3908,9 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "NIF/NIE del representante fiscal en España (obligatorio fuera UE/EEE)"
+            ],
             "about": "NIF of the representante fiscal designated in Spain when fiscal_residency is non_resident_irnr. Required by TRLIRNR Art. 10 for non-EU/EEE residents and recommended for EU/EEE residents.",
             "row_index": null
           },
@@ -3794,7 +3922,7 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": ["Nombre del representante fiscal en España"],
             "about": "Full name of the representante fiscal designated in Spain when fiscal_residency is non_resident_irnr. Required together with representante_fiscal_nif by TRLIRNR Art. 10 for non-EU/EEE residents.",
             "row_index": null
           }
@@ -4518,7 +4646,9 @@
             "required": true,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "Actividad económica (texto normal; usa el epígrafe IAE si lo conoces)"
+            ],
             "about": "Censo activity description.",
             "row_index": null
           },
@@ -4559,7 +4689,9 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": [
+              "Aplica la excepción Art. 109 por cobertura del 70% de ingresos de actividad"
+            ],
             "about": "Whether the Art. 109 RIRPF 70 percent income-coverage exception is met for covered professional, agricultural, livestock, or forestry activity income. For activity-start cases this is the current payment-period coverage fact, not a prior-year fact.",
             "row_index": null
           },
@@ -4584,7 +4716,13 @@
                 "label": "Estimación objetiva (módulos)"
               }
             ],
-            "help": null,
+            "help": [
+              "Régimen de estimación IRPF",
+              "Cómo se determina el rendimiento neto de la actividad económica; selecciona Modelo 130 o 131",
+              "Estimación directa normal: Estimación directa normal: contabilidad por ingresos reales con libros completos - obligatoria por encima de 600.000 EUR.",
+              "Estimación directa simplificada: Estimación directa simplificada: ingresos reales con libros simplificados - la opción habitual para la mayoría de autónomos.",
+              "Estimación objetiva (módulos): Estimación objetiva (módulos): el rendimiento se calcula por indicadores de la actividad, solo para actividades incluidas."
+            ],
             "about": "IRPF estimation regime for economic-activity income: directa_normal (estimacion directa normal), directa_simplificada (estimacion directa simplificada), objetiva (estimacion objetiva / modulos). The regime selects Modelo 130 vs Modelo 131 and the deductible-expense computation.",
             "row_index": null
           },
@@ -4674,7 +4812,12 @@
                 "label": "Régimen de impatriados (art. 93 LIRPF)"
               }
             ],
-            "help": null,
+            "help": [
+              "Régimen especial IRPF (Ley Beckham / Art. 93 LIRPF)",
+              "El régimen de impatriados (Ley Beckham) se aplica durante los primeros 6 años tras el traslado. La mayoría tributa en régimen general.",
+              "Régimen general: Tributas en IRPF por el régimen general (modelo 100).",
+              "Impatriado - Ley Beckham (Art. 93 LIRPF): Has optado por el régimen especial del art. 93 LIRPF (modelo 151)."
+            ],
             "about": "Régimen especial de IRPF. El régimen general aplica la tarifa progresiva y el Modelo 100. El régimen de impatriados del art. 93 LIRPF aplica el Modelo 151 y la tarifa correspondiente de IRNR durante seis ejercicios desde la opción; indique también la fecha de inicio.",
             "row_index": null
           },
@@ -4686,7 +4829,10 @@
             "required": false,
             "field_type": "date",
             "choices": [],
-            "help": null,
+            "help": [
+              "Fecha de inicio del régimen especial (AAAA-MM-DD)",
+              "Fecha en que el trabajador optó por el régimen de impatriados (RIRPF Art. 116). El régimen expira al finalizar el 6.º año natural."
+            ],
             "about": "Opt-in election date for the IRPF special regime (RIRPF Art. 116). Required to compute the six-year impatriado window. Blank when no special regime is in effect.",
             "row_index": null
           },
@@ -4751,7 +4897,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Tiene empleados y paga salarios con retención"],
             "about": "Whether the taxpayer pays employees with withholding.",
             "row_index": null
           },
@@ -4793,7 +4939,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Paga a profesionales con retención"],
             "about": "Whether the taxpayer pays professionals with withholding.",
             "row_index": null
           },
@@ -4814,7 +4960,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Paga alquiler de local con retención"],
             "about": "Whether the taxpayer pays rent with withholding.",
             "row_index": null
           },
@@ -4835,7 +4981,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Paga rentas de capital con retención"],
             "about": "Whether the taxpayer pays capital income with withholding.",
             "row_index": null
           },
@@ -4847,7 +4993,10 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "Periodos Modelo 111 sin retenciones",
+              "Periodos AAAA:PERIODO en los que no se pagaron rentas sujetas a retención o ingreso a cuenta, por lo que no se presenta un Modelo 111 en blanco."
+            ],
             "about": "Comma-separated YYYY:PERIOD Modelo 111 periods where no rentas subject to retencion or ingreso a cuenta were paid, so no all-blank Modelo 111 filing obligation existed.",
             "row_index": null
           },
@@ -4859,7 +5008,10 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "Periodos Modelo 115 sin pago relevante",
+              "Periodos AAAA:PERIODO en los que no hubo pago relevante de alquiler urbano sujeto a retención, permitiendo un cálculo local a cero del Modelo 115."
+            ],
             "about": "Comma-separated YYYY:PERIOD Modelo 115 quarters explicitly attested as having no relevant urban-rent payment subject to withholding; only these facts permit a local zero materialization.",
             "row_index": null
           }
@@ -4901,9 +5053,12 @@
               }
             ],
             "help": [
-              "El régimen de IVA en el que está dada de alta tu actividad.",
-              "Decide qué declaraciones de IVA presentas y cómo se calcula el IVA de tus ventas y compras.",
-              "En tu declaración censal (modelo 036 o 037), o en tus datos censales en la sede electrónica de la AEAT."
+              "¿Qué régimen de IVA aplica?",
+              "Régimen general: IVA general: repercute IVA en ventas, deduce IVA soportado y presenta el Modelo 303 trimestral.",
+              "Régimen simplificado: Régimen simplificado por módulos para actividades acogidas (vinculado a la estimación objetiva).",
+              "Recargo de equivalencia: Para comercio minorista: el proveedor aplica un recargo adicional y no presentas declaraciones de IVA por esa actividad.",
+              "Régimen especial de la agricultura, ganadería y pesca (REAGP): Régimen especial de agricultura, ganadería y pesca (REAGP): compensación a tanto alzado en lugar de declaraciones de IVA.",
+              "Exento: Actividad exenta de IVA (educación, sanidad, seguros…): no repercute ni deduce IVA."
             ],
             "about": "IVA regime used by obligation and classification projections. REAGP is the regimen especial de la agricultura, ganaderia y pesca.",
             "row_index": null
@@ -4925,7 +5080,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Realiza operaciones intracomunitarias"],
             "about": "Whether the taxpayer conducts intracommunity operations.",
             "row_index": null
           },
@@ -4946,7 +5101,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Operaciones intracomunitarias superan 50.000 EUR"],
             "about": "Modelo 349 cadence threshold.",
             "row_index": null
           },
@@ -4967,7 +5122,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Alta en ROI"],
             "about": "Indica si el contribuyente figura en el Registro de Operadores Intracomunitarios (ROI/VIES), mediante la casilla 582 de los Modelos 036/037. Es distinto de realizar operaciones intracomunitarias y determina el acceso a comprobaciones reservadas a operadores inscritos.",
             "row_index": null
           },
@@ -4988,7 +5143,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Alta en OSS"],
             "about": "Whether the taxpayer is enrolled in the OSS / IOSS one-stop-shop regime for declaring intra-EU B2C sales (Modelo 369). Live cross-references that consult OSS-only AEAT surfaces (e.g. modelo-369-exterior-filed-declarations-read) gate applicability on this field.",
             "row_index": null
           },
@@ -5009,7 +5164,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Alta como entidad miembro de un grupo de IVA"],
             "about": "Whether the taxpayer is a member entity in the IVA group-of-entities special regime and files Modelo 322 as the individual monthly self-assessment.",
             "row_index": null
           },
@@ -5030,7 +5185,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Alta como entidad dominante de un grupo de IVA"],
             "about": "Whether the taxpayer is the dominant entity of an IVA group-of-entities regime and files Modelo 353 as the aggregate monthly self-assessment.",
             "row_index": null
           },
@@ -5051,7 +5206,9 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": [
+              "Inscrito en el SII (Suministro Inmediato de Información)"
+            ],
             "about": "Whether the taxpayer is enrolled in the SII (Suministro Inmediato de Informacion), the near-real-time IVA Libros registro submission system. Mandatory for the monthly IVA collective (grandes empresas, REDEME, grupos de IVA); voluntary opt-in via Modelo 036 for everyone else.",
             "row_index": null
           },
@@ -5073,9 +5230,7 @@
               }
             ],
             "help": [
-              "Si estás inscrito en el REDEME, el registro de devolución mensual del IVA.",
-              "La inscripción hace que tu declaración de IVA sea mensual en lugar de trimestral y obliga al SII.",
-              "Se solicita en el modelo 036 y figura en tus datos censales. Si nunca lo pediste, la respuesta es No."
+              "Inscrito en REDEME (Registro de Devolución Mensual del IVA)"
             ],
             "about": "Whether the taxpayer is registered in REDEME (Registro de Devolucion Mensual del IVA). REDEME registration switches the IVA self-assessment period to monthly and is one of the mandatory-SII triggers.",
             "row_index": null
@@ -5101,11 +5256,7 @@
                 "label": "Régimen general y simplificado"
               }
             ],
-            "help": [
-              "Qué regímenes de IVA combina tu modelo 303: solo el general, solo el simplificado o ambos.",
-              "El modelo 303 tiene una parte distinta para cada régimen; esto decide qué partes se rellenan.",
-              "Se deduce del régimen de IVA de cada una de tus actividades en tu declaración censal."
-            ],
+            "help": ["¿Qué composición de regímenes se aplica al Modelo 303?"],
             "about": "Explicit Modelo 303 regime composition. Required when any IVA profile fact claims the IVA block; mixed is distinct from either single-regime arm.",
             "row_index": null
           },
@@ -5127,9 +5278,7 @@
               }
             ],
             "help": [
-              "Si optaste por el régimen especial del criterio de caja del IVA.",
-              "Con él, el IVA se devenga al cobrar o pagar las facturas y no al emitirlas, lo que cambia las cifras de cada periodo.",
-              "Se elige en el modelo 036 y figura en tus datos censales. Si no optaste por él, la respuesta es No."
+              "¿Estás inscrito en el régimen especial del criterio de caja?"
             ],
             "about": "Explicit enrolment in the special cash-accounting IVA regime. Required when the IVA profile block is present.",
             "row_index": null
@@ -5151,11 +5300,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Si te adheriste voluntariamente al SII, el suministro inmediato de tus libros registro de IVA a la AEAT.",
-              "Quien está en el SII lleva sus libros de IVA en línea con la AEAT, lo que cambia algunas obligaciones y plazos.",
-              "La adhesión voluntaria se solicita en el modelo 036 y figura en tus datos censales. Si nunca la pediste, la respuesta es No."
-            ],
+            "help": ["¿Estás inscrito voluntariamente en el SII?"],
             "about": "Explicit voluntary SII membership, distinct from generic SII membership and mandatory-SII triggers. Required when the IVA profile block is present.",
             "row_index": null
           },
@@ -5177,9 +5322,7 @@
               }
             ],
             "help": [
-              "Si puedes deducir los pagos anticipados de IVA hechos al sacar hidrocarburos de un régimen de depósito fiscal.",
-              "Esos pagos anticipados se deducen en la declaración de IVA, así que el derecho cambia el importe a ingresar.",
-              "Solo afecta a empresas que sacan combustible de un depósito fiscal. La mayoría de contribuyentes responde No."
+              "¿Tienes derecho a deducir pagos anticipados del régimen de depósitos fiscales de hidrocarburos?"
             ],
             "about": "Explicit entitlement to deduct advance payments made under the hydrocarbon tax-deposit regime. Required when the IVA profile block is present.",
             "row_index": null
@@ -5221,7 +5364,9 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": [
+              "En el año natural que cubre el Modelo 347, ¿tus operaciones con una misma persona o entidad superaron 3.005,06 € (300,51 € en los cobros que hagas por cuenta de terceros), contando por separado las ventas y las compras?"
+            ],
             "about": "Modelo 347 eligibility: declared yearly transactions with a single counterpart exceed the legal threshold.",
             "row_index": null
           },
@@ -5242,7 +5387,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Bienes en el extranjero superan el umbral legal"],
             "about": "Modelo 720 eligibility: foreign assets/rights declared above the legal threshold.",
             "row_index": null
           },
@@ -5263,7 +5408,9 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": [
+              "Monedas virtuales en el extranjero superan el umbral del Modelo 721"
+            ],
             "about": "Modelo 721 eligibility: virtual currencies held abroad declared above the legal threshold.",
             "row_index": null
           },
@@ -5284,7 +5431,9 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": [
+              "Obtuviste un premio de loterías o apuestas sujeto al gravamen especial sin retención ni ingreso a cuenta"
+            ],
             "about": "Modelo 136 eligibility: a lottery or betting prize subject to the gravamen especial was obtained without retencion or ingreso a cuenta.",
             "row_index": null
           },
@@ -5296,7 +5445,10 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "Trimestres en que se cobró el premio",
+              "Un token AAAA-nT por trimestre natural, separados por | (por ejemplo 2025-1T|2025-3T). Cada trimestre abre su propia presentación del Modelo 136."
+            ],
             "about": "Modelo 136 quarters: pipe-separated YYYY-nT quarter codes naming each natural quarter in which such a prize was cashed, for example 2025-1T|2025-3T.",
             "row_index": null
           }
@@ -5316,7 +5468,11 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "Código del tipo de tributación",
+              "1 - individual: Usa este valor cuando presentes solo tu declaración individual",
+              "2 - conjunta: Usa este valor solo para tributación conjunta de unidad familiar"
+            ],
             "about": "Modelo 100 declaration type.",
             "row_index": null
           }
@@ -5382,7 +5538,7 @@
                 "label": "Mujer"
               }
             ],
-            "help": null,
+            "help": ["Sexo del primer declarante"],
             "about": "Sexo del contribuyente para el Modelo 100. Toma los valores del tipo tipo_Sexo del diseno de registro: H (hombre) y M (mujer).",
             "row_index": null
           },
@@ -5415,7 +5571,7 @@
                 "label": "5"
               }
             ],
-            "help": null,
+            "help": ["Estado civil del primer declarante"],
             "about": "Taxpayer marital or registered-partnership status used by Renta profile decisions.",
             "row_index": null
           },
@@ -5427,7 +5583,7 @@
             "required": false,
             "field_type": "date",
             "choices": [],
-            "help": null,
+            "help": ["Fecha de nacimiento del primer declarante"],
             "about": "Taxpayer birth date.",
             "row_index": null
           },
@@ -5439,7 +5595,13 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "Clave de discapacidad del primer declarante",
+              "Discapacidad del 33% al 64%: Discapacidad reconocida del 33% al 64% - incrementa el mínimo personal.",
+              "Discapacidad del 65% o superior: Discapacidad reconocida del 65% o más - mayor incremento del mínimo personal.",
+              "Incapacidad judicial o equivalente: Incapacidad declarada judicialmente - se asimila al 65%+ con independencia del grado certificado.",
+              "Ayuda de terceros o movilidad reducida: Necesidad acreditada de ayuda de terceros o movilidad reducida - añade el incremento por asistencia."
+            ],
             "about": "Taxpayer disability grade code for Modelo 100.",
             "row_index": null
           },
@@ -5451,7 +5613,7 @@
             "required": false,
             "field_type": "date",
             "choices": [],
-            "help": null,
+            "help": ["Fecha de fallecimiento del primer declarante"],
             "about": "Taxpayer death date when Modelo 100 requires it.",
             "row_index": null
           },
@@ -5463,7 +5625,7 @@
             "required": false,
             "field_type": "date",
             "choices": [],
-            "help": null,
+            "help": ["Fecha de inicio del matrimonio (AAAA-MM-DD)"],
             "about": "Fecha de inicio del matrimonio actual. Permite determinar si estuvo vigente todo el ejercicio y los meses inicial y final para las casillas 0245, 0246 y 0247.",
             "row_index": null
           },
@@ -5528,7 +5690,7 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": ["NIF/NIE del cónyuge"],
             "about": "Spouse NIF/NIE for joint filing.",
             "row_index": null
           },
@@ -5540,7 +5702,7 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": ["Nombre del cónyuge"],
             "about": "Spouse given name.",
             "row_index": null
           },
@@ -5552,7 +5714,7 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": ["Apellidos del cónyuge"],
             "about": "Spouse surnames.",
             "row_index": null
           },
@@ -5564,7 +5726,7 @@
             "required": false,
             "field_type": "date",
             "choices": [],
-            "help": null,
+            "help": ["Fecha de nacimiento del cónyuge"],
             "about": "Spouse birth date.",
             "row_index": null
           },
@@ -5585,7 +5747,7 @@
                 "label": "Mujer"
               }
             ],
-            "help": null,
+            "help": ["Sexo del cónyuge"],
             "about": "Sexo del conyuge para el Modelo 100. Toma los valores del tipo tipo_Sexo del diseno de registro: H (hombre) y M (mujer).",
             "row_index": null
           },
@@ -5597,7 +5759,13 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "Grado de discapacidad del cónyuge (si aplica)",
+              "Discapacidad del 33% al 64%: Discapacidad reconocida del 33% al 64% - incrementa el mínimo personal.",
+              "Discapacidad del 65% o superior: Discapacidad reconocida del 65% o más - mayor incremento del mínimo personal.",
+              "Incapacidad judicial o equivalente: Incapacidad declarada judicialmente - se asimila al 65%+ con independencia del grado certificado.",
+              "Ayuda de terceros o movilidad reducida: Necesidad acreditada de ayuda de terceros o movilidad reducida - añade el incremento por asistencia."
+            ],
             "about": "Spouse disability grade code for Modelo 100.",
             "row_index": null
           },
@@ -5618,7 +5786,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Cónyuge no residente IRPF"],
             "about": "Whether the spouse is non-resident and not an IRPF taxpayer.",
             "row_index": null
           },
@@ -5639,7 +5807,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Cónyuge residente UE/EEE"],
             "about": "Whether the non-resident spouse is resident in the EU or EEA.",
             "row_index": null
           },
@@ -5651,7 +5819,7 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": ["País UE/EEE del cónyuge"],
             "about": "EU or EEA country of residence for the spouse.",
             "row_index": null
           }
@@ -5680,7 +5848,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Hijos menores en unidad familiar"],
             "about": "Minor children in the family unit.",
             "row_index": null
           },
@@ -5701,7 +5869,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Descendientes UE/EEE en deducción de unidad familiar"],
             "about": "EU/EEA descendant deduction flag for Modelo 100.",
             "row_index": null
           },
@@ -5734,7 +5902,15 @@
                 "label": "Separado o divorciado"
               }
             ],
-            "help": null,
+            "help": [
+              "Situación familiar (Art. 82 LIRPF)",
+              "Situación familiar a efectos del Art. 82 LIRPF: determina si puede optarse por la declaración conjunta y qué unidad familiar aplica.",
+              "Casado/a: Matrimonio vigente - tributación conjunta disponible (Art. 82.1.1°)",
+              "Pareja de hecho registrada: Inscrita en el registro autonómico - tributación conjunta disponible (Art. 82.1.2°)",
+              "Pareja de hecho no registrada: Convivencia sin inscripción registral - tributación conjunta NO disponible",
+              "Soltero/a: Soltero, viudo o divorciado sin pareja registrada - tributación individual, o conjunta solo como familia monoparental con hijos.",
+              "Separado/a o divorciado/a: Separado legalmente o divorciado - la tributación conjunta solo es posible con hijos en su unidad familiar."
+            ],
             "about": "Art. 82 LIRPF family situation used to validate joint taxation eligibility.",
             "row_index": null
           },
@@ -6115,11 +6291,7 @@
             "required": true,
             "field_type": "string",
             "choices": [],
-            "help": [
-              "El teu número d'identificació fiscal: el NIF del teu DNI, el NIE si ets estranger, o el NIF d'una entitat.",
-              "Totes les declaracions es presenten amb aquest número; és com t'identifica l'AEAT.",
-              "Al teu DNI o targeta de NIE, o a la targeta de NIF emesa per l'AEAT. També apareix en qualsevol declaració anterior o carta de l'AEAT."
-            ],
+            "help": ["Identificador fiscal (NIF/NIE) per a declaracions"],
             "about": "NIF/NIE/CIF used as filing identity.",
             "row_index": null
           },
@@ -6131,7 +6303,7 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": ["Nom visible mostrat en revisions locals"],
             "about": "Declarant given name or display name.",
             "row_index": null
           },
@@ -6143,7 +6315,7 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": ["Cognoms o raó social per a capçaleres d'exportació"],
             "about": "Declarant surnames for person filings.",
             "row_index": null
           },
@@ -6155,7 +6327,10 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "Raó social de l'entitat per a capçaleres d'exportació",
+              "Per a persones jurídiques, és el nom fiscal usat a les capçaleres d'exportació. És diferent del nom visible local."
+            ],
             "about": "Legal or company name for entity-style export headers.",
             "row_index": null
           },
@@ -6204,7 +6379,7 @@
                 "label": "Hongarès"
               }
             ],
-            "help": null,
+            "help": ["Idioma de sortida de la CLI per a aquest perfil"],
             "about": "Output language used by CLI rendering and notification copy.",
             "row_index": null
           }
@@ -6233,7 +6408,9 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": [
+              "Vols permetre llegir documents escanejats o en imatge amb el model de lectura d'imatges que has triat?"
+            ],
             "about": "Whether this profile may read scanned or image evidence with the image-reading model the person selected. Default on; opting out disables the image read. This flag does not decide where the read runs: an off-host read also needs the cloud_evidence_upload capability and the per-read consent.",
             "row_index": null
           },
@@ -6254,7 +6431,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Vols activar l'exportació a Google Sheets?"],
             "about": "Whether this profile may export modelo workbooks to Google Sheets or Drive. Default on; opting out keeps exports offline-only.",
             "row_index": null
           },
@@ -6397,7 +6574,7 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": ["Codi postal del domicili fiscal"],
             "about": "Fiscal-address postcode.",
             "row_index": null
           },
@@ -6514,7 +6691,7 @@
                 "label": "Regió de Múrcia"
               }
             ],
-            "help": null,
+            "help": ["Comunitat autònoma de residència fiscal"],
             "about": "Comunidad autónoma de residencia fiscal en territorio común para el Modelo 100.",
             "row_index": null
           },
@@ -6536,9 +6713,7 @@
               }
             ],
             "help": [
-              "Si els teus impostos es regeixen pel territori comú o per un territori foral (País Basc o Navarra).",
-              "Decideix quina administració tributària i quines normes s'apliquen. Els territoris forals presenten davant la seva pròpia Hisenda, cosa que encara no s'admet.",
-              "Es dedueix del teu domicili fiscal: un domicili a Àlaba, Biscaia, Guipúscoa o Navarra és foral; a la resta d'Espanya és territori comú."
+              "Quin règim territorial s'aplica a la teva residència fiscal?"
             ],
             "about": "Régimen territorial aplicable declarado explícitamente: territorio común o territorio foral aún no soportado.",
             "row_index": null
@@ -6593,7 +6768,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Empresa de gran volum"],
             "about": "Large-company condition used by filing cadence. Applies when operation volume, calculated under LIVA Art. 121, exceeded 6.010.121,04 EUR during the immediately prior calendar year; RIVA Art. 71 then switches IVA liquidation to monthly.",
             "row_index": null
           },
@@ -6614,7 +6789,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Pressupost administració pública superior a 6.000.000"],
             "about": "Public-administration budget threshold used by Modelo 111 filing cadence. Applies when the last approved annual public-administration budget before the start of the tax year exceeds 6 million EUR; the Modelo 111 official instructions then route the withholding self-assessment to monthly.",
             "row_index": null
           },
@@ -6626,7 +6801,10 @@
             "required": false,
             "field_type": "date",
             "choices": [],
-            "help": null,
+            "help": [
+              "Des de quina data tens obligacions de declaració / quan et vas donar d'alta? (AAAA-MM-DD, opcional)",
+              "Si la indiques, no es mostren com a vençudes les declaracions de períodes anteriors a aquesta data. Deixa-la en blanc si no la coneixes."
+            ],
             "about": "AEAT censo alta date for the economic activity. Drives obligation start year and pago-fraccionado eligibility.",
             "row_index": null
           },
@@ -6671,7 +6849,13 @@
                 "label": "Entitat en atribució de rendes"
               }
             ],
-            "help": null,
+            "help": [
+              "Tipus d'entitat",
+              "Persona física (IRPF), persona jurídica (Impost sobre Societats) o entitat en atribució de rendes",
+              "Persona física: Una persona física (autònom o particular) que tributa per IRPF.",
+              "Persona jurídica (societat): Una societat o organització (SL, SA, associació…) que tributa per l'Impost sobre Societats.",
+              "Entitat en atribució de rendes: Una entitat en atribució de rendes (comunitat de béns, societat civil): les rendes s'atribueixen als seus membres."
+            ],
             "about": "Taxpayer entity type. natural_person is an IRPF contribuyente; legal_entity is an Impuesto sobre Sociedades contribuyente; attribution_entity is an entity without legal personality under the regimen de atribucion de rentas. The entity type selects the tax and therefore the modelos, calendar, and rate schedule.",
             "row_index": null
           },
@@ -6716,7 +6900,11 @@
                 "label": "Una altra"
               }
             ],
-            "help": null,
+            "help": [
+              "Forma jurídica",
+              "Societat de responsabilitat limitada (S.L.): Societat Limitada: la forma societària habitual per a pimes, capital mínim 3.000 EUR.",
+              "Entitat sense fins lucratius: Entitat sense finalitats lucratives (Llei 49/2002): pot optar al règim fiscal especial que es pregunta més avall."
+            ],
             "about": "Recognised legal form when entity_type is legal_entity. Drives the Impuesto sobre Sociedades rate schedule per LIS Art. 29.",
             "row_index": null
           },
@@ -6728,7 +6916,10 @@
             "required": false,
             "field_type": "decimal",
             "choices": [],
-            "help": null,
+            "help": [
+              "Quin va ser el teu import net de la xifra de negocis durant els darrers 12 mesos? (en euros, opcional)",
+              "Ens cal per saber si el Model 202 t'obliga a la modalitat de l'article 40.3 LIS (a partir de 6.000.000 EUR). Deixa-ho en blanc si no ho saps."
+            ],
             "about": "Importe neto de la cifra de negocios (INCN) de los 12 meses anteriores. Determina la modalidad del pago fraccionado del Modelo 202 en el umbral de 6.000.000 EUR (art. 40.3 LIS): por encima es obligatorio el art. 40.3 y por debajo pueden resultar aplicables los arts. 40.2 o 40.3. Si no se declara, Cadrumo solicita completar la información en lugar de elegir una modalidad.",
             "row_index": null
           },
@@ -6749,7 +6940,10 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": [
+              "És una entitat de nova creació en un dels seus dos primers períodes impositius amb beneficis?",
+              "S'aplica només a persones jurídiques. Si ho marques, l'entitat tributa al tipus reduït del 15 per cent durant aquests dos períodes."
+            ],
             "about": "Whether a newly-created legal entity is in one of its first two profit-making tax periods. Opts the entity into the LIS Art. 29 15 percent micro-empresa-style rate override. The override is opt-in: an undeclared value leaves the entity on the otherwise-applicable sub-form rate.",
             "row_index": null
           },
@@ -6773,7 +6967,16 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "Categories de renda IRPF",
+              "Selecciona cada categoria de renda IRPF que tinguis; només l'activitat econòmica obliga al Model 130/131",
+              "Activitat econòmica: Activitat econòmica o professional per compte propi - activa el Model 130 trimestral i les obligacions d'IVA.",
+              "Rendiments del treball: Rendiments del treball: salari o pensió d'un ocupador o de la Seguretat Social.",
+              "Rendiments del capital immobiliari: Rendiments del capital immobiliari: lloguers d'immobles de la seva propietat.",
+              "Rendiments del capital mobiliari: Rendiments del capital mobiliari: interessos, dividends i altres rendes d'inversions.",
+              "Guanys patrimonials: Guanys o pèrdues patrimonials per venda d'actius (accions, immobles, criptomonedes).",
+              "Pensió: Pensions - tributen com a rendiments del treball a l'IRPF."
+            ],
             "about": "Categorías de renta IRPF declaradas por la persona: actividad económica, trabajo, capital inmobiliario, capital mobiliario, ganancias patrimoniales o pensión. Solo la actividad económica puede originar pagos fraccionados en los Modelos 130 o 131.",
             "row_index": null
           },
@@ -6785,7 +6988,15 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "L'entitat declarant exerceix algun d'aquests papers institucionals als efectes del Model 347 (operacions amb terceres persones)?",
+              "Papers institucionals que activen les claus C, D o E del Model 347: cobrament d'honoraris per compte de tercers (art. 31.3), comunitat de propietaris (Llei 49/1960), entitat de caràcter social (art. 20.tres LIVA), entitat sotmesa al deure general d'informar (art. 94 LGT) o entitat integrada en una administració pública. Deixa-ho en blanc si no correspon.",
+              "Cobrament d'honoraris per compte de tercers: Societat, associació, col·legi professional o una altra entitat que cobra honoraris professionals o drets de propietat intel·lectual, industrial o d'autor per compte dels seus socis, associats o col·legiats (art. 31.3 RD 1065/2007).",
+              "Comunitat de propietaris: Entitat a la qual és aplicable la Llei 49/1960 sobre propietat horitzontal.",
+              "Entitat de caràcter social: Entitat o establiment privat de caràcter social segons l'article 20.tres de la Llei 37/1992 de l'IVA.",
+              "Entitat sotmesa al deure general d'informar: Autoritat, organisme públic, cambra o corporació, col·legi o associació professional, mutualitat de previsió social, partit polític, sindicat o associació empresarial subjectes al deure de subministrar informació tributària (art. 94.1 i 94.2 de la Llei 58/2003 General Tributària).",
+              "Entitat integrada en una administració pública: Entitat integrada en les diferents administracions públiques, subjecta a més al deure de declarar les subvencions, auxilis o ajudes que concedeixi (art. 31.2, segon paràgraf, RD 1065/2007)."
+            ],
             "about": "Papeles institucionales del declarante a efectos del Modelo 347 (claves C, D y E): cobro de honorarios por cuenta de terceros, comunidad de propietarios, entidad de carácter social, entidad sometida al deber general de informar, o entidad integrada en una Administración pública. Eje independiente del tipo de entidad a efectos fiscales.",
             "row_index": null
           },
@@ -6806,7 +7017,11 @@
                 "label": "No resident (IRNR)"
               }
             ],
-            "help": null,
+            "help": [
+              "Categoria de residència fiscal",
+              "Resident habitual a Espanya - IRPF: Resident fiscal a Espanya (183+ dies o centre d'interessos): renda mundial per IRPF.",
+              "No resident - IRNR (RDLeg 5/2004): No resident: només tributa la renda de font espanyola, per IRNR (Model 210), i pot requerir-se representant fiscal."
+            ],
             "about": "Whether the taxpayer has habitual residence in Spain (resident_irpf, subject to IRPF) or not (non_resident_irnr, subject to IRNR under TRLIRNR). Drives which tax and therefore which calendar/modelos apply.",
             "row_index": null
           },
@@ -6818,7 +7033,9 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "País de residència fiscal (codi ISO 3166-1 alfa-2, p.ex. GB, DE, FR)"
+            ],
             "about": "ISO 3166-1 alpha-2 country code of the taxpayer's fiscal residence when fiscal_residency is non_resident_irnr. Drives the UE/EEE classification for the IRNR rate split (Art. 25.1.a vs Art. 25.1.f TRLIRNR).",
             "row_index": null
           },
@@ -6830,7 +7047,9 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "NIF/NIE del representant fiscal a Espanya (obligatori fora UE/EEE)"
+            ],
             "about": "NIF of the representante fiscal designated in Spain when fiscal_residency is non_resident_irnr. Required by TRLIRNR Art. 10 for non-EU/EEE residents and recommended for EU/EEE residents.",
             "row_index": null
           },
@@ -6842,7 +7061,7 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": ["Nom del representant fiscal a Espanya"],
             "about": "Full name of the representante fiscal designated in Spain when fiscal_residency is non_resident_irnr. Required together with representante_fiscal_nif by TRLIRNR Art. 10 for non-EU/EEE residents.",
             "row_index": null
           }
@@ -7566,7 +7785,9 @@
             "required": true,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "Activitat econòmica (text normal; usa l'epígraf IAE si el coneixes)"
+            ],
             "about": "Censo activity description.",
             "row_index": null
           },
@@ -7607,7 +7828,9 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": [
+              "Aplica l'excepció Art. 109 per cobertura del 70% dels ingressos d'activitat"
+            ],
             "about": "Whether the Art. 109 RIRPF 70 percent income-coverage exception is met for covered professional, agricultural, livestock, or forestry activity income. For activity-start cases this is the current payment-period coverage fact, not a prior-year fact.",
             "row_index": null
           },
@@ -7632,7 +7855,13 @@
                 "label": "Estimació objectiva (mòduls)"
               }
             ],
-            "help": null,
+            "help": [
+              "Règim d'estimació IRPF",
+              "Com es determina el rendiment net de l'activitat econòmica; selecciona Model 130 o 131",
+              "Estimació directa normal: Estimació directa normal: comptabilitat per ingressos reals amb llibres complets - obligatòria per sobre de 600.000 EUR.",
+              "Estimació directa simplificada: Estimació directa simplificada: ingressos reals amb llibres simplificats - l'opció habitual per a la majoria d'autònoms.",
+              "Estimació objectiva (mòduls): Estimació objectiva (mòduls): el rendiment es calcula per indicadors de l'activitat, només per a activitats incloses."
+            ],
             "about": "IRPF estimation regime for economic-activity income: directa_normal (estimacion directa normal), directa_simplificada (estimacion directa simplificada), objetiva (estimacion objetiva / modulos). The regime selects Modelo 130 vs Modelo 131 and the deductible-expense computation.",
             "row_index": null
           },
@@ -7722,7 +7951,12 @@
                 "label": "Règim d'impatriats (art. 93 LIRPF)"
               }
             ],
-            "help": null,
+            "help": [
+              "Règim especial IRPF (Llei Beckham / Art. 93 LIRPF)",
+              "El règim d'impatriats (Llei Beckham) s'aplica durant els primers 6 anys des del trasllat. La majoria tributa en règim general.",
+              "Règim general: Tributes en IRPF pel règim general (model 100).",
+              "Impatriat - Llei Beckham (Art. 93 LIRPF): Has optat pel règim especial de l'art. 93 LIRPF (model 151)."
+            ],
             "about": "Régimen especial de IRPF. El régimen general aplica la tarifa progresiva y el Modelo 100. El régimen de impatriados del art. 93 LIRPF aplica el Modelo 151 y la tarifa correspondiente de IRNR durante seis ejercicios desde la opción; indique también la fecha de inicio.",
             "row_index": null
           },
@@ -7734,7 +7968,10 @@
             "required": false,
             "field_type": "date",
             "choices": [],
-            "help": null,
+            "help": [
+              "Data d'inici del règim especial (AAAA-MM-DD)",
+              "Data en què el treballador va optar pel règim d'impatriats (RIRPF Art. 116). El règim expira en acabar el 6è any natural."
+            ],
             "about": "Opt-in election date for the IRPF special regime (RIRPF Art. 116). Required to compute the six-year impatriado window. Blank when no special regime is in effect.",
             "row_index": null
           },
@@ -7799,7 +8036,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Té empleats i paga salaris amb retenció"],
             "about": "Whether the taxpayer pays employees with withholding.",
             "row_index": null
           },
@@ -7841,7 +8078,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Paga a professionals amb retenció"],
             "about": "Whether the taxpayer pays professionals with withholding.",
             "row_index": null
           },
@@ -7862,7 +8099,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Paga lloguer de local amb retenció"],
             "about": "Whether the taxpayer pays rent with withholding.",
             "row_index": null
           },
@@ -7883,7 +8120,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Paga rendes de capital amb retenció"],
             "about": "Whether the taxpayer pays capital income with withholding.",
             "row_index": null
           },
@@ -7895,7 +8132,10 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "Períodes Model 111 sense retencions",
+              "Períodes AAAA:Període en què no es van pagar rendes subjectes a retenció o ingrés a compte, de manera que no es presenta un Model 111 en blanc."
+            ],
             "about": "Comma-separated YYYY:PERIOD Modelo 111 periods where no rentas subject to retencion or ingreso a cuenta were paid, so no all-blank Modelo 111 filing obligation existed.",
             "row_index": null
           },
@@ -7907,7 +8147,10 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "Períodes Model 115 sense pagament rellevant",
+              "Períodes AAAA:Període en què no hi va haver cap pagament rellevant de lloguer urbà subjecte a retenció, que permeten un càlcul local a zero del Model 115."
+            ],
             "about": "Comma-separated YYYY:PERIOD Modelo 115 quarters explicitly attested as having no relevant urban-rent payment subject to withholding; only these facts permit a local zero materialization.",
             "row_index": null
           }
@@ -7949,9 +8192,12 @@
               }
             ],
             "help": [
-              "El règim d'IVA en què està donada d'alta la teva activitat.",
-              "Decideix quines declaracions d'IVA presentes i com es calcula l'IVA de les teves vendes i compres.",
-              "A la teva declaració censal (model 036 o 037), o a les teves dades censals a la seu electrònica de l'AEAT."
+              "Quin règim d'IVA s'aplica?",
+              "Règim general: IVA general: repercuteix IVA en vendes, dedueix IVA suportat i presenta el Model 303 trimestral.",
+              "Règim simplificat: Règim simplificat per mòduls per a activitats acollides (vinculat a l'estimació objectiva).",
+              "Recàrrec d'equivalència: Per a comerç minorista: el proveïdor aplica un recàrrec addicional i no presentes declaracions d'IVA per aquesta activitat.",
+              "Règim especial de l'agricultura, ramaderia i pesca (REAGP): Règim especial d'agricultura, ramaderia i pesca (REAGP): compensació a preu fet en lloc de declaracions d'IVA.",
+              "Exempt/a: Activitat exempta d'IVA (educació, sanitat, assegurances…): no repercuteix ni dedueix IVA."
             ],
             "about": "IVA regime used by obligation and classification projections. REAGP is the regimen especial de la agricultura, ganaderia y pesca.",
             "row_index": null
@@ -7973,7 +8219,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Realitza operacions intracomunitàries"],
             "about": "Whether the taxpayer conducts intracommunity operations.",
             "row_index": null
           },
@@ -7994,7 +8240,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Operacions intracomunitàries superen 50.000 EUR"],
             "about": "Modelo 349 cadence threshold.",
             "row_index": null
           },
@@ -8015,7 +8261,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Alta en ROI"],
             "about": "Indica si el contribuyente figura en el Registro de Operadores Intracomunitarios (ROI/VIES), mediante la casilla 582 de los Modelos 036/037. Es distinto de realizar operaciones intracomunitarias y determina el acceso a comprobaciones reservadas a operadores inscritos.",
             "row_index": null
           },
@@ -8036,7 +8282,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Alta en OSS"],
             "about": "Whether the taxpayer is enrolled in the OSS / IOSS one-stop-shop regime for declaring intra-EU B2C sales (Modelo 369). Live cross-references that consult OSS-only AEAT surfaces (e.g. modelo-369-exterior-filed-declarations-read) gate applicability on this field.",
             "row_index": null
           },
@@ -8057,7 +8303,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Alta com a entitat membre d'un grup d'IVA"],
             "about": "Whether the taxpayer is a member entity in the IVA group-of-entities special regime and files Modelo 322 as the individual monthly self-assessment.",
             "row_index": null
           },
@@ -8078,7 +8324,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Alta com a entitat dominant d'un grup d'IVA"],
             "about": "Whether the taxpayer is the dominant entity of an IVA group-of-entities regime and files Modelo 353 as the aggregate monthly self-assessment.",
             "row_index": null
           },
@@ -8099,7 +8345,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Inscrit al SII (Subministrament Immediat d'Informació)"],
             "about": "Whether the taxpayer is enrolled in the SII (Suministro Inmediato de Informacion), the near-real-time IVA Libros registro submission system. Mandatory for the monthly IVA collective (grandes empresas, REDEME, grupos de IVA); voluntary opt-in via Modelo 036 for everyone else.",
             "row_index": null
           },
@@ -8121,9 +8367,7 @@
               }
             ],
             "help": [
-              "Si estàs inscrit al REDEME, el registre de devolució mensual de l'IVA.",
-              "La inscripció fa que la teva declaració d'IVA sigui mensual en lloc de trimestral i obliga al SII.",
-              "Se sol·licita al model 036 i figura a les teves dades censals. Si no ho has demanat mai, la resposta és No."
+              "Inscrit a REDEME (Registre de Devolució Mensual de l'IVA)"
             ],
             "about": "Whether the taxpayer is registered in REDEME (Registro de Devolucion Mensual del IVA). REDEME registration switches the IVA self-assessment period to monthly and is one of the mandatory-SII triggers.",
             "row_index": null
@@ -8149,11 +8393,7 @@
                 "label": "Règim general i simplificat"
               }
             ],
-            "help": [
-              "Quins règims d'IVA combina el teu model 303: només el general, només el simplificat o tots dos.",
-              "El model 303 té una part diferent per a cada règim; això decideix quines parts s'omplen.",
-              "Es dedueix del règim d'IVA de cadascuna de les teves activitats a la teva declaració censal."
-            ],
+            "help": ["Quina composició de règims s'aplica al Model 303?"],
             "about": "Explicit Modelo 303 regime composition. Required when any IVA profile fact claims the IVA block; mixed is distinct from either single-regime arm.",
             "row_index": null
           },
@@ -8174,11 +8414,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Si vas optar pel règim especial del criteri de caixa de l'IVA.",
-              "Amb aquest règim, l'IVA es merita en cobrar o pagar les factures i no en emetre-les, cosa que canvia les xifres de cada període.",
-              "S'escull al model 036 i figura a les teves dades censals. Si no hi vas optar, la resposta és No."
-            ],
+            "help": ["Estàs inscrit al règim especial del criteri de caixa?"],
             "about": "Explicit enrolment in the special cash-accounting IVA regime. Required when the IVA profile block is present.",
             "row_index": null
           },
@@ -8199,11 +8435,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Si et vas adherir voluntàriament al SII, el subministrament immediat dels teus llibres registre d'IVA a l'AEAT.",
-              "Qui és al SII porta els llibres d'IVA en línia amb l'AEAT, cosa que canvia algunes obligacions i terminis.",
-              "L'adhesió voluntària se sol·licita al model 036 i figura a les teves dades censals. Si no l'has demanada mai, la resposta és No."
-            ],
+            "help": ["Estàs inscrit voluntàriament al SII?"],
             "about": "Explicit voluntary SII membership, distinct from generic SII membership and mandatory-SII triggers. Required when the IVA profile block is present.",
             "row_index": null
           },
@@ -8225,9 +8457,7 @@
               }
             ],
             "help": [
-              "Si pots deduir els pagaments anticipats d'IVA fets en treure hidrocarburs d'un règim de dipòsit fiscal.",
-              "Aquests pagaments anticipats es dedueixen a la declaració d'IVA, així que el dret canvia l'import a ingressar.",
-              "Només afecta empreses que treuen combustible d'un dipòsit fiscal. La majoria de contribuents respon No."
+              "Té dret a deduir pagaments anticipats del règim de dipòsits fiscals d'hidrocarburs?"
             ],
             "about": "Explicit entitlement to deduct advance payments made under the hydrocarbon tax-deposit regime. Required when the IVA profile block is present.",
             "row_index": null
@@ -8269,7 +8499,9 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": [
+              "A l'any natural que cobreix el Model 347, les teves operacions amb una mateixa persona o entitat van superar 3.005,06 € (300,51 € en els cobraments que facis per compte de tercers), comptant per separat les vendes i les compres?"
+            ],
             "about": "Modelo 347 eligibility: declared yearly transactions with a single counterpart exceed the legal threshold.",
             "row_index": null
           },
@@ -8290,7 +8522,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Béns a l'estranger superen el llindar legal"],
             "about": "Modelo 720 eligibility: foreign assets/rights declared above the legal threshold.",
             "row_index": null
           },
@@ -8311,7 +8543,9 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": [
+              "Monedes virtuals a l'estranger superen el llindar del Model 721"
+            ],
             "about": "Modelo 721 eligibility: virtual currencies held abroad declared above the legal threshold.",
             "row_index": null
           },
@@ -8332,7 +8566,9 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": [
+              "Vas obtenir un premi de loteries o apostes subjecte al gravamen especial sense retenció ni ingrés a compte"
+            ],
             "about": "Modelo 136 eligibility: a lottery or betting prize subject to the gravamen especial was obtained without retencion or ingreso a cuenta.",
             "row_index": null
           },
@@ -8344,7 +8580,10 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "Trimestres en què es va cobrar el premi",
+              "Un token AAAA-nT per trimestre natural, separats per | (per exemple 2025-1T|2025-3T). Cada trimestre obre la seva pròpia presentació del Model 136."
+            ],
             "about": "Modelo 136 quarters: pipe-separated YYYY-nT quarter codes naming each natural quarter in which such a prize was cashed, for example 2025-1T|2025-3T.",
             "row_index": null
           }
@@ -8364,7 +8603,11 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "Codi del tipus de tributació",
+              "1 - tributació individual: Fes servir aquest valor quan presentis només la declaració individual",
+              "2 - conjunta: Fes servir aquest valor només per a tributació conjunta de la unitat familiar"
+            ],
             "about": "Modelo 100 declaration type.",
             "row_index": null
           }
@@ -8430,7 +8673,7 @@
                 "label": "Dona"
               }
             ],
-            "help": null,
+            "help": ["Sexe del primer declarant"],
             "about": "Sexo del contribuyente para el Modelo 100. Toma los valores del tipo tipo_Sexo del diseno de registro: H (hombre) y M (mujer).",
             "row_index": null
           },
@@ -8463,7 +8706,7 @@
                 "label": "5"
               }
             ],
-            "help": null,
+            "help": ["Estat civil del primer declarant"],
             "about": "Taxpayer marital or registered-partnership status used by Renta profile decisions.",
             "row_index": null
           },
@@ -8475,7 +8718,7 @@
             "required": false,
             "field_type": "date",
             "choices": [],
-            "help": null,
+            "help": ["Data de naixement del primer declarant"],
             "about": "Taxpayer birth date.",
             "row_index": null
           },
@@ -8487,7 +8730,13 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "Clau de discapacitat del primer declarant",
+              "Discapacitat del 33% al 64%: Discapacitat reconeguda del 33% al 64% - incrementa el mínim personal.",
+              "Discapacitat del 65% o superior: Discapacitat reconeguda del 65% o més - major increment del mínim personal.",
+              "Incapacitat judicial o equivalent: Incapacitat declarada judicialment - s'assimila al 65%+ amb independència del grau certificat.",
+              "Ajuda de tercers o mobilitat reduïda: Necessitat acreditada d'ajuda de tercers o mobilitat reduïda - afegeix l'increment per assistència."
+            ],
             "about": "Taxpayer disability grade code for Modelo 100.",
             "row_index": null
           },
@@ -8499,7 +8748,7 @@
             "required": false,
             "field_type": "date",
             "choices": [],
-            "help": null,
+            "help": ["Data de defunció del primer declarant"],
             "about": "Taxpayer death date when Modelo 100 requires it.",
             "row_index": null
           },
@@ -8511,7 +8760,7 @@
             "required": false,
             "field_type": "date",
             "choices": [],
-            "help": null,
+            "help": ["Data d'inici del matrimoni (AAAA-MM-DD)"],
             "about": "Fecha de inicio del matrimonio actual. Permite determinar si estuvo vigente todo el ejercicio y los meses inicial y final para las casillas 0245, 0246 y 0247.",
             "row_index": null
           },
@@ -8576,7 +8825,7 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": ["NIF/NIE del cònjuge"],
             "about": "Spouse NIF/NIE for joint filing.",
             "row_index": null
           },
@@ -8588,7 +8837,7 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": ["Nom del cònjuge"],
             "about": "Spouse given name.",
             "row_index": null
           },
@@ -8600,7 +8849,7 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": ["Cognoms del cònjuge"],
             "about": "Spouse surnames.",
             "row_index": null
           },
@@ -8612,7 +8861,7 @@
             "required": false,
             "field_type": "date",
             "choices": [],
-            "help": null,
+            "help": ["Data de naixement del cònjuge"],
             "about": "Spouse birth date.",
             "row_index": null
           },
@@ -8633,7 +8882,7 @@
                 "label": "Dona"
               }
             ],
-            "help": null,
+            "help": ["Sexe del cònjuge"],
             "about": "Sexo del conyuge para el Modelo 100. Toma los valores del tipo tipo_Sexo del diseno de registro: H (hombre) y M (mujer).",
             "row_index": null
           },
@@ -8645,7 +8894,13 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "Grau de discapacitat del cònjuge (si aplica)",
+              "Discapacitat del 33% al 64%: Discapacitat reconeguda del 33% al 64% - incrementa el mínim personal.",
+              "Discapacitat del 65% o superior: Discapacitat reconeguda del 65% o més - major increment del mínim personal.",
+              "Incapacitat judicial o equivalent: Incapacitat declarada judicialment - s'assimila al 65%+ amb independència del grau certificat.",
+              "Ajuda de tercers o mobilitat reduïda: Necessitat acreditada d'ajuda de tercers o mobilitat reduïda - afegeix l'increment per assistència."
+            ],
             "about": "Spouse disability grade code for Modelo 100.",
             "row_index": null
           },
@@ -8666,7 +8921,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Cònjuge no resident IRPF"],
             "about": "Whether the spouse is non-resident and not an IRPF taxpayer.",
             "row_index": null
           },
@@ -8687,7 +8942,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Cònjuge resident UE/EEE"],
             "about": "Whether the non-resident spouse is resident in the EU or EEA.",
             "row_index": null
           },
@@ -8699,7 +8954,7 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": ["País UE/EEE del cònjuge"],
             "about": "EU or EEA country of residence for the spouse.",
             "row_index": null
           }
@@ -8728,7 +8983,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Fills menors en unitat familiar"],
             "about": "Minor children in the family unit.",
             "row_index": null
           },
@@ -8749,7 +9004,7 @@
                 "label": "No"
               }
             ],
-            "help": null,
+            "help": ["Descendents UE/EEE en deducció d'unitat familiar"],
             "about": "EU/EEA descendant deduction flag for Modelo 100.",
             "row_index": null
           },
@@ -8782,7 +9037,15 @@
                 "label": "Separat o divorciat"
               }
             ],
-            "help": null,
+            "help": [
+              "Situació familiar (Art. 82 LIRPF)",
+              "Situació familiar a efectes de l'Art. 82 LIRPF: determina si es pot optar per la declaració conjunta i quina unitat familiar s'aplica.",
+              "Casat/ada: Matrimoni vigent - tributació conjunta disponible (Art. 82.1.1°)",
+              "Parella de fet registrada: Inscrita al registre autonòmic - tributació conjunta disponible (Art. 82.1.2°)",
+              "Parella de fet no registrada: Convivència sense inscripció registral - tributació conjunta NO disponible",
+              "Solter/a: Solter, vidu o divorciat sense parella registrada - tributació individual, o conjunta només com a família monoparental amb fills.",
+              "Separat/ada o divorciat/ada: Separat legalment o divorciat - la tributació conjunta només és possible amb fills a la seva unitat familiar."
+            ],
             "about": "Art. 82 LIRPF family situation used to validate joint taxation eligibility.",
             "row_index": null
           },
@@ -9163,11 +9426,7 @@
             "required": true,
             "field_type": "string",
             "choices": [],
-            "help": [
-              "Az adóazonosító száma: a DNI-n szereplő NIF, külföldi állampolgárként a NIE, illetve jogi személy esetén a NIF.",
-              "Minden bevallást ezzel a számmal nyújtanak be; az AEAT ez alapján azonosít téged.",
-              "A DNI- vagy NIE-kártyáján, illetve az AEAT által kiadott NIF-kártyán. Bármely korábbi bevalláson vagy AEAT-levélen is szerepel."
-            ],
+            "help": ["Adóazonosító (NIF/CIF/DNI/NIE) a bevallásokhoz"],
             "about": "NIF/NIE/CIF used as filing identity.",
             "row_index": null
           },
@@ -9179,7 +9438,7 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": ["A helyi áttekintésekben megjelenő megjelenítési név"],
             "about": "Declarant given name or display name.",
             "row_index": null
           },
@@ -9191,7 +9450,7 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": ["Vezetéknevei vagy cégneve az exportfejlécekhez"],
             "about": "Declarant surnames for person filings.",
             "row_index": null
           },
@@ -9203,7 +9462,10 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "Jogi személy cégneve az exportfejlécekhez",
+              "Jogi személyeknél ez az exportfejlécekben használt adózási név. Különbözik a helyi megjelenítési névtől."
+            ],
             "about": "Legal or company name for entity-style export headers.",
             "row_index": null
           },
@@ -9252,7 +9514,7 @@
                 "label": "Magyar"
               }
             ],
-            "help": null,
+            "help": ["CLI kimeneti nyelv ehhez a profilhoz"],
             "about": "Output language used by CLI rendering and notification copy.",
             "row_index": null
           }
@@ -9281,7 +9543,9 @@
                 "label": "Nem"
               }
             ],
-            "help": null,
+            "help": [
+              "Engedélyezed a beolvasott vagy kép alapú dokumentumok olvasását az általad kiválasztott képolvasó modellel?"
+            ],
             "about": "Whether this profile may read scanned or image evidence with the image-reading model the person selected. Default on; opting out disables the image read. This flag does not decide where the read runs: an off-host read also needs the cloud_evidence_upload capability and the per-read consent.",
             "row_index": null
           },
@@ -9302,7 +9566,7 @@
                 "label": "Nem"
               }
             ],
-            "help": null,
+            "help": ["Engedélyezi a Google Sheets exportálást?"],
             "about": "Whether this profile may export modelo workbooks to Google Sheets or Drive. Default on; opting out keeps exports offline-only.",
             "row_index": null
           },
@@ -9445,7 +9709,7 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": ["Adóügyi lakcím irányítószáma"],
             "about": "Fiscal-address postcode.",
             "row_index": null
           },
@@ -9562,7 +9826,7 @@
                 "label": "Murcia"
               }
             ],
-            "help": null,
+            "help": ["Adóügyi illetékességi autonóm közösség"],
             "about": "Comunidad autónoma de residencia fiscal en territorio común para el Modelo 100.",
             "row_index": null
           },
@@ -9584,9 +9848,7 @@
               }
             ],
             "help": [
-              "Az adózása a közös területi rendszer vagy egy forális terület (Baszkföld vagy Navarra) szabályait követi-e.",
-              "Ez dönti el, melyik adóhatóság és milyen szabályok vonatkoznak rád. A forális területek a saját adóhivatalukhoz nyújtanak be, ez még nem támogatott.",
-              "Az adózási lakcíméből következik: Álava, Bizkaia, Gipuzkoa vagy Navarra területén forális, Spanyolország többi részén közös terület."
+              "Melyik területi adórendszer vonatkozik az adóügyi illetőségedre?"
             ],
             "about": "Régimen territorial aplicable declarado explícitamente: territorio común o territorio foral aún no soportado.",
             "row_index": null
@@ -9641,7 +9903,7 @@
                 "label": "Nem"
               }
             ],
-            "help": null,
+            "help": ["Nagyvállalati bejegyzés"],
             "about": "Large-company condition used by filing cadence. Applies when operation volume, calculated under LIVA Art. 121, exceeded 6.010.121,04 EUR during the immediately prior calendar year; RIVA Art. 71 then switches IVA liquidation to monthly.",
             "row_index": null
           },
@@ -9662,7 +9924,7 @@
                 "label": "Nem"
               }
             ],
-            "help": null,
+            "help": ["Közigazgatási költségvetés meghaladja a 6 000 000-t"],
             "about": "Public-administration budget threshold used by Modelo 111 filing cadence. Applies when the last approved annual public-administration budget before the start of the tax year exceeds 6 million EUR; the Modelo 111 official instructions then route the withholding self-assessment to monthly.",
             "row_index": null
           },
@@ -9674,7 +9936,10 @@
             "required": false,
             "field_type": "date",
             "choices": [],
-            "help": null,
+            "help": [
+              "Mikortól van bevallási kötelezettsége / mikor regisztrált? (ÉÉÉÉ-HH-NN, opcionális)",
+              "Ha meg van adva, az előtte lévő időszakok bevallásai nem jelennek meg lejártként. Hagyd üresen, ha nem tudod."
+            ],
             "about": "AEAT censo alta date for the economic activity. Drives obligation start year and pago-fraccionado eligibility.",
             "row_index": null
           },
@@ -9719,7 +9984,13 @@
                 "label": "Jövedelem-hozzárendelési jogalany"
               }
             ],
-            "help": null,
+            "help": [
+              "Entitástípus",
+              "Természetes személy (IRPF), jogi személy (Impuesto sobre Sociedades) vagy jövedelemattribúciós szervezet",
+              "Természetes személy: Magánszemély (egyéni vállalkozó vagy magánszemély), aki IRPF szerint adózik.",
+              "Jogi személy (társaság): Társaság vagy szervezet (SL, SA, egyesület…), amely társasági adó (IS) szerint adózik.",
+              "Jövedelemattribúciós szervezet: Jövedelem-hozzárendelési entitás (comunidad de bienes, sociedad civil): a jövedelem a tagoknak tulajdonítható."
+            ],
             "about": "Taxpayer entity type. natural_person is an IRPF contribuyente; legal_entity is an Impuesto sobre Sociedades contribuyente; attribution_entity is an entity without legal personality under the regimen de atribucion de rentas. The entity type selects the tax and therefore the modelos, calendar, and rate schedule.",
             "row_index": null
           },
@@ -9764,7 +10035,11 @@
                 "label": "Egyéb"
               }
             ],
-            "help": null,
+            "help": [
+              "Jogi forma",
+              "Korlátolt felelősségű társaság (S.L.): Sociedad Limitada: a szokásos kisvállalati forma, minimum tőke 3000 EUR.",
+              "Nonprofit szervezet: Nonprofit szervezet (Ley 49/2002): választhatja a lentebb kérdezett különös adószabályozást."
+            ],
             "about": "Recognised legal form when entity_type is legal_entity. Drives the Impuesto sobre Sociedades rate schedule per LIS Art. 29.",
             "row_index": null
           },
@@ -9776,7 +10051,10 @@
             "required": false,
             "field_type": "decimal",
             "choices": [],
-            "help": null,
+            "help": [
+              "Mi volt a nettó árbevétele az elmúlt 12 hónapban? (euróban, opcionális)",
+              "Erre azért van szükségünk, hogy meghatározzuk, hogy a Modelo 202 az LIS 40.3. cikkely szerinti módozatot írja-e elő (6 000 000 EUR felett). Hagyd üresen, ha nem tudod."
+            ],
             "about": "Importe neto de la cifra de negocios (INCN) de los 12 meses anteriores. Determina la modalidad del pago fraccionado del Modelo 202 en el umbral de 6.000.000 EUR (art. 40.3 LIS): por encima es obligatorio el art. 40.3 y por debajo pueden resultar aplicables los arts. 40.2 o 40.3. Si no se declara, Cadrumo solicita completar la información en lugar de elegir una modalidad.",
             "row_index": null
           },
@@ -9797,7 +10075,10 @@
                 "label": "Nem"
               }
             ],
-            "help": null,
+            "help": [
+              "Ez egy újonnan létrehozott jogi személy az első két nyereséges adóidőszakának egyikében?",
+              "Csak jogi személyekre vonatkozik. Ha be van jelölve, az entitás 15%-os kedvezményes adókulcs szerint adózik az adott két időszakban."
+            ],
             "about": "Whether a newly-created legal entity is in one of its first two profit-making tax periods. Opts the entity into the LIS Art. 29 15 percent micro-empresa-style rate override. The override is opt-in: an undeclared value leaves the entity on the otherwise-applicable sub-form rate.",
             "row_index": null
           },
@@ -9821,7 +10102,16 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "IRPF jövedelemkategóriák",
+              "Válaszd ki az összes IRPF jövedelemkategóriát; csak a gazdasági tevékenység vált ki Modelo 130 és Modelo 131 kötelezettséget",
+              "Gazdasági tevékenység: Önálló gazdasági vagy szakmai tevékenység - negyedéves Modelo 130 és IVA kötelezettségekkel jár.",
+              "Munkaviszonyból származó jövedelem: Munkajövedelem: munkáltatótól vagy társadalombiztosítástól származó bér vagy nyugdíj.",
+              "Ingatlanvagyon-jövedelem (bérbeadás): Ingatlan-bérbeadásból származó jövedelem.",
+              "Ingóvagyon-jövedelem: Tőkejövedelem: kamat, osztalék és egyéb befektetési jövedelem.",
+              "Tőkenyereség: Eszközértékesítésből származó nyereség vagy veszteség (részvény, ingatlan, kripto).",
+              "Nyugdíj: Nyugdíj - az IRPF-ben munkajövedelemként adózik."
+            ],
             "about": "Categorías de renta IRPF declaradas por la persona: actividad económica, trabajo, capital inmobiliario, capital mobiliario, ganancias patrimoniales o pensión. Solo la actividad económica puede originar pagos fraccionados en los Modelos 130 o 131.",
             "row_index": null
           },
@@ -9833,7 +10123,15 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "A bejelentő szervezet betölt-e valamelyik alábbi intézményi szerepet a 347-es adatlap (harmadik felekkel folytatott ügyletek) szempontjából?",
+              "A 347-es adatlap C, D vagy E kulcsát aktiváló intézményi szerepek: harmadik felek nevében történő díjbeszedés (31.3. cikk), társasházi közösség (49/1960. törvény), szociális jellegű szervezet (LIVA 20.tres cikk), az általános adatszolgáltatási kötelezettség alá tartozó szervezet (LGT 94. cikk), vagy közigazgatási szervbe integrált entitás. Hagyd üresen, ha egyik sem alkalmazandó.",
+              "Harmadik felek nevében történő díjbeszedés: Olyan társaság, egyesület, szakmai kamara vagy más szervezet, amely tagjai, társult tagjai vagy kamarai tagjai nevében szakmai díjakat vagy szellemi, ipari vagy szerzői jogi jövedelmet szed be (RD 1065/2007 31.3. cikk).",
+              "Társasházi közösség: Olyan entitás, amelyre a 49/1960. törvény (társasházi tulajdon) vonatkozik.",
+              "Szociális jellegű szervezet: Az LIVA (37/1992. törvény) 20.tres cikke szerinti szociális jellegű magánszervezet vagy intézmény.",
+              "Az általános adatszolgáltatási kötelezettség alá tartozó szervezet: Hatóság, közintézmény, kamara vagy testület, szakmai kamara vagy egyesület, kölcsönös biztosító egyesület, politikai párt, szakszervezet vagy szakmai szövetség, amelyre az adóügyi adatszolgáltatási kötelezettség vonatkozik (LGT 94.1. és 94.2. cikk).",
+              "Közigazgatási szervbe integrált entitás: Valamely közigazgatási szervbe integrált entitás, amely emellett köteles bejelenteni az általa nyújtott támogatásokat és segélyeket (RD 1065/2007 31.2. cikk, második bekezdés)."
+            ],
             "about": "Papeles institucionales del declarante a efectos del Modelo 347 (claves C, D y E): cobro de honorarios por cuenta de terceros, comunidad de propietarios, entidad de carácter social, entidad sometida al deber general de informar, o entidad integrada en una Administración pública. Eje independiente del tipo de entidad a efectos fiscales.",
             "row_index": null
           },
@@ -9854,7 +10152,11 @@
                 "label": "Nem spanyolországi illetőségű (IRNR)"
               }
             ],
-            "help": null,
+            "help": [
+              "Adóügyi illetőségi kategória",
+              "Spanyolországban szokásos lakóhellyel rendelkező – IRPF: Spanyol adóügyi illetőség (183+ nap vagy érdekközpont): világjövedelem IRPF szerint.",
+              "Nem rezidens – IRNR (RDLeg 5/2004): Nem rezidens: csak a spanyol forrású jövedelem adózik IRNR szerint (Modelo 210), és adóügyi képviselő lehet szükséges."
+            ],
             "about": "Whether the taxpayer has habitual residence in Spain (resident_irpf, subject to IRPF) or not (non_resident_irnr, subject to IRNR under TRLIRNR). Drives which tax and therefore which calendar/modelos apply.",
             "row_index": null
           },
@@ -9866,7 +10168,9 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "Adóügyi lakóhely szerinti ország (ISO 3166-1 alfa-2 kód, pl. GB, DE, FR)"
+            ],
             "about": "ISO 3166-1 alpha-2 country code of the taxpayer's fiscal residence when fiscal_residency is non_resident_irnr. Drives the UE/EEE classification for the IRNR rate split (Art. 25.1.a vs Art. 25.1.f TRLIRNR).",
             "row_index": null
           },
@@ -9878,7 +10182,9 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "A spanyolországi adóügyi képviselő NIF/NIE száma (EU-n/EGT-n kívüli esetén kötelező)"
+            ],
             "about": "NIF of the representante fiscal designated in Spain when fiscal_residency is non_resident_irnr. Required by TRLIRNR Art. 10 for non-EU/EEE residents and recommended for EU/EEE residents.",
             "row_index": null
           },
@@ -9890,7 +10196,7 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": ["A spanyolországi adóügyi képviselő neve"],
             "about": "Full name of the representante fiscal designated in Spain when fiscal_residency is non_resident_irnr. Required together with representante_fiscal_nif by TRLIRNR Art. 10 for non-EU/EEE residents.",
             "row_index": null
           }
@@ -10614,7 +10920,9 @@
             "required": true,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "Gazdasági tevékenység (egyszerű szöveg is megfelelő; használd az IAE fejezetet, ha ismered)"
+            ],
             "about": "Censo activity description.",
             "row_index": null
           },
@@ -10655,7 +10963,9 @@
                 "label": "Nem"
               }
             ],
-            "help": null,
+            "help": [
+              "Alkalmazandó az Art. 109 szerinti 70%-os tevékenységi jövedelemfedezeti kivétel"
+            ],
             "about": "Whether the Art. 109 RIRPF 70 percent income-coverage exception is met for covered professional, agricultural, livestock, or forestry activity income. For activity-start cases this is the current payment-period coverage fact, not a prior-year fact.",
             "row_index": null
           },
@@ -10680,7 +10990,13 @@
                 "label": "Objektív becslés (módulos)"
               }
             ],
-            "help": null,
+            "help": [
+              "IRPF becslési rend",
+              "A gazdasági tevékenység nettó jövedelmének meghatározási módja; meghatározza, hogy a Modelo 130 vagy a Modelo 131 alkalmazandó-e",
+              "Közvetlen becslés, normál: Normál közvetlen becslés: valós bevétel szerinti teljes könyvelés - 600 000 EUR forgalom felett kötelező.",
+              "Közvetlen becslés, egyszerűsített: Egyszerűsített közvetlen becslés: valós bevétel egyszerűsített könyveléssel - a legtöbb egyéni vállalkozó szokásos választása.",
+              "Objektív becslés (módszerek): Objektív becslés (modulok): az adó a tevékenységi mutatókból számítódik, csak a felsorolt tevékenységekre."
+            ],
             "about": "IRPF estimation regime for economic-activity income: directa_normal (estimacion directa normal), directa_simplificada (estimacion directa simplificada), objetiva (estimacion objetiva / modulos). The regime selects Modelo 130 vs Modelo 131 and the deductible-expense computation.",
             "row_index": null
           },
@@ -10770,7 +11086,12 @@
                 "label": "Beköltözők különleges rendszere (LIRPF 93. cikk)"
               }
             ],
-            "help": null,
+            "help": [
+              "IRPF különleges adózási rend (Beckham-törvény / LIRPF 93. cikkely)",
+              "A kiküldött (Beckham-törvény) adózási rend az áthelyezés utáni első 6 adóévre alkalmazható. A legtöbb adózó az általános rend szerint adózik.",
+              "Általános adózási rend: Az IRPF általános rendszere szerint adózol (Modelo 100).",
+              "Bejövő expatriált – Beckham-törvény (LIRPF 93. cikkely): A LIRPF 93. cikke szerinti különleges rendszert választottad (Modelo 151)."
+            ],
             "about": "Régimen especial de IRPF. El régimen general aplica la tarifa progresiva y el Modelo 100. El régimen de impatriados del art. 93 LIRPF aplica el Modelo 151 y la tarifa correspondiente de IRNR durante seis ejercicios desde la opción; indique también la fecha de inicio.",
             "row_index": null
           },
@@ -10782,7 +11103,10 @@
             "required": false,
             "field_type": "date",
             "choices": [],
-            "help": null,
+            "help": [
+              "A különleges adózási rend kezdőnapja (ÉÉÉÉ-HH-NN)",
+              "A munkavállaló kiküldött adózási rendbe lépésének dátuma (RIRPF 116. cikkely). Az adózási rend a 6. naptári év végén jár le."
+            ],
             "about": "Opt-in election date for the IRPF special regime (RIRPF Art. 116). Required to compute the six-year impatriado window. Blank when no special regime is in effect.",
             "row_index": null
           },
@@ -10847,7 +11171,9 @@
                 "label": "Nem"
               }
             ],
-            "help": null,
+            "help": [
+              "Alkalmazottai vannak és forrásadóval terhelt béreket fizet"
+            ],
             "about": "Whether the taxpayer pays employees with withholding.",
             "row_index": null
           },
@@ -10889,7 +11215,7 @@
                 "label": "Nem"
               }
             ],
-            "help": null,
+            "help": ["Forrásadóval terhelt díjazást fizet szakembereknek"],
             "about": "Whether the taxpayer pays professionals with withholding.",
             "row_index": null
           },
@@ -10910,7 +11236,7 @@
                 "label": "Nem"
               }
             ],
-            "help": null,
+            "help": ["Forrásadóval terhelt helyi bérleti díjat fizet"],
             "about": "Whether the taxpayer pays rent with withholding.",
             "row_index": null
           },
@@ -10931,7 +11257,7 @@
                 "label": "Nem"
               }
             ],
-            "help": null,
+            "help": ["Forrásadóval terhelt tőkejövedelmet fizet"],
             "about": "Whether the taxpayer pays capital income with withholding.",
             "row_index": null
           },
@@ -10943,7 +11269,10 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "Modelo 111 forrásadó nélküli időszakok",
+              "ÉÉÉÉ:IDŐSZAK időszakok, amikor nem történt retención vagy ingreso a cuenta alá eső kifizetés, ezért nem nyújtandó be üres Modelo 111."
+            ],
             "about": "Comma-separated YYYY:PERIOD Modelo 111 periods where no rentas subject to retencion or ingreso a cuenta were paid, so no all-blank Modelo 111 filing obligation existed.",
             "row_index": null
           },
@@ -10955,7 +11284,10 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "Modelo 115 releváns kifizetés nélküli időszakai",
+              "ÉÉÉÉ:IDŐSZAK időszakok, amikor nem történt releváns, forrásadó-köteles városi bérleti kifizetés, ezért helyi nulla 115-ös számítás készíthető."
+            ],
             "about": "Comma-separated YYYY:PERIOD Modelo 115 quarters explicitly attested as having no relevant urban-rent payment subject to withholding; only these facts permit a local zero materialization.",
             "row_index": null
           }
@@ -10997,9 +11329,12 @@
               }
             ],
             "help": [
-              "Az az áfa- (IVA-) rendszer, amelyben a tevékenysége nyilvántartásba van véve.",
-              "Ez dönti el, milyen áfabevallásokat nyújt be, és hogyan számítják az áfát az eladásain és beszerzésein.",
-              "Az adózói bejelentkezésén (Modelo 036 vagy Modelo 037), vagy az adózói adatai között az AEAT elektronikus ügyfélkapujában."
+              "Melyik IVA-rendszer alkalmazandó?",
+              "Általános adózási rend: Általános IVA: az értékesítésre IVA-t számít fel, a beszerzések IVA-ja levonható, negyedéves Modelo 303.",
+              "Egyszerűsített adózási rend: Modul-alapú egyszerűsített IVA a jogosult tevékenységekhez (az objektív becsléshez kapcsolódik).",
+              "Egyenértékűségi pótlék: Kiskereskedőknek: a beszállító felárat számít fel, és nem nyújtasz be IVA-bevallást erre a tevékenységre.",
+              "Mezőgazdaság, állattenyésztés és halászat különleges adózási rendje (REAGP): Mezőgazdasági, állattenyésztési és halászati különös szabályozás (REAGP): átalány-kompenzáció IVA-bevallás helyett.",
+              "Mentes: IVA-mentes tevékenység (oktatás, egészségügy, biztosítás…): nem számít fel és nem von le IVA-t."
             ],
             "about": "IVA regime used by obligation and classification projections. REAGP is the regimen especial de la agricultura, ganaderia y pesca.",
             "row_index": null
@@ -11021,7 +11356,7 @@
                 "label": "Nem"
               }
             ],
-            "help": null,
+            "help": ["Végez intraközösségi ügyleteket"],
             "about": "Whether the taxpayer conducts intracommunity operations.",
             "row_index": null
           },
@@ -11042,7 +11377,7 @@
                 "label": "Nem"
               }
             ],
-            "help": null,
+            "help": ["Intraközösségi ügyletek meghaladják az 50 000 EUR-t"],
             "about": "Modelo 349 cadence threshold.",
             "row_index": null
           },
@@ -11063,7 +11398,7 @@
                 "label": "Nem"
               }
             ],
-            "help": null,
+            "help": ["ROI-ba bejelentkezett"],
             "about": "Indica si el contribuyente figura en el Registro de Operadores Intracomunitarios (ROI/VIES), mediante la casilla 582 de los Modelos 036/037. Es distinto de realizar operaciones intracomunitarias y determina el acceso a comprobaciones reservadas a operadores inscritos.",
             "row_index": null
           },
@@ -11084,7 +11419,7 @@
                 "label": "Nem"
               }
             ],
-            "help": null,
+            "help": ["OSS-be bejelentkezett"],
             "about": "Whether the taxpayer is enrolled in the OSS / IOSS one-stop-shop regime for declaring intra-EU B2C sales (Modelo 369). Live cross-references that consult OSS-only AEAT surfaces (e.g. modelo-369-exterior-filed-declarations-read) gate applicability on this field.",
             "row_index": null
           },
@@ -11105,7 +11440,7 @@
                 "label": "Nem"
               }
             ],
-            "help": null,
+            "help": ["IVA-csoport tag szervezeteként bejelentkezett"],
             "about": "Whether the taxpayer is a member entity in the IVA group-of-entities special regime and files Modelo 322 as the individual monthly self-assessment.",
             "row_index": null
           },
@@ -11126,7 +11461,7 @@
                 "label": "Nem"
               }
             ],
-            "help": null,
+            "help": ["IVA-csoport domináns szervezeteként bejelentkezett"],
             "about": "Whether the taxpayer is the dominant entity of an IVA group-of-entities regime and files Modelo 353 as the aggregate monthly self-assessment.",
             "row_index": null
           },
@@ -11147,7 +11482,7 @@
                 "label": "Nem"
               }
             ],
-            "help": null,
+            "help": ["SII-be bejelentkezett (azonnali információszolgáltatás)"],
             "about": "Whether the taxpayer is enrolled in the SII (Suministro Inmediato de Informacion), the near-real-time IVA Libros registro submission system. Mandatory for the monthly IVA collective (grandes empresas, REDEME, grupos de IVA); voluntary opt-in via Modelo 036 for everyone else.",
             "row_index": null
           },
@@ -11169,9 +11504,7 @@
               }
             ],
             "help": [
-              "Szerepel-e a REDEME-ben, a havi áfa-visszatérítési nyilvántartásban.",
-              "A nyilvántartásba vétel miatt az áfabevallás negyedéves helyett havi lesz, és az SII kötelezővé válik.",
-              "A Modelo 036-on kell kérelmezni, és az adózói adataid között látható. Ha soha nem kérted, a válasz Nem."
+              "REDEME-ben bejegyzett (havi IVA visszaigénylési nyilvántartás)"
             ],
             "about": "Whether the taxpayer is registered in REDEME (Registro de Devolucion Mensual del IVA). REDEME registration switches the IVA self-assessment period to monthly and is one of the mandatory-SII triggers.",
             "row_index": null
@@ -11197,11 +11530,7 @@
                 "label": "Általános és egyszerűsített rendszer együtt"
               }
             ],
-            "help": [
-              "Mely áfarendszereket kombinálja a 303-as bevallásod: csak az általánost, csak az egyszerűsítettet, vagy mindkettőt.",
-              "A Modelo 303-nak minden rendszerhez külön része van; ez dönti el, mely részeket kell kitölteni.",
-              "Az adózói bejelentkezésén szereplő egyes tevékenységek áfarendszeréből következik."
-            ],
+            "help": ["Melyik Modelo 303 rendszerösszetétel alkalmazandó?"],
             "about": "Explicit Modelo 303 regime composition. Required when any IVA profile fact claims the IVA block; mixed is distinct from either single-regime arm.",
             "row_index": null
           },
@@ -11223,9 +11552,7 @@
               }
             ],
             "help": [
-              "A pénzforgalmi áfa különleges rendszerét (criterio de caja) választottad?",
-              "Ebben a rendszerben az áfa a számlák kifizetésekor és nem kiállításukkor esedékes, ami megváltoztatja az egyes időszakok számait.",
-              "A Modelo 036-on kell választani, és az adózói adataid között látható. Ha nem választottad, a válasz Nem."
+              "Bejelentkeztél az IVA pénzforgalmi különleges rendszerébe?"
             ],
             "about": "Explicit enrolment in the special cash-accounting IVA regime. Required when the IVA profile block is present.",
             "row_index": null
@@ -11247,11 +11574,7 @@
                 "label": "Nem"
               }
             ],
-            "help": [
-              "Önként csatlakoztál-e az SII-hez, az áfa-nyilvántartásaid azonnali elektronikus továbbításához az AEAT felé.",
-              "Az SII-tagok online vezetik áfa-nyilvántartásaikat az AEAT-nál, ami egyes kötelezettségeket és határidőket megváltoztat.",
-              "Az önkéntes csatlakozást a Modelo 036-on kell kérelmezni, és az adózói adataid között látható. Ha soha nem kérted, a válasz Nem."
-            ],
+            "help": ["Önkéntesen csatlakoztál az SII-hez?"],
             "about": "Explicit voluntary SII membership, distinct from generic SII membership and mandatory-SII triggers. Required when the IVA profile block is present.",
             "row_index": null
           },
@@ -11272,11 +11595,7 @@
                 "label": "Nem"
               }
             ],
-            "help": [
-              "Levonhatja-e azokat az áfa-előlegeket, amelyeket szénhidrogéneknek adóraktári rendszerből való kivételekor fizetett.",
-              "Ezeket az előlegeket az áfabevallásban vonják le, így a jogosultság megváltoztatja a fizetendő összeget.",
-              "Csak azokat a vállalkozásokat érinti, amelyek üzemanyagot vesznek ki adóraktárból (depósito fiscal). A legtöbb adózó válasza Nem."
-            ],
+            "help": ["Jogosult a szénhidrogén-adóraktári előlegek levonására?"],
             "about": "Explicit entitlement to deduct advance payments made under the hydrocarbon tax-deposit regime. Required when the IVA profile block is present.",
             "row_index": null
           },
@@ -11317,7 +11636,9 @@
                 "label": "Nem"
               }
             ],
-            "help": null,
+            "help": [
+              "A Modelo 347 által lefedett naptári évben meghaladták-e az ugyanazzal a személlyel vagy szervezettel folytatott ügyleteid a 3 005,06 EUR-t (a harmadik felek nevében beszedett összegeknél a 300,51 EUR-t), az értékesítéseket és a beszerzéseket külön számítva?"
+            ],
             "about": "Modelo 347 eligibility: declared yearly transactions with a single counterpart exceed the legal threshold.",
             "row_index": null
           },
@@ -11338,7 +11659,7 @@
                 "label": "Nem"
               }
             ],
-            "help": null,
+            "help": ["Külföldi vagyon meghaladja a jogszabályi küszöbértéket"],
             "about": "Modelo 720 eligibility: foreign assets/rights declared above the legal threshold.",
             "row_index": null
           },
@@ -11359,7 +11680,9 @@
                 "label": "Nem"
               }
             ],
-            "help": null,
+            "help": [
+              "Külföldi virtuális valuták meghaladják a Modelo 721 küszöbértékét"
+            ],
             "about": "Modelo 721 eligibility: virtual currencies held abroad declared above the legal threshold.",
             "row_index": null
           },
@@ -11380,7 +11703,9 @@
                 "label": "Nem"
               }
             ],
-            "help": null,
+            "help": [
+              "Különadó alá eső lottó- vagy fogadási nyereményt kapott forrásadó-levonás és adóelőleg nélkül"
+            ],
             "about": "Modelo 136 eligibility: a lottery or betting prize subject to the gravamen especial was obtained without retencion or ingreso a cuenta.",
             "row_index": null
           },
@@ -11392,7 +11717,10 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "Negyedévek, amelyekben a nyereményt felvették",
+              "Naptári negyedévenként egy ÉÉÉÉ-nT token, |-jellel elválasztva (például 2025-1T|2025-3T). Minden negyedév külön 136-os bevallást nyit."
+            ],
             "about": "Modelo 136 quarters: pipe-separated YYYY-nT quarter codes naming each natural quarter in which such a prize was cashed, for example 2025-1T|2025-3T.",
             "row_index": null
           }
@@ -11412,7 +11740,11 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "Adózási típus kódja",
+              "1 - egyéni: Akkor használd, ha kizárólag a saját egyéni bevallásodat nyújtod be",
+              "2 - közös: Csak a családi egység közös adózásához használd"
+            ],
             "about": "Modelo 100 declaration type.",
             "row_index": null
           }
@@ -11478,7 +11810,7 @@
                 "label": "Nő"
               }
             ],
-            "help": null,
+            "help": ["Az első adózó neme"],
             "about": "Sexo del contribuyente para el Modelo 100. Toma los valores del tipo tipo_Sexo del diseno de registro: H (hombre) y M (mujer).",
             "row_index": null
           },
@@ -11511,7 +11843,7 @@
                 "label": "5"
               }
             ],
-            "help": null,
+            "help": ["Az első adózó családi állapota"],
             "about": "Taxpayer marital or registered-partnership status used by Renta profile decisions.",
             "row_index": null
           },
@@ -11523,7 +11855,7 @@
             "required": false,
             "field_type": "date",
             "choices": [],
-            "help": null,
+            "help": ["Az első adózó születési dátuma"],
             "about": "Taxpayer birth date.",
             "row_index": null
           },
@@ -11535,7 +11867,13 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "Az első adózó fogyatékossági kódja",
+              "Fogyatékossági fokozat 33%-tól 64%-ig: Elismert 33–64%-os fogyatékosság - növeli a személyi minimumot.",
+              "Fogyatékossági fokozat 65% vagy magasabb: Elismert 65%-os vagy nagyobb fogyatékosság - nagyobb személyiminimum-növekedés.",
+              "Bírói cselekvőképesség-korlátozás vagy azzal egyenértékű: Bíróság által megállapított cselekvőképtelenség - a tanúsított foktól függetlenül 65%+ként kezelendő.",
+              "Harmadik személy segítsége vagy korlátozott mozgásképesség: Igazolt harmadik személy segítségének szükségessége vagy csökkent mozgásképesség - asszisztencia-növekményt ad."
+            ],
             "about": "Taxpayer disability grade code for Modelo 100.",
             "row_index": null
           },
@@ -11547,7 +11885,7 @@
             "required": false,
             "field_type": "date",
             "choices": [],
-            "help": null,
+            "help": ["Az első adózó elhalálozásának dátuma"],
             "about": "Taxpayer death date when Modelo 100 requires it.",
             "row_index": null
           },
@@ -11559,7 +11897,7 @@
             "required": false,
             "field_type": "date",
             "choices": [],
-            "help": null,
+            "help": ["Házasságkötés dátuma (ÉÉÉÉ-HH-NN)"],
             "about": "Fecha de inicio del matrimonio actual. Permite determinar si estuvo vigente todo el ejercicio y los meses inicial y final para las casillas 0245, 0246 y 0247.",
             "row_index": null
           },
@@ -11624,7 +11962,7 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": ["Házastárs NIF/NIE száma"],
             "about": "Spouse NIF/NIE for joint filing.",
             "row_index": null
           },
@@ -11636,7 +11974,7 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": ["Házastárs keresztneve"],
             "about": "Spouse given name.",
             "row_index": null
           },
@@ -11648,7 +11986,7 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": ["Házastárs vezetéknevei"],
             "about": "Spouse surnames.",
             "row_index": null
           },
@@ -11660,7 +11998,7 @@
             "required": false,
             "field_type": "date",
             "choices": [],
-            "help": null,
+            "help": ["Házastárs születési dátuma"],
             "about": "Spouse birth date.",
             "row_index": null
           },
@@ -11681,7 +12019,7 @@
                 "label": "Nő"
               }
             ],
-            "help": null,
+            "help": ["Házastárs neme"],
             "about": "Sexo del conyuge para el Modelo 100. Toma los valores del tipo tipo_Sexo del diseno de registro: H (hombre) y M (mujer).",
             "row_index": null
           },
@@ -11693,7 +12031,13 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": [
+              "Házastárs fogyatékossági fokozata (ha alkalmazható)",
+              "Fogyatékossági fokozat 33%-tól 64%-ig: Elismert 33–64%-os fogyatékosság - növeli a személyi minimumot.",
+              "Fogyatékossági fokozat 65% vagy magasabb: Elismert 65%-os vagy nagyobb fogyatékosság - nagyobb személyiminimum-növekedés.",
+              "Bírói cselekvőképesség-korlátozás vagy azzal egyenértékű: Bíróság által megállapított cselekvőképtelenség - a tanúsított foktól függetlenül 65%+ként kezelendő.",
+              "Harmadik személy segítsége vagy korlátozott mozgásképesség: Igazolt harmadik személy segítségének szükségessége vagy csökkent mozgásképesség - asszisztencia-növekményt ad."
+            ],
             "about": "Spouse disability grade code for Modelo 100.",
             "row_index": null
           },
@@ -11714,7 +12058,7 @@
                 "label": "Nem"
               }
             ],
-            "help": null,
+            "help": ["Házastárs nem rezidens IRPF szerint"],
             "about": "Whether the spouse is non-resident and not an IRPF taxpayer.",
             "row_index": null
           },
@@ -11735,7 +12079,7 @@
                 "label": "Nem"
               }
             ],
-            "help": null,
+            "help": ["Házastárs EU/EGT-ben él"],
             "about": "Whether the non-resident spouse is resident in the EU or EEA.",
             "row_index": null
           },
@@ -11747,7 +12091,7 @@
             "required": false,
             "field_type": "string",
             "choices": [],
-            "help": null,
+            "help": ["Házastárs EU/EGT országa"],
             "about": "EU or EEA country of residence for the spouse.",
             "row_index": null
           }
@@ -11776,7 +12120,7 @@
                 "label": "Nem"
               }
             ],
-            "help": null,
+            "help": ["Kiskorú gyermekek a családi egységben"],
             "about": "Minor children in the family unit.",
             "row_index": null
           },
@@ -11797,7 +12141,7 @@
                 "label": "Nem"
               }
             ],
-            "help": null,
+            "help": ["EU/EEE leszármazottak a családi egység levonásban"],
             "about": "EU/EEA descendant deduction flag for Modelo 100.",
             "row_index": null
           },
@@ -11830,7 +12174,15 @@
                 "label": "Különélő vagy elvált"
               }
             ],
-            "help": null,
+            "help": [
+              "Családi állapot (LIRPF 82. cikk)",
+              "Családi állapot a LIRPF 82. cikke értelmében: meghatározza, hogy elérhető-e az együttes adózás, és melyik családi egység típus alkalmazandó.",
+              "Házas: Érvényes házasság - együttes adózás elérhető (LIRPF 82. cikk 1. bek. 1. pont)",
+              "Bejegyzett élettársi kapcsolat: Az autonóm közösség nyilvántartásába bejegyzett - együttes adózás elérhető (LIRPF 82. cikk 1. bek. 2. pont)",
+              "Nem bejegyzett élettársi kapcsolat: Regisztráció nélküli együttélés - együttes adózás NEM elérhető",
+              "Egyedülálló: Egyedülálló, özvegy vagy elvált bejegyzett élettárs nélkül - egyéni adózás, közös csak egyszülős családként gyermekkel.",
+              "Elvált vagy különélő: Különvált vagy elvált - közös adózás csak a családi egységben lévő gyermekekkel lehetséges."
+            ],
             "about": "Art. 82 LIRPF family situation used to validate joint taxation eligibility.",
             "row_index": null
           },

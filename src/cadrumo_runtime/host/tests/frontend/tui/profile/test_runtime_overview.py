@@ -23,6 +23,7 @@ from cadrumo.application.user_profile.view_operation import (
     ProfileViewPageKind,
 )
 from cadrumo.application.user_profile.view_reader import read_profile_view_page
+from cadrumo.application.wizard.catalogue import build_setup_flow
 from cadrumo.core.config import override_settings
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
@@ -126,7 +127,10 @@ def test_real_encrypted_overview_pages_round_trip_every_field(tmp_path: Path) ->
             assert len(collection.pages) > 1
             with override_settings(cadrumo_output_language="es"):
                 expected = build_profile_overview(
-                    added.record, label="Public inventory label", schema=authority.profile_schema()
+                    added.record,
+                    label="Public inventory label",
+                    schema=authority.profile_schema(),
+                    flow=build_setup_flow(authority),
                 )
             actual = profile_overview_from_client_view(collection, profile_label="Public inventory label")
             assert actual == expected

@@ -23,18 +23,14 @@ if TYPE_CHECKING:
 
 
 def field_help_text(field: ProfileFieldView) -> str:
-    """Explain one field: what it is, why it is asked, where to find it.
+    """Explain one field in the words the backend serves for it.
 
-    A field without catalogue help is explained by its schema description,
-    so no question is ever asked without saying what it is about.
+    A field the setup wizard asks about shows the wizard's own copy, one
+    paragraph per line. A field without it is explained by its schema
+    description, so no question is ever asked without saying what it is about.
     """
     if field.help is not None and field.help:
-        headings = (
-            tr("flows.manager.help.what"),
-            tr("flows.manager.help.why"),
-            tr("flows.manager.help.where"),
-        )
-        return "\n".join(f"{heading} {part}" for heading, part in zip(headings, field.help, strict=True))
+        return "\n".join(field.help)
     if field.about:
         return f"{tr('flows.manager.help.about')} {field.about}"
     return ""

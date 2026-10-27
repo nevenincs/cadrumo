@@ -19,6 +19,7 @@ from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_s
 from ....application.user_profile.overview import build_profile_overview
 from ....application.user_profile.profile_record_repository import ProfileRecordRepository
 from ....application.user_profile.registration import register_profile_with_credentials
+from ....application.wizard.catalogue import build_setup_flow
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.i18n.render import tr
 from ....domain.calculations.registry.authority import bundled_indexed_authority
@@ -56,7 +57,7 @@ def _register() -> None:
 
 def _complete_setup():
     """The repository completion door the installed session binds."""
-    with bundled_indexed_authority().operation():
+    with bundled_indexed_authority().operation() as operation:
         _create_context, decode_context = _profile_contexts_for_test()
         profile_id = require_active_bucket_id()
         profiles = ProfileRecordRepository.for_current_session(profile_id, profile_decode_context=decode_context)
@@ -66,7 +67,9 @@ def _complete_setup():
             expected_revision=current.record_revision,
             expected_content_digest=current.content_digest,
         )
-        return build_profile_overview(promoted, label="Manager Subject", schema=decode_context.schema)
+        return build_profile_overview(
+            promoted, label="Manager Subject", schema=decode_context.schema, flow=build_setup_flow(operation)
+        )
 
 
 def _visible_rows(app: ProfileManagerScreen) -> set[str]:
@@ -415,8 +418,7 @@ async def test_a_choice_question_offers_words_and_refuses_an_empty_save(tmp_path
 
 @pytest.mark.asyncio
 async def test_every_setup_question_explains_itself_and_the_page_explains_the_cursor_row(tmp_path) -> None:
-    """Each question says what it is, why it is asked and where to find it; so does the page."""
-    headings = [tr(f"flows.manager.help.{part}") for part in ("what", "why", "where")]
+    """Each question shows the setup wizard's copy as its help; so does the page."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _register()
         overview = _live_overview()
@@ -430,9 +432,11 @@ async def test_every_setup_question_explains_itself_and_the_page_explains_the_cu
             await settle(pilot)
             panel = app.query_one("#manager-field-help", Static)
             assert panel.display
-            assert all(heading in str(panel.content) for heading in headings)
+            tax_id = app._field_by_key["identity.tax_id"]
+            assert tax_id.help is not None
+            assert tax_id.help[0] == tr("wizard.setup.profile.tax-id.prompt")
             # The row under the cursor, not whichever section happened to be built last.
-            assert str(panel.content) == field_help_text(app._field_by_key["identity.tax_id"])
+            assert str(panel.content) == field_help_text(tax_id) == "\n".join(tax_id.help)
 
             await pilot.click("#onboarding-continue")
             await settle(pilot)
@@ -447,7 +451,8 @@ async def test_every_setup_question_explains_itself_and_the_page_explains_the_cu
                 await settle(pilot)
                 assert not help_fold.collapsed
                 help_text = str(dialog.query_one("#edit-help", Static).content)
-                assert [line.split(":", 1)[0] + ":" for line in help_text.splitlines()] == headings, dialog._field.path
+                assert dialog._field.help, dialog._field.path
+                assert help_text == "\n".join(dialog._field.help), dialog._field.path
                 asked += 1
                 await _answer(app, pilot)
                 await settle(pilot, workers=False)

@@ -208,8 +208,9 @@ def _build_overview_source(
     record: UserProfileRecord,
     common: _ProfileViewCommon,
     schema: ProfileSchemaDefinition,
+    authority_operation: PinnedAuthorityOperation,
 ) -> tuple[ProfileViewItem, ...] | ProfileViewOperationResult:
-    overview = build_profile_overview(record, schema=schema)
+    overview = build_profile_overview(record, schema=schema, flow=build_setup_flow(authority_operation))
     if any(notice.action is not None for notice in overview.notices):
         return _refused_page(common, ProfileViewRefusalCode.PROJECTION_UNAVAILABLE)
     section_items = tuple(
@@ -263,7 +264,7 @@ def _build_page_source(
         return _build_issue_source(request, record, report)
     if request.page_kind is ProfileViewPageKind.STATUS:
         return _build_status_source(request, record, authority_operation, common)
-    return _build_overview_source(record, common, schema)
+    return _build_overview_source(record, common, schema, authority_operation)
 
 
 def _paginate_source(
