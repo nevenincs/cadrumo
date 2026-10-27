@@ -242,6 +242,7 @@
         "cadrumo_runtime.host.worker_extension_records",
         "cadrumo_runtime.host.worker_operation_requests",
         "cadrumo_runtime.host.worker_service",
+        "cadrumo_runtime.host.worker_stall_watchdog",
         "cadrumo_runtime.host.worker_submission_staging"
       ]
     }

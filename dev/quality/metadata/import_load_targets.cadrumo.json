@@ -406,6 +406,7 @@
         "cadrumo.adapters.persistence.storage.master_key.master_key_derivation",
         "cadrumo.adapters.persistence.storage.master_key.profile_worker_binding",
         "cadrumo.adapters.persistence.storage.master_key.profile_worker_custody",
+        "cadrumo.adapters.persistence.storage.master_key.timed_lock",
         "cadrumo.adapters.persistence.storage.namespace_registry",
         "cadrumo.adapters.persistence.storage.namespace_taxonomy",
         "cadrumo.adapters.persistence.storage.operator_scope",
