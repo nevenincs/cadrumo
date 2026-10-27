@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:9005e1aeb08c3c2d78da2b82ec0c5a7c3e3987785b963dc3378ce05abdd23f52'
+body_hash: 'sha256:f6951e7792c9c7beab8ea16e63bf770ffe1e36c8dfb62b289e2f6876b3a189d4'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -1433,6 +1433,12 @@ related:
 - `S31` `verify:` `just check-types` -> `pass`
 - `S31` `verify:` `uv run --no-sync ruff check src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_import.py` -> `pass`
 - `S31` `verify:` `uv run --no-sync ruff format --check src/cadrumo_runtime/host/tests/frontend/tui/test_runtime_ledger_import.py` -> `pass`
+- `S28` `A` `src/cadrumo_runtime/host/tests/frontend/cli/test_model_role_selection_acceptance.py`
+- `S28` `A` `src/cadrumo_runtime/host/tests/frontend/test_saved_model_role_selection.py`
+- `S28` `verify:` `uv run --no-sync pytest src/cadrumo_runtime/host/tests/frontend/cli/test_model_role_selection_acceptance.py src/cadrumo_runtime/host/tests/frontend/test_saved_model_role_selection.py -n 0 -q -m integration` -> `pass`
+- `S28` `verify:` `just check-types` -> `pass`
+- `S28` `verify:` `uv run --no-sync ruff check src/cadrumo_runtime/host/tests/frontend/cli/test_model_role_selection_acceptance.py src/cadrumo_runtime/host/tests/frontend/test_saved_model_role_selection.py` -> `pass`
+- `S28` `verify:` `uv run --no-sync ruff format --check src/cadrumo_runtime/host/tests/frontend/cli/test_model_role_selection_acceptance.py src/cadrumo_runtime/host/tests/frontend/test_saved_model_role_selection.py` -> `pass`
 
 ## Notes
 
@@ -1532,3 +1538,4 @@ related:
 - `S31` native/CONTRACT.md names no row field, so it needed no change.
 - `S31` Committed checkpoint 5645a4f9a8 at owner request. TUI fixture migration and its focused test plus just check-types remain pending; foreign `_Controller` hunks were excluded. P05.S31 stays open.
 - `S31` Owner explicitly authorized committing existing `_Controller` refactor. Hardware-floor fixture replaced with missing-selection verdict; 32 focused tests pass at e6a7dcaef0.
+- `S28` 91e8fc23f3: 5 acceptance cases pass, log 20261027T060257.547036Z-pytest-48860-d68ee754. CLI covers all four locales using production absent-selection lookup. Authenticated admin-to-encrypted-store-to-runtime-relay read-back passes; desktop UI and separate CLI/TUI/MCP submission/START fences remain pending.
