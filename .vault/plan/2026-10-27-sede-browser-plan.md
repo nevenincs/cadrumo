@@ -12,7 +12,7 @@ related:
   - '[[2026-06-04-live-auth-decomposition-adr]]'
 modified: '2026-10-27'
 body_schema: body-v2
-body_hash: 'sha256:42596bfa5ff85c4d43289879d94fdecfd0fa038ca4043e6730ffae9b8fd4a3f2'
+body_hash: 'sha256:7831311277cf89fbbb4318736933dc7bec3559485a5a247b5caf2b5bc2af2b39'
 ---
 
 # `sede-browser` plan
@@ -57,7 +57,7 @@ Deliver the Browser page, the Browser and AEAT rail items with the AEAT context 
 
 - [x] `P04.S09` - add the Browser page: canvas drawing from in-memory JPEG bytes with credit after draw, terminal-scope key capture, pointer, wheel and text forwarding, the toolbar with origin and path display and Open in external browser, notices, page dialogs, download and file-chooser prompts, and the busy guard while publishing; `new native/desktop/frontend/src/components/browser/, native/desktop/frontend/src/shell/navigation/windowViews.ts, native/desktop/frontend/src/ipc/contract.ts, native/desktop/frontend/src/ipc/tauriHost.ts`.
 - [x] `P04.S10` - add the Browser rail item, the AEAT rail click to the Browser page with its Open in external browser context menu, both palette actions, the gui register element and its regenerated projection, and the locale keys in four languages through the canonical locale workflow; `native/desktop/frontend/src/App.tsx, native/desktop/frontend/src/components/Rail.tsx, native/desktop/frontend/src/shell/actions.ts, src/cadrumo_client/contracts/navigation.toml, src/cadrumo_client/contracts/tests/navigation_shipped_views.json, src/cadrumo/locales/{en,es,ca,hu}/common.yml, dev/locales/desktop_chrome.py`.
-- [ ] `P04.S11` - add scenario host fixtures for a synthetic view and a sede-browser scenario spec covering the rail, the AEAT context menu, toolbar verbs including Open in external browser, key scope, notices, download and file-chooser prompts, the publish busy guard and close cancellation; `native/desktop/frontend/src/dev/scenarioHost.ts, new native/desktop/frontend/tests/scenarios/sede-browser.spec.ts`.
+- [x] `P04.S11` - add scenario host fixtures for a synthetic view and a sede-browser scenario spec covering the rail, the AEAT context menu, toolbar verbs including Open in external browser, key scope, notices, download and file-chooser prompts, the publish busy guard and close cancellation; `native/desktop/frontend/src/dev/scenarioHost.ts, new native/desktop/frontend/tests/scenarios/sede-browser.spec.ts`.
 
 ### Phase `P05` - in-panel login
 

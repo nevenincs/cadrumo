@@ -4,9 +4,11 @@
 // by drawing what it received, honours credit as the host does (two images at
 // first, one more for each the window credits, the newest replacing the rest),
 // keeps one view at a time and publishes its made-up session when closed. A
-// scenario plays a notice, a dialog, a download or a file chooser through
-// `window.__scenarioSedeView`. Design and test evidence only; its call lines
-// name a verb, never a value.
+// person's input while a made-up login runs ends that login, as the host's
+// interrupt does. A scenario plays a notice, a dialog, a download or a file
+// chooser through `window.__scenarioSedeView`, and reads back what the page
+// received and how each prompt was answered. Design and test evidence only;
+// its call lines name a verb, never a value.
 
 import type {
   SedeViewDialogKind,
@@ -24,10 +26,20 @@ import type {
   SedeViewSize,
 } from "../shell/sedeView";
 
-/** A synthetic origin that belongs to no real site. */
-const ORIGIN = "https://sede.example.test";
-const HOME = "/inicio";
+/** A synthetic origin that belongs to no real site, its start path and a
+ * title no part of the window shows. */
+export const SEDE_VIEW_ORIGIN = "https://sede.example.test";
+export const SEDE_VIEW_HOME = "/inicio";
+export const SEDE_VIEW_TITLE = "Titulo sintetico de la pagina";
 const START_CREDIT = 2;
+/** The most input events the made-up page keeps for a scenario to read. */
+const INPUT_KEPT = 400;
+
+/** How the person answered one prompt of the page, in the order answered. */
+export type SedeViewAnswer =
+  | { kind: "dialog"; id: number; accepted: boolean; text: string | null }
+  | { kind: "download"; id: number; accepted: boolean }
+  | { kind: "file_chooser"; id: number; accepted: boolean };
 
 /** What a scenario can play into the open view. */
 export type SedeViewFixtureControls = {
@@ -40,6 +52,12 @@ export type SedeViewFixtureControls = {
   end(reason: SedeViewEndReason, publication?: SedeViewPublication): void;
   /** How many input events of each kind the made-up page has received. */
   received(): Readonly<Record<string, number>>;
+  /** The newest input events the made-up page received, oldest first. */
+  inputs(): readonly SedeViewInput[];
+  /** How many images the made-up page has sent. */
+  images(): number;
+  /** Every answer to a dialog, a download or a file chooser, in order. */
+  answers(): readonly SedeViewAnswer[];
 };
 
 declare global {
@@ -66,6 +84,8 @@ type Open = {
   at: number;
   phase: SedeViewPhase;
   received: Record<string, number>;
+  inputs: SedeViewInput[];
+  answers: SedeViewAnswer[];
   last: string;
   transfers: number;
 };
@@ -88,7 +108,7 @@ async function draw(open: Open): Promise<ArrayBuffer> {
   context.fillStyle = "#222222";
   context.font = "16px sans-serif";
   const lines = [
-    `Path ${open.history[open.at] ?? HOME}`,
+    `Path ${open.history[open.at] ?? SEDE_VIEW_HOME}`,
     open.phase === "acquiring"
       ? "A made-up login is running."
       : "Browsing a made-up page.",
@@ -116,9 +136,9 @@ export function sedeViewFixture({
     open.listener({
       kind: "state",
       view: open.id,
-      origin: ORIGIN,
-      path: open.history[open.at] ?? HOME,
-      title: "",
+      origin: SEDE_VIEW_ORIGIN,
+      path: open.history[open.at] ?? SEDE_VIEW_HOME,
+      title: SEDE_VIEW_TITLE,
       can_go_back: open.at > 0,
       can_go_forward: open.at < open.history.length - 1,
       loading: false,
@@ -227,6 +247,9 @@ export function sedeViewFixture({
     },
     end: (reason, publication) => finish(open, reason, publication ?? null),
     received: () => ({ ...open.received }),
+    inputs: () => [...open.inputs],
+    images: () => open.sequence,
+    answers: () => [...open.answers],
   });
 
   const session = (open: Open): SedeViewSession => {
@@ -245,6 +268,13 @@ export function sedeViewFixture({
         await live();
         say(`sedeViewInput ${event.type}`);
         open.received[event.type] = (open.received[event.type] ?? 0) + 1;
+        open.inputs.push(event);
+        if (open.inputs.length > INPUT_KEPT) open.inputs.shift();
+        // The person takes a login that runs over, and the page goes on.
+        if (open.phase === "acquiring") {
+          open.phase = "browsing";
+          state(open);
+        }
         open.last =
           event.type === "pointer"
             ? `${event.action} at ${event.x}, ${event.y}`
@@ -262,7 +292,10 @@ export function sedeViewFixture({
           else if (verb === "forward")
             open.at = Math.min(open.history.length - 1, open.at + 1);
           else if (verb === "home") {
-            open.history = [...open.history.slice(0, open.at + 1), HOME];
+            open.history = [
+              ...open.history.slice(0, open.at + 1),
+              SEDE_VIEW_HOME,
+            ];
             open.at = open.history.length - 1;
           }
         });
@@ -279,14 +312,20 @@ export function sedeViewFixture({
         open.credit = Math.min(START_CREDIT, open.credit + 1);
         if (open.stale) void frame(open);
       },
-      async dialog(dialogId, accept) {
+      async dialog(dialogId, accept, promptText) {
         await live();
         say(`sedeViewDialog ${accept ? "accept" : "dismiss"}`);
-        void dialogId;
+        open.answers.push({
+          kind: "dialog",
+          id: dialogId,
+          accepted: accept,
+          text: promptText ?? null,
+        });
       },
       async downloadAnswer(transferId, save) {
         await live();
         say(`sedeViewDownload ${save ? "save" : "decline"}`);
+        open.answers.push({ kind: "download", id: transferId, accepted: save });
         if (save)
           window.setTimeout(() => {
             if (open.ended) return;
@@ -302,6 +341,11 @@ export function sedeViewFixture({
       async fileChooserAnswer(chooserId, choose) {
         await live();
         say(`sedeViewUpload ${choose ? "choose" : "cancel"}`);
+        open.answers.push({
+          kind: "file_chooser",
+          id: chooserId,
+          accepted: choose,
+        });
         window.setTimeout(() => {
           if (open.ended) return;
           open.listener({
@@ -342,10 +386,12 @@ export function sedeViewFixture({
         credit: START_CREDIT,
         stale: false,
         sequence: 0,
-        history: [HOME],
+        history: [SEDE_VIEW_HOME],
         at: 0,
         phase: "browsing",
         received: {},
+        inputs: [],
+        answers: [],
         last: "nothing yet",
         transfers: 0,
       };

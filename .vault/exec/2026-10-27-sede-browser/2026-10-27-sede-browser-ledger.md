@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#sede-browser'
 date: '2026-10-27'
-modified: '2026-10-27'
+modified: '2026-10-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:6d1976bb3f6793f3db1a05ed459c7bf6693b608f7f40d295bea64b7f793855e5'
+body_hash: 'sha256:46e62882bd2d4ba14a5abed3a00dda692870989cdd3add2a9403f9db993f712c'
 related:
   - "[[2026-10-27-sede-browser-plan]]"
 ---
@@ -277,6 +277,12 @@ related:
 - `S10` `verify:` `just check-locales (exit 1 on baseline findings; none on this Step's keys except en 'maximize' spelling shared with the existing maximize keys)` -> `fail`
 - `S10` `verify:` `uv run --no-sync ruff check and ruff format --check on dev/locales/desktop_chrome.py and test_navigation_register.py` -> `pass`
 - `S10` `by:` `vaultspec-standard-executor`
+- `S11` `A` `native/desktop/frontend/tests/scenarios/sede-browser.spec.ts`
+- `S11` `M` `native/desktop/frontend/src/dev/sedeViewFixture.ts`
+- `S11` `verify:` `npm run check` -> `pass`
+- `S11` `verify:` `npx playwright test -c playwright.scenarios.config.ts tests/scenarios/sede-browser.spec.ts tests/scenarios/navigation-register.spec.ts tests/scenarios/palette.spec.ts` -> `pass`
+- `S11` `verify:` `npx playwright test -c playwright.scenarios.config.ts tests/scenarios/accessibility.spec.ts tests/scenarios/scenarios.spec.ts -g rail-and-browser-subset` -> `pass`
+- `S11` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
@@ -305,3 +311,5 @@ related:
 - `S09` contract.ts and scenarioHost.ts were committed whole and carry another session's reconnecting hunks
 - `S10` `navigation_shipped_views.json` has no generator: it is an append-only baseline grown by hand with the new id; `test_navigation_register.py` reads it.
 - `S10` `desktop_chrome.py` and the four common.yml catalogues also carry another session's uncommitted reconnecting hunks, so they are left uncommitted by pathspec rule; the browser strings declared by P04.S09 sit in the same uncommitted `desktop_chrome.py` hunk.
+- `S11` the spec reads the desktop.browser strings from the generated chrome catalogue, which holds them from the uncommitted locale files; the spec is correct only once those catalogues are committed
+- `S11` the fixture was extended for the spec: it records inputs and answers, counts images, sends a made-up title, and ends a made-up login when the person's input arrives
