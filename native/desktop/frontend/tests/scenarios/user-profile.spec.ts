@@ -970,6 +970,99 @@ test("a save waits for a pending refresh and submits the unchanged draft once", 
   expect(await page.evaluate(() => window.__scenarioProfile!.writes())).toBe(1);
 });
 
+test("a committed save stays busy through readback and coalesced observations", async ({
+  page,
+}) => {
+  const profile = await open(page);
+  await editButton(profile, "Given name").click();
+  const dialog = page.getByRole("dialog", { name: "Given name", exact: true });
+  const input = dialog.getByLabel("Given name", { exact: true });
+  await input.fill("Saved after readback");
+  const before = await page.evaluate(() => window.__scenarioProfile!.reads());
+  await page.evaluate(() => window.__scenarioProfile!.deferRead());
+  await save(dialog).click();
+  await expect
+    .poll(() => page.evaluate(() => window.__scenarioProfile!.reads()))
+    .toBe(before + 1);
+  expect(await page.evaluate(() => window.__scenarioProfile!.writes())).toBe(1);
+  await expect(
+    dialog.getByRole("button", {
+      name: label("desktop.profile.saving"),
+      exact: true,
+    }),
+  ).toBeDisabled();
+  await expect(input).toBeDisabled();
+  await expect(
+    dialog.getByRole("button", {
+      name: label("desktop.profile.cancel"),
+      exact: true,
+    }),
+  ).toBeDisabled();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeVisible();
+  // Even an additional form submission cannot replay the committed edit.
+  await dialog.locator("form").evaluate((form) => {
+    if (form instanceof HTMLFormElement) form.requestSubmit();
+  });
+  await page.evaluate(() => window.__scenarioProfile!.burst());
+  expect(await page.evaluate(() => window.__scenarioProfile!.writes())).toBe(1);
+  expect(await page.evaluate(() => window.__scenarioProfile!.reads())).toBe(
+    before + 1,
+  );
+  await page.evaluate(() => {
+    window.__scenarioProfile!.releaseRead();
+    window.__scenarioProfile!.deferRead();
+  });
+  await expect
+    .poll(() => page.evaluate(() => window.__scenarioProfile!.reads()))
+    .toBe(before + 2);
+  await expect(input).toBeDisabled();
+  await expect(dialog).toBeVisible();
+  await page.evaluate(() => window.__scenarioProfile!.releaseRead());
+  await expect(dialog).toHaveCount(0);
+  await expect(profile.locator("header")).toContainText("Saved after readback");
+  expect(await page.evaluate(() => window.__scenarioProfile!.writes())).toBe(1);
+  await editButton(profile, "Given name").click();
+  await expect(input).toBeEnabled();
+});
+
+test("a committed save with failed readback unlocks and refreshes without replay", async ({
+  page,
+}) => {
+  const profile = await open(page);
+  await editButton(profile, "Given name").click();
+  const dialog = page.getByRole("dialog", { name: "Given name", exact: true });
+  await dialog.getByLabel("Given name", { exact: true }).fill("Already saved");
+  const before = await page.evaluate(() => window.__scenarioProfile!.reads());
+  await page.evaluate(() => window.__scenarioProfile!.deferRead());
+  await save(dialog).click();
+  await expect
+    .poll(() => page.evaluate(() => window.__scenarioProfile!.reads()))
+    .toBe(before + 1);
+  await expect(
+    dialog.getByRole("button", {
+      name: label("desktop.profile.saving"),
+      exact: true,
+    }),
+  ).toBeDisabled();
+  await page.evaluate(() => window.__scenarioProfile!.rejectRead());
+  await expect(dialog).toHaveCount(0);
+  await expect(profile.getByRole("alert")).toContainText(
+    label("desktop.profile.saved_unread"),
+  );
+  await expect(profile).not.toContainText(label("desktop.profile.loading"));
+  expect(await page.evaluate(() => window.__scenarioProfile!.writes())).toBe(1);
+  const refresh = profile.getByRole("button", {
+    name: label("desktop.profile.refresh"),
+    exact: true,
+  });
+  await expect(refresh).toBeEnabled();
+  await refresh.click();
+  await expect(profile.locator("header")).toContainText("Already saved");
+  await expect(profile.getByRole("alert")).toHaveCount(0);
+  expect(await page.evaluate(() => window.__scenarioProfile!.writes())).toBe(1);
+});
+
 test("a failed pending profile read leaves loading and allows a retry", async ({
   page,
 }) => {

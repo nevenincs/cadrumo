@@ -121,9 +121,9 @@ export function useUserProfile(
       state = { ...state, ...patch };
       setStored({ identity, state });
     };
-    const refresh = async () => {
+    const refresh = async (saveReadback = false) => {
       if (!alive) return;
-      if (reading || saving) {
+      if (reading || (saving && !saveReadback)) {
         again = true;
         return;
       }
@@ -145,7 +145,7 @@ export function useUserProfile(
             error: state.error === "unknown" ? "unknown" : code,
           });
         }
-      } while (alive && again && !saving);
+      } while (alive && again && (!saving || saveReadback));
       reading = false;
       update({ loading: false });
       finishRead();
@@ -195,15 +195,20 @@ export function useUserProfile(
           committed = code === "saved_unread";
           update({ error: code, saved: committed });
         } finally {
-          saving = false;
-          update({ saving: false });
-          if (committed || again || state.error === "conflict") {
-            const writeError = state.error;
-            await refresh();
-            if (committed && (!state.data || state.error === "unavailable"))
-              update({ error: "saved_unread" });
-            else if (writeError && writeError !== "saved_unread")
-              update({ error: writeError });
+          try {
+            if (committed || again || state.error === "conflict") {
+              const writeError = state.error;
+              // Keep the save reserved, including its UI, until readback and
+              // coalesced observations settle. Only this read may bypass it.
+              await refresh(true);
+              if (committed && (!state.data || state.error === "unavailable"))
+                update({ error: "saved_unread" });
+              else if (writeError && writeError !== "saved_unread")
+                update({ error: writeError });
+            }
+          } finally {
+            saving = false;
+            update({ saving: false });
           }
         }
         return alive && committed;
