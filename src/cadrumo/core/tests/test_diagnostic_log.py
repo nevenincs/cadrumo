@@ -23,6 +23,7 @@ from ..diagnostic_log import (
     DiagnosticFormatter,
     DiagnosticValue,
     diagnostic_event,
+    diagnostic_phase,
     diagnostic_process,
     diagnostic_scope,
     diagnostic_slow_call,
@@ -660,6 +661,69 @@ def test_a_slow_call_that_raises_is_reported_and_its_exception_propagates_unchan
     assert caught.value is failure
     (record,) = delivered_records(caplog, logger.name)
     assert record.levelno == logging.WARNING
+    assert _context(record)[1]["outcome"] == "raised"
+
+
+def test_a_prompt_call_is_recorded_at_the_level_asked_for_and_a_slow_one_still_warns(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    logger = get_logger("cadrumo.tests.slow_call_prompt_level")
+    with caplog.at_level(logging.DEBUG, logger=logger.name):
+        with diagnostic_slow_call(
+            logger, "synthetic_prompt_call", threshold_seconds=60.0, prompt_level=logging.DEBUG, fields={"phase": "a"}
+        ):
+            pass
+        with diagnostic_slow_call(
+            logger, "synthetic_slow_call", threshold_seconds=0.0, prompt_level=logging.DEBUG, fields={"phase": "b"}
+        ):
+            pass
+
+    prompt, slow = delivered_records(caplog, logger.name)
+    assert (prompt.levelno, slow.levelno) == (logging.DEBUG, logging.WARNING)
+    for record, phase in ((prompt, "a"), (slow, "b")):
+        _, context = _context(record)
+        assert context["phase"] == phase and context["outcome"] == "completed"
+        assert isinstance(context["elapsed_seconds"], float) and context["elapsed_seconds"] >= 0.0
+
+
+def test_a_phase_is_recorded_with_its_name_its_seconds_and_what_the_block_counted(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    logger = get_logger("cadrumo.tests.phase")
+    with caplog.at_level(logging.DEBUG, logger=logger.name), diagnostic_scope(new=True) as identifier:
+        with diagnostic_phase(logger, "synthetic_phase", "loading", fields={"definition_id": "x.y"}) as measured:
+            measured["item_count"] = 3
+            measured["taxpayer_name"] = _PRIVATE_INPUT_CANARY
+        with diagnostic_phase(logger, "synthetic_phase", "waiting", slow_seconds=0.0):
+            pass
+
+    prompt, slow = delivered_records(caplog, logger.name)
+    assert [record.getMessage() for record in (prompt, slow)] == ["synthetic_phase"] * 2
+    assert (prompt.levelno, slow.levelno) == (logging.DEBUG, logging.WARNING)
+    _, context = _context(prompt)
+    assert context["phase"] == "loading" and context["definition_id"] == "x.y"
+    assert context["item_count"] == 3 and context["outcome"] == "completed"
+    assert context["diagnostic_id"] == identifier
+    assert isinstance(context["elapsed_seconds"], float)
+    assert "taxpayer_name" not in context
+    assert _PRIVATE_INPUT_CANARY not in prompt.__dict__["diagnostic_context"]
+    assert _context(slow)[1]["phase"] == "waiting"
+
+
+def test_a_phase_that_raises_is_recorded_and_its_exception_propagates_unchanged(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    logger = get_logger("cadrumo.tests.phase_raising")
+    failure = ValueError("synthetic failure")
+    with (
+        caplog.at_level(logging.DEBUG, logger=logger.name),
+        pytest.raises(ValueError, match="synthetic failure") as caught,
+        diagnostic_phase(logger, "synthetic_phase", "loading"),
+    ):
+        raise failure
+
+    assert caught.value is failure
+    (record,) = delivered_records(caplog, logger.name)
     assert _context(record)[1]["outcome"] == "raised"
 
 

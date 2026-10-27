@@ -78,6 +78,7 @@ _LIFECYCLE_FIELDS = tuple(
             "inventory_elapsed_ms",
             "inventory_login_count",
             "inventory_state",
+            "item_count",
             "kdf_operation",
             "kdf_clean_exit_elapsed_ms",
             "kdf_cleanup_elapsed_ms",
@@ -233,18 +234,23 @@ def diagnostic_slow_call(
     *,
     threshold_seconds: float,
     fields: Mapping[str, DiagnosticValue] | None = None,
+    prompt_level: int | None = None,
 ) -> Generator[None]:
-    """Warn, once the block ends, that it took at least ``threshold_seconds``; a prompt block logs nothing.
+    """Warn, once the block ends, that it took at least ``threshold_seconds``.
 
-    The record carries the caller's fields, ``elapsed_seconds`` and whether the
-    block ``raised``. The block's own exception always propagates unchanged.
+    A prompt block logs nothing unless ``prompt_level`` names the level to
+    record it at. The record carries the caller's fields, ``elapsed_seconds``
+    and whether the block ``raised``. The fields are read when the block ends,
+    so the caller's mapping may gain what the block measured. The block's own
+    exception always propagates unchanged.
     """
     started = time.monotonic()
     try:
         yield
     finally:
         elapsed = time.monotonic() - started
-        if elapsed >= threshold_seconds:
+        level = logging.WARNING if elapsed >= threshold_seconds else prompt_level
+        if level is not None:
             primary = sys.exception()
             diagnostic_event(
                 logger,
@@ -254,9 +260,33 @@ def diagnostic_slow_call(
                     "elapsed_seconds": round(elapsed, 3),
                     "outcome": "completed" if primary is None else "raised",
                 },
-                level=logging.WARNING,
+                level=level,
                 primary_error=primary,
             )
+
+
+@contextmanager
+def diagnostic_phase(
+    logger: logging.Logger,
+    event: str,
+    phase: str,
+    *,
+    slow_seconds: float = 1.0,
+    fields: Mapping[str, DiagnosticValue] | None = None,
+) -> Generator[dict[str, DiagnosticValue]]:
+    """Record how long one named phase took, whether or not it was slow.
+
+    The record is DEBUG for a phase under ``slow_seconds`` and WARNING from
+    there. It carries ``phase``, the caller's fields and ``elapsed_seconds``.
+    The block receives the record's fields and may add what it measured, such
+    as ``item_count``; they must be counts, durations and fixed names, never
+    taxpayer values.
+    """
+    measured: dict[str, DiagnosticValue] = {**(fields or {}), "phase": phase}
+    with diagnostic_slow_call(
+        logger, event, threshold_seconds=slow_seconds, fields=measured, prompt_level=logging.DEBUG
+    ):
+        yield measured
 
 
 def diagnostic_error_fields(error: BaseException) -> dict[str, DiagnosticValue]:
