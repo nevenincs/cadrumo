@@ -67,6 +67,7 @@ from .profile_host import ProfileConnection, RuntimeProfileHost
 from .session_events import RuntimeSessionEvents
 from .shutdown import request_runtime_stop
 from .sign_in_sweep import sweep_saved_sign_ins
+from .view_stream_relay import ViewStreamRelay
 
 if TYPE_CHECKING:
     from .installation_composition import InstallationActRegistry
@@ -177,6 +178,8 @@ class RuntimeProfileConnections(
         # Connections whose approval ended with the person's session; only a new connection may ask again.
         self._attendance_spent: set[UUID] = set()
         self._events = RuntimeSessionEvents()
+        # View stream legs, bound to the exact session that submitted each running view.
+        self._views = ViewStreamRelay(runtime_boot_id=runtime_boot_id, holds_session=self._holds_session)
         self._sign_in_watchers: set[UUID] = set()
         self._observed_logins: frozenset[tuple[str, bool, OsLockState]] = frozenset()
         self._language_observations: dict[UUID, tuple[UUID, str | None]] = {}
@@ -223,8 +226,16 @@ class RuntimeProfileConnections(
             synchronize=self._synchronize_profile_sessions,
         )
 
+    def _holds_session(self, connection_id: UUID, session_id: UUID) -> bool:
+        """Whether this connection still holds exactly this session."""
+        with self._guard:
+            connection = self._connections.get(connection_id)
+            return connection is not None and connection.session_id == session_id
+
     def _publish_retirement(self, event: SessionEvent) -> None:
         """Publish exact retirement; services own shutdown of their native descendants."""
+        # A retired session's views unbind before anyone hears of the retirement.
+        self._views.unbind_sessions((event.session_id,))
         withdrawn: list[ServiceLeaseChanged] = []
         with self._guard:
             self._language_observations.pop(event.connection_id, None)
@@ -718,10 +729,13 @@ class RuntimeProfileConnections(
                 dues[host.store.binding.profile_id] = due
         with self._guard:
             self._host_dues = dues
+        # Any other way a session stopped being held still ends its view on this pass.
+        self._views.unbind_unheld()
 
     def _remove_retired_host(self, host: RuntimeProfileHost) -> None:
         """Forget only the contained incarnation; old connections gain no new lease."""
         profile_id = host.store.binding.profile_id
+        self._views.unbind_profile(profile_id)
         self._enrollments.retire_profile(profile_id, host=host)
         with self._guard:
             self._prepared_profiles.discard(profile_id)

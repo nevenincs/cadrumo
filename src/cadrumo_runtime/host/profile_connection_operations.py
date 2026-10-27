@@ -6,6 +6,7 @@ import time
 from collections.abc import Generator
 from contextlib import ExitStack, contextmanager
 from datetime import datetime
+from importlib.metadata import version
 from typing import TYPE_CHECKING
 from uuid import UUID
 
@@ -49,12 +50,19 @@ from cadrumo_client.contracts.submission_payload import (
     FinancialOperandInputDescriptor,
 )
 from cadrumo_client.contracts.transport import ConnectionContext
+from cadrumo_client.contracts.view_stream import (
+    SEDE_VIEW_DEFINITION_ID,
+    ViewAttachGranted,
+    ViewAttachRequest,
+    ViewConnect,
+)
 from cadrumo_client.transport.frame_io import read_secret, write_document
 from cadrumo_runtime.contracts.profile_worker import ProfileWorkerOperationReceipt
 
 from .operation_projection import prepare_operation_projection
 from .profile_host import ProfileConnection, RuntimeProfileHost
 from .submission_stream import stream_operation_submission
+from .view_stream_relay import ViewAttachGrant, open_worker_view_leg
 
 _log = get_logger(__name__)
 
@@ -486,3 +494,109 @@ class ProfileConnectionOperationMixin:
             expires_at = status.status.session_expires_at
             if expires_at is None or expires_at <= self._wall_clock():
                 raise ProfileAccessRefusedError(AccessDenialCode.SESSION_EXPIRED)
+
+    def view_attach(
+        self: RuntimeProfileConnections, context: ConnectionContext, channel: ByteChannel, request: ViewAttachRequest
+    ) -> None:
+        """Issue a single-use attach token to the desktop session that submitted this running view.
+
+        The view's worker leg is opened on the first attach. The token is bound
+        to this session, profile, native peer, boot and operation.
+        """
+        reply: ViewAttachGranted | AccessRefusal
+        try:
+            with self.operation_admission():
+                connection, host = self._view_target(context, channel, request)
+                with self._views.opening:
+                    if self._views.worker_bind(request.operation_id) is None:
+                        worker = host.owner.operation_worker()
+                        bind, worker_channel = open_worker_view_leg(
+                            storage_root=self.root,
+                            identity=worker.identity,
+                            verify=worker.verify_view_channel,
+                            product_version=version("cadrumo"),
+                        )
+                        if bind.definition_id != SEDE_VIEW_DEFINITION_ID or bind.operation_id != request.operation_id:
+                            worker_channel.close()
+                            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+                        self._views.bind_worker(profile_id=connection.profile_id, bind=bind, channel=worker_channel)
+                token = self._views.issue(
+                    ViewAttachGrant(
+                        operation_id=request.operation_id,
+                        profile_id=connection.profile_id,
+                        session_id=request.session_id,
+                        person_connection_id=context.connection_id,
+                        peer=context.peer,
+                        runtime_boot_id=self.boot,
+                    )
+                )
+                reply = ViewAttachGranted(
+                    request_id=request.request_id,
+                    runtime_boot_id=self.boot,
+                    connection_id=context.connection_id,
+                    operation_id=request.operation_id,
+                    attach_token=token,
+                )
+        except (AutomationCustodyError, RefusalError, ProfileAccessRefusedError) as error:
+            _log.warning("runtime view attach refused code=%s", error.reason)
+            reply = self._view_refusal(context, request.request_id, error)
+        write_document(channel, reply, deadline=time.monotonic() + 5)
+
+    def view_connect(
+        self: RuntimeProfileConnections, context: ConnectionContext, channel: ByteChannel, request: ViewConnect
+    ) -> None:
+        """Admit this connection as a view connection by its attach token, then relay until it unbinds."""
+        try:
+            if context.runtime_boot_id != self.boot or context.peer != channel.peer:
+                raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+            if not self._admitting():
+                raise RefusalError(RefusalCode.DRAINING)
+            leg = self._views.admit(
+                attach_token=request.attach_token, operation_id=request.operation_id, context=context, channel=channel
+            )
+        except (AutomationCustodyError, RefusalError, ProfileAccessRefusedError) as error:
+            _log.warning("runtime view connection refused code=%s", error.reason)
+            refusal = self._view_refusal(context, request.request_id, error)
+            write_document(channel, refusal, deadline=time.monotonic() + 5)
+            return
+        self._views.serve_window(leg, request.request_id)
+
+    def _view_target(
+        self: RuntimeProfileConnections, context: ConnectionContext, channel: ByteChannel, request: ViewAttachRequest
+    ) -> tuple[ProfileConnection, RuntimeProfileHost]:
+        """Require the exact desktop person connection, its profile and its current session."""
+        if context.runtime_boot_id != self.boot or context.peer != channel.peer:
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+        if not self._admitting():
+            raise RefusalError(RefusalCode.DRAINING)
+        connection = self._connected(context.connection_id)
+        if connection.context != context or connection.profile_id != request.profile_id:
+            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        if connection.session_id != request.session_id:
+            raise ProfileAccessRefusedError(_session_mismatch(connection))
+        if connection.frontend is not OperationFrontendProjection.DESKTOP:
+            raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
+        with self._guard:
+            host = self._profiles.get(connection.profile_id)
+        if host is None:
+            raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+        with host.guard:
+            status = self._status(connection, host, request.request_id, request.session_id)
+        if isinstance(status, AccessDenied):
+            raise ProfileAccessRefusedError(status.code)
+        if status.status.denial is not None:
+            raise ProfileAccessRefusedError(status.status.denial)
+        return connection, host
+
+    def _view_refusal(
+        self: RuntimeProfileConnections,
+        context: ConnectionContext,
+        request_id: UUID,
+        error: AutomationCustodyError | RefusalError | ProfileAccessRefusedError,
+    ) -> AccessRefusal:
+        return AccessRefusal(
+            request_id=request_id,
+            runtime_boot_id=self.boot,
+            connection_id=context.connection_id,
+            code=error.reason,
+        )

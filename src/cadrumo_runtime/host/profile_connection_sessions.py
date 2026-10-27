@@ -493,6 +493,7 @@ class ProfileConnectionSessionMixin:
         return self._status(connection, host, request.request_id, request.session_id)
 
     def _retired(self: RuntimeProfileConnections, identities: tuple[UUID, ...]) -> None:
+        self._views.unbind_sessions(identities)
         with self._guard:
             hosts = tuple(self._profiles.values())
             for connection in self._connections.values():
@@ -642,6 +643,7 @@ class ProfileConnectionSessionMixin:
     def disconnect(self: RuntimeProfileConnections, context: ConnectionContext) -> None:
         """Release only this connection's authority; keep native login provenance separate."""
         self._events.disconnect(context)
+        self._views.disconnect(context.connection_id)
         self._enrollments.disconnect(context.connection_id)
         self._forget_attendance(context.connection_id)
         with self._guard:

@@ -19,6 +19,11 @@ def worker_operation_namespace(worker_id: UUID) -> UUID:
     return uuid5(worker_id, "cadrumo-profile-operations")
 
 
+def worker_view_namespace(worker_id: UUID) -> UUID:
+    """Keep a view's pushed image stream off both the control and the execution channel."""
+    return uuid5(worker_id, "cadrumo-profile-view")
+
+
 def verify_worker_native_pid(
     channel: WorkerChannel, scope: WindowsProcessScope | LinuxProcessScope | MacosProcessScope, os_owner_id: str
 ) -> int:

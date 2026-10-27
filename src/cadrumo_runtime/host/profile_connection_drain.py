@@ -58,6 +58,7 @@ class ProfileConnectionDrainMixin:
         with self._guard:
             self._closed = True
             hosts = tuple(self._profiles.items())
+        self._views.close()
         self._enrollments.close()
         failures: list[Exception] = []
         for profile_id, host in hosts:
@@ -111,6 +112,7 @@ class ProfileConnectionDrainMixin:
             raise ShutdownIncompleteError()
         try:
             self._closed = True
+            self._views.close()
             if self._drain_records is None:
                 self._drain_records = {
                     profile_id: ProfileDrainRecord(host) for profile_id, host in self._profiles.items()

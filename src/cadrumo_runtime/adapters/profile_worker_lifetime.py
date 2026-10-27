@@ -76,6 +76,18 @@ class ProfileWorkerNativeLifetime:
                 raise RefusalError(RefusalCode.CONNECTION_CLOSED)
             return verify_worker_native_pid(channel, self._scope, self.identity.binding.os_owner_id)
 
+    def verify_view_channel(self, channel: WorkerChannel) -> None:
+        """Admit a view channel only from this worker's own retained native process.
+
+        The channel's kernel peer must equal the control channel's and pass
+        the same native process and containment check.
+        """
+        # Read without the control channel's transport lock, which a long control call may hold.
+        control = self._channel
+        if control is None or channel.peer != control.peer:
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="view_channel_peer")
+        self._verify_native_peer(channel)
+
     def _owns_native_process(self, process_id: int) -> bool:
         with self._native_guard, self._native_call("process_membership"):
             return not self._stopping.is_set() and process_id in self._scope.active_process_ids()

@@ -24,6 +24,10 @@ _HEADER = 16
 _BODY = _FRAME_MAX - _HEADER
 _IMAGE_MAX = 2 * 1024 * 1024
 _PATTERN_MODULUS = 251
+_TRANSFER_FLAG = 2
+_TRANSFER_ID_MAX = 2**32 - 1
+_TRANSFER_SIZE_MAX = 2**64 - 1
+_TRANSFER_CREDIT_WINDOW = 32
 
 _ABOUT = (
     "Conformance vectors for the Sede view stream. A B frame payload is a 16-byte network-order header "
@@ -35,7 +39,20 @@ _ABOUT = (
     "J document, document any other J document, chunk a B payload whose body is the image bytes from offset for "
     "length, where image byte k is k mod 251. expect lists what the reader returns in order, or refused_at names "
     "the step that refuses and closes the connection. documents: control documents each direction must accept "
-    "or refuse, in their closed sets."
+    "or refuse, in their closed sets. Flag bit 1 (transfer_flag) marks a chunk of a download or upload instead of "
+    "an image; its 16-byte header is u8 version 1, u8 flags (bit 0 the last chunk, bit 1 set, no other bit), u16 "
+    "reserved zero, u32 transfer id from 1, u64 byte offset of the body's first byte. Every chunk but the last "
+    "carries exactly 65520 body bytes and offsets are multiples of 65520; the last carries 0 to 65520 bytes, none "
+    "only at offset 0. No total transfer size is bounded beyond the 64-bit offset. transfer_headers and "
+    "transfer_header_refusals are the transfer analogues of headers and header_refusals, and an image header that "
+    "sets flag bit 1 is refused. transfer_streams: direction names the reader, downstream for the window (which "
+    "receives downloads) and upstream for the worker side (which receives uploads). setup lists the receiver calls "
+    "made before any frame is read: expect a transfer with an optional exact size, grant credit in chunks, cancel "
+    "locally. steps, expect and refused_at read as in streams; an expected chunk names its transfer id, offset, "
+    "length, last flag and the sha256 of its body, and transfer byte k is k mod 251. A transfer chunk is refused "
+    "when its transfer was not expected, arrives out of order, interleaves with another transfer or inside an "
+    "image, or exceeds the credit granted; a completion is refused when it precedes the last chunk or disagrees "
+    "with the bytes received in size or sha256, or with the declared size."
 )
 
 
@@ -174,6 +191,12 @@ def _header_refusals() -> list[dict[str, Any]]:
             "check": "view_chunk_reserved",
         },
         {
+            "name": "transfer_flag_on_image_header",
+            "header": _header(0, 0, 1, 1, flags=_TRANSFER_FLAG),
+            "body_length": 1,
+            "check": "view_chunk_reserved",
+        },
+        {
             "name": "last_flag_missing",
             "header": _header(0, 0, 1, 1, flags=0),
             "body_length": 1,
@@ -286,6 +309,577 @@ def _streams() -> list[dict[str, Any]]:
     ]
 
 
+def _transfer_header(
+    transfer_id: int, offset: int, *, last: bool, flags: int | None = None, version: int = 1, reserved: int = 0
+) -> str:
+    if flags is None:
+        flags = _TRANSFER_FLAG | (1 if last else 0)
+    raw = (
+        version.to_bytes(1, "big")
+        + flags.to_bytes(1, "big")
+        + reserved.to_bytes(2, "big")
+        + transfer_id.to_bytes(4, "big")
+        + offset.to_bytes(8, "big")
+    )
+    return raw.hex()
+
+
+def _transfer_chunk_count(size: int) -> int:
+    return max(1, -(-size // _BODY))
+
+
+def _transfer_chunk(
+    transfer_id: int, size: int, index: int, *, header: str | None = None, body: int | None = None
+) -> dict[str, Any]:
+    offset = index * _BODY
+    last = index == _transfer_chunk_count(size) - 1
+    default_body = min(_BODY, size - offset)
+    return {
+        "chunk": {
+            "header": header if header is not None else _transfer_header(transfer_id, offset, last=last),
+            "body_offset": offset,
+            "body_length": default_body if body is None else body,
+        }
+    }
+
+
+def _transfer_chunks(transfer_id: int, size: int) -> list[dict[str, Any]]:
+    return [_transfer_chunk(transfer_id, size, index) for index in range(_transfer_chunk_count(size))]
+
+
+def _complete(
+    transfer_id: int, size: int, *, sha256: str | None = None, reported_size: int | None = None
+) -> dict[str, Any]:
+    return {
+        "document": {
+            "kind": "view.transfer_complete",
+            "transfer_id": transfer_id,
+            "size": size if reported_size is None else reported_size,
+            "sha256": sha256 if sha256 is not None else hashlib.sha256(_pattern(size)).hexdigest(),
+        }
+    }
+
+
+def _cancel(direction: str, transfer_id: int) -> dict[str, Any]:
+    return {"document": {"kind": "view.transfer_cancel", "direction": direction, "transfer_id": transfer_id}}
+
+
+def _expect(transfer_id: int, size: int | None = None) -> dict[str, Any]:
+    return {"expect": {"transfer_id": transfer_id, "size": size}}
+
+
+def _grant(transfer_id: int, chunks: int) -> dict[str, Any]:
+    return {"grant": {"transfer_id": transfer_id, "chunks": chunks}}
+
+
+def _expected_chunk(transfer_id: int, size: int, index: int) -> dict[str, Any]:
+    offset = index * _BODY
+    length = min(_BODY, size - offset)
+    return {
+        "chunk": {
+            "transfer_id": transfer_id,
+            "offset": offset,
+            "length": length,
+            "last": index == _transfer_chunk_count(size) - 1,
+            "sha256": hashlib.sha256(_pattern(offset + length)[offset:]).hexdigest(),
+        }
+    }
+
+
+def _expected_chunks(transfer_id: int, size: int) -> list[dict[str, Any]]:
+    return [_expected_chunk(transfer_id, size, index) for index in range(_transfer_chunk_count(size))]
+
+
+def _expected_document(kind: str) -> dict[str, Any]:
+    return {"document": kind}
+
+
+_COMPLETE = _expected_document("view.transfer_complete")
+
+
+def _transfer_headers() -> list[dict[str, Any]]:
+    far_offset = (2**40 // _BODY) * _BODY
+    largest_offset = (_TRANSFER_SIZE_MAX // _BODY) * _BODY
+    cases = [
+        ("empty_file", 1, 0, True, 0),
+        ("one_byte", 1, 0, True, 1),
+        ("full_chunk_not_last", 1, 0, False, _BODY),
+        ("full_chunk_last", 1, 0, True, _BODY),
+        ("second_chunk_last", 2, _BODY, True, 10),
+        ("largest_transfer_id", _TRANSFER_ID_MAX, 0, True, 5),
+        ("offset_beyond_32_bits", 3, far_offset, False, _BODY),
+        ("largest_offset", 3, largest_offset, True, 7),
+    ]
+    return [
+        {
+            "name": name,
+            "header": _transfer_header(transfer_id, offset, last=last),
+            "transfer_id": transfer_id,
+            "offset": offset,
+            "last": last,
+            "body_length": body,
+        }
+        for name, transfer_id, offset, last, body in cases
+    ]
+
+
+def _transfer_header_refusals() -> list[dict[str, Any]]:
+    return [
+        {
+            "name": "short_header",
+            "header": _transfer_header(1, 0, last=True)[:30],
+            "body_length": 0,
+            "check": "view_chunk_header_length",
+        },
+        {
+            "name": "version_two",
+            "header": _transfer_header(1, 0, last=True, version=2),
+            "body_length": 1,
+            "check": "view_chunk_version",
+        },
+        {
+            "name": "unknown_flag_bit",
+            "header": _transfer_header(1, 0, last=True, flags=_TRANSFER_FLAG | 4),
+            "body_length": 1,
+            "check": "view_chunk_reserved",
+        },
+        {
+            "name": "reserved_nonzero",
+            "header": _transfer_header(1, 0, last=True, reserved=1),
+            "body_length": 1,
+            "check": "view_chunk_reserved",
+        },
+        {
+            "name": "transfer_flag_clear",
+            "header": _transfer_header(1, 0, last=True, flags=1),
+            "body_length": 1,
+            "check": "view_transfer_flag",
+        },
+        {
+            "name": "transfer_id_zero",
+            "header": _transfer_header(0, 0, last=True),
+            "body_length": 1,
+            "check": "view_transfer_id",
+        },
+        {
+            "name": "offset_one_byte",
+            "header": _transfer_header(1, 1, last=True),
+            "body_length": 1,
+            "check": "view_transfer_offset",
+        },
+        {
+            "name": "offset_one_short_of_a_chunk",
+            "header": _transfer_header(1, _BODY - 1, last=True),
+            "body_length": 1,
+            "check": "view_transfer_offset",
+        },
+        {
+            "name": "offset_misaligned_beyond_32_bits",
+            "header": _transfer_header(1, 2**40 + 1, last=True),
+            "body_length": 1,
+            "check": "view_transfer_offset",
+        },
+        {
+            "name": "not_last_body_short",
+            "header": _transfer_header(1, 0, last=False),
+            "body_length": _BODY - 1,
+            "check": "view_transfer_body_length",
+        },
+        {
+            "name": "not_last_body_empty",
+            "header": _transfer_header(1, 0, last=False),
+            "body_length": 0,
+            "check": "view_transfer_body_length",
+        },
+        {
+            "name": "last_body_too_long",
+            "header": _transfer_header(1, 0, last=True),
+            "body_length": _BODY + 1,
+            "check": "view_transfer_body_length",
+        },
+        {
+            "name": "empty_last_chunk_after_data",
+            "header": _transfer_header(1, _BODY, last=True),
+            "body_length": 0,
+            "check": "view_transfer_body_length",
+        },
+    ]
+
+
+def _transfer_streams() -> list[dict[str, Any]]:
+    two = 2 * _BODY
+    three = 2 * _BODY + 1
+    flipped = hashlib.sha256(_pattern(5)[:-1] + b"\xff").hexdigest()
+    image_after_chunk = [_announce(1, two), _chunk(1, 0, two)]
+
+    def accepted(
+        name: str, setup: list[dict[str, Any]], steps: list[dict[str, Any]], expect: list[dict[str, Any]]
+    ) -> dict[str, Any]:
+        return {"name": name, "direction": "downstream", "setup": setup, "steps": steps, "expect": expect}
+
+    def refused(
+        name: str,
+        setup: list[dict[str, Any]],
+        steps: list[dict[str, Any]],
+        refused_at: int,
+        direction: str = "downstream",
+    ) -> dict[str, Any]:
+        return {"name": name, "direction": direction, "setup": setup, "steps": steps, "refused_at": refused_at}
+
+    return [
+        accepted(
+            "empty_file",
+            [_expect(1, 0), _grant(1, 1)],
+            [*_transfer_chunks(1, 0), _complete(1, 0)],
+            [*_expected_chunks(1, 0), _COMPLETE],
+        ),
+        accepted(
+            "one_byte_file",
+            [_expect(1), _grant(1, 1)],
+            [*_transfer_chunks(1, 1), _complete(1, 1)],
+            [*_expected_chunks(1, 1), _COMPLETE],
+        ),
+        accepted(
+            "full_chunk_file",
+            [_expect(1), _grant(1, 1)],
+            [*_transfer_chunks(1, _BODY), _complete(1, _BODY)],
+            [*_expected_chunks(1, _BODY), _COMPLETE],
+        ),
+        accepted(
+            "two_full_chunks",
+            [_expect(1), _grant(1, 2)],
+            [*_transfer_chunks(1, two), _complete(1, two)],
+            [*_expected_chunks(1, two), _COMPLETE],
+        ),
+        accepted(
+            "three_chunks_with_declared_size",
+            [_expect(1, three), _grant(1, 3)],
+            [*_transfer_chunks(1, three), _complete(1, three)],
+            [*_expected_chunks(1, three), _COMPLETE],
+        ),
+        accepted(
+            "full_credit_window",
+            [_expect(1), _grant(1, 32)],
+            [*_transfer_chunks(1, 32 * _BODY), _complete(1, 32 * _BODY)],
+            [*_expected_chunks(1, 32 * _BODY), _COMPLETE],
+        ),
+        accepted(
+            "ids_increase_and_may_skip",
+            [_expect(1), _expect(3), _grant(1, 1), _grant(3, 1)],
+            [*_transfer_chunks(1, 5), _complete(1, 5), *_transfer_chunks(3, 6), _complete(3, 6)],
+            [*_expected_chunks(1, 5), _COMPLETE, *_expected_chunks(3, 6), _COMPLETE],
+        ),
+        accepted(
+            "images_and_documents_between_chunks",
+            [_expect(1), _grant(1, 3)],
+            [
+                _transfer_chunk(1, three, 0),
+                _announce(1, 10),
+                *_image_chunks(1, 10),
+                _transfer_chunk(1, three, 1),
+                {"document": _STATE},
+                _transfer_chunk(1, three, 2),
+                _complete(1, three),
+            ],
+            [
+                _expected_chunk(1, three, 0),
+                _expected_image(1, 10),
+                _expected_chunk(1, three, 1),
+                _expected_document("view.state"),
+                _expected_chunk(1, three, 2),
+                _COMPLETE,
+            ],
+        ),
+        accepted(
+            "local_cancel_discards_crossing_chunks",
+            [_expect(1), _grant(1, 2), {"cancel": {"transfer_id": 1}}],
+            [
+                _transfer_chunk(1, three, 0),
+                _transfer_chunk(1, three, 1),
+                _cancel("download", 1),
+            ],
+            [_expected_document("view.transfer_cancel")],
+        ),
+        accepted(
+            "sender_cancel_ends_the_stream",
+            [_expect(1), _expect(2), _grant(1, 1), _grant(2, 1)],
+            [
+                _transfer_chunk(1, three, 0),
+                _cancel("download", 1),
+                *_transfer_chunks(2, 5),
+                _complete(2, 5),
+            ],
+            [
+                _expected_chunk(1, three, 0),
+                _expected_document("view.transfer_cancel"),
+                *_expected_chunks(2, 5),
+                _COMPLETE,
+            ],
+        ),
+        accepted(
+            "cancel_of_the_other_direction_passes_through",
+            [],
+            [_cancel("upload", 7)],
+            [_expected_document("view.transfer_cancel")],
+        ),
+        accepted(
+            "transfer_documents_pass_through",
+            [],
+            [
+                {"document": {"kind": "view.download", "transfer_id": 1, "filename": "a.pdf"}},
+                {"document": {"kind": "view.file_chooser", "chooser_id": 1, "accept": [], "multiple": False}},
+                {"document": {"kind": "view.transfer_credit", "transfer_id": 1, "chunks": 32}},
+            ],
+            [
+                _expected_document("view.download"),
+                _expected_document("view.file_chooser"),
+                _expected_document("view.transfer_credit"),
+            ],
+        ),
+        refused("chunk_for_unknown_transfer", [], _transfer_chunks(1, 5), 0),
+        refused("chunk_without_credit", [_expect(1)], _transfer_chunks(1, 5), 0),
+        refused("chunk_beyond_credit", [_expect(1), _grant(1, 1)], _transfer_chunks(1, two), 1),
+        refused(
+            "out_of_order_chunk",
+            [_expect(1), _grant(1, 2)],
+            [_transfer_chunk(1, two, 1), _transfer_chunk(1, two, 0)],
+            0,
+        ),
+        refused(
+            "repeated_chunk", [_expect(1), _grant(1, 2)], [_transfer_chunk(1, two, 0), _transfer_chunk(1, two, 0)], 1
+        ),
+        refused(
+            "skipped_chunk", [_expect(1), _grant(1, 2)], [_transfer_chunk(1, three, 0), _transfer_chunk(1, three, 2)], 1
+        ),
+        refused(
+            "chunk_after_last", [_expect(1), _grant(1, 2)], [_transfer_chunk(1, 5, 0), _transfer_chunk(1, 5, 0)], 1
+        ),
+        refused(
+            "interleaved_transfers",
+            [_expect(1), _expect(2), _grant(1, 2), _grant(2, 2)],
+            [_transfer_chunk(1, two, 0), _transfer_chunk(2, 5, 0)],
+            1,
+        ),
+        refused(
+            "transfer_chunk_inside_an_image",
+            [_expect(1), _grant(1, 1)],
+            [*image_after_chunk, _transfer_chunk(1, 5, 0)],
+            2,
+        ),
+        refused(
+            "misaligned_offset",
+            [_expect(1), _grant(1, 1)],
+            [_transfer_chunk(1, 5, 0, header=_transfer_header(1, 1, last=True))],
+            0,
+        ),
+        refused(
+            "short_chunk_that_is_not_last",
+            [_expect(1), _grant(1, 1)],
+            [_transfer_chunk(1, 10, 0, header=_transfer_header(1, 0, last=False))],
+            0,
+        ),
+        refused(
+            "complete_before_the_last_chunk",
+            [_expect(1), _grant(1, 1)],
+            [_transfer_chunk(1, two, 0), _complete(1, two)],
+            1,
+        ),
+        refused("complete_for_unknown_transfer", [], [_complete(9, 5)], 0),
+        refused(
+            "complete_twice",
+            [_expect(1), _grant(1, 1)],
+            [*_transfer_chunks(1, 5), _complete(1, 5), _complete(1, 5)],
+            2,
+        ),
+        refused(
+            "complete_size_differs",
+            [_expect(1), _grant(1, 1)],
+            [*_transfer_chunks(1, 5), _complete(1, 5, reported_size=6)],
+            1,
+        ),
+        refused(
+            "complete_digest_differs",
+            [_expect(1), _grant(1, 1)],
+            [*_transfer_chunks(1, 5), _complete(1, 5, sha256=flipped)],
+            1,
+        ),
+        refused("declared_size_exceeded", [_expect(1, 4), _grant(1, 1)], _transfer_chunks(1, 5), 0),
+        refused(
+            "declared_size_not_reached",
+            [_expect(1, 10), _grant(1, 1)],
+            [*_transfer_chunks(1, 5), _complete(1, 5)],
+            1,
+        ),
+        refused(
+            "image_chunk_upstream",
+            [],
+            [_chunk(1, 0, 1)],
+            0,
+            direction="upstream",
+        ),
+        refused(
+            "upload_digest_differs",
+            [_expect(1, 5), _grant(1, 1)],
+            [*_transfer_chunks(1, 5), _complete(1, 5, sha256=flipped)],
+            1,
+            direction="upstream",
+        ),
+        {
+            "name": "upload_chunks_and_documents",
+            "direction": "upstream",
+            "setup": [_expect(1, three), _grant(1, 3)],
+            "steps": [
+                {
+                    "document": {
+                        "kind": "view.file_chooser_answer",
+                        "chooser_id": 1,
+                        "outcome": "supplied",
+                        "file_count": 1,
+                    }
+                },
+                {
+                    "document": {
+                        "kind": "view.upload",
+                        "chooser_id": 1,
+                        "transfer_id": 1,
+                        "name": "a.pdf",
+                        "size": three,
+                    }
+                },
+                *_transfer_chunks(1, three),
+                _complete(1, three),
+            ],
+            "expect": [
+                _expected_document("view.file_chooser_answer"),
+                _expected_document("view.upload"),
+                *_expected_chunks(1, three),
+                _COMPLETE,
+            ],
+        },
+    ]
+
+
+_SHA256 = hashlib.sha256(b"transfer").hexdigest()
+
+
+def _transfer_documents_accepted() -> list[tuple[str, str, dict[str, Any]]]:
+    download = {"kind": "view.download", "transfer_id": 1, "filename": "justificante.pdf"}
+    chooser = {"kind": "view.file_chooser", "chooser_id": 1, "accept": [], "multiple": False}
+    answer = {"kind": "view.file_chooser_answer", "chooser_id": 1, "outcome": "supplied", "file_count": 3}
+    upload = {"kind": "view.upload", "chooser_id": 1, "transfer_id": 2, "name": "factura.pdf", "size": 1234}
+    complete = {"kind": "view.transfer_complete", "transfer_id": 1, "size": 1234, "sha256": _SHA256}
+    credit = {"kind": "view.transfer_credit", "transfer_id": 1, "chunks": 1}
+    cancel = {"kind": "view.transfer_cancel", "direction": "download", "transfer_id": 1}
+    answer_to_download = {"kind": "view.download_answer", "transfer_id": 1, "outcome": "accepted"}
+    return [
+        ("download_bare", "downstream", download),
+        ("download_with_hints", "downstream", {**download, "size": 123456, "mime": "application/pdf"}),
+        ("download_empty_file", "downstream", {**download, "size": 0}),
+        (
+            "download_beyond_32_bits",
+            "downstream",
+            {**download, "transfer_id": _TRANSFER_ID_MAX, "size": _TRANSFER_SIZE_MAX, "mime": "text/csv"},
+        ),
+        ("download_unicode_name", "downstream", {**download, "filename": "Declaración ñ 2025.txt"}),
+        ("download_longest_name", "downstream", {**download, "filename": "n" * 255}),
+        ("file_chooser_single", "downstream", chooser),
+        (
+            "file_chooser_multiple",
+            "downstream",
+            {
+                **chooser,
+                "accept": [
+                    ".pdf",
+                    "image/*",
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                ],
+                "multiple": True,
+            },
+        ),
+        ("file_chooser_most_accept_entries", "downstream", {**chooser, "accept": [".pdf"] * 128}),
+        ("complete_downstream", "downstream", complete),
+        (
+            "complete_largest_size",
+            "downstream",
+            {**complete, "transfer_id": _TRANSFER_ID_MAX, "size": _TRANSFER_SIZE_MAX},
+        ),
+        ("complete_empty_file", "downstream", {**complete, "size": 0}),
+        ("credit_downstream", "downstream", credit),
+        ("credit_full_window", "downstream", {**credit, "chunks": _TRANSFER_CREDIT_WINDOW}),
+        ("cancel_download_downstream", "downstream", cancel),
+        ("cancel_upload_downstream", "downstream", {**cancel, "direction": "upload"}),
+        ("download_answer_accepted", "upstream", answer_to_download),
+        ("download_answer_refused", "upstream", {**answer_to_download, "outcome": "refused"}),
+        ("download_answer_cancelled", "upstream", {**answer_to_download, "outcome": "cancelled"}),
+        ("file_chooser_answer_supplied", "upstream", answer),
+        ("file_chooser_answer_cancelled", "upstream", {**answer, "outcome": "cancelled", "file_count": 0}),
+        ("upload", "upstream", upload),
+        ("upload_empty_file_with_media_type", "upstream", {**upload, "size": 0, "mime": "application/vnd.ms-excel"}),
+        ("complete_upstream", "upstream", complete),
+        ("credit_upstream", "upstream", credit),
+        ("cancel_download_upstream", "upstream", cancel),
+        ("cancel_upload_upstream", "upstream", {**cancel, "direction": "upload"}),
+    ]
+
+
+def _transfer_documents_refused() -> list[tuple[str, str, dict[str, Any]]]:
+    download = {"kind": "view.download", "transfer_id": 1, "filename": "justificante.pdf"}
+    chooser = {"kind": "view.file_chooser", "chooser_id": 1, "accept": [], "multiple": False}
+    answer = {"kind": "view.file_chooser_answer", "chooser_id": 1, "outcome": "supplied", "file_count": 3}
+    upload = {"kind": "view.upload", "chooser_id": 1, "transfer_id": 2, "name": "factura.pdf", "size": 1234}
+    complete = {"kind": "view.transfer_complete", "transfer_id": 1, "size": 1234, "sha256": _SHA256}
+    credit = {"kind": "view.transfer_credit", "transfer_id": 1, "chunks": 1}
+    answer_to_download = {"kind": "view.download_answer", "transfer_id": 1, "outcome": "accepted"}
+    return [
+        ("download_on_upstream", "upstream", download),
+        ("file_chooser_on_upstream", "upstream", chooser),
+        ("download_answer_on_downstream", "downstream", answer_to_download),
+        ("file_chooser_answer_on_downstream", "downstream", answer),
+        ("upload_on_downstream", "downstream", upload),
+        ("download_transfer_id_zero", "downstream", {**download, "transfer_id": 0}),
+        ("download_transfer_id_beyond_u32", "downstream", {**download, "transfer_id": 2**32}),
+        ("download_filename_empty", "downstream", {**download, "filename": ""}),
+        ("download_filename_too_long", "downstream", {**download, "filename": "n" * 256}),
+        ("download_filename_with_slash", "downstream", {**download, "filename": "../secret.pdf"}),
+        ("download_filename_with_backslash", "downstream", {**download, "filename": "dir\\secret.pdf"}),
+        ("download_filename_dot_dot", "downstream", {**download, "filename": ".."}),
+        ("download_filename_control_character", "downstream", {**download, "filename": "a\nb.pdf"}),
+        ("download_size_beyond_u64", "downstream", {**download, "size": 2**64}),
+        ("download_size_negative", "downstream", {**download, "size": -1}),
+        ("download_mime_with_parameters", "downstream", {**download, "mime": "text/html; charset=utf-8"}),
+        ("download_mime_without_subtype", "downstream", {**download, "mime": "pdf"}),
+        ("download_unknown_member", "downstream", {**download, "url": "https://x"}),
+        (
+            "file_chooser_accept_missing",
+            "downstream",
+            {"kind": "view.file_chooser", "chooser_id": 1, "multiple": False},
+        ),
+        ("file_chooser_too_many_accept_entries", "downstream", {**chooser, "accept": [".pdf"] * 129}),
+        ("file_chooser_accept_with_space", "downstream", {**chooser, "accept": ["image/png, image/jpeg"]}),
+        ("file_chooser_id_zero", "downstream", {**chooser, "chooser_id": 0}),
+        ("download_answer_unknown_outcome", "upstream", {**answer_to_download, "outcome": "maybe"}),
+        ("download_answer_without_outcome", "upstream", {"kind": "view.download_answer", "transfer_id": 1}),
+        ("file_chooser_answer_supplied_without_files", "upstream", {**answer, "file_count": 0}),
+        ("file_chooser_answer_cancelled_with_files", "upstream", {**answer, "outcome": "cancelled"}),
+        ("file_chooser_answer_negative_count", "upstream", {**answer, "file_count": -1}),
+        ("upload_without_size", "upstream", {key: value for key, value in upload.items() if key != "size"}),
+        ("upload_name_with_slash", "upstream", {**upload, "name": "a/b.pdf"}),
+        ("upload_size_beyond_u64", "upstream", {**upload, "size": 2**64}),
+        ("complete_sha256_upper_case", "downstream", {**complete, "sha256": _SHA256.upper()}),
+        ("complete_sha256_short", "downstream", {**complete, "sha256": _SHA256[:63]}),
+        ("complete_size_negative", "downstream", {**complete, "size": -1}),
+        ("complete_size_beyond_u64", "upstream", {**complete, "size": 2**64}),
+        ("credit_zero_chunks", "downstream", {**credit, "chunks": 0}),
+        ("credit_beyond_the_window", "upstream", {**credit, "chunks": _TRANSFER_CREDIT_WINDOW + 1}),
+        (
+            "cancel_unknown_direction",
+            "downstream",
+            {"kind": "view.transfer_cancel", "direction": "sideways", "transfer_id": 1},
+        ),
+        ("cancel_without_direction", "upstream", {"kind": "view.transfer_cancel", "transfer_id": 1}),
+    ]
+
+
 def _documents() -> dict[str, list[dict[str, Any]]]:
     offer = {"offer_id": "0123456789abcdef0123456789abcdef", "url": "https://www.example.org/form?id=1"}
     pointer = {
@@ -347,6 +941,7 @@ def _documents() -> dict[str, list[dict[str, Any]]]:
         ("resize", "upstream", {"kind": "view.resize", "css_width": 4096, "css_height": 1, "scale": 0.5}),
         ("dialog_accept", "upstream", {"kind": "view.dialog", "dialog_id": 1, "accept": True, "prompt_text": "sí"}),
         ("dialog_dismiss", "upstream", {"kind": "view.dialog", "dialog_id": 4294967295, "accept": False}),
+        *_transfer_documents_accepted(),
     ]
     refused = [
         ("unknown_kind", "downstream", {"kind": "view.frame"}),
@@ -418,6 +1013,7 @@ def _documents() -> dict[str, list[dict[str, Any]]]:
             {"kind": "view.dialog", "dialog_id": 1, "accept": False, "prompt_text": "x"},
         ),
         ("dialog_id_zero", "upstream", {"kind": "view.dialog", "dialog_id": 0, "accept": True}),
+        *_transfer_documents_refused(),
     ]
     return {
         "accepted": [
@@ -446,11 +1042,18 @@ def vectors() -> dict[str, Any]:
             "last_flag": 1,
             "credit_max_images": 2,
             "image_pattern_modulus": _PATTERN_MODULUS,
+            "transfer_flag": _TRANSFER_FLAG,
+            "transfer_id_max": _TRANSFER_ID_MAX,
+            "transfer_size_max": _TRANSFER_SIZE_MAX,
+            "transfer_credit_max_chunks": _TRANSFER_CREDIT_WINDOW,
         },
         "headers": _headers(),
         "header_refusals": _header_refusals(),
         "streams": _streams(),
         "documents": _documents(),
+        "transfer_headers": _transfer_headers(),
+        "transfer_header_refusals": _transfer_header_refusals(),
+        "transfer_streams": _transfer_streams(),
     }
 
 

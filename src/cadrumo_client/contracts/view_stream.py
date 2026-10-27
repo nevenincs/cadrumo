@@ -12,6 +12,12 @@ immediately followed by all of that image's chunks, in order; ``view.state``,
 ``view.dialog``. Every set is closed: an unknown kind, member or value refuses
 the frame, and a refused frame ends the view connection.
 
+The window binds a view connection by asking on its person connection with
+``view_attach`` for a single-use token, then presenting it with
+``view_connect`` as the first request of a new connection from the same native
+peer. The worker's own leg opens with ``view.bind``. ``ViewStreamSink`` is the
+worker-side port a view operation's executor writes to.
+
 Images, page titles, URLs, dialog text and input are private taxpayer data.
 These documents live in memory only; they are never logged, persisted,
 journaled or projected.
@@ -20,11 +26,13 @@ journaled or projected.
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Annotated, Literal, Self
+from typing import Annotated, Final, Literal, Protocol, Self
 from urllib.parse import urlsplit
+from uuid import UUID
 
 from pydantic import BaseModel, Field, RootModel, model_validator
 
+from cadrumo.application.operations.models import OperationId
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
 VIEW_IMAGE_MAX_BYTES = 2 * 1024 * 1024
@@ -451,3 +459,161 @@ class ViewDownstreamFrame(RootModel[Annotated[ViewDownstreamDocument, Field(disc
 
 class ViewUpstreamFrame(RootModel[Annotated[ViewUpstreamDocument, Field(discriminator="kind")]]):
     """The closed set of control documents sent from the window."""
+
+
+SEDE_VIEW_DEFINITION_ID: Final = "live.sede.view"
+"""The one registered operation whose worker may open a view stream."""
+
+VIEW_ATTACH_TOKEN_BYTES = 32
+"""CSPRNG bytes in one attach token; it travels as 64 lower-case hex characters."""
+
+VIEW_ATTACH_TOKEN_SECONDS: Final = 10
+"""How long an attach token stays presentable after it is issued."""
+
+type _AttachToken = Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
+
+
+class ViewAttachRequest(BaseModel):
+    """Ask, on the window's person connection, to attach a view connection to a running view.
+
+    The runtime grants it only to the admitted desktop session that submitted
+    the ``live.sede.view`` operation named here, on the same profile and
+    native peer, and only while that operation's worker holds its view open.
+    The reply is ``view_attach_granted`` or an ``access_refusal``.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    action: Literal["view_attach"] = "view_attach"
+    request_id: UUID
+    profile_id: UUID
+    session_id: UUID
+    operation_id: OperationId
+
+
+class ViewAttachGranted(BaseModel):
+    """A single-use attach token for one new view connection.
+
+    The token is bound to the exact session, profile, native peer, runtime
+    boot and operation of the request. It is spent by its first presentation,
+    accepted or not, and refused after ``expires_in_seconds``. It is never
+    logged, journaled or persisted.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["view_attach_granted"] = "view_attach_granted"
+    request_id: UUID
+    runtime_boot_id: UUID
+    connection_id: UUID
+    operation_id: OperationId
+    attach_token: _AttachToken
+    expires_in_seconds: Literal[10] = VIEW_ATTACH_TOKEN_SECONDS
+
+
+class ViewConnect(BaseModel):
+    """The first request on a new runtime connection, turning it into a view connection.
+
+    It is refused anywhere but first. The connection must come from the same
+    native peer as the person connection that asked for the token. The reply
+    is ``view_connected``, after which the connection carries only the view
+    stream: ``view.*`` documents in ``J`` frames and image chunks in ``B``
+    frames toward the window, and upstream ``view.*`` documents from it. Any
+    refusal is an ``access_refusal`` followed by the connection's close.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    action: Literal["view_connect"] = "view_connect"
+    request_id: UUID
+    operation_id: OperationId
+    attach_token: _AttachToken
+
+
+class ViewConnected(BaseModel):
+    """The view connection is bound to its operation; the stream follows with no credit granted."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["view_connected"] = "view_connected"
+    request_id: UUID
+    runtime_boot_id: UUID
+    connection_id: UUID
+    operation_id: OperationId
+
+
+class ViewWorkerBind(BaseModel):
+    """The profile worker's first document on its view channel, naming the one view it serves.
+
+    The worker listens for its view channel only while a ``live.sede.view``
+    operation it owns runs. The runtime host connects when a window first
+    attaches, verifies the worker process natively, and reads this document
+    to learn which operation and submitting session the channel serves.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["view.bind"] = "view.bind"
+    definition_id: Literal["live.sede.view"] = SEDE_VIEW_DEFINITION_ID
+    operation_id: OperationId
+    session_id: UUID
+
+
+type ViewPersonInput = ViewInput | ViewNavigate | ViewResize | ViewDialog
+"""Upstream documents the view's executor acts on; credit is consumed by the sink itself."""
+
+
+class ViewStreamSink(Protocol):
+    """The worker-side port through which a ``live.sede.view`` executor reaches its view stream.
+
+    The worker's operation host composes one sink per view into the
+    operation context; the tax application never sees the channel behind it.
+    Every method is thread-safe and none blocks on the window: ``offer_image``
+    keeps only the newest image not yet sent and sends it when the window has
+    credit, ``send`` drops a document once its small bounded queue is full,
+    and ``receive`` returns person input or ``None`` when ``timeout`` passes.
+    Images, documents and input are private taxpayer data and stay in memory.
+
+    ``connected`` says whether the runtime host holds the view channel now; it
+    connects when a window attaches. ``ended`` turns true once the host closed
+    the channel, which it does when the submitting session is retired or
+    locked, the runtime stops, or a protocol violation occurs; the executor
+    must then end the view. ``close`` ends the view from the worker side: it
+    sends ``view.closed`` with ``reason`` and returns only after the host has
+    unbound the window, or after a short bound when the host does not answer,
+    so the operation settles only after unbinding.
+    """
+
+    @property
+    def connected(self) -> bool:
+        """Whether the runtime host holds the view channel."""
+        ...
+
+    @property
+    def ended(self) -> bool:
+        """Whether the view channel ended; the view must then end."""
+        ...
+
+    def offer_image(self, announcement: ViewImage, image: bytes) -> None:
+        """Make this the newest pending image, replacing any older one not yet sent."""
+        ...
+
+    def send(self, document: ViewState | ViewNotice) -> None:
+        """Queue one page document for the window."""
+        ...
+
+    def receive(self, *, timeout: float) -> ViewPersonInput | None:
+        """Return the next person input, or ``None`` after ``timeout`` seconds or once ended."""
+        ...
+
+    def close(self, reason: ViewClosedReason) -> None:
+        """End the view stream and wait for the host to unbind it."""
+        ...
+
+
+class ViewStreamSinks(Protocol):
+    """Open the one view stream a worker may hold at a time, for its running view operation."""
+
+    def open_view(self, *, operation_id: OperationId, session_id: UUID) -> ViewStreamSink:
+        """Start listening for the host's view channel for this operation and session."""
+        ...

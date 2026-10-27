@@ -28,10 +28,8 @@ from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, Refusal
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.frame_io import read_document, write_document
 from cadrumo_client.transport.framing import VerifiedConnection
-from cadrumo_client.transport.posix_channel import PosixChannel
 from cadrumo_client.transport.transport_cleanup import TransportCleanup
 
-from ..adapters.native_peer import require_live_native_peer
 from ..adapters.worker_authorization_client import WorkerAuthorizationClient
 from ..adapters.worker_native_identity import worker_operation_namespace
 from ..adapters.worker_transport import WorkerChannel, worker_endpoint
@@ -40,16 +38,9 @@ from . import worker_service as _worker_service
 from .operation_host import ProfileWorkerOperationHost
 from .profile_login import ProfileWorkerHumanLogin
 from .worker_stall_watchdog import watch_event_loop
+from .worker_view_stream import require_native_parent
 
 _LOGGER = get_logger(__name__)
-
-
-def _require_native_parent(channel: WorkerChannel, parent_pid: int) -> None:
-    """Check the socket's live kernel peer before admitting profile custody."""
-    if channel.peer.process_id != parent_pid:
-        raise RefusalError(RefusalCode.PEER_UNTRUSTED)
-    if isinstance(channel, PosixChannel):
-        require_live_native_peer(channel)
 
 
 @contextmanager
@@ -88,7 +79,7 @@ def _open_control_channel(options: argparse.Namespace, resources: _WorkerRunReso
     resources.channel = channel
     channel_release = TransportCleanup(channel)
     resources.channel_release = channel_release
-    _require_native_parent(channel, options.parent_pid)
+    require_native_parent(channel, options.parent_pid)
     deadline = time.monotonic() + 10
     resources.handshake_release = channel_release
     connection = VerifiedConnection(
@@ -126,7 +117,7 @@ def _open_operation_channel(
     resources.operation_channel_release = operation_channel_release
     if operation_channel.peer != channel.peer:
         raise RefusalError(RefusalCode.PEER_UNTRUSTED)
-    _require_native_parent(operation_channel, options.parent_pid)
+    require_native_parent(operation_channel, options.parent_pid)
     deadline = time.monotonic() + 10
     resources.handshake_release = operation_channel_release
     verified = VerifiedConnection(

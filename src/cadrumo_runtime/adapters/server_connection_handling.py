@@ -73,6 +73,7 @@ from cadrumo_client.contracts.profile_selection import (
 from cadrumo_client.contracts.service_access import ServiceAdmission, ServiceConnect
 from cadrumo_client.contracts.sign_in import HumanSignedOut, SignInStatusReply, SignInStatusRequest
 from cadrumo_client.contracts.transport import ConnectionContext
+from cadrumo_client.contracts.view_stream import ViewAttachRequest, ViewConnect
 from cadrumo_client.transport.frame_io import read_document, write_document, write_profile_status, write_session_event
 from cadrumo_client.transport.native_wake import NativeWake
 from cadrumo_client.transport.transport_cleanup import TransportCleanup, close_transport_after_failure
@@ -104,6 +105,7 @@ type _ProfileConnectionRequest = (
     | ExtensionRecordRequest
     | ModelRunFetchRequest
     | ModelRunCompleteRequest
+    | ViewAttachRequest
 )
 
 
@@ -220,6 +222,7 @@ class RuntimeConnectionHandling:
         Between requests the thread blocks on the channel, the connection's
         queued events and the runtime stop together; nothing wakes it on a timer.
         """
+        first = True
         while not self.stop.is_set():
             # Cleared before taking, so an event queued meanwhile still ends the wait.
             queued.clear()
@@ -239,6 +242,13 @@ class RuntimeConnectionHandling:
             if not ready:
                 continue
             request = read_document(channel, Request, deadline=time.monotonic() + 5).root
+            if isinstance(request, ViewConnect):
+                # Only a fresh connection becomes a view connection, and it carries nothing else after.
+                if not first or self.profiles is None:
+                    raise RefusalError(RefusalCode.INVALID_FRAME, check="view_connect_not_first")
+                self.profiles.view_connect(context, channel, request)
+                return
+            first = False
             status = self._dispatch_profile_request(channel, context, request)
             if self.profiles is not None:
                 # What the request changed may move a lease's deadline or end one.
@@ -280,6 +290,9 @@ class RuntimeConnectionHandling:
             return None
         if isinstance(request, ServiceConnect | ServiceAdmission):
             return self.profiles.service(context, channel, request)
+        if isinstance(request, ViewAttachRequest):
+            self.profiles.view_attach(context, channel, request)
+            return None
         if isinstance(request, ExtensionRecordRequest):
             self.profiles.extension_record(context, channel, request)
             return None

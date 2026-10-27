@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "about": "Conformance vectors for the Sede view stream. A B frame payload is a 16-byte network-order header (u8 version 1, u8 flags with bit 0 the last chunk and no other bit, u16 reserved zero, u32 image sequence, u16 chunk index, u16 chunk count = ceil(image length / 65520), u32 image length 1..2097152) and a body of exactly 65520 bytes for every chunk but the last. headers: accepted headers with their fields and the body length each must carry. header_refusals: headers refused with the given body length; check is the Python diagnostic name. streams: frames read in order on a downstream view connection; announce is a view.image J document, document any other J document, chunk a B payload whose body is the image bytes from offset for length, where image byte k is k mod 251. expect lists what the reader returns in order, or refused_at names the step that refuses and closes the connection. documents: control documents each direction must accept or refuse, in their closed sets.",
+  "about": "Conformance vectors for the Sede view stream. A B frame payload is a 16-byte network-order header (u8 version 1, u8 flags with bit 0 the last chunk and no other bit, u16 reserved zero, u32 image sequence, u16 chunk index, u16 chunk count = ceil(image length / 65520), u32 image length 1..2097152) and a body of exactly 65520 bytes for every chunk but the last. headers: accepted headers with their fields and the body length each must carry. header_refusals: headers refused with the given body length; check is the Python diagnostic name. streams: frames read in order on a downstream view connection; announce is a view.image J document, document any other J document, chunk a B payload whose body is the image bytes from offset for length, where image byte k is k mod 251. expect lists what the reader returns in order, or refused_at names the step that refuses and closes the connection. documents: control documents each direction must accept or refuse, in their closed sets. Flag bit 1 (transfer_flag) marks a chunk of a download or upload instead of an image; its 16-byte header is u8 version 1, u8 flags (bit 0 the last chunk, bit 1 set, no other bit), u16 reserved zero, u32 transfer id from 1, u64 byte offset of the body's first byte. Every chunk but the last carries exactly 65520 body bytes and offsets are multiples of 65520; the last carries 0 to 65520 bytes, none only at offset 0. No total transfer size is bounded beyond the 64-bit offset. transfer_headers and transfer_header_refusals are the transfer analogues of headers and header_refusals, and an image header that sets flag bit 1 is refused. transfer_streams: direction names the reader, downstream for the window (which receives downloads) and upstream for the worker side (which receives uploads). setup lists the receiver calls made before any frame is read: expect a transfer with an optional exact size, grant credit in chunks, cancel locally. steps, expect and refused_at read as in streams; an expected chunk names its transfer id, offset, length, last flag and the sha256 of its body, and transfer byte k is k mod 251. A transfer chunk is refused when its transfer was not expected, arrives out of order, interleaves with another transfer or inside an image, or exceeds the credit granted; a completion is refused when it precedes the last chunk or disagrees with the bytes received in size or sha256, or with the declared size.",
   "layout": {
     "frame_kind": "B",
     "control_frame_kind": "J",
@@ -15,7 +15,11 @@
     "version": 1,
     "last_flag": 1,
     "credit_max_images": 2,
-    "image_pattern_modulus": 251
+    "image_pattern_modulus": 251,
+    "transfer_flag": 2,
+    "transfer_id_max": 4294967295,
+    "transfer_size_max": 18446744073709551615,
+    "transfer_credit_max_chunks": 32
   },
   "headers": [
     {
@@ -101,6 +105,12 @@
     {
       "name": "reserved_nonzero",
       "header": "01010001000000000000000100000001",
+      "body_length": 1,
+      "check": "view_chunk_reserved"
+    },
+    {
+      "name": "transfer_flag_on_image_header",
+      "header": "01020000000000000000000100000001",
       "body_length": 1,
       "check": "view_chunk_reserved"
     },
@@ -1110,6 +1120,401 @@
           "dialog_id": 4294967295,
           "accept": false
         }
+      },
+      {
+        "name": "download_bare",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.download",
+          "transfer_id": 1,
+          "filename": "justificante.pdf"
+        }
+      },
+      {
+        "name": "download_with_hints",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.download",
+          "transfer_id": 1,
+          "filename": "justificante.pdf",
+          "size": 123456,
+          "mime": "application/pdf"
+        }
+      },
+      {
+        "name": "download_empty_file",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.download",
+          "transfer_id": 1,
+          "filename": "justificante.pdf",
+          "size": 0
+        }
+      },
+      {
+        "name": "download_beyond_32_bits",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.download",
+          "transfer_id": 4294967295,
+          "filename": "justificante.pdf",
+          "size": 18446744073709551615,
+          "mime": "text/csv"
+        }
+      },
+      {
+        "name": "download_unicode_name",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.download",
+          "transfer_id": 1,
+          "filename": "Declaración ñ 2025.txt"
+        }
+      },
+      {
+        "name": "download_longest_name",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.download",
+          "transfer_id": 1,
+          "filename": "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"
+        }
+      },
+      {
+        "name": "file_chooser_single",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.file_chooser",
+          "chooser_id": 1,
+          "accept": [],
+          "multiple": false
+        }
+      },
+      {
+        "name": "file_chooser_multiple",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.file_chooser",
+          "chooser_id": 1,
+          "accept": [
+            ".pdf",
+            "image/*",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          ],
+          "multiple": true
+        }
+      },
+      {
+        "name": "file_chooser_most_accept_entries",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.file_chooser",
+          "chooser_id": 1,
+          "accept": [
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf"
+          ],
+          "multiple": false
+        }
+      },
+      {
+        "name": "complete_downstream",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.transfer_complete",
+          "transfer_id": 1,
+          "size": 1234,
+          "sha256": "27f576cafbb263ed44be8bd094f66114da26877706f96c4c31d5a97ffebf2e29"
+        }
+      },
+      {
+        "name": "complete_largest_size",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.transfer_complete",
+          "transfer_id": 4294967295,
+          "size": 18446744073709551615,
+          "sha256": "27f576cafbb263ed44be8bd094f66114da26877706f96c4c31d5a97ffebf2e29"
+        }
+      },
+      {
+        "name": "complete_empty_file",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.transfer_complete",
+          "transfer_id": 1,
+          "size": 0,
+          "sha256": "27f576cafbb263ed44be8bd094f66114da26877706f96c4c31d5a97ffebf2e29"
+        }
+      },
+      {
+        "name": "credit_downstream",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.transfer_credit",
+          "transfer_id": 1,
+          "chunks": 1
+        }
+      },
+      {
+        "name": "credit_full_window",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.transfer_credit",
+          "transfer_id": 1,
+          "chunks": 32
+        }
+      },
+      {
+        "name": "cancel_download_downstream",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.transfer_cancel",
+          "direction": "download",
+          "transfer_id": 1
+        }
+      },
+      {
+        "name": "cancel_upload_downstream",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.transfer_cancel",
+          "direction": "upload",
+          "transfer_id": 1
+        }
+      },
+      {
+        "name": "download_answer_accepted",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.download_answer",
+          "transfer_id": 1,
+          "outcome": "accepted"
+        }
+      },
+      {
+        "name": "download_answer_refused",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.download_answer",
+          "transfer_id": 1,
+          "outcome": "refused"
+        }
+      },
+      {
+        "name": "download_answer_cancelled",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.download_answer",
+          "transfer_id": 1,
+          "outcome": "cancelled"
+        }
+      },
+      {
+        "name": "file_chooser_answer_supplied",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.file_chooser_answer",
+          "chooser_id": 1,
+          "outcome": "supplied",
+          "file_count": 3
+        }
+      },
+      {
+        "name": "file_chooser_answer_cancelled",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.file_chooser_answer",
+          "chooser_id": 1,
+          "outcome": "cancelled",
+          "file_count": 0
+        }
+      },
+      {
+        "name": "upload",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.upload",
+          "chooser_id": 1,
+          "transfer_id": 2,
+          "name": "factura.pdf",
+          "size": 1234
+        }
+      },
+      {
+        "name": "upload_empty_file_with_media_type",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.upload",
+          "chooser_id": 1,
+          "transfer_id": 2,
+          "name": "factura.pdf",
+          "size": 0,
+          "mime": "application/vnd.ms-excel"
+        }
+      },
+      {
+        "name": "complete_upstream",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.transfer_complete",
+          "transfer_id": 1,
+          "size": 1234,
+          "sha256": "27f576cafbb263ed44be8bd094f66114da26877706f96c4c31d5a97ffebf2e29"
+        }
+      },
+      {
+        "name": "credit_upstream",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.transfer_credit",
+          "transfer_id": 1,
+          "chunks": 1
+        }
+      },
+      {
+        "name": "cancel_download_upstream",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.transfer_cancel",
+          "direction": "download",
+          "transfer_id": 1
+        }
+      },
+      {
+        "name": "cancel_upload_upstream",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.transfer_cancel",
+          "direction": "upload",
+          "transfer_id": 1
+        }
       }
     ],
     "refused": [
@@ -1585,7 +1990,2645 @@
           "dialog_id": 0,
           "accept": true
         }
+      },
+      {
+        "name": "download_on_upstream",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.download",
+          "transfer_id": 1,
+          "filename": "justificante.pdf"
+        }
+      },
+      {
+        "name": "file_chooser_on_upstream",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.file_chooser",
+          "chooser_id": 1,
+          "accept": [],
+          "multiple": false
+        }
+      },
+      {
+        "name": "download_answer_on_downstream",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.download_answer",
+          "transfer_id": 1,
+          "outcome": "accepted"
+        }
+      },
+      {
+        "name": "file_chooser_answer_on_downstream",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.file_chooser_answer",
+          "chooser_id": 1,
+          "outcome": "supplied",
+          "file_count": 3
+        }
+      },
+      {
+        "name": "upload_on_downstream",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.upload",
+          "chooser_id": 1,
+          "transfer_id": 2,
+          "name": "factura.pdf",
+          "size": 1234
+        }
+      },
+      {
+        "name": "download_transfer_id_zero",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.download",
+          "transfer_id": 0,
+          "filename": "justificante.pdf"
+        }
+      },
+      {
+        "name": "download_transfer_id_beyond_u32",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.download",
+          "transfer_id": 4294967296,
+          "filename": "justificante.pdf"
+        }
+      },
+      {
+        "name": "download_filename_empty",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.download",
+          "transfer_id": 1,
+          "filename": ""
+        }
+      },
+      {
+        "name": "download_filename_too_long",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.download",
+          "transfer_id": 1,
+          "filename": "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"
+        }
+      },
+      {
+        "name": "download_filename_with_slash",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.download",
+          "transfer_id": 1,
+          "filename": "../secret.pdf"
+        }
+      },
+      {
+        "name": "download_filename_with_backslash",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.download",
+          "transfer_id": 1,
+          "filename": "dir\\secret.pdf"
+        }
+      },
+      {
+        "name": "download_filename_dot_dot",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.download",
+          "transfer_id": 1,
+          "filename": ".."
+        }
+      },
+      {
+        "name": "download_filename_control_character",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.download",
+          "transfer_id": 1,
+          "filename": "a\nb.pdf"
+        }
+      },
+      {
+        "name": "download_size_beyond_u64",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.download",
+          "transfer_id": 1,
+          "filename": "justificante.pdf",
+          "size": 18446744073709551616
+        }
+      },
+      {
+        "name": "download_size_negative",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.download",
+          "transfer_id": 1,
+          "filename": "justificante.pdf",
+          "size": -1
+        }
+      },
+      {
+        "name": "download_mime_with_parameters",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.download",
+          "transfer_id": 1,
+          "filename": "justificante.pdf",
+          "mime": "text/html; charset=utf-8"
+        }
+      },
+      {
+        "name": "download_mime_without_subtype",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.download",
+          "transfer_id": 1,
+          "filename": "justificante.pdf",
+          "mime": "pdf"
+        }
+      },
+      {
+        "name": "download_unknown_member",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.download",
+          "transfer_id": 1,
+          "filename": "justificante.pdf",
+          "url": "https://x"
+        }
+      },
+      {
+        "name": "file_chooser_accept_missing",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.file_chooser",
+          "chooser_id": 1,
+          "multiple": false
+        }
+      },
+      {
+        "name": "file_chooser_too_many_accept_entries",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.file_chooser",
+          "chooser_id": 1,
+          "accept": [
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf",
+            ".pdf"
+          ],
+          "multiple": false
+        }
+      },
+      {
+        "name": "file_chooser_accept_with_space",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.file_chooser",
+          "chooser_id": 1,
+          "accept": [
+            "image/png, image/jpeg"
+          ],
+          "multiple": false
+        }
+      },
+      {
+        "name": "file_chooser_id_zero",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.file_chooser",
+          "chooser_id": 0,
+          "accept": [],
+          "multiple": false
+        }
+      },
+      {
+        "name": "download_answer_unknown_outcome",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.download_answer",
+          "transfer_id": 1,
+          "outcome": "maybe"
+        }
+      },
+      {
+        "name": "download_answer_without_outcome",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.download_answer",
+          "transfer_id": 1
+        }
+      },
+      {
+        "name": "file_chooser_answer_supplied_without_files",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.file_chooser_answer",
+          "chooser_id": 1,
+          "outcome": "supplied",
+          "file_count": 0
+        }
+      },
+      {
+        "name": "file_chooser_answer_cancelled_with_files",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.file_chooser_answer",
+          "chooser_id": 1,
+          "outcome": "cancelled",
+          "file_count": 3
+        }
+      },
+      {
+        "name": "file_chooser_answer_negative_count",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.file_chooser_answer",
+          "chooser_id": 1,
+          "outcome": "supplied",
+          "file_count": -1
+        }
+      },
+      {
+        "name": "upload_without_size",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.upload",
+          "chooser_id": 1,
+          "transfer_id": 2,
+          "name": "factura.pdf"
+        }
+      },
+      {
+        "name": "upload_name_with_slash",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.upload",
+          "chooser_id": 1,
+          "transfer_id": 2,
+          "name": "a/b.pdf",
+          "size": 1234
+        }
+      },
+      {
+        "name": "upload_size_beyond_u64",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.upload",
+          "chooser_id": 1,
+          "transfer_id": 2,
+          "name": "factura.pdf",
+          "size": 18446744073709551616
+        }
+      },
+      {
+        "name": "complete_sha256_upper_case",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.transfer_complete",
+          "transfer_id": 1,
+          "size": 1234,
+          "sha256": "27F576CAFBB263ED44BE8BD094F66114DA26877706F96C4C31D5A97FFEBF2E29"
+        }
+      },
+      {
+        "name": "complete_sha256_short",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.transfer_complete",
+          "transfer_id": 1,
+          "size": 1234,
+          "sha256": "27f576cafbb263ed44be8bd094f66114da26877706f96c4c31d5a97ffebf2e2"
+        }
+      },
+      {
+        "name": "complete_size_negative",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.transfer_complete",
+          "transfer_id": 1,
+          "size": -1,
+          "sha256": "27f576cafbb263ed44be8bd094f66114da26877706f96c4c31d5a97ffebf2e29"
+        }
+      },
+      {
+        "name": "complete_size_beyond_u64",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.transfer_complete",
+          "transfer_id": 1,
+          "size": 18446744073709551616,
+          "sha256": "27f576cafbb263ed44be8bd094f66114da26877706f96c4c31d5a97ffebf2e29"
+        }
+      },
+      {
+        "name": "credit_zero_chunks",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.transfer_credit",
+          "transfer_id": 1,
+          "chunks": 0
+        }
+      },
+      {
+        "name": "credit_beyond_the_window",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.transfer_credit",
+          "transfer_id": 1,
+          "chunks": 33
+        }
+      },
+      {
+        "name": "cancel_unknown_direction",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.transfer_cancel",
+          "direction": "sideways",
+          "transfer_id": 1
+        }
+      },
+      {
+        "name": "cancel_without_direction",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.transfer_cancel",
+          "transfer_id": 1
+        }
       }
     ]
-  }
+  },
+  "transfer_headers": [
+    {
+      "name": "empty_file",
+      "header": "01030000000000010000000000000000",
+      "transfer_id": 1,
+      "offset": 0,
+      "last": true,
+      "body_length": 0
+    },
+    {
+      "name": "one_byte",
+      "header": "01030000000000010000000000000000",
+      "transfer_id": 1,
+      "offset": 0,
+      "last": true,
+      "body_length": 1
+    },
+    {
+      "name": "full_chunk_not_last",
+      "header": "01020000000000010000000000000000",
+      "transfer_id": 1,
+      "offset": 0,
+      "last": false,
+      "body_length": 65520
+    },
+    {
+      "name": "full_chunk_last",
+      "header": "01030000000000010000000000000000",
+      "transfer_id": 1,
+      "offset": 0,
+      "last": true,
+      "body_length": 65520
+    },
+    {
+      "name": "second_chunk_last",
+      "header": "0103000000000002000000000000fff0",
+      "transfer_id": 2,
+      "offset": 65520,
+      "last": true,
+      "body_length": 10
+    },
+    {
+      "name": "largest_transfer_id",
+      "header": "01030000ffffffff0000000000000000",
+      "transfer_id": 4294967295,
+      "offset": 0,
+      "last": true,
+      "body_length": 5
+    },
+    {
+      "name": "offset_beyond_32_bits",
+      "header": "0102000000000003000000fffffffff0",
+      "transfer_id": 3,
+      "offset": 1099511627760,
+      "last": false,
+      "body_length": 65520
+    },
+    {
+      "name": "largest_offset",
+      "header": "0103000000000003fffffffffffffff0",
+      "transfer_id": 3,
+      "offset": 18446744073709551600,
+      "last": true,
+      "body_length": 7
+    }
+  ],
+  "transfer_header_refusals": [
+    {
+      "name": "short_header",
+      "header": "010300000000000100000000000000",
+      "body_length": 0,
+      "check": "view_chunk_header_length"
+    },
+    {
+      "name": "version_two",
+      "header": "02030000000000010000000000000000",
+      "body_length": 1,
+      "check": "view_chunk_version"
+    },
+    {
+      "name": "unknown_flag_bit",
+      "header": "01060000000000010000000000000000",
+      "body_length": 1,
+      "check": "view_chunk_reserved"
+    },
+    {
+      "name": "reserved_nonzero",
+      "header": "01030001000000010000000000000000",
+      "body_length": 1,
+      "check": "view_chunk_reserved"
+    },
+    {
+      "name": "transfer_flag_clear",
+      "header": "01010000000000010000000000000000",
+      "body_length": 1,
+      "check": "view_transfer_flag"
+    },
+    {
+      "name": "transfer_id_zero",
+      "header": "01030000000000000000000000000000",
+      "body_length": 1,
+      "check": "view_transfer_id"
+    },
+    {
+      "name": "offset_one_byte",
+      "header": "01030000000000010000000000000001",
+      "body_length": 1,
+      "check": "view_transfer_offset"
+    },
+    {
+      "name": "offset_one_short_of_a_chunk",
+      "header": "0103000000000001000000000000ffef",
+      "body_length": 1,
+      "check": "view_transfer_offset"
+    },
+    {
+      "name": "offset_misaligned_beyond_32_bits",
+      "header": "01030000000000010000010000000001",
+      "body_length": 1,
+      "check": "view_transfer_offset"
+    },
+    {
+      "name": "not_last_body_short",
+      "header": "01020000000000010000000000000000",
+      "body_length": 65519,
+      "check": "view_transfer_body_length"
+    },
+    {
+      "name": "not_last_body_empty",
+      "header": "01020000000000010000000000000000",
+      "body_length": 0,
+      "check": "view_transfer_body_length"
+    },
+    {
+      "name": "last_body_too_long",
+      "header": "01030000000000010000000000000000",
+      "body_length": 65521,
+      "check": "view_transfer_body_length"
+    },
+    {
+      "name": "empty_last_chunk_after_data",
+      "header": "0103000000000001000000000000fff0",
+      "body_length": 0,
+      "check": "view_transfer_body_length"
+    }
+  ],
+  "transfer_streams": [
+    {
+      "name": "empty_file",
+      "direction": "downstream",
+      "setup": [
+        {
+          "expect": {
+            "transfer_id": 1,
+            "size": 0
+          }
+        },
+        {
+          "grant": {
+            "transfer_id": 1,
+            "chunks": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "chunk": {
+            "header": "01030000000000010000000000000000",
+            "body_offset": 0,
+            "body_length": 0
+          }
+        },
+        {
+          "document": {
+            "kind": "view.transfer_complete",
+            "transfer_id": 1,
+            "size": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 0,
+            "length": 0,
+            "last": true,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "document": "view.transfer_complete"
+        }
+      ]
+    },
+    {
+      "name": "one_byte_file",
+      "direction": "downstream",
+      "setup": [
+        {
+          "expect": {
+            "transfer_id": 1,
+            "size": null
+          }
+        },
+        {
+          "grant": {
+            "transfer_id": 1,
+            "chunks": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "chunk": {
+            "header": "01030000000000010000000000000000",
+            "body_offset": 0,
+            "body_length": 1
+          }
+        },
+        {
+          "document": {
+            "kind": "view.transfer_complete",
+            "transfer_id": 1,
+            "size": 1,
+            "sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 0,
+            "length": 1,
+            "last": true,
+            "sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+          }
+        },
+        {
+          "document": "view.transfer_complete"
+        }
+      ]
+    },
+    {
+      "name": "full_chunk_file",
+      "direction": "downstream",
+      "setup": [
+        {
+          "expect": {
+            "transfer_id": 1,
+            "size": null
+          }
+        },
+        {
+          "grant": {
+            "transfer_id": 1,
+            "chunks": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "chunk": {
+            "header": "01030000000000010000000000000000",
+            "body_offset": 0,
+            "body_length": 65520
+          }
+        },
+        {
+          "document": {
+            "kind": "view.transfer_complete",
+            "transfer_id": 1,
+            "size": 65520,
+            "sha256": "38d7e626d639f497cc84c66f2b6e1a191bb287a9d3c4415dc9b20fd4f695de85"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 0,
+            "length": 65520,
+            "last": true,
+            "sha256": "38d7e626d639f497cc84c66f2b6e1a191bb287a9d3c4415dc9b20fd4f695de85"
+          }
+        },
+        {
+          "document": "view.transfer_complete"
+        }
+      ]
+    },
+    {
+      "name": "two_full_chunks",
+      "direction": "downstream",
+      "setup": [
+        {
+          "expect": {
+            "transfer_id": 1,
+            "size": null
+          }
+        },
+        {
+          "grant": {
+            "transfer_id": 1,
+            "chunks": 2
+          }
+        }
+      ],
+      "steps": [
+        {
+          "chunk": {
+            "header": "01020000000000010000000000000000",
+            "body_offset": 0,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0103000000000001000000000000fff0",
+            "body_offset": 65520,
+            "body_length": 65520
+          }
+        },
+        {
+          "document": {
+            "kind": "view.transfer_complete",
+            "transfer_id": 1,
+            "size": 131040,
+            "sha256": "1d87b5e624974fe948977a1882009add7e58153d36120c94cfaed00d51edd5d7"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 0,
+            "length": 65520,
+            "last": false,
+            "sha256": "38d7e626d639f497cc84c66f2b6e1a191bb287a9d3c4415dc9b20fd4f695de85"
+          }
+        },
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 65520,
+            "length": 65520,
+            "last": true,
+            "sha256": "4dad1d2165287ba25a6889028c3294e41fdb5ebd8cbce64fab0d21820eb8c8c3"
+          }
+        },
+        {
+          "document": "view.transfer_complete"
+        }
+      ]
+    },
+    {
+      "name": "three_chunks_with_declared_size",
+      "direction": "downstream",
+      "setup": [
+        {
+          "expect": {
+            "transfer_id": 1,
+            "size": 131041
+          }
+        },
+        {
+          "grant": {
+            "transfer_id": 1,
+            "chunks": 3
+          }
+        }
+      ],
+      "steps": [
+        {
+          "chunk": {
+            "header": "01020000000000010000000000000000",
+            "body_offset": 0,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0102000000000001000000000000fff0",
+            "body_offset": 65520,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0103000000000001000000000001ffe0",
+            "body_offset": 131040,
+            "body_length": 1
+          }
+        },
+        {
+          "document": {
+            "kind": "view.transfer_complete",
+            "transfer_id": 1,
+            "size": 131041,
+            "sha256": "e56b113ebb471b20b3bed1ea1ac69104a38b32c1ce9767fae58183980ef0dca5"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 0,
+            "length": 65520,
+            "last": false,
+            "sha256": "38d7e626d639f497cc84c66f2b6e1a191bb287a9d3c4415dc9b20fd4f695de85"
+          }
+        },
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 65520,
+            "length": 65520,
+            "last": false,
+            "sha256": "4dad1d2165287ba25a6889028c3294e41fdb5ebd8cbce64fab0d21820eb8c8c3"
+          }
+        },
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 131040,
+            "length": 1,
+            "last": true,
+            "sha256": "f299791cddd3d6664f6670842812ef6053eb6501bd6282a476bbbf3ee91e750c"
+          }
+        },
+        {
+          "document": "view.transfer_complete"
+        }
+      ]
+    },
+    {
+      "name": "full_credit_window",
+      "direction": "downstream",
+      "setup": [
+        {
+          "expect": {
+            "transfer_id": 1,
+            "size": null
+          }
+        },
+        {
+          "grant": {
+            "transfer_id": 1,
+            "chunks": 32
+          }
+        }
+      ],
+      "steps": [
+        {
+          "chunk": {
+            "header": "01020000000000010000000000000000",
+            "body_offset": 0,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0102000000000001000000000000fff0",
+            "body_offset": 65520,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0102000000000001000000000001ffe0",
+            "body_offset": 131040,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0102000000000001000000000002ffd0",
+            "body_offset": 196560,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0102000000000001000000000003ffc0",
+            "body_offset": 262080,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0102000000000001000000000004ffb0",
+            "body_offset": 327600,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0102000000000001000000000005ffa0",
+            "body_offset": 393120,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0102000000000001000000000006ff90",
+            "body_offset": 458640,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0102000000000001000000000007ff80",
+            "body_offset": 524160,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0102000000000001000000000008ff70",
+            "body_offset": 589680,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0102000000000001000000000009ff60",
+            "body_offset": 655200,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "010200000000000100000000000aff50",
+            "body_offset": 720720,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "010200000000000100000000000bff40",
+            "body_offset": 786240,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "010200000000000100000000000cff30",
+            "body_offset": 851760,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "010200000000000100000000000dff20",
+            "body_offset": 917280,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "010200000000000100000000000eff10",
+            "body_offset": 982800,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "010200000000000100000000000fff00",
+            "body_offset": 1048320,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0102000000000001000000000010fef0",
+            "body_offset": 1113840,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0102000000000001000000000011fee0",
+            "body_offset": 1179360,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0102000000000001000000000012fed0",
+            "body_offset": 1244880,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0102000000000001000000000013fec0",
+            "body_offset": 1310400,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0102000000000001000000000014feb0",
+            "body_offset": 1375920,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0102000000000001000000000015fea0",
+            "body_offset": 1441440,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0102000000000001000000000016fe90",
+            "body_offset": 1506960,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0102000000000001000000000017fe80",
+            "body_offset": 1572480,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0102000000000001000000000018fe70",
+            "body_offset": 1638000,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0102000000000001000000000019fe60",
+            "body_offset": 1703520,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "010200000000000100000000001afe50",
+            "body_offset": 1769040,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "010200000000000100000000001bfe40",
+            "body_offset": 1834560,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "010200000000000100000000001cfe30",
+            "body_offset": 1900080,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "010200000000000100000000001dfe20",
+            "body_offset": 1965600,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "010300000000000100000000001efe10",
+            "body_offset": 2031120,
+            "body_length": 65520
+          }
+        },
+        {
+          "document": {
+            "kind": "view.transfer_complete",
+            "transfer_id": 1,
+            "size": 2096640,
+            "sha256": "a25de1039c65e7c6fedc3e642e81e2b502de3733a8295f76940a260da46925e4"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 0,
+            "length": 65520,
+            "last": false,
+            "sha256": "38d7e626d639f497cc84c66f2b6e1a191bb287a9d3c4415dc9b20fd4f695de85"
+          }
+        },
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 65520,
+            "length": 65520,
+            "last": false,
+            "sha256": "4dad1d2165287ba25a6889028c3294e41fdb5ebd8cbce64fab0d21820eb8c8c3"
+          }
+        },
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 131040,
+            "length": 65520,
+            "last": false,
+            "sha256": "4086b45694b49521a6a981767b4ae1a638585f8b122fcbc2fa1172e676dc7a01"
+          }
+        },
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 196560,
+            "length": 65520,
+            "last": false,
+            "sha256": "2212a7276043dd2b8d8a91798d6dff5cf71b939d62c4ba0acb363a38a92614c5"
+          }
+        },
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 262080,
+            "length": 65520,
+            "last": false,
+            "sha256": "c3c693483b03d6c88f7cd5f3b15b6f65e89e9625123d927761b7985aed9a2c44"
+          }
+        },
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 327600,
+            "length": 65520,
+            "last": false,
+            "sha256": "ea03a9453f25c87a31af2b580efce50d191bfa7c2930166308940f0d423c172e"
+          }
+        },
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 393120,
+            "length": 65520,
+            "last": false,
+            "sha256": "469876631acceafc370e1e920d2e9ea950c4899525f2189335653d567c692b3d"
+          }
+        },
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 458640,
+            "length": 65520,
+            "last": false,
+            "sha256": "82194a3e1d63581df40becfe9379999261a91e07453f6791e8c82c4473d65003"
+          }
+        },
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 524160,
+            "length": 65520,
+            "last": false,
+            "sha256": "31607cf92cd6abab7a00d3e94af34c4f334c0aef81a88c2aa709c161cbe165e3"
+          }
+        },
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 589680,
+            "length": 65520,
+            "last": false,
+            "sha256": "14237f81bd50e1ccbfcb5a230e9118f01d8a83a70b846281d50d9e6c0079a1b3"
+          }
+        },
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 655200,
+            "length": 65520,
+            "last": false,
+            "sha256": "0895db944443b04d062494a61d76a62f69c297e15b993ad602f5130e1271ee93"
+          }
+        },
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 720720,
+            "length": 65520,
+            "last": false,
+            "sha256": "46cf0f747120f611c2cdc78ea59a01d3b2c158adb806be535c0165a69de0f277"
+          }
+        },
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 786240,
+            "length": 65520,
+            "last": false,
+            "sha256": "9ebb12078770e69291da9a068c07f1abb2f7a8941c25969149404a533ec63d37"
+          }
+        },
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 851760,
+            "length": 65520,
+            "last": false,
+            "sha256": "f692ddb0ef00f1b3f35a3590cd4e667316464f86539a1a9d553d5ec1634763a6"
+          }
+        },
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 917280,
+            "length": 65520,
+            "last": false,
+            "sha256": "7fcc26ddc9eb812562344fe12851873b8b6b76f1d4ce44b043d38dc03c9394d0"
+          }
+        },
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 982800,
+            "length": 65520,
+            "last": false,
+            "sha256": "f0c57007c249d1e621267d68e00989ee5838ebfbbfc310006d1c44436296bbb7"
+          }
+        },
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 1048320,
+            "length": 65520,
+            "last": false,
+            "sha256": "12a95487be63d7cb2da4337344fd8b067e53a44ee3ef2aa4e905647ed0a830b9"
+          }
+        },
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 1113840,
+            "length": 65520,
+            "last": false,
+            "sha256": "31e1d56775b93660543cdc50d076ab0410690247660201bb69e593c2b7b3b6fd"
+          }
+        },
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 1179360,
+            "length": 65520,
+            "last": false,
+            "sha256": "11d76f717016750d51e8bd34bd077d71497759e3f2e7aff190857c35586605a1"
+          }
+        },
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 1244880,
+            "length": 65520,
+            "last": false,
+            "sha256": "7ffaf2a79dc4ba824a933cc8c077c37425caeb1ec217a799b4c304795fa17bdf"
+          }
+        },
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 1310400,
+            "length": 65520,
+            "last": false,
+            "sha256": "08de0ce3dad63f3399a5618743c0f8664bbc4588a480fb3b4325a5ccebbc961d"
+          }
+        },
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 1375920,
+            "length": 65520,
+            "last": false,
+            "sha256": "2d3e02d282e7713584bc442655bc3396de878f1232ae498cffbc816603d2aa1c"
+          }
+        },
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 1441440,
+            "length": 65520,
+            "last": false,
+            "sha256": "6206ba5389ade419c4d651a5837657a2c0d9f5d12a7adbf25a8bd8e6fdf0aa8a"
+          }
+        },
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 1506960,
+            "length": 65520,
+            "last": false,
+            "sha256": "c51decb2d1bb6766547537557b864b3875cd67b8a80df23b7e2381dbf6b9928a"
+          }
+        },
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 1572480,
+            "length": 65520,
+            "last": false,
+            "sha256": "b7cae8eb42a0c1769c1b31e9b829847583d556c9f98c26414da6c75a34563c09"
+          }
+        },
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 1638000,
+            "length": 65520,
+            "last": false,
+            "sha256": "1874a97e9689141242494844871cc6c0271939b0c2846070160e13b2665337c6"
+          }
+        },
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 1703520,
+            "length": 65520,
+            "last": false,
+            "sha256": "09bed5a482a99158fdc74d74c18b9e60beef7212cfef09ae8c3c1459807de75e"
+          }
+        },
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 1769040,
+            "length": 65520,
+            "last": false,
+            "sha256": "7a1828d8613b183699bd59e0346ceb9312854435c2808729bdad62584db08f45"
+          }
+        },
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 1834560,
+            "length": 65520,
+            "last": false,
+            "sha256": "796739905287406d701a362e7745662764acbf319a4f66b1313f7bf2502462b1"
+          }
+        },
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 1900080,
+            "length": 65520,
+            "last": false,
+            "sha256": "74c5e65bc6e9a7c98f6558ad3b7667bce52f38b7c80418468a6cb401e4bf88d2"
+          }
+        },
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 1965600,
+            "length": 65520,
+            "last": false,
+            "sha256": "56361b810f3d51fcbf18427ed736d88ed49498eaa56805925237116d0a5088e6"
+          }
+        },
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 2031120,
+            "length": 65520,
+            "last": true,
+            "sha256": "2c5fca1a39c1a49a07ba6a1b06e7748bdc2d0a0da21e0ef674910813c3ba20b2"
+          }
+        },
+        {
+          "document": "view.transfer_complete"
+        }
+      ]
+    },
+    {
+      "name": "ids_increase_and_may_skip",
+      "direction": "downstream",
+      "setup": [
+        {
+          "expect": {
+            "transfer_id": 1,
+            "size": null
+          }
+        },
+        {
+          "expect": {
+            "transfer_id": 3,
+            "size": null
+          }
+        },
+        {
+          "grant": {
+            "transfer_id": 1,
+            "chunks": 1
+          }
+        },
+        {
+          "grant": {
+            "transfer_id": 3,
+            "chunks": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "chunk": {
+            "header": "01030000000000010000000000000000",
+            "body_offset": 0,
+            "body_length": 5
+          }
+        },
+        {
+          "document": {
+            "kind": "view.transfer_complete",
+            "transfer_id": 1,
+            "size": 5,
+            "sha256": "08bb5e5d6eaac1049ede0893d30ed022b1a4d9b5b48db414871f51c9cb35283d"
+          }
+        },
+        {
+          "chunk": {
+            "header": "01030000000000030000000000000000",
+            "body_offset": 0,
+            "body_length": 6
+          }
+        },
+        {
+          "document": {
+            "kind": "view.transfer_complete",
+            "transfer_id": 3,
+            "size": 6,
+            "sha256": "17e88db187afd62c16e5debf3e6527cd006bc012bc90b51a810cd80c2d511f43"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 0,
+            "length": 5,
+            "last": true,
+            "sha256": "08bb5e5d6eaac1049ede0893d30ed022b1a4d9b5b48db414871f51c9cb35283d"
+          }
+        },
+        {
+          "document": "view.transfer_complete"
+        },
+        {
+          "chunk": {
+            "transfer_id": 3,
+            "offset": 0,
+            "length": 6,
+            "last": true,
+            "sha256": "17e88db187afd62c16e5debf3e6527cd006bc012bc90b51a810cd80c2d511f43"
+          }
+        },
+        {
+          "document": "view.transfer_complete"
+        }
+      ]
+    },
+    {
+      "name": "images_and_documents_between_chunks",
+      "direction": "downstream",
+      "setup": [
+        {
+          "expect": {
+            "transfer_id": 1,
+            "size": null
+          }
+        },
+        {
+          "grant": {
+            "transfer_id": 1,
+            "chunks": 3
+          }
+        }
+      ],
+      "steps": [
+        {
+          "chunk": {
+            "header": "01020000000000010000000000000000",
+            "body_offset": 0,
+            "body_length": 65520
+          }
+        },
+        {
+          "announce": {
+            "kind": "view.image",
+            "sequence": 1,
+            "byte_length": 10,
+            "pixel_width": 1600,
+            "pixel_height": 1000,
+            "css_width": 1280,
+            "css_height": 800,
+            "scale": 1.25
+          }
+        },
+        {
+          "chunk": {
+            "header": "0101000000000001000000010000000a",
+            "body_offset": 0,
+            "body_length": 10
+          }
+        },
+        {
+          "chunk": {
+            "header": "0102000000000001000000000000fff0",
+            "body_offset": 65520,
+            "body_length": 65520
+          }
+        },
+        {
+          "document": {
+            "kind": "view.state",
+            "origin": "https://sede.agenciatributaria.gob.es",
+            "path": "/Sede/inicio.html",
+            "title": "Sede electrónica",
+            "can_go_back": false,
+            "can_go_forward": false,
+            "loading": false,
+            "phase": "browsing"
+          }
+        },
+        {
+          "chunk": {
+            "header": "0103000000000001000000000001ffe0",
+            "body_offset": 131040,
+            "body_length": 1
+          }
+        },
+        {
+          "document": {
+            "kind": "view.transfer_complete",
+            "transfer_id": 1,
+            "size": 131041,
+            "sha256": "e56b113ebb471b20b3bed1ea1ac69104a38b32c1ce9767fae58183980ef0dca5"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 0,
+            "length": 65520,
+            "last": false,
+            "sha256": "38d7e626d639f497cc84c66f2b6e1a191bb287a9d3c4415dc9b20fd4f695de85"
+          }
+        },
+        {
+          "image": {
+            "sequence": 1,
+            "byte_length": 10,
+            "sha256": "1f825aa2f0020ef7cf91dfa30da4668d791c5d4824fc8e41354b89ec05795ab3"
+          }
+        },
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 65520,
+            "length": 65520,
+            "last": false,
+            "sha256": "4dad1d2165287ba25a6889028c3294e41fdb5ebd8cbce64fab0d21820eb8c8c3"
+          }
+        },
+        {
+          "document": "view.state"
+        },
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 131040,
+            "length": 1,
+            "last": true,
+            "sha256": "f299791cddd3d6664f6670842812ef6053eb6501bd6282a476bbbf3ee91e750c"
+          }
+        },
+        {
+          "document": "view.transfer_complete"
+        }
+      ]
+    },
+    {
+      "name": "local_cancel_discards_crossing_chunks",
+      "direction": "downstream",
+      "setup": [
+        {
+          "expect": {
+            "transfer_id": 1,
+            "size": null
+          }
+        },
+        {
+          "grant": {
+            "transfer_id": 1,
+            "chunks": 2
+          }
+        },
+        {
+          "cancel": {
+            "transfer_id": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "chunk": {
+            "header": "01020000000000010000000000000000",
+            "body_offset": 0,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0102000000000001000000000000fff0",
+            "body_offset": 65520,
+            "body_length": 65520
+          }
+        },
+        {
+          "document": {
+            "kind": "view.transfer_cancel",
+            "direction": "download",
+            "transfer_id": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "document": "view.transfer_cancel"
+        }
+      ]
+    },
+    {
+      "name": "sender_cancel_ends_the_stream",
+      "direction": "downstream",
+      "setup": [
+        {
+          "expect": {
+            "transfer_id": 1,
+            "size": null
+          }
+        },
+        {
+          "expect": {
+            "transfer_id": 2,
+            "size": null
+          }
+        },
+        {
+          "grant": {
+            "transfer_id": 1,
+            "chunks": 1
+          }
+        },
+        {
+          "grant": {
+            "transfer_id": 2,
+            "chunks": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "chunk": {
+            "header": "01020000000000010000000000000000",
+            "body_offset": 0,
+            "body_length": 65520
+          }
+        },
+        {
+          "document": {
+            "kind": "view.transfer_cancel",
+            "direction": "download",
+            "transfer_id": 1
+          }
+        },
+        {
+          "chunk": {
+            "header": "01030000000000020000000000000000",
+            "body_offset": 0,
+            "body_length": 5
+          }
+        },
+        {
+          "document": {
+            "kind": "view.transfer_complete",
+            "transfer_id": 2,
+            "size": 5,
+            "sha256": "08bb5e5d6eaac1049ede0893d30ed022b1a4d9b5b48db414871f51c9cb35283d"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 0,
+            "length": 65520,
+            "last": false,
+            "sha256": "38d7e626d639f497cc84c66f2b6e1a191bb287a9d3c4415dc9b20fd4f695de85"
+          }
+        },
+        {
+          "document": "view.transfer_cancel"
+        },
+        {
+          "chunk": {
+            "transfer_id": 2,
+            "offset": 0,
+            "length": 5,
+            "last": true,
+            "sha256": "08bb5e5d6eaac1049ede0893d30ed022b1a4d9b5b48db414871f51c9cb35283d"
+          }
+        },
+        {
+          "document": "view.transfer_complete"
+        }
+      ]
+    },
+    {
+      "name": "cancel_of_the_other_direction_passes_through",
+      "direction": "downstream",
+      "setup": [],
+      "steps": [
+        {
+          "document": {
+            "kind": "view.transfer_cancel",
+            "direction": "upload",
+            "transfer_id": 7
+          }
+        }
+      ],
+      "expect": [
+        {
+          "document": "view.transfer_cancel"
+        }
+      ]
+    },
+    {
+      "name": "transfer_documents_pass_through",
+      "direction": "downstream",
+      "setup": [],
+      "steps": [
+        {
+          "document": {
+            "kind": "view.download",
+            "transfer_id": 1,
+            "filename": "a.pdf"
+          }
+        },
+        {
+          "document": {
+            "kind": "view.file_chooser",
+            "chooser_id": 1,
+            "accept": [],
+            "multiple": false
+          }
+        },
+        {
+          "document": {
+            "kind": "view.transfer_credit",
+            "transfer_id": 1,
+            "chunks": 32
+          }
+        }
+      ],
+      "expect": [
+        {
+          "document": "view.download"
+        },
+        {
+          "document": "view.file_chooser"
+        },
+        {
+          "document": "view.transfer_credit"
+        }
+      ]
+    },
+    {
+      "name": "chunk_for_unknown_transfer",
+      "direction": "downstream",
+      "setup": [],
+      "steps": [
+        {
+          "chunk": {
+            "header": "01030000000000010000000000000000",
+            "body_offset": 0,
+            "body_length": 5
+          }
+        }
+      ],
+      "refused_at": 0
+    },
+    {
+      "name": "chunk_without_credit",
+      "direction": "downstream",
+      "setup": [
+        {
+          "expect": {
+            "transfer_id": 1,
+            "size": null
+          }
+        }
+      ],
+      "steps": [
+        {
+          "chunk": {
+            "header": "01030000000000010000000000000000",
+            "body_offset": 0,
+            "body_length": 5
+          }
+        }
+      ],
+      "refused_at": 0
+    },
+    {
+      "name": "chunk_beyond_credit",
+      "direction": "downstream",
+      "setup": [
+        {
+          "expect": {
+            "transfer_id": 1,
+            "size": null
+          }
+        },
+        {
+          "grant": {
+            "transfer_id": 1,
+            "chunks": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "chunk": {
+            "header": "01020000000000010000000000000000",
+            "body_offset": 0,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0103000000000001000000000000fff0",
+            "body_offset": 65520,
+            "body_length": 65520
+          }
+        }
+      ],
+      "refused_at": 1
+    },
+    {
+      "name": "out_of_order_chunk",
+      "direction": "downstream",
+      "setup": [
+        {
+          "expect": {
+            "transfer_id": 1,
+            "size": null
+          }
+        },
+        {
+          "grant": {
+            "transfer_id": 1,
+            "chunks": 2
+          }
+        }
+      ],
+      "steps": [
+        {
+          "chunk": {
+            "header": "0103000000000001000000000000fff0",
+            "body_offset": 65520,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "01020000000000010000000000000000",
+            "body_offset": 0,
+            "body_length": 65520
+          }
+        }
+      ],
+      "refused_at": 0
+    },
+    {
+      "name": "repeated_chunk",
+      "direction": "downstream",
+      "setup": [
+        {
+          "expect": {
+            "transfer_id": 1,
+            "size": null
+          }
+        },
+        {
+          "grant": {
+            "transfer_id": 1,
+            "chunks": 2
+          }
+        }
+      ],
+      "steps": [
+        {
+          "chunk": {
+            "header": "01020000000000010000000000000000",
+            "body_offset": 0,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "01020000000000010000000000000000",
+            "body_offset": 0,
+            "body_length": 65520
+          }
+        }
+      ],
+      "refused_at": 1
+    },
+    {
+      "name": "skipped_chunk",
+      "direction": "downstream",
+      "setup": [
+        {
+          "expect": {
+            "transfer_id": 1,
+            "size": null
+          }
+        },
+        {
+          "grant": {
+            "transfer_id": 1,
+            "chunks": 2
+          }
+        }
+      ],
+      "steps": [
+        {
+          "chunk": {
+            "header": "01020000000000010000000000000000",
+            "body_offset": 0,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0103000000000001000000000001ffe0",
+            "body_offset": 131040,
+            "body_length": 1
+          }
+        }
+      ],
+      "refused_at": 1
+    },
+    {
+      "name": "chunk_after_last",
+      "direction": "downstream",
+      "setup": [
+        {
+          "expect": {
+            "transfer_id": 1,
+            "size": null
+          }
+        },
+        {
+          "grant": {
+            "transfer_id": 1,
+            "chunks": 2
+          }
+        }
+      ],
+      "steps": [
+        {
+          "chunk": {
+            "header": "01030000000000010000000000000000",
+            "body_offset": 0,
+            "body_length": 5
+          }
+        },
+        {
+          "chunk": {
+            "header": "01030000000000010000000000000000",
+            "body_offset": 0,
+            "body_length": 5
+          }
+        }
+      ],
+      "refused_at": 1
+    },
+    {
+      "name": "interleaved_transfers",
+      "direction": "downstream",
+      "setup": [
+        {
+          "expect": {
+            "transfer_id": 1,
+            "size": null
+          }
+        },
+        {
+          "expect": {
+            "transfer_id": 2,
+            "size": null
+          }
+        },
+        {
+          "grant": {
+            "transfer_id": 1,
+            "chunks": 2
+          }
+        },
+        {
+          "grant": {
+            "transfer_id": 2,
+            "chunks": 2
+          }
+        }
+      ],
+      "steps": [
+        {
+          "chunk": {
+            "header": "01020000000000010000000000000000",
+            "body_offset": 0,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "01030000000000020000000000000000",
+            "body_offset": 0,
+            "body_length": 5
+          }
+        }
+      ],
+      "refused_at": 1
+    },
+    {
+      "name": "transfer_chunk_inside_an_image",
+      "direction": "downstream",
+      "setup": [
+        {
+          "expect": {
+            "transfer_id": 1,
+            "size": null
+          }
+        },
+        {
+          "grant": {
+            "transfer_id": 1,
+            "chunks": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "announce": {
+            "kind": "view.image",
+            "sequence": 1,
+            "byte_length": 131040,
+            "pixel_width": 1600,
+            "pixel_height": 1000,
+            "css_width": 1280,
+            "css_height": 800,
+            "scale": 1.25
+          }
+        },
+        {
+          "chunk": {
+            "header": "0100000000000001000000020001ffe0",
+            "body_offset": 0,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "01030000000000010000000000000000",
+            "body_offset": 0,
+            "body_length": 5
+          }
+        }
+      ],
+      "refused_at": 2
+    },
+    {
+      "name": "misaligned_offset",
+      "direction": "downstream",
+      "setup": [
+        {
+          "expect": {
+            "transfer_id": 1,
+            "size": null
+          }
+        },
+        {
+          "grant": {
+            "transfer_id": 1,
+            "chunks": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "chunk": {
+            "header": "01030000000000010000000000000001",
+            "body_offset": 0,
+            "body_length": 5
+          }
+        }
+      ],
+      "refused_at": 0
+    },
+    {
+      "name": "short_chunk_that_is_not_last",
+      "direction": "downstream",
+      "setup": [
+        {
+          "expect": {
+            "transfer_id": 1,
+            "size": null
+          }
+        },
+        {
+          "grant": {
+            "transfer_id": 1,
+            "chunks": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "chunk": {
+            "header": "01020000000000010000000000000000",
+            "body_offset": 0,
+            "body_length": 10
+          }
+        }
+      ],
+      "refused_at": 0
+    },
+    {
+      "name": "complete_before_the_last_chunk",
+      "direction": "downstream",
+      "setup": [
+        {
+          "expect": {
+            "transfer_id": 1,
+            "size": null
+          }
+        },
+        {
+          "grant": {
+            "transfer_id": 1,
+            "chunks": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "chunk": {
+            "header": "01020000000000010000000000000000",
+            "body_offset": 0,
+            "body_length": 65520
+          }
+        },
+        {
+          "document": {
+            "kind": "view.transfer_complete",
+            "transfer_id": 1,
+            "size": 131040,
+            "sha256": "1d87b5e624974fe948977a1882009add7e58153d36120c94cfaed00d51edd5d7"
+          }
+        }
+      ],
+      "refused_at": 1
+    },
+    {
+      "name": "complete_for_unknown_transfer",
+      "direction": "downstream",
+      "setup": [],
+      "steps": [
+        {
+          "document": {
+            "kind": "view.transfer_complete",
+            "transfer_id": 9,
+            "size": 5,
+            "sha256": "08bb5e5d6eaac1049ede0893d30ed022b1a4d9b5b48db414871f51c9cb35283d"
+          }
+        }
+      ],
+      "refused_at": 0
+    },
+    {
+      "name": "complete_twice",
+      "direction": "downstream",
+      "setup": [
+        {
+          "expect": {
+            "transfer_id": 1,
+            "size": null
+          }
+        },
+        {
+          "grant": {
+            "transfer_id": 1,
+            "chunks": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "chunk": {
+            "header": "01030000000000010000000000000000",
+            "body_offset": 0,
+            "body_length": 5
+          }
+        },
+        {
+          "document": {
+            "kind": "view.transfer_complete",
+            "transfer_id": 1,
+            "size": 5,
+            "sha256": "08bb5e5d6eaac1049ede0893d30ed022b1a4d9b5b48db414871f51c9cb35283d"
+          }
+        },
+        {
+          "document": {
+            "kind": "view.transfer_complete",
+            "transfer_id": 1,
+            "size": 5,
+            "sha256": "08bb5e5d6eaac1049ede0893d30ed022b1a4d9b5b48db414871f51c9cb35283d"
+          }
+        }
+      ],
+      "refused_at": 2
+    },
+    {
+      "name": "complete_size_differs",
+      "direction": "downstream",
+      "setup": [
+        {
+          "expect": {
+            "transfer_id": 1,
+            "size": null
+          }
+        },
+        {
+          "grant": {
+            "transfer_id": 1,
+            "chunks": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "chunk": {
+            "header": "01030000000000010000000000000000",
+            "body_offset": 0,
+            "body_length": 5
+          }
+        },
+        {
+          "document": {
+            "kind": "view.transfer_complete",
+            "transfer_id": 1,
+            "size": 6,
+            "sha256": "08bb5e5d6eaac1049ede0893d30ed022b1a4d9b5b48db414871f51c9cb35283d"
+          }
+        }
+      ],
+      "refused_at": 1
+    },
+    {
+      "name": "complete_digest_differs",
+      "direction": "downstream",
+      "setup": [
+        {
+          "expect": {
+            "transfer_id": 1,
+            "size": null
+          }
+        },
+        {
+          "grant": {
+            "transfer_id": 1,
+            "chunks": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "chunk": {
+            "header": "01030000000000010000000000000000",
+            "body_offset": 0,
+            "body_length": 5
+          }
+        },
+        {
+          "document": {
+            "kind": "view.transfer_complete",
+            "transfer_id": 1,
+            "size": 5,
+            "sha256": "ff5d8507b6a72bee2debce2c0054798deaccdc5d8a1b945b6280ce8aa9cba52e"
+          }
+        }
+      ],
+      "refused_at": 1
+    },
+    {
+      "name": "declared_size_exceeded",
+      "direction": "downstream",
+      "setup": [
+        {
+          "expect": {
+            "transfer_id": 1,
+            "size": 4
+          }
+        },
+        {
+          "grant": {
+            "transfer_id": 1,
+            "chunks": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "chunk": {
+            "header": "01030000000000010000000000000000",
+            "body_offset": 0,
+            "body_length": 5
+          }
+        }
+      ],
+      "refused_at": 0
+    },
+    {
+      "name": "declared_size_not_reached",
+      "direction": "downstream",
+      "setup": [
+        {
+          "expect": {
+            "transfer_id": 1,
+            "size": 10
+          }
+        },
+        {
+          "grant": {
+            "transfer_id": 1,
+            "chunks": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "chunk": {
+            "header": "01030000000000010000000000000000",
+            "body_offset": 0,
+            "body_length": 5
+          }
+        },
+        {
+          "document": {
+            "kind": "view.transfer_complete",
+            "transfer_id": 1,
+            "size": 5,
+            "sha256": "08bb5e5d6eaac1049ede0893d30ed022b1a4d9b5b48db414871f51c9cb35283d"
+          }
+        }
+      ],
+      "refused_at": 1
+    },
+    {
+      "name": "image_chunk_upstream",
+      "direction": "upstream",
+      "setup": [],
+      "steps": [
+        {
+          "chunk": {
+            "header": "01010000000000010000000100000001",
+            "body_offset": 0,
+            "body_length": 1
+          }
+        }
+      ],
+      "refused_at": 0
+    },
+    {
+      "name": "upload_digest_differs",
+      "direction": "upstream",
+      "setup": [
+        {
+          "expect": {
+            "transfer_id": 1,
+            "size": 5
+          }
+        },
+        {
+          "grant": {
+            "transfer_id": 1,
+            "chunks": 1
+          }
+        }
+      ],
+      "steps": [
+        {
+          "chunk": {
+            "header": "01030000000000010000000000000000",
+            "body_offset": 0,
+            "body_length": 5
+          }
+        },
+        {
+          "document": {
+            "kind": "view.transfer_complete",
+            "transfer_id": 1,
+            "size": 5,
+            "sha256": "ff5d8507b6a72bee2debce2c0054798deaccdc5d8a1b945b6280ce8aa9cba52e"
+          }
+        }
+      ],
+      "refused_at": 1
+    },
+    {
+      "name": "upload_chunks_and_documents",
+      "direction": "upstream",
+      "setup": [
+        {
+          "expect": {
+            "transfer_id": 1,
+            "size": 131041
+          }
+        },
+        {
+          "grant": {
+            "transfer_id": 1,
+            "chunks": 3
+          }
+        }
+      ],
+      "steps": [
+        {
+          "document": {
+            "kind": "view.file_chooser_answer",
+            "chooser_id": 1,
+            "outcome": "supplied",
+            "file_count": 1
+          }
+        },
+        {
+          "document": {
+            "kind": "view.upload",
+            "chooser_id": 1,
+            "transfer_id": 1,
+            "name": "a.pdf",
+            "size": 131041
+          }
+        },
+        {
+          "chunk": {
+            "header": "01020000000000010000000000000000",
+            "body_offset": 0,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0102000000000001000000000000fff0",
+            "body_offset": 65520,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0103000000000001000000000001ffe0",
+            "body_offset": 131040,
+            "body_length": 1
+          }
+        },
+        {
+          "document": {
+            "kind": "view.transfer_complete",
+            "transfer_id": 1,
+            "size": 131041,
+            "sha256": "e56b113ebb471b20b3bed1ea1ac69104a38b32c1ce9767fae58183980ef0dca5"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "document": "view.file_chooser_answer"
+        },
+        {
+          "document": "view.upload"
+        },
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 0,
+            "length": 65520,
+            "last": false,
+            "sha256": "38d7e626d639f497cc84c66f2b6e1a191bb287a9d3c4415dc9b20fd4f695de85"
+          }
+        },
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 65520,
+            "length": 65520,
+            "last": false,
+            "sha256": "4dad1d2165287ba25a6889028c3294e41fdb5ebd8cbce64fab0d21820eb8c8c3"
+          }
+        },
+        {
+          "chunk": {
+            "transfer_id": 1,
+            "offset": 131040,
+            "length": 1,
+            "last": true,
+            "sha256": "f299791cddd3d6664f6670842812ef6053eb6501bd6282a476bbbf3ee91e750c"
+          }
+        },
+        {
+          "document": "view.transfer_complete"
+        }
+      ]
+    }
+  ]
 }

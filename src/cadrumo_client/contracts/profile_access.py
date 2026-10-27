@@ -55,6 +55,7 @@ from .profile_selection import ActiveProfileReply, ActiveProfileRequest, LoginTa
 from .service_access import ServiceAdmission, ServiceConnect, ServiceConnected
 from .sign_in import HumanSignedOut, SignInStatusReply, SignInStatusRequest
 from .sign_in_outcomes import SignInRefusal
+from .view_stream import ViewAttachRequest, ViewConnect
 
 type HumanProofMethod = Literal["password", "receipt"]
 
@@ -153,7 +154,9 @@ class Request(
             | ServiceAdmission
             | ExtensionRecordRequest
             | ModelRunFetchRequest
-            | ModelRunCompleteRequest,
+            | ModelRunCompleteRequest
+            | ViewAttachRequest
+            | ViewConnect,
             Field(discriminator="action"),
         ]
     ]

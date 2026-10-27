@@ -142,6 +142,7 @@ class ProfileConnectionAccessMixin:
                     connection.session_id = None
                     retired.append(session_id)
             host.approvals.retire_sessions(tuple(retired))
+        self._views.unbind_sessions(tuple(retired))
 
     def manage_access(
         self: RuntimeProfileConnections,
