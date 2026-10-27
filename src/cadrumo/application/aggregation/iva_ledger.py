@@ -63,6 +63,7 @@ from ...domain.bienes_inversion.register import (
 )
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
+from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
@@ -88,6 +89,9 @@ from ...domain.calculations.registry.prorrata_vocabulary import (
 )
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_base import DateAxis
+from ...domain.categories.proportionality import IvaMixedUseShare
+from ...domain.categories.registry import resolve_category_profile
+from ...domain.categories.spending_category_catalogue import require_spending_category
 from ...domain.iva.classification import territorial_scope_alias
 from ...domain.iva.errors import ProrrataInputError
 from ...domain.iva.establishment import (
@@ -251,6 +255,11 @@ class IvaLedgerAggregationIssueReason(StrEnum):
     # statutory fallback date. The settlement split reads exactly these facts,
     # so a contradiction would split the cuota across the wrong periods.
     CASH_ACCOUNTING_EVIDENCE_INCOHERENT = "cash_accounting_evidence_incoherent"
+    # A MIXED received row whose spending category grants no IVA deduction for
+    # simultaneous business and private use (LIVA art. 95.Uno and Dos.2.º).
+    # Excluded like a personal row rather than observed with a zero cuota: a
+    # cuota the law never lets be deducted has no base in the deductible boxes.
+    NON_DEDUCTIBLE_MIXED_USE = "non_deductible_mixed_use"
 
 
 #: The traceable-exclusion ``detail`` annotation: elides rather than refusing.
@@ -1714,6 +1723,42 @@ def validate_iva_ledger_deduction_classification(
 
 def business_proportionality_for(transaction: Transaction) -> Decimal | None:
     return business_proportion(transaction.business_classification, transaction.business_pct)
+
+
+def iva_mixed_use_share_for(
+    transaction: Transaction,
+    *,
+    year: int,
+    operation: PinnedAuthorityOperation,
+) -> IvaMixedUseShare | None:
+    """Return the IVA treatment the row's category declares for MIXED use, or ``None``.
+
+    Only a MIXED row asks: a BUSINESS row deducts in full and any other
+    classification feeds no deduction. ``None`` also covers a row without a
+    category, a category the pinned authority does not declare, and a category
+    with no IVA treatment; each keeps the row's own business share, which is
+    what the IVA ledger applied before categories carried an IVA rule.
+
+    Args:
+        transaction: The ledger row.
+        year: The filing year whose category profiles apply.
+        operation: The caller-owned authority generation.
+
+    Returns:
+        The category's :class:`IvaMixedUseShare`, or ``None``.
+    """
+    if transaction.business_classification is not BusinessClassification.MIXED or transaction.category_id is None:
+        return None
+    try:
+        category = require_spending_category(
+            transaction.category_id,
+            effective_date=date(year, 12, 31),
+            authority=operation,
+        )
+    except RegistryValidationError:
+        return None
+    rule = resolve_category_profile(category, year, operation=operation).proportionality.iva_mixed_use
+    return None if rule is None else rule.share
 
 
 def has_converted_non_eur_amount(transaction: Transaction) -> bool:

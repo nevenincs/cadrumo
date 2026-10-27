@@ -665,8 +665,9 @@ def test_home_office_gasto_deducts_the_statutory_share_once(
     """LIRPF art. 30.2.5.b reaches casilla 02 as it reaches the annual return: once.
 
     A BUSINESS row used to deduct its whole base here, because the quarterly path
-    never consulted the usage ratio; a MIXED row deducted its stored share, which is
-    the same 0.06. Both now come out of the category rule: 100.00 * 0.06 = 6.00.
+    never consulted the usage ratio; a MIXED row deducted its stored share. Both now
+    come out of the category rule: 100.00 * 0.06 = 6.00, whatever the row's share
+    (the 0.20 degree of use, which feeds IVA only).
     """
     profile = dwelling_profile()
     ratios = dwelling_usage_ratios(profile, bucket_id=SECURE_OBJECTS_BUCKET_ID, operation=operation)

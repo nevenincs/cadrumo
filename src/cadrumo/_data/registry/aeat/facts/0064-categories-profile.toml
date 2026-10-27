@@ -1353,7 +1353,7 @@ selectors = [
 date_axis = "filing_period"
 valid_from = 2022-01-01
 valid_to = 2022-12-31
-legal_refs = ["ley-35-2006:art-30"]
+legal_refs = ["ley-35-2006:art-30", "ley-37-1992:art-95-3", "ley-37-1992:art-95-4"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -1377,6 +1377,25 @@ entries = [
   { key = "citation.0.valid_to", value = 2026-12-31 },
   { key = "citation.0.quote", value = "b) En los casos en que el contribuyente afecte parcialmente su vivienda habitual al desarrollo de la actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, en el porcentaje resultante de aplicar el 30 por ciento a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior." },
   { key = "citation.0.legal_ref", value = "ley-35-2006:art-30" },
+  { key = "iva_mixed_use_share", value = "degree_of_use" },
+  { key = "iva_citation.0.source", value = "ley_iva" },
+  { key = "iva_citation.0.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.0.locator", value = "art. 95.Tres.1.ª, aplicable a suministros por el art. 95.Cuatro según el criterio del TEAC" },
+  { key = "iva_citation.0.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.0.grounding", value = "verified" },
+  { key = "iva_citation.0.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.0.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.0.quote", value = "Cuando se trate de bienes de inversión distintos de los comprendidos en la regla siguiente, en la medida en que dichos bienes vayan a utilizarse previsiblemente, de acuerdo con criterios fundados, en el desarrollo de la actividad empresarial o profesional." },
+  { key = "iva_citation.0.legal_ref", value = "ley-37-1992:art-95-3" },
+  { key = "iva_citation.1.source", value = "ley_iva" },
+  { key = "iva_citation.1.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.1.locator", value = "art. 95.Cuatro" },
+  { key = "iva_citation.1.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.1.grounding", value = "verified" },
+  { key = "iva_citation.1.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.1.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.1.quote", value = "Lo dispuesto en el apartado anterior será también de aplicación a las cuotas soportadas o satisfechas por la adquisición o importación de los siguientes bienes y servicios directamente relacionados con los bienes a que se refiere dicho apartado" },
+  { key = "iva_citation.1.legal_ref", value = "ley-37-1992:art-95-4" },
 ]
 
 [[fact.variants]]
@@ -1387,13 +1406,16 @@ selectors = [
 date_axis = "filing_period"
 valid_from = 2023-01-01
 valid_to = 2023-12-31
-legal_refs = ["ley-35-2006:art-30"]
-source_refs = ["lirpf-cuota-chain-authority"]
+legal_refs = ["ley-35-2006:art-30", "ley-37-1992:art-95-3", "ley-37-1992:art-95-4"]
+source_refs = ["lirpf-cuota-chain-authority", "aeat-manual-iva-2023"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["b) En los casos en que el contribuyente afecte parcialmente su vivienda habitual al desarrollo de la actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, en el porcentaje resultante de aplicar el 30 por ciento a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior."]
+[[fact.variants.source_citations]]
+source_ref = "aeat-manual-iva-2023"
+required_text = ["La cuota soportada en los suministros será deducible en la parte en que el inmueble esté afecta a la actividad profesional.", "Suministros y demás gastos corrientes de inmuebles. (Resolución del TEAC de 19 de julio de 2023 - RG 00/06654/2022)"]
 [fact.variants.payload]
 kind = "mapping"
 entries = [
@@ -1411,6 +1433,43 @@ entries = [
   { key = "citation.0.valid_to", value = 2026-12-31 },
   { key = "citation.0.quote", value = "b) En los casos en que el contribuyente afecte parcialmente su vivienda habitual al desarrollo de la actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, en el porcentaje resultante de aplicar el 30 por ciento a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior." },
   { key = "citation.0.legal_ref", value = "ley-35-2006:art-30" },
+  { key = "iva_mixed_use_share", value = "degree_of_use" },
+  { key = "iva_citation.0.source", value = "ley_iva" },
+  { key = "iva_citation.0.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.0.locator", value = "art. 95.Tres.1.ª, aplicable a suministros por el art. 95.Cuatro según el criterio del TEAC" },
+  { key = "iva_citation.0.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.0.grounding", value = "verified" },
+  { key = "iva_citation.0.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.0.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.0.quote", value = "Cuando se trate de bienes de inversión distintos de los comprendidos en la regla siguiente, en la medida en que dichos bienes vayan a utilizarse previsiblemente, de acuerdo con criterios fundados, en el desarrollo de la actividad empresarial o profesional." },
+  { key = "iva_citation.0.legal_ref", value = "ley-37-1992:art-95-3" },
+  { key = "iva_citation.1.source", value = "ley_iva" },
+  { key = "iva_citation.1.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.1.locator", value = "art. 95.Cuatro" },
+  { key = "iva_citation.1.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.1.grounding", value = "verified" },
+  { key = "iva_citation.1.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.1.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.1.quote", value = "Lo dispuesto en el apartado anterior será también de aplicación a las cuotas soportadas o satisfechas por la adquisición o importación de los siguientes bienes y servicios directamente relacionados con los bienes a que se refiere dicho apartado" },
+  { key = "iva_citation.1.legal_ref", value = "ley-37-1992:art-95-4" },
+  { key = "iva_citation.2.source", value = "manual_iva" },
+  { key = "iva_citation.2.reference", value = "Manual práctico IVA 2023" },
+  { key = "iva_citation.2.locator", value = "Deducciones: IVA soportado en bienes o servicios utilizados en la actividad" },
+  { key = "iva_citation.2.url", value = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2023.pdf" },
+  { key = "iva_citation.2.grounding", value = "verified" },
+  { key = "iva_citation.2.valid_from", value = 2023-01-01 },
+  { key = "iva_citation.2.valid_to", value = 2023-12-31 },
+  { key = "iva_citation.2.quote", value = "La cuota soportada en los suministros será deducible en la parte en que el inmueble esté afecta a la actividad profesional." },
+  { key = "iva_citation.2.source_ref", value = "aeat-manual-iva-2023" },
+  { key = "iva_citation.3.source", value = "manual_iva" },
+  { key = "iva_citation.3.reference", value = "Manual práctico IVA 2023" },
+  { key = "iva_citation.3.locator", value = "Deducciones: IVA soportado en bienes o servicios utilizados en la actividad" },
+  { key = "iva_citation.3.url", value = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2023.pdf" },
+  { key = "iva_citation.3.grounding", value = "verified" },
+  { key = "iva_citation.3.valid_from", value = 2023-01-01 },
+  { key = "iva_citation.3.valid_to", value = 2023-12-31 },
+  { key = "iva_citation.3.quote", value = "Suministros y demás gastos corrientes de inmuebles. (Resolución del TEAC de 19 de julio de 2023 - RG 00/06654/2022)" },
+  { key = "iva_citation.3.source_ref", value = "aeat-manual-iva-2023" },
 ]
 
 [[fact.variants]]
@@ -1421,13 +1480,16 @@ selectors = [
 date_axis = "filing_period"
 valid_from = 2024-01-01
 valid_to = 2024-12-31
-legal_refs = ["ley-35-2006:art-30"]
-source_refs = ["lirpf-cuota-chain-authority"]
+legal_refs = ["ley-35-2006:art-30", "ley-37-1992:art-95-3", "ley-37-1992:art-95-4"]
+source_refs = ["lirpf-cuota-chain-authority", "aeat-manual-iva-2024"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["b) En los casos en que el contribuyente afecte parcialmente su vivienda habitual al desarrollo de la actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, en el porcentaje resultante de aplicar el 30 por ciento a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior."]
+[[fact.variants.source_citations]]
+source_ref = "aeat-manual-iva-2024"
+required_text = ["La cuota soportada en los suministros será deducible en la parte en que el inmueble esté afecta a la actividad profesional.", "Suministros y demás gastos corrientes de inmuebles. (Resolución del TEAC de 19 de julio de 2023 - RG 00/06654/2022)"]
 [fact.variants.payload]
 kind = "mapping"
 entries = [
@@ -1445,6 +1507,43 @@ entries = [
   { key = "citation.0.valid_to", value = 2026-12-31 },
   { key = "citation.0.quote", value = "b) En los casos en que el contribuyente afecte parcialmente su vivienda habitual al desarrollo de la actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, en el porcentaje resultante de aplicar el 30 por ciento a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior." },
   { key = "citation.0.legal_ref", value = "ley-35-2006:art-30" },
+  { key = "iva_mixed_use_share", value = "degree_of_use" },
+  { key = "iva_citation.0.source", value = "ley_iva" },
+  { key = "iva_citation.0.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.0.locator", value = "art. 95.Tres.1.ª, aplicable a suministros por el art. 95.Cuatro según el criterio del TEAC" },
+  { key = "iva_citation.0.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.0.grounding", value = "verified" },
+  { key = "iva_citation.0.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.0.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.0.quote", value = "Cuando se trate de bienes de inversión distintos de los comprendidos en la regla siguiente, en la medida en que dichos bienes vayan a utilizarse previsiblemente, de acuerdo con criterios fundados, en el desarrollo de la actividad empresarial o profesional." },
+  { key = "iva_citation.0.legal_ref", value = "ley-37-1992:art-95-3" },
+  { key = "iva_citation.1.source", value = "ley_iva" },
+  { key = "iva_citation.1.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.1.locator", value = "art. 95.Cuatro" },
+  { key = "iva_citation.1.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.1.grounding", value = "verified" },
+  { key = "iva_citation.1.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.1.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.1.quote", value = "Lo dispuesto en el apartado anterior será también de aplicación a las cuotas soportadas o satisfechas por la adquisición o importación de los siguientes bienes y servicios directamente relacionados con los bienes a que se refiere dicho apartado" },
+  { key = "iva_citation.1.legal_ref", value = "ley-37-1992:art-95-4" },
+  { key = "iva_citation.2.source", value = "manual_iva" },
+  { key = "iva_citation.2.reference", value = "Manual práctico IVA 2024" },
+  { key = "iva_citation.2.locator", value = "Deducciones: IVA soportado en bienes o servicios utilizados en la actividad" },
+  { key = "iva_citation.2.url", value = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2024.pdf" },
+  { key = "iva_citation.2.grounding", value = "verified" },
+  { key = "iva_citation.2.valid_from", value = 2024-01-01 },
+  { key = "iva_citation.2.valid_to", value = 2024-12-31 },
+  { key = "iva_citation.2.quote", value = "La cuota soportada en los suministros será deducible en la parte en que el inmueble esté afecta a la actividad profesional." },
+  { key = "iva_citation.2.source_ref", value = "aeat-manual-iva-2024" },
+  { key = "iva_citation.3.source", value = "manual_iva" },
+  { key = "iva_citation.3.reference", value = "Manual práctico IVA 2024" },
+  { key = "iva_citation.3.locator", value = "Deducciones: IVA soportado en bienes o servicios utilizados en la actividad" },
+  { key = "iva_citation.3.url", value = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2024.pdf" },
+  { key = "iva_citation.3.grounding", value = "verified" },
+  { key = "iva_citation.3.valid_from", value = 2024-01-01 },
+  { key = "iva_citation.3.valid_to", value = 2024-12-31 },
+  { key = "iva_citation.3.quote", value = "Suministros y demás gastos corrientes de inmuebles. (Resolución del TEAC de 19 de julio de 2023 - RG 00/06654/2022)" },
+  { key = "iva_citation.3.source_ref", value = "aeat-manual-iva-2024" },
 ]
 
 [[fact.variants]]
@@ -1455,13 +1554,19 @@ selectors = [
 date_axis = "filing_period"
 valid_from = 2025-01-01
 valid_to = 2025-12-31
-legal_refs = ["ley-35-2006:art-30"]
-source_refs = ["lirpf-cuota-chain-authority"]
+legal_refs = ["ley-35-2006:art-30", "ley-37-1992:art-95-3", "ley-37-1992:art-95-4"]
+source_refs = ["lirpf-cuota-chain-authority", "aeat-manual-iva-2025", "aeat-renta-2025-manual-parte1"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["b) En los casos en que el contribuyente afecte parcialmente su vivienda habitual al desarrollo de la actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, en el porcentaje resultante de aplicar el 30 por ciento a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior."]
+[[fact.variants.source_citations]]
+source_ref = "aeat-manual-iva-2025"
+required_text = ["La cuota soportada en los suministros será deducible en la parte en que el inmueble esté afecta a la actividad profesional.", "Suministros y demás gastos corrientes de inmuebles. (Resolución del TEAC de 19 de julio de 2023 - RG 00/06654/2022)"]
+[[fact.variants.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["cuando el contribuyente afecte parcialmente su vivienda habitual al desarrollo de su actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, serán deducibles en el porcentaje resultante de aplicar el 30 por 100 a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior."]
 [fact.variants.payload]
 kind = "mapping"
 entries = [
@@ -1481,12 +1586,50 @@ entries = [
   { key = "citation.0.legal_ref", value = "ley-35-2006:art-30" },
   { key = "citation.1.source", value = "manual_renta" },
   { key = "citation.1.reference", value = "Manual práctico Renta 2025" },
-  { key = "citation.1.locator", value = "Vivienda parcialmente afecta" },
+  { key = "citation.1.locator", value = "Capítulo 7, suministros de la vivienda habitual parcialmente afecta a la actividad (art. 30.2.5.ª b) Ley IRPF)" },
   { key = "citation.1.url", value = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf" },
-  { key = "citation.1.grounding", value = "source_not_bundled" },
+  { key = "citation.1.grounding", value = "verified" },
   { key = "citation.1.valid_from", value = 2025-01-01 },
   { key = "citation.1.valid_to", value = 2025-12-31 },
-  { key = "citation.1.grounding_reason", value = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus." },
+  { key = "citation.1.quote", value = "cuando el contribuyente afecte parcialmente su vivienda habitual al desarrollo de su actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, serán deducibles en el porcentaje resultante de aplicar el 30 por 100 a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior." },
+  { key = "citation.1.source_ref", value = "aeat-renta-2025-manual-parte1" },
+  { key = "iva_mixed_use_share", value = "degree_of_use" },
+  { key = "iva_citation.0.source", value = "ley_iva" },
+  { key = "iva_citation.0.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.0.locator", value = "art. 95.Tres.1.ª, aplicable a suministros por el art. 95.Cuatro según el criterio del TEAC" },
+  { key = "iva_citation.0.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.0.grounding", value = "verified" },
+  { key = "iva_citation.0.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.0.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.0.quote", value = "Cuando se trate de bienes de inversión distintos de los comprendidos en la regla siguiente, en la medida en que dichos bienes vayan a utilizarse previsiblemente, de acuerdo con criterios fundados, en el desarrollo de la actividad empresarial o profesional." },
+  { key = "iva_citation.0.legal_ref", value = "ley-37-1992:art-95-3" },
+  { key = "iva_citation.1.source", value = "ley_iva" },
+  { key = "iva_citation.1.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.1.locator", value = "art. 95.Cuatro" },
+  { key = "iva_citation.1.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.1.grounding", value = "verified" },
+  { key = "iva_citation.1.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.1.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.1.quote", value = "Lo dispuesto en el apartado anterior será también de aplicación a las cuotas soportadas o satisfechas por la adquisición o importación de los siguientes bienes y servicios directamente relacionados con los bienes a que se refiere dicho apartado" },
+  { key = "iva_citation.1.legal_ref", value = "ley-37-1992:art-95-4" },
+  { key = "iva_citation.2.source", value = "manual_iva" },
+  { key = "iva_citation.2.reference", value = "Manual práctico IVA 2025" },
+  { key = "iva_citation.2.locator", value = "Deducciones: IVA soportado en bienes o servicios utilizados en la actividad" },
+  { key = "iva_citation.2.url", value = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2025.pdf" },
+  { key = "iva_citation.2.grounding", value = "verified" },
+  { key = "iva_citation.2.valid_from", value = 2025-01-01 },
+  { key = "iva_citation.2.valid_to", value = 2025-12-31 },
+  { key = "iva_citation.2.quote", value = "La cuota soportada en los suministros será deducible en la parte en que el inmueble esté afecta a la actividad profesional." },
+  { key = "iva_citation.2.source_ref", value = "aeat-manual-iva-2025" },
+  { key = "iva_citation.3.source", value = "manual_iva" },
+  { key = "iva_citation.3.reference", value = "Manual práctico IVA 2025" },
+  { key = "iva_citation.3.locator", value = "Deducciones: IVA soportado en bienes o servicios utilizados en la actividad" },
+  { key = "iva_citation.3.url", value = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2025.pdf" },
+  { key = "iva_citation.3.grounding", value = "verified" },
+  { key = "iva_citation.3.valid_from", value = 2025-01-01 },
+  { key = "iva_citation.3.valid_to", value = 2025-12-31 },
+  { key = "iva_citation.3.quote", value = "Suministros y demás gastos corrientes de inmuebles. (Resolución del TEAC de 19 de julio de 2023 - RG 00/06654/2022)" },
+  { key = "iva_citation.3.source_ref", value = "aeat-manual-iva-2025" },
 ]
 
 [[fact.variants]]
@@ -1496,7 +1639,7 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-legal_refs = ["ley-35-2006:art-30"]
+legal_refs = ["ley-35-2006:art-30", "ley-37-1992:art-95-3", "ley-37-1992:art-95-4"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -1520,6 +1663,25 @@ entries = [
   { key = "citation.0.valid_to", value = 2026-12-31 },
   { key = "citation.0.quote", value = "b) En los casos en que el contribuyente afecte parcialmente su vivienda habitual al desarrollo de la actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, en el porcentaje resultante de aplicar el 30 por ciento a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior." },
   { key = "citation.0.legal_ref", value = "ley-35-2006:art-30" },
+  { key = "iva_mixed_use_share", value = "degree_of_use" },
+  { key = "iva_citation.0.source", value = "ley_iva" },
+  { key = "iva_citation.0.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.0.locator", value = "art. 95.Tres.1.ª, aplicable a suministros por el art. 95.Cuatro según el criterio del TEAC" },
+  { key = "iva_citation.0.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.0.grounding", value = "verified" },
+  { key = "iva_citation.0.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.0.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.0.quote", value = "Cuando se trate de bienes de inversión distintos de los comprendidos en la regla siguiente, en la medida en que dichos bienes vayan a utilizarse previsiblemente, de acuerdo con criterios fundados, en el desarrollo de la actividad empresarial o profesional." },
+  { key = "iva_citation.0.legal_ref", value = "ley-37-1992:art-95-3" },
+  { key = "iva_citation.1.source", value = "ley_iva" },
+  { key = "iva_citation.1.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.1.locator", value = "art. 95.Cuatro" },
+  { key = "iva_citation.1.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.1.grounding", value = "verified" },
+  { key = "iva_citation.1.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.1.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.1.quote", value = "Lo dispuesto en el apartado anterior será también de aplicación a las cuotas soportadas o satisfechas por la adquisición o importación de los siguientes bienes y servicios directamente relacionados con los bienes a que se refiere dicho apartado" },
+  { key = "iva_citation.1.legal_ref", value = "ley-37-1992:art-95-4" },
 ]
 
 [[fact.variants]]
@@ -1530,7 +1692,7 @@ selectors = [
 date_axis = "filing_period"
 valid_from = 2022-01-01
 valid_to = 2022-12-31
-legal_refs = ["ley-35-2006:art-30"]
+legal_refs = ["ley-35-2006:art-30", "ley-37-1992:art-95-3", "ley-37-1992:art-95-4"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -1554,6 +1716,25 @@ entries = [
   { key = "citation.0.valid_to", value = 2026-12-31 },
   { key = "citation.0.quote", value = "b) En los casos en que el contribuyente afecte parcialmente su vivienda habitual al desarrollo de la actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, en el porcentaje resultante de aplicar el 30 por ciento a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior." },
   { key = "citation.0.legal_ref", value = "ley-35-2006:art-30" },
+  { key = "iva_mixed_use_share", value = "degree_of_use" },
+  { key = "iva_citation.0.source", value = "ley_iva" },
+  { key = "iva_citation.0.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.0.locator", value = "art. 95.Tres.1.ª, aplicable a suministros por el art. 95.Cuatro según el criterio del TEAC" },
+  { key = "iva_citation.0.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.0.grounding", value = "verified" },
+  { key = "iva_citation.0.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.0.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.0.quote", value = "Cuando se trate de bienes de inversión distintos de los comprendidos en la regla siguiente, en la medida en que dichos bienes vayan a utilizarse previsiblemente, de acuerdo con criterios fundados, en el desarrollo de la actividad empresarial o profesional." },
+  { key = "iva_citation.0.legal_ref", value = "ley-37-1992:art-95-3" },
+  { key = "iva_citation.1.source", value = "ley_iva" },
+  { key = "iva_citation.1.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.1.locator", value = "art. 95.Cuatro" },
+  { key = "iva_citation.1.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.1.grounding", value = "verified" },
+  { key = "iva_citation.1.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.1.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.1.quote", value = "Lo dispuesto en el apartado anterior será también de aplicación a las cuotas soportadas o satisfechas por la adquisición o importación de los siguientes bienes y servicios directamente relacionados con los bienes a que se refiere dicho apartado" },
+  { key = "iva_citation.1.legal_ref", value = "ley-37-1992:art-95-4" },
 ]
 
 [[fact.variants]]
@@ -1564,13 +1745,16 @@ selectors = [
 date_axis = "filing_period"
 valid_from = 2023-01-01
 valid_to = 2023-12-31
-legal_refs = ["ley-35-2006:art-30"]
-source_refs = ["lirpf-cuota-chain-authority"]
+legal_refs = ["ley-35-2006:art-30", "ley-37-1992:art-95-3", "ley-37-1992:art-95-4"]
+source_refs = ["lirpf-cuota-chain-authority", "aeat-manual-iva-2023"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["b) En los casos en que el contribuyente afecte parcialmente su vivienda habitual al desarrollo de la actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, en el porcentaje resultante de aplicar el 30 por ciento a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior."]
+[[fact.variants.source_citations]]
+source_ref = "aeat-manual-iva-2023"
+required_text = ["La cuota soportada en los suministros será deducible en la parte en que el inmueble esté afecta a la actividad profesional.", "Suministros y demás gastos corrientes de inmuebles. (Resolución del TEAC de 19 de julio de 2023 - RG 00/06654/2022)"]
 [fact.variants.payload]
 kind = "mapping"
 entries = [
@@ -1588,6 +1772,43 @@ entries = [
   { key = "citation.0.valid_to", value = 2026-12-31 },
   { key = "citation.0.quote", value = "b) En los casos en que el contribuyente afecte parcialmente su vivienda habitual al desarrollo de la actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, en el porcentaje resultante de aplicar el 30 por ciento a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior." },
   { key = "citation.0.legal_ref", value = "ley-35-2006:art-30" },
+  { key = "iva_mixed_use_share", value = "degree_of_use" },
+  { key = "iva_citation.0.source", value = "ley_iva" },
+  { key = "iva_citation.0.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.0.locator", value = "art. 95.Tres.1.ª, aplicable a suministros por el art. 95.Cuatro según el criterio del TEAC" },
+  { key = "iva_citation.0.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.0.grounding", value = "verified" },
+  { key = "iva_citation.0.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.0.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.0.quote", value = "Cuando se trate de bienes de inversión distintos de los comprendidos en la regla siguiente, en la medida en que dichos bienes vayan a utilizarse previsiblemente, de acuerdo con criterios fundados, en el desarrollo de la actividad empresarial o profesional." },
+  { key = "iva_citation.0.legal_ref", value = "ley-37-1992:art-95-3" },
+  { key = "iva_citation.1.source", value = "ley_iva" },
+  { key = "iva_citation.1.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.1.locator", value = "art. 95.Cuatro" },
+  { key = "iva_citation.1.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.1.grounding", value = "verified" },
+  { key = "iva_citation.1.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.1.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.1.quote", value = "Lo dispuesto en el apartado anterior será también de aplicación a las cuotas soportadas o satisfechas por la adquisición o importación de los siguientes bienes y servicios directamente relacionados con los bienes a que se refiere dicho apartado" },
+  { key = "iva_citation.1.legal_ref", value = "ley-37-1992:art-95-4" },
+  { key = "iva_citation.2.source", value = "manual_iva" },
+  { key = "iva_citation.2.reference", value = "Manual práctico IVA 2023" },
+  { key = "iva_citation.2.locator", value = "Deducciones: IVA soportado en bienes o servicios utilizados en la actividad" },
+  { key = "iva_citation.2.url", value = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2023.pdf" },
+  { key = "iva_citation.2.grounding", value = "verified" },
+  { key = "iva_citation.2.valid_from", value = 2023-01-01 },
+  { key = "iva_citation.2.valid_to", value = 2023-12-31 },
+  { key = "iva_citation.2.quote", value = "La cuota soportada en los suministros será deducible en la parte en que el inmueble esté afecta a la actividad profesional." },
+  { key = "iva_citation.2.source_ref", value = "aeat-manual-iva-2023" },
+  { key = "iva_citation.3.source", value = "manual_iva" },
+  { key = "iva_citation.3.reference", value = "Manual práctico IVA 2023" },
+  { key = "iva_citation.3.locator", value = "Deducciones: IVA soportado en bienes o servicios utilizados en la actividad" },
+  { key = "iva_citation.3.url", value = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2023.pdf" },
+  { key = "iva_citation.3.grounding", value = "verified" },
+  { key = "iva_citation.3.valid_from", value = 2023-01-01 },
+  { key = "iva_citation.3.valid_to", value = 2023-12-31 },
+  { key = "iva_citation.3.quote", value = "Suministros y demás gastos corrientes de inmuebles. (Resolución del TEAC de 19 de julio de 2023 - RG 00/06654/2022)" },
+  { key = "iva_citation.3.source_ref", value = "aeat-manual-iva-2023" },
 ]
 
 [[fact.variants]]
@@ -1598,13 +1819,16 @@ selectors = [
 date_axis = "filing_period"
 valid_from = 2024-01-01
 valid_to = 2024-12-31
-legal_refs = ["ley-35-2006:art-30"]
-source_refs = ["lirpf-cuota-chain-authority"]
+legal_refs = ["ley-35-2006:art-30", "ley-37-1992:art-95-3", "ley-37-1992:art-95-4"]
+source_refs = ["lirpf-cuota-chain-authority", "aeat-manual-iva-2024"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["b) En los casos en que el contribuyente afecte parcialmente su vivienda habitual al desarrollo de la actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, en el porcentaje resultante de aplicar el 30 por ciento a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior."]
+[[fact.variants.source_citations]]
+source_ref = "aeat-manual-iva-2024"
+required_text = ["La cuota soportada en los suministros será deducible en la parte en que el inmueble esté afecta a la actividad profesional.", "Suministros y demás gastos corrientes de inmuebles. (Resolución del TEAC de 19 de julio de 2023 - RG 00/06654/2022)"]
 [fact.variants.payload]
 kind = "mapping"
 entries = [
@@ -1622,6 +1846,43 @@ entries = [
   { key = "citation.0.valid_to", value = 2026-12-31 },
   { key = "citation.0.quote", value = "b) En los casos en que el contribuyente afecte parcialmente su vivienda habitual al desarrollo de la actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, en el porcentaje resultante de aplicar el 30 por ciento a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior." },
   { key = "citation.0.legal_ref", value = "ley-35-2006:art-30" },
+  { key = "iva_mixed_use_share", value = "degree_of_use" },
+  { key = "iva_citation.0.source", value = "ley_iva" },
+  { key = "iva_citation.0.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.0.locator", value = "art. 95.Tres.1.ª, aplicable a suministros por el art. 95.Cuatro según el criterio del TEAC" },
+  { key = "iva_citation.0.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.0.grounding", value = "verified" },
+  { key = "iva_citation.0.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.0.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.0.quote", value = "Cuando se trate de bienes de inversión distintos de los comprendidos en la regla siguiente, en la medida en que dichos bienes vayan a utilizarse previsiblemente, de acuerdo con criterios fundados, en el desarrollo de la actividad empresarial o profesional." },
+  { key = "iva_citation.0.legal_ref", value = "ley-37-1992:art-95-3" },
+  { key = "iva_citation.1.source", value = "ley_iva" },
+  { key = "iva_citation.1.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.1.locator", value = "art. 95.Cuatro" },
+  { key = "iva_citation.1.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.1.grounding", value = "verified" },
+  { key = "iva_citation.1.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.1.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.1.quote", value = "Lo dispuesto en el apartado anterior será también de aplicación a las cuotas soportadas o satisfechas por la adquisición o importación de los siguientes bienes y servicios directamente relacionados con los bienes a que se refiere dicho apartado" },
+  { key = "iva_citation.1.legal_ref", value = "ley-37-1992:art-95-4" },
+  { key = "iva_citation.2.source", value = "manual_iva" },
+  { key = "iva_citation.2.reference", value = "Manual práctico IVA 2024" },
+  { key = "iva_citation.2.locator", value = "Deducciones: IVA soportado en bienes o servicios utilizados en la actividad" },
+  { key = "iva_citation.2.url", value = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2024.pdf" },
+  { key = "iva_citation.2.grounding", value = "verified" },
+  { key = "iva_citation.2.valid_from", value = 2024-01-01 },
+  { key = "iva_citation.2.valid_to", value = 2024-12-31 },
+  { key = "iva_citation.2.quote", value = "La cuota soportada en los suministros será deducible en la parte en que el inmueble esté afecta a la actividad profesional." },
+  { key = "iva_citation.2.source_ref", value = "aeat-manual-iva-2024" },
+  { key = "iva_citation.3.source", value = "manual_iva" },
+  { key = "iva_citation.3.reference", value = "Manual práctico IVA 2024" },
+  { key = "iva_citation.3.locator", value = "Deducciones: IVA soportado en bienes o servicios utilizados en la actividad" },
+  { key = "iva_citation.3.url", value = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2024.pdf" },
+  { key = "iva_citation.3.grounding", value = "verified" },
+  { key = "iva_citation.3.valid_from", value = 2024-01-01 },
+  { key = "iva_citation.3.valid_to", value = 2024-12-31 },
+  { key = "iva_citation.3.quote", value = "Suministros y demás gastos corrientes de inmuebles. (Resolución del TEAC de 19 de julio de 2023 - RG 00/06654/2022)" },
+  { key = "iva_citation.3.source_ref", value = "aeat-manual-iva-2024" },
 ]
 
 [[fact.variants]]
@@ -1632,13 +1893,19 @@ selectors = [
 date_axis = "filing_period"
 valid_from = 2025-01-01
 valid_to = 2025-12-31
-legal_refs = ["ley-35-2006:art-30"]
-source_refs = ["lirpf-cuota-chain-authority"]
+legal_refs = ["ley-35-2006:art-30", "ley-37-1992:art-95-3", "ley-37-1992:art-95-4"]
+source_refs = ["lirpf-cuota-chain-authority", "aeat-manual-iva-2025", "aeat-renta-2025-manual-parte1"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["b) En los casos en que el contribuyente afecte parcialmente su vivienda habitual al desarrollo de la actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, en el porcentaje resultante de aplicar el 30 por ciento a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior."]
+[[fact.variants.source_citations]]
+source_ref = "aeat-manual-iva-2025"
+required_text = ["La cuota soportada en los suministros será deducible en la parte en que el inmueble esté afecta a la actividad profesional.", "Suministros y demás gastos corrientes de inmuebles. (Resolución del TEAC de 19 de julio de 2023 - RG 00/06654/2022)"]
+[[fact.variants.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["cuando el contribuyente afecte parcialmente su vivienda habitual al desarrollo de su actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, serán deducibles en el porcentaje resultante de aplicar el 30 por 100 a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior."]
 [fact.variants.payload]
 kind = "mapping"
 entries = [
@@ -1658,12 +1925,50 @@ entries = [
   { key = "citation.0.legal_ref", value = "ley-35-2006:art-30" },
   { key = "citation.1.source", value = "manual_renta" },
   { key = "citation.1.reference", value = "Manual práctico Renta 2025" },
-  { key = "citation.1.locator", value = "Vivienda parcialmente afecta" },
+  { key = "citation.1.locator", value = "Capítulo 7, suministros de la vivienda habitual parcialmente afecta a la actividad (art. 30.2.5.ª b) Ley IRPF)" },
   { key = "citation.1.url", value = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf" },
-  { key = "citation.1.grounding", value = "source_not_bundled" },
+  { key = "citation.1.grounding", value = "verified" },
   { key = "citation.1.valid_from", value = 2025-01-01 },
   { key = "citation.1.valid_to", value = 2025-12-31 },
-  { key = "citation.1.grounding_reason", value = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus." },
+  { key = "citation.1.quote", value = "cuando el contribuyente afecte parcialmente su vivienda habitual al desarrollo de su actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, serán deducibles en el porcentaje resultante de aplicar el 30 por 100 a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior." },
+  { key = "citation.1.source_ref", value = "aeat-renta-2025-manual-parte1" },
+  { key = "iva_mixed_use_share", value = "degree_of_use" },
+  { key = "iva_citation.0.source", value = "ley_iva" },
+  { key = "iva_citation.0.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.0.locator", value = "art. 95.Tres.1.ª, aplicable a suministros por el art. 95.Cuatro según el criterio del TEAC" },
+  { key = "iva_citation.0.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.0.grounding", value = "verified" },
+  { key = "iva_citation.0.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.0.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.0.quote", value = "Cuando se trate de bienes de inversión distintos de los comprendidos en la regla siguiente, en la medida en que dichos bienes vayan a utilizarse previsiblemente, de acuerdo con criterios fundados, en el desarrollo de la actividad empresarial o profesional." },
+  { key = "iva_citation.0.legal_ref", value = "ley-37-1992:art-95-3" },
+  { key = "iva_citation.1.source", value = "ley_iva" },
+  { key = "iva_citation.1.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.1.locator", value = "art. 95.Cuatro" },
+  { key = "iva_citation.1.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.1.grounding", value = "verified" },
+  { key = "iva_citation.1.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.1.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.1.quote", value = "Lo dispuesto en el apartado anterior será también de aplicación a las cuotas soportadas o satisfechas por la adquisición o importación de los siguientes bienes y servicios directamente relacionados con los bienes a que se refiere dicho apartado" },
+  { key = "iva_citation.1.legal_ref", value = "ley-37-1992:art-95-4" },
+  { key = "iva_citation.2.source", value = "manual_iva" },
+  { key = "iva_citation.2.reference", value = "Manual práctico IVA 2025" },
+  { key = "iva_citation.2.locator", value = "Deducciones: IVA soportado en bienes o servicios utilizados en la actividad" },
+  { key = "iva_citation.2.url", value = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2025.pdf" },
+  { key = "iva_citation.2.grounding", value = "verified" },
+  { key = "iva_citation.2.valid_from", value = 2025-01-01 },
+  { key = "iva_citation.2.valid_to", value = 2025-12-31 },
+  { key = "iva_citation.2.quote", value = "La cuota soportada en los suministros será deducible en la parte en que el inmueble esté afecta a la actividad profesional." },
+  { key = "iva_citation.2.source_ref", value = "aeat-manual-iva-2025" },
+  { key = "iva_citation.3.source", value = "manual_iva" },
+  { key = "iva_citation.3.reference", value = "Manual práctico IVA 2025" },
+  { key = "iva_citation.3.locator", value = "Deducciones: IVA soportado en bienes o servicios utilizados en la actividad" },
+  { key = "iva_citation.3.url", value = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2025.pdf" },
+  { key = "iva_citation.3.grounding", value = "verified" },
+  { key = "iva_citation.3.valid_from", value = 2025-01-01 },
+  { key = "iva_citation.3.valid_to", value = 2025-12-31 },
+  { key = "iva_citation.3.quote", value = "Suministros y demás gastos corrientes de inmuebles. (Resolución del TEAC de 19 de julio de 2023 - RG 00/06654/2022)" },
+  { key = "iva_citation.3.source_ref", value = "aeat-manual-iva-2025" },
 ]
 
 [[fact.variants]]
@@ -1673,7 +1978,7 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-legal_refs = ["ley-35-2006:art-30"]
+legal_refs = ["ley-35-2006:art-30", "ley-37-1992:art-95-3", "ley-37-1992:art-95-4"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -1697,6 +2002,25 @@ entries = [
   { key = "citation.0.valid_to", value = 2026-12-31 },
   { key = "citation.0.quote", value = "b) En los casos en que el contribuyente afecte parcialmente su vivienda habitual al desarrollo de la actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, en el porcentaje resultante de aplicar el 30 por ciento a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior." },
   { key = "citation.0.legal_ref", value = "ley-35-2006:art-30" },
+  { key = "iva_mixed_use_share", value = "degree_of_use" },
+  { key = "iva_citation.0.source", value = "ley_iva" },
+  { key = "iva_citation.0.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.0.locator", value = "art. 95.Tres.1.ª, aplicable a suministros por el art. 95.Cuatro según el criterio del TEAC" },
+  { key = "iva_citation.0.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.0.grounding", value = "verified" },
+  { key = "iva_citation.0.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.0.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.0.quote", value = "Cuando se trate de bienes de inversión distintos de los comprendidos en la regla siguiente, en la medida en que dichos bienes vayan a utilizarse previsiblemente, de acuerdo con criterios fundados, en el desarrollo de la actividad empresarial o profesional." },
+  { key = "iva_citation.0.legal_ref", value = "ley-37-1992:art-95-3" },
+  { key = "iva_citation.1.source", value = "ley_iva" },
+  { key = "iva_citation.1.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.1.locator", value = "art. 95.Cuatro" },
+  { key = "iva_citation.1.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.1.grounding", value = "verified" },
+  { key = "iva_citation.1.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.1.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.1.quote", value = "Lo dispuesto en el apartado anterior será también de aplicación a las cuotas soportadas o satisfechas por la adquisición o importación de los siguientes bienes y servicios directamente relacionados con los bienes a que se refiere dicho apartado" },
+  { key = "iva_citation.1.legal_ref", value = "ley-37-1992:art-95-4" },
 ]
 
 [[fact.variants]]
@@ -1707,7 +2031,7 @@ selectors = [
 date_axis = "filing_period"
 valid_from = 2022-01-01
 valid_to = 2022-12-31
-legal_refs = ["ley-35-2006:art-30"]
+legal_refs = ["ley-35-2006:art-30", "ley-37-1992:art-95-3", "ley-37-1992:art-95-4"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -1731,6 +2055,25 @@ entries = [
   { key = "citation.0.valid_to", value = 2026-12-31 },
   { key = "citation.0.quote", value = "b) En los casos en que el contribuyente afecte parcialmente su vivienda habitual al desarrollo de la actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, en el porcentaje resultante de aplicar el 30 por ciento a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior." },
   { key = "citation.0.legal_ref", value = "ley-35-2006:art-30" },
+  { key = "iva_mixed_use_share", value = "degree_of_use" },
+  { key = "iva_citation.0.source", value = "ley_iva" },
+  { key = "iva_citation.0.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.0.locator", value = "art. 95.Tres.1.ª, aplicable a suministros por el art. 95.Cuatro según el criterio del TEAC" },
+  { key = "iva_citation.0.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.0.grounding", value = "verified" },
+  { key = "iva_citation.0.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.0.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.0.quote", value = "Cuando se trate de bienes de inversión distintos de los comprendidos en la regla siguiente, en la medida en que dichos bienes vayan a utilizarse previsiblemente, de acuerdo con criterios fundados, en el desarrollo de la actividad empresarial o profesional." },
+  { key = "iva_citation.0.legal_ref", value = "ley-37-1992:art-95-3" },
+  { key = "iva_citation.1.source", value = "ley_iva" },
+  { key = "iva_citation.1.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.1.locator", value = "art. 95.Cuatro" },
+  { key = "iva_citation.1.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.1.grounding", value = "verified" },
+  { key = "iva_citation.1.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.1.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.1.quote", value = "Lo dispuesto en el apartado anterior será también de aplicación a las cuotas soportadas o satisfechas por la adquisición o importación de los siguientes bienes y servicios directamente relacionados con los bienes a que se refiere dicho apartado" },
+  { key = "iva_citation.1.legal_ref", value = "ley-37-1992:art-95-4" },
 ]
 
 [[fact.variants]]
@@ -1741,13 +2084,16 @@ selectors = [
 date_axis = "filing_period"
 valid_from = 2023-01-01
 valid_to = 2023-12-31
-legal_refs = ["ley-35-2006:art-30"]
-source_refs = ["lirpf-cuota-chain-authority"]
+legal_refs = ["ley-35-2006:art-30", "ley-37-1992:art-95-3", "ley-37-1992:art-95-4"]
+source_refs = ["lirpf-cuota-chain-authority", "aeat-manual-iva-2023"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["b) En los casos en que el contribuyente afecte parcialmente su vivienda habitual al desarrollo de la actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, en el porcentaje resultante de aplicar el 30 por ciento a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior."]
+[[fact.variants.source_citations]]
+source_ref = "aeat-manual-iva-2023"
+required_text = ["La cuota soportada en los suministros será deducible en la parte en que el inmueble esté afecta a la actividad profesional.", "Suministros y demás gastos corrientes de inmuebles. (Resolución del TEAC de 19 de julio de 2023 - RG 00/06654/2022)"]
 [fact.variants.payload]
 kind = "mapping"
 entries = [
@@ -1765,6 +2111,43 @@ entries = [
   { key = "citation.0.valid_to", value = 2026-12-31 },
   { key = "citation.0.quote", value = "b) En los casos en que el contribuyente afecte parcialmente su vivienda habitual al desarrollo de la actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, en el porcentaje resultante de aplicar el 30 por ciento a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior." },
   { key = "citation.0.legal_ref", value = "ley-35-2006:art-30" },
+  { key = "iva_mixed_use_share", value = "degree_of_use" },
+  { key = "iva_citation.0.source", value = "ley_iva" },
+  { key = "iva_citation.0.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.0.locator", value = "art. 95.Tres.1.ª, aplicable a suministros por el art. 95.Cuatro según el criterio del TEAC" },
+  { key = "iva_citation.0.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.0.grounding", value = "verified" },
+  { key = "iva_citation.0.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.0.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.0.quote", value = "Cuando se trate de bienes de inversión distintos de los comprendidos en la regla siguiente, en la medida en que dichos bienes vayan a utilizarse previsiblemente, de acuerdo con criterios fundados, en el desarrollo de la actividad empresarial o profesional." },
+  { key = "iva_citation.0.legal_ref", value = "ley-37-1992:art-95-3" },
+  { key = "iva_citation.1.source", value = "ley_iva" },
+  { key = "iva_citation.1.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.1.locator", value = "art. 95.Cuatro" },
+  { key = "iva_citation.1.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.1.grounding", value = "verified" },
+  { key = "iva_citation.1.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.1.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.1.quote", value = "Lo dispuesto en el apartado anterior será también de aplicación a las cuotas soportadas o satisfechas por la adquisición o importación de los siguientes bienes y servicios directamente relacionados con los bienes a que se refiere dicho apartado" },
+  { key = "iva_citation.1.legal_ref", value = "ley-37-1992:art-95-4" },
+  { key = "iva_citation.2.source", value = "manual_iva" },
+  { key = "iva_citation.2.reference", value = "Manual práctico IVA 2023" },
+  { key = "iva_citation.2.locator", value = "Deducciones: IVA soportado en bienes o servicios utilizados en la actividad" },
+  { key = "iva_citation.2.url", value = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2023.pdf" },
+  { key = "iva_citation.2.grounding", value = "verified" },
+  { key = "iva_citation.2.valid_from", value = 2023-01-01 },
+  { key = "iva_citation.2.valid_to", value = 2023-12-31 },
+  { key = "iva_citation.2.quote", value = "La cuota soportada en los suministros será deducible en la parte en que el inmueble esté afecta a la actividad profesional." },
+  { key = "iva_citation.2.source_ref", value = "aeat-manual-iva-2023" },
+  { key = "iva_citation.3.source", value = "manual_iva" },
+  { key = "iva_citation.3.reference", value = "Manual práctico IVA 2023" },
+  { key = "iva_citation.3.locator", value = "Deducciones: IVA soportado en bienes o servicios utilizados en la actividad" },
+  { key = "iva_citation.3.url", value = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2023.pdf" },
+  { key = "iva_citation.3.grounding", value = "verified" },
+  { key = "iva_citation.3.valid_from", value = 2023-01-01 },
+  { key = "iva_citation.3.valid_to", value = 2023-12-31 },
+  { key = "iva_citation.3.quote", value = "Suministros y demás gastos corrientes de inmuebles. (Resolución del TEAC de 19 de julio de 2023 - RG 00/06654/2022)" },
+  { key = "iva_citation.3.source_ref", value = "aeat-manual-iva-2023" },
 ]
 
 [[fact.variants]]
@@ -1775,13 +2158,16 @@ selectors = [
 date_axis = "filing_period"
 valid_from = 2024-01-01
 valid_to = 2024-12-31
-legal_refs = ["ley-35-2006:art-30"]
-source_refs = ["lirpf-cuota-chain-authority"]
+legal_refs = ["ley-35-2006:art-30", "ley-37-1992:art-95-3", "ley-37-1992:art-95-4"]
+source_refs = ["lirpf-cuota-chain-authority", "aeat-manual-iva-2024"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["b) En los casos en que el contribuyente afecte parcialmente su vivienda habitual al desarrollo de la actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, en el porcentaje resultante de aplicar el 30 por ciento a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior."]
+[[fact.variants.source_citations]]
+source_ref = "aeat-manual-iva-2024"
+required_text = ["La cuota soportada en los suministros será deducible en la parte en que el inmueble esté afecta a la actividad profesional.", "Suministros y demás gastos corrientes de inmuebles. (Resolución del TEAC de 19 de julio de 2023 - RG 00/06654/2022)"]
 [fact.variants.payload]
 kind = "mapping"
 entries = [
@@ -1799,6 +2185,43 @@ entries = [
   { key = "citation.0.valid_to", value = 2026-12-31 },
   { key = "citation.0.quote", value = "b) En los casos en que el contribuyente afecte parcialmente su vivienda habitual al desarrollo de la actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, en el porcentaje resultante de aplicar el 30 por ciento a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior." },
   { key = "citation.0.legal_ref", value = "ley-35-2006:art-30" },
+  { key = "iva_mixed_use_share", value = "degree_of_use" },
+  { key = "iva_citation.0.source", value = "ley_iva" },
+  { key = "iva_citation.0.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.0.locator", value = "art. 95.Tres.1.ª, aplicable a suministros por el art. 95.Cuatro según el criterio del TEAC" },
+  { key = "iva_citation.0.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.0.grounding", value = "verified" },
+  { key = "iva_citation.0.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.0.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.0.quote", value = "Cuando se trate de bienes de inversión distintos de los comprendidos en la regla siguiente, en la medida en que dichos bienes vayan a utilizarse previsiblemente, de acuerdo con criterios fundados, en el desarrollo de la actividad empresarial o profesional." },
+  { key = "iva_citation.0.legal_ref", value = "ley-37-1992:art-95-3" },
+  { key = "iva_citation.1.source", value = "ley_iva" },
+  { key = "iva_citation.1.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.1.locator", value = "art. 95.Cuatro" },
+  { key = "iva_citation.1.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.1.grounding", value = "verified" },
+  { key = "iva_citation.1.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.1.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.1.quote", value = "Lo dispuesto en el apartado anterior será también de aplicación a las cuotas soportadas o satisfechas por la adquisición o importación de los siguientes bienes y servicios directamente relacionados con los bienes a que se refiere dicho apartado" },
+  { key = "iva_citation.1.legal_ref", value = "ley-37-1992:art-95-4" },
+  { key = "iva_citation.2.source", value = "manual_iva" },
+  { key = "iva_citation.2.reference", value = "Manual práctico IVA 2024" },
+  { key = "iva_citation.2.locator", value = "Deducciones: IVA soportado en bienes o servicios utilizados en la actividad" },
+  { key = "iva_citation.2.url", value = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2024.pdf" },
+  { key = "iva_citation.2.grounding", value = "verified" },
+  { key = "iva_citation.2.valid_from", value = 2024-01-01 },
+  { key = "iva_citation.2.valid_to", value = 2024-12-31 },
+  { key = "iva_citation.2.quote", value = "La cuota soportada en los suministros será deducible en la parte en que el inmueble esté afecta a la actividad profesional." },
+  { key = "iva_citation.2.source_ref", value = "aeat-manual-iva-2024" },
+  { key = "iva_citation.3.source", value = "manual_iva" },
+  { key = "iva_citation.3.reference", value = "Manual práctico IVA 2024" },
+  { key = "iva_citation.3.locator", value = "Deducciones: IVA soportado en bienes o servicios utilizados en la actividad" },
+  { key = "iva_citation.3.url", value = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2024.pdf" },
+  { key = "iva_citation.3.grounding", value = "verified" },
+  { key = "iva_citation.3.valid_from", value = 2024-01-01 },
+  { key = "iva_citation.3.valid_to", value = 2024-12-31 },
+  { key = "iva_citation.3.quote", value = "Suministros y demás gastos corrientes de inmuebles. (Resolución del TEAC de 19 de julio de 2023 - RG 00/06654/2022)" },
+  { key = "iva_citation.3.source_ref", value = "aeat-manual-iva-2024" },
 ]
 
 [[fact.variants]]
@@ -1809,13 +2232,19 @@ selectors = [
 date_axis = "filing_period"
 valid_from = 2025-01-01
 valid_to = 2025-12-31
-legal_refs = ["ley-35-2006:art-30"]
-source_refs = ["lirpf-cuota-chain-authority"]
+legal_refs = ["ley-35-2006:art-30", "ley-37-1992:art-95-3", "ley-37-1992:art-95-4"]
+source_refs = ["lirpf-cuota-chain-authority", "aeat-manual-iva-2025", "aeat-renta-2025-manual-parte1"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["b) En los casos en que el contribuyente afecte parcialmente su vivienda habitual al desarrollo de la actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, en el porcentaje resultante de aplicar el 30 por ciento a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior."]
+[[fact.variants.source_citations]]
+source_ref = "aeat-manual-iva-2025"
+required_text = ["La cuota soportada en los suministros será deducible en la parte en que el inmueble esté afecta a la actividad profesional.", "Suministros y demás gastos corrientes de inmuebles. (Resolución del TEAC de 19 de julio de 2023 - RG 00/06654/2022)"]
+[[fact.variants.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["cuando el contribuyente afecte parcialmente su vivienda habitual al desarrollo de su actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, serán deducibles en el porcentaje resultante de aplicar el 30 por 100 a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior."]
 [fact.variants.payload]
 kind = "mapping"
 entries = [
@@ -1835,12 +2264,50 @@ entries = [
   { key = "citation.0.legal_ref", value = "ley-35-2006:art-30" },
   { key = "citation.1.source", value = "manual_renta" },
   { key = "citation.1.reference", value = "Manual práctico Renta 2025" },
-  { key = "citation.1.locator", value = "Vivienda parcialmente afecta" },
+  { key = "citation.1.locator", value = "Capítulo 7, suministros de la vivienda habitual parcialmente afecta a la actividad (art. 30.2.5.ª b) Ley IRPF)" },
   { key = "citation.1.url", value = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf" },
-  { key = "citation.1.grounding", value = "source_not_bundled" },
+  { key = "citation.1.grounding", value = "verified" },
   { key = "citation.1.valid_from", value = 2025-01-01 },
   { key = "citation.1.valid_to", value = 2025-12-31 },
-  { key = "citation.1.grounding_reason", value = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus." },
+  { key = "citation.1.quote", value = "cuando el contribuyente afecte parcialmente su vivienda habitual al desarrollo de su actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, serán deducibles en el porcentaje resultante de aplicar el 30 por 100 a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior." },
+  { key = "citation.1.source_ref", value = "aeat-renta-2025-manual-parte1" },
+  { key = "iva_mixed_use_share", value = "degree_of_use" },
+  { key = "iva_citation.0.source", value = "ley_iva" },
+  { key = "iva_citation.0.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.0.locator", value = "art. 95.Tres.1.ª, aplicable a suministros por el art. 95.Cuatro según el criterio del TEAC" },
+  { key = "iva_citation.0.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.0.grounding", value = "verified" },
+  { key = "iva_citation.0.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.0.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.0.quote", value = "Cuando se trate de bienes de inversión distintos de los comprendidos en la regla siguiente, en la medida en que dichos bienes vayan a utilizarse previsiblemente, de acuerdo con criterios fundados, en el desarrollo de la actividad empresarial o profesional." },
+  { key = "iva_citation.0.legal_ref", value = "ley-37-1992:art-95-3" },
+  { key = "iva_citation.1.source", value = "ley_iva" },
+  { key = "iva_citation.1.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.1.locator", value = "art. 95.Cuatro" },
+  { key = "iva_citation.1.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.1.grounding", value = "verified" },
+  { key = "iva_citation.1.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.1.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.1.quote", value = "Lo dispuesto en el apartado anterior será también de aplicación a las cuotas soportadas o satisfechas por la adquisición o importación de los siguientes bienes y servicios directamente relacionados con los bienes a que se refiere dicho apartado" },
+  { key = "iva_citation.1.legal_ref", value = "ley-37-1992:art-95-4" },
+  { key = "iva_citation.2.source", value = "manual_iva" },
+  { key = "iva_citation.2.reference", value = "Manual práctico IVA 2025" },
+  { key = "iva_citation.2.locator", value = "Deducciones: IVA soportado en bienes o servicios utilizados en la actividad" },
+  { key = "iva_citation.2.url", value = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2025.pdf" },
+  { key = "iva_citation.2.grounding", value = "verified" },
+  { key = "iva_citation.2.valid_from", value = 2025-01-01 },
+  { key = "iva_citation.2.valid_to", value = 2025-12-31 },
+  { key = "iva_citation.2.quote", value = "La cuota soportada en los suministros será deducible en la parte en que el inmueble esté afecta a la actividad profesional." },
+  { key = "iva_citation.2.source_ref", value = "aeat-manual-iva-2025" },
+  { key = "iva_citation.3.source", value = "manual_iva" },
+  { key = "iva_citation.3.reference", value = "Manual práctico IVA 2025" },
+  { key = "iva_citation.3.locator", value = "Deducciones: IVA soportado en bienes o servicios utilizados en la actividad" },
+  { key = "iva_citation.3.url", value = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2025.pdf" },
+  { key = "iva_citation.3.grounding", value = "verified" },
+  { key = "iva_citation.3.valid_from", value = 2025-01-01 },
+  { key = "iva_citation.3.valid_to", value = 2025-12-31 },
+  { key = "iva_citation.3.quote", value = "Suministros y demás gastos corrientes de inmuebles. (Resolución del TEAC de 19 de julio de 2023 - RG 00/06654/2022)" },
+  { key = "iva_citation.3.source_ref", value = "aeat-manual-iva-2025" },
 ]
 
 [[fact.variants]]
@@ -1850,7 +2317,7 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-legal_refs = ["ley-35-2006:art-30"]
+legal_refs = ["ley-35-2006:art-30", "ley-37-1992:art-95-3", "ley-37-1992:art-95-4"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -1874,6 +2341,25 @@ entries = [
   { key = "citation.0.valid_to", value = 2026-12-31 },
   { key = "citation.0.quote", value = "b) En los casos en que el contribuyente afecte parcialmente su vivienda habitual al desarrollo de la actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, en el porcentaje resultante de aplicar el 30 por ciento a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior." },
   { key = "citation.0.legal_ref", value = "ley-35-2006:art-30" },
+  { key = "iva_mixed_use_share", value = "degree_of_use" },
+  { key = "iva_citation.0.source", value = "ley_iva" },
+  { key = "iva_citation.0.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.0.locator", value = "art. 95.Tres.1.ª, aplicable a suministros por el art. 95.Cuatro según el criterio del TEAC" },
+  { key = "iva_citation.0.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.0.grounding", value = "verified" },
+  { key = "iva_citation.0.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.0.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.0.quote", value = "Cuando se trate de bienes de inversión distintos de los comprendidos en la regla siguiente, en la medida en que dichos bienes vayan a utilizarse previsiblemente, de acuerdo con criterios fundados, en el desarrollo de la actividad empresarial o profesional." },
+  { key = "iva_citation.0.legal_ref", value = "ley-37-1992:art-95-3" },
+  { key = "iva_citation.1.source", value = "ley_iva" },
+  { key = "iva_citation.1.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.1.locator", value = "art. 95.Cuatro" },
+  { key = "iva_citation.1.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.1.grounding", value = "verified" },
+  { key = "iva_citation.1.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.1.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.1.quote", value = "Lo dispuesto en el apartado anterior será también de aplicación a las cuotas soportadas o satisfechas por la adquisición o importación de los siguientes bienes y servicios directamente relacionados con los bienes a que se refiere dicho apartado" },
+  { key = "iva_citation.1.legal_ref", value = "ley-37-1992:art-95-4" },
 ]
 
 [[fact.variants]]
@@ -1884,7 +2370,7 @@ selectors = [
 date_axis = "filing_period"
 valid_from = 2022-01-01
 valid_to = 2022-12-31
-legal_refs = ["ley-35-2006:art-30"]
+legal_refs = ["ley-35-2006:art-30", "ley-37-1992:art-95-3", "ley-37-1992:art-95-4"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -1908,6 +2394,25 @@ entries = [
   { key = "citation.0.valid_to", value = 2026-12-31 },
   { key = "citation.0.quote", value = "b) En los casos en que el contribuyente afecte parcialmente su vivienda habitual al desarrollo de la actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, en el porcentaje resultante de aplicar el 30 por ciento a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior." },
   { key = "citation.0.legal_ref", value = "ley-35-2006:art-30" },
+  { key = "iva_mixed_use_share", value = "degree_of_use" },
+  { key = "iva_citation.0.source", value = "ley_iva" },
+  { key = "iva_citation.0.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.0.locator", value = "art. 95.Tres.1.ª, aplicable a suministros por el art. 95.Cuatro según el criterio del TEAC" },
+  { key = "iva_citation.0.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.0.grounding", value = "verified" },
+  { key = "iva_citation.0.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.0.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.0.quote", value = "Cuando se trate de bienes de inversión distintos de los comprendidos en la regla siguiente, en la medida en que dichos bienes vayan a utilizarse previsiblemente, de acuerdo con criterios fundados, en el desarrollo de la actividad empresarial o profesional." },
+  { key = "iva_citation.0.legal_ref", value = "ley-37-1992:art-95-3" },
+  { key = "iva_citation.1.source", value = "ley_iva" },
+  { key = "iva_citation.1.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.1.locator", value = "art. 95.Cuatro" },
+  { key = "iva_citation.1.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.1.grounding", value = "verified" },
+  { key = "iva_citation.1.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.1.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.1.quote", value = "Lo dispuesto en el apartado anterior será también de aplicación a las cuotas soportadas o satisfechas por la adquisición o importación de los siguientes bienes y servicios directamente relacionados con los bienes a que se refiere dicho apartado" },
+  { key = "iva_citation.1.legal_ref", value = "ley-37-1992:art-95-4" },
 ]
 
 [[fact.variants]]
@@ -1918,13 +2423,16 @@ selectors = [
 date_axis = "filing_period"
 valid_from = 2023-01-01
 valid_to = 2023-12-31
-legal_refs = ["ley-35-2006:art-30"]
-source_refs = ["lirpf-cuota-chain-authority"]
+legal_refs = ["ley-35-2006:art-30", "ley-37-1992:art-95-3", "ley-37-1992:art-95-4"]
+source_refs = ["lirpf-cuota-chain-authority", "aeat-manual-iva-2023"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["b) En los casos en que el contribuyente afecte parcialmente su vivienda habitual al desarrollo de la actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, en el porcentaje resultante de aplicar el 30 por ciento a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior."]
+[[fact.variants.source_citations]]
+source_ref = "aeat-manual-iva-2023"
+required_text = ["La cuota soportada en los suministros será deducible en la parte en que el inmueble esté afecta a la actividad profesional.", "Suministros y demás gastos corrientes de inmuebles. (Resolución del TEAC de 19 de julio de 2023 - RG 00/06654/2022)"]
 [fact.variants.payload]
 kind = "mapping"
 entries = [
@@ -1942,6 +2450,43 @@ entries = [
   { key = "citation.0.valid_to", value = 2026-12-31 },
   { key = "citation.0.quote", value = "b) En los casos en que el contribuyente afecte parcialmente su vivienda habitual al desarrollo de la actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, en el porcentaje resultante de aplicar el 30 por ciento a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior." },
   { key = "citation.0.legal_ref", value = "ley-35-2006:art-30" },
+  { key = "iva_mixed_use_share", value = "degree_of_use" },
+  { key = "iva_citation.0.source", value = "ley_iva" },
+  { key = "iva_citation.0.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.0.locator", value = "art. 95.Tres.1.ª, aplicable a suministros por el art. 95.Cuatro según el criterio del TEAC" },
+  { key = "iva_citation.0.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.0.grounding", value = "verified" },
+  { key = "iva_citation.0.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.0.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.0.quote", value = "Cuando se trate de bienes de inversión distintos de los comprendidos en la regla siguiente, en la medida en que dichos bienes vayan a utilizarse previsiblemente, de acuerdo con criterios fundados, en el desarrollo de la actividad empresarial o profesional." },
+  { key = "iva_citation.0.legal_ref", value = "ley-37-1992:art-95-3" },
+  { key = "iva_citation.1.source", value = "ley_iva" },
+  { key = "iva_citation.1.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.1.locator", value = "art. 95.Cuatro" },
+  { key = "iva_citation.1.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.1.grounding", value = "verified" },
+  { key = "iva_citation.1.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.1.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.1.quote", value = "Lo dispuesto en el apartado anterior será también de aplicación a las cuotas soportadas o satisfechas por la adquisición o importación de los siguientes bienes y servicios directamente relacionados con los bienes a que se refiere dicho apartado" },
+  { key = "iva_citation.1.legal_ref", value = "ley-37-1992:art-95-4" },
+  { key = "iva_citation.2.source", value = "manual_iva" },
+  { key = "iva_citation.2.reference", value = "Manual práctico IVA 2023" },
+  { key = "iva_citation.2.locator", value = "Deducciones: IVA soportado en bienes o servicios utilizados en la actividad" },
+  { key = "iva_citation.2.url", value = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2023.pdf" },
+  { key = "iva_citation.2.grounding", value = "verified" },
+  { key = "iva_citation.2.valid_from", value = 2023-01-01 },
+  { key = "iva_citation.2.valid_to", value = 2023-12-31 },
+  { key = "iva_citation.2.quote", value = "La cuota soportada en los suministros será deducible en la parte en que el inmueble esté afecta a la actividad profesional." },
+  { key = "iva_citation.2.source_ref", value = "aeat-manual-iva-2023" },
+  { key = "iva_citation.3.source", value = "manual_iva" },
+  { key = "iva_citation.3.reference", value = "Manual práctico IVA 2023" },
+  { key = "iva_citation.3.locator", value = "Deducciones: IVA soportado en bienes o servicios utilizados en la actividad" },
+  { key = "iva_citation.3.url", value = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2023.pdf" },
+  { key = "iva_citation.3.grounding", value = "verified" },
+  { key = "iva_citation.3.valid_from", value = 2023-01-01 },
+  { key = "iva_citation.3.valid_to", value = 2023-12-31 },
+  { key = "iva_citation.3.quote", value = "Suministros y demás gastos corrientes de inmuebles. (Resolución del TEAC de 19 de julio de 2023 - RG 00/06654/2022)" },
+  { key = "iva_citation.3.source_ref", value = "aeat-manual-iva-2023" },
 ]
 
 [[fact.variants]]
@@ -1952,13 +2497,16 @@ selectors = [
 date_axis = "filing_period"
 valid_from = 2024-01-01
 valid_to = 2024-12-31
-legal_refs = ["ley-35-2006:art-30"]
-source_refs = ["lirpf-cuota-chain-authority"]
+legal_refs = ["ley-35-2006:art-30", "ley-37-1992:art-95-3", "ley-37-1992:art-95-4"]
+source_refs = ["lirpf-cuota-chain-authority", "aeat-manual-iva-2024"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["b) En los casos en que el contribuyente afecte parcialmente su vivienda habitual al desarrollo de la actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, en el porcentaje resultante de aplicar el 30 por ciento a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior."]
+[[fact.variants.source_citations]]
+source_ref = "aeat-manual-iva-2024"
+required_text = ["La cuota soportada en los suministros será deducible en la parte en que el inmueble esté afecta a la actividad profesional.", "Suministros y demás gastos corrientes de inmuebles. (Resolución del TEAC de 19 de julio de 2023 - RG 00/06654/2022)"]
 [fact.variants.payload]
 kind = "mapping"
 entries = [
@@ -1976,6 +2524,43 @@ entries = [
   { key = "citation.0.valid_to", value = 2026-12-31 },
   { key = "citation.0.quote", value = "b) En los casos en que el contribuyente afecte parcialmente su vivienda habitual al desarrollo de la actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, en el porcentaje resultante de aplicar el 30 por ciento a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior." },
   { key = "citation.0.legal_ref", value = "ley-35-2006:art-30" },
+  { key = "iva_mixed_use_share", value = "degree_of_use" },
+  { key = "iva_citation.0.source", value = "ley_iva" },
+  { key = "iva_citation.0.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.0.locator", value = "art. 95.Tres.1.ª, aplicable a suministros por el art. 95.Cuatro según el criterio del TEAC" },
+  { key = "iva_citation.0.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.0.grounding", value = "verified" },
+  { key = "iva_citation.0.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.0.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.0.quote", value = "Cuando se trate de bienes de inversión distintos de los comprendidos en la regla siguiente, en la medida en que dichos bienes vayan a utilizarse previsiblemente, de acuerdo con criterios fundados, en el desarrollo de la actividad empresarial o profesional." },
+  { key = "iva_citation.0.legal_ref", value = "ley-37-1992:art-95-3" },
+  { key = "iva_citation.1.source", value = "ley_iva" },
+  { key = "iva_citation.1.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.1.locator", value = "art. 95.Cuatro" },
+  { key = "iva_citation.1.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.1.grounding", value = "verified" },
+  { key = "iva_citation.1.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.1.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.1.quote", value = "Lo dispuesto en el apartado anterior será también de aplicación a las cuotas soportadas o satisfechas por la adquisición o importación de los siguientes bienes y servicios directamente relacionados con los bienes a que se refiere dicho apartado" },
+  { key = "iva_citation.1.legal_ref", value = "ley-37-1992:art-95-4" },
+  { key = "iva_citation.2.source", value = "manual_iva" },
+  { key = "iva_citation.2.reference", value = "Manual práctico IVA 2024" },
+  { key = "iva_citation.2.locator", value = "Deducciones: IVA soportado en bienes o servicios utilizados en la actividad" },
+  { key = "iva_citation.2.url", value = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2024.pdf" },
+  { key = "iva_citation.2.grounding", value = "verified" },
+  { key = "iva_citation.2.valid_from", value = 2024-01-01 },
+  { key = "iva_citation.2.valid_to", value = 2024-12-31 },
+  { key = "iva_citation.2.quote", value = "La cuota soportada en los suministros será deducible en la parte en que el inmueble esté afecta a la actividad profesional." },
+  { key = "iva_citation.2.source_ref", value = "aeat-manual-iva-2024" },
+  { key = "iva_citation.3.source", value = "manual_iva" },
+  { key = "iva_citation.3.reference", value = "Manual práctico IVA 2024" },
+  { key = "iva_citation.3.locator", value = "Deducciones: IVA soportado en bienes o servicios utilizados en la actividad" },
+  { key = "iva_citation.3.url", value = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2024.pdf" },
+  { key = "iva_citation.3.grounding", value = "verified" },
+  { key = "iva_citation.3.valid_from", value = 2024-01-01 },
+  { key = "iva_citation.3.valid_to", value = 2024-12-31 },
+  { key = "iva_citation.3.quote", value = "Suministros y demás gastos corrientes de inmuebles. (Resolución del TEAC de 19 de julio de 2023 - RG 00/06654/2022)" },
+  { key = "iva_citation.3.source_ref", value = "aeat-manual-iva-2024" },
 ]
 
 [[fact.variants]]
@@ -1986,13 +2571,19 @@ selectors = [
 date_axis = "filing_period"
 valid_from = 2025-01-01
 valid_to = 2025-12-31
-legal_refs = ["ley-35-2006:art-30"]
-source_refs = ["lirpf-cuota-chain-authority"]
+legal_refs = ["ley-35-2006:art-30", "ley-37-1992:art-95-3", "ley-37-1992:art-95-4"]
+source_refs = ["lirpf-cuota-chain-authority", "aeat-manual-iva-2025", "aeat-renta-2025-manual-parte1"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["b) En los casos en que el contribuyente afecte parcialmente su vivienda habitual al desarrollo de la actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, en el porcentaje resultante de aplicar el 30 por ciento a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior."]
+[[fact.variants.source_citations]]
+source_ref = "aeat-manual-iva-2025"
+required_text = ["La cuota soportada en los suministros será deducible en la parte en que el inmueble esté afecta a la actividad profesional.", "Suministros y demás gastos corrientes de inmuebles. (Resolución del TEAC de 19 de julio de 2023 - RG 00/06654/2022)"]
+[[fact.variants.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["cuando el contribuyente afecte parcialmente su vivienda habitual al desarrollo de su actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, serán deducibles en el porcentaje resultante de aplicar el 30 por 100 a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior."]
 [fact.variants.payload]
 kind = "mapping"
 entries = [
@@ -2012,12 +2603,50 @@ entries = [
   { key = "citation.0.legal_ref", value = "ley-35-2006:art-30" },
   { key = "citation.1.source", value = "manual_renta" },
   { key = "citation.1.reference", value = "Manual práctico Renta 2025" },
-  { key = "citation.1.locator", value = "Vivienda parcialmente afecta" },
+  { key = "citation.1.locator", value = "Capítulo 7, suministros de la vivienda habitual parcialmente afecta a la actividad (art. 30.2.5.ª b) Ley IRPF)" },
   { key = "citation.1.url", value = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf" },
-  { key = "citation.1.grounding", value = "source_not_bundled" },
+  { key = "citation.1.grounding", value = "verified" },
   { key = "citation.1.valid_from", value = 2025-01-01 },
   { key = "citation.1.valid_to", value = 2025-12-31 },
-  { key = "citation.1.grounding_reason", value = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus." },
+  { key = "citation.1.quote", value = "cuando el contribuyente afecte parcialmente su vivienda habitual al desarrollo de su actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, serán deducibles en el porcentaje resultante de aplicar el 30 por 100 a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior." },
+  { key = "citation.1.source_ref", value = "aeat-renta-2025-manual-parte1" },
+  { key = "iva_mixed_use_share", value = "degree_of_use" },
+  { key = "iva_citation.0.source", value = "ley_iva" },
+  { key = "iva_citation.0.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.0.locator", value = "art. 95.Tres.1.ª, aplicable a suministros por el art. 95.Cuatro según el criterio del TEAC" },
+  { key = "iva_citation.0.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.0.grounding", value = "verified" },
+  { key = "iva_citation.0.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.0.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.0.quote", value = "Cuando se trate de bienes de inversión distintos de los comprendidos en la regla siguiente, en la medida en que dichos bienes vayan a utilizarse previsiblemente, de acuerdo con criterios fundados, en el desarrollo de la actividad empresarial o profesional." },
+  { key = "iva_citation.0.legal_ref", value = "ley-37-1992:art-95-3" },
+  { key = "iva_citation.1.source", value = "ley_iva" },
+  { key = "iva_citation.1.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.1.locator", value = "art. 95.Cuatro" },
+  { key = "iva_citation.1.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.1.grounding", value = "verified" },
+  { key = "iva_citation.1.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.1.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.1.quote", value = "Lo dispuesto en el apartado anterior será también de aplicación a las cuotas soportadas o satisfechas por la adquisición o importación de los siguientes bienes y servicios directamente relacionados con los bienes a que se refiere dicho apartado" },
+  { key = "iva_citation.1.legal_ref", value = "ley-37-1992:art-95-4" },
+  { key = "iva_citation.2.source", value = "manual_iva" },
+  { key = "iva_citation.2.reference", value = "Manual práctico IVA 2025" },
+  { key = "iva_citation.2.locator", value = "Deducciones: IVA soportado en bienes o servicios utilizados en la actividad" },
+  { key = "iva_citation.2.url", value = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2025.pdf" },
+  { key = "iva_citation.2.grounding", value = "verified" },
+  { key = "iva_citation.2.valid_from", value = 2025-01-01 },
+  { key = "iva_citation.2.valid_to", value = 2025-12-31 },
+  { key = "iva_citation.2.quote", value = "La cuota soportada en los suministros será deducible en la parte en que el inmueble esté afecta a la actividad profesional." },
+  { key = "iva_citation.2.source_ref", value = "aeat-manual-iva-2025" },
+  { key = "iva_citation.3.source", value = "manual_iva" },
+  { key = "iva_citation.3.reference", value = "Manual práctico IVA 2025" },
+  { key = "iva_citation.3.locator", value = "Deducciones: IVA soportado en bienes o servicios utilizados en la actividad" },
+  { key = "iva_citation.3.url", value = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2025.pdf" },
+  { key = "iva_citation.3.grounding", value = "verified" },
+  { key = "iva_citation.3.valid_from", value = 2025-01-01 },
+  { key = "iva_citation.3.valid_to", value = 2025-12-31 },
+  { key = "iva_citation.3.quote", value = "Suministros y demás gastos corrientes de inmuebles. (Resolución del TEAC de 19 de julio de 2023 - RG 00/06654/2022)" },
+  { key = "iva_citation.3.source_ref", value = "aeat-manual-iva-2025" },
 ]
 
 [[fact.variants]]
@@ -2027,7 +2656,7 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-legal_refs = ["ley-35-2006:art-30"]
+legal_refs = ["ley-35-2006:art-30", "ley-37-1992:art-95-3", "ley-37-1992:art-95-4"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -2051,6 +2680,25 @@ entries = [
   { key = "citation.0.valid_to", value = 2026-12-31 },
   { key = "citation.0.quote", value = "b) En los casos en que el contribuyente afecte parcialmente su vivienda habitual al desarrollo de la actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, en el porcentaje resultante de aplicar el 30 por ciento a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior." },
   { key = "citation.0.legal_ref", value = "ley-35-2006:art-30" },
+  { key = "iva_mixed_use_share", value = "degree_of_use" },
+  { key = "iva_citation.0.source", value = "ley_iva" },
+  { key = "iva_citation.0.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.0.locator", value = "art. 95.Tres.1.ª, aplicable a suministros por el art. 95.Cuatro según el criterio del TEAC" },
+  { key = "iva_citation.0.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.0.grounding", value = "verified" },
+  { key = "iva_citation.0.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.0.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.0.quote", value = "Cuando se trate de bienes de inversión distintos de los comprendidos en la regla siguiente, en la medida en que dichos bienes vayan a utilizarse previsiblemente, de acuerdo con criterios fundados, en el desarrollo de la actividad empresarial o profesional." },
+  { key = "iva_citation.0.legal_ref", value = "ley-37-1992:art-95-3" },
+  { key = "iva_citation.1.source", value = "ley_iva" },
+  { key = "iva_citation.1.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.1.locator", value = "art. 95.Cuatro" },
+  { key = "iva_citation.1.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.1.grounding", value = "verified" },
+  { key = "iva_citation.1.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.1.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.1.quote", value = "Lo dispuesto en el apartado anterior será también de aplicación a las cuotas soportadas o satisfechas por la adquisición o importación de los siguientes bienes y servicios directamente relacionados con los bienes a que se refiere dicho apartado" },
+  { key = "iva_citation.1.legal_ref", value = "ley-37-1992:art-95-4" },
 ]
 
 [[fact.variants]]
@@ -2061,13 +2709,16 @@ selectors = [
 date_axis = "filing_period"
 valid_from = 2022-01-01
 valid_to = 2022-12-31
-legal_refs = ["rd-439-2007:art-22"]
-source_refs = ["boe-rirpf-category-profile-authority"]
+legal_refs = ["rd-439-2007:art-22", "ley-37-1992:art-95"]
+source_refs = ["boe-rirpf-category-profile-authority", "aeat-manual-iva-2022"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "boe-rirpf-category-profile-authority"
 required_text = ["Cuando se trate de elementos patrimoniales que sirvan sólo parcialmente al objeto de la actividad, la afectación se entenderá limitada a aquella parte de los mismos que realmente se utilice en la actividad de que se trate. En este sentido, sólo se considerarán afectadas aquellas partes de los elementos patrimoniales que sean susceptibles de un aprovechamiento separado e independiente del resto. En ningún caso serán susceptibles de afectación parcial elementos patrimoniales indivisibles."]
+[[fact.variants.source_citations]]
+source_ref = "aeat-manual-iva-2022"
+required_text = ["Si se utiliza simultáneamente un equipo informático que costó 1.000 euros o el teléfono para una actividad empresarial y para fines privados, no se puede deducir las cuotas soportadas en ninguna medida."]
 [fact.variants.payload]
 kind = "mapping"
 entries = [
@@ -2084,6 +2735,34 @@ entries = [
   { key = "citation.0.valid_to", value = 2026-12-31 },
   { key = "citation.0.quote", value = "Cuando se trate de elementos patrimoniales que sirvan sólo parcialmente al objeto de la actividad, la afectación se entenderá limitada a aquella parte de los mismos que realmente se utilice en la actividad de que se trate. En este sentido, sólo se considerarán afectadas aquellas partes de los elementos patrimoniales que sean susceptibles de un aprovechamiento separado e independiente del resto. En ningún caso serán susceptibles de afectación parcial elementos patrimoniales indivisibles." },
   { key = "citation.0.legal_ref", value = "rd-439-2007:art-22" },
+  { key = "iva_mixed_use_share", value = "not_deductible" },
+  { key = "iva_citation.0.source", value = "ley_iva" },
+  { key = "iva_citation.0.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.0.locator", value = "art. 95.Uno" },
+  { key = "iva_citation.0.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.0.grounding", value = "verified" },
+  { key = "iva_citation.0.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.0.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.0.quote", value = "Los empresarios o profesionales no podrán deducir las cuotas soportadas o satisfechas por las adquisiciones o importaciones de bienes o servicios que no se afecten, directa y exclusivamente, a su actividad empresarial o profesional." },
+  { key = "iva_citation.0.legal_ref", value = "ley-37-1992:art-95" },
+  { key = "iva_citation.1.source", value = "ley_iva" },
+  { key = "iva_citation.1.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.1.locator", value = "art. 95.Dos.2.º" },
+  { key = "iva_citation.1.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.1.grounding", value = "verified" },
+  { key = "iva_citation.1.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.1.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.1.quote", value = "Los bienes o servicios que se utilicen simultáneamente para actividades empresariales o profesionales y para necesidades privadas." },
+  { key = "iva_citation.1.legal_ref", value = "ley-37-1992:art-95" },
+  { key = "iva_citation.2.source", value = "manual_iva" },
+  { key = "iva_citation.2.reference", value = "Manual práctico IVA 2022" },
+  { key = "iva_citation.2.locator", value = "Deducciones: IVA soportado en bienes o servicios utilizados en la actividad" },
+  { key = "iva_citation.2.url", value = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2022.pdf" },
+  { key = "iva_citation.2.grounding", value = "verified" },
+  { key = "iva_citation.2.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.2.valid_to", value = 2022-12-31 },
+  { key = "iva_citation.2.quote", value = "Si se utiliza simultáneamente un equipo informático que costó 1.000 euros o el teléfono para una actividad empresarial y para fines privados, no se puede deducir las cuotas soportadas en ninguna medida." },
+  { key = "iva_citation.2.source_ref", value = "aeat-manual-iva-2022" },
 ]
 
 [[fact.variants]]
@@ -2094,13 +2773,16 @@ selectors = [
 date_axis = "filing_period"
 valid_from = 2023-01-01
 valid_to = 2023-12-31
-legal_refs = ["rd-439-2007:art-22"]
-source_refs = ["boe-rirpf-category-profile-authority"]
+legal_refs = ["rd-439-2007:art-22", "ley-37-1992:art-95"]
+source_refs = ["boe-rirpf-category-profile-authority", "aeat-manual-iva-2023"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "boe-rirpf-category-profile-authority"
 required_text = ["Cuando se trate de elementos patrimoniales que sirvan sólo parcialmente al objeto de la actividad, la afectación se entenderá limitada a aquella parte de los mismos que realmente se utilice en la actividad de que se trate. En este sentido, sólo se considerarán afectadas aquellas partes de los elementos patrimoniales que sean susceptibles de un aprovechamiento separado e independiente del resto. En ningún caso serán susceptibles de afectación parcial elementos patrimoniales indivisibles."]
+[[fact.variants.source_citations]]
+source_ref = "aeat-manual-iva-2023"
+required_text = ["Si se utiliza simultáneamente un equipo informático que costó 1.000 euros o el teléfono para una actividad empresarial y para fines privados, no se puede deducir las cuotas soportadas en ninguna medida."]
 [fact.variants.payload]
 kind = "mapping"
 entries = [
@@ -2117,6 +2799,34 @@ entries = [
   { key = "citation.0.valid_to", value = 2026-12-31 },
   { key = "citation.0.quote", value = "Cuando se trate de elementos patrimoniales que sirvan sólo parcialmente al objeto de la actividad, la afectación se entenderá limitada a aquella parte de los mismos que realmente se utilice en la actividad de que se trate. En este sentido, sólo se considerarán afectadas aquellas partes de los elementos patrimoniales que sean susceptibles de un aprovechamiento separado e independiente del resto. En ningún caso serán susceptibles de afectación parcial elementos patrimoniales indivisibles." },
   { key = "citation.0.legal_ref", value = "rd-439-2007:art-22" },
+  { key = "iva_mixed_use_share", value = "not_deductible" },
+  { key = "iva_citation.0.source", value = "ley_iva" },
+  { key = "iva_citation.0.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.0.locator", value = "art. 95.Uno" },
+  { key = "iva_citation.0.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.0.grounding", value = "verified" },
+  { key = "iva_citation.0.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.0.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.0.quote", value = "Los empresarios o profesionales no podrán deducir las cuotas soportadas o satisfechas por las adquisiciones o importaciones de bienes o servicios que no se afecten, directa y exclusivamente, a su actividad empresarial o profesional." },
+  { key = "iva_citation.0.legal_ref", value = "ley-37-1992:art-95" },
+  { key = "iva_citation.1.source", value = "ley_iva" },
+  { key = "iva_citation.1.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.1.locator", value = "art. 95.Dos.2.º" },
+  { key = "iva_citation.1.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.1.grounding", value = "verified" },
+  { key = "iva_citation.1.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.1.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.1.quote", value = "Los bienes o servicios que se utilicen simultáneamente para actividades empresariales o profesionales y para necesidades privadas." },
+  { key = "iva_citation.1.legal_ref", value = "ley-37-1992:art-95" },
+  { key = "iva_citation.2.source", value = "manual_iva" },
+  { key = "iva_citation.2.reference", value = "Manual práctico IVA 2023" },
+  { key = "iva_citation.2.locator", value = "Deducciones: IVA soportado en bienes o servicios utilizados en la actividad" },
+  { key = "iva_citation.2.url", value = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2023.pdf" },
+  { key = "iva_citation.2.grounding", value = "verified" },
+  { key = "iva_citation.2.valid_from", value = 2023-01-01 },
+  { key = "iva_citation.2.valid_to", value = 2023-12-31 },
+  { key = "iva_citation.2.quote", value = "Si se utiliza simultáneamente un equipo informático que costó 1.000 euros o el teléfono para una actividad empresarial y para fines privados, no se puede deducir las cuotas soportadas en ninguna medida." },
+  { key = "iva_citation.2.source_ref", value = "aeat-manual-iva-2023" },
 ]
 
 [[fact.variants]]
@@ -2127,13 +2837,16 @@ selectors = [
 date_axis = "filing_period"
 valid_from = 2024-01-01
 valid_to = 2024-12-31
-legal_refs = ["rd-439-2007:art-22"]
-source_refs = ["boe-rirpf-category-profile-authority"]
+legal_refs = ["rd-439-2007:art-22", "ley-37-1992:art-95"]
+source_refs = ["boe-rirpf-category-profile-authority", "aeat-manual-iva-2024"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "boe-rirpf-category-profile-authority"
 required_text = ["Cuando se trate de elementos patrimoniales que sirvan sólo parcialmente al objeto de la actividad, la afectación se entenderá limitada a aquella parte de los mismos que realmente se utilice en la actividad de que se trate. En este sentido, sólo se considerarán afectadas aquellas partes de los elementos patrimoniales que sean susceptibles de un aprovechamiento separado e independiente del resto. En ningún caso serán susceptibles de afectación parcial elementos patrimoniales indivisibles."]
+[[fact.variants.source_citations]]
+source_ref = "aeat-manual-iva-2024"
+required_text = ["Si se utiliza simultáneamente un equipo informático que costó 1.000 euros o el teléfono para una actividad empresarial y para fines privados, no se puede deducir las cuotas soportadas en ninguna medida."]
 [fact.variants.payload]
 kind = "mapping"
 entries = [
@@ -2150,6 +2863,34 @@ entries = [
   { key = "citation.0.valid_to", value = 2026-12-31 },
   { key = "citation.0.quote", value = "Cuando se trate de elementos patrimoniales que sirvan sólo parcialmente al objeto de la actividad, la afectación se entenderá limitada a aquella parte de los mismos que realmente se utilice en la actividad de que se trate. En este sentido, sólo se considerarán afectadas aquellas partes de los elementos patrimoniales que sean susceptibles de un aprovechamiento separado e independiente del resto. En ningún caso serán susceptibles de afectación parcial elementos patrimoniales indivisibles." },
   { key = "citation.0.legal_ref", value = "rd-439-2007:art-22" },
+  { key = "iva_mixed_use_share", value = "not_deductible" },
+  { key = "iva_citation.0.source", value = "ley_iva" },
+  { key = "iva_citation.0.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.0.locator", value = "art. 95.Uno" },
+  { key = "iva_citation.0.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.0.grounding", value = "verified" },
+  { key = "iva_citation.0.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.0.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.0.quote", value = "Los empresarios o profesionales no podrán deducir las cuotas soportadas o satisfechas por las adquisiciones o importaciones de bienes o servicios que no se afecten, directa y exclusivamente, a su actividad empresarial o profesional." },
+  { key = "iva_citation.0.legal_ref", value = "ley-37-1992:art-95" },
+  { key = "iva_citation.1.source", value = "ley_iva" },
+  { key = "iva_citation.1.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.1.locator", value = "art. 95.Dos.2.º" },
+  { key = "iva_citation.1.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.1.grounding", value = "verified" },
+  { key = "iva_citation.1.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.1.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.1.quote", value = "Los bienes o servicios que se utilicen simultáneamente para actividades empresariales o profesionales y para necesidades privadas." },
+  { key = "iva_citation.1.legal_ref", value = "ley-37-1992:art-95" },
+  { key = "iva_citation.2.source", value = "manual_iva" },
+  { key = "iva_citation.2.reference", value = "Manual práctico IVA 2024" },
+  { key = "iva_citation.2.locator", value = "Deducciones: IVA soportado en bienes o servicios utilizados en la actividad" },
+  { key = "iva_citation.2.url", value = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2024.pdf" },
+  { key = "iva_citation.2.grounding", value = "verified" },
+  { key = "iva_citation.2.valid_from", value = 2024-01-01 },
+  { key = "iva_citation.2.valid_to", value = 2024-12-31 },
+  { key = "iva_citation.2.quote", value = "Si se utiliza simultáneamente un equipo informático que costó 1.000 euros o el teléfono para una actividad empresarial y para fines privados, no se puede deducir las cuotas soportadas en ninguna medida." },
+  { key = "iva_citation.2.source_ref", value = "aeat-manual-iva-2024" },
 ]
 
 [[fact.variants]]
@@ -2160,13 +2901,16 @@ selectors = [
 date_axis = "filing_period"
 valid_from = 2025-01-01
 valid_to = 2025-12-31
-legal_refs = ["rd-439-2007:art-22"]
-source_refs = ["boe-rirpf-category-profile-authority"]
+legal_refs = ["rd-439-2007:art-22", "ley-37-1992:art-95"]
+source_refs = ["boe-rirpf-category-profile-authority", "aeat-manual-iva-2025"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "boe-rirpf-category-profile-authority"
 required_text = ["Cuando se trate de elementos patrimoniales que sirvan sólo parcialmente al objeto de la actividad, la afectación se entenderá limitada a aquella parte de los mismos que realmente se utilice en la actividad de que se trate. En este sentido, sólo se considerarán afectadas aquellas partes de los elementos patrimoniales que sean susceptibles de un aprovechamiento separado e independiente del resto. En ningún caso serán susceptibles de afectación parcial elementos patrimoniales indivisibles."]
+[[fact.variants.source_citations]]
+source_ref = "aeat-manual-iva-2025"
+required_text = ["Si se utiliza simultáneamente un equipo informático que costó 1.000 euros o el teléfono para una actividad empresarial y para fines privados, no se puede deducir las cuotas soportadas en ninguna medida."]
 [fact.variants.payload]
 kind = "mapping"
 entries = [
@@ -2191,6 +2935,34 @@ entries = [
   { key = "citation.1.valid_to", value = 2026-12-31 },
   { key = "citation.1.quote", value = "Cuando se trate de elementos patrimoniales que sirvan sólo parcialmente al objeto de la actividad, la afectación se entenderá limitada a aquella parte de los mismos que realmente se utilice en la actividad de que se trate. En este sentido, sólo se considerarán afectadas aquellas partes de los elementos patrimoniales que sean susceptibles de un aprovechamiento separado e independiente del resto. En ningún caso serán susceptibles de afectación parcial elementos patrimoniales indivisibles." },
   { key = "citation.1.legal_ref", value = "rd-439-2007:art-22" },
+  { key = "iva_mixed_use_share", value = "not_deductible" },
+  { key = "iva_citation.0.source", value = "ley_iva" },
+  { key = "iva_citation.0.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.0.locator", value = "art. 95.Uno" },
+  { key = "iva_citation.0.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.0.grounding", value = "verified" },
+  { key = "iva_citation.0.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.0.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.0.quote", value = "Los empresarios o profesionales no podrán deducir las cuotas soportadas o satisfechas por las adquisiciones o importaciones de bienes o servicios que no se afecten, directa y exclusivamente, a su actividad empresarial o profesional." },
+  { key = "iva_citation.0.legal_ref", value = "ley-37-1992:art-95" },
+  { key = "iva_citation.1.source", value = "ley_iva" },
+  { key = "iva_citation.1.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.1.locator", value = "art. 95.Dos.2.º" },
+  { key = "iva_citation.1.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.1.grounding", value = "verified" },
+  { key = "iva_citation.1.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.1.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.1.quote", value = "Los bienes o servicios que se utilicen simultáneamente para actividades empresariales o profesionales y para necesidades privadas." },
+  { key = "iva_citation.1.legal_ref", value = "ley-37-1992:art-95" },
+  { key = "iva_citation.2.source", value = "manual_iva" },
+  { key = "iva_citation.2.reference", value = "Manual práctico IVA 2025" },
+  { key = "iva_citation.2.locator", value = "Deducciones: IVA soportado en bienes o servicios utilizados en la actividad" },
+  { key = "iva_citation.2.url", value = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2025.pdf" },
+  { key = "iva_citation.2.grounding", value = "verified" },
+  { key = "iva_citation.2.valid_from", value = 2025-01-01 },
+  { key = "iva_citation.2.valid_to", value = 2025-12-31 },
+  { key = "iva_citation.2.quote", value = "Si se utiliza simultáneamente un equipo informático que costó 1.000 euros o el teléfono para una actividad empresarial y para fines privados, no se puede deducir las cuotas soportadas en ninguna medida." },
+  { key = "iva_citation.2.source_ref", value = "aeat-manual-iva-2025" },
 ]
 
 [[fact.variants]]
@@ -2200,7 +2972,7 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-legal_refs = ["rd-439-2007:art-22"]
+legal_refs = ["rd-439-2007:art-22", "ley-37-1992:art-95"]
 source_refs = ["boe-rirpf-category-profile-authority"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -2223,6 +2995,25 @@ entries = [
   { key = "citation.0.valid_to", value = 2026-12-31 },
   { key = "citation.0.quote", value = "Cuando se trate de elementos patrimoniales que sirvan sólo parcialmente al objeto de la actividad, la afectación se entenderá limitada a aquella parte de los mismos que realmente se utilice en la actividad de que se trate. En este sentido, sólo se considerarán afectadas aquellas partes de los elementos patrimoniales que sean susceptibles de un aprovechamiento separado e independiente del resto. En ningún caso serán susceptibles de afectación parcial elementos patrimoniales indivisibles." },
   { key = "citation.0.legal_ref", value = "rd-439-2007:art-22" },
+  { key = "iva_mixed_use_share", value = "not_deductible" },
+  { key = "iva_citation.0.source", value = "ley_iva" },
+  { key = "iva_citation.0.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.0.locator", value = "art. 95.Uno" },
+  { key = "iva_citation.0.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.0.grounding", value = "verified" },
+  { key = "iva_citation.0.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.0.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.0.quote", value = "Los empresarios o profesionales no podrán deducir las cuotas soportadas o satisfechas por las adquisiciones o importaciones de bienes o servicios que no se afecten, directa y exclusivamente, a su actividad empresarial o profesional." },
+  { key = "iva_citation.0.legal_ref", value = "ley-37-1992:art-95" },
+  { key = "iva_citation.1.source", value = "ley_iva" },
+  { key = "iva_citation.1.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.1.locator", value = "art. 95.Dos.2.º" },
+  { key = "iva_citation.1.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.1.grounding", value = "verified" },
+  { key = "iva_citation.1.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.1.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.1.quote", value = "Los bienes o servicios que se utilicen simultáneamente para actividades empresariales o profesionales y para necesidades privadas." },
+  { key = "iva_citation.1.legal_ref", value = "ley-37-1992:art-95" },
 ]
 
 [[fact.variants]]
@@ -2233,7 +3024,7 @@ selectors = [
 date_axis = "filing_period"
 valid_from = 2022-01-01
 valid_to = 2022-12-31
-legal_refs = ["ley-35-2006:art-30"]
+legal_refs = ["ley-35-2006:art-30", "ley-37-1992:art-95-3", "ley-37-1992:art-95-4"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -2257,6 +3048,25 @@ entries = [
   { key = "citation.0.valid_to", value = 2026-12-31 },
   { key = "citation.0.quote", value = "b) En los casos en que el contribuyente afecte parcialmente su vivienda habitual al desarrollo de la actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, en el porcentaje resultante de aplicar el 30 por ciento a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior." },
   { key = "citation.0.legal_ref", value = "ley-35-2006:art-30" },
+  { key = "iva_mixed_use_share", value = "degree_of_use" },
+  { key = "iva_citation.0.source", value = "ley_iva" },
+  { key = "iva_citation.0.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.0.locator", value = "art. 95.Tres.1.ª, aplicable a suministros por el art. 95.Cuatro según el criterio del TEAC" },
+  { key = "iva_citation.0.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.0.grounding", value = "verified" },
+  { key = "iva_citation.0.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.0.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.0.quote", value = "Cuando se trate de bienes de inversión distintos de los comprendidos en la regla siguiente, en la medida en que dichos bienes vayan a utilizarse previsiblemente, de acuerdo con criterios fundados, en el desarrollo de la actividad empresarial o profesional." },
+  { key = "iva_citation.0.legal_ref", value = "ley-37-1992:art-95-3" },
+  { key = "iva_citation.1.source", value = "ley_iva" },
+  { key = "iva_citation.1.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.1.locator", value = "art. 95.Cuatro" },
+  { key = "iva_citation.1.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.1.grounding", value = "verified" },
+  { key = "iva_citation.1.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.1.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.1.quote", value = "Lo dispuesto en el apartado anterior será también de aplicación a las cuotas soportadas o satisfechas por la adquisición o importación de los siguientes bienes y servicios directamente relacionados con los bienes a que se refiere dicho apartado" },
+  { key = "iva_citation.1.legal_ref", value = "ley-37-1992:art-95-4" },
 ]
 
 [[fact.variants]]
@@ -2267,13 +3077,16 @@ selectors = [
 date_axis = "filing_period"
 valid_from = 2023-01-01
 valid_to = 2023-12-31
-legal_refs = ["ley-35-2006:art-30"]
-source_refs = ["lirpf-cuota-chain-authority"]
+legal_refs = ["ley-35-2006:art-30", "ley-37-1992:art-95-3", "ley-37-1992:art-95-4"]
+source_refs = ["lirpf-cuota-chain-authority", "aeat-manual-iva-2023"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["b) En los casos en que el contribuyente afecte parcialmente su vivienda habitual al desarrollo de la actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, en el porcentaje resultante de aplicar el 30 por ciento a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior."]
+[[fact.variants.source_citations]]
+source_ref = "aeat-manual-iva-2023"
+required_text = ["La cuota soportada en los suministros será deducible en la parte en que el inmueble esté afecta a la actividad profesional.", "Suministros y demás gastos corrientes de inmuebles. (Resolución del TEAC de 19 de julio de 2023 - RG 00/06654/2022)"]
 [fact.variants.payload]
 kind = "mapping"
 entries = [
@@ -2291,6 +3104,43 @@ entries = [
   { key = "citation.0.valid_to", value = 2026-12-31 },
   { key = "citation.0.quote", value = "b) En los casos en que el contribuyente afecte parcialmente su vivienda habitual al desarrollo de la actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, en el porcentaje resultante de aplicar el 30 por ciento a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior." },
   { key = "citation.0.legal_ref", value = "ley-35-2006:art-30" },
+  { key = "iva_mixed_use_share", value = "degree_of_use" },
+  { key = "iva_citation.0.source", value = "ley_iva" },
+  { key = "iva_citation.0.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.0.locator", value = "art. 95.Tres.1.ª, aplicable a suministros por el art. 95.Cuatro según el criterio del TEAC" },
+  { key = "iva_citation.0.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.0.grounding", value = "verified" },
+  { key = "iva_citation.0.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.0.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.0.quote", value = "Cuando se trate de bienes de inversión distintos de los comprendidos en la regla siguiente, en la medida en que dichos bienes vayan a utilizarse previsiblemente, de acuerdo con criterios fundados, en el desarrollo de la actividad empresarial o profesional." },
+  { key = "iva_citation.0.legal_ref", value = "ley-37-1992:art-95-3" },
+  { key = "iva_citation.1.source", value = "ley_iva" },
+  { key = "iva_citation.1.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.1.locator", value = "art. 95.Cuatro" },
+  { key = "iva_citation.1.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.1.grounding", value = "verified" },
+  { key = "iva_citation.1.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.1.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.1.quote", value = "Lo dispuesto en el apartado anterior será también de aplicación a las cuotas soportadas o satisfechas por la adquisición o importación de los siguientes bienes y servicios directamente relacionados con los bienes a que se refiere dicho apartado" },
+  { key = "iva_citation.1.legal_ref", value = "ley-37-1992:art-95-4" },
+  { key = "iva_citation.2.source", value = "manual_iva" },
+  { key = "iva_citation.2.reference", value = "Manual práctico IVA 2023" },
+  { key = "iva_citation.2.locator", value = "Deducciones: IVA soportado en bienes o servicios utilizados en la actividad" },
+  { key = "iva_citation.2.url", value = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2023.pdf" },
+  { key = "iva_citation.2.grounding", value = "verified" },
+  { key = "iva_citation.2.valid_from", value = 2023-01-01 },
+  { key = "iva_citation.2.valid_to", value = 2023-12-31 },
+  { key = "iva_citation.2.quote", value = "La cuota soportada en los suministros será deducible en la parte en que el inmueble esté afecta a la actividad profesional." },
+  { key = "iva_citation.2.source_ref", value = "aeat-manual-iva-2023" },
+  { key = "iva_citation.3.source", value = "manual_iva" },
+  { key = "iva_citation.3.reference", value = "Manual práctico IVA 2023" },
+  { key = "iva_citation.3.locator", value = "Deducciones: IVA soportado en bienes o servicios utilizados en la actividad" },
+  { key = "iva_citation.3.url", value = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2023.pdf" },
+  { key = "iva_citation.3.grounding", value = "verified" },
+  { key = "iva_citation.3.valid_from", value = 2023-01-01 },
+  { key = "iva_citation.3.valid_to", value = 2023-12-31 },
+  { key = "iva_citation.3.quote", value = "Suministros y demás gastos corrientes de inmuebles. (Resolución del TEAC de 19 de julio de 2023 - RG 00/06654/2022)" },
+  { key = "iva_citation.3.source_ref", value = "aeat-manual-iva-2023" },
 ]
 
 [[fact.variants]]
@@ -2301,13 +3151,16 @@ selectors = [
 date_axis = "filing_period"
 valid_from = 2024-01-01
 valid_to = 2024-12-31
-legal_refs = ["ley-35-2006:art-30"]
-source_refs = ["lirpf-cuota-chain-authority"]
+legal_refs = ["ley-35-2006:art-30", "ley-37-1992:art-95-3", "ley-37-1992:art-95-4"]
+source_refs = ["lirpf-cuota-chain-authority", "aeat-manual-iva-2024"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["b) En los casos en que el contribuyente afecte parcialmente su vivienda habitual al desarrollo de la actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, en el porcentaje resultante de aplicar el 30 por ciento a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior."]
+[[fact.variants.source_citations]]
+source_ref = "aeat-manual-iva-2024"
+required_text = ["La cuota soportada en los suministros será deducible en la parte en que el inmueble esté afecta a la actividad profesional.", "Suministros y demás gastos corrientes de inmuebles. (Resolución del TEAC de 19 de julio de 2023 - RG 00/06654/2022)"]
 [fact.variants.payload]
 kind = "mapping"
 entries = [
@@ -2325,6 +3178,43 @@ entries = [
   { key = "citation.0.valid_to", value = 2026-12-31 },
   { key = "citation.0.quote", value = "b) En los casos en que el contribuyente afecte parcialmente su vivienda habitual al desarrollo de la actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, en el porcentaje resultante de aplicar el 30 por ciento a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior." },
   { key = "citation.0.legal_ref", value = "ley-35-2006:art-30" },
+  { key = "iva_mixed_use_share", value = "degree_of_use" },
+  { key = "iva_citation.0.source", value = "ley_iva" },
+  { key = "iva_citation.0.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.0.locator", value = "art. 95.Tres.1.ª, aplicable a suministros por el art. 95.Cuatro según el criterio del TEAC" },
+  { key = "iva_citation.0.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.0.grounding", value = "verified" },
+  { key = "iva_citation.0.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.0.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.0.quote", value = "Cuando se trate de bienes de inversión distintos de los comprendidos en la regla siguiente, en la medida en que dichos bienes vayan a utilizarse previsiblemente, de acuerdo con criterios fundados, en el desarrollo de la actividad empresarial o profesional." },
+  { key = "iva_citation.0.legal_ref", value = "ley-37-1992:art-95-3" },
+  { key = "iva_citation.1.source", value = "ley_iva" },
+  { key = "iva_citation.1.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.1.locator", value = "art. 95.Cuatro" },
+  { key = "iva_citation.1.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.1.grounding", value = "verified" },
+  { key = "iva_citation.1.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.1.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.1.quote", value = "Lo dispuesto en el apartado anterior será también de aplicación a las cuotas soportadas o satisfechas por la adquisición o importación de los siguientes bienes y servicios directamente relacionados con los bienes a que se refiere dicho apartado" },
+  { key = "iva_citation.1.legal_ref", value = "ley-37-1992:art-95-4" },
+  { key = "iva_citation.2.source", value = "manual_iva" },
+  { key = "iva_citation.2.reference", value = "Manual práctico IVA 2024" },
+  { key = "iva_citation.2.locator", value = "Deducciones: IVA soportado en bienes o servicios utilizados en la actividad" },
+  { key = "iva_citation.2.url", value = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2024.pdf" },
+  { key = "iva_citation.2.grounding", value = "verified" },
+  { key = "iva_citation.2.valid_from", value = 2024-01-01 },
+  { key = "iva_citation.2.valid_to", value = 2024-12-31 },
+  { key = "iva_citation.2.quote", value = "La cuota soportada en los suministros será deducible en la parte en que el inmueble esté afecta a la actividad profesional." },
+  { key = "iva_citation.2.source_ref", value = "aeat-manual-iva-2024" },
+  { key = "iva_citation.3.source", value = "manual_iva" },
+  { key = "iva_citation.3.reference", value = "Manual práctico IVA 2024" },
+  { key = "iva_citation.3.locator", value = "Deducciones: IVA soportado en bienes o servicios utilizados en la actividad" },
+  { key = "iva_citation.3.url", value = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2024.pdf" },
+  { key = "iva_citation.3.grounding", value = "verified" },
+  { key = "iva_citation.3.valid_from", value = 2024-01-01 },
+  { key = "iva_citation.3.valid_to", value = 2024-12-31 },
+  { key = "iva_citation.3.quote", value = "Suministros y demás gastos corrientes de inmuebles. (Resolución del TEAC de 19 de julio de 2023 - RG 00/06654/2022)" },
+  { key = "iva_citation.3.source_ref", value = "aeat-manual-iva-2024" },
 ]
 
 [[fact.variants]]
@@ -2335,13 +3225,19 @@ selectors = [
 date_axis = "filing_period"
 valid_from = 2025-01-01
 valid_to = 2025-12-31
-legal_refs = ["ley-35-2006:art-30"]
-source_refs = ["lirpf-cuota-chain-authority"]
+legal_refs = ["ley-35-2006:art-30", "ley-37-1992:art-95-3", "ley-37-1992:art-95-4"]
+source_refs = ["lirpf-cuota-chain-authority", "aeat-manual-iva-2025", "aeat-renta-2025-manual-parte1"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["b) En los casos en que el contribuyente afecte parcialmente su vivienda habitual al desarrollo de la actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, en el porcentaje resultante de aplicar el 30 por ciento a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior."]
+[[fact.variants.source_citations]]
+source_ref = "aeat-manual-iva-2025"
+required_text = ["La cuota soportada en los suministros será deducible en la parte en que el inmueble esté afecta a la actividad profesional.", "Suministros y demás gastos corrientes de inmuebles. (Resolución del TEAC de 19 de julio de 2023 - RG 00/06654/2022)"]
+[[fact.variants.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["cuando el contribuyente afecte parcialmente su vivienda habitual al desarrollo de su actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, serán deducibles en el porcentaje resultante de aplicar el 30 por 100 a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior."]
 [fact.variants.payload]
 kind = "mapping"
 entries = [
@@ -2361,12 +3257,50 @@ entries = [
   { key = "citation.0.legal_ref", value = "ley-35-2006:art-30" },
   { key = "citation.1.source", value = "manual_renta" },
   { key = "citation.1.reference", value = "Manual práctico Renta 2025" },
-  { key = "citation.1.locator", value = "Vivienda parcialmente afecta" },
+  { key = "citation.1.locator", value = "Capítulo 7, suministros de la vivienda habitual parcialmente afecta a la actividad (art. 30.2.5.ª b) Ley IRPF)" },
   { key = "citation.1.url", value = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf" },
-  { key = "citation.1.grounding", value = "source_not_bundled" },
+  { key = "citation.1.grounding", value = "verified" },
   { key = "citation.1.valid_from", value = 2025-01-01 },
   { key = "citation.1.valid_to", value = 2025-12-31 },
-  { key = "citation.1.grounding_reason", value = "El Manual práctico de Renta de la AEAT no forma parte del corpus consolidado empaquetado con la aplicación, por lo que no puede transcribirse de él ningún texto verbatim ni verificarse por contención contra el corpus." },
+  { key = "citation.1.quote", value = "cuando el contribuyente afecte parcialmente su vivienda habitual al desarrollo de su actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, serán deducibles en el porcentaje resultante de aplicar el 30 por 100 a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior." },
+  { key = "citation.1.source_ref", value = "aeat-renta-2025-manual-parte1" },
+  { key = "iva_mixed_use_share", value = "degree_of_use" },
+  { key = "iva_citation.0.source", value = "ley_iva" },
+  { key = "iva_citation.0.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.0.locator", value = "art. 95.Tres.1.ª, aplicable a suministros por el art. 95.Cuatro según el criterio del TEAC" },
+  { key = "iva_citation.0.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.0.grounding", value = "verified" },
+  { key = "iva_citation.0.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.0.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.0.quote", value = "Cuando se trate de bienes de inversión distintos de los comprendidos en la regla siguiente, en la medida en que dichos bienes vayan a utilizarse previsiblemente, de acuerdo con criterios fundados, en el desarrollo de la actividad empresarial o profesional." },
+  { key = "iva_citation.0.legal_ref", value = "ley-37-1992:art-95-3" },
+  { key = "iva_citation.1.source", value = "ley_iva" },
+  { key = "iva_citation.1.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.1.locator", value = "art. 95.Cuatro" },
+  { key = "iva_citation.1.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.1.grounding", value = "verified" },
+  { key = "iva_citation.1.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.1.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.1.quote", value = "Lo dispuesto en el apartado anterior será también de aplicación a las cuotas soportadas o satisfechas por la adquisición o importación de los siguientes bienes y servicios directamente relacionados con los bienes a que se refiere dicho apartado" },
+  { key = "iva_citation.1.legal_ref", value = "ley-37-1992:art-95-4" },
+  { key = "iva_citation.2.source", value = "manual_iva" },
+  { key = "iva_citation.2.reference", value = "Manual práctico IVA 2025" },
+  { key = "iva_citation.2.locator", value = "Deducciones: IVA soportado en bienes o servicios utilizados en la actividad" },
+  { key = "iva_citation.2.url", value = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2025.pdf" },
+  { key = "iva_citation.2.grounding", value = "verified" },
+  { key = "iva_citation.2.valid_from", value = 2025-01-01 },
+  { key = "iva_citation.2.valid_to", value = 2025-12-31 },
+  { key = "iva_citation.2.quote", value = "La cuota soportada en los suministros será deducible en la parte en que el inmueble esté afecta a la actividad profesional." },
+  { key = "iva_citation.2.source_ref", value = "aeat-manual-iva-2025" },
+  { key = "iva_citation.3.source", value = "manual_iva" },
+  { key = "iva_citation.3.reference", value = "Manual práctico IVA 2025" },
+  { key = "iva_citation.3.locator", value = "Deducciones: IVA soportado en bienes o servicios utilizados en la actividad" },
+  { key = "iva_citation.3.url", value = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2025.pdf" },
+  { key = "iva_citation.3.grounding", value = "verified" },
+  { key = "iva_citation.3.valid_from", value = 2025-01-01 },
+  { key = "iva_citation.3.valid_to", value = 2025-12-31 },
+  { key = "iva_citation.3.quote", value = "Suministros y demás gastos corrientes de inmuebles. (Resolución del TEAC de 19 de julio de 2023 - RG 00/06654/2022)" },
+  { key = "iva_citation.3.source_ref", value = "aeat-manual-iva-2025" },
 ]
 
 [[fact.variants]]
@@ -2376,7 +3310,7 @@ selectors = [
 ]
 date_axis = "filing_period"
 valid_from = 2026-01-01
-legal_refs = ["ley-35-2006:art-30"]
+legal_refs = ["ley-35-2006:art-30", "ley-37-1992:art-95-3", "ley-37-1992:art-95-4"]
 source_refs = ["lirpf-cuota-chain-authority"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -2400,6 +3334,25 @@ entries = [
   { key = "citation.0.valid_to", value = 2026-12-31 },
   { key = "citation.0.quote", value = "b) En los casos en que el contribuyente afecte parcialmente su vivienda habitual al desarrollo de la actividad económica, los gastos de suministros de dicha vivienda, tales como agua, gas, electricidad, telefonía e Internet, en el porcentaje resultante de aplicar el 30 por ciento a la proporción existente entre los metros cuadrados de la vivienda destinados a la actividad respecto a su superficie total, salvo que se pruebe un porcentaje superior o inferior." },
   { key = "citation.0.legal_ref", value = "ley-35-2006:art-30" },
+  { key = "iva_mixed_use_share", value = "degree_of_use" },
+  { key = "iva_citation.0.source", value = "ley_iva" },
+  { key = "iva_citation.0.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.0.locator", value = "art. 95.Tres.1.ª, aplicable a suministros por el art. 95.Cuatro según el criterio del TEAC" },
+  { key = "iva_citation.0.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.0.grounding", value = "verified" },
+  { key = "iva_citation.0.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.0.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.0.quote", value = "Cuando se trate de bienes de inversión distintos de los comprendidos en la regla siguiente, en la medida en que dichos bienes vayan a utilizarse previsiblemente, de acuerdo con criterios fundados, en el desarrollo de la actividad empresarial o profesional." },
+  { key = "iva_citation.0.legal_ref", value = "ley-37-1992:art-95-3" },
+  { key = "iva_citation.1.source", value = "ley_iva" },
+  { key = "iva_citation.1.reference", value = "Ley 37/1992" },
+  { key = "iva_citation.1.locator", value = "art. 95.Cuatro" },
+  { key = "iva_citation.1.url", value = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740" },
+  { key = "iva_citation.1.grounding", value = "verified" },
+  { key = "iva_citation.1.valid_from", value = 2022-01-01 },
+  { key = "iva_citation.1.valid_to", value = 2026-12-31 },
+  { key = "iva_citation.1.quote", value = "Lo dispuesto en el apartado anterior será también de aplicación a las cuotas soportadas o satisfechas por la adquisición o importación de los siguientes bienes y servicios directamente relacionados con los bienes a que se refiere dicho apartado" },
+  { key = "iva_citation.1.legal_ref", value = "ley-37-1992:art-95-4" },
 ]
 
 [[fact.variants]]

@@ -175,6 +175,7 @@ _IVA_SOURCE_DIAGNOSTIC_SUPPRESSED_REASONS = frozenset(
     {
         IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
         IvaLedgerAggregationIssueReason.PERSONAL_TRANSACTION,
+        IvaLedgerAggregationIssueReason.NON_DEDUCTIBLE_MIXED_USE,
     },
 )
 

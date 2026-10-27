@@ -451,21 +451,33 @@ categories:
       label: Az ügyfélnek közvetlenül továbbszámlázott ellátások
       notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1).
     suministros_home_office_agua:
-      notes: A lakás üzleti célra használt alapterületének aránya szerint levonható
-        (alapértelmezett arány 30%), részlegesen üzleti célú lakás esetén (Ley 35/2006
-        art. 30.2.5.b szabály 4.ª).
+      notes: 'IRPF: ha a lakóhelyed egy részét a tevékenységhez használod, a tevékenységre
+        szánt alapterület és a teljes alapterület arányának 30%-át vonhatod le, kivéve,
+        ha magasabb vagy alacsonyabb arányt igazolsz (Ley 35/2006 art. 30.2, 5. szabály,
+        b pont). IVA: az előzetesen felszámított adó (cuota soportada) a tevékenységben
+        való használat mértékének arányában vonható le, a 30%-os szorzó nélkül (Ley
+        37/1992 art. 95; a TEAC 2023. július 19-i határozata, RG 00/06654/2022).'
     suministros_home_office_gas:
-      notes: A lakás üzleti célra használt alapterületének aránya szerint levonható
-        (alapértelmezett arány 30%), részlegesen üzleti célú lakás esetén (Ley 35/2006
-        art. 30.2.5.b szabály 4.ª).
+      notes: 'IRPF: ha a lakóhelyed egy részét a tevékenységhez használod, a tevékenységre
+        szánt alapterület és a teljes alapterület arányának 30%-át vonhatod le, kivéve,
+        ha magasabb vagy alacsonyabb arányt igazolsz (Ley 35/2006 art. 30.2, 5. szabály,
+        b pont). IVA: az előzetesen felszámított adó (cuota soportada) a tevékenységben
+        való használat mértékének arányában vonható le, a 30%-os szorzó nélkül (Ley
+        37/1992 art. 95; a TEAC 2023. július 19-i határozata, RG 00/06654/2022).'
     suministros_home_office_internet:
-      notes: A lakás üzleti célra használt alapterületének aránya szerint levonható
-        (alapértelmezett arány 30%), részlegesen üzleti célú lakás esetén (Ley 35/2006
-        art. 30.2.5.b szabály 4.ª).
+      notes: 'IRPF: ha a lakóhelyed egy részét a tevékenységhez használod, a tevékenységre
+        szánt alapterület és a teljes alapterület arányának 30%-át vonhatod le, kivéve,
+        ha magasabb vagy alacsonyabb arányt igazolsz (Ley 35/2006 art. 30.2, 5. szabály,
+        b pont). IVA: az előzetesen felszámított adó (cuota soportada) a tevékenységben
+        való használat mértékének arányában vonható le, a 30%-os szorzó nélkül (Ley
+        37/1992 art. 95; a TEAC 2023. július 19-i határozata, RG 00/06654/2022).'
     suministros_home_office_luz:
-      notes: A lakás üzleti célra használt alapterületének aránya szerint levonható
-        (alapértelmezett arány 30%), részlegesen üzleti célú lakás esetén (Ley 35/2006
-        art. 30.2.5.b szabály 4.ª).
+      notes: 'IRPF: ha a lakóhelyed egy részét a tevékenységhez használod, a tevékenységre
+        szánt alapterület és a teljes alapterület arányának 30%-át vonhatod le, kivéve,
+        ha magasabb vagy alacsonyabb arányt igazolsz (Ley 35/2006 art. 30.2, 5. szabály,
+        b pont). IVA: az előzetesen felszámított adó (cuota soportada) a tevékenységben
+        való használat mértékének arányában vonható le, a 30%-os szorzó nélkül (Ley
+        37/1992 art. 95; a TEAC 2023. július 19-i határozata, RG 00/06654/2022).'
     suministros_local_afecto:
       label: Üzleti helyiség közüzemi költségei
       notes: 'Teljes egészében levonható költség: a tevékenység végzésének helyet
@@ -475,9 +487,12 @@ categories:
         vonatkozik.'
     telefonia_fija:
       label: Vezetékes telefon-költség
-      notes: A lakás üzleti célra használt alapterületének aránya szerint levonható
-        (alapértelmezett arány 30%), részlegesen üzleti célú lakás esetén (Ley 35/2006
-        art. 30.2.5.b szabály 4.ª).
+      notes: 'IRPF: ha a lakóhelyed egy részét a tevékenységhez használod, a tevékenységre
+        szánt alapterület és a teljes alapterület arányának 30%-át vonhatod le, kivéve,
+        ha magasabb vagy alacsonyabb arányt igazolsz (Ley 35/2006 art. 30.2, 5. szabály,
+        b pont). IVA: az előzetesen felszámított adó (cuota soportada) a tevékenységben
+        való használat mértékének arányában vonható le, a 30%-os szorzó nélkül (Ley
+        37/1992 art. 95; a TEAC 2023. július 19-i határozata, RG 00/06654/2022).'
     telefonia_movil:
       label: Mobiltelefon-költség
       notes: Az üzleti célú, kizárólagos használat igazolása esetén levonható (Reglamento
@@ -636,6 +651,9 @@ desktop:
     new_profile: Új profil
     no_profile: Nincs aktív profil
     no_profile_lead: Ezen a számítógépen még nincs profil.
+    reconnecting: Újracsatlakozás…
+    reconnecting_lead: A munkameneted megszakadt. A Cadrumo helyreállítja, és ez az
+      ablak folytatódik, amint visszaáll.
     remaining_access: Kijelentkezés után az általad külső alkalmazásoknak kiadott
       kulcsok közül legalább egy még hozzáférést adhat ehhez a profilhoz.
     services_down: A háttérszolgáltatások nem futnak
@@ -715,6 +733,77 @@ desktop:
     tax_values_note: A kiszámított adókra és a bevallások adataira is kiterjed. Hagyd
       kikapcsolva, ha nem szeretnéd, hogy az alkalmazás lássa ezeket.
     title: Hozzáférési kulcsok más MI-alkalmazásoknak
+  browser:
+    acquiring: A Cadrumo bejelentkeztet. Kattints, vagy nyomj meg egy billentyűt,
+      hogy átvedd az irányítást.
+    address: Az oldal címe
+    back: Vissza
+    closing: A munkameneted mentése…
+    dialog:
+      cancel: Mégse
+      leave: Elhagyom
+      leave_description: Az oldal rákérdez, mielőtt elhagynád. Lehet, hogy amit beírtál,
+        nem mentődik.
+      leave_title: Elhagyod ezt az oldalt?
+      ok: Rendben
+      prompt_label: A válaszod
+      stay: Maradok
+      title: Az oldal üzenete
+    download:
+      cancelled: A letöltés megszakadt.
+      decline: Nem mentem
+      done: A fájl elmentve.
+      failed: A fájlt nem sikerült elmenteni.
+      prompt: 'Az oldal ezt kínálja fel: {name}.'
+      save: Mentés…
+    ended:
+      closed: A böngésző be van zárva.
+      failed: A böngésző hiba miatt leállt.
+      refused: A Cadrumo most nem tudja megnyitni a böngészőt.
+      session_lost: A munkameneted véget ért, ezért a böngésző bezárult, és a bejelentkezésed
+        nem lett mentve.
+      stopped: A böngésző leállt.
+      unavailable: A Cadrumo most nem éri el a böngészőt.
+    external: Megnyitás külső böngészőben
+    failure:
+      conflict: A böngésző még bezáródik. Várj egy kicsit, aztán próbáld újra.
+      file_unavailable: A Cadrumo nem tudta használni azt a fájlt.
+      invalid: A Cadrumo nem tudta használni azt a kérést.
+      not_admitted: A böngésző már nincs nyitva.
+      not_signed_in: A böngésző használatához jelentkezz be.
+      refused: A Cadrumo elutasította azt a kérést.
+      unavailable: A böngésző most nem érhető el.
+      unknown: A Cadrumo nem tudta megállapítani, hogyan ért véget.
+    forward: Előre
+    home: Az AEAT kezdőoldala
+    notice:
+      dialog_opened: Az oldal megnyitott egy párbeszédablakot.
+      dismiss: Elvetés
+      download_offered: A letöltést megnyithatod a saját böngésződben.
+      file_chooser_offered: A fájlfeltöltést megnyithatod a saját böngésződben.
+      more: még {count} vár
+    opening: A böngésző megnyitása…
+    publication:
+      kept_newer: Már el volt mentve egy újabb bejelentkezés, ezért a Cadrumo azt
+        tartotta meg.
+      published: A bejelentkezésed mentve lett. A Cadrumo többi része mostantól használhatja.
+      unchanged: A bejelentkezésed nem változott.
+      unknown: A Cadrumo nem tudta megerősíteni, hogy a bejelentkezésed mentve lett-e.
+      verification_failed: A Cadrumo nem tudta megerősíteni, hogy be vagy jelentkezve,
+        ezért nem mentett semmit.
+    reload: Újratöltés
+    reopen: A böngésző újranyitása
+    retry: Próbáld újra
+    surface: Böngészőoldal
+    upload:
+      cancelled: A feltöltés megszakadt.
+      choose: Választás…
+      decline: Mégse
+      done: A fájl el lett küldve az oldalnak.
+      failed: A fájlt nem sikerült elküldeni.
+      prompt: Az oldal egy fájlt kér.
+      prompt_many: Az oldal egy vagy több fájlt kér.
+    waiting: Az előző böngészőmunkamenet lezárása…
   calendar:
     aeat:
       accepted: Elfogadva
@@ -3802,6 +3891,9 @@ desktop:
     password: Jelszó
     profile: Profil
     profiles_unread: A számítógépen lévő profilokat nem sikerült beolvasni.
+    reconnect_lead: A munkameneted megszakadt, és automatikusan nem sikerült helyreállítani.
+      Add meg a profilod jelszavát, hogy ott folytasd, ahol abbahagytad.
+    reconnect_title: A folytatáshoz jelentkezz be újra
     recovering_services: Háttérszolgáltatások helyreállítása…
     refused:
       busy: A bejelentkezés túl sokáig tartott, mert a számítógép le van terhelve.

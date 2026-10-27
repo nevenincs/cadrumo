@@ -227,7 +227,7 @@ def prepare_manual_transaction(
         attachment_store=ports.attachment_store,
         evidence_records=ports.purchase_invoice_evidence_records,
     )
-    verify_usage_ratio_reference(command, usage_ratio_profile=ports.usage_ratio_profile)
+    verify_usage_ratio_reference(command, usage_ratio_profile=ports.usage_ratio_profile, operation=ports.operation)
     event = build_ledger_bucket_event(
         bucket_id=command.bucket_id,
         event_type=BucketEventType.LEDGER_TRANSACTION_CREATED,
@@ -1174,7 +1174,7 @@ def _prepare_manual_transaction_update(
         attachment_store=ports.attachment_store,
         evidence_records=ports.purchase_invoice_evidence_records,
     )
-    verify_usage_ratio_reference(command, usage_ratio_profile=ports.usage_ratio_profile)
+    verify_usage_ratio_reference(command, usage_ratio_profile=ports.usage_ratio_profile, operation=ports.operation)
     event_specs = _update_event_specs(
         current=current,
         replacement=replacement,

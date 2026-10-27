@@ -85,6 +85,7 @@ class CategoryCitationSource(StrEnum):
         LEY_IRPF: Ley del Impuesto sobre la Renta de las Personas
             Físicas.
         REGLAMENTO_IRPF: Reglamento del IRPF.
+        LEY_IVA: Ley 37/1992 del Impuesto sobre el Valor Añadido.
         AEAT_HELP: AEAT online help / portal text.
     """
 
@@ -92,7 +93,16 @@ class CategoryCitationSource(StrEnum):
     MANUAL_IVA = "manual_iva"
     LEY_IRPF = "ley_irpf"
     REGLAMENTO_IRPF = "reglamento_irpf"
+    LEY_IVA = "ley_iva"
     AEAT_HELP = "aeat_help"
+
+
+#: The sources that can ground an IVA treatment. An IRPF source states an IRPF
+#: rule, and the IRPF home-office factor is exactly the rule that must never
+#: reach an IVA share, so an IVA treatment cited by one is refused.
+IVA_CITATION_SOURCES: frozenset[CategoryCitationSource] = frozenset(
+    {CategoryCitationSource.LEY_IVA, CategoryCitationSource.MANUAL_IVA},
+)
 
 
 #: Citation sources published as a dated ANNUAL EDITION, as opposed to a statute
@@ -150,6 +160,12 @@ class CategoryCitation(_ProportionalityStrictFrozenModel):
             edition-dated citation by the edition it names, a statutory one by
             the provision's own effective span. Leaving it optional would let an
             author widen a statutory window with nothing able to check it.
+        source_ref: The registry source id of the bundled edition a VERIFIED
+            annual-edition citation was read from. Required there and forbidden
+            everywhere else: it is the corpus the registry build checks the
+            quotation against, so a statutory citation (checked through
+            ``legal_ref``) or an unverified one (checked against nothing) has
+            no use for it.
         valid_from: First date this citation is asserted to support the rule.
         valid_to: Last date, inclusive. Both bounds are required: the span is
             the claim, and a defaulted one would assert grounding nobody typed.
@@ -175,6 +191,11 @@ class CategoryCitation(_ProportionalityStrictFrozenModel):
         default=None,
         min_length=1,
         description="Registry legal-catalogue id of the cited provision; statutory sources only.",
+    )
+    source_ref: str | None = Field(
+        default=None,
+        min_length=1,
+        description="Registry source id of the bundled edition; verified annual-edition citations only.",
     )
     valid_from: date
     valid_to: date
@@ -223,7 +244,31 @@ class CategoryCitation(_ProportionalityStrictFrozenModel):
         _ = self.window
         self._validate_edition_year_bounds_the_window()
         self._validate_legal_ref_matches_the_source_kind()
+        self._validate_source_ref_names_the_checked_edition()
         return self
+
+    def _validate_source_ref_names_the_checked_edition(self) -> None:
+        """A verified edition citation names the bundled edition its text is in.
+
+        A statutory quotation is checked against its provision through
+        ``legal_ref``. An edition has no provision id, so without the source id
+        a verified Manual quotation would name no corpus at all and could not be
+        told apart from one nobody read.
+        """
+        verified_edition = (
+            self.source in ANNUAL_EDITION_CITATION_SOURCES and self.grounding is CitationGrounding.VERIFIED
+        )
+        if verified_edition and self.source_ref is None:
+            raise CategoryValidationError(
+                f"verified category citation from {self.source.value!r} must name the bundled edition it was "
+                "read from with source_ref, so the quotation is checked against that edition's text",
+            )
+        if not verified_edition and self.source_ref is not None:
+            raise CategoryValidationError(
+                f"category citation from {self.source.value!r} with grounding {self.grounding.value!r} must not "
+                f"carry source_ref={self.source_ref!r}; only a verified annual-edition citation is checked "
+                "against a bundled edition",
+            )
 
     def _validate_grounding_matches_its_evidence(self) -> None:
         """Hold each grounding state to the evidence it claims.
@@ -760,6 +805,50 @@ def _validate_statutory_cap_variants(rule: ProportionalityRule) -> None:
     _validate_statutory_cap_variant_units(rule)
 
 
+class IvaMixedUseShare(StrEnum):
+    """How much input IVA a category's MIXED-use row deducts.
+
+    Attributes:
+        DEGREE_OF_USE: The cuota is deductible in proportion to the degree of
+            use in the activity, which is the row's business share. No
+            statutory factor applies: LIVA art. 95 carries none.
+        NOT_DEDUCTIBLE: Simultaneous use for the activity and for private
+            needs gives no deduction in any measure (LIVA art. 95.Uno and
+            Dos.2.º).
+    """
+
+    DEGREE_OF_USE = "degree_of_use"
+    NOT_DEDUCTIBLE = "not_deductible"
+
+
+class IvaMixedUseRule(_ProportionalityStrictFrozenModel):
+    """The IVA treatment of a category's MIXED-use rows, with its own authority.
+
+    Kept apart from the IRPF fields of :class:`ProportionalityRule` because the
+    two taxes answer the question differently: the IRPF home-office suministros
+    rule scales the area ratio by a statutory factor, and IVA deducts the
+    degree of use with no factor at all. Sharing one datum is how the IRPF
+    factor once reached the IVA cuota.
+
+    Attributes:
+        share: The :class:`IvaMixedUseShare` a MIXED row deducts.
+        citations: At least one citation, every one from an IVA source.
+    """
+
+    share: IvaMixedUseShare
+    citations: tuple[CategoryCitation, ...] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_iva_authority(self) -> IvaMixedUseRule:
+        foreign = sorted({c.source.value for c in self.citations if c.source not in IVA_CITATION_SOURCES})
+        if foreign:
+            raise CategoryValidationError(
+                f"an IVA mixed-use treatment must be grounded in IVA sources only; it cites {foreign}",
+            )
+        return self
+
+
 class ProportionalityRule(_ProportionalityStrictFrozenModel):
     """Deductibility and proportionality rule for one spending category.
 
@@ -767,17 +856,18 @@ class ProportionalityRule(_ProportionalityStrictFrozenModel):
         kind: One of :class:`ProportionalityKind`.
         fixed_pct: Required when the projected kind declares a fixed-percent
             evaluator role; otherwise must be ``None``.
-        statutory_multiplier: Optional statutory factor applied on
-            top of the operator-chosen usage ratio. Only valid for
-            usage-ratio kinds. The canonical example is the LIRPF
-            Art. 30.2 rule 5 (Ley 6/2017, BOE-A-2017-12544) 0.30
-            multiplier applied to suministros (utility) costs of
-            the habitual vivienda when the operator deducts under
-            estimacion directa: ``effective_deductible_pct =
-            operator_chosen_ratio * statutory_multiplier``. When
-            ``None`` no statutory factor is applied (equivalent to
-            ``Decimal("1")``); the operator's chosen ratio is the
-            effective deductible percentage.
+        statutory_multiplier: Optional IRPF statutory factor applied on
+            top of the usage ratio. Only valid for usage-ratio kinds.
+            The canonical example is the LIRPF art. 30.2, regla 5.ª b)
+            0.30 factor applied to suministros of the habitual vivienda
+            under estimación directa: ``effective_deductible_pct =
+            afectación_ratio * statutory_multiplier``. When ``None`` no
+            statutory factor is applied (equivalent to
+            ``Decimal("1")``). It never scales IVA; the IVA treatment is
+            :attr:`iva_mixed_use`.
+        iva_mixed_use: The category's own IVA treatment of MIXED-use rows,
+            or ``None`` when the category declares none and a MIXED row
+            deducts its business share.
         statutory_cap_eur_per_day: Daily statutory cap; only valid
             for a projected statutory-cap kind.
         statutory_cap_eur: Generic statutory cap amount; only valid
@@ -800,6 +890,7 @@ class ProportionalityRule(_ProportionalityStrictFrozenModel):
     kind: ProportionalityKind
     fixed_pct: UnitProportion | None = None
     statutory_multiplier: UnitProportion | None = None
+    iva_mixed_use: IvaMixedUseRule | None = None
     statutory_cap_eur_per_day: Decimal | None = Field(default=None, ge=Decimal("0"))
     statutory_cap_eur: Decimal | None = Field(default=None, ge=Decimal("0"))
     statutory_cap_period: StatutoryCapPeriod | None = None
@@ -886,10 +977,11 @@ class ProportionalityRule(_ProportionalityStrictFrozenModel):
 
 
 def effective_usage_ratio(rule: ProportionalityRule, chosen_ratio: Decimal) -> Decimal:
-    """Return the legally-effective deductible percentage for ``chosen_ratio``.
+    """Return the IRPF-effective deductible percentage for ``chosen_ratio``.
 
-    Applies the rule's ``statutory_multiplier`` on top of the operator-
-    chosen usage ratio. Only meaningful for usage-ratio kinds; raises
+    Applies the rule's IRPF ``statutory_multiplier`` on top of the usage
+    ratio. Not an IVA share: IVA deducts the degree of use itself. Only
+    meaningful for usage-ratio kinds; raises
     when called on a non-usage-ratio rule (the caller is responsible
     for routing rules to the right evaluator).
 

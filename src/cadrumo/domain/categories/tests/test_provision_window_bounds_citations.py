@@ -48,7 +48,10 @@ def _statutory_citations(operation: PinnedAuthorityOperation) -> list[tuple[str,
     return [
         (f"{category.value}/{citation.locator}", citation)
         for category, profile in load_category_profiles(operation=operation).items()
-        for citation in profile.proportionality.citations
+        for citation in (
+            *profile.proportionality.citations,
+            *(() if profile.proportionality.iva_mixed_use is None else profile.proportionality.iva_mixed_use.citations),
+        )
         if citation.source in STATUTORY_CITATION_SOURCES
     ]
 

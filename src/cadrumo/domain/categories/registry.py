@@ -11,6 +11,7 @@ from pydantic import ValidationError
 
 from ...core.citation_grounding import CitationGrounding
 from ...core.i18n.translatable import Translatable as tr
+from ...core.text_fold import normalise_corpus_text
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import (
     MappingFactQuery,
@@ -24,8 +25,11 @@ from .errors import CategoryValidationError
 from .iva_hint import require_iva_deductibility_hint
 from .profile import CategoryProfile
 from .proportionality import (
+    ANNUAL_EDITION_CITATION_SOURCES,
     CategoryCitation,
     CategoryCitationSource,
+    IvaMixedUseRule,
+    IvaMixedUseShare,
     ProportionalityRule,
     StatutoryCapAmount,
     StatutoryCapVariant,
@@ -82,33 +86,59 @@ def _resolve_profiles(
     materialise_schedule: bool,
     operation: PinnedAuthorityOperation,
 ) -> Mapping[SpendingCategory, CategoryProfile]:
-    profiles: dict[SpendingCategory, CategoryProfile] = {}
-    for category in spending_category_tokens(
-        effective_date=date(year, 12, 31),
-        authority=operation,
-    ):
-        try:
-            fact = operation.resolve_governed_fact(
-                MappingFactQuery(
-                    fact_id=CATEGORY_PROFILE_FACT_ID,
-                    date_axis=DateAxis.FILING_PERIOD,
-                    effective_date=date(year, 12, 31),
-                    selectors=(FactSelector(name="category", value=category.value),),
-                )
+    return MappingProxyType(
+        {
+            category: _resolve_profile(category, year, materialise_schedule=materialise_schedule, operation=operation)
+            for category in spending_category_tokens(
+                effective_date=date(year, 12, 31),
+                authority=operation,
             )
-        except RegistryValidationError as exc:
-            raise CategoryValidationError(
-                f"category authority has no profile for {category.value}/{year}; the year is unsupported"
-            ) from exc
-        if not isinstance(fact, ResolvedMappingFact):
-            raise CategoryValidationError("category profile authority returned a non-mapping fact")
-        profiles[category] = _profile_from_authority_fact(
-            fact,
-            operation=operation,
-            year=year,
-            materialise_schedule=materialise_schedule,
+        }
+    )
+
+
+def resolve_category_profile(
+    category: SpendingCategory,
+    year: int,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> CategoryProfile:
+    """Resolve one category's profile for one exact filing year.
+
+    For a per-row reader that needs a single category: resolving the whole
+    catalogue for each ledger row would repeat every other category's work.
+    """
+    return _resolve_profile(category, year, materialise_schedule=True, operation=operation)
+
+
+def _resolve_profile(
+    category: SpendingCategory,
+    year: int,
+    *,
+    materialise_schedule: bool,
+    operation: PinnedAuthorityOperation,
+) -> CategoryProfile:
+    try:
+        fact = operation.resolve_governed_fact(
+            MappingFactQuery(
+                fact_id=CATEGORY_PROFILE_FACT_ID,
+                date_axis=DateAxis.FILING_PERIOD,
+                effective_date=date(year, 12, 31),
+                selectors=(FactSelector(name="category", value=category.value),),
+            )
         )
-    return MappingProxyType(profiles)
+    except RegistryValidationError as exc:
+        raise CategoryValidationError(
+            f"category authority has no profile for {category.value}/{year}; the year is unsupported"
+        ) from exc
+    if not isinstance(fact, ResolvedMappingFact):
+        raise CategoryValidationError("category profile authority returned a non-mapping fact")
+    return _profile_from_authority_fact(
+        fact,
+        operation=operation,
+        year=year,
+        materialise_schedule=materialise_schedule,
+    )
 
 
 def _profile_from_authority_fact(
@@ -119,8 +149,8 @@ def _profile_from_authority_fact(
     materialise_schedule: bool = True,
 ) -> CategoryProfile:
     values = {str(entry.key): entry.value for entry in resolved.payload.entries}
-    citations = _category_citations(values)
     category = str(resolved.matched_selectors[0].value)
+    citations = _category_citations(values, resolved=resolved, root="citation")
     category_token = require_spending_category(
         category,
         effective_date=date(year, 12, 31),
@@ -148,6 +178,7 @@ def _profile_from_authority_fact(
         "citations": citations,
         "fixed_pct": values.get("fixed_pct"),
         "statutory_multiplier": values.get("statutory_multiplier"),
+        "iva_mixed_use": _iva_mixed_use_rule(values, resolved=resolved, category=category),
         "statutory_cap_eur_per_day": values.get("statutory_cap_eur_per_day"),
         "statutory_cap_eur": cap,
         "statutory_cap_period": (
@@ -182,29 +213,86 @@ def _profile_from_authority_fact(
     )
 
 
-def _category_citations(values: Mapping[str, object]) -> tuple[CategoryCitation, ...]:
+def _iva_mixed_use_rule(
+    values: Mapping[str, object],
+    *,
+    resolved: ResolvedMappingFact,
+    category: str,
+) -> IvaMixedUseRule | None:
+    """Rebuild the category's IVA treatment of MIXED-use rows, when it declares one."""
+    share = values.get("iva_mixed_use_share")
+    citations = _category_citations(values, resolved=resolved, root="iva_citation")
+    if share is None:
+        if citations:
+            raise CategoryValidationError(
+                f"category authority for {category} cites an IVA treatment it does not declare",
+            )
+        return None
+    try:
+        return IvaMixedUseRule(share=IvaMixedUseShare(str(share)), citations=citations)
+    except (ValueError, ValidationError) as exc:
+        raise CategoryValidationError(
+            f"category authority carries an invalid IVA treatment for {category}: {exc}"
+        ) from exc
+
+
+def _category_citations(
+    values: Mapping[str, object],
+    *,
+    resolved: ResolvedMappingFact,
+    root: str,
+) -> tuple[CategoryCitation, ...]:
     citations: list[CategoryCitation] = []
     index = 0
-    while f"citation.{index}.source" in values:
-        prefix = f"citation.{index}"
-        citations.append(
-            CategoryCitation.model_validate(
-                {
-                    "source": CategoryCitationSource(str(values[f"{prefix}.source"])),
-                    "reference": str(values[f"{prefix}.reference"]),
-                    "locator": str(values[f"{prefix}.locator"]),
-                    "url": parse_http_url(str(values[f"{prefix}.url"])),
-                    "quote": str(values.get(f"{prefix}.quote", "")),
-                    "grounding": CitationGrounding(str(values[f"{prefix}.grounding"])),
-                    "grounding_reason": str(values.get(f"{prefix}.grounding_reason", "")),
-                    "legal_ref": str(values[f"{prefix}.legal_ref"]) if f"{prefix}.legal_ref" in values else None,
-                    "valid_from": values[f"{prefix}.valid_from"],
-                    "valid_to": values[f"{prefix}.valid_to"],
-                }
-            )
+    while f"{root}.{index}.source" in values:
+        prefix = f"{root}.{index}"
+        citation = CategoryCitation.model_validate(
+            {
+                "source": CategoryCitationSource(str(values[f"{prefix}.source"])),
+                "reference": str(values[f"{prefix}.reference"]),
+                "locator": str(values[f"{prefix}.locator"]),
+                "url": parse_http_url(str(values[f"{prefix}.url"])),
+                "quote": str(values.get(f"{prefix}.quote", "")),
+                "grounding": CitationGrounding(str(values[f"{prefix}.grounding"])),
+                "grounding_reason": str(values.get(f"{prefix}.grounding_reason", "")),
+                "legal_ref": str(values[f"{prefix}.legal_ref"]) if f"{prefix}.legal_ref" in values else None,
+                "source_ref": str(values[f"{prefix}.source_ref"]) if f"{prefix}.source_ref" in values else None,
+                "valid_from": values[f"{prefix}.valid_from"],
+                "valid_to": values[f"{prefix}.valid_to"],
+            }
         )
+        _require_edition_quotation_is_build_checked(citation, resolved=resolved)
+        citations.append(citation)
         index += 1
     return tuple(citations)
+
+
+def _require_edition_quotation_is_build_checked(
+    citation: CategoryCitation,
+    *,
+    resolved: ResolvedMappingFact,
+) -> None:
+    """Refuse a verified edition quotation the registry build never checked.
+
+    The build checks each variant's ``source_citations`` text against the
+    bundled edition it names. A verified Manual quotation is evidence only if
+    it lies inside one of those checked texts for its own edition; otherwise
+    nothing has read it against the corpus.
+    """
+    if citation.source not in ANNUAL_EDITION_CITATION_SOURCES or citation.source_ref is None:
+        return
+    quotation = normalise_corpus_text(citation.quote)
+    checked = any(
+        quotation in normalise_corpus_text(required)
+        for source_citation in resolved.source_citations
+        if source_citation.source_ref == citation.source_ref
+        for required in source_citation.required_text
+    )
+    if not checked:
+        raise CategoryValidationError(
+            f"verified citation {citation.reference!r}/{citation.locator!r} quotes {citation.source_ref!r}, but no "
+            "source citation of its variant carries that text for the build to check",
+        )
 
 
 def _declared_cap_schedule(
@@ -282,5 +370,6 @@ __all__ = [
     "CATEGORY_STATUTORY_CAP_FACT_ID",
     "category_profile_years",
     "load_category_profiles",
+    "resolve_category_profile",
     "resolve_category_profiles",
 ]

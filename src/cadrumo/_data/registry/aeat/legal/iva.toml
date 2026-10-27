@@ -2497,6 +2497,53 @@ required_text = [
     "limitaciones del derecho a deducir",
 ]
 
+[legal."ley-37-1992:art-95-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a95"
+document_id = "BOE-A-1992-28740"
+article = "95.Tres"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a95"
+published_at = 1992-12-29
+effective_from = 1998-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-27
+reviewed_by = "agent-authored from bundled ley-37-1992.html#a95; operator to re-stamp"
+notes = """\
+LIVA art 95.Tres, regla 1.a: cuotas on bienes de inversion used in part in the activity are deductible \
+in the measure of their foreseeable use in it. Wording of Ley 66/1997 art 6.12, in force 01/01/1998 and \
+unamended since. A separate entry from ley-37-1992:art-95 because that entry's corpus excerpt carries \
+only apartados Uno and Dos; this one anchors the whole bundled article. The TEAC unified criterion RG \
+00/06654/2022 (19/07/2023) reads apartado Cuatro, which extends this rule, as reaching the suministros \
+of an immovable used for the activity and for private needs."""
+required_text = [
+    "en la medida en que dichos bienes vayan a utilizarse previsiblemente, de acuerdo con criterios fundados, en el desarrollo de la actividad empresarial o profesional",
+]
+
+[legal."ley-37-1992:art-95-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a95"
+document_id = "BOE-A-1992-28740"
+article = "95.Cuatro"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a95"
+published_at = 1992-12-29
+effective_from = 1998-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-27
+reviewed_by = "agent-authored from bundled ley-37-1992.html#a95; operator to re-stamp"
+notes = """\
+LIVA art 95.Cuatro: apartado Tres also applies to cuotas on goods and services directly related to the \
+bienes de inversion it governs. Wording of Ley 66/1997 art 6.12, in force 01/01/1998 and unamended \
+since. Its literal list names accessories, fuels, parking and tolls, and repairs; the TEAC unified \
+criterion RG 00/06654/2022 (19/07/2023), read in conformity with Directive 2006/112/CE art 168 bis, \
+holds the list open to the suministros of a partly affected immovable."""
+required_text = [
+    "Lo dispuesto en el apartado anterior será también de aplicación a las cuotas soportadas o satisfechas por la adquisición o importación de los siguientes bienes y servicios directamente relacionados con los bienes a que se refiere dicho apartado",
+]
+
 [legal."ley-37-1992:art-122"]
 evidence_tier = "legal_authority"
 authority = "boe"

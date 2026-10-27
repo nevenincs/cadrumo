@@ -465,21 +465,33 @@ categories:
       label: Subministraments facturats directament al client
       notes: Despesa íntegrament deduïble (Ley 35/2006 art. 28.1).
     suministros_home_office_agua:
-      notes: Deduïble en proporció a la superfície de l'habitatge afecta a l'activitat
-        (ràtio per defecte del 30%), quan l'habitatge només s'usa parcialment per
-        a l'activitat (Ley 35/2006 art. 30.2.5.b regla 4a).
+      notes: 'IRPF: si afectes parcialment el teu habitatge habitual a l''activitat,
+        dedueixes el 30 % de la proporció entre els metres quadrats destinats a l''activitat
+        i la superfície total, llevat que provis un percentatge superior o inferior
+        (Ley 35/2006 art. 30.2, regla 5a, lletra b). IVA: la quota suportada és deduïble
+        en proporció al grau d''utilització en l''activitat, sense el factor del 30
+        % (Ley 37/1992 art. 95; resolució del TEAC de 19 de juliol de 2023, RG 00/06654/2022).'
     suministros_home_office_gas:
-      notes: Deduïble en proporció a la superfície de l'habitatge afecta a l'activitat
-        (ràtio per defecte del 30%), quan l'habitatge només s'usa parcialment per
-        a l'activitat (Ley 35/2006 art. 30.2.5.b regla 4a).
+      notes: 'IRPF: si afectes parcialment el teu habitatge habitual a l''activitat,
+        dedueixes el 30 % de la proporció entre els metres quadrats destinats a l''activitat
+        i la superfície total, llevat que provis un percentatge superior o inferior
+        (Ley 35/2006 art. 30.2, regla 5a, lletra b). IVA: la quota suportada és deduïble
+        en proporció al grau d''utilització en l''activitat, sense el factor del 30
+        % (Ley 37/1992 art. 95; resolució del TEAC de 19 de juliol de 2023, RG 00/06654/2022).'
     suministros_home_office_internet:
-      notes: Deduïble en proporció a la superfície de l'habitatge afecta a l'activitat
-        (ràtio per defecte del 30%), quan l'habitatge només s'usa parcialment per
-        a l'activitat (Ley 35/2006 art. 30.2.5.b regla 4a).
+      notes: 'IRPF: si afectes parcialment el teu habitatge habitual a l''activitat,
+        dedueixes el 30 % de la proporció entre els metres quadrats destinats a l''activitat
+        i la superfície total, llevat que provis un percentatge superior o inferior
+        (Ley 35/2006 art. 30.2, regla 5a, lletra b). IVA: la quota suportada és deduïble
+        en proporció al grau d''utilització en l''activitat, sense el factor del 30
+        % (Ley 37/1992 art. 95; resolució del TEAC de 19 de juliol de 2023, RG 00/06654/2022).'
     suministros_home_office_luz:
-      notes: Deduïble en proporció a la superfície de l'habitatge afecta a l'activitat
-        (ràtio per defecte del 30%), quan l'habitatge només s'usa parcialment per
-        a l'activitat (Ley 35/2006 art. 30.2.5.b regla 4a).
+      notes: 'IRPF: si afectes parcialment el teu habitatge habitual a l''activitat,
+        dedueixes el 30 % de la proporció entre els metres quadrats destinats a l''activitat
+        i la superfície total, llevat que provis un percentatge superior o inferior
+        (Ley 35/2006 art. 30.2, regla 5a, lletra b). IVA: la quota suportada és deduïble
+        en proporció al grau d''utilització en l''activitat, sense el factor del 30
+        % (Ley 37/1992 art. 95; resolució del TEAC de 19 de juliol de 2023, RG 00/06654/2022).'
     suministros_local_afecto:
       label: Subministraments del local afecte
       notes: 'Despesa totalment deduïble: l''immoble on es desenvolupa l''activitat
@@ -488,9 +500,12 @@ categories:
         reservada a l''habitatge habitual parcialment afecte.'
     telefonia_fija:
       label: Despesa de telefonia fixa
-      notes: Deduïble en proporció a la superfície de l'habitatge afecta a l'activitat
-        (ràtio per defecte del 30%), quan l'habitatge només s'usa parcialment per
-        a l'activitat (Ley 35/2006 art. 30.2.5.b regla 4a).
+      notes: 'IRPF: si afectes parcialment el teu habitatge habitual a l''activitat,
+        dedueixes el 30 % de la proporció entre els metres quadrats destinats a l''activitat
+        i la superfície total, llevat que provis un percentatge superior o inferior
+        (Ley 35/2006 art. 30.2, regla 5a, lletra b). IVA: la quota suportada és deduïble
+        en proporció al grau d''utilització en l''activitat, sense el factor del 30
+        % (Ley 37/1992 art. 95; resolució del TEAC de 19 de juliol de 2023, RG 00/06654/2022).'
     telefonia_movil:
       label: Despesa de telefonia mòbil
       notes: Deduïble amb prova d'ús exclusiu per a l'activitat (Reglamento IRPF art.
@@ -647,6 +662,9 @@ desktop:
     new_profile: Perfil nou
     no_profile: Cap perfil actiu
     no_profile_lead: Encara no hi ha cap perfil en aquest ordinador.
+    reconnecting: S’està reconnectant…
+    reconnecting_lead: La teva sessió s’ha interromput. Cadrumo la està restaurant
+      i aquesta finestra continua tan bon punt torni.
     remaining_access: Després de tancar la sessió, almenys una clau que vas emetre
       per a una aplicació externa encara pot donar accés a aquest perfil.
     services_down: Els serveis en segon pla no estan en marxa
@@ -728,6 +746,79 @@ desktop:
     tax_values_note: Inclou els impostos calculats i les dades de les declaracions.
       Deixa-ho desactivat perquè l’aplicació no els vegi.
     title: Claus d’accés per a altres aplicacions d’IA
+  browser:
+    acquiring: Cadrumo està iniciant la teva sessió. Fes clic o prem una tecla per
+      prendre'n el control.
+    address: Adreça de la pàgina
+    back: Enrere
+    closing: Desant la teva sessió…
+    dialog:
+      cancel: Cancel·la
+      leave: Surt
+      leave_description: La pàgina pregunta abans que surtis. Pot ser que el que hagis
+        escrit no es desi.
+      leave_title: Vols sortir d'aquesta pàgina?
+      ok: D'acord
+      prompt_label: La teva resposta
+      stay: Queda't
+      title: La pàgina diu
+    download:
+      cancelled: S'ha cancel·lat la baixada.
+      decline: No el desis
+      done: El fitxer s'ha desat.
+      failed: No s'ha pogut desar el fitxer.
+      prompt: La pàgina ofereix {name}.
+      save: Desa…
+    ended:
+      closed: El navegador està tancat.
+      failed: El navegador s'ha aturat per un error.
+      refused: Cadrumo no pot obrir el navegador ara.
+      session_lost: La teva sessió de Cadrumo ha acabat, així que el navegador s'ha
+        tancat sense desar el teu inici de sessió.
+      stopped: El navegador s'ha aturat.
+      unavailable: Cadrumo no pot connectar amb el navegador ara.
+    external: Obre al navegador extern
+    failure:
+      conflict: El navegador encara s'està tancant. Espera un moment i torna-ho a
+        provar.
+      file_unavailable: Cadrumo no ha pogut fer servir aquest fitxer.
+      invalid: Cadrumo no ha pogut fer servir aquesta petició.
+      not_admitted: El navegador ja no és obert.
+      not_signed_in: Inicia la sessió per fer servir el navegador.
+      refused: Cadrumo ha rebutjat aquesta petició.
+      unavailable: El navegador no està disponible ara.
+      unknown: Cadrumo no ha pogut saber com ha acabat.
+    forward: Endavant
+    home: Pàgina d'inici de l'AEAT
+    notice:
+      dialog_opened: La pàgina ha obert un diàleg.
+      dismiss: Descarta
+      download_offered: Una baixada es pot obrir al teu propi navegador.
+      file_chooser_offered: Una pujada de fitxer es pot obrir al teu propi navegador.
+      more: '{count} més en espera'
+    opening: Obrint el navegador…
+    publication:
+      kept_newer: Ja hi havia un inici de sessió més recent desat, així que Cadrumo
+        l'ha mantingut.
+      published: El teu inici de sessió s'ha desat. La resta de Cadrumo ja el pot
+        fer servir.
+      unchanged: El teu inici de sessió no ha canviat.
+      unknown: Cadrumo no ha pogut confirmar si s'ha desat el teu inici de sessió.
+      verification_failed: Cadrumo no ha pogut confirmar que havies iniciat la sessió,
+        així que no ha desat res.
+    reload: Torna a carregar
+    reopen: Obre el navegador un altre cop
+    retry: Torna-ho a provar
+    surface: Pàgina del navegador
+    upload:
+      cancelled: S'ha cancel·lat la pujada.
+      choose: Tria…
+      decline: Cancel·la
+      done: El fitxer s'ha enviat a la pàgina.
+      failed: No s'ha pogut enviar el fitxer.
+      prompt: La pàgina demana un fitxer.
+      prompt_many: La pàgina demana un o diversos fitxers.
+    waiting: Acabant la sessió anterior del navegador…
   calendar:
     aeat:
       accepted: Acceptada
@@ -3821,6 +3912,9 @@ desktop:
     password: Contrasenya
     profile: Perfil
     profiles_unread: No s'han pogut llegir els perfils d'aquest equip.
+    reconnect_lead: La teva sessió s’ha interromput i no s’ha pogut restaurar automàticament.
+      Escriu la contrasenya del teu perfil per continuar on eres.
+    reconnect_title: Torna a iniciar la sessió per continuar
     recovering_services: S’estan recuperant els serveis en segon pla…
     refused:
       busy: Iniciar la sessió ha trigat massa perquè l'ordinador està ocupat. Torna-ho

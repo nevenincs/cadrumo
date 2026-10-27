@@ -38,6 +38,7 @@ def _citation() -> CategoryCitation:
         locator="test",
         url=parse_http_url(CITATION_MANUAL_PDF_URL_FIXTURE),
         quote="Texto de prueba suficientemente concreto.",
+        source_ref="aeat-renta-2025-manual-parte1",
         valid_from=date(2025, 1, 1),
         valid_to=date(2025, 12, 31),
     )

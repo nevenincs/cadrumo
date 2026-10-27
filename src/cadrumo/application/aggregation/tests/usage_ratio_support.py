@@ -27,6 +27,10 @@ from ...user_profile.usage_ratio_resolution import resolve_effective_usage_ratio
 #: home-office suministro: 0.20 * 0.30. Written out here, not read from a resolver.
 HOME_OFFICE_SUMINISTRO_RATIO = Decimal("0.06")
 
+#: The degree of use the dwelling profile gives a home-office row: 20 / 100, with no
+#: statutory factor. It is the row's ``business_pct`` and what IVA deducts.
+HOME_OFFICE_DEGREE_OF_USE = Decimal("0.20")
+
 _FILING_YEAR = 2025
 
 
@@ -36,13 +40,13 @@ def no_stored_usage_ratios(*, bucket_id: str, operation: PinnedAuthorityOperatio
     return UsageRatioProfile()
 
 
-def dwelling_profile() -> UserProfileRecord:
-    """Return a profile declaring a 20 m2 office in a 100 m2 dwelling."""
+def dwelling_profile(*, office_m2: Decimal = Decimal("20")) -> UserProfileRecord:
+    """Return a profile declaring an ``office_m2`` office (20 m2 by default) in a 100 m2 dwelling."""
     return _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id="22222222-2222-4222-8222-222222222222",
         facts=(
-            UserProfileFact(path="vivienda_office.office_m2", value=Decimal("20")),
+            UserProfileFact(path="vivienda_office.office_m2", value=office_m2),
             UserProfileFact(path="vivienda_office.total_m2", value=Decimal("100")),
         ),
         context=_profile_creation_context_for_test(),
@@ -71,7 +75,7 @@ def dwelling_classify_share(
     *,
     operation: PinnedAuthorityOperation,
 ) -> Decimal | None:
-    """Return the ``business_pct`` the classify path stamps on a row of ``category`` for ``profile``."""
+    """Return the ``business_pct`` (degree of use) the classify path stamps on a row of ``category``."""
     return resolve_business_share_pct(
         operator_supplied=None,
         category=category,
@@ -82,6 +86,7 @@ def dwelling_classify_share(
 
 
 __all__ = [
+    "HOME_OFFICE_DEGREE_OF_USE",
     "HOME_OFFICE_SUMINISTRO_RATIO",
     "dwelling_classify_share",
     "dwelling_profile",

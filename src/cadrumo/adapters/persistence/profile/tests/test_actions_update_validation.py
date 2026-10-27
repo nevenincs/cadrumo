@@ -195,3 +195,61 @@ def test_update_manual_transaction_rejects_provenance_only_correction(secure_obj
             ports=ports,
             occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
         )
+
+
+def test_update_manual_transaction_accepts_a_home_office_degree_of_use_bound_to_its_irpf_ratio(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """DISCRIMINATING. The row keeps the 0.40 degree of use that IVA deducts.
+
+    The usage-ratio profile holds the IRPF share, 0.40 x 0.30 = 0.12. Comparing
+    the two facts directly would refuse the row; the reference binds them
+    through the category's IRPF rule instead.
+    """
+    transaction_repository, event_repository = _repositories(secure_objects)
+    category = SpendingCategory.from_registry("suministros_home_office_luz")
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        created = create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 1),
+                amount=Decimal("121.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="factura luz",
+                idempotency_key="home-office-usage-ratio",
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
+        )
+
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        bucket_event_repository=event_repository,
+        transaction_repository=transaction_repository,
+        usage_ratio_profile=UsageRatioProfile(ratios={category: Decimal("0.120")}),
+    ) as ports:
+        updated = update_manual_transaction(
+            transaction_id=created.ref.transaction_id,
+            command=ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 1),
+                amount=Decimal("121.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="factura luz",
+                business_classification=BusinessClassification.MIXED,
+                business_pct=Decimal("0.40"),
+                category_id=category.value,
+                usage_ratio_id=category.value,
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
+        )
+
+    assert updated.transaction.business_pct == Decimal("0.40")
+    assert updated.transaction.usage_ratio_id == category.value

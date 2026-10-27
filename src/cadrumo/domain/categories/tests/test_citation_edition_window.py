@@ -48,7 +48,9 @@ def _citation(
     # A statutory source is bounded by its provision and so must name one; an
     # annual-edition source is bounded by its edition and must NOT. The fixture
     # follows the same partition the model enforces rather than hard-coding one.
+    # A verified annual-edition source names the bundled edition it was read from.
     provision = "ley-35-2006:art-30" if source in STATUTORY_CITATION_SOURCES else None
+    edition = "aeat-renta-2025-manual-parte1" if source in ANNUAL_EDITION_CITATION_SOURCES else None
     return CategoryCitation(
         source=source,
         reference=reference,
@@ -56,6 +58,7 @@ def _citation(
         url=parse_http_url(_BOE_URL),
         quote=tr("Texto autoritativo de prueba."),
         legal_ref=provision,
+        source_ref=edition,
         valid_from=valid_from,
         valid_to=valid_to,
     )

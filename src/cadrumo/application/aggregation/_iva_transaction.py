@@ -31,6 +31,7 @@ from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObserva
 from ...domain.calculations.registry.prorrata_exclusions import resolve_art104_tres_exclusion_catalogue
 from ...domain.calculations.registry.prorrata_vocabulary import resolve_input_classification_catalogue
 from ...domain.calculations.registry.schema_base import DateAxis
+from ...domain.categories.proportionality import IvaMixedUseShare
 from ...domain.iva.components import (
     category_components,
     registry_category_projection,
@@ -75,6 +76,7 @@ from .iva_ledger import (
     ProrrataLedgerReference,
     business_proportionality_for,
     has_converted_non_eur_amount,
+    iva_mixed_use_share_for,
     iva_rate_kind_for,
     missing_tax_fact_detail,
     missing_tax_fact_reason,
@@ -457,6 +459,21 @@ def _resolve_iva_transaction_context(
                 transaction_id=transaction_id,
                 reason=reason,
                 detail=f"business classification {business_classification!r} cannot feed IVA aggregation",
+            ),
+        )
+    if (
+        invoice_kind is InvoiceKind.RECEIVED
+        and iva_mixed_use_share_for(transaction, year=resolved_period.filing_year, operation=operation)
+        is IvaMixedUseShare.NOT_DEDUCTIBLE
+    ):
+        return _IvaTransactionOutcome(
+            gate_issue=IvaLedgerAggregationIssue(
+                transaction_id=transaction_id,
+                reason=IvaLedgerAggregationIssueReason.NON_DEDUCTIBLE_MIXED_USE,
+                detail=(
+                    f"category {transaction.category_id!r} grants no IVA deduction for simultaneous "
+                    "business and private use"
+                ),
             ),
         )
     # Establish the source's business/flow ownership before diagnosing missing

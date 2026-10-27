@@ -472,21 +472,33 @@ categories:
       label: Suministros directos del cliente
       notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1).
     suministros_home_office_agua:
-      notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
-        (ratio por defecto 30%), cuando la vivienda está solo parcialmente afecta
-        (Ley 35/2006 art. 30.2.5.b, regla 4ª).
+      notes: 'IRPF: si afectas parcialmente tu vivienda habitual a la actividad, deduces
+        el 30 % de la proporción entre los metros cuadrados destinados a la actividad
+        y la superficie total, salvo que pruebes un porcentaje superior o inferior
+        (Ley 35/2006 art. 30.2, regla 5.ª, letra b). IVA: la cuota soportada es deducible
+        en proporción al grado de utilización en la actividad, sin el factor del 30
+        % (Ley 37/1992 art. 95; Resolución del TEAC de 19 de julio de 2023, RG 00/06654/2022).'
     suministros_home_office_gas:
-      notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
-        (ratio por defecto 30%), cuando la vivienda está solo parcialmente afecta
-        (Ley 35/2006 art. 30.2.5.b, regla 4ª).
+      notes: 'IRPF: si afectas parcialmente tu vivienda habitual a la actividad, deduces
+        el 30 % de la proporción entre los metros cuadrados destinados a la actividad
+        y la superficie total, salvo que pruebes un porcentaje superior o inferior
+        (Ley 35/2006 art. 30.2, regla 5.ª, letra b). IVA: la cuota soportada es deducible
+        en proporción al grado de utilización en la actividad, sin el factor del 30
+        % (Ley 37/1992 art. 95; Resolución del TEAC de 19 de julio de 2023, RG 00/06654/2022).'
     suministros_home_office_internet:
-      notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
-        (ratio por defecto 30%), cuando la vivienda está solo parcialmente afecta
-        (Ley 35/2006 art. 30.2.5.b, regla 4ª).
+      notes: 'IRPF: si afectas parcialmente tu vivienda habitual a la actividad, deduces
+        el 30 % de la proporción entre los metros cuadrados destinados a la actividad
+        y la superficie total, salvo que pruebes un porcentaje superior o inferior
+        (Ley 35/2006 art. 30.2, regla 5.ª, letra b). IVA: la cuota soportada es deducible
+        en proporción al grado de utilización en la actividad, sin el factor del 30
+        % (Ley 37/1992 art. 95; Resolución del TEAC de 19 de julio de 2023, RG 00/06654/2022).'
     suministros_home_office_luz:
-      notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
-        (ratio por defecto 30%), cuando la vivienda está solo parcialmente afecta
-        (Ley 35/2006 art. 30.2.5.b, regla 4ª).
+      notes: 'IRPF: si afectas parcialmente tu vivienda habitual a la actividad, deduces
+        el 30 % de la proporción entre los metros cuadrados destinados a la actividad
+        y la superficie total, salvo que pruebes un porcentaje superior o inferior
+        (Ley 35/2006 art. 30.2, regla 5.ª, letra b). IVA: la cuota soportada es deducible
+        en proporción al grado de utilización en la actividad, sin el factor del 30
+        % (Ley 37/1992 art. 95; Resolución del TEAC de 19 de julio de 2023, RG 00/06654/2022).'
     suministros_local_afecto:
       label: Suministros del local afecto
       notes: 'Gasto totalmente deducible: el inmueble donde se desarrolla la actividad
@@ -495,9 +507,12 @@ categories:
         a la vivienda habitual parcialmente afecta.'
     telefonia_fija:
       label: Telefonía fija
-      notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
-        (ratio por defecto 30%), cuando la vivienda está solo parcialmente afecta
-        (Ley 35/2006 art. 30.2.5.b, regla 4ª).
+      notes: 'IRPF: si afectas parcialmente tu vivienda habitual a la actividad, deduces
+        el 30 % de la proporción entre los metros cuadrados destinados a la actividad
+        y la superficie total, salvo que pruebes un porcentaje superior o inferior
+        (Ley 35/2006 art. 30.2, regla 5.ª, letra b). IVA: la cuota soportada es deducible
+        en proporción al grado de utilización en la actividad, sin el factor del 30
+        % (Ley 37/1992 art. 95; Resolución del TEAC de 19 de julio de 2023, RG 00/06654/2022).'
     telefonia_movil:
       label: Telefonía móvil
       notes: Deducible con prueba de afectación exclusiva a la actividad (Reglamento
@@ -654,6 +669,9 @@ desktop:
     new_profile: Nuevo perfil
     no_profile: Ningún perfil activo
     no_profile_lead: Todavía no hay ningún perfil en este equipo.
+    reconnecting: Reconectando…
+    reconnecting_lead: Tu sesión se interrumpió. Cadrumo la está restaurando y esta
+      ventana sigue en cuanto vuelva.
     remaining_access: Después de cerrar la sesión, al menos una clave que emitiste
       para una aplicación externa todavía puede dar acceso a este perfil.
     services_down: Los servicios en segundo plano no están en marcha
@@ -734,6 +752,78 @@ desktop:
     tax_values_note: Incluye los impuestos calculados y los datos de las declaraciones.
       Déjalo desactivado para que la aplicación no los vea.
     title: Claves de acceso para otras aplicaciones de IA
+  browser:
+    acquiring: Cadrumo está iniciando tu sesión. Haz clic o pulsa una tecla para tomar
+      el control.
+    address: Dirección de la página
+    back: Atrás
+    closing: Guardando tu sesión…
+    dialog:
+      cancel: Cancelar
+      leave: Salir
+      leave_description: La página pregunta antes de que salgas. Puede que no se guarde
+        lo que hayas escrito.
+      leave_title: ¿Salir de esta página?
+      ok: Aceptar
+      prompt_label: Tu respuesta
+      stay: Quedarme
+      title: La página dice
+    download:
+      cancelled: Se canceló la descarga.
+      decline: No guardar
+      done: El archivo se guardó.
+      failed: No se pudo guardar el archivo.
+      prompt: La página ofrece {name}.
+      save: Guardar…
+    ended:
+      closed: El navegador está cerrado.
+      failed: El navegador se detuvo por un error.
+      refused: Cadrumo no puede abrir el navegador ahora.
+      session_lost: Tu sesión de Cadrumo terminó, así que el navegador se cerró sin
+        guardar tu inicio de sesión.
+      stopped: El navegador se detuvo.
+      unavailable: Cadrumo no puede conectar con el navegador ahora.
+    external: Abrir en el navegador externo
+    failure:
+      conflict: El navegador todavía se está cerrando. Espera un momento y vuelve
+        a intentarlo.
+      file_unavailable: Cadrumo no pudo usar ese archivo.
+      invalid: Cadrumo no pudo usar esa petición.
+      not_admitted: El navegador ya no está abierto.
+      not_signed_in: Inicia sesión para usar el navegador.
+      refused: Cadrumo rechazó esa petición.
+      unavailable: El navegador no está disponible ahora.
+      unknown: Cadrumo no pudo saber cómo terminó.
+    forward: Adelante
+    home: Página de inicio de la AEAT
+    notice:
+      dialog_opened: La página abrió un cuadro de diálogo.
+      dismiss: Descartar
+      download_offered: Una descarga puede abrirse en tu propio navegador.
+      file_chooser_offered: Una subida de archivo puede abrirse en tu propio navegador.
+      more: '{count} más en espera'
+    opening: Abriendo el navegador…
+    publication:
+      kept_newer: Ya había un inicio de sesión más reciente guardado, así que Cadrumo
+        lo mantuvo.
+      published: Tu inicio de sesión se guardó. El resto de Cadrumo ya puede usarlo.
+      unchanged: Tu inicio de sesión no cambió.
+      unknown: Cadrumo no pudo confirmar si se guardó tu inicio de sesión.
+      verification_failed: Cadrumo no pudo confirmar que habías iniciado sesión, así
+        que no guardó nada.
+    reload: Recargar
+    reopen: Abrir el navegador otra vez
+    retry: Volver a intentarlo
+    surface: Página del navegador
+    upload:
+      cancelled: Se canceló la subida.
+      choose: Elegir…
+      decline: Cancelar
+      done: El archivo se envió a la página.
+      failed: No se pudo enviar el archivo.
+      prompt: La página pide un archivo.
+      prompt_many: La página pide uno o varios archivos.
+    waiting: Terminando la sesión anterior del navegador…
   calendar:
     aeat:
       accepted: Aceptada
@@ -3823,6 +3913,9 @@ desktop:
     password: Contraseña
     profile: Perfil
     profiles_unread: No se han podido leer los perfiles de este equipo.
+    reconnect_lead: Tu sesión se interrumpió y no se pudo restaurar automáticamente.
+      Escribe la contraseña de tu perfil para seguir donde estabas.
+    reconnect_title: Vuelve a iniciar sesión para continuar
     recovering_services: Recuperando los servicios en segundo plano…
     refused:
       busy: Iniciar sesión ha tardado demasiado porque el ordenador está ocupado.

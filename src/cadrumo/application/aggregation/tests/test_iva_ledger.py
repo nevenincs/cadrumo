@@ -15,11 +15,13 @@ from ....core.period import Period
 from ....core.prorrata_exclusions import Art104TresExclusion
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister, BienInversionIvaRecord
 from ....domain.bienes_inversion.vocabulary import BienInversionKind
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
+from ....domain.categories.spending_category_catalogue import require_spending_category
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.flow import IvaFlowDirection
 from ....domain.iva.prorrata import ProrrataKind, ProrrataRegime
@@ -34,6 +36,7 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...ledger.preflight import OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE
+from ...ledger.ratios import resolve_business_share_pct
 from ..errors import AggregationValidationError
 from ..iva_ledger import (
     IvaLedgerAggregation,
@@ -198,6 +201,7 @@ def _transaction(
     iva_category: IvaCategory | None = None,
     exemption_article: IvaExemptionArticle | None = None,
     art_104_tres_exclusion: Art104TresExclusion | None = None,
+    category_id: str | None = None,
 ) -> Transaction:
     # Keep the gross consistent with base + iva (the Transaction
     # gross == taxable_base + iva_amount invariant). When the caller does not
@@ -225,6 +229,7 @@ def _transaction(
             "source_jurisdiction": "ES",
             "business_classification": business_classification,
             "business_pct": business_pct,
+            "category_id": category_id,
             "taxable_base": taxable_base,
             "iva_rate": iva_rate,
             "iva_amount": iva_amount,
@@ -951,3 +956,118 @@ def test_the_same_sale_dated_after_the_measure_expired_is_refused() -> None:
 
     assert result.observations == ()
     assert result.issues[0].reason is IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_RATE
+
+
+# ---------------------------------------------------------------------------
+# The IVA share of a MIXED row is the category's IVA treatment of the degree of
+# use, never the IRPF home-office factor.
+# ---------------------------------------------------------------------------
+
+
+def _stamped_share(
+    category_id: str,
+    *,
+    year: int,
+    operation: PinnedAuthorityOperation,
+    operator_supplied: Decimal | None = None,
+    censo_afectacion_ratio: Decimal | None = Decimal("0.40"),
+) -> Decimal | None:
+    """Return the share ledger add stamps on a row, through the real resolver."""
+    return resolve_business_share_pct(
+        operator_supplied=operator_supplied,
+        category=require_spending_category(category_id, effective_date=date(year, 12, 31), authority=operation),
+        censo_afectacion_ratio=censo_afectacion_ratio,
+        year=year,
+        operation=operation,
+    ).business_pct
+
+
+@pytest.mark.parametrize("year", [2022, 2026])
+def test_a_mixed_home_office_suministro_deducts_iva_at_the_degree_of_use(
+    year: int,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """40 m2 of 100 m2, base 100.00, cuota 21.00: 40 per cent of the cuota is 8.40.
+
+    Worked by hand from the TEAC unified criterion of 19-07-2023 and the Manual
+    práctico IVA: the cuota is deductible in proportion to the use of the
+    dwelling in the activity, with no 30 per cent factor. The IRPF factor gave
+    0.40 x 0.30 x 21.00 = 2.52. 2022 is asserted too: LIVA art. 95 has not
+    changed since 1998, so the share does not start with the criterion.
+    """
+    share = _stamped_share("suministros_home_office_luz", year=year, operation=operation)
+    assert share == Decimal("0.40")
+    row = _transaction(
+        "home-office-luz",
+        business_classification=BusinessClassification.MIXED,
+        business_pct=share,
+        category_id="suministros_home_office_luz",
+        booked_date=date(year, 4, 5),
+        value_date=date(year, 4, 5),
+    )
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((row,)), period=_period(year, "2T")
+    )
+
+    assert result.issues == ()
+    assert result.observations[0].base_amount == Decimal("100.00")
+    assert result.observations[0].iva_amount == Decimal("8.40")
+
+
+def test_an_operator_stated_share_wins_over_the_censo_area(operation: PinnedAuthorityOperation) -> None:
+    """A proved share replaces the floor-area proxy: 55 per cent of 21.00 is 11.55."""
+    share = _stamped_share(
+        "suministros_home_office_gas", year=2026, operation=operation, operator_supplied=Decimal("0.55")
+    )
+    assert share == Decimal("0.55")
+    row = _transaction(
+        "home-office-gas",
+        business_classification=BusinessClassification.MIXED,
+        business_pct=share,
+        category_id="suministros_home_office_gas",
+    )
+
+    result = aggregate_iva_ledger_observations(TransactionCatalogue.from_transactions((row,)), period=_Q2_2026)
+
+    assert result.issues == ()
+    assert result.observations[0].iva_amount == Decimal("11.55")
+
+
+@pytest.mark.parametrize("category_id", ["suministros_home_office_internet", "telefonia_movil"])
+def test_a_business_only_row_deducts_its_whole_cuota_whatever_its_category(category_id: str) -> None:
+    row = _transaction("business-only", category_id=category_id)
+
+    result = aggregate_iva_ledger_observations(TransactionCatalogue.from_transactions((row,)), period=_Q2_2026)
+
+    assert result.issues == ()
+    assert result.observations[0].iva_amount == Decimal("21.00")
+
+
+@pytest.mark.parametrize("year", [2022, 2026])
+def test_a_mixed_use_mobile_phone_deducts_no_iva(year: int) -> None:
+    """DISCRIMINATING. Simultaneous private use gives no deduction in any measure.
+
+    LIVA art. 95.Dos.2.º and the Manual práctico IVA. The row's 50 per cent
+    share would have deducted 10.50; the row is excluded instead, so neither
+    its base nor a zero cuota reaches the deductible boxes.
+    """
+    row = _transaction(
+        "mixed-phone",
+        business_classification=BusinessClassification.MIXED,
+        business_pct=Decimal("0.50"),
+        category_id="telefonia_movil",
+        booked_date=date(year, 4, 5),
+        value_date=date(year, 4, 5),
+    )
+
+    result = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((row,)), period=_period(year, "2T")
+    )
+
+    assert result.observations == ()
+    assert [issue.reason for issue in result.issues] == [IvaLedgerAggregationIssueReason.NON_DEDUCTIBLE_MIXED_USE]
+    assert (
+        OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE[IvaLedgerAggregationIssueReason.NON_DEDUCTIBLE_MIXED_USE]
+        is OperatorActionAxis.REVIEW_ADVISORY
+    )

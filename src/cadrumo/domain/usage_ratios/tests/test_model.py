@@ -216,13 +216,15 @@ def test_saved_profile_has_canonical_key_order() -> None:
     assert keys_in_payload == sorted(keys_in_payload, key=lambda c: c.value)
 
 
-def test_validate_usage_ratio_reference_accepts_configured_category_key() -> None:
+def test_validate_usage_ratio_reference_accepts_configured_category_key(operation: PinnedAuthorityOperation) -> None:
     profile = UsageRatioProfile(ratios={SpendingCategory.from_registry("telefonia_movil"): Decimal("0.60")})
 
     reference = validate_usage_ratio_reference(
         profile,
         category_id=SpendingCategory.from_registry("telefonia_movil").value,
         usage_ratio_id=SpendingCategory.from_registry("telefonia_movil").value,
+        year=2025,
+        operation=operation,
         business_pct=Decimal("0.60"),
     )
 
@@ -231,7 +233,7 @@ def test_validate_usage_ratio_reference_accepts_configured_category_key() -> Non
     assert reference.ratio == Decimal("0.60")
 
 
-def test_validate_usage_ratio_reference_rejects_alias_or_unknown_key() -> None:
+def test_validate_usage_ratio_reference_rejects_alias_or_unknown_key(operation: PinnedAuthorityOperation) -> None:
     profile = UsageRatioProfile()
 
     with pytest.raises(UsageRatioValidationError, match="concrete eligible spending category"):
@@ -239,10 +241,12 @@ def test_validate_usage_ratio_reference_rejects_alias_or_unknown_key() -> None:
             profile,
             category_id=SpendingCategory.from_registry("telefonia_movil").value,
             usage_ratio_id="home_office_area",
+            year=2025,
+            operation=operation,
         )
 
 
-def test_validate_usage_ratio_reference_rejects_category_mismatch() -> None:
+def test_validate_usage_ratio_reference_rejects_category_mismatch(operation: PinnedAuthorityOperation) -> None:
     profile = UsageRatioProfile(
         ratios={
             SpendingCategory.from_registry("telefonia_movil"): Decimal("0.60"),
@@ -255,10 +259,14 @@ def test_validate_usage_ratio_reference_rejects_category_mismatch() -> None:
             profile,
             category_id=SpendingCategory.from_registry("telefonia_movil").value,
             usage_ratio_id=SpendingCategory.from_registry("suministros_home_office_luz").value,
+            year=2025,
+            operation=operation,
         )
 
 
-def test_validate_usage_ratio_reference_rejects_unconfigured_active_bucket_entry() -> None:
+def test_validate_usage_ratio_reference_rejects_unconfigured_active_bucket_entry(
+    operation: PinnedAuthorityOperation,
+) -> None:
     profile = UsageRatioProfile()
 
     with pytest.raises(UsageRatioValidationError, match="not configured"):
@@ -266,10 +274,12 @@ def test_validate_usage_ratio_reference_rejects_unconfigured_active_bucket_entry
             profile,
             category_id=SpendingCategory.from_registry("telefonia_movil").value,
             usage_ratio_id=SpendingCategory.from_registry("telefonia_movil").value,
+            year=2025,
+            operation=operation,
         )
 
 
-def test_validate_usage_ratio_reference_rejects_business_pct_drift() -> None:
+def test_validate_usage_ratio_reference_rejects_business_pct_drift(operation: PinnedAuthorityOperation) -> None:
     profile = UsageRatioProfile(ratios={SpendingCategory.from_registry("telefonia_movil"): Decimal("0.60")})
 
     with pytest.raises(UsageRatioValidationError, match="does not match"):
@@ -277,11 +287,15 @@ def test_validate_usage_ratio_reference_rejects_business_pct_drift() -> None:
             profile,
             category_id=SpendingCategory.from_registry("telefonia_movil").value,
             usage_ratio_id=SpendingCategory.from_registry("telefonia_movil").value,
+            year=2025,
+            operation=operation,
             business_pct=Decimal("0.50"),
         )
 
 
-def test_validate_usage_ratio_reference_reports_a_missing_scope_as_an_invariant_failure() -> None:
+def test_validate_usage_ratio_reference_reports_a_missing_scope_as_an_invariant_failure(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """A missing authority scope must not read as "not a spending category"."""
     profile = UsageRatioProfile()
     category = SpendingCategory.from_registry("telefonia_movil").value
@@ -290,4 +304,40 @@ def test_validate_usage_ratio_reference_reports_a_missing_scope_as_an_invariant_
         outside_governed_fact_validation(),
         pytest.raises(InternalInvariantError, match="requires an explicit generation-pinned governed-fact scope"),
     ):
-        validate_usage_ratio_reference(profile, category_id=category, usage_ratio_id=category)
+        validate_usage_ratio_reference(
+            profile, category_id=category, usage_ratio_id=category, year=2025, operation=operation
+        )
+
+
+@pytest.mark.parametrize("year", [2022, 2025])
+def test_a_home_office_row_carries_the_degree_of_use_its_irpf_ratio_is_derived_from(
+    operation: PinnedAuthorityOperation,
+    year: int,
+) -> None:
+    """DISCRIMINATING. The row holds 0.40 of use; the profile holds 0.40 x 0.30 for IRPF.
+
+    The row share is what IVA deducts, so it carries no IRPF factor; the
+    reference still binds the two facts through the category's IRPF rule.
+    """
+    luz = SpendingCategory.from_registry("suministros_home_office_luz")
+    profile = UsageRatioProfile(ratios={luz: Decimal("0.120")})
+
+    reference = validate_usage_ratio_reference(
+        profile,
+        category_id=luz.value,
+        usage_ratio_id=luz.value,
+        business_pct=Decimal("0.40"),
+        year=year,
+        operation=operation,
+    )
+
+    assert reference.ratio == Decimal("0.120")
+    with pytest.raises(UsageRatioValidationError, match="does not match"):
+        validate_usage_ratio_reference(
+            profile,
+            category_id=luz.value,
+            usage_ratio_id=luz.value,
+            business_pct=Decimal("0.120"),
+            year=year,
+            operation=operation,
+        )

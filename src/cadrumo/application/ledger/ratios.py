@@ -13,6 +13,7 @@ close the discoverability and pre-calculate readiness gaps:
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated, Self
@@ -316,25 +317,26 @@ def censo_business_pct_for(
     year: int,
     operation: PinnedAuthorityOperation,
 ) -> Decimal | None:
-    """Return the legally-effective business_pct for a category from censo.
+    """Return the censo-derived degree of use a row's ``business_pct`` is stamped with.
 
-    The per-category projection of
-    :func:`cadrumo.domain.usage_ratios.service.derive_home_office_ratios_from_censo`:
-    given a single :class:`SpendingCategory` and the operator's bound
-    censo ``office_m2 / total_m2``, returns the
-    ``raw_afectacion_ratio * statutory_multiplier`` value the classify
-    and allocate paths should stamp onto ``Transaction.business_pct``
-    when no operator override is present. Returns ``None`` for
-    categories outside the HOME_OFFICE families or when no censo has
-    been applied yet, signalling to the caller that the operator's
-    explicit value (or the registry default) governs instead.
+    ``Transaction.business_pct`` is the degree of use of the expense in the
+    activity, which is what IVA deducts (LIVA art. 95, read as the TEAC
+    unified criterion of 19-07-2023 reads it). For the home-office families
+    the censo default is the raw afectación ``office_m2 / total_m2`` with no
+    statutory factor. The IRPF factor of LIRPF art. 30.2, regla 5.ª b) is
+    applied only by the Renta category rule over the usage-ratio store
+    (:func:`cadrumo.domain.usage_ratios.service.derive_home_office_ratios_from_censo`),
+    so it never reaches the IVA cuota.
+
+    Returns ``None`` for categories outside the HOME_OFFICE families or when
+    no censo has been applied yet, signalling to the caller that the
+    operator's explicit value governs instead.
     """
     if raw_afectacion_ratio is None:
         return None
-    if family_for(category, authority=operation) not in HOME_OFFICE_FAMILIES:
+    if family_for(category, effective_date=date(year, 12, 31), authority=operation) not in HOME_OFFICE_FAMILIES:
         return None
-    rule = resolve_category_profiles(year, operation=operation)[category].proportionality
-    return effective_usage_ratio(rule, raw_afectacion_ratio)
+    return raw_afectacion_ratio
 
 
 class BusinessSharePctOutcome(StrEnum):
@@ -347,7 +349,7 @@ class BusinessSharePctOutcome(StrEnum):
 
     #: The operator supplied a share; no profile fact is consulted.
     STATED = "stated"
-    #: The censo fact and the category's statutory rule produced one.
+    #: The censo afectación supplied the degree of use.
     DERIVED_FROM_CENSO = "derived_from_censo"
     #: No category, so there is nothing to apportion against.
     NO_CATEGORY = "no_category"
@@ -418,11 +420,12 @@ def resolve_business_share_pct(
         category: The row's spending category, or ``None`` when unset.
         censo_afectacion_ratio: The bound ``office_m2 / total_m2`` from the
             applied censo, or ``None`` when none has been applied.
-        year: The filing year whose category profiles supply the statutory
-            multiplier. Year-versioned regulatory data, so it comes from the
-            row's own booked date rather than a pinned literal.
+        year: The filing year whose category families decide which
+            categories the censo apportions. Year-versioned regulatory data,
+            so it comes from the row's own booked date rather than a pinned
+            literal.
         operation: The caller-owned authority generation used for category
-            family and proportionality resolution.
+            family resolution.
 
     Returns:
         The resolution, carrying a share only where one was decided.
@@ -453,17 +456,17 @@ def censo_override_warning(
     year: int,
     operation: PinnedAuthorityOperation,
 ) -> RatiosCensoOverrideWarning | None:
-    """Return a typed warning when an override deviates from the censo.
+    """Return a typed warning when a usage-ratio override deviates from the censo.
 
-    The check is silent for non-HOME_OFFICE categories: only the
-    suministros and ownership home-office families are legally bound
-    to the censo-derived afectación ratio (LIRPF Art. 30.2 rule 5,
-    Ley 6/2017 BOE-A-2017-12544). For HOME_OFFICE categories the
-    helper computes the legally-effective ratio (raw afectación times
-    the rule's ``statutory_multiplier``) and compares it against
-    ``override_ratio`` for exact equality. A non-equal pair returns a
-    :class:`RatiosCensoOverrideWarning`; equal values (and
-    non-home-office categories) return ``None``.
+    The override is a value of the Renta usage-ratio store, which holds the
+    IRPF-effective ratio, so it is compared against the IRPF derivation: raw
+    afectación times the rule's ``statutory_multiplier`` (LIRPF art. 30.2,
+    regla 5.ª b), for the suministros family; the raw afectación for the
+    ownership family). It says nothing about IVA, which deducts a row's degree
+    of use (see :func:`censo_business_pct_for`). The check is silent for
+    non-HOME_OFFICE categories. A non-equal pair returns a
+    :class:`RatiosCensoOverrideWarning`; equal values (and non-home-office
+    categories) return ``None``.
 
     Args:
         category: The category being overridden via ``ratios set``.

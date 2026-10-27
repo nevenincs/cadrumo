@@ -20,10 +20,12 @@ drift by
 
 Usage ratios model business/personal proportional deduction for ledger and
 Renta paths. Ledger commands validate ``usage_ratio_id`` against this profile
-and require any stored ``business_pct`` to match the referenced category ratio;
-Renta aggregation then consumes the resolved mapping as business-use
-proportions. They are explicitly separate from legal IVA prorrata and do not
-decide modelo applicability or casilla routing.
+and require any stored ``business_pct``, carried through the category's IRPF
+rule, to match the referenced category ratio: the row holds the degree of use
+that IVA deducts, the profile holds the IRPF share. Renta aggregation then
+consumes the resolved mapping as business-use proportions. They are explicitly
+separate from legal IVA prorrata and do not decide modelo applicability or
+casilla routing.
 
 See Also:
     :mod:`application.ledger`

@@ -46,6 +46,7 @@ from ..renta_ledger import (
 )
 from .renta_income_aggregation_support import _period
 from .usage_ratio_support import (
+    HOME_OFFICE_DEGREE_OF_USE,
     HOME_OFFICE_SUMINISTRO_RATIO,
     dwelling_classify_share,
     dwelling_profile,
@@ -572,6 +573,7 @@ def _region_override_profile(category: SpendingCategory) -> CategoryProfile:
                     locator="test",
                     url=parse_http_url(RENTA_REGIMEN_CITATION_URL_FIXTURE),
                     quote=tr("Texto de prueba para override territorial."),
+                    source_ref="aeat-renta-2025-manual-parte1",
                     valid_from=date(2025, 1, 1),
                     valid_to=date(2025, 12, 31),
                 ),
@@ -687,8 +689,8 @@ def _profile_with_ccaa(ccaa_value: str | None) -> UserProfileRecord:
 
 
 # ---------------------------------------------------------------------------
-# One proportion, one application: a row's business share and the category's
-# usage ratio are the same fact for a home-office or usage-ratio expense.
+# One proportion, one application: the category rule applies the usage ratio, and
+# a row's business share (the degree of use, which feeds IVA) never scales it again.
 # ---------------------------------------------------------------------------
 
 
@@ -704,17 +706,18 @@ def test_home_office_utility_bill_deducts_the_statutory_share_once(
     """LIRPF art. 30.2.5.b: 30 per cent of office m2 over total m2, applied one time.
 
     Expected figure, worked by hand: 20 / 100 = 0.20; 0.30 * 0.20 = 0.06; the bill
-    is a 100.00 EUR base, so 100.00 * 0.06 = 6.00. The row's stored share and the
-    category's usage ratio both come out of the real resolvers for the same
-    profile, and both are 0.06. Applying each of them to the base gives 0.36, not
-    6.00, which is the double application this guards against.
+    is a 100.00 EUR base, so 100.00 * 0.06 = 6.00. The row's stored share is the
+    degree of use, 0.20, which IVA deducts; the category's usage ratio is 0.06.
+    Both come out of the real resolvers for the same profile. Applying the share
+    as well would give 1.20, not 6.00, which is the double application this
+    guards against.
     """
     category = SpendingCategory.from_registry("suministros_home_office_luz")
     profile = dwelling_profile()
     usage_ratios = dwelling_usage_ratios(profile, bucket_id=SECURE_OBJECTS_BUCKET_ID, operation=operation)
     stamped_share = dwelling_classify_share(profile, category, operation=operation)
     assert usage_ratios[category] == HOME_OFFICE_SUMINISTRO_RATIO
-    assert stamped_share == HOME_OFFICE_SUMINISTRO_RATIO
+    assert stamped_share == HOME_OFFICE_DEGREE_OF_USE
 
     bill = _transaction(
         "home-office-luz",
@@ -743,6 +746,48 @@ def test_home_office_utility_bill_deducts_the_statutory_share_once(
     deducted = result.observations[0].deductible_amount
     assert deducted == Decimal("6.00"), f"{classification.value} home-office bill deducted {deducted}, expected 6.00"
     assert sum(result.casilla_values.values()) == Decimal("6.00")
+
+
+def test_a_40_of_100_m2_home_office_bill_deducts_12_per_cent_in_renta_though_its_row_share_is_40(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """The Manual de Renta 2025 example: 30% x 40% = 12% of the base, here 12.00 of 100.00.
+
+    The row's stamped share is the 0.40 degree of use, which IVA deducts. Renta
+    must not read it: the IRPF factor reaches the base only through the category
+    rule over the usage-ratio store.
+    """
+    category = SpendingCategory.from_registry("suministros_home_office_luz")
+    profile = dwelling_profile(office_m2=Decimal("40"))
+    usage_ratios = dwelling_usage_ratios(profile, bucket_id=SECURE_OBJECTS_BUCKET_ID, operation=operation)
+    stamped_share = dwelling_classify_share(profile, category, operation=operation)
+    assert usage_ratios[category] == Decimal("0.12")
+    assert stamped_share == Decimal("0.40")
+    bill = _transaction(
+        "home-office-luz-40",
+        amount=Decimal("121.00"),
+        category=category,
+        business_classification=BusinessClassification.MIXED,
+        business_pct=stamped_share,
+        usage_ratio_id=category.value,
+        taxable_base=Decimal("100.00"),
+        iva_rate=Decimal("0.21"),
+        iva_amount=Decimal("21.00"),
+    )
+
+    result = aggregate_renta_ledger_expenses(
+        TransactionCatalogue.from_transactions((bill,)),
+        InvoiceCatalogue(),
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_ANNUAL_2025,
+        profile_year=2025,
+        usage_ratios=usage_ratios,
+        profile_record=profile,
+        operation=operation,
+    )
+
+    assert result.issues == ()
+    assert result.observations[0].deductible_amount == Decimal("12.00")
 
 
 @pytest.mark.parametrize(

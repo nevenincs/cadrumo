@@ -446,21 +446,33 @@ categories:
       label: Supplies billed directly to the client
       notes: Fully deductible expense (Ley 35/2006 art. 28.1).
     suministros_home_office_agua:
-      notes: Deductible in proportion to the home's business-use floor area (default
-        ratio 30%), where the home is only partly used for the activity (Ley 35/2006
-        art. 30.2.5.b rule 4).
+      notes: 'IRPF: where you use part of your habitual home for the activity, you
+        deduct 30% of the ratio between the floor area used for the activity and the
+        total floor area, unless you prove a higher or lower share (Ley 35/2006 art.
+        30.2, rule 5, letter b). IVA: the input cuota is deductible in proportion
+        to the degree of use in the activity, without the 30% factor (Ley 37/1992
+        art. 95; TEAC resolution of 19 July 2023, RG 00/06654/2022).'
     suministros_home_office_gas:
-      notes: Deductible in proportion to the home's business-use floor area (default
-        ratio 30%), where the home is only partly used for the activity (Ley 35/2006
-        art. 30.2.5.b rule 4).
+      notes: 'IRPF: where you use part of your habitual home for the activity, you
+        deduct 30% of the ratio between the floor area used for the activity and the
+        total floor area, unless you prove a higher or lower share (Ley 35/2006 art.
+        30.2, rule 5, letter b). IVA: the input cuota is deductible in proportion
+        to the degree of use in the activity, without the 30% factor (Ley 37/1992
+        art. 95; TEAC resolution of 19 July 2023, RG 00/06654/2022).'
     suministros_home_office_internet:
-      notes: Deductible in proportion to the home's business-use floor area (default
-        ratio 30%), where the home is only partly used for the activity (Ley 35/2006
-        art. 30.2.5.b rule 4).
+      notes: 'IRPF: where you use part of your habitual home for the activity, you
+        deduct 30% of the ratio between the floor area used for the activity and the
+        total floor area, unless you prove a higher or lower share (Ley 35/2006 art.
+        30.2, rule 5, letter b). IVA: the input cuota is deductible in proportion
+        to the degree of use in the activity, without the 30% factor (Ley 37/1992
+        art. 95; TEAC resolution of 19 July 2023, RG 00/06654/2022).'
     suministros_home_office_luz:
-      notes: Deductible in proportion to the home's business-use floor area (default
-        ratio 30%), where the home is only partly used for the activity (Ley 35/2006
-        art. 30.2.5.b rule 4).
+      notes: 'IRPF: where you use part of your habitual home for the activity, you
+        deduct 30% of the ratio between the floor area used for the activity and the
+        total floor area, unless you prove a higher or lower share (Ley 35/2006 art.
+        30.2, rule 5, letter b). IVA: the input cuota is deductible in proportion
+        to the degree of use in the activity, without the 30% factor (Ley 37/1992
+        art. 95; TEAC resolution of 19 July 2023, RG 00/06654/2022).'
     suministros_local_afecto:
       label: Utilities for business premises
       notes: 'Fully deductible expense: the premises where the activity is carried
@@ -469,9 +481,12 @@ categories:
         as it covers only a home partly used for the activity.'
     telefonia_fija:
       label: Landline phone expense
-      notes: Deductible in proportion to the home's business-use floor area (default
-        ratio 30%), where the home is only partly used for the activity (Ley 35/2006
-        art. 30.2.5.b rule 4).
+      notes: 'IRPF: where you use part of your habitual home for the activity, you
+        deduct 30% of the ratio between the floor area used for the activity and the
+        total floor area, unless you prove a higher or lower share (Ley 35/2006 art.
+        30.2, rule 5, letter b). IVA: the input cuota is deductible in proportion
+        to the degree of use in the activity, without the 30% factor (Ley 37/1992
+        art. 95; TEAC resolution of 19 July 2023, RG 00/06654/2022).'
     telefonia_movil:
       label: Mobile phone expense
       notes: Deductible on proof of exclusive business use (Reglamento IRPF art. 22,
@@ -625,6 +640,9 @@ desktop:
     new_profile: New profile
     no_profile: No active profile
     no_profile_lead: There's no profile on this computer yet.
+    reconnecting: Reconnecting…
+    reconnecting_lead: Your session was interrupted. Cadrumo is restoring it, and
+      this window carries on once it is back.
     remaining_access: After you sign out, at least one key you issued for an external
       application can still grant access to this profile.
     services_down: Background services aren't running
@@ -700,6 +718,75 @@ desktop:
     tax_values_note: Includes calculated taxes and return details. Leave this off
       to keep them from the app.
     title: Access keys for other AI apps
+  browser:
+    acquiring: Cadrumo is signing you in. Click or press a key to take over.
+    address: Page address
+    back: Back
+    closing: Saving your session…
+    dialog:
+      cancel: Cancel
+      leave: Leave
+      leave_description: The page asks before you leave it. What you entered may not
+        be saved.
+      leave_title: Leave this page?
+      ok: OK
+      prompt_label: Your answer
+      stay: Stay
+      title: The page says
+    download:
+      cancelled: The download was cancelled.
+      decline: Don't save
+      done: The file was saved.
+      failed: The file couldn't be saved.
+      prompt: The page is offering {name}.
+      save: Save…
+    ended:
+      closed: The browser is closed.
+      failed: The browser stopped because of an error.
+      refused: Cadrumo can't open the browser right now.
+      session_lost: Your Cadrumo session ended, so the browser closed without saving
+        your sign-in.
+      stopped: The browser was stopped.
+      unavailable: Cadrumo can't reach the browser right now.
+    external: Open in external browser
+    failure:
+      conflict: The browser is still closing. Wait a moment and try again.
+      file_unavailable: Cadrumo couldn't use that file.
+      invalid: Cadrumo couldn't use that request.
+      not_admitted: The browser isn't open any more.
+      not_signed_in: Sign in to use the browser.
+      refused: Cadrumo refused that request.
+      unavailable: The browser isn't available right now.
+      unknown: Cadrumo couldn't tell how that ended.
+    forward: Forward
+    home: AEAT start page
+    notice:
+      dialog_opened: The page opened a dialog.
+      dismiss: Dismiss
+      download_offered: A download can open in your own browser.
+      file_chooser_offered: An upload can open in your own browser.
+      more: '{count} more waiting'
+    opening: Opening the browser…
+    publication:
+      kept_newer: A newer sign-in was already saved, so Cadrumo kept it.
+      published: Your sign-in was saved. Everything else in Cadrumo can use it now.
+      unchanged: Your sign-in didn't change.
+      unknown: Cadrumo couldn't confirm whether your sign-in was saved.
+      verification_failed: Cadrumo couldn't confirm you were signed in, so it saved
+        nothing.
+    reload: Reload
+    reopen: Open the browser again
+    retry: Try again
+    surface: Browser page
+    upload:
+      cancelled: The upload was cancelled.
+      choose: Choose…
+      decline: Cancel
+      done: The file was sent to the page.
+      failed: The file couldn't be sent.
+      prompt: The page asks for a file.
+      prompt_many: The page asks for one or more files.
+    waiting: Finishing the previous browser session…
   calendar:
     aeat:
       accepted: Accepted
@@ -3758,6 +3845,9 @@ desktop:
     password: Password
     profile: Profile
     profiles_unread: The profiles on this computer could not be read.
+    reconnect_lead: Your session was interrupted and could not be restored automatically.
+      Enter your profile password to carry on where you were.
+    reconnect_title: Sign in again to continue
     recovering_services: Recovering background services…
     refused:
       busy: Signing in took too long because the computer is busy. Try again in a

@@ -117,21 +117,26 @@ def test_business_pct_is_none_for_non_home_office_category(operation: PinnedAuth
     )
 
 
-def test_business_pct_for_suministros_applies_lirpf_30_2_rule_5_factor(
+def test_business_pct_for_suministros_is_the_degree_of_use_without_the_irpf_factor(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """Suministros home-office categories deduct at raw * 0.30 (LIRPF Art. 30.2 rule 5)."""
+    """DISCRIMINATING. The row share is the degree of use, which is what IVA deducts.
+
+    The IRPF factor of LIRPF art. 30.2, regla 5.ª b) belongs to the Renta usage
+    ratio store; stamping it on the row put it on the IVA cuota as well.
+    """
 
     raw = Decimal("0.20")
 
-    suministros = censo_business_pct_for(
-        _category("suministros_home_office_agua", operation),
-        raw,
-        year=2025,
-        operation=operation,
-    )
+    for year in (2022, 2025):
+        suministros = censo_business_pct_for(
+            _category("suministros_home_office_agua", operation),
+            raw,
+            year=year,
+            operation=operation,
+        )
 
-    assert suministros == Decimal("0.060")
+        assert suministros == raw
 
 
 def test_business_pct_for_ownership_uses_raw_afectacion(operation: PinnedAuthorityOperation) -> None:

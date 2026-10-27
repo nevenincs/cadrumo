@@ -24,6 +24,7 @@ from ...core.time.clock import now
 
 if TYPE_CHECKING:
     from ...core.secure_object_write import SecureObjectWrite
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 from ...core.time.utc import coerce_utc_aware
 from ...domain.attachments.errors import AttachmentNotFoundError, AttachmentValidationError
@@ -606,6 +607,7 @@ def verify_usage_ratio_reference(
     command: ManualLedgerTransactionCommand,
     *,
     usage_ratio_profile: UsageRatioProfile | None,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     if command.usage_ratio_id is None:
         return
@@ -616,6 +618,8 @@ def verify_usage_ratio_reference(
             category_id=command.category_id,
             usage_ratio_id=command.usage_ratio_id,
             business_pct=command.business_pct,
+            year=command.booked_date.year,
+            operation=operation,
         )
     except UsageRatioValidationError as exc:
         raise TransactionValidationError(
