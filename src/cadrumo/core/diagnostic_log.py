@@ -6,6 +6,7 @@ import json
 import logging
 import math
 import os
+import sys
 import time
 from collections.abc import Callable, Generator, Mapping
 from contextlib import contextmanager
@@ -223,6 +224,39 @@ def diagnostic_timing_event(
     except BaseException:
         if primary_error is None:
             raise
+
+
+@contextmanager
+def diagnostic_slow_call(
+    logger: logging.Logger,
+    event: str,
+    *,
+    threshold_seconds: float,
+    fields: Mapping[str, DiagnosticValue] | None = None,
+) -> Generator[None]:
+    """Warn, once the block ends, that it took at least ``threshold_seconds``; a prompt block logs nothing.
+
+    The record carries the caller's fields, ``elapsed_seconds`` and whether the
+    block ``raised``. The block's own exception always propagates unchanged.
+    """
+    started = time.monotonic()
+    try:
+        yield
+    finally:
+        elapsed = time.monotonic() - started
+        if elapsed >= threshold_seconds:
+            primary = sys.exception()
+            diagnostic_event(
+                logger,
+                event,
+                fields={
+                    **(fields or {}),
+                    "elapsed_seconds": round(elapsed, 3),
+                    "outcome": "completed" if primary is None else "raised",
+                },
+                level=logging.WARNING,
+                primary_error=primary,
+            )
 
 
 def diagnostic_error_fields(error: BaseException) -> dict[str, DiagnosticValue]:

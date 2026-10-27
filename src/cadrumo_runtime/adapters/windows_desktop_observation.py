@@ -6,9 +6,16 @@ import ctypes
 import sys
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
+from typing import Final, cast
 
+from cadrumo.core.diagnostic_log import diagnostic_slow_call
+from cadrumo.core.logging import get_logger
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+
+_log = get_logger(__name__)
+
+_ACCOUNT_LOOKUP_SLOW_SECONDS: Final = 1.0
+"""A name lookup that reaches the domain controller can stall; one this long is reported."""
 
 
 class WindowsSessionLevel(ctypes.Structure):
@@ -63,7 +70,8 @@ def _desktop_owner(data: WindowsSessionLevel) -> str:
     import win32security
 
     domain, user = _native_account_name(data.domain), _native_account_name(data.user)
-    sid, resolved_domain, kind = win32security.LookupAccountName(None, f"{domain}\\{user}")
+    with diagnostic_slow_call(_log, "windows_account_lookup_slow", threshold_seconds=_ACCOUNT_LOOKUP_SLOW_SECONDS):
+        sid, resolved_domain, kind = win32security.LookupAccountName(None, f"{domain}\\{user}")
     create_sid = cast(Callable[[int, None], object], win32security.CreateWellKnownSid)
     sid_type = type(create_sid(win32security.WinNullSid, None))
     if (

@@ -10,8 +10,8 @@ from contextlib import contextmanager, suppress
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from threading import Lock, RLock
-from typing import override
+from threading import Lock
+from typing import Final, override
 from uuid import UUID, uuid4
 
 from pydantic import SecretBytes
@@ -28,6 +28,7 @@ from cadrumo.adapters.persistence.storage.custody.automation_store import Automa
 from cadrumo.adapters.persistence.storage.custody.errors import ProfileCustodyRecordError
 from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGeneration, SignInGenerationCustody
 from cadrumo.adapters.persistence.storage.errors import StorageError
+from cadrumo.adapters.persistence.storage.master_key.timed_lock import TimedRLock
 from cadrumo.adapters.persistence.storage.profile_custody import build_profile_custody_port
 from cadrumo.application.auth.operation_definitions import PROFILE_ROTATION_OPERATION_DEFINITION_ID
 from cadrumo.application.operations.disclosure_projections import registered_disclosure_projections
@@ -105,6 +106,9 @@ from ..application.approval_sessions import RuntimeApprovalSessions
 from ..application.session_authority import ProfileSessionAuthority
 from ..application.session_authority_contracts import SessionAuthorityFacts
 from .session_owner import ProfileWorkerSessionOwner
+
+_GUARD_SLOW_SECONDS: Final = 1.0
+"""A wait for, or a hold of, the profile guard this long is reported with the code that entered it."""
 
 
 @dataclass
@@ -233,7 +237,7 @@ class RuntimeProfileHost:
         self._connected, self._logins, self._admitting = connected, logins, admitting
         self._recipient = recipient
         self._wall_clock = wall_clock
-        self.guard = RLock()
+        self.guard = TimedRLock(slow_seconds=_GUARD_SLOW_SECONDS, event="profile_guard_slow")
         self._replacement_retirement_guard = Lock()
         self._lock_fence: ProfileGlobalLockState | None = None
         self._password_rotation: OperationIdentity | None = None

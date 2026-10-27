@@ -8,6 +8,7 @@ import logging
 import os
 import sys
 import threading
+import time
 import tracemalloc
 from io import StringIO
 from pathlib import Path
@@ -16,12 +17,15 @@ from typing import cast, override
 
 import pytest
 
+from cadrumo.tests.log_records import delivered_records
+
 from ..diagnostic_log import (
     DiagnosticFormatter,
     DiagnosticValue,
     diagnostic_event,
     diagnostic_process,
     diagnostic_scope,
+    diagnostic_slow_call,
     diagnostic_timing_event,
     stamp_diagnostic_record,
     stamp_diagnostic_scalar_fields,
@@ -618,6 +622,45 @@ def test_stall_and_lock_timing_fields_reach_the_log_file_and_unlisted_fields_do_
     assert "dump_path" not in context and "session_id" not in context
     assert _PRIVATE_INPUT_CANARY not in line
     assert str(tmp_path) not in line
+
+
+def test_a_slow_call_is_reported_once_with_its_fields_and_a_prompt_call_is_not(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    logger = get_logger("cadrumo.tests.slow_call")
+    with caplog.at_level(logging.DEBUG, logger=logger.name):
+        with diagnostic_slow_call(logger, "synthetic_prompt_call", threshold_seconds=60.0):
+            pass
+        with diagnostic_slow_call(
+            logger, "synthetic_slow_call", threshold_seconds=0.02, fields={"phase": "lookup", "definition_id": "x"}
+        ):
+            time.sleep(0.05)
+
+    (record,) = delivered_records(caplog, logger.name)
+    assert record.getMessage() == "synthetic_slow_call"
+    assert record.levelno == logging.WARNING
+    _, context = _context(record)
+    assert context["phase"] == "lookup" and context["definition_id"] == "x"
+    assert context["outcome"] == "completed"
+    assert isinstance(context["elapsed_seconds"], float) and context["elapsed_seconds"] >= 0.02
+
+
+def test_a_slow_call_that_raises_is_reported_and_its_exception_propagates_unchanged(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    logger = get_logger("cadrumo.tests.slow_call_raising")
+    failure = ValueError("synthetic failure")
+    with (
+        caplog.at_level(logging.DEBUG, logger=logger.name),
+        pytest.raises(ValueError, match="synthetic failure") as caught,
+        diagnostic_slow_call(logger, "synthetic_slow_call", threshold_seconds=0.0),
+    ):
+        raise failure
+
+    assert caught.value is failure
+    (record,) = delivered_records(caplog, logger.name)
+    assert record.levelno == logging.WARNING
+    assert _context(record)[1]["outcome"] == "raised"
 
 
 @pytest.mark.parametrize("failure_site", ("clock", "log"))

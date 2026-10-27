@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ctypes
+import logging
 import sys
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
@@ -12,6 +13,7 @@ from typing import cast
 import pytest
 
 from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState
+from cadrumo.tests.log_records import delivered_records
 from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.login import LoginInventory
@@ -480,3 +482,22 @@ def test_malformed_wts_inventory_never_corroborates_absence(native: _Native, row
     result = windows_login_inventory(expected_owner=_OWNER)
     assert result == LoginInventory((), False)
     assert native.lsa_reads == native.query_reads == 0
+
+
+def test_a_slow_account_lookup_is_reported_with_its_outcome_and_never_names_the_account(
+    native: _Native, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    monkeypatch.setattr(windows_desktop_observation, "_ACCOUNT_LOOKUP_SLOW_SECONDS", 0.0)
+    logger_name = windows_desktop_observation._log.name
+    with caplog.at_level(logging.DEBUG, logger=logger_name):
+        assert windows_login_inventory(expected_owner=_OWNER).complete
+        completed = delivered_records(caplog, logger_name)
+        native.lookup_error = True
+        assert windows_login_inventory(expected_owner=_OWNER) == LoginInventory((), False)
+
+    assert len(completed) == native.query_reads - 1 > 0
+    records = delivered_records(caplog, logger_name)
+    assert {record.getMessage() for record in records} == {"windows_account_lookup_slow"}
+    assert {record.levelno for record in records} == {logging.WARNING}
+    assert [record.__dict__["outcome"] for record in records] == ["completed"] * len(completed) + ["raised"]
+    assert not any("owner" in str(record.__dict__) for record in records)

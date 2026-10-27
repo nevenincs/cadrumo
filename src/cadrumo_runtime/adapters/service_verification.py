@@ -8,10 +8,13 @@ import os
 import sys
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
+from typing import Final
 from uuid import UUID
 
+from cadrumo.core.diagnostic_log import diagnostic_slow_call
 from cadrumo.core.hashing import canonical_json_bytes, reject_duplicate_json_members, reject_json_constant, sha256_hex
 from cadrumo.core.link_safety import is_link_like
+from cadrumo.core.logging import get_logger
 from cadrumo.core.path_confinement import HostPathRefusal, opened_confined_file
 from cadrumo.core.storage_environment import storage_mode
 from cadrumo_client.contracts.contracts import ByteChannel, RefusalCode, RefusalError
@@ -25,6 +28,10 @@ from .macos_login import macos_peer_audit_token
 from .macos_process import read_macos_process
 from .native_peer import require_live_native_peer
 
+_log = get_logger(__name__)
+
+_SERVICE_RECHECK_SLOW_SECONDS: Final = 1.0
+"""Reading a peer's process and image from the kernel can stall; a recheck this long is reported."""
 _MAXIMUM_PACKAGE_MANIFEST_BYTES = 16 * 1024 * 1024
 _MAXIMUM_SERVICE_DESCRIPTOR_BYTES = 1024 * 1024
 
@@ -255,25 +262,26 @@ class InstalledNativeServiceVerifier:
         kernel incarnation on the same retained channel, still running the same
         image file, is the evidence ``verify_service`` established.
         """
-        try:
-            if (
-                context.peer != channel.peer
-                or context.peer.process_id != peer.process_id
-                or context.connection_id != peer.connection_id
-                or context.runtime_boot_id != peer.runtime_boot_id
-            ):
+        with diagnostic_slow_call(_log, "service_recheck_slow", threshold_seconds=_SERVICE_RECHECK_SLOW_SECONDS):
+            try:
+                if (
+                    context.peer != channel.peer
+                    or context.peer.process_id != peer.process_id
+                    or context.connection_id != peer.connection_id
+                    or context.runtime_boot_id != peer.runtime_boot_id
+                ):
+                    return False
+                identity = native_process_identity(peer.process_id, context.peer.os_owner_id)
+                if (
+                    str(identity.born) != peer.process_incarnation
+                    or str(Path(identity.image).resolve(strict=True)) != peer.image_path
+                    or _running_image_identity(identity) != peer.image_identity
+                ):
+                    return False
+                _require_channel(channel, identity)
+                return True
+            except (RefusalError, OSError, ValueError, IndexError):
                 return False
-            identity = native_process_identity(peer.process_id, context.peer.os_owner_id)
-            if (
-                str(identity.born) != peer.process_incarnation
-                or str(Path(identity.image).resolve(strict=True)) != peer.image_path
-                or _running_image_identity(identity) != peer.image_identity
-            ):
-                return False
-            _require_channel(channel, identity)
-            return True
-        except (RefusalError, OSError, ValueError, IndexError):
-            return False
 
     def installed_parent_image_matches(self, image_path: str, descriptor_path: str, image_digest: str) -> bool:
         """Verify a desktop parent against its exact bounded package image."""

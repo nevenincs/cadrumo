@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import sys
 from collections.abc import Generator
 from contextlib import contextmanager
@@ -12,6 +13,7 @@ from uuid import uuid4
 import pytest
 
 from cadrumo.core.hashing import sha256_hex
+from cadrumo.tests.log_records import delivered_records
 from cadrumo_client.contracts.access_vocabulary import AccessScope
 from cadrumo_client.contracts.contracts import ByteChannel
 from cadrumo_client.contracts.service_access import InstalledServiceDescriptor
@@ -91,6 +93,33 @@ def test_a_verified_peer_is_rechecked_by_incarnation_and_image_without_hashing_a
         assert not verifier.recheck_service(context, channel, replace(peer, image_path=str(tmp_path / "other.exe")))
         other = ConnectionContext(uuid4(), context.runtime_boot_id, channel.peer)
         assert not verifier.recheck_service(other, channel, peer)
+
+
+def test_a_slow_recheck_is_reported_by_name_and_a_prompt_one_is_not(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    with _peer_channel(tmp_path) as channel:
+        assert channel.peer.image_path is not None
+        image = Path(channel.peer.image_path).resolve(strict=True)
+        context = ConnectionContext(uuid4(), uuid4(), channel.peer)
+        verifier = InstalledNativeServiceVerifier()
+        peer = verifier.verify_service(context, channel, _descriptor(image))
+        assert peer is not None
+
+        with caplog.at_level(logging.DEBUG, logger=service_verification._log.name):
+            monkeypatch.setattr(service_verification, "_SERVICE_RECHECK_SLOW_SECONDS", 3600.0)
+            assert verifier.recheck_service(context, channel, peer)
+            assert delivered_records(caplog, service_verification._log.name) == []
+
+            monkeypatch.setattr(service_verification, "_SERVICE_RECHECK_SLOW_SECONDS", 0.0)
+            assert verifier.recheck_service(context, channel, peer)
+            assert not verifier.recheck_service(context, channel, replace(peer, process_incarnation="1"))
+
+    completed, refused = delivered_records(caplog, service_verification._log.name)
+    assert completed.getMessage() == refused.getMessage() == "service_recheck_slow"
+    assert completed.levelno == logging.WARNING
+    assert completed.__dict__["outcome"] == refused.__dict__["outcome"] == "completed"
+    assert completed.__dict__["elapsed_seconds"] >= 0.0
 
 
 def test_an_image_that_does_not_match_its_digest_is_not_verified(tmp_path: Path) -> None:

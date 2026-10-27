@@ -44,7 +44,7 @@ class ProfileWorkerSessionOwner:
         storage_root: Path,
         observe: Callable[[UUID], SessionAuthorityFacts],
         human_secret: Callable[[UUID], AbstractContextManager[HumanProof]],
-        guard: RLock,
+        guard: AbstractContextManager[object],
         authorization: WorkerAuthorizationOwner | None = None,
         worker_script: Path | None = None,
         wall_clock: Callable[[], datetime] = now,

@@ -1,15 +1,19 @@
-"""A slow wait for, or hold of, the worker's custody lock is reported by caller; a prompt one is not.
+"""A slow wait for, or hold of, a timed lock is reported by caller; a prompt one is not.
 
-The lock is exercised with real threads and short thresholds. Custody is built
-without pinning the process-wide worker binding, which other tests rely on.
+The lock is exercised with real threads and short thresholds, both through its
+labelled ``held`` entry and through the ``RLock`` protocol that names the
+calling code. Custody is built without pinning the process-wide worker binding,
+which other tests rely on.
 """
 
 from __future__ import annotations
 
 import logging
 import time
+from collections.abc import Callable, Generator
+from contextlib import ExitStack, contextmanager
 from pathlib import Path
-from threading import Event, Thread, Timer
+from threading import Event, RLock, Thread, Timer
 from uuid import UUID, uuid4
 
 import pytest
@@ -31,12 +35,10 @@ _LOGGER_NAME = timed_lock.__name__
 _SLOW = 0.05
 
 
-def _slow_events(caplog: pytest.LogCaptureFixture) -> list[logging.LogRecord]:
-    return [
-        record
-        for record in delivered_records(caplog, _LOGGER_NAME)
-        if record.getMessage() == "profile_worker_custody_lock_slow"
-    ]
+def _slow_events(
+    caplog: pytest.LogCaptureFixture, event: str = "profile_worker_custody_lock_slow"
+) -> list[logging.LogRecord]:
+    return [record for record in delivered_records(caplog, _LOGGER_NAME) if record.getMessage() == event]
 
 
 def _hold_until(lock: TimedRLock, call_name: str, holding: Event, release: Event) -> Thread:
@@ -211,3 +213,184 @@ def test_custody_entries_report_a_slow_wait_under_their_own_names(
     assert waited["held_call_name"] == "seconds_until_expiry"
     assert waited["held_elapsed_seconds"] >= _SLOW
     assert not {"session_id", "lease", "identity"}.intersection(waited)
+
+
+_PROTOCOL_EVENT = "synthetic_protocol_lock_slow"
+
+
+def _on_another_thread(action: Callable[[], object]) -> object:
+    """Run ``action`` on a fresh thread and return what it returned, or the exception it raised."""
+    outcome: list[object] = []
+
+    def run() -> None:
+        try:
+            outcome.append(action())
+        except BaseException as error:
+            outcome.append(error)
+
+    thread = Thread(target=run)
+    thread.start()
+    thread.join(5)
+    assert not thread.is_alive()
+    return outcome[0]
+
+
+def _described(outcome: object) -> object:
+    return (type(outcome).__name__, str(outcome)) if isinstance(outcome, BaseException) else outcome
+
+
+def _acquired_then_released(lock: RLock | TimedRLock) -> bool:
+    acquired = lock.acquire(blocking=False)
+    if acquired:
+        lock.release()
+    return acquired
+
+
+@pytest.mark.parametrize("make_lock", [RLock, TimedRLock], ids=["rlock", "timed"])
+def test_acquire_and_release_follow_the_rlock_contract(make_lock: Callable[[], RLock | TimedRLock]) -> None:
+    """The same expectations hold for ``RLock`` itself, so they are not derived from the timed lock."""
+    lock = make_lock()
+    unheld = ("RuntimeError", "cannot release un-acquired lock")
+    assert _described(_on_another_thread(lock.release)) == unheld
+    with pytest.raises(ValueError, match="non-blocking"):
+        lock.acquire(blocking=False, timeout=1)
+    with pytest.raises(ValueError, match="non-negative"):
+        lock.acquire(timeout=-2)
+    assert _on_another_thread(lambda: _acquired_then_released(lock)) is True, "a refused call left the lock held"
+
+    assert lock.acquire() is True
+    assert lock.acquire(blocking=False) is True
+    with lock as entered:
+        assert entered is True
+        assert _on_another_thread(lambda: lock.acquire(blocking=False)) is False
+        assert _on_another_thread(lambda: lock.acquire(timeout=0.02)) is False
+        assert _described(_on_another_thread(lock.release)) == unheld
+    lock.release()
+    assert _on_another_thread(lambda: lock.acquire(blocking=False)) is False, "one level is still held"
+    lock.release()
+    assert _on_another_thread(lambda: _acquired_then_released(lock)) is True
+    with pytest.raises(RuntimeError, match="un-acquired"):
+        lock.release()
+
+
+def _hold_reentrantly(lock: TimedRLock, seconds: float) -> None:
+    with lock, lock:
+        time.sleep(seconds)
+
+
+def test_a_slow_with_block_is_reported_once_under_the_code_that_entered_it(caplog: pytest.LogCaptureFixture) -> None:
+    lock = TimedRLock(slow_seconds=_SLOW, event=_PROTOCOL_EVENT)
+    with caplog.at_level(logging.DEBUG, logger=_LOGGER_NAME):
+        _hold_reentrantly(lock, 3 * _SLOW)
+
+    (event,) = _slow_events(caplog, _PROTOCOL_EVENT)
+    assert event.levelno == logging.WARNING
+    assert event.__dict__["call_name"].startswith(f"{__name__}:_hold_reentrantly < {__name__}:")
+    assert event.__dict__["hold_seconds"] >= 2 * _SLOW
+    assert event.__dict__["wait_seconds"] < _SLOW
+    assert event.threadName == "MainThread"
+    assert _slow_events(caplog) == [], "an event name is the lock's own"
+
+
+@contextmanager
+def _admission(lock: TimedRLock) -> Generator[None]:
+    with lock:
+        yield
+
+
+def test_contextlib_frames_do_not_name_an_entry(caplog: pytest.LogCaptureFixture) -> None:
+    lock = TimedRLock(slow_seconds=_SLOW, event=_PROTOCOL_EVENT)
+    with caplog.at_level(logging.DEBUG, logger=_LOGGER_NAME), ExitStack() as stack:
+        stack.enter_context(_admission(lock))
+        time.sleep(2 * _SLOW)
+
+    (event,) = _slow_events(caplog, _PROTOCOL_EVENT)
+    name = event.__dict__["call_name"]
+    assert name.startswith(f"{__name__}:_admission < {__name__}:test_contextlib_frames_do_not_name_an_entry")
+    assert "contextlib" not in [frame.split(":")[0] for frame in name.split(" < ")]
+
+
+def _hold_until_released(lock: TimedRLock, holding: Event, release: Event) -> None:
+    with lock:
+        holding.set()
+        assert release.wait(5)
+
+
+def _wait_for(lock: TimedRLock) -> None:
+    with lock:
+        pass
+
+
+def test_a_contended_with_reports_its_wait_and_names_the_code_that_held_the_lock(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    lock = TimedRLock(slow_seconds=_SLOW, event=_PROTOCOL_EVENT)
+    holding, release = Event(), Event()
+    holder = Thread(target=_hold_until_released, args=(lock, holding, release), name="synthetic-holder")
+    with caplog.at_level(logging.DEBUG, logger=_LOGGER_NAME):
+        holder.start()
+        assert holding.wait(5)
+        Timer(4 * _SLOW, release.set).start()
+        _wait_for(lock)
+        holder.join(5)
+
+    events = {event.__dict__["call_name"].split(" < ")[0]: event for event in _slow_events(caplog, _PROTOCOL_EVENT)}
+    assert set(events) == {f"{__name__}:_hold_until_released", f"{__name__}:_wait_for"}
+    waited = events[f"{__name__}:_wait_for"]
+    assert waited.__dict__["wait_seconds"] >= 2 * _SLOW
+    assert waited.__dict__["held_call_name"].startswith(f"{__name__}:_hold_until_released")
+    assert waited.__dict__["held_elapsed_seconds"] >= _SLOW
+    held = events[f"{__name__}:_hold_until_released"]
+    assert held.threadName == "synthetic-holder"
+    assert held.__dict__["hold_seconds"] >= 3 * _SLOW
+    assert "held_call_name" not in held.__dict__
+
+
+def test_an_expired_timed_acquire_is_refused_unreported_and_leaves_the_holder_intact(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    lock = TimedRLock(slow_seconds=_SLOW, event=_PROTOCOL_EVENT)
+    holding, release = Event(), Event()
+    holder = Thread(target=_hold_until_released, args=(lock, holding, release), name="synthetic-holder")
+    with caplog.at_level(logging.DEBUG, logger=_LOGGER_NAME):
+        holder.start()
+        assert holding.wait(5)
+        assert not lock.acquire(blocking=False)
+        assert not lock.acquire(timeout=_SLOW / 2)
+        assert not lock.acquire(timeout=2 * _SLOW)
+        release.set()
+        holder.join(5)
+
+    (event,) = _slow_events(caplog, _PROTOCOL_EVENT)
+    assert event.threadName == "synthetic-holder"
+    assert _on_another_thread(lambda: _acquired_then_released(lock)) is True
+
+
+def test_a_timed_acquire_that_outlasts_the_threshold_but_succeeds_names_its_blocker(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    lock = TimedRLock(slow_seconds=_SLOW, event=_PROTOCOL_EVENT)
+    holding, release = Event(), Event()
+    holder = Thread(target=_hold_until_released, args=(lock, holding, release), name="synthetic-holder")
+    with caplog.at_level(logging.DEBUG, logger=_LOGGER_NAME):
+        holder.start()
+        assert holding.wait(5)
+        Timer(3 * _SLOW, release.set).start()
+        assert lock.acquire(timeout=20 * _SLOW)
+        lock.release()
+        holder.join(5)
+
+    waited = next(event for event in _slow_events(caplog, _PROTOCOL_EVENT) if event.threadName == "MainThread")
+    assert waited.__dict__["wait_seconds"] >= 2 * _SLOW
+    assert waited.__dict__["held_call_name"].startswith(f"{__name__}:_hold_until_released")
+
+
+def test_a_failing_with_block_propagates_reports_and_releases(caplog: pytest.LogCaptureFixture) -> None:
+    lock = TimedRLock(slow_seconds=_SLOW, event=_PROTOCOL_EVENT)
+    with caplog.at_level(logging.DEBUG, logger=_LOGGER_NAME):
+        with pytest.raises(ValueError, match="synthetic body failure"), lock:
+            time.sleep(2 * _SLOW)
+            raise ValueError("synthetic body failure")
+        assert _on_another_thread(lambda: _acquired_then_released(lock)) is True
+
+    assert len(_slow_events(caplog, _PROTOCOL_EVENT)) == 1
